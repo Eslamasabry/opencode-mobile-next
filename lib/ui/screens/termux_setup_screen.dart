@@ -14,7 +14,7 @@ import '../../state/profiles.dart';
 import '../../termux/bridge.dart';
 import '../app_theme.dart';
 import '../widgets/confirm_sheet.dart';
-import '../desktop/desktop_interaction.dart';
+import '../widgets/setup_terminal.dart';
 
 class TermuxSetupScreen extends ConsumerStatefulWidget {
   const TermuxSetupScreen({super.key});
@@ -40,7 +40,15 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
 
   _Phase _phase = _Phase.checking;
   TermuxSetupStatus? _status;
+  TermuxInstallation? _installation;
+  bool _checkingInstallation = false;
+  String? _installationError;
+  bool _startingExisting = false;
   Timer? _poll;
+  Timer? _elapsedTimer;
+  bool _launching = false;
+  int _statusEpoch = 0;
+  String _launchMessage = 'Checking Termux connection';
   bool _busy = false;
   bool _refreshing = false;
   bool _polling = false;
@@ -82,6 +90,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _poll?.cancel();
+    _elapsedTimer?.cancel();
     _outputScrollController.dispose();
     super.dispose();
   }
@@ -90,11 +99,12 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     // Off Android the build below is the unsupported card; there is no state
     // worth polling for and no channel to poll.
     if (!platformCapabilities.supportsTermux) return;
-    if (_refreshing) return;
+    if (_refreshing || _launching) return;
+    final epoch = _statusEpoch;
     _refreshing = true;
     try {
       final capabilities = await TermuxBridge.capabilities();
-      if (!mounted) return;
+      if (!mounted || epoch != _statusEpoch) return;
       if (!capabilities.installed) {
         _stopPolling();
         setState(() {
@@ -126,7 +136,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       try {
         await TermuxBridge.verifyBridge();
       } on TermuxBridgeException catch (error) {
-        if (!mounted) return;
+        if (!mounted || epoch != _statusEpoch) return;
         _stopPolling();
         setState(() {
           _phase = _Phase.needUnlock;
@@ -137,9 +147,13 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         });
         return;
       }
+      if (!mounted || epoch != _statusEpoch) return;
       await _refreshStatus();
+      if (mounted && (_phase == _Phase.ready || _phase == _Phase.failed)) {
+        await _checkInstallation();
+      }
     } on PlatformException catch (error) {
-      if (!mounted) return;
+      if (!mounted || epoch != _statusEpoch) return;
       setState(() {
         _phase = _Phase.failed;
         _error = error.message ?? 'Android could not inspect Termux.';
@@ -189,6 +203,9 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       }
       await TermuxBridge.verifyBridge();
       await _refreshStatus();
+      if (mounted && (_phase == _Phase.ready || _phase == _Phase.failed)) {
+        await _checkInstallation();
+      }
     } on TermuxBridgeException catch (error) {
       if (!mounted) return;
       setState(() {
@@ -242,8 +259,14 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   Future<void> _installAndStart() async {
     if (_busy || _phase == _Phase.installing) return;
     var launchRequested = false;
+    _stopPolling();
+    _statusEpoch++;
     setState(() {
       _busy = true;
+      _launching = true;
+      _phase = _Phase.installing;
+      _status = null;
+      _launchMessage = 'Checking Termux connection';
       _error = null;
       _elapsedSeconds = 0;
       _monitoringFailed = false;
@@ -251,17 +274,24 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       _setupOutput = '';
       _lastLaunchOutput = null;
       _restarting = false;
+      _startingExisting = false;
       _restartOperationID = null;
     });
+    _startElapsedTimer();
     try {
       await TermuxBridge.verifyBridge();
+      if (!mounted) return;
+      setState(() => _launchMessage = 'Saving local server settings');
       final profile = await _ensureLocalProfile();
+      if (!mounted) return;
+      setState(() => _launchMessage = 'Starting setup in Termux');
       final command = TermuxBridge.installAndServeScript(
         port: port,
         password: profile.password,
       );
       launchRequested = true;
       final launch = await TermuxBridge.run(command);
+      if (!mounted) return;
       _lastLaunchOutput = [
         launch.stdout.trim(),
         launch.stderr.trim(),
@@ -274,14 +304,18 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
           code: 'invalid_launch_result',
         );
       }
+      setState(() => _launchMessage = 'Reading setup progress');
       var initialStatus = await TermuxBridge.status();
+      if (!mounted) return;
       for (
         var attempt = 0;
         attempt < 10 && initialStatus.phase == 'idle';
         attempt++
       ) {
         await Future<void>.delayed(const Duration(milliseconds: 250));
+        if (!mounted) return;
         initialStatus = await TermuxBridge.status();
+        if (!mounted) return;
       }
       if (initialStatus.phase == 'idle' ||
           initialStatus.message.contains('manager is missing')) {
@@ -292,6 +326,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         );
       }
       if (!mounted) return;
+      _launching = false;
       _status = initialStatus;
       setState(() => _phase = _Phase.installing);
       _startPolling();
@@ -316,7 +351,12 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         _error = 'Could not save or start the local setup: $error';
       });
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        _launching = false;
+        if (_phase != _Phase.installing) _stopPolling();
+        setState(() => _busy = false);
+        if (_phase == _Phase.failed) unawaited(_checkInstallation());
+      }
     }
   }
 
@@ -372,8 +412,13 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     if (confirmed && mounted) await _restartServer(profile);
   }
 
-  Future<void> _restartServer(ServerProfile profile) async {
-    if (_busy || _phase != _Phase.connected) return;
+  Future<void> _restartServer(
+    ServerProfile profile, {
+    bool startExisting = false,
+  }) async {
+    if (_busy || (!startExisting && _phase != _Phase.connected)) return;
+    _startingExisting = startExisting;
+    _statusEpoch++;
     final operationID = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
     _stopPolling();
     setState(() {
@@ -396,6 +441,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         operationID: operationID,
       );
     });
+    _startElapsedTimer();
     try {
       await TermuxBridge.run(
         TermuxBridge.restartScript(port: port, operationID: operationID),
@@ -436,7 +482,10 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         _error = 'Could not restart the local server: ${error.message}';
       });
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        if (_phase != _Phase.installing) _stopPolling();
+        setState(() => _busy = false);
+      }
     }
   }
 
@@ -452,6 +501,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         await _finishRestart(profile);
         return true;
       }
+      if (_startingExisting) return false;
       setState(() {
         _restarting = false;
         _phase = _Phase.connected;
@@ -551,10 +601,16 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     ].join('\n');
   }
 
+  void _startElapsedTimer() {
+    _elapsedTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _elapsedSeconds += 1);
+    });
+  }
+
   void _startPolling() {
+    _startElapsedTimer();
     _poll?.cancel();
     _poll = Timer.periodic(const Duration(seconds: 1), (_) {
-      _elapsedSeconds += 1;
       unawaited(_refreshStatus());
     });
   }
@@ -562,14 +618,17 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   void _stopPolling() {
     _poll?.cancel();
     _poll = null;
+    _elapsedTimer?.cancel();
+    _elapsedTimer = null;
   }
 
   Future<void> _refreshStatus() async {
-    if (_polling) return;
+    if (_polling || _launching) return;
+    final epoch = _statusEpoch;
     _polling = true;
     try {
       final snapshot = await TermuxBridge.setupSnapshot();
-      if (!mounted) return;
+      if (!mounted || epoch != _statusEpoch) return;
       _validateRestartSnapshot(snapshot.status);
       _snapshotFailures = 0;
       _monitoringFailed = false;
@@ -630,7 +689,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         _error = null;
       });
     } on TermuxBridgeException catch (error) {
-      if (!mounted) return;
+      if (!mounted || epoch != _statusEpoch) return;
       _snapshotFailures += 1;
       final setupMayBeRunning =
           _phase == _Phase.installing ||
@@ -759,6 +818,11 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       );
       return;
     }
+    if (_startingExisting) {
+      _startingExisting = false;
+      await _finishConnect(profile);
+      return;
+    }
     if (!_restartProfileStillActive(profile)) return;
     final connection = ref.read(connProvider);
     await connection.retryConnection();
@@ -868,7 +932,9 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     // presenting six steps that can never complete.
     if (!platformCapabilities.supportsTermux) {
       return Scaffold(
-        appBar: AppBar(title: const Text('On-device setup')),
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context).setupScreenTitle),
+        ),
         body: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
@@ -907,8 +973,18 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       );
     }
     final l10n = AppLocalizations.of(context);
+    if (_phase == _Phase.installing) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context).setupScreenTitle),
+        ),
+        body: SafeArea(child: _buildSetupProgress()),
+      );
+    }
     return Scaffold(
-      appBar: AppBar(title: const Text('On-device setup')),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context).setupScreenTitle),
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
@@ -923,9 +999,11 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                     color: theme.colorScheme.primary,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    'Run OpenCode on this phone',
-                    style: theme.textTheme.titleMedium,
+                  Expanded(
+                    child: Text(
+                      'Run OpenCode on this phone',
+                      style: theme.textTheme.titleMedium,
+                    ),
                   ),
                 ],
               ),
@@ -964,7 +1042,9 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                               ),
                               OutlinedButton(
                                 onPressed: _refresh,
-                                child: const Text('Check again'),
+                                child: Text(
+                                  AppLocalizations.of(context).setupCheckAgain,
+                                ),
                               ),
                             ],
                           ),
@@ -1062,7 +1142,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
               const SizedBox(height: 8),
               _stepTile(
                 n: 3,
-                title: 'Install or update OpenCode',
+                title: 'Choose how to continue',
                 state: switch (_phase) {
                   _Phase.installing => _StepState.running,
                   _Phase.connected => _StepState.done,
@@ -1081,47 +1161,14 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                   _Phase.ready => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _error == null
-                            ? 'Setup runs once in the background and records every stage. '
-                                  'Leaving this screen will not start another installer.'
-                            : friendlyError(_error!),
-                      ),
-                      const SizedBox(height: 10),
-                      FilledButton.icon(
-                        onPressed: _busy ? null : _installAndStart,
-                        icon: const Icon(Icons.rocket_launch_rounded),
-                        label: const Text('Install & start'),
-                      ),
+                      if (_error != null) ...[
+                        Text(friendlyError(_error!)),
+                        const SizedBox(height: 10),
+                      ],
+                      _setupChoices(),
                     ],
                   ),
-                  _Phase.installing => Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _ProgressLine(
-                        text:
-                            '${_status?.message ?? 'Starting setup'} ($_elapsedSeconds s)',
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _restarting
-                            ? l10n.termuxRestartProgress
-                            : 'The first install downloads Ubuntu and typically '
-                                  'takes 10–15 minutes. You can leave this screen and '
-                                  'return — setup keeps running.',
-                        style: theme.textTheme.bodySmall!.copyWith(
-                          color: AppTheme.mutedOf(theme),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _LiveSetupTerminal(
-                        output: _setupOutput,
-                        running: true,
-                        controller: _outputScrollController,
-                        onCopy: _setupOutput.isEmpty ? null : _copySetupOutput,
-                      ),
-                    ],
-                  ),
+                  _Phase.installing => null,
                   _Phase.connected => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1197,7 +1244,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                         style: TextStyle(color: theme.colorScheme.error),
                       ),
                       const SizedBox(height: 10),
-                      _LiveSetupTerminal(
+                      SetupTerminal(
                         output: _setupOutput,
                         running: false,
                         controller: _outputScrollController,
@@ -1205,6 +1252,8 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                         copyTooltip: 'Copy failure report',
                       ),
                       const SizedBox(height: 10),
+                      _setupChoices(showInstall: false),
+                      const SizedBox(height: 12),
                       if (_monitoringFailed)
                         Wrap(
                           spacing: 8,
@@ -1243,6 +1292,224 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     );
   }
 
+  Future<void> _checkInstallation() async {
+    if (_checkingInstallation || _launching) return;
+    final epoch = _statusEpoch;
+    setState(() {
+      _checkingInstallation = true;
+      _installationError = null;
+    });
+    try {
+      final installation = await TermuxBridge.inspectInstallation();
+      if (!mounted || epoch != _statusEpoch) return;
+      setState(() => _installation = installation);
+    } on TermuxBridgeException {
+      if (!mounted || epoch != _statusEpoch) return;
+      setState(() {
+        _installation = null;
+        _installationError = 'Could not check the installed environment.';
+      });
+    } finally {
+      if (mounted) setState(() => _checkingInstallation = false);
+    }
+  }
+
+  Future<void> _startInstalled() async {
+    final profile = _localProfile();
+    if (_busy || profile == null) return;
+    final confirmed = await showConfirmSheet(
+      context,
+      title: 'Start installed OpenCode?',
+      message:
+          'Use OpenCode ${_installation?.openCodeVersion ?? ''} in the '
+          'existing Ubuntu environment and connect to it. This restarts only '
+          'the managed local server; it does not download or update packages.',
+      confirmLabel: 'Start & connect',
+      icon: Icons.play_arrow_rounded,
+    );
+    if (confirmed && mounted) {
+      await _restartServer(profile, startExisting: true);
+    }
+  }
+
+  Widget _setupChoices({bool showInstall = true}) {
+    final theme = Theme.of(context);
+    final installed = _installation;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_checkingInstallation)
+          const _ProgressLine(text: 'Checking installed environment...')
+        else if (_installationError != null) ...[
+          Text(_installationError!),
+          TextButton.icon(
+            onPressed: _busy ? null : _checkInstallation,
+            icon: const Icon(Icons.refresh_rounded),
+            label: Text(AppLocalizations.of(context).setupCheckAgain),
+          ),
+        ] else if (installed != null) ...[
+          Text(
+            installed.openCodeVersion != null
+                ? 'Found OpenCode ${installed.openCodeVersion} in Ubuntu'
+                : installed.ubuntuInstalled
+                ? 'Ubuntu is installed. OpenCode is not installed yet.'
+                : 'No managed Ubuntu installation found.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (installed.openCodeVersion != null && _localProfile() != null)
+            FilledButton.icon(
+              onPressed: _busy ? null : _startInstalled,
+              icon: const Icon(Icons.play_arrow_rounded),
+              label: Text(AppLocalizations.of(context).setupStartInstalled),
+            ),
+          if (installed.openCodeVersion != null && _localProfile() == null)
+            Text(AppLocalizations.of(context).setupMissingCredential),
+        ],
+        if (showInstall) ...[
+          const SizedBox(height: 12),
+          Text(
+            AppLocalizations.of(context).setupUbuntuOption,
+            style: theme.textTheme.titleSmall,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Install the tested OpenCode ${TermuxBridge.defaultOpenCodeVersion} '
+            'in a full, app-managed Ubuntu environment. Existing Ubuntu files '
+            'are reused.',
+          ),
+          const SizedBox(height: 10),
+          FilledButton.icon(
+            onPressed: _busy || _checkingInstallation ? null : _installAndStart,
+            icon: const Icon(Icons.rocket_launch_rounded),
+            label: Text(AppLocalizations.of(context).setupInstallStart),
+          ),
+        ],
+        const SizedBox(height: 16),
+        Text(
+          AppLocalizations.of(context).setupOwnOption,
+          style: theme.textTheme.titleSmall,
+        ),
+        const SizedBox(height: 4),
+        Text(AppLocalizations.of(context).setupOwnDescription),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: _busy
+              ? null
+              : () => Navigator.of(context).pushNamed('/servers'),
+          icon: const Icon(Icons.link_rounded),
+          label: Text(AppLocalizations.of(context).setupConnectExisting),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSetupProgress() {
+    final theme = Theme.of(context);
+    final stage = _status?.phase;
+    final title = _launching
+        ? 'Preparing setup'
+        : switch (stage) {
+            'installing_ubuntu' => 'Setting up Ubuntu',
+            'installing_opencode' => 'Installing OpenCode',
+            'refreshing_models' => 'Getting models ready',
+            'starting_server' => 'Starting local server',
+            'restarting' => 'Restarting local server',
+            _ => 'Preparing setup',
+          };
+    final message = _launching
+        ? _launchMessage
+        : _status?.message ?? 'Reading setup progress';
+    final elapsed = _elapsedSeconds < 60
+        ? '${_elapsedSeconds}s elapsed'
+        : '${_elapsedSeconds ~/ 60}m ${_elapsedSeconds % 60}s elapsed';
+    final summary = Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              title,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 3),
+                child: SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Semantics(liveRegion: true, child: Text(message)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Elapsed feedback is visible, but does not interrupt a screen
+          // reader every second while it is reading the current stage.
+          Text(elapsed, style: theme.textTheme.labelLarge),
+          const SizedBox(height: 10),
+          Text(
+            _launching
+                ? 'Waiting for Termux to respond. This can take a little while.'
+                : _restarting
+                ? AppLocalizations.of(context).termuxRestartProgress
+                : 'First-time setup can take 10–15 minutes. You can leave '
+                      'this screen and return; setup keeps running.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+    Widget terminal({required bool expand}) => SetupTerminal(
+      output: _setupOutput,
+      running: true,
+      controller: _outputScrollController,
+      onCopy: _setupOutput.isEmpty ? null : _copySetupOutput,
+      expand: expand,
+    );
+
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 960),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Keep the log in the available screen area on a phone. At large
+            // text sizes or in landscape, let the page scroll so status and
+            // actions remain readable instead of squeezing either section.
+            final largeText = MediaQuery.textScalerOf(context).scale(14) > 21;
+            if (constraints.maxHeight < 560 || largeText) {
+              return ListView(children: [summary, terminal(expand: false)]);
+            }
+            return Column(
+              children: [
+                summary,
+                Expanded(child: terminal(expand: true)),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _stepTile({
     required int n,
     required String title,
@@ -1269,14 +1536,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       child: Opacity(
         opacity: enabled ? 1 : .6,
         child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(
-              alpha: .3,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.hairline(theme)),
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1366,112 +1626,6 @@ class _ProgressLine extends StatelessWidget {
       Expanded(child: Text(text)),
     ],
   );
-}
-
-class _LiveSetupTerminal extends StatelessWidget {
-  final String output;
-  final bool running;
-  final ScrollController controller;
-  final VoidCallback? onCopy;
-  final String copyTooltip;
-
-  const _LiveSetupTerminal({
-    required this.output,
-    required this.running,
-    required this.controller,
-    required this.onCopy,
-    this.copyTooltip = 'Copy output',
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final terminalBackground = theme.colorScheme.surfaceContainerLowest;
-    final terminalText = theme.colorScheme.onSurfaceVariant;
-    final overlay = theme.colorScheme.onSurface;
-    final liveAccent = AppTheme.successOf(theme);
-    final visibleOutput = output.isEmpty
-        ? r'$ Waiting for Termux output...'
-        : output;
-
-    return Container(
-      height: 220,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: terminalBackground,
-        borderRadius: BorderRadius.circular(AppTheme.radiusControl),
-        border: Border.all(color: overlay.withValues(alpha: .1)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            height: 38,
-            padding: const EdgeInsets.only(left: 12, right: 4),
-            decoration: BoxDecoration(
-              color: overlay.withValues(alpha: .035),
-              border: Border(
-                bottom: BorderSide(color: overlay.withValues(alpha: .08)),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.circle,
-                  size: 8,
-                  color: running ? liveAccent : overlay.withValues(alpha: .38),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  running ? 'LIVE OUTPUT' : 'LAST OUTPUT',
-                  style: TextStyle(
-                    color: overlay.withValues(alpha: .6),
-                    fontFamily: AppTheme.monoFamily,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  onPressed: onCopy,
-                  tooltip: copyTooltip,
-                  icon: const Icon(AppIcons.copy, size: 18),
-                  color: overlay.withValues(alpha: .7),
-                  disabledColor: overlay.withValues(alpha: .24),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Scrollbar(
-              controller: controller,
-              thumbVisibility: true,
-              // This log pane draws its own thumb on every platform; without
-              // this the desktop scroll behaviour would draw a second one.
-              child: OwnScrollbar(
-                child: SingleChildScrollView(
-                  controller: controller,
-                  padding: const EdgeInsets.all(12),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: SelectableText(
-                      visibleOutput,
-                      style: TextStyle(
-                        color: terminalText,
-                        fontFamily: AppTheme.monoFamily,
-                        fontSize: AppTheme.captionFontSize,
-                        height: 1.45,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class CmdPreview extends StatelessWidget {

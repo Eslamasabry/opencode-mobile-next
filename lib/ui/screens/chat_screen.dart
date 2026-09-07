@@ -31,6 +31,7 @@ import '../../state/draft_attachments.dart';
 import '../../state/prompt_photos.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
+import '../../voice/read_aloud.dart';
 import '../navigation/chat_route.dart';
 import '../app_theme.dart';
 import '../desktop/context_menu.dart';
@@ -79,6 +80,7 @@ import 'session_relations_screen.dart';
 import 'settings_screen.dart';
 import 'terminal_screen.dart';
 import 'tools_screen.dart';
+import 'web_sources_screen.dart';
 
 part 'chat/sessions_tab.dart';
 part 'chat/timeline_sheet.dart';
@@ -91,6 +93,8 @@ part 'chat/composer.dart';
 part 'chat/message_view.dart';
 part 'chat/session_sheets.dart';
 part 'chat/attention_card.dart';
+part 'chat/read_aloud.dart';
+part 'chat/voice_conversation.dart';
 
 const _maxAttachmentCount = 5;
 const _maxAttachmentBytes = 10 * 1024 * 1024;
@@ -317,6 +321,15 @@ class _ChatScreenState extends State<ChatScreen>
   );
   final _promptHistory = PromptHistoryNavigation();
   bool _promptShelfOperationBusy = false;
+  ReadAloudController? _readAloud;
+  Object? _speechOwnerScope;
+  bool _readAloudConsented = false;
+  bool _readAloudRequestBusy = false;
+  int _readAloudRequest = 0;
+  String? _readAloudVoiceID;
+  ReadAloudFailure? _lastReadAloudFailure;
+  void _updateSpeech(VoidCallback change) => setState(change);
+  int _promptContentRevision = 0;
   bool get _promptShelfBusy =>
       _photoBusy ||
       _promptShelfOperationBusy ||
@@ -408,6 +421,9 @@ class _ChatScreenState extends State<ChatScreen>
   Future<VoiceComposerController>? _voiceFuture;
   VoiceComposerController? _voice;
   bool _voiceOpening = false;
+  bool _voiceConversation = false;
+  Object? _voiceOwnerScope;
+  final ValueNotifier<int> _voiceEpoch = ValueNotifier(0);
   bool _allowRoutePop = false;
   bool _leavingProvisionalSession = false;
   String? _localShareUrl;
@@ -476,6 +492,7 @@ class _ChatScreenState extends State<ChatScreen>
     _focus.onKeyEvent = (_, event) => _navigatePromptHistory(event);
     _dataRefreshRevision = _conn.dataRefreshRevision;
     _conn.addListener(_onConnectionChanged);
+    _conn.profileDataChanges.addListener(_readAloudScopeChanged);
     if (!_conn.sessionsById.containsKey(widget.sessionID)) {
       unawaited(_conn.ensureSession(widget.sessionID));
     }
@@ -499,6 +516,10 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<VoiceComposerController> _getVoice() {
     return _voiceFuture ??= VoiceComposerController.create().then((voice) {
+      if (!mounted) {
+        voice.dispose();
+        throw StateError('Voice input is unavailable.');
+      }
       _voice = voice;
       return voice;
     });
@@ -507,9 +528,33 @@ class _ChatScreenState extends State<ChatScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) {
+      _interruptVoiceConversation();
+      unawaited(_stopReading());
       unawaited(_voice?.handleLifecyclePause());
       _persistDraft();
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if ((_readAloud?.speaking == true ||
+            (_voiceConversation && !_voiceOpening)) &&
+        !(route?.isCurrent ?? true)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !(route?.isCurrent ?? true)) {
+          unawaited(_stopReading());
+          if (!_voiceOpening) _interruptVoiceConversation();
+        }
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant ChatScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.sessionID != widget.sessionID) _readAloudScopeChanged();
   }
 
   /// Saves the composer text as this session's draft (or clears the draft
@@ -517,6 +562,10 @@ class _ChatScreenState extends State<ChatScreen>
   /// after sends so the persisted draft always mirrors the composer.
   Future<bool> _persistDraft() async {
     _draftSaveTimer?.cancel();
+    // Conversation review is transient. Only an explicit Send publishes text;
+    // lifecycle, debounce and route persistence must not save an utterance.
+    if (_voiceConversation) return true;
+    final sessionID = widget.sessionID;
     final generation = ++_draftWriteGeneration;
     final text = _promptHistory.original?.text ?? _composer.text;
     final attachments = List<PromptAttachment>.of(_attachments);
@@ -524,8 +573,9 @@ class _ChatScreenState extends State<ChatScreen>
     try {
       await _draftRecoveryFuture;
       if (_draftRecoveryBlocked) return false;
+      if (widget.sessionID != sessionID) return false;
       await _conn.saveSessionDraft(
-        widget.sessionID,
+        sessionID,
         text,
         profileID: _draftProfileID,
         attachments: wasRecovering ? _attachments : attachments,
@@ -558,6 +608,7 @@ class _ChatScreenState extends State<ChatScreen>
         listEquals(_attachments, _lastDraftAttachments)) {
       return;
     }
+    _promptContentRevision++;
     _lastDraftText = _composer.text;
     _lastDraftAttachments = List.of(_attachments);
     _draftSaveTimer?.cancel();
@@ -782,6 +833,10 @@ class _ChatScreenState extends State<ChatScreen>
     final snapshot = _snapshotPrompt();
     if (snapshot.isEmpty) return;
     final location = _conn.locationRevision;
+    final session = widget.sessionID;
+    final profile = _conn.promptShelfProfileID;
+    final revision = _promptContentRevision;
+    final route = ModalRoute.of(context);
     setState(() => _promptShelfOperationBusy = true);
     try {
       if (_conn.promptStash.length >= PromptShelfStore.capacity) {
@@ -789,15 +844,35 @@ class _ChatScreenState extends State<ChatScreen>
         return;
       }
       await _conn.savePromptStash(snapshot, locationRevision: location);
-      if (!mounted || !_promptUnchanged(snapshot, location)) return;
+      if (!_promptUnchanged(snapshot, location) ||
+          widget.sessionID != session ||
+          profile != _conn.promptShelfProfileID ||
+          !_conn.canUsePromptShelf ||
+          revision != _promptContentRevision ||
+          !(route?.isCurrent ?? true)) {
+        return;
+      }
       setState(() {
         _composer.clear();
         _attachments.clear();
         _handoff.store.clear(widget.sessionID);
       });
       _restoreHistoryDraft();
-      _persistDraft();
-      _showComposerNote(_chatL10n(context).promptStashed);
+      final clearedRevision = _promptContentRevision;
+      final persisted = await _persistDraft();
+      if (mounted &&
+          widget.sessionID == session &&
+          profile == _conn.promptShelfProfileID &&
+          location == _conn.locationRevision &&
+          _conn.canUsePromptShelf &&
+          clearedRevision == _promptContentRevision &&
+          (route?.isCurrent ?? true)) {
+        _showComposerNote(
+          persisted
+              ? _chatL10n(context).promptStashed
+              : _chatL10n(context).promptStashedDraftPending,
+        );
+      }
     } catch (_) {
       if (mounted) _showActionError(_chatL10n(context).promptStashSaveFailed);
     } finally {
@@ -808,52 +883,90 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _openPromptStash() async {
     if (_sending || _promptShelfBusy || !_conn.canUsePromptShelf) return;
     final location = _conn.locationRevision;
-    final selected = await showModalBottomSheet<StashedPrompt>(
-      context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (_) => _PromptStashSheet(controller: _conn, location: location),
-    );
-    if (!mounted || selected == null || location != _conn.locationRevision) {
-      return;
+    final profile = _conn.promptShelfProfileID;
+    final session = widget.sessionID;
+    final route = ModalRoute.of(context);
+    var invalidated = false;
+    void checkScope() {
+      if (!_conn.canUsePromptShelf ||
+          profile != _conn.promptShelfProfileID ||
+          location != _conn.locationRevision) {
+        invalidated = true;
+      }
     }
-    if (selected.locationBound &&
-        (selected.directory != _conn.directory ||
-            selected.workspace != _conn.workspace)) {
-      _showActionError(
-        _chatL10n(context).promptStashLocation(
-          selected.directory ?? _chatL10n(context).promptDefaultLocation,
-        ),
-      );
-      return;
-    }
-    final unavailable = selected.unavailableAttachments;
-    if (unavailable.isNotEmpty) {
-      final accepted = await showConfirmSheet(
-        context,
-        icon: Icons.attachment_rounded,
-        title: _chatL10n(context).promptAttachmentsUnavailable,
-        message: _chatL10n(
-          context,
-        ).promptAttachmentsUnavailableDetail(unavailable.join(', ')),
-        confirmLabel: _chatL10n(context).promptRestoreAvailable,
-      );
-      if (!mounted || !accepted || location != _conn.locationRevision) return;
-    }
+
+    bool currentScope() =>
+        mounted &&
+        !invalidated &&
+        widget.sessionID == session &&
+        _conn.canUsePromptShelf &&
+        profile == _conn.promptShelfProfileID &&
+        location == _conn.locationRevision &&
+        (route?.isCurrent ?? true);
     final current = _snapshotPrompt();
-    if (!current.isEmpty) {
-      final accepted = await showConfirmSheet(
-        context,
-        icon: Icons.inventory_2_outlined,
-        title: _chatL10n(context).promptRestoreTitle,
-        message: _chatL10n(context).promptRestorePreserve,
-        confirmLabel: _chatL10n(context).promptRestore,
-      );
-      if (!mounted || !accepted || !_promptUnchanged(current, location)) return;
-    }
+    final revision = _promptContentRevision;
+    bool unchanged() =>
+        currentScope() &&
+        revision == _promptContentRevision &&
+        _promptUnchanged(current, location);
+    _conn.addListener(checkScope);
+    _conn.profileDataChanges.addListener(checkScope);
     setState(() => _promptShelfOperationBusy = true);
     try {
+      final selected = await showModalBottomSheet<StashedPrompt>(
+        context: context,
+        useSafeArea: true,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (_) => _PromptStashSheet(
+          controller: _conn,
+          location: location,
+          profile: profile,
+        ),
+      );
+      if (!mounted || selected == null || !unchanged()) {
+        return;
+      }
+      if (selected.locationBound &&
+          (selected.directory != _conn.directory ||
+              selected.workspace != _conn.workspace)) {
+        _showActionError(
+          _chatL10n(context).promptStashLocation(
+            selected.directory ?? _chatL10n(context).promptDefaultLocation,
+          ),
+        );
+        return;
+      }
+      final recovered = await _conn.restorePromptStashAttachments(
+        selected.id,
+        locationRevision: location,
+      );
+      if (!mounted || !unchanged()) return;
+      final unavailable = recovered.unavailable;
+      if (unavailable.isNotEmpty) {
+        final accepted = await showConfirmSheet(
+          context,
+          icon: Icons.attachment_rounded,
+          title: _chatL10n(context).promptAttachmentsUnavailable,
+          message: _chatL10n(
+            context,
+          ).promptAttachmentsUnavailableDetail(unavailable.join(', ')),
+          confirmLabel: _chatL10n(context).promptRestoreAvailable,
+          cancelLabel: MaterialLocalizations.of(context).cancelButtonLabel,
+        );
+        if (!mounted || !accepted || !unchanged()) return;
+      }
+      if (!current.isEmpty) {
+        final accepted = await showConfirmSheet(
+          context,
+          icon: Icons.inventory_2_outlined,
+          title: _chatL10n(context).promptRestoreTitle,
+          message: _chatL10n(context).promptRestorePreserve,
+          confirmLabel: _chatL10n(context).promptRestore,
+          cancelLabel: MaterialLocalizations.of(context).cancelButtonLabel,
+        );
+        if (!mounted || !accepted || !unchanged()) return;
+      }
       if (!current.isEmpty) {
         if (_conn.promptStash.length >= PromptShelfStore.capacity) {
           _showComposerNote(_chatL10n(context).promptStashFull);
@@ -861,7 +974,7 @@ class _ChatScreenState extends State<ChatScreen>
         }
         await _conn.savePromptStash(current, locationRevision: location);
       }
-      if (!mounted || !_promptUnchanged(current, location)) return;
+      if (!mounted || !unchanged()) return;
       // Keep the source entry until all content is applied. A failed removal
       // leaves a recoverable copy, never a missing prompt.
       setState(() {
@@ -870,10 +983,8 @@ class _ChatScreenState extends State<ChatScreen>
           selection: TextSelection.collapsed(offset: selected.text.length),
         );
         _attachments.clear();
-        _attachments.addAll(
-          selected.attachments.where(StashedPrompt.canRestoreAttachment),
-        );
-        _handoff.store.clear(widget.sessionID);
+        _attachments.addAll(recovered.attachments);
+        _handoff.store.clear(session);
         for (final reference in selected.references) {
           _handoff.stage(
             ReviewReference(
@@ -891,13 +1002,25 @@ class _ChatScreenState extends State<ChatScreen>
           );
         }
       });
-      _persistDraft();
-      if (unavailable.isEmpty && _promptHistory.original == null) {
+      final restored = _snapshotPrompt();
+      final restoredRevision = _promptContentRevision;
+      final persisted = await _persistDraft();
+      if (!currentScope() ||
+          restoredRevision != _promptContentRevision ||
+          !_promptUnchanged(restored, location)) {
+        return;
+      }
+      final keepCopy =
+          !persisted ||
+          unavailable.isNotEmpty ||
+          selected.references.isNotEmpty ||
+          _promptHistory.original != null;
+      if (!keepCopy) {
         await _conn.removePromptStash(selected.id, locationRevision: location);
       }
-      if (mounted && location == _conn.locationRevision) {
+      if (mounted && currentScope() && _promptUnchanged(restored, location)) {
         _showComposerNote(
-          unavailable.isNotEmpty || _promptHistory.original != null
+          keepCopy
               ? _chatL10n(context).promptRestoredCopyKept
               : selected.locationBound
               ? _chatL10n(context).promptRestoredReferences
@@ -906,10 +1029,12 @@ class _ChatScreenState extends State<ChatScreen>
         _focus.requestFocus();
       }
     } catch (_) {
-      if (mounted) {
+      if (mounted && currentScope()) {
         _showActionError(_chatL10n(context).promptStashRestoreFailed);
       }
     } finally {
+      _conn.removeListener(checkScope);
+      _conn.profileDataChanges.removeListener(checkScope);
       if (mounted) setState(() => _promptShelfOperationBusy = false);
     }
   }
@@ -2085,9 +2210,28 @@ class _ChatScreenState extends State<ChatScreen>
   /// it is omitted the composer's current delivery choice applies; the
   /// long-press shortcut passes an explicit steer or queue.
   Future<void> _send({PromptDelivery? delivery}) async {
+    final conversationSend = _voiceConversation;
+    final voiceEpoch = _voiceEpoch.value;
+    final voiceScope = _speechScopeNow;
+    bool voiceSendCurrent() =>
+        !conversationSend ||
+        (mounted &&
+            _voiceConversation &&
+            voiceEpoch == _voiceEpoch.value &&
+            voiceScope == _speechScopeNow &&
+            (ModalRoute.of(context)?.isCurrent ?? true));
+    if (_voiceConversation && !_conversationCanSend) {
+      _showComposerNote(_conversationPauseCopy);
+      return;
+    }
+    if (_voiceConversation && _composer.text.trimLeft().startsWith('/')) {
+      _showComposerNote(_chatL10n(context).voiceConversationCommandsOnly);
+      return;
+    }
     delivery ??= _activeDelivery;
     await _voice?.cancel();
-    if (!mounted) return;
+    if (!mounted || !voiceSendCurrent()) return;
+    if (conversationSend && !_conversationCanSend) return;
     // UX-103 review handoff: the command grammar is matched against the text
     // the *user* typed, before any staged reference is folded in. Folding
     // first appended a multi-line reference block that `_typedChatCommand`
@@ -2145,6 +2289,10 @@ class _ChatScreenState extends State<ChatScreen>
     setState(() => _sending = true);
     final actionApi = await _conn.prepareActionTransport();
     if (!mounted) return;
+    if (!voiceSendCurrent() || (conversationSend && !_conversationCanSend)) {
+      setState(() => _sending = false);
+      return;
+    }
     if (actionApi == null) {
       setState(() => _sending = false);
       final detail = _conn.connectionError;
@@ -2208,6 +2356,9 @@ class _ChatScreenState extends State<ChatScreen>
         widget.sessionID,
         expectedApi: actionApi,
       );
+      if (!voiceSendCurrent() || (conversationSend && !_conversationCanSend)) {
+        throw StateError('Voice conversation was interrupted.');
+      }
       selection = _conn.selectionForSession(widget.sessionID);
       promptStarted = true;
       await actionApi.promptAsync(
@@ -2220,14 +2371,16 @@ class _ChatScreenState extends State<ChatScreen>
         agentMentions: agentMentions,
         delivery: delivery,
       );
-      unawaited(_rememberSentPrompt(selectionProfileID ?? '', text));
+      if (!conversationSend) {
+        unawaited(_rememberSentPrompt(selectionProfileID ?? '', text));
+      }
       if (!mounted) return;
       setState(() {
         _sending = false;
         pending.requestComplete = true;
         if (pending.canonicalID != null) _pendingSends.remove(pending);
       });
-      if (_composer.text.isEmpty) _restoreHistoryDraft();
+      if (!conversationSend && _composer.text.isEmpty) _restoreHistoryDraft();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -2241,7 +2394,11 @@ class _ChatScreenState extends State<ChatScreen>
       });
       // A transport-level failure (no HTTP response) means the server became
       // unreachable mid-send: queue the draft rather than erroring.
-      if (promptStarted && e is ApiException && e.statusCode == null) {
+      if (!voiceSendCurrent()) return;
+      if (!conversationSend &&
+          promptStarted &&
+          e is ApiException &&
+          e.statusCode == null) {
         if (await _queueDraft(
           text,
           attachments,
@@ -2376,16 +2533,57 @@ class _ChatScreenState extends State<ChatScreen>
     // download for a recognizer that can never be fed.
     if (!platformCapabilities.supportsVoice) return;
     if (_voiceOpening || _sending) return;
+    if (_voiceConversation && !_conversationCanSend) {
+      _showComposerNote(_conversationPauseCopy);
+      return;
+    }
+    final scope = _speechScopeNow;
+    final epoch = _voiceEpoch.value;
+    final original = _composer.value;
+    _voiceOwnerScope = scope;
+    bool current() =>
+        mounted &&
+        epoch == _voiceEpoch.value &&
+        scope == _speechScopeNow &&
+        _conn.isProfileReadable(_conn.promptShelfProfileID);
     setState(() => _voiceOpening = true);
     try {
+      await _stopReading();
+      if (!mounted ||
+          !current() ||
+          !(ModalRoute.of(context)?.isCurrent ?? true)) {
+        return;
+      }
       final voice = await _getVoice();
-      if (!mounted) return;
+      if (!mounted ||
+          !current() ||
+          !(ModalRoute.of(context)?.isCurrent ?? true)) {
+        return;
+      }
       if (!voice.models.isReady) {
         final ready = await showVoiceModelSetupSheet(context, voice.models);
-        if (!ready || !mounted) return;
+        if (!mounted ||
+            !ready ||
+            !current() ||
+            !(ModalRoute.of(context)?.isCurrent ?? true)) {
+          return;
+        }
       }
-      final result = await showVoiceComposerResultSheet(context, voice);
-      if (!mounted || result == null || result.text.trim().isEmpty) return;
+      final result = await showVoiceComposerResultSheet(
+        context,
+        voice,
+        conversation: _voiceConversation,
+        validity: _voiceEpoch,
+        isCurrent: current,
+      );
+      if (!mounted ||
+          !current() ||
+          result == null ||
+          result.text.trim().isEmpty ||
+          _composer.value != original ||
+          !(ModalRoute.of(context)?.isCurrent ?? true)) {
+        return;
+      }
       final selection = _composer.selection;
       _composer.text = mergeVoiceDraft(_composer.text, selection, result.text);
       _composer.selection = TextSelection.collapsed(
@@ -2397,10 +2595,53 @@ class _ChatScreenState extends State<ChatScreen>
       // commands and attachments behave exactly as a typed prompt would.
       if (result.send) await _send();
     } catch (error) {
-      if (mounted) _showActionError('Voice input failed: $error');
+      if (mounted && current()) {
+        _showActionError(_chatL10n(context).voiceInputUnavailable);
+      }
     } finally {
       if (mounted) setState(() => _voiceOpening = false);
     }
+  }
+
+  Future<void> _addWebSources() async {
+    if (_sending || _promptShelfBusy || _voiceConversation) return;
+    final source = _speechScopeNow;
+    final snapshot = _snapshotPrompt();
+    final location = _conn.locationRevision;
+    final revision = _promptContentRevision;
+    final route = ModalRoute.of(context);
+    final selections = await Navigator.of(context)
+        .push<List<WebSourceSelection>>(
+          MaterialPageRoute(
+            builder: (_) => WebSourcesScreen(controller: _conn),
+          ),
+        );
+    if (!mounted || selections == null || selections.isEmpty) return;
+    if (source != _speechScopeNow ||
+        revision != _promptContentRevision ||
+        !_promptUnchanged(snapshot, location) ||
+        !(route?.isCurrent ?? true)) {
+      _showComposerNote(_chatL10n(context).webSourcesDraftChanged);
+      return;
+    }
+    final appendix = jsonEncode([
+      for (final selection in selections)
+        {
+          'title': selection.title,
+          'url': selection.url,
+          'excerpt': selection.excerpt,
+        },
+    ]);
+    final addition = '${_chatL10n(context).webSourcesDraftLabel}\n$appendix';
+    final text = snapshot.text.isEmpty
+        ? addition
+        : '${snapshot.text}\n\n$addition';
+    _composer.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+    await _persistDraft();
+    if (mounted && source == _speechScopeNow) _focus.requestFocus();
   }
 
   Future<void> _pickAttachment() async {
@@ -3298,14 +3539,16 @@ class _ChatScreenState extends State<ChatScreen>
   ];
 
   Future<void> _showMessageActions(MessageWithParts message) async {
+    final source = _speechScopeNow;
     final copy = _messageCopy(message);
     final canFork = message.info.role == 'user';
     final theme = Theme.of(context);
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: ListView(
+          shrinkWrap: true,
+          primary: false,
           children: [
             if (copy.text.isNotEmpty)
               ListTile(
@@ -3323,6 +3566,18 @@ class _ChatScreenState extends State<ChatScreen>
                   'Start a new session with this prompt in the composer',
                 ),
                 onTap: () => Navigator.pop(context, 'fork'),
+              ),
+            if (_canReadReply(message))
+              ListTile(
+                leading: const Icon(Icons.volume_up_outlined),
+                title: Text(_chatL10n(context).readAloudAction),
+                onTap: () => Navigator.pop(context, 'readAloud'),
+              ),
+            if (_canReadReply(message) && _readAloudConsented)
+              ListTile(
+                leading: const Icon(Icons.record_voice_over_outlined),
+                title: Text(_chatL10n(context).readAloudOtherVoice),
+                onTap: () => Navigator.pop(context, 'readAloudOtherVoice'),
               ),
             // §7 row 14: v2 has no message delete, and PATCH edit is not the
             // same promise — do not fake it.
@@ -3353,11 +3608,14 @@ class _ChatScreenState extends State<ChatScreen>
         ),
       ),
     );
-    if (!mounted || action == null) return;
+    if (!mounted || action == null || source != _speechScopeNow) return;
     if (action == 'copy') await _copyMessageText(message);
     if (action == 'fork') await _forkFromMessage(message);
     if (action == 'revert') await _stageFromMessage(message);
     if (action == 'delete') await _deleteMessage(message);
+    if (action == 'readAloud' || action == 'readAloudOtherVoice') {
+      await _readReply(message, chooseVoice: action == 'readAloudOtherVoice');
+    }
   }
 
   Future<void> _deleteMessage(MessageWithParts message) async {
@@ -3657,6 +3915,7 @@ class _ChatScreenState extends State<ChatScreen>
   void _onConnectionChanged() {
     if (_findOpen && _findLocation != _conn.locationRevision) _closeFind();
     if (!mounted) return;
+    _readAloudScopeChanged();
     _announceCompletedFlush();
     _syncRetryTicker();
     final shouldRehydrate =
@@ -4949,6 +5208,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   // UX-103 review handoff (start).
   void _onHandoffChanged() {
+    _promptContentRevision++;
     if (mounted) setState(() {});
   }
 
@@ -5469,6 +5729,12 @@ class _ChatScreenState extends State<ChatScreen>
             overflow: TextOverflow.ellipsis,
           ),
           actions: [
+            if (_readAloudRequestBusy || _readAloud?.speaking == true)
+              IconButton(
+                tooltip: _chatL10n(context).readAloudStop,
+                icon: const Icon(Icons.stop_circle_outlined),
+                onPressed: () => unawaited(_stopReading()),
+              ),
             if (busy)
               IconButton(
                 tooltip: 'Stop',
@@ -6084,6 +6350,8 @@ class _ChatScreenState extends State<ChatScreen>
                                   ),
                                 ),
                               ),
+                            if (_voiceConversation)
+                              _voiceConversationControls(),
                             Center(
                               child: ConstrainedBox(
                                 constraints: const BoxConstraints(
@@ -6094,6 +6362,7 @@ class _ChatScreenState extends State<ChatScreen>
                                   child: _ChatComposer(
                                     compact: compactComposer,
                                     allowInlineCommands:
+                                        !_voiceConversation &&
                                         bodyConstraints.maxHeight >= 300,
                                     controller: _composer,
                                     focusNode: _focus,
@@ -6142,7 +6411,7 @@ class _ChatScreenState extends State<ChatScreen>
                                     // OpenCode 1 runs a send made mid-turn
                                     // after that turn; OpenCode 2 steers or
                                     // queues it. Either way Send stays live.
-                                    canSendWhileBusy: true,
+                                    canSendWhileBusy: !_voiceConversation,
                                     canChooseDelivery: _conn.supportsInbox,
                                     delivery: _delivery,
                                     onDeliveryChanged: (delivery) =>
@@ -6182,6 +6451,9 @@ class _ChatScreenState extends State<ChatScreen>
                                       _handleInsertedContent(content),
                                     ),
                                     onVoice: _openVoice,
+                                    onConversation: _startVoiceConversation,
+                                    onWebSources: _addWebSources,
+                                    conversationMode: _voiceConversation,
                                     onSend: _send,
                                     onStop: _abort,
                                     onChooseModel: () => showModelPicker(
@@ -6254,6 +6526,11 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    _voiceEpoch.value++;
+    _voiceEpoch.dispose();
+    _conn.profileDataChanges.removeListener(_readAloudScopeChanged);
+    _readAloud?.removeListener(_readAloudChanged);
+    _readAloud?.dispose();
     _conn.promptPhotos.removeListener(_onPhotosChanged);
     _draftTrackingEnabled = false;
     _persistDraft();

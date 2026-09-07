@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/mcp_oauth.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
@@ -189,14 +190,26 @@ class _SwitchingRepositoryController extends ConnectionController {
   Future<ProductRepository?> prepareActionRepository() {
     actionRepositoryCalls += 1;
     if (actionRepositoryCalls == 1) return Future.value(initialRepository);
-    return readyRepository.future;
+    return readyRepository.future.then((replacement) {
+      repository = replacement;
+      return replacement;
+    });
   }
 }
 
 Future<ConnectionController> _controller(ProductRepository repository) async {
   SharedPreferences.setMockInitialValues({});
   final preferences = await SharedPreferences.getInstance();
-  return ConnectionController(ProfileStore(prefs: preferences))
+  final store = ProfileStore(prefs: preferences);
+  await store.upsert(
+    ServerProfile(
+      id: 'integrations-test',
+      name: 'Test server',
+      baseUrl: 'https://integrations.example',
+    ),
+  );
+  await store.setActiveId('integrations-test');
+  return ConnectionController(store)
     ..repository = repository
     ..status = StreamStatus.connected;
 }
@@ -221,6 +234,17 @@ Widget _app(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  const secureStorage = MethodChannel(
+    'plugins.it_nomads.com/flutter_secure_storage',
+  );
+  setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(secureStorage, (_) async => null);
+  });
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(secureStorage, null);
+  });
   // Provider logos are fetched favicons; tests render the monogram instead.
   setUpAll(() => ProviderLogo.imageProviderOverride = (_) => null);
   tearDownAll(() => ProviderLogo.imageProviderOverride = null);
@@ -281,12 +305,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('GitHub'), findsOneWidget);
-      await tester.dragUntilVisible(
-        find.text('Resources unavailable'),
-        find.byType(ListView),
-        const Offset(0, -200),
+      await tester.scrollUntilVisible(
+        find.text('Could not refresh MCP data. Try again.'),
+        200,
+        scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text('Resources unavailable'), findsOneWidget);
+      expect(
+        find.text('Could not refresh MCP data. Try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('Resources unavailable'), findsNothing);
       expect(find.text('Could not load this section'), findsOneWidget);
     },
   );
@@ -626,7 +654,9 @@ void main() {
 
     expect(repository.providerDisconnectCalls, 1);
     expect(
-      find.text('The connection remains visible so you can retry.'),
+      find.text(
+        'Could not confirm authentication. Return to the original source and try again.',
+      ),
       findsOneWidget,
     );
     expect(
@@ -704,9 +734,14 @@ void main() {
     await tester.pumpWidget(_app(await _controller(repository)));
     await tester.pumpAndSettle();
 
-    expect(find.text('Project handbook'), findsOneWidget);
     expect(find.text('Providers unavailable'), findsOneWidget);
     expect(find.text('Could not load this section'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Project handbook'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Project handbook'), findsOneWidget);
   });
 
   testWidgets('MCP authentication shows the validated destination host', (
@@ -788,6 +823,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(find.text('Open browser'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Open external link?'), findsOneWidget);
+    await tester.tap(find.text('Open link'));
     await tester.pumpAndSettle();
 
     expect(opened?.host, 'mcp-auth.example.com');
@@ -797,6 +835,10 @@ void main() {
       findsOneWidget,
     );
 
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('enter-mcp-oauth-code')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('enter-mcp-oauth-code')));
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -838,6 +880,13 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       await tester.tap(find.text('Open browser'));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('Open external link?'), findsOneWidget);
+      await tester.tap(find.text('Open link'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('enter-mcp-oauth-code')),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('enter-mcp-oauth-code')));
       await tester.pumpAndSettle();
@@ -851,6 +900,10 @@ void main() {
       expect(find.textContaining('state does not match'), findsOneWidget);
       expect(repository.mcpCompleteCalls, 0);
       await tester.tap(find.text('Back'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('cancel-mcp-oauth')),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('cancel-mcp-oauth')));
       await tester.pumpAndSettle();
@@ -901,6 +954,9 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.ensureVisible(find.text('Open browser'));
     await tester.tap(find.text('Open browser'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Open external link?'), findsOneWidget);
+    await tester.tap(find.text('Open link'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     await tester.scrollUntilVisible(
@@ -928,9 +984,18 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();
     final readyRepository = Completer<ProductRepository?>();
+    final store = ProfileStore(prefs: preferences);
+    await store.upsert(
+      ServerProfile(
+        id: 'switching-test',
+        name: 'Test server',
+        baseUrl: 'https://integrations.example',
+      ),
+    );
+    await store.setActiveId('switching-test');
     final controller =
         _SwitchingRepositoryController(
-            ProfileStore(prefs: preferences),
+            store,
             retainedRepository,
             readyRepository,
           )
@@ -1170,6 +1235,9 @@ void main() {
         findsOneWidget,
       );
       await tester.tap(find.text('Open browser'));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('Open external link?'), findsOneWidget);
+      await tester.tap(find.text('Open link'));
       await tester.pumpAndSettle();
 
       expect(
@@ -1218,6 +1286,9 @@ void main() {
     await tester.tap(find.text('Connect'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Open browser'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Open external link?'), findsOneWidget);
+    await tester.tap(find.text('Open link'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Check'));
     await tester.pump();
@@ -1269,6 +1340,9 @@ void main() {
     await tester.tap(find.text('Connect'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Open browser'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Open external link?'), findsOneWidget);
+    await tester.tap(find.text('Open link'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Enter code'));
     await tester.pumpAndSettle();
@@ -1440,6 +1514,9 @@ void main() {
     await tester.tap(find.text('Connect'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Open browser'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Open external link?'), findsOneWidget);
+    await tester.tap(find.text('Open link'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Check'));
     await tester.pumpAndSettle();

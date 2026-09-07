@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
+import '../widgets/session_handoff.dart';
 
 class SessionRelationsScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -27,10 +29,13 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
   Object? _error;
   int _generation = 0;
   int _dataRefreshRevision = 0;
+  late final SessionNavigationScope _scope;
+  bool _selecting = false;
 
   @override
   void initState() {
     super.initState();
+    _scope = SessionNavigationScope(widget.controller);
     _dataRefreshRevision = widget.controller.dataRefreshRevision;
     widget.controller.addListener(_controllerChanged);
     unawaited(_load());
@@ -38,6 +43,15 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
 
   void _controllerChanged() {
     if (!mounted) return;
+    if (!_scope.matches(widget.controller)) {
+      _generation++;
+      setState(
+        () => _error = StateError(
+          'Session location changed. Return and reopen related sessions.',
+        ),
+      );
+      return;
+    }
     final revision = widget.controller.dataRefreshRevision;
     if (revision == _dataRefreshRevision) return;
     _dataRefreshRevision = revision;
@@ -48,18 +62,21 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
     final generation = ++_generation;
     setState(() => _error = null);
     try {
+      _scope.check(widget.controller);
       final repository = await widget.controller.prepareActionRepository();
+      _scope.check(widget.controller);
       if (repository == null) {
         throw const ProductException('OpenCode is reconnecting. Try again.');
       }
-      var current = widget.controller.sessionsById[widget.sessionID];
-      current ??= await repository.getSessionDetails(widget.sessionID);
+      final current = await repository.getSessionDetails(widget.sessionID);
+      _scope.check(widget.controller);
       final parentID = current.parentID ?? current.id;
       var parent = widget.controller.sessionsById[parentID];
       parent ??= parentID == current.id
           ? current
           : await repository.getSessionDetails(parentID);
       final children = await repository.listSessionChildren(parentID);
+      _scope.check(widget.controller);
       if (!mounted || generation != _generation) return;
       setState(() {
         _parent = parent;
@@ -71,7 +88,66 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
     }
   }
 
-  void _select(Session session) => Navigator.of(context).pop(session);
+  Future<void> _select(Session session) async {
+    if (_selecting) return;
+    setState(() => _selecting = true);
+    try {
+      _scope.check(widget.controller);
+      final repository = await widget.controller.prepareActionRepository();
+      _scope.check(widget.controller);
+      if (repository == null) {
+        throw StateError('OpenCode is reconnecting. Try again.');
+      }
+      final current = await repository.getSessionDetails(session.id);
+      _scope.check(widget.controller);
+      if (current.id != session.id ||
+          current.directory != session.directory ||
+          current.workspaceID != session.workspaceID) {
+        throw StateError('Session location changed. Return and try again.');
+      }
+      if (mounted) Navigator.of(context).pop(current);
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _error = StateError(
+            'Session unavailable or location changed. Return or refresh to try again.',
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _selecting = false);
+    }
+  }
+
+  Future<void> _pin(Session session) async {
+    try {
+      _scope.check(widget.controller);
+      final repository = await widget.controller.prepareActionRepository();
+      _scope.check(widget.controller);
+      if (repository == null) {
+        throw StateError('OpenCode is reconnecting. Try again.');
+      }
+      final current = await repository.getSessionDetails(session.id);
+      _scope.check(widget.controller);
+      if (current.id != session.id ||
+          current.directory != session.directory ||
+          current.workspaceID != session.workspaceID) {
+        throw StateError('Session location changed. Return and try again.');
+      }
+      await widget.controller.setSessionPinned(
+        session.id,
+        !widget.controller.isSessionPinned(session.id),
+        locationRevision: _scope.revision,
+      );
+    } catch (_) {
+      if (mounted) {
+        showProductError(
+          context,
+          'Could not update the pin. Return and try again.',
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -91,8 +167,12 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
   Widget _body() {
     final parent = _parent;
     final children = _children;
-    if (_error != null && parent == null) {
-      return ProductErrorState(message: productErrorText(_error!), onRetry: _load);
+    if (_error != null &&
+        (parent == null || !_scope.matches(widget.controller))) {
+      return ProductErrorState(
+        message: productErrorText(_error!),
+        onRetry: _load,
+      );
     }
     if (parent == null || children == null) return const LoadingList(rows: 5);
 
@@ -111,6 +191,17 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
               busy: widget.controller.busySessions.contains(parent.id),
               icon: Icons.chat_bubble_outline_rounded,
               onTap: () => _select(parent),
+              onHandoff: () => showSessionHandoff(
+                context,
+                controller: widget.controller,
+                sessionID: parent.id,
+                projectID: parent.projectID,
+              ),
+              enabled: !_selecting,
+              pinned: widget.controller.isSessionPinned(parent.id),
+              onPin: widget.controller.canPinSessions
+                  ? () => _pin(parent)
+                  : null,
             ),
             const Divider(height: 1, indent: 64),
             SectionLabel(
@@ -142,6 +233,17 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
                   position: index + 1,
                   total: children.length,
                   onTap: () => _select(children[index]),
+                  onHandoff: () => showSessionHandoff(
+                    context,
+                    controller: widget.controller,
+                    sessionID: children[index].id,
+                    projectID: children[index].projectID,
+                  ),
+                  enabled: !_selecting,
+                  pinned: widget.controller.isSessionPinned(children[index].id),
+                  onPin: widget.controller.canPinSessions
+                      ? () => _pin(children[index])
+                      : null,
                 ),
                 if (index < children.length - 1)
                   const Divider(height: 1, indent: 64),
@@ -228,6 +330,10 @@ class _SessionRelationTile extends StatelessWidget {
   final int? position;
   final int? total;
   final VoidCallback onTap;
+  final VoidCallback onHandoff;
+  final bool enabled;
+  final bool pinned;
+  final VoidCallback? onPin;
 
   const _SessionRelationTile({
     required this.session,
@@ -235,6 +341,10 @@ class _SessionRelationTile extends StatelessWidget {
     required this.busy,
     required this.icon,
     required this.onTap,
+    required this.onHandoff,
+    required this.enabled,
+    required this.pinned,
+    this.onPin,
     this.position,
     this.total,
   });
@@ -264,10 +374,32 @@ class _SessionRelationTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: details.isEmpty ? null : Text(details.join(' · ')),
-      trailing: current
-          ? const Icon(Icons.check_circle_rounded)
-          : const Icon(Icons.chevron_right_rounded),
-      onTap: current ? null : onTap,
+      trailing: PopupMenuButton<String>(
+        tooltip: lookupAppLocalizations(
+          Localizations.localeOf(context),
+        ).sessionActions,
+        enabled: enabled,
+        onSelected: (value) {
+          if (value == 'handoff') onHandoff();
+          if (value == 'pin') onPin?.call();
+        },
+        itemBuilder: (_) => [
+          PopupMenuItem(
+            value: 'handoff',
+            child: Text(
+              lookupAppLocalizations(
+                Localizations.localeOf(context),
+              ).sessionCopyHandoff,
+            ),
+          ),
+          if (onPin != null)
+            PopupMenuItem(
+              value: 'pin',
+              child: Text(pinned ? 'Unpin session' : 'Pin session'),
+            ),
+        ],
+      ),
+      onTap: current || !enabled ? null : onTap,
     );
   }
 }

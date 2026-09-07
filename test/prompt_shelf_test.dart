@@ -10,6 +10,7 @@ import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'support/complete_message_history.dart';
+import 'support/stash_memory_vault.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/prompt_shelf.dart';
@@ -49,19 +50,21 @@ class _Api extends OpenCodeApi with CompleteMessageHistory {
 }
 
 class _Controller extends ConnectionController {
-  _Controller(super.store);
+  _Controller(super.store)
+    : super(
+        stashAttachmentVault: StashMemoryVault(),
+        draftAttachmentVault: StashMemoryVault(),
+      );
   @override
-  ServerProfile get profile =>
-      ServerProfile(id: 'a', name: 'A', baseUrl: 'http://localhost');
+  ServerProfile get profile => (store as _HistoryProfiles).saved;
 }
 
 class _HistoryProfiles extends ProfileStore {
   _HistoryProfiles(SharedPreferences prefs) : super(prefs: prefs);
   bool present = true;
+  final saved = ServerProfile(id: 'a', name: 'A', baseUrl: 'http://localhost');
   @override
-  List<ServerProfile> get profiles => present
-      ? [ServerProfile(id: 'a', name: 'A', baseUrl: 'http://localhost')]
-      : [];
+  List<ServerProfile> get profiles => present ? [saved] : [];
 }
 
 const _attachment = PromptAttachment(
@@ -139,7 +142,15 @@ Future<void> _tool(WidgetTester tester, String key) async {
   await tester.ensureVisible(find.byKey(Key(key)));
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(Key(key)));
-  await tester.pumpAndSettle();
+  // Stash ownership keeps the composer busy while its sheet is open. Wait for
+  // the finite transition, not for an intentionally live progress indicator.
+  await _frames(tester);
+}
+
+Future<void> _frames(WidgetTester tester) async {
+  for (var frame = 0; frame < 10; frame++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 }
 
 void main() {
@@ -334,13 +345,10 @@ void main() {
       );
       await _tool(tester, 'composer-tool-saved');
       await tester.tap(find.byKey(const ValueKey('restore-stash-temporary')));
-      await tester.pumpAndSettle();
-      expect(
-        find.textContaining('Temporary attachments: temporary.png'),
-        findsOneWidget,
-      );
+      await _frames(tester);
+      expect(find.textContaining('temporary.png'), findsOneWidget);
       await tester.tap(find.text('Restore available content'));
-      await tester.pumpAndSettle();
+      await _frames(tester);
       expect(
         tester
             .widget<TextField>(find.byKey(const Key('chat-composer-field')))
@@ -349,7 +357,7 @@ void main() {
         'restore available text',
       );
       expect(
-        c.promptStash.single.attachments.single.url,
+        c.promptStash.single.attachmentRefs.single.url,
         'content://keyboard/temporary',
       );
       await tester.pumpWidget(const SizedBox());
@@ -387,20 +395,31 @@ void main() {
           });
         }
         await tester.ensureVisible(find.byKey(ValueKey('restore-stash-$id')));
-        await tester.pumpAndSettle();
+        await _frames(tester);
         expect(
           find.byKey(ValueKey('restore-stash-$id')).hitTestable(),
           findsOneWidget,
         );
         await tester.tap(find.byKey(ValueKey('restore-stash-$id')));
-        await tester.pumpAndSettle();
+        await _frames(tester);
         await tester.tap(find.text('Restore').last);
-        await tester.pumpAndSettle();
+        await _frames(tester);
         expect(
           tester.widget<TextField>(fieldFinder).controller!.text,
           'save this',
         );
-        expect(c.promptStash.single.text, 'keep current');
+        expect(
+          c.promptStash.map((prompt) => prompt.text),
+          containsAll(['keep current', 'save this']),
+        );
+        expect(
+          c.promptStash
+              .firstWhere((prompt) => prompt.id == id)
+              .references
+              .single
+              .toPromptText(),
+          _reference.toPromptText(),
+        );
         expect(
           handoff.referencesFor('s').single.toPromptText(),
           _reference.toPromptText(),

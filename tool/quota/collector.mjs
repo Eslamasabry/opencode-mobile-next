@@ -10,7 +10,6 @@ import { pathToFileURL } from 'node:url';
 export const QUOTA_PATH = '/ocmn/quota/v1';
 export const CLAUDE_QUOTA_PATH = '/ocmn/quota/v1/claude';
 export const WHAM_URL = 'https://chatgpt.com/backend-api/wham/usage';
-export const CLAUDE_USAGE_URL = 'https://api.anthropic.com/api/oauth/usage';
 export const MAX_BYTES = 64 * 1024;
 export const PROVIDER_TIMEOUT_MS = 10_000;
 export const CACHE_MS = 60_000;
@@ -181,6 +180,7 @@ export function createFileAuthSource({ filePath, format = 'codex', readFile = re
   };
 }
 
+// Historical schema research only; no live Claude auth-source adapter is wired.
 export function parseClaudeAuthDocument(document, { format = 'claude', nowMs = Date.now() } = {}) {
   if (!['claude', 'opencode'].includes(format)) return { status: 'unsupported' };
   if (!object(document)) return { status: 'authRequired' };
@@ -194,31 +194,8 @@ export function parseClaudeAuthDocument(document, { format = 'claude', nowMs = D
   return { status: 'ok', accessToken: token, expiresAtMs: expiresAtMs ?? null };
 }
 
-export function createClaudeFileAuthSource({ filePath, format = 'claude', readFile = readBoundedFile,
-  clock = Date.now } = {}) {
-  return async () => {
-    if (!filePath) return { status: 'unconfigured' };
-    try {
-      return parseClaudeAuthDocument(JSON.parse(decodeBytes(await readFile(filePath))), {
-        format, nowMs: clock(),
-      });
-    } catch { return { status: 'authRequired' }; }
-  };
-}
-
-function normalizeAuth(auth, now, provider = 'codex') {
+function normalizeAuth(auth, now) {
   if (object(auth) && AUTH_STATUSES.has(auth.status)) return { status: auth.status };
-  if (provider === 'claude') {
-    if (!object(auth) || auth.status !== 'ok' || !accessToken(auth.accessToken)
-      || (auth.expiresAtMs != null && (!timestamp(auth.expiresAtMs) || auth.expiresAtMs <= now))) {
-      return { status: 'authRequired' };
-    }
-    // Claude usage does not identify the account. Scope cache/results to this
-    // exact configured credential, not a guessed email/account identifier.
-    return { status: 'ok', accessToken: auth.accessToken,
-      accountId: createHash('sha256').update(auth.accessToken).digest('hex'),
-      userId: null, expiresAtMs: auth.expiresAtMs ?? null };
-  }
   if (!object(auth) || auth.status !== 'ok' || !accessToken(auth.accessToken)
     || !identifier(auth.accountId) || (auth.userId != null && !identifier(auth.userId))
     || (auth.expiresAtMs != null && (!timestamp(auth.expiresAtMs) || auth.expiresAtMs <= now))) {
@@ -303,7 +280,8 @@ function claudeWindow(value, id, field, durationSeconds) {
     ...(value.resets_at == null ? {} : { resetsAtMs: isoReset(value.resets_at) }) };
 }
 
-function mapClaude(payload, ref, now) {
+// Retained as a pure research mapper. Normal collection below is disabled.
+export function mapClaudeUsage(payload, ref, now) {
   if (!object(payload) || !['limits', 'five_hour', 'seven_day'].some((key) => Object.hasOwn(payload, key))) invalid();
   let windows;
   if (payload.limits != null) {
@@ -363,7 +341,6 @@ export function createCollector({ readToken, authSource = async () => ({ status:
   fetchImpl = globalThis.fetch, clock = Date.now, timeoutMs = PROVIDER_TIMEOUT_MS, provider = 'codex' } = {}) {
   validateReadToken(readToken);
   if (!['codex', 'claude'].includes(provider)) throw new ConfigurationError('QUOTA_PROVIDER_INVALID');
-  const providerUrl = provider === 'claude' ? CLAUDE_USAGE_URL : WHAM_URL;
   const empty = (status, time, account) => emptySnapshot(status, time, account, provider);
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > PROVIDER_TIMEOUT_MS) {
     throw new ConfigurationError('QUOTA_TIMEOUT_INVALID');
@@ -375,6 +352,12 @@ export function createCollector({ readToken, authSource = async () => ({ status:
     }
     return value;
   };
+  if (provider === 'claude') {
+    // An undocumented usage endpoint and readable OAuth file do not establish
+    // a supported/permitted third-party subscription integration. Do not even
+    // invoke authSource; no credential read or provider request is permitted.
+    return { async readSnapshot() { return empty('unsupported', now()); } };
+  }
   const hmac = (text) => createHmac('sha256', readToken).update(text).digest('hex');
   let generation = 0, activeKey = null, cache = null, flight = null;
   let authQueue = Promise.resolve();
@@ -384,7 +367,7 @@ export function createCollector({ readToken, authSource = async () => ({ status:
   function selectAuth() {
     const selection = authQueue.then(async () => {
       let auth;
-      try { auth = normalizeAuth(await authSource(), now(), provider); }
+      try { auth = normalizeAuth(await authSource(), now()); }
       catch { auth = { status: 'authRequired' }; }
       const key = auth.status === 'ok'
         ? hmac(JSON.stringify([auth.accountId, auth.userId, auth.accessToken, auth.expiresAtMs])) : null;
@@ -402,7 +385,7 @@ export function createCollector({ readToken, authSource = async () => ({ status:
   }
 
   async function collect(auth, controller) {
-    const ref = hmac(provider === 'claude' ? `claude:${auth.accountId}` : auth.accountId);
+    const ref = hmac(auth.accountId);
     let timer;
     const aborted = new Promise((_, reject) => {
       const fail = () => reject(new ProviderFailure('unavailable'));
@@ -410,13 +393,13 @@ export function createCollector({ readToken, authSource = async () => ({ status:
       timer = setTimeout(() => controller.abort(), timeoutMs);
     });
     const request = async () => {
-      const response = await fetchImpl(providerUrl, { method: 'GET', redirect: 'error', credentials: 'omit',
+      const response = await fetchImpl(WHAM_URL, { method: 'GET', redirect: 'error', credentials: 'omit',
         signal: controller.signal, headers: { Authorization: `Bearer ${auth.accessToken}`,
-          ...(provider === 'codex' ? { 'ChatGPT-Account-Id': auth.accountId } : {}),
+          'ChatGPT-Account-Id': auth.accountId,
           Accept: 'application/json', 'User-Agent': 'ocmn-quota/1' } });
       try {
         if (controller.signal.aborted) throw new ProviderFailure('unavailable');
-        if (response.redirected || (response.url && response.url !== providerUrl)) invalid();
+        if (response.redirected || (response.url && response.url !== WHAM_URL)) invalid();
         if (response.status !== 200) {
           const status = response.status === 401 ? 'authRequired'
             : response.status === 429 ? 'rateLimited'
@@ -425,7 +408,7 @@ export function createCollector({ readToken, authSource = async () => ({ status:
           throw new ProviderFailure(status);
         }
         const payload = await readProviderBody(response, controller.signal);
-        return provider === 'claude' ? mapClaude(payload, ref, now()) : mapWham(payload, auth, ref, now());
+        return mapWham(payload, auth, ref, now());
       } finally {
         // Also cancel unread bodies rejected by status, URL or size headers.
         // Never wait on an uncooperative peer's cancellation promise.
@@ -458,7 +441,7 @@ export function createCollector({ readToken, authSource = async () => ({ status:
         const snapshot = await collect(selected.auth, pending.controller);
         await selectAuth();
         if (pending.generation !== generation) return empty('unavailable', now());
-        if (snapshot.status === 'ok' && ['matched', 'sourceBound'].includes(snapshot.account.status)
+        if (snapshot.status === 'ok' && snapshot.account.status === 'matched'
           && snapshot.freshness === 'fresh') cache = snapshot;
         return snapshot;
       })().finally(() => { if (flight === pending) flight = null; });
@@ -498,6 +481,10 @@ export function createRequestHandler({ readToken, collector, claudeCollector }) 
 }
 
 export async function loadConfiguration(env, { readFile = readBoundedFile } = {}) {
+  // Retired options must not disable a valid Codex deployment, be retained in
+  // config, or become file reads. The CLI emits only a fixed deprecation code.
+  const ignoredClaudeConfiguration = env.OCMN_CLAUDE_AUTH_FILE != null
+    || env.OCMN_CLAUDE_AUTH_FORMAT != null;
   const port = env.OCMN_QUOTA_PORT ?? '4195';
   if (!/^\d{4,5}$/.test(port) || Number(port) < 1024 || Number(port) > 65535) {
     throw new ConfigurationError('QUOTA_PORT_INVALID');
@@ -509,25 +496,19 @@ export async function loadConfiguration(env, { readFile = readBoundedFile } = {}
     throw new ConfigurationError('QUOTA_AUTH_FILE_INVALID');
   }
   const tokenPath = env.OCMN_QUOTA_READ_TOKEN_FILE;
-  const claudeFormat = env.OCMN_CLAUDE_AUTH_FORMAT ?? 'claude';
-  const claudeFilePath = env.OCMN_CLAUDE_AUTH_FILE;
-  if (!['claude', 'opencode'].includes(claudeFormat)) throw new ConfigurationError('QUOTA_AUTH_FORMAT_INVALID');
-  if (claudeFilePath != null && (!claudeFilePath || !isAbsolute(claudeFilePath))) {
-    throw new ConfigurationError('QUOTA_AUTH_FILE_INVALID');
-  }
   if (!tokenPath) throw new ConfigurationError('QUOTA_READ_TOKEN_FILE_REQUIRED');
   if (!isAbsolute(tokenPath)) throw new ConfigurationError('QUOTA_READ_TOKEN_FILE_INVALID');
-  return { host: '127.0.0.1', port: Number(port), format, filePath, claudeFormat, claudeFilePath,
+  return { host: '127.0.0.1', port: Number(port), format, filePath, ignoredClaudeConfiguration,
     readToken: await loadReadToken(tokenPath, { readFile }) };
 }
 
 async function main() {
   if (process.argv.length !== 2) throw new ConfigurationError('QUOTA_ARGUMENTS_UNSUPPORTED');
   const config = await loadConfiguration(process.env);
+  if (config.ignoredClaudeConfiguration) process.stderr.write('QUOTA_CLAUDE_COLLECTION_UNAVAILABLE\n');
   const collector = createCollector({ readToken: config.readToken,
     authSource: createFileAuthSource(config) });
-  const claudeCollector = createCollector({ readToken: config.readToken, provider: 'claude',
-    authSource: createClaudeFileAuthSource({ filePath: config.claudeFilePath, format: config.claudeFormat }) });
+  const claudeCollector = createCollector({ readToken: config.readToken, provider: 'claude' });
   const server = createServer({ maxHeaderSize: 8192, requestTimeout: 10_000,
     headersTimeout: 5000, keepAliveTimeout: 1000 }, createRequestHandler({ ...config, collector, claudeCollector }));
   server.maxRequestsPerSocket = 100;

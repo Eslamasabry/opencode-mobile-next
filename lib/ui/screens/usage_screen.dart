@@ -144,6 +144,7 @@ class _UsageScreenState extends State<UsageScreen> {
                       LinearProgressIndicator(
                         semanticsLabel: l10n.usageLoading,
                       ),
+                      if (snapshot != null) Text(l10n.usagePreviousResult),
                       const SizedBox(height: 12),
                     ],
                     if (_overview.detached) Text(l10n.usageLocationChanged),
@@ -167,7 +168,8 @@ class _UsageScreenState extends State<UsageScreen> {
                         ),
                       const SizedBox(height: 12),
                     ],
-                    if (snapshot != null) _UsageReport(snapshot: snapshot),
+                    if (snapshot != null)
+                      _UsageReport(snapshot: snapshot, overview: _overview),
                   ],
                 ),
               ),
@@ -192,7 +194,8 @@ String _money(BuildContext context, double value) {
 
 class _UsageReport extends StatelessWidget {
   final UsageSnapshot snapshot;
-  const _UsageReport({required this.snapshot});
+  final UsageOverview overview;
+  const _UsageReport({required this.snapshot, required this.overview});
 
   @override
   Widget build(BuildContext context) {
@@ -205,6 +208,23 @@ class _UsageReport extends StatelessWidget {
     final time = DateFormat.Hm(locale);
     final tools = stats.tools;
     final providers = stats.providers;
+    final models = overview.matchingModels;
+    final matchingProviderIDs = models.map((model) => model.providerID).toSet();
+    final subtotal = models.fold<double>(0, (sum, model) => sum + model.cost);
+    // BigInt avoids overflowing aggregate record counts on native platforms.
+    final matchingSteps = models.fold<BigInt>(
+      BigInt.zero,
+      (sum, model) => sum + BigInt.from(model.steps),
+    );
+    final matchingTokens = models.fold<BigInt>(BigInt.zero, (sum, model) {
+      final tokens = model.tokens;
+      return sum +
+          BigInt.from(tokens.input) +
+          BigInt.from(tokens.output) +
+          BigInt.from(tokens.reasoning) +
+          BigInt.from(tokens.cacheRead) +
+          BigInt.from(tokens.cacheWrite);
+    });
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -227,6 +247,8 @@ class _UsageReport extends StatelessWidget {
           style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 16),
+        Text(l10n.usageScopedTotals, style: theme.textTheme.titleMedium),
+        const SizedBox(height: 8),
         Card(
           margin: EdgeInsets.zero,
           child: Padding(
@@ -278,45 +300,117 @@ class _UsageReport extends StatelessWidget {
         Text(l10n.usageProviders, style: theme.textTheme.titleLarge),
         const SizedBox(height: 8),
         Text(l10n.usageProviderScope, style: theme.textTheme.bodySmall),
+        const SizedBox(height: 8),
+        Text(l10n.usageInspectionDisclosure, style: theme.textTheme.bodySmall),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          key: ValueKey((overview.filterRevision, overview.providerFilter)),
+          initialValue: overview.providerFilter ?? '',
+          isExpanded: true,
+          decoration: InputDecoration(
+            labelText: l10n.usageProviderFilter,
+            border: const OutlineInputBorder(),
+          ),
+          items: [
+            DropdownMenuItem(value: '', child: Text(l10n.usageAllProviders)),
+            for (final id in {
+              ...providers.map((provider) => provider.providerID),
+              if (overview.providerFilter != null) overview.providerFilter!,
+            }.toList()..sort())
+              DropdownMenuItem(
+                value: id,
+                child: Text(id, overflow: TextOverflow.ellipsis),
+              ),
+          ],
+          onChanged: (value) =>
+              overview.setProviderFilter(value == '' ? null : value),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          key: ValueKey('usage-search-${overview.filterRevision}'),
+          initialValue: overview.modelSearch,
+          decoration: InputDecoration(
+            labelText: l10n.usageSearchRecords,
+            prefixIcon: const Icon(Icons.search),
+            border: const OutlineInputBorder(),
+          ),
+          onChanged: overview.setModelSearch,
+        ),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton.icon(
+            onPressed: overview.hasInspectionFilters
+                ? overview.clearInspectionFilters
+                : null,
+            icon: const Icon(Icons.filter_alt_off_outlined),
+            label: Text(l10n.usageClearFilters),
+          ),
+        ),
+        Text(l10n.usageScopedProviderTotals, style: theme.textTheme.bodySmall),
         const SizedBox(height: 12),
         if (providers.isEmpty) Text(l10n.usageNoModels),
         for (final provider in providers)
-          Card(
-            key: ValueKey('usage-provider-${provider.providerID}'),
-            margin: const EdgeInsets.only(bottom: 10),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(provider.providerID, style: theme.textTheme.titleMedium),
-                  Text(l10n.usageProviderModelCount(provider.modelCount)),
-                  const SizedBox(height: 8),
-                  Text(
-                    provider.cost == null
-                        ? l10n.usageProviderCostUnavailable
-                        : _money(context, provider.cost!),
-                    style: theme.textTheme.titleLarge,
-                  ),
-                  if (provider.cost != null &&
-                      stats.cost > 0 &&
-                      provider.cost! <= stats.cost)
+          if (matchingProviderIDs.contains(provider.providerID))
+            Card(
+              key: ValueKey('usage-provider-${provider.providerID}'),
+              margin: const EdgeInsets.only(bottom: 10),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                     Text(
-                      l10n.usageProviderCostShare(
-                        NumberFormat.percentPattern(
-                          locale,
-                        ).format(provider.cost! / stats.cost),
-                      ),
+                      provider.providerID,
+                      style: theme.textTheme.titleMedium,
                     ),
-                ],
+                    Text(l10n.usageProviderModelCount(provider.modelCount)),
+                    const SizedBox(height: 8),
+                    Text(
+                      provider.cost == null
+                          ? l10n.usageProviderCostUnavailable
+                          : _money(context, provider.cost!),
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    if (provider.cost != null &&
+                        stats.cost > 0 &&
+                        provider.cost! <= stats.cost)
+                      Text(
+                        l10n.usageProviderCostShare(
+                          NumberFormat.percentPattern(
+                            locale,
+                          ).format(provider.cost! / stats.cost),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
         const SizedBox(height: 24),
         Text(l10n.usageModels, style: theme.textTheme.titleLarge),
         const SizedBox(height: 12),
-        if (stats.models.isEmpty) Text(l10n.usageNoModels),
-        for (final model in stats.models)
+        Text(l10n.usageMatchingSubtotal, style: theme.textTheme.titleMedium),
+        Text(l10n.usageMatchingRecords(number.format(models.length))),
+        Wrap(
+          spacing: 16,
+          runSpacing: 8,
+          children: [
+            Text(
+              subtotal.isFinite
+                  ? _money(context, subtotal)
+                  : l10n.usageProviderCostUnavailable,
+            ),
+            Text(l10n.usageModelSteps(matchingSteps.toString())),
+            Text(l10n.usageModelTokens(matchingTokens.toString())),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (models.isEmpty)
+          Text(
+            overview.hasInspectionFilters
+                ? l10n.usageNoMatchingRecords
+                : l10n.usageNoModels,
+          ),
+        for (final model in models)
           Card(
             margin: const EdgeInsets.only(bottom: 10),
             child: Padding(

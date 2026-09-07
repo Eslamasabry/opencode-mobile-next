@@ -239,29 +239,23 @@ void main() {
       old.result.complete(h.response());
       await pending;
       expect(h.overview.snapshot, isNull);
-      final next = h.overview.allowAndRefresh();
-      h.gateways.last.result.complete(
-        ProviderQuotaSnapshot.fromJson(
-          providerQuotaFixture(
-            provider: QuotaProvider.claude,
-            fetchedAtMs: _now.millisecondsSinceEpoch,
-          ),
-        ),
-      );
-      await next;
-      expect(h.overview.snapshot!.provider, QuotaProvider.claude);
-      expect(
-        h.overview.snapshot!.account.status,
-        QuotaAccountStatus.sourceBound,
-      );
+      await h.overview.allowAndRefresh();
+      expect(h.overview.providerSupported, isFalse);
+      expect(h.overview.consented, isFalse);
+      expect(h.overview.snapshot, isNull);
+      expect(h.gateways.length, count);
+      expect(h.overview.failure!.kind, QuotaFailureKind.unsupported);
     },
   );
 
   test('a gateway response cannot impersonate the selected provider', () async {
     final h = await harness();
-    h.overview.selectProvider(QuotaProvider.claude);
     final pending = h.overview.allowAndRefresh();
-    h.gateways.last.result.complete(h.response());
+    h.gateways.last.result.complete(
+      ProviderQuotaSnapshot.fromJson(
+        providerQuotaFixture(provider: QuotaProvider.claude),
+      ),
+    );
     await pending;
     expect(h.overview.snapshot, isNull);
     expect(h.overview.failure!.kind, QuotaFailureKind.invalidResponse);

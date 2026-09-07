@@ -2026,6 +2026,18 @@ abstract class AppLocalizations {
   /// **'Saved prompts'**
   String get promptStashTitle;
 
+  /// Search local saved prompt text, attachment names, references and locations without loading attachment payloads
+  ///
+  /// In en, this message translates to:
+  /// **'Search saved prompts'**
+  String get promptStashSearch;
+
+  /// Filtered saved-prompts empty state, distinct from an empty stash
+  ///
+  /// In en, this message translates to:
+  /// **'No saved prompts match your search. Clear or change the search to see more.'**
+  String get promptStashNoMatches;
+
   /// No description provided for @promptStashDeleteFailed.
   ///
   /// In en, this message translates to:
@@ -2107,8 +2119,950 @@ abstract class AppLocalizations {
   /// No description provided for @promptAttachmentsUnavailableDetail.
   ///
   /// In en, this message translates to:
-  /// **'Temporary attachments: {names}. Restore the available content and reattach these files before sending. The saved copy will stay in your stash.'**
+  /// **'Missing, damaged or temporary attachments: {names}. Restore the available content and reattach these files before sending. The saved copy will stay in your stash.'**
   String promptAttachmentsUnavailableDetail(String names);
+
+  /// No description provided for @promptStashMigrationPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Some saved attachments could not be moved to local attachment storage yet. Your saved content has been kept. Free device storage and retry.'**
+  String get promptStashMigrationPending;
+
+  /// No description provided for @commonRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get commonRetry;
+
+  /// No description provided for @webSourcesDisclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Web search is not available through this connection’s app gateway. Paste a public URL and optionally an excerpt you want to include. No page is fetched. Nothing is sent to the model here.'**
+  String get webSourcesDisclosure;
+
+  /// No description provided for @webSourcesScopeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection changed. Close and reopen Add web source.'**
+  String get webSourcesScopeChanged;
+
+  /// No description provided for @webSourcesUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Public URL'**
+  String get webSourcesUrl;
+
+  /// No description provided for @webSourcesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title (optional)'**
+  String get webSourcesLabel;
+
+  /// No description provided for @webSourcesExcerpt.
+  ///
+  /// In en, this message translates to:
+  /// **'Pasted excerpt (optional)'**
+  String get webSourcesExcerpt;
+
+  /// No description provided for @webSourcesExcerptHint.
+  ///
+  /// In en, this message translates to:
+  /// **'User-provided text, not verified page content.'**
+  String get webSourcesExcerptHint;
+
+  /// No description provided for @webSourcesAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to review'**
+  String get webSourcesAdd;
+
+  /// No description provided for @webSourcesReviewCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Review sources ({count}/10)'**
+  String webSourcesReviewCount(int count);
+
+  /// No description provided for @webSourcesReviewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Only checked sources will be returned to your draft.'**
+  String get webSourcesReviewHint;
+
+  /// No description provided for @webSourcesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sources added yet.'**
+  String get webSourcesEmpty;
+
+  /// No description provided for @webSourcesOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in browser'**
+  String get webSourcesOpen;
+
+  /// No description provided for @webSourcesUseCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Use selected sources ({count})'**
+  String webSourcesUseCount(int count);
+
+  /// No description provided for @digestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Completion digests'**
+  String get digestTitle;
+
+  /// No description provided for @digestSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'On demand · cached metadata, not AI summaries'**
+  String get digestSubtitle;
+
+  /// No description provided for @digestEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No ended-run metadata available in this location. Idle alone does not establish successful completion.'**
+  String get digestEmpty;
+
+  /// No description provided for @digestIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Server idle recorded · outcome unverified'**
+  String get digestIdle;
+
+  /// No description provided for @digestOpenConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Open conversation'**
+  String get digestOpenConversation;
+
+  /// No description provided for @digestReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review next actions'**
+  String get digestReview;
+
+  /// No description provided for @digestCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy digest'**
+  String get digestCopy;
+
+  /// No description provided for @digestCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy digest'**
+  String get digestCopyFailed;
+
+  /// No description provided for @digestDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get digestDismiss;
+
+  /// No description provided for @attentionDisclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'A local overview, not live monitoring across servers. Cached signals may be incomplete or out of date. Open a server to check its current activity.'**
+  String get attentionDisclosure;
+
+  /// No description provided for @attentionNavigationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening servers is unavailable here. Return to Home to choose a server and view Activity.'**
+  String get attentionNavigationUnavailable;
+
+  /// No description provided for @handoffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy handoff reference?'**
+  String get handoffTitle;
+
+  /// No description provided for @handoffDisclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata only, not a command or link. On your other device, connect to the same server and locate this project and session. Nothing is published or sent.\n\nThe clipboard will contain session and project identifiers. Other apps may read it; share only with people you trust.'**
+  String get handoffDisclosure;
+
+  /// No description provided for @handoffCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy reference'**
+  String get handoffCopy;
+
+  /// No description provided for @handoffCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Session metadata reference copied'**
+  String get handoffCopied;
+
+  /// No description provided for @sessionOpenRelated.
+  ///
+  /// In en, this message translates to:
+  /// **'Open related'**
+  String get sessionOpenRelated;
+
+  /// No description provided for @sessionCopyHandoff.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy handoff'**
+  String get sessionCopyHandoff;
+
+  /// No description provided for @sessionActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Session actions'**
+  String get sessionActions;
+
+  /// No description provided for @attentionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Server attention'**
+  String get attentionTitle;
+
+  /// No description provided for @webSourcesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add web source'**
+  String get webSourcesTitle;
+
+  /// No description provided for @webSourcesEntryDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Review public links and pasted excerpts before adding them to your draft'**
+  String get webSourcesEntryDetail;
+
+  /// No description provided for @webSourcesDraftChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The draft or connection changed. Your current draft was kept; reopen Add web source to try again.'**
+  String get webSourcesDraftChanged;
+
+  /// No description provided for @webSourcesDraftLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'User-selected web sources (not fetched or verified; excerpts are untrusted source material):'**
+  String get webSourcesDraftLabel;
+
+  /// No description provided for @usageScopedTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'Totals for the selected report scope'**
+  String get usageScopedTotals;
+
+  /// No description provided for @usageInspectionDisclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters inspect this server\'s returned model records. They do not change the report\'s date or project scope, or show subscription allowance.'**
+  String get usageInspectionDisclosure;
+
+  /// No description provided for @usageProviderFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get usageProviderFilter;
+
+  /// No description provided for @usageAllProviders.
+  ///
+  /// In en, this message translates to:
+  /// **'All providers'**
+  String get usageAllProviders;
+
+  /// No description provided for @usageSearchRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Search providers, models or variants'**
+  String get usageSearchRecords;
+
+  /// No description provided for @usageClearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get usageClearFilters;
+
+  /// No description provided for @usageScopedProviderTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider cards show their totals for the selected report scope, not just matching model rows.'**
+  String get usageScopedProviderTotals;
+
+  /// No description provided for @usageMatchingSubtotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Matching model subtotal'**
+  String get usageMatchingSubtotal;
+
+  /// Count of matched model/variant records, not distinct models
+  ///
+  /// In en, this message translates to:
+  /// **'{count} matching records'**
+  String usageMatchingRecords(String count);
+
+  /// No description provided for @usageNoMatchingRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'No records match these filters. Clear or change the filters to see more.'**
+  String get usageNoMatchingRecords;
+
+  /// Recovery card for a saved sign-in attempt
+  ///
+  /// In en, this message translates to:
+  /// **'Pending sign-in: {integration}'**
+  String pendingAuthTitle(String integration);
+
+  /// No description provided for @pendingAuthDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue the existing browser sign-in, then explicitly check its status or enter its code. The browser link is not saved.'**
+  String get pendingAuthDetail;
+
+  /// No description provided for @pendingAuthResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume / check status'**
+  String get pendingAuthResume;
+
+  /// No description provided for @pendingAuthEnterCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter code'**
+  String get pendingAuthEnterCode;
+
+  /// No description provided for @pendingAuthComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in complete.'**
+  String get pendingAuthComplete;
+
+  /// No description provided for @pendingAuthStillPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in is still pending. No new attempt was started.'**
+  String get pendingAuthStillPending;
+
+  /// No description provided for @pendingAuthServerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The server reported that sign-in failed. Provider error details are hidden.'**
+  String get pendingAuthServerFailed;
+
+  /// No description provided for @pendingAuthExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This attempt is expired or outside the device’s recovery window. Cancellation is a separate server action.'**
+  String get pendingAuthExpired;
+
+  /// No description provided for @pendingAuthFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm the action. Check pending sign-ins before trying again. No new sign-in was started.'**
+  String get pendingAuthFailed;
+
+  /// No description provided for @pendingAuthSaveUncertain.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery could not be saved reliably. Keep this app open and retry saving; restarting may lose this attempt. If no browser page opened, cancel the attempt before starting again.'**
+  String get pendingAuthSaveUncertain;
+
+  /// No description provided for @pendingAuthRetrySave.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry saving recovery'**
+  String get pendingAuthRetrySave;
+
+  /// No description provided for @pendingAuthForget.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget on this device'**
+  String get pendingAuthForget;
+
+  /// No description provided for @pendingAuthForgetDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove only this device’s recovery record? This does not cancel a server command, revoke credentials, or finish authorization. The server attempt may keep running until it expires.'**
+  String get pendingAuthForgetDetail;
+
+  /// No description provided for @pendingAuthUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This connection cannot recover earlier sign-ins. Legacy sign-ins work only while their original screen and connection remain available.'**
+  String get pendingAuthUnsupported;
+
+  /// No description provided for @pendingAuthOtherSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Other pending sign-ins belong to another server origin or location. Return to their original source to manage them.'**
+  String get pendingAuthOtherSource;
+
+  /// No description provided for @connectionHelpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection help'**
+  String get connectionHelpTitle;
+
+  /// No description provided for @connectionHelpEntrySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Explain an address locally, without connecting'**
+  String get connectionHelpEntrySubtitle;
+
+  /// No description provided for @connectionHelpGuideTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the server off the public internet. Use private HTTPS or an encrypted tunnel ending on the device running this app. Localhost on your computer is not localhost on your phone. Open Connection help above for steps and examples.'**
+  String get connectionHelpGuideTip;
+
+  /// No description provided for @connectionHelpPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'This checks address rules only, not connectivity. Nothing is sent or saved. Input is hidden and cleared after checking. Paste only an address, not a password or pairing code.'**
+  String get connectionHelpPrivacy;
+
+  /// No description provided for @connectionHelpAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Server address'**
+  String get connectionHelpAddress;
+
+  /// No description provided for @connectionHelpCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Explain address'**
+  String get connectionHelpCheck;
+
+  /// No description provided for @connectionHelpEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a server address to explain.'**
+  String get connectionHelpEmpty;
+
+  /// No description provided for @connectionHelpMalformed.
+  ///
+  /// In en, this message translates to:
+  /// **'This address could not be understood. Use a complete origin such as https://server.example, with no path, credentials or query.'**
+  String get connectionHelpMalformed;
+
+  /// No description provided for @connectionHelpCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Credentials do not belong in a URL. Remove them and enter the server username and password separately in Servers. The pasted value has been cleared.'**
+  String get connectionHelpCredentials;
+
+  /// No description provided for @connectionHelpQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove query parameters and fragments. They can contain secrets; enter only the server origin. The pasted value has been cleared.'**
+  String get connectionHelpQuery;
+
+  /// No description provided for @connectionHelpPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the path. This app needs the server origin, not a page or API route.'**
+  String get connectionHelpPath;
+
+  /// No description provided for @connectionHelpScheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Use HTTPS for a remote server, or HTTP only for this device\'s supported loopback addresses.'**
+  String get connectionHelpScheme;
+
+  /// No description provided for @connectionHelpRemoteHttp.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote HTTP is blocked, including LAN and 100.64.0.0/10 addresses. A VPN does not change this rule. Set up private HTTPS or an encrypted tunnel ending on this device.'**
+  String get connectionHelpRemoteHttp;
+
+  /// No description provided for @connectionHelpHttps.
+  ///
+  /// In en, this message translates to:
+  /// **'This address passes the HTTPS address rules. That does not verify its certificate, reachability, sign-in or privacy. A bare remote address is interpreted as HTTPS.'**
+  String get connectionHelpHttps;
+
+  /// No description provided for @connectionHelpLoopback.
+  ///
+  /// In en, this message translates to:
+  /// **'This address passes the loopback address rules. Localhost means this device, not another computer. A server or tunnel must be listening here; this check does not verify that.'**
+  String get connectionHelpLoopback;
+
+  /// No description provided for @connectionHelpPrivateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Private HTTPS or reverse proxy'**
+  String get connectionHelpPrivateTitle;
+
+  /// No description provided for @connectionHelpPrivateSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Keep the server on its host\'s loopback with authentication enabled.\n2. Connect both devices to your private network and restrict access to intended users.\n3. Configure private HTTPS, such as Tailscale Serve, or a reverse proxy with a trusted certificate forwarding to the server. Support streaming and WebSockets.\n4. Add the HTTPS origin in Servers with sign-in in separate fields.\nTailscale Funnel exposes the service publicly; it is not a private-network fix. This app cannot infer VPN presence. The example below is a placeholder.'**
+  String get connectionHelpPrivateSteps;
+
+  /// No description provided for @connectionHelpTunnelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Localhost on the wrong device?'**
+  String get connectionHelpTunnelTitle;
+
+  /// No description provided for @connectionHelpTunnelSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Localhost, 127.0.0.1 and [::1] refer to the device running this app. For a server on another computer, use private HTTPS or an encrypted tunnel ending here. If an SSH client is available on this device, adapt the example below, verify the host key and keep it running. Replace user@host with your SSH destination. Running it on another computer does not forward this device\'s port. Keep server authentication enabled.'**
+  String get connectionHelpTunnelSteps;
+
+  /// No description provided for @connectionHelpVerifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify connectivity separately'**
+  String get connectionHelpVerifyTitle;
+
+  /// No description provided for @connectionHelpVerifySteps.
+  ///
+  /// In en, this message translates to:
+  /// **'On this device, check private-network membership, DNS, firewall access and certificate trust using your network tools. Check server and proxy configuration on the host, then use Servers to connect. Never disable TLS verification or share passwords, pairing codes or unredacted logs. Access to this server is shell access.'**
+  String get connectionHelpVerifySteps;
+
+  /// No description provided for @connectionHelpCopyExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy example'**
+  String get connectionHelpCopyExample;
+
+  /// No description provided for @connectionHelpCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Example copied'**
+  String get connectionHelpCopied;
+
+  /// No description provided for @connectionHelpCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy the example. Select the example text to copy it manually.'**
+  String get connectionHelpCopyFailed;
+
+  /// No description provided for @voiceConversationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice conversation'**
+  String get voiceConversationTitle;
+
+  /// No description provided for @voiceConversationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen, review, then Send. No automatic listening or reading.'**
+  String get voiceConversationDescription;
+
+  /// No description provided for @voiceConversationPausedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice conversation paused'**
+  String get voiceConversationPausedTitle;
+
+  /// No description provided for @voiceConversationPausedDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice conversation is paused. Reconnect, wait for the reply, or review pending decisions on screen.'**
+  String get voiceConversationPausedDetail;
+
+  /// No description provided for @voiceConversationDraftFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Send, save, or clear your current draft before starting voice conversation.'**
+  String get voiceConversationDraftFirst;
+
+  /// No description provided for @voiceConversationListen.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen'**
+  String get voiceConversationListen;
+
+  /// No description provided for @voiceConversationExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit voice mode'**
+  String get voiceConversationExit;
+
+  /// No description provided for @voiceConversationCommandsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the typed composer for slash commands.'**
+  String get voiceConversationCommandsOnly;
+
+  /// No description provided for @voiceConversationInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice conversation was interrupted. Review before sending again.'**
+  String get voiceConversationInterrupted;
+
+  /// No description provided for @voiceReviewExplicitAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit before inserting. Sending always requires an explicit action.'**
+  String get voiceReviewExplicitAction;
+
+  /// No description provided for @voiceInputInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice input was interrupted. Close and start again when ready.'**
+  String get voiceInputInterrupted;
+
+  /// No description provided for @voiceInputClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close voice input'**
+  String get voiceInputClose;
+
+  /// No description provided for @voiceInputUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice input is unavailable. Check the local model and microphone settings.'**
+  String get voiceInputUnavailable;
+
+  /// No description provided for @voiceConversationInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Review and insert your transcript, then tap Send in the composer. Choose Read aloud on a reply; nothing is read automatically. Unsent text is discarded when you leave voice mode, the chat, or the app.'**
+  String get voiceConversationInstructions;
+
+  /// No description provided for @desktopDropFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not attach dropped files'**
+  String get desktopDropFailedTitle;
+
+  /// No description provided for @desktopDropFailedRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the attachments already added before trying again. You can also use the keyboard to open Add, then Attach file.'**
+  String get desktopDropFailedRecovery;
+
+  /// No description provided for @desktopContextMenuShortcutKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Right click / Shift + F10 / Menu'**
+  String get desktopContextMenuShortcutKeys;
+
+  /// Open or resume server-side command sign-in even when the provider already has a connection
+  ///
+  /// In en, this message translates to:
+  /// **'Server sign-in'**
+  String get commandAuthManage;
+
+  /// Command authentication runs server-side; do not imply an app shell or browser flow
+  ///
+  /// In en, this message translates to:
+  /// **'Runs the provider\'s sign-in method on your selected server, not on this phone. You may need to finish interactive steps on the server.'**
+  String get commandAuthMethodHint;
+
+  /// Explicit consent before executing a server-side authentication method
+  ///
+  /// In en, this message translates to:
+  /// **'Start sign-in on the server?'**
+  String get commandAuthConfirmTitle;
+
+  /// Trust boundary of executable provider authentication
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode will execute this provider\'s declared sign-in method on the selected server. Continue only if you trust that server and provider. The app does not run or copy a shell command on your phone.'**
+  String get commandAuthConfirmDetail;
+
+  /// Launch a command authentication attempt after confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Start server sign-in'**
+  String get commandAuthStart;
+
+  /// Pending status without fabricated instructions or automatic cancellation
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in is pending on the server. Finish any server-side interaction, then check its status. Closing this sheet does not cancel it.'**
+  String get commandAuthPending;
+
+  /// Read the pinned command-auth attempt status
+  ///
+  /// In en, this message translates to:
+  /// **'Check status'**
+  String get commandAuthCheck;
+
+  /// Cancel the selected command-auth attempt, not all credentials
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel sign-in'**
+  String get commandAuthCancel;
+
+  /// Safe failure without raw provider logs or tokens
+  ///
+  /// In en, this message translates to:
+  /// **'Could not complete or confirm server sign-in. Check the existing attempt before starting another.'**
+  String get commandAuthFailed;
+
+  /// Terminal status reported by the server, not proof of a particular active credential
+  ///
+  /// In en, this message translates to:
+  /// **'The server reported that sign-in completed. Refresh Providers to see its current connections.'**
+  String get commandAuthComplete;
+
+  /// Server-reported terminal expiry
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in attempt expired. You can start a new attempt.'**
+  String get commandAuthExpired;
+
+  /// Reject actions against the wrong provider authentication scope
+  ///
+  /// In en, this message translates to:
+  /// **'The server or project changed. Return to the original location and reopen sign-in to manage its attempt.'**
+  String get commandAuthScopeChanged;
+
+  /// Unknown dispatch outcome blocks duplicate executable auth attempts
+  ///
+  /// In en, this message translates to:
+  /// **'The server may have started sign-in, but the app could not safely recover its attempt. Check on the server before retrying; automatic restart is blocked to avoid duplicate processes.'**
+  String get commandAuthUncertainStart;
+
+  /// Explicitly read the loaded assistant reply, excluding code and tool details
+  ///
+  /// In en, this message translates to:
+  /// **'Read reply prose'**
+  String get readAloudAction;
+
+  /// Visible control that stops speech or cancels pending speech setup
+  ///
+  /// In en, this message translates to:
+  /// **'Stop reading aloud'**
+  String get readAloudStop;
+
+  /// Choose another installed voice and read the selected reply
+  ///
+  /// In en, this message translates to:
+  /// **'Read with another voice'**
+  String get readAloudOtherVoice;
+
+  /// Picker of installed system voices marked offline
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a reading voice'**
+  String get readAloudChooseVoice;
+
+  /// Consent before any system speech engine access
+  ///
+  /// In en, this message translates to:
+  /// **'Use the system speech engine?'**
+  String get readAloudConsentTitle;
+
+  /// Discloses external engine access and audible output without promising network isolation
+  ///
+  /// In en, this message translates to:
+  /// **'The loaded reply prose will be sent to your system speech engine. Only voices marked offline are offered, but the engine is separate software and its privacy practices apply. Code blocks and tool details are omitted. Others may hear the audio. Playback stops when this chat is covered or the app goes into the background.'**
+  String get readAloudConsentDetail;
+
+  /// Accept speech disclosure and request installed voice metadata
+  ///
+  /// In en, this message translates to:
+  /// **'Choose voice'**
+  String get readAloudContinue;
+
+  /// Unsupported platform, without native calls
+  ///
+  /// In en, this message translates to:
+  /// **'Read-aloud is not available on this platform.'**
+  String get readAloudUnsupported;
+
+  /// No automatic engine or model installation is performed
+  ///
+  /// In en, this message translates to:
+  /// **'No installed voice marked offline is available. Configure an offline voice in your system speech settings and try again.'**
+  String get readAloudNoVoice;
+
+  /// Safe system speech failure without spoken text or raw engine errors
+  ///
+  /// In en, this message translates to:
+  /// **'The speech engine could not read this reply. Try again or choose another voice.'**
+  String get readAloudUnavailable;
+
+  /// Bounded speech input is rejected rather than silently truncated
+  ///
+  /// In en, this message translates to:
+  /// **'This reply is too long to read aloud. Choose a shorter reply.'**
+  String get readAloudTooLong;
+
+  /// Audio focus or microphone conflict prevents playback
+  ///
+  /// In en, this message translates to:
+  /// **'Speech playback is unavailable while audio capture or another audio interruption is active.'**
+  String get readAloudBusy;
+
+  /// Explicit empty prose result without invoking a speech engine
+  ///
+  /// In en, this message translates to:
+  /// **'There is no reply prose to read. Code and tool details are not spoken.'**
+  String get readAloudNoProse;
+
+  /// Open individual saved provider credential management
+  ///
+  /// In en, this message translates to:
+  /// **'Manage accounts'**
+  String get credentialManage;
+
+  /// Describes the metadata-only credential list
+  ///
+  /// In en, this message translates to:
+  /// **'Only saved account labels are shown. API keys and login tokens stay on your server.'**
+  String get credentialMetadataOnly;
+
+  /// Cold start or stream gap cannot establish an active credential
+  ///
+  /// In en, this message translates to:
+  /// **'Active account unknown. The saved-account list does not report which account is active.'**
+  String get credentialActiveUnknown;
+
+  /// An explicit nullable credential-switched event reported no active credential
+  ///
+  /// In en, this message translates to:
+  /// **'The server reported no active saved account.'**
+  String get credentialNoneActive;
+
+  /// Distinguishes event-confirmed activation from a successful command response
+  ///
+  /// In en, this message translates to:
+  /// **'The Active badge reflects the latest server event.'**
+  String get credentialActiveObserved;
+
+  /// Live-region feedback after a valid credential-switched event
+  ///
+  /// In en, this message translates to:
+  /// **'Active account updated from the server.'**
+  String get credentialActiveUpdated;
+
+  /// Accepted but unconfirmed activation, without an indefinite spinner or invented badge
+  ///
+  /// In en, this message translates to:
+  /// **'Switch requested. This request has not yet been confirmed by a server event.'**
+  String get credentialSwitchRequested;
+
+  /// Server-event-confirmed active saved credential badge
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get credentialActive;
+
+  /// Request activation of one saved provider credential
+  ///
+  /// In en, this message translates to:
+  /// **'Set active'**
+  String get credentialSetActive;
+
+  /// Edit a saved credential label, not its secret
+  ///
+  /// In en, this message translates to:
+  /// **'Rename account'**
+  String get credentialRename;
+
+  /// Single-line saved credential label input
+  ///
+  /// In en, this message translates to:
+  /// **'Account label'**
+  String get credentialLabel;
+
+  /// Submit only the edited credential label
+  ///
+  /// In en, this message translates to:
+  /// **'Save label'**
+  String get credentialSave;
+
+  /// Destructive confirmation naming the saved provider credential
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {label}?'**
+  String credentialRemoveTitle(String label);
+
+  /// Discloses server-wide credential removal and avoids promising successor activation
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this saved sign-in from the server. Other projects using it may be affected. This does not edit environment configuration; the server determines which account, if any, becomes active afterward.'**
+  String get credentialRemoveDetail;
+
+  /// Blocks operations from a previous credential-management scope
+  ///
+  /// In en, this message translates to:
+  /// **'The server or project changed. Close and reopen account management before making changes.'**
+  String get credentialScopeChanged;
+
+  /// Fresh integration read no longer contains the selected provider
+  ///
+  /// In en, this message translates to:
+  /// **'This provider is no longer in the server\'s integration list.'**
+  String get credentialProviderMissing;
+
+  /// Safe credential metadata refresh failure
+  ///
+  /// In en, this message translates to:
+  /// **'Could not refresh saved accounts. Try again.'**
+  String get credentialLoadFailed;
+
+  /// Uncertain credential mutation result without raw server or secret data
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm the account change. Refresh before retrying; the server may already have applied it.'**
+  String get credentialMutationFailed;
+
+  /// Refetch safe credential metadata, not a guarantee of active-state confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh accounts'**
+  String get credentialRefresh;
+
+  /// Empty credential list without claiming provider disconnection
+  ///
+  /// In en, this message translates to:
+  /// **'No saved accounts were reported for this provider.'**
+  String get credentialEmpty;
+
+  /// Environment-backed integration connection is not an editable credential
+  ///
+  /// In en, this message translates to:
+  /// **'Managed by the server environment. It cannot be removed here.'**
+  String get credentialEnvironment;
+
+  /// Display-only ordinal for a credential with no label; not a server-reported identity
+  ///
+  /// In en, this message translates to:
+  /// **'Saved account {index}'**
+  String credentialUnnamed(int index);
+
+  /// Remove an MCP server from the current runtime location
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get mcpRemove;
+
+  /// Confirmation title naming the selected MCP server
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}?'**
+  String mcpRemoveTitle(String name);
+
+  /// Distinguishes runtime MCP removal from persistent configuration changes
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this MCP server from the current runtime location. Its tools will no longer be available there. This does not erase persistent server configuration; it may return after a server restart.'**
+  String get mcpRemoveRuntimeDetail;
+
+  /// Safe feedback for an uncertain removal outcome without raw configuration or server errors
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm MCP removal. Refresh the list before trying again; the server may already have applied the change.'**
+  String get mcpRemoveFailed;
+
+  /// Generic MCP inventory or resource refresh failure
+  ///
+  /// In en, this message translates to:
+  /// **'Could not refresh MCP data. Try again.'**
+  String get mcpLoadFailed;
+
+  /// Warns against acting on MCP data from a previous profile or location
+  ///
+  /// In en, this message translates to:
+  /// **'The server or project changed. Refresh to load its MCP servers before making changes.'**
+  String get mcpScopeChanged;
 
   /// No description provided for @promptStashRestoreFailed.
   ///
@@ -2145,6 +3099,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Prompt saved to your stash.'**
   String get promptStashed;
+
+  /// Stash save succeeded but persisting the cleared or restored composer draft failed; the saved stash remains available
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt saved to your stash. The composer draft still needs to be saved; use Retry in the draft warning.'**
+  String get promptStashedDraftPending;
 
   /// No description provided for @promptStashReadFailed.
   ///
@@ -2803,7 +3763,7 @@ abstract class AppLocalizations {
   /// Settings row explaining remaining quota requires an optional server extension
   ///
   /// In en, this message translates to:
-  /// **'Codex and Claude collectors · setup required'**
+  /// **'Optional Codex collector · setup required'**
   String get quotaSettingsSummary;
 
   /// Distinguishes account-wide rate-limit windows from project consumption
@@ -3064,6 +4024,36 @@ abstract class AppLocalizations {
   /// **'Claude'**
   String get quotaClaude;
 
+  /// Explains the disabled Claude subscription collection path without suggesting an OAuth workaround
+  ///
+  /// In en, this message translates to:
+  /// **'Claude subscription usage is unavailable here pending a supported, permitted integration. Current OpenCode does not include Claude Pro/Max sign-in. This app will not read or reuse that subscription login.'**
+  String get quotaClaudeUnavailable;
+
+  /// iOS app identity without describing it as an Android or desktop build
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode for iOS'**
+  String get iosAppTitle;
+
+  /// Truthful initial iOS remote-control scope
+  ///
+  /// In en, this message translates to:
+  /// **'A remote client for the OpenCode server you choose. On-device server hosting and background monitoring are not available in this iOS build.'**
+  String get iosRemoteSummary;
+
+  /// iOS credential storage guidance
+  ///
+  /// In en, this message translates to:
+  /// **'Server passwords use this device\'s Keychain. They are not stored in plain profile preferences.'**
+  String get iosKeychainGuide;
+
+  /// Platform-neutral storage copy rather than incorrectly promising Linux libsecret everywhere
+  ///
+  /// In en, this message translates to:
+  /// **'Server passwords use this platform\'s secure credential storage. They are not stored in plain profile preferences.'**
+  String get platformSecureStorageGuide;
+
   /// Claude allowances for the operator-selected OAuth login
   ///
   /// In en, this message translates to:
@@ -3105,6 +4095,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{percent} of reported cost'**
   String usageProviderCostShare(String percent);
+
+  /// No description provided for @setupOutputWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Termux output…'**
+  String get setupOutputWaiting;
+
+  /// No description provided for @setupOutputWaitingDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup messages will appear here when Termux responds.'**
+  String get setupOutputWaitingDetail;
+
+  /// No description provided for @setupStartInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Start installed OpenCode'**
+  String get setupStartInstalled;
+
+  /// No description provided for @setupMissingCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'This app has no saved credential for that installation. Connect with its server address, or run setup to configure it.'**
+  String get setupMissingCredential;
+
+  /// No description provided for @setupUbuntuOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Ubuntu · OpenCode 1'**
+  String get setupUbuntuOption;
+
+  /// No description provided for @setupOwnOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your own setup'**
+  String get setupOwnOption;
+
+  /// No description provided for @setupOwnDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect an existing OpenCode 1 or OpenCode 2 server by address. OpenCode 2 and musl installation are not managed by this app yet; musl also needs a compatible Linux environment.'**
+  String get setupOwnDescription;
+
+  /// No description provided for @setupConnectExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect existing server'**
+  String get setupConnectExisting;
+
+  /// No description provided for @setupScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'On-device setup'**
+  String get setupScreenTitle;
+
+  /// No description provided for @setupInstallStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Install & start'**
+  String get setupInstallStart;
+
+  /// No description provided for @setupCheckAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get setupCheckAgain;
+
+  /// No description provided for @uncertainAuthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unconfirmed sign-in: {integrationID}'**
+  String uncertainAuthTitle(String integrationID);
+
+  /// No description provided for @uncertainAuthDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'The server may have started sign-in, but no attempt ID was received. Check on the server before starting again.'**
+  String get uncertainAuthDetail;
+
+  /// No description provided for @uncertainAuthForgetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget uncertain start?'**
+  String get uncertainAuthForgetTitle;
+
+  /// No description provided for @uncertainAuthForgetDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'This clears only the local retry block. It does not cancel sign-in on the server. Check the server first to avoid running a second sign-in. No new sign-in will start.'**
+  String get uncertainAuthForgetDetail;
+
+  /// No description provided for @uncertainAuthForget.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget uncertain start'**
+  String get uncertainAuthForget;
+
+  /// No description provided for @uncertainAuthCloseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Close this sheet and use the unconfirmed sign-in row to clear its local retry block after checking the server.'**
+  String get uncertainAuthCloseHint;
 }
 
 class _AppLocalizationsDelegate

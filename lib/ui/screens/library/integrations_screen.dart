@@ -26,7 +26,13 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   List<McpServerInfo>? _servers;
   List<McpResourceInfo>? _resources;
   List<IntegrationInfo>? _integrations;
+  Object? _integrationsSource;
   String? _serverError;
+  String? _removalError;
+  final Set<String> _removingMcp = {};
+  int? _serversLocationRevision;
+  ServerOperationsGateway? _serversRepository;
+  Object? _serversSource;
   String? _resourceError;
   String? _integrationError;
   final Set<String> _busy = {};
@@ -34,12 +40,16 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   bool _finishingMcpOAuth = false;
   _PendingIntegrationOAuth? _pendingOAuth;
   bool _checkingOAuth = false;
-  bool _requestCodeOnResume = false;
   int _serverLoadGeneration = 0;
   int _resourceLoadGeneration = 0;
   int _integrationLoadGeneration = 0;
   final TextEditingController _providerSearch = TextEditingController();
   String _providerQuery = '';
+
+  // Used only for equality checks; never render or log this sign-in snapshot.
+  Object get _mcpSource {
+    return _integrationSourceFor(widget.controller);
+  }
 
   @override
   void initState() {
@@ -50,21 +60,12 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) return;
-    final pending = _pendingOAuth;
-    if (pending != null) {
-      if (pending.launch.mode == IntegrationAuthMode.auto) {
-        unawaited(_checkOAuth());
-      } else if (_requestCodeOnResume) {
-        _requestCodeOnResume = false;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) unawaited(_enterOAuthCode());
-        });
-      }
-    }
+    // Returning from a browser is not consent to poll or submit a code.
   }
 
   Future<void> _load() async {
+    await widget.controller.prunePendingIntegrationAuth();
+    if (!mounted) return;
     final repository = await widget.controller.prepareActionRepository();
     if (!mounted) return;
     if (repository == null) {
@@ -84,55 +85,107 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   }
 
   Future<void> _loadServers(ServerOperationsGateway repository) async {
+    final source = _mcpSource;
+    final controller = widget.controller;
+    final profile = controller.profile;
+    final location = controller.locationRevision;
+    bool currentScope() =>
+        mounted &&
+        source == _mcpSource &&
+        identical(widget.controller, controller) &&
+        identical(controller.profile, profile) &&
+        controller.locationRevision == location &&
+        identical(controller.repository, repository);
     final generation = ++_serverLoadGeneration;
     setState(() => _serverError = null);
     try {
       final servers = await repository.listMcpServers();
-      if (mounted && generation == _serverLoadGeneration) {
-        setState(() => _servers = servers);
+      if (currentScope() && generation == _serverLoadGeneration) {
+        setState(() {
+          _servers = servers;
+          _serversLocationRevision = location;
+          _serversRepository = repository;
+          _serversSource = source;
+        });
       }
-    } catch (error) {
-      if (mounted && generation == _serverLoadGeneration) {
-        setState(() => _serverError = productErrorText(error));
+    } catch (_) {
+      if (currentScope() && generation == _serverLoadGeneration) {
+        setState(
+          () => _serverError = lookupAppLocalizations(
+            Localizations.localeOf(context),
+          ).mcpLoadFailed,
+        );
       }
     }
   }
 
   Future<void> _loadResources(ServerOperationsGateway repository) async {
+    final source = _mcpSource;
     final generation = ++_resourceLoadGeneration;
     setState(() => _resourceError = null);
     try {
       final resources = await repository.listMcpResources();
-      if (mounted && generation == _resourceLoadGeneration) {
+      if (mounted &&
+          source == _mcpSource &&
+          generation == _resourceLoadGeneration) {
         setState(() => _resources = resources);
       }
-    } catch (error) {
-      if (mounted && generation == _resourceLoadGeneration) {
-        setState(() => _resourceError = productErrorText(error));
+    } catch (_) {
+      if (mounted &&
+          source == _mcpSource &&
+          generation == _resourceLoadGeneration) {
+        setState(
+          () => _resourceError = lookupAppLocalizations(
+            Localizations.localeOf(context),
+          ).mcpLoadFailed,
+        );
       }
     }
   }
 
   Future<void> _loadIntegrations(ServerOperationsGateway repository) async {
+    if (!identical(repository, widget.controller.repository)) return;
+    final source = _mcpSource;
     final generation = ++_integrationLoadGeneration;
     setState(() => _integrationError = null);
     try {
       final integrations = await repository.listIntegrations();
-      if (mounted && generation == _integrationLoadGeneration) {
-        setState(() => _integrations = integrations);
+      if (mounted &&
+          source == _mcpSource &&
+          generation == _integrationLoadGeneration) {
+        setState(() {
+          _integrations = integrations;
+          _integrationsSource = source;
+        });
       }
     } catch (error) {
-      if (mounted && generation == _integrationLoadGeneration) {
+      if (mounted &&
+          source == _mcpSource &&
+          generation == _integrationLoadGeneration) {
         setState(() => _integrationError = productErrorText(error));
       }
     }
   }
 
   Future<void> _action(McpServerInfo server) async {
-    if (_busy.contains(server.name)) return;
+    if (_serversSource != _mcpSource ||
+        _busy.contains(server.name) ||
+        _removingMcp.contains(server.name)) {
+      return;
+    }
+    // A wake-time reconnect may replace the repository while preserving the
+    // user-selected profile and location. Reacquire that transport below.
+    final source = _authSourceFor(widget.controller);
     setState(() => _busy.add(server.name));
     try {
       final repository = await _requireActionRepository();
+      if (!mounted ||
+          source != _authSourceFor(widget.controller) ||
+          !widget.controller.isProfileReadable(
+            widget.controller.promptShelfProfileID,
+          )) {
+        return;
+      }
       switch (server.status) {
         case 'connected':
           await repository.disconnectMcp(server.name);
@@ -152,23 +205,113 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     }
   }
 
+  Future<void> _removeMcp(McpServerInfo server) async {
+    final controller = widget.controller;
+    final profile = controller.profile;
+    final location = controller.locationRevision;
+    final repository = controller.repository;
+    final source = _mcpSource;
+    final route = ModalRoute.of(context);
+    var invalidated = false;
+    bool currentScope() =>
+        mounted &&
+        !invalidated &&
+        source == _mcpSource &&
+        controller.isProfileReadable(controller.promptShelfProfileID) &&
+        identical(widget.controller, controller) &&
+        identical(controller.profile, profile) &&
+        controller.locationRevision == location &&
+        identical(controller.repository, repository);
+    if (!_canRemoveMcp ||
+        _busy.contains(server.name) ||
+        _removingMcp.contains(server.name) ||
+        _pendingMcpOAuth?.server.name == server.name) {
+      return;
+    }
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    void changed() {
+      if (!currentScope()) invalidated = true;
+    }
+
+    controller.addListener(changed);
+    controller.profileDataChanges.addListener(changed);
+    setState(() => _removingMcp.add(server.name));
+    try {
+      FocusManager.instance.primaryFocus?.unfocus();
+      final confirmed = await showConfirmSheet(
+        context,
+        icon: Icons.delete_outline_rounded,
+        title: l10n.mcpRemoveTitle(server.name),
+        message: l10n.mcpRemoveRuntimeDetail,
+        confirmLabel: l10n.mcpRemove,
+        cancelLabel: l10n.workCancel,
+        destructive: true,
+      );
+      if (!confirmed ||
+          !currentScope() ||
+          !_canRemoveMcp ||
+          !(route?.isCurrent ?? true)) {
+        return;
+      }
+      setState(() => _removalError = null);
+      try {
+        await controller.removeMcpServer(
+          server.name,
+          locationRevision: location,
+        );
+      } catch (_) {
+        if (!currentScope()) return;
+        setState(() => _removalError = l10n.mcpRemoveFailed);
+      }
+      // DELETE may have reached the server even when its response was lost.
+      // Keep the existing inventory until an authoritative refetch succeeds.
+      if (!currentScope() ||
+          !(route?.isCurrent ?? true) ||
+          repository == null) {
+        return;
+      }
+      await Future.wait([_loadServers(repository), _loadResources(repository)]);
+    } catch (_) {
+      if (currentScope()) setState(() => _removalError = l10n.mcpRemoveFailed);
+    } finally {
+      controller.removeListener(changed);
+      controller.profileDataChanges.removeListener(changed);
+      if (mounted) setState(() => _removingMcp.remove(server.name));
+    }
+  }
+
+  bool get _canRemoveMcp =>
+      _serversSource == _mcpSource &&
+      widget.controller.isProfileReadable(
+        widget.controller.promptShelfProfileID,
+      ) &&
+      widget.controller.capabilities.mcpRuntimeRemovals &&
+      widget.controller.repository is McpRemovalGateway &&
+      _serversLocationRevision == widget.controller.locationRevision &&
+      identical(_serversRepository, widget.controller.repository);
+
   Future<void> _startMcpAuthentication(
     McpServerInfo server,
     ServerOperationsGateway repository,
   ) async {
+    final source = _mcpSource;
     if (_pendingMcpOAuth != null) {
       throw const ProductException(
         'Finish or cancel the current MCP authorization first.',
       );
     }
     final launch = await repository.startMcpAuthentication(server.name);
+    if (!mounted || source != _mcpSource) return;
     final destination = parseAuthorizationUrl(
       launch.authorizationUrl.toString(),
     );
     if (!mounted || !await _confirmAuthorizationLaunch(destination)) {
-      await repository.cancelMcpAuthentication(server.name);
+      if (mounted && source == _mcpSource) {
+        await repository.cancelMcpAuthentication(server.name);
+      }
       return;
     }
+    if (!mounted || source != _mcpSource) return;
 
     McpOAuthLoopbackListener? listener;
     final redirect = mcpLoopbackRedirect(destination);
@@ -183,13 +326,13 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
         // a manual code/URL path in the pending row below.
       }
     }
-    if (!mounted) {
+    if (!mounted || source != _mcpSource) {
       await listener?.close();
-      await repository.cancelMcpAuthentication(server.name);
       return;
     }
 
     final pending = _PendingMcpOAuth(
+      source: source,
       server: server,
       launch: launch,
       listener: listener,
@@ -197,9 +340,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     setState(() => _pendingMcpOAuth = pending);
     if (listener != null) unawaited(_watchMcpCallback(pending));
     try {
-      final opened = widget.authorizationLauncher == null
-          ? await launchUrl(destination, mode: LaunchMode.externalApplication)
-          : await widget.authorizationLauncher!(destination);
+      final opened = await _openAuthorization(destination);
       if (!opened) {
         throw const ProductException('Could not open the authorization page');
       }
@@ -208,7 +349,9 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
         setState(() => _pendingMcpOAuth = null);
       }
       await listener?.close();
-      await repository.cancelMcpAuthentication(server.name);
+      if (mounted && source == _mcpSource) {
+        await repository.cancelMcpAuthentication(server.name);
+      }
       rethrow;
     }
   }
@@ -245,13 +388,17 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     if (_finishingMcpOAuth || _pendingMcpOAuth != pending) return;
     setState(() => _finishingMcpOAuth = true);
     try {
-      final repository = await _requireActionRepository();
+      final repository = await _requireMcpOAuthRepository(pending);
       final status = await repository.completeMcpAuthentication(
         pending.server.name,
         code,
       );
       await pending.listener?.close();
-      if (!mounted || _pendingMcpOAuth != pending) return;
+      if (!mounted ||
+          _pendingMcpOAuth != pending ||
+          pending.source != _mcpSource) {
+        return;
+      }
       setState(() {
         _pendingMcpOAuth = null;
         _servers = [
@@ -267,9 +414,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
           content: Text(
             connected
                 ? '${pending.server.name} authenticated'
-                : status.error?.isNotEmpty == true
-                ? status.error!
-                : '${pending.server.name}: ${_statusLabel(status.status)}',
+                : 'Could not confirm MCP authentication',
           ),
         ),
       );
@@ -286,7 +431,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     setState(() => _finishingMcpOAuth = true);
     await pending.listener?.close();
     try {
-      final repository = await _requireActionRepository();
+      final repository = await _requireMcpOAuthRepository(pending);
       await repository.cancelMcpAuthentication(pending.server.name);
       if (!mounted || _pendingMcpOAuth != pending) return;
       setState(() => _pendingMcpOAuth = null);
@@ -337,10 +482,28 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   }
 
   Future<void> _retryServers() async {
+    final controller = widget.controller;
+    final profile = controller.profile;
+    final location = controller.locationRevision;
+    bool currentScope() =>
+        mounted &&
+        identical(widget.controller, controller) &&
+        identical(controller.profile, profile) &&
+        controller.locationRevision == location;
     try {
-      await _loadServers(await _requireActionRepository());
-    } catch (error) {
-      if (mounted) setState(() => _serverError = productErrorText(error));
+      setState(() => _removalError = null);
+      final repository = await controller.prepareActionRepository();
+      if (!currentScope()) return;
+      if (repository == null) throw StateError('MCP unavailable');
+      await _loadServers(repository);
+    } catch (_) {
+      if (currentScope()) {
+        setState(
+          () => _serverError = lookupAppLocalizations(
+            Localizations.localeOf(context),
+          ).mcpLoadFailed,
+        );
+      }
     }
   }
 
@@ -364,7 +527,15 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   bool get _showProviders => widget.mode != IntegrationsMode.mcp;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: Listenable.merge([
+      widget.controller,
+      widget.controller.profileDataChanges,
+    ]),
+    builder: (context, _) => _buildScreen(context),
+  );
+
+  Widget _buildScreen(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(switch (widget.mode) {
@@ -399,6 +570,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
 
   List<Widget> _providerSection() {
     final loaded = _integrations;
+    final staleSource = loaded != null && _integrationsSource != _mcpSource;
     final integrations = loaded == null
         ? null
         : _withConfiguredProviders(loaded);
@@ -422,6 +594,73 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
         description:
             'The model providers this OpenCode server can use. Connect one to start chatting.',
       ),
+      if (widget.controller.pendingAuthPersistenceUncertain)
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                lookupAppLocalizations(
+                  Localizations.localeOf(context),
+                ).pendingAuthSaveUncertain,
+              ),
+              TextButton(
+                onPressed: () async {
+                  try {
+                    await widget.controller.retryPendingAuthPersistence();
+                  } catch (_) {
+                    if (mounted) {
+                      _showError(
+                        const ProductException(
+                          'Could not save sign-in recovery.',
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: Text(
+                  lookupAppLocalizations(
+                    Localizations.localeOf(context),
+                  ).pendingAuthRetrySave,
+                ),
+              ),
+            ],
+          ),
+        ),
+      if (widget.controller.hasPendingAuthAtOtherSource)
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            lookupAppLocalizations(
+              Localizations.localeOf(context),
+            ).pendingAuthOtherSource,
+          ),
+        ),
+      for (final entry in widget.controller.uncertainIntegrationAuth)
+        _UncertainAuthRecoveryTile(
+          controller: widget.controller,
+          integrationID: entry.integrationID,
+          kind: entry.kind,
+        ),
+      for (final entry in widget.controller.pendingIntegrationAuth)
+        _PendingAuthRecoveryTile(
+          key: ValueKey(entry.key),
+          controller: widget.controller,
+          entry: entry,
+          onComplete: () async {
+            await Future.wait([_load(), widget.controller.refreshCatalog()]);
+          },
+        ),
+      if (!widget.controller.integrationAuthRecoverySupported)
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            lookupAppLocalizations(
+              Localizations.localeOf(context),
+            ).pendingAuthUnsupported,
+          ),
+        ),
       if (_pendingOAuth case final pending?)
         _PendingOAuthTile(
           pending: pending,
@@ -433,7 +672,23 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
               : _checkOAuth,
           onCancel: _cancelOAuth,
         ),
-      if (_integrationError != null)
+      if (_pendingOAuth != null && _pendingOAuth!.source != _mcpSource)
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            lookupAppLocalizations(
+              Localizations.localeOf(context),
+            ).pendingAuthUnsupported,
+          ),
+        ),
+      if (staleSource)
+        _SectionLoadError(
+          message: lookupAppLocalizations(
+            Localizations.localeOf(context),
+          ).credentialScopeChanged,
+          onRetry: _retryIntegrations,
+        )
+      else if (_integrationError != null)
         _SectionLoadError(
           message: _integrationError!,
           onRetry: _retryIntegrations,
@@ -466,8 +721,11 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
             onAction: _clearProviderSearch,
           )
         else
-          for (final presented in matching)
+          for (final presented in matching) ...[
             _ProviderIntegrationTile(
+              commandAuthSupported:
+                  widget.controller.capabilities.integrationCommandAuth &&
+                  widget.controller.repository is IntegrationCommandGateway,
               presented: presented,
               subtitle: _integrationSubtitle(presented.integration),
               modelCount: _modelCount(presented.integration.id),
@@ -475,8 +733,79 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
               onConnect: () => _connectIntegration(presented.integration),
               onDisconnect: () => _disconnectIntegration(presented),
             ),
+            if (widget.controller.capabilities.integrationCommandAuth &&
+                widget.controller.repository is IntegrationCommandGateway &&
+                presented.integration.methods.any(
+                  (method) => method.type == 'command' && method.id != null,
+                ))
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton.icon(
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(48, 48),
+                    ),
+                    onPressed: _busy.contains(presented.integration.id)
+                        ? null
+                        : () => _connectIntegration(presented.integration),
+                    icon: const Icon(Icons.terminal_rounded),
+                    label: Text(
+                      lookupAppLocalizations(
+                        Localizations.localeOf(context),
+                      ).commandAuthManage,
+                    ),
+                  ),
+                ),
+              ),
+            if (widget.controller.capabilities.integrationCredentials &&
+                widget.controller.repository is IntegrationCredentialGateway)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton.icon(
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(48, 48),
+                    ),
+                    onPressed: _busy.contains(presented.integration.id)
+                        ? null
+                        : () => _openCredentials(
+                            presented.integration,
+                            presented.name,
+                          ),
+                    icon: const Icon(Icons.manage_accounts_outlined),
+                    label: Text(
+                      lookupAppLocalizations(
+                        Localizations.localeOf(context),
+                      ).credentialManage,
+                    ),
+                  ),
+                ),
+              ),
+          ],
       ],
     ];
+  }
+
+  Future<void> _openCredentials(
+    IntegrationInfo integration,
+    String name,
+  ) async {
+    if (_integrationsSource != _mcpSource) return;
+    final source = _mcpSource;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (_) => _CredentialManagementSheet(
+        controller: widget.controller,
+        integrationID: integration.id,
+        integrationName: name,
+      ),
+    );
+    if (mounted && source == _mcpSource) await _retryIntegrations();
   }
 
   /// Mirrors the model picker's search field: a dense filled field with a
@@ -531,10 +860,19 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
             'Add-on servers that give the agent extra tools, like a browser or a database.',
       ),
       if (_serverError != null)
-        _SectionLoadError(message: _serverError!, onRetry: _retryServers)
-      else if (servers == null)
+        _SectionLoadError(message: _serverError!, onRetry: _retryServers),
+      if (_removalError != null)
+        _SectionLoadError(message: _removalError!, onRetry: _retryServers),
+      if (_serversSource != null && _serversSource != _mcpSource)
+        _SectionLoadError(
+          message: lookupAppLocalizations(
+            Localizations.localeOf(context),
+          ).mcpScopeChanged,
+          onRetry: _retryServers,
+        ),
+      if (servers == null && _serverError == null)
         const _SectionLoading(label: 'Loading MCP servers')
-      else if (servers.isEmpty)
+      else if (servers != null && servers.isEmpty)
         ProductInlineEmpty(
           icon: Icons.hub_outlined,
           title: 'No MCP servers configured',
@@ -546,27 +884,52 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
           actionLabel: 'Add an MCP server',
           onAction: _openMcpSetup,
         )
-      else
+      else if (servers != null)
         for (final server in servers) ...[
           _McpServerTile(
             server: server,
-            subtitle: server.error?.isNotEmpty == true
-                ? server.error!
-                : _statusLabel(server.status),
+            subtitle: _statusLabel(server.status),
             actionLabel: _pendingMcpOAuth?.server.name == server.name
                 ? 'Authorizing'
                 : _actionLabel(server.status),
             busy:
                 _busy.contains(server.name) ||
+                _removingMcp.contains(server.name) ||
                 (_pendingMcpOAuth?.server.name == server.name &&
                     _finishingMcpOAuth),
             authGated: _mcpAuthGated(server.status),
             onAction:
-                _pendingMcpOAuth?.server.name == server.name ||
+                _serversSource != _mcpSource ||
+                    _pendingMcpOAuth?.server.name == server.name ||
                     _mcpAuthGated(server.status)
                 ? null
                 : () => _action(server),
           ),
+          if (_canRemoveMcp)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: TextButton.icon(
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                  onPressed:
+                      _busy.contains(server.name) ||
+                          _removingMcp.contains(server.name) ||
+                          _pendingMcpOAuth?.server.name == server.name
+                      ? null
+                      : () => _removeMcp(server),
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  label: Text(
+                    lookupAppLocalizations(
+                      Localizations.localeOf(context),
+                    ).mcpRemove,
+                  ),
+                ),
+              ),
+            ),
           if (_pendingMcpOAuth case final pending?
               when pending.server.name == server.name)
             _PendingMcpOAuthTile(
@@ -588,10 +951,10 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
             'Files and data that connected MCP servers expose to the agent.',
       ),
       if (_resourceError != null)
-        _SectionLoadError(message: _resourceError!, onRetry: _retryResources)
-      else if (resources == null)
+        _SectionLoadError(message: _resourceError!, onRetry: _retryResources),
+      if (resources == null && _resourceError == null)
         const _SectionLoading(label: 'Loading available resources')
-      else if (resources.isEmpty)
+      else if (resources != null && resources.isEmpty)
         ProductInlineEmpty(
           icon: Icons.description_outlined,
           title: 'No resources available',
@@ -599,7 +962,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
           actionLabel: _servers?.isEmpty == true ? 'Add an MCP server' : null,
           onAction: _servers?.isEmpty == true ? _openMcpSetup : null,
         )
-      else
+      else if (resources != null)
         for (final resource in resources)
           ListTile(
             leading: const BrandTile(
@@ -699,6 +1062,8 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                   const SizedBox(height: 4),
+                  // Auth instructions may contain a one-time device code.
+                  // Display only for this explicit launch; never persist/log.
                   SelectableText(instructions.trim()),
                 ],
               ],
@@ -806,9 +1171,20 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   }
 
   Future<void> _connectIntegration(IntegrationInfo integration) async {
+    final source = _mcpSource;
+    final commandSupported =
+        widget.controller.capabilities.integrationCommandAuth &&
+        widget.controller.repository is IntegrationCommandGateway;
     final methods = orderConnectMethods(
       integration.methods
-          .where((method) => method.type == 'key' || method.type == 'oauth')
+          .where(
+            (method) =>
+                method.type == 'key' ||
+                method.type == 'oauth' ||
+                (commandSupported &&
+                    method.type == 'command' &&
+                    method.id != null),
+          )
           .toList(),
     );
     if (methods.isEmpty) return;
@@ -827,10 +1203,18 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                       leading: Icon(
                         method.type == 'key'
                             ? Icons.key_outlined
+                            : method.type == 'command'
+                            ? Icons.terminal_rounded
                             : Icons.open_in_browser_rounded,
                       ),
                       title: Text(method.label),
-                      subtitle: Text(connectMethodHint(method)),
+                      subtitle: Text(
+                        method.type == 'command'
+                            ? lookupAppLocalizations(
+                                Localizations.localeOf(context),
+                              ).commandAuthMethodHint
+                            : connectMethodHint(method),
+                      ),
                       isThreeLine: connectMethodHint(method).length > 40,
                       onTap: () => Navigator.pop(context, method),
                     ),
@@ -838,8 +1222,21 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
               ),
             ),
           );
-    if (method == null || !mounted) return;
-    if (method.type == 'key') {
+    if (method == null || !mounted || source != _mcpSource) return;
+    if (method.type == 'command') {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        showDragHandle: true,
+        builder: (_) => _CommandAuthSheet(
+          controller: widget.controller,
+          integration: integration,
+          method: method,
+        ),
+      );
+      if (mounted && source == _mcpSource) await _retryIntegrations();
+    } else if (method.type == 'key') {
       await _connectWithKey(integration, method);
     } else {
       await _connectWithOAuth(integration, method);
@@ -887,21 +1284,62 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     IntegrationMethodInfo method,
   ) async {
     if (method.id == null) return;
+    final source = _authSourceFor(widget.controller);
+    final location = widget.controller.locationRevision;
     final inputs = await _oauthInputs(method);
-    if (inputs == null) return;
+    if (inputs == null ||
+        !mounted ||
+        source != _authSourceFor(widget.controller)) {
+      return;
+    }
+    if (widget.controller.integrationAuthRecoverySupported) {
+      await _runIntegrationAction(integration.id, () async {
+        final launch = await widget.controller.startRecoverableIntegrationOAuth(
+          integration.id,
+          method.id!,
+          inputs: inputs,
+          locationRevision: location,
+        );
+        if (!mounted || source != _authSourceFor(widget.controller)) return;
+        // Persisted before handing off to the browser. Declining/open failure
+        // retains the row: only an explicit Cancel contacts the server again.
+        final destination = parseAuthorizationUrl(launch.url);
+        final confirmed = await _confirmAuthorizationLaunch(
+          destination,
+          instructions: launch.instructions,
+        );
+        if (!confirmed ||
+            !mounted ||
+            source != _authSourceFor(widget.controller)) {
+          return;
+        }
+        final opened = await _openAuthorization(destination);
+        if (!opened && mounted && source == _authSourceFor(widget.controller)) {
+          _showError(
+            const ProductException(
+              'Authorization was not opened. The pending attempt is retained.',
+            ),
+          );
+        }
+      });
+      return;
+    }
     await _runIntegrationAction(integration.id, () async {
+      final legacySource = _mcpSource;
       final repository = await _requireActionRepository();
+      if (!mounted || legacySource != _mcpSource) return;
       final launch = await repository.startIntegrationOAuth(
         integration.id,
         method.id!,
         inputs: inputs,
       );
-      if (!mounted) return;
+      if (!mounted || legacySource != _mcpSource) return;
       setState(() {
         _pendingOAuth = _PendingIntegrationOAuth(
           integrationID: integration.id,
           integrationName: integration.name,
           launch: launch,
+          source: legacySource,
         );
       });
       try {
@@ -913,11 +1351,9 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
           await _cancelOAuth();
           return;
         }
-        final opened = widget.authorizationLauncher == null
-            ? await launchUrl(destination, mode: LaunchMode.externalApplication)
-            : await widget.authorizationLauncher!(destination);
+        if (!mounted || legacySource != _mcpSource) return;
+        final opened = await _openAuthorization(destination);
         if (!opened) throw const ProductException('Could not open OAuth');
-        _requestCodeOnResume = launch.mode == IntegrationAuthMode.code;
       } catch (_) {
         await _cancelOAuth(showError: false);
         rethrow;
@@ -930,11 +1366,15 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     if (pending == null || _checkingOAuth) return;
     setState(() => _checkingOAuth = true);
     try {
-      final repository = await _requireActionRepository();
+      final repository = await _requireOAuthRepository(pending);
       final status = await repository.integrationOAuthStatus(
         pending.launch.attemptID,
       );
-      if (!mounted || _pendingOAuth != pending) return;
+      if (!mounted ||
+          _pendingOAuth != pending ||
+          pending.source != _mcpSource) {
+        return;
+      }
       if (status.state == IntegrationAuthState.complete) {
         final completed = pending.copyWith(status: status);
         setState(() => _pendingOAuth = completed);
@@ -964,15 +1404,20 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     if (code == null || !mounted || _pendingOAuth != pending) return;
     setState(() => _checkingOAuth = true);
     try {
-      final repository = await _requireActionRepository();
+      final repository = await _requireOAuthRepository(pending);
       await repository.completeIntegrationOAuth(
         pending.launch.attemptID,
         code: providerOAuthCompletionCode(code),
       );
+      if (!mounted || pending.source != _mcpSource) return;
       final status = await repository.integrationOAuthStatus(
         pending.launch.attemptID,
       );
-      if (!mounted || _pendingOAuth != pending) return;
+      if (!mounted ||
+          _pendingOAuth != pending ||
+          pending.source != _mcpSource) {
+        return;
+      }
       if (status.state == IntegrationAuthState.complete) {
         final completed = pending.copyWith(status: status);
         setState(() => _pendingOAuth = completed);
@@ -988,12 +1433,13 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   }
 
   Future<void> _finishOAuth(_PendingIntegrationOAuth pending) async {
-    final repository = await _requireActionRepository();
+    final repository = await _requireOAuthRepository(pending);
     // §7 row 25: v2 hot-reloads its provider config, so the explicit runtime
     // refresh is skipped rather than failing a connect that already worked.
     if (widget.controller.capabilities.providerRuntimeRefresh) {
       await repository.refreshProviderRuntime();
     }
+    if (!mounted || pending.source != _mcpSource) return;
     await Future.wait([_load(), widget.controller.refreshCatalog()]);
     if (!mounted || _pendingOAuth != pending) return;
     setState(() => _pendingOAuth = null);
@@ -1006,21 +1452,76 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     final pending = _pendingOAuth;
     if (pending == null) return;
     try {
-      final repository = await _requireActionRepository();
+      final repository = await _requireOAuthRepository(pending);
       await repository.cancelIntegrationOAuth(pending.launch.attemptID);
-    } catch (error) {
-      if (showError && mounted) _showError(error);
-    } finally {
       if (mounted && _pendingOAuth == pending) {
         setState(() {
           _pendingOAuth = null;
-          _requestCodeOnResume = false;
         });
       }
+    } catch (error) {
+      if (showError && mounted) _showError(error);
     }
   }
 
-  void _showError(Object error) => showProductError(context, error);
+  Future<ServerOperationsGateway> _requireOAuthRepository(
+    _PendingIntegrationOAuth pending,
+  ) async {
+    if (pending.source != _mcpSource) {
+      throw const ProductException('The sign-in source changed.');
+    }
+    final repository = await _requireActionRepository();
+    if (!mounted || pending.source != _mcpSource) {
+      throw const ProductException('The sign-in source changed.');
+    }
+    return repository;
+  }
+
+  Future<ServerOperationsGateway> _requireMcpOAuthRepository(
+    _PendingMcpOAuth pending,
+  ) async {
+    if (pending.source != _mcpSource) {
+      throw const ProductException('The sign-in source changed.');
+    }
+    final repository = await _requireActionRepository();
+    if (!mounted || pending.source != _mcpSource) {
+      throw const ProductException('The sign-in source changed.');
+    }
+    return repository;
+  }
+
+  Future<bool> _openAuthorization(Uri destination) async {
+    final source = _authSourceFor(widget.controller);
+    final route = ModalRoute.of(context);
+    final validated = parseAuthorizationUrl(destination.toString());
+    final result = await openExternalLink(
+      context,
+      validated.toString(),
+      launcher: (uri) async {
+        if (!mounted ||
+            source != _authSourceFor(widget.controller) ||
+            !(route?.isCurrent ?? true)) {
+          return false;
+        }
+        try {
+          return await (widget.authorizationLauncher?.call(uri) ??
+              launchUrl(uri, mode: LaunchMode.externalApplication));
+        } catch (_) {
+          // The shared policy's generic launcher error could include a URL.
+          // Auth URLs are sensitive: never forward platform exception text.
+          return false;
+        }
+      },
+    );
+    return result == ExternalLinkOutcome.opened;
+  }
+
+  void _showError(Object error) => showProductError(
+    context,
+    const ProductException(
+      'Could not confirm authentication. Return to the original source and try again.',
+    ),
+  );
 
   Future<Map<String, String>?> _oauthInputs(
     IntegrationMethodInfo method,
@@ -1041,7 +1542,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     try {
       await action();
     } catch (error) {
-      if (mounted) showProductError(context, error);
+      if (mounted) _showError(error);
     } finally {
       if (mounted) setState(() => _busy.remove(id));
     }
@@ -1056,9 +1557,6 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     if (_pendingMcpOAuth case final pending?) {
       unawaited(_disposePendingMcpAuthentication(pending));
     }
-    if (_pendingOAuth case final pending?) {
-      unawaited(_disposePendingProviderAuthentication(pending));
-    }
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -1067,24 +1565,8 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     _PendingMcpOAuth pending,
   ) async {
     await pending.listener?.close();
-    try {
-      final repository = await widget.controller.prepareActionRepository();
-      await repository?.cancelMcpAuthentication(pending.server.name);
-    } catch (_) {
-      // Route disposal cannot present recovery UI. A later auth start replaces
-      // any abandoned server-side pending transport.
-    }
-  }
-
-  Future<void> _disposePendingProviderAuthentication(
-    _PendingIntegrationOAuth pending,
-  ) async {
-    try {
-      final repository = await widget.controller.prepareActionRepository();
-      await repository?.cancelIntegrationOAuth(pending.launch.attemptID);
-    } catch (_) {
-      // Route disposal cannot present recovery UI. Server attempts expire.
-    }
+    // No network action on navigation, particularly not through a new source.
+    // This legacy protocol has no persisted attempt-recovery contract.
   }
 }
 

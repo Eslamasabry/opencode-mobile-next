@@ -1,4 +1,18 @@
-# Optional Codex and Claude quota collector (Node >= 20)
+# Optional Codex quota collector (Node >= 20)
+
+**Claude collection is disabled pending a supported, permitted integration.**
+Current OpenCode does not bundle Claude Pro/Max subscription sign-in. Historical
+OAuth-file parsing or synthetic usage mapping is not proof of support or
+permission to reuse subscription tokens. The legacy Claude route returns an
+unsupported snapshot without reading an auth source or contacting a provider.
+Retired `OCMN_CLAUDE_AUTH_FILE` / `OCMN_CLAUDE_AUTH_FORMAT` options are ignored
+with the fixed startup warning `QUOTA_CLAUDE_COLLECTION_UNAVAILABLE`; valid
+Codex configuration continues to work. Remove those obsolete options. No
+workaround plugin is installed or recommended.
+
+Sources checked September 6, 2026:
+[OpenCode Anthropic support](https://opencode.ai/docs/providers/#anthropic) and
+[Anthropic credential policy](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use).
 
 This is an **optional, independently deployed extension**, not an upstream
 OpenCode API, plugin installation, or bundled mobile/background service. It
@@ -10,7 +24,7 @@ GET /ocmn/quota/v1/claude
 ```
 
 The first route reports **core Codex windows on a ChatGPT OAuth account**;
-the second reports **core Claude OAuth windows**. These are not OpenCode
+the second is retained only to return **unsupported** safely. These are not OpenCode
 project consumption, all product/model allowances, an API-key
 budget, or a promise that a model request will succeed. No provider access or
 deployment was performed during implementation; tests use synthetic inputs.
@@ -23,11 +37,11 @@ Flutter -- HTTPS + existing OpenCode Basic credentials --> trusted operator prox
         -- HTTPS + selected provider OAuth identity --> fixed WHAM usage endpoint
 ```
 
-The operator explicitly grants this service read access to one chosen credential
-file per configured provider. Authorized proxy users can see the selected
-accounts' normalized windows. The operator must be trusted with both the
-OpenCode authentication boundary and those accounts. The reverse proxy is part of that security
-boundary, not a transparent, untrusted relay.
+The operator explicitly grants this service read access to one chosen Codex
+credential file. Authorized proxy users can see that account's normalized
+windows. The operator must be trusted with both the OpenCode authentication
+boundary and that account. The reverse proxy is part of that security boundary,
+not a transparent, untrusted relay.
 
 The operator's **HTTPS reverse proxy must**:
 
@@ -70,8 +84,7 @@ Configuration consists of file paths and non-secret settings only:
 | `OCMN_QUOTA_READ_TOKEN_FILE` | Required absolute path to the collector read-token file. Loaded only by CLI startup. No default. |
 | `OCMN_QUOTA_AUTH_FILE` | Optional absolute path to the explicitly authorized provider credential file. Without it, return `unconfigured` without provider/file discovery. |
 | `OCMN_QUOTA_AUTH_FORMAT` | `codex` (default) or `opencode`; never inferred from a path. |
-| `OCMN_CLAUDE_AUTH_FILE` | Optional absolute path to the explicitly authorized Claude credential file; never discovered automatically. |
-| `OCMN_CLAUDE_AUTH_FORMAT` | `claude` (default) for `claudeAiOauth`, or `opencode` for the v1 `anthropic` OAuth entry. |
+| `OCMN_CLAUDE_AUTH_FILE` / `OCMN_CLAUDE_AUTH_FORMAT` | Retired; ignored with a fixed startup warning. No Claude credential source is retained or read. |
 | `OCMN_QUOTA_PORT` | Default `4195`; integer in `1024..65535`. Host is always `127.0.0.1`. |
 
 For example, after configuring those variables through the service manager:
@@ -83,7 +96,8 @@ node tool/quota/collector.mjs
 No package installation is needed. There are no CLI arguments. Importing the
 module does not read environment configuration, load auth files, fetch, or
 listen. The CLI emits only fixed startup/configuration error codes to stderr;
-it has no request logging or raw exception output. Do not enable external HTTP
+it also emits the fixed warning above for retired Claude options. It has no
+request logging or raw exception output. Do not enable external HTTP
 debug instrumentation that records credentials. The operator owns service
 supervision, filesystem permissions, TLS/proxy configuration, updates and
 rollback. Nothing installs or starts this service from Flutter.
@@ -208,30 +222,20 @@ Its raw HTTP mapper preserves second durations and allows finite fractional
 percentages/missing reset metadata as explicitly permitted by the frozen domain
 contract (the pinned generated WHAM window model uses required integer fields).
 
-## Claude adapter and attribution limits
+## Archived Claude mapping research — not live collection
 
-Claude is configured independently; a Codex request never reads the Claude
-credential file or vice versa. The only additional vendor destination is
-`GET https://api.anthropic.com/api/oauth/usage`, using Bearer OAuth, JSON Accept
-and the collector User-Agent. It sends no Codex account header, query, refresh
-request, or caller-selected URL. It shares the body/deadline/redirect and
-credential-change safeguards described above.
+Pure payload/auth-schema parsers and synthetic fixtures are retained for future
+permitted integration work. They do not authorize live collection. There is no
+Claude file-reader adapter or provider destination in the normal collector;
+the app also rejects Claude collection before creating a request.
 
-Credential formats (selected explicitly): `claudeAiOauth.accessToken` with
-optional millisecond `expiresAt`, or OpenCode v1
-`anthropic: {type: "oauth", access, expires, ...}`. The collector never reads
-refresh tokens or uses API-key fallback. Missing/expired/unreadable sources
-return typed unconfigured/auth-required responses without scanning other stores.
+The historical payload has no independent account ID, so research snapshots use
+`sourceBound`, never `matched`. The caller-supplied opaque reference is not
+proof of account identity. No account email, plan inferred from local metadata,
+or ordinary-use permission is manufactured.
 
-Claude usage does **not** return an account ID. Its `account.status` is therefore
-`sourceBound`, not `matched`; the opaque reference is derived from the selected
-credential with HMAC, and changes on token rotation. This establishes only
-which configured login produced the authenticated response, not independent
-account identification. The app discloses that distinction. No account email,
-plan inferred from local metadata, or ordinary-use permission is manufactured.
-
-Normalized Claude snapshots use `provider: "claude"`, `source: "claude.oauth"`
-and the same version-one percentage-window envelope. The mapper recognizes:
+Research snapshots use `provider: "claude"`, `source: "claude.oauth"` and the
+same version-one percentage-window envelope. The pure mapper recognizes:
 
 - Legacy `five_hour` / `seven_day`: finite `utilization` in `[0,100]`, optional
   RFC3339 `resets_at`; durations follow the explicit legacy window names.
@@ -242,11 +246,12 @@ and the same version-one percentage-window envelope. The mapper recognizes:
 
 Missing/null windows remain missing; additional model-scoped windows and
 extra-usage billing are explicitly omitted from this slice. No percentage is
-clamped into range and no reset passage refills locally. This endpoint is
-undocumented; the payload shapes were corroborated by public-source review,
-not an authenticated account query. The compatibility expectations are encoded
-in synthetic fixtures in `collector.test.mjs`; deployment must verify current
-access/schema behavior before claiming live account support.
+clamped into range and no reset passage refills locally. These historical shapes
+were investigated through public-source review, not an authenticated account
+query. Synthetic compatibility fixtures do not establish a supported API or
+permission to reuse subscription credentials. Re-enabling collection requires
+a separately reviewed, supported and permitted integration, not a file path
+or an undocumented-endpoint workaround.
 
 GLM, MiniMax and Gemini collectors are not implemented. Their units/auth/reset
 semantics must be verified separately, rather than guessed from these adapters.
@@ -264,7 +269,9 @@ location (this workspace uses `/tmp/opencode`). They cover
 exact domain JSON, 0/100/fraction percentages, missing/invalid fields, identity
 evidence, error separation, strict URL/method/auth guards, bounded streaming and
 timeout, cache/singleflight/account races, import safety, configuration, both
-authorized file formats and absence of credential-refresh writes.
+Codex file formats and absence of credential-refresh writes. Claude coverage
+checks pure historical mapping, unsupported responses with zero auth/network
+calls, and continued Codex operation when retired Claude settings remain.
 
 Remaining deployment risks require operator review: live-provider approval,
 endpoint/credential-version drift, sole OAuth refresh ownership, account-file

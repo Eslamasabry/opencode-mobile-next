@@ -7,14 +7,17 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../api/models.dart' show ModelRef, Session;
 import '../../api/mcp_oauth.dart';
 import '../../l10n/app_localizations.dart';
+import '../../domain/server_gateway.dart' show StreamStatus;
 import '../../api/provider_presentation.dart';
 import '../../feedback/bug_report.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../../state/pending_auth.dart';
 import '../app_theme.dart';
 import '../desktop/desktop_interaction.dart';
 import '../desktop/shortcuts.dart';
 import '../widgets/file_preview.dart';
+import '../widgets/external_link.dart';
 import '../widgets/connect_methods.dart';
 import '../widgets/info_label.dart';
 import '../widgets/provider_logo.dart';
@@ -32,6 +35,9 @@ import 'terminal_screen.dart';
 part 'library/catalog_screen.dart';
 part 'library/integrations_screen.dart';
 part 'library/integration_tiles.dart';
+part 'library/credential_sheet.dart';
+part 'library/command_auth_sheet.dart';
+part 'library/pending_auth_recovery.dart';
 part 'library/commands_screen.dart';
 part 'library/skills_screen.dart';
 part 'library/skill_activation.dart';
@@ -112,13 +118,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ].where((card) => card.matches(_query)).toList();
         final group1 = <_DestinationRow>[
           if (controller.repository is SessionImportGateway &&
-              (controller.repository as SessionImportGateway).sessionImportSupported)
+              (controller.repository as SessionImportGateway)
+                  .sessionImportSupported)
             _DestinationRow(
               key: const ValueKey('library-import-session'),
               icon: Icons.upload_file_outlined,
               title: l10n.importTitle,
               keywords: 'backup restore transfer JSON conversation',
-              onTap: () => _open(context, SessionImportScreen(controller: controller)),
+              onTap: () =>
+                  _open(context, SessionImportScreen(controller: controller)),
             ),
           _DestinationRow(
             icon: Icons.settings_outlined,

@@ -112,6 +112,9 @@ class HttpProviderQuotaGateway implements ProviderQuotaGateway {
   Future<ProviderQuotaSnapshot> readSnapshot() async {
     final cancel = CancelToken();
     try {
+      if (!quotaCollectionAvailable(provider)) {
+        throw const ProviderQuotaFailure(QuotaFailureKind.unsupported);
+      }
       if (_closed ||
           !_validProfile(
             _baseUrl,

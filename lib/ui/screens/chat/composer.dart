@@ -5,9 +5,11 @@ part of '../chat_screen.dart';
 enum _PromptTool {
   commands,
   attach,
+  webSources,
   gallery,
   camera,
   voice,
+  conversation,
   history,
   clearText,
   stash,
@@ -57,6 +59,9 @@ class _ChatComposer extends StatelessWidget {
     required this.onCamera,
     required this.onContentInserted,
     required this.onVoice,
+    required this.onConversation,
+    required this.onWebSources,
+    this.conversationMode = false,
     required this.onSend,
     required this.onStop,
     required this.onChooseModel,
@@ -141,6 +146,9 @@ class _ChatComposer extends StatelessWidget {
   /// Android clipboard-image paste chips). See `_handleInsertedContent`.
   final ValueChanged<KeyboardInsertedContent> onContentInserted;
   final VoidCallback onVoice;
+  final VoidCallback onConversation;
+  final VoidCallback onWebSources;
+  final bool conversationMode;
   final VoidCallback onSend;
 
   final VoidCallback onStop;
@@ -360,7 +368,7 @@ class _ChatComposer extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (onRestoreHistoryDraft != null)
+        if (!conversationMode && onRestoreHistoryDraft != null)
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: TextButton.icon(
@@ -387,11 +395,12 @@ class _ChatComposer extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
           child: Row(
             children: [
-              _PromptToolsButton(
-                voiceOpening: voiceOpening,
-                onSelected: _openTool,
-                onAttach: _attachBlocked ? null : onAttach,
-              ),
+              if (!conversationMode)
+                _PromptToolsButton(
+                  voiceOpening: voiceOpening,
+                  onSelected: _openTool,
+                  onAttach: _attachBlocked ? null : onAttach,
+                ),
               const SizedBox(width: 2),
               // The model/agent reads as context, not as a fifth equal
               // action: it flexes and ellipsizes so the row never pushes
@@ -405,7 +414,7 @@ class _ChatComposer extends StatelessWidget {
               IconButton(
                 key: const Key('prompt-editor-button'),
                 tooltip: 'Open full-screen prompt editor',
-                onPressed: shelfBusy ? null : onOpenEditor,
+                onPressed: shelfBusy || conversationMode ? null : onOpenEditor,
                 icon: const Icon(Icons.open_in_full_rounded, size: 19),
                 style: IconButton.styleFrom(
                   foregroundColor: Theme.of(
@@ -436,7 +445,7 @@ class _ChatComposer extends StatelessWidget {
   /// closed, so a tool that opens its own sheet (Commands, Voice) never
   /// races the dismissal of this one.
   Future<void> _openTool(BuildContext context) async {
-    if (shelfBusy) return;
+    if (shelfBusy || conversationMode) return;
     final tool = await showModalBottomSheet<_PromptTool>(
       context: context,
       useSafeArea: true,
@@ -463,12 +472,16 @@ class _ChatComposer extends StatelessWidget {
         onOpenCommands();
       case _PromptTool.attach:
         onAttach();
+      case _PromptTool.webSources:
+        onWebSources();
       case _PromptTool.gallery:
         onPhotoLibrary();
       case _PromptTool.camera:
         onCamera();
       case _PromptTool.voice:
         onVoice();
+      case _PromptTool.conversation:
+        onConversation();
       case _PromptTool.history:
         onReusePrompt?.call();
       case _PromptTool.clearText:
@@ -778,6 +791,26 @@ class _PromptToolsSheet extends StatelessWidget {
                 onTap: voiceBlocked
                     ? null
                     : () => Navigator.pop(context, _PromptTool.voice),
+              ),
+            ListTile(
+              enabled: !attachBlocked,
+              leading: const Icon(Icons.link_rounded),
+              title: Text(_chatL10n(context).webSourcesTitle),
+              subtitle: Text(_chatL10n(context).webSourcesEntryDetail),
+              onTap: attachBlocked
+                  ? null
+                  : () => Navigator.pop(context, _PromptTool.webSources),
+            ),
+            if (platformCapabilities.supportsVoiceConversation)
+              ListTile(
+                key: const Key('composer-tool-conversation'),
+                enabled: !voiceBlocked,
+                leading: const Icon(Icons.record_voice_over_outlined),
+                title: Text(_chatL10n(context).voiceConversationTitle),
+                subtitle: Text(_chatL10n(context).voiceConversationDescription),
+                onTap: voiceBlocked
+                    ? null
+                    : () => Navigator.pop(context, _PromptTool.conversation),
               ),
             if (canReusePrompt)
               ListTile(

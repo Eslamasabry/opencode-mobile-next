@@ -98,11 +98,13 @@ class _McpServerTile extends StatelessWidget {
 }
 
 class _PendingMcpOAuth {
+  final Object source;
   final McpServerInfo server;
   final McpAuthLaunch launch;
   final McpOAuthLoopbackListener? listener;
 
   const _PendingMcpOAuth({
+    required this.source,
     required this.server,
     required this.launch,
     required this.listener,
@@ -247,6 +249,7 @@ class _McpOAuthCodeDialogState extends State<_McpOAuthCodeDialog> {
 }
 
 class _ProviderIntegrationTile extends StatelessWidget {
+  final bool commandAuthSupported;
   final PresentedIntegration presented;
   final String subtitle;
 
@@ -264,6 +267,7 @@ class _ProviderIntegrationTile extends StatelessWidget {
     required this.onConnect,
     required this.onDisconnect,
     this.modelCount,
+    this.commandAuthSupported = false,
   });
 
   @override
@@ -349,7 +353,12 @@ class _ProviderIntegrationTile extends StatelessWidget {
       );
     }
     final canConnect = integration.methods.any(
-      (method) => method.type == 'key' || method.type == 'oauth',
+      (method) =>
+          method.type == 'key' ||
+          method.type == 'oauth' ||
+          (commandAuthSupported &&
+              method.type == 'command' &&
+              method.id != null),
     );
     return FilledButton.tonal(
       key: ValueKey('connect-provider-${integration.id}'),
@@ -423,12 +432,14 @@ class _ServerManagedLabel extends StatelessWidget {
 }
 
 class _PendingIntegrationOAuth {
+  final Object source;
   final String integrationID;
   final String integrationName;
   final IntegrationAuthLaunch launch;
   final IntegrationAuthStatus? status;
 
   const _PendingIntegrationOAuth({
+    required this.source,
     required this.integrationID,
     required this.integrationName,
     required this.launch,
@@ -437,6 +448,7 @@ class _PendingIntegrationOAuth {
 
   _PendingIntegrationOAuth copyWith({required IntegrationAuthStatus status}) =>
       _PendingIntegrationOAuth(
+        source: source,
         integrationID: integrationID,
         integrationName: integrationName,
         launch: launch,
@@ -464,16 +476,13 @@ class _PendingOAuthTile extends StatelessWidget {
         state == IntegrationAuthState.failed ||
         state == IntegrationAuthState.expired;
     final message = switch (state) {
-      IntegrationAuthState.failed =>
-        pending.status?.message ?? 'Authentication failed',
+      IntegrationAuthState.failed => 'Authentication failed',
       IntegrationAuthState.expired => 'Authentication attempt expired',
       IntegrationAuthState.complete => 'Authentication complete',
       IntegrationAuthState.pending =>
-        pending.launch.instructions.trim().isEmpty
-            ? pending.launch.mode == IntegrationAuthMode.code
-                  ? 'Return from the browser and enter the authorization code.'
-                  : 'Finish authentication in the browser, then check its status.'
-            : pending.launch.instructions.trim(),
+        pending.launch.mode == IntegrationAuthMode.code
+            ? 'Return from the browser and enter the authorization code.'
+            : 'Finish authentication in the browser, then check its status.',
     };
     final actionLabel = terminal
         ? 'Dismiss'

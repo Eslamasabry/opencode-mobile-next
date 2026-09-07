@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../api2/models.dart' show Api2FormInfo;
+import '../../domain/completion_digest.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
@@ -10,6 +11,7 @@ import '../app_theme.dart';
 import '../desktop/desktop_interaction.dart';
 import '../permission_presentation.dart';
 import '../widgets/product_states.dart';
+import '../widgets/completion_digest.dart';
 import '../widgets/question_options.dart';
 import '../widgets/request_routes.dart';
 import 'chat/form_flow.dart';
@@ -64,6 +66,167 @@ class _ActivityScreenState extends State<ActivityScreen> {
   String? _error;
   bool _initialQuestionScheduled = false;
   bool _initialQuestionHandled = false;
+  Object? _digestScope;
+  bool _showDigests = false;
+  final Set<(String, int)> _expandedDigests = {};
+  final Set<(String, int)> _dismissedDigests = {};
+
+  Object get _currentDigestScope => (
+    widget.controller,
+    widget.controller.profile?.id,
+    widget.controller.connectionRevision,
+    widget.controller.locationRevision,
+    widget.controller.directory,
+    widget.controller.workspace,
+  );
+
+  void _clearDigestScope() {
+    if (_digestScope == _currentDigestScope) return;
+    _digestScope = _currentDigestScope;
+    _showDigests = false;
+    _expandedDigests.clear();
+    _dismissedDigests.clear();
+  }
+
+  @override
+  void didUpdateWidget(covariant ActivityScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_changed);
+      widget.controller.addListener(_changed);
+    }
+    _clearDigestScope();
+  }
+
+  void _reviewDigest(String sessionID, Object scope) {
+    if (_currentDigestScope != scope) return;
+    final controller = widget.controller;
+    for (final permission in controller.permissions.values) {
+      if (permission.sessionID == sessionID) {
+        showPermissionSheet(
+          context,
+          permission: permission,
+          controller: controller,
+        );
+        return;
+      }
+    }
+    for (final question in controller.questions.values) {
+      if (question.sessionID == sessionID) {
+        showQuestionSheet(context, controller, question);
+        return;
+      }
+    }
+    if (controller.capabilities.forms) {
+      for (final form in controller.forms.values) {
+        if (form.sessionID == sessionID) {
+          presentConnectionForm(context, controller, form);
+          return;
+        }
+      }
+    }
+    // Chat owns the authoritative review/task actions; do not create a second
+    // diff cache or a route retaining another profile's content here.
+    _openChat(sessionID);
+  }
+
+  Widget _completionDigests() {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final controller = widget.controller;
+    final scope = _currentDigestScope;
+    final sessions =
+        controller.sessionsById.values.where((session) {
+          final idle = session.time?.idle;
+          return session.parentID == null &&
+              session.directory == controller.directory &&
+              session.workspaceID == controller.workspace &&
+              idle != null &&
+              idle > 0 &&
+              !controller.busySessions.contains(session.id) &&
+              !_dismissedDigests.contains((session.id, idle));
+        }).toList()..sort((a, b) {
+          final byTime = b.time!.idle!.compareTo(a.time!.idle!);
+          return byTime == 0 ? a.id.compareTo(b.id) : byTime;
+        });
+    final pendingKnown =
+        !controller.permissionsLoading &&
+        !controller.questionsLoading &&
+        controller.permissionsError == null &&
+        controller.questionsError == null &&
+        (!controller.capabilities.forms ||
+            (!controller.formsLoading && controller.formsError == null));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListTile(
+          leading: const Icon(Icons.fact_check_outlined),
+          title: Text(l10n.digestTitle),
+          subtitle: Text(l10n.digestSubtitle),
+          trailing: Icon(_showDigests ? Icons.expand_less : Icons.expand_more),
+          onTap: () => setState(() => _showDigests = !_showDigests),
+        ),
+        if (_showDigests && sessions.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(l10n.digestEmpty),
+          ),
+        if (_showDigests)
+          for (final session in sessions) ...[
+            ListTile(
+              title: Text(
+                session.title?.trim().isNotEmpty == true
+                    ? session.title!
+                    : 'Untitled session',
+              ),
+              subtitle: Text(l10n.digestIdle),
+              trailing: Icon(
+                _expandedDigests.contains((session.id, session.time!.idle!))
+                    ? Icons.expand_less
+                    : Icons.expand_more,
+              ),
+              onTap: () => setState(() {
+                final key = (session.id, session.time!.idle!);
+                if (!_expandedDigests.remove(key)) _expandedDigests.add(key);
+              }),
+            ),
+            if (_expandedDigests.contains((session.id, session.time!.idle!)))
+              CompletionDigestCard(
+                key: ValueKey((scope, session.id, session.time!.idle)),
+                digest: CompletionDigest(
+                  sessionID: session.id,
+                  idleAt: session.time!.idle!,
+                  changedFiles:
+                      session.summary == null || session.summary!.files < 0
+                      ? null
+                      : session.summary!.files,
+                  pendingDecisions: !pendingKnown
+                      ? null
+                      : controller.permissions.values
+                                .where((p) => p.sessionID == session.id)
+                                .length +
+                            controller.questions.values
+                                .where((q) => q.sessionID == session.id)
+                                .length +
+                            (controller.capabilities.forms
+                                ? controller.forms.values
+                                      .where((f) => f.sessionID == session.id)
+                                      .length
+                                : 0),
+                ),
+                onOpenConversation: () {
+                  if (scope == _currentDigestScope) _openChat(session.id);
+                },
+                onReview: () => _reviewDigest(session.id, scope),
+                onDismiss: () => setState(() {
+                  final key = (session.id, session.time!.idle!);
+                  _dismissedDigests.add(key);
+                  _expandedDigests.remove(key);
+                }),
+              ),
+          ],
+      ],
+    );
+  }
 
   @override
   void initState() {
@@ -225,6 +388,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _clearDigestScope();
     final controller = widget.controller;
     final permissions = controller.permissions.values.toList();
     final questions = controller.questions.values.toList()
@@ -300,6 +464,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   _BackgroundUpdatesHint(
                     onOpen: () => _openBackgroundSettings(context),
                   ),
+                _completionDigests(),
               ],
             )
           : DesktopScrollbarArea(
@@ -365,6 +530,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             _place(session),
                         onTap: () => _openChat(session.id),
                       ),
+                  _completionDigests(),
                 ],
               ),
             ),

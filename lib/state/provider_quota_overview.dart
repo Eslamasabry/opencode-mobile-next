@@ -24,6 +24,7 @@ class ProviderQuotaOverview extends ChangeNotifier with WidgetsBindingObserver {
   _gatewayFactory;
   QuotaProvider _provider = QuotaProvider.codex;
   QuotaProvider get provider => _provider;
+  bool get providerSupported => quotaCollectionAvailable(_provider);
   final int _location;
   _QuotaProfileScope? _scope;
   int _connectionRevision;
@@ -111,6 +112,7 @@ class ProviderQuotaOverview extends ChangeNotifier with WidgetsBindingObserver {
     _synchronize();
     return !_disposed &&
         !_detached &&
+        providerSupported &&
         _consented &&
         !_backgrounded &&
         !_suspended &&
@@ -146,6 +148,11 @@ class ProviderQuotaOverview extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> allowAndRefresh() async {
     _synchronize(notify: true);
     if (_disposed || _detached) return;
+    if (!providerSupported) {
+      _failure = const ProviderQuotaFailure(QuotaFailureKind.unsupported);
+      notifyListeners();
+      return;
+    }
     _consented = true;
     await refresh();
   }

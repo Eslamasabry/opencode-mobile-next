@@ -121,7 +121,7 @@ List<ShortcutHelpEntry> shortcutHelp() {
     ShortcutHelpEntry('$mod + /', 'This list'),
     const ShortcutHelpEntry('Esc', 'Close a sheet, dialog, or menu'),
     const ShortcutHelpEntry(
-      'Right click',
+      'Right click / Shift + F10 / Menu',
       'Message, file, and session actions',
     ),
   ];

@@ -20,6 +20,9 @@
     <uses-permission android:name="com.termux.permission.RUN_COMMAND"/>
     <!-- Package visibility (Android 11+) so we can detect Termux and launch it -->
     <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE"/>
+        </intent>
         <package android:name="com.termux" />
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>

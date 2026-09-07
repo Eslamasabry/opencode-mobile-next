@@ -18,7 +18,9 @@ import 'transport.dart';
 /// `docs/opencode2-port-matrix.md` §2:
 ///
 /// - `mcpRuntimeAdds` supports location-scoped MCP additions until restart.
+///   `mcpRuntimeRemovals` removes servers from that runtime location only.
 ///   `mcpConfigWrites` is false: the route does not persist configuration.
+/// - `integrationCredentials` manages stored credentials by their safe IDs.
 /// - `globalEventStream` is true because the single `/api/event` stream
 ///   carries every location (events are tagged with `location`), so a global
 ///   channel can be served by an unfiltered subscription.
@@ -37,6 +39,9 @@ const ServerCapabilities api2ServerCapabilities = ServerCapabilities(
   mcpOAuth: false,
   mcpConfigWrites: false,
   mcpRuntimeAdds: true,
+  mcpRuntimeRemovals: true,
+  integrationCredentials: true,
+  integrationCommandAuth: true,
   sessionShare: false,
   sessionArchive: false,
   sessionTodos: false,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
@@ -64,6 +65,19 @@ class _ProjectsRepository implements ProductRepository {
   String? renamedDirectory;
   String? renamedName;
   final archiveCalls = <String>[];
+  List<GlobalSessionResult> globalSessions = const [];
+
+  @override
+  Future<ServerPage<GlobalSessionResult>> listGlobalSessions({
+    String? search,
+    bool includeArchived = false,
+    String? cursor,
+    int limit = 50,
+  }) async => ServerPage(items: globalSessions);
+
+  @override
+  Future<Session> getSessionDetails(String id) async =>
+      globalSessions.singleWhere((result) => result.session.id == id).session;
 
   @override
   void setLocation({String? directory, String? workspace}) {}
@@ -577,6 +591,134 @@ void main() {
     // The empty state explains the situation without dead-ending the flow.
     expect(find.text('No projects opened'), findsOneWidget);
     expect(find.byKey(const ValueKey('workspace-quick-ask')), findsOneWidget);
+    expect(find.text('Search all sessions'), findsOneWidget);
+  });
+
+  testWidgets('an empty project catalog does not hide existing sessions', (
+    tester,
+  ) async {
+    final repository = _ProjectsRepository()..projects = const [];
+    final controller = await _controller(repository)
+      ..api = _WorkspaceSessionsApi()
+      ..status = StreamStatus.connected;
+    addTearDown(controller.dispose);
+    await controller.refreshSessions();
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          '/chat/session-1': (_) =>
+              const Scaffold(body: Text('Previous chat opened')),
+        },
+        home: Scaffold(body: WorkspaceScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('No projects opened'), findsOneWidget);
+    expect(find.text('Swipe target'), findsOneWidget);
+    await tester.tap(find.text('Swipe target'));
+    await tester.pumpAndSettle();
+    expect(find.text('Previous chat opened'), findsOneWidget);
+  });
+
+  testWidgets('zero projects still allows finding and opening an older chat', (
+    tester,
+  ) async {
+    const secureChannel = MethodChannel(
+      'plugins.it_nomads.com/flutter_secure_storage',
+    );
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      secureChannel,
+      (_) async => null,
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        secureChannel,
+        null,
+      ),
+    );
+    final repository = _ProjectsRepository()
+      ..projects = const []
+      ..globalSessions = [
+        GlobalSessionResult(
+          session: Session(
+            id: 'older-chat',
+            title: 'Previous conversation',
+            directory: '/work/previous',
+          ),
+          projectDirectory: '/work/previous',
+        ),
+      ];
+    final controller = await _controller(repository)
+      ..status = StreamStatus.connected;
+    addTearDown(controller.dispose);
+    await controller.store.upsert(
+      ServerProfile(
+        id: 'server',
+        name: 'Test server',
+        baseUrl: 'http://localhost',
+      ),
+    );
+    await controller.store.setActiveId('server');
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          '/chat/older-chat': (_) =>
+              const Scaffold(body: Text('Previous chat opened')),
+        },
+        home: Scaffold(body: WorkspaceScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Search all sessions'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Previous conversation'));
+    await tester.pumpAndSettle();
+    expect(controller.locations, [
+      (directory: '/work/previous', workspace: null),
+    ]);
+    expect(find.text('Previous chat opened'), findsOneWidget);
+  });
+
+  testWidgets('zero projects keeps session errors and older pages reachable', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    var fail = true;
+    final api = _WorkspaceSessionsApi()
+      ..pageHandler = (cursor) async {
+        if (fail) throw ApiException('Session list unavailable');
+        return cursor == null
+            ? const ServerPage(items: [], nextCursor: 'older')
+            : ServerPage(
+                items: [Session(id: 'older-chat', title: 'Older conversation')],
+              );
+      };
+    final repository = _ProjectsRepository()..projects = const [];
+    final controller = await _controller(repository)
+      ..api = api
+      ..status = StreamStatus.connected;
+    addTearDown(controller.dispose);
+    await controller.refreshSessions();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: WorkspaceScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Session list unavailable'), findsOneWidget);
+    fail = false;
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Load more sessions'));
+    await tester.pumpAndSettle();
+    expect(find.text('Older conversation'), findsOneWidget);
+    expect(controller.hasMoreSessions, isFalse);
   });
 
   testWidgets(

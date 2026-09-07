@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'audio.dart';
 import 'model_manager.dart';
 import 'recognizer.dart';
+import '../platform/platform_capabilities.dart';
 
 enum VoiceComposerState {
   modelRequired,
@@ -61,12 +62,16 @@ class VoiceComposerController extends ChangeNotifier {
   StreamSubscription<Uint8List>? _audioSubscription;
   Completer<void>? _audioDone;
   Timer? _clock;
+  Timer? _captureDeadline;
   VoiceRecognitionHandle? _recognition;
   int _generation = 0;
   bool _disposed = false;
   bool _starting = false;
 
   static Future<VoiceComposerController> create() async {
+    if (!platformCapabilities.supportsVoice) {
+      throw StateError('Local voice input is unavailable on this platform.');
+    }
     final models = await VoiceModelManager.shared();
     return VoiceComposerController(
       models: models,
@@ -99,6 +104,16 @@ class VoiceComposerController extends ChangeNotifier {
   }
 
   Future<void> startListening() async {
+    if (!platformCapabilities.supportsVoice) {
+      if (!_disposed) {
+        error = StateError(
+          'Local voice input is unavailable on this platform.',
+        );
+        state = VoiceComposerState.error;
+        notifyListeners();
+      }
+      return;
+    }
     if (_disposed ||
         _starting ||
         state == VoiceComposerState.listening ||
@@ -114,8 +129,10 @@ class VoiceComposerController extends ChangeNotifier {
       return;
     }
     _starting = true;
-    await cancel(clearError: true);
-    if (_disposed) {
+    final cancellation = cancel(clearError: true);
+    final startingGeneration = _generation;
+    await cancellation;
+    if (_disposed || startingGeneration != _generation) {
       _starting = false;
       return;
     }
@@ -135,6 +152,12 @@ class VoiceComposerController extends ChangeNotifier {
         return;
       }
       state = VoiceComposerState.listening;
+      // The sample cap alone cannot stop a stalled recorder with no frames.
+      _captureDeadline = Timer(voiceMaximumDuration, () {
+        if (!_disposed && generation == _generation) {
+          unawaited(stopListening());
+        }
+      });
       _audioDone = Completer<void>();
       _audioSubscription = stream.listen(
         (bytes) {
@@ -168,7 +191,7 @@ class VoiceComposerController extends ChangeNotifier {
       error = exception;
       state = VoiceComposerState.error;
       await recorder.cancel();
-      notifyListeners();
+      if (!_disposed && generation == _generation) notifyListeners();
     } finally {
       _starting = false;
     }
@@ -177,17 +200,21 @@ class VoiceComposerController extends ChangeNotifier {
   Future<void> stopListening() async {
     if (state != VoiceComposerState.listening) return;
     final generation = _generation;
+    final audioDone = _audioDone;
     state = VoiceComposerState.loading;
     models.markLoading();
     _clock?.cancel();
+    _captureDeadline?.cancel();
     notifyListeners();
     try {
       await recorder.stop();
-      await _audioDone?.future.timeout(const Duration(seconds: 2));
+      await audioDone?.future.timeout(const Duration(seconds: 2));
     } catch (_) {
       // The stream may already have closed after an interruption.
     }
+    if (_disposed || generation != _generation) return;
     await _audioSubscription?.cancel();
+    if (_disposed || generation != _generation) return;
     _audioSubscription = null;
     final samples = _audio?.takeSamples() ?? Float32List(0);
     _audio = null;
@@ -250,17 +277,23 @@ class VoiceComposerController extends ChangeNotifier {
     final generation = _generation;
     _clock?.cancel();
     _clock = null;
+    _captureDeadline?.cancel();
+    _captureDeadline = null;
     final recognition = _recognition;
     recognition?.cancel();
     _recognition = null;
     final finishing = recognition?.finished;
-    await _audioSubscription?.cancel();
+    final subscription = _audioSubscription;
     _audioSubscription = null;
     _audio?.clear();
     _audio = null;
+    draft = '';
+    await subscription?.cancel();
+    if (_disposed || generation != _generation) return;
     try {
       await recorder.cancel();
     } catch (_) {}
+    if (_disposed || generation != _generation) return;
     if (finishing == null) models.markReady();
     elapsed = Duration.zero;
     level = 0;
@@ -301,6 +334,10 @@ class VoiceComposerController extends ChangeNotifier {
     _disposed = true;
     ++_generation;
     _clock?.cancel();
+    _captureDeadline?.cancel();
+    _audio?.clear();
+    _audio = null;
+    draft = '';
     _recognition?.cancel();
     unawaited(_audioSubscription?.cancel());
     unawaited(recorder.cancel());

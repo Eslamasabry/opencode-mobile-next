@@ -557,8 +557,27 @@ class Api2EventAdapter {
             return [_env('catalog.updated', const {})];
           case 'integration.updated':
           case 'credential.updated':
-          case 'credential.switched':
             return [_env('integration.connection.updated', const {})];
+          case 'credential.switched':
+            final data = envelope.data;
+            final integrationID = data['integrationID'];
+            final credentialID = data['credentialID'];
+            // Only an explicitly present null means no active credential.
+            // Never forward credential payloads or infer state from bad data.
+            final valid =
+                integrationID is String &&
+                integrationID.trim().isNotEmpty &&
+                data.containsKey('credentialID') &&
+                (credentialID == null ||
+                    (credentialID is String && credentialID.trim().isNotEmpty));
+            return [
+              if (valid)
+                _env('credential.switched', {
+                  'integrationID': integrationID,
+                  'credentialID': credentialID,
+                }),
+              _env('integration.connection.updated', const {}),
+            ];
           default:
             return const [];
         }

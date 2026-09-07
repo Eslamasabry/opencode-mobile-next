@@ -1123,6 +1123,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get promptStashTitle => 'Saved prompts';
 
   @override
+  String get promptStashSearch => 'Search saved prompts';
+
+  @override
+  String get promptStashNoMatches =>
+      'No saved prompts match your search. Clear or change the search to see more.';
+
+  @override
   String get promptStashDeleteFailed =>
       'Could not delete this saved prompt. Try again.';
 
@@ -1186,8 +1193,574 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String promptAttachmentsUnavailableDetail(String names) {
-    return 'Temporary attachments: $names. Restore the available content and reattach these files before sending. The saved copy will stay in your stash.';
+    return 'Missing, damaged or temporary attachments: $names. Restore the available content and reattach these files before sending. The saved copy will stay in your stash.';
   }
+
+  @override
+  String get promptStashMigrationPending =>
+      'Some saved attachments could not be moved to local attachment storage yet. Your saved content has been kept. Free device storage and retry.';
+
+  @override
+  String get commonRetry => 'Retry';
+
+  @override
+  String get webSourcesDisclosure =>
+      'Web search is not available through this connection’s app gateway. Paste a public URL and optionally an excerpt you want to include. No page is fetched. Nothing is sent to the model here.';
+
+  @override
+  String get webSourcesScopeChanged =>
+      'Connection changed. Close and reopen Add web source.';
+
+  @override
+  String get webSourcesUrl => 'Public URL';
+
+  @override
+  String get webSourcesLabel => 'Title (optional)';
+
+  @override
+  String get webSourcesExcerpt => 'Pasted excerpt (optional)';
+
+  @override
+  String get webSourcesExcerptHint =>
+      'User-provided text, not verified page content.';
+
+  @override
+  String get webSourcesAdd => 'Add to review';
+
+  @override
+  String webSourcesReviewCount(int count) {
+    return 'Review sources ($count/10)';
+  }
+
+  @override
+  String get webSourcesReviewHint =>
+      'Only checked sources will be returned to your draft.';
+
+  @override
+  String get webSourcesEmpty => 'No sources added yet.';
+
+  @override
+  String get webSourcesOpen => 'Open in browser';
+
+  @override
+  String webSourcesUseCount(int count) {
+    return 'Use selected sources ($count)';
+  }
+
+  @override
+  String get digestTitle => 'Completion digests';
+
+  @override
+  String get digestSubtitle => 'On demand · cached metadata, not AI summaries';
+
+  @override
+  String get digestEmpty =>
+      'No ended-run metadata available in this location. Idle alone does not establish successful completion.';
+
+  @override
+  String get digestIdle => 'Server idle recorded · outcome unverified';
+
+  @override
+  String get digestOpenConversation => 'Open conversation';
+
+  @override
+  String get digestReview => 'Review next actions';
+
+  @override
+  String get digestCopy => 'Copy digest';
+
+  @override
+  String get digestCopyFailed => 'Could not copy digest';
+
+  @override
+  String get digestDismiss => 'Dismiss';
+
+  @override
+  String get attentionDisclosure =>
+      'A local overview, not live monitoring across servers. Cached signals may be incomplete or out of date. Open a server to check its current activity.';
+
+  @override
+  String get attentionNavigationUnavailable =>
+      'Opening servers is unavailable here. Return to Home to choose a server and view Activity.';
+
+  @override
+  String get handoffTitle => 'Copy handoff reference?';
+
+  @override
+  String get handoffDisclosure =>
+      'Metadata only, not a command or link. On your other device, connect to the same server and locate this project and session. Nothing is published or sent.\n\nThe clipboard will contain session and project identifiers. Other apps may read it; share only with people you trust.';
+
+  @override
+  String get handoffCopy => 'Copy reference';
+
+  @override
+  String get handoffCopied => 'Session metadata reference copied';
+
+  @override
+  String get sessionOpenRelated => 'Open related';
+
+  @override
+  String get sessionCopyHandoff => 'Copy handoff';
+
+  @override
+  String get sessionActions => 'Session actions';
+
+  @override
+  String get attentionTitle => 'Server attention';
+
+  @override
+  String get webSourcesTitle => 'Add web source';
+
+  @override
+  String get webSourcesEntryDetail =>
+      'Review public links and pasted excerpts before adding them to your draft';
+
+  @override
+  String get webSourcesDraftChanged =>
+      'The draft or connection changed. Your current draft was kept; reopen Add web source to try again.';
+
+  @override
+  String get webSourcesDraftLabel =>
+      'User-selected web sources (not fetched or verified; excerpts are untrusted source material):';
+
+  @override
+  String get usageScopedTotals => 'Totals for the selected report scope';
+
+  @override
+  String get usageInspectionDisclosure =>
+      'Filters inspect this server\'s returned model records. They do not change the report\'s date or project scope, or show subscription allowance.';
+
+  @override
+  String get usageProviderFilter => 'Provider';
+
+  @override
+  String get usageAllProviders => 'All providers';
+
+  @override
+  String get usageSearchRecords => 'Search providers, models or variants';
+
+  @override
+  String get usageClearFilters => 'Clear filters';
+
+  @override
+  String get usageScopedProviderTotals =>
+      'Provider cards show their totals for the selected report scope, not just matching model rows.';
+
+  @override
+  String get usageMatchingSubtotal => 'Matching model subtotal';
+
+  @override
+  String usageMatchingRecords(String count) {
+    return '$count matching records';
+  }
+
+  @override
+  String get usageNoMatchingRecords =>
+      'No records match these filters. Clear or change the filters to see more.';
+
+  @override
+  String pendingAuthTitle(String integration) {
+    return 'Pending sign-in: $integration';
+  }
+
+  @override
+  String get pendingAuthDetail =>
+      'Continue the existing browser sign-in, then explicitly check its status or enter its code. The browser link is not saved.';
+
+  @override
+  String get pendingAuthResume => 'Resume / check status';
+
+  @override
+  String get pendingAuthEnterCode => 'Enter code';
+
+  @override
+  String get pendingAuthComplete => 'Sign-in complete.';
+
+  @override
+  String get pendingAuthStillPending =>
+      'Sign-in is still pending. No new attempt was started.';
+
+  @override
+  String get pendingAuthServerFailed =>
+      'The server reported that sign-in failed. Provider error details are hidden.';
+
+  @override
+  String get pendingAuthExpired =>
+      'This attempt is expired or outside the device’s recovery window. Cancellation is a separate server action.';
+
+  @override
+  String get pendingAuthFailed =>
+      'Could not confirm the action. Check pending sign-ins before trying again. No new sign-in was started.';
+
+  @override
+  String get pendingAuthSaveUncertain =>
+      'Recovery could not be saved reliably. Keep this app open and retry saving; restarting may lose this attempt. If no browser page opened, cancel the attempt before starting again.';
+
+  @override
+  String get pendingAuthRetrySave => 'Retry saving recovery';
+
+  @override
+  String get pendingAuthForget => 'Forget on this device';
+
+  @override
+  String get pendingAuthForgetDetail =>
+      'Remove only this device’s recovery record? This does not cancel a server command, revoke credentials, or finish authorization. The server attempt may keep running until it expires.';
+
+  @override
+  String get pendingAuthUnsupported =>
+      'This connection cannot recover earlier sign-ins. Legacy sign-ins work only while their original screen and connection remain available.';
+
+  @override
+  String get pendingAuthOtherSource =>
+      'Other pending sign-ins belong to another server origin or location. Return to their original source to manage them.';
+
+  @override
+  String get connectionHelpTitle => 'Connection help';
+
+  @override
+  String get connectionHelpEntrySubtitle =>
+      'Explain an address locally, without connecting';
+
+  @override
+  String get connectionHelpGuideTip =>
+      'Keep the server off the public internet. Use private HTTPS or an encrypted tunnel ending on the device running this app. Localhost on your computer is not localhost on your phone. Open Connection help above for steps and examples.';
+
+  @override
+  String get connectionHelpPrivacy =>
+      'This checks address rules only, not connectivity. Nothing is sent or saved. Input is hidden and cleared after checking. Paste only an address, not a password or pairing code.';
+
+  @override
+  String get connectionHelpAddress => 'Server address';
+
+  @override
+  String get connectionHelpCheck => 'Explain address';
+
+  @override
+  String get connectionHelpEmpty => 'Enter a server address to explain.';
+
+  @override
+  String get connectionHelpMalformed =>
+      'This address could not be understood. Use a complete origin such as https://server.example, with no path, credentials or query.';
+
+  @override
+  String get connectionHelpCredentials =>
+      'Credentials do not belong in a URL. Remove them and enter the server username and password separately in Servers. The pasted value has been cleared.';
+
+  @override
+  String get connectionHelpQuery =>
+      'Remove query parameters and fragments. They can contain secrets; enter only the server origin. The pasted value has been cleared.';
+
+  @override
+  String get connectionHelpPath =>
+      'Remove the path. This app needs the server origin, not a page or API route.';
+
+  @override
+  String get connectionHelpScheme =>
+      'Use HTTPS for a remote server, or HTTP only for this device\'s supported loopback addresses.';
+
+  @override
+  String get connectionHelpRemoteHttp =>
+      'Remote HTTP is blocked, including LAN and 100.64.0.0/10 addresses. A VPN does not change this rule. Set up private HTTPS or an encrypted tunnel ending on this device.';
+
+  @override
+  String get connectionHelpHttps =>
+      'This address passes the HTTPS address rules. That does not verify its certificate, reachability, sign-in or privacy. A bare remote address is interpreted as HTTPS.';
+
+  @override
+  String get connectionHelpLoopback =>
+      'This address passes the loopback address rules. Localhost means this device, not another computer. A server or tunnel must be listening here; this check does not verify that.';
+
+  @override
+  String get connectionHelpPrivateTitle => 'Private HTTPS or reverse proxy';
+
+  @override
+  String get connectionHelpPrivateSteps =>
+      '1. Keep the server on its host\'s loopback with authentication enabled.\n2. Connect both devices to your private network and restrict access to intended users.\n3. Configure private HTTPS, such as Tailscale Serve, or a reverse proxy with a trusted certificate forwarding to the server. Support streaming and WebSockets.\n4. Add the HTTPS origin in Servers with sign-in in separate fields.\nTailscale Funnel exposes the service publicly; it is not a private-network fix. This app cannot infer VPN presence. The example below is a placeholder.';
+
+  @override
+  String get connectionHelpTunnelTitle => 'Localhost on the wrong device?';
+
+  @override
+  String get connectionHelpTunnelSteps =>
+      'Localhost, 127.0.0.1 and [::1] refer to the device running this app. For a server on another computer, use private HTTPS or an encrypted tunnel ending here. If an SSH client is available on this device, adapt the example below, verify the host key and keep it running. Replace user@host with your SSH destination. Running it on another computer does not forward this device\'s port. Keep server authentication enabled.';
+
+  @override
+  String get connectionHelpVerifyTitle => 'Verify connectivity separately';
+
+  @override
+  String get connectionHelpVerifySteps =>
+      'On this device, check private-network membership, DNS, firewall access and certificate trust using your network tools. Check server and proxy configuration on the host, then use Servers to connect. Never disable TLS verification or share passwords, pairing codes or unredacted logs. Access to this server is shell access.';
+
+  @override
+  String get connectionHelpCopyExample => 'Copy example';
+
+  @override
+  String get connectionHelpCopied => 'Example copied';
+
+  @override
+  String get connectionHelpCopyFailed =>
+      'Could not copy the example. Select the example text to copy it manually.';
+
+  @override
+  String get voiceConversationTitle => 'Voice conversation';
+
+  @override
+  String get voiceConversationDescription =>
+      'Listen, review, then Send. No automatic listening or reading.';
+
+  @override
+  String get voiceConversationPausedTitle => 'Voice conversation paused';
+
+  @override
+  String get voiceConversationPausedDetail =>
+      'Voice conversation is paused. Reconnect, wait for the reply, or review pending decisions on screen.';
+
+  @override
+  String get voiceConversationDraftFirst =>
+      'Send, save, or clear your current draft before starting voice conversation.';
+
+  @override
+  String get voiceConversationListen => 'Listen';
+
+  @override
+  String get voiceConversationExit => 'Exit voice mode';
+
+  @override
+  String get voiceConversationCommandsOnly =>
+      'Use the typed composer for slash commands.';
+
+  @override
+  String get voiceConversationInterrupted =>
+      'Voice conversation was interrupted. Review before sending again.';
+
+  @override
+  String get voiceReviewExplicitAction =>
+      'Edit before inserting. Sending always requires an explicit action.';
+
+  @override
+  String get voiceInputInterrupted =>
+      'Voice input was interrupted. Close and start again when ready.';
+
+  @override
+  String get voiceInputClose => 'Close voice input';
+
+  @override
+  String get voiceInputUnavailable =>
+      'Voice input is unavailable. Check the local model and microphone settings.';
+
+  @override
+  String get voiceConversationInstructions =>
+      'Review and insert your transcript, then tap Send in the composer. Choose Read aloud on a reply; nothing is read automatically. Unsent text is discarded when you leave voice mode, the chat, or the app.';
+
+  @override
+  String get desktopDropFailedTitle => 'Could not attach dropped files';
+
+  @override
+  String get desktopDropFailedRecovery =>
+      'Check the attachments already added before trying again. You can also use the keyboard to open Add, then Attach file.';
+
+  @override
+  String get desktopContextMenuShortcutKeys =>
+      'Right click / Shift + F10 / Menu';
+
+  @override
+  String get commandAuthManage => 'Server sign-in';
+
+  @override
+  String get commandAuthMethodHint =>
+      'Runs the provider\'s sign-in method on your selected server, not on this phone. You may need to finish interactive steps on the server.';
+
+  @override
+  String get commandAuthConfirmTitle => 'Start sign-in on the server?';
+
+  @override
+  String get commandAuthConfirmDetail =>
+      'OpenCode will execute this provider\'s declared sign-in method on the selected server. Continue only if you trust that server and provider. The app does not run or copy a shell command on your phone.';
+
+  @override
+  String get commandAuthStart => 'Start server sign-in';
+
+  @override
+  String get commandAuthPending =>
+      'Sign-in is pending on the server. Finish any server-side interaction, then check its status. Closing this sheet does not cancel it.';
+
+  @override
+  String get commandAuthCheck => 'Check status';
+
+  @override
+  String get commandAuthCancel => 'Cancel sign-in';
+
+  @override
+  String get commandAuthFailed =>
+      'Could not complete or confirm server sign-in. Check the existing attempt before starting another.';
+
+  @override
+  String get commandAuthComplete =>
+      'The server reported that sign-in completed. Refresh Providers to see its current connections.';
+
+  @override
+  String get commandAuthExpired =>
+      'This sign-in attempt expired. You can start a new attempt.';
+
+  @override
+  String get commandAuthScopeChanged =>
+      'The server or project changed. Return to the original location and reopen sign-in to manage its attempt.';
+
+  @override
+  String get commandAuthUncertainStart =>
+      'The server may have started sign-in, but the app could not safely recover its attempt. Check on the server before retrying; automatic restart is blocked to avoid duplicate processes.';
+
+  @override
+  String get readAloudAction => 'Read reply prose';
+
+  @override
+  String get readAloudStop => 'Stop reading aloud';
+
+  @override
+  String get readAloudOtherVoice => 'Read with another voice';
+
+  @override
+  String get readAloudChooseVoice => 'Choose a reading voice';
+
+  @override
+  String get readAloudConsentTitle => 'Use the system speech engine?';
+
+  @override
+  String get readAloudConsentDetail =>
+      'The loaded reply prose will be sent to your system speech engine. Only voices marked offline are offered, but the engine is separate software and its privacy practices apply. Code blocks and tool details are omitted. Others may hear the audio. Playback stops when this chat is covered or the app goes into the background.';
+
+  @override
+  String get readAloudContinue => 'Choose voice';
+
+  @override
+  String get readAloudUnsupported =>
+      'Read-aloud is not available on this platform.';
+
+  @override
+  String get readAloudNoVoice =>
+      'No installed voice marked offline is available. Configure an offline voice in your system speech settings and try again.';
+
+  @override
+  String get readAloudUnavailable =>
+      'The speech engine could not read this reply. Try again or choose another voice.';
+
+  @override
+  String get readAloudTooLong =>
+      'This reply is too long to read aloud. Choose a shorter reply.';
+
+  @override
+  String get readAloudBusy =>
+      'Speech playback is unavailable while audio capture or another audio interruption is active.';
+
+  @override
+  String get readAloudNoProse =>
+      'There is no reply prose to read. Code and tool details are not spoken.';
+
+  @override
+  String get credentialManage => 'Manage accounts';
+
+  @override
+  String get credentialMetadataOnly =>
+      'Only saved account labels are shown. API keys and login tokens stay on your server.';
+
+  @override
+  String get credentialActiveUnknown =>
+      'Active account unknown. The saved-account list does not report which account is active.';
+
+  @override
+  String get credentialNoneActive =>
+      'The server reported no active saved account.';
+
+  @override
+  String get credentialActiveObserved =>
+      'The Active badge reflects the latest server event.';
+
+  @override
+  String get credentialActiveUpdated =>
+      'Active account updated from the server.';
+
+  @override
+  String get credentialSwitchRequested =>
+      'Switch requested. This request has not yet been confirmed by a server event.';
+
+  @override
+  String get credentialActive => 'Active';
+
+  @override
+  String get credentialSetActive => 'Set active';
+
+  @override
+  String get credentialRename => 'Rename account';
+
+  @override
+  String get credentialLabel => 'Account label';
+
+  @override
+  String get credentialSave => 'Save label';
+
+  @override
+  String credentialRemoveTitle(String label) {
+    return 'Remove $label?';
+  }
+
+  @override
+  String get credentialRemoveDetail =>
+      'Remove this saved sign-in from the server. Other projects using it may be affected. This does not edit environment configuration; the server determines which account, if any, becomes active afterward.';
+
+  @override
+  String get credentialScopeChanged =>
+      'The server or project changed. Close and reopen account management before making changes.';
+
+  @override
+  String get credentialProviderMissing =>
+      'This provider is no longer in the server\'s integration list.';
+
+  @override
+  String get credentialLoadFailed =>
+      'Could not refresh saved accounts. Try again.';
+
+  @override
+  String get credentialMutationFailed =>
+      'Could not confirm the account change. Refresh before retrying; the server may already have applied it.';
+
+  @override
+  String get credentialRefresh => 'Refresh accounts';
+
+  @override
+  String get credentialEmpty =>
+      'No saved accounts were reported for this provider.';
+
+  @override
+  String get credentialEnvironment =>
+      'Managed by the server environment. It cannot be removed here.';
+
+  @override
+  String credentialUnnamed(int index) {
+    return 'Saved account $index';
+  }
+
+  @override
+  String get mcpRemove => 'Remove';
+
+  @override
+  String mcpRemoveTitle(String name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String get mcpRemoveRuntimeDetail =>
+      'Remove this MCP server from the current runtime location. Its tools will no longer be available there. This does not erase persistent server configuration; it may return after a server restart.';
+
+  @override
+  String get mcpRemoveFailed =>
+      'Could not confirm MCP removal. Refresh the list before trying again; the server may already have applied the change.';
+
+  @override
+  String get mcpLoadFailed => 'Could not refresh MCP data. Try again.';
+
+  @override
+  String get mcpScopeChanged =>
+      'The server or project changed. Refresh to load its MCP servers before making changes.';
 
   @override
   String get promptStashRestoreFailed =>
@@ -1209,6 +1782,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get promptStashed => 'Prompt saved to your stash.';
+
+  @override
+  String get promptStashedDraftPending =>
+      'Prompt saved to your stash. The composer draft still needs to be saved; use Retry in the draft warning.';
 
   @override
   String get promptStashReadFailed =>
@@ -1607,7 +2184,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quotaSettingsSummary =>
-      'Codex and Claude collectors · setup required';
+      'Optional Codex collector · setup required';
 
   @override
   String get quotaDescription =>
@@ -1796,6 +2373,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quotaClaude => 'Claude';
 
   @override
+  String get quotaClaudeUnavailable =>
+      'Claude subscription usage is unavailable here pending a supported, permitted integration. Current OpenCode does not include Claude Pro/Max sign-in. This app will not read or reuse that subscription login.';
+
+  @override
+  String get iosAppTitle => 'OpenCode for iOS';
+
+  @override
+  String get iosRemoteSummary =>
+      'A remote client for the OpenCode server you choose. On-device server hosting and background monitoring are not available in this iOS build.';
+
+  @override
+  String get iosKeychainGuide =>
+      'Server passwords use this device\'s Keychain. They are not stored in plain profile preferences.';
+
+  @override
+  String get platformSecureStorageGuide =>
+      'Server passwords use this platform\'s secure credential storage. They are not stored in plain profile preferences.';
+
+  @override
   String get quotaClaudeAccount => 'Claude login windows';
 
   @override
@@ -1827,4 +2423,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String usageProviderCostShare(String percent) {
     return '$percent of reported cost';
   }
+
+  @override
+  String get setupOutputWaiting => 'Waiting for Termux output…';
+
+  @override
+  String get setupOutputWaitingDetail =>
+      'Setup messages will appear here when Termux responds.';
+
+  @override
+  String get setupStartInstalled => 'Start installed OpenCode';
+
+  @override
+  String get setupMissingCredential =>
+      'This app has no saved credential for that installation. Connect with its server address, or run setup to configure it.';
+
+  @override
+  String get setupUbuntuOption => 'Ubuntu · OpenCode 1';
+
+  @override
+  String get setupOwnOption => 'Use your own setup';
+
+  @override
+  String get setupOwnDescription =>
+      'Connect an existing OpenCode 1 or OpenCode 2 server by address. OpenCode 2 and musl installation are not managed by this app yet; musl also needs a compatible Linux environment.';
+
+  @override
+  String get setupConnectExisting => 'Connect existing server';
+
+  @override
+  String get setupScreenTitle => 'On-device setup';
+
+  @override
+  String get setupInstallStart => 'Install & start';
+
+  @override
+  String get setupCheckAgain => 'Check again';
+
+  @override
+  String uncertainAuthTitle(String integrationID) {
+    return 'Unconfirmed sign-in: $integrationID';
+  }
+
+  @override
+  String get uncertainAuthDetail =>
+      'The server may have started sign-in, but no attempt ID was received. Check on the server before starting again.';
+
+  @override
+  String get uncertainAuthForgetTitle => 'Forget uncertain start?';
+
+  @override
+  String get uncertainAuthForgetDetail =>
+      'This clears only the local retry block. It does not cancel sign-in on the server. Check the server first to avoid running a second sign-in. No new sign-in will start.';
+
+  @override
+  String get uncertainAuthForget => 'Forget uncertain start';
+
+  @override
+  String get uncertainAuthCloseHint =>
+      'Close this sheet and use the unconfirmed sign-in row to clear its local retry block after checking the server.';
 }

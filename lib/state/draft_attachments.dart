@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as p;
@@ -66,6 +67,22 @@ class DraftAttachmentVault {
       sha256.convert(utf8.encode(owner)).toString();
   static String _id(String value) =>
       sha256.convert(utf8.encode(value)).toString();
+
+  // A length check followed by readAsBytes/readAsString is not a bound: the
+  // file can grow between the two. Enforce the expected size while streaming.
+  Future<Uint8List> _readBounded(File file, int expectedBytes) async {
+    final bytes = BytesBuilder(copy: false);
+    await for (final chunk in file.openRead()) {
+      if (chunk.length > expectedBytes - bytes.length) {
+        throw const FormatException('Attachment size changed');
+      }
+      bytes.add(chunk);
+    }
+    if (bytes.length != expectedBytes) {
+      throw const FormatException('Attachment size changed');
+    }
+    return bytes.takeBytes();
+  }
 
   Future<File> _file(String owner, String id) async {
     if (!_hash.hasMatch(id)) {
@@ -143,7 +160,8 @@ class DraftAttachmentVault {
       var intact = false;
       if (await file.exists() && await file.length() == ref.bytes) {
         intact =
-            sha256.convert(await file.readAsBytes()).toString() == ref.blob;
+            sha256.convert(await _readBounded(file, ref.bytes)).toString() ==
+            ref.blob;
       }
       if (!intact) {
         if (await file.exists()) await file.delete();
@@ -187,15 +205,16 @@ class DraftAttachmentVault {
         }
         final String url;
         if (ref.blob != null) {
-          restoredBytes += ref.bytes;
-          final file = await _file(owner, ref.blob!);
-          if (ref.bytes < 0 ||
-              restoredBytes > maxDraftBytes ||
-              ref.bytes > maxDraftBytes ||
-              await file.length() != ref.bytes) {
+          if (ref.bytes < 0 || ref.bytes > maxDraftBytes - restoredBytes) {
             throw const FormatException('Attachment size changed');
           }
-          url = await file.readAsString(encoding: utf8);
+          // A malformed negative length must not buy more recovery capacity.
+          restoredBytes += ref.bytes;
+          final file = await _file(owner, ref.blob!);
+          if (await file.length() != ref.bytes) {
+            throw const FormatException('Attachment size changed');
+          }
+          url = utf8.decode(await _readBounded(file, ref.bytes));
           if (_id(url) != ref.blob || Uri.tryParse(url)?.scheme != 'data') {
             throw const FormatException('Attachment content changed');
           }

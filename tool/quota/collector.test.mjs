@@ -8,10 +8,10 @@ import { tmpdir } from 'node:os';
 import { setImmediate as tick } from 'node:timers/promises';
 import test from 'node:test';
 import {
-  CACHE_MS, MAX_BYTES, PROVIDER_TIMEOUT_MS, QUOTA_PATH, WHAM_URL, CLAUDE_QUOTA_PATH, CLAUDE_USAGE_URL,
+  CACHE_MS, MAX_BYTES, PROVIDER_TIMEOUT_MS, QUOTA_PATH, WHAM_URL, CLAUDE_QUOTA_PATH,
   ConfigurationError, createCollector, createFileAuthSource, createReadTokenVerifier,
   createRequestHandler, loadConfiguration, loadReadToken, parseAuthDocument, readBoundedFile,
-  parseClaudeAuthDocument, createClaudeFileAuthSource,
+  parseClaudeAuthDocument, mapClaudeUsage,
 } from './collector.mjs';
 
 const READ_TOKEN = 'SYNTHETIC_READ_TOKEN_abcdefghijklmnopqrstuvwxyz0123456789';
@@ -562,6 +562,7 @@ test('CLI config requires a dedicated token file, binds loopback only, validates
     OCMN_QUOTA_PROVIDER_URL: 'https://synthetic.invalid' }, fakeFiles);
   assert.equal(result.host, '127.0.0.1');
   assert.equal(result.port, 4195);
+  assert.equal(result.ignoredClaudeConfiguration, false);
   assert.equal(reads, 1);
   for (const port of ['1024', '65535']) {
     assert.equal((await loadConfiguration({ ...env, OCMN_QUOTA_PORT: port }, fakeFiles)).port, Number(port));
@@ -585,26 +586,21 @@ const claudePayload = (used = 12.5) => ({
   five_hour: { utilization: used, resets_at: new Date(NOW + 300_000).toISOString() },
   seven_day: { utilization: 100, resets_at: null },
 });
-function claudeSetup({ response = claudePayload(), ...options } = {}) {
-  const calls = [];
-  let token = 'synthetic-claude-token-A';
-  const collector = createCollector({ provider: 'claude', readToken: READ_TOKEN,
-    authSource: () => ({ status: 'ok', accessToken: token, expiresAtMs: NOW + 600_000 }),
-    clock: () => NOW, fetchImpl: async (url, init) => {
-      calls.push({ url, init }); return jsonResponse(response);
-    }, ...options });
-  return { collector, calls, setToken: (value) => { token = value; } };
-}
+const claudeMapping = (response) => mapClaudeUsage(response, 'a'.repeat(64), NOW);
 
-test('Claude uses its fixed OAuth endpoint and source-bound identity without Codex headers', async () => {
-  const h = claudeSetup();
-  const snapshot = await h.collector.readSnapshot();
-  assert.equal(h.calls.length, 1);
-  assert.equal(h.calls[0].url, CLAUDE_USAGE_URL);
-  assert.equal(h.calls[0].init.method, 'GET');
-  assert.equal(h.calls[0].init.redirect, 'error');
-  assert.equal(h.calls[0].init.body, undefined);
-  assert.equal(h.calls[0].init.headers['ChatGPT-Account-Id'], undefined);
+test('Claude live collection is disabled before auth-source or network access', async () => {
+  const collector = createCollector({ provider: 'claude', readToken: READ_TOKEN, clock: () => NOW,
+    authSource: () => assert.fail('Claude credential access is not permitted'),
+    fetchImpl: () => assert.fail('Claude network collection is not permitted') });
+  const snapshot = await collector.readSnapshot();
+  assert.equal(snapshot.status, 'unsupported');
+  assert.deepEqual(snapshot.windows, []);
+  assert.equal(snapshot.account.ref, undefined);
+  assert.equal(snapshot.ordinaryUsageAllowed, null);
+});
+
+test('Claude research-only payload mapping retains the source-bound distinction', () => {
+  const snapshot = claudeMapping(claudePayload());
   assert.equal(snapshot.provider, 'claude');
   assert.equal(snapshot.source, 'claude.oauth');
   assert.equal(snapshot.account.status, 'sourceBound');
@@ -618,24 +614,23 @@ test('Claude uses its fixed OAuth endpoint and source-bound identity without Cod
   assert.equal(JSON.stringify(snapshot).includes('synthetic-claude-token'), false);
 });
 
-test('Claude preserves zero/full/fraction and missing windows without extrapolating resets', async () => {
+test('Claude research mapper preserves zero/full/fraction and missing windows without extrapolating resets', () => {
   for (const used of [0, 100, 12.5]) {
-    const { collector } = claudeSetup({ response: claudePayload(used) });
-    assert.equal((await collector.readSnapshot()).windows[0].usedPercent, used);
+    assert.equal(claudeMapping(claudePayload(used)).windows[0].usedPercent, used);
   }
   for (const response of [{ five_hour: null }, { five_hour: null, seven_day: null }, { limits: [] }]) {
-    const snapshot = await claudeSetup({ response }).collector.readSnapshot();
+    const snapshot = claudeMapping(response);
     assert.equal(snapshot.status, 'ok');
     assert.deepEqual(snapshot.windows, [{ id: 'primary', status: 'missing' }, { id: 'secondary', status: 'missing' }]);
   }
 });
 
-test('Claude structured limits are authoritative without merging legacy or inventing duration', async () => {
-  const snapshot = await claudeSetup({ response: { five_hour: { utilization: 99 }, limits: [
+test('Claude research mapper uses authoritative structured limits without merging legacy or inventing duration', () => {
+  const snapshot = claudeMapping({ five_hour: { utilization: 99 }, limits: [
     { kind: 'session', percent: 25, resets_at: '2026-09-06T14:00:00+02:00' },
     { kind: 'weekly_all', percent: 50 },
     { kind: 'weekly_scoped', percent: 98, display_name: 'PRIVATE_COPY_NOT_FOR_OUTPUT' },
-  ] } }).collector.readSnapshot();
+  ] });
   assert.deepEqual(snapshot.windows, [
     { id: 'primary', status: 'reported', usedPercent: 25, resetsAtMs: Date.parse('2026-09-06T12:00:00Z') },
     { id: 'secondary', status: 'reported', usedPercent: 50 },
@@ -643,7 +638,7 @@ test('Claude structured limits are authoritative without merging legacy or inven
   assert.equal(JSON.stringify(snapshot).includes('PRIVATE_COPY'), false);
 });
 
-test('Claude malformed schemas, percentages and reset dates fail visibly', async () => {
+test('Claude research mapper rejects malformed schemas, percentages and reset dates', () => {
   const cases = [null, {}, [], { limits: {} }, { limits: [null] },
     { limits: [{ kind: 'session', percent: 1 }, { kind: 'session', percent: 2 }] }];
   for (const used of [-1, 101, '5', true, null]) cases.push({ five_hour: { utilization: used } });
@@ -651,57 +646,11 @@ test('Claude malformed schemas, percentages and reset dates fail visibly', async
     cases.push({ five_hour: { utilization: 10, resets_at } });
   }
   for (const response of cases) {
-    const snapshot = await claudeSetup({ response }).collector.readSnapshot();
-    assert.equal(snapshot.provider, 'claude');
-    assert.equal(snapshot.status, 'invalidResponse');
-    assert.deepEqual(snapshot.windows, []);
+    assert.throws(() => claudeMapping(response), { message: 'invalidResponse' });
   }
 });
 
-test('Claude credential changes invalidate both cache and public source reference', async () => {
-  const h = claudeSetup();
-  const first = await h.collector.readSnapshot();
-  assert.deepEqual(await h.collector.readSnapshot(), first);
-  assert.equal(h.calls.length, 1);
-  h.setToken('synthetic-claude-token-B');
-  const next = await h.collector.readSnapshot();
-  assert.notEqual(first.account.ref, next.account.ref);
-  assert.equal(h.calls.length, 2);
-});
-
-test('Claude does not publish a fetch from a credential replaced during the request', async () => {
-  const response = deferred();
-  const h = claudeSetup({ fetchImpl: () => response.promise });
-  const pending = h.collector.readSnapshot();
-  await tick();
-  h.setToken('synthetic-claude-token-replacement');
-  response.resolve(jsonResponse(claudePayload()));
-  const snapshot = await pending;
-  assert.equal(snapshot.status, 'unavailable');
-  assert.deepEqual(snapshot.windows, []);
-});
-
-test('Claude failures have no measurements and never fall back to another provider', async () => {
-  for (const status of [401, 429, 500]) {
-    const calls = [];
-    const h = claudeSetup({ fetchImpl: async (url) => {
-      calls.push(url); return jsonResponse({ private: 'synthetic-secret-error' }, status);
-    } });
-    const snapshot = await h.collector.readSnapshot();
-    assert.equal(snapshot.status, status === 401 ? 'authRequired' : status === 429 ? 'rateLimited' : 'unavailable');
-    assert.deepEqual(snapshot.windows, []);
-    assert.deepEqual(calls, [CLAUDE_USAGE_URL]);
-    assert.equal(JSON.stringify(snapshot).includes('synthetic-secret-error'), false);
-  }
-  const redirected = await claudeSetup({ fetchImpl: async () => {
-    const response = jsonResponse(claudePayload());
-    Object.defineProperty(response, 'redirected', { value: true });
-    return response;
-  } }).collector.readSnapshot();
-  assert.equal(redirected.status, 'invalidResponse');
-});
-
-test('Claude explicit OAuth-file formats do not require a guessed account ID or refresh ownership', async () => {
+test('historical Claude auth-schema research does not invent account ID or refresh ownership', () => {
   const cli = { claudeAiOauth: { accessToken: 'synthetic-claude-access', expiresAt: NOW + 1000,
     refreshToken: 'synthetic-refresh-NEVER-USED', subscriptionType: 'max' } };
   const expected = { status: 'ok', accessToken: 'synthetic-claude-access', expiresAtMs: NOW + 1000 };
@@ -711,32 +660,60 @@ test('Claude explicit OAuth-file formats do not require a guessed account ID or 
     expires: NOW + 1000, refresh: 'synthetic-refresh-NEVER-USED' } }, { format: 'opencode', nowMs: NOW }), expected);
   assert.equal(parseClaudeAuthDocument({ anthropic: { type: 'api', key: 'synthetic' } }, { format: 'opencode' }).status, 'unsupported');
   assert.equal(JSON.stringify(expected).includes('refresh'), false);
-  const unconfigured = createClaudeFileAuthSource({ readFile: () => assert.fail('unexpected read') });
-  assert.deepEqual(await unconfigured(), { status: 'unconfigured' });
 });
 
-test('Claude HTTP route is fixed, authenticated and separate from Codex', async () => {
-  let codexReads = 0, claudeReads = 0;
+test('legacy Claude route returns unsupported without credential reads', async () => {
+  let codexReads = 0;
+  const claudeCollector = createCollector({ provider: 'claude', readToken: READ_TOKEN, clock: () => NOW,
+    authSource: () => assert.fail('unexpected credential read'), fetchImpl: () => assert.fail('unexpected fetch') });
   const handler = createRequestHandler({ readToken: READ_TOKEN,
     collector: { readSnapshot: async () => { codexReads++; return { provider: 'codex' }; } },
-    claudeCollector: { readSnapshot: async () => { claudeReads++; return { provider: 'claude' }; } } });
-  assert.equal((await invoke(handler, { url: CLAUDE_QUOTA_PATH })).body.provider, 'claude');
+    claudeCollector });
+  const response = await invoke(handler, { url: CLAUDE_QUOTA_PATH });
+  assert.equal(response.body.provider, 'claude');
+  assert.equal(response.body.status, 'unsupported');
+  assert.deepEqual(response.body.windows, []);
   assert.equal(codexReads, 0);
   for (const url of [`${CLAUDE_QUOTA_PATH}?provider=codex`, `${CLAUDE_QUOTA_PATH}/`, `${QUOTA_PATH}/unknown`]) {
     assert.equal((await invoke(handler, { url })).status, 404);
   }
   assert.equal((await invoke(handler, { url: CLAUDE_QUOTA_PATH, headers: {} })).status, 401);
-  assert.equal(claudeReads, 1);
 });
 
-test('Claude CLI configuration uses explicit bounded-file sources only', async () => {
-  const readFile = async () => Buffer.from(READ_TOKEN);
+test('retired Claude options never read that source or prevent Codex collection', async () => {
   const env = { OCMN_QUOTA_READ_TOKEN_FILE: '/tmp/opencode/synthetic-read-token',
-    OCMN_CLAUDE_AUTH_FILE: '/tmp/opencode/synthetic-claude-auth.json', OCMN_CLAUDE_AUTH_FORMAT: 'opencode' };
-  const config = await loadConfiguration(env, { readFile });
-  assert.equal(config.claudeFilePath, env.OCMN_CLAUDE_AUTH_FILE);
-  assert.equal(config.claudeFormat, 'opencode');
-  for (const change of [{ OCMN_CLAUDE_AUTH_FORMAT: 'guess' }, { OCMN_CLAUDE_AUTH_FILE: 'relative.json' }]) {
-    await assert.rejects(loadConfiguration({ ...env, ...change }, { readFile }), ConfigurationError);
+    OCMN_QUOTA_AUTH_FILE: '/tmp/opencode/synthetic-codex-auth.json' };
+  for (const retired of [
+    { OCMN_CLAUDE_AUTH_FILE: '/tmp/opencode/synthetic-claude-auth.json' },
+    { OCMN_CLAUDE_AUTH_FORMAT: 'opencode' },
+    { OCMN_CLAUDE_AUTH_FILE: 'invalid-ignored-path', OCMN_CLAUDE_AUTH_FORMAT: 'invalid-ignored-format' },
+  ]) {
+    const reads = [], calls = [];
+    const readFile = async (path) => {
+      reads.push(path);
+      if (path === env.OCMN_QUOTA_READ_TOKEN_FILE) return Buffer.from(READ_TOKEN);
+      if (path === env.OCMN_QUOTA_AUTH_FILE) return Buffer.from(JSON.stringify(codexFile()));
+      assert.fail('unexpected credential source');
+    };
+    const config = await loadConfiguration({ ...env, ...retired }, { readFile });
+    assert.equal(config.ignoredClaudeConfiguration, true);
+    assert.equal(Object.hasOwn(config, 'claudeFilePath'), false);
+    assert.equal(Object.hasOwn(config, 'claudeFormat'), false);
+    const collector = createCollector({ readToken: config.readToken, clock: () => NOW,
+      authSource: createFileAuthSource({ ...config, readFile, clock: () => NOW }),
+      fetchImpl: async (url) => { calls.push(url); return jsonResponse(payload()); } });
+    const claudeCollector = createCollector({ readToken: config.readToken, provider: 'claude', clock: () => NOW,
+      authSource: () => assert.fail('unexpected Claude auth access'),
+      fetchImpl: () => assert.fail('unexpected Claude request') });
+    const handler = createRequestHandler({ ...config, collector, claudeCollector });
+    assertEmpty((await invoke(handler, { url: CLAUDE_QUOTA_PATH })).body, 'unsupported');
+    assert.deepEqual(reads, [env.OCMN_QUOTA_READ_TOKEN_FILE]);
+    assert.deepEqual(calls, []);
+    const snapshot = (await invoke(handler)).body;
+    assert.equal(snapshot.status, 'ok');
+    assert.equal(snapshot.provider, 'codex');
+    assert.equal(snapshot.windows[0].usedPercent, 25);
+    assert.deepEqual(calls, [WHAM_URL]);
+    assert.deepEqual(reads, [env.OCMN_QUOTA_READ_TOKEN_FILE, env.OCMN_QUOTA_AUTH_FILE, env.OCMN_QUOTA_AUTH_FILE]);
   }
 });

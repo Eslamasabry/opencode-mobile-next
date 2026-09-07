@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'desktop_interaction.dart';
 
@@ -35,7 +36,7 @@ class ContextMenuAction {
 ///
 /// [actions] is a callback rather than a list so the menu is built from state
 /// at the moment of the click, not at the moment the row was laid out.
-class ContextMenuRegion extends StatelessWidget {
+class ContextMenuRegion extends StatefulWidget {
   const ContextMenuRegion({
     super.key,
     required this.actions,
@@ -46,17 +47,62 @@ class ContextMenuRegion extends StatelessWidget {
   final Widget child;
 
   @override
+  State<ContextMenuRegion> createState() => _ContextMenuRegionState();
+}
+
+class _ContextMenuRegionState extends State<ContextMenuRegion> {
+  bool _showFocus = false;
+  bool _menuOpen = false;
+
+  Future<void> _open(Offset position) async {
+    if (_menuOpen) return;
+    _menuOpen = true;
+    try {
+      await showContextMenu(context, position, widget.actions());
+    } finally {
+      _menuOpen = false;
+    }
+  }
+
+  void _openFromKeyboard() {
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return;
+    unawaited(_open(box.localToGlobal(box.size.center(Offset.zero))));
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (!desktopInteractions) return child;
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      // Excluded from semantics: every action in the menu is reachable from
-      // the row's own overflow button or sheet, which screen readers use.
-      excludeFromSemantics: true,
-      onSecondaryTapDown: (details) => unawaited(
-        showContextMenu(context, details.globalPosition, actions()),
+    if (!desktopInteractions) return widget.child;
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.f10, shift: true):
+            _openFromKeyboard,
+        const SingleActivator(LogicalKeyboardKey.contextMenu):
+            _openFromKeyboard,
+      },
+      child: FocusableActionDetector(
+        onShowFocusHighlight: (value) => setState(() => _showFocus = value),
+        child: DecoratedBox(
+          position: DecorationPosition.foreground,
+          decoration: BoxDecoration(
+            border: _showFocus
+                ? Border.all(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 2,
+                  )
+                : null,
+          ),
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            // Excluded from semantics: every action in the menu is reachable from
+            // the row's own overflow button or sheet, which screen readers use.
+            excludeFromSemantics: true,
+            onSecondaryTapDown: (details) =>
+                unawaited(_open(details.globalPosition)),
+            child: widget.child,
+          ),
+        ),
       ),
-      child: child,
     );
   }
 }
@@ -69,13 +115,15 @@ Future<void> showContextMenu(
   List<ContextMenuAction> actions,
 ) async {
   if (actions.isEmpty) return;
-  final overlay = Overlay.of(context).context.findRenderObject();
-  if (overlay is! RenderBox) return;
+  final overlay = Overlay.maybeOf(context)?.context.findRenderObject();
+  if (overlay is! RenderBox || !overlay.hasSize) return;
+  final position = overlay.globalToLocal(globalPosition);
   final theme = Theme.of(context);
   final selected = await showMenu<int>(
     context: context,
+    requestFocus: true,
     position: RelativeRect.fromRect(
-      Rect.fromPoints(globalPosition, globalPosition),
+      Rect.fromPoints(position, position),
       Offset.zero & overlay.size,
     ),
     items: [
@@ -112,6 +160,6 @@ Future<void> showContextMenu(
         ),
     ],
   );
-  if (selected == null) return;
+  if (!context.mounted || selected == null) return;
   actions[selected].onSelected();
 }

@@ -18,7 +18,10 @@ import 'package:opencode_mobile/platform/share_intent.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/termux/bridge.dart';
+import 'package:opencode_mobile/ui/app_theme.dart';
+import 'package:opencode_mobile/ui/screens/about_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
+import 'package:opencode_mobile/ui/screens/guide_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/voice/device.dart';
@@ -149,6 +152,50 @@ Future<void> _pumpFrames(WidgetTester tester) async {
   for (var i = 0; i < 8; i++) {
     await tester.pump(const Duration(milliseconds: 120));
   }
+}
+
+Future<void> _pumpNarrowCopy(
+  WidgetTester tester,
+  Widget screen,
+  Brightness brightness,
+) async {
+  addTearDown(tester.view.reset);
+  tester.view.devicePixelRatio = 1;
+  tester.view.physicalSize = const Size(360, 740);
+  await tester.pumpWidget(
+    MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      theme: brightness == Brightness.light
+          ? AppTheme.light()
+          : AppTheme.dark(),
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: const TextScaler.linear(2.5),
+          disableAnimations: true,
+        ),
+        child: child!,
+      ),
+      home: screen,
+    ),
+  );
+  await _pumpFrames(tester);
+}
+
+Future<void> _revealCopy(WidgetTester tester, Finder target) async {
+  await tester.scrollUntilVisible(
+    target,
+    220,
+    maxScrolls: 80,
+    scrollable: find
+        .descendant(
+          of: find.byType(ListView),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  await tester.pump();
+  expect(target.hitTestable(), findsOneWidget);
 }
 
 void main() {
@@ -429,4 +476,90 @@ void main() {
     },
     variant: TargetPlatformVariant.only(TargetPlatform.iOS),
   );
+
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      '${brightness.name} iOS guide shows Keychain guidance at 360x740 and 2.5x',
+      (tester) async {
+        final l10n = lookupAppLocalizations(const Locale('en'));
+        await _pumpNarrowCopy(tester, const GuideScreen(), brightness);
+        final advanced = find.text('Advanced');
+        await _revealCopy(tester, advanced);
+        await tester.tap(advanced);
+        await _pumpFrames(tester);
+        final guidance = find.text(l10n.iosKeychainGuide);
+        await _revealCopy(tester, guidance);
+        expect(
+          tester.getSemantics(guidance).label,
+          contains(l10n.iosKeychainGuide),
+        );
+        expect(find.textContaining('libsecret'), findsNothing);
+        expect(find.textContaining('Android Keystore'), findsNothing);
+        expect(find.textContaining('Termux'), findsNothing);
+        expect(
+          find.byKey(const ValueKey('guide-termux-section')),
+          findsNothing,
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    );
+
+    testWidgets(
+      '${brightness.name} iOS About shows remote-only identity at 360x740 and 2.5x',
+      (tester) async {
+        final l10n = lookupAppLocalizations(const Locale('en'));
+        const packageChannel = MethodChannel(
+          'dev.fluttercommunity.plus/package_info',
+        );
+        messenger.setMockMethodCallHandler(
+          packageChannel,
+          (_) async => {
+            'appName': 'OpenCode Mobile',
+            'packageName': 'io.github.eslamasabry.opencodeMobile',
+            'version': '1.0.0',
+            'buildNumber': '1',
+          },
+        );
+        addTearDown(
+          () => messenger.setMockMethodCallHandler(packageChannel, null),
+        );
+        // Reset the process-wide asset fixture, as in the isolated About tests.
+        // These are copy/layout checks, not warm-cache/bootstrap evidence.
+        rootBundle.evict('PRIVACY.md');
+        rootBundle.evict('THIRD_PARTY_NOTICES.md');
+        await _pumpNarrowCopy(
+          tester,
+          const AboutScreen(initialTab: 1),
+          brightness,
+        );
+        await tester.pumpAndSettle();
+        final title = find.text(l10n.iosAppTitle);
+        final summary = find.text(l10n.iosRemoteSummary);
+        await _revealCopy(tester, title);
+        expect(tester.getSemantics(title).label, contains(l10n.iosAppTitle));
+        await _revealCopy(tester, summary);
+        expect(
+          tester.getSemantics(summary).label,
+          contains(l10n.iosRemoteSummary),
+        );
+        expect(find.text('OpenCode for Android'), findsNothing);
+        expect(find.text('OpenCode for desktop'), findsNothing);
+        expect(
+          find.textContaining('Voice recognition runs locally'),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const ValueKey('about-signing-certificate')),
+          findsNothing,
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    );
+  }
 }

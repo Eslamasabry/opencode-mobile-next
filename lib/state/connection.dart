@@ -23,6 +23,7 @@ import '../termux/bridge.dart';
 import 'model_library.dart';
 import 'offline_queue.dart';
 import 'profiles.dart';
+import 'pending_auth.dart';
 import 'session_drafts.dart';
 import 'draft_attachments.dart';
 import 'prompt_photos.dart';
@@ -32,6 +33,17 @@ import 'session_read_state.dart';
 
 Map<String, dynamic> _catalogMap(Object? value) =>
     value is Map ? Map<String, dynamic>.from(value) : const {};
+
+/// An in-memory reservation becomes uncertain as soon as start is dispatched.
+/// Never retain command text, launch URLs, status messages, or raw errors here.
+class _IntegrationCommandAttempt {
+  final String methodID;
+  final int deletionRevision;
+  String? attemptID;
+  Future<({IntegrationAuthLaunch launch, void Function() check})>? starting;
+
+  _IntegrationCommandAttempt(this.methodID, this.deletionRevision);
+}
 
 List<CatalogVariant> _catalogVariants(Object? value) {
   if (value is! Map) return const [];
@@ -455,9 +467,14 @@ class ConnectionController extends ChangeNotifier {
     AppDiagnosticsController? diagnostics,
     LocalWakeLockEnsurer? localWakeLockEnsurer,
     DraftAttachmentVault? draftAttachmentVault,
+    DraftAttachmentVault? stashAttachmentVault,
     PromptPhotoStore? promptPhotoStore,
   }) : _promptPhotoStore = promptPhotoStore,
        _draftAttachmentVault = draftAttachmentVault ?? DraftAttachmentVault(),
+       _promptShelf = PromptShelfStore.withAttachmentFiles(
+         store.prefs,
+         vault: stashAttachmentVault,
+       ),
        _apiFactory = apiFactory ?? _createApi,
        _repositoryFactory = repositoryFactory ?? _createRepository,
        _v2GatewayFactory = v2GatewayFactory ?? _createV2GatewayPair,
@@ -3104,6 +3121,8 @@ class ConnectionController extends ChangeNotifier {
   int get readPrivacyRevision => _readPrivacyRevision;
   final _viewOperations = <Object, Future<void>>{};
   final _deletingReadProfiles = <String>{};
+  final _profileDeletions = <String, Future<DeleteProfileResult>>{};
+  Future<void> _profileDeletionChanges = Future.value();
   bool _readProfileAvailable(String id) =>
       !_deletingReadProfiles.contains(id) &&
       (id.isEmpty || store.profiles.any((profile) => profile.id == id));
@@ -4354,12 +4373,45 @@ class ConnectionController extends ChangeNotifier {
   ///
   /// Server-side and provider-side data is untouched; only this device is
   /// cleared.
-  Future<DeleteProfileResult> deleteProfileAndLocalData(
+  Future<DeleteProfileResult> deleteProfileAndLocalData(String profileId) {
+    if (_disposed || profileId.isEmpty) {
+      return Future.error(StateError('The server profile is unavailable'));
+    }
+    final pending = _profileDeletions[profileId];
+    if (pending != null) return pending;
+    // Close admission synchronously, before any drain can yield. An epoch also
+    // rejects old callbacks after a failed deletion makes the profile usable.
+    _deletingReadProfiles.add(profileId);
+    _pendingAuth.block(profileId);
+    _integrationCommandAttempts.removeWhere(
+      (key, _) => _authKeyProfile(key) == profileId,
+    );
+    _oauthStarts.removeWhere((key) => _authKeyProfile(key) == profileId);
+    _authRecoveryActions.removeWhere(
+      (key) => _authKeyProfile(key) == profileId,
+    );
+    _promptShelfDeletionRevisions[profileId] =
+        (_promptShelfDeletionRevisions[profileId] ?? 0) + 1;
+    final operation = _profileDeletionChanges
+        .then((_) => _deleteProfileAndLocalData(profileId))
+        .whenComplete(() {
+          _deletingReadProfiles.remove(profileId);
+          _profileDeletions.remove(profileId);
+        });
+    _profileDeletions[profileId] = operation;
+    _profileDeletionChanges = operation.then<void>(
+      (_) {},
+      onError: (Object _) {},
+    );
+    _profileDataChanges.notifyListeners();
+    return operation;
+  }
+
+  Future<DeleteProfileResult> _deleteProfileAndLocalData(
     String profileId,
   ) async {
-    _deletingReadProfiles.add(profileId);
-    _profileDataChanges.notifyListeners();
     await _draftChanges;
+    await _pendingAuth.drain(profileId);
     // Drain shortcut writes before the deletion sweep discovers its keys.
     // A failed write must not prevent the user from removing a profile.
     try {
@@ -4435,9 +4487,15 @@ class ConnectionController extends ChangeNotifier {
         failures.add('the home-screen widget’s sessions');
       }
 
-      // 4. Profile-scoped preferences: model, agent, variant, location.
-      final unclearedKeys = await store.removeScopedPreferences(profileId);
-      if (unclearedKeys.isNotEmpty) {
+      // 4. Stash metadata and its private files must go before the generic
+      // preference sweep. On failure that sweep would erase the durable owner
+      // marker and make orphan-file cleanup undiscoverable on the next launch.
+      final clearedStash = await _promptShelf.clearForProfile(profileId);
+      if (!clearedStash) failures.add('stashed prompts and attachments');
+      final unclearedKeys = clearedStash
+          ? await store.removeScopedPreferences(profileId)
+          : scopedKeys;
+      if (clearedStash && unclearedKeys.isNotEmpty) {
         failures.add(
           '${unclearedKeys.length} saved '
           '${unclearedKeys.length == 1 ? 'setting' : 'settings'}',
@@ -4458,9 +4516,6 @@ class ConnectionController extends ChangeNotifier {
         );
       }
       await store.remove(profileId);
-      _sessionReadStore.forgetProfile(profileId);
-      _sessionPins.forget(profileId);
-      _promptShelf.forget(profileId);
 
       return DeleteProfileResult(
         removedPreferenceKeys: scopedKeys,
@@ -4469,13 +4524,25 @@ class ConnectionController extends ChangeNotifier {
         clearedWidgetSnapshot: widgetOutcome == WidgetSnapshotClear.cleared,
       );
     } finally {
+      // A partial deletion can already have removed stash/history/pin/read
+      // metadata. Reconcile optimistic preference caches even when a later
+      // step failed; never let a retained in-memory shelf resurrect that data.
+      try {
+        await _promptShelf.reload();
+      } catch (_) {
+        // PromptShelfStore independently fails closed on uncertain writes.
+      }
+      _sessionReadStore.forgetProfile(profileId);
+      _sessionPins.forget(profileId);
+      _promptShelf.forget(profileId);
+      _pendingAuth.forget(profileId);
       // Notify while republishing is still suspended, then lift it: this
       // controller keeps the deleted profile's sessions in memory until the
       // caller disconnects, and a republish would put their titles straight
       // back onto the home screen.
-      notifyListeners();
-      _widgetSnapshotSuspended = false;
       _deletingReadProfiles.remove(profileId);
+      if (!_disposed) notifyListeners();
+      _widgetSnapshotSuspended = false;
     }
   }
 
@@ -4622,6 +4689,1011 @@ class ConnectionController extends ChangeNotifier {
     await prepareActionTransport();
     if (_disposed || _lifecycleSuspended) return null;
     return repository;
+  }
+
+  final _mcpRemovals = <Object, Future<void>>{};
+
+  final _integrationCredentialMutations = <Object, Future<void>>{};
+
+  final _integrationCommandAttempts = <Object, _IntegrationCommandAttempt>{};
+
+  late final PendingAuthStore _pendingAuth = PendingAuthStore(store.prefs);
+  final _oauthStarts = <Object>{};
+  final _oauthRequestsInFlight = <Object>{};
+  final _authRecoveryActions = <Object>{};
+  final _authStartReservations = <String, int>{};
+
+  static String? _authKeyProfile(Object key) => switch (key) {
+    (String owner, _, _, _, _) => owner,
+    (String owner, _, _, _, _, _, _) => owner,
+    _ => null,
+  };
+
+  void Function() _reserveAuthStart() {
+    final owner = profile!.id;
+    _pendingAuth.ensureCapacity(owner);
+    final reserved = _authStartReservations[owner] ?? 0;
+    if (_pendingAuth.entries(owner).length + reserved >=
+        PendingAuthStore.maxCount) {
+      throw StateError('Sign-in recovery storage is full.');
+    }
+    _authStartReservations[owner] = reserved + 1;
+    return () {
+      final remaining = (_authStartReservations[owner] ?? 1) - 1;
+      if (remaining <= 0) {
+        _authStartReservations.remove(owner);
+      } else {
+        _authStartReservations[owner] = remaining;
+      }
+    };
+  }
+
+  /// Dispatches whose response supplied no recoverable attempt ID. These are
+  /// local uncertainty markers, never evidence that the server did not start.
+  List<({String integrationID, PendingAuthKind kind})>
+  get uncertainIntegrationAuth {
+    final result = <({String integrationID, PendingAuthKind kind})>[];
+    void add(Object key, PendingAuthKind kind) {
+      if (key case (_, _, _, _, String integrationID)) {
+        try {
+          final scope = _integrationCommandScope(
+            integrationID,
+            locationRevision,
+          );
+          if (scope.key == key &&
+              !pendingIntegrationAuth.any(
+                (entry) =>
+                    entry.integrationID == integrationID && entry.kind == kind,
+              )) {
+            result.add((integrationID: integrationID, kind: kind));
+          }
+        } catch (_) {
+          // Inactive/deleted profiles and other locations have no actions here.
+        }
+      }
+    }
+
+    for (final key in _oauthStarts) {
+      if (!_oauthRequestsInFlight.contains(key)) {
+        add(key, PendingAuthKind.oauth);
+      }
+    }
+    for (final entry in _integrationCommandAttempts.entries) {
+      if (entry.value.starting == null && entry.value.attemptID == null) {
+        add(entry.key, PendingAuthKind.command);
+      }
+    }
+    return List.unmodifiable(result);
+  }
+
+  /// Explicitly dismisses only an unknown local dispatch outcome. The UI must
+  /// explain that this neither cancels the server attempt nor starts another.
+  void forgetUncertainIntegrationAuth(
+    String integrationID,
+    PendingAuthKind kind, {
+    required int locationRevision,
+  }) {
+    final scope = _integrationCommandScope(integrationID, locationRevision);
+    if (!uncertainIntegrationAuth.any(
+      (entry) => entry.integrationID == integrationID && entry.kind == kind,
+    )) {
+      throw StateError('The uncertain sign-in is no longer available.');
+    }
+    if (kind == PendingAuthKind.oauth) {
+      _oauthStarts.remove(scope.key);
+    } else {
+      _integrationCommandAttempts.remove(scope.key);
+    }
+    if (!_disposed) notifyListeners();
+  }
+
+  bool get integrationAuthRecoverySupported =>
+      repository is IntegrationAuthRecoveryGateway;
+
+  bool get pendingAuthPersistenceUncertain =>
+      profile != null && _pendingAuth.uncertain(profile!.id);
+
+  bool get hasPendingAuthAtOtherSource {
+    final owner = profile;
+    if (owner == null || !isProfileReadable(owner.id)) return false;
+    return _pendingAuth
+        .entries(owner.id)
+        .any(
+          (entry) =>
+              entry.origin != owner.baseUrl ||
+              entry.directory != directory ||
+              entry.workspace != workspace,
+        );
+  }
+
+  Future<void> retryPendingAuthPersistence() async {
+    final owner = profile?.id;
+    if (owner == null ||
+        !isProfileReadable(owner) ||
+        !await _pendingAuth.retry(owner)) {
+      throw StateError('Could not save pending sign-in recovery.');
+    }
+    if (!_disposed) notifyListeners();
+  }
+
+  Future<void> prunePendingIntegrationAuth() async {
+    final owner = profile?.id;
+    if (owner == null || !isProfileReadable(owner)) return;
+    await _pendingAuth.prune(owner);
+    if (!_disposed) notifyListeners();
+  }
+
+  /// Local discovery only: opening Providers never checks or restarts an attempt.
+  /// Other locations stay on disk until the user returns to that exact source.
+  List<PendingAuthAttempt> get pendingIntegrationAuth {
+    final owner = profile;
+    if (owner == null || !isProfileReadable(owner.id)) return const [];
+    return _pendingAuth
+        .entries(owner.id)
+        .where(
+          (entry) =>
+              entry.origin == owner.baseUrl &&
+              entry.directory == directory &&
+              entry.workspace == workspace,
+        )
+        .toList(growable: false);
+  }
+
+  Future<bool> Function(IntegrationAuthLaunch) _authRecorder(
+    String integrationID,
+    PendingAuthKind kind,
+  ) {
+    final owner = profile!;
+    final origin = owner.baseUrl;
+    final originalDirectory = directory;
+    final originalWorkspace = workspace;
+    final deletion = _promptShelfDeletionRevisions[owner.id] ?? 0;
+    final deadline = DateTime.now()
+        .add(PendingAuthStore.retention)
+        .millisecondsSinceEpoch;
+    if (PendingAuthAttempt.parse(
+          PendingAuthAttempt(
+            attemptID: 'pending',
+            integrationID: integrationID,
+            kind: kind,
+            mode: IntegrationAuthMode.auto,
+            profileID: owner.id,
+            origin: origin,
+            directory: originalDirectory,
+            workspace: originalWorkspace,
+            expiresAt: deadline,
+          ).toJson(),
+          owner.id,
+        ) ==
+        null) {
+      throw StateError('This sign-in source cannot be safely retained.');
+    }
+    return (launch) async {
+      // A late response may retain recovery at its ORIGINAL location, never at
+      // the currently selected one. Deletion closes admission before any await.
+      if (_disposed ||
+          !isProfileReadable(owner.id) ||
+          (_promptShelfDeletionRevisions[owner.id] ?? 0) != deletion) {
+        return false;
+      }
+      final expiry = launch.expiresAt;
+      final saved = await _pendingAuth.save(
+        PendingAuthAttempt(
+          attemptID: launch.attemptID,
+          integrationID: integrationID,
+          kind: kind,
+          mode: launch.mode,
+          profileID: owner.id,
+          origin: origin,
+          directory: originalDirectory,
+          workspace: originalWorkspace,
+          expiresAt: expiry != null && expiry > 0 && expiry < deadline
+              ? expiry
+              : deadline,
+        ),
+      );
+      if (!_disposed) notifyListeners();
+      return saved;
+    };
+  }
+
+  /// Explicit OAuth start only. An uncertain dispatch is never auto-retried.
+  Future<IntegrationAuthLaunch> startRecoverableIntegrationOAuth(
+    String integrationID,
+    String methodID, {
+    Map<String, String> inputs = const {},
+    required int locationRevision,
+  }) async {
+    final scope = _integrationCommandScope(integrationID, locationRevision);
+    _pendingAuth.ensureCapacity(profile!.id);
+    if (_oauthStarts.contains(scope.key) ||
+        pendingIntegrationAuth.any(
+          (e) =>
+              e.integrationID == integrationID &&
+              e.kind == PendingAuthKind.oauth,
+        )) {
+      throw StateError('Resume or cancel the existing sign-in first.');
+    }
+    final record = _authRecorder(integrationID, PendingAuthKind.oauth);
+    final releaseReservation = _reserveAuthStart();
+    _oauthStarts.add(scope.key);
+    _oauthRequestsInFlight.add(scope.key);
+    var dispatched = false;
+    try {
+      final actionRepository = await prepareActionRepository();
+      scope.check();
+      if (actionRepository == null ||
+          actionRepository is! IntegrationAuthRecoveryGateway) {
+        throw StateError('Sign-in recovery is unavailable.');
+      }
+      final generation = _generation;
+      dispatched = true;
+      final launch = await actionRepository.startIntegrationOAuth(
+        integrationID,
+        methodID,
+        inputs: inputs,
+      );
+      final recoverySaved = await record(launch);
+      scope.check();
+      if (_lifecycleSuspended ||
+          _generation != generation ||
+          !identical(repository, actionRepository)) {
+        throw StateError('The sign-in connection changed.');
+      }
+      if (!recoverySaved) {
+        throw StateError('Sign-in started, but recovery could not be saved.');
+      }
+      _oauthStarts.remove(scope.key);
+      return launch;
+    } catch (_) {
+      throw StateError(
+        'Could not confirm sign-in. Use pending sign-in recovery; do not start again.',
+      );
+    } finally {
+      releaseReservation();
+      _oauthRequestsInFlight.remove(scope.key);
+      if (!dispatched) _oauthStarts.remove(scope.key);
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  /// Reacquires the action transport and restores only routing, never consent.
+  /// Every network operation and completion is guarded by request scope and the
+  /// current transport generation. Session selection is deliberately irrelevant.
+  Future<IntegrationAuthStatus> recoverIntegrationAuth(
+    PendingAuthAttempt entry, {
+    bool cancel = false,
+    String? code,
+    required int locationRevision,
+  }) async {
+    final scope = _integrationCommandScope(
+      entry.integrationID,
+      locationRevision,
+    );
+    void check() {
+      scope.check();
+      if (!pendingIntegrationAuth.any(
+        (e) =>
+            e.key == entry.key &&
+            e.mode == entry.mode &&
+            e.expiresAt == entry.expiresAt,
+      )) {
+        throw StateError('The sign-in source changed.');
+      }
+    }
+
+    check();
+    if (!_authRecoveryActions.add(entry.key)) {
+      throw StateError('Sign-in action is already running.');
+    }
+    try {
+      final actionRepository = await prepareActionRepository();
+      check();
+      if (actionRepository == null ||
+          actionRepository is! IntegrationAuthRecoveryGateway) {
+        throw StateError('This server does not support sign-in recovery.');
+      }
+      final generation = _generation;
+      final actionApi = api;
+      void checkTransport() {
+        check();
+        if (_lifecycleSuspended ||
+            generation != _generation ||
+            !identical(repository, actionRepository) ||
+            !identical(api, actionApi)) {
+          throw StateError('The sign-in connection changed.');
+        }
+      }
+
+      checkTransport();
+      (actionRepository as IntegrationAuthRecoveryGateway)
+          .restoreIntegrationAuthAttempt(
+            integrationID: entry.integrationID,
+            attemptID: entry.attemptID,
+            command: entry.kind == PendingAuthKind.command,
+            directory: entry.directory,
+            workspace: entry.workspace,
+          );
+      // Expiration is local recovery retention, not evidence of server cancel.
+      if (entry.expired && !cancel) {
+        return const IntegrationAuthStatus(state: IntegrationAuthState.expired);
+      }
+      IntegrationAuthStatus result;
+      if (entry.kind == PendingAuthKind.command) {
+        if (actionRepository is! IntegrationCommandGateway ||
+            !capabilities.integrationCommandAuth ||
+            code != null) {
+          throw StateError('Command recovery is unavailable.');
+        }
+        final gateway = actionRepository as IntegrationCommandGateway;
+        if (cancel) {
+          await gateway.cancelIntegrationCommand(
+            entry.integrationID,
+            entry.attemptID,
+          );
+          result = const IntegrationAuthStatus(
+            state: IntegrationAuthState.expired,
+          );
+        } else {
+          result = await gateway.integrationCommandStatus(
+            entry.integrationID,
+            entry.attemptID,
+          );
+        }
+      } else {
+        if (cancel) {
+          await actionRepository.cancelIntegrationOAuth(entry.attemptID);
+          result = const IntegrationAuthStatus(
+            state: IntegrationAuthState.expired,
+          );
+        } else {
+          if (code != null) {
+            if (entry.mode != IntegrationAuthMode.code ||
+                code.trim().isEmpty ||
+                code.length > 8192) {
+              throw StateError('Enter a valid authorization code.');
+            }
+            await actionRepository.completeIntegrationOAuth(
+              entry.attemptID,
+              code: code,
+            );
+            checkTransport();
+          }
+          result = await actionRepository.integrationOAuthStatus(
+            entry.attemptID,
+          );
+        }
+      }
+      checkTransport();
+      if (cancel || result.state == IntegrationAuthState.complete) {
+        if (!await _pendingAuth.remove(entry)) {
+          throw StateError('Could not save sign-in recovery.');
+        }
+        scope.check();
+        if (_lifecycleSuspended ||
+            generation != _generation ||
+            !identical(repository, actionRepository) ||
+            !identical(api, actionApi)) {
+          throw StateError('The sign-in connection changed.');
+        }
+        _integrationCommandAttempts.remove(scope.key);
+        _oauthStarts.remove(scope.key);
+      }
+      if (!_disposed) notifyListeners();
+      // Never return provider-controlled messages to recovery UI.
+      return IntegrationAuthStatus(state: result.state);
+    } catch (_) {
+      throw StateError(
+        'Could not confirm sign-in. Check pending recovery before trying again.',
+      );
+    } finally {
+      _authRecoveryActions.remove(entry.key);
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  /// Explicit local dismissal does not claim server cancellation or revocation.
+  Future<void> forgetIntegrationAuth(
+    PendingAuthAttempt entry, {
+    required int locationRevision,
+  }) async {
+    final scope = _integrationCommandScope(
+      entry.integrationID,
+      locationRevision,
+    );
+    if (!pendingIntegrationAuth.any((e) => e.key == entry.key) ||
+        _authRecoveryActions.contains(entry.key)) {
+      throw StateError('Sign-in is unavailable.');
+    }
+    if (!await _pendingAuth.remove(entry)) {
+      throw StateError('Could not remove sign-in recovery.');
+    }
+    scope.check();
+    _integrationCommandAttempts.remove(scope.key);
+    _oauthStarts.remove(scope.key);
+    if (!_disposed) notifyListeners();
+  }
+
+  /// Captures a request's selected source, not its session. Attempt ownership
+  /// survives transport replacement and leaving/revisiting the same location;
+  /// each request still pins the current profile objects and location revision.
+  ({Object key, int deletion, void Function() check}) _integrationCommandScope(
+    String integrationID,
+    int expectedLocationRevision,
+  ) {
+    final saved = profile;
+    final connected = _connectedProfile;
+    if (saved == null || connected == null || integrationID.trim().isEmpty) {
+      throw StateError('Command sign-in is unavailable.');
+    }
+    final owner = saved.id;
+    final origin = saved.baseUrl;
+    final connectedOrigin = connected.baseUrl;
+    final location = (directory, workspace);
+    final deletion = _promptShelfDeletionRevisions[owner] ?? 0;
+    final identity = (saved.username, saved.flavor);
+    final connectedIdentity = (connected.username, connected.flavor);
+    void check() {
+      if (_disposed ||
+          !isProfileReadable(owner) ||
+          store.activeId != owner ||
+          !identical(profile, saved) ||
+          !identical(_connectedProfile, connected) ||
+          connected.id != owner ||
+          saved.baseUrl != origin ||
+          connected.baseUrl != connectedOrigin ||
+          origin != connectedOrigin ||
+          (saved.username, saved.flavor) != identity ||
+          (connected.username, connected.flavor) != connectedIdentity ||
+          identity != connectedIdentity ||
+          validateServerProfileUrl(origin) != null ||
+          locationRevision != expectedLocationRevision ||
+          (directory, workspace) != location ||
+          (_promptShelfDeletionRevisions[owner] ?? 0) != deletion) {
+        throw StateError('The command sign-in location changed.');
+      }
+    }
+
+    check();
+    return (
+      key: (owner, origin, identity, location, integrationID),
+      deletion: deletion,
+      check: check,
+    );
+  }
+
+  Future<T> _withIntegrationCommandTransport<T>(
+    void Function() checkScope,
+    Future<T> Function(
+      ServerOperationsGateway repository,
+      IntegrationCommandGateway gateway,
+      void Function() checkTransport,
+    )
+    action,
+  ) async {
+    try {
+      checkScope();
+      final actionRepository = await prepareActionRepository();
+      checkScope();
+      final actionApi = api;
+      final generation = _generation;
+      void checkTransport() {
+        checkScope();
+        if (_lifecycleSuspended ||
+            actionApi == null ||
+            actionRepository == null ||
+            generation != _generation ||
+            !identical(api, actionApi) ||
+            !identical(repository, actionRepository) ||
+            !capabilities.integrationCommandAuth) {
+          throw StateError('The command sign-in connection changed.');
+        }
+      }
+
+      checkTransport();
+      if (actionRepository == null ||
+          actionRepository is! IntegrationCommandGateway) {
+        throw StateError('Command sign-in is unavailable.');
+      }
+      final result = await action(
+        actionRepository,
+        actionRepository as IntegrationCommandGateway,
+        checkTransport,
+      );
+      checkTransport();
+      return result;
+    } catch (_) {
+      // Command output and server errors may contain provider credentials.
+      throw StateError(
+        'Could not confirm command sign-in. Refresh and try again.',
+      );
+    }
+  }
+
+  /// Starts executable authentication on the selected server. The UI MUST obtain
+  /// explicit user confirmation before calling this; discovery is not consent.
+  /// Identical concurrent taps share a launch. An uncertain dispatch blocks
+  /// retries rather than risking a second server-side process.
+  Future<IntegrationAuthLaunch> startIntegrationCommand(
+    String integrationID,
+    String methodID, {
+    String? label,
+    required int locationRevision,
+  }) async {
+    final scope = _integrationCommandScope(integrationID, locationRevision);
+    if (methodID.trim().isEmpty ||
+        (label != null &&
+            (label.trim().isEmpty ||
+                label.trim().length > 128 ||
+                RegExp(r'[\x00-\x1f\x7f-\x9f]').hasMatch(label)))) {
+      throw StateError(
+        'Enter a valid command method and optional sign-in label.',
+      );
+    }
+    final existing = _integrationCommandAttempts[scope.key];
+    if (existing != null) {
+      final starting = existing.starting;
+      if (existing.methodID == methodID &&
+          existing.deletionRevision == scope.deletion &&
+          starting != null) {
+        final result = await starting;
+        scope.check();
+        result.check();
+        return result.launch;
+      }
+      throw StateError(
+        'A command sign-in may already be running at this location.',
+      );
+    }
+
+    if (pendingIntegrationAuth.any(
+      (entry) =>
+          entry.integrationID == integrationID &&
+          entry.kind == PendingAuthKind.command,
+    )) {
+      throw StateError('Resume or cancel the existing command sign-in first.');
+    }
+    final record = _authRecorder(integrationID, PendingAuthKind.command);
+    final releaseReservation = _reserveAuthStart();
+    final pending = _IntegrationCommandAttempt(methodID, scope.deletion);
+    _integrationCommandAttempts[scope.key] = pending;
+    var dispatched = false;
+    final operation =
+        _withIntegrationCommandTransport<
+          ({IntegrationAuthLaunch launch, void Function() check})
+        >(scope.check, (actionRepository, gateway, checkTransport) async {
+          final integrations = await actionRepository.listIntegrations();
+          checkTransport();
+          final valid = integrations.any(
+            (integration) =>
+                integration.id == integrationID &&
+                integration.methods.any(
+                  (method) => method.id == methodID && method.type == 'command',
+                ),
+          );
+          if (!valid) {
+            throw StateError('The command sign-in method is unavailable.');
+          }
+          dispatched = true;
+          final launch = await gateway.startIntegrationCommand(
+            integrationID,
+            methodID,
+            label: label?.trim(),
+          );
+          final recoverySaved = await record(launch);
+          checkTransport();
+          if (launch.attemptID.trim().isEmpty) {
+            throw StateError('The command sign-in attempt is unavailable.');
+          }
+          // A stale completion leaves the original reservation uncertain. It
+          // cannot attach an attempt to the newly selected profile/location.
+          pending.attemptID = launch.attemptID;
+          if (!recoverySaved) {
+            throw StateError(
+              'Command sign-in started, but recovery could not be saved.',
+            );
+          }
+          return (launch: launch, check: checkTransport);
+        });
+    pending.starting = operation;
+    try {
+      final result = await operation;
+      scope.check();
+      result.check();
+      return result.launch;
+    } finally {
+      releaseReservation();
+      pending.starting = null;
+      // Before dispatch there is only a reservation, not a possible attempt.
+      if (!dispatched &&
+          identical(_integrationCommandAttempts[scope.key], pending)) {
+        _integrationCommandAttempts.remove(scope.key);
+      }
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  String? pendingIntegrationCommand(
+    String integrationID, {
+    required int locationRevision,
+  }) {
+    final scope = _integrationCommandScope(integrationID, locationRevision);
+    scope.check();
+    for (final entry in pendingIntegrationAuth) {
+      if (entry.integrationID == integrationID &&
+          entry.kind == PendingAuthKind.command) {
+        return entry.attemptID;
+      }
+    }
+    return _integrationCommandAttempts[scope.key]?.attemptID;
+  }
+
+  Future<IntegrationAuthStatus> integrationCommandStatus(
+    String integrationID,
+    String attemptID, {
+    required int locationRevision,
+  }) async {
+    for (final entry in pendingIntegrationAuth) {
+      if (entry.integrationID == integrationID &&
+          entry.attemptID == attemptID &&
+          entry.kind == PendingAuthKind.command) {
+        return recoverIntegrationAuth(
+          entry,
+          locationRevision: locationRevision,
+        );
+      }
+    }
+    return _integrationCommandAttemptAction<IntegrationAuthStatus>(
+      integrationID,
+      attemptID,
+      locationRevision: locationRevision,
+      action: (gateway) =>
+          gateway.integrationCommandStatus(integrationID, attemptID),
+      terminal: (status) => status.state != IntegrationAuthState.pending,
+    );
+  }
+
+  Future<void> cancelIntegrationCommand(
+    String integrationID,
+    String attemptID, {
+    required int locationRevision,
+  }) async {
+    for (final entry in pendingIntegrationAuth) {
+      if (entry.integrationID == integrationID &&
+          entry.attemptID == attemptID &&
+          entry.kind == PendingAuthKind.command) {
+        await recoverIntegrationAuth(
+          entry,
+          cancel: true,
+          locationRevision: locationRevision,
+        );
+        return;
+      }
+    }
+    await _integrationCommandAttemptAction<bool>(
+      integrationID,
+      attemptID,
+      locationRevision: locationRevision,
+      action: (gateway) async {
+        await gateway.cancelIntegrationCommand(integrationID, attemptID);
+        return true;
+      },
+      terminal: (_) => true,
+    );
+  }
+
+  Future<T> _integrationCommandAttemptAction<T>(
+    String integrationID,
+    String attemptID, {
+    required int locationRevision,
+    required Future<T> Function(IntegrationCommandGateway) action,
+    required bool Function(T) terminal,
+  }) async {
+    final scope = _integrationCommandScope(integrationID, locationRevision);
+    final pending = _integrationCommandAttempts[scope.key];
+    void checkOwnership() {
+      scope.check();
+      if (attemptID.trim().isEmpty ||
+          pending == null ||
+          pending.attemptID != attemptID ||
+          pending.deletionRevision != scope.deletion ||
+          !identical(_integrationCommandAttempts[scope.key], pending)) {
+        throw StateError(
+          'The command sign-in attempt is unavailable at this location.',
+        );
+      }
+    }
+
+    checkOwnership();
+    void Function()? checkCompletion;
+    final result = await _withIntegrationCommandTransport<T>(checkOwnership, (
+      _,
+      gateway,
+      checkTransport,
+    ) async {
+      checkCompletion = checkTransport;
+      final result = await action(gateway);
+      checkTransport();
+      return result;
+    });
+    checkCompletion?.call();
+    if (terminal(result)) _integrationCommandAttempts.remove(scope.key);
+    return result;
+  }
+
+  Future<void> activateIntegrationCredential(
+    String integrationID,
+    String credentialID, {
+    required int locationRevision,
+  }) => _mutateIntegrationCredential(
+    integrationID,
+    credentialID,
+    locationRevision: locationRevision,
+    mutate: (gateway) => gateway.activateCredential(credentialID),
+  );
+
+  Future<void> renameIntegrationCredential(
+    String integrationID,
+    String credentialID,
+    String label, {
+    required int locationRevision,
+  }) async {
+    final trimmed = label.trim();
+    if (trimmed.isEmpty ||
+        trimmed.length > 128 ||
+        RegExp(r'[\x00-\x1f\x7f-\x9f]').hasMatch(label)) {
+      throw StateError(
+        'Enter a label of 1–128 characters without control characters.',
+      );
+    }
+    return _mutateIntegrationCredential(
+      integrationID,
+      credentialID,
+      locationRevision: locationRevision,
+      mutate: (gateway) => gateway.renameCredential(credentialID, trimmed),
+    );
+  }
+
+  Future<void> removeIntegrationCredential(
+    String integrationID,
+    String credentialID, {
+    required int locationRevision,
+  }) => _mutateIntegrationCredential(
+    integrationID,
+    credentialID,
+    locationRevision: locationRevision,
+    allowAbsent: true,
+    mutate: (gateway) => gateway.removeCredential(credentialID),
+  );
+
+  /// Credential metadata is server-owned. Serialize intent, not inferred active
+  /// state; neither a successful response nor removal selects a replacement.
+  Future<void> _mutateIntegrationCredential(
+    String integrationID,
+    String credentialID, {
+    required int locationRevision,
+    bool allowAbsent = false,
+    required Future<void> Function(IntegrationCredentialGateway) mutate,
+  }) async {
+    final saved = profile;
+    final connected = _connectedProfile;
+    if (saved == null ||
+        connected == null ||
+        integrationID.trim().isEmpty ||
+        credentialID.trim().isEmpty) {
+      throw StateError('Credential management is unavailable.');
+    }
+    final owner = saved.id;
+    final savedOrigin = saved.baseUrl;
+    final connectedOrigin = connected.baseUrl;
+    final location = (directory, workspace);
+    final deletion = _promptShelfDeletionRevisions[owner] ?? 0;
+    void checkScope() {
+      if (!isProfileReadable(owner) ||
+          store.activeId != owner ||
+          !identical(profile, saved) ||
+          !identical(_connectedProfile, connected) ||
+          connected.id != owner ||
+          saved.baseUrl != savedOrigin ||
+          connected.baseUrl != connectedOrigin ||
+          savedOrigin != connectedOrigin ||
+          this.locationRevision != locationRevision ||
+          (directory, workspace) != location ||
+          (_promptShelfDeletionRevisions[owner] ?? 0) != deletion) {
+        throw StateError(
+          'The credential location changed. Refresh and try again.',
+        );
+      }
+    }
+
+    checkScope();
+    // Integration is deliberately not part of the key: the same credential
+    // cannot be mutated concurrently through two claimed integration owners.
+    // Labels are not coalesced; each queued rename keeps its own intent.
+    final key = (
+      owner,
+      saved,
+      connected,
+      savedOrigin,
+      locationRevision,
+      location,
+      deletion,
+      credentialID,
+    );
+    final previous = _integrationCredentialMutations[key];
+    void Function()? checkCompletion;
+    final operation = () async {
+      try {
+        if (previous != null) {
+          try {
+            await previous;
+          } catch (_) {
+            // A failed predecessor does not authorize or discard this intent.
+          }
+          checkScope();
+        }
+        final actionRepository = await prepareActionRepository();
+        checkScope();
+        final actionApi = api;
+        final generation = _generation;
+        void checkTransport() {
+          checkScope();
+          if (_lifecycleSuspended ||
+              actionApi == null ||
+              actionRepository == null ||
+              generation != _generation ||
+              !identical(api, actionApi) ||
+              !identical(repository, actionRepository)) {
+            throw StateError(
+              'The credential connection changed. Refresh and try again.',
+            );
+          }
+        }
+
+        checkCompletion = checkTransport;
+        checkTransport();
+        if (actionRepository == null ||
+            !capabilities.integrationCredentials ||
+            actionRepository is! IntegrationCredentialGateway) {
+          throw StateError('Credential management is unavailable.');
+        }
+        final integrations = await actionRepository.listIntegrations();
+        checkTransport();
+        if (!capabilities.integrationCredentials) {
+          throw StateError('Credential management is unavailable.');
+        }
+        final belongs = integrations.any(
+          (integration) =>
+              integration.id == integrationID &&
+              integration.credentialIDs.contains(credentialID),
+        );
+        if (!belongs) {
+          // Absence is idempotent only when the credential is absent everywhere,
+          // not when it is present under a different integration.
+          final presentElsewhere = integrations.any(
+            (integration) => integration.credentialIDs.contains(credentialID),
+          );
+          if (allowAbsent && !presentElsewhere) return;
+          throw StateError(
+            'The credential is unavailable. Refresh and try again.',
+          );
+        }
+        await mutate(actionRepository as IntegrationCredentialGateway);
+        checkTransport();
+      } catch (_) {
+        checkScope();
+        throw StateError(
+          'Could not confirm the credential change. Refresh and try again.',
+        );
+      }
+    }();
+    _integrationCredentialMutations[key] = operation;
+    try {
+      await operation;
+      checkScope();
+      checkCompletion?.call();
+    } finally {
+      if (identical(_integrationCredentialMutations[key], operation)) {
+        _integrationCredentialMutations.remove(key);
+      }
+    }
+  }
+
+  /// Removes only a currently listed runtime entry. The caller owns refetching
+  /// its inventory; this never changes saved configuration or publishes state.
+  Future<void> removeMcpServer(
+    String name, {
+    required int locationRevision,
+  }) async {
+    final saved = profile;
+    final connected = _connectedProfile;
+    if (saved == null || connected == null || name.trim().isEmpty) {
+      throw StateError('MCP removal is unavailable.');
+    }
+    final owner = saved.id;
+    final savedOrigin = saved.baseUrl;
+    final connectedOrigin = connected.baseUrl;
+    final location = (directory, workspace);
+    final deletion = _promptShelfDeletionRevisions[owner] ?? 0;
+    bool currentScope() =>
+        isProfileReadable(owner) &&
+        store.activeId == owner &&
+        identical(profile, saved) &&
+        identical(_connectedProfile, connected) &&
+        connected.id == owner &&
+        saved.baseUrl == savedOrigin &&
+        connected.baseUrl == connectedOrigin &&
+        savedOrigin == connectedOrigin &&
+        this.locationRevision == locationRevision &&
+        (directory, workspace) == location &&
+        (_promptShelfDeletionRevisions[owner] ?? 0) == deletion;
+    void checkScope() {
+      if (!currentScope()) {
+        throw StateError('The MCP location changed. Refresh and try again.');
+      }
+    }
+
+    checkScope();
+    // A request is profile/location/name-scoped, not session-scoped. Keep its
+    // slot across transport recovery so a second tap cannot dispatch twice.
+    final key = (
+      owner,
+      saved,
+      connected,
+      savedOrigin,
+      locationRevision,
+      location,
+      deletion,
+      name,
+    );
+    final pending = _mcpRemovals[key];
+    if (pending != null) return pending;
+    final operation = () async {
+      try {
+        final actionRepository = await prepareActionRepository();
+        checkScope();
+        final actionApi = api;
+        final generation = _generation;
+        void checkTransport() {
+          checkScope();
+          if (_lifecycleSuspended ||
+              actionApi == null ||
+              actionRepository == null ||
+              generation != _generation ||
+              !identical(api, actionApi) ||
+              !identical(repository, actionRepository)) {
+            throw StateError(
+              'The MCP connection changed. Refresh and try again.',
+            );
+          }
+        }
+
+        checkTransport();
+        if (actionRepository == null ||
+            !capabilities.mcpRuntimeRemovals ||
+            actionRepository is! McpRemovalGateway) {
+          throw StateError('MCP removal is unavailable.');
+        }
+        final inventory = await actionRepository.listMcpServers();
+        checkTransport();
+        if (!capabilities.mcpRuntimeRemovals) {
+          throw StateError('MCP removal is unavailable.');
+        }
+        if (!inventory.any((entry) => entry.name == name)) return;
+        await (actionRepository as McpRemovalGateway).removeMcpServer(name);
+        checkTransport();
+      } catch (_) {
+        // Never propagate inventory/configuration contents or raw server errors.
+        checkScope();
+        throw StateError(
+          'Could not confirm MCP removal. Refresh and try again.',
+        );
+      } finally {
+        _mcpRemovals.remove(key);
+      }
+    }();
+    _mcpRemovals[key] = operation;
+    return operation;
   }
 
   /// Rebuilds the selected location after a configuration patch invalidates
@@ -4880,49 +5952,156 @@ class ConnectionController extends ChangeNotifier {
   }
 
   late final _sessionPins = SessionPinStore(store.prefs);
-  late final _promptShelf = PromptShelfStore(store.prefs);
+  final PromptShelfStore _promptShelf;
+  final _promptShelfDeletionRevisions = <String, int>{};
   String get promptShelfProfileID => (_connectedProfile ?? profile)?.id ?? '';
-  bool get canUsePromptShelf =>
-      promptShelfProfileID.isNotEmpty &&
-      store.profiles.any((profile) => profile.id == promptShelfProfileID) &&
-      !_deletingReadProfiles.contains(promptShelfProfileID);
+  bool get canUsePromptShelf => isProfileReadable(promptShelfProfileID);
   List<StashedPrompt> get promptStash =>
-      _promptShelf.stashes(promptShelfProfileID);
+      canUsePromptShelf ? _promptShelf.stashes(promptShelfProfileID) : const [];
   List<String> get sentPromptHistory =>
-      _promptShelf.history(promptShelfProfileID);
+      canUsePromptShelf ? _promptShelf.history(promptShelfProfileID) : const [];
+
+  /// The shelf belongs to a profile; one operation also belongs to the selected
+  /// location and that profile's deletion epoch. It does not belong to a server
+  /// request/session or replaceable API/repository generation: these are local
+  /// files, usable offline and across same-location transport recovery. A chat
+  /// must separately guard its destination session/composer before insertion.
+  bool Function() _promptShelfScope(int expectedLocation) {
+    if (!canUsePromptShelf) throw StateError('The prompt location changed');
+    final owner = promptShelfProfileID;
+    final savedProfile = store.profiles.firstWhere(
+      (candidate) => candidate.id == owner,
+    );
+    final savedOrigin = savedProfile.baseUrl;
+    final activeID = store.activeId;
+    final origin = (_connectedProfile ?? profile)?.baseUrl;
+    final location = (directory, workspace);
+    final deletion = _promptShelfDeletionRevisions[owner] ?? 0;
+    bool current() =>
+        canUsePromptShelf &&
+        locationRevision == expectedLocation &&
+        promptShelfProfileID == owner &&
+        store.activeId == activeID &&
+        store.profiles.any((candidate) => identical(candidate, savedProfile)) &&
+        savedProfile.baseUrl == savedOrigin &&
+        (_connectedProfile ?? profile)?.baseUrl == origin &&
+        (directory, workspace) == location &&
+        (_promptShelfDeletionRevisions[owner] ?? 0) == deletion;
+    _checkPromptShelfScope(current);
+    return current;
+  }
+
+  static void _checkPromptShelfScope(bool Function() current) {
+    if (!current()) throw StateError('The prompt location changed');
+  }
+
+  /// Lazily migrate without consuming saved prompts. Empty shelves do not
+  /// access a vault/root or write preferences, even on the live default path.
+  Future<List<String>> preparePromptStash({
+    required int locationRevision,
+  }) async {
+    final current = _promptShelfScope(locationRevision);
+    final owner = promptShelfProfileID;
+    List<StashedPrompt>? before;
+    try {
+      before = _promptShelf.stashes(owner);
+    } on StateError {
+      // A previous refused write may need the serialized metadata reload below.
+    }
+    final deferred = await _promptShelf.migrateAttachments(
+      owner,
+      checkCurrent: () => _checkPromptShelfScope(current),
+    );
+    _checkPromptShelfScope(current);
+    if (!listEquals(before, _promptShelf.stashes(owner))) notifyListeners();
+    return deferred;
+  }
+
+  Future<DraftAttachmentRecovery> restorePromptStashAttachments(
+    String id, {
+    required int locationRevision,
+  }) async {
+    final current = _promptShelfScope(locationRevision);
+    final owner = promptShelfProfileID;
+    final prompt = _promptShelf.stashes(owner).firstWhere((p) => p.id == id);
+    final sameLocation =
+        sameDirectoryPath(prompt.directory, directory) &&
+        prompt.workspace == workspace;
+    if (prompt.locationBound && !sameLocation) {
+      throw StateError('The saved prompt belongs to another location');
+    }
+    void checkCurrent() {
+      _checkPromptShelfScope(current);
+      // IDs may be removed and reused while this read waits in the file queue.
+      if (!_promptShelf.stashes(owner).any((p) => identical(p, prompt))) {
+        throw StateError('The saved prompt changed');
+      }
+    }
+
+    final recovery = await _promptShelf.restoreAttachments(
+      owner,
+      id,
+      sameLocation: sameLocation,
+      checkCurrent: checkCurrent,
+    );
+    checkCurrent();
+    return recovery;
+  }
 
   Future<void> savePromptStash(
     StashedPrompt prompt, {
     required int locationRevision,
   }) async {
-    if (!canUsePromptShelf || this.locationRevision != locationRevision) {
-      throw StateError('The prompt location changed');
+    final current = _promptShelfScope(locationRevision);
+    final owner = promptShelfProfileID;
+    try {
+      await _promptShelf.stash(
+        owner,
+        prompt,
+        checkCurrent: () => _checkPromptShelfScope(current),
+      );
+      _checkPromptShelfScope(current);
+    } finally {
+      if (current()) notifyListeners();
     }
-    await _promptShelf.stash(promptShelfProfileID, prompt);
-    if (!_disposed) notifyListeners();
   }
 
   Future<void> removePromptStash(
     String id, {
     required int locationRevision,
   }) async {
-    if (!canUsePromptShelf || this.locationRevision != locationRevision) {
-      throw StateError('The prompt location changed');
+    final current = _promptShelfScope(locationRevision);
+    final owner = promptShelfProfileID;
+    try {
+      await _promptShelf.remove(
+        owner,
+        id,
+        checkCurrent: () => _checkPromptShelfScope(current),
+      );
+      _checkPromptShelfScope(current);
+    } finally {
+      // Removal may have committed metadata before file cleanup failed.
+      if (current()) notifyListeners();
     }
-    await _promptShelf.remove(promptShelfProfileID, id);
-    if (!_disposed) notifyListeners();
   }
 
   Future<void> rememberSentPrompt(String profileID, String text) async {
     // A network send can finish after its server profile has been deleted.
     // Never recreate the removed profile's local history in that callback.
-    if (_disposed ||
-        profileID.isEmpty ||
-        _deletingReadProfiles.contains(profileID) ||
-        !store.profiles.any((profile) => profile.id == profileID)) {
-      return;
+    final deletion = _promptShelfDeletionRevisions[profileID] ?? 0;
+    bool current() =>
+        isProfileReadable(profileID) &&
+        (_promptShelfDeletionRevisions[profileID] ?? 0) == deletion;
+    if (!current()) return;
+    try {
+      await _promptShelf.recordSent(
+        profileID,
+        text,
+        checkCurrent: () => _checkPromptShelfScope(current),
+      );
+    } catch (_) {
+      if (current()) rethrow;
     }
-    await _promptShelf.recordSent(profileID, text);
   }
 
   String get _pinProfile => (_connectedProfile ?? profile)?.id ?? '';
