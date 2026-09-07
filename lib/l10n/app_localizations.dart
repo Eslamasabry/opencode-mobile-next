@@ -6206,6 +6206,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 draft with an unconfirmed send to review.} other{{count} drafts with an unconfirmed send to review.}}'**
   String queuedBannerReview(int count);
+
+  /// No description provided for @returnBriefTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unreviewed work'**
+  String get returnBriefTitle;
+
+  /// No description provided for @returnBriefDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'For this project on this device. Dismissing keeps conversations unread and requests pending.'**
+  String get returnBriefDescription;
+
+  /// No description provided for @returnBriefUntitled.
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled session'**
+  String get returnBriefUntitled;
+
+  /// No description provided for @returnBriefStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Last observed state. Reconnect or refresh to check current work and requests.'**
+  String get returnBriefStale;
+
+  /// No description provided for @returnBriefUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not report read state. Unreviewed results are unknown.'**
+  String get returnBriefUnknown;
+
+  /// No description provided for @returnBriefPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Loaded sessions only. The session list is still incomplete.'**
+  String get returnBriefPartial;
+
+  /// No description provided for @returnBriefAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer'**
+  String get returnBriefAnswer;
+
+  /// No description provided for @returnBriefUnreviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unreviewed session. Open results to check the outcome.'**
+  String get returnBriefUnreviewed;
+
+  /// No description provided for @returnBriefReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review results'**
+  String get returnBriefReview;
+
+  /// No description provided for @returnBriefContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get returnBriefContinue;
+
+  /// No description provided for @returnBriefMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional items: {count}. They remain unacknowledged; see the sessions below or Activity.'**
+  String returnBriefMore(int count);
+
+  /// No description provided for @returnBriefSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismissal was not saved. These items are still unreviewed. Try again.'**
+  String get returnBriefSaveFailed;
+
+  /// No description provided for @returnBriefSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving dismissal...'**
+  String get returnBriefSaving;
+
+  /// No description provided for @returnBriefDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss shown items'**
+  String get returnBriefDismiss;
 }
 
 class _AppLocalizationsDelegate

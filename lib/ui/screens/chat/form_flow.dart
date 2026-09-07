@@ -4,6 +4,7 @@ import '../../../api/models.dart' show ApiException;
 import '../../../api2/models.dart' show Api2FormInfo;
 import '../../../state/connection.dart';
 import '../../widgets/form_renderer.dart';
+import '../../widgets/request_routes.dart';
 
 /// Presents a pending form through the shared [FormRenderer] presenter and
 /// routes its reply/cancel through the connection's [FormGateway] state,
@@ -18,7 +19,13 @@ Future<void> presentConnectionForm(
   BuildContext context,
   ConnectionController connection,
   Api2FormInfo form,
-) {
+) async {
+  final scope = connection.returnBriefScope;
+  bool current() =>
+      connection.returnBriefScope == scope &&
+      identical(connection.forms[form.id], form);
+  if (!current()) return;
+  final routes = RequestRoutes(changes: connection, isPending: current);
   final messenger = ScaffoldMessenger.maybeOf(context);
   bool settledElsewhere(Object error) =>
       error is ApiException &&
@@ -30,30 +37,45 @@ Future<void> presentConnectionForm(
     );
   }
 
-  return presentForm(
-    context,
-    form: form,
-    onSubmit: (answer) async {
-      try {
-        await connection.replyForm(form.id, answer);
-      } catch (error) {
-        if (settledElsewhere(error)) {
-          toastSettled();
-          return;
+  try {
+    await presentForm(
+      context,
+      form: form,
+      routes: routes,
+      onSubmit: (answer) async {
+        if (!current()) {
+          throw StateError(
+            'The form or project changed. Reopen the current request.',
+          );
         }
-        rethrow;
-      }
-    },
-    onCancel: () async {
-      try {
-        await connection.cancelForm(form.id);
-      } catch (error) {
-        if (settledElsewhere(error)) {
-          toastSettled();
-          return;
+        try {
+          await connection.replyForm(form.id, answer);
+        } catch (error) {
+          if (settledElsewhere(error)) {
+            toastSettled();
+            return;
+          }
+          rethrow;
         }
-        rethrow;
-      }
-    },
-  );
+      },
+      onCancel: () async {
+        if (!current()) {
+          throw StateError(
+            'The form or project changed. Reopen the current request.',
+          );
+        }
+        try {
+          await connection.cancelForm(form.id);
+        } catch (error) {
+          if (settledElsewhere(error)) {
+            toastSettled();
+            return;
+          }
+          rethrow;
+        }
+      },
+    );
+  } finally {
+    routes.close();
+  }
 }

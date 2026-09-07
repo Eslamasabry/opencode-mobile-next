@@ -1393,5 +1393,26 @@
     "placeholders": {
       "count": {"type": "int"}
     }
-  }
+  },
+  "returnBriefTitle": "Unreviewed work",
+  "returnBriefDescription": "For this project on this device. Dismissing keeps conversations unread and requests pending.",
+  "returnBriefUntitled": "Untitled session",
+  "returnBriefStale": "Last observed state. Reconnect or refresh to check current work and requests.",
+  "returnBriefUnknown": "This server does not report read state. Unreviewed results are unknown.",
+  "returnBriefPartial": "Loaded sessions only. The session list is still incomplete.",
+  "returnBriefAnswer": "Answer",
+  "returnBriefUnreviewed": "Unreviewed session. Open results to check the outcome.",
+  "returnBriefReview": "Review results",
+  "returnBriefContinue": "Continue",
+  "returnBriefMore": "Additional items: {count}. They remain unacknowledged; see the sessions below or Activity.",
+  "@returnBriefMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "returnBriefSaveFailed": "Dismissal was not saved. These items are still unreviewed. Try again.",
+  "returnBriefSaving": "Saving dismissal...",
+  "returnBriefDismiss": "Dismiss shown items"
 }

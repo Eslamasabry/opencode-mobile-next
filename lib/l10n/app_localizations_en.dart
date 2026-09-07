@@ -3712,4 +3712,54 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get returnBriefTitle => 'Unreviewed work';
+
+  @override
+  String get returnBriefDescription =>
+      'For this project on this device. Dismissing keeps conversations unread and requests pending.';
+
+  @override
+  String get returnBriefUntitled => 'Untitled session';
+
+  @override
+  String get returnBriefStale =>
+      'Last observed state. Reconnect or refresh to check current work and requests.';
+
+  @override
+  String get returnBriefUnknown =>
+      'This server does not report read state. Unreviewed results are unknown.';
+
+  @override
+  String get returnBriefPartial =>
+      'Loaded sessions only. The session list is still incomplete.';
+
+  @override
+  String get returnBriefAnswer => 'Answer';
+
+  @override
+  String get returnBriefUnreviewed =>
+      'Unreviewed session. Open results to check the outcome.';
+
+  @override
+  String get returnBriefReview => 'Review results';
+
+  @override
+  String get returnBriefContinue => 'Continue';
+
+  @override
+  String returnBriefMore(int count) {
+    return 'Additional items: $count. They remain unacknowledged; see the sessions below or Activity.';
+  }
+
+  @override
+  String get returnBriefSaveFailed =>
+      'Dismissal was not saved. These items are still unreviewed. Try again.';
+
+  @override
+  String get returnBriefSaving => 'Saving dismissal...';
+
+  @override
+  String get returnBriefDismiss => 'Dismiss shown items';
 }

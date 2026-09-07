@@ -7,6 +7,7 @@ import '../../api2/models.dart';
 import '../app_theme.dart';
 import 'confirm_sheet.dart';
 import 'external_link.dart';
+import 'request_routes.dart';
 
 /// Delivers the assembled answer payload (active fields only) to the caller.
 /// Throwing keeps the form open and surfaces the message in the pinned error
@@ -33,21 +34,25 @@ Future<void> presentForm(
   required Api2FormInfo form,
   required FormRendererSubmit onSubmit,
   required FormRendererCancel onCancel,
+  RequestRoutes? routes,
 }) {
   if (formPrefersFullScreen(form)) {
     return Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         fullscreenDialog: true,
-        builder: (routeContext) => Scaffold(
-          body: SafeArea(
-            child: FormRenderer(
-              form: form,
-              onSubmit: onSubmit,
-              onCancel: onCancel,
-              onClose: () => Navigator.of(routeContext).maybePop(),
+        builder: (routeContext) {
+          routes?.own(ModalRoute.of(routeContext));
+          return Scaffold(
+            body: SafeArea(
+              child: FormRenderer(
+                form: form,
+                onSubmit: onSubmit,
+                onCancel: onCancel,
+                onClose: () => Navigator.of(routeContext).maybePop(),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -61,17 +66,20 @@ Future<void> presentForm(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (sheetContext) => Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-      ),
-      child: FormRenderer(
-        form: form,
-        onSubmit: onSubmit,
-        onCancel: onCancel,
-        onClose: () => Navigator.of(sheetContext).maybePop(),
-      ),
-    ),
+    builder: (sheetContext) {
+      routes?.own(ModalRoute.of(sheetContext));
+      return Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+        ),
+        child: FormRenderer(
+          form: form,
+          onSubmit: onSubmit,
+          onCancel: onCancel,
+          onClose: () => Navigator.of(sheetContext).maybePop(),
+        ),
+      );
+    },
   );
 }
 
@@ -1219,7 +1227,11 @@ class _FormRendererState extends State<FormRenderer> {
       );
     }
     return Row(
-      children: [dismiss, const SizedBox(width: 12), Expanded(child: submit)],
+      children: [
+        dismiss,
+        const SizedBox(width: 12),
+        Expanded(child: submit),
+      ],
     );
   }
 
