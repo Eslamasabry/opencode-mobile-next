@@ -315,6 +315,7 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Refresh status'**
   String get servicesRefresh;
+
   /// No description provided for @isolatedTaskScopeChanged.
   ///
   /// In en, this message translates to:
