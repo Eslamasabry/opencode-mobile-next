@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:opencode_sdk/opencode_sdk.dart' as sdk;
@@ -12,7 +13,11 @@ export 'models.dart' show ApiException;
 
 /// HTTP client for a single opencode server (`opencode serve`).
 class OpenCodeApi
-    implements ServerGateway, SessionRetryGateway, EventStreamTransport {
+    implements
+        ServerGateway,
+        SessionRetryGateway,
+        EventStreamTransport,
+        CorrelatedPromptGateway {
   final String baseUrl;
   final String? username;
   final String? password;
@@ -565,6 +570,72 @@ class OpenCodeApi
     List<PromptAttachment> attachments = const [],
     List<PromptAgentMention> agentMentions = const [],
     PromptDelivery? delivery,
+  }) => _promptAsync(
+    sessionID,
+    text: text,
+    model: model,
+    agent: agent,
+    variant: variant,
+    attachments: attachments,
+    agentMentions: agentMentions,
+  );
+
+  static final _messageRandom = Random.secure();
+  static int _messageTimestamp = 0;
+  static int _messageCounter = 0;
+
+  @override
+  String createPromptMessageID() {
+    // Pinned v1 ascending ID shape: low 48 bits of milliseconds*4096+counter,
+    // followed by 14 random base62 characters. Not a resend/idempotency key.
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now != _messageTimestamp) {
+      _messageTimestamp = now;
+      _messageCounter = 0;
+    }
+    final time = ((now * 4096 + ++_messageCounter) & 0xffffffffffff)
+        .toRadixString(16)
+        .padLeft(12, '0');
+    const alphabet =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    final random = List.generate(
+      14,
+      (_) => alphabet[_messageRandom.nextInt(62)],
+    ).join();
+    return 'msg_$time$random';
+  }
+
+  @override
+  Future<void> promptWithMessageID(
+    String sessionID, {
+    required String messageID,
+    required String text,
+    ModelRef? model,
+    String? agent,
+    String? variant,
+    List<PromptAttachment> attachments = const [],
+    List<PromptAgentMention> agentMentions = const [],
+    PromptDelivery? delivery,
+  }) => _promptAsync(
+    sessionID,
+    messageID: messageID,
+    text: text,
+    model: model,
+    agent: agent,
+    variant: variant,
+    attachments: attachments,
+    agentMentions: agentMentions,
+  );
+
+  Future<void> _promptAsync(
+    String sessionID, {
+    String? messageID,
+    required String text,
+    ModelRef? model,
+    String? agent,
+    String? variant,
+    List<PromptAttachment> attachments = const [],
+    List<PromptAgentMention> agentMentions = const [],
   }) async {
     try {
       await sdkClient.getSessionApi().sessionPromptAsync(
@@ -572,6 +643,7 @@ class OpenCodeApi
         directory: _directory,
         workspace: _workspace,
         sessionPromptAsyncRequest: sdk.SessionPromptAsyncRequest(
+          messageID: messageID,
           model: model == null
               ? null
               : sdk.SessionPromptAsyncRequestModel(

@@ -2965,8 +2965,68 @@ abstract class AppLocalizations {
   /// No description provided for @voiceConversationDescription.
   ///
   /// In en, this message translates to:
-  /// **'Listen, review, then Send. No automatic listening or reading.'**
+  /// **'Listen, review, then Send. No automatic listening; replies are read aloud only if you turn that on.'**
   String get voiceConversationDescription;
+
+  /// No description provided for @voiceConversationSpeakReplies.
+  ///
+  /// In en, this message translates to:
+  /// **'Speak replies'**
+  String get voiceConversationSpeakReplies;
+
+  /// No description provided for @voiceConversationSpeakRepliesDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Read a matched reply once after Send. Tap Listen to use the microphone.'**
+  String get voiceConversationSpeakRepliesDetail;
+
+  /// No description provided for @voiceConversationWaitingReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the reply…'**
+  String get voiceConversationWaitingReply;
+
+  /// No description provided for @voiceConversationSpeakingReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaking the reply'**
+  String get voiceConversationSpeakingReply;
+
+  /// No description provided for @voiceConversationStopReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get voiceConversationStopReply;
+
+  /// No description provided for @voiceConversationReadReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Read reply'**
+  String get voiceConversationReadReply;
+
+  /// No description provided for @voiceConversationReplyReviewNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'The reply finished, but it could not be matched to your message for certain. Read it if you want.'**
+  String get voiceConversationReplyReviewNeeded;
+
+  /// No description provided for @voiceConversationReplyInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'The reply needed a decision on screen, so it was not read automatically.'**
+  String get voiceConversationReplyInterrupted;
+
+  /// No description provided for @voiceConversationReplyNoProse.
+  ///
+  /// In en, this message translates to:
+  /// **'The reply has no prose to read. Code and tool details are not spoken.'**
+  String get voiceConversationReplyNoProse;
+
+  /// No description provided for @voiceConversationReplyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The reply could not be read aloud.'**
+  String get voiceConversationReplyFailed;
 
   /// No description provided for @voiceConversationPausedTitle.
   ///
@@ -3037,7 +3097,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceConversationInstructions.
   ///
   /// In en, this message translates to:
-  /// **'Review and insert your transcript, then tap Send in the composer. Choose Read aloud on a reply; nothing is read automatically. Unsent text is discarded when you leave voice mode, the chat, or the app.'**
+  /// **'Review and insert your transcript, then tap Send in the composer. Replies are read aloud only while Speak replies is on, and only the reply to what you just sent. Unsent text is discarded when you leave voice mode, the chat, or the app.'**
   String get voiceConversationInstructions;
 
   /// No description provided for @desktopDropFailedTitle.

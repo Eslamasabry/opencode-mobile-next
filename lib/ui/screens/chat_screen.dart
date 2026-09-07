@@ -221,6 +221,8 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _PendingSend {
+  /// Authored before dispatch, never inferred from matching message contents.
+  final String? dispatchedMessageID;
   final String localID;
   final String text;
   final List<PromptAttachment> attachments;
@@ -229,6 +231,7 @@ class _PendingSend {
   bool requestComplete = false;
 
   _PendingSend({
+    this.dispatchedMessageID,
     required this.localID,
     required this.text,
     required this.attachments,
@@ -443,6 +446,21 @@ class _ChatScreenState extends State<ChatScreen>
   bool _voiceConversation = false;
   Object? _voiceOwnerScope;
   final ValueNotifier<int> _voiceEpoch = ValueNotifier(0);
+
+  /// The "Speak replies" opt-in of the current voice conversation. Never
+  /// persisted: it is granted per conversation, after consent and voice
+  /// choice, and Exit, a scope change or a lifecycle pause revoke it.
+  bool _voiceSpeakReplies = false;
+  bool _voiceReplyPlayback = false;
+  bool _speechSheetOpen = false;
+  final _voiceControlsScroll = ScrollController();
+
+  /// The turn sent from this conversation whose reply is still owed, or
+  /// null. Only this turn's reply is ever spoken automatically.
+  _VoiceReplyWatch? _voiceReplyWatch;
+
+  /// What the conversation strip says about the last automatic reading.
+  _VoiceReplyState _voiceReplyState = _VoiceReplyState.idle;
   bool _allowRoutePop = false;
   bool _leavingProvisionalSession = false;
   String? _localShareUrl;
@@ -597,7 +615,7 @@ class _ChatScreenState extends State<ChatScreen>
     super.didChangeDependencies();
     final route = ModalRoute.of(context);
     if ((_readAloud?.speaking == true ||
-            (_voiceConversation && !_voiceOpening)) &&
+            (_voiceConversation && !_voiceOpening && !_speechSheetOpen)) &&
         !(route?.isCurrent ?? true)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && !(route?.isCurrent ?? true)) {
@@ -1220,6 +1238,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   void _onEvent(EventEnvelope env) {
+    _observeVoiceReplyStatus(env);
     if (!mounted) return;
     if (env.type == 'session.skill.changed' &&
         env.properties['sessionID'] == widget.sessionID) {
@@ -1349,6 +1368,12 @@ class _ChatScreenState extends State<ChatScreen>
         if (info is Map<String, dynamic>) {
           final msg = MessageInfo.fromJson(info);
           if (msg.sessionID != widget.sessionID) break;
+          final watch = _voiceReplyWatch;
+          if (watch != null &&
+              msg.role == 'user' &&
+              !watch.existingMessageIDs.contains(msg.id)) {
+            watch.liveUserIDs.add(msg.id);
+          }
           setState(() {
             if (msg.role == 'assistant' && msg.errorText != null) {
               _promptError = msg.errorText;
@@ -1413,6 +1438,7 @@ class _ChatScreenState extends State<ChatScreen>
         break;
     }
     _historyChanges.value++;
+    _checkVoiceReply();
   }
 
   String _partKey(String messageID, String partID) => '$messageID\u0000$partID';
@@ -1505,7 +1531,8 @@ class _ChatScreenState extends State<ChatScreen>
     if (info.role != 'user') return false;
     _PendingSend? pending = pendingSend;
     for (final candidate in _pendingSends) {
-      if (candidate.canonicalID == info.id) {
+      if (candidate.dispatchedMessageID == info.id ||
+          candidate.canonicalID == info.id) {
         pending = candidate;
         break;
       }
@@ -1516,6 +1543,7 @@ class _ChatScreenState extends State<ChatScreen>
           .where(
             (candidate) =>
                 candidate.canonicalID == null &&
+                candidate.dispatchedMessageID == null &&
                 _matchesPendingPrompt(parts, candidate),
           )
           .toList();
@@ -1532,6 +1560,10 @@ class _ChatScreenState extends State<ChatScreen>
       }
     }
     if (pending == null) return false;
+    if (pending.dispatchedMessageID != null &&
+        pending.dispatchedMessageID != info.id) {
+      return false;
+    }
 
     final localIndex = _messages.indexWhere(
       (message) => message.info.id == pending!.localID,
@@ -2469,6 +2501,13 @@ class _ChatScreenState extends State<ChatScreen>
     final createdAt = DateTime.now().millisecondsSinceEpoch;
     final localID = 'local-$createdAt-${DateTime.now().microsecondsSinceEpoch}';
     final pending = _PendingSend(
+      dispatchedMessageID:
+          conversationSend &&
+              _voiceSpeakReplies &&
+              actionApi.capabilities.clientPromptMessageID &&
+              actionApi is CorrelatedPromptGateway
+          ? (actionApi as CorrelatedPromptGateway).createPromptMessageID()
+          : null,
       localID: localID,
       text: text,
       attachments: attachments,
@@ -2514,16 +2553,34 @@ class _ChatScreenState extends State<ChatScreen>
       }
       selection = _conn.selectionForSession(widget.sessionID);
       promptStarted = true;
-      await actionApi.promptAsync(
-        widget.sessionID,
-        text: text,
-        model: selection.model,
-        agent: selection.agent?.isNotEmpty == true ? selection.agent : null,
-        variant: selection.variant.isEmpty ? null : selection.variant,
-        attachments: attachments,
-        agentMentions: agentMentions,
-        delivery: delivery,
-      );
+      if (conversationSend && voiceSendCurrent()) {
+        setState(() => _watchVoiceReply(pending));
+      }
+      final exactMessageID = pending.dispatchedMessageID;
+      if (exactMessageID != null && actionApi is CorrelatedPromptGateway) {
+        await (actionApi as CorrelatedPromptGateway).promptWithMessageID(
+          widget.sessionID,
+          messageID: exactMessageID,
+          text: text,
+          model: selection.model,
+          agent: selection.agent?.isNotEmpty == true ? selection.agent : null,
+          variant: selection.variant.isEmpty ? null : selection.variant,
+          attachments: attachments,
+          agentMentions: agentMentions,
+          delivery: delivery,
+        );
+      } else {
+        await actionApi.promptAsync(
+          widget.sessionID,
+          text: text,
+          model: selection.model,
+          agent: selection.agent?.isNotEmpty == true ? selection.agent : null,
+          variant: selection.variant.isEmpty ? null : selection.variant,
+          attachments: attachments,
+          agentMentions: agentMentions,
+          delivery: delivery,
+        );
+      }
       if (!conversationSend) {
         unawaited(_rememberSentPrompt(selectionProfileID ?? '', text));
       }
@@ -2533,11 +2590,16 @@ class _ChatScreenState extends State<ChatScreen>
         pending.requestComplete = true;
         if (pending.canonicalID != null) _pendingSends.remove(pending);
       });
+      _checkVoiceReply();
       if (!conversationSend && _composer.text.isEmpty) _restoreHistoryDraft();
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _sending = false;
+        if (identical(_voiceReplyWatch?.pending, pending)) {
+          _voiceReplyWatch = null;
+          _voiceReplyState = _VoiceReplyState.reviewNeeded;
+        }
         _pendingSends.remove(pending);
         _messages.removeWhere(
           (message) =>
@@ -4121,8 +4183,13 @@ class _ChatScreenState extends State<ChatScreen>
     _syncRetryTicker();
     final shouldRehydrate =
         _dataRefreshRevision != _conn.dataRefreshRevision && _conn.api != null;
+    if (shouldRehydrate && _voiceReplyWatch != null) {
+      _voiceReplyWatch = null;
+      _voiceReplyState = _VoiceReplyState.reviewNeeded;
+    }
     _dataRefreshRevision = _conn.dataRefreshRevision;
     _noteRunFinished();
+    _checkVoiceReply();
     setState(() {});
     final scopeChanged =
         _requestedHistoryScope != null &&
@@ -6934,6 +7001,7 @@ class _ChatScreenState extends State<ChatScreen>
     _focus.dispose();
     _historyRefreshTimer?.cancel();
     _historyChanges.dispose();
+    _voiceControlsScroll.dispose();
     super.dispose();
   }
 }

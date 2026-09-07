@@ -819,6 +819,8 @@ class ProductException implements Exception {
 /// protocol generation. The v1 server exposes every listed feature, so its
 /// gateway reports [allV1]; a v2 gateway narrows these per endpoint support.
 class ServerCapabilities {
+  /// Prompt dispatch preserves an app-authored message ID in the user echo.
+  final bool clientPromptMessageID;
   // Core operations differ across supported server backends.
   final bool promptAttachments;
   final bool promptAgentMentions;
@@ -889,6 +891,7 @@ class ServerCapabilities {
   final bool inbox;
 
   const ServerCapabilities({
+    this.clientPromptMessageID = false,
     this.promptAttachments = true,
     this.promptAgentMentions = true,
     this.offlinePromptQueue = true,
@@ -943,7 +946,7 @@ class ServerCapabilities {
     this.inbox = false,
   });
 
-  static const allV1 = ServerCapabilities();
+  static const allV1 = ServerCapabilities(clientPromptMessageID: true);
 }
 
 /// Server health checks.
@@ -1017,6 +1020,23 @@ abstract class PromptGateway {
     String? variant,
   });
   Future<void> abort(String sessionID);
+}
+
+/// Optional exact dispatch correlation, separate from heuristic transcript
+/// reconciliation. This is not an idempotency or delivery-retry contract.
+abstract interface class CorrelatedPromptGateway {
+  String createPromptMessageID();
+  Future<void> promptWithMessageID(
+    String sessionID, {
+    required String messageID,
+    required String text,
+    ModelRef? model,
+    String? agent,
+    String? variant,
+    List<PromptAttachment> attachments,
+    List<PromptAgentMention> agentMentions,
+    PromptDelivery? delivery,
+  });
 }
 
 /// Pending permission requests and replies.
