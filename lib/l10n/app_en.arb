@@ -1333,5 +1333,26 @@
     "placeholders": {
       "count": {"type": "int"}
     }
-  }
+  },
+
+    "capsuleTitle":  "Context capsule",
+    "capsuleEntry":  "Collect notes, errors and screenshots for this task",
+    "capsuleDescription":  "Build a bundle for this task. Applying adds it to your existing draft; nothing is sent. Unapplied edits are kept only while this screen is open.",
+    "capsuleNote":  "Note",
+    "capsuleError":  "Error",
+    "capsuleCode":  "Code",
+    "capsuleLabel":  "Label",
+    "capsuleExcerpt":  "Excerpt",
+    "capsulePaste":  "Paste",
+    "capsuleRemove":  "Remove",
+    "capsuleAddImage":  "Add screenshot or image",
+    "capsulePreview":  "Tap to preview",
+    "capsuleApply":  "Apply to draft",
+    "capsuleApplied":  "Context added to your saved draft. Review it before sending.",
+    "capsuleScopeChanged":  "The task, connection or draft changed. Close this capsule and reopen it from the intended task.",
+    "capsuleTextOnly":  "This connection accepts text only. You can still collect notes, errors and code.",
+    "capsuleImagesOnly":  "Choose a PNG, JPEG, GIF or WebP image. Paste text into an excerpt instead.",
+    "capsuleImageFailed":  "Could not add that image. Use up to 5 attachments, 10 MB each and 20 MB total, including your existing draft.",
+    "capsulePasteFailed":  "Clipboard text is unavailable. You can type or paste into the excerpt.",
+    "capsuleTextLimit":  "Keep each excerpt under 16,000 characters and the bundle under 32,000."
 }

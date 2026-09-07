@@ -5942,6 +5942,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 draft with an unconfirmed send to review.} other{{count} drafts with an unconfirmed send to review.}}'**
   String queuedBannerReview(int count);
+
+  /// No description provided for @capsuleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Context capsule'**
+  String get capsuleTitle;
+
+  /// No description provided for @capsuleEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect notes, errors and screenshots for this task'**
+  String get capsuleEntry;
+
+  /// No description provided for @capsuleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Build a bundle for this task. Applying adds it to your existing draft; nothing is sent. Unapplied edits are kept only while this screen is open.'**
+  String get capsuleDescription;
+
+  /// No description provided for @capsuleNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get capsuleNote;
+
+  /// No description provided for @capsuleError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get capsuleError;
+
+  /// No description provided for @capsuleCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get capsuleCode;
+
+  /// No description provided for @capsuleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Label'**
+  String get capsuleLabel;
+
+  /// No description provided for @capsuleExcerpt.
+  ///
+  /// In en, this message translates to:
+  /// **'Excerpt'**
+  String get capsuleExcerpt;
+
+  /// No description provided for @capsulePaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get capsulePaste;
+
+  /// No description provided for @capsuleRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get capsuleRemove;
+
+  /// No description provided for @capsuleAddImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add screenshot or image'**
+  String get capsuleAddImage;
+
+  /// No description provided for @capsulePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to preview'**
+  String get capsulePreview;
+
+  /// No description provided for @capsuleApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to draft'**
+  String get capsuleApply;
+
+  /// No description provided for @capsuleApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Context added to your saved draft. Review it before sending.'**
+  String get capsuleApplied;
+
+  /// No description provided for @capsuleScopeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The task, connection or draft changed. Close this capsule and reopen it from the intended task.'**
+  String get capsuleScopeChanged;
+
+  /// No description provided for @capsuleTextOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'This connection accepts text only. You can still collect notes, errors and code.'**
+  String get capsuleTextOnly;
+
+  /// No description provided for @capsuleImagesOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a PNG, JPEG, GIF or WebP image. Paste text into an excerpt instead.'**
+  String get capsuleImagesOnly;
+
+  /// No description provided for @capsuleImageFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add that image. Use up to 5 attachments, 10 MB each and 20 MB total, including your existing draft.'**
+  String get capsuleImageFailed;
+
+  /// No description provided for @capsulePasteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard text is unavailable. You can type or paste into the excerpt.'**
+  String get capsulePasteFailed;
+
+  /// No description provided for @capsuleTextLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep each excerpt under 16,000 characters and the bundle under 32,000.'**
+  String get capsuleTextLimit;
 }
 
 class _AppLocalizationsDelegate

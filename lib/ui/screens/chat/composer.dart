@@ -6,6 +6,7 @@ enum _PromptTool {
   commands,
   attach,
   webSources,
+  contextCapsule,
   gallery,
   camera,
   voice,
@@ -65,6 +66,7 @@ class _ChatComposer extends StatelessWidget {
     required this.onVoice,
     required this.onConversation,
     required this.onWebSources,
+    required this.onContextCapsule,
     this.conversationMode = false,
     required this.onSend,
     required this.onStop,
@@ -156,6 +158,7 @@ class _ChatComposer extends StatelessWidget {
   final VoidCallback onVoice;
   final VoidCallback onConversation;
   final VoidCallback onWebSources;
+  final VoidCallback onContextCapsule;
   final bool conversationMode;
   final VoidCallback onSend;
 
@@ -499,6 +502,8 @@ class _ChatComposer extends StatelessWidget {
         onAttach();
       case _PromptTool.webSources:
         onWebSources();
+      case _PromptTool.contextCapsule:
+        onContextCapsule();
       case _PromptTool.gallery:
         onPhotoLibrary();
       case _PromptTool.camera:
@@ -773,6 +778,15 @@ class _PromptToolsSheet extends StatelessWidget {
               title: const Text('Commands'),
               subtitle: const Text('Slash commands and agents'),
               onTap: () => Navigator.pop(context, _PromptTool.commands),
+            ),
+            ListTile(
+              leading: const Icon(Icons.layers_outlined),
+              title: Text(_chatL10n(context).capsuleTitle),
+              subtitle: Text(_chatL10n(context).capsuleEntry),
+              enabled: !voiceBlocked,
+              onTap: voiceBlocked
+                  ? null
+                  : () => Navigator.pop(context, _PromptTool.contextCapsule),
             ),
             if (attachmentsSupported)
               ListTile(
