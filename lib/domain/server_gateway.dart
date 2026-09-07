@@ -834,6 +834,7 @@ class ServerCapabilities {
   final bool integrationCredentials;
   final bool integrationCommandAuth;
   final bool pluginInventory;
+  final bool webSearch;
   final bool sessionShare;
   final bool sessionArchive;
   final bool sessionTodos;
@@ -874,6 +875,7 @@ class ServerCapabilities {
     this.integrationCredentials = false,
     this.integrationCommandAuth = false,
     this.pluginInventory = false,
+    this.webSearch = false,
     this.sessionShare = true,
     this.sessionArchive = true,
     this.sessionTodos = true,
@@ -1341,4 +1343,45 @@ abstract class ServerOperationsGateway
         IntegrationGateway,
         RequestGateway {
   void setLocation({String? directory, String? workspace});
+}
+
+/// Search performs an explicit provider request, never a session mutation.
+abstract interface class WebSearchGateway {
+  Future<List<WebSearchProvider>> webSearchProviders();
+  Future<WebSearchResponse> searchWeb(
+    String query, {
+    required String providerID,
+  });
+}
+
+class WebSearchProvider {
+  final String id;
+  final String name;
+  const WebSearchProvider({required this.id, required this.name});
+}
+
+class WebSearchResult {
+  final String url;
+  final String? title;
+  final String? content;
+  const WebSearchResult({required this.url, this.title, this.content});
+}
+
+class WebSearchResponse {
+  final String providerID;
+  final List<WebSearchResult> results;
+  const WebSearchResponse({required this.providerID, required this.results});
+}
+
+enum WebSearchFailureKind {
+  unavailable,
+  authentication,
+  invalidResponse,
+  failed,
+}
+
+/// Deliberately excludes remote error bodies, URLs, queries and credentials.
+class WebSearchFailure implements Exception {
+  final WebSearchFailureKind kind;
+  const WebSearchFailure(this.kind);
 }

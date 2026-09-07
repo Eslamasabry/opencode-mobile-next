@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
+import '../domain/server_gateway.dart';
 import '../domain/web_source_selection.dart';
 import 'connection.dart';
 
-/// In-memory review only: no search adapter, network request or persistence.
+/// Search/review is transient. Only explicit confirmation returns draft context.
 class WebSourcesOverview extends ChangeNotifier {
   static const maxSources = 10;
   final ConnectionController controller;
@@ -16,6 +19,22 @@ class WebSourcesOverview extends ChangeNotifier {
   final List<WebSourceSelection> _sources = [];
   final Set<String> _selected = {};
   bool _scopeChanged = false;
+  bool _disposed = false;
+  int _searchRevision = 0;
+  int _providerRevision = 0;
+  StreamSubscription<dynamic>? _events;
+  List<WebSearchProvider> providers = const [];
+  List<WebSourceSelection> results = const [];
+  String? providerID;
+  bool discovering = false;
+  bool _discoverAgain = false;
+  bool searching = false;
+  bool searched = false;
+  int omittedResults = 0;
+  WebSearchFailureKind? searchFailure;
+  bool get supportsSearch =>
+      _gateway is WebSearchGateway &&
+      controller.api?.capabilities.webSearch == true;
 
   WebSourcesOverview({required this.controller})
     : _gateway = controller.api,
@@ -27,6 +46,12 @@ class WebSourcesOverview extends ChangeNotifier {
     controller.addListener(_checkScope);
     controller.profileDataChanges.addListener(_checkScope);
     _checkScope();
+    _events = controller.events.listen((event) {
+      if (event.type == 'websearch.updated' ||
+          event.type == 'server.connected') {
+        unawaited(discoverProviders());
+      }
+    });
   }
 
   bool get scopeChanged => _scopeChanged;
@@ -35,7 +60,9 @@ class WebSourcesOverview extends ChangeNotifier {
   int get selectedCount => _selected.length;
 
   void _checkScope() {
-    if (_scopeChanged) return;
+    if (_scopeChanged || _disposed) {
+      return;
+    }
     if (_profileID == null ||
         !controller.isProfileReadable(_profileID) ||
         _profileID != controller.profile?.id ||
@@ -45,6 +72,12 @@ class WebSourcesOverview extends ChangeNotifier {
         !identical(_gateway, controller.api) ||
         !identical(_repository, controller.repository)) {
       _scopeChanged = true;
+      _searchRevision++;
+      _providerRevision++;
+      providers = const [];
+      results = const [];
+      searching = false;
+      discovering = false;
       _sources.clear();
       _selected.clear();
       notifyListeners();
@@ -53,7 +86,143 @@ class WebSourcesOverview extends ChangeNotifier {
 
   bool _canEdit() {
     _checkScope();
-    return !_scopeChanged;
+    return !_scopeChanged && !_disposed;
+  }
+
+  Future<void> discoverProviders() async {
+    if (!_canEdit() || !supportsSearch) {
+      return;
+    }
+    if (discovering) {
+      // Coalesce invalidation bursts into one subsequent discovery. Invalidate
+      // the active result immediately, without creating parallel requests.
+      ++_providerRevision;
+      ++_searchRevision;
+      _discoverAgain = true;
+      return;
+    }
+    final revision = ++_providerRevision;
+    ++_searchRevision;
+    searching = false;
+    discovering = true;
+    results = const [];
+    providers = const [];
+    searched = false;
+    searchFailure = null;
+    notifyListeners();
+    try {
+      final found = await (_gateway as WebSearchGateway).webSearchProviders();
+      if (!_canEdit() || revision != _providerRevision) {
+        return;
+      }
+      providers = found;
+      if (!providers.any((item) => item.id == providerID)) {
+        providerID = providers.length == 1 ? providers.single.id : null;
+      }
+    } on WebSearchFailure catch (error) {
+      if (!_canEdit() || revision != _providerRevision) {
+        return;
+      }
+      searchFailure = error.kind;
+      providerID = null;
+    } catch (_) {
+      if (!_canEdit() || revision != _providerRevision) {
+        return;
+      }
+      searchFailure = WebSearchFailureKind.failed;
+      providerID = null;
+    } finally {
+      if (_canEdit()) {
+        discovering = false;
+        notifyListeners();
+        if (_discoverAgain) {
+          _discoverAgain = false;
+          unawaited(discoverProviders());
+        }
+      }
+    }
+  }
+
+  void chooseProvider(String? id) {
+    if (!_canEdit() || !providers.any((item) => item.id == id)) {
+      return;
+    }
+    ++_searchRevision;
+    providerID = id;
+    searching = false;
+    searched = false;
+    results = const [];
+    searchFailure = null;
+    notifyListeners();
+  }
+
+  Future<void> search(String query) async {
+    if (!_canEdit() ||
+        !supportsSearch ||
+        discovering ||
+        searching ||
+        query.trim().isEmpty ||
+        query.length > 1000 ||
+        !providers.any((item) => item.id == providerID)) {
+      return;
+    }
+    final revision = ++_searchRevision;
+    final chosen = providerID!;
+    searching = true;
+    searched = false;
+    results = const [];
+    omittedResults = 0;
+    searchFailure = null;
+    notifyListeners();
+    try {
+      final response = await (_gateway as WebSearchGateway).searchWeb(
+        query,
+        providerID: chosen,
+      );
+      if (!_canEdit() || revision != _searchRevision) {
+        return;
+      }
+      if (response.providerID != chosen) {
+        throw const WebSearchFailure(WebSearchFailureKind.invalidResponse);
+      }
+      final safe = <WebSourceSelection>[];
+      final seen = <String>{};
+      for (final result in response.results.take(100)) {
+        try {
+          final source = WebSourceSelection(
+            title: result.title ?? '',
+            url: result.url,
+            excerpt: result.content,
+          );
+          if (seen.add(source.url)) {
+            safe.add(source);
+          }
+        } on FormatException {
+          omittedResults++;
+        }
+      }
+      results = List.unmodifiable(safe);
+      searched = true;
+    } on WebSearchFailure catch (error) {
+      if (!_canEdit() || revision != _searchRevision) {
+        return;
+      }
+      searchFailure = error.kind;
+      if (error.kind == WebSearchFailureKind.unavailable) {
+        providers = const [];
+        providerID = null;
+      }
+    } catch (_) {
+      if (!_canEdit() || revision != _searchRevision) {
+        return;
+      }
+      searchFailure = WebSearchFailureKind.failed;
+    } finally {
+      if (_canEdit() && revision == _searchRevision) {
+        searching = false;
+        notifyListeners();
+      }
+    }
   }
 
   /// Returns safe, app-authored validation copy; failures retain all sources.
@@ -74,7 +243,9 @@ class WebSourcesOverview extends ChangeNotifier {
   }
 
   void select(WebSourceSelection source, bool selected) {
-    if (!_canEdit() || !_sources.contains(source)) return;
+    if (!_canEdit() || !_sources.contains(source)) {
+      return;
+    }
     if (selected) {
       _selected.add(source.url);
     } else {
@@ -84,7 +255,9 @@ class WebSourcesOverview extends ChangeNotifier {
   }
 
   void remove(WebSourceSelection source) {
-    if (!_canEdit()) return;
+    if (!_canEdit()) {
+      return;
+    }
     _sources.remove(source);
     _selected.remove(source.url);
     notifyListeners();
@@ -92,12 +265,16 @@ class WebSourcesOverview extends ChangeNotifier {
 
   /// Null means the original source/profile/location is no longer valid.
   List<WebSourceSelection>? reviewedSelection() {
-    if (!_canEdit()) return null;
+    if (!_canEdit()) {
+      return null;
+    }
     return List.unmodifiable(_sources.where(isSelected));
   }
 
   @override
   void dispose() {
+    _disposed = true;
+    _events?.cancel();
     controller.removeListener(_checkScope);
     controller.profileDataChanges.removeListener(_checkScope);
     _sources.clear();

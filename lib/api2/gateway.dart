@@ -24,7 +24,8 @@ import 'transport.dart';
 /// server has no equivalent endpoint the method returns an inert empty
 /// result or throws a typed [ProductException], and the matching
 /// [ServerCapabilities] flag is false (see [api2ServerCapabilities]).
-class Api2Gateway implements ServerGateway, SessionSelectionGateway {
+class Api2Gateway
+    implements ServerGateway, SessionSelectionGateway, WebSearchGateway {
   final Api2Client client;
 
   Api2Gateway({required this.client});
@@ -75,6 +76,138 @@ class Api2Gateway implements ServerGateway, SessionSelectionGateway {
     if (client.workspace != null) 'location[workspace]': client.workspace,
     ...extra,
   };
+
+  // Pinned beta-18600 /api/websearch: one request, no pagination contract.
+  Future<T> _webSearchRun<T>(Future<T> Function() action) async {
+    try {
+      return await action();
+    } on WebSearchFailure {
+      rethrow;
+    } on Api2Error catch (error) {
+      throw WebSearchFailure(switch (error.statusCode) {
+        401 || 403 => WebSearchFailureKind.authentication,
+        404 || 503 => WebSearchFailureKind.unavailable,
+        _ => WebSearchFailureKind.failed,
+      });
+    } catch (_) {
+      throw const WebSearchFailure(WebSearchFailureKind.invalidResponse);
+    }
+  }
+
+  void _validateWebSearchLocation(
+    dynamic json,
+    String? directory,
+    String? workspace,
+  ) {
+    final location = json is Map ? json['location'] : null;
+    if (location is! Map ||
+        location['directory'] is! String ||
+        (location['directory'] as String).isEmpty ||
+        (directory != null && location['directory'] != directory) ||
+        (workspace != null && location['workspaceID'] != workspace) ||
+        client.directory != directory ||
+        client.workspace != workspace) {
+      throw const WebSearchFailure(WebSearchFailureKind.invalidResponse);
+    }
+  }
+
+  @override
+  Future<List<WebSearchProvider>> webSearchProviders() => _webSearchRun(
+    () async {
+      final directory = client.directory;
+      final workspace = client.workspace;
+      final json = await transport.getJson(
+        '/websearch/provider',
+        query: _loc(),
+        receiveTimeout: const Duration(seconds: 15),
+      );
+      _validateWebSearchLocation(json, directory, workspace);
+      final data = json is Map ? json['data'] : null;
+      if (data is! List || data.length > 100) {
+        throw const WebSearchFailure(WebSearchFailureKind.invalidResponse);
+      }
+      final seen = <String>{};
+      return List.unmodifiable(
+        data.map((item) {
+          if (item is! Map ||
+              item['id'] is! String ||
+              item['name'] is! String) {
+            throw const WebSearchFailure(WebSearchFailureKind.invalidResponse);
+          }
+          final id = item['id'] as String;
+          final name = item['name'] as String;
+          if (id.trim().isEmpty ||
+              id.length > 200 ||
+              name.trim().isEmpty ||
+              name.length > 200 ||
+              !seen.add(id) ||
+              RegExp(r'[\x00-\x1f\x7f]').hasMatch(id + name)) {
+            throw const WebSearchFailure(WebSearchFailureKind.invalidResponse);
+          }
+          return WebSearchProvider(id: id, name: name);
+        }),
+      );
+    },
+  );
+
+  @override
+  Future<WebSearchResponse> searchWeb(
+    String query, {
+    required String providerID,
+  }) => _webSearchRun(() async {
+    if (query.trim().isEmpty ||
+        query.length > 1000 ||
+        providerID.isEmpty ||
+        providerID.length > 200) {
+      throw const WebSearchFailure(WebSearchFailureKind.failed);
+    }
+    final directory = client.directory;
+    final workspace = client.workspace;
+    final json = await transport.postJson(
+      '/websearch',
+      query: _loc(),
+      body: {'query': query.trim(), 'providerID': providerID},
+      receiveTimeout: const Duration(seconds: 30),
+    );
+    _validateWebSearchLocation(json, directory, workspace);
+    final data = json is Map ? json['data'] : null;
+    if (data is! Map ||
+        data['providerID'] != providerID ||
+        data['results'] is! List ||
+        (data['results'] as List).length > 100) {
+      throw const WebSearchFailure(WebSearchFailureKind.invalidResponse);
+    }
+    final results = <WebSearchResult>[];
+    for (final item in data['results'] as List) {
+      if (item is! Map ||
+          item['url'] is! String ||
+          item['time'] is! Map ||
+          (item['title'] != null && item['title'] is! String) ||
+          (item['content'] != null && item['content'] is! String)) {
+        throw const WebSearchFailure(WebSearchFailureKind.invalidResponse);
+      }
+      if ((item['url'] as String).length > 8192 ||
+          ((item['title'] as String?)?.length ?? 0) > 10000 ||
+          ((item['content'] as String?)?.length ?? 0) > 100000) {
+        throw const WebSearchFailure(WebSearchFailureKind.invalidResponse);
+      }
+      final published = (item['time'] as Map)['published'];
+      if (published != null && (published is! num || !published.isFinite)) {
+        throw const WebSearchFailure(WebSearchFailureKind.invalidResponse);
+      }
+      results.add(
+        WebSearchResult(
+          url: item['url'] as String,
+          title: item['title'] as String?,
+          content: item['content'] as String?,
+        ),
+      );
+    }
+    return WebSearchResponse(
+      providerID: providerID,
+      results: List.unmodifiable(results),
+    );
+  });
 
   // ---------------- Health ----------------
 

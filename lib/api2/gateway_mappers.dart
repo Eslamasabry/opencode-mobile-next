@@ -43,6 +43,7 @@ const ServerCapabilities api2ServerCapabilities = ServerCapabilities(
   integrationCredentials: true,
   integrationCommandAuth: true,
   pluginInventory: true,
+  webSearch: true,
   sessionShare: false,
   sessionArchive: false,
   sessionTodos: false,

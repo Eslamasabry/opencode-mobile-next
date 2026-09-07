@@ -554,6 +554,7 @@ class Api2EventAdapter {
             return [_env('config.updated', const {})];
           case 'plugin.added':
           case 'plugin.updated':
+          case 'websearch.updated':
             return [_env(envelope.type, const {})];
           case 'catalog.updated':
           case 'models-dev.refreshed':
