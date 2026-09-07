@@ -288,7 +288,17 @@ void main() {
       await tester.enterText(field, 'Original draft');
       await tester.tap(find.byKey(const Key('composer-tools-button')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('composer-tool-clear')));
+      final clearText = find.byKey(const Key('composer-tool-clear'));
+      await tester.scrollUntilVisible(
+        clearText.hitTestable(),
+        180,
+        scrollable: find
+            .ancestor(of: clearText, matching: find.byType(Scrollable))
+            .first,
+      );
+      await tester.pumpAndSettle();
+      expect(clearText.hitTestable(), findsOneWidget);
+      await tester.tap(clearText);
       await tester.pumpAndSettle();
       expect(tester.widget<TextField>(field).controller!.text, isEmpty);
       expect(find.text('notes.txt'), findsOneWidget);
