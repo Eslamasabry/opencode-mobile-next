@@ -79,7 +79,7 @@ dependencies:
   # Held at 1.x on purpose: 2.x returns package:material_ui ColorSchemes, which
   # are a different type from Flutter's and cannot feed ThemeData until the
   # whole app moves to material_ui. 1.9 carries the surface-role fix.
-  dynamic_color: ^1.9.0
+  dynamic_color: ^2.1.0
   package_info_plus: ^10.2.1
   window_manager: ^0.5.2
   # Already present transitively via window_manager. Declared explicitly
