@@ -211,6 +211,15 @@ class _DestinationRepository extends _FakeProductRepository {
   String? reminderDirectory;
 
   @override
+  Future<Session> getSessionDetails(String id) async => Session(
+    id: id,
+    title: 'Mobile work',
+    projectID: 'project-1',
+    directory: movedDirectory ?? '/work/acme',
+    workspaceID: warpedWorkspaceID ?? 'workspace-1',
+  );
+
+  @override
   Future<List<WorkspaceProject>> listProjects() async => const [
     WorkspaceProject(
       id: 'project-1',
@@ -1294,7 +1303,7 @@ void main() {
       directory: '/work/acme',
       time: SessionTime(created: 3),
     );
-    final controller = await _controller(api, savedProfile: true)
+    final controller = await _controller(api)
       ..directory = '/work/acme'
       ..repository = _RelationsProductRepository(parent, [child, sibling])
       ..sessionsById = {parent.id: parent, child.id: child, sibling.id: sibling}
@@ -1346,7 +1355,7 @@ void main() {
       directory: '/work/acme',
       time: SessionTime(created: 3),
     );
-    final controller = await _controller(api)
+    final controller = await _controller(api, savedProfile: true)
       ..directory = '/work/acme'
       ..repository = _RelationsProductRepository(parent, [child, sibling])
       ..sessionsById = {
