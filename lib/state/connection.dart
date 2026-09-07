@@ -37,6 +37,8 @@ import 'prompt_photos.dart';
 import 'session_pins.dart';
 import 'prompt_shelf.dart';
 import 'session_read_state.dart';
+import 'return_brief_state.dart';
+import '../domain/return_brief.dart';
 
 Map<String, dynamic> _catalogMap(Object? value) =>
     value is Map ? Map<String, dynamic>.from(value) : const {};
@@ -626,6 +628,22 @@ class ConnectionController extends ChangeNotifier {
   final Map<String, String> sessionDetailsErrors = {};
   final Set<String> _deletedSessionIDs = {};
   Set<String> busySessions = {};
+
+  /// Assistant message ids whose completion (or error) this phone received
+  /// as a live `message.updated` event on the current connection. Bound to
+  /// the exact message record, never to a session-level idle timestamp, so a
+  /// run-results view can say "observed live" only for that step. In-memory,
+  /// bounded, and cleared with the rest of the connection state.
+  final Set<String> observedCompletedMessageIDs = {};
+  static const _maxObservedCompletedMessages = 512;
+
+  void _noteObservedCompletion(String messageID) {
+    if (messageID.isEmpty) return;
+    if (observedCompletedMessageIDs.length >= _maxObservedCompletedMessages) {
+      observedCompletedMessageIDs.remove(observedCompletedMessageIDs.first);
+    }
+    observedCompletedMessageIDs.add(messageID);
+  }
 
   /// Sessions currently in provider-retry backoff, keyed by session ID.
   /// Populated from `session.status` `{type: 'retry'}` (v1 and v2), the v2
@@ -2346,6 +2364,7 @@ class ConnectionController extends ChangeNotifier {
             final working =
                 (msg.time == null || !msg.time!.isDone) &&
                 msg.errorText == null;
+            if (!working) _noteObservedCompletion(msg.id);
             // A Codex turn can contain several completed items and still be
             // running. Its explicit session status owns the busy state.
             if (capabilities.messageCompletionEndsRun) {
@@ -3479,6 +3498,40 @@ class ConnectionController extends ChangeNotifier {
 
   bool get supportsSessionReadState => repository is SessionReadStateGateway;
   late final _sessionReadStore = SessionReadStore(store.prefs);
+  late final _returnBriefStore = ReturnBriefStore(store.prefs);
+
+  /// Saved scope excludes connection epochs so dismissal survives recovery;
+  /// callbacks additionally retain the location revision to reject old UI.
+  (String, String, int) get returnBriefScope {
+    final owner = _connectedProfile ?? profile;
+    return (
+      owner?.id ?? '',
+      jsonEncode([owner?.baseUrl, directory, workspace]),
+      locationRevision,
+    );
+  }
+
+  ReturnBriefAck get returnBriefAcknowledgement {
+    final scope = returnBriefScope;
+    return _returnBriefStore.acknowledged(scope.$1, scope.$2);
+  }
+
+  Future<void> dismissReturnBrief(
+    ReturnBrief shown, {
+    required (String, String, int) expectedScope,
+  }) async {
+    if (returnBriefScope != expectedScope ||
+        !isProfileReadable(expectedScope.$1)) {
+      throw StateError('The project changed. Review its current brief.');
+    }
+    await _returnBriefStore.acknowledge(
+      expectedScope.$1,
+      expectedScope.$2,
+      shown,
+    );
+    if (!_disposed) notifyListeners();
+  }
+
   late bool _shareSessionViews =
       store.prefs.getBool('oc.shareSessionViews') ?? true;
   bool get shareSessionViews => _shareSessionViews;
@@ -3768,17 +3821,25 @@ class ConnectionController extends ChangeNotifier {
       if (_resolvedFormIDs.contains(formID)) return;
       throw StateError('Form request $formID is no longer pending');
     }
+    final scope = returnBriefScope;
+    bool current() =>
+        returnBriefScope == scope && identical(forms[formID], form);
     final currentApi = await _requireActionTransport();
+    if (!current()) {
+      throw StateError(
+        'The form or project changed. Reopen the current request.',
+      );
+    }
     try {
       await currentApi.replyForm(form.sessionID, formID, answer);
     } on ApiException catch (error) {
       if (error.errorTag == 'FormAlreadySettledError' ||
           error.errorTag == 'FormNotFoundError') {
-        _resolveForm(formID);
+        if (current()) _resolveForm(formID);
       }
       rethrow;
     }
-    _resolveForm(formID);
+    if (current()) _resolveForm(formID);
   }
 
   /// Cancels (dismisses) a pending form; the agent continues unanswered.
@@ -3788,18 +3849,26 @@ class ConnectionController extends ChangeNotifier {
       if (_resolvedFormIDs.contains(formID)) return;
       throw StateError('Form request $formID is no longer pending');
     }
+    final scope = returnBriefScope;
+    bool current() =>
+        returnBriefScope == scope && identical(forms[formID], form);
     final currentApi = await _requireActionTransport();
+    if (!current()) {
+      throw StateError(
+        'The form or project changed. Reopen the current request.',
+      );
+    }
     try {
       await currentApi.cancelForm(form.sessionID, formID);
     } on ApiException catch (error) {
       if (error.errorTag == 'FormAlreadySettledError' ||
           error.errorTag == 'FormNotFoundError') {
-        _resolveForm(formID);
+        if (current()) _resolveForm(formID);
         return;
       }
       rethrow;
     }
-    _resolveForm(formID);
+    if (current()) _resolveForm(formID);
   }
 
   // ---------------- Inbox (OpenCode 2) ----------------
@@ -4916,6 +4985,9 @@ class ConnectionController extends ChangeNotifier {
       await _sessionReadStore.drain(profileId);
     } catch (_) {}
     try {
+      await _returnBriefStore.drain(profileId);
+    } catch (_) {}
+    try {
       await _sessionPins.drain(profileId);
     } catch (_) {}
     try {
@@ -5033,6 +5105,7 @@ class ConnectionController extends ChangeNotifier {
         // PromptShelfStore independently fails closed on uncertain writes.
       }
       _sessionReadStore.forgetProfile(profileId);
+      _returnBriefStore.forgetProfile(profileId);
       _sessionPins.forget(profileId);
       _promptShelf.forget(profileId);
       _pendingAuth.forget(profileId);
@@ -7762,6 +7835,7 @@ class ConnectionController extends ChangeNotifier {
     sessionModels = {};
     _modelLibrary = const ModelLibrary();
     busySessions = {};
+    observedCompletedMessageIDs.clear();
     retryStates = {};
     permissions = {};
     questions = {};

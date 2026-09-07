@@ -1476,6 +1476,196 @@ class AppLocalizationsEn extends AppLocalizations {
   String get digestDismiss => 'Dismiss';
 
   @override
+  String get digestRunResults => 'Run results';
+
+  @override
+  String get runResultsScopeChanged =>
+      'The connection or project changed. Close this view and reopen Run results from the intended project.';
+
+  @override
+  String get runResultsTitle => 'Run results';
+
+  @override
+  String get runResultsEmpty =>
+      'The latest turn has no assistant step yet, so there is nothing to show.';
+
+  @override
+  String runResultsRunLabel(String id) {
+    return 'Run …$id';
+  }
+
+  @override
+  String runResultsSteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count assistant steps',
+      one: '1 assistant step',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String runResultsStepsAtLeast(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'At least $count assistant steps loaded',
+      one: 'At least 1 assistant step loaded',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String runResultsStarted(String time) {
+    return 'Started $time';
+  }
+
+  @override
+  String get runResultsStartedUnknown => 'Start time not recorded';
+
+  @override
+  String runResultsFinished(String time) {
+    return 'Finished $time';
+  }
+
+  @override
+  String get runResultsFinishedUnknown => 'Finish time not recorded';
+
+  @override
+  String get runResultsPartialHistory =>
+      'The message that started this run was not found in the loaded history. Counts here are lower bounds and the run id is only the oldest loaded step.';
+
+  @override
+  String get runResultsOutcomeCompleted => 'Completed';
+
+  @override
+  String get runResultsOutcomeCutOff => 'Cut off by the provider';
+
+  @override
+  String get runResultsOutcomeFailed => 'Failed';
+
+  @override
+  String get runResultsOutcomeAborted => 'Aborted';
+
+  @override
+  String get runResultsOutcomeRunning => 'Still running';
+
+  @override
+  String get runResultsOutcomeNotReported => 'Outcome not reported';
+
+  @override
+  String runResultsFinishReason(String finish) {
+    return 'Provider finish reason: $finish';
+  }
+
+  @override
+  String get runResultsFinishReasonMissing =>
+      'The provider gave no finish reason.';
+
+  @override
+  String runResultsEarlierErrors(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count earlier steps reported errors; the newest step decides the outcome.',
+      one:
+          'An earlier step reported an error; the newest step decides the outcome.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get runResultsObservedLive =>
+      'This phone received the completion of the newest step live.';
+
+  @override
+  String get runResultsFromHistory =>
+      'Recovered from server history. This phone did not observe the newest step complete.';
+
+  @override
+  String get runResultsNoToolEvidence =>
+      'This run recorded no tool calls, so there is no file or command evidence. That is not the same as no changes.';
+
+  @override
+  String get runResultsChangedFilesTitle => 'Changed files';
+
+  @override
+  String get runResultsChangedFilesSource =>
+      'From completed edit, write and patch tools in this run. Not a verified diff of the working tree.';
+
+  @override
+  String get runResultsNoChangedFiles =>
+      'No completed file-changing tool in this run.';
+
+  @override
+  String get runResultsChangeEdited => 'Edited';
+
+  @override
+  String get runResultsChangeWritten => 'Written';
+
+  @override
+  String get runResultsChangePatched => 'Patched';
+
+  @override
+  String get runResultsCommandsTitle => 'Commands';
+
+  @override
+  String get runResultsCommandsSource =>
+      'From bash and shell tools in this run. Exit codes appear only when the server recorded them.';
+
+  @override
+  String get runResultsNoCommands => 'No commands were run in this run.';
+
+  @override
+  String get runResultsCommandEmpty => '(command text not recorded)';
+
+  @override
+  String runResultsExit(int code) {
+    return 'Exit code $code';
+  }
+
+  @override
+  String get runResultsExitUnknown => 'Exit code not recorded';
+
+  @override
+  String get runResultsCommandFailed => 'Tool reported failure';
+
+  @override
+  String get runResultsLooksLikeTest =>
+      'Looks like a test command (from the command text only)';
+
+  @override
+  String get runResultsOutputPruned => 'Output pruned by the server';
+
+  @override
+  String runResultsPrunedTools(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count tool outputs were pruned by the server and cannot be opened.',
+      one: '1 tool output was pruned by the server and cannot be opened.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get runResultsTruncated =>
+      'Lists are capped at 50 entries. Open the conversation for the rest.';
+
+  @override
+  String get runResultsSourceNote =>
+      'Everything here is copied from the server\'s message and tool records. Nothing is summarised by a model.';
+
+  @override
+  String get runResultsOutputTitle => 'Recorded tool output';
+
+  @override
+  String get runResultsOpenConversation => 'Open conversation';
+
+  @override
   String get attentionDisclosure =>
       'A local overview, not live monitoring across servers. Cached signals may be incomplete or out of date. Open a server to check its current activity.';
 
@@ -3820,4 +4010,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get isolatedTaskClose => 'Close';
+
+  @override
+  String get returnBriefTitle => 'Unreviewed work';
+
+  @override
+  String get returnBriefDescription =>
+      'For this project on this device. Dismissing keeps conversations unread and requests pending.';
+
+  @override
+  String get returnBriefUntitled => 'Untitled session';
+
+  @override
+  String get returnBriefStale =>
+      'Last observed state. Reconnect or refresh to check current work and requests.';
+
+  @override
+  String get returnBriefUnknown =>
+      'This server does not report read state. Unreviewed results are unknown.';
+
+  @override
+  String get returnBriefPartial =>
+      'Loaded sessions only. The session list is still incomplete.';
+
+  @override
+  String get returnBriefAnswer => 'Answer';
+
+  @override
+  String get returnBriefUnreviewed =>
+      'Unreviewed session. Open results to check the outcome.';
+
+  @override
+  String get returnBriefReview => 'Review results';
+
+  @override
+  String get returnBriefContinue => 'Continue';
+
+  @override
+  String returnBriefMore(int count) {
+    return 'Additional items: $count. They remain unacknowledged; see the sessions below or Activity.';
+  }
+
+  @override
+  String get returnBriefSaveFailed =>
+      'Dismissal was not saved. These items are still unreviewed. Try again.';
+
+  @override
+  String get returnBriefSaving => 'Saving dismissal...';
+
+  @override
+  String get returnBriefDismiss => 'Dismiss shown items';
 }

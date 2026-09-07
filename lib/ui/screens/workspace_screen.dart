@@ -15,6 +15,7 @@ import '../widgets/entrance.dart';
 import '../widgets/product_states.dart';
 import '../widgets/session_title.dart';
 import '../widgets/session_read_state.dart';
+import '../widgets/return_brief_panel.dart';
 import '../widgets/session_inventory_footer.dart';
 import 'global_sessions_screen.dart';
 import 'isolated_task_sheet.dart';
@@ -522,6 +523,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         ),
                     ],
                   ),
+                ),
+                SliverToBoxAdapter(
+                  child: ReturnBriefPanel(controller: widget.controller),
                 ),
                 // 2. Work waiting on the user, first: the persona's top job
                 // is seeing what needs them, and a blocked run reads as

@@ -2577,6 +2577,270 @@ abstract class AppLocalizations {
   /// **'Dismiss'**
   String get digestDismiss;
 
+  /// Completion digest action opening the latest run's server-recorded outcome and tool evidence
+  ///
+  /// In en, this message translates to:
+  /// **'Run results'**
+  String get digestRunResults;
+
+  /// No description provided for @runResultsScopeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection or project changed. Close this view and reopen Run results from the intended project.'**
+  String get runResultsScopeChanged;
+
+  /// No description provided for @runResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Run results'**
+  String get runResultsTitle;
+
+  /// Run results empty state: the newest user message has no assistant reply after it
+  ///
+  /// In en, this message translates to:
+  /// **'The latest turn has no assistant step yet, so there is nothing to show.'**
+  String get runResultsEmpty;
+
+  /// Run identity header; the id is the tail of the first assistant message id
+  ///
+  /// In en, this message translates to:
+  /// **'Run …{id}'**
+  String runResultsRunLabel(String id);
+
+  /// No description provided for @runResultsSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 assistant step} other {{count} assistant steps}}'**
+  String runResultsSteps(int count);
+
+  /// Step count when the run's start was not found in the loaded history
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {At least 1 assistant step loaded} other {At least {count} assistant steps loaded}}'**
+  String runResultsStepsAtLeast(int count);
+
+  /// No description provided for @runResultsStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Started {time}'**
+  String runResultsStarted(String time);
+
+  /// No description provided for @runResultsStartedUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Start time not recorded'**
+  String get runResultsStartedUnknown;
+
+  /// No description provided for @runResultsFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished {time}'**
+  String runResultsFinished(String time);
+
+  /// No description provided for @runResultsFinishedUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish time not recorded'**
+  String get runResultsFinishedUnknown;
+
+  /// Shown when the bounded page walk never reached the latest user message
+  ///
+  /// In en, this message translates to:
+  /// **'The message that started this run was not found in the loaded history. Counts here are lower bounds and the run id is only the oldest loaded step.'**
+  String get runResultsPartialHistory;
+
+  /// No description provided for @runResultsOutcomeCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get runResultsOutcomeCompleted;
+
+  /// No description provided for @runResultsOutcomeCutOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Cut off by the provider'**
+  String get runResultsOutcomeCutOff;
+
+  /// No description provided for @runResultsOutcomeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get runResultsOutcomeFailed;
+
+  /// No description provided for @runResultsOutcomeAborted.
+  ///
+  /// In en, this message translates to:
+  /// **'Aborted'**
+  String get runResultsOutcomeAborted;
+
+  /// No description provided for @runResultsOutcomeRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Still running'**
+  String get runResultsOutcomeRunning;
+
+  /// The newest step completed but the provider gave no recognised finish reason
+  ///
+  /// In en, this message translates to:
+  /// **'Outcome not reported'**
+  String get runResultsOutcomeNotReported;
+
+  /// Raw finish reason copied from the assistant message
+  ///
+  /// In en, this message translates to:
+  /// **'Provider finish reason: {finish}'**
+  String runResultsFinishReason(String finish);
+
+  /// No description provided for @runResultsFinishReasonMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The provider gave no finish reason.'**
+  String get runResultsFinishReasonMissing;
+
+  /// No description provided for @runResultsEarlierErrors.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {An earlier step reported an error; the newest step decides the outcome.} other {{count} earlier steps reported errors; the newest step decides the outcome.}}'**
+  String runResultsEarlierErrors(int count);
+
+  /// The controller saw the message.updated completion event for exactly this step
+  ///
+  /// In en, this message translates to:
+  /// **'This phone received the completion of the newest step live.'**
+  String get runResultsObservedLive;
+
+  /// No live completion event for this exact step was received on this connection
+  ///
+  /// In en, this message translates to:
+  /// **'Recovered from server history. This phone did not observe the newest step complete.'**
+  String get runResultsFromHistory;
+
+  /// No description provided for @runResultsNoToolEvidence.
+  ///
+  /// In en, this message translates to:
+  /// **'This run recorded no tool calls, so there is no file or command evidence. That is not the same as no changes.'**
+  String get runResultsNoToolEvidence;
+
+  /// No description provided for @runResultsChangedFilesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed files'**
+  String get runResultsChangedFilesTitle;
+
+  /// No description provided for @runResultsChangedFilesSource.
+  ///
+  /// In en, this message translates to:
+  /// **'From completed edit, write and patch tools in this run. Not a verified diff of the working tree.'**
+  String get runResultsChangedFilesSource;
+
+  /// No description provided for @runResultsNoChangedFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed file-changing tool in this run.'**
+  String get runResultsNoChangedFiles;
+
+  /// No description provided for @runResultsChangeEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited'**
+  String get runResultsChangeEdited;
+
+  /// No description provided for @runResultsChangeWritten.
+  ///
+  /// In en, this message translates to:
+  /// **'Written'**
+  String get runResultsChangeWritten;
+
+  /// No description provided for @runResultsChangePatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Patched'**
+  String get runResultsChangePatched;
+
+  /// No description provided for @runResultsCommandsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Commands'**
+  String get runResultsCommandsTitle;
+
+  /// No description provided for @runResultsCommandsSource.
+  ///
+  /// In en, this message translates to:
+  /// **'From bash and shell tools in this run. Exit codes appear only when the server recorded them.'**
+  String get runResultsCommandsSource;
+
+  /// No description provided for @runResultsNoCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'No commands were run in this run.'**
+  String get runResultsNoCommands;
+
+  /// No description provided for @runResultsCommandEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'(command text not recorded)'**
+  String get runResultsCommandEmpty;
+
+  /// No description provided for @runResultsExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit code {code}'**
+  String runResultsExit(int code);
+
+  /// No description provided for @runResultsExitUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit code not recorded'**
+  String get runResultsExitUnknown;
+
+  /// No description provided for @runResultsCommandFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Tool reported failure'**
+  String get runResultsCommandFailed;
+
+  /// Source-derived label; says nothing about whether tests ran or passed
+  ///
+  /// In en, this message translates to:
+  /// **'Looks like a test command (from the command text only)'**
+  String get runResultsLooksLikeTest;
+
+  /// No description provided for @runResultsOutputPruned.
+  ///
+  /// In en, this message translates to:
+  /// **'Output pruned by the server'**
+  String get runResultsOutputPruned;
+
+  /// No description provided for @runResultsPrunedTools.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 tool output was pruned by the server and cannot be opened.} other {{count} tool outputs were pruned by the server and cannot be opened.}}'**
+  String runResultsPrunedTools(int count);
+
+  /// No description provided for @runResultsTruncated.
+  ///
+  /// In en, this message translates to:
+  /// **'Lists are capped at 50 entries. Open the conversation for the rest.'**
+  String get runResultsTruncated;
+
+  /// No description provided for @runResultsSourceNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything here is copied from the server\'s message and tool records. Nothing is summarised by a model.'**
+  String get runResultsSourceNote;
+
+  /// No description provided for @runResultsOutputTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded tool output'**
+  String get runResultsOutputTitle;
+
+  /// No description provided for @runResultsOpenConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Open conversation'**
+  String get runResultsOpenConversation;
+
   /// No description provided for @attentionDisclosure.
   ///
   /// In en, this message translates to:
@@ -6433,6 +6697,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get isolatedTaskClose;
+
+  /// No description provided for @returnBriefTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unreviewed work'**
+  String get returnBriefTitle;
+
+  /// No description provided for @returnBriefDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'For this project on this device. Dismissing keeps conversations unread and requests pending.'**
+  String get returnBriefDescription;
+
+  /// No description provided for @returnBriefUntitled.
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled session'**
+  String get returnBriefUntitled;
+
+  /// No description provided for @returnBriefStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Last observed state. Reconnect or refresh to check current work and requests.'**
+  String get returnBriefStale;
+
+  /// No description provided for @returnBriefUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not report read state. Unreviewed results are unknown.'**
+  String get returnBriefUnknown;
+
+  /// No description provided for @returnBriefPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Loaded sessions only. The session list is still incomplete.'**
+  String get returnBriefPartial;
+
+  /// No description provided for @returnBriefAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer'**
+  String get returnBriefAnswer;
+
+  /// No description provided for @returnBriefUnreviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unreviewed session. Open results to check the outcome.'**
+  String get returnBriefUnreviewed;
+
+  /// No description provided for @returnBriefReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review results'**
+  String get returnBriefReview;
+
+  /// No description provided for @returnBriefContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get returnBriefContinue;
+
+  /// No description provided for @returnBriefMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional items: {count}. They remain unacknowledged; see the sessions below or Activity.'**
+  String returnBriefMore(int count);
+
+  /// No description provided for @returnBriefSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismissal was not saved. These items are still unreviewed. Try again.'**
+  String get returnBriefSaveFailed;
+
+  /// No description provided for @returnBriefSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving dismissal...'**
+  String get returnBriefSaving;
+
+  /// No description provided for @returnBriefDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss shown items'**
+  String get returnBriefDismiss;
 }
 
 class _AppLocalizationsDelegate
