@@ -113,3 +113,19 @@ record is focused verification, not a completed final integration gate.
   Focused Flutter checks use available Flutter 3.47.2; its Shorebird provenance
   has not been verified. Final full-manifest coverage remains required after
   the remaining product integrations settle.
+
+## Second wave and usefulness audit boundary
+
+E6 search is implemented through explicit review into the editable composer.
+E13 independent monitoring is integrated, with historical threshold alerts and
+source-safe review during collector outages; deployment/native proof remain
+open. F7 runtime choices now expose existing-server access before Termux gates
+and clearly separate reuse from replacement. Workspace recovery remains usable
+when the project catalog fails. E8 packaging now validates actual ELF
+architecture; application builds remain unverified. F10 Codex has isolated real
+CLI proof and a tested but **unexposed** transport/gateway; shared product
+integration remains open. Other queued items above are not silently completed.
+
+The [feature truth audit](../verification/feature-truth-audit-2026-09-07.md)
+records corrected findings, production-context previews, focused verification
+and remaining acceptance. Public development commits retain `[skip ci]`.

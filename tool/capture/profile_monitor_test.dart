@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
-import 'package:opencode_mobile/ui/screens/profile_monitor_screen.dart';
+import 'package:opencode_mobile/ui/screens/home_screen.dart';
+import 'package:opencode_mobile/domain/server_gateway.dart' show StreamStatus;
 import '../../test/support/profile_monitor_fixture.dart';
-import 'fixtures.dart'
-    show loadCaptureFonts, capturePng, captureTheme, writePng;
+import 'fixtures.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +32,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       final store = await monitorStore();
+      await store.setActiveId('profile-2');
       final controller = ConnectionController(
         store,
         monitorGatewayFactory: (_) => (
@@ -40,29 +40,29 @@ void main() {
           operations: MonitorTestOperations(),
         ),
       );
+      controller
+        ..api = (CaptureApi()..busy = {})
+        ..repository = CaptureRepository()
+        ..status = StreamStatus.connected
+        ..directory = projectDirectory;
       try {
         await controller.profileMonitor.setEnabled('profile-1', true);
         await controller.profileMonitor.refresh();
         final boundary = GlobalKey();
         await tester.pumpWidget(
-          RepaintBoundary(
-            key: boundary,
-            child: MaterialApp(
-              debugShowCheckedModeBanner: false,
-              theme: captureTheme(light: !dark),
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              home: Scaffold(
-                appBar: AppBar(title: const Text('Activity')),
-                body: SingleChildScrollView(
-                  child: ProfileMonitorInbox(controller: controller),
-                ),
-              ),
-            ),
+          captureApp(
+            boundaryKey: boundary,
+            controller: controller,
+            store: store,
+            light: !dark,
+            home: const HomeScreen(initialTab: 2),
           ),
         );
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 200));
+        expect(find.byType(HomeScreen), findsOneWidget);
+        expect(find.byType(NavigationBar), findsOneWidget);
+        expect(find.text('Saved-server attention'), findsOneWidget);
         expect(tester.takeException(), isNull);
         await writePng(
           'docs/qa/profile-monitor/${dark ? 'dark' : 'light'}.png',
