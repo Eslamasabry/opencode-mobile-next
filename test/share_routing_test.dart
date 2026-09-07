@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'support/complete_message_history.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -37,10 +39,16 @@ class _ShareApi extends OpenCodeApi with CompleteMessageHistory {
   _ShareApi() : super(baseUrl: 'http://localhost:4096');
 
   int created = 0;
+  Object? createError;
+  Completer<Session>? pendingCreate;
 
   @override
   Future<Session> createSession() async {
     created += 1;
+    if (createError != null) throw createError!;
+    final pending = pendingCreate;
+    pendingCreate = null;
+    if (pending != null) return pending.future;
     return Session(id: 'shared-$created', title: 'New session');
   }
 
@@ -168,5 +176,121 @@ void main() {
     expect(find.byType(ChatScreen), findsNothing);
     // Let the snackbar's own timer run out before the tree is torn down.
     await tester.pump(const Duration(seconds: 5));
+  });
+
+  testWidgets(
+    'startup share waits for connection and saved location restoration',
+    (tester) async {
+      final controller = await _controller(connected: true);
+      addTearDown(controller.dispose);
+      final api = controller.api! as _ShareApi;
+      controller.status = StreamStatus.connecting;
+      final share = ShareIntent(channel: const MethodChannel('oc/share-test'));
+      addTearDown(share.dispose);
+      await tester.pumpWidget(_app(controller, share));
+      await tester.pump(const Duration(milliseconds: 500));
+      share.pending.value = 'earlier startup text';
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(api.created, 0);
+      controller.status = StreamStatus.connected;
+      controller.locationLoading = true;
+      share.pending.value = 'latest startup text';
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(api.created, 0);
+      controller.locationLoading = false;
+      controller.locationRevision += 1;
+      await controller.refreshSessions();
+      await tester.pumpAndSettle();
+      expect(api.created, 1);
+      expect(
+        tester.widget<ChatScreen>(find.byType(ChatScreen)).initialText,
+        'latest startup text',
+      );
+      expect(share.pending.value, isNull);
+      expect(find.byType(MaterialBanner), findsNothing);
+      await tester.pump(const Duration(seconds: 5));
+    },
+  );
+
+  testWidgets('failed shared session keeps text and waits for explicit retry', (
+    tester,
+  ) async {
+    final controller = await _controller(connected: true);
+    addTearDown(controller.dispose);
+    final api = controller.api! as _ShareApi;
+    api.createError = StateError('sensitive raw server failure');
+    final share = ShareIntent(channel: const MethodChannel('oc/share-test'));
+    addTearDown(share.dispose);
+    await tester.pumpWidget(_app(controller, share));
+    await tester.pumpAndSettle();
+    share.pending.value = 'keep this shared text';
+    await tester.pumpAndSettle();
+
+    expect(api.created, 1);
+    expect(share.pending.value, 'keep this shared text');
+    expect(find.byType(ChatScreen), findsNothing);
+    expect(find.textContaining('sensitive raw'), findsNothing);
+    expect(find.byType(MaterialBanner), findsOneWidget);
+    await controller.refreshSessions();
+    await tester.pump(const Duration(seconds: 8));
+    expect(api.created, 1);
+    expect(find.text('Retry'), findsOneWidget);
+
+    api.createError = null;
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    final chat = tester.widget<ChatScreen>(find.byType(ChatScreen));
+    expect(chat.initialText, 'keep this shared text');
+    expect(api.created, 2);
+    expect(share.pending.value, isNull);
+    expect(find.byType(MaterialBanner), findsNothing);
+  });
+
+  testWidgets('a newer share survives an older in-flight creation failure', (
+    tester,
+  ) async {
+    final controller = await _controller(connected: true);
+    addTearDown(controller.dispose);
+    final api = controller.api! as _ShareApi;
+    final creation = Completer<Session>();
+    api.pendingCreate = creation;
+    final share = ShareIntent(channel: const MethodChannel('oc/share-test'));
+    addTearDown(share.dispose);
+    await tester.pumpWidget(_app(controller, share));
+    await tester.pumpAndSettle();
+    share.pending.value = 'older text';
+    await tester.pumpAndSettle();
+    share.pending.value = 'newest text';
+    await tester.pump();
+    expect(api.created, 1);
+    creation.completeError(StateError('creation failed'));
+    await tester.pumpAndSettle();
+    final chat = tester.widget<ChatScreen>(find.byType(ChatScreen));
+    expect(chat.initialText, 'newest text');
+    expect(api.created, 2);
+    expect(share.pending.value, isNull);
+  });
+
+  testWidgets('share creation cannot route into a replacement connection', (
+    tester,
+  ) async {
+    final controller = await _controller(connected: true);
+    addTearDown(controller.dispose);
+    final api = controller.api! as _ShareApi;
+    final creation = Completer<Session>();
+    api.pendingCreate = creation;
+    final share = ShareIntent(channel: const MethodChannel('oc/share-test'));
+    addTearDown(share.dispose);
+    await tester.pumpWidget(_app(controller, share));
+    await tester.pumpAndSettle();
+    share.pending.value = 'review in the right connection';
+    await tester.pumpAndSettle();
+    controller.repository = _ShareRepository();
+    creation.complete(Session(id: 'old-connection-session'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ChatScreen), findsNothing);
+    expect(share.pending.value, 'review in the right connection');
+    expect(find.text('Retry'), findsOneWidget);
+    expect(api.created, 1);
   });
 }

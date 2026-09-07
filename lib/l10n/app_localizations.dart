@@ -2164,6 +2164,18 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get commonRetry;
 
+  /// No description provided for @shareWaitingForServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to a server and the shared text opens in a new session.'**
+  String get shareWaitingForServer;
+
+  /// No description provided for @shareSessionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared text kept. Could not open a session. Retry when the connection is ready.'**
+  String get shareSessionFailed;
+
   /// No description provided for @webSourcesDisclosure.
   ///
   /// In en, this message translates to:
@@ -2373,6 +2385,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Session metadata reference copied'**
   String get handoffCopied;
+
+  /// No description provided for @handoffCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy the handoff. Try again.'**
+  String get handoffCopyFailed;
 
   /// No description provided for @sessionOpenRelated.
   ///

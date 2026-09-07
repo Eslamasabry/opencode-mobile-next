@@ -1220,6 +1220,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonRetry => 'Retry';
 
   @override
+  String get shareWaitingForServer =>
+      'Connect to a server and the shared text opens in a new session.';
+
+  @override
+  String get shareSessionFailed =>
+      'Shared text kept. Could not open a session. Retry when the connection is ready.';
+
+  @override
   String get webSourcesDisclosure =>
       'Web search is not available through this connection’s app gateway. Paste a public URL and optionally an excerpt you want to include. No page is fetched. Nothing is sent to the model here.';
 
@@ -1356,6 +1364,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get handoffCopied => 'Session metadata reference copied';
+
+  @override
+  String get handoffCopyFailed => 'Could not copy the handoff. Try again.';
 
   @override
   String get sessionOpenRelated => 'Open related';

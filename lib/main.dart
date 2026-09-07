@@ -233,6 +233,7 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   bool _codingAlertRouteScheduled = false;
   late final ShareIntent _share;
   bool _shareRouteScheduled = false;
+  String? _failedShareText;
   bool _shareWaitingNoticeShown = false;
 
   @override
@@ -291,22 +292,29 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   /// Until a server is connected the text waits, and the user is told once
   /// where it went, so a share never silently disappears.
   void _scheduleShareRoute() {
-    if (_shareRouteScheduled || _share.pending.value == null) return;
+    if (_shareRouteScheduled ||
+        _share.pending.value == null ||
+        _share.pending.value == _failedShareText) {
+      return;
+    }
     final connected =
         _controller.api != null &&
         _controller.repository != null &&
-        _controller.version != null;
+        _controller.version != null &&
+        !_controller.connectionLoading &&
+        !_controller.locationLoading;
     if (!connected) {
       if (!_shareWaitingNoticeShown) {
         _shareWaitingNoticeShown = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          final context = _navigatorKey.currentContext;
+          if (!mounted || context == null) return;
           _messengerKey.currentState
             ?..hideCurrentSnackBar()
             ..showSnackBar(
-              const SnackBar(
+              SnackBar(
                 content: Text(
-                  'Connect to a server and the shared text opens in a new '
-                  'session.',
+                  AppLocalizations.of(context).shareWaitingForServer,
                 ),
               ),
             );
@@ -316,31 +324,73 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     }
     _shareRouteScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      _shareRouteScheduled = false;
       _shareWaitingNoticeShown = false;
       if (!mounted) return;
       final navigator = _navigatorKey.currentState;
       if (navigator == null) {
+        _shareRouteScheduled = false;
         _scheduleShareRoute();
         return;
       }
-      final text = _share.take();
-      if (text == null) return;
+      if (_controller.connectionLoading || _controller.locationLoading) {
+        _shareRouteScheduled = false;
+        return;
+      }
+      final text = _share.pending.value;
+      if (text == null) {
+        _shareRouteScheduled = false;
+        return;
+      }
+      final location = _controller.locationRevision;
+      final api = _controller.api;
+      final repository = _controller.repository;
       try {
         final session = await _controller.createSession();
         if (!mounted) return;
-        await navigator.push(
-          MaterialPageRoute<void>(
-            builder: (_) =>
-                ChatScreen(sessionID: session.id, initialText: text),
+        if (location != _controller.locationRevision ||
+            !identical(api, _controller.api) ||
+            !identical(repository, _controller.repository)) {
+          throw StateError('Shared session scope changed');
+        }
+        unawaited(
+          navigator.push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  ChatScreen(sessionID: session.id, initialText: text),
+            ),
           ),
         );
-      } catch (error) {
+        if (_share.pending.value == text) _share.take();
+        _failedShareText = null;
+        _messengerKey.currentState?.hideCurrentMaterialBanner();
+      } catch (_) {
+        if (!mounted) return;
+        if (_share.pending.value == text) _failedShareText = text;
+        final l10n = AppLocalizations.of(navigator.context);
         _messengerKey.currentState
-          ?..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(productErrorText(error))));
+          ?..hideCurrentMaterialBanner()
+          ..showMaterialBanner(
+            MaterialBanner(
+              content: Text(l10n.shareSessionFailed),
+              actions: [
+                TextButton(
+                  child: Text(l10n.commonRetry),
+                  onPressed: () {
+                    if (!mounted) return;
+                    _failedShareText = null;
+                    _messengerKey.currentState?.hideCurrentMaterialBanner();
+                    _scheduleShareRoute();
+                  },
+                ),
+              ],
+            ),
+          );
+      } finally {
+        _shareRouteScheduled = false;
+        if (mounted) _scheduleShareRoute();
       }
     });
+    WidgetsBinding.instance.ensureVisualUpdate();
   }
 
   void _scheduleCodingAlertRoute() {

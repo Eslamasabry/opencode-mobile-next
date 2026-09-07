@@ -33,6 +33,7 @@ class MainActivity : FlutterActivity() {
     private var pendingCodingAlertOpen: Map<String, String>? = null
     private var pendingSharedText: String? = null
     private var shareChannel: MethodChannel? = null
+    private var shareDartReady = false
     private var readAloud: ReadAloudBridge? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -41,11 +42,16 @@ class MainActivity : FlutterActivity() {
         readAloud = ReadAloudBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         captureCodingAlertOpen(intent)
         captureSharedText(intent)
+        shareDartReady = false
         shareChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SHARE_CHANNEL_NAME)
             .also { channel ->
                 channel.setMethodCallHandler { call, result ->
                     when (call.method) {
                         "consumeSharedText" -> {
+                            // Dart installs its inbound handler before this
+                            // call. This is the readiness acknowledgment for
+                            // live shares delivered during engine startup.
+                            shareDartReady = true
                             val text = pendingSharedText
                             pendingSharedText = null
                             result.success(text)
@@ -218,6 +224,8 @@ class MainActivity : FlutterActivity() {
         readAloud?.dispose()
         readAloud = null
         if (backgroundChannel != null) backgroundChannel = null
+        shareChannel = null
+        shareDartReady = false
         super.cleanUpFlutterEngine(flutterEngine)
     }
 
@@ -246,7 +254,7 @@ class MainActivity : FlutterActivity() {
             // waits in pendingSharedText for the consume call.
             val channel = shareChannel
             val text = pendingSharedText
-            if (channel != null && text != null) {
+            if (shareDartReady && channel != null && text != null) {
                 pendingSharedText = null
                 channel.invokeMethod("shared", text)
             }
