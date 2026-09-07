@@ -1,0 +1,25 @@
+{
+  "failed_share_retained": true,
+  "retry_remains_after_8_seconds": true,
+  "refresh_does_not_auto_retry_create": true,
+  "large_text_retry_reachable": true,
+  "explicit_retry_opens_unsent_draft": true,
+  "draft_survives_process_restart": true,
+  "rapid_startup_shares_latest_visible": true,
+  "before": {
+    "prompts": 0,
+    "creates": 5
+  },
+  "after": {
+    "prompts": 0,
+    "creates": 8
+  },
+  "target": "emulator-5554 / OCMN_Luna_Audit / Android 14 x86_64",
+  "app": "io.github.eslamasabry.opencode_mobile",
+  "version": "1.0.36+37",
+  "build": "debug, standard Flutter 3.47.2 engine",
+  "apk_sha256": "af486c522dfd64561841850f928a2b6227aa30c07e1cf20b512e9c2bf3247d30",
+  "runtime_error_log_bytes": 0,
+  "source_fingerprint": "93435c8e3bceebb9d6f60dd19ab690a903734f1afa8fa73c832ca068c793190c",
+  "fixture": "synthetic v1 server at 127.0.0.1:4124; no provider/model calls"
+}
