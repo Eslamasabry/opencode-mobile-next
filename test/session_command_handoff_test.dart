@@ -188,8 +188,9 @@ void main() {
 
   Future<({_Controller controller, List<String> clipboard})> mount(
     WidgetTester tester,
-    _MetadataRepository repository,
-  ) async {
+    _MetadataRepository repository, {
+    bool clipboardFails = false,
+  }) async {
     SharedPreferences.setMockInitialValues({});
     final controller = _Controller(
       ProfileStore(prefs: await SharedPreferences.getInstance()),
@@ -204,6 +205,9 @@ void main() {
     messenger.setMockMethodCallHandler(secureStorage, (_) async => null);
     messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
       if (call.method == 'Clipboard.setData') {
+        if (clipboardFails) {
+          throw PlatformException(code: 'clipboard-unavailable');
+        }
         clipboard.add((call.arguments as Map)['text'] as String);
       }
       return null;
@@ -284,6 +288,35 @@ void main() {
       expect(fixture.clipboard, isEmpty);
     },
   );
+
+  testWidgets('connection generation changes block a stale handoff copy', (
+    tester,
+  ) async {
+    final repo = _CommandRepository();
+    final fixture = await mount(tester, repo);
+    fixture.controller.connectionRevision++;
+    await tester.tap(find.text('Copy command'));
+    await tester.pumpAndSettle();
+    expect(repo.reads, 1);
+    expect(fixture.clipboard, isEmpty);
+  });
+
+  testWidgets('clipboard failure reports a retryable copy error', (
+    tester,
+  ) async {
+    final repo = _CommandRepository();
+    final fixture = await mount(tester, repo, clipboardFails: true);
+    await tester.tap(find.text('Copy command'));
+    await tester.pumpAndSettle();
+    expect(fixture.clipboard, isEmpty);
+    expect(find.text('Could not copy the handoff. Try again.'), findsOneWidget);
+    expect(
+      find.text(
+        'Session unavailable or location changed. Return and try again.',
+      ),
+      findsNothing,
+    );
+  });
 
   for (final loopback in [false, true]) {
     testWidgets(

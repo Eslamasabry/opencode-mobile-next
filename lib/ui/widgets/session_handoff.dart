@@ -13,14 +13,17 @@ import 'product_states.dart';
 class SessionNavigationScope {
   SessionNavigationScope(ConnectionController controller)
     : profileID = controller.profile?.id,
+      connectionRevision = controller.connectionRevision,
       revision = controller.locationRevision;
 
   final String? profileID;
+  final int connectionRevision;
   final int revision;
 
   bool matches(ConnectionController controller) =>
       profileID != null &&
       controller.profile?.id == profileID &&
+      controller.connectionRevision == connectionRevision &&
       controller.locationRevision == revision;
 
   void check(ConnectionController controller) {
@@ -150,7 +153,14 @@ Future<void> showSessionHandoff(
         throw StateError('Server command changed');
       }
     }
-    await Clipboard.setData(ClipboardData(text: command ?? reference));
+    try {
+      await Clipboard.setData(ClipboardData(text: command ?? reference));
+    } catch (_) {
+      if (context.mounted) {
+        showProductError(context, l10n.handoffCopyFailed);
+      }
+      return;
+    }
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
