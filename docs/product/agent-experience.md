@@ -24,23 +24,66 @@ anything is spoken) → Send → *Waiting for the reply…* → *Speaking the re
 with Stop → Listen again or Exit. The microphone never opens by itself; the
 reply text stays on screen.
 
-**Correlation.** The reply is the set of assistant messages after the
-server's echo of the sent user message and before any later user message.
-On OpenCode v1 the wire `parentID` (now parsed into `MessageInfo.parentID`)
-associates replies with the observed echo. Automatic playback requires one
-new live user echo matching the send and explicit assistant parent IDs.
-Missing parent IDs (including current v2/Codex mappings), duplicate matching
-echoes, and intervening user messages keep reading manual. This is conservative
-observed correlation, not a server-issued delivery receipt: a concurrent client
-submitting identical text cannot be distinguished until both echoes arrive.
-Playback happens once, only after dispatch acceptance, observed busy → idle,
-and every reply message completed or errored. Stop, Exit, a server/session/scope
-switch, a lifecycle pause, or a pending permission/question/form cancels
-pending speech. Disconnect or connection rehydration invalidates the watch;
-completion or failure consumes it, so duplicate events cannot replay speech.
-Stop while waiting also cancels owed playback without cancelling/resending the
-server turn or erasing an independently typed draft. No preference is persisted:
-automatic speech is off again after exiting, changing scope, or backgrounding.
+**Correlation (P1 correction).** Automatic playback requires an app-authored
+message ID carried unchanged on the dispatched v1 request, the exact live user
+echo of that ID, and completed assistant messages whose `parentID` matches it.
+The heuristic text/attachment/time `canonicalID` is never playback authority.
+Correlated optimistic sends also refuse heuristic reconciliation against another
+ID. A single foreign identical-text echo can complete before our own echo is
+delayed or absent: it remains silent, consumes the watch conservatively, and
+cannot cause later history/echo events to re-arm playback.
+
+The pinned v1 generated request already exposes optional `messageID`. Exact
+[upstream prompt source](https://github.com/anomalyco/opencode/blob/f12e14cf1640cbf0dfb6b1ff425b2daaef459eec/packages/opencode/src/session/prompt.ts#L619)
+uses it as the user message ID and preserves it on save. The same source assigns
+assistant `parentID` from the user ID. The app's random ascending message ID uses
+the pinned [identifier format](https://github.com/anomalyco/opencode/blob/f12e14cf1640cbf0dfb6b1ff425b2daaef459eec/packages/opencode/src/id/id.ts#L48).
+This is correlation, not an idempotency or resend contract. No generated SDK
+files were edited. Unsupported transports or servers that ignore/replace the
+ID remain manual; missing parent IDs, mixed parents, or multiple live user
+messages also keep reading manual.
+
+Playback still requires dispatch acceptance, observed busy → idle, and all
+reply messages completed or errored. Stop, Exit, lifecycle/scope changes,
+approvals/questions/forms, disconnect and history rehydration invalidate the
+watch. Nothing automatically opens the microphone or resends a prompt. The
+feature stores no preference or pending speech across scope/background changes.
+
+**Correction verification (2026-09-08).** On the corrected source from `a8b27bf`,
+**131 focused checks passed**: prompt transport (3), voice pipeline (23 including
+3 capture cases), existing voice composer/read-aloud (13), and chat live events
+(92). The new cases complete a single foreign identical-text turn while our own
+echo is delayed or absent; no TTS or extra microphone/send occurs. A transport
+without the correlation capability stays manual. The generated HTTP request
+fixture verifies that the authored ID reaches the wire unchanged and all other
+prompt fields retain their previous representation.
+
+The first serial run passed 128 and failed only its three capture cases because
+the newly selected output directory did not exist. After creating that ignored
+directory, only those three capture cases were rerun: all passed. No behavioral
+source changes followed the tests. Two analyzer style findings were corrected
+(braces and equivalent null-aware map syntax); final analyzer passed with no
+issues. Changed files were formatted and the diff check passed. No l10n copy
+changed, so generation was unnecessary.
+
+Commands/evidence for the correction (ignored):
+
+- `flutter test --no-pub --concurrency=1 test/prompt_transport_test.dart
+  test/voice_reply_pipeline_test.dart test/voice_composer_test.dart
+  test/read_aloud_test.dart test/chat_live_events_test.dart`:
+  `build/traycer/voice-correlation-tests.log`.
+- Exact capture rerun: `flutter test --no-pub --concurrency=1
+  test/voice_reply_pipeline_test.dart --plain-name "capture production voice states"`:
+  `build/traycer/voice-correlation-captures.log` (3 passed).
+- `flutter analyze --no-pub`: `build/traycer/voice-correlation-analyze-final.log`
+  (no issues, 14.4 seconds).
+- `OC_VOICE_REPLY_CAPTURE_DIR=build/traycer/voice-captures-correlation`: 13 fresh
+  PNGs. Dark waiting, light speaking, large error and large scrolled controls
+  were visually inspected. These remain synthetic widget renders with mocked
+  native audio; no provider/live-account/server or hardware-speech proof.
+
+The earlier verification record below describes the original implementation
+and captures, not a substitute for this correction's results.
 
 **Verification (2026-09-08, Flutter 3.47.2 / Dart 3.13.2).** `test/voice_reply_pipeline_test.dart`
 covers default off, completion/acceptance ordering, Stop during dispatch and
@@ -76,7 +119,27 @@ repository-wide serial integration gate remain unrun. Nothing is deployed or
 released by this branch. Correlation on v2/Codex remains manual as described
 above; this does not claim automatic voice replies across all transports.
 
-## Queued: Codex account panel (next E2E slice)
+## Next priority after voice correction: A2A interoperability
+
+Queued by the coordinator: a phone client for external A2A agents, with card
+inspection, supported authentication, explicit task dispatch, progress and
+input-required states, results/reopen/cancel. Pin and prove the official 1.0.1
+binding against a synthetic official server before enabling an adapter. No
+hosting, public listener, or provider spend. SaaS is cancelled. This priority
+comes before resuming the account WIP; it is not implemented in this branch.
+
+The proposed "Try two approaches" idea stays queued behind isolation and usage
+proof: explicit separate workspaces, visible added compute, compare results,
+no automatic winner/merge. It does not authorize another feature or paid run.
+
+## Preserved WIP: Codex account panel
+
+Account source was checkpointed separately at `a7e2b3a` on
+`feature/codex-account-panel`; it must not be merged. The installed 0.153.4
+schema includes the account/device-code/rate-limit/usage methods. Callable
+scratch proof, generated localization, fixtures, tests, analyzer and captures
+remain pending. The original queued scope below is context, not a finished
+feature or current verification claim.
 
 **Evidence.** The pinned Codex app-server adapter (`lib/codex/transport.dart`,
 `lib/codex/gateway.dart`) connects with a capability token and uses

@@ -221,6 +221,8 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _PendingSend {
+  /// Authored before dispatch, never inferred from matching message contents.
+  final String? dispatchedMessageID;
   final String localID;
   final String text;
   final List<PromptAttachment> attachments;
@@ -229,6 +231,7 @@ class _PendingSend {
   bool requestComplete = false;
 
   _PendingSend({
+    this.dispatchedMessageID,
     required this.localID,
     required this.text,
     required this.attachments,
@@ -1528,7 +1531,8 @@ class _ChatScreenState extends State<ChatScreen>
     if (info.role != 'user') return false;
     _PendingSend? pending = pendingSend;
     for (final candidate in _pendingSends) {
-      if (candidate.canonicalID == info.id) {
+      if (candidate.dispatchedMessageID == info.id ||
+          candidate.canonicalID == info.id) {
         pending = candidate;
         break;
       }
@@ -1539,6 +1543,7 @@ class _ChatScreenState extends State<ChatScreen>
           .where(
             (candidate) =>
                 candidate.canonicalID == null &&
+                candidate.dispatchedMessageID == null &&
                 _matchesPendingPrompt(parts, candidate),
           )
           .toList();
@@ -1555,6 +1560,10 @@ class _ChatScreenState extends State<ChatScreen>
       }
     }
     if (pending == null) return false;
+    if (pending.dispatchedMessageID != null &&
+        pending.dispatchedMessageID != info.id) {
+      return false;
+    }
 
     final localIndex = _messages.indexWhere(
       (message) => message.info.id == pending!.localID,
@@ -2492,6 +2501,13 @@ class _ChatScreenState extends State<ChatScreen>
     final createdAt = DateTime.now().millisecondsSinceEpoch;
     final localID = 'local-$createdAt-${DateTime.now().microsecondsSinceEpoch}';
     final pending = _PendingSend(
+      dispatchedMessageID:
+          conversationSend &&
+              _voiceSpeakReplies &&
+              actionApi.capabilities.clientPromptMessageID &&
+              actionApi is CorrelatedPromptGateway
+          ? (actionApi as CorrelatedPromptGateway).createPromptMessageID()
+          : null,
       localID: localID,
       text: text,
       attachments: attachments,
@@ -2540,16 +2556,31 @@ class _ChatScreenState extends State<ChatScreen>
       if (conversationSend && voiceSendCurrent()) {
         setState(() => _watchVoiceReply(pending));
       }
-      await actionApi.promptAsync(
-        widget.sessionID,
-        text: text,
-        model: selection.model,
-        agent: selection.agent?.isNotEmpty == true ? selection.agent : null,
-        variant: selection.variant.isEmpty ? null : selection.variant,
-        attachments: attachments,
-        agentMentions: agentMentions,
-        delivery: delivery,
-      );
+      final exactMessageID = pending.dispatchedMessageID;
+      if (exactMessageID != null && actionApi is CorrelatedPromptGateway) {
+        await (actionApi as CorrelatedPromptGateway).promptWithMessageID(
+          widget.sessionID,
+          messageID: exactMessageID,
+          text: text,
+          model: selection.model,
+          agent: selection.agent?.isNotEmpty == true ? selection.agent : null,
+          variant: selection.variant.isEmpty ? null : selection.variant,
+          attachments: attachments,
+          agentMentions: agentMentions,
+          delivery: delivery,
+        );
+      } else {
+        await actionApi.promptAsync(
+          widget.sessionID,
+          text: text,
+          model: selection.model,
+          agent: selection.agent?.isNotEmpty == true ? selection.agent : null,
+          variant: selection.variant.isEmpty ? null : selection.variant,
+          attachments: attachments,
+          agentMentions: agentMentions,
+          delivery: delivery,
+        );
+      }
       if (!conversationSend) {
         unawaited(_rememberSentPrompt(selectionProfileID ?? '', text));
       }

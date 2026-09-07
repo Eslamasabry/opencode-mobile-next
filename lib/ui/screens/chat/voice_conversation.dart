@@ -1,8 +1,7 @@
 part of '../chat_screen.dart';
 
 /// One turn sent from a voice conversation with "Speak replies" on. The
-/// watch is bound to the exact send ([pending] carries the server's id for
-/// the user message once the echo lands), the speech scope and the voice
+/// watch is bound to the app-authored ID carried on dispatch, the speech scope and the voice
 /// epoch, so a reconnect, a scope switch, or Exit can never re-attach it to
 /// some other text.
 class _VoiceReplyWatch {
@@ -198,6 +197,11 @@ extension _ChatVoiceConversation on _ChatScreenState {
   /// events are observed. Playback still waits for requestComplete.
   void _watchVoiceReply(_PendingSend pending) {
     if (!_voiceSpeakReplies) return;
+    if (pending.dispatchedMessageID == null) {
+      _voiceReplyWatch = null;
+      _voiceReplyState = _VoiceReplyState.reviewNeeded;
+      return;
+    }
     _voiceReplyWatch = _VoiceReplyWatch(
       pending: pending,
       scope: _speechScopeNow,
@@ -261,7 +265,9 @@ extension _ChatVoiceConversation on _ChatScreenState {
     if (!watch.pending.requestComplete || !watch.sawBusy || !watch.sawIdle) {
       return;
     }
-    final canonicalID = watch.pending.canonicalID;
+    // canonicalID is text/time reconciliation for optimistic rendering, not
+    // evidence that this client dispatched a message. Never trust it here.
+    final canonicalID = watch.pending.dispatchedMessageID;
     if (canonicalID == null ||
         watch.existingMessageIDs.contains(canonicalID) ||
         watch.liveUserIDs.length != 1 ||

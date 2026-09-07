@@ -30,7 +30,39 @@ const _newReply = 'The answer to what you just said.';
 const _transcript = 'A synthetic private utterance';
 
 class _Api extends OpenCodeApi with CompleteMessageHistory {
-  _Api() : super(baseUrl: 'http://localhost');
+  _Api({this.correlate = true}) : super(baseUrl: 'http://localhost');
+  final bool correlate;
+  final dispatchedIDs = <String>[];
+  @override
+  ServerCapabilities get capabilities =>
+      correlate ? ServerCapabilities.allV1 : const ServerCapabilities();
+  @override
+  String createPromptMessageID() => 'msg_fixture_own';
+  @override
+  Future<void> promptWithMessageID(
+    String sessionID, {
+    required String messageID,
+    required String text,
+    ModelRef? model,
+    String? agent,
+    String? variant,
+    List<PromptAttachment> attachments = const [],
+    List<PromptAgentMention> agentMentions = const [],
+    PromptDelivery? delivery,
+  }) {
+    dispatchedIDs.add(messageID);
+    return promptAsync(
+      sessionID,
+      text: text,
+      model: model,
+      agent: agent,
+      variant: variant,
+      attachments: attachments,
+      agentMentions: agentMentions,
+      delivery: delivery,
+    );
+  }
+
   final prompts = <String>[];
   Completer<void>? promptGate;
 
@@ -196,7 +228,10 @@ void _user(ConnectionController connection, String id, String text) {
   );
 }
 
-void _reply(ConnectionController connection, {String? parent = 'user-1'}) {
+void _reply(
+  ConnectionController connection, {
+  String? parent = 'msg_fixture_own',
+}) {
   connection.handleEventForTesting(
     _event('message.updated', {
       'info': _info('reply-1', 'assistant', parentID: parent, completed: true),
@@ -215,7 +250,7 @@ Future<void> _completeTurn(
   ConnectionController connection,
 ) async {
   _status(connection, 'busy');
-  _user(connection, 'user-1', _transcript);
+  _user(connection, 'msg_fixture_own', _transcript);
   _reply(connection);
   // Deliver completed parts while busy, before the terminal idle event.
   await tester.pump();
@@ -442,6 +477,61 @@ void main() {
     });
   }
 
+  for (final ownEcho in ['delayed', 'absent']) {
+    testWidgets(
+      'one foreign identical echo completes with our echo $ownEcho and never speaks',
+      (tester) async {
+        final voice = _Voice(models: await readyVoiceModelManager());
+        addTearDown(voice.dispose);
+        final api = _Api();
+        final connection = await _pumpChat(tester, api, voice);
+        await _enterAndListen(tester, api);
+        await _optIn(tester, calls);
+        await _send(tester, api);
+        expect(api.dispatchedIDs, ['msg_fixture_own']);
+        _status(connection, 'busy');
+        _user(connection, 'msg_foreign', _transcript);
+        _reply(connection, parent: 'msg_foreign');
+        await tester.pump();
+        _status(connection, 'idle');
+        await _settle(tester);
+        expect(calls.where((call) => call.method == 'speak'), isEmpty);
+        expect(find.byKey(const Key('voice-reply-read')), findsOneWidget);
+        // The watch is consumed conservatively. Our own later echo/reply,
+        // or another idle event when it never arrives, must not re-arm it.
+        if (ownEcho == 'delayed') {
+          _status(connection, 'busy');
+          _user(connection, api.dispatchedIDs.single, _transcript);
+          _reply(connection, parent: api.dispatchedIDs.single);
+          await tester.pump();
+        }
+        _status(connection, 'idle');
+        await _settle(tester);
+        expect(calls.where((call) => call.method == 'speak'), isEmpty);
+        expect(api.prompts, [_transcript]);
+        expect(voice.listens, 1);
+        expect(find.text(_newReply), findsOneWidget);
+      },
+    );
+  }
+
+  testWidgets('transport without dispatched message IDs keeps replies manual', (
+    tester,
+  ) async {
+    final voice = _Voice(models: await readyVoiceModelManager());
+    addTearDown(voice.dispose);
+    final api = _Api(correlate: false);
+    final connection = await _pumpChat(tester, api, voice);
+    await _enterAndListen(tester, api);
+    await _optIn(tester, calls);
+    await _send(tester, api);
+    await _completeTurn(tester, connection);
+    expect(api.dispatchedIDs, isEmpty);
+    expect(calls.where((call) => call.method == 'speak'), isEmpty);
+    expect(find.byKey(const Key('voice-reply-read')), findsOneWidget);
+    expect(voice.listens, 1);
+  });
+
   for (final ambiguity in [
     'intervening user',
     'duplicate echo',
@@ -457,7 +547,7 @@ void main() {
       await _optIn(tester, calls);
       await _send(tester, api);
       _status(connection, 'busy');
-      _user(connection, 'user-1', _transcript);
+      _user(connection, 'msg_fixture_own', _transcript);
       if (ambiguity == 'intervening user' || ambiguity == 'duplicate echo') {
         _user(
           connection,
@@ -469,7 +559,7 @@ void main() {
       }
       _reply(
         connection,
-        parent: ambiguity == 'missing parent' ? null : 'user-1',
+        parent: ambiguity == 'missing parent' ? null : 'msg_fixture_own',
       );
       if (ambiguity == 'mixed reply parents') {
         connection.handleEventForTesting(
@@ -536,7 +626,7 @@ void main() {
       connection.dataRefreshRevision++;
       _status(connection, 'idle');
       await _settle(tester);
-      _user(connection, 'user-1', _transcript);
+      _user(connection, 'msg_fixture_own', _transcript);
       _reply(connection);
       _status(connection, 'idle');
       await _settle(tester);
@@ -657,15 +747,15 @@ void main() {
     connection.handleEventForTesting(
       _event('message.part.updated', {
         'sessionID': 'session',
-        'part': _textPart('p-user', 'user-1', _transcript),
+        'part': _textPart('p-user', 'msg_fixture_own', _transcript),
       }),
     );
     connection.handleEventForTesting(
-      _event('message.updated', {'info': _info('user-1', 'user')}),
+      _event('message.updated', {'info': _info('msg_fixture_own', 'user')}),
     );
     connection.handleEventForTesting(
       _event('message.updated', {
-        'info': _info('reply-1', 'assistant', parentID: 'user-1'),
+        'info': _info('reply-1', 'assistant', parentID: 'msg_fixture_own'),
       }),
     );
     connection.handleEventForTesting(
@@ -684,7 +774,7 @@ void main() {
         'info': _info(
           'reply-1',
           'assistant',
-          parentID: 'user-1',
+          parentID: 'msg_fixture_own',
           completed: true,
         ),
       }),
@@ -796,18 +886,18 @@ void main() {
       connection.handleEventForTesting(
         _event('message.part.updated', {
           'sessionID': 'session',
-          'part': _textPart('p-user', 'user-1', _transcript),
+          'part': _textPart('p-user', 'msg_fixture_own', _transcript),
         }),
       );
       connection.handleEventForTesting(
-        _event('message.updated', {'info': _info('user-1', 'user')}),
+        _event('message.updated', {'info': _info('msg_fixture_own', 'user')}),
       );
       connection.handleEventForTesting(
         _event('message.updated', {
           'info': _info(
             'reply-1',
             'assistant',
-            parentID: 'user-1',
+            parentID: 'msg_fixture_own',
             completed: true,
           ),
         }),
