@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/provider_quota.dart';
@@ -102,6 +103,36 @@ void main() {
     final restored = make();
     addTearDown(restored.dispose);
     expect(restored.rule(data, data.windows.first)?.percent, 75);
+  });
+
+  test('one malformed persisted rule does not discard valid budgets', () async {
+    final first = snapshot();
+    final second = snapshot(account: 'b');
+    expect(
+      await budgets.save(first, first.windows.first, const QuotaBudget(75)),
+      isTrue,
+    );
+    expect(
+      await budgets.save(second, second.windows.first, const QuotaBudget(80)),
+      isTrue,
+    );
+    final stored =
+        jsonDecode(prefs.getString(budgets.key)!) as Map<String, dynamic>;
+    final rules = stored['rules'] as Map<String, dynamic>;
+    rules['f' * 64] = {'unit': 'percentUsed', 'percent': 'invalid'};
+    await prefs.setString(budgets.key, jsonEncode(stored));
+
+    final restored = make();
+    addTearDown(restored.dispose);
+    expect(restored.rule(first, first.windows.first)?.percent, 75);
+    expect(restored.rule(second, second.windows.first)?.percent, 80);
+    expect(restored.failed, isTrue);
+    expect(
+      await restored.save(first, first.windows.first, const QuotaBudget(85)),
+      isTrue,
+    );
+    expect(restored.rule(first, first.windows.first)?.percent, 85);
+    expect(restored.failed, isTrue);
   });
 
   test(

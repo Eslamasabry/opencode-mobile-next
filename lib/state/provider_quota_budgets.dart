@@ -49,25 +49,13 @@ class ProviderQuotaBudgets extends ChangeNotifier {
       final rules = data['rules'] as Map<String, dynamic>;
       if (rules.length > 64) throw const FormatException();
       for (final entry in rules.entries) {
-        if (!RegExp(r'^[a-f0-9]{64}$').hasMatch(entry.key)) {
-          throw const FormatException();
+        if (!_validStoredRule(entry.key, entry.value)) {
+          failed = true;
+          continue;
         }
-        final value = entry.value as Map<String, dynamic>;
-        final percent = value['percent'] as num;
-        if (!percent.isFinite ||
-            percent <= 0 ||
-            percent > 100 ||
-            value['unit'] != 'percentUsed' ||
-            value['attention'] is! bool ||
-            (value['alertedWindow'] != null &&
-                (value['alertedWindow'] is! String ||
-                    !RegExp(
-                      r'^[a-f0-9]{64}$',
-                    ).hasMatch(value['alertedWindow'])))) {
-          throw const FormatException();
-        }
+        final value = Map<String, dynamic>.from(entry.value as Map);
         _rules[entry.key] = QuotaBudget(
-          percent.toDouble(),
+          (value['percent'] as num).toDouble(),
           attention: value['attention'] as bool,
           alertedWindow: value['alertedWindow'] as String?,
         );
@@ -80,6 +68,24 @@ class ProviderQuotaBudgets extends ChangeNotifier {
 
   String get key => 'oc.budgets.$profileId';
   bool get available => !_disposed && isCurrent();
+
+  static bool _validStoredRule(String id, Object? raw) {
+    try {
+      final value = Map<String, dynamic>.from(raw as Map);
+      final percent = value['percent'] as num;
+      return RegExp(r'^[a-f0-9]{64}$').hasMatch(id) &&
+          percent.isFinite &&
+          percent > 0 &&
+          percent <= 100 &&
+          value['unit'] == 'percentUsed' &&
+          value['attention'] is bool &&
+          (value['alertedWindow'] == null ||
+              (value['alertedWindow'] is String &&
+                  RegExp(r'^[a-f0-9]{64}$').hasMatch(value['alertedWindow'])));
+    } catch (_) {
+      return false;
+    }
+  }
 
   String _id(ProviderQuotaSnapshot snapshot, ProviderQuotaWindow window) =>
       sha256
@@ -146,6 +152,7 @@ class ProviderQuotaBudgets extends ChangeNotifier {
     failed = false;
     notifyListeners();
     var success = false;
+    var degraded = false;
     try {
       final changes = <String, dynamic>{};
       for (final id in {..._rules.keys, ...next.keys}) {
@@ -171,20 +178,26 @@ class ProviderQuotaBudgets extends ChangeNotifier {
       );
       success = durable != null;
       if (durable != null) {
-        _rules = {
-          for (final entry in durable.entries)
-            entry.key: QuotaBudget(
-              (entry.value['percent'] as num).toDouble(),
-              attention: entry.value['attention'] as bool,
-              alertedWindow: entry.value['alertedWindow'] as String?,
-            ),
-        };
+        degraded = durable.entries.any(
+          (entry) => !_validStoredRule(entry.key, entry.value),
+        );
+        final restored = <String, QuotaBudget>{};
+        for (final entry in durable.entries) {
+          if (!_validStoredRule(entry.key, entry.value)) continue;
+          final value = Map<String, dynamic>.from(entry.value as Map);
+          restored[entry.key] = QuotaBudget(
+            (value['percent'] as num).toDouble(),
+            attention: value['attention'] as bool,
+            alertedWindow: value['alertedWindow'] as String?,
+          );
+        }
+        _rules = restored;
       }
     } catch (_) {
       success = false;
     } finally {
       saving = false;
-      failed = !success;
+      failed = !success || degraded;
       if (!_disposed) notifyListeners();
     }
     return success;

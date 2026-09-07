@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/usage_statistics.dart';
@@ -116,6 +117,46 @@ void main() {
       expect(budgets.limit(data, UsageBudgetUnit.usd), isNull);
     },
   );
+
+  test(
+    'mismatched persisted scope cannot masquerade as the current budget',
+    () async {
+      final data = sample();
+      expect(await budgets.save(data, UsageBudgetUnit.usd, 10), isTrue);
+      final stored =
+          jsonDecode(prefs.getString(budgets.key)!) as Map<String, dynamic>;
+      final rules = stored['rules'] as Map<String, dynamic>;
+      final rule = rules.values.single as Map<String, dynamic>;
+      rule['timezone'] = 'Asia/Dubai';
+      await prefs.setString(budgets.key, jsonEncode(stored));
+
+      final restored = make();
+      addTearDown(restored.dispose);
+      expect(restored.limit(data, UsageBudgetUnit.usd), isNull);
+      expect(restored.failed, isTrue);
+    },
+  );
+
+  test('one malformed persisted rule does not discard valid budgets', () async {
+    final first = sample();
+    final second = sample(from: 101);
+    expect(await budgets.save(first, UsageBudgetUnit.usd, 10), isTrue);
+    expect(await budgets.save(second, UsageBudgetUnit.usd, 20), isTrue);
+    final stored =
+        jsonDecode(prefs.getString(budgets.key)!) as Map<String, dynamic>;
+    final rules = stored['rules'] as Map<String, dynamic>;
+    rules['f' * 64] = {'unit': 'usd', 'limit': 'invalid'};
+    await prefs.setString(budgets.key, jsonEncode(stored));
+
+    final restored = make();
+    addTearDown(restored.dispose);
+    expect(restored.limit(first, UsageBudgetUnit.usd), 10);
+    expect(restored.limit(second, UsageBudgetUnit.usd), 20);
+    expect(restored.failed, isTrue);
+    expect(await restored.save(first, UsageBudgetUnit.usd, 30), isTrue);
+    expect(restored.limit(first, UsageBudgetUnit.usd), 30);
+    expect(restored.failed, isTrue);
+  });
 
   test(
     'replacement screens serialize writes and merge separate units',
