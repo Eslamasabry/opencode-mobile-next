@@ -52,6 +52,8 @@ class ReadAloudController extends ChangeNotifier with WidgetsBindingObserver {
   bool _disposed = false;
   bool _observing = false;
   int _generation = 0;
+  final Set<String> _pendingOperations = {};
+  final Map<String, ReadAloudFailure> _retiredFailures = {};
 
   bool get speaking => _speaking;
   String? get activeID => _activeID;
@@ -181,8 +183,17 @@ class ReadAloudController extends ChangeNotifier with WidgetsBindingObserver {
     _activeID = id;
     _speaking = true;
     _failure = null;
+    _pendingOperations.add(operation);
     notifyListeners();
-    if (_disposed || _operation != operation) return;
+    if (_disposed || _operation != operation) {
+      final retiredFailure = _retiredFailures.remove(operation);
+      _pendingOperations.remove(operation);
+      if (retiredFailure != null) {
+        throw ReadAloudException(retiredFailure);
+      }
+      return;
+    }
+    ReadAloudFailure? retiredFailure;
     try {
       final result = await _channel
           .invokeMethod<Object?>('speak', {
@@ -191,6 +202,10 @@ class ReadAloudController extends ChangeNotifier with WidgetsBindingObserver {
             'voiceID': voiceID,
           })
           .timeout(const Duration(seconds: 12));
+      retiredFailure = _retiredFailures[operation];
+      if (retiredFailure != null) {
+        throw ReadAloudException(retiredFailure);
+      }
       if (_operation != operation || _disposed) return;
       if (result is! Map ||
           result['operationID'] != operation ||
@@ -198,15 +213,28 @@ class ReadAloudController extends ChangeNotifier with WidgetsBindingObserver {
         throw const ReadAloudException(ReadAloudFailure.engineUnavailable);
       }
     } catch (error) {
+      retiredFailure ??= _retiredFailures[operation];
+      if (retiredFailure != null) {
+        throw ReadAloudException(retiredFailure);
+      }
       if (_operation != operation || _disposed) return;
       final value = _decode(error);
       _clear(failure: value);
       unawaited(_stopOperation(operation));
       throw ReadAloudException(value);
+    } finally {
+      _pendingOperations.remove(operation);
+      _retiredFailures.remove(operation);
     }
   }
 
   void _clear({ReadAloudFailure? failure}) {
+    final operation = _operation;
+    if (failure != null &&
+        operation != null &&
+        _pendingOperations.contains(operation)) {
+      _retiredFailures[operation] = failure;
+    }
     _generation++;
     _operation = null;
     _activeID = null;

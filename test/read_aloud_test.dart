@@ -231,6 +231,48 @@ void main() {
     },
   );
 
+  test(
+    'a native terminal failure during pending acceptance reaches the caller',
+    () async {
+      final accepted = Completer<Object?>();
+      binding.defaultBinaryMessenger.setMockMethodCallHandler(_channel, (
+        call,
+      ) async {
+        calls.add(call);
+        return call.method == 'speak' ? accepted.future : null;
+      });
+      final speech = ReadAloudController();
+      addTearDown(speech.dispose);
+      final pending = speech.speak('reply', _reply);
+      await Future<void>.delayed(Duration.zero);
+      final operation = (calls.single.arguments as Map)['operationID'];
+
+      await binding.defaultBinaryMessenger.handlePlatformMessage(
+        _channel.name,
+        _channel.codec.encodeMethodCall(
+          MethodCall('status', {
+            'operationID': operation,
+            'status': 'engineUnavailable',
+          }),
+        ),
+        (_) {},
+      );
+      accepted.complete({'operationID': operation, 'status': 'accepted'});
+
+      await expectLater(
+        pending,
+        throwsA(
+          isA<ReadAloudException>().having(
+            (error) => error.failure,
+            'failure',
+            ReadAloudFailure.engineUnavailable,
+          ),
+        ),
+      );
+      expect(speech.speaking, isFalse);
+    },
+  );
+
   testWidgets(
     'reply reading asks consent before engine access and stops on leaving chat',
     (tester) async {

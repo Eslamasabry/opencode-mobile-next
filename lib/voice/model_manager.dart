@@ -60,6 +60,7 @@ class VoiceModelManager extends ChangeNotifier {
   final Set<String> _installedPackIDs = {};
   bool _disposed = false;
   bool _preparingDownload = false;
+  int _lifecycleGeneration = 0;
 
   static Future<VoiceModelManager>? _sharedManager;
 
@@ -94,6 +95,8 @@ class VoiceModelManager extends ChangeNotifier {
 
   Future<void> initialize() async {
     if (_disposed) return;
+    if (_preparingDownload) _preparingDownload = false;
+    final generation = ++_lifecycleGeneration;
     state = VoiceModelState.checking;
     error = null;
     selectedPack = voiceModelPack(
@@ -102,22 +105,28 @@ class VoiceModelManager extends ChangeNotifier {
     language = VoiceLanguage.fromID(preferences.getString(_languageKey));
     notifyListeners();
     try {
-      deviceInfo = await devicePlatform.getDeviceInfo();
-      if (_disposed) return;
-      _installedPackIDs.clear();
+      final probedDeviceInfo = await devicePlatform.getDeviceInfo();
+      if (!_isCurrent(generation)) return;
+      final installedPackIDs = <String>{};
       for (final pack in voiceModelPacks) {
-        if (await downloader.verifyInstalled(root, pack)) {
-          _installedPackIDs.add(pack.id);
-        }
+        final installed = await downloader.verifyInstalled(root, pack);
+        if (!_isCurrent(generation)) return;
+        if (installed) installedPackIDs.add(pack.id);
       }
+      if (!_isCurrent(generation)) return;
+      deviceInfo = probedDeviceInfo;
+      _installedPackIDs
+        ..clear()
+        ..addAll(installedPackIDs);
       state = isInstalled(selectedPack)
           ? VoiceModelState.ready
           : VoiceModelState.required;
     } catch (exception) {
+      if (!_isCurrent(generation)) return;
       error = exception;
       state = VoiceModelState.error;
     }
-    _notify();
+    if (_isCurrent(generation)) _notify();
   }
 
   int requiredStorageBytes(VoiceModelPack pack) =>
@@ -161,9 +170,10 @@ class VoiceModelManager extends ChangeNotifier {
         state == VoiceModelState.loading) {
       return;
     }
+    final generation = ++_lifecycleGeneration;
     selectedPack = pack;
     await preferences.setString(_selectedPackKey, pack.id);
-    if (_disposed) return;
+    if (!_isCurrent(generation)) return;
     state = isInstalled(pack)
         ? VoiceModelState.ready
         : VoiceModelState.required;
@@ -187,24 +197,28 @@ class VoiceModelManager extends ChangeNotifier {
         state == VoiceModelState.loading) {
       return;
     }
+    final generation = ++_lifecycleGeneration;
     _preparingDownload = true;
     final pack = selectedPack;
     try {
-      deviceInfo = await devicePlatform.getDeviceInfo();
+      final probedDeviceInfo = await devicePlatform.getDeviceInfo();
+      if (!_isCurrent(generation)) return;
+      deviceInfo = probedDeviceInfo;
     } catch (exception) {
-      _preparingDownload = false;
-      if (_disposed) return;
+      if (_isCurrent(generation)) _preparingDownload = false;
+      if (!_isCurrent(generation)) return;
       error = exception;
       state = VoiceModelState.error;
       _notify();
       return;
     }
-    if (_disposed || selectedPack.id != pack.id) {
-      _preparingDownload = false;
+    if (!_isCurrent(generation) || selectedPack.id != pack.id) {
+      if (_isCurrent(generation)) _preparingDownload = false;
       return;
     }
     final support = supportFor(pack, replacing: replaceExisting);
     if (!support.supported) {
+      if (!_isCurrent(generation)) return;
       _preparingDownload = false;
       error = VoiceModelPreflightException(support.reason!);
       state = VoiceModelState.error;
@@ -229,7 +243,8 @@ class VoiceModelManager extends ChangeNotifier {
         cancellation: cancellation,
         replaceExisting: replaceExisting,
         onProgress: (value) {
-          if (_disposed || !identical(_downloadCancellation, cancellation)) {
+          if (!_isCurrent(generation) ||
+              !identical(_downloadCancellation, cancellation)) {
             return;
           }
           progress = value;
@@ -239,36 +254,52 @@ class VoiceModelManager extends ChangeNotifier {
           _notify();
         },
         onVerifying: () {
-          if (_disposed || !identical(_downloadCancellation, cancellation)) {
+          if (!_isCurrent(generation) ||
+              !identical(_downloadCancellation, cancellation)) {
             return;
           }
           state = VoiceModelState.verifying;
           _notify();
         },
       );
-      if (cancellation.isCancelled) return;
+      if (!_isCurrent(generation) || cancellation.isCancelled) return;
       _installedPackIDs.add(pack.id);
       state = selectedPack.id == pack.id
           ? VoiceModelState.ready
           : VoiceModelState.required;
       progress = null;
     } on VoiceDownloadCancelled {
+      if (!_isCurrent(generation)) return;
       state = isInstalled(selectedPack)
           ? VoiceModelState.ready
           : VoiceModelState.required;
       progress = null;
     } catch (exception) {
+      if (!_isCurrent(generation)) return;
       error = exception;
       state = VoiceModelState.error;
     } finally {
       if (identical(_downloadCancellation, cancellation)) {
         _downloadCancellation = null;
       }
-      _notify();
+      if (_isCurrent(generation)) _notify();
     }
   }
 
-  void cancelDownload() => _downloadCancellation?.cancel();
+  void cancelDownload() {
+    if (_disposed) return;
+    if (_preparingDownload) {
+      ++_lifecycleGeneration;
+      _preparingDownload = false;
+      progress = null;
+      state = isInstalled(selectedPack)
+          ? VoiceModelState.ready
+          : VoiceModelState.required;
+      _notify();
+      return;
+    }
+    _downloadCancellation?.cancel();
+  }
 
   Future<void> deletePack(VoiceModelPack pack) async {
     if (_disposed ||
@@ -278,7 +309,9 @@ class VoiceModelManager extends ChangeNotifier {
         state == VoiceModelState.loading) {
       return;
     }
+    final generation = ++_lifecycleGeneration;
     await downloader.deletePack(root, pack);
+    if (!_isCurrent(generation)) return;
     _installedPackIDs.remove(pack.id);
     if (selectedPack.id == pack.id) state = VoiceModelState.required;
     _notify();
@@ -308,6 +341,8 @@ class VoiceModelManager extends ChangeNotifier {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
+    ++_lifecycleGeneration;
+    _preparingDownload = false;
     _downloadCancellation?.cancel();
     downloader.http.close();
     super.dispose();
@@ -316,4 +351,7 @@ class VoiceModelManager extends ChangeNotifier {
   void _notify() {
     if (!_disposed) notifyListeners();
   }
+
+  bool _isCurrent(int generation) =>
+      !_disposed && generation == _lifecycleGeneration;
 }
