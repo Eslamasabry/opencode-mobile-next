@@ -17,6 +17,8 @@ class ShareIntent {
   final ValueNotifier<String?> pending = ValueNotifier<String?>(null);
 
   bool _started = false;
+  bool _disposed = false;
+  int _acceptGeneration = 0;
 
   static bool get supported =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
@@ -24,14 +26,21 @@ class ShareIntent {
   /// Registers for shares delivered while the app is running and drains the
   /// share that may have launched it. Safe to call once; later calls no-op.
   Future<void> start() async {
-    if (_started || !supported) return;
+    if (_started || _disposed || !supported) return;
     _started = true;
     _channel.setMethodCallHandler((call) async {
-      if (call.method == 'shared') _accept(call.arguments);
+      if (!_disposed && call.method == 'shared') _accept(call.arguments);
       return null;
     });
+    final consumeGeneration = _acceptGeneration;
     try {
-      _accept(await _channel.invokeMethod<String>('consumeSharedText'));
+      final value = await _channel.invokeMethod<String>('consumeSharedText');
+      // A live share can arrive while the cold-start consume is in flight.
+      // Keep that newer value instead of allowing the stale cold-start value
+      // to replace it.
+      if (!_disposed && consumeGeneration == _acceptGeneration) {
+        _accept(value);
+      }
     } on MissingPluginException {
       // Tests and desktop hosts have no channel implementation.
     } on PlatformException {
@@ -40,17 +49,25 @@ class ShareIntent {
   }
 
   void _accept(Object? value) {
+    if (_disposed) return;
     final text = value is String ? value.trim() : '';
     if (text.isEmpty) return;
+    _acceptGeneration++;
     pending.value = text;
   }
 
   /// Takes the pending text, leaving nothing behind.
   String? take() {
+    if (_disposed) return null;
     final text = pending.value;
     pending.value = null;
     return text;
   }
 
-  void dispose() => pending.dispose();
+  void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+    if (_started) _channel.setMethodCallHandler(null);
+    pending.dispose();
+  }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -69,4 +71,141 @@ void main() {
     expect(called, isFalse);
     expect(share.pending.value, isNull);
   });
+
+  test('a newer live share wins over a pending cold-start consume', () async {
+    final consumed = Completer<String?>();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          if (call.method == 'consumeSharedText') return consumed.future;
+          return null;
+        });
+    final share = ShareIntent(channel: channel);
+    addTearDown(share.dispose);
+    final start = share.start();
+    await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .handlePlatformMessage(
+          channel.name,
+          channel.codec.encodeMethodCall(
+            const MethodCall('shared', 'newer warm share'),
+          ),
+          (_) {},
+        );
+    consumed.complete('stale cold-start share');
+    await start;
+
+    expect(share.pending.value, 'newer warm share');
+    expect(share.take(), 'newer warm share');
+  });
+
+  test(
+    'a warm share taken before cold-start completion stays consumed',
+    () async {
+      final consumed = Completer<String?>();
+      final consumeRequested = Completer<void>();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            if (call.method == 'consumeSharedText') {
+              consumeRequested.complete();
+              return consumed.future;
+            }
+            return null;
+          });
+      final share = ShareIntent(channel: channel);
+      addTearDown(share.dispose);
+      final start = share.start();
+      await consumeRequested.future;
+      await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .handlePlatformMessage(
+            channel.name,
+            channel.codec.encodeMethodCall(
+              const MethodCall('shared', 'warm share'),
+            ),
+            (_) {},
+          );
+      expect(share.take(), 'warm share');
+
+      consumed.complete('stale cold-start share');
+      await start;
+
+      expect(share.pending.value, isNull);
+    },
+  );
+
+  test(
+    'dispose while cold-start consume is pending ignores its completion',
+    () async {
+      final consumed = Completer<String?>();
+      final consumeRequested = Completer<void>();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            if (call.method == 'consumeSharedText') {
+              consumeRequested.complete();
+              return consumed.future;
+            }
+            return null;
+          });
+      final share = ShareIntent(channel: channel);
+      addTearDown(share.dispose);
+      final start = share.start();
+      await consumeRequested.future;
+      var notifications = 0;
+      share.pending.addListener(() => notifications++);
+      share.dispose();
+
+      consumed.complete('after dispose');
+      await start;
+
+      expect(notifications, 0);
+      expect(share.take(), isNull);
+    },
+  );
+
+  test(
+    'disposing a never-started receiver preserves an active receiver',
+    () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async => null);
+      final active = ShareIntent(channel: channel);
+      final neverStarted = ShareIntent(channel: channel);
+      addTearDown(active.dispose);
+      addTearDown(neverStarted.dispose);
+      await active.start();
+      neverStarted.dispose();
+
+      await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .handlePlatformMessage(
+            channel.name,
+            channel.codec.encodeMethodCall(
+              const MethodCall('shared', 'still active'),
+            ),
+            (_) {},
+          );
+
+      expect(active.pending.value, 'still active');
+    },
+  );
+
+  test(
+    'dispose unregisters the channel and blocks notifier callbacks',
+    () async {
+      final share = ShareIntent(channel: channel);
+      addTearDown(share.dispose);
+      await share.start();
+      var notifications = 0;
+      share.pending.addListener(() => notifications++);
+      share.dispose();
+
+      await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .handlePlatformMessage(
+            channel.name,
+            channel.codec.encodeMethodCall(
+              const MethodCall('shared', 'after dispose'),
+            ),
+            (_) {},
+          );
+
+      expect(notifications, 0);
+      expect(share.take(), isNull);
+    },
+  );
 }
