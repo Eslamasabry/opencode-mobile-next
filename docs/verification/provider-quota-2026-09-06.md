@@ -1,6 +1,7 @@
 # Remaining usage implementation — 2026-09-06
 
-Working-tree implementation based on `db79069`; no feature commit, deployment,
+Checkpoints A/B were implemented from `db79069` and committed in `84e1e0f`.
+Checkpoint C is the follow-up working tree. No collector deployment,
 provider-account query, native build or release was performed by this work.
 
 ## Checkpoint A: Codex collector and screen
@@ -71,6 +72,66 @@ not a claim of a second clean monolithic full-suite invocation.
 At the user's direction, broad tests are now deferred while development
 continues. Preserve the full-run/focused-rerun distinction. No additional
 provider account or native deployment was exercised.
+
+## Checkpoint C: supported collection boundary and iOS preparation
+
+- Current OpenCode does not bundle Claude Pro/Max subscription sign-in, and
+  historical OAuth-file schemas are not evidence of supported/permitted token
+  reuse. App and collector entry points now make Claude unavailable before any
+  Claude credential read or provider request. Pure historical parsers remain.
+- Retired Claude settings are ignored with a fixed warning instead of preventing
+  a valid Codex deployment from starting. The CLI no longer constructs a Claude
+  file-reader adapter. Mixed-configuration regression fixtures stay synthetic.
+- Added the Flutter 3.47.2 iOS runner, Keychain entitlements, local-network
+  purpose string, opaque project icons and unsigned simulator CI source. Package
+  versions and application bootstrap were preserved. Native builds require
+  macOS/Xcode; no signing or Apple-account operation was performed.
+- Read-only platform, state/security and accessibility reviews were completed
+  against `84e1e0f` plus this working tree. The lead retained all write ownership.
+  The platform review found no source-level blocker, not proof of native launch.
+  Accepted findings preserve Codex startup with retired options, update the
+  desktop storage-copy assertion, and cover unavailable-Claude/iOS copy at
+  narrow width and large text.
+- The revised Node synthetic collector suite passed **36 checks**. Prior
+  Claude HTTP/cache cases became pure mapping and zero-I/O unsupported tests;
+  this is intentional removal of unsupported behavior, not live validation.
+- Read-only delivery review caught omitted iOS CI inputs: the local SDK path
+  dependency and bundled policy/license/update assets are now included in both
+  trigger filters. Action pins match existing repository CI; remote revisions
+  and native execution were not independently verified.
+
+### Verification before continuing E5 development
+
+- The initial focused Flutter batch reported 115 passes, six failures and one
+  opt-in capture skip. It exposed a real About tab overflow at 2.5x, plus new
+  test assumptions about merged semantics and tall text. The tab layout and
+  assertions were corrected; the four iOS-copy and two Claude-layout cases
+  passed their bounded reruns. A deprecated matcher was replaced without an
+  analyzer ignore. Existing About/text-scale/localization checks then passed
+  **17 tests**, and `flutter analyze --no-pub` reported **no issues**.
+- One full `flutter test --no-pub --concurrency=1 --reporter expanded` invocation
+  reached **1,788 passes and two skips**, then hit the shell's 40-minute limit
+  while loading `prompt_photos_test.dart`. SIGTERM/cleanup errors followed;
+  there was no earlier runner-reported assertion failure. This invocation
+  **did not complete and is not a full-suite pass**.
+- File-level reconciliation found 188 test files, 183 completed, and five
+  uncompleted: `prompt_photos_test.dart`, `ios_remote_platform_gating_test.dart`,
+  `ios_runner_contract_test.dart`, `provider_quota_test.dart`, and
+  `session_pins_test.dart`. The skips were opt-in context/quota preview captures.
+- At the user's direction, no continuation or new broad run was started.
+  Development resumed with E5. This evidence belongs to the pre-E5 snapshot;
+  it must not be presented as verification of subsequent storage changes.
+
+### Delivery follow-ups, outside this product slice
+
+The bundled privacy policy requires a new public sideload baseline under the
+repository's release policy. The review found that `scripts/release.sh` does
+not currently block privacy-only asset diffs from its patch preflight; add a
+mocked contract before any future approved patch decision. It also flagged the
+pre-existing Android tag workflow's CI-APK attachment/replacement path instead
+of exact Shorebird-baseline attachment. Resolve artifact provenance before an
+approved release. No release script/workflow, version, tag or signing identity
+was changed as part of this iOS/quota correction.
 
 ## Remaining external gates
 

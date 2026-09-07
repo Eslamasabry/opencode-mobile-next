@@ -24,8 +24,11 @@ loopback addresses used by a server running on the same device.
 The app stores server profile metadata, interface preferences, cached server
 state, downloaded voice models, unsent drafts and photos awaiting recovery, and
 prompts queued while offline. Ordinary draft and pending-photo payloads use
-app-private files; their metadata uses preferences. A queued or stashed prompt
-can include an attachment encoded into preferences. These local stores are not
+app-private files; their metadata uses preferences. New stash attachment payloads
+also use a separate app-private file store. Older inline stash payloads migrate
+when Saved prompts is opened; failed migrations retain their original data.
+Queued prompts and unmigrated legacy stashes can still include attachments
+encoded into preferences. These local stores are not
 encrypted separately from the Android app sandbox. Queue entries are bounded by
 age, count, and total size. Server passwords are stored with Android secure
 storage. Android backup is disabled for this app.
@@ -42,30 +45,52 @@ server or AI provider must be deleted through that service.
 
 Remaining usage is a separately installed server extension, not a built-in
 OpenCode endpoint. On each screen visit, the app asks you to confirm that you
-installed or trust the collector before it requests the selected provider's
-fixed route (`/ocmn/quota/v1` for Codex or `/ocmn/quota/v1/claude` for Claude)
+installed or trust the collector before it requests the Codex
+fixed route (`/ocmn/quota/v1`)
 at your saved server's exact origin using that profile's server sign-in. It never
 forwards that sign-in to a different origin or follows a redirect.
 
 The operator must authenticate the proxy route and replace the client's
 credentials with a dedicated collector-only read token before forwarding to
 the private collector. If explicitly configured by its operator, the optional
-collector reads one selected OAuth credential file on the server and contacts
-the provider's fixed usage endpoint. Provider tokens are not sent to the app,
+collector reads one selected Codex OAuth credential file on the server and
+contacts the provider's fixed usage endpoint. Provider tokens are not sent to the app,
 refreshed by the collector, or written to a new credential store.
 
 The app displays only normalized core account windows, plan information when
-reported, reset times and freshness. Claude usage responses do not identify the
-account independently; that view is explicitly bound to the operator-selected
-login and its opaque reference changes when the login token changes. The app
-does not receive that token or an inferred account email.
+reported, reset times and freshness. It does not receive provider tokens or an
+inferred account email. Claude subscription collection is unavailable pending
+a supported, permitted integration: choosing Claude sends no quota request.
+The collector's legacy Claude route returns unsupported without reading Claude
+credentials or contacting that provider; obsolete Claude settings are ignored.
 
 Quota consent and snapshots are kept only in memory for the screen visit;
 there is no background polling, quota notification, or quota upload to this
 project's developer. Changing provider clears the old snapshot and requires
-consent for the new route. Invalid or missing
+fresh consent before another supported read. Invalid or missing
 data is not converted into an estimated allowance. The provider's own privacy
 and access policies apply, and its internal usage endpoint may change.
+
+## iOS source preparation
+
+The experimental iOS runner is for remote server control only. Its source uses
+the platform secure-storage plugin with Keychain entitlements for server
+passwords and declares local-network access to reach a server you select. It
+does not enable Android's Termux setup, background service, notifications,
+camera, local dictation or incoming-share bridges. Native Keychain, plugin and
+privacy-manifest validation remain prerequisites for iOS distribution; a source
+scaffold or simulator artifact is not a released iPhone app.
+
+## Pending provider sign-in recovery
+
+For supported servers, the app retains bounded sign-in recovery metadata per
+server profile: attempt and integration IDs, method kind, mode, original origin
+and project/workspace location, and recovery expiry. It does not save the browser
+authorization URL, one-time code, submitted answers or provider tokens. Resume,
+check, cancel and local forgetting are explicit actions. Forgetting a local
+record or deleting a profile does not cancel a remote sign-in or revoke its
+credentials. Failed storage writes are disclosed because they cannot guarantee
+recovery after restarting the app.
 
 ## App diagnostics
 
@@ -87,6 +112,17 @@ is transcribed locally on the device with a downloaded speech model. The app
 does not upload the recording, and voice input never sends a prompt
 automatically. Transcribed text is sent only if you choose to submit it as part
 of a prompt.
+
+## Optional read-aloud
+
+On Android, Read reply prose requires confirmation before accessing the system
+speech engine. Loaded assistant prose is sent to that separately installed
+engine; code blocks and tool details are omitted. Only voices marked offline
+are offered, but that metadata is not a guarantee of network isolation: the
+engine's own privacy practices apply. The app does not save speech input or
+automatically download voices. Playback is foreground-only, can be stopped
+explicitly, and is interrupted on backgrounding, chat coverage, scope changes
+and audio-focus loss. People nearby may hear the audio.
 
 ## Files, terminal access, and Termux
 
