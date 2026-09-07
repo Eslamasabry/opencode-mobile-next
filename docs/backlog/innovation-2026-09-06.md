@@ -447,7 +447,7 @@ copy, and physics — not rendering layers or gesture-only affordances**
 (landscape keyboard/list code is where their live bugs concentrate, and
 hidden-gesture navigation violates our standing rule).
 
-| Steal | Lane | Size |
+| Pattern | Lane | Size |
 |---|---|---|
 | Anchor-maintaining scroll + IME-resize reading physics for the transcript | chat polish (with E2) | M |
 | Settled/pending markdown split (memoize completed blocks, re-parse tail) | transcript perf | M |
@@ -464,7 +464,7 @@ hidden-gesture navigation violates our standing rule).
 
 Rejected on evidence: edge-swipe-only navigation, duplex-voice transport,
 share-link relay machinery, in-app code editing surfaces, sub-48dp targets,
-color-only status. Full named briefs live in the private research notes.
+color-only status. This inventory records generalized interaction patterns.
 
 This rejects blind transplantation, not whole future workstreams. Before
 absorbing a pattern: check current source/tests (queue/steer, tool grouping,

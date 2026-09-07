@@ -44,7 +44,7 @@ distinguishes focused passing checks from its interrupted full-suite gate.
 | F7-S1/S2 | Immediate setup progress, existing-install choice, flat terminal, process/version/storage status, opt-in foreground recovery with three persisted attempts and Stop/deletion cancellation | Existing-server access before Termux prerequisites is drafted; genuine non-proot auth/tool/SSE/rollback proof and native device verification remain; no native-musl migration claim |
 | F8 | Route-owned demo gateway and memory store through production chat/events/permissions/diff; scoped escape controls | Final first-run device comprehension check |
 | F9 | Secure connection guidance and existing HTTPS/loopback policy | Per-service authenticated SSE deployment checks, optional discovery/assistance, separately approved phone-server exposure design |
-| F10 | Protocol research inventory | Separate pinned Codex/pi/ACP transport/auth/reconnect proofs, then one usable backend; no speculative adapter is enabled |
+| F10 | Experimental Codex connection/editor/controller and text-chat journey implemented; isolated real CLI authentication/init proof and synthetic Android journey exercised | Final checkpoint: [Codex verification](../verification/codex-connection-2026-09-07.md). Live provider use and physical-device behavior remain unverified; other adapters still require their own proof |
 
 The open source features above remain backlog, not external blockers or silently
 completed work. Native-host, account, participant and publication prerequisites

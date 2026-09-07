@@ -144,3 +144,59 @@ surfaces remain major follow-on candidates. The smaller replenishment pool above
 is secondary unless a defect blocks the active journey. Feasibility must be
 confirmed before enabling a backend; if its prerequisite fails, record the exact
 blocker and select another runnable major journey.
+
+
+## Codex implementation boundary
+
+Base: `0159664a4393089e6ec11156cfce197eb5d0759c`, verified equal to
+`mobile-next/dev` after Batch 3. The isolated real CLI 0.153.4 proof passed:
+missing/wrong bearer returned 401; correct bearer returned 101 and completed
+initialize plus an empty scoped thread list. No account or model call occurred.
+See [protocol evidence](../verification/codex-connection-2026-09-07.md).
+
+Frozen profile contract: `ServerBackend.openCode/codex`, with separate runtime
+`codexToken`, secure `oc.codexToken.<id>`, metadata `codexDirectory`, and
+`requiresCodexTokenReentry`. Old profiles retain OpenCode behavior. Existing
+profile backend is fixed in the editor. Codex is not an HTTP probe flavor.
+
+| Owner | Exclusive implementation fence | Acceptance |
+|---|---|---|
+| Root | Controller, domain capability definitions, localization, final integration | Correct backend and non-null folder through connect/reconnect; no HTTP fallback or automatic queued Codex replay |
+| Luna 01 | Codex gateway and existing gateway tests | Scoped mutations, honest auth errors, supported capability set |
+| Luna 02 | Profile store and two profile test files | Token isolation, compatible persistence, reentry and deletion |
+| Luna 03 | New controller integration tests; read-only controller review | Connect, token failure, folder preservation, retired transport disposal |
+| Luna 04 | Project/manage-project screens and new tests | Current folder context without unsupported management actions |
+| Luna 05 | Server editor and new flow tests | Add, test, save/connect, failure retention, token reentry |
+| Luna 06 | Temporary synthetic protocol fixture; profile monitor and existing tests | Complete scripted conversation, no unsupported background attention claim |
+| Luna 07 | Codex connection guide and protocol proof document | Reproducible supported setup and explicit evidence limits |
+| Luna 08 | Probe service/tests, then exclusive entire chat library and new tests | Text-only composer, preserved offline drafts, supported actions only |
+| Luna 09 | Home/workspace/library and new tests | Stable navigation IDs, useful current-folder context, no unsupported routes |
+| Luna 10 | New protocol journey test; auth banner and new test | Positive stream/approval/cancel/resume journey and actionable token rejection |
+
+Root's first review rejected a navigation gate that hid the configured-folder
+context, recovery notice and pinned-session heading together with unsupported
+project management. Those surfaces must remain understandable independently.
+Root also corrected a probe that ignored an unhealthy health result. Initial
+focused checks found an omitted domain import, test teardown timers and a gated
+fixture that discarded its own completion handle; failed logs remain retained.
+
+The protocol has no pending-approval listing RPC. After reconnect, authoritative
+history can be read but lost approval requests cannot be represented as recovered.
+The product must disclose that limit and direct the user to their computer for
+such requests. Synthetic streaming/approval evidence is not a live-model result.
+
+
+## Machine-transfer checkpoint
+
+At the maintainer's request, new task replenishment is stopped and all worker
+edits are frozen. Codex source checkpoint `499c0e1a0aaaddd6edd9b1bd899b79133a687f87` includes
+all accepted implementations and root corrections. The complete serial run
+covered 223 files (2,186 passed, three skipped, six failed); the six failures
+were corrected and their affected checks passed. Final analyzer, 47 SDK tests,
+format/diff checks, debug build, saved startup and targeted Android approval/
+cancellation checks pass. A corrected-source full rerun and complete final APK
+journey remain pending. See [handover](../../HANDOVER.md) and
+[verification](../verification/codex-connection-2026-09-07.md).
+
+Transfer contains generalized planning and sanitized synthetic evidence.
+Generated artifacts and original conversation captures are excluded.

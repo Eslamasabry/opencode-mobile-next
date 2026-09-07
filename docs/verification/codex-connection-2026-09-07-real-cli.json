@@ -1,0 +1,19 @@
+{
+  "correct_auth_status": 101,
+  "initialize_reply": "result",
+  "initialize_result_keys": [
+    "codexHome",
+    "platformFamily",
+    "platformOs",
+    "userAgent"
+  ],
+  "missing_auth_status": 401,
+  "thread_list_data_count": 0,
+  "thread_list_reply": "result",
+  "thread_list_result_keys": [
+    "backwardsCursor",
+    "data",
+    "nextCursor"
+  ],
+  "wrong_auth_status": 401
+}
