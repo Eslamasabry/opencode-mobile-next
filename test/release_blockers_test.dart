@@ -1,7 +1,9 @@
 import 'support/complete_message_history.dart';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
@@ -85,6 +87,10 @@ class _ReleaseRepository implements ProductRepository {
 
 class _DestinationReleaseRepository extends _ReleaseRepository {
   @override
+  Future<Session> getSessionDetails(String id) async =>
+      Session(id: id, projectID: 'project-1', directory: '/work/acme');
+
+  @override
   Future<List<WorkspaceProject>> listProjects() async => const [
     WorkspaceProject(
       id: 'project-1',
@@ -123,10 +129,30 @@ class _DestinationReleaseRepository extends _ReleaseRepository {
 Future<ConnectionController> _controller({
   _ReleaseApi? api,
   ProductRepository? repository,
+  bool savedProfile = false,
 }) async {
-  SharedPreferences.setMockInitialValues({});
+  SharedPreferences.setMockInitialValues({
+    if (savedProfile) ...{
+      'oc.profiles': jsonEncode([
+        {'id': 'profile', 'name': 'Synthetic', 'baseUrl': 'http://localhost'},
+      ]),
+      'oc.activeProfile': 'profile',
+    },
+  });
   final prefs = await SharedPreferences.getInstance();
-  return ConnectionController(ProfileStore(prefs: prefs))
+  final store = ProfileStore(prefs: prefs);
+  if (savedProfile) {
+    // Navigation guards require the saved profile whose location they protect.
+    const secure = MethodChannel(
+      'plugins.it_nomads.com/flutter_secure_storage',
+    );
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(secure, (_) async => null);
+    addTearDown(() => messenger.setMockMethodCallHandler(secure, null));
+    await store.load();
+  }
+  return ConnectionController(store)
     ..api = api ?? _ReleaseApi()
     ..repository = repository ?? _ReleaseRepository()
     ..status = StreamStatus.connected;
@@ -616,6 +642,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     final controller = await _controller(
       repository: _DestinationReleaseRepository(),
+      savedProfile: true,
     );
     controller
       ..directory = '/work/acme'

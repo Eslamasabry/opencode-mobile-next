@@ -1,7 +1,9 @@
 import 'support/complete_message_history.dart';
+import 'dart:convert';
 import 'dart:ui' show Tristate;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
@@ -24,6 +26,9 @@ class _VoiceChatApi extends OpenCodeApi with CompleteMessageHistory {
   int promptCalls = 0;
 
   @override
+  Future<Session> session(String id) async => Session(id: id);
+
+  @override
   Future<List<MessageWithParts>> messages(String id) async => [];
 
   @override
@@ -42,9 +47,18 @@ class _VoiceChatApi extends OpenCodeApi with CompleteMessageHistory {
 }
 
 Future<ConnectionController> _connection(_VoiceChatApi api) async {
-  SharedPreferences.setMockInitialValues({});
+  SharedPreferences.setMockInitialValues({
+    'oc.profiles': jsonEncode([
+      {'id': 'profile-1', 'name': 'Synthetic', 'baseUrl': 'http://localhost'},
+    ]),
+    'oc.activeProfile': 'profile-1',
+  });
   final prefs = await SharedPreferences.getInstance();
-  return ConnectionController(ProfileStore(prefs: prefs))..api = api;
+  final store = ProfileStore(prefs: prefs);
+  await store.load();
+  final connection = ConnectionController(store)..api = api;
+  connection.sessionsById['session-1'] = Session(id: 'session-1');
+  return connection;
 }
 
 class _WidgetVoiceController extends VoiceComposerController {
@@ -121,7 +135,24 @@ Future<void> _openVoiceTool(WidgetTester tester) async {
 }
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  final binding = TestWidgetsFlutterBinding.ensureInitialized();
+  const secureStorage = MethodChannel(
+    'plugins.it_nomads.com/flutter_secure_storage',
+  );
+
+  setUp(() {
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      secureStorage,
+      (_) async => null,
+    );
+  });
+
+  tearDown(() {
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      secureStorage,
+      null,
+    );
+  });
 
   testWidgets(
     'voice draft preserves typed composer text and never auto-sends',
@@ -350,13 +381,16 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
+    expect(voice.controller.state, VoiceComposerState.listening);
+    expect(find.byKey(const Key('stop-voice-recording')), findsOneWidget);
+    final cancellationsBeforePause = voice.recorder.cancelCalls;
     final pausing = voice.controller.handleLifecyclePause();
     await tester.pump(const Duration(seconds: 1));
     await pausing;
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump();
 
-    expect(voice.recorder.cancelCalls, greaterThan(0));
+    expect(voice.recorder.cancelCalls, greaterThan(cancellationsBeforePause));
     expect(voice.controller.state, VoiceComposerState.idle);
   });
 

@@ -246,7 +246,11 @@ void main() {
             bootstrapProvider.overrideWithValue(AppBootstrap(store)),
             connProvider.overrideWithValue(controller),
           ],
-          child: const MaterialApp(home: TermuxSetupScreen()),
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: TermuxSetupScreen(),
+          ),
         ),
       );
       await tester.pump();

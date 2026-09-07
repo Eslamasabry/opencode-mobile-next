@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
@@ -61,13 +64,27 @@ class _RelationsController extends ConnectionController {
   _RelationsController(super.store);
 
   @override
-  Future<ServerOperationsGateway?> prepareActionRepository() async => repository;
+  Future<ServerOperationsGateway?> prepareActionRepository() async =>
+      repository;
 }
 
 Future<_RelationsController> _controller() async {
-  SharedPreferences.setMockInitialValues({});
+  SharedPreferences.setMockInitialValues({
+    'oc.profiles': jsonEncode([
+      {'id': 'profile', 'name': 'Synthetic', 'baseUrl': 'http://localhost'},
+    ]),
+    'oc.activeProfile': 'profile',
+  });
   final preferences = await SharedPreferences.getInstance();
-  return _RelationsController(ProfileStore(prefs: preferences))
+  final store = ProfileStore(prefs: preferences);
+  // Navigation guards require the saved profile whose location they protect.
+  const secure = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+  final messenger =
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+  messenger.setMockMethodCallHandler(secure, (_) async => null);
+  addTearDown(() => messenger.setMockMethodCallHandler(secure, null));
+  await store.load();
+  return _RelationsController(store)
     ..repository = _RelationsRepository()
     ..directory = '/work/app'
     ..workspace = 'phone'

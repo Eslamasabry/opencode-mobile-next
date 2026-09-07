@@ -82,10 +82,7 @@ void main() {
       'https://box.tail1234.ts.net',
     );
     // Already-schemed and implausible values pass through untouched.
-    expect(
-      normalizeServerProfileUrl('https://host:4096'),
-      'https://host:4096',
-    );
+    expect(normalizeServerProfileUrl('https://host:4096'), 'https://host:4096');
     expect(normalizeServerProfileUrl('not a url'), 'not a url');
     expect(normalizeServerProfileUrl(''), '');
   });
@@ -129,20 +126,26 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byKey(const ValueKey('welcome-guide-card')));
+    final guideCard = find.byKey(const ValueKey('welcome-guide-card'));
+    await Scrollable.ensureVisible(tester.element(guideCard), alignment: .5);
+    await tester.pumpAndSettle();
+    expect(guideCard.hitTestable(), findsOneWidget);
+    await tester.tap(guideCard);
     await tester.pumpAndSettle();
     expect(find.text('guide-route'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('welcome-termux-card')));
+    final termuxCard = find.byKey(const ValueKey('welcome-termux-card'));
+    await Scrollable.ensureVisible(tester.element(termuxCard), alignment: .5);
+    await tester.pumpAndSettle();
+    expect(termuxCard.hitTestable(), findsOneWidget);
+    await tester.tap(termuxCard);
     await tester.pumpAndSettle();
     expect(find.text('termux-route'), findsOneWidget);
   });
 
-  testWidgets('a saved profile keeps the ordinary server list', (
-    tester,
-  ) async {
+  testWidgets('a saved profile keeps the ordinary server list', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     final store = _SeededStore(
@@ -286,62 +289,61 @@ void main() {
     expect(find.byKey(const ValueKey('server-test-failure')), findsNothing);
   });
 
-  testWidgets(
-    'timeout and refused verdicts point at the host setup guide',
-    (tester) async {
-      final previous = serverProbe;
-      addTearDown(() => serverProbe = previous);
-      serverProbe = ({required baseUrl, username, password}) async =>
-          const ServerProbeResult.failure(
-            'The connection was refused. Is opencode serve running on that '
-            'host and port?',
-            suggestsMissingServer: true,
-          );
+  testWidgets('timeout and refused verdicts point at the host setup guide', (
+    tester,
+  ) async {
+    final previous = serverProbe;
+    addTearDown(() => serverProbe = previous);
+    serverProbe = ({required baseUrl, username, password}) async =>
+        const ServerProbeResult.failure(
+          'The connection was refused. Is opencode serve running on that '
+          'host and port?',
+          suggestsMissingServer: true,
+        );
 
-      final (store, controller) = await _state();
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(
-        _app(
-          store,
-          controller,
-          routes: {
-            '/guide': (_) => Scaffold(
-              appBar: AppBar(title: const Text('Guide')),
-              body: const Text('guide-route'),
-            ),
-          },
-        ),
-      );
-      await tester.tap(find.byKey(const ValueKey('welcome-connect-card')));
-      await tester.pumpAndSettle();
+    final (store, controller) = await _state();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      _app(
+        store,
+        controller,
+        routes: {
+          '/guide': (_) => Scaffold(
+            appBar: AppBar(title: const Text('Guide')),
+            body: const Text('guide-route'),
+          ),
+        },
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('welcome-connect-card')));
+    await tester.pumpAndSettle();
 
-      await tester.enterText(
-        find.byKey(const ValueKey('server-url-field')),
-        'https://box.example:4096',
-      );
-      await tester.pump();
-      await tester.scrollUntilVisible(
-        find.byKey(const ValueKey('test-server-connection')),
-        200,
-        scrollable: _editorList,
-      );
-      await tester.tap(find.byKey(const ValueKey('test-server-connection')));
-      await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('server-url-field')),
+      'https://box.example:4096',
+    );
+    await tester.pump();
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('test-server-connection')),
+      200,
+      scrollable: _editorList,
+    );
+    await tester.tap(find.byKey(const ValueKey('test-server-connection')));
+    await tester.pumpAndSettle();
 
-      expect(find.byKey(const ValueKey('server-test-failure')), findsOneWidget);
-      expect(find.textContaining('No server there yet?'), findsOneWidget);
+    expect(find.byKey(const ValueKey('server-test-failure')), findsOneWidget);
+    expect(find.textContaining('No server there yet?'), findsOneWidget);
 
-      await tester.scrollUntilVisible(
-        find.byKey(const ValueKey('server-test-guide')),
-        200,
-        scrollable: _editorList,
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('server-test-guide')));
-      await tester.pumpAndSettle();
-      expect(find.text('guide-route'), findsOneWidget);
-    },
-  );
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('server-test-guide')),
+      200,
+      scrollable: _editorList,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('server-test-guide')));
+    await tester.pumpAndSettle();
+    expect(find.text('guide-route'), findsOneWidget);
+  });
 
   testWidgets('a DNS failure verdict stays about the address, not the server', (
     tester,
@@ -373,10 +375,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('server-test-failure')), findsOneWidget);
-    expect(
-      find.textContaining('Check the address spelling'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Check the address spelling'), findsOneWidget);
     expect(find.textContaining('No server there yet?'), findsNothing);
   });
 
