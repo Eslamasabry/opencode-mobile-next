@@ -1,0 +1,22 @@
+{
+  "warm_share_unsent": true,
+  "cold_share_unsent_after_launch_settled": true,
+  "draft_reopened": true,
+  "failed_refresh_kept_rows": true,
+  "retained_session_opened": true,
+  "prompt_posts_before": 1,
+  "prompt_posts_after": 1,
+  "harness_notes": [
+    "Waited for launch and 10s Flutter startup before UiAutomator cold capture",
+    "Matched titles using text or content-desc",
+    "Scrolled retained 11-row inventory to reveal refresh error"
+  ],
+  "activity_large_text_outer_scroll": true,
+  "activity_digest_empty_state_expanded": true,
+  "font_scale_reset": 1.0,
+  "runtime_error_log_empty": true,
+  "apk_sha256": "83ed8ce7c4868b697ccfe30ba5e2f1312a9d529fbb2e2037ba300a84afc4cf0c",
+  "version": "1.0.36+37",
+  "device": "Android 14 x86_64 emulator-5554",
+  "apk_type": "local debug, standard Flutter engine"
+}
