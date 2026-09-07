@@ -279,6 +279,53 @@ void main() {
   );
 
   test(
+    'failed pre-save reconciliation rejects publication and retry survives restart',
+    () async {
+      await shelf.stash('a', _prompt('saved'));
+      final original = await backend.onDisk(_key('a', 'saved'));
+      vault.failCollect = true;
+      await expectLater(shelf.stash('a', _prompt('new')), throwsStateError);
+      expect(await backend.onDisk(_key('a', 'new')), isNull);
+      expect(await backend.onDisk(_key('a', 'saved')), original);
+      expect(shelf.stashes('a').map((prompt) => prompt.id), ['saved']);
+      expect(
+        (await shelf.restoreAttachments(
+          'a',
+          'saved',
+          sameLocation: true,
+        )).attachments.single.url,
+        _data.url,
+      );
+
+      vault.failCollect = false;
+      await shelf.stash('a', _prompt('new'));
+      final restarted = PromptShelfStore.withAttachmentFiles(
+        prefs,
+        vault: _Vault(vault.root),
+      );
+      final recoveredIDs = restarted.stashes('a').map((prompt) => prompt.id);
+      expect(recoveredIDs, hasLength(2));
+      expect(recoveredIDs, containsAll(['new', 'saved']));
+      expect(
+        (await restarted.restoreAttachments(
+          'a',
+          'saved',
+          sameLocation: true,
+        )).attachments.single.url,
+        _data.url,
+      );
+      expect(
+        (await restarted.restoreAttachments(
+          'a',
+          'new',
+          sameLocation: true,
+        )).attachments.single.url,
+        _data.url,
+      );
+    },
+  );
+
+  test(
     'uncertain preference cache suppresses GC until a successful reload',
     () async {
       final original = jsonEncode(_prompt('legacy').toJson());

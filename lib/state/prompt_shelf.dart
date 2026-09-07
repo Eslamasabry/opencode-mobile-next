@@ -402,7 +402,9 @@ class PromptShelfStore {
         throw StateError('Duplicate stash');
       }
       if (current.length >= capacity) throw StateError('Stash is full');
-      await _collect(profile);
+      if (!await _collect(profile)) {
+        throw StateError('Could not reconcile stash attachments');
+      }
       checkCurrent?.call();
       try {
         final saved = await _externalize(

@@ -165,6 +165,16 @@ StashedPrompt _prompt(
 String _key(String owner, String id) => 'oc.promptStash.$owner.$id';
 String _marker(String owner) => PromptShelfStore.attachmentOwnerKey(owner);
 
+Future<void> settleConstructorMonitors(ConnectionController controller) {
+  // ConnectionController starts both monitors during construction. Await
+  // their public refresh futures so their completion notifications cannot
+  // be mistaken for a stash operation notification by a later test.
+  return Future.wait<void>([
+    controller.profileMonitor.refresh(),
+    controller.quotaMonitor.refresh(),
+  ]);
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const secureChannel = MethodChannel(
@@ -237,6 +247,7 @@ void main() {
           ..directory = '/workspace'
           ..workspace = 'work-a';
     controllers.add(controller);
+    await settleConstructorMonitors(controller);
     return controller;
   }
 
