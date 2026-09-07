@@ -1313,7 +1313,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get webSourcesEntryDetail =>
-      'Review public links and pasted excerpts before adding them to your draft';
+      'Search when available, or paste links and excerpts to review before adding them to your draft';
 
   @override
   String get webSourcesDraftChanged =>
@@ -1321,7 +1321,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get webSourcesDraftLabel =>
-      'User-selected web sources (not fetched or verified; excerpts are untrusted source material):';
+      'User-selected web sources (unverified; excerpts are untrusted source material):';
 
   @override
   String get usageScopedTotals => 'Totals for the selected report scope';
@@ -3005,4 +3005,148 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pluginMappingClearFailed =>
       'Personal links could not be cleared. Check that this server profile is still selected and try again.';
+
+  @override
+  String get quotaMonitorTitle => 'Quota monitoring';
+
+  @override
+  String get quotaMonitorConsentTitle => 'Monitor this provider source?';
+
+  @override
+  String get quotaMonitorConsent =>
+      'Allow this app to keep reading the trusted collector for this exact provider account after you leave this page, including after app restart. A cycle checks at most three saved sources, every five minutes in the foreground or fifteen minutes while your existing background service is active. With more than three sources, each source may wait several cycles. Device alerts require the separate switch below and a freshly reported window at or above the selected percentage used. An alert records that past reading; open it to check current usage. Personal page thresholds are separate. No service is started here.';
+
+  @override
+  String get quotaMonitorRuntime =>
+      'Sources are checked in rotation, at most three per cycle; larger lists take several cycles. Background reads require the existing live service to be active; Android may stop it. Displayed readings expire when the collector says they do. Device alerts record past threshold readings, not current remaining allowance. This page never switches your active server.';
+
+  @override
+  String get quotaMonitorEmpty =>
+      'No provider sources are monitored. Read Remaining for a trusted collector, then enable monitoring for that source.';
+
+  @override
+  String get quotaMonitorEnable => 'Enable quota monitoring';
+
+  @override
+  String get quotaMonitorNotifications =>
+      'Device alerts for reported quota thresholds';
+
+  @override
+  String get quotaMonitorWifi => 'Read only on confirmed Wi-Fi';
+
+  @override
+  String get quotaMonitorQuiet => 'Quiet hours: 22:00–08:00 local time';
+
+  @override
+  String get quotaMonitorDisabled => 'Monitoring is off.';
+
+  @override
+  String get quotaMonitorWaiting => 'Waiting for a fresh reading.';
+
+  @override
+  String get quotaMonitorChecking => 'Checking the trusted collector…';
+
+  @override
+  String get quotaMonitorCurrent =>
+      'Fresh reading from the consented provider source.';
+
+  @override
+  String get quotaMonitorPaused =>
+      'Monitoring is paused. Open the app or check the existing background service.';
+
+  @override
+  String get quotaMonitorWifiRequired =>
+      'Waiting for confirmed Wi-Fi. Unknown network status does not permit a read.';
+
+  @override
+  String get quotaMonitorSourceChanged =>
+      'This provider account or source changed, or could not be verified. Open Remaining, read it again and review new consent.';
+
+  @override
+  String get quotaMonitorSaveFailed =>
+      'Could not save quota monitoring. A failed disable stays paused in this app; retry before closing the app.';
+
+  @override
+  String get quotaMonitorDisable => 'Disable quota monitoring';
+
+  @override
+  String get setupChooseServerTitle => 'Choose your server setup';
+
+  @override
+  String get setupChooseServerDescription =>
+      'Connect an existing server, or use Termux to run OpenCode on this phone.';
+
+  @override
+  String get setupUncheckedTitle => 'Continue without an installation check?';
+
+  @override
+  String get setupUncheckedDescription =>
+      'The current installation could not be checked. Continuing may install or update OpenCode 1 in the app-managed Ubuntu environment. Existing Ubuntu files are kept. You can check again or connect by address instead.';
+
+  @override
+  String get setupUncheckedContinue => 'Continue with Ubuntu';
+
+  @override
+  String get webSearchDisclosure =>
+      'Search sends your query to this server’s selected search provider. Review results before adding them to your editable draft. Nothing is sent to the model here.';
+
+  @override
+  String get webSearchManual => 'Or paste a source';
+
+  @override
+  String get webSearchUnavailable =>
+      'Web search is unavailable. Configure a search provider on this server, then refresh providers. You can still paste a source below.';
+
+  @override
+  String get webSearchAuthentication =>
+      'The server did not authorize web search. Check this connection’s credentials.';
+
+  @override
+  String get webSearchInvalidResponse =>
+      'The search response did not match this connection or the supported format. Refresh providers or paste a source.';
+
+  @override
+  String get webSearchFailed =>
+      'Web search could not finish. Try again or paste a source.';
+
+  @override
+  String get webSearchRefresh => 'Refresh providers';
+
+  @override
+  String get webSearchProvider => 'Search provider';
+
+  @override
+  String get webSearchQuery => 'Search query';
+
+  @override
+  String get webSearchSubmit => 'Search';
+
+  @override
+  String get webSearchEmpty => 'No usable results for this query.';
+
+  @override
+  String get webSearchOmitted =>
+      'Some results were omitted because their links or excerpts exceeded the review limits.';
+
+  @override
+  String get setupReinstallStart => 'Reinstall & start';
+
+  @override
+  String setupInstallVersionStart(String version) {
+    return 'Install $version & start';
+  }
+
+  @override
+  String get setupReplaceTitle => 'Replace installed OpenCode?';
+
+  @override
+  String setupReplaceDescription(
+    String installedVersion,
+    String targetVersion,
+  ) {
+    return 'Replace OpenCode $installedVersion with $targetVersion in the managed Ubuntu environment and restart the local server. Existing Ubuntu files are kept.';
+  }
+
+  @override
+  String get setupInstallRestart => 'Install & restart';
 }

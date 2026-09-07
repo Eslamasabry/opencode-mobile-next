@@ -259,6 +259,8 @@ class BackgroundConnectionService : Service() {
             monitorToken: String = ""
         ): Boolean {
             if (sessionID.isBlank() || key.isBlank()) return false
+            if (kind == "quota" && (sessionID != "quota" || profileID.isBlank() ||
+                !monitorToken.matches(Regex("^[a-f0-9]{64}$")))) return false
             val manager = context.getSystemService(NotificationManager::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
                 !manager.areNotificationsEnabled()
@@ -267,6 +269,13 @@ class BackgroundConnectionService : Service() {
             }
 
             val content = when (kind) {
+                "quota" -> CodingAlertContent(
+                    channelID = STATUS_CHANNEL_ID,
+                    title = "Provider usage reached your threshold",
+                    text = "Open to check current usage.",
+                    category = Notification.CATEGORY_STATUS,
+                    priority = Notification.PRIORITY_DEFAULT
+                )
                 "permission" -> CodingAlertContent(
                     channelID = ACTION_CHANNEL_ID,
                     title = "OpenCode needs permission",
@@ -332,7 +341,7 @@ class BackgroundConnectionService : Service() {
                 .setContentText(content.text)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
-                .setOnlyAlertOnce(true)
+                .setOnlyAlertOnce(kind != "quota")
                 .setCategory(content.category)
                 .setVisibility(Notification.VISIBILITY_PRIVATE)
                 .setGroup(CODING_ALERT_GROUP)

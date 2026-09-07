@@ -9,6 +9,7 @@ import '../../state/connection.dart';
 import '../../state/provider_quota_overview.dart';
 import '../../state/provider_quota_budgets.dart';
 import '../app_theme.dart';
+import 'quota_monitor_screen.dart';
 
 class ProviderQuotaScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -41,14 +42,18 @@ class _ProviderQuotaScreenState extends State<ProviderQuotaScreen> {
         oldWidget.overview == widget.overview) {
       return;
     }
-    if (oldWidget.overview == null) _overview.dispose();
+    if (oldWidget.overview == null) {
+      _overview.dispose();
+    }
     _overview = widget.overview ?? ProviderQuotaOverview(widget.controller);
     _trusted = false;
   }
 
   @override
   void dispose() {
-    if (widget.overview == null) _overview.dispose();
+    if (widget.overview == null) {
+      _overview.dispose();
+    }
     super.dispose();
   }
 
@@ -81,6 +86,111 @@ class _ProviderQuotaScreenState extends State<ProviderQuotaScreen> {
         ProviderQuotaStatus.invalidResponse => l10n.quotaInvalidResponse,
       };
 
+  Future<void> _enroll() async {
+    final snapshot = _overview.snapshot;
+    final profileID = widget.controller.profile?.id;
+    if (snapshot == null ||
+        profileID == null ||
+        _overview.snapshotIsStale ||
+        _overview.detached) {
+      return;
+    }
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    var notifications = false, wifiOnly = false, quiet = false;
+    var threshold = 100.0;
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, update) => AlertDialog(
+          title: Text(l10n.quotaMonitorConsentTitle),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l10n.quotaMonitorConsent),
+                Text(_source(l10n)),
+                DropdownButton<double>(
+                  value: threshold,
+                  isExpanded: true,
+                  items: [
+                    for (final value in [50.0, 75.0, 90.0, 100.0])
+                      DropdownMenuItem(
+                        value: value,
+                        child: Text(
+                          l10n.quotaBudgetPercent(value.toInt().toString()),
+                        ),
+                      ),
+                  ],
+                  onChanged: (value) => update(() => threshold = value ?? 100),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.quotaMonitorNotifications),
+                  value: notifications,
+                  onChanged: (value) => update(() => notifications = value),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.quotaMonitorWifi),
+                  value: wifiOnly,
+                  onChanged: (value) => update(() => wifiOnly = value),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.quotaMonitorQuiet),
+                  value: quiet,
+                  onChanged: (value) => update(() => quiet = value),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.workCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.quotaMonitorEnable),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || accepted != true) {
+      return;
+    }
+    final valid =
+        !_overview.detached &&
+        !_overview.snapshotIsStale &&
+        identical(snapshot, _overview.snapshot);
+    final saved =
+        valid &&
+        await widget.controller.quotaMonitor.enroll(
+          profileID,
+          snapshot,
+          notifications: notifications,
+          threshold: threshold,
+          wifiOnly: wifiOnly,
+          quietStart: quiet ? 22 * 60 : null,
+          quietEnd: quiet ? 8 * 60 : null,
+        );
+    if (!mounted) {
+      return;
+    }
+    if (!saved) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.quotaMonitorSaveFailed)));
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => QuotaMonitorScreen(controller: widget.controller),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: _overview,
@@ -94,6 +204,16 @@ class _ProviderQuotaScreenState extends State<ProviderQuotaScreen> {
         appBar: AppBar(
           title: Text(l10n.quotaTitle),
           actions: [
+            IconButton(
+              tooltip: l10n.quotaMonitorTitle,
+              icon: const Icon(Icons.notifications_none_rounded),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      QuotaMonitorScreen(controller: widget.controller),
+                ),
+              ),
+            ),
             if (_overview.consented)
               IconButton(
                 tooltip: l10n.quotaRefresh,
@@ -131,7 +251,9 @@ class _ProviderQuotaScreenState extends State<ProviderQuotaScreen> {
                             }),
                             selected: _overview.provider == provider,
                             onSelected: (_) {
-                              if (_overview.provider == provider) return;
+                              if (_overview.provider == provider) {
+                                return;
+                              }
                               setState(() => _trusted = false);
                               _overview.selectProvider(provider);
                             },
@@ -202,6 +324,16 @@ class _ProviderQuotaScreenState extends State<ProviderQuotaScreen> {
                         ),
                       ],
                       if (snapshot != null) ...[
+                        if (snapshot.canShowWindows)
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: TextButton(
+                              onPressed: _overview.snapshotIsStale
+                                  ? null
+                                  : _enroll,
+                              child: Text(l10n.quotaMonitorEnable),
+                            ),
+                          ),
                         if (_overview.budgets.failed)
                           _Notice(
                             text: l10n.quotaBudgetSaveFailed,

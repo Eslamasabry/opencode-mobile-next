@@ -273,7 +273,7 @@ node --test tool/quota/collector.test.mjs tool/quota/minimax.test.mjs tool/quota
 Tests use injected fetch/auth/clock, fake request/response objects (no listener),
 and explicitly created synthetic files in the OS temporary directory. Set
 `OCMN_QUOTA_TEST_TMPDIR` to an existing directory to constrain that scratch
-location (this workspace uses `/tmp/opencode`). They cover
+location. They cover
 exact domain JSON, 0/100/fraction percentages, missing/invalid fields, identity
 evidence, error separation, strict URL/method/auth guards, bounded streaming and
 timeout, cache/singleflight/account races, import safety, configuration, both
@@ -423,3 +423,48 @@ Both stores serialize replacement-screen writes, merge changed rules after
 durable reload, report failed writes, and participate in profile deletion,
 including deletion while a write is pending. No existing-format migration is
 needed: these are new version-one preference documents.
+
+## Independently consented quota monitoring
+
+Remaining now offers a separate **Enable quota monitoring** review after a fresh
+trusted-source read. This consent persists for the exact saved server origin,
+Basic-auth username, provider and opaque collector account reference. It does
+not inherit page consent or the cross-server session monitor's settings. It
+never starts an Android service or deploys a collector. The operator's source
+provisioning and proxy authentication requirements above remain unchanged.
+
+Users choose a per-source percentage-used threshold (50/75/90/100; default 100),
+optional device alerts, optional confirmed-Wi-Fi-only reads, and optional local
+quiet hours 22:00–08:00. These rules are separate from personal page thresholds.
+At most three sources are read sequentially per cycle, with fair rotation:
+5-minute foreground cycles and 15-minute background cycles only while the
+existing live background service is actually active. Paused/stopped Android
+service state halts background reads; this is not continuous-server monitoring.
+Wi-Fi probe failure/unknown fails closed. Quiet hours mute alerts, not reads.
+
+Only fresh successful account-bound snapshots can create threshold attention.
+Each reported window is evaluated separately; missing windows imply neither
+zero nor unlimited capacity. Future timestamps, expired/passed-reset snapshots,
+source/account changes and generic provider errors cannot alert. Dedupe is
+persisted before native publication and includes the selected threshold and
+reported reset. Unknown resets never rearm by elapsed time; changing a threshold
+is an explicit new condition. Recovered/unknown windows and expired observations
+dismiss prior native attention. Failed notification delivery can retry on the
+next bounded cycle.
+
+Android owns the fixed title **Provider quota needs attention** and review text.
+No percentage, provider response, credential, account reference or server label
+is passed as notification copy. An opaque per-consent token routes through a
+new fresh source/account check into the quota review page, without switching
+OpenCode profiles or offering quick actions. The in-app review remains usable
+when device notifications are unsupported or denied.
+
+Settings and dedupe metadata use `oc.quotaMonitor.<profileId>`; measured quota
+snapshots remain memory-only. Disabling immediately pauses reads in this app
+before durable cleanup; failed saves are visible and retryable. Profile removal
+blocks new reads, cancels the current gateway, drains outstanding work and uses
+the existing scoped preference sweep. No credentials are copied or refreshed.
+Synthetic checks live in `test/provider_quota_monitor_test.dart` and the actual
+Remaining-page consent test; `tool/capture/quota_monitor_test.dart` renders the
+consent and review in both themes. Live notification delivery and deployment
+remain unverified until an explicitly authorized device/operator check.

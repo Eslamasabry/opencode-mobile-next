@@ -1245,6 +1245,60 @@ void main() {
     },
   );
 
+  testWidgets(
+    'monitoring requires separate consent and can be disabled from its review page',
+    (tester) async {
+      final h = await harness(tester);
+      h.now = DateTime.now();
+      await _pumpQuota(tester, h);
+      await _consentAndRead(tester, h);
+      await _finishRead(tester, h, _snapshot(at: h.now));
+      expect(h.connection.quotaMonitor.sources, isEmpty);
+      final enable = find.widgetWithText(TextButton, _l10n.quotaMonitorEnable);
+      await _reveal(tester, enable);
+      await tester.tap(enable);
+      await tester.pumpAndSettle();
+      final dialog = find.byType(AlertDialog);
+      expect(
+        find.descendant(
+          of: dialog,
+          matching: find.text(_l10n.quotaMonitorConsent),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.descendant(of: dialog, matching: find.text(_l10n.workCancel)),
+      );
+      await tester.pumpAndSettle();
+      expect(h.connection.quotaMonitor.sources, isEmpty);
+      await tester.tap(enable);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.widgetWithText(FilledButton, _l10n.quotaMonitorEnable),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(h.connection.quotaMonitor.sources, hasLength(1));
+      final rules = h.connection.quotaMonitor.rulesFor(
+        'quota-profile-a',
+        QuotaProvider.codex,
+      )!;
+      expect(rules.notifications, isFalse);
+      expect(h.connection.store.activeId, 'quota-profile-a');
+      final disable = find.widgetWithText(
+        TextButton,
+        _l10n.quotaMonitorDisable,
+      );
+      await _reveal(tester, disable);
+      await tester.tap(disable);
+      await tester.pumpAndSettle();
+      expect(h.connection.quotaMonitor.sources, isEmpty);
+      h.connection.quotaMonitor.dispose();
+    },
+  );
+
   final capturePath = Platform.environment['OC_QUOTA_CAPTURE'];
   testWidgets('synthetic remaining usage rendered preview', (tester) async {
     // Opt-in only, with a pre-existing output directory. This is a synthetic

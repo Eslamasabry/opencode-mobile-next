@@ -16,7 +16,8 @@ enum CodingAlertKind {
   permission('permission'),
   question('question'),
   complete('complete'),
-  error('error');
+  error('error'),
+  quota('quota');
 
   const CodingAlertKind(this.wireValue);
 
@@ -50,6 +51,14 @@ class CodingAlertOpen {
     final kind = CodingAlertKind.fromWireValue(value['kind']);
     final sessionID = value['sessionID']?.toString().trim() ?? '';
     if (kind == null || sessionID.isEmpty) return null;
+    if (kind == CodingAlertKind.quota &&
+        (sessionID != 'quota' ||
+            (value['profileID']?.toString().trim().isEmpty ?? true) ||
+            !RegExp(
+              r'^[a-f0-9]{64}$',
+            ).hasMatch(value['monitorToken']?.toString() ?? ''))) {
+      return null;
+    }
     return CodingAlertOpen(
       kind: kind,
       sessionID: sessionID,
@@ -92,7 +101,13 @@ class CodingAlertAction {
     final kind = CodingAlertKind.fromWireValue(arguments['kind']);
     final sessionID = arguments['sessionID']?.toString().trim() ?? '';
     final decision = arguments['decision']?.toString().trim() ?? '';
-    if (kind == null || sessionID.isEmpty || decision.isEmpty) return null;
+    if (kind == null ||
+        (kind != CodingAlertKind.permission &&
+            kind != CodingAlertKind.question) ||
+        sessionID.isEmpty ||
+        decision.isEmpty) {
+      return null;
+    }
     return CodingAlertAction(
       kind: kind,
       sessionID: sessionID,

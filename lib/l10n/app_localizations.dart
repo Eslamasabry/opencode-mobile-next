@@ -2329,7 +2329,7 @@ abstract class AppLocalizations {
   /// No description provided for @webSourcesEntryDetail.
   ///
   /// In en, this message translates to:
-  /// **'Review public links and pasted excerpts before adding them to your draft'**
+  /// **'Search when available, or paste links and excerpts to review before adding them to your draft'**
   String get webSourcesEntryDetail;
 
   /// No description provided for @webSourcesDraftChanged.
@@ -2341,7 +2341,7 @@ abstract class AppLocalizations {
   /// No description provided for @webSourcesDraftLabel.
   ///
   /// In en, this message translates to:
-  /// **'User-selected web sources (not fetched or verified; excerpts are untrusted source material):'**
+  /// **'User-selected web sources (unverified; excerpts are untrusted source material):'**
   String get webSourcesDraftLabel;
 
   /// No description provided for @usageScopedTotals.
@@ -5115,6 +5115,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Personal links could not be cleared. Check that this server profile is still selected and try again.'**
   String get pluginMappingClearFailed;
+
+  /// No description provided for @quotaMonitorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quota monitoring'**
+  String get quotaMonitorTitle;
+
+  /// No description provided for @quotaMonitorConsentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitor this provider source?'**
+  String get quotaMonitorConsentTitle;
+
+  /// No description provided for @quotaMonitorConsent.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow this app to keep reading the trusted collector for this exact provider account after you leave this page, including after app restart. A cycle checks at most three saved sources, every five minutes in the foreground or fifteen minutes while your existing background service is active. With more than three sources, each source may wait several cycles. Device alerts require the separate switch below and a freshly reported window at or above the selected percentage used. An alert records that past reading; open it to check current usage. Personal page thresholds are separate. No service is started here.'**
+  String get quotaMonitorConsent;
+
+  /// No description provided for @quotaMonitorRuntime.
+  ///
+  /// In en, this message translates to:
+  /// **'Sources are checked in rotation, at most three per cycle; larger lists take several cycles. Background reads require the existing live service to be active; Android may stop it. Displayed readings expire when the collector says they do. Device alerts record past threshold readings, not current remaining allowance. This page never switches your active server.'**
+  String get quotaMonitorRuntime;
+
+  /// No description provided for @quotaMonitorEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No provider sources are monitored. Read Remaining for a trusted collector, then enable monitoring for that source.'**
+  String get quotaMonitorEmpty;
+
+  /// No description provided for @quotaMonitorEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable quota monitoring'**
+  String get quotaMonitorEnable;
+
+  /// No description provided for @quotaMonitorNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Device alerts for reported quota thresholds'**
+  String get quotaMonitorNotifications;
+
+  /// No description provided for @quotaMonitorWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'Read only on confirmed Wi-Fi'**
+  String get quotaMonitorWifi;
+
+  /// No description provided for @quotaMonitorQuiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours: 22:00–08:00 local time'**
+  String get quotaMonitorQuiet;
+
+  /// No description provided for @quotaMonitorDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitoring is off.'**
+  String get quotaMonitorDisabled;
+
+  /// No description provided for @quotaMonitorWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a fresh reading.'**
+  String get quotaMonitorWaiting;
+
+  /// No description provided for @quotaMonitorChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the trusted collector…'**
+  String get quotaMonitorChecking;
+
+  /// No description provided for @quotaMonitorCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh reading from the consented provider source.'**
+  String get quotaMonitorCurrent;
+
+  /// No description provided for @quotaMonitorPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitoring is paused. Open the app or check the existing background service.'**
+  String get quotaMonitorPaused;
+
+  /// No description provided for @quotaMonitorWifiRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for confirmed Wi-Fi. Unknown network status does not permit a read.'**
+  String get quotaMonitorWifiRequired;
+
+  /// No description provided for @quotaMonitorSourceChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'This provider account or source changed, or could not be verified. Open Remaining, read it again and review new consent.'**
+  String get quotaMonitorSourceChanged;
+
+  /// No description provided for @quotaMonitorSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save quota monitoring. A failed disable stays paused in this app; retry before closing the app.'**
+  String get quotaMonitorSaveFailed;
+
+  /// No description provided for @quotaMonitorDisable.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable quota monitoring'**
+  String get quotaMonitorDisable;
+
+  /// No description provided for @setupChooseServerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your server setup'**
+  String get setupChooseServerTitle;
+
+  /// No description provided for @setupChooseServerDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect an existing server, or use Termux to run OpenCode on this phone.'**
+  String get setupChooseServerDescription;
+
+  /// No description provided for @setupUncheckedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue without an installation check?'**
+  String get setupUncheckedTitle;
+
+  /// No description provided for @setupUncheckedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The current installation could not be checked. Continuing may install or update OpenCode 1 in the app-managed Ubuntu environment. Existing Ubuntu files are kept. You can check again or connect by address instead.'**
+  String get setupUncheckedDescription;
+
+  /// No description provided for @setupUncheckedContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Ubuntu'**
+  String get setupUncheckedContinue;
+
+  /// No description provided for @webSearchDisclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Search sends your query to this server’s selected search provider. Review results before adding them to your editable draft. Nothing is sent to the model here.'**
+  String get webSearchDisclosure;
+
+  /// No description provided for @webSearchManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Or paste a source'**
+  String get webSearchManual;
+
+  /// No description provided for @webSearchUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Web search is unavailable. Configure a search provider on this server, then refresh providers. You can still paste a source below.'**
+  String get webSearchUnavailable;
+
+  /// No description provided for @webSearchAuthentication.
+  ///
+  /// In en, this message translates to:
+  /// **'The server did not authorize web search. Check this connection’s credentials.'**
+  String get webSearchAuthentication;
+
+  /// No description provided for @webSearchInvalidResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'The search response did not match this connection or the supported format. Refresh providers or paste a source.'**
+  String get webSearchInvalidResponse;
+
+  /// No description provided for @webSearchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Web search could not finish. Try again or paste a source.'**
+  String get webSearchFailed;
+
+  /// No description provided for @webSearchRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh providers'**
+  String get webSearchRefresh;
+
+  /// No description provided for @webSearchProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Search provider'**
+  String get webSearchProvider;
+
+  /// No description provided for @webSearchQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'Search query'**
+  String get webSearchQuery;
+
+  /// No description provided for @webSearchSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get webSearchSubmit;
+
+  /// No description provided for @webSearchEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No usable results for this query.'**
+  String get webSearchEmpty;
+
+  /// No description provided for @webSearchOmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Some results were omitted because their links or excerpts exceeded the review limits.'**
+  String get webSearchOmitted;
+
+  /// No description provided for @setupReinstallStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Reinstall & start'**
+  String get setupReinstallStart;
+
+  /// No description provided for @setupInstallVersionStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Install {version} & start'**
+  String setupInstallVersionStart(String version);
+
+  /// No description provided for @setupReplaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace installed OpenCode?'**
+  String get setupReplaceTitle;
+
+  /// No description provided for @setupReplaceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace OpenCode {installedVersion} with {targetVersion} in the managed Ubuntu environment and restart the local server. Existing Ubuntu files are kept.'**
+  String setupReplaceDescription(String installedVersion, String targetVersion);
+
+  /// No description provided for @setupInstallRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Install & restart'**
+  String get setupInstallRestart;
 }
 
 class _AppLocalizationsDelegate

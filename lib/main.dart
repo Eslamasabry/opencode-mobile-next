@@ -1,4 +1,5 @@
 import 'ui/screens/profile_monitor_screen.dart';
+import 'ui/screens/quota_monitor_screen.dart';
 import 'dart:async';
 import 'dart:io' show Platform;
 
@@ -362,6 +363,35 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
       }
       final target = _controller.takePendingCodingAlertOpen();
       if (target == null) return;
+      if (target.kind == CodingAlertKind.quota) {
+        unawaited(
+          _controller.quotaMonitor
+              .resolveRoute(target.profileID, target.monitorToken)
+              .then((route) {
+                if (!mounted) {
+                  return;
+                }
+                if (route == null) {
+                  _messengerKey.currentState?.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        lookupAppLocalizations(
+                          Localizations.localeOf(navigator.context),
+                        ).quotaMonitorSourceChanged,
+                      ),
+                    ),
+                  );
+                  return;
+                }
+                navigator.push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => QuotaMonitorScreen(controller: _controller),
+                  ),
+                );
+              }),
+        );
+        return;
+      }
       if (target.monitorToken.isNotEmpty) {
         final route = _controller.profileMonitor.routeForToken(
           target.profileID,

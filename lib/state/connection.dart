@@ -13,6 +13,8 @@ import '../api/product_repository.dart';
 import '../api/server_probe.dart';
 import '../termux/managed_server_recovery.dart';
 import 'profile_monitor.dart';
+import 'provider_quota_monitor.dart';
+import '../quota/provider_quota_client.dart';
 import '../api/sse.dart';
 import '../api2/client.dart';
 import '../api2/gateway.dart';
@@ -238,6 +240,29 @@ class ConnectionController extends ChangeNotifier {
   final ProfileStore store;
   final BackgroundLiveController backgroundLive;
   ProfileMonitor? _profileMonitor;
+  ProviderQuotaMonitor? _quotaMonitor;
+  ProviderQuotaMonitor get quotaMonitor =>
+      _quotaMonitor ??= ProviderQuotaMonitor(
+        store: store,
+        createGateway: (profile, provider) =>
+            HttpProviderQuotaGateway(profile, provider: provider),
+        isReadable: (id) => !isIsolated && isProfileReadable(id),
+        networkWifi: backgroundLive.monitorWifiAvailable,
+        dismiss: backgroundLive.dismissCodingAlert,
+        alert: ({required profileID, required key, required token}) =>
+            backgroundLive.showCodingAlert(
+              kind: CodingAlertKind.quota,
+              sessionID: 'quota',
+              profileID: profileID,
+              key: key,
+              monitorToken: token,
+              allowActions: false,
+            ),
+      )..addListener(_quotaMonitorChanged);
+  void _quotaMonitorChanged() {
+    if (!_disposed) super.notifyListeners();
+  }
+
   final MonitorGatewayFactory? _monitorGatewayFactory;
   ProfileMonitor get profileMonitor => _profileMonitor ??= ProfileMonitor(
     store: store,
@@ -734,6 +759,7 @@ class ConnectionController extends ChangeNotifier {
       this.backgroundLive.bindActionHandler(_handleCodingAlertAction);
       _syncProfileServices();
       profileMonitor.start();
+      quotaMonitor.start();
     }
   }
 
@@ -895,6 +921,10 @@ class ConnectionController extends ChangeNotifier {
   }
 
   void _backgroundLiveChanged() {
+    _quotaMonitor?.setRuntime(
+      foreground: !_lifecycleWasBackgrounded,
+      backgroundAllowed: keepLiveInBackground && backgroundLive.active,
+    );
     _profileMonitor?.setRuntime(
       foreground: !_lifecycleWasBackgrounded,
       backgroundAllowed: keepLiveInBackground && backgroundLive.active,
@@ -4214,6 +4244,10 @@ class ConnectionController extends ChangeNotifier {
   void suspendForLifecycle() {
     if (_disposed || isIsolated) return;
     _lifecycleWasBackgrounded = true;
+    _quotaMonitor?.setRuntime(
+      foreground: false,
+      backgroundAllowed: keepLiveInBackground && backgroundLive.active,
+    );
     _profileMonitor?.setRuntime(
       foreground: false,
       backgroundAllowed: keepLiveInBackground && backgroundLive.active,
@@ -4239,6 +4273,10 @@ class ConnectionController extends ChangeNotifier {
   /// [suspendForLifecycle]. Concurrent resume signals share the same future.
   Future<void> resumeFromLifecycle() {
     if (_disposed || isIsolated) return Future.value();
+    _quotaMonitor?.setRuntime(
+      foreground: true,
+      backgroundAllowed: keepLiveInBackground && backgroundLive.active,
+    );
     _profileMonitor?.setRuntime(
       foreground: true,
       backgroundAllowed: keepLiveInBackground && backgroundLive.active,
@@ -4660,6 +4698,7 @@ class ConnectionController extends ChangeNotifier {
     // rejects old callbacks after a failed deletion makes the profile usable.
     _deletingReadProfiles.add(profileId);
     _profileMonitor?.removeProfile(profileId);
+    _quotaMonitor?.removeProfile(profileId);
     final recoveryDisabled = ManagedServerRecovery.disableForProfile(
       store.prefs,
       profileId,
@@ -4683,6 +4722,7 @@ class ConnectionController extends ChangeNotifier {
             );
           }
           await _profileMonitor?.drain(profileId);
+          await _quotaMonitor?.drain(profileId);
           return _deleteProfileAndLocalData(profileId);
         })
         .whenComplete(() {
@@ -7324,6 +7364,8 @@ class ConnectionController extends ChangeNotifier {
     _retireTransport();
     _profileMonitor?.removeListener(_monitorChanged);
     _profileMonitor?.dispose();
+    _quotaMonitor?.removeListener(_quotaMonitorChanged);
+    _quotaMonitor?.dispose();
     if (!isIsolated) ManagedServerRecovery.disposeForPreferences(store.prefs);
     backgroundLive.removeListener(_backgroundLiveChanged);
     backgroundLive.dispose();

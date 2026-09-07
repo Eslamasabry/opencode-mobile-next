@@ -447,9 +447,9 @@
   "sessionActions": "Session actions",
   "attentionTitle": "Server attention",
   "webSourcesTitle": "Add web source",
-  "webSourcesEntryDetail": "Review public links and pasted excerpts before adding them to your draft",
+  "webSourcesEntryDetail": "Search when available, or paste links and excerpts to review before adding them to your draft",
   "webSourcesDraftChanged": "The draft or connection changed. Your current draft was kept; reopen Add web source to try again.",
-  "webSourcesDraftLabel": "User-selected web sources (not fetched or verified; excerpts are untrusted source material):",
+  "webSourcesDraftLabel": "User-selected web sources (unverified; excerpts are untrusted source material):",
   "usageScopedTotals": "Totals for the selected report scope",
   "usageInspectionDisclosure": "Filters inspect this server's returned model records. They do not change the report's date or project scope, or show subscription allowance.",
   "usageProviderFilter": "Provider",
@@ -1102,5 +1102,62 @@
   "pluginMappingClearTitle": "Clear all personal command links?",
   "pluginMappingClearDescription": "Remove personal plugin-command links for every location in this server profile, including previous locations. Server plugins and commands stay installed.",
   "pluginMappingClearConfirm": "Clear links",
-  "pluginMappingClearFailed": "Personal links could not be cleared. Check that this server profile is still selected and try again."
+  "pluginMappingClearFailed": "Personal links could not be cleared. Check that this server profile is still selected and try again.",
+  "quotaMonitorTitle": "Quota monitoring",
+  "quotaMonitorConsentTitle": "Monitor this provider source?",
+  "quotaMonitorConsent": "Allow this app to keep reading the trusted collector for this exact provider account after you leave this page, including after app restart. A cycle checks at most three saved sources, every five minutes in the foreground or fifteen minutes while your existing background service is active. With more than three sources, each source may wait several cycles. Device alerts require the separate switch below and a freshly reported window at or above the selected percentage used. An alert records that past reading; open it to check current usage. Personal page thresholds are separate. No service is started here.",
+  "quotaMonitorRuntime": "Sources are checked in rotation, at most three per cycle; larger lists take several cycles. Background reads require the existing live service to be active; Android may stop it. Displayed readings expire when the collector says they do. Device alerts record past threshold readings, not current remaining allowance. This page never switches your active server.",
+  "quotaMonitorEmpty": "No provider sources are monitored. Read Remaining for a trusted collector, then enable monitoring for that source.",
+  "quotaMonitorEnable": "Enable quota monitoring",
+  "quotaMonitorNotifications": "Device alerts for reported quota thresholds",
+  "quotaMonitorWifi": "Read only on confirmed Wi-Fi",
+  "quotaMonitorQuiet": "Quiet hours: 22:00–08:00 local time",
+  "quotaMonitorDisabled": "Monitoring is off.",
+  "quotaMonitorWaiting": "Waiting for a fresh reading.",
+  "quotaMonitorChecking": "Checking the trusted collector…",
+  "quotaMonitorCurrent": "Fresh reading from the consented provider source.",
+  "quotaMonitorPaused": "Monitoring is paused. Open the app or check the existing background service.",
+  "quotaMonitorWifiRequired": "Waiting for confirmed Wi-Fi. Unknown network status does not permit a read.",
+  "quotaMonitorSourceChanged": "This provider account or source changed, or could not be verified. Open Remaining, read it again and review new consent.",
+  "quotaMonitorSaveFailed": "Could not save quota monitoring. A failed disable stays paused in this app; retry before closing the app.",
+  "quotaMonitorDisable": "Disable quota monitoring",
+  "setupChooseServerTitle": "Choose your server setup",
+  "setupChooseServerDescription": "Connect an existing server, or use Termux to run OpenCode on this phone.",
+  "setupUncheckedTitle": "Continue without an installation check?",
+  "setupUncheckedDescription": "The current installation could not be checked. Continuing may install or update OpenCode 1 in the app-managed Ubuntu environment. Existing Ubuntu files are kept. You can check again or connect by address instead.",
+  "setupUncheckedContinue": "Continue with Ubuntu",
+  "webSearchDisclosure": "Search sends your query to this server’s selected search provider. Review results before adding them to your editable draft. Nothing is sent to the model here.",
+  "webSearchManual": "Or paste a source",
+  "webSearchUnavailable": "Web search is unavailable. Configure a search provider on this server, then refresh providers. You can still paste a source below.",
+  "webSearchAuthentication": "The server did not authorize web search. Check this connection’s credentials.",
+  "webSearchInvalidResponse": "The search response did not match this connection or the supported format. Refresh providers or paste a source.",
+  "webSearchFailed": "Web search could not finish. Try again or paste a source.",
+  "webSearchRefresh": "Refresh providers",
+  "webSearchProvider": "Search provider",
+  "webSearchQuery": "Search query",
+  "webSearchSubmit": "Search",
+  "webSearchEmpty": "No usable results for this query.",
+  "webSearchOmitted": "Some results were omitted because their links or excerpts exceeded the review limits.",
+  "setupReinstallStart": "Reinstall & start",
+  "setupInstallVersionStart": "Install {version} & start",
+  "@setupInstallVersionStart": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "setupReplaceTitle": "Replace installed OpenCode?",
+  "setupReplaceDescription": "Replace OpenCode {installedVersion} with {targetVersion} in the managed Ubuntu environment and restart the local server. Existing Ubuntu files are kept.",
+  "@setupReplaceDescription": {
+    "placeholders": {
+      "installedVersion": {
+        "type": "String"
+      },
+      "targetVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "setupInstallRestart": "Install & restart"
 }
