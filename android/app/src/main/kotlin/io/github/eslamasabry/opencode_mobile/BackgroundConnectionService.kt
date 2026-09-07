@@ -253,7 +253,10 @@ class BackgroundConnectionService : Service() {
             sessionID: String,
             key: String,
             quickReply: Boolean = false,
-            requestID: String = ""
+            requestID: String = "",
+            profileID: String = "",
+            allowActions: Boolean = true,
+            monitorToken: String = ""
         ): Boolean {
             if (sessionID.isBlank() || key.isBlank()) return false
             val manager = context.getSystemService(NotificationManager::class.java)
@@ -308,6 +311,8 @@ class BackgroundConnectionService : Service() {
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 putExtra(EXTRA_CODING_ALERT_KIND, kind)
                 putExtra(EXTRA_CODING_ALERT_SESSION_ID, sessionID)
+                putExtra(EXTRA_CODING_ALERT_PROFILE_ID, profileID)
+                putExtra(EXTRA_MONITOR_TOKEN, monitorToken)
             }
             val pendingIntent = PendingIntent.getActivity(
                 context,
@@ -331,9 +336,9 @@ class BackgroundConnectionService : Service() {
                 .setCategory(content.category)
                 .setVisibility(Notification.VISIBILITY_PRIVATE)
                 .setGroup(CODING_ALERT_GROUP)
-            for (action in codingAlertActions(
-                context, kind, sessionID, key, quickReply, requestID, notificationID
-            )) {
+            for (action in if (allowActions) codingAlertActions(
+                context, kind, sessionID, key, quickReply, requestID, notificationID, profileID
+            ) else emptyList()) {
                 builder.addAction(action)
             }
             manager.notify(notificationID, builder.build())
@@ -349,7 +354,8 @@ class BackgroundConnectionService : Service() {
             key: String,
             quickReply: Boolean,
             requestID: String,
-            notificationID: Int
+            notificationID: Int,
+            profileID: String
         ): List<Notification.Action> {
             fun actionIntent(decision: String): Intent =
                 Intent(context, CodingActionReceiver::class.java).apply {
@@ -358,6 +364,7 @@ class BackgroundConnectionService : Service() {
                     putExtra(EXTRA_CODING_ALERT_KIND, kind)
                     putExtra(EXTRA_CODING_ALERT_SESSION_ID, sessionID)
                     putExtra(EXTRA_CODING_ALERT_KEY, key)
+                    putExtra(EXTRA_CODING_ALERT_PROFILE_ID, profileID)
                     putExtra(EXTRA_CODING_ALERT_DECISION, decision)
                     // The exact pending request this notification represents;
                     // Dart refuses to resolve any other request with it.
@@ -460,6 +467,7 @@ class BackgroundConnectionService : Service() {
             "io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_KIND"
         const val EXTRA_CODING_ALERT_SESSION_ID =
             "io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_SESSION_ID"
+        const val EXTRA_MONITOR_TOKEN = "io.github.eslamasabry.opencode_mobile.MONITOR_TOKEN"
         const val EXTRA_CODING_ALERT_PROFILE_ID =
             "io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_PROFILE_ID"
         const val EXTRA_CODING_ALERT_KEY =

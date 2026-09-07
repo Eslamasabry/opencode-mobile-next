@@ -1,3 +1,4 @@
+import 'ui/screens/profile_monitor_screen.dart';
 import 'dart:async';
 import 'dart:io' show Platform;
 
@@ -344,9 +345,10 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   void _scheduleCodingAlertRoute() {
     if (_codingAlertRouteScheduled ||
         _controller.pendingCodingAlertOpen == null ||
-        _controller.api == null ||
-        _controller.repository == null ||
-        _controller.version == null) {
+        (_controller.pendingCodingAlertOpen?.monitorToken.isEmpty != false &&
+            (_controller.api == null ||
+                _controller.repository == null ||
+                _controller.version == null))) {
       return;
     }
     _codingAlertRouteScheduled = true;
@@ -360,6 +362,28 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
       }
       final target = _controller.takePendingCodingAlertOpen();
       if (target == null) return;
+      if (target.monitorToken.isNotEmpty) {
+        final route = _controller.profileMonitor.routeForToken(
+          target.profileID,
+          target.monitorToken,
+        );
+        if (route != null && route.sessionID == target.sessionID) {
+          unawaited(
+            openMonitoredRequest(navigator.context, _controller, route),
+          );
+        } else {
+          _messengerKey.currentState?.showSnackBar(
+            SnackBar(
+              content: Text(
+                lookupAppLocalizations(
+                  Localizations.localeOf(navigator.context),
+                ).monitorOpenFailed,
+              ),
+            ),
+          );
+        }
+        return;
+      }
       if (target.kind == CodingAlertKind.question) {
         navigator.push(
           MaterialPageRoute<void>(

@@ -32,6 +32,7 @@ class CodingActionReceiver : BroadcastReceiver() {
         val requestID = intent.getStringExtra(
             BackgroundConnectionService.EXTRA_CODING_ALERT_REQUEST_ID
         ).orEmpty()
+        val profileID = intent.getStringExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_PROFILE_ID).orEmpty()
         if (kind.isBlank() || sessionID.isBlank() || decision.isBlank()) return
 
         val reply = RemoteInput.getResultsFromIntent(intent)
@@ -40,7 +41,7 @@ class CodingActionReceiver : BroadcastReceiver() {
 
         val channel = MainActivity.backgroundChannel
         if (channel == null) {
-            openApp(context, kind, sessionID)
+            openApp(context, kind, sessionID, profileID)
             return
         }
 
@@ -53,24 +54,25 @@ class CodingActionReceiver : BroadcastReceiver() {
                     "sessionID" to sessionID,
                     "decision" to decision,
                     "reply" to reply,
-                    "requestID" to requestID
+                    "requestID" to requestID,
+                    "profileID" to profileID
                 ),
                 object : MethodChannel.Result {
                     override fun success(result: Any?) {
                         val handled = (result as? Map<*, *>)?.get("handled") == true
                         if (!handled) {
-                            repost(appContext, kind, sessionID, key, decision, requestID)
+                            repost(appContext, kind, sessionID, key, decision, requestID, profileID)
                         }
                         // A handled reply's RemoteInput spinner resolves when
                         // Dart's resolution lifecycle cancels the alert.
                     }
 
                     override fun error(code: String, message: String?, details: Any?) {
-                        repost(appContext, kind, sessionID, key, decision, requestID)
+                        repost(appContext, kind, sessionID, key, decision, requestID, profileID)
                     }
 
                     override fun notImplemented() {
-                        openApp(appContext, kind, sessionID)
+                        openApp(appContext, kind, sessionID, profileID)
                     }
                 }
             )
@@ -85,7 +87,8 @@ class CodingActionReceiver : BroadcastReceiver() {
         sessionID: String,
         key: String,
         decision: String,
-        requestID: String
+        requestID: String,
+        profileID: String
     ) {
         if (key.isBlank()) return
         BackgroundConnectionService.showCodingAlert(
@@ -94,16 +97,18 @@ class CodingActionReceiver : BroadcastReceiver() {
             sessionID = sessionID,
             key = key,
             quickReply = decision == "reply",
-            requestID = requestID
+            requestID = requestID,
+            profileID = profileID
         )
     }
 
-    private fun openApp(context: Context, kind: String, sessionID: String) {
+    private fun openApp(context: Context, kind: String, sessionID: String, profileID: String) {
         val open = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or
                 Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_KIND, kind)
+            putExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_PROFILE_ID, profileID)
             putExtra(
                 BackgroundConnectionService.EXTRA_CODING_ALERT_SESSION_ID,
                 sessionID

@@ -11,6 +11,8 @@ import '../api/opencode_api.dart';
 import '../api2/models.dart' show Api2Delivery, Api2FormInfo, Api2InboxItem;
 import '../api/product_repository.dart';
 import '../api/server_probe.dart';
+import '../termux/managed_server_recovery.dart';
+import 'profile_monitor.dart';
 import '../api/sse.dart';
 import '../api2/client.dart';
 import '../api2/gateway.dart';
@@ -235,6 +237,205 @@ class SessionRevertReview {
 class ConnectionController extends ChangeNotifier {
   final ProfileStore store;
   final BackgroundLiveController backgroundLive;
+  ProfileMonitor? _profileMonitor;
+  final MonitorGatewayFactory? _monitorGatewayFactory;
+  ProfileMonitor get profileMonitor => _profileMonitor ??= ProfileMonitor(
+    store: store,
+    createGateway: _monitorGatewayFactory ?? _buildTransportPair,
+    isReadable: (id) => !isIsolated && isProfileReadable(id),
+    networkWifi: backgroundLive.monitorWifiAvailable,
+    dismiss: backgroundLive.dismissCodingAlert,
+    alertsAllowed: (id) => id != profile?.id,
+    alert: (id, request, key, token) => backgroundLive.showCodingAlert(
+      kind: request.kind == MonitoredRequestKind.permission
+          ? CodingAlertKind.permission
+          : CodingAlertKind.question,
+      profileID: id,
+      sessionID: request.sessionID,
+      key: key,
+      allowActions: false,
+      monitorToken: token,
+    ),
+  )..addListener(_monitorChanged);
+  void _monitorChanged() {
+    if (_disposed) return;
+    if (_lifecycleWasBackgrounded && !_canShowCodingAlert) {
+      _dismissAllCodingAlerts();
+    }
+    // Monitor observations do not change the active session/widget snapshot.
+    super.notifyListeners();
+  }
+
+  void _syncProfileServices() {
+    if (isIsolated || _disposed) return;
+    ManagedServerRecovery.syncProfiles(
+      store.prefs,
+      store.profiles
+          .where(
+            (p) =>
+                TermuxBridge.supported &&
+                TermuxBridge.managesServerUrl(p.baseUrl),
+          )
+          .map((p) => p.id),
+    );
+  }
+
+  /// A monitor row is an observation, never authorization to reuse cached
+  /// request content or another profile's active transport.
+  Future<bool> prepareMonitoredRequest(MonitoredRoute target) async {
+    if (isIsolated ||
+        _disposed ||
+        !isProfileReadable(target.profileID) ||
+        !profileMonitor.rulesFor(target.profileID).enabled ||
+        (target.createdAt.isAfter(DateTime.now()) ||
+            DateTime.now().difference(target.createdAt) >
+                const Duration(days: 1))) {
+      return false;
+    }
+    final targetProfile = store.profiles
+        .where((p) => p.id == target.profileID)
+        .firstOrNull;
+    if (targetProfile == null ||
+        targetProfile.baseUrl != target.serverUrl ||
+        target.sourceIdentity !=
+            ProfileMonitor.routeSourceIdentity(targetProfile) ||
+        targetProfile.requiresPasswordReentry) {
+      return false;
+    }
+    final before = (connectionRevision, locationRevision, profile?.id);
+    final address = (
+      targetProfile.baseUrl,
+      targetProfile.username,
+      targetProfile.password,
+      targetProfile.flavor,
+    );
+    final pair = (_monitorGatewayFactory ?? _buildTransportPair)(targetProfile);
+    try {
+      pair.gateway.setLocation(
+        directory: target.directory,
+        workspace: target.workspace,
+      );
+      pair.operations.setLocation(
+        directory: target.directory,
+        workspace: target.workspace,
+      );
+      final found = switch (target.kind) {
+        MonitoredRequestKind.permission =>
+          (await ProfileMonitor.readPermissions(
+            pair.gateway,
+            const Duration(seconds: 8),
+          )).any(
+            (p) => p.id == target.requestID && p.sessionID == target.sessionID,
+          ),
+        MonitoredRequestKind.question =>
+          (await ProfileMonitor.readQuestions(
+            pair.gateway,
+            pair.operations,
+            const Duration(seconds: 8),
+          )).any(
+            (p) => p.id == target.requestID && p.sessionID == target.sessionID,
+          ),
+        MonitoredRequestKind.form =>
+          pair.gateway.capabilities.forms &&
+              (await pair.gateway.pendingForms().timeout(
+                const Duration(seconds: 8),
+              )).any(
+                (p) =>
+                    p.id == target.requestID && p.sessionID == target.sessionID,
+              ),
+      };
+      if (!found) return false;
+      if (target.sessionID != 'global') {
+        final session = await pair.gateway
+            .session(target.sessionID)
+            .timeout(const Duration(seconds: 8));
+        if (session.id != target.sessionID ||
+            (session.directory != null &&
+                session.directory != target.directory) ||
+            session.workspaceID != target.workspace) {
+          return false;
+        }
+      }
+    } catch (_) {
+      return false;
+    } finally {
+      pair.gateway.close();
+    }
+    if (_disposed ||
+        before != (connectionRevision, locationRevision, profile?.id) ||
+        !isProfileReadable(target.profileID) ||
+        !store.profiles.any(
+          (p) =>
+              p.id == target.profileID &&
+              (p.baseUrl, p.username, p.password, p.flavor) == address,
+        )) {
+      return false;
+    }
+    if (profile?.id != target.profileID || !isConnected) {
+      final connecting = connect(targetProfile);
+      final expected = connectionRevision;
+      await connecting;
+      if (connectionRevision != expected) return false;
+    }
+    if (_disposed ||
+        profile?.id != target.profileID ||
+        !isConnected ||
+        !isProfileReadable(target.profileID)) {
+      return false;
+    }
+    var generation = connectionRevision;
+    if (directory != target.directory || workspace != target.workspace) {
+      final selecting = selectLocation(
+        directory: target.directory,
+        workspace: target.workspace,
+      );
+      generation = connectionRevision;
+      await selecting;
+    }
+    if (_disposed ||
+        connectionRevision != generation ||
+        profile?.id != target.profileID ||
+        directory != target.directory ||
+        workspace != target.workspace ||
+        locationLoading) {
+      return false;
+    }
+    final location = locationRevision;
+    await Future.wait([
+      refreshPendingPermissions(),
+      refreshPendingQuestions(),
+      refreshPendingForms(),
+    ]);
+    return !_disposed &&
+        generation == connectionRevision &&
+        location == locationRevision &&
+        profile?.id == target.profileID &&
+        isProfileReadable(target.profileID);
+  }
+
+  int get unknownAttentionProfileCount => store.profiles
+      .where(
+        (p) =>
+            isProfileReadable(p.id) &&
+            !(p.id == profile?.id && isConnected) &&
+            !profileMonitor.snapshotFor(p.id).isCurrent,
+      )
+      .length;
+
+  int get unifiedAttentionCount {
+    final selected = profile?.id;
+    return permissions.length +
+        questions.length +
+        forms.length +
+        store.profiles
+            .where((p) => p.id != selected && isProfileReadable(p.id))
+            .fold<int>(
+              0,
+              (sum, p) =>
+                  sum + (profileMonitor.snapshotFor(p.id).pendingCount ?? 0),
+            );
+  }
+
   final WidgetSessionSnapshot _widgetSnapshot;
 
   /// The most recent home-screen widget write started by [notifyListeners].
@@ -492,6 +693,7 @@ class ConnectionController extends ChangeNotifier {
     this.store, {
     this.isIsolated = false,
     OpenCodeApiFactory? apiFactory,
+    MonitorGatewayFactory? monitorGatewayFactory,
     ProductRepositoryFactory? repositoryFactory,
     V2GatewayPairFactory? v2GatewayFactory,
     EventStreamFactory? eventStreamFactory,
@@ -502,7 +704,8 @@ class ConnectionController extends ChangeNotifier {
     DraftAttachmentVault? draftAttachmentVault,
     DraftAttachmentVault? stashAttachmentVault,
     PromptPhotoStore? promptPhotoStore,
-  }) : _promptPhotoStore = promptPhotoStore,
+  }) : _monitorGatewayFactory = monitorGatewayFactory,
+       _promptPhotoStore = promptPhotoStore,
        _draftAttachmentVault = draftAttachmentVault ?? DraftAttachmentVault(),
        _promptShelf = PromptShelfStore.withAttachmentFiles(
          store.prefs,
@@ -529,6 +732,8 @@ class ConnectionController extends ChangeNotifier {
     this.backgroundLive.addListener(_backgroundLiveChanged);
     if (!isIsolated) {
       this.backgroundLive.bindActionHandler(_handleCodingAlertAction);
+      _syncProfileServices();
+      profileMonitor.start();
     }
   }
 
@@ -539,6 +744,7 @@ class ConnectionController extends ChangeNotifier {
   /// alert. Returns false so Android re-posts the alert when the reply cannot
   /// be delivered.
   Future<bool> _handleCodingAlertAction(CodingAlertAction action) async {
+    if (action.profileID != (profile?.id ?? '')) return false;
     if (_disposed || _lifecycleSuspended) return false;
     final currentApi = api;
     final current = repository;
@@ -654,7 +860,9 @@ class ConnectionController extends ChangeNotifier {
     // another profile's ID opens the app normally rather than silently
     // routing into (or switching to) that profile's chat. Notification taps
     // carry no profile ID and keep routing as before.
-    if (value.profileID.isNotEmpty && value.profileID != store.activeId) {
+    if (value.monitorToken.isEmpty &&
+        value.profileID.isNotEmpty &&
+        value.profileID != store.activeId) {
       return;
     }
     _pendingCodingAlertOpen = value;
@@ -687,6 +895,10 @@ class ConnectionController extends ChangeNotifier {
   }
 
   void _backgroundLiveChanged() {
+    _profileMonitor?.setRuntime(
+      foreground: !_lifecycleWasBackgrounded,
+      backgroundAllowed: keepLiveInBackground && backgroundLive.active,
+    );
     if (keepLiveInBackground) {
       unawaited(_ensureLocalServerWakeLock());
     } else {
@@ -695,13 +907,18 @@ class ConnectionController extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
-  static String _inputAlertKey(String sessionID) => 'input:$sessionID';
-  static String _statusAlertKey(String sessionID) => 'status:$sessionID';
+  String _inputAlertKey(String sessionID) =>
+      profile == null ? 'input:$sessionID' : 'input:${profile!.id}:$sessionID';
+  String _statusAlertKey(String sessionID) => profile == null
+      ? 'status:$sessionID'
+      : 'status:${profile!.id}:$sessionID';
 
   bool get _canShowCodingAlert =>
       keepLiveInBackground &&
       _lifecycleWasBackgrounded &&
-      backgroundLive.notificationGranted;
+      backgroundLive.notificationGranted &&
+      profileMonitor.rulesFor(profile?.id ?? '').notifications &&
+      !profileMonitor.rulesFor(profile?.id ?? '').quietAt(DateTime.now());
 
   void _markSessionAttentionActive(String sessionID) {
     if (sessionID.isEmpty) return;
@@ -715,6 +932,10 @@ class ConnectionController extends ChangeNotifier {
     if (sessionID.isEmpty || !_attentionActiveSessions.remove(sessionID)) {
       return;
     }
+    if (kind == CodingAlertKind.complete &&
+        profileMonitor.rulesFor(profile?.id ?? '').enabled) {
+      return;
+    }
     if (!_canShowCodingAlert || sessionsById[sessionID]?.parentID != null) {
       return;
     }
@@ -723,6 +944,7 @@ class ConnectionController extends ChangeNotifier {
       backgroundLive
           .showCodingAlert(
             kind: kind,
+            profileID: profile?.id ?? '',
             sessionID: sessionID,
             key: _statusAlertKey(sessionID),
           )
@@ -760,6 +982,7 @@ class ConnectionController extends ChangeNotifier {
       backgroundLive
           .showCodingAlert(
             kind: kind,
+            profileID: profile?.id ?? '',
             sessionID: sessionID,
             key: _inputAlertKey(sessionID),
             quickReply: quickReplyQuestion != null || permissionReply,
@@ -1191,6 +1414,7 @@ class ConnectionController extends ChangeNotifier {
     if (isIsolated) {
       throw StateError('An isolated session cannot connect to a server.');
     }
+    _syncProfileServices();
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;
     _lifecycleResume = null;
@@ -3990,6 +4214,10 @@ class ConnectionController extends ChangeNotifier {
   void suspendForLifecycle() {
     if (_disposed || isIsolated) return;
     _lifecycleWasBackgrounded = true;
+    _profileMonitor?.setRuntime(
+      foreground: false,
+      backgroundAllowed: keepLiveInBackground && backgroundLive.active,
+    );
     if (keepLiveInBackground) {
       _attentionActiveSessions.addAll(busySessions);
       _syncInputAlerts();
@@ -4011,6 +4239,10 @@ class ConnectionController extends ChangeNotifier {
   /// [suspendForLifecycle]. Concurrent resume signals share the same future.
   Future<void> resumeFromLifecycle() {
     if (_disposed || isIsolated) return Future.value();
+    _profileMonitor?.setRuntime(
+      foreground: true,
+      backgroundAllowed: keepLiveInBackground && backgroundLive.active,
+    );
     final inFlight = _lifecycleResume;
     if (inFlight != null) return inFlight;
     if (!_lifecycleSuspended) {
@@ -4427,6 +4659,11 @@ class ConnectionController extends ChangeNotifier {
     // Close admission synchronously, before any drain can yield. An epoch also
     // rejects old callbacks after a failed deletion makes the profile usable.
     _deletingReadProfiles.add(profileId);
+    _profileMonitor?.removeProfile(profileId);
+    final recoveryDisabled = ManagedServerRecovery.disableForProfile(
+      store.prefs,
+      profileId,
+    ).then<Object?>((_) => null, onError: (Object error) => error);
     _pendingAuth.block(profileId);
     _integrationCommandAttempts.removeWhere(
       (key, _) => _authKeyProfile(key) == profileId,
@@ -4438,7 +4675,16 @@ class ConnectionController extends ChangeNotifier {
     _promptShelfDeletionRevisions[profileId] =
         (_promptShelfDeletionRevisions[profileId] ?? 0) + 1;
     final operation = _profileDeletionChanges
-        .then((_) => _deleteProfileAndLocalData(profileId))
+        .then((_) async {
+          final recoveryError = await recoveryDisabled;
+          if (recoveryError != null) {
+            throw StateError(
+              'Could not disable server recovery before deletion',
+            );
+          }
+          await _profileMonitor?.drain(profileId);
+          return _deleteProfileAndLocalData(profileId);
+        })
         .whenComplete(() {
           _deletingReadProfiles.remove(profileId);
           _profileDeletions.remove(profileId);
@@ -7076,6 +7322,9 @@ class ConnectionController extends ChangeNotifier {
     _generation += 1;
     connectionRevision = _generation;
     _retireTransport();
+    _profileMonitor?.removeListener(_monitorChanged);
+    _profileMonitor?.dispose();
+    if (!isIsolated) ManagedServerRecovery.disposeForPreferences(store.prefs);
     backgroundLive.removeListener(_backgroundLiveChanged);
     backgroundLive.dispose();
     if (_ownsDiagnostics) diagnostics.dispose();

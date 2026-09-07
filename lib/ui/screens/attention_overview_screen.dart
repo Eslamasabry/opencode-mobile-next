@@ -4,6 +4,7 @@ import '../../domain/attention_item.dart';
 import '../../state/attention_overview.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
+import 'profile_monitor_screen.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Local overview only. The host owns navigation and any profile-switch guard.
@@ -28,6 +29,19 @@ class AttentionOverviewScreen extends StatelessWidget {
       title: Text(
         lookupAppLocalizations(Localizations.localeOf(context)).attentionTitle,
       ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.settings_outlined),
+          tooltip: lookupAppLocalizations(
+            Localizations.localeOf(context),
+          ).monitorConfigure,
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => ProfileMonitorScreen(controller: controller),
+            ),
+          ),
+        ),
+      ],
     ),
     body: SafeArea(
       child: AnimatedBuilder(

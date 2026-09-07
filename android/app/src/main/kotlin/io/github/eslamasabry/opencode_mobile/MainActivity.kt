@@ -9,6 +9,8 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -127,6 +129,11 @@ class MainActivity : FlutterActivity() {
                         requestBatteryOptimizationExemption()
                         result.success(backgroundStatus())
                     }
+                    "monitorNetworkPolicy" -> {
+                        val connectivity = getSystemService(ConnectivityManager::class.java)
+                        val capabilities = connectivity.getNetworkCapabilities(connectivity.activeNetwork)
+                        result.success(mapOf("wifi" to (capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true)))
+                    }
                     "showCodingAlert" -> {
                         val kind = call.argument<String>("kind").orEmpty()
                         val sessionID = call.argument<String>("sessionID").orEmpty()
@@ -141,7 +148,10 @@ class MainActivity : FlutterActivity() {
                                     sessionID = sessionID,
                                     key = key,
                                     quickReply = quickReply,
-                                    requestID = requestID
+                                    requestID = requestID,
+                                    profileID = call.argument<String>("profileID").orEmpty(),
+                                    allowActions = call.argument<Boolean>("allowActions") ?: true,
+                                    monitorToken = call.argument<String>("monitorToken").orEmpty()
                                 )
                             )
                         )
@@ -283,12 +293,14 @@ class MainActivity : FlutterActivity() {
                 "sessionID" to sessionID,
                 // Set by widget-row taps only; Dart drops the destination
                 // when it names a profile other than the active one.
-                "profileID" to profileID
+                "profileID" to profileID,
+                "monitorToken" to intent.getStringExtra(BackgroundConnectionService.EXTRA_MONITOR_TOKEN).orEmpty()
             )
         }
         intent.removeExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_KIND)
         intent.removeExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_SESSION_ID)
         intent.removeExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_PROFILE_ID)
+        intent.removeExtra(BackgroundConnectionService.EXTRA_MONITOR_TOKEN)
     }
 
     override fun onRequestPermissionsResult(

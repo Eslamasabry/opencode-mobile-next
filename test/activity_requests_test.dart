@@ -64,7 +64,17 @@ Future<void> _openQuestion(
     MaterialApp(home: ActivityScreen(controller: controller)),
   );
   await tester.pumpAndSettle();
-  await tester.tap(find.text(question.prompts.single.title));
+  final row = find.text(question.prompts.single.title);
+  for (
+    var attempt = 0;
+    attempt < 20 && row.hitTestable().evaluate().isEmpty;
+    attempt++
+  ) {
+    await tester.drag(find.byType(ListView), const Offset(0, -140));
+    await tester.pump();
+  }
+  expect(row.hitTestable(), findsOneWidget);
+  await tester.tap(row.hitTestable());
   await tester.pumpAndSettle();
 }
 

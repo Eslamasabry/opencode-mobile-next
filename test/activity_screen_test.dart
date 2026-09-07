@@ -309,10 +309,16 @@ void main() {
     );
     await tester.pump();
 
-    expect(
-      find.byKey(const ValueKey('activity-running-ses_run')),
-      findsOneWidget,
-    );
+    final running = find.byKey(const ValueKey('activity-running-ses_run'));
+    for (
+      var attempt = 0;
+      attempt < 20 && running.hitTestable().evaluate().isEmpty;
+      attempt++
+    ) {
+      await tester.drag(find.byType(ListView), const Offset(0, -160));
+      await tester.pump();
+    }
+    expect(running.hitTestable(), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

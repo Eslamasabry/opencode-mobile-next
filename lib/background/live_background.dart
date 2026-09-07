@@ -35,15 +35,16 @@ class CodingAlertOpen {
     required this.kind,
     required this.sessionID,
     this.profileID = '',
+    this.monitorToken = '',
   });
 
   final CodingAlertKind kind;
   final String sessionID;
 
-  /// The server profile the session belongs to, stamped by home-screen
-  /// widget taps so a stale row never routes into another profile's chat.
-  /// Notification taps leave it empty.
+  /// The server profile stamped by widgets and all newly posted alerts.
+  /// Monitor tokens additionally bind a persisted location and exact request.
   final String profileID;
+  final String monitorToken;
 
   static CodingAlertOpen? fromPlatform(Map<String, dynamic> value) {
     final kind = CodingAlertKind.fromWireValue(value['kind']);
@@ -53,6 +54,7 @@ class CodingAlertOpen {
       kind: kind,
       sessionID: sessionID,
       profileID: value['profileID']?.toString().trim() ?? '',
+      monitorToken: value['monitorToken']?.toString().trim() ?? '',
     );
   }
 }
@@ -66,6 +68,7 @@ class CodingAlertAction {
     required this.sessionID,
     required this.decision,
     this.requestID = '',
+    this.profileID = '',
     this.reply,
   });
 
@@ -76,6 +79,7 @@ class CodingAlertAction {
   /// bound to this ID; an empty or stale ID never resolves a different
   /// request for the same session.
   final String requestID;
+  final String profileID;
 
   /// 'allow' | 'deny' for permission alerts, 'reply' for question alerts.
   final String decision;
@@ -94,6 +98,7 @@ class CodingAlertAction {
       sessionID: sessionID,
       decision: decision,
       requestID: arguments['requestID']?.toString().trim() ?? '',
+      profileID: arguments['profileID']?.toString().trim() ?? '',
       reply: arguments['reply']?.toString(),
     );
   }
@@ -233,6 +238,17 @@ class BackgroundLiveController extends ChangeNotifier {
     return enabled;
   }
 
+  /// Actual Android network policy. Unsupported/unknown never counts as Wi-Fi.
+  Future<bool?> monitorWifiAvailable() async {
+    if (!platformCapabilities.supportsBackgroundService) return null;
+    try {
+      final value = await _invoke('monitorNetworkPolicy');
+      return value['wifi'] is bool ? value['wifi'] as bool : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> refreshStatus() async {
     await _run('getStatus', persist: false);
   }
@@ -257,6 +273,9 @@ class BackgroundLiveController extends ChangeNotifier {
     required String key,
     bool quickReply = false,
     String requestID = '',
+    String profileID = '',
+    String monitorToken = '',
+    bool allowActions = true,
   }) async {
     if (!platformCapabilities.supportsNotifications) return false;
     if (!enabled || !notificationGranted) return false;
@@ -267,6 +286,9 @@ class BackgroundLiveController extends ChangeNotifier {
         'key': key,
         'quickReply': quickReply,
         'requestID': requestID,
+        if (profileID.isNotEmpty) 'profileID': profileID,
+        if (monitorToken.isNotEmpty) 'monitorToken': monitorToken,
+        if (!allowActions) 'allowActions': false,
       });
       return result['shown'] == true;
     } on PlatformException {

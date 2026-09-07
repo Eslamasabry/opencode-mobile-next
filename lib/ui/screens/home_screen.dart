@@ -100,8 +100,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ActivityScreen(controller: conn, embedded: true),
       LibraryScreen(controller: conn),
     ];
-    final pending =
-        conn.permissions.length + conn.questions.length + conn.forms.length;
+    final pending = conn.unifiedAttentionCount;
     final destinations = [
       const NavigationDestination(
         icon: Icon(Icons.workspaces_outline),

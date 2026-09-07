@@ -17,6 +17,7 @@ import '../widgets/request_routes.dart';
 import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
 import 'settings_screen.dart';
+import 'profile_monitor_screen.dart';
 
 /// Activity: the single cross-session control centre (audit §3, §8).
 ///
@@ -316,6 +317,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
       _error = null;
     });
     try {
+      await widget.controller.profileMonitor.refresh();
       final repository = await widget.controller.prepareActionRepository();
       if (repository == null) {
         throw const ProductException('OpenCode is reconnecting. Try again.');
@@ -435,7 +437,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
         questions.length +
         sessionForms.length +
         globalForms.length;
-    final empty = attentionCount == 0 && running.isEmpty;
+    final empty =
+        attentionCount == 0 &&
+        running.isEmpty &&
+        controller.unifiedAttentionCount == 0;
 
     final body = RefreshIndicator(
       onRefresh: _refresh,
@@ -447,7 +452,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
           ? ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
-                const SizedBox(height: 80),
+                ProfileMonitorInbox(controller: controller),
+                const SizedBox(height: 40),
                 const ProductEmptyState(
                   key: ValueKey('activity-all-clear'),
                   icon: Icons.task_alt_rounded,
@@ -473,6 +479,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.only(bottom: 24),
                 children: [
+                  ProfileMonitorInbox(controller: controller),
                   if (loading) const LinearProgressIndicator(minHeight: 2),
                   if (error != null)
                     ProductInlineEmpty(
