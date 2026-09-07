@@ -23,8 +23,8 @@ class WebSourcesOverview extends ChangeNotifier {
   int _searchRevision = 0;
   int _providerRevision = 0;
   StreamSubscription<dynamic>? _events;
-  List<WebSearchProvider> providers = const [];
-  List<WebSourceSelection> results = const [];
+  List<WebSearchProvider> _providers = const [];
+  List<WebSourceSelection> _results = const [];
   String? providerID;
   bool discovering = false;
   bool _discoverAgain = false;
@@ -56,6 +56,8 @@ class WebSourcesOverview extends ChangeNotifier {
 
   bool get scopeChanged => _scopeChanged;
   List<WebSourceSelection> get sources => List.unmodifiable(_sources);
+  List<WebSearchProvider> get providers => List.unmodifiable(_providers);
+  List<WebSourceSelection> get results => List.unmodifiable(_results);
   bool isSelected(WebSourceSelection source) => _selected.contains(source.url);
   int get selectedCount => _selected.length;
 
@@ -74,8 +76,8 @@ class WebSourcesOverview extends ChangeNotifier {
       _scopeChanged = true;
       _searchRevision++;
       _providerRevision++;
-      providers = const [];
-      results = const [];
+      _providers = const [];
+      _results = const [];
       searching = false;
       discovering = false;
       _sources.clear();
@@ -105,8 +107,8 @@ class WebSourcesOverview extends ChangeNotifier {
     ++_searchRevision;
     searching = false;
     discovering = true;
-    results = const [];
-    providers = const [];
+    _results = const [];
+    _providers = const [];
     searched = false;
     searchFailure = null;
     notifyListeners();
@@ -115,9 +117,9 @@ class WebSourcesOverview extends ChangeNotifier {
       if (!_canEdit() || revision != _providerRevision) {
         return;
       }
-      providers = found;
-      if (!providers.any((item) => item.id == providerID)) {
-        providerID = providers.length == 1 ? providers.single.id : null;
+      _providers = List.unmodifiable(found);
+      if (!_providers.any((item) => item.id == providerID)) {
+        providerID = _providers.length == 1 ? _providers.single.id : null;
       }
     } on WebSearchFailure catch (error) {
       if (!_canEdit() || revision != _providerRevision) {
@@ -144,14 +146,14 @@ class WebSourcesOverview extends ChangeNotifier {
   }
 
   void chooseProvider(String? id) {
-    if (!_canEdit() || !providers.any((item) => item.id == id)) {
+    if (!_canEdit() || !_providers.any((item) => item.id == id)) {
       return;
     }
     ++_searchRevision;
     providerID = id;
     searching = false;
     searched = false;
-    results = const [];
+    _results = const [];
     searchFailure = null;
     notifyListeners();
   }
@@ -163,14 +165,14 @@ class WebSourcesOverview extends ChangeNotifier {
         searching ||
         query.trim().isEmpty ||
         query.length > 1000 ||
-        !providers.any((item) => item.id == providerID)) {
+        !_providers.any((item) => item.id == providerID)) {
       return;
     }
     final revision = ++_searchRevision;
     final chosen = providerID!;
     searching = true;
     searched = false;
-    results = const [];
+    _results = const [];
     omittedResults = 0;
     searchFailure = null;
     notifyListeners();
@@ -201,7 +203,7 @@ class WebSourcesOverview extends ChangeNotifier {
           omittedResults++;
         }
       }
-      results = List.unmodifiable(safe);
+      _results = List.unmodifiable(safe);
       searched = true;
     } on WebSearchFailure catch (error) {
       if (!_canEdit() || revision != _searchRevision) {
@@ -209,7 +211,7 @@ class WebSourcesOverview extends ChangeNotifier {
       }
       searchFailure = error.kind;
       if (error.kind == WebSearchFailureKind.unavailable) {
-        providers = const [];
+        _providers = const [];
         providerID = null;
       }
     } catch (_) {

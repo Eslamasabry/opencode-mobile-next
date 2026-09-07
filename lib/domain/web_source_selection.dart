@@ -41,6 +41,12 @@ class WebSourceSelection {
     if (text != null && text.length > maxExcerptLength) {
       throw const FormatException('Use an excerpt of at most 2000 characters.');
     }
+    if (text != null &&
+        text.contains(RegExp(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]'))) {
+      throw const FormatException(
+        'Remove unsupported control characters from the excerpt.',
+      );
+    }
     return WebSourceSelection._(
       label,
       uri.toString(),

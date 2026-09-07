@@ -463,6 +463,49 @@ void main() {
   );
 
   test(
+    'source staging exposes immutable snapshots and rejects unsafe overflow',
+    () async {
+      await overview.discoverProviders();
+      expect(
+        () => overview.providers.add(
+          const WebSearchProvider(id: 'two', name: 'Two'),
+        ),
+        throwsUnsupportedError,
+      );
+
+      await overview.search('documentation');
+      expect(overview.results, hasLength(1));
+      expect(() => overview.results.clear(), throwsUnsupportedError);
+      final result = overview.results.single;
+      expect(overview.add(result), isNull);
+      expect(
+        overview.add(
+          WebSourceSelection(
+            title: 'Duplicate',
+            url: '  https://example.com/doc  ',
+          ),
+        ),
+        'This URL is already in your review list.',
+      );
+      expect(
+        () => WebSourceSelection(
+          title: 'a' * (WebSourceSelection.maxTitleLength + 1),
+          url: 'https://example.com/title',
+        ),
+        throwsFormatException,
+      );
+      expect(
+        () => WebSourceSelection(
+          title: 'Excerpt',
+          url: 'https://example.com/excerpt',
+          excerpt: 'visible${String.fromCharCode(0x1b)}hidden',
+        ),
+        throwsFormatException,
+      );
+    },
+  );
+
+  test(
     'multiple providers require choice; refresh never submits a query',
     () async {
       api.available = const [
