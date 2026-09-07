@@ -5984,6 +5984,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 draft with an unconfirmed send to review.} other{{count} drafts with an unconfirmed send to review.}}'**
   String queuedBannerReview(int count);
+
+  /// No description provided for @markdownCopyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code'**
+  String get markdownCopyCode;
+
+  /// No description provided for @markdownCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied'**
+  String get markdownCopied;
+
+  /// No description provided for @markdownCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy code. Try again.'**
+  String get markdownCopyFailed;
+
+  /// No description provided for @markdownCopyRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get markdownCopyRetry;
+
+  /// No description provided for @markdownWrapCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrap lines'**
+  String get markdownWrapCode;
+
+  /// No description provided for @markdownScrollCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll lines'**
+  String get markdownScrollCode;
+
+  /// No description provided for @markdownExpandCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Full screen'**
+  String get markdownExpandCode;
+
+  /// No description provided for @markdownReaderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Code reader'**
+  String get markdownReaderTitle;
+
+  /// No description provided for @markdownSnapshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshot of the code when opened. Close and reopen to read later updates.'**
+  String get markdownSnapshot;
 }
 
 class _AppLocalizationsDelegate

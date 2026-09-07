@@ -3371,6 +3371,88 @@ void main() {
     expect(tester.getSize(row).height, greaterThanOrEqualTo(44));
   });
 
+  testWidgets(
+    'nested code scrolling does not change follow latest and new events respect reading position',
+    (tester) async {
+      final messages = <MessageWithParts>[
+        for (var index = 0; index < 35; index++)
+          _message('user-$index', 'user', [
+            Part(
+              id: 'part-$index',
+              messageID: 'user-$index',
+              type: 'text',
+              text: 'prompt $index',
+            ),
+          ], created: index + 1),
+        _message('code-reply', 'assistant', [
+          Part(
+            id: 'code-part',
+            messageID: 'code-reply',
+            type: 'text',
+            text: '```text\n${'wide ' * 150}\n```',
+          ),
+        ], created: 40),
+      ];
+      final api = _FakeOpenCodeApi()..messagesHandler = (_) async => messages;
+      final controller = await _pumpChat(tester, api);
+      await tester.pumpAndSettle();
+      final horizontal = find.descendant(
+        of: find.byType(CodeBlock),
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is SingleChildScrollView &&
+              w.scrollDirection == Axis.horizontal,
+        ),
+      );
+      expect(horizontal, findsOneWidget);
+      await tester.drag(horizontal, const Offset(-650, 0));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('jump-to-latest')), findsNothing);
+      await tester.drag(
+        find.byType(ScrollablePositionedList),
+        const Offset(0, 900),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('jump-to-latest')), findsOneWidget);
+      controller.handleEventForTesting(
+        _event('message.updated', {
+          'info': {
+            'id': 'new-stream',
+            'sessionID': 'session-1',
+            'role': 'assistant',
+            'time': {'created': 100},
+          },
+        }),
+      );
+      controller.handleEventForTesting(
+        _event('message.part.updated', {
+          'sessionID': 'session-1',
+          'part': _partJson(
+            id: 'new-part',
+            messageID: 'new-stream',
+            type: 'text',
+            text: 'Later streamed reply',
+          ),
+        }),
+      );
+      await _pumpEvent(tester);
+      expect(
+        find.text('Later streamed reply', findRichText: true),
+        findsNothing,
+      );
+      await tester.tap(find.byKey(const ValueKey('jump-to-latest')));
+      // The unfinished assistant deliberately keeps its streaming indicator
+      // active. Advance the navigation animation without waiting for idle.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(
+        find.text('Later streamed reply', findRichText: true),
+        findsOneWidget,
+      );
+    },
+  );
+
   testWidgets('floating transcript pills meet tap-target minimums', (
     tester,
   ) async {

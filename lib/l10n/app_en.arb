@@ -1353,5 +1353,15 @@
     "placeholders": {
       "count": {"type": "int"}
     }
-  }
+  },
+
+  "markdownCopyCode": "Copy code",
+  "markdownCopied": "Code copied",
+  "markdownCopyFailed": "Could not copy code. Try again.",
+  "markdownCopyRetry": "Retry",
+  "markdownWrapCode": "Wrap lines",
+  "markdownScrollCode": "Scroll lines",
+  "markdownExpandCode": "Full screen",
+  "markdownReaderTitle": "Code reader",
+  "markdownSnapshot": "Snapshot of the code when opened. Close and reopen to read later updates."
 }

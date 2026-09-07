@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
 import '../desktop/desktop_interaction.dart';
 import 'agent_blocks.dart';
@@ -135,7 +136,24 @@ class _MarkdownTextState extends State<MarkdownText> {
     MarkdownText.debugParseCount++;
     _parsedData = widget.data;
     _parsedSelectable = widget.selectable;
-    return _blocks = _splitBlocks(widget.data);
+    final next = _splitBlocks(widget.data);
+    // A growing later fence must not rebuild an unchanged earlier code block
+    // or disturb its local selection, horizontal offset or wrap choice.
+    if (cached != null) {
+      for (var i = 0; i < next.length && i < cached.length; i++) {
+        final old = cached[i];
+        final value = next[i];
+        if (old is CodeBlock &&
+            value is CodeBlock &&
+            old.code == value.code &&
+            old.originalSource == value.originalSource &&
+            old.language == value.language &&
+            old.highlightEnabled == value.highlightEnabled) {
+          next[i] = old;
+        }
+      }
+    }
+    return _blocks = next;
   }
 
   @override
@@ -167,6 +185,7 @@ class _MarkdownTextState extends State<MarkdownText> {
   List<Widget> _splitBlocks(String src) {
     final selectable = widget.selectable;
     final widgets = <Widget>[];
+    final originalLines = src.split('\n');
     final lines = src.replaceAll('\r\n', '\n').split('\n');
     var i = 0;
     var paragraph = <String>[];
@@ -182,10 +201,61 @@ class _MarkdownTextState extends State<MarkdownText> {
     while (i < lines.length) {
       final line = lines[i];
 
+      // Fenced code block
+      final fence = RegExp(r'^( {0,3})(`{3,}|~{3,})(.*)$').firstMatch(line);
+      if (fence != null &&
+          !(fence.group(2)!.startsWith('`') && fence.group(3)!.contains('`'))) {
+        flushParagraph();
+        final marker = fence.group(2)!;
+        final indent = fence.group(1)!.length;
+        final info = fence.group(3)!.trim();
+        final lang = info.isEmpty ? null : info.split(RegExp(r'\s+')).first;
+        final closing = RegExp(
+          '^ {0,3}${RegExp.escape(marker[0])}{${marker.length},}[ \\t]*\$',
+        );
+        final code = <String>[];
+        i++;
+        final sourceStart = i;
+        while (i < lines.length && !closing.hasMatch(lines[i])) {
+          var removed = 0;
+          while (removed < indent &&
+              removed < lines[i].length &&
+              lines[i][removed] == ' ') {
+            removed++;
+          }
+          code.add(lines[i].substring(removed));
+          i++;
+        }
+        // While a fence is still open (streaming), the block re-parses on
+        // every delta flush — defer syntax highlighting until it closes so
+        // `highlight.parse` never runs per token on a growing buffer. The
+        // code still appears streamed, as plain monospace.
+        final closed = i < lines.length;
+        final original =
+            originalLines.sublist(sourceStart, i).join('\n') +
+            (closed && i > sourceStart ? '\n' : '');
+        if (closed) i++; // skip closing fence
+        final body = code.join('\n');
+        if (AgentBlockKinds.matches(lang)) {
+          widgets.add(_agentBlock(lang!.trim().toLowerCase(), body));
+          continue;
+        }
+        widgets.add(
+          CodeBlock(
+            code: body,
+            originalSource: original,
+            language: lang,
+            highlightEnabled: closed,
+          ),
+        );
+        continue;
+      }
+
       // GitHub-flavored Markdown table. A table starts with a header row and
       // a delimiter row such as `| --- | :---: | ---: |`.
       if (i + 1 < lines.length &&
           _tableCells(line).length >= 2 &&
+          _tableCells(line).length == _tableCells(lines[i + 1]).length &&
           _isTableDelimiter(lines[i + 1])) {
         flushParagraph();
         final headers = _tableCells(line);
@@ -200,34 +270,6 @@ class _MarkdownTextState extends State<MarkdownText> {
         }
         widgets.add(
           _MarkdownTable(headers: headers, delimiter: delimiter, rows: rows),
-        );
-        continue;
-      }
-
-      // Fenced code block
-      final fence = RegExp(r'^\s*```\s*(\S*)\s*$').firstMatch(line);
-      if (fence != null) {
-        flushParagraph();
-        final lang = fence.group(1);
-        final code = <String>[];
-        i++;
-        while (i < lines.length && !RegExp(r'^\s*```').hasMatch(lines[i])) {
-          code.add(lines[i]);
-          i++;
-        }
-        // While a fence is still open (streaming), the block re-parses on
-        // every delta flush — defer syntax highlighting until it closes so
-        // `highlight.parse` never runs per token on a growing buffer. The
-        // code still appears streamed, as plain monospace.
-        final closed = i < lines.length;
-        i++; // skip closing fence
-        final body = code.join('\n');
-        if (AgentBlockKinds.matches(lang)) {
-          widgets.add(_agentBlock(lang!.trim().toLowerCase(), body));
-          continue;
-        }
-        widgets.add(
-          CodeBlock(code: body, language: lang, highlightEnabled: closed),
         );
         continue;
       }
@@ -331,12 +373,39 @@ class _MarkdownTextState extends State<MarkdownText> {
 List<String> _tableCells(String line) {
   final trimmed = line.trim();
   if (!trimmed.contains('|')) return const [];
-  var body = trimmed;
-  if (body.startsWith('|')) body = body.substring(1);
-  if (body.endsWith('|')) body = body.substring(0, body.length - 1);
-  return body.split(RegExp(r'(?<!\\)\|')).map((cell) {
-    return cell.trim().replaceAll(r'\|', '|');
-  }).toList();
+  final cells = <String>[];
+  var cell = StringBuffer();
+  var start = trimmed.startsWith('|') ? 1 : 0;
+  var endedWithSeparator = false;
+  while (start < trimmed.length) {
+    final char = trimmed[start];
+    if (char == r'\' && start + 1 < trimmed.length) {
+      final next = trimmed[start + 1];
+      if (next == '|') {
+        cell.write('|');
+        start += 2;
+        endedWithSeparator = false;
+        continue;
+      }
+      if (next == r'\') {
+        cell.write(r'\\');
+        start += 2;
+        endedWithSeparator = false;
+        continue;
+      }
+    }
+    if (char == '|') {
+      cells.add(cell.toString().trim());
+      cell = StringBuffer();
+      endedWithSeparator = true;
+    } else {
+      cell.write(char);
+      endedWithSeparator = false;
+    }
+    start++;
+  }
+  if (!endedWithSeparator) cells.add(cell.toString().trim());
+  return cells;
 }
 
 bool _isTableDelimiter(String line) {
@@ -361,58 +430,117 @@ class _MarkdownTable extends StatelessWidget {
     final theme = Theme.of(context);
     String cellAt(List<String> cells, int index) =>
         index < cells.length ? cells[index] : '';
-    bool rightAligned(int index) =>
-        index < delimiter.length && delimiter[index].trim().endsWith(':');
+    TextAlign alignmentAt(int index) {
+      final value = index < delimiter.length ? delimiter[index].trim() : '';
+      if (value.startsWith(':') && value.endsWith(':')) return TextAlign.center;
+      return value.endsWith(':') ? TextAlign.right : TextAlign.left;
+    }
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            headingRowColor: WidgetStatePropertyAll(
-              theme.colorScheme.surfaceContainerHighest.withValues(alpha: .7),
-            ),
-            headingTextStyle: theme.textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-            dataTextStyle: theme.textTheme.bodySmall,
-            // Chat density: DataTable's defaults are sized for data screens.
-            dataRowMinHeight: 32,
-            dataRowMaxHeight: 40,
-            headingRowHeight: 36,
-            horizontalMargin: 12,
-            columnSpacing: 16,
-            dividerThickness: .7,
-            columns: [
-              for (var column = 0; column < headers.length; column++)
-                DataColumn(
-                  numeric: rightAligned(column),
-                  label: Text.rich(
-                    _InlineParser(headers[column]).parse(context),
+    final headerStyle = theme.textTheme.labelLarge!.copyWith(
+      fontWeight: FontWeight.w700,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final available = constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        // Keep individual cells readable; wide tables scroll as one surface.
+        // The rows grow with wrapped content rather than clipping at 40px.
+        final cellWidth = ((available - 40) / headers.length).clamp(
+          156.0,
+          280.0,
+        );
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border.all(color: theme.colorScheme.outlineVariant),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                headingRowColor: WidgetStatePropertyAll(
+                  theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: .7,
                   ),
                 ),
-            ],
-            rows: [
-              for (final row in rows)
-                DataRow(
-                  cells: [
-                    for (var column = 0; column < headers.length; column++)
-                      DataCell(
-                        Text.rich(
-                          _InlineParser(cellAt(row, column)).parse(context),
-                        ),
+                headingTextStyle: headerStyle,
+                dataTextStyle: theme.textTheme.bodyMedium,
+                dataRowMinHeight: 48,
+                dataRowMaxHeight: double.infinity,
+                headingRowHeight: 0,
+                horizontalMargin: 12,
+                columnSpacing: 16,
+                dividerThickness: .7,
+                columns: [
+                  for (var column = 0; column < headers.length; column++)
+                    const DataColumn(label: SizedBox.shrink()),
+                ],
+                rows: [
+                  // DataTable requires a fixed heading height. A semantic
+                  // header in an auto-height row measures the real rich spans,
+                  // including wrapped inline code and validated path chips.
+                  DataRow(
+                    color: WidgetStatePropertyAll(
+                      theme.colorScheme.surfaceContainerHighest.withValues(
+                        alpha: .7,
                       ),
-                  ],
-                ),
-            ],
+                    ),
+                    cells: [
+                      for (var column = 0; column < headers.length; column++)
+                        DataCell(
+                          Semantics(
+                            header: true,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: SizedBox(
+                                width: cellWidth,
+                                child: DefaultTextStyle(
+                                  style: headerStyle,
+                                  child: Builder(
+                                    builder: (context) => Text.rich(
+                                      _InlineParser(
+                                        headers[column],
+                                      ).parse(context),
+                                      textAlign: alignmentAt(column),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  for (final row in rows)
+                    DataRow(
+                      cells: [
+                        for (var column = 0; column < headers.length; column++)
+                          DataCell(
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: SizedBox(
+                                width: cellWidth,
+                                child: Text.rich(
+                                  _InlineParser(
+                                    cellAt(row, column),
+                                  ).parse(context),
+                                  style: theme.textTheme.bodyMedium,
+                                  textAlign: alignmentAt(column),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -839,6 +967,8 @@ class _PathCodeChipState extends State<_PathCodeChip> {
             ],
           ),
         ),
+        // The enclosing WidgetSpan already scales the entire chip.
+        textScaler: TextScaler.noScaling,
         style: widget.base.copyWith(
           fontFamily: AppTheme.monoFamily,
           fontSize: (widget.base.fontSize ?? 14) - 1.5,
@@ -883,6 +1013,8 @@ class _CodeSpan extends WidgetSpan {
            ),
            child: Text.rich(
              TranscriptHighlight.decorate(context, TextSpan(text: code)),
+             // WidgetSpan applies the paragraph's accessibility scale once.
+             textScaler: TextScaler.noScaling,
              style: base.copyWith(
                fontFamily: AppTheme.monoFamily,
                fontSize: (base.fontSize ?? 14) - 1.5,
@@ -893,62 +1025,219 @@ class _CodeSpan extends WidgetSpan {
        );
 }
 
-/// Scrollable, selectable monospace block with a header row carrying the
-/// language chip and copy button — a real row instead of an overlay, so the
-/// first code lines are never covered and a top-right tap cannot copy by
-/// accident.
-class CodeBlock extends StatelessWidget {
-  final String code;
-  final String? language;
-
-  /// Streaming callers pass false while the fence is still open so the
-  /// grammar never re-parses a growing buffer per delta.
-  final bool highlightEnabled;
-
+/// Selectable local code with independent display wrapping and exact copying.
+class CodeBlock extends StatefulWidget {
   const CodeBlock({
     super.key,
     required this.code,
+    this.originalSource,
     this.language,
     this.highlightEnabled = true,
+    this.initialWrap = false,
+    this.canExpand = true,
   });
+  final String code;
 
-  /// Hard-wraps pathological single lines (minified payloads) so a streamed
-  /// 100k-char line cannot become a ~100k-px layout/selection surface. Copy
-  /// still uses the original [code].
+  /// Original fence body, before line-ending/indent display normalization.
+  /// Direct callers omit this: their [code] is already the exact source.
+  final String? originalSource;
+  final String? language;
+  final bool highlightEnabled;
+  final bool initialWrap;
+  final bool canExpand;
+
+  @override
+  State<CodeBlock> createState() => _CodeBlockState();
+}
+
+class _CodeBlockState extends State<CodeBlock> {
+  late bool _wrap = widget.initialWrap;
+  final _readerPermission = ValueNotifier(true);
+  final _selectionKey = GlobalKey();
+  bool _readerOpen = false;
+  bool _permissionDisposed = false;
+  String? _displaySource;
+  String? _displayValue;
+
+  AppLocalizations get l10n =>
+      lookupAppLocalizations(Localizations.localeOf(context));
+  bool get _interactive =>
+      mounted && MarkdownInteractionScope.enabledOf(context);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final enabled = _interactive;
+    if (_readerOpen) {
+      scheduleMicrotask(() {
+        if (!_permissionDisposed) _readerPermission.value = enabled;
+      });
+    } else {
+      _readerPermission.value = enabled;
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_readerOpen) {
+      // The snapshot route may outlive its source transcript row. Retire its
+      // controls after this tree update, then dispose when that route closes.
+      scheduleMicrotask(() {
+        if (!_permissionDisposed) _readerPermission.value = false;
+      });
+    } else {
+      _permissionDisposed = true;
+      _readerPermission.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _copy(String original) async {
+    if (!_interactive) return;
+    try {
+      await Clipboard.setData(ClipboardData(text: original));
+      if (!mounted || !_interactive) return;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          content: Text(l10n.markdownCopied),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (_) {
+      if (!mounted || !_interactive) return;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          content: Text(l10n.markdownCopyFailed),
+          action: SnackBarAction(
+            label: l10n.markdownCopyRetry,
+            onPressed: () => _copy(original),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _openReader() async {
+    if (!_interactive || _readerOpen || !widget.canExpand) return;
+    // Capture values now. A streaming source may change behind this route.
+    final snapshot = widget.code;
+    final original = widget.originalSource ?? widget.code;
+    final language = widget.language;
+    final highlighted = widget.highlightEnabled;
+    final wrap = _wrap;
+    final query =
+        context
+            .dependOnInheritedWidgetOfExactType<TranscriptHighlight>()
+            ?.query ??
+        '';
+    _readerOpen = true;
+    try {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (context) {
+            final strings = lookupAppLocalizations(
+              Localizations.localeOf(context),
+            );
+            return Scaffold(
+              appBar: AppBar(title: Text(strings.markdownReaderTitle)),
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (!highlighted)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Text(strings.markdownSnapshot),
+                        ),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: _readerPermission,
+                        builder: (context, enabled, _) =>
+                            MarkdownInteractionScope(
+                              enabled: enabled,
+                              child: TranscriptHighlight(
+                                query: query,
+                                child: CodeBlock(
+                                  code: snapshot,
+                                  originalSource: original,
+                                  language: language,
+                                  highlightEnabled: highlighted,
+                                  initialWrap: wrap,
+                                  canExpand: false,
+                                ),
+                              ),
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    } finally {
+      _readerOpen = false;
+      if (!mounted) {
+        _permissionDisposed = true;
+        _readerPermission.dispose();
+      }
+    }
+  }
+
+  /// Bound pathological lines for layout only. Copy never reads this value.
   static String _displayCode(String source) {
     const limit = 1000;
-    var needsWrap = false;
-    var runLength = 0;
-    for (var i = 0; i < source.length; i++) {
-      if (source.codeUnitAt(i) == 0x0A) {
-        runLength = 0;
-      } else if (++runLength > limit) {
-        needsWrap = true;
-        break;
-      }
-    }
-    if (!needsWrap) return source;
-    final out = StringBuffer();
-    for (final line in source.split('\n')) {
-      if (out.isNotEmpty) out.write('\n');
-      if (line.length <= limit) {
-        out.write(line);
-        continue;
-      }
-      for (var start = 0; start < line.length; start += limit) {
-        if (start > 0) out.write('\n');
-        final end = start + limit < line.length ? start + limit : line.length;
-        out.write(line.substring(start, end));
-      }
-    }
-    return out.toString();
+    if (!source.split('\n').any((line) => line.length > limit)) return source;
+    return source
+        .split('\n')
+        .map((line) {
+          final pieces = <String>[];
+          var start = 0;
+          while (line.length - start > limit) {
+            var end = start + limit;
+            // Avoid splitting a UTF-16 surrogate pair at a display line boundary.
+            final unit = line.codeUnitAt(end - 1);
+            if (unit >= 0xD800 && unit <= 0xDBFF) end--;
+            pieces.add(line.substring(start, end));
+            start = end;
+          }
+          pieces.add(line.substring(start));
+          return pieces.join('\n');
+        })
+        .join('\n');
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final muted = theme.colorScheme.onSurfaceVariant;
-    final display = _displayCode(code);
+    final enabled = _interactive;
+    if (_displaySource != widget.code) {
+      _displaySource = widget.code;
+      _displayValue = _displayCode(widget.code);
+    }
+    final display = _displayValue!;
+    final text = SelectableText.rich(
+      TranscriptHighlight.decorate(
+        context,
+        widget.highlightEnabled
+            ? highlightedCode(
+                display,
+                widget.language,
+                CodeHighlightTheme.of(context),
+              )
+            : TextSpan(text: display),
+      ),
+      key: _selectionKey,
+      style: theme.textTheme.bodySmall!.copyWith(
+        fontFamily: AppTheme.monoFamily,
+        fontSize: AppTheme.codeFontSize,
+        height: 1.45,
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.left,
+    );
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -962,66 +1251,77 @@ class CodeBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(10, 2, 2, 0),
-            child: Row(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (language != null && language!.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 1,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: .7),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+                if (widget.language?.isNotEmpty == true)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Text(
-                      language!,
-                      style: theme.textTheme.labelSmall!.copyWith(color: muted),
+                      widget.language!,
+                      style: theme.textTheme.labelMedium,
                     ),
                   ),
-                const Spacer(),
-                if (MarkdownInteractionScope.enabledOf(context))
-                  IconButton(
-                    tooltip: 'Copy code',
-                    visualDensity: VisualDensity.compact,
-                    iconSize: 16,
-                    icon: Icon(AppIcons.copy, color: muted),
-                    onPressed: () async {
-                      await Clipboard.setData(ClipboardData(text: code));
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Copied ${language ?? 'code'}'),
-                            duration: const Duration(seconds: 1),
+                if (enabled)
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: [
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(48, 48),
+                        ),
+                        onPressed: () {
+                          if (_interactive) setState(() => _wrap = !_wrap);
+                        },
+                        icon: Icon(
+                          _wrap ? Icons.wrap_text : Icons.arrow_right_alt,
+                        ),
+                        label: Text(
+                          _wrap
+                              ? l10n.markdownScrollCode
+                              : l10n.markdownWrapCode,
+                        ),
+                      ),
+                      if (widget.canExpand)
+                        TextButton.icon(
+                          style: TextButton.styleFrom(
+                            minimumSize: const Size(48, 48),
                           ),
-                        );
-                      }
-                    },
+                          onPressed: _openReader,
+                          icon: const Icon(Icons.open_in_full),
+                          label: Text(l10n.markdownExpandCode),
+                        ),
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(48, 48),
+                        ),
+                        onPressed: () =>
+                            _copy(widget.originalSource ?? widget.code),
+                        icon: const Icon(AppIcons.copy),
+                        label: Text(l10n.markdownCopyCode),
+                      ),
+                    ],
                   ),
               ],
             ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SelectableText.rich(
-                TranscriptHighlight.decorate(
-                  context,
-                  highlightEnabled
-                      ? highlightedCode(
-                          display,
-                          language,
-                          CodeHighlightTheme.of(context),
-                        )
-                      : TextSpan(text: display),
-                ),
-                style: theme.textTheme.bodySmall!.copyWith(
-                  fontFamily: AppTheme.monoFamily,
-                  fontSize: AppTheme.codeFontSize,
-                  height: 1.45,
+            child: IgnorePointer(
+              ignoring: !enabled,
+              child: ExcludeFocus(
+                excluding: !enabled,
+                // Code starts at its left edge even when reader chrome is RTL.
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: _wrap
+                      ? text
+                      : SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: text,
+                        ),
                 ),
               ),
             ),
