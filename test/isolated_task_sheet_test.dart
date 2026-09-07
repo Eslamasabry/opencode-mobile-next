@@ -36,6 +36,14 @@ class _Repository implements ProductRepository {
   final resetCalls = <String>[];
   String? createName;
   String? createProjectDirectory;
+  List<WorkspaceProject> projects = const [_project];
+  Future<void> Function()? beforeProjects;
+
+  @override
+  Future<List<WorkspaceProject>> listProjects() async {
+    await beforeProjects?.call();
+    return projects;
+  }
 
   @override
   void setLocation({String? directory, String? workspace}) {}
@@ -84,6 +92,7 @@ class _Controller extends ConnectionController {
   ServerCapabilities capabilityOverride = ServerCapabilities.allV1;
   Future<void> Function()? beforeRepository;
   Future<void> Function()? beforeTransport;
+  Future<void> Function()? duringSelection;
 
   @override
   ServerCapabilities get capabilities => capabilityOverride;
@@ -104,9 +113,14 @@ class _Controller extends ConnectionController {
   Future<void> selectLocation({String? directory, String? workspace}) async {
     if (selectLocationError case final error?) throw error;
     locations.add(directory);
+    if (this.directory != directory || this.workspace != workspace) {
+      locationRevision++;
+      connectionRevision++;
+    }
     this.directory = directory;
     this.workspace = workspace;
     notifyListeners();
+    await duringSelection?.call();
   }
 }
 
@@ -220,6 +234,143 @@ const _created = WorktreeInfo(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('profile switch before Start permanently retires the sheet', (
+    tester,
+  ) async {
+    final original = _Repository();
+    final other = _Repository();
+    final controller = await _controller(original);
+    addTearDown(controller.dispose);
+    final originalScope = controller.isolatedTaskScope;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: _Host(
+          controller: controller,
+          timeout: const Duration(seconds: 45),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('open-sheet')));
+    await tester.pumpAndSettle();
+    // Retain the original callback to exercise a stale queued tap as well.
+    final start = tester
+        .widget<FilledButton>(find.byKey(const Key('isolated-task-start')))
+        .onPressed!;
+    controller.repository = other;
+    controller.adoptConnectedProfileForTesting(
+      ServerProfile(id: 'other', name: 'Other', baseUrl: 'http://127.0.0.1:2'),
+    );
+    controller.notifyListeners();
+    await tester.pumpAndSettle();
+    start();
+    expect(
+      () => controller.startIsolatedTask(
+        project: _project,
+        expectedScope: originalScope,
+      ),
+      throwsA(isA<ProductException>()),
+    );
+    controller.repository = original;
+    controller.adoptConnectedProfileForTesting(
+      ServerProfile(
+        id: 'remote',
+        name: 'remote',
+        baseUrl: 'http://127.0.0.1:1',
+      ),
+    );
+    controller.notifyListeners();
+    await tester.pumpAndSettle();
+    start();
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Close this sheet'), findsOneWidget);
+    expect(find.byKey(const Key('isolated-task-start')), findsNothing);
+    expect(original.createProjectDirectory, isNull);
+    expect(other.createProjectDirectory, isNull);
+    expect(controller.createdSessions, isEmpty);
+    expect(original.removeCalls, isEmpty);
+    expect(other.removeCalls, isEmpty);
+  });
+
+  testWidgets('cached project absent from current catalog never creates', (
+    tester,
+  ) async {
+    final repository = _Repository()..projects = const [_otherProject];
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+    await _openSheet(tester, controller);
+    await tester.pumpAndSettle();
+    expect(repository.createProjectDirectory, isNull);
+    expect(controller.createdSessions, isEmpty);
+    expect(
+      find.textContaining('project could not be confirmed'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('scope change while revalidating catalog refuses creation', (
+    tester,
+  ) async {
+    final repository = _Repository();
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+    repository.beforeProjects = () async {
+      controller.locationRevision++;
+    };
+    await _openSheet(tester, controller);
+    await tester.pumpAndSettle();
+    expect(repository.createProjectDirectory, isNull);
+    expect(controller.createdSessions, isEmpty);
+  });
+
+  for (final stage in ['selection', 'repository', 'transport']) {
+    testWidgets(
+      'same-directory workspace change during $stage refuses opening',
+      (tester) async {
+        final repository = _Repository();
+        final controller = await _controller(repository);
+        addTearDown(controller.dispose);
+        final host = await _openSheet(tester, controller);
+        repository.create.complete(_created);
+        await tester.pump();
+        final entered = Completer<void>();
+        final release = Completer<void>();
+        Future<void> hold() async {
+          if (!entered.isCompleted) entered.complete();
+          await release.future;
+        }
+
+        switch (stage) {
+          case 'selection':
+            controller.duringSelection = hold;
+          case 'repository':
+            controller.beforeRepository = hold;
+          case 'transport':
+            controller.beforeTransport = hold;
+        }
+        _ready(controller);
+        await tester.pump();
+        expect(entered.isCompleted, isTrue);
+        expect(controller.directory, _directory);
+        controller.duringSelection = null;
+        await controller.selectLocation(
+          directory: _directory,
+          workspace: 'other-workspace',
+        );
+        release.complete();
+        await tester.pumpAndSettle();
+        expect(controller.workspace, 'other-workspace');
+        expect(controller.createdSessions, isEmpty);
+        expect(host.results, isEmpty);
+        expect(repository.removeCalls, isEmpty);
+        expect(repository.resetCalls, isEmpty);
+        expect(
+          find.byKey(const Key('isolated-task-open-error')),
+          findsOneWidget,
+        );
+      },
+    );
+  }
 
   testWidgets('connection change during repository preparation blocks create', (
     tester,

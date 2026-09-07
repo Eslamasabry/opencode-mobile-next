@@ -17,31 +17,37 @@ Future<Session?> showIsolatedTaskSheet(
   required ConnectionController controller,
   required WorkspaceProject project,
   Duration readinessTimeout = const Duration(seconds: 45),
-}) => showModalBottomSheet<Session>(
-  context: context,
-  isScrollControlled: true,
-  useSafeArea: true,
-  showDragHandle: false,
-  isDismissible: false,
-  enableDrag: false,
-  constraints: const BoxConstraints(maxWidth: 720),
-  builder: (_) => IsolatedTaskSheet(
-    controller: controller,
-    project: project,
-    readinessTimeout: readinessTimeout,
-  ),
-);
+}) {
+  final openingScope = controller.isolatedTaskScope;
+  return showModalBottomSheet<Session>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: false,
+    isDismissible: false,
+    enableDrag: false,
+    constraints: const BoxConstraints(maxWidth: 720),
+    builder: (_) => IsolatedTaskSheet(
+      controller: controller,
+      project: project,
+      openingScope: openingScope,
+      readinessTimeout: readinessTimeout,
+    ),
+  );
+}
 
 class IsolatedTaskSheet extends StatefulWidget {
   const IsolatedTaskSheet({
     super.key,
     required this.controller,
     required this.project,
+    required this.openingScope,
     this.readinessTimeout = const Duration(seconds: 45),
   });
 
   final ConnectionController controller;
   final WorkspaceProject project;
+  final Object openingScope;
   final Duration readinessTimeout;
 
   @override
@@ -53,9 +59,41 @@ class _IsolatedTaskSheetState extends State<IsolatedTaskSheet> {
   IsolatedTaskLaunch? _launch;
   bool _autoOpened = false;
   bool _popped = false;
+  late final ConnectionController _controller;
+  late final Object _openingScope;
+  bool _invalid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = widget.controller;
+    _openingScope = widget.openingScope;
+    _invalid = _openingScope != _controller.isolatedTaskScope;
+    _controller.addListener(_scopeChanged);
+  }
+
+  void _scopeChanged() {
+    // Once launched, controller guards own the transition into the new tree.
+    // Before Start, any observed mismatch permanently retires this sheet.
+    if (_launch == null && _openingScope != _controller.isolatedTaskScope) {
+      setState(() => _invalid = true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant IsolatedTaskSheet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(widget.controller, _controller) ||
+        widget.project.id != oldWidget.project.id ||
+        widget.project.directory != oldWidget.project.directory) {
+      _invalid = true;
+      if (_launch?.canCancel == true) _launch!.cancel();
+    }
+  }
 
   @override
   void dispose() {
+    _controller.removeListener(_scopeChanged);
     _launch?.removeListener(_onLaunchChanged);
     _launch?.dispose();
     _name.dispose();
@@ -64,10 +102,15 @@ class _IsolatedTaskSheetState extends State<IsolatedTaskSheet> {
 
   void _start() {
     if (_launch != null) return;
+    if (_invalid || _openingScope != _controller.isolatedTaskScope) {
+      setState(() => _invalid = true);
+      return;
+    }
     final IsolatedTaskLaunch launch;
     try {
-      launch = widget.controller.startIsolatedTask(
+      launch = _controller.startIsolatedTask(
         project: widget.project,
+        expectedScope: _openingScope,
         name: _name.text,
         readinessTimeout: widget.readinessTimeout,
       );
@@ -80,7 +123,7 @@ class _IsolatedTaskSheetState extends State<IsolatedTaskSheet> {
   }
 
   void _onLaunchChanged() {
-    if (!mounted) return;
+    if (!mounted || _invalid) return;
     final launch = _launch!;
     setState(() {});
     if (launch.phase == IsolatedTaskPhase.ready && !_autoOpened) {
@@ -160,7 +203,9 @@ class _IsolatedTaskSheetState extends State<IsolatedTaskSheet> {
                 ),
               ),
               const SizedBox(height: 12),
-              if (launch == null)
+              if (_invalid)
+                Text(l10n.isolatedTaskScopeChanged)
+              else if (launch == null)
                 ..._form(l10n, theme)
               else
                 _status(l10n, theme),

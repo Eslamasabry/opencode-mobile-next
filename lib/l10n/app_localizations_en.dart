@@ -9,6 +9,10 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get isolatedTaskScopeChanged =>
+      'The server or project changed. Close this sheet and reopen the task from the intended project.';
+
+  @override
   String get appTitle => 'OpenCode Mobile';
 
   @override

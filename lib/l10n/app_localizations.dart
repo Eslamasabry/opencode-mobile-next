@@ -94,6 +94,12 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
 
+  /// No description provided for @isolatedTaskScopeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The server or project changed. Close this sheet and reopen the task from the intended project.'**
+  String get isolatedTaskScopeChanged;
+
   /// Application title shown in the task switcher / window title
   ///
   /// In en, this message translates to:

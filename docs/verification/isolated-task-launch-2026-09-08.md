@@ -97,3 +97,46 @@ Final checks, using the same pinned environment:
 
 The broadened focused run is not green. No full-suite or live-server pass is
 claimed. Root owns review, queue-failure triage and the stable integration gate.
+
+## Independent-review correction checkpoint
+
+Corrects the two scope findings against `a4114cc`, without adding prompt sends
+or worktree/session deletion. The modal captures controller/profile/base URL,
+connection and location revisions, directory and workspace before its builder
+runs. An observed pre-Start mismatch permanently retires the sheet, including
+a switch away and back. The controller requires that opening scope and checks
+the cached project ID/path against a fresh catalog before worktree creation.
+
+Session opening pins the intended no-workspace destination and expected
+connection/location revisions before selection; it checks them after selection,
+repository preparation, current-project lookup, and transport preparation. This
+uses `_selectLocation`'s existing synchronous revision increment before async
+hydration. A superseding selection at the same directory cannot be adopted.
+Returned sessions carrying a workspace ID are refused for routing.
+
+Validation with pinned Flutter 3.47.2 under the granted serial runtime lease:
+
+- Localization generated and four changed Dart files formatted.
+- `isolated_task_sheet_test.dart` plus `isolated_task_launch_test.dart`: **30 passed**.
+  Six new regressions cover before-Start profile switch/stale callback, stale
+  catalog, catalog-await scope change, and same-directory workspace replacement
+  during selection/repository/transport preparation. Existing no-send/no-delete,
+  readiness, failure, cancellation and explicit retry cases remain passing.
+- `worktrees_screen_test.dart`, `connection_sse_test.dart`,
+  `l10n_coverage_test.dart`: **33 passed**.
+- `tool/capture/isolated_task_test.dart`: **6 capture cases passed** across the
+  initial run and exact two-case correction. Initial Workspace captures failed
+  because the new fake returned an immutable list that Workspace sorts; returning
+  a mutable fixture list fixed both. Only the two affected Workspace cases were
+  rerun. All production source was unchanged after the focused pass.
+- `flutter analyze --no-pub`: **no issues**, 16.5 seconds.
+- `git diff --check`: clean.
+
+Total **69 focused/capture checks passed**. Logs are ignored local files
+`build/traycer/isolated-correction-*.log`. Two new synthetic captures
+[light](../qa/isolated-task/sheet-stale-light.png) and
+[dark](../qa/isolated-task/sheet-stale-dark.png) show the retired sheet at 320
+logical pixels and 2× system text. Both were visually inspected: copy wraps,
+Start is absent, and Close remains usable. The existing 12 captures regenerated
+without image changes. No full suite or live v1/on-device worktree journey was
+run at this correction checkpoint; earlier gate history above is unchanged.

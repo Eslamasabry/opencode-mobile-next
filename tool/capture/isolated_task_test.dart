@@ -37,6 +37,9 @@ class _Repository extends CaptureRepository {
   final create = Completer<WorktreeInfo>();
 
   @override
+  Future<List<WorkspaceProject>> listProjects() async => [_project];
+
+  @override
   Future<WorktreeInfo> createWorktree({
     required String projectDirectory,
     String? name,
@@ -55,6 +58,10 @@ class _Controller extends CaptureController {
 
   @override
   Future<void> selectLocation({String? directory, String? workspace}) async {
+    if (this.directory != directory || this.workspace != workspace) {
+      locationRevision++;
+      connectionRevision++;
+    }
     this.directory = directory;
     this.workspace = workspace;
     notifyListeners();
@@ -144,6 +151,39 @@ void main() {
 
   for (final light in [true, false]) {
     final tone = light ? 'light' : 'dark';
+
+    testWidgets('stale sheet $tone', (tester) async {
+      await _onPhone(tester, () async {
+        tester.view.physicalSize = const Size(960, 2532);
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        final controller = await _controller(_Repository());
+        addTearDown(controller.dispose);
+        final key = GlobalKey();
+        await tester.pumpWidget(
+          captureApp(
+            home: _host(controller),
+            boundaryKey: key,
+            controller: controller,
+            light: light,
+          ),
+        );
+        await tester.tap(find.text('Start a task in a fresh worktree'));
+        await tester.pumpAndSettle();
+        controller.locationRevision++;
+        controller.notifyListeners();
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('isolated-task-start')), findsNothing);
+        expect(find.textContaining('Close this sheet'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await writePng(
+          '$_outputDir/sheet-stale-$tone.png',
+          await capturePng(tester, key),
+        );
+        await tester.tap(find.byKey(const Key('isolated-task-close')));
+        await tester.pumpAndSettle();
+      });
+    });
 
     testWidgets('workspace entry $tone', (tester) async {
       await _onPhone(tester, () async {

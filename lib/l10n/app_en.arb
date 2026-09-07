@@ -1,4 +1,5 @@
 {
+  "isolatedTaskScopeChanged": "The server or project changed. Close this sheet and reopen the task from the intended project.",
   "@@locale": "en",
   "appTitle": "OpenCode Mobile",
   "@appTitle": {
