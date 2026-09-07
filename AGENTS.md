@@ -101,6 +101,16 @@ flutter test --concurrency=1    # serial — parallel runs are flaky or killed
 
 ## Workflow
 
+- Maintainer instruction (2026-09-08): new features use one dedicated branch and
+  Git worktree per agent. That agent owns the complete user journey, implementation,
+  localization, tests, screenshots and local commits. The coordinator reviews the
+  complete branch, resolves integration conflicts and merges after validation.
+  Keep each worktree to one feature; do not edit another agent's checkout. This
+  supersedes direct-on-dev development for new features and file-by-file delegation.
+  Use `[skip ci]` in commits; no automatic pushes, CI, signing or releases. Serialize
+  machine-heavy Flutter/native checks across worktrees, while source work proceeds
+  independently. Shared-library single ownership applies within each worktree.
+
 - Maintainer instruction (2026-09-07): consolidate work in logical staged commit batches directly on `dev`, with `[skip ci]` in every commit message to preserve the CI budget. Do not open PRs or trigger native workflows for this consolidation. Run checks locally; CI/signing runs require a fresh explicit request. This instruction overrides the default PR workflow below for this batch.
 
 - Replacement APKs for the maintainer must keep the installed stable CI signer: `2D010C2103CB2F78ABAACA690EAD4D45F8003A6C0A02082CD2A2AE62FD18D0EC`. Use the Android quality workflow for these updates, verify the APK certificate before delivery, and never substitute or rotate the signer.
