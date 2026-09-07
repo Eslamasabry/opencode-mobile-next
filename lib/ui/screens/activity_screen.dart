@@ -18,6 +18,7 @@ import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
 import 'settings_screen.dart';
 import 'profile_monitor_screen.dart';
+import 'run_result_screen.dart';
 
 /// Activity: the single cross-session control centre (audit §3, §8).
 ///
@@ -218,6 +219,17 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   if (scope == _currentDigestScope) _openChat(session.id);
                 },
                 onReview: () => _reviewDigest(session.id, scope),
+                onRunResults: () {
+                  if (scope != _currentDigestScope) return;
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => RunResultScreen(
+                        controller: controller,
+                        sessionID: session.id,
+                      ),
+                    ),
+                  );
+                },
                 onDismiss: () => setState(() {
                   final key = (session.id, session.time!.idle!);
                   _dismissedDigests.add(key);

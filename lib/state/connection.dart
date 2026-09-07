@@ -626,6 +626,22 @@ class ConnectionController extends ChangeNotifier {
   final Set<String> _deletedSessionIDs = {};
   Set<String> busySessions = {};
 
+  /// Assistant message ids whose completion (or error) this phone received
+  /// as a live `message.updated` event on the current connection. Bound to
+  /// the exact message record, never to a session-level idle timestamp, so a
+  /// run-results view can say "observed live" only for that step. In-memory,
+  /// bounded, and cleared with the rest of the connection state.
+  final Set<String> observedCompletedMessageIDs = {};
+  static const _maxObservedCompletedMessages = 512;
+
+  void _noteObservedCompletion(String messageID) {
+    if (messageID.isEmpty) return;
+    if (observedCompletedMessageIDs.length >= _maxObservedCompletedMessages) {
+      observedCompletedMessageIDs.remove(observedCompletedMessageIDs.first);
+    }
+    observedCompletedMessageIDs.add(messageID);
+  }
+
   /// Sessions currently in provider-retry backoff, keyed by session ID.
   /// Populated from `session.status` `{type: 'retry'}` (v1 and v2), the v2
   /// `session.retry.scheduled` event, and the v1 status endpoint on refresh;
@@ -2345,6 +2361,7 @@ class ConnectionController extends ChangeNotifier {
             final working =
                 (msg.time == null || !msg.time!.isDone) &&
                 msg.errorText == null;
+            if (!working) _noteObservedCompletion(msg.id);
             // A Codex turn can contain several completed items and still be
             // running. Its explicit session status owns the busy state.
             if (capabilities.messageCompletionEndsRun) {
@@ -7570,6 +7587,7 @@ class ConnectionController extends ChangeNotifier {
     sessionModels = {};
     _modelLibrary = const ModelLibrary();
     busySessions = {};
+    observedCompletedMessageIDs.clear();
     retryStates = {};
     permissions = {};
     questions = {};
