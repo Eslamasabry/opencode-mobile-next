@@ -55,6 +55,7 @@ class _Imports extends ProductRepository implements SessionImportGateway {
   final writes = <Map<String, dynamic>>[];
   Completer<void>? gate;
   Object? error;
+  Session? result;
   @override
   bool get sessionImportSupported => true;
   @override
@@ -65,12 +66,13 @@ class _Imports extends ProductRepository implements SessionImportGateway {
     writes.add(document.requestBody(destination));
     await gate?.future;
     if (error != null) throw error!;
-    return Session(
-      id: document.id,
-      title: document.title,
-      directory: destination.directory,
-      workspaceID: destination.workspaceID,
-    );
+    return result ??
+        Session(
+          id: document.id,
+          title: document.title,
+          directory: destination.directory,
+          workspaceID: destination.workspaceID,
+        );
   }
 
   @override
@@ -532,6 +534,92 @@ void main() {
       );
     },
   );
+
+  testWidgets('picker result after connection change is discarded', (
+    tester,
+  ) async {
+    final selected = Completer<SessionImportFile?>();
+    final (controller, repo) = await screen(
+      tester,
+      pick: () => selected.future,
+    );
+    await tester.tap(find.text('Choose JSON file'));
+    await tester.pump();
+
+    controller.repository = _Imports();
+    final bytes = utf8.encode(jsonEncode({'data': transfer()}));
+    selected.complete(
+      SessionImportFile(
+        name: 'late.json',
+        length: () async => bytes.length,
+        read: () => Stream.value(bytes),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('late.json'), findsNothing);
+    expect(find.text('Transfer العربية'), findsNothing);
+    expect(
+      find.textContaining('connection or location changed'),
+      findsOneWidget,
+    );
+    expect(repo.writes, isEmpty);
+  });
+
+  testWidgets('controller replacement retires picker scope', (tester) async {
+    final selected = Completer<SessionImportFile?>();
+    final (controller, _) = await screen(tester, pick: () => selected.future);
+    await tester.tap(find.text('Choose JSON file'));
+    await tester.pump();
+
+    final replacement =
+        _Controller(ProfileStore(prefs: await SharedPreferences.getInstance()))
+          ..repository = _Imports()
+          ..directory = '/replacement';
+    addTearDown(replacement.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SessionImportScreen(
+          controller: replacement,
+          pickFile: () => selected.future,
+        ),
+      ),
+    );
+    controller.notifyListeners();
+    final bytes = utf8.encode(jsonEncode({'data': transfer()}));
+    selected.complete(
+      SessionImportFile(
+        name: 'retired.json',
+        length: () async => bytes.length,
+        read: () => Stream.value(bytes),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('retired.json'), findsNothing);
+    expect(find.text('Transfer العربية'), findsNothing);
+  });
+
+  testWidgets('mismatched success response stays retryable and unconfirmed', (
+    tester,
+  ) async {
+    final (_, repo) = await screen(tester);
+    await choose(tester);
+    repo.result = Session(id: 'ses_other', directory: '/current');
+    await tester.tap(find.widgetWithText(FilledButton, 'Import conversation'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Conversation imported'), findsNothing);
+    expect(
+      find.textContaining('Import could not be confirmed'),
+      findsOneWidget,
+    );
+    expect(
+      find.widgetWithText(FilledButton, 'Import conversation'),
+      findsOneWidget,
+    );
+    expect(repo.writes, hasLength(1));
+  });
 
   testWidgets('oversize file is never read or uploaded', (tester) async {
     final (_, repo) = await screen(

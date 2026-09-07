@@ -46,9 +46,10 @@ class SessionImportScreen extends StatefulWidget {
 }
 
 class _SessionImportScreenState extends State<SessionImportScreen> {
-  late final ServerOperationsGateway? _repository;
-  late final int _location;
-  late final String _serverName;
+  late ConnectionController _controller;
+  late ServerOperationsGateway? _repository;
+  late int _location;
+  late String _serverName;
   SessionImportDestination? _destination;
   SessionImportDocument? _document;
   String? _fileName;
@@ -58,11 +59,15 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
   bool _importing = false;
   bool _choosing = false;
   bool _opening = false;
+  int _pickGeneration = 0;
+  int _scopeGeneration = 0;
 
   bool get _busy => _reading || _importing || _choosing || _opening;
   bool get _current =>
-      widget.controller.locationRevision == _location &&
-      identical(widget.controller.repository, _repository);
+      _controller.locationRevision == _location &&
+      identical(_controller.repository, _repository);
+  bool _isCurrent(int scope) =>
+      mounted && scope == _scopeGeneration && _current;
   bool get _supported =>
       _repository is SessionImportGateway &&
       (_repository as SessionImportGateway).sessionImportSupported;
@@ -72,18 +77,52 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.controller.repository;
-    _location = widget.controller.locationRevision;
-    _serverName = widget.controller.profile?.name ?? '';
-    final directory = widget.controller.directory;
+    _controller = widget.controller;
+    _captureControllerScope();
+    final directory = _controller.directory;
     if (directory?.isNotEmpty == true) {
       _destination = SessionImportDestination(
         directory: directory!,
-        workspaceID: widget.controller.workspace,
+        workspaceID: _controller.workspace,
       );
     }
-    widget.controller.addListener(_changed);
+    _controller.addListener(_changed);
     if (_destination == null) unawaited(_resolveDefault());
+  }
+
+  void _captureControllerScope() {
+    _repository = _controller.repository;
+    _location = _controller.locationRevision;
+    _serverName = _controller.profile?.name ?? '';
+  }
+
+  @override
+  void didUpdateWidget(covariant SessionImportScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (identical(oldWidget.controller, widget.controller)) return;
+    oldWidget.controller.removeListener(_changed);
+    _controller = widget.controller;
+    _scopeGeneration += 1;
+    _pickGeneration += 1;
+    _captureControllerScope();
+    _destination = null;
+    _document = null;
+    _fileName = null;
+    _error = null;
+    _imported = null;
+    _reading = false;
+    _importing = false;
+    _choosing = false;
+    _opening = false;
+    _controller.addListener(_changed);
+    if (_controller.directory?.isNotEmpty != true) {
+      unawaited(_resolveDefault());
+    } else {
+      _destination = SessionImportDestination(
+        directory: _controller.directory!,
+        workspaceID: _controller.workspace,
+      );
+    }
   }
 
   void _changed() {
@@ -92,15 +131,17 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
 
   @override
   void dispose() {
-    widget.controller.removeListener(_changed);
+    _controller.removeListener(_changed);
     super.dispose();
   }
 
   Future<void> _resolveDefault() async {
+    final scope = _scopeGeneration;
+    final repository = _repository;
     _choosing = true;
     try {
-      final project = await _repository?.loadCurrentProject();
-      if (mounted && _current && project?.directory.isNotEmpty == true) {
+      final project = await repository?.loadCurrentProject();
+      if (_isCurrent(scope) && project?.directory.isNotEmpty == true) {
         setState(
           () => _destination = SessionImportDestination(
             directory: project!.directory,
@@ -110,31 +151,41 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
     } catch (_) {
       // The explicit destination chooser remains available after a failed probe.
     } finally {
-      if (mounted) setState(() => _choosing = false);
+      if (mounted && scope == _scopeGeneration) {
+        setState(() => _choosing = false);
+      }
     }
   }
 
   Future<void> _pick() async {
     if (_busy || !_current) return;
+    final generation = ++_pickGeneration;
+    final scope = _scopeGeneration;
     setState(() {
       _reading = true;
       _error = null;
     });
     try {
       final file = await widget.pickFile();
-      if (!mounted || file == null) return;
+      if (!_isCurrent(scope) || generation != _pickGeneration || file == null) {
+        return;
+      }
       setState(() {
         _fileName = file.name;
         _document = null;
         _imported = null;
       });
-      if (await file.length() > SessionImportDocument.maxBytes) {
+      final length = await file.length();
+      if (!_isCurrent(scope) || generation != _pickGeneration) return;
+      if (length > SessionImportDocument.maxBytes) {
         throw const SessionImportTooLarge();
       }
       final document = await SessionImportDocument.read(file.read());
-      if (mounted) setState(() => _document = document);
+      if (_isCurrent(scope) && generation == _pickGeneration) {
+        setState(() => _document = document);
+      }
     } catch (error) {
-      if (mounted) {
+      if (_isCurrent(scope) && generation == _pickGeneration) {
         setState(
           () => _error = error is SessionImportTooLarge
               ? _l10n.importTooLarge
@@ -142,23 +193,27 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _reading = false);
+      if (mounted && generation == _pickGeneration) {
+        setState(() => _reading = false);
+      }
     }
   }
 
   Future<void> _chooseDestination() async {
-    if (_busy || !_current || _repository == null) return;
+    final repository = _repository;
+    if (_busy || !_current || repository == null) return;
+    final scope = _scopeGeneration;
     setState(() {
       _choosing = true;
       _error = null;
     });
     try {
-      final projects = await _repository.listProjects();
-      if (!mounted || !_current) return;
-      final workspaces = widget.controller.capabilities.managedWorkspaces
-          ? await _repository.listWorkspaces()
+      final projects = await repository.listProjects();
+      if (!_isCurrent(scope)) return;
+      final workspaces = _controller.capabilities.managedWorkspaces
+          ? await repository.listWorkspaces()
           : <WorkspaceInfo>[];
-      if (!mounted || !_current) return;
+      if (!_isCurrent(scope)) return;
       final choices = <({String label, SessionImportDestination destination})>[
         for (final project in projects) ...[
           if (project.directory.isNotEmpty)
@@ -187,6 +242,7 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
       ];
       // Loading has finished; the modal now owns interaction. Do not keep an
       // indeterminate preparation indicator animating behind the choices.
+      if (!mounted) return;
       setState(() => _choosing = false);
       final result = await showModalBottomSheet<SessionImportDestination>(
         context: context,
@@ -222,13 +278,17 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
           ),
         ),
       );
-      if (mounted && _current && result != null) {
+      if (_isCurrent(scope) && result != null) {
         setState(() => _destination = result);
       }
     } catch (_) {
-      if (mounted) setState(() => _error = _l10n.importDestinationFailed);
+      if (_isCurrent(scope)) {
+        setState(() => _error = _l10n.importDestinationFailed);
+      }
     } finally {
-      if (mounted) setState(() => _choosing = false);
+      if (mounted && scope == _scopeGeneration) {
+        setState(() => _choosing = false);
+      }
     }
   }
 
@@ -243,13 +303,14 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
         _imported != null) {
       return;
     }
+    final scope = _scopeGeneration;
     setState(() {
       _importing = true;
       _error = null;
     });
     try {
-      final ready = await widget.controller.prepareActionRepository();
-      if (!mounted || !_current) return;
+      final ready = await _controller.prepareActionRepository();
+      if (!_isCurrent(scope)) return;
       if (!identical(ready, _repository)) {
         throw StateError('Connection not ready');
       }
@@ -257,12 +318,19 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
         document,
         destination,
       );
+      if (session.id != document.id ||
+          session.directory != destination.directory ||
+          session.workspaceID != destination.workspaceID) {
+        throw StateError('Import returned a mismatched session');
+      }
       // Preserve a confirmed successful result even if the UI changed location
       // while the request ran. Never retry an acknowledged import automatically.
-      if (mounted) setState(() => _imported = session);
-      if (_current) unawaited(widget.controller.refreshSessions());
+      if (mounted && scope == _scopeGeneration) {
+        setState(() => _imported = session);
+      }
+      if (_current) unawaited(_controller.refreshSessions());
     } catch (error) {
-      if (mounted) {
+      if (mounted && scope == _scopeGeneration) {
         setState(
           () => _error = switch (error) {
             SessionImportUnsupported() => _l10n.importUnsupported,
@@ -276,35 +344,41 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _importing = false);
+      if (mounted && scope == _scopeGeneration) {
+        setState(() => _importing = false);
+      }
     }
   }
 
   Future<void> _open() async {
     final session = _imported;
     if (_busy || !_current || session == null) return;
-    final profileID = widget.controller.profile?.id;
-    final serverUrl = widget.controller.profile?.baseUrl;
+    final scope = _scopeGeneration;
+    final profileID = _controller.profile?.id;
+    final serverUrl = _controller.profile?.baseUrl;
     final route = ModalRoute.of(context);
     setState(() => _opening = true);
     try {
-      await widget.controller.selectLocation(
+      await _controller.selectLocation(
         directory: session.directory,
         workspace: session.workspaceID,
       );
       if (!mounted ||
+          scope != _scopeGeneration ||
           route?.isCurrent != true ||
-          widget.controller.profile?.id != profileID ||
-          widget.controller.profile?.baseUrl != serverUrl ||
-          widget.controller.directory != session.directory ||
-          widget.controller.workspace != session.workspaceID) {
+          _controller.profile?.id != profileID ||
+          _controller.profile?.baseUrl != serverUrl ||
+          _controller.directory != session.directory ||
+          _controller.workspace != session.workspaceID) {
         return;
       }
       await Navigator.of(context).pushReplacementNamed('/chat/${session.id}');
     } catch (_) {
       if (mounted) setState(() => _error = _l10n.importOpenFailed);
     } finally {
-      if (mounted) setState(() => _opening = false);
+      if (mounted && scope == _scopeGeneration) {
+        setState(() => _opening = false);
+      }
     }
   }
 
