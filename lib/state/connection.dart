@@ -2329,11 +2329,12 @@ class ConnectionController extends ChangeNotifier {
       //   session.inbox.cancelled         {sessionID, inboxID}
       //   session.inbox.delivery.changed  {sessionID, inboxID, delivery}
       case 'form.v2.created':
-        _handleFormCreated(props);
+        if (supportsForms) _handleFormCreated(props);
         break;
 
       case 'form.v2.replied':
       case 'form.v2.cancelled':
+        if (!supportsForms) break;
         final formID = props['id']?.toString() ?? '';
         if (formID.isNotEmpty) _resolveForm(formID);
         break;

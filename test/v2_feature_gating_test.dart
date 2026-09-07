@@ -599,6 +599,8 @@ void main() {
       final controller = await _controller(v2: false);
       addTearDown(controller.dispose);
       controller.handleEventForTesting(_formCreated());
+      expect(controller.forms, isEmpty);
+      expect(controller.unifiedAttentionCount, 0);
 
       await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
       await tester.pumpAndSettle();

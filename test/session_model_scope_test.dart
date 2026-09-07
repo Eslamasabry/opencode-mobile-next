@@ -20,6 +20,18 @@ Future<ProfileStore> _store([Map<String, Object> seed = const {}]) async {
 ModelRef _ref(String provider, String id) =>
     ModelRef(providerID: provider, modelID: id);
 
+Future<void> settleConstructorMonitorRefreshes(
+  ConnectionController controller,
+) {
+  // ConnectionController starts these monitor refreshes in its constructor.
+  // Await both completion futures before an operation-specific listener is
+  // attached, so startup observations cannot inflate its notification count.
+  return Future.wait<void>([
+    controller.profileMonitor.refresh(),
+    controller.quotaMonitor.refresh(),
+  ]);
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -28,6 +40,7 @@ void main() {
     () async {
       final controller = ConnectionController(await _store());
       addTearDown(controller.dispose);
+      await settleConstructorMonitorRefreshes(controller);
       controller.selectedModel = _ref('opencode', 'default');
       controller.selectedVariant = 'low';
       var notified = 0;

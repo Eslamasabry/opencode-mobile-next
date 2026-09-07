@@ -530,10 +530,16 @@ void main() {
       );
       addTearDown(controller.dispose);
       await tester.pumpWidget(
-        _scaledApp(ActivityScreen(controller: controller), bottomInset: 96),
+        _scaledApp(
+          ActivityScreen(
+            controller: controller,
+            // Use the same route as a notification deep link so the question
+            // sheet opens even when its inbox row is below this short viewport.
+            initialQuestionSessionID: 's1',
+          ),
+          bottomInset: 96,
+        ),
       );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Deployment'));
       await tester.pumpAndSettle();
       expect(find.text('Dismiss'), findsOneWidget);
       expect(find.text('Send answers'), findsOneWidget);
