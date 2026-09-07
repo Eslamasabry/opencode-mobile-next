@@ -6,6 +6,7 @@ import '../domain/provider_quota.dart';
 import '../quota/provider_quota_client.dart';
 import 'connection.dart';
 import 'profiles.dart';
+import 'provider_quota_budgets.dart';
 
 /// Screen-visit consent for one server identity and connection location.
 ///
@@ -42,6 +43,7 @@ class ProviderQuotaOverview extends ChangeNotifier with WidgetsBindingObserver {
   ProviderQuotaSnapshot? _snapshot;
   ProviderQuotaFailure? _failure;
   Timer? _expiry;
+  late final ProviderQuotaBudgets budgets;
 
   ProviderQuotaOverview(
     this.connection, {
@@ -63,6 +65,19 @@ class ProviderQuotaOverview extends ChangeNotifier with WidgetsBindingObserver {
        _suspended = connection.lifecycleSuspended,
        _backgrounded = _isBackgrounded(WidgetsBinding.instance.lifecycleState) {
     _detached = _scope == null;
+    final profile = connection.profile;
+    budgets = ProviderQuotaBudgets(
+      preferences: connection.store.prefs,
+      profileId: profile?.id ?? '',
+      serverOrigin: '${profile?.baseUrl ?? ''}\n${profile?.username ?? ''}',
+      isCurrent: () =>
+          !_detached &&
+          _scope?.matches(connection.profile) == true &&
+          connection.isProfileReadable(profile?.id ?? ''),
+      isProfilePresent: () => connection.isProfileReadable(profile?.id ?? ''),
+      clock: this.clock,
+    );
+    budgets.addListener(_budgetsChanged);
     connection.addListener(_connectionChanged);
     connection.profileDataChanges.addListener(_connectionChanged);
     WidgetsBinding.instance.addObserver(this);
@@ -194,6 +209,7 @@ class ProviderQuotaOverview extends ChangeNotifier with WidgetsBindingObserver {
       _snapshot = result;
       _refreshFailed = false;
       _scheduleExpiry(result);
+      unawaited(budgets.observe(result, stale: snapshotIsStale));
     } catch (error) {
       if (!_current(request)) return;
       _failure = ProviderQuotaFailure(
@@ -281,6 +297,7 @@ class ProviderQuotaOverview extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _interrupt() {
+    budgets.clearAttention();
     if (_loading) {
       _failure = const ProviderQuotaFailure(QuotaFailureKind.unavailable);
     }
@@ -292,6 +309,7 @@ class ProviderQuotaOverview extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _clear() {
+    budgets.clearAttention();
     _consented = false;
     _loading = false;
     _snapshot = null;
@@ -350,7 +368,13 @@ class ProviderQuotaOverview extends ChangeNotifier with WidgetsBindingObserver {
     _repository = null;
     _detached = true;
     _clear();
+    budgets.removeListener(_budgetsChanged);
+    budgets.dispose();
     super.dispose();
+  }
+
+  void _budgetsChanged() {
+    if (!_disposed) notifyListeners();
   }
 
   @override

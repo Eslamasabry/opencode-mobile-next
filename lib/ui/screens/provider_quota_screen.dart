@@ -7,6 +7,7 @@ import '../../domain/provider_quota.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../../state/provider_quota_overview.dart';
+import '../../state/provider_quota_budgets.dart';
 import '../app_theme.dart';
 
 class ProviderQuotaScreen extends StatefulWidget {
@@ -126,6 +127,7 @@ class _ProviderQuotaScreenState extends State<ProviderQuotaScreen> {
                               QuotaProvider.codex => l10n.quotaCodex,
                               QuotaProvider.claude => l10n.quotaClaude,
                               QuotaProvider.minimax => l10n.quotaMiniMax,
+                              QuotaProvider.glm => l10n.quotaGlm,
                             }),
                             selected: _overview.provider == provider,
                             onSelected: (_) {
@@ -200,6 +202,14 @@ class _ProviderQuotaScreenState extends State<ProviderQuotaScreen> {
                         ),
                       ],
                       if (snapshot != null) ...[
+                        if (_overview.budgets.failed)
+                          _Notice(
+                            text: l10n.quotaBudgetSaveFailed,
+                            error: true,
+                          ),
+                        if (_overview.budgets.attentionVisible &&
+                            !_overview.snapshotIsStale)
+                          _Notice(text: l10n.quotaBudgetAttention),
                         if (!snapshot.canShowWindows)
                           _Notice(text: _status(snapshot.status, l10n))
                         else
@@ -207,9 +217,41 @@ class _ProviderQuotaScreenState extends State<ProviderQuotaScreen> {
                             snapshot: snapshot,
                             stale: _overview.snapshotIsStale,
                             now: _overview.clock(),
+                            budgets: _overview.budgets,
                           ),
                       ],
                       const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: _overview.budgets.saving
+                            ? null
+                            : () async {
+                                final clear = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text(l10n.quotaBudgetClearAll),
+                                    content: Text(
+                                      l10n.quotaBudgetClearDescription,
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
+                                        child: Text(l10n.workCancel),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, true),
+                                        child: Text(l10n.quotaBudgetClearAll),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (clear == true) {
+                                  await _overview.budgets.clearAll();
+                                }
+                              },
+                        child: Text(l10n.quotaBudgetClearAll),
+                      ),
                       TextButton(
                         onPressed: () {
                           setState(() => _trusted = false);
@@ -250,10 +292,12 @@ class _QuotaReport extends StatelessWidget {
   final ProviderQuotaSnapshot snapshot;
   final bool stale;
   final DateTime now;
+  final ProviderQuotaBudgets budgets;
   const _QuotaReport({
     required this.snapshot,
     required this.stale,
     required this.now,
+    required this.budgets,
   });
 
   @override
@@ -271,6 +315,7 @@ class _QuotaReport extends StatelessWidget {
           QuotaProvider.codex => l10n.quotaCodexAccount,
           QuotaProvider.claude => l10n.quotaClaudeAccount,
           QuotaProvider.minimax => l10n.quotaMiniMaxAccount,
+          QuotaProvider.glm => l10n.quotaGlmAccount,
         }, style: theme.textTheme.titleLarge),
         if (snapshot.account.status == QuotaAccountStatus.sourceBound) ...[
           const SizedBox(height: 8),
@@ -301,6 +346,10 @@ class _QuotaReport extends StatelessWidget {
             builder: (context) {
               final window = snapshot.windows[index];
               final title = switch (window.id) {
+                'tokens' when snapshot.provider == QuotaProvider.glm =>
+                  l10n.quotaGlmTokenWindow,
+                'mcp' when snapshot.provider == QuotaProvider.glm =>
+                  l10n.quotaGlmMcpWindow,
                 'primary' => l10n.quotaPrimaryWindow,
                 'secondary' => l10n.quotaSecondaryWindow,
                 _ => l10n.quotaOtherWindow(index + 1),
@@ -363,6 +412,15 @@ class _QuotaReport extends StatelessWidget {
                       ),
                       if (reset != null && !now.isBefore(reset))
                         Text(l10n.quotaResetPassed),
+                      if (budgets.usable(snapshot, window)) ...[
+                        const SizedBox(height: 16),
+                        _BudgetControls(
+                          budgets: budgets,
+                          snapshot: snapshot,
+                          window: window,
+                          stale: stale,
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -372,6 +430,85 @@ class _QuotaReport extends StatelessWidget {
         ],
         const SizedBox(height: 16),
         Text(l10n.quotaSourceDisclosure, style: theme.textTheme.bodySmall),
+      ],
+    );
+  }
+}
+
+class _BudgetControls extends StatelessWidget {
+  final ProviderQuotaBudgets budgets;
+  final ProviderQuotaSnapshot snapshot;
+  final ProviderQuotaWindow window;
+  final bool stale;
+  const _BudgetControls({
+    required this.budgets,
+    required this.snapshot,
+    required this.window,
+    required this.stale,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final rule = budgets.rule(snapshot, window);
+    final enabled = !stale && !budgets.saving;
+    Future<void> save(QuotaBudget? value) async {
+      if (await budgets.save(snapshot, window, value)) {
+        await budgets.observe(snapshot, stale: stale);
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l10n.quotaBudgetTitle,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        Text(l10n.quotaBudgetDescription),
+        DropdownButton<double>(
+          key: ValueKey('quota-threshold-${window.id}'),
+          isExpanded: true,
+          value: rule?.percent ?? 0,
+          items: [
+            DropdownMenuItem(value: 0, child: Text(l10n.quotaBudgetOff)),
+            for (final value in {
+              50.0,
+              75.0,
+              90.0,
+              100.0,
+              if (rule != null) rule.percent,
+            })
+              DropdownMenuItem(
+                value: value,
+                child: Text(l10n.quotaBudgetPercent(value.toStringAsFixed(0))),
+              ),
+          ],
+          onChanged: enabled
+              ? (value) => unawaited(
+                  save(
+                    value == null || value == 0
+                        ? null
+                        : QuotaBudget(
+                            value,
+                            attention: rule?.attention ?? false,
+                          ),
+                  ),
+                )
+              : null,
+        ),
+        if (rule != null)
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.quotaBudgetOptIn),
+            subtitle: Text(l10n.quotaBudgetAttentionScope),
+            value: rule.attention,
+            onChanged: enabled
+                ? (value) => unawaited(
+                    save(QuotaBudget(rule.percent, attention: value)),
+                  )
+                : null,
+          ),
       ],
     );
   }

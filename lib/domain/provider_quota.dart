@@ -1,17 +1,20 @@
 /// Optional deployment extension, not an upstream OpenCode API route.
 const providerQuotaPath = '/ocmn/quota/v1';
 
-enum QuotaProvider { codex, claude, minimax }
+enum QuotaProvider { codex, claude, minimax, glm }
 
 /// A parser or historical credential format is not permission to collect data.
 /// Claude subscription collection stays off pending a supported integration.
 bool quotaCollectionAvailable(QuotaProvider provider) =>
-    provider == QuotaProvider.codex || provider == QuotaProvider.minimax;
+    provider == QuotaProvider.codex ||
+    provider == QuotaProvider.minimax ||
+    provider == QuotaProvider.glm;
 
 String quotaPathFor(QuotaProvider provider) => switch (provider) {
   QuotaProvider.codex => providerQuotaPath,
   QuotaProvider.claude => '$providerQuotaPath/claude',
   QuotaProvider.minimax => '$providerQuotaPath/minimax',
+  QuotaProvider.glm => '$providerQuotaPath/glm',
 };
 
 enum ProviderQuotaStatus {
@@ -123,6 +126,7 @@ class ProviderQuotaSnapshot {
       QuotaProvider.codex => 'codex.wham',
       QuotaProvider.claude => 'claude.oauth',
       QuotaProvider.minimax => 'minimax.tokenPlan',
+      QuotaProvider.glm => 'glm.codingPlan',
     };
     if (json['schemaVersion'] != 1 || json['source'] != source) {
       throw const FormatException('Unsupported quota snapshot');

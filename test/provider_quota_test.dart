@@ -13,6 +13,7 @@ Map<String, dynamic> providerQuotaFixture({
     QuotaProvider.codex => 'codex.wham',
     QuotaProvider.claude => 'claude.oauth',
     QuotaProvider.minimax => 'minimax.tokenPlan',
+    QuotaProvider.glm => 'glm.codingPlan',
   },
   'status': 'ok',
   'freshness': 'fresh',

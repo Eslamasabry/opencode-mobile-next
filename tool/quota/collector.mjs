@@ -11,6 +11,8 @@ export const QUOTA_PATH = '/ocmn/quota/v1';
 export const CLAUDE_QUOTA_PATH = '/ocmn/quota/v1/claude';
 export const MINIMAX_QUOTA_PATH = '/ocmn/quota/v1/minimax';
 export const MINIMAX_QUOTA_URL = 'https://www.minimax.io/v1/token_plan/remains';
+export const GLM_QUOTA_PATH = '/ocmn/quota/v1/glm';
+export const GLM_QUOTA_URL = 'https://api.z.ai/api/monitor/usage/quota/limit';
 export const WHAM_URL = 'https://chatgpt.com/backend-api/wham/usage';
 export const MAX_BYTES = 64 * 1024;
 export const PROVIDER_TIMEOUT_MS = 10_000;
@@ -209,7 +211,8 @@ function normalizeAuth(auth, now) {
 
 function emptySnapshot(status, now, account = { status: 'unverified' }, provider = 'codex') {
   return { schemaVersion: 1, provider, source: provider === 'claude' ? 'claude.oauth'
-    : provider === 'minimax' ? 'minimax.tokenPlan' : 'codex.wham', status,
+    : provider === 'minimax' ? 'minimax.tokenPlan'
+    : provider === 'glm' ? 'glm.codingPlan' : 'codex.wham', status,
     freshness: 'none', fetchedAtMs: now, expiresAtMs: now, account,
     ordinaryUsageAllowed: null, windows: [] };
 }
@@ -333,6 +336,58 @@ function normalizeMiniMaxAuth(auth) {
     accountId: `minimax:${auth.accessToken}`, userId: null, expiresAtMs: null };
 }
 
+// Provider-maintained glm-plan-usage script, pinned in README. Only an explicit
+// Z.ai Coding Plan key file is read; no Claude OAuth/config discovery.
+export function createGlmKeySource({ filePath, readFile = readBoundedFile } = {}) {
+  return async () => {
+    if (!filePath) return { status: 'unconfigured' };
+    try {
+      const token = decodeBytes(await readFile(filePath)).replace(/\r?\n$/, '');
+      return accessToken(token) && !token.startsWith('Bearer ')
+        ? { status: 'ok', accessToken: token } : { status: 'authRequired' };
+    } catch { return { status: 'authRequired' }; }
+  };
+}
+
+function normalizeGlmAuth(auth) {
+  if (object(auth) && AUTH_STATUSES.has(auth.status)) return { status: auth.status };
+  if (!object(auth) || auth.status !== 'ok' || !accessToken(auth.accessToken)
+      || auth.accessToken.startsWith('Bearer ')) return { status: 'authRequired' };
+  return { status: 'ok', accessToken: auth.accessToken,
+    accountId: `glm:${auth.accessToken}`, userId: null, expiresAtMs: null };
+}
+
+export function mapGlmUsage(payload, ref, now) {
+  if (!object(payload)) invalid();
+  if (payload.success === false) return emptySnapshot('unavailable', now, undefined, 'glm');
+  if (payload.success != null && payload.success !== true) invalid();
+  if (payload.code != null && payload.code !== 200 && payload.code !== 0) {
+    return emptySnapshot('unavailable', now, undefined, 'glm');
+  }
+  const data = payload.data ?? payload;
+  if (!object(data) || !Array.isArray(data.limits) || data.limits.length > 64) invalid();
+  const windows = [];
+  const ids = new Set();
+  for (const limit of data.limits) {
+    if (!object(limit)) invalid();
+    const id = limit.type === 'TOKENS_LIMIT' ? 'tokens'
+      : limit.type === 'TIME_LIMIT' ? 'mcp' : null;
+    // Changed or multiple token window contracts require new evidence; never
+    // guess weekly windows, units, resets, or aggregate percentages.
+    if (id == null) return emptySnapshot('unsupported', now, undefined, 'glm');
+    if (ids.has(id)) invalid();
+    ids.add(id);
+    if (limit.percentage == null) windows.push({ id, status: 'missing' });
+    else {
+      if (typeof limit.percentage !== 'number' || !Number.isFinite(limit.percentage)
+          || limit.percentage < 0 || limit.percentage > 100) invalid();
+      windows.push({ id, status: 'reported', usedPercent: limit.percentage });
+    }
+  }
+  return { ...emptySnapshot('ok', now, { ref, status: 'sourceBound' }, 'glm'),
+    freshness: 'fresh', expiresAtMs: now + CACHE_MS, windows };
+}
+
 function miniMaxWindow(value, id) {
   const weekly = id === 'secondary';
   const prefix = weekly ? 'current_weekly' : 'current_interval';
@@ -412,7 +467,7 @@ async function readProviderBody(response, signal) {
 export function createCollector({ readToken, authSource = async () => ({ status: 'unconfigured' }),
   fetchImpl = globalThis.fetch, clock = Date.now, timeoutMs = PROVIDER_TIMEOUT_MS, provider = 'codex' } = {}) {
   validateReadToken(readToken);
-  if (!['codex', 'claude', 'minimax'].includes(provider)) throw new ConfigurationError('QUOTA_PROVIDER_INVALID');
+  if (!['codex', 'claude', 'minimax', 'glm'].includes(provider)) throw new ConfigurationError('QUOTA_PROVIDER_INVALID');
   const empty = (status, time, account) => emptySnapshot(status, time, account, provider);
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > PROVIDER_TIMEOUT_MS) {
     throw new ConfigurationError('QUOTA_TIMEOUT_INVALID');
@@ -441,7 +496,8 @@ export function createCollector({ readToken, authSource = async () => ({ status:
       let auth;
       try {
         const source = await authSource();
-        auth = provider === 'minimax' ? normalizeMiniMaxAuth(source) : normalizeAuth(source, now());
+        auth = provider === 'minimax' ? normalizeMiniMaxAuth(source)
+          : provider === 'glm' ? normalizeGlmAuth(source) : normalizeAuth(source, now());
       }
       catch { auth = { status: 'authRequired' }; }
       const key = auth.status === 'ok'
@@ -468,9 +524,11 @@ export function createCollector({ readToken, authSource = async () => ({ status:
       timer = setTimeout(() => controller.abort(), timeoutMs);
     });
     const request = async () => {
-      const url = provider === 'minimax' ? MINIMAX_QUOTA_URL : WHAM_URL;
+      const url = provider === 'minimax' ? MINIMAX_QUOTA_URL
+        : provider === 'glm' ? GLM_QUOTA_URL : WHAM_URL;
       const response = await fetchImpl(url, { method: 'GET', redirect: 'error', credentials: 'omit',
-        signal: controller.signal, headers: { Authorization: `Bearer ${auth.accessToken}`,
+        signal: controller.signal, headers: { Authorization: provider === 'glm'
+          ? auth.accessToken : `Bearer ${auth.accessToken}`,
           ...(provider === 'codex' ? { 'ChatGPT-Account-Id': auth.accountId } : {}),
           Accept: 'application/json', 'User-Agent': 'ocmn-quota/1' } });
       try {
@@ -485,6 +543,7 @@ export function createCollector({ readToken, authSource = async () => ({ status:
         }
         const payload = await readProviderBody(response, controller.signal);
         return provider === 'minimax' ? mapMiniMaxUsage(payload, ref, now())
+          : provider === 'glm' ? mapGlmUsage(payload, ref, now())
           : mapWham(payload, auth, ref, now());
       } finally {
         // Also cancel unread bodies rejected by status, URL or size headers.
@@ -519,7 +578,7 @@ export function createCollector({ readToken, authSource = async () => ({ status:
         await selectAuth();
         if (pending.generation !== generation) return empty('unavailable', now());
         if (snapshot.status === 'ok' && (snapshot.account.status === 'matched'
-          || (provider === 'minimax' && snapshot.account.status === 'sourceBound'))
+          || (['minimax', 'glm'].includes(provider) && snapshot.account.status === 'sourceBound'))
           && snapshot.freshness === 'fresh') cache = snapshot;
         return snapshot;
       })().finally(() => { if (flight === pending) flight = null; });
@@ -528,7 +587,7 @@ export function createCollector({ readToken, authSource = async () => ({ status:
   };
 }
 
-export function createRequestHandler({ readToken, collector, claudeCollector, minimaxCollector }) {
+export function createRequestHandler({ readToken, collector, claudeCollector, minimaxCollector, glmCollector }) {
   const authorized = createReadTokenVerifier(readToken);
   return async (request, response) => {
     const send = (status, body) => {
@@ -547,7 +606,8 @@ export function createRequestHandler({ readToken, collector, claudeCollector, mi
     // Exact request-target comparison rejects query strings and absolute URLs.
     const selected = request.url === QUOTA_PATH ? collector
       : request.url === CLAUDE_QUOTA_PATH ? claudeCollector
-      : request.url === MINIMAX_QUOTA_PATH ? minimaxCollector : null;
+      : request.url === MINIMAX_QUOTA_PATH ? minimaxCollector
+      : request.url === GLM_QUOTA_PATH ? glmCollector : null;
     if (!selected) { send(404, { error: 'unsupported' }); return; }
     if (request.method !== 'GET') { send(405, { error: 'unsupported' }); return; }
     if (request.headers['transfer-encoding'] != null
@@ -578,11 +638,16 @@ export async function loadConfiguration(env, { readFile = readBoundedFile } = {}
   if (minimaxKeyFile != null && (!minimaxKeyFile || !isAbsolute(minimaxKeyFile))) {
     throw new ConfigurationError('QUOTA_MINIMAX_KEY_FILE_INVALID');
   }
+  const glmKeyFile = env.OCMN_GLM_KEY_FILE;
+  if (glmKeyFile != null && (!glmKeyFile || !isAbsolute(glmKeyFile))) {
+    throw new ConfigurationError('QUOTA_GLM_KEY_FILE_INVALID');
+  }
   const tokenPath = env.OCMN_QUOTA_READ_TOKEN_FILE;
   if (!tokenPath) throw new ConfigurationError('QUOTA_READ_TOKEN_FILE_REQUIRED');
   if (!isAbsolute(tokenPath)) throw new ConfigurationError('QUOTA_READ_TOKEN_FILE_INVALID');
   return { host: '127.0.0.1', port: Number(port), format, filePath, ignoredClaudeConfiguration,
     ...(minimaxKeyFile == null ? {} : { minimaxKeyFile }),
+    ...(glmKeyFile == null ? {} : { glmKeyFile }),
     readToken: await loadReadToken(tokenPath, { readFile }) };
 }
 
@@ -595,8 +660,10 @@ async function main() {
   const claudeCollector = createCollector({ readToken: config.readToken, provider: 'claude' });
   const minimaxCollector = createCollector({ readToken: config.readToken, provider: 'minimax',
     authSource: createMiniMaxKeySource({ filePath: config.minimaxKeyFile }) });
+  const glmCollector = createCollector({ readToken: config.readToken, provider: 'glm',
+    authSource: createGlmKeySource({ filePath: config.glmKeyFile }) });
   const server = createServer({ maxHeaderSize: 8192, requestTimeout: 10_000,
-    headersTimeout: 5000, keepAliveTimeout: 1000 }, createRequestHandler({ ...config, collector, claudeCollector, minimaxCollector }));
+    headersTimeout: 5000, keepAliveTimeout: 1000 }, createRequestHandler({ ...config, collector, claudeCollector, minimaxCollector, glmCollector }));
   server.maxRequestsPerSocket = 100;
   server.on('clientError', (_error, socket) => socket.destroy());
   server.on('error', () => { process.stderr.write('QUOTA_LISTENER_FAILED\n'); process.exitCode = 1; });

@@ -71,6 +71,28 @@ Matcher _failure(QuotaFailureKind kind) => throwsA(
 
 void main() {
   test(
+    'GLM uses its fixed collector route with unknown window duration',
+    () async {
+      final value = providerQuotaFixture(provider: QuotaProvider.glm);
+      final window = (value['windows'] as List).first as Map<String, dynamic>;
+      window.remove('durationSeconds');
+      window.remove('resetsAtMs');
+      final adapter = _Adapter((_) => _json(value: value));
+      final gateway = HttpProviderQuotaGateway(
+        _profile(),
+        provider: QuotaProvider.glm,
+        adapter: adapter,
+      );
+      addTearDown(gateway.close);
+      final snapshot = await gateway.readSnapshot();
+      expect(adapter.requests.single.uri.path, '/ocmn/quota/v1/glm');
+      expect(snapshot.account.status, QuotaAccountStatus.sourceBound);
+      expect(snapshot.windows.first.durationSeconds, isNull);
+      expect(snapshot.windows.first.resetsAt, isNull);
+      expect(snapshot.ordinaryUsageAllowed, isNull);
+    },
+  );
+  test(
     'MiniMax reads its fixed collector route and rejects a different provider',
     () async {
       var wrongProvider = false;

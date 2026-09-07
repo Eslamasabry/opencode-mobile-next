@@ -8,6 +8,7 @@ import '../../domain/server_gateway.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../../state/usage_overview.dart';
+import '../../state/usage_budgets.dart';
 import '../widgets/product_states.dart';
 
 AppLocalizations _strings(BuildContext context) =>
@@ -24,15 +25,33 @@ class UsageScreen extends StatefulWidget {
 class _UsageScreenState extends State<UsageScreen> {
   late final UsageOverview _overview =
       widget.overview ?? UsageOverview(widget.controller);
+  late final UsageBudgets _budgets;
   @override
   void initState() {
     super.initState();
+    final profile = widget.controller.profile;
+    final id = profile?.id ?? '';
+    final origin = profile?.baseUrl;
+    final username = profile?.username;
+    _budgets = UsageBudgets(
+      preferences: widget.controller.store.prefs,
+      profileId: id,
+      serverOrigin: '$origin\n$username',
+      isCurrent: () =>
+          !_overview.detached &&
+          widget.controller.profile?.id == id &&
+          widget.controller.profile?.baseUrl == origin &&
+          widget.controller.profile?.username == username &&
+          widget.controller.isProfileReadable(id),
+      isProfilePresent: () => widget.controller.isProfileReadable(id),
+    );
     unawaited(_overview.refresh());
   }
 
   @override
   void dispose() {
     if (widget.overview == null) _overview.dispose();
+    _budgets.dispose();
     super.dispose();
   }
 
@@ -49,7 +68,7 @@ class _UsageScreenState extends State<UsageScreen> {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: _overview,
+    listenable: Listenable.merge([_overview, _budgets]),
     builder: (context, _) {
       final l10n = _strings(context);
       final snapshot = _overview.snapshot;
@@ -168,6 +187,17 @@ class _UsageScreenState extends State<UsageScreen> {
                         ),
                       const SizedBox(height: 12),
                     ],
+                    if (snapshot != null && _budgets.available) ...[
+                      _UsageBudgetControls(
+                        budgets: _budgets,
+                        snapshot: snapshot,
+                        enabled:
+                            available &&
+                            !_overview.loading &&
+                            _overview.error == null,
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                     if (snapshot != null)
                       _UsageReport(snapshot: snapshot, overview: _overview),
                   ],
@@ -179,6 +209,193 @@ class _UsageScreenState extends State<UsageScreen> {
       );
     },
   );
+}
+
+class _UsageBudgetControls extends StatelessWidget {
+  final UsageBudgets budgets;
+  final UsageSnapshot snapshot;
+  final bool enabled;
+  const _UsageBudgetControls({
+    required this.budgets,
+    required this.snapshot,
+    required this.enabled,
+  });
+
+  Future<void> _edit(BuildContext context, UsageBudgetUnit unit) async {
+    final l10n = _strings(context);
+    final controller = TextEditingController(
+      text: budgets.limit(snapshot, unit)?.toString() ?? '',
+    );
+    final form = GlobalKey<FormState>();
+    final route = DialogRoute<num>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          unit == UsageBudgetUnit.usd
+              ? l10n.usageBudgetUsd
+              : l10n.usageBudgetTokens,
+        ),
+        content: SingleChildScrollView(
+          child: Form(
+            key: form,
+            child: TextFormField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.numberWithOptions(
+                decimal: unit == UsageBudgetUnit.usd,
+              ),
+              decoration: InputDecoration(labelText: l10n.usageBudgetAmount),
+              validator: (value) =>
+                  UsageBudgets.validLimit(
+                    num.tryParse(value?.trim() ?? ''),
+                    unit,
+                  )
+                  ? null
+                  : l10n.usageBudgetInvalid,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, -1),
+            child: Text(l10n.usageBudgetRemove),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.workCancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (form.currentState!.validate()) {
+                Navigator.pop(context, num.parse(controller.text.trim()));
+              }
+            },
+            child: Text(l10n.fileSave),
+          ),
+        ],
+      ),
+    );
+    final result = await Navigator.of(context).push(route);
+    await route.completed;
+    controller.dispose();
+    if (result != null) {
+      await budgets.save(snapshot, unit, result == -1 ? null : result);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = _strings(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l10n.usageBudgetTitle,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        Text(l10n.usageBudgetDescription),
+        if (budgets.failed)
+          Text(
+            l10n.quotaBudgetSaveFailed,
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        for (final unit in UsageBudgetUnit.values) ...[
+          const SizedBox(height: 8),
+          Builder(
+            builder: (context) {
+              final limit = budgets.limit(snapshot, unit);
+              final tokens = snapshot.statistics.tokens;
+              final tokenTotal =
+                  [
+                    tokens.input,
+                    tokens.output,
+                    tokens.reasoning,
+                    tokens.cacheRead,
+                    tokens.cacheWrite,
+                  ].fold<BigInt>(
+                    BigInt.zero,
+                    (sum, value) => sum + BigInt.from(value),
+                  );
+              final format = NumberFormat.decimalPattern(
+                Localizations.localeOf(context).toLanguageTag(),
+              );
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (limit != null)
+                    Text(
+                      l10n.usageBudgetProgress(
+                        unit == UsageBudgetUnit.usd
+                            ? format.format(snapshot.statistics.cost)
+                            : tokenTotal.toString(),
+                        format.format(limit),
+                        unit == UsageBudgetUnit.usd
+                            ? 'USD'
+                            : l10n.usageBudgetTokenUnit,
+                      ),
+                    ),
+                  if (limit != null &&
+                      (unit == UsageBudgetUnit.usd
+                          ? snapshot.statistics.cost >= limit
+                          : tokenTotal >= BigInt.from(limit)))
+                    Text(
+                      enabled
+                          ? l10n.usageBudgetReached
+                          : l10n.usageBudgetPrevious,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextButton(
+                      key: ValueKey('usage-budget-${unit.name}'),
+                      onPressed: enabled && !budgets.saving
+                          ? () => _edit(context, unit)
+                          : null,
+                      child: Text(
+                        unit == UsageBudgetUnit.usd
+                            ? l10n.usageBudgetUsd
+                            : l10n.usageBudgetTokens,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton(
+            onPressed: budgets.saving
+                ? null
+                : () async {
+                    final clear = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text(l10n.usageBudgetClearAll),
+                        content: Text(l10n.usageBudgetClearDescription),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text(l10n.workCancel),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: Text(l10n.usageBudgetClearAll),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (clear == true) await budgets.clearAll();
+                  },
+            child: Text(l10n.usageBudgetClearAll),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 String _money(BuildContext context, double value) {

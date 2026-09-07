@@ -22,12 +22,15 @@ implements the frozen `lib/domain/provider_quota.dart` contract at exactly:
 GET /ocmn/quota/v1
 GET /ocmn/quota/v1/claude
 GET /ocmn/quota/v1/minimax
+GET /ocmn/quota/v1/glm
 ```
 
 The first route reports **core Codex windows on a ChatGPT OAuth account**;
 the second is retained only to return **unsupported** safely. The MiniMax route
 reports explicit percentages for its shared `general` Token Plan pool; see the
-[verified source contract and limitations](#minimax-token-plan). These are not OpenCode
+[verified source contract and limitations](#minimax-token-plan). GLM follows the
+[narrow provider-maintained plugin contract](#glm-coding-plan-plugin-contract).
+These are not OpenCode
 project consumption, all product/model allowances, an API-key
 budget, or a promise that a model request will succeed. No provider access or
 deployment was performed during implementation; tests use synthetic inputs.
@@ -89,6 +92,7 @@ Configuration consists of file paths and non-secret settings only:
 | `OCMN_QUOTA_AUTH_FORMAT` | `codex` (default) or `opencode`; never inferred from a path. |
 | `OCMN_CLAUDE_AUTH_FILE` / `OCMN_CLAUDE_AUTH_FORMAT` | Retired; ignored with a fixed startup warning. No Claude credential source is retained or read. |
 | `OCMN_MINIMAX_KEY_FILE` | Optional absolute path to an explicitly provisioned MiniMax Subscription Key text file. One trailing newline accepted. No default, discovery, OAuth reuse, or PAYG balance requests. |
+| `OCMN_GLM_KEY_FILE` | Optional absolute path to an explicitly provisioned global Z.ai Coding Plan key text file. No Claude OAuth, CLI config, environment-token discovery or China-host fallback. |
 | `OCMN_QUOTA_PORT` | Default `4195`; integer in `1024..65535`. Host is always `127.0.0.1`. |
 
 For example, after configuring those variables through the service manager:
@@ -257,13 +261,13 @@ permission to reuse subscription credentials. Re-enabling collection requires
 a separately reviewed, supported and permitted integration, not a file path
 or an undocumented-endpoint workaround.
 
-GLM and Gemini collectors are not implemented. Their units/auth/reset
-semantics must be verified separately, rather than guessed from these adapters.
+Gemini collection is unavailable. GLM's narrow provider-maintained plugin
+contract is described below; it does not establish a stable public API.
 
 ## Focused verification
 
 ```sh
-node --test tool/quota/collector.test.mjs tool/quota/minimax.test.mjs
+node --test tool/quota/collector.test.mjs tool/quota/minimax.test.mjs tool/quota/glm.test.mjs
 ```
 
 Tests use injected fetch/auth/clock, fake request/response objects (no listener),
@@ -342,11 +346,80 @@ contradictory count fields to prove they cannot influence percentages.
 payloads, key loading, fixed-host requests, rotation/cache expiry, HTTP errors,
 authenticated routing and CLI configuration. The lead runs these tests serially.
 
-GLM remains unavailable: the official
+The initial GLM review of the official
 [documentation index](https://docs.z.ai/llms.txt) and
 [Coding Plan FAQ](https://docs.z.ai/devpack/faq) did not establish a supported
 third-party subscription-quota request/schema in this September 7 review.
-The commonly cited `/api/monitor/usage/quota/limit` dashboard endpoint is not
-sufficient by itself. A public supported contract or explicit vendor permission
-with current schema/units/identity evidence is the prerequisite. Gemini was not
-reopened after MiniMax met this slice's feasibility gate.
+That finding was superseded by the provider-maintained plugin evidence below. A community
+dashboard endpoint alone was not sufficient evidence.
+
+## GLM Coding Plan plugin contract
+
+Implemented with synthetic fixtures; live access and deployment unverified.
+The official [GLM Plan Usage plugin README](https://github.com/zai-org/zai-coding-plugins/blob/0446d0bb0bc537d97d3ab3664c4b8b9c4a0e1254/plugins/glm-plan-usage/README.md)
+and [query script](https://github.com/zai-org/zai-coding-plugins/blob/0446d0bb0bc537d97d3ab3664c4b8b9c4a0e1254/plugins/glm-plan-usage/skills/usage-query-skill/scripts/query-usage.mjs)
+establish provider-maintained quota inspection for GLM Coding Plan in Claude
+Code. This is **plugin-contract parity, not a general stable public API**.
+An operator must explicitly provision a Z.ai Coding Plan API key in the absolute
+`OCMN_GLM_KEY_FILE`; no Claude OAuth credential, environment token, CLI config or
+browser session is discovered or reused. The key file follows the same bounded,
+read-only rules as MiniMax. Global Z.ai only is supported; China endpoints and
+arbitrary base URLs are unavailable.
+
+The fixed route `GET /ocmn/quota/v1/glm` uses the same authenticated proxy and
+collector boundary as other routes. The provider call is exactly
+`GET https://api.z.ai/api/monitor/usage/quota/limit`, **raw API key Authorization**
+(not Bearer), no query/body, no redirect. No model/tool usage or subscription
+list endpoint is called. The account reference is an HMAC bound to the selected
+key, not an independently verified account identity. Key rotation cancels
+in-flight work and invalidates the 60-second cache.
+
+Only the official script's `TOKENS_LIMIT` and `TIME_LIMIT` percentages are
+recognized, as `tokens` and `mcp` windows. Explicit finite percentages in 0–100
+are retained; missing percentages remain missing. Counts, plan names, interval
+labels, reset dates and durations are not inferred. In particular the script's
+legacy five-hour/month labels do not prove current reset semantics. Unknown
+window types return unsupported; duplicates/malformed percentages return
+invalidResponse. Error envelopes carry no measurements or raw provider text.
+The mobile contract already permits absent durations/resets; other providers'
+validation remains intact. Unknown reset times do not rearm personal attention.
+
+Synthetic checks: `node --test tool/quota/glm.test.mjs` (lead runs serially).
+They cover fixed raw-key request, mapping, drift, unknown/missing windows,
+configuration, authenticated route, cache expiry and key rotation.
+
+## Gemini prerequisite
+
+The September 7 review of official [quota documentation](https://geminicli.com/docs/resources/quota-and-pricing/)
+and [authentication setup](https://geminicli.com/docs/get-started/authentication/)
+distinguishes Google-account, API-key and Vertex quotas. The public
+[Code Assist client source](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/code_assist/server.ts)
+implements `retrieveUserQuota` through an AuthClient on the `v1internal` service.
+That establishes an internal CLI operation, not permission to reuse CLI OAuth
+credentials in an independent collector or a supported third-party account
+quota contract. No adapter, credential access or live request was added. A
+supported authorized integration with identity, units and reset evidence is
+still required; published plan maxima are not remaining capacity.
+
+## Personal budgets and attention
+
+The mobile Remaining page offers optional percentage-used thresholds per exact
+collector source, opaque account reference, provider window and duration. Rules
+are stored under `oc.budgets.<profileId>`; measured quota snapshots and raw
+credentials are not persisted. Attention requires a separate opt-in, a fresh
+successful read, and a reached personal threshold. Its durable marker dedupes
+per reported reset; missing reset never rearms by elapsed time. Generic 429,
+stale readings, account changes and missing windows cannot produce attention.
+This is in-page attention only, with no polling or device notifications.
+
+Consumption budgets use actual server-reported USD or total tokens, saved in
+`oc.consumptionBudgets.<profileId>`. The scope includes server identity, project,
+timezone, selected range and exact start date. Refresh advances the observed
+upper bound; a changed start needs a new budget. Budgets include all models in
+that scope, independent of inspection filters. Users can explicitly clear all
+current/past consumption budgets to recover the bounded 64-rule capacity.
+These are personal budgets, not provider allowances or request enforcement.
+Both stores serialize replacement-screen writes, merge changed rules after
+durable reload, report failed writes, and participate in profile deletion,
+including deletion while a write is pending. No existing-format migration is
+needed: these are new version-one preference documents.

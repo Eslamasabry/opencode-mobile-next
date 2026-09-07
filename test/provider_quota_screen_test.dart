@@ -1217,6 +1217,34 @@ void main() {
     },
   );
 
+  testWidgets(
+    'personal threshold is saved and attention requires explicit opt-in',
+    (tester) async {
+      final h = await harness(tester);
+      await _pumpQuota(tester, h);
+      await _consentAndRead(tester, h);
+      await _finishRead(tester, h, _snapshot(usedPercent: 100));
+      final threshold = find.byKey(const ValueKey('quota-threshold-primary'));
+      await _reveal(tester, threshold);
+      await tester.tap(threshold);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_l10n.quotaBudgetPercent('90')).last);
+      await tester.pumpAndSettle();
+      expect(find.text(_l10n.quotaBudgetAttention), findsNothing);
+      final optIn = find.widgetWithText(SwitchListTile, _l10n.quotaBudgetOptIn);
+      await _reveal(tester, optIn);
+      await tester.tap(optIn);
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, 1600));
+      await tester.pumpAndSettle();
+      expect(find.text(_l10n.quotaBudgetAttention), findsOneWidget);
+      expect(
+        h.connection.store.prefs.getString('oc.budgets.quota-profile-a'),
+        isNotNull,
+      );
+    },
+  );
+
   final capturePath = Platform.environment['OC_QUOTA_CAPTURE'];
   testWidgets('synthetic remaining usage rendered preview', (tester) async {
     // Opt-in only, with a pre-existing output directory. This is a synthetic
