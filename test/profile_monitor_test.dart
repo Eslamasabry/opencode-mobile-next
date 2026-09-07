@@ -291,6 +291,153 @@ void main() {
     },
   );
   test(
+    'consent changes during a failed alert stop retries before the next post',
+    () async {
+      final store = await monitorStore(count: 1);
+      var consent = true;
+      var calls = 0;
+      final monitor = ProfileMonitor(
+        store: store,
+        isReadable: (_) => true,
+        createGateway: (_) => (
+          gateway: MonitorTestGateway(requests: List.generate(2, request)),
+          operations: MonitorTestOperations(),
+        ),
+        networkWifi: () async => true,
+        alertsAllowed: (_) => consent,
+        alert: (_, r, key, token) async {
+          calls++;
+          consent = false;
+          return false;
+        },
+        dismiss: (_) async => true,
+      );
+      addTearDown(monitor.dispose);
+      monitor.setRuntime(foreground: false, backgroundAllowed: true);
+      await monitor.setEnabled('profile-1', true);
+      await monitor.refresh();
+
+      expect(calls, 1);
+      expect(
+        store.prefs.getString(ProfileMonitor.alertsKey('profile-1')),
+        isNull,
+      );
+    },
+  );
+  test(
+    'quiet hours changing during a failed alert stop retries before the next post',
+    () async {
+      final store = await monitorStore(count: 1);
+      var now = DateTime(2026, 9, 7, 10);
+      var calls = 0;
+      final monitor = ProfileMonitor(
+        store: store,
+        isReadable: (_) => true,
+        now: () => now,
+        createGateway: (_) => (
+          gateway: MonitorTestGateway(requests: List.generate(2, request)),
+          operations: MonitorTestOperations(),
+        ),
+        networkWifi: () async => true,
+        alert: (_, r, key, token) async {
+          calls++;
+          now = DateTime(2026, 9, 7, 23);
+          return false;
+        },
+        dismiss: (_) async => true,
+      );
+      addTearDown(monitor.dispose);
+      monitor.setRuntime(foreground: false, backgroundAllowed: true);
+      await monitor.setRules(
+        'profile-1',
+        const ProfileNotifyRules(
+          enabled: true,
+          quietStart: 22 * 60,
+          quietEnd: 8 * 60,
+        ),
+      );
+      await monitor.refresh();
+
+      expect(calls, 1);
+      expect(
+        store.prefs.getString(ProfileMonitor.alertsKey('profile-1')),
+        isNull,
+      );
+    },
+  );
+  test(
+    'a failed alert dismissal keeps its key for a later successful retry',
+    () async {
+      final store = await monitorStore(count: 1);
+      await store.prefs.setStringList(
+        ProfileMonitor.alertsKey('profile-1'),
+        const ['monitor:profile-1:stale'],
+      );
+      var now = DateTime(2026, 9, 7, 10);
+      final dismissed = <String>[];
+      final monitor = ProfileMonitor(
+        store: store,
+        isReadable: (_) => true,
+        now: () => now,
+        createGateway: (_) => (
+          gateway: MonitorTestGateway(),
+          operations: MonitorTestOperations(),
+        ),
+        networkWifi: () async => true,
+        alert: (_, r, key, token) async => true,
+        dismiss: (key) async {
+          dismissed.add(key);
+          return dismissed.length > 1;
+        },
+      );
+      addTearDown(monitor.dispose);
+      monitor.setRuntime(foreground: false, backgroundAllowed: true);
+      await monitor.setEnabled('profile-1', true);
+      await monitor.refresh();
+
+      expect(dismissed, ['monitor:profile-1:stale']);
+      expect(store.prefs.getStringList(ProfileMonitor.alertsKey('profile-1')), [
+        'monitor:profile-1:stale',
+      ]);
+      now = now.add(const Duration(minutes: 6));
+      await monitor.refresh();
+      expect(dismissed, ['monitor:profile-1:stale', 'monitor:profile-1:stale']);
+      expect(
+        store.prefs.getStringList(ProfileMonitor.alertsKey('profile-1')),
+        isEmpty,
+      );
+    },
+  );
+  test('a timed-out poll cannot publish its late attention result', () async {
+    final store = await monitorStore(count: 1);
+    final pending = Completer<List<PermissionRequest>>();
+    late MonitorTestGateway gateway;
+    final monitor = ProfileMonitor(
+      store: store,
+      isReadable: (_) => true,
+      createGateway: (_) => (
+        gateway: gateway = MonitorTestGateway(pending: pending),
+        operations: MonitorTestOperations(),
+      ),
+      networkWifi: () async => true,
+      alert: (_, r, key, token) async => true,
+      dismiss: (_) async => true,
+      timeout: const Duration(milliseconds: 1),
+    );
+    addTearDown(monitor.dispose);
+    await monitor.setEnabled('profile-1', true);
+    await monitor.refresh();
+
+    expect(gateway.isClosed, isTrue);
+    expect(
+      monitor.snapshotFor('profile-1').status,
+      ProfileMonitorStatus.unavailable,
+    );
+    pending.complete([request(1)]);
+    await monitor.drain('profile-1');
+    expect(monitor.snapshotFor('profile-1').pendingCount, isNull);
+  });
+  test(
     'deletion cancels admission and sweeps settings, alert routing, and late results',
     () async {
       final store = await monitorStore(count: 1);

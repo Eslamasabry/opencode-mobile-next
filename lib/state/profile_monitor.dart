@@ -77,6 +77,7 @@ class ProfileMonitor extends ChangeNotifier {
     _sources[profile.id] = source;
     if (prior == null) return;
     _epochs[profile.id] = (_epochs[profile.id] ?? 0) + 1;
+    _invalidatePoll(profile.id);
     _snapshots.remove(profile.id);
     _next.remove(profile.id);
     _failures.remove(profile.id);
@@ -87,6 +88,7 @@ class ProfileMonitor extends ChangeNotifier {
   final _snapshots = <String, ProfileAttentionSnapshot>{};
   final _failures = <String, int>{};
   final _epochs = <String, int>{};
+  final _pollGenerations = <String, int>{};
   final _blocked = <String>{};
   final _next = <String, DateTime>{};
   final _alerts = <String, Set<String>>{};
@@ -102,6 +104,16 @@ class ProfileMonitor extends ChangeNotifier {
   bool get runningAllowed => _foreground || _backgroundAllowed;
   Map<String, ProfileAttentionSnapshot> get snapshots =>
       Map.unmodifiable(_snapshots);
+
+  int _beginPoll(String id) {
+    final generation = (_pollGenerations[id] ?? 0) + 1;
+    _pollGenerations[id] = generation;
+    return generation;
+  }
+
+  void _invalidatePoll(String id) {
+    _pollGenerations[id] = (_pollGenerations[id] ?? 0) + 1;
+  }
 
   /// Durable route scope deliberately excludes credentials.
   static String routeSourceIdentity(ServerProfile profile) => sha256
@@ -291,6 +303,7 @@ class ProfileMonitor extends ChangeNotifier {
             throw StateError('Could not save monitoring settings');
           }
           _epochs[id] = (_epochs[id] ?? 0) + 1;
+          _invalidatePoll(id);
           if (_activeProfileID == id) _activeGateway?.close();
           _next.remove(id);
           _snapshots.remove(id);
@@ -310,6 +323,7 @@ class ProfileMonitor extends ChangeNotifier {
     if (_activeProfileID == id) _activeGateway?.close();
     _blocked.add(id);
     _epochs[id] = (_epochs[id] ?? 0) + 1;
+    _invalidatePoll(id);
     _snapshots.remove(id);
     _next.remove(id);
     _failures.remove(id);
@@ -401,7 +415,8 @@ class ProfileMonitor extends ChangeNotifier {
         );
         continue;
       }
-      final poll = _poll(profile);
+      final generation = _beginPoll(profile.id);
+      final poll = _poll(profile, generation);
       _polls[profile.id] = poll;
       try {
         await poll;
@@ -455,7 +470,7 @@ class ProfileMonitor extends ChangeNotifier {
     }.values.toList();
   }
 
-  Future<void> _poll(ServerProfile profile) async {
+  Future<void> _poll(ServerProfile profile, int generation) async {
     final id = profile.id, epoch = _epochs[profile.id] ?? 0;
     final location = store.locationFor(id);
     final address = (
@@ -470,6 +485,7 @@ class ProfileMonitor extends ChangeNotifier {
         !_blocked.contains(id) &&
         isReadable(id) &&
         rulesFor(id).enabled &&
+        (_pollGenerations[id] ?? 0) == generation &&
         (_epochs[id] ?? 0) == epoch &&
         store.profiles.any(
           (p) =>
@@ -564,7 +580,8 @@ class ProfileMonitor extends ChangeNotifier {
       );
       if (!_foreground &&
           _backgroundAllowed &&
-          (alertsAllowed?.call(id) ?? true)) {
+          current() &&
+          _notificationPolicyCurrent(id)) {
         await _publishAlerts(id, unique, current);
       }
     } catch (_) {
@@ -596,37 +613,90 @@ class ProfileMonitor extends ChangeNotifier {
     List<MonitoredRequest> requests,
     bool Function() current,
   ) async {
-    final rules = rulesFor(id);
-    if (!rules.notifications || rules.quietAt(_now())) {
+    if (!current() || !_notificationPolicyCurrent(id)) {
       await _dismissProfile(id);
       return;
     }
     final keys = _alerts.putIfAbsent(id, () => _storedAlertKeys(id));
     final valid = {for (final r in requests) alertKey(id, r)};
     for (final key in keys.difference(valid).toList()) {
-      await dismiss(key).timeout(timeout, onTimeout: () => false);
+      if (!current() || !_notificationPolicyCurrent(id)) {
+        await _dismissProfile(id);
+        return;
+      }
+      try {
+        final removed = await dismiss(
+          key,
+        ).timeout(timeout, onTimeout: () => false);
+        if (!removed) continue;
+      } catch (_) {
+        continue;
+      }
+      if (!current() || !_notificationPolicyCurrent(id)) {
+        await _dismissProfile(id);
+        return;
+      }
       keys.remove(key);
     }
     var dispatched = 0;
     for (final request in requests) {
-      if (!current() || _foreground || !_backgroundAllowed) return;
+      if (!current() ||
+          !_notificationPolicyCurrent(id) ||
+          _foreground ||
+          !_backgroundAllowed) {
+        return;
+      }
       final key = alertKey(id, request);
       if (keys.contains(key)) continue;
       if (dispatched >= 8) break;
       dispatched++;
-      final token = await _saveRoute(id, request);
-      if (!current() || token == null) return;
-      if (await alert(
-        id,
-        request,
-        key,
-        token,
-      ).timeout(timeout, onTimeout: () => false)) {
+      final String? token;
+      try {
+        token = await _saveRoute(id, request);
+      } catch (_) {
+        return;
+      }
+      if (!current() || !_notificationPolicyCurrent(id) || token == null) {
+        return;
+      }
+      final bool delivered;
+      try {
+        delivered = await alert(
+          id,
+          request,
+          key,
+          token,
+        ).timeout(timeout, onTimeout: () => false);
+      } catch (_) {
+        return;
+      }
+      if (!current() || !_notificationPolicyCurrent(id)) {
+        if (delivered) {
+          try {
+            await dismiss(key).timeout(timeout, onTimeout: () => false);
+          } catch (_) {}
+        }
+        return;
+      }
+      if (delivered) {
         keys.add(key);
       }
     }
-    if (current()) {
+    if (current() && _notificationPolicyCurrent(id)) {
       await store.prefs.setStringList(alertsKey(id), keys.take(256).toList());
+    }
+  }
+
+  bool _notificationPolicyCurrent(String id) {
+    if (_disposed || !runningAllowed || _blocked.contains(id)) return false;
+    try {
+      final rules = rulesFor(id);
+      return rules.enabled &&
+          rules.notifications &&
+          !rules.quietAt(_now()) &&
+          (alertsAllowed?.call(id) ?? true);
+    } catch (_) {
+      return false;
     }
   }
 
@@ -635,6 +705,9 @@ class ProfileMonitor extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    for (final id in _pollGenerations.keys.toList()) {
+      _invalidatePoll(id);
+    }
     _timer?.cancel();
     _activeGateway?.close();
     super.dispose();
