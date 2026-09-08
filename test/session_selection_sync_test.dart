@@ -186,7 +186,15 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining('plan · primary').last);
     await tester.pumpAndSettle();
-    expect(find.text('Could not save the agent. Try again.'), findsOneWidget);
+    expect(api.writes, isEmpty);
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Use for this session'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Model saved. Agent choice was not confirmed. Try again.'),
+      findsOneWidget,
+    );
     expect(controller.agentForSession('a'), 'build');
     expect(controller.selectedAgent, 'default-agent');
   });

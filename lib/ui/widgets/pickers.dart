@@ -30,6 +30,7 @@ Future<void> showModelPicker(
   BuildContext context, {
   ModelPickerApplyScope applyScope = ModelPickerApplyScope.classic,
   String? sessionID,
+  bool focusAgent = false,
 }) {
   final controller = ProviderScope.containerOf(
     context,
@@ -54,8 +55,11 @@ Future<void> showModelPicker(
     // collapses by dragging.
     clipBehavior: Clip.antiAlias,
     constraints: const BoxConstraints(maxWidth: 720),
-    builder: (_) =>
-        _ModelAgentSheet(applyScope: applyScope, sessionID: sessionID),
+    builder: (_) => _ModelAgentSheet(
+      applyScope: applyScope,
+      sessionID: sessionID,
+      focusAgent: focusAgent,
+    ),
   );
 }
 
@@ -63,10 +67,12 @@ class _ModelAgentSheet extends ConsumerWidget {
   const _ModelAgentSheet({
     this.applyScope = ModelPickerApplyScope.classic,
     this.sessionID,
+    this.focusAgent = false,
   });
 
   final ModelPickerApplyScope applyScope;
   final String? sessionID;
+  final bool focusAgent;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Padding(
@@ -87,6 +93,7 @@ class _ModelAgentSheet extends ConsumerWidget {
           onClose: () => Navigator.maybePop(context),
           applyScope: applyScope,
           sessionID: sessionID,
+          focusAgent: focusAgent,
         ),
       ),
     ),
@@ -108,6 +115,7 @@ class ModelCatalogView extends StatefulWidget {
     this.showHeader = true,
     this.applyScope = ModelPickerApplyScope.classic,
     this.sessionID,
+    this.focusAgent = false,
   });
 
   final ConnectionController controller;
@@ -117,6 +125,7 @@ class ModelCatalogView extends StatefulWidget {
   final bool showHeader;
   final ModelPickerApplyScope applyScope;
   final String? sessionID;
+  final bool focusAgent;
 
   @override
   State<ModelCatalogView> createState() => _ModelCatalogViewState();
@@ -141,9 +150,9 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
   String? _saveError;
   ModelRef? _observedModel;
   String _observedVariant = '';
-  bool _agentSaving = false;
+  String _draftAgent = '';
+  String _observedAgent = '';
   bool _optionsOpen = false;
-  String? _agentError;
   String? _scopeProfile;
   int _scopeLocation = 0;
 
@@ -164,7 +173,14 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     _syncDraft();
     _observedModel = _currentModel;
     _observedVariant = _currentVariant;
+    _observedAgent = _currentAgent;
     widget.controller.addListener(_selectionChanged);
+    if (widget.focusAgent) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final catalog = widget.controller.catalog;
+        if (mounted && catalog != null) _showAgentOptions(catalog);
+      });
+    }
   }
 
   @override
@@ -182,6 +198,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
       _syncDraft();
       _observedModel = _currentModel;
       _observedVariant = _currentVariant;
+      _observedAgent = _currentAgent;
     }
   }
 
@@ -199,7 +216,12 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
       ? widget.controller.selectedVariant
       : widget.controller.variantForSession(_scopedSessionID!);
 
+  String get _currentAgent => _scopedSessionID == null
+      ? widget.controller.selectedAgent
+      : widget.controller.agentForSession(_scopedSessionID!);
+
   void _syncDraft() {
+    _draftAgent = _currentAgent;
     final sessionID = _scopedSessionID;
     if (sessionID != null) {
       _draftModel = widget.controller.modelForSession(sessionID);
@@ -214,9 +236,11 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     if (!mounted) return;
     final untouched =
         _draftModel?.wireName == _observedModel?.wireName &&
-        _draftVariant == _observedVariant;
+        _draftVariant == _observedVariant &&
+        _draftAgent == _observedAgent;
     _observedModel = _currentModel;
     _observedVariant = _currentVariant;
+    _observedAgent = _currentAgent;
     if (untouched && !_applying && !_optionsOpen) setState(_syncDraft);
   }
 
@@ -468,21 +492,68 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
               'This server returned a basic catalog. Capability and context details are unavailable.',
         ),
       if (unloaded.isNotEmpty)
-        _Notice(
-          key: const ValueKey('picker-unloaded-providers'),
-          icon: Icons.sync_problem_rounded,
-          text: unloadedProvidersNotice(
-            unloaded
-                .map((id) => presentedProviderName(id, catalog.providers))
-                .toList(),
-          ),
-          action: TextButton.icon(
-            key: const ValueKey('picker-reload-providers'),
-            onPressed: widget.controller.catalogLoading
-                ? null
-                : widget.controller.reloadProviderRuntime,
-            icon: const Icon(Icons.refresh_rounded, size: 18),
-            label: const Text('Reload providers'),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: Material(
+            color: Theme.of(context).colorScheme.surfaceContainer,
+            borderRadius: BorderRadius.circular(12),
+            clipBehavior: Clip.antiAlias,
+            child: Row(
+              key: const ValueKey('picker-unloaded-providers'),
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () => showDialog<void>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Providers not loaded'),
+                        content: Text(
+                          unloadedProvidersNotice(
+                            unloaded
+                                .map(
+                                  (id) => presentedProviderName(
+                                    id,
+                                    catalog.providers,
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Done'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.info_outline_rounded, size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              '${unloaded.length} signed-in ${unloaded.length == 1 ? 'provider not' : 'providers not'} loaded. View details',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  key: const ValueKey('picker-reload-providers'),
+                  tooltip: 'Reload providers',
+                  onPressed: widget.controller.catalogLoading
+                      ? null
+                      : widget.controller.reloadProviderRuntime,
+                  icon: const Icon(Icons.refresh_rounded),
+                ),
+              ],
+            ),
           ),
         ),
       if (catalog.models.isNotEmpty)
@@ -620,23 +691,20 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
         .where((agent) => !agent.hidden && agent.mode != 'subagent')
         .toList();
     final sessionID = _scopedSessionID;
-    final selected = sessionID == null
-        ? widget.controller.selectedAgent
-        : widget.controller.agentForSession(sessionID);
+    final selected = _draftAgent;
     final value = selected.isEmpty ? null : selected;
     final unavailable =
         selected.isNotEmpty && !visible.any((agent) => agent.id == selected);
     return KeyedSubtree(
       key: const Key('model-picker-agent'),
       child: DropdownButtonFormField<String>(
-        key: ValueKey(('model-picker-agent', value, _agentSaving)),
+        key: ValueKey(('model-picker-agent', value)),
         isExpanded: true,
         initialValue: value,
         decoration: InputDecoration(
           labelText: 'Agent',
           prefixIcon: const Icon(Icons.support_agent_outlined),
-          helperText: _agentSaving ? _strings.modelSelectionSaving : null,
-          errorText: _agentError,
+          helperText: 'Applied with your model choice',
         ),
         hint: Text(visible.isEmpty ? 'No agents available' : 'Server default'),
         items: [
@@ -679,35 +747,17 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
         onChanged:
             !_sameScope ||
                 visible.isEmpty ||
-                _agentSaving ||
                 _applying ||
                 (sessionID != null &&
                     widget.controller.sessionSelectionSaving(sessionID))
             ? null
-            : (value) async {
+            : (value) {
                 if (value == null) return;
                 setState(() {
-                  _agentSaving = true;
-                  _agentError = null;
+                  _draftAgent = value;
+                  _saveError = null;
                 });
                 onStateChanged?.call();
-                try {
-                  if (sessionID == null) {
-                    await widget.controller.selectAgent(value);
-                  } else {
-                    await widget.controller.selectAgentForSession(
-                      sessionID,
-                      value,
-                    );
-                  }
-                } catch (_) {
-                  if (mounted) {
-                    setState(() => _agentError = _strings.modelAgentSaveFailed);
-                  }
-                } finally {
-                  if (mounted) setState(() => _agentSaving = false);
-                  onStateChanged?.call();
-                }
               },
       ),
     );
@@ -889,7 +939,12 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             Text(
-              _draftVariant.isEmpty ? _strings.modelDefaultMode : _draftVariant,
+              [
+                _draftVariant.isEmpty
+                    ? _strings.modelDefaultMode
+                    : _draftVariant,
+                if (_draftAgent.isNotEmpty) _draftAgent,
+              ].join(' · '),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -941,7 +996,6 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
               onPressed:
                   !_sameScope ||
                       _applying ||
-                      _agentSaving ||
                       (_scopedSessionID != null &&
                           widget.controller.sessionSelectionSaving(
                             _scopedSessionID!,
@@ -965,6 +1019,35 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
       ),
     ),
   );
+
+  Future<void> _showAgentOptions(CatalogSnapshot catalog) async {
+    _optionsOpen = true;
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (context) => StatefulBuilder(
+          builder: (context, updateDialog) => AlertDialog(
+            title: const Text('Choose an agent'),
+            scrollable: true,
+            content: _agentPicker(
+              catalog,
+              onStateChanged: () {
+                if (context.mounted) updateDialog(() {});
+              },
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Done'),
+              ),
+            ],
+          ),
+        ),
+      );
+    } finally {
+      _optionsOpen = false;
+    }
+  }
 
   Future<void> _showModelOptions(
     BuildContext context,
@@ -1082,10 +1165,12 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     final model = _draftModel;
     if (model == null || _applying || !_sameScope) return;
     final variant = _draftVariant;
+    final agent = _draftAgent;
     setState(() {
       _applying = true;
       _saveError = null;
     });
+    var modelConfirmed = false;
     try {
       final sessionID = _scopedSessionID;
       if (sessionID != null) {
@@ -1097,21 +1182,42 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
       } else {
         await widget.controller.selectModel(model, variant: variant);
       }
-      if (!mounted || !_sameScope) return;
+      if (!_sameScope) return;
       if (!ModelLibrary.sameModel(_currentModel, model) ||
           _currentVariant != variant) {
-        setState(
-          () => _saveError =
-              'This choice is no longer available. Refresh models and try again.',
-        );
+        if (mounted) {
+          setState(
+            () => _saveError =
+                'This choice is no longer available. Refresh models and try again.',
+          );
+        }
         return;
       }
+      modelConfirmed = true;
+      if (agent.isNotEmpty && agent != _currentAgent) {
+        if (sessionID != null) {
+          await widget.controller.selectAgentForSession(sessionID, agent);
+        } else {
+          await widget.controller.selectAgent(agent);
+        }
+        if (!mounted || !_sameScope) return;
+        if (_currentAgent != agent) {
+          setState(
+            () => _saveError =
+                'Model saved. Agent choice was not confirmed. Try again.',
+          );
+          return;
+        }
+      }
+      if (!mounted) return;
       widget.onApplied?.call();
       if (mounted && widget.onApplied == null) setState(_syncDraft);
     } catch (_) {
       if (mounted) {
         setState(
-          () => _saveError = 'Could not save the model choice. Try again.',
+          () => _saveError = modelConfirmed
+              ? 'Model saved. Agent choice was not confirmed. Try again.'
+              : 'Could not confirm the model choice. Check your selection and try again.',
         );
       }
     } finally {
