@@ -1,0 +1,20 @@
+{
+  "version": "0.153.4",
+  "transport": "stdio",
+  "checks": {
+    "initialize": "pinned result",
+    "account/read": {
+      "account": null,
+      "requiresOpenaiAuth": true
+    },
+    "account/rateLimits/read": {
+      "outcome": "unauthenticated rejection",
+      "code": -32600
+    },
+    "account/usage/read": {
+      "outcome": "unauthenticated rejection",
+      "code": -32600
+    }
+  },
+  "processClosed": true
+}

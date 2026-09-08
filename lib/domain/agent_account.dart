@@ -65,7 +65,13 @@ class AccountDeviceCode {
   String toString() => 'AccountDeviceCode(redacted)';
 }
 
-enum AccountEventKind { changed, limitsChanged, loginCompleted, disconnected }
+enum AccountEventKind {
+  changed,
+  limitsChanged,
+  loginCompleted,
+  loginCancelled,
+  disconnected,
+}
 
 class AccountEvent {
   final AccountEventKind kind;

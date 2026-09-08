@@ -44,10 +44,13 @@ class _AgentAccountScreenState extends State<AgentAccountScreen>
     final gateway = widget.connection.api;
     if (!widget.connection.isConnected ||
         !widget.connection.capabilities.agentAccount ||
-        gateway is! AgentAccountGateway)
+        gateway is! AgentAccountGateway) {
       return;
+    }
     _controller?.dispose();
-    _controller = AgentAccountController(gateway.openAccountSession());
+    _controller = AgentAccountController(
+      (gateway as AgentAccountGateway).openAccountSession(),
+    );
     unawaited(_controller!.refresh());
   }
 
@@ -76,8 +79,9 @@ class _AgentAccountScreenState extends State<AgentAccountScreen>
     if (state == AppLifecycleState.resumed && !_scopeLost) {
       _sync();
       final controller = _controller;
-      if (controller != null && controller.session.active)
+      if (controller != null && controller.session.active) {
         unawaited(controller.refresh());
+      }
     }
   }
 
@@ -134,7 +138,11 @@ class AgentAccountPanel extends StatelessWidget {
           account!.signedIn
               ? l.agentAccountConnected
               : account.requiresSignIn
-              ? l.agentAccountSignedOut
+              ? controller.loginPending
+                    ? l.agentAccountInProgress
+                    : controller.loginStatus == AccountLoginStatus.uncertain
+                    ? l.agentAccountNeedsAttention
+                    : l.agentAccountSignedOut
               : l.agentAccountNoAuth,
       };
       return Scaffold(
@@ -270,14 +278,15 @@ class AgentAccountPanel extends StatelessWidget {
                       if (controller.metricsLoading &&
                           controller.limits == null)
                         const LinearProgressIndicator(),
-                      if (controller.limits == null ||
-                          controller.limits!.every(
-                            (bucket) =>
-                                bucket.primary == null &&
-                                bucket.secondary == null,
-                          ))
+                      if (!controller.metricsLoading &&
+                          (controller.limits == null ||
+                              controller.limits!.every(
+                                (bucket) =>
+                                    bucket.primary == null &&
+                                    bucket.secondary == null,
+                              )))
                         _detail(context, l.agentAccountLimitsUnavailable)
-                      else
+                      else if (controller.limits != null)
                         for (final bucket in controller.limits!)
                           _bucket(context, l, bucket),
                       const SizedBox(height: 24),
@@ -288,7 +297,8 @@ class AgentAccountPanel extends StatelessWidget {
                       const SizedBox(height: 12),
                       if (controller.metricsLoading)
                         const LinearProgressIndicator(),
-                      if (controller.usage?.lifetimeTokens == null &&
+                      if (!controller.metricsLoading &&
+                          controller.usage?.lifetimeTokens == null &&
                           controller.usage?.peakDailyTokens == null)
                         _detail(context, l.agentAccountUsageUnavailable)
                       else
@@ -368,8 +378,10 @@ class AgentAccountPanel extends StatelessWidget {
               const SizedBox(height: 12),
               SelectableText(
                 code.userCode,
-                style: Theme.of(context).textTheme.headlineMedium
-                    ?.copyWith(fontFamily: 'AppMono', letterSpacing: 2),
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontFamily: 'AppMono',
+                  letterSpacing: 2,
+                ),
               ),
               const SizedBox(height: 16),
               FilledButton.tonalIcon(
@@ -381,7 +393,7 @@ class AgentAccountPanel extends StatelessWidget {
               const SizedBox(height: 8),
               const Text('auth.openai.com'),
             ],
-            if (controller.loginPending) ...[
+            if (controller.loginPending || controller.canCancel) ...[
               const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: status == AccountLoginStatus.cancelling
@@ -442,7 +454,7 @@ class AgentAccountPanel extends StatelessWidget {
         Text(
           window.durationMinutes == null
               ? l.agentAccountWindowUnknown
-              : l.agentAccountWindowMinutes(window.durationMinutes!),
+              : _duration(l, window.durationMinutes!),
         ),
         Text(
           window.resetsAt == null
@@ -485,8 +497,13 @@ class AgentAccountPanel extends StatelessWidget {
     ),
     child: Text(text, style: Theme.of(context).textTheme.labelLarge),
   );
-  String _time(BuildContext context, DateTime at) =>
-      DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag())
-          .add_jm()
-          .format(at.toLocal());
+  String _duration(AppLocalizations l, int minutes) =>
+      minutes > 0 && minutes % 1440 == 0
+      ? l.agentAccountWindowDays(minutes ~/ 1440)
+      : minutes > 0 && minutes % 60 == 0
+      ? l.agentAccountWindowHours(minutes ~/ 60)
+      : l.agentAccountWindowMinutes(minutes);
+  String _time(BuildContext context, DateTime at) => DateFormat.yMMMd(
+    Localizations.localeOf(context).toLanguageTag(),
+  ).add_jm().format(at.toLocal());
 }

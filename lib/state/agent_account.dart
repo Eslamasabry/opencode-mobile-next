@@ -39,6 +39,8 @@ class AgentAccountController extends ChangeNotifier {
   }
 
   bool get canSignIn =>
+      session.active &&
+      session.supported &&
       status == AccountPanelStatus.ready &&
       account?.signedIn == false &&
       account?.requiresSignIn == true &&
@@ -49,6 +51,10 @@ class AgentAccountController extends ChangeNotifier {
     AccountLoginStatus.waiting,
     AccountLoginStatus.cancelling,
   }.contains(loginStatus);
+  bool get canCancel =>
+      session.active &&
+      (loginPending || loginStatus == AccountLoginStatus.uncertain) &&
+      loginStatus != AccountLoginStatus.cancelling;
   void _notify() {
     if (!_disposed) notifyListeners();
   }
@@ -65,7 +71,18 @@ class AgentAccountController extends ChangeNotifier {
             ? AccountLoginStatus.completed
             : AccountLoginStatus.failed;
         _queueRefresh();
+      case AccountEventKind.loginCancelled:
+        ++_loginRevision;
+        deviceCode = null;
+        loginStatus = event.success
+            ? AccountLoginStatus.cancelled
+            : AccountLoginStatus.uncertain;
+        _queueRefresh();
       case AccountEventKind.changed:
+        if (loginPending) {
+          unawaited(cancel());
+        }
+        _queueRefresh();
       case AccountEventKind.limitsChanged:
         _queueRefresh();
     }
@@ -177,14 +194,20 @@ class AgentAccountController extends ChangeNotifier {
 
   Future<void> cancel() async {
     if (_disposed ||
-        !loginPending ||
-        loginStatus == AccountLoginStatus.cancelling)
+        !canCancel ||
+        loginStatus == AccountLoginStatus.cancelling) {
       return;
+    }
     final revision = ++_loginRevision;
     deviceCode = null;
     loginStatus = AccountLoginStatus.cancelling;
     _notify();
-    final confirmed = await session.cancelLogin();
+    var confirmed = false;
+    try {
+      confirmed = await session.cancelLogin();
+    } catch (_) {
+      /* Keep cancellation uncertainty visible. */
+    }
     if (_disposed || revision != _loginRevision) return;
     loginStatus = confirmed
         ? AccountLoginStatus.cancelled

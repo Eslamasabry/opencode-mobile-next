@@ -30,7 +30,8 @@ class CodexFailure extends ApiException {
   CodexFailure(this.kind)
     : super(
         switch (kind) {
-          CodexFailureKind.invalidEndpoint => 'Use a secure Codex server address; plain WebSocket is limited to this device.',
+          CodexFailureKind.invalidEndpoint =>
+            'Use a secure Codex server address; plain WebSocket is limited to this device.',
           CodexFailureKind.authentication =>
             'Codex rejected the server connection token.',
           CodexFailureKind.disconnected => 'The Codex server disconnected.',
@@ -40,7 +41,8 @@ class CodexFailure extends ApiException {
             'This action is unavailable for this Codex connection.',
           CodexFailureKind.overloaded =>
             'The Codex server is busy. Try again later.',
-          CodexFailureKind.deliveryUnknown => 'Delivery is uncertain. Refresh the conversation before sending again.',
+          CodexFailureKind.deliveryUnknown =>
+            'Delivery is uncertain. Refresh the conversation before sending again.',
           CodexFailureKind.staleRequest =>
             'This request has changed. Refresh before replying.',
           CodexFailureKind.scopeMismatch =>
@@ -69,10 +71,8 @@ abstract interface class CodexSocket {
   Future<void> close();
 }
 
-typedef CodexSocketFactory = Future<CodexSocket> Function(
-  Uri endpoint,
-  String token,
-);
+typedef CodexSocketFactory =
+    Future<CodexSocket> Function(Uri endpoint, String token);
 
 class _IoCodexSocket implements CodexSocket {
   final WebSocket socket;

@@ -16,6 +16,7 @@ class CodexAccountSession extends AgentAccountSession {
   bool _starting = false;
   bool _cancelRequested = false;
   String? _loginId;
+  bool _untrackedStart = false;
   final _earlyCompletions = <String, bool>{};
 
   CodexAccountSession(this.transport, this.scopeValid)
@@ -24,8 +25,9 @@ class CodexAccountSession extends AgentAccountSession {
     _disconnect = transport.disconnects.listen((_) {
       _loginId = null;
       _earlyCompletions.clear();
-      if (!_closed)
+      if (!_closed) {
         _events.add(const AccountEvent(AccountEventKind.disconnected));
+      }
     });
   }
 
@@ -39,10 +41,12 @@ class CodexAccountSession extends AgentAccountSession {
   Stream<AccountEvent> get events => _events.stream;
 
   void _check() {
-    if (!active)
+    if (!active) {
       throw const AgentAccountException(AgentAccountFailure.disconnected);
-    if (!supported)
+    }
+    if (!supported) {
       throw const AgentAccountException(AgentAccountFailure.unavailable);
+    }
   }
 
   Future<Map<String, dynamic>> _call(
@@ -77,7 +81,7 @@ class CodexAccountSession extends AgentAccountSession {
   Future<AgentAccount> read() async {
     final result = await _call('account/read', {'refreshToken': false});
     final required = result['requiresOpenaiAuth'];
-    if (required is! bool) throw _invalid;
+    if (required is! bool || !result.containsKey('account')) throw _invalid;
     final account = result['account'];
     if (account == null) return AgentAccount(requiresSignIn: required);
     if (account is! Map || account['type'] is! String) throw _invalid;
@@ -93,6 +97,7 @@ class CodexAccountSession extends AgentAccountSession {
   Future<List<AccountRateBucket>> rateLimits() async {
     final result = await _call('account/rateLimits/read', {});
     final multi = result['rateLimitsByLimitId'];
+    if (multi != null && multi is! Map) throw _invalid;
     final List<dynamic> values;
     if (multi is Map && multi.isNotEmpty) {
       if (multi.length > 32) throw _invalid;
@@ -126,17 +131,21 @@ class CodexAccountSession extends AgentAccountSession {
   @override
   Future<AccountDeviceCode> startDeviceLogin() async {
     _check();
-    if (_starting || _loginId != null)
+    if (_starting || _loginId != null || _untrackedStart) {
       throw const AgentAccountException(AgentAccountFailure.unavailable);
+    }
     _starting = true;
     _cancelRequested = false;
     _earlyCompletions.clear();
+    var requested = false;
+    var receiptKnown = false;
     try {
       // Do not knowingly replace an account authenticated by another client.
       final current = await read();
       if (current.signedIn || !current.requiresSignIn || _cancelRequested) {
         throw const AgentAccountException(AgentAccountFailure.unavailable);
       }
+      requested = true;
       final result = await _call(
         'account/login/start',
         {'type': 'chatgptDeviceCode'},
@@ -144,8 +153,26 @@ class CodexAccountSession extends AgentAccountSession {
         finishLogin: true,
       );
       _loginId = _text(result['loginId'], 256);
+      receiptKnown = true;
+      final completed = _earlyCompletions.remove(_loginId);
+      if (completed != null) {
+        _loginId = null;
+        if (active) {
+          _events.add(
+            AccountEvent(AccountEventKind.loginCompleted, success: completed),
+          );
+        }
+        // The matching notification already settled the login. Returning a
+        // device code here could reopen a completed flow in a late UI callback.
+        throw const AgentAccountException(AgentAccountFailure.unavailable);
+      }
       if (_cancelRequested) {
-        await _cancelOwned();
+        final confirmed = await _cancelOwned();
+        if (active) {
+          _events.add(
+            AccountEvent(AccountEventKind.loginCancelled, success: confirmed),
+          );
+        }
         throw const AgentAccountException(AgentAccountFailure.unavailable);
       }
       try {
@@ -161,38 +188,43 @@ class CodexAccountSession extends AgentAccountSession {
             uri.userInfo.isNotEmpty ||
             uri.hasQuery ||
             uri.hasFragment ||
-            (uri.hasPort && uri.port != 443))
+            (uri.hasPort && uri.port != 443)) {
           throw _invalid;
-        final code = _text(result['userCode'], 64);
-        final completed = _earlyCompletions.remove(_loginId);
-        if (completed != null) {
-          _loginId = null;
-          scheduleMicrotask(() {
-            if (active)
-              _events.add(
-                AccountEvent(
-                  AccountEventKind.loginCompleted,
-                  success: completed,
-                ),
-              );
-          });
         }
+        final code = _text(result['userCode'], 64);
         return AccountDeviceCode(url, code);
       } catch (_) {
-        await _cancelOwned();
+        if (!await _cancelOwned()) {
+          throw const AgentAccountException(AgentAccountFailure.uncertain);
+        }
         rethrow;
       }
+    } on AgentAccountException catch (error) {
+      if (requested &&
+          !receiptKnown &&
+          {
+            AgentAccountFailure.uncertain,
+            AgentAccountFailure.invalidResponse,
+          }.contains(error.kind)) {
+        _untrackedStart = true;
+        throw const AgentAccountException(AgentAccountFailure.uncertain);
+      }
+      rethrow;
     } finally {
       _starting = false;
       _earlyCompletions.clear();
+      if (_cancelRequested && !requested && active) {
+        _events.add(
+          const AccountEvent(AccountEventKind.loginCancelled, success: true),
+        );
+      }
     }
   }
 
   Future<bool> _cancelOwned() async {
-    final id = _loginId;
-    _loginId = null;
-    if (id == null) return true;
     if (!_sameScope) return false;
+    final id = _loginId;
+    if (id == null) return !_starting && !_untrackedStart;
     try {
       final result = await transport.requestInEpoch(
         'account/login/cancel',
@@ -200,7 +232,11 @@ class CodexAccountSession extends AgentAccountSession {
         epoch: _epoch,
         mutation: true,
       );
-      return result['status'] == 'canceled';
+      final confirmed = result['status'] == 'canceled';
+      if (confirmed && _loginId == id) {
+        _loginId = null;
+      }
+      return confirmed;
     } catch (_) {
       return false;
     }
@@ -216,6 +252,9 @@ class CodexAccountSession extends AgentAccountSession {
   void _onEvent(CodexRpcEvent event) {
     if (!active || event.epoch != _epoch) return;
     if (event.method == 'account/updated') {
+      if (_starting || _loginId != null) {
+        _cancelRequested = true;
+      }
       _events.add(const AccountEvent(AccountEventKind.changed));
     } else if (event.method == 'account/rateLimits/updated') {
       // Re-read instead of merging uncorrelated account snapshots.
@@ -257,8 +296,9 @@ String _text(dynamic value, int max) {
   if (value is! String ||
       value.isEmpty ||
       value.length > max ||
-      RegExp(r'[\x00-\x1f\x7f]').hasMatch(value))
+      RegExp(r'[\x00-\x1f\x7f]').hasMatch(value)) {
     throw _invalid;
+  }
   return value;
 }
 

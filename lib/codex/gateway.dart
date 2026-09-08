@@ -476,10 +476,9 @@ class CodexGateway
       turns: true,
       operation: context,
     );
-    final active = codexList(thread['turns'])
-        .map(codexObject)
-        .where((turn) => turn['status'] == 'inProgress')
-        .toList();
+    final active = codexList(
+      thread['turns'],
+    ).map(codexObject).where((turn) => turn['status'] == 'inProgress').toList();
     if (active.length != 1) throw CodexFailure(CodexFailureKind.staleRequest);
     _checkOperation(context, mutation: true);
     await transport.request('turn/interrupt', {
