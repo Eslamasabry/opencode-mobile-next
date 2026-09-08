@@ -1,0 +1,192 @@
+{
+  "card": {
+    "name": "Synthetic color agent",
+    "description": "No model; deterministic A2A lifecycle fixture.",
+    "supportedInterfaces": [
+      {
+        "url": "http://127.0.0.1:56141/rpc",
+        "protocolBinding": "JSONRPC",
+        "protocolVersion": "1.0"
+      }
+    ],
+    "version": "fixture-1",
+    "capabilities": {
+      "streaming": false
+    },
+    "securitySchemes": {
+      "bearer": {
+        "httpAuthSecurityScheme": {
+          "scheme": "Bearer"
+        }
+      }
+    },
+    "securityRequirements": [
+      {
+        "schemes": {
+          "bearer": {}
+        }
+      }
+    ],
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "color",
+        "name": "Choose a color",
+        "description": "Asks for input then returns an artifact.",
+        "tags": [
+          "fixture"
+        ]
+      }
+    ]
+  },
+  "submitted": {
+    "task": {
+      "id": "7321ebea-fcdf-49f7-88a0-892883300407",
+      "contextId": "7db1fc17-b1bc-43d7-8e79-c3256d7233d2",
+      "status": {
+        "state": "TASK_STATE_SUBMITTED"
+      },
+      "history": [
+        {
+          "messageId": "0315cd64-1804-420e-89a3-b40c43d5f6fa",
+          "contextId": "7db1fc17-b1bc-43d7-8e79-c3256d7233d2",
+          "taskId": "7321ebea-fcdf-49f7-88a0-892883300407",
+          "role": "ROLE_USER",
+          "parts": [
+            {
+              "text": "choose"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "inputRequired": {
+    "id": "7321ebea-fcdf-49f7-88a0-892883300407",
+    "contextId": "7db1fc17-b1bc-43d7-8e79-c3256d7233d2",
+    "status": {
+      "state": "TASK_STATE_INPUT_REQUIRED",
+      "message": {
+        "messageId": "87e4637a-2588-4f73-a825-3f33e4a03e7b",
+        "contextId": "7db1fc17-b1bc-43d7-8e79-c3256d7233d2",
+        "taskId": "7321ebea-fcdf-49f7-88a0-892883300407",
+        "role": "ROLE_AGENT",
+        "parts": [
+          {
+            "text": "Which color?"
+          }
+        ]
+      },
+      "timestamp": "2026-09-07T22:09:14.696026Z"
+    },
+    "history": [
+      {
+        "messageId": "0315cd64-1804-420e-89a3-b40c43d5f6fa",
+        "contextId": "7db1fc17-b1bc-43d7-8e79-c3256d7233d2",
+        "taskId": "7321ebea-fcdf-49f7-88a0-892883300407",
+        "role": "ROLE_USER",
+        "parts": [
+          {
+            "text": "choose"
+          }
+        ]
+      }
+    ]
+  },
+  "completed": {
+    "id": "7321ebea-fcdf-49f7-88a0-892883300407",
+    "contextId": "7db1fc17-b1bc-43d7-8e79-c3256d7233d2",
+    "status": {
+      "state": "TASK_STATE_COMPLETED",
+      "timestamp": "2026-09-07T22:09:14.701026Z"
+    },
+    "artifacts": [
+      {
+        "artifactId": "744c64d7-7702-4d57-9e00-5267081d697d",
+        "name": "Synthetic result",
+        "parts": [
+          {
+            "text": "Synthetic result: blue",
+            "mediaType": "text/plain"
+          },
+          {
+            "url": "https://example.org/synthetic.txt",
+            "filename": "synthetic.txt",
+            "mediaType": "text/plain"
+          }
+        ]
+      }
+    ],
+    "history": [
+      {
+        "messageId": "0315cd64-1804-420e-89a3-b40c43d5f6fa",
+        "contextId": "7db1fc17-b1bc-43d7-8e79-c3256d7233d2",
+        "taskId": "7321ebea-fcdf-49f7-88a0-892883300407",
+        "role": "ROLE_USER",
+        "parts": [
+          {
+            "text": "choose"
+          }
+        ]
+      },
+      {
+        "messageId": "87e4637a-2588-4f73-a825-3f33e4a03e7b",
+        "contextId": "7db1fc17-b1bc-43d7-8e79-c3256d7233d2",
+        "taskId": "7321ebea-fcdf-49f7-88a0-892883300407",
+        "role": "ROLE_AGENT",
+        "parts": [
+          {
+            "text": "Which color?"
+          }
+        ]
+      }
+    ]
+  },
+  "working": {
+    "id": "8ae36664-3e0e-40a6-84a1-422e7451ee4c",
+    "contextId": "672b131b-6abd-4067-b31b-d8ea8feb83c1",
+    "status": {
+      "state": "TASK_STATE_WORKING",
+      "timestamp": "2026-09-07T22:09:14.722617Z"
+    },
+    "history": [
+      {
+        "messageId": "d8a7009e-2f43-4bae-be6c-cdfcaa1789d8",
+        "contextId": "672b131b-6abd-4067-b31b-d8ea8feb83c1",
+        "taskId": "8ae36664-3e0e-40a6-84a1-422e7451ee4c",
+        "role": "ROLE_USER",
+        "parts": [
+          {
+            "text": "wait"
+          }
+        ]
+      }
+    ]
+  },
+  "canceled": {
+    "id": "8ae36664-3e0e-40a6-84a1-422e7451ee4c",
+    "contextId": "672b131b-6abd-4067-b31b-d8ea8feb83c1",
+    "status": {
+      "state": "TASK_STATE_CANCELED",
+      "timestamp": "2026-09-07T22:09:14.727309Z"
+    },
+    "history": [
+      {
+        "messageId": "d8a7009e-2f43-4bae-be6c-cdfcaa1789d8",
+        "contextId": "672b131b-6abd-4067-b31b-d8ea8feb83c1",
+        "taskId": "8ae36664-3e0e-40a6-84a1-422e7451ee4c",
+        "role": "ROLE_USER",
+        "parts": [
+          {
+            "text": "wait"
+          }
+        ]
+      }
+    ]
+  }
+}
