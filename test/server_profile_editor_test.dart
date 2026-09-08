@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
+import 'package:opencode_mobile/api/server_probe.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
@@ -94,6 +96,171 @@ Future<void> _openEditor(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'Tailscale reaches existing authentication, retains draft through handoff, and retries a failed probe',
+    (tester) async {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      const channel = MethodChannel('oc/tailscale');
+      messenger.setMockMethodCallHandler(
+        channel,
+        (call) async => call.method == 'check' ? 'installed' : true,
+      );
+      addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+      final oldProbe = serverProbe;
+      var probes = 0;
+      serverProbe = ({required baseUrl, username, password}) async {
+        probes++;
+        expect(baseUrl, 'https://work.example.ts.net');
+        expect(password, 'synthetic-password');
+        return probes == 1
+            ? const ServerProbeResult.failure(
+                'Server unreachable',
+                suggestsMissingServer: true,
+              )
+            : const ServerProbeResult.success('test');
+      };
+      addTearDown(() => serverProbe = oldProbe);
+      final (store, controller) = await _state();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_app(store, controller));
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('welcome-tailscale-card')),
+      );
+      await tester.tap(find.byKey(const ValueKey('welcome-tailscale-card')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'work.example.ts.net');
+      tester.testTextInput.hide();
+      await tester.scrollUntilVisible(
+        find.text('Continue to authentication'),
+        220,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Continue to authentication'));
+      await tester.pumpAndSettle();
+      expect(probes, 0);
+      expect(store.saved, isEmpty);
+      expect(
+        find.byKey(const ValueKey('server-backend-selector')),
+        findsNothing,
+      );
+      final password = find.byKey(const ValueKey('server-password-field'));
+      await tester.scrollUntilVisible(
+        password,
+        220,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.enterText(password, 'synthetic-password');
+      tester.testTextInput.hide();
+      await tester.scrollUntilVisible(
+        find.text('Test connection'),
+        220,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Test connection'));
+      await tester.pumpAndSettle();
+      expect(probes, 1);
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('server-test-failure')),
+        180,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.byKey(const ValueKey('server-test-failure')), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Tailscale setup and recovery'),
+        -220,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Tailscale setup and recovery'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Open Tailscale'));
+      await tester.tap(find.text('Open Tailscale'));
+      await tester.pumpAndSettle();
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        password,
+        220,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(
+        tester.widget<TextField>(password).controller!.text,
+        'synthetic-password',
+      );
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const ValueKey('server-url-field')))
+            .controller!
+            .text,
+        'https://work.example.ts.net',
+      );
+      tester.testTextInput.hide();
+      await tester.scrollUntilVisible(
+        find.text('Test connection'),
+        220,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Test connection'));
+      await tester.pumpAndSettle();
+      expect(probes, 2);
+      await tester.tap(find.byKey(const ValueKey('save-server-profile')));
+      await tester.pumpAndSettle();
+      expect(store.saved.single.password, 'synthetic-password');
+      expect(
+        store.prefs.getBool('oc.tailscale.${store.saved.single.id}'),
+        isTrue,
+      );
+      expect(find.text('home-route'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'saved Tailscale profile keeps guidance and rejects HTTP before probe or connect',
+    (tester) async {
+      final (store, controller) = await _state();
+      addTearDown(controller.dispose);
+      final profile = ServerProfile(
+        id: 'private-server',
+        name: 'Private server',
+        baseUrl: 'https://work.example.ts.net',
+        username: '',
+        password: '',
+      );
+      store.saved.add(profile);
+      await store.prefs.setBool('oc.tailscale.private-server', true);
+      final oldProbe = serverProbe;
+      var probes = 0;
+      serverProbe = ({required baseUrl, username, password}) async {
+        probes++;
+        return const ServerProbeResult.success('test');
+      };
+      addTearDown(() => serverProbe = oldProbe);
+      await tester.pumpWidget(_app(store, controller));
+      await tester.tap(find.byType(PopupMenuButton<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit'));
+      await tester.pumpAndSettle();
+      expect(find.text('Tailscale setup and recovery'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const ValueKey('server-url-field')),
+        'http://100.64.0.1:4096',
+      );
+      tester.testTextInput.hide();
+      await tester.scrollUntilVisible(
+        find.text('Test connection'),
+        220,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Test connection'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('save-server-profile')));
+      await tester.pumpAndSettle();
+      expect(probes, 0);
+      expect((controller as _RecordingConnection).connected, isEmpty);
+      expect(store.saved.single.baseUrl, 'https://work.example.ts.net');
+    },
+  );
+
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('remote setup opens a full-screen URL-first editor', (

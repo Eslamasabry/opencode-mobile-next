@@ -58,6 +58,9 @@ class PlatformCapabilities {
   /// desktop equivalent and nothing to fall back to.
   bool get supportsTermux => isAndroid;
 
+  /// Explicit handoff to the separately installed official Android VPN app.
+  bool get supportsTailscaleHandoff => isAndroid;
+
   /// On-device speech: the `oc/voice` channel (microphone permission, device
   /// probe) and the recorder that writes into Android-shaped paths. No
   /// desktop capture path exists yet, so desktop reports honestly unavailable

@@ -41,6 +41,7 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        TailscaleHandoff(this, flutterEngine.dartExecutor.binaryMessenger)
         readAloud?.dispose()
         readAloud = ReadAloudBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         captureCodingAlertOpen(intent)
