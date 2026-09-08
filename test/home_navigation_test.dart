@@ -369,6 +369,20 @@ void main() {
 
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.byType(GlassSurface), findsOneWidget);
+    final dock = tester.getRect(find.byType(GlassSurface));
+    expect(dock.left, 16);
+    expect(dock.right, 374);
+    expect(dock.height, 72);
+    final icon = tester.getRect(find.byIcon(Icons.workspaces_rounded));
+    expect(icon.top - dock.top, greaterThanOrEqualTo(8));
+    final label = tester.getRect(
+      find.descendant(
+        of: find.byType(NavigationBar),
+        matching: find.text('Workspace'),
+      ),
+    );
+    expect(dock.bottom - label.bottom, greaterThanOrEqualTo(4));
+
     expect(find.byType(NavigationRail), findsNothing);
     expect(find.text('Workspace'), findsWidgets);
     expect(find.text('Files'), findsOneWidget);

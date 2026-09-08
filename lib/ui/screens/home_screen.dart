@@ -10,6 +10,7 @@ import '../desktop/shortcuts.dart';
 import '../widgets/connection_status_banner.dart';
 import '../widgets/glass_surface.dart';
 import '../widgets/pickers.dart';
+import '../widgets/retained_tab_view.dart';
 import 'activity_screen.dart';
 import 'files_screen.dart';
 import 'library_screen.dart';
@@ -215,7 +216,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 if (conn.status != StreamStatus.connected)
                   ConnectionStatusBanner(controller: conn),
                 Expanded(
-                  child: IndexedStack(index: activeTab, children: tabs),
+                  child: RetainedTabView(
+                    index: activeTab,
+                    reduceMotion: GlassSurface.reduceEffects(context),
+                    children: tabs,
+                  ),
                 ),
               ],
             );
@@ -245,74 +250,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         bottomNavigationBar: MediaQuery.sizeOf(context).width < 760
             ? SafeArea(
                 top: false,
-                minimum: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+                minimum: const EdgeInsets.fromLTRB(16, 6, 16, 8),
                 child: GlassSurface(
                   child: LayoutBuilder(
-                    builder: (context, constraints) => _buildNavigation(
-                      context,
-                      constraints.maxWidth,
-                      [for (final entry in destinations) entry.destination],
-                      selectedDestination,
-                      (index) => _selectTab(destinations[index].id),
+                    builder: (context, constraints) => _ShellNavigation(
+                      width: constraints.maxWidth,
+                      destinations: [
+                        for (final entry in destinations) entry.destination,
+                      ],
+                      selectedIndex: selectedDestination,
+                      onSelected: (index) => _selectTab(destinations[index].id),
                     ),
                   ),
                 ),
               )
             : null,
-      ),
-    );
-  }
-
-  // Keep destination names intact. Compact navigation labels scale as far as
-  // their equal-width slots allow; content elsewhere keeps the user's full scale.
-  Widget _buildNavigation(
-    BuildContext context,
-    double width,
-    List<NavigationDestination> destinations,
-    int selectedIndex,
-    ValueChanged<int> onSelected,
-  ) {
-    final theme = Theme.of(context);
-    final navigation = theme.navigationBarTheme;
-    var maxScale = 2.0;
-    var labelHeight = 0.0;
-    for (final destination in destinations) {
-      for (final states in [
-        <WidgetState>{},
-        {WidgetState.selected},
-      ]) {
-        final painter = TextPainter(
-          text: TextSpan(
-            text: destination.label,
-            style:
-                navigation.labelTextStyle?.resolve(states) ??
-                theme.textTheme.labelMedium,
-          ),
-          textDirection: Directionality.of(context),
-        )..layout();
-        final fit = (width / destinations.length - 8) / painter.width;
-        if (fit < maxScale) maxScale = fit;
-        if (painter.height > labelHeight) labelHeight = painter.height;
-        painter.dispose();
-      }
-    }
-    maxScale = maxScale.clamp(1.0, 2.0);
-    final scaler = MediaQuery.textScalerOf(
-      context,
-    ).clamp(maxScaleFactor: maxScale);
-    final requiredHeight = 48 + 4 + scaler.scale(labelHeight) + 16;
-    final baseHeight = navigation.height ?? 80.0;
-    return MediaQuery.withClampedTextScaling(
-      maxScaleFactor: maxScale,
-      child: NavigationBar(
-        height: requiredHeight > baseHeight ? requiredHeight : baseHeight,
-        backgroundColor: Colors.transparent,
-        animationDuration: GlassSurface.reduceEffects(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 220),
-        selectedIndex: selectedIndex,
-        onDestinationSelected: onSelected,
-        destinations: destinations,
       ),
     );
   }
@@ -351,6 +303,96 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   DateTime? _lastBackAt;
 
   static const _titles = ['Workspace', 'Files', 'Activity', 'More'];
+}
+
+/// Label metrics depend on typography and available width, not connection
+/// traffic or which destination happens to be selected.
+class _ShellNavigation extends StatefulWidget {
+  const _ShellNavigation({
+    required this.width,
+    required this.destinations,
+    required this.selectedIndex,
+    required this.onSelected,
+  });
+
+  final double width;
+  final List<NavigationDestination> destinations;
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+
+  @override
+  State<_ShellNavigation> createState() => _ShellNavigationState();
+}
+
+class _ShellNavigationState extends State<_ShellNavigation> {
+  Object? _metricsKey;
+  double _maxScale = 1;
+  double _labelHeight = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final navigation = theme.navigationBarTheme;
+    // Resolve partial theme styles before both measuring and painting labels;
+    // otherwise Text inherits body metrics while TextPainter measures defaults.
+    final labelBase = theme.textTheme.labelSmall!;
+    final normal = labelBase.merge(navigation.labelTextStyle?.resolve({}));
+    final selected = labelBase.merge(
+      navigation.labelTextStyle?.resolve({WidgetState.selected}),
+    );
+    final direction = Directionality.of(context);
+    final key = (
+      widget.width,
+      widget.destinations
+          .map((destination) => destination.label)
+          .join('\u0000'),
+      normal,
+      selected,
+      direction,
+    );
+    if (_metricsKey != key) {
+      _metricsKey = key;
+      _maxScale = 2;
+      _labelHeight = 0;
+      for (final destination in widget.destinations) {
+        for (final style in [normal, selected]) {
+          final painter = TextPainter(
+            text: TextSpan(text: destination.label, style: style),
+            textDirection: direction,
+          )..layout();
+          final fit =
+              (widget.width / widget.destinations.length - 8) / painter.width;
+          if (fit < _maxScale) _maxScale = fit;
+          if (painter.height > _labelHeight) _labelHeight = painter.height;
+          painter.dispose();
+        }
+      }
+      _maxScale = _maxScale.clamp(1.0, 2.0);
+    }
+    final scaler = MediaQuery.textScalerOf(
+      context,
+    ).clamp(maxScaleFactor: _maxScale);
+    // The painted indicator is 32dp high. Its whole destination remains a
+    // 72dp touch target; counting a separate 48dp icon hit box made the dock
+    // unnecessarily tall. Leave at least 8dp above and below the visible stack.
+    final requiredHeight = 32 + 4 + scaler.scale(_labelHeight) + 16;
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: _maxScale,
+      child: NavigationBar(
+        height: requiredHeight > 72 ? requiredHeight : 72,
+        backgroundColor: Colors.transparent,
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? selected : normal,
+        ),
+        animationDuration: GlassSurface.reduceEffects(context)
+            ? Duration.zero
+            : RetainedTabView.duration,
+        selectedIndex: widget.selectedIndex,
+        onDestinationSelected: widget.onSelected,
+        destinations: widget.destinations,
+      ),
+    );
+  }
 }
 
 /// The product's single pending badge (audit UX-P0-01). Semantics carry the
