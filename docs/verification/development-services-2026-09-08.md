@@ -126,3 +126,23 @@ Logs remain in ignored `build/traycer/services-*.log`. These are local focused
 checks and widget captures, alongside the separate native contract proof above.
 The complete Flutter-on-device service journey, repository full suite,
 integration review, native build, deployment and release remain unclaimed.
+
+## Integrated CI fixture correction
+
+The first integrated Android quality run, [34186760031](https://github.com/Eslamasabry/opencode-mobile-next/actions/runs/34186760031),
+failed before native compilation. Without the capture font setup, the 320px / 2x
+confirmation's Start button was below the viewport; its missed tap left the
+fake gateway's start count at zero. The existing product sheet already scrolls.
+The test now reveals the confirmation, asserts that it is hit-testable, and
+still requires zero starts before confirmation and exactly one afterward.
+
+The affected rerun exposed the next lazy-layout assumption: log output was below
+the large-text sheet introduction. The fixture now scrolls that specific log
+sheet to its literal output before asserting or capturing it. No product code,
+tap-warning suppression, start-count assertion or output assertion changed.
+
+On the integrated source at `73aea4f` plus this test-only correction, the exact
+large case passed, then the complete `development_services_screen_test.dart`
+passed **9/9** using pinned Flutter 3.47.2, `--no-pub --concurrency=1`, without
+`OC_SERVICE_CAPTURE_DIR`. Format and diff checks passed. This repairs the local
+fixture; the next full Android quality run and native app proof remain pending.

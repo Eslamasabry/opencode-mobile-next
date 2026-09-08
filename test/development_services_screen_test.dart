@@ -249,7 +249,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Start'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilledButton, 'Start').last);
+      expect(gateway.starts, 0);
+      final confirmStart = find.widgetWithText(FilledButton, 'Start').last;
+      await tester.ensureVisible(confirmStart);
+      await tester.pumpAndSettle();
+      expect(confirmStart.hitTestable(), findsOneWidget);
+      await tester.tap(confirmStart.hitTestable());
       await tester.pumpAndSettle();
       expect(gateway.starts, 1);
       expect(find.text('Running command'), findsOneWidget);
@@ -265,6 +270,19 @@ void main() {
       await tester.ensureVisible(find.text('Logs'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Logs'));
+      await tester.pumpAndSettle();
+      final logSheet = find.ancestor(
+        of: find.text('${sampleService.name} · Logs'),
+        matching: find.byType(ListView),
+      );
+      expect(logSheet, findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.textContaining('VITE ready'),
+        120,
+        scrollable: find
+            .descendant(of: logSheet, matching: find.byType(Scrollable))
+            .first,
+      );
       await tester.pumpAndSettle();
       expect(find.textContaining('VITE ready'), findsOneWidget);
       expect(tester.takeException(), isNull);
