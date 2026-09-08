@@ -299,6 +299,9 @@ class _FilesScreenState extends State<FilesScreen> {
     setState(() {
       _loading = true;
       _error = null;
+      // Keep the destination through errors so Retry opens the same folder.
+      if (_path != path) _entries = null;
+      _path = path;
     });
     try {
       final api = await widget.controller.prepareActionTransport();
@@ -759,34 +762,47 @@ class _FilesScreenState extends State<FilesScreen> {
 
     return Column(
       children: [
-        // §7 row 15: with no workspace-symbol search there is only one
-        // surface left, so the whole selector goes rather than leaving a
-        // one-segment control.
         if (widget.controller.capabilities.workspaceSymbols)
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-            child: SizedBox(
-              width: double.infinity,
-              child: SegmentedButton<_FileSurface>(
-                key: const ValueKey('file-surface-selector'),
-                segments: const [
-                  ButtonSegment(
-                    value: _FileSurface.files,
-                    label: Text('Files'),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              key: const ValueKey('file-surface-selector'),
+              children: [
+                for (final surface in _FileSurface.values)
+                  Expanded(
+                    child: Semantics(
+                      selected: _surface == surface,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: _surface == surface
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.outlineVariant,
+                              width: _surface == surface ? 2 : 1,
+                            ),
+                          ),
+                        ),
+                        child: TextButton(
+                          onPressed: () => _selectSurface(surface),
+                          style: TextButton.styleFrom(
+                            foregroundColor: _surface == surface
+                                ? theme.colorScheme.onSurface
+                                : theme.colorScheme.onSurfaceVariant,
+                            minimumSize: const Size(48, 48),
+                          ),
+                          child: Text(
+                            surface == _FileSurface.files ? 'Files' : 'Symbols',
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                  ButtonSegment(
-                    value: _FileSurface.symbols,
-                    label: Text('Symbols'),
-                  ),
-                ],
-                selected: {_surface},
-                showSelectedIcon: false,
-                onSelectionChanged: (value) => _selectSurface(value.single),
-              ),
+              ],
             ),
           ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: TextField(
             key: const ValueKey('files-search-field'),
             controller: _search,
@@ -795,8 +811,8 @@ class _FilesScreenState extends State<FilesScreen> {
               isDense: true,
               prefixIcon: const Icon(Icons.search_rounded, size: 20),
               hintText: _surface == _FileSurface.symbols
-                  ? 'Find class, function, or variable…'
-                  : 'Find file by name…',
+                  ? 'Search symbols'
+                  : 'Search files',
               suffixIcon: _search.text.isEmpty
                   ? null
                   : IconButton(
@@ -827,47 +843,48 @@ class _FilesScreenState extends State<FilesScreen> {
         ),
         if (_surface == _FileSurface.files && _path.isNotEmpty)
           SizedBox(
-            height: 52,
-            child: ListView(
+            width: double.infinity,
+            child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              children: [
-                ActionChip(
-                  label: Text(l10n.filesProjectRoot),
-                  onPressed: () => _navigateTo(''),
-                ),
-                for (var i = 1; i <= crumbs.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 6),
-                    child: i == crumbs.length
-                        ? Semantics(
-                            selected: true,
-                            child: Chip(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  ActionChip(
+                    label: Text(l10n.filesProjectRoot),
+                    onPressed: () => _navigateTo(''),
+                  ),
+                  for (var i = 1; i <= crumbs.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: i == crumbs.length
+                          ? Semantics(
+                              selected: true,
+                              child: Chip(
+                                label: Text(
+                                  crumbs[i - 1],
+                                  semanticsLabel: l10n.filesCurrentFolder(
+                                    crumbs[i - 1],
+                                  ),
+                                ),
+                              ),
+                            )
+                          : ActionChip(
                               label: Text(
                                 crumbs[i - 1],
-                                semanticsLabel: l10n.filesCurrentFolder(
+                                semanticsLabel: l10n.filesOpenFolder(
                                   crumbs[i - 1],
                                 ),
                               ),
+                              onPressed: () =>
+                                  _navigateTo(crumbs.take(i).join('/')),
                             ),
-                          )
-                        : ActionChip(
-                            label: Text(
-                              crumbs[i - 1],
-                              semanticsLabel: l10n.filesOpenFolder(
-                                crumbs[i - 1],
-                              ),
-                            ),
-                            onPressed: () =>
-                                _navigateTo(crumbs.take(i).join('/')),
-                          ),
-                  ),
-              ],
+                    ),
+                ],
+              ),
             ),
           ),
         // UX-102: after a run the question is "what changed?", so the
-        // changed set gets a standing card above the tree rather than
-        // living only as per-row markers.
+        // changed set stays one tap away in a quiet row above the tree.
         if (_surface == _FileSurface.files && _fileStatuses.isNotEmpty)
           _ChangesCard(
             changes: _fileStatuses.values,
@@ -988,7 +1005,10 @@ class _FilesScreenState extends State<FilesScreen> {
               actions: () => _fileRowActions(node, change),
               child: ListTile(
                 key: ValueKey('project-file-${node.path}'),
-                dense: true,
+                minTileHeight: 56,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                minLeadingWidth: 24,
+                horizontalTitleGap: 12,
                 selected: node.path == _selectedPath,
                 leading: Icon(
                   node.isDir
@@ -997,26 +1017,14 @@ class _FilesScreenState extends State<FilesScreen> {
                       ? Icons.remove_circle_outline_rounded
                       : _fileTypeIcon(node.name),
                   size: 20,
-                  color: node.isDir
-                      ? theme.colorScheme.primary
-                      : change?.status == 'deleted'
+                  color: change?.status == 'deleted'
                       ? theme.colorScheme.error
                       : AppTheme.mutedOf(theme),
                 ),
-                title: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        node.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (change != null)
-                      _FileChangeBadge(change: change)
-                    else if (descendantChanges > 0)
-                      _FolderStatusMark(count: descendantChanges),
-                  ],
+                title: Text(
+                  node.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 subtitle: detail == null
                     ? null
@@ -1024,12 +1032,10 @@ class _FilesScreenState extends State<FilesScreen> {
                         detail,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: AppTheme.captionFontSize,
-                        ),
+                        style: const TextStyle(fontSize: 12),
                       ),
                 onTap: change?.status == 'deleted'
-                    ? null
+                    ? () => unawaited(_reviewFileChange(node))
                     : () {
                         if (node.isDir) {
                           _navigateTo(node.path);
@@ -1039,7 +1045,7 @@ class _FilesScreenState extends State<FilesScreen> {
                       },
                 // Touch counterpart of the right-click menu: every row action,
                 // Review included, without a second control crammed into a
-                // 40px row.
+                // compact file row.
                 onLongPress: () => unawaited(_showFileRowActions(node, change)),
               ),
             );
@@ -1139,13 +1145,6 @@ class _FilesScreenState extends State<FilesScreen> {
           icon: Icons.open_in_new_rounded,
           onSelected: () => _openFile(node),
         ),
-        if (change != null)
-          ContextMenuAction(
-            menuKey: const ValueKey('file-menu-review'),
-            label: 'Open in Review',
-            icon: Icons.difference_outlined,
-            onSelected: () => unawaited(_reviewFileChange(node)),
-          ),
         if (widget.onAttachFile != null)
           ContextMenuAction(
             menuKey: const ValueKey('file-menu-attach'),
@@ -1161,6 +1160,13 @@ class _FilesScreenState extends State<FilesScreen> {
             onSelected: () => _stageProjectFile(path, null),
           ),
       ],
+      if (change != null)
+        ContextMenuAction(
+          menuKey: const ValueKey('file-menu-review'),
+          label: 'Open in Review',
+          icon: Icons.difference_outlined,
+          onSelected: () => unawaited(_reviewFileChange(node)),
+        ),
       ContextMenuAction(
         menuKey: const ValueKey('file-menu-copy-path'),
         label: 'Copy path',
@@ -1489,8 +1495,7 @@ class _ChangeChoice {
   final String path;
 }
 
-/// UX-102: the changed-file card. Counts and totals are the summary the
-/// audit asks for; the whole card is one tap into the changed set.
+/// A quiet review entry. Counts and totals remain one tap from the tree.
 class _ChangesCard extends StatelessWidget {
   const _ChangesCard({required this.changes, required this.onOpen});
 
@@ -1504,49 +1509,44 @@ class _ChangesCard extends StatelessWidget {
     final added = changes.fold<int>(0, (sum, file) => sum + file.additions);
     final removed = changes.fold<int>(0, (sum, file) => sum + file.deletions);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Material(
         key: const ValueKey('files-changes-card'),
-        color: theme.colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(14),
-        clipBehavior: Clip.antiAlias,
+        color: Colors.transparent,
         child: InkWell(
           onTap: onOpen,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.difference_outlined,
-                  size: 20,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$files changed ${files == 1 ? 'file' : 'files'}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
+          borderRadius: BorderRadius.circular(8),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          '$files changed ${files == 1 ? 'file' : 'files'}',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
-                      ),
-                      Text(
-                        '+$added −$removed · Review the changes',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: AppTheme.mutedOf(theme),
+                        Text(
+                          '+$added −$removed',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const Icon(Icons.chevron_right_rounded),
-              ],
+                  const SizedBox(width: 8),
+                  const Icon(Icons.chevron_right_rounded, size: 20),
+                ],
+              ),
             ),
           ),
         ),
@@ -1682,68 +1682,6 @@ class _ChangesSheet extends StatelessWidget {
       ),
     );
   }
-}
-
-/// A compact, non-interactive change mark in the file row: one letter in the
-/// status colour. Review itself lives in the row's long-press and right-click
-/// menus, so no 48dp button has to fit a 40px row.
-class _FileChangeBadge extends StatelessWidget {
-  final VersionControlFile change;
-
-  const _FileChangeBadge({required this.change});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = switch (change.status) {
-      'deleted' => theme.colorScheme.error,
-      'modified' => theme.colorScheme.tertiary,
-      _ => theme.colorScheme.primary,
-    };
-    final label = _fileStatusLabel(change.status);
-    return Semantics(
-      label: label,
-      child: ExcludeSemantics(
-        child: Container(
-          key: ValueKey('review-file-change-${change.path}'),
-          margin: const EdgeInsets.only(left: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: .14),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            label.isEmpty ? '?' : label.substring(0, 1).toUpperCase(),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FolderStatusMark extends StatelessWidget {
-  final int count;
-
-  const _FolderStatusMark({required this.count});
-
-  @override
-  Widget build(BuildContext context) => ExcludeSemantics(
-    child: Padding(
-      padding: const EdgeInsets.only(left: 8),
-      child: Text(
-        '$count',
-        key: const ValueKey('folder-change-count'),
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    ),
-  );
 }
 
 class _FileStatusNotice extends StatelessWidget {

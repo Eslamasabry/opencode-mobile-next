@@ -515,28 +515,20 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const ValueKey('folder-change-count')), findsOneWidget);
       expect(find.text('1 changed file'), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('review-file-change-README.md')),
-        findsOneWidget,
-      );
       expect(find.text('Modified · +8 −2'), findsOneWidget);
       expect(find.text('gone.txt'), findsOneWidget);
       expect(find.text('Deleted · −12'), findsOneWidget);
-      expect(
-        tester
-            .widget<ListTile>(
-              find.byKey(const ValueKey('project-file-gone.txt')),
-            )
-            .onTap,
-        isNull,
-      );
-      expect(
-        find.byKey(const ValueKey('review-file-change-gone.txt')),
-        findsOneWidget,
-      );
       expect(tester.takeException(), isNull);
+
+      await tester.ensureVisible(find.text('gone.txt'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('gone.txt'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('review-workspace')), findsOneWidget);
+      expect(find.text('-deleted text'), findsOneWidget);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
 
       await _openInReview(tester, 'README.md');
 
@@ -544,19 +536,26 @@ void main() {
       expect(find.byKey(const Key('review-scope-picker')), findsNothing);
       expect(find.text('+new readme'), findsOneWidget);
       expect(find.text('+library change'), findsNothing);
-      expect(repository.diffLoads, 1);
+      expect(repository.diffLoads, 2);
       expect(tester.takeException(), isNull);
 
       await tester.pageBack();
       await tester.pumpAndSettle();
 
+      await tester.scrollUntilVisible(
+        find.text('lib'),
+        -200,
+        scrollable: find
+            .descendant(
+              of: find.byType(ListView),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.text('lib'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(const ValueKey('review-file-change-lib/main.dart')),
-        findsOneWidget,
-      );
       expect(find.text('Added · +34'), findsOneWidget);
       expect(repository.statusLoads, greaterThanOrEqualTo(2));
       expect(tester.takeException(), isNull);
@@ -744,7 +743,7 @@ void main() {
     // UX-102: the card summarises the changed set above the tree.
     expect(find.byKey(const ValueKey('files-changes-card')), findsOneWidget);
     expect(find.text('2 changed files'), findsOneWidget);
-    expect(find.text('+42 −2 · Review the changes'), findsOneWidget);
+    expect(find.text('+42 −2'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('files-changes-card')));
     await tester.pumpAndSettle();
@@ -860,10 +859,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('file-status-notice')), findsNothing);
-    expect(
-      find.byKey(const ValueKey('review-file-change-README.md')),
-      findsOneWidget,
-    );
+    expect(find.text('Modified · +1'), findsOneWidget);
     expect(repository.statusLoads, 2);
   });
 
@@ -1620,6 +1616,8 @@ void main() {
 /// Review is reached from the file row's long-press sheet (the touch twin of
 /// the desktop right-click menu); the change badge itself is not a button.
 Future<void> _openInReview(WidgetTester tester, String path) async {
+  await tester.ensureVisible(find.byKey(ValueKey('project-file-$path')));
+  await tester.pumpAndSettle();
   await tester.longPress(find.byKey(ValueKey('project-file-$path')));
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const ValueKey('file-menu-review')));
