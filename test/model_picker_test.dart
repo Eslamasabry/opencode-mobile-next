@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,9 +18,30 @@ class _RefreshCountingController extends ConnectionController {
   int refreshCalls = 0;
   int reloadCalls = 0;
   bool failSelection = false;
+  Future<void>? waitForModel;
+  bool failAgent = false;
+  int agentWrites = 0;
+  final sessionAgents = <String, String>{};
+
+  @override
+  String agentForSession(String id) => sessionAgents[id] ?? selectedAgent;
+
+  @override
+  Future<void> selectAgentForSession(String id, String name) async {
+    sessionAgents[id] = name;
+    notifyListeners();
+  }
+
+  @override
+  Future<void> selectAgent(String name) async {
+    agentWrites++;
+    if (failAgent) throw StateError("agent unavailable");
+    await super.selectAgent(name);
+  }
 
   @override
   Future<void> selectModel(ModelRef ref, {String? variant}) async {
+    await waitForModel;
     if (failSelection) throw StateError('disk unavailable');
     await super.selectModel(ref, variant: variant);
   }
@@ -178,6 +200,7 @@ Widget _app(
   double keyboardInset = 0,
   ModelPickerApplyScope applyScope = ModelPickerApplyScope.classic,
   String? sessionID,
+  bool focusAgent = false,
 }) {
   return ProviderScope(
     overrides: [connProvider.overrideWithValue(controller)],
@@ -199,6 +222,7 @@ Widget _app(
                 context,
                 applyScope: applyScope,
                 sessionID: sessionID,
+                focusAgent: focusAgent,
               ),
               child: const Text('Choose model'),
             ),
@@ -387,11 +411,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('picker-unloaded-providers')), findsOneWidget);
+    await tester.tap(
+      find.text('1 signed-in provider not loaded. View details'),
+    );
+    await tester.pumpAndSettle();
     expect(
       find.textContaining('signed in to Local models but has not loaded it'),
       findsOneWidget,
     );
 
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('picker-reload-providers')));
     await tester.pump();
     expect(controller.reloadCalls, 1);
@@ -530,6 +560,159 @@ void main() {
     expect(controller.selectedVariant, 'fast');
   });
 
+  testWidgets('direct agent entry opens agent choice without saving', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(411, 891));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller, focusAgent: true));
+    await tester.tap(find.text('Choose model'));
+    await tester.pumpAndSettle();
+    expect(find.text('Choose an agent'), findsOneWidget);
+    expect(find.byKey(const Key('model-picker-agent')), findsOneWidget);
+    expect(controller.agentWrites, 0);
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Close model selector'));
+    await tester.pumpAndSettle();
+    expect(controller.selectedAgent, 'build');
+  });
+
+  for (final apply in [false, true]) {
+    testWidgets('agent and mode are staged until apply: $apply', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(411, 891));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final controller = await _controller();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_app(controller));
+      await tester.tap(find.text('Choose model'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('model-picker-options')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('fast · low effort'));
+      await tester.tap(find.byKey(const Key('model-picker-agent')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('plan · primary').last);
+      await tester.pumpAndSettle();
+      expect(controller.selectedAgent, 'build');
+      expect(controller.selectedVariant, '');
+      expect(controller.agentWrites, 0);
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        apply
+            ? find.text('Use model and mode')
+            : find.byTooltip('Close model selector'),
+      );
+      await tester.pumpAndSettle();
+      expect(controller.selectedAgent, apply ? 'plan' : 'build');
+      expect(controller.selectedVariant, apply ? 'fast' : '');
+      expect(controller.agentWrites, apply ? 1 : 0);
+    });
+  }
+
+  testWidgets('session apply changes agent only in its target session', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(411, 891));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      _app(
+        controller,
+        applyScope: ModelPickerApplyScope.session,
+        sessionID: 'chat',
+      ),
+    );
+    await tester.tap(find.text('Choose model'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('model-picker-options')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('model-picker-agent')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('plan · primary').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Use for this session'));
+    await tester.pumpAndSettle();
+    expect(controller.agentForSession('chat'), 'plan');
+    expect(controller.agentForSession('other'), 'build');
+    expect(controller.selectedAgent, 'build');
+    expect(controller.agentWrites, 0);
+  });
+
+  testWidgets(
+    'dismissing after Apply still completes the authorized agent choice',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(411, 891));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final controller = await _controller();
+      final pending = Completer<void>();
+      controller.waitForModel = pending.future;
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_app(controller));
+      await tester.tap(find.text('Choose model'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('model-picker-options')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('model-picker-agent')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('plan · primary').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Use model and mode'));
+      await tester.pump();
+      await tester.tap(find.byTooltip('Close model selector'));
+      await tester.pump(const Duration(seconds: 1));
+      pending.complete();
+      await tester.pumpAndSettle();
+      expect(controller.selectedAgent, 'plan');
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('partial apply names saved model and allows agent retry', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(411, 891));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller()
+      ..failAgent = true;
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+    await tester.tap(find.text('Choose model'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('model-picker-options')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('fast · low effort'));
+    await tester.tap(find.byKey(const Key('model-picker-agent')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('plan · primary').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Use model and mode'));
+    await tester.pumpAndSettle();
+    expect(controller.selectedVariant, 'fast');
+    expect(controller.selectedAgent, 'build');
+    expect(
+      find.text('Model saved. Agent choice was not confirmed. Try again.'),
+      findsOneWidget,
+    );
+    controller.failAgent = false;
+    await tester.tap(find.text('Use model and mode'));
+    await tester.pumpAndSettle();
+    expect(controller.selectedAgent, 'plan');
+    expect(find.byType(ModelCatalogView), findsNothing);
+  });
+
   testWidgets('primary agent picker excludes subagents', (tester) async {
     await tester.binding.setSurfaceSize(const Size(411, 891));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -576,7 +759,7 @@ void main() {
       );
       await tester.tap(find.text('Choose model'));
       await tester.pumpAndSettle();
-      expect(find.text('deep'), findsOneWidget);
+      expect(find.text('deep · build'), findsOneWidget);
       await tester.enterText(
         find.byKey(const Key('model-picker-search')),
         'lightning',
@@ -885,7 +1068,9 @@ void main() {
     await tester.tap(find.text('Use model and mode'));
     await tester.pumpAndSettle();
     expect(
-      find.text('Could not save the model choice. Try again.'),
+      find.text(
+        'Could not confirm the model choice. Check your selection and try again.',
+      ),
       findsOneWidget,
     );
     expect(find.byTooltip('Close model selector'), findsOneWidget);
