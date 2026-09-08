@@ -16,6 +16,12 @@ class _Repository implements ProductRepository {
 class _Controller extends ConnectionController {
   _Controller(super.store);
 
+  int unknownProfiles = 0;
+  @override
+  int get unknownAttentionProfileCount => unknownProfiles;
+  @override
+  bool get isConnected => status == StreamStatus.connected;
+
   int prepareCalls = 0;
   int refreshCalls = 0;
   final preparedRepositories = <ServerOperationsGateway?>[];
@@ -268,12 +274,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('activity-all-clear')), findsOneWidget);
-    expect(find.text('All clear'), findsOneWidget);
-    expect(find.textContaining('Nothing needs you right now'), findsOneWidget);
+    expect(find.text('All clear here'), findsOneWidget);
+    expect(
+      find.textContaining('Nothing needs you in the checked locations'),
+      findsOneWidget,
+    );
     expect(find.text('All sessions'), findsNothing);
   });
 
-  testWidgets('running sessions with no pending work still say so', (
+  testWidgets('running sessions omit empty attention bookkeeping', (
     tester,
   ) async {
     final controller = await _controller();
@@ -283,12 +292,96 @@ void main() {
     await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
     await tester.pump();
 
-    expect(find.text('Needs attention'.toUpperCase()), findsOneWidget);
-    expect(find.text('Nothing needs attention'), findsOneWidget);
+    expect(find.text('Needs attention'.toUpperCase()), findsNothing);
+    expect(find.text('Nothing needs attention'), findsNothing);
     expect(
       find.byKey(const ValueKey('activity-running-ses_run')),
       findsOneWidget,
     );
+  });
+
+  testWidgets('unknown saved-server status never becomes all clear', (
+    tester,
+  ) async {
+    final controller = await _controller(seed: false)
+      ..unknownProfiles = 2;
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('activity-all-clear')), findsNothing);
+    expect(find.text('Status incomplete'), findsOneWidget);
+    expect(find.textContaining('2 unknown'), findsOneWidget);
+    await tester.tap(find.text('Check again'));
+    await tester.pumpAndSettle();
+    expect(controller.refreshCalls, 1);
+    expect(find.text('Status incomplete'), findsOneWidget);
+  });
+
+  testWidgets('disconnected empty state stays unknown', (tester) async {
+    final controller = await _controller(seed: false)
+      ..status = StreamStatus.disconnected;
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
+    await tester.pumpAndSettle();
+    expect(find.text('Status incomplete'), findsOneWidget);
+    expect(find.byKey(const ValueKey('activity-all-clear')), findsNothing);
+  });
+
+  testWidgets('requests lead the page and digest explanation is disclosed', (
+    tester,
+  ) async {
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
+    await tester.pump();
+    expect(
+      tester.getTopLeft(find.text('Edit a file')).dy,
+      lessThan(tester.getTopLeft(find.text('Saved servers')).dy),
+    );
+    expect(find.text('Nothing running'), findsNothing);
+    expect(
+      find.text('On demand · cached metadata, not AI summaries'),
+      findsNothing,
+    );
+    await tester.ensureVisible(find.text('Completion digests'));
+    await tester.tap(find.text('Completion digests'));
+    await tester.pump();
+    expect(
+      find.text('On demand · cached metadata, not AI summaries'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('failed pending check never shows all clear', (tester) async {
+    final controller = await _controller(seed: false)
+      ..permissionsError = 'Could not check permissions';
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      _app(
+        Scaffold(body: ActivityScreen(controller: controller, embedded: true)),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Could not check permissions'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
+    expect(find.byKey(const ValueKey('activity-all-clear')), findsNothing);
+  });
+
+  testWidgets('unsupported stale forms do not block the current inbox', (
+    tester,
+  ) async {
+    final controller = await _controller(seed: false)
+      ..formsError = 'Old form error'
+      ..formsLoading = true;
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      _app(
+        Scaffold(body: ActivityScreen(controller: controller, embedded: true)),
+      ),
+    );
+    await tester.pump();
+    expect(find.byKey(const ValueKey('activity-all-clear')), findsOneWidget);
+    expect(find.text('Old form error'), findsNothing);
   });
 
   testWidgets('activity fits a 320dp phone at 2x text', (tester) async {

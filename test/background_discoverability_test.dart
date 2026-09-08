@@ -18,6 +18,9 @@ class _Controller extends ConnectionController {
   _Controller(super.store, {super.backgroundLive});
 
   @override
+  bool get isConnected => status == StreamStatus.connected;
+
+  @override
   Future<ServerOperationsGateway?> prepareActionRepository() async =>
       repository;
 

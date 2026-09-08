@@ -8480,6 +8480,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Termux setup'**
   String get onboardingTermuxSetup;
+
+  /// No description provided for @activityClearHere.
+  ///
+  /// In en, this message translates to:
+  /// **'All clear here'**
+  String get activityClearHere;
+
+  /// No description provided for @activityStatusIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Status incomplete'**
+  String get activityStatusIncomplete;
+
+  /// No description provided for @activityCheckedLocationsClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing needs you in the checked locations.'**
+  String get activityCheckedLocationsClear;
+
+  /// No description provided for @activityUnknownStatusDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'No requests loaded. Some server activity is still unknown.'**
+  String get activityUnknownStatusDetail;
+
+  /// No description provided for @activityCheckAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get activityCheckAgain;
+
+  /// No description provided for @activitySavedServers.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved servers'**
+  String get activitySavedServers;
+
+  /// No description provided for @activitySelectedLocationsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Last selected locations only'**
+  String get activitySelectedLocationsOnly;
+
+  /// No description provided for @activityBackgroundUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Background updates'**
+  String get activityBackgroundUpdates;
+
+  /// No description provided for @activityBackgroundOffDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Off · choose when to stay connected'**
+  String get activityBackgroundOffDetail;
+
+  /// No description provided for @activityPendingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pending'**
+  String activityPendingCount(int count);
+
+  /// No description provided for @activityUnknownCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unknown'**
+  String activityUnknownCount(int count);
 }
 
 class _AppLocalizationsDelegate

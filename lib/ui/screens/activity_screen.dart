@@ -163,7 +163,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         ListTile(
           leading: const Icon(Icons.fact_check_outlined),
           title: Text(l10n.digestTitle),
-          subtitle: Text(l10n.digestSubtitle),
+          subtitle: _showDigests ? Text(l10n.digestSubtitle) : null,
           trailing: Icon(_showDigests ? Icons.expand_less : Icons.expand_more),
           onTap: () => setState(() => _showDigests = !_showDigests),
         ),
@@ -438,12 +438,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
         _loading ||
         controller.permissionsLoading ||
         controller.questionsLoading ||
-        controller.formsLoading;
+        (formsAvailable && controller.formsLoading);
     final error =
         _error ??
         controller.permissionsError ??
         controller.questionsError ??
-        controller.formsError;
+        (formsAvailable ? controller.formsError : null);
     final attentionCount =
         permissions.length +
         questions.length +
@@ -473,20 +473,15 @@ class _ActivityScreenState extends State<ActivityScreen> {
           ? ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
-                ProfileMonitorInbox(controller: controller),
                 if (!hasCheckIns) ...[
-                  const SizedBox(height: 40),
-                  const ProductEmptyState(
-                    key: ValueKey('activity-all-clear'),
-                    icon: Icons.task_alt_rounded,
-                    title: 'All clear',
-                    scrollable: false,
-                    message:
-                        'Nothing needs you right now. Permission requests, '
-                        'questions, and running sessions appear here the '
-                        'moment a session asks.',
+                  _ActivityStatus(
+                    known:
+                        controller.isConnected &&
+                        controller.unknownAttentionProfileCount == 0,
+                    onRefresh: _refresh,
                   ),
                 ],
+                ProfileMonitorInbox(controller: controller, compact: true),
                 // An empty inbox is only reassuring if it would fill while
                 // the app is closed; when it would not, say what to turn on.
                 if (platformCapabilities.supportsBackgroundService &&
@@ -503,7 +498,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.only(bottom: 24),
                 children: [
-                  ProfileMonitorInbox(controller: controller),
                   if (loading) const LinearProgressIndicator(minHeight: 2),
                   if (error != null)
                     ProductInlineEmpty(
@@ -513,15 +507,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                       actionLabel: 'Try again',
                       onAction: _refresh,
                     ),
-                  const SectionLabel('Needs attention'),
-                  if (attentionCount == 0)
-                    const ProductInlineEmpty(
-                      icon: Icons.task_alt_rounded,
-                      title: 'Nothing needs attention',
-                      message:
-                          'Permission requests, assistant questions, and forms '
-                          'appear here the moment a session asks.',
-                    ),
+                  if (attentionCount > 0) const SectionLabel('Needs attention'),
                   for (final permission in permissions)
                     ActivityPermissionTile(
                       key: ValueKey('activity-permission-${permission.id}'),
@@ -541,15 +527,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     for (final form in globalForms)
                       ActivityFormTile(form: form, controller: controller),
                   ],
-                  const SectionLabel('Running'),
-                  if (running.isEmpty)
-                    const ProductInlineEmpty(
-                      icon: AppIcons.run,
-                      title: 'Nothing running',
-                      message:
-                          'Busy sessions appear here the moment a run starts.',
-                    )
-                  else
+                  ProfileMonitorInbox(controller: controller, compact: true),
+                  if (running.isNotEmpty) const SectionLabel('Running'),
+                  if (running.isNotEmpty)
                     for (final session in running)
                       _SessionRow(
                         key: ValueKey('activity-running-${session.id}'),
@@ -1095,27 +1075,67 @@ class _BackgroundUpdatesHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    return ListTile(
+      key: const ValueKey('activity-background-settings'),
+      leading: const Icon(Icons.notifications_outlined),
+      title: Text(l10n.activityBackgroundUpdates),
+      subtitle: Text(
+        l10n.activityBackgroundOffDetail,
+        key: const ValueKey('activity-background-hint'),
+      ),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: onOpen,
+    );
+  }
+}
+
+/// A scoped result, rather than an unqualified claim about every project.
+class _ActivityStatus extends StatelessWidget {
+  const _ActivityStatus({required this.known, required this.onRefresh});
+  final bool known;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     return Padding(
-      padding: const EdgeInsets.fromLTRB(32, 0, 32, 24),
+      key: ValueKey(known ? 'activity-all-clear' : 'activity-status-unknown'),
+      padding: const EdgeInsets.fromLTRB(16, 32, 16, 28),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Icon(
+            known ? Icons.task_alt_rounded : Icons.sync_problem_rounded,
+            size: 32,
+            color: known
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 16),
           Text(
-            'Turn on background updates to get notified when a run needs you',
-            key: const ValueKey('activity-background-hint'),
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: AppTheme.mutedOf(theme),
+            known ? l10n.activityClearHere : l10n.activityStatusIncomplete,
+            style: theme.textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            known
+                ? l10n.activityCheckedLocationsClear
+                : l10n.activityUnknownStatusDetail,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 12),
-          FilledButton.tonalIcon(
-            key: const ValueKey('activity-background-settings'),
-            onPressed: onOpen,
-            icon: const Icon(Icons.cloud_sync_outlined, size: 18),
-            label: const Text('Turn on background updates'),
-          ),
+          if (!known)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: TextButton.icon(
+                onPressed: onRefresh,
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(l10n.activityCheckAgain),
+              ),
+            ),
         ],
       ),
     );

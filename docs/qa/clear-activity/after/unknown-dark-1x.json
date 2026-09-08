@@ -1,0 +1,28 @@
+{
+  "logicalViewport": {
+    "width": 390,
+    "height": 844
+  },
+  "textScale": 1.0,
+  "state": "unknown",
+  "theme": "dark",
+  "phase": "after",
+  "Status incomplete": {
+    "left": 16.0,
+    "top": 144.0,
+    "width": 205.18138122558594,
+    "height": 32.0
+  },
+  "Saved servers": {
+    "left": 56.0,
+    "top": 321.86804723739624,
+    "width": 270.0,
+    "height": 24.0
+  },
+  "Completion digests": {
+    "left": 56.0,
+    "top": 468.0,
+    "width": 270.0,
+    "height": 24.0
+  }
+}

@@ -5056,4 +5056,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingTermuxSetup => 'Termux setup';
+
+  @override
+  String get activityClearHere => 'All clear here';
+
+  @override
+  String get activityStatusIncomplete => 'Status incomplete';
+
+  @override
+  String get activityCheckedLocationsClear =>
+      'Nothing needs you in the checked locations.';
+
+  @override
+  String get activityUnknownStatusDetail =>
+      'No requests loaded. Some server activity is still unknown.';
+
+  @override
+  String get activityCheckAgain => 'Check again';
+
+  @override
+  String get activitySavedServers => 'Saved servers';
+
+  @override
+  String get activitySelectedLocationsOnly => 'Last selected locations only';
+
+  @override
+  String get activityBackgroundUpdates => 'Background updates';
+
+  @override
+  String get activityBackgroundOffDetail =>
+      'Off · choose when to stay connected';
+
+  @override
+  String activityPendingCount(int count) {
+    return '$count pending';
+  }
+
+  @override
+  String activityUnknownCount(int count) {
+    return '$count unknown';
+  }
 }
