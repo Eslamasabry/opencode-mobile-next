@@ -5103,4 +5103,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get demoTaskInstruction =>
       'Send the sample prompt below, then review the proposed edit.';
+
+  @override
+  String get reviewTitle => 'Review';
 }

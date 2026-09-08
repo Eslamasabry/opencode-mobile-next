@@ -28,17 +28,13 @@ class DiffView extends StatelessWidget {
   });
 
   DiffView.single(FileDiff diff, {Key? key, bool allowCopy = true})
-    : this(
-        key: key,
-        diffs: [diff],
-        title: diff.file.split('/').last,
-        allowCopy: allowCopy,
-      );
+    : this(key: key, diffs: [diff], allowCopy: allowCopy);
 
   final List<FileDiff> diffs;
   final bool allowCopy;
 
-  /// Centred app-bar title; defaults to "Diff", or the file name for one file.
+  /// Optional route title; defaults to the localized "Review".
+  /// File identity belongs to the sticky file header.
   final String? title;
 
   static const wrapBelow = 600.0;
@@ -64,10 +60,7 @@ class DiffView extends StatelessWidget {
       appBar: AppBar(
         leading: const CloseButton(),
         centerTitle: true,
-        title: Text(
-          title ?? (single != null ? single.file.split('/').last : 'Diff'),
-          overflow: TextOverflow.ellipsis,
-        ),
+        title: Text(title ?? l10n.reviewTitle, overflow: TextOverflow.ellipsis),
         actions: [
           if (allowCopy && single != null)
             IconButton(

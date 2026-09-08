@@ -8558,6 +8558,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send the sample prompt below, then review the proposed edit.'**
   String get demoTaskInstruction;
+
+  /// No description provided for @reviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get reviewTitle;
 }
 
 class _AppLocalizationsDelegate

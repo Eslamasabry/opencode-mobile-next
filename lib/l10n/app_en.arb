@@ -2933,5 +2933,6 @@
     }
   },
   "demoTaskTitle": "Try a small change",
-  "demoTaskInstruction": "Send the sample prompt below, then review the proposed edit."
+  "demoTaskInstruction": "Send the sample prompt below, then review the proposed edit.",
+  "reviewTitle": "Review"
 }
