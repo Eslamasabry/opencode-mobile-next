@@ -80,7 +80,7 @@ void main() {
     expect(find.text('a,b'), findsOneWidget);
     await tester.tap(find.text('Source'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Copy code'));
+    await tester.tap(find.byTooltip('Copy code'));
     await tester.pump();
     expect(copies, [source]);
     await tester.tap(find.text('Table'));

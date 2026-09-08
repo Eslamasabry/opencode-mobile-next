@@ -1209,6 +1209,17 @@ class _CodeBlockState extends State<CodeBlock> {
         .join('\n');
   }
 
+  // Compact visuals keep complete touch targets, including with dense themes.
+  ButtonStyle _toolbarStyle(ThemeData theme) => IconButton.styleFrom(
+    fixedSize: const Size(48, 48),
+    minimumSize: const Size(48, 48),
+    maximumSize: const Size(48, 48),
+    visualDensity: VisualDensity.standard,
+    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    iconSize: 19,
+    foregroundColor: theme.colorScheme.onSurfaceVariant,
+  );
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -1251,59 +1262,51 @@ class _CodeBlockState extends State<CodeBlock> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsetsDirectional.only(start: 12, end: 4),
+            child: Row(
               children: [
-                if (widget.language?.isNotEmpty == true)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Text(
-                      widget.language!,
-                      style: theme.textTheme.labelMedium,
+                Expanded(
+                  child: Text(
+                    widget.language ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                if (enabled)
-                  Wrap(
-                    spacing: 4,
-                    runSpacing: 4,
-                    children: [
-                      TextButton.icon(
-                        style: TextButton.styleFrom(
-                          minimumSize: const Size(48, 48),
-                        ),
-                        onPressed: () {
-                          if (_interactive) setState(() => _wrap = !_wrap);
-                        },
-                        icon: Icon(
-                          _wrap ? Icons.wrap_text : Icons.arrow_right_alt,
-                        ),
-                        label: Text(
-                          _wrap
-                              ? l10n.markdownScrollCode
-                              : l10n.markdownWrapCode,
-                        ),
+                ),
+                if (enabled) ...[
+                  Semantics(
+                    toggled: _wrap,
+                    child: IconButton(
+                      tooltip: _wrap
+                          ? l10n.markdownScrollCode
+                          : l10n.markdownWrapCode,
+                      style: _toolbarStyle(theme),
+                      onPressed: () {
+                        if (_interactive) setState(() => _wrap = !_wrap);
+                      },
+                      icon: Icon(
+                        Icons.wrap_text_rounded,
+                        color: _wrap ? theme.colorScheme.primary : null,
                       ),
-                      if (widget.canExpand)
-                        TextButton.icon(
-                          style: TextButton.styleFrom(
-                            minimumSize: const Size(48, 48),
-                          ),
-                          onPressed: _openReader,
-                          icon: const Icon(Icons.open_in_full),
-                          label: Text(l10n.markdownExpandCode),
-                        ),
-                      TextButton.icon(
-                        style: TextButton.styleFrom(
-                          minimumSize: const Size(48, 48),
-                        ),
-                        onPressed: () =>
-                            _copy(widget.originalSource ?? widget.code),
-                        icon: const Icon(AppIcons.copy),
-                        label: Text(l10n.markdownCopyCode),
-                      ),
-                    ],
+                    ),
                   ),
+                  if (widget.canExpand)
+                    IconButton(
+                      tooltip: l10n.markdownExpandCode,
+                      style: _toolbarStyle(theme),
+                      onPressed: _openReader,
+                      icon: const Icon(Icons.open_in_full_rounded),
+                    ),
+                  IconButton(
+                    tooltip: l10n.markdownCopyCode,
+                    style: _toolbarStyle(theme),
+                    onPressed: () =>
+                        _copy(widget.originalSource ?? widget.code),
+                    icon: const Icon(AppIcons.copy),
+                  ),
+                ],
               ],
             ),
           ),

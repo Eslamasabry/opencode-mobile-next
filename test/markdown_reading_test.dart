@@ -28,6 +28,36 @@ Future<void> _pump(
 }
 
 void main() {
+  for (final scale in [1.0, 2.5]) {
+    testWidgets('short code keeps a single toolbar row at ${scale}x', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(320, 640));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await _pump(
+        tester,
+        const Padding(
+          padding: EdgeInsets.all(16),
+          child: CodeBlock(code: 'npm run dev', language: 'bash'),
+        ),
+        scale: scale,
+      );
+      final actions = ['Wrap lines', 'Full screen', 'Copy code'];
+      final top = tester.getTopLeft(find.byTooltip(actions.first)).dy;
+      for (final label in actions) {
+        final action = find.byTooltip(label);
+        expect(tester.getSize(action), const Size(48, 48));
+        expect(tester.getTopLeft(action).dy, top);
+        final data = tester.getSemantics(action).getSemanticsData();
+        expect('${data.label} ${data.tooltip}', contains(label));
+      }
+      // Even with 2.5x text, a one-line snippet should not become a card
+      // dominated by several rows of actions.
+      expect(tester.getSize(find.byType(CodeBlock)).height, lessThan(125));
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('RTL code starts at the beginning of its horizontal viewport', (
     tester,
   ) async {
@@ -45,7 +75,7 @@ void main() {
     expect(state.position.axisDirection, AxisDirection.right);
     expect(state.position.pixels, state.position.minScrollExtent);
     expect(state.position.maxScrollExtent, greaterThan(0));
-    await tester.tap(find.text('Full screen'));
+    await tester.tap(find.byTooltip('Full screen'));
     await tester.pumpAndSettle();
     final readerState = tester.state<ScrollableState>(horizontal);
     expect(readerState.position.axisDirection, AxisDirection.right);
@@ -70,12 +100,12 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text('Full screen'));
+    await tester.tap(find.byTooltip('Full screen'));
     await tester.pumpAndSettle();
     enabled.value = false;
     await tester.pumpAndSettle();
-    expect(find.text('Copy code'), findsNothing);
-    expect(find.text('Wrap lines'), findsNothing);
+    expect(find.byTooltip('Copy code'), findsNothing);
+    expect(find.byTooltip('Wrap lines'), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pageBack();
     await tester.pumpAndSettle();
@@ -94,11 +124,11 @@ void main() {
             value ? const CodeBlock(code: 'snapshot') : const SizedBox(),
       ),
     );
-    await tester.tap(find.text('Full screen'));
+    await tester.tap(find.byTooltip('Full screen'));
     await tester.pumpAndSettle();
     visible.value = false;
     await tester.pumpAndSettle();
-    expect(find.text('Copy code'), findsNothing);
+    expect(find.byTooltip('Copy code'), findsNothing);
     await tester.pageBack();
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
@@ -172,9 +202,9 @@ void main() {
         tester,
         const MarkdownText('  ~~~dart\r\n  final a = 1;  \r\n  \r\n  ~~~'),
       );
-      await tester.tap(find.text('Wrap lines'));
+      await tester.tap(find.byTooltip('Wrap lines'));
       await tester.pump();
-      await tester.tap(find.text('Copy code'));
+      await tester.tap(find.byTooltip('Copy code'));
       await tester.pump();
       expect(copies, ['  final a = 1;  \r\n  \r\n']);
     },
@@ -203,7 +233,7 @@ void main() {
       );
       final source = '${'x' * 1200}\n\n';
       await _pump(tester, CodeBlock(code: source));
-      await tester.tap(find.text('Copy code'));
+      await tester.tap(find.byTooltip('Copy code'));
       await tester.pumpAndSettle();
       expect(find.text('Could not copy code. Try again.'), findsOneWidget);
       expect(find.text('Code copied'), findsNothing);
@@ -223,9 +253,9 @@ void main() {
         child: CodeBlock(code: 'local only'),
       ),
     );
-    expect(find.text('Copy code'), findsNothing);
-    expect(find.text('Full screen'), findsNothing);
-    expect(find.text('Wrap lines'), findsNothing);
+    expect(find.byTooltip('Copy code'), findsNothing);
+    expect(find.byTooltip('Full screen'), findsNothing);
+    expect(find.byTooltip('Wrap lines'), findsNothing);
     final ignored = find.ancestor(
       of: find.byType(SelectableText),
       matching: find.byType(IgnorePointer),
@@ -378,7 +408,7 @@ void main() {
           builder: (_, text, _) => MarkdownText(text),
         ),
       );
-      await tester.tap(find.text('Full screen'));
+      await tester.tap(find.byTooltip('Full screen'));
       await tester.pumpAndSettle();
       expect(find.text('Code reader'), findsOneWidget);
       expect(find.textContaining('Snapshot of the code'), findsOneWidget);
@@ -432,14 +462,14 @@ void main() {
       final before = scroll.offset;
       for (final label in ['Wrap lines', 'Full screen', 'Copy code']) {
         expect(
-          tester.getSize(find.widgetWithText(TextButton, label)).height,
+          tester.getSize(find.byTooltip(label)).height,
           greaterThanOrEqualTo(48),
         );
       }
-      await tester.tap(find.text('Wrap lines'));
+      await tester.tap(find.byTooltip('Wrap lines'));
       await tester.pump();
       expect(scroll.offset, before);
-      await tester.tap(find.text('Full screen'));
+      await tester.tap(find.byTooltip('Full screen'));
       await tester.pumpAndSettle();
       await tester.pageBack();
       await tester.pumpAndSettle();

@@ -403,7 +403,8 @@ class _ChatComposer extends StatelessWidget {
             controller: controller,
             focusNode: focusNode,
             onContentInserted: onContentInserted,
-            minLines: compact ? 1 : 2,
+            // Let the draft earn its space; an empty field needs one line.
+            minLines: 1,
             maxLines: compact ? 3 : 6,
             contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
             onSubmitShortcut: _submitFromKeyboard,
