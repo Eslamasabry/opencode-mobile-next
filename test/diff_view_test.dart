@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -177,8 +176,9 @@ void main() {
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
       SystemChannels.platform,
       (call) async {
-        if (call.method == 'Clipboard.setData')
+        if (call.method == 'Clipboard.setData') {
           copied = (call.arguments as Map)['text'] as String;
+        }
         return null;
       },
     );

@@ -183,8 +183,9 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     if (!widget.focusAgent ||
         _agentEntryOpened ||
         !_sameScope ||
-        widget.controller.catalog == null)
+        widget.controller.catalog == null) {
       return;
+    }
     _agentEntryOpened = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_sameScope) return;

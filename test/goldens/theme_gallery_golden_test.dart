@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -24,7 +23,6 @@ void main() {
     await _loadFont('AppDisplay', const [
       'assets/fonts/SpaceGrotesk-Regular.ttf',
       'assets/fonts/SpaceGrotesk-Medium.ttf',
-      'assets/fonts/SpaceGrotesk-SemiBold.ttf',
       'assets/fonts/SpaceGrotesk-SemiBold.ttf',
       'assets/fonts/SpaceGrotesk-Bold.ttf',
     ]);

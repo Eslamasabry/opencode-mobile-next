@@ -90,8 +90,9 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
     setState(() => _syncing = true);
     try {
       final repository = await widget.controller.prepareActionRepository();
-      if (repository == null)
+      if (repository == null) {
         throw const ProductException('OpenCode is reconnecting.');
+      }
       await repository.syncWorkspaceList(
         projectDirectory: widget.project.directory,
       );
@@ -115,8 +116,9 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
     setState(() => _creating = true);
     try {
       final repository = await widget.controller.prepareActionRepository();
-      if (repository == null)
+      if (repository == null) {
         throw const ProductException('OpenCode is reconnecting.');
+      }
       final workspace = await repository.createManagedWorkspace(
         projectDirectory: widget.project.directory,
         type: draft.type,
@@ -170,8 +172,9 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
         if (locationError != null) throw ProductException(locationError);
       }
       final repository = await widget.controller.prepareActionRepository();
-      if (repository == null)
+      if (repository == null) {
         throw const ProductException('OpenCode is reconnecting.');
+      }
       await repository.removeManagedWorkspace(
         projectDirectory: widget.project.directory,
         id: workspace.id,
