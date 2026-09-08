@@ -365,7 +365,10 @@ void main() {
     setUp(() => _useTallSurface());
 
     Future<void> openSessionMenu(WidgetTester tester) async {
-      await tester.tap(find.byIcon(Icons.more_vert).first);
+      // Workspace also has a section menu; open the session's labeled control.
+      final actions = find.byTooltip('Session actions').hitTestable();
+      expect(actions, findsOneWidget);
+      await tester.tap(actions);
       await tester.pumpAndSettle();
     }
 
