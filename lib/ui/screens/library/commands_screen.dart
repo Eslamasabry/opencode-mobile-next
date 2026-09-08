@@ -69,7 +69,7 @@ class _CommandsScreenState extends State<CommandsScreen> {
                 child: TextField(
                   decoration: const InputDecoration(
                     hintText: 'Search server commands',
-                    prefixIcon: Icon(Icons.search_rounded),
+                    prefixIcon: Icon(AppIconography.search),
                     border: OutlineInputBorder(),
                     isDense: true,
                   ),
@@ -103,7 +103,7 @@ class _CommandsScreenState extends State<CommandsScreen> {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              trailing: const Icon(Icons.play_arrow_rounded),
+                              trailing: const Icon(AppIconography.play),
                               onTap: () => _run(command),
                             );
                           },

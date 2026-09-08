@@ -68,7 +68,7 @@ class RunResultView extends StatelessWidget {
           _notice(
             context,
             key: const Key('run-result-no-tools'),
-            icon: Icons.help_outline_rounded,
+            icon: AppIconography.question,
             text: l10n.runResultsNoToolEvidence,
           )
         else ...[
@@ -115,7 +115,7 @@ class RunResultView extends StatelessWidget {
           child: FilledButton.tonalIcon(
             key: const Key('run-result-open-conversation'),
             onPressed: onOpenConversation,
-            icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+            icon: const Icon(AppIconography.chat, size: 18),
             label: Text(l10n.runResultsOpenConversation),
           ),
         ),
@@ -172,32 +172,32 @@ class RunResultView extends StatelessWidget {
     final (label, icon, color) = switch (outcome.kind) {
       RunOutcomeKind.completed => (
         l10n.runResultsOutcomeCompleted,
-        Icons.check_circle_outline_rounded,
+        AppIconography.checkCircle,
         AppTheme.successOf(theme),
       ),
       RunOutcomeKind.cutOff => (
         l10n.runResultsOutcomeCutOff,
-        Icons.content_cut_rounded,
+        AppIconography.cut,
         theme.colorScheme.tertiary,
       ),
       RunOutcomeKind.failed => (
         l10n.runResultsOutcomeFailed,
-        Icons.error_outline_rounded,
+        AppIconography.error,
         theme.colorScheme.error,
       ),
       RunOutcomeKind.aborted => (
         l10n.runResultsOutcomeAborted,
-        Icons.block_rounded,
+        AppIconography.blocked,
         theme.colorScheme.error,
       ),
       RunOutcomeKind.running => (
         l10n.runResultsOutcomeRunning,
-        Icons.hourglass_top_rounded,
+        AppIconography.waitingStart,
         theme.colorScheme.primary,
       ),
       RunOutcomeKind.notReported => (
         l10n.runResultsOutcomeNotReported,
-        Icons.help_outline_rounded,
+        AppIconography.question,
         AppTheme.mutedOf(theme),
       ),
     };
@@ -294,14 +294,14 @@ class RunResultView extends StatelessWidget {
       key: Key('run-result-file-${file.path}'),
       dense: true,
       contentPadding: EdgeInsets.zero,
-      leading: const Icon(Icons.edit_note_rounded, size: 20),
+      leading: const Icon(AppIconography.editNote, size: 20),
       title: Text(file.path, style: theme.textTheme.bodyMedium),
       subtitle: Text(
         file.state.pruned ? '$change · ${l10n.runResultsOutputPruned}' : change,
       ),
       trailing: file.state.pruned
           ? null
-          : const Icon(Icons.open_in_new_rounded, size: 16),
+          : const Icon(AppIconography.externalLink, size: 16),
       onTap: file.state.pruned
           ? null
           : () => _openOutput(context, l10n, file.toolName, file.state),
@@ -329,7 +329,7 @@ class RunResultView extends StatelessWidget {
       dense: true,
       contentPadding: EdgeInsets.zero,
       leading: Icon(
-        failed ? Icons.error_outline_rounded : Icons.terminal_rounded,
+        failed ? AppIconography.error : AppIconography.terminal,
         size: 20,
         color: failed ? theme.colorScheme.error : null,
       ),
@@ -342,7 +342,7 @@ class RunResultView extends StatelessWidget {
       subtitle: Text(caption),
       trailing: command.outputPruned
           ? null
-          : const Icon(Icons.open_in_new_rounded, size: 16),
+          : const Icon(AppIconography.externalLink, size: 16),
       onTap: command.outputPruned
           ? null
           : () => _openOutput(context, l10n, command.toolName, command.state),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'request_routes.dart';
+import '../app_iconography.dart';
 
 /// Mobile-idiomatic confirmation: a bottom sheet with one clear primary
 /// action, replacing centered [AlertDialog] confirms. Returns true only when
@@ -12,7 +13,7 @@ Future<bool> showConfirmSheet(
   required String message,
   required String confirmLabel,
   String cancelLabel = 'Cancel',
-  IconData icon = Icons.help_outline_rounded,
+  IconData icon = AppIconography.question,
   bool destructive = false,
   Key? sheetKey,
   Key? confirmKey,
@@ -107,7 +108,7 @@ class SwipeDeleteBackground extends StatelessWidget {
       color: scheme.errorContainer,
       alignment: AlignmentDirectional.centerEnd,
       padding: const EdgeInsetsDirectional.only(end: 24),
-      child: Icon(Icons.delete_outline_rounded, color: scheme.onErrorContainer),
+      child: Icon(AppIconography.delete, color: scheme.onErrorContainer),
     );
   }
 }

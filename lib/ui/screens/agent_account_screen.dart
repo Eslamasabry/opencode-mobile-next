@@ -8,6 +8,7 @@ import '../../l10n/app_localizations.dart';
 import '../../state/agent_account.dart';
 import '../../state/connection.dart';
 import '../widgets/external_link.dart';
+import '../app_iconography.dart';
 
 /// Pins the route to the profile/location the user opened. A reconnect may
 /// refresh that account, but never recreates a pending login.
@@ -156,7 +157,7 @@ class AgentAccountPanel extends StatelessWidget {
                       !controller.session.active
                   ? null
                   : controller.refresh,
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const Icon(AppIconography.retry),
             ),
           ],
         ),
@@ -190,8 +191,8 @@ class AgentAccountPanel extends StatelessWidget {
                         children: [
                           Icon(
                             ready && account!.signedIn
-                                ? Icons.verified_user_outlined
-                                : Icons.account_circle_outlined,
+                                ? AppIconography.privacy
+                                : AppIconography.account,
                             color: colors.primary,
                             size: 32,
                           ),
@@ -255,7 +256,7 @@ class AgentAccountPanel extends StatelessWidget {
                       const SizedBox(height: 20),
                       FilledButton.icon(
                         onPressed: controller.signIn,
-                        icon: const Icon(Icons.login_rounded),
+                        icon: const Icon(AppIconography.login),
                         label: Text(l.agentAccountSignIn),
                       ),
                       const SizedBox(height: 10),
@@ -387,7 +388,7 @@ class AgentAccountPanel extends StatelessWidget {
               FilledButton.tonalIcon(
                 onPressed: () =>
                     openExternalLink(context, code.verificationUrl),
-                icon: const Icon(Icons.open_in_new_rounded),
+                icon: const Icon(AppIconography.externalLink),
                 label: Text(l.agentAccountOpenSignIn),
               ),
               const SizedBox(height: 8),

@@ -72,7 +72,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         final group0 = <_DestinationRow>[
           if (controller.capabilities.serverCatalog) ...[
             _DestinationRow(
-              icon: Icons.model_training_outlined,
+              icon: AppIconography.model,
               title: l10n.libraryModelsAgentsTitle,
               subtitle: l10n.settingsDiscoveryNewChatsModel(
                 _defaultModelLabel(controller, l10n),
@@ -82,7 +82,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   _open(context, CatalogScreen(controller: controller)),
             ),
             _DestinationRow(
-              icon: Icons.cloud_outlined,
+              icon: AppIconography.cloud,
               title: l10n.libraryProvidersTitle,
               keywords: 'API keys authentication connect',
               onTap: () => _open(
@@ -94,7 +94,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               ),
             ),
             _DestinationRow(
-              icon: Icons.hub_outlined,
+              icon: AppIconography.network,
               title: l10n.libraryMcpTitle,
               keywords: 'integrations servers',
               onTap: () => _open(
@@ -106,7 +106,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               ),
             ),
             _DestinationRow(
-              icon: Icons.build_circle_outlined,
+              icon: AppIconography.tools,
               title: l10n.libraryCommandsToolsTitle,
               keywords: 'slash skills references capabilities',
               onTap: () =>
@@ -115,7 +115,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ],
           if (controller.capabilities.pluginInventory)
             _DestinationRow(
-              icon: Icons.extension_outlined,
+              icon: AppIconography.extensions,
               title: l10n.pluginsTitle,
               keywords: 'plugin installed source status',
               onTap: () =>
@@ -126,7 +126,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           if (controller.capabilities.terminal)
             _DestinationRow(
               key: const ValueKey('library-terminal'),
-              icon: Icons.terminal_outlined,
+              icon: AppIconography.terminal,
               title: l10n.libraryTerminalTitle,
               keywords: 'shell command line',
               onTap: () => _open(context, TerminalPage(controller: controller)),
@@ -139,21 +139,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   .sessionImportSupported)
             _DestinationRow(
               key: const ValueKey('library-import-session'),
-              icon: Icons.upload_file_outlined,
+              icon: AppIconography.fileUpload,
               title: l10n.importTitle,
               keywords: 'backup restore transfer JSON conversation',
               onTap: () =>
                   _open(context, SessionImportScreen(controller: controller)),
             ),
           _DestinationRow(
-            icon: Icons.settings_outlined,
+            icon: AppIconography.settings,
             title: l10n.librarySettingsTitle,
             keywords:
                 'appearance theme language notifications privacy voice background server',
             onTap: () => _open(context, SettingsScreen(controller: controller)),
           ),
           _DestinationRow(
-            icon: Icons.menu_book_outlined,
+            icon: AppIconography.guide,
             title: 'Setup guide',
             keywords: 'help connect tutorial start',
             onTap: () => _open(context, const GuideScreen()),
@@ -163,7 +163,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           // outside a failure surface.
           _DestinationRow(
             key: const ValueKey('library-report-bug'),
-            icon: Icons.bug_report_outlined,
+            icon: AppIconography.bug,
             title: 'Report a bug',
             keywords: 'feedback issue support',
             onTap: () => unawaited(openBugReport(context)),
@@ -173,7 +173,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           if (desktopInteractions)
             _DestinationRow(
               key: const ValueKey('library-keyboard-shortcuts'),
-              icon: Icons.keyboard_outlined,
+              icon: AppIconography.keyboard,
               title: 'Keyboard shortcuts',
               keywords: 'hotkeys help desktop',
               onTap: () => unawaited(showShortcutsHelp(context)),
@@ -195,12 +195,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       setState(() => _query = value.trim().toLowerCase()),
                   decoration: InputDecoration(
                     hintText: l10n.librarySearchHint,
-                    prefixIcon: const Icon(Icons.search_rounded),
+                    prefixIcon: const Icon(AppIconography.search),
                     suffixIcon: _query.isEmpty
                         ? null
                         : IconButton(
                             tooltip: l10n.commonClearSearch,
-                            icon: const Icon(Icons.close_rounded),
+                            icon: const Icon(AppIconography.close),
                             onPressed: () {
                               _search.clear();
                               setState(() => _query = '');
@@ -332,7 +332,7 @@ class _DestinationRow extends StatelessWidget {
       leading: SizedBox.square(dimension: 32, child: Icon(icon, size: 24)),
       title: Text(title),
       subtitle: subtitle == null ? null : Text(subtitle!),
-      trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+      trailing: const Icon(AppIconography.chevronRight, size: 20),
       onTap: onTap,
     );
   }

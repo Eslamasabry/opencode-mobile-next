@@ -148,7 +148,7 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         scrollable: true,
-        icon: const Icon(Icons.gpp_maybe_outlined),
+        icon: const Icon(AppIconography.privacyWarning),
         title: const Text('Revoke always allowed action?'),
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,7 +236,7 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
                     dimension: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.refresh_rounded),
+                : const Icon(AppIconography.retry),
           ),
         ],
       ),
@@ -246,7 +246,7 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
             ? const LoadingList(rows: 4)
             : permissions?.isEmpty == true && _error == null
             ? const ProductEmptyState(
-                icon: Icons.verified_user_outlined,
+                icon: AppIconography.privacy,
                 title: 'No always allowed actions',
                 message:
                     'Grants created with Always allow for this project will appear here.',
@@ -267,7 +267,7 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
                   if (_error != null)
                     ListTile(
                       leading: Icon(
-                        Icons.error_outline_rounded,
+                        AppIconography.error,
                         color: Theme.of(context).colorScheme.error,
                       ),
                       title: const Text('The last action failed'),
@@ -276,7 +276,7 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
                   for (final permission in permissions)
                     ListTile(
                       key: ValueKey('saved-permission-${permission.id}'),
-                      leading: const Icon(Icons.admin_panel_settings_outlined),
+                      leading: const Icon(AppIconography.privacy),
                       title: Text(permissionRequestTitle(permission.action)),
                       subtitle: SelectableText(
                         permission.resource.trim().isEmpty
@@ -299,7 +299,7 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
                               ),
                               tooltip: 'Revoke ${permission.action} access',
                               onPressed: () => _revoke(permission),
-                              icon: const Icon(Icons.delete_outline_rounded),
+                              icon: const Icon(AppIconography.delete),
                             ),
                     ),
                 ],

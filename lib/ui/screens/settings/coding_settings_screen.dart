@@ -87,7 +87,7 @@ class _CodingSettingsScreenState extends State<CodingSettingsScreen>
             shrinkWrap: true,
             children: [
               const ListTile(
-                leading: Icon(Icons.terminal_rounded),
+                leading: Icon(AppIconography.terminal),
                 title: Text('Default shell'),
                 subtitle: Text(
                   'Used by new terminals and compatible shell commands on this OpenCode server.',
@@ -98,8 +98,8 @@ class _CodingSettingsScreenState extends State<CodingSettingsScreen>
                   key: ValueKey('server-shell-${choice.id}'),
                   leading: Icon(
                     choice.value == settings.selected
-                        ? Icons.radio_button_checked_rounded
-                        : Icons.radio_button_off_rounded,
+                        ? AppIconography.radioSelected
+                        : AppIconography.radioEmpty,
                   ),
                   title: Text(choice.label),
                   subtitle: choice.terminalOnly
@@ -208,12 +208,12 @@ class _CodingSettingsScreenState extends State<CodingSettingsScreen>
               title: 'Default shell',
               explainer:
                   "Shell selection isn't available on OpenCode 2 servers",
-              leading: Icon(Icons.terminal_rounded),
+              leading: Icon(AppIconography.terminal),
             )
           else
             ListTile(
               key: const ValueKey('default-shell-settings-entry'),
-              leading: const Icon(Icons.terminal_rounded),
+              leading: const Icon(AppIconography.terminal),
               title: const Text('Default shell'),
               subtitle: Text(
                 _shellError != null
@@ -229,7 +229,7 @@ class _CodingSettingsScreenState extends State<CodingSettingsScreen>
                       dimension: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.chevron_right_rounded),
+                  : const Icon(AppIconography.chevronRight),
               onTap: _loadingShell || _savingShell
                   ? null
                   : _shellError != null
@@ -237,7 +237,7 @@ class _CodingSettingsScreenState extends State<CodingSettingsScreen>
                   : _chooseShell,
             ),
           ListTile(
-            leading: const Icon(Icons.model_training_outlined),
+            leading: const Icon(AppIconography.model),
             title: const Text('Selected model'),
             subtitle: Text(
               controller.selectedModel == null
@@ -261,18 +261,18 @@ class _CodingSettingsScreenState extends State<CodingSettingsScreen>
                         controller.selectedVariant,
                     ].join(' · '),
             ),
-            trailing: const Icon(Icons.chevron_right_rounded),
+            trailing: const Icon(AppIconography.chevronRight),
             onTap: () => showModelPicker(context),
           ),
           ListTile(
-            leading: const Icon(Icons.support_agent_outlined),
+            leading: const Icon(AppIconography.support),
             title: const Text('Selected agent'),
             subtitle: Text(
               controller.selectedAgent.isEmpty
                   ? 'Server default'
                   : controller.selectedAgent,
             ),
-            trailing: const Icon(Icons.chevron_right_rounded),
+            trailing: const Icon(AppIconography.chevronRight),
             onTap: () => showModelPicker(context, focusAgent: true),
           ),
         ],

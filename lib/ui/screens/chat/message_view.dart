@@ -43,7 +43,7 @@ class _PromptErrorBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(
-                  Icons.error_outline_rounded,
+                  AppIconography.error,
                   size: 20,
                   color: scheme.onErrorContainer,
                 ),
@@ -63,7 +63,7 @@ class _PromptErrorBanner extends StatelessWidget {
                   visualDensity: VisualDensity.compact,
                   onPressed: onDismiss,
                   icon: Icon(
-                    Icons.close_rounded,
+                    AppIconography.close,
                     size: 19,
                     color: scheme.onErrorContainer,
                   ),
@@ -256,7 +256,7 @@ class _EmptyTranscript extends StatelessWidget {
                             WidgetSpan(
                               alignment: PlaceholderAlignment.middle,
                               child: Icon(
-                                Icons.more_horiz_rounded,
+                                AppIconography.more,
                                 size: 14,
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -325,7 +325,7 @@ class _JumpToLatestButton extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Icon(
-              Icons.arrow_downward_rounded,
+              AppIconography.down,
               size: 20,
               color: theme.colorScheme.primary,
             ),
@@ -381,7 +381,7 @@ class _EarlierMessagesPill extends StatelessWidget {
                 ),
               ),
               Icon(
-                Icons.expand_more_rounded,
+                AppIconography.chevronDown,
                 size: 15,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -567,8 +567,8 @@ class _TranscriptNoticeState extends State<TranscriptNotice> {
                     if (body.isNotEmpty)
                       Icon(
                         _open
-                            ? Icons.expand_less_rounded
-                            : Icons.expand_more_rounded,
+                            ? AppIconography.chevronUp
+                            : AppIconography.chevronDown,
                         size: 14,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -627,8 +627,8 @@ class V2TranscriptRow extends StatelessWidget {
     switch (part.type) {
       case 'v2:switch':
         final (icon, prefix) = switch (kind) {
-          'model' => (Icons.memory_rounded, 'Model'),
-          'agent' => (Icons.support_agent_rounded, 'Agent'),
+          'model' => (AppIconography.processor, 'Model'),
+          'agent' => (AppIconography.support, 'Agent'),
           _ => (Icons.drive_file_move_outline, 'Moved'),
         };
         final detail = kind == 'location'
@@ -654,14 +654,14 @@ class V2TranscriptRow extends StatelessWidget {
           ),
           'failed' => TranscriptNotice(
             key: ValueKey('compaction-failed-$messageId'),
-            icon: Icons.compress_rounded,
+            icon: AppIconography.collapse,
             header: 'Compaction failed',
             text: part.text,
             error: true,
           ),
           _ => TranscriptNotice(
             key: ValueKey('compaction-completed-$messageId'),
-            icon: Icons.compress_rounded,
+            icon: AppIconography.collapse,
             header: 'Context compacted',
             text: part.text,
             markdown: true,
@@ -670,22 +670,22 @@ class V2TranscriptRow extends StatelessWidget {
       default:
         final (icon, header, mono) = switch (kind) {
           'instructions' => (
-            Icons.sticky_note_2_outlined,
+            AppIconography.note,
             _chatL10n(context).sessionInstructionsUpdated,
             null,
           ),
           'synthetic' => (
-            Icons.auto_awesome_outlined,
+            AppIconography.sparkle,
             part.filename ?? 'Context added',
             null,
           ),
           'system' => (
-            Icons.settings_suggest_outlined,
+            AppIconography.settingsAdvanced,
             part.filename ?? 'System update',
             null,
           ),
           'skill' => (AppIcons.run, 'Skill ·', part.filename ?? part.text),
-          _ => (Icons.dns_outlined, part.filename ?? 'Server message', null),
+          _ => (AppIconography.server, part.filename ?? 'Server message', null),
         };
         return TranscriptNotice(
           key: ValueKey('transcript-notice-$messageId'),
@@ -1032,7 +1032,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
                   child: Row(
                     children: [
                       Icon(
-                        Icons.search_rounded,
+                        AppIconography.search,
                         size: 16,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -1070,12 +1070,12 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
                       else
                         Icon(
                           _failed
-                              ? Icons.error_outline_rounded
+                              ? AppIconography.error
                               : _running
-                              ? Icons.hourglass_top_rounded
+                              ? AppIconography.waitingStart
                               : _notRun
-                              ? Icons.block_rounded
-                              : Icons.check_circle_outline_rounded,
+                              ? AppIconography.blocked
+                              : AppIconography.checkCircle,
                           size: 14,
                           color: _failed
                               ? theme.colorScheme.error
@@ -1090,7 +1090,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
                             ? Duration.zero
                             : const Duration(milliseconds: 150),
                         child: Icon(
-                          Icons.expand_more_rounded,
+                          AppIconography.chevronDown,
                           size: 16,
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -1238,7 +1238,7 @@ class _AssistantMessagePart extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.only(bottom: 6),
         child: Chip(
-          avatar: const Icon(Icons.attach_file_rounded, size: 16),
+          avatar: const Icon(AppIconography.attach, size: 16),
           label: Text(part.filename ?? 'Attachment'),
         ),
       );
@@ -1517,7 +1517,7 @@ class _MessageView extends StatelessWidget {
                                 minHeight: 44,
                               ),
                               child: Icon(
-                                Icons.more_horiz_rounded,
+                                AppIconography.more,
                                 size: 16,
                                 color: theme.colorScheme.onSurfaceVariant
                                     .withValues(alpha: .8),
@@ -1606,7 +1606,7 @@ class _AssistantErrorRow extends StatelessWidget {
       case MessageErrorKind.modelNotFound:
         return _ErrorActionCard(
           key: const Key('error-card-model-not-found'),
-          icon: Icons.model_training_outlined,
+          icon: AppIconography.model,
           text: text,
           details: details,
           actionKey: const Key('error-action-choose-model'),
@@ -1616,7 +1616,7 @@ class _AssistantErrorRow extends StatelessWidget {
       case MessageErrorKind.contextOverflow:
         return _ErrorActionCard(
           key: const Key('error-card-context-overflow'),
-          icon: Icons.compress_rounded,
+          icon: AppIconography.collapse,
           text: text,
           details: details,
           actionKey: const Key('error-action-compact'),
@@ -1635,7 +1635,7 @@ class _AssistantErrorRow extends StatelessWidget {
       case MessageErrorKind.outputLength:
         return _ErrorActionCard(
           key: const Key('error-card-output-length'),
-          icon: Icons.short_text_rounded,
+          icon: AppIconography.textShort,
           text: text,
           details: details,
           actionKey: const Key('error-action-continue'),
@@ -1661,7 +1661,7 @@ class _AssistantErrorRow extends StatelessWidget {
       case MessageErrorKind.unknown:
         return _ErrorActionCard(
           key: const Key('error-card-generic'),
-          icon: Icons.error_outline_rounded,
+          icon: AppIconography.error,
           text: text,
           details: details,
           actionKey: const Key('error-action-none'),
@@ -1916,9 +1916,7 @@ class _AttachmentPart extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  reference
-                      ? Icons.bookmark_outline_rounded
-                      : Icons.attach_file_rounded,
+                  reference ? AppIconography.bookmark : AppIconography.attach,
                   size: 17,
                 ),
                 const SizedBox(width: 8),
@@ -1948,7 +1946,7 @@ class _AttachmentPart extends StatelessWidget {
                 ),
                 if (!reference) ...[
                   const SizedBox(width: 8),
-                  const Icon(Icons.visibility_outlined, size: 15),
+                  const Icon(AppIconography.visible, size: 15),
                 ],
               ],
             ),
@@ -2133,7 +2131,7 @@ class _ReasoningState extends State<_Reasoning> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  Icons.psychology_alt_outlined,
+                                  AppIconography.model,
                                   size: 13,
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
@@ -2215,10 +2213,7 @@ class _SubagentContextBanner extends StatelessWidget {
         padding: const EdgeInsets.only(left: 16),
         child: Row(
           children: [
-            Icon(
-              Icons.subdirectory_arrow_right_rounded,
-              color: theme.colorScheme.primary,
-            ),
+            Icon(AppIconography.nested, color: theme.colorScheme.primary),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -2232,13 +2227,13 @@ class _SubagentContextBanner extends StatelessWidget {
               key: const ValueKey('subagent-parent-session'),
               tooltip: 'Open parent session',
               onPressed: onParent,
-              icon: const Icon(Icons.arrow_upward_rounded),
+              icon: const Icon(AppIconography.send),
             ),
             IconButton(
               key: const ValueKey('subagent-session-list'),
               tooltip: 'Show all subagent sessions',
               onPressed: onAll,
-              icon: const Icon(Icons.account_tree_outlined),
+              icon: const Icon(AppIconography.branch),
             ),
           ],
         ),
@@ -2261,7 +2256,7 @@ class _SharedSessionBanner extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
         child: Row(
           children: [
-            const Icon(Icons.public_rounded, size: 20),
+            const Icon(AppIconography.globe, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -2535,23 +2530,23 @@ class _QueuedPromptBubble extends StatelessWidget {
     final IconData icon;
     if (sending) {
       label = l10n.queuedSending;
-      icon = Icons.upload_rounded;
+      icon = AppIconography.upload;
     } else if (review && acceptedUnrecorded) {
       // The controller's recorded reason names the acceptance; the generic
       // "unconfirmed" copy would invite a resend that is a certain duplicate.
       label = error ?? l10n.queuedDeliveryUnconfirmed;
-      icon = Icons.cloud_done_outlined;
+      icon = AppIconography.cloudCheck;
     } else if (review) {
       label = error == null
           ? l10n.queuedDeliveryUnconfirmed
           : l10n.queuedDeliveryUnconfirmedWithError(error);
-      icon = Icons.help_outline_rounded;
+      icon = AppIconography.question;
     } else if (error != null) {
       label = 'Failed: $error';
-      icon = Icons.error_outline_rounded;
+      icon = AppIconography.error;
     } else {
       label = 'Queued — will send when reconnected';
-      icon = Icons.schedule_rounded;
+      icon = AppIconography.clock;
     }
     return _PendingSendBubble(
       text: entry.text,
@@ -2564,19 +2559,19 @@ class _QueuedPromptBubble extends StatelessWidget {
         if (review && !acceptedUnrecorded)
           _PendingSendAction(
             key: const ValueKey('queued-action-resend'),
-            icon: Icons.send_rounded,
+            icon: AppIconography.send,
             tooltip: l10n.queuedResendTooltip,
             onPressed: onResend,
           ),
         _PendingSendAction(
           key: const ValueKey('queued-action-edit'),
-          icon: Icons.edit_outlined,
+          icon: AppIconography.edit,
           tooltip: 'Edit draft',
           onPressed: sending ? null : onEdit,
         ),
         _PendingSendAction(
           key: const ValueKey('queued-action-discard'),
-          icon: Icons.delete_outline_rounded,
+          icon: AppIconography.delete,
           tooltip: 'Discard draft',
           onPressed: sending ? null : onDiscard,
         ),
@@ -2615,7 +2610,7 @@ class _InboxSendBubble extends StatelessWidget {
       text: _isUser ? (item.promptText ?? '') : '',
       attachmentCount: 0,
       icon: !_isUser
-          ? Icons.auto_awesome_outlined
+          ? AppIconography.sparkle
           : _steering
           ? AppIcons.run
           : AppIcons.queue,
@@ -2641,7 +2636,7 @@ class _InboxSendBubble extends StatelessWidget {
         if (_isUser)
           _PendingSendAction(
             key: const ValueKey('inbox-action-cancel'),
-            icon: Icons.close_rounded,
+            icon: AppIconography.close,
             tooltip: 'Cancel and return to the composer',
             onPressed: onCancel,
           ),

@@ -10,6 +10,7 @@ import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../../state/review_handoff.dart';
 import 'chat_screen.dart';
+import '../app_iconography.dart';
 
 /// Production chat backed by a route-owned gateway and ephemeral stores.
 /// Nothing replaces the real connection, profile store or plugin singleton.
@@ -100,18 +101,18 @@ class _DemoScreenState extends State<DemoScreen> {
             padding: const EdgeInsets.fromLTRB(16, 0, 4, 0),
             child: Row(
               children: [
-                const Icon(Icons.science_outlined, size: 20),
+                const Icon(AppIconography.experiments, size: 20),
                 const SizedBox(width: 8),
                 const Expanded(child: Text(DemoCopy.title)),
                 IconButton(
                   tooltip: DemoCopy.reset,
                   onPressed: _reset,
-                  icon: const Icon(Icons.restart_alt_rounded),
+                  icon: const Icon(AppIconography.restart),
                 ),
                 IconButton(
                   tooltip: DemoCopy.exit,
                   onPressed: _exit,
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(AppIconography.close),
                 ),
               ],
             ),

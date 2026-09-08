@@ -102,7 +102,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
           child: TextField(
             decoration: const InputDecoration(
               hintText: 'Search models',
-              prefixIcon: Icon(Icons.search_rounded),
+              prefixIcon: Icon(AppIconography.search),
               border: OutlineInputBorder(),
               isDense: true,
             ),
@@ -164,7 +164,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                         isThreeLine: true,
                         trailing: selected
                             ? Icon(
-                                Icons.check_circle_rounded,
+                                AppIconography.checkCircle,
                                 color: Theme.of(context).colorScheme.primary,
                               )
                             : null,
@@ -184,7 +184,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
       return RefreshIndicator(
         onRefresh: _load,
         child: const ProductEmptyState(
-          icon: Icons.cloud_off_outlined,
+          icon: AppIconography.cloudOff,
           title: 'No providers connected',
           message: 'Connect a provider on the OpenCode server to use models.',
         ),
@@ -211,7 +211,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
               '$count available models\nAuthentication is managed under MCP and integrations.',
               maxLines: 2,
             ),
-            trailing: const Icon(Icons.chevron_right_rounded),
+            trailing: const Icon(AppIconography.chevronRight),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) =>
@@ -231,7 +231,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
       return RefreshIndicator(
         onRefresh: _load,
         child: const ProductEmptyState(
-          icon: Icons.support_agent_outlined,
+          icon: AppIconography.support,
           title: 'No agents available',
           message: 'No visible agents were returned for this workspace.',
         ),
@@ -247,7 +247,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
           final agent = agents[index];
           final selected = widget.controller.selectedAgent == agent.id;
           return ListTile(
-            leading: const Icon(Icons.support_agent_outlined),
+            leading: const Icon(AppIconography.support),
             title: Text(agent.id),
             subtitle: Text(
               [
@@ -257,7 +257,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            trailing: selected ? const Icon(Icons.check_rounded) : null,
+            trailing: selected ? const Icon(AppIconography.check) : null,
             onTap: () => widget.controller.selectAgent(agent.id).then((_) {
               if (mounted) setState(() {});
             }),

@@ -364,7 +364,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
           IconButton(
             tooltip: 'Refresh context',
             onPressed: _loading || !_sameLocation ? null : _load,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(AppIconography.retry),
           ),
         ],
       ),
@@ -382,14 +382,14 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
                         .activeContextSupported)
                   ListTile(
                     key: const ValueKey('open-active-context'),
-                    leading: const Icon(Icons.subject_rounded),
+                    leading: const Icon(AppIconography.text),
                     title: Text(
                       AppLocalizations.of(context).activeContextTitle,
                     ),
                     subtitle: Text(
                       AppLocalizations.of(context).activeContextSubtitle,
                     ),
-                    trailing: const Icon(Icons.chevron_right_rounded),
+                    trailing: const Icon(AppIconography.chevronRight),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => ActiveContextScreen(
@@ -416,7 +416,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
     }
     if (metrics.currentMessage == null) {
       return ProductEmptyState(
-        icon: Icons.donut_large_outlined,
+        icon: AppIconography.usageRing,
         title: 'No context usage yet',
         message: _error != null
             ? productErrorText(_error!)

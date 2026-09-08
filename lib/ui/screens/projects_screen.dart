@@ -8,6 +8,7 @@ import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
 import 'project_folder_actions.dart';
+import '../app_iconography.dart';
 
 class ProjectsScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -203,7 +204,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           children: [
             ListTile(
               key: const ValueKey('projects-configured-folder'),
-              leading: const Icon(Icons.folder_rounded),
+              leading: const Icon(AppIconography.files),
               title: Text(
                 lookupAppLocalizations(
                   Localizations.localeOf(context),
@@ -218,7 +219,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               ),
             ),
             const ProductEmptyState(
-              icon: Icons.folder_open_outlined,
+              icon: AppIconography.folderOpen,
               title: 'Project switching is unavailable',
               message:
                   'This connection keeps the configured folder for sessions. '
@@ -238,7 +239,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           IconButton(
             tooltip: 'Refresh projects',
             onPressed: _loading || _busyProjectID != null ? null : _load,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(AppIconography.retry),
           ),
         ],
       ),
@@ -257,13 +258,13 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
                   hintText: 'Search projects or paths',
-                  prefixIcon: const Icon(Icons.search_rounded),
+                  prefixIcon: const Icon(AppIconography.search),
                   suffixIcon: _search.text.isEmpty
                       ? null
                       : IconButton(
                           tooltip: 'Clear project search',
                           onPressed: _search.clear,
-                          icon: const Icon(Icons.close_rounded),
+                          icon: const Icon(AppIconography.close),
                         ),
                 ),
               ),
@@ -271,7 +272,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             if (ProjectFolderActions.canCreate(widget.controller))
               ListTile(
                 key: const ValueKey('projects-create-folder'),
-                leading: const Icon(Icons.create_new_folder_rounded),
+                leading: const Icon(AppIconography.folderAdd),
                 title: Text(l10n.projectFolderCreate),
                 subtitle: Text(
                   l10n.projectFolderCreateSubtitle(managedProjectsDirectory),
@@ -280,7 +281,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               ),
             ListTile(
               key: const ValueKey('projects-open-folder'),
-              leading: const Icon(Icons.folder_open_rounded),
+              leading: const Icon(AppIconography.folderOpen),
               title: Text(l10n.projectFolderOpen),
               subtitle: Text(l10n.projectFolderOpenSubtitle),
               onTap: _openFolder,
@@ -324,13 +325,13 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             if (_error != null && projects != null)
               ListTile(
                 key: const ValueKey('project-refresh-error'),
-                leading: const Icon(Icons.error_outline_rounded),
+                leading: const Icon(AppIconography.error),
                 title: const Text('Project refresh failed'),
                 subtitle: Text(_error!),
                 trailing: IconButton(
                   tooltip: 'Retry projects',
                   onPressed: _load,
-                  icon: const Icon(Icons.refresh_rounded),
+                  icon: const Icon(AppIconography.retry),
                 ),
               ),
           ],
@@ -375,7 +376,7 @@ class _ProjectTile extends StatelessWidget {
               dimension: 22,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
-          : Icon(active ? Icons.folder_rounded : Icons.folder_outlined),
+          : Icon(active ? AppIconography.files : AppIconography.files),
       title: Text(project.name),
       subtitle: Text(
         worktreeCount == 0
@@ -391,10 +392,10 @@ class _ProjectTile extends StatelessWidget {
             key: ValueKey('rename-project-${project.id}'),
             tooltip: 'Rename ${project.name}',
             onPressed: busy ? null : onRename,
-            icon: const Icon(Icons.edit_outlined),
+            icon: const Icon(AppIconography.edit),
           ),
           Icon(
-            active ? Icons.check_circle_rounded : Icons.chevron_right_rounded,
+            active ? AppIconography.checkCircle : AppIconography.chevronRight,
           ),
         ],
       ),

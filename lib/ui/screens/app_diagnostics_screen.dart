@@ -68,7 +68,7 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
       title: 'Clear diagnostics?',
       message: 'This removes every captured error from process memory.',
       confirmLabel: 'Clear',
-      icon: Icons.delete_outline_rounded,
+      icon: AppIconography.delete,
       destructive: true,
     );
     if (confirmed) _diagnostics.clear();
@@ -139,7 +139,7 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : const Icon(Icons.send_outlined),
+                                  : const Icon(AppIconography.send),
                               label: Text(_sending ? 'Sending…' : 'Send'),
                             ),
                             OutlinedButton.icon(
@@ -151,7 +151,7 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                             TextButton.icon(
                               key: const ValueKey('clear-app-diagnostics'),
                               onPressed: entries.isEmpty ? null : _clear,
-                              icon: const Icon(Icons.delete_outline_rounded),
+                              icon: const Icon(AppIconography.delete),
                               label: const Text('Clear'),
                             ),
                           ],
@@ -183,7 +183,7 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.health_and_safety_outlined, size: 38),
+                            Icon(AppIconography.privacy, size: 38),
                             SizedBox(height: 14),
                             Text('No captured app errors'),
                             SizedBox(height: 6),
@@ -209,7 +209,7 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                       final entry = entries[index];
                       return ExpansionTile(
                         key: ValueKey('diagnostic-entry-${entry.id}'),
-                        leading: const Icon(Icons.error_outline_rounded),
+                        leading: const Icon(AppIconography.error),
                         title: Text(
                           entry.message,
                           maxLines: 2,

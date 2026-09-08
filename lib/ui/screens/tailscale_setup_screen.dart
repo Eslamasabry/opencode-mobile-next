@@ -6,6 +6,7 @@ import '../../l10n/app_localizations.dart';
 import '../../platform/tailscale.dart';
 import '../../state/tailscale_address.dart';
 import '../widgets/external_link.dart';
+import '../app_iconography.dart';
 
 /// User-controlled app handoff, then an address review. Returning a URL does
 /// not probe, save, authenticate or assert that Tailscale is connected.
@@ -141,7 +142,7 @@ class _TailscaleSetupScreenState extends State<TailscaleSetupScreen>
                     if (_state == TailscaleAppState.installed)
                       FilledButton.icon(
                         onPressed: _opening ? null : _open,
-                        icon: const Icon(Icons.open_in_new),
+                        icon: const Icon(AppIconography.externalLink),
                         label: Text(strings.tailscaleOpen),
                       ),
                     if (_state != TailscaleAppState.installed)
@@ -150,7 +151,7 @@ class _TailscaleSetupScreenState extends State<TailscaleSetupScreen>
                           context,
                           'https://play.google.com/store/apps/details?id=com.tailscale.ipn',
                         ),
-                        icon: const Icon(Icons.download_outlined),
+                        icon: const Icon(AppIconography.download),
                         label: Text(strings.tailscaleInstall),
                       ),
                     TextButton(
@@ -189,7 +190,7 @@ class _TailscaleSetupScreenState extends State<TailscaleSetupScreen>
             const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: _continue,
-              icon: const Icon(Icons.arrow_forward),
+              icon: const Icon(AppIconography.forward),
               label: Text(strings.tailscaleContinue),
             ),
             const SizedBox(height: 16),

@@ -5,6 +5,7 @@ import '../../api/product_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
+import '../app_iconography.dart';
 
 class ActiveContextScreen extends StatefulWidget {
   const ActiveContextScreen({
@@ -154,7 +155,7 @@ class _ActiveContextScreenState extends State<ActiveContextScreen> {
           IconButton(
             tooltip: _l10n.activeContextRefresh,
             onPressed: _loading || !_sameLocation ? null : _load,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(AppIconography.retry),
           ),
         ],
       ),
@@ -211,12 +212,12 @@ class _ActiveContextScreenState extends State<ActiveContextScreen> {
                             ),
                             decoration: InputDecoration(
                               hintText: _l10n.activeContextSearch,
-                              prefixIcon: const Icon(Icons.search_rounded),
+                              prefixIcon: const Icon(AppIconography.search),
                               suffixIcon: _query.isEmpty
                                   ? null
                                   : IconButton(
                                       tooltip: _l10n.commonClearSearch,
-                                      icon: const Icon(Icons.close_rounded),
+                                      icon: const Icon(AppIconography.close),
                                       onPressed: () {
                                         _search.clear();
                                         setState(() => _query = '');
@@ -302,7 +303,7 @@ class _ActiveContextScreenState extends State<ActiveContextScreen> {
                                 maxLines: 3,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              trailing: const Icon(Icons.chevron_right_rounded),
+                              trailing: const Icon(AppIconography.chevronRight),
                               onTap: () => Navigator.of(context).push(
                                 MaterialPageRoute<void>(
                                   builder: (_) => _ContextMessageScreen(
@@ -425,7 +426,7 @@ class _ContextMessageScreen extends StatelessWidget {
                           tooltip: MaterialLocalizations.of(
                             context,
                           ).copyButtonLabel,
-                          icon: const Icon(Icons.copy_rounded),
+                          icon: const Icon(AppIconography.copy),
                           onPressed: () =>
                               Clipboard.setData(ClipboardData(text: part.text)),
                         ),

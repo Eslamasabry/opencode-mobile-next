@@ -17,6 +17,7 @@ import 'package:opencode_mobile/ui/desktop/shortcuts.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/ui/screens/terminal_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:opencode_mobile/ui/app_iconography.dart';
 
 class _ShellApi extends OpenCodeApi {
   _ShellApi() : super(baseUrl: 'http://localhost');
@@ -104,12 +105,12 @@ class _Harness {
         paletteCommands: (context) => [
           DesktopCommand(
             label: 'New session',
-            icon: Icons.add_rounded,
+            icon: AppIconography.add,
             onInvoke: () => newSessions++,
           ),
           DesktopCommand(
             label: 'Open the diagnostics screen',
-            icon: Icons.bug_report_outlined,
+            icon: AppIconography.bug,
             onInvoke: () {},
           ),
         ],

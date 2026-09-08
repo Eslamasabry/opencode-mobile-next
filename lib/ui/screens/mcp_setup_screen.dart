@@ -6,6 +6,7 @@ import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
 import '../widgets/info_label.dart';
+import '../app_iconography.dart';
 
 class McpSetupScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -247,7 +248,7 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
           IconButton(
             key: const ValueKey('mcp-glossary'),
             tooltip: 'What is MCP?',
-            icon: const Icon(Icons.info_outline_rounded),
+            icon: const Icon(AppIconography.info),
             onPressed: () => InfoLabel.show(
               context,
               term: Glossary.mcp.term,
@@ -300,7 +301,7 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
                   onPressed: _saving || _detached || !_scopeMatches
                       ? null
                       : _retryReconnect,
-                  icon: const Icon(Icons.refresh_rounded),
+                  icon: const Icon(AppIconography.retry),
                   label: Text(l10n.mcpRetryReconnect),
                 ),
               ),
@@ -318,8 +319,8 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
                     )
                   : Icon(
                       _configurationSaved
-                          ? Icons.check_rounded
-                          : Icons.save_outlined,
+                          ? AppIconography.check
+                          : AppIconography.save,
                     ),
               label: Text(
                 _saving
@@ -378,12 +379,12 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
                   ButtonSegment(
                     value: McpConfigScope.project,
                     enabled: _hasProject,
-                    icon: const Icon(Icons.folder_outlined),
+                    icon: const Icon(AppIconography.files),
                     label: const Text('This project'),
                   ),
                   const ButtonSegment(
                     value: McpConfigScope.global,
-                    icon: Icon(Icons.public_outlined),
+                    icon: Icon(AppIconography.globe),
                     label: Text('All projects'),
                   ),
                 ],
@@ -425,12 +426,12 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
               segments: const [
                 ButtonSegment(
                   value: McpServerKind.remote,
-                  icon: Icon(Icons.cloud_outlined),
+                  icon: Icon(AppIconography.cloud),
                   label: Text('Remote URL'),
                 ),
                 ButtonSegment(
                   value: McpServerKind.local,
-                  icon: Icon(Icons.terminal_rounded),
+                  icon: Icon(AppIconography.terminal),
                   label: Text('Local command'),
                 ),
               ],

@@ -169,7 +169,7 @@ class _PendingMcpOAuthTile extends StatelessWidget {
                     TextButton.icon(
                       key: const ValueKey('cancel-mcp-oauth'),
                       onPressed: busy ? null : onCancel,
-                      icon: const Icon(Icons.close_rounded),
+                      icon: const Icon(AppIconography.close),
                       label: const Text('Cancel'),
                     ),
                   ],
@@ -499,7 +499,7 @@ class _PendingOAuthTile extends StatelessWidget {
               dimension: 22,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
-          : Icon(terminal ? Icons.error_outline_rounded : Icons.login_rounded),
+          : Icon(terminal ? AppIconography.error : AppIconography.login),
       title: Text('Connecting ${pending.integrationName}'),
       subtitle: Text(message, maxLines: 3, overflow: TextOverflow.ellipsis),
       trailing: Row(
@@ -521,7 +521,7 @@ class _PendingOAuthTile extends StatelessWidget {
                   onTap: onCancel,
                   child: const ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.close_rounded),
+                    leading: Icon(AppIconography.close),
                     title: Text('Cancel attempt'),
                   ),
                 ),
@@ -782,7 +782,7 @@ class _SectionLoadError extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListTile(
     leading: Icon(
-      Icons.error_outline_rounded,
+      AppIconography.error,
       color: Theme.of(context).colorScheme.error,
     ),
     title: const Text('Could not load this section'),

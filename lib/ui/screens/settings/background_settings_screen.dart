@@ -105,8 +105,8 @@ class _BackgroundSettingsScreenState extends State<BackgroundSettingsScreen>
             ListTile(
               leading: Icon(
                 controller.backgroundLive.batteryOptimizationIgnored
-                    ? Icons.battery_charging_full_rounded
-                    : Icons.battery_alert_outlined,
+                    ? AppIconography.batteryCharging
+                    : AppIconography.batteryWarning,
               ),
               title: Text(
                 controller.backgroundLive.batteryOptimizationIgnored
@@ -120,8 +120,8 @@ class _BackgroundSettingsScreenState extends State<BackgroundSettingsScreen>
                           'Android 15+ limits data-sync background work to six hours per 24 hours.',
               ),
               trailing: controller.backgroundLive.batteryOptimizationIgnored
-                  ? const Icon(Icons.check_rounded)
-                  : const Icon(Icons.open_in_new_rounded),
+                  ? const Icon(AppIconography.check)
+                  : const Icon(AppIconography.externalLink),
               onTap: controller.backgroundLive.batteryOptimizationIgnored
                   ? null
                   : () async {
@@ -169,10 +169,10 @@ class _BackgroundStatusRow extends StatelessWidget {
     final icon = stopped
         ? Icons.timer_off_outlined
         : running
-        ? Icons.cloud_sync_outlined
+        ? AppIconography.sync
         : starting
-        ? Icons.cloud_queue_rounded
-        : Icons.cloud_off_outlined;
+        ? AppIconography.cloud
+        : AppIconography.cloudOff;
     final color = stopped
         ? theme.colorScheme.error
         : running
@@ -186,7 +186,7 @@ class _BackgroundStatusRow extends StatelessWidget {
         'Android 15+ allows six hours of this per 24 hours and then stops '
         'it; the app turns the switch off and says so when that happens.',
       ),
-      trailing: stopped ? const Icon(Icons.refresh_rounded) : null,
+      trailing: stopped ? const Icon(AppIconography.retry) : null,
       onTap: stopped ? onRestart : null,
     );
   }

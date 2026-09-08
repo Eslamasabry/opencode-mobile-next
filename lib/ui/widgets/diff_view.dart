@@ -589,7 +589,7 @@ class _DiffFileLinesState extends State<_DiffFileLines> {
           _GapBar(
             key: Key('diff-collapse-$index'),
             label: _reviewL10n(context).reviewHideContext,
-            icon: Icons.unfold_less_rounded,
+            icon: AppIconography.unfoldLess,
             gutter: gutter,
             onTap: () => setState(() {
               _shownTop.remove(index);
@@ -612,7 +612,7 @@ class _DiffFileLinesState extends State<_DiffFileLines> {
               label: _reviewL10n(
                 context,
               ).reviewShowNext(remaining.clamp(1, DiffView.expandStep)),
-              icon: Icons.keyboard_arrow_down_rounded,
+              icon: AppIconography.chevronDown,
               gutter: gutter,
               onTap: () => _expandTop(index),
             ),
@@ -627,7 +627,7 @@ class _DiffFileLinesState extends State<_DiffFileLines> {
                     remaining,
                   )
                 : _reviewL10n(context).reviewMissingContext(remaining),
-            icon: expandable ? Icons.keyboard_arrow_up_rounded : null,
+            icon: expandable ? AppIconography.chevronUp : null,
             gutter: gutter,
             onTap: expandable ? () => _expandBottom(index) : null,
           ),

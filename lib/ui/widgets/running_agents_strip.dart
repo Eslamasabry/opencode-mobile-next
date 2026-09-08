@@ -159,8 +159,8 @@ class RunningAgentsStrip extends StatelessWidget {
                         else
                           Icon(
                             entry.relation == RunningAgentRelation.parent
-                                ? Icons.arrow_upward_rounded
-                                : Icons.check_rounded,
+                                ? AppIconography.send
+                                : AppIconography.check,
                             size: 13,
                             color: scheme.onSurfaceVariant,
                           ),

@@ -168,7 +168,7 @@ class _PermissionAttentionCard extends StatelessWidget {
       primary: FilledButton.icon(
         key: const Key('permission-card-review'),
         onPressed: onReview,
-        icon: const Icon(Icons.fact_check_outlined, size: 18),
+        icon: const Icon(AppIconography.checklist, size: 18),
         label: const Text('Review'),
       ),
     );
@@ -293,7 +293,7 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
     if (first == null || questionPrefersSheet(widget.question)) {
       final count = _prompts.length;
       return _AttentionCard(
-        icon: Icons.help_outline_rounded,
+        icon: AppIconography.question,
         title: title,
         announcement: 'Question: $title',
         detail: first == null
@@ -339,7 +339,7 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
         : more;
 
     return _AttentionCard(
-      icon: Icons.help_outline_rounded,
+      icon: AppIconography.question,
       title: title,
       announcement: 'Question: $title',
       body: Column(
@@ -549,35 +549,35 @@ class _SessionMenuSheet extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   _SessionMenuChip(
-                    icon: Icons.search_rounded,
+                    icon: AppIconography.search,
                     label: _chatL10n(context).transcriptFindTitle,
                     value: 'find',
                   ),
                   _SessionMenuChip(
-                    icon: Icons.view_timeline_outlined,
+                    icon: AppIconography.timeline,
                     label: 'Timeline',
                     value: 'timeline',
                   ),
                   _SessionMenuChip(
-                    icon: Icons.donut_large_outlined,
+                    icon: AppIconography.usageRing,
                     label: 'Context usage',
                     value: 'context',
                   ),
                   if (changesAvailable)
                     _SessionMenuChip(
-                      icon: Icons.difference_outlined,
+                      icon: AppIconography.review,
                       label: 'Changes',
                       value: 'changes',
                     ),
                   if (todosAvailable)
                     _SessionMenuChip(
-                      icon: Icons.checklist_rounded,
+                      icon: AppIconography.checklist,
                       label: 'Todos',
                       value: 'todos',
                     ),
                   if (subagentsAvailable)
                     _SessionMenuChip(
-                      icon: Icons.account_tree_outlined,
+                      icon: AppIconography.branch,
                       label: 'Subagent sessions',
                       value: 'subagents',
                     ),
@@ -593,26 +593,26 @@ class _SessionMenuSheet extends StatelessWidget {
             const SectionLabel('Actions'),
             if (skillsAvailable)
               _SessionSheetRow(
-                icon: Icons.extension_outlined,
+                icon: AppIconography.extensions,
                 label: _chatL10n(context).skillMenu,
                 value: 'skills',
               ),
             if (notesAvailable)
               _SessionSheetRow(
-                icon: Icons.sticky_note_2_outlined,
+                icon: AppIconography.note,
                 label: _chatL10n(context).sessionNoteTitle,
                 value: 'note',
               ),
             _SessionSheetRow(
-              icon: Icons.replay_rounded,
+              icon: AppIconography.retry,
               label: 'Retry last prompt',
               value: 'retry',
             ),
             if (revertAvailable)
               _SessionSheetRow(
                 icon: reverted
-                    ? Icons.settings_backup_restore_rounded
-                    : Icons.history_rounded,
+                    ? AppIconography.restore
+                    : AppIconography.history,
                 label: reverted
                     ? (stagedRevert
                           ? _chatL10n(context).revertReviewTitle
@@ -622,25 +622,25 @@ class _SessionMenuSheet extends StatelessWidget {
               ),
             if (forkAvailable)
               _SessionSheetRow(
-                icon: Icons.fork_right_rounded,
+                icon: AppIconography.fork,
                 label: 'Fork session',
                 value: 'fork',
               ),
             if (compactAvailable)
               _SessionSheetRow(
-                icon: Icons.compress_rounded,
+                icon: AppIconography.collapse,
                 label: 'Compact context',
                 value: 'compact',
               ),
             if (sharingAvailable)
               _SessionSheetRow(
-                icon: shared ? Icons.public_off_rounded : Icons.public_rounded,
+                icon: shared ? AppIconography.networkOff : AppIconography.globe,
                 label: shared ? 'Stop sharing' : 'Share session',
                 value: shared ? 'unshare' : 'share',
               ),
             if (terminalAvailable)
               _SessionSheetRow(
-                icon: Icons.terminal_rounded,
+                icon: AppIconography.terminal,
                 label: 'Run shell command',
                 value: 'shell',
               ),
@@ -650,7 +650,7 @@ class _SessionMenuSheet extends StatelessWidget {
               value: 'slash',
             ),
             _SessionSheetRow(
-              icon: Icons.refresh_rounded,
+              icon: AppIconography.retry,
               label: 'Reload messages',
               value: 'reload',
             ),

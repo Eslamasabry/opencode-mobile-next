@@ -456,7 +456,7 @@ void main() {
     expect(find.text('Authorize Sentry'), findsOneWidget);
     expect(find.text('Grants read access'), findsOneWidget);
     expect(find.text('Opens example.com in your browser'), findsOneWidget);
-    expect(find.byIcon(Icons.open_in_new_rounded), findsOneWidget);
+    expect(find.byIcon(AppIconography.externalLink), findsOneWidget);
 
     await submit(tester);
     expect(sent, {'note': 'done'});

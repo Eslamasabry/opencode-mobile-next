@@ -153,7 +153,7 @@ class InfoLabel extends StatelessWidget {
               Text(term, style: textStyle),
               const SizedBox(width: 3),
               Icon(
-                Icons.info_outline_rounded,
+                AppIconography.info,
                 size: iconSize,
                 color: AppTheme.mutedOf(theme),
               ),

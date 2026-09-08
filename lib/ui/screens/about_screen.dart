@@ -67,7 +67,7 @@ class AboutScreen extends StatelessWidget {
               key: const ValueKey('about-report-bug'),
               tooltip: 'Report a bug',
               onPressed: () => unawaited(openBugReport(context)),
-              icon: const Icon(Icons.bug_report_outlined),
+              icon: const Icon(AppIconography.bug),
             ),
           ],
           bottom: TabBar(
@@ -81,7 +81,7 @@ class AboutScreen extends StatelessWidget {
               ),
               Tab(
                 height: tabHeight,
-                icon: const Icon(Icons.code_rounded),
+                icon: const Icon(AppIconography.code),
                 text: 'Open source',
               ),
             ],
@@ -143,7 +143,7 @@ class _AlphaNotice extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  Icons.science_outlined,
+                  AppIconography.experiments,
                   size: 18,
                   color: AppTheme.successOf(theme),
                 ),
@@ -169,7 +169,7 @@ class _AlphaNotice extends StatelessWidget {
               child: TextButton.icon(
                 key: const ValueKey('about-alpha-report-bug'),
                 onPressed: () => unawaited(openBugReport(context)),
-                icon: const Icon(Icons.bug_report_outlined, size: 18),
+                icon: const Icon(AppIconography.bug, size: 18),
                 label: const Text('Report a bug'),
               ),
             ),
@@ -204,7 +204,7 @@ class _DocumentView extends StatelessWidget {
           if (showAppSummary) ...[
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.terminal_rounded, size: 34),
+              leading: const Icon(AppIconography.terminal, size: 34),
               // The desktop bundle is the same app, but naming it "for
               // Android" and promising local voice recognition describes a
               // build the reader is not running.
@@ -329,7 +329,7 @@ class _NonAffiliationNotice extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            Icons.info_outline_rounded,
+            AppIconography.info,
             size: 20,
             color: theme.colorScheme.onSurfaceVariant,
           ),

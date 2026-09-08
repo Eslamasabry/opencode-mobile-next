@@ -206,7 +206,7 @@ class _ProviderQuotaScreenState extends State<ProviderQuotaScreen> {
           actions: [
             IconButton(
               tooltip: l10n.quotaMonitorTitle,
-              icon: const Icon(Icons.notifications_none_rounded),
+              icon: const Icon(AppIconography.activity),
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) =>
@@ -220,7 +220,7 @@ class _ProviderQuotaScreenState extends State<ProviderQuotaScreen> {
                 onPressed: canRefresh
                     ? () => unawaited(_overview.refresh())
                     : null,
-                icon: const Icon(Icons.refresh_rounded),
+                icon: const Icon(AppIconography.retry),
               ),
           ],
         ),
@@ -301,7 +301,7 @@ class _ProviderQuotaScreenState extends State<ProviderQuotaScreen> {
                         onPressed: !_trusted || _overview.setupNeeded
                             ? null
                             : () => unawaited(_overview.allowAndRefresh()),
-                        icon: const Icon(Icons.speed_rounded),
+                        icon: const Icon(AppIconography.speed),
                         label: Text(l10n.quotaRead),
                       ),
                     ] else ...[

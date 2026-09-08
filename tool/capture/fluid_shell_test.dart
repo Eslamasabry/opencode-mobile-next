@@ -5,6 +5,7 @@ import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import '../../test/support/setup_capture_preferences.dart';
 
 import 'fixtures.dart';
+import 'package:opencode_mobile/ui/app_iconography.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -67,7 +68,7 @@ void main() {
             await capturePng(tester, boundary, pixelRatio: 1),
           );
           if (tab == 0 && scenario.scale == 1) {
-            await tester.tap(find.byIcon(Icons.more_horiz_rounded));
+            await tester.tap(find.byIcon(AppIconography.more));
             await tester.pump();
             await tester.pump(const Duration(milliseconds: 60));
             await writePng(

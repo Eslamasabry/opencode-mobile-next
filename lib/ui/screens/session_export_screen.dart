@@ -8,6 +8,7 @@ import '../../api2/transport.dart';
 import '../../domain/server_gateway.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
+import '../app_iconography.dart';
 
 typedef SaveSessionExport =
     Future<Uri?> Function(String name, Uint8List bytes, String mimeType);
@@ -202,7 +203,7 @@ class _SessionExportScreenState extends State<SessionExportScreen> {
                         onPressed: _current && (!_json || _supported)
                             ? _export
                             : null,
-                        icon: const Icon(Icons.save_alt),
+                        icon: const Icon(AppIconography.download),
                         label: Text(l10n.exportSave),
                       ),
                     if (_saved) ...[
@@ -234,7 +235,7 @@ class _SessionExportScreenState extends State<SessionExportScreen> {
                     _format(
                       title: l10n.exportJson,
                       description: l10n.exportJsonDescription,
-                      icon: Icons.data_object,
+                      icon: AppIconography.dataObject,
                       selected: _json,
                       onTap: () => setState(() {
                         _json = true;
@@ -245,7 +246,7 @@ class _SessionExportScreenState extends State<SessionExportScreen> {
                   _format(
                     title: l10n.exportMarkdown,
                     description: l10n.exportMarkdownDescription,
-                    icon: Icons.description_outlined,
+                    icon: AppIconography.fileText,
                     selected: !_json,
                     onTap: () => setState(() {
                       _json = false;
@@ -302,7 +303,7 @@ class _SessionExportScreenState extends State<SessionExportScreen> {
         title: Text(title),
         subtitle: Text(description),
         trailing: Icon(
-          selected ? Icons.radio_button_checked : Icons.radio_button_off,
+          selected ? AppIconography.radioSelected : AppIconography.radioEmpty,
         ),
         onTap: onTap,
       ),

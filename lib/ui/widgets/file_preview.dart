@@ -279,8 +279,8 @@ class _FilePreviewSheetState extends State<_FilePreviewSheet> {
               children: [
                 Icon(
                   data.isRasterImage
-                      ? Icons.image_outlined
-                      : Icons.description_outlined,
+                      ? AppIconography.image
+                      : AppIconography.fileText,
                   size: 20,
                   color: theme.colorScheme.primary,
                 ),
@@ -324,7 +324,7 @@ class _FilePreviewSheetState extends State<_FilePreviewSheet> {
                             dimension: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.attach_file_rounded, size: 20),
+                        : const Icon(AppIconography.attach, size: 20),
                   ),
                 if (data.exportBytes != null)
                   IconButton(
@@ -336,12 +336,12 @@ class _FilePreviewSheetState extends State<_FilePreviewSheet> {
                             dimension: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.download_rounded, size: 20),
+                        : const Icon(AppIconography.download, size: 20),
                   ),
                 IconButton(
                   tooltip: 'Close preview',
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(AppIconography.close),
                 ),
               ],
             ),
@@ -366,7 +366,7 @@ class FilePreviewBody extends StatelessWidget {
     final theme = Theme.of(context);
     if (data.error != null) {
       return _PreviewNotice(
-        icon: Icons.visibility_off_outlined,
+        icon: AppIconography.hidden,
         title: 'Preview unavailable',
         message: data.error!,
       );
@@ -387,7 +387,7 @@ class FilePreviewBody extends StatelessWidget {
                     key: const Key('file-preview-image'),
                     fit: BoxFit.contain,
                     errorBuilder: (_, _, _) => const _PreviewNotice(
-                      icon: Icons.broken_image_outlined,
+                      icon: AppIconography.imageBroken,
                       title: 'Image could not be displayed',
                       message: 'The file data is not a supported image.',
                     ),
@@ -481,7 +481,7 @@ class FilePreviewBody extends StatelessWidget {
       return PdfFilePreview(bytes: data.bytes!);
     }
     return _PreviewNotice(
-      icon: Icons.insert_drive_file_outlined,
+      icon: AppIconography.file,
       title: 'Preview unavailable',
       message: [
         data.mimeType ?? 'Unknown file type',

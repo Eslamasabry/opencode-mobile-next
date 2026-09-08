@@ -14,12 +14,12 @@ import '../../widgets/request_routes.dart';
 /// The glyph identifies the requested action rather than a generic admin role.
 IconData permissionActionIcon(String permission) =>
     switch (permission.toLowerCase()) {
-      'bash' => Icons.terminal_rounded,
-      'edit' || 'write' || 'multiedit' || 'patch' => Icons.edit_note_rounded,
-      'read' => Icons.description_outlined,
-      'webfetch' || 'websearch' => Icons.public_rounded,
-      'external_directory' => Icons.folder_open_rounded,
-      _ => Icons.key_rounded,
+      'bash' => AppIconography.terminal,
+      'edit' || 'write' || 'multiedit' || 'patch' => AppIconography.editNote,
+      'read' => AppIconography.fileText,
+      'webfetch' || 'websearch' => AppIconography.globe,
+      'external_directory' => AppIconography.folderOpen,
+      _ => AppIconography.permissions,
     };
 
 /// Presents the OpenCode 2 permission prompt as a modal bottom sheet
@@ -189,7 +189,7 @@ class _PermissionSheetState extends State<PermissionSheet> {
             _routes.own(ModalRoute.of(context));
             return AlertDialog(
               scrollable: true,
-              icon: const Icon(Icons.warning_amber_rounded),
+              icon: const Icon(AppIconography.warning),
               title: const Text('Confirm broader access'),
               content: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,11 +268,11 @@ class _PermissionSheetState extends State<PermissionSheet> {
   }
 
   IconData get _resourceIcon => switch (widget.permission.permission) {
-    'bash' => Icons.terminal_rounded,
-    'read' || 'edit' => Icons.description_outlined,
-    'webfetch' => Icons.public_rounded,
-    'external_directory' => Icons.folder_open_rounded,
-    _ => Icons.key_rounded,
+    'bash' => AppIconography.terminal,
+    'read' || 'edit' => AppIconography.fileText,
+    'webfetch' => AppIconography.globe,
+    'external_directory' => AppIconography.folderOpen,
+    _ => AppIconography.permissions,
   };
 
   @override
@@ -358,7 +358,7 @@ class _PermissionSheetState extends State<PermissionSheet> {
                   const SizedBox(height: 12),
                   ActionChip(
                     key: const Key('permission-source-chip'),
-                    avatar: const Icon(Icons.build_circle_outlined, size: 18),
+                    avatar: const Icon(AppIconography.tools, size: 18),
                     label: const Text('From tool call'),
                     onPressed: () {
                       if (!_routes.isPending) return;
@@ -533,7 +533,7 @@ class _PermissionSheetState extends State<PermissionSheet> {
           TextButton.icon(
             key: const Key('permission-allow-always'),
             onPressed: _replying ? null : () => _reply('always'),
-            icon: const Icon(Icons.key_rounded, size: 18),
+            icon: const Icon(AppIconography.permissions, size: 18),
             label: const Text('Always allow'),
           ),
         ],
@@ -660,7 +660,7 @@ class _FilePathRow extends StatelessWidget {
       key: const Key('permission-file-path'),
       children: [
         Icon(
-          Icons.folder_outlined,
+          AppIconography.files,
           size: 16,
           color: theme.colorScheme.onSurfaceVariant,
         ),
@@ -729,7 +729,7 @@ class _DiffPreviewBox extends StatelessWidget {
           child: TextButton.icon(
             key: const Key('permission-see-full-diff'),
             onPressed: onSeeFull,
-            icon: const Icon(Icons.difference_outlined, size: 18),
+            icon: const Icon(AppIconography.review, size: 18),
             label: const Text('See full diff'),
           ),
         ),

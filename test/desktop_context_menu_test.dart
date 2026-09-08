@@ -16,6 +16,7 @@ import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/files_screen.dart';
 import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:opencode_mobile/ui/app_iconography.dart';
 
 /// A widget test that runs with the platform reported as Linux desktop. The
 /// override must be cleared inside the body: flutter_test asserts no
@@ -143,7 +144,7 @@ void main() {
                   ContextMenuAction(
                     menuKey: const ValueKey('probe-run'),
                     label: 'Run it',
-                    icon: Icons.play_arrow_rounded,
+                    icon: AppIconography.play,
                     onSelected: () => ran++,
                   ),
                 ],
@@ -176,7 +177,7 @@ void main() {
                 actions: () => [
                   ContextMenuAction(
                     label: 'Run it',
-                    icon: Icons.play_arrow_rounded,
+                    icon: AppIconography.play,
                     onSelected: () => fail('no menu on Android'),
                   ),
                 ],

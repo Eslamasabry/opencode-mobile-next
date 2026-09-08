@@ -121,14 +121,14 @@ class _SkillsScreenState extends State<SkillsScreen> {
             itemBuilder: (context, index) {
               final skill = _skills![index];
               return ListTile(
-                leading: const Icon(Icons.extension_outlined),
+                leading: const Icon(AppIconography.extensions),
                 title: Text(skill.name),
                 subtitle: Text(
                   skill.description ?? skill.location,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                trailing: const Icon(AppIconography.chevronRight),
                 onTap: () => _showSkill(skill),
               );
             },

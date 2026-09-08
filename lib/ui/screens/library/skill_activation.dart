@@ -89,7 +89,7 @@ class _SkillActivationSheetState extends State<_SkillActivationSheet> {
                 trailing: IconButton(
                   tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                   onPressed: _sending ? null : () => Navigator.pop(context),
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(AppIconography.close),
                 ),
               ),
               const Divider(height: 1),
@@ -152,7 +152,7 @@ class _SkillActivationSheetState extends State<_SkillActivationSheet> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Icon(Icons.extension_outlined),
+                              : const Icon(AppIconography.extensions),
                           label: Text(l10n.skillUse),
                         ),
                       ],

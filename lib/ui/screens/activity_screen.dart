@@ -161,10 +161,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ListTile(
-          leading: const Icon(Icons.fact_check_outlined),
+          leading: const Icon(AppIconography.checklist),
           title: Text(l10n.digestTitle),
           subtitle: _showDigests ? Text(l10n.digestSubtitle) : null,
-          trailing: Icon(_showDigests ? Icons.expand_less : Icons.expand_more),
+          trailing: Icon(
+            _showDigests
+                ? AppIconography.chevronUp
+                : AppIconography.chevronDown,
+          ),
           onTap: () => setState(() => _showDigests = !_showDigests),
         ),
         if (_showDigests && sessions.isEmpty)
@@ -183,8 +187,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
               subtitle: Text(l10n.digestIdle),
               trailing: Icon(
                 _expandedDigests.contains((session.id, session.time!.idle!))
-                    ? Icons.expand_less
-                    : Icons.expand_more,
+                    ? AppIconography.chevronUp
+                    : AppIconography.chevronDown,
               ),
               onTap: () => setState(() {
                 final key = (session.id, session.time!.idle!);
@@ -560,7 +564,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     dimension: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.refresh_rounded),
+                : const Icon(AppIconography.retry),
           ),
         ],
       ),
@@ -589,7 +593,7 @@ class ActivityPermissionTile extends StatelessWidget {
         : permissionRequestTitle(permission.permission);
     return ListTile(
       minTileHeight: 66,
-      leading: Icon(Icons.shield_outlined, color: theme.colorScheme.tertiary),
+      leading: Icon(AppIconography.shield, color: theme.colorScheme.tertiary),
       title: Text(title),
       subtitle: Text(
         permission.patterns.isNotEmpty
@@ -604,7 +608,7 @@ class ActivityPermissionTile extends StatelessWidget {
               )
             : null,
       ),
-      trailing: const Icon(Icons.chevron_right_rounded),
+      trailing: const Icon(AppIconography.chevronRight),
       onTap: () => showPermissionSheet(
         context,
         permission: permission,
@@ -630,7 +634,7 @@ class ActivityQuestionTile extends StatelessWidget {
     return ListTile(
       minTileHeight: 66,
       leading: Icon(
-        Icons.contact_support_outlined,
+        AppIconography.supportQuestion,
         color: Theme.of(context).colorScheme.primary,
       ),
       title: Text(
@@ -645,7 +649,7 @@ class ActivityQuestionTile extends StatelessWidget {
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: const Icon(Icons.chevron_right_rounded),
+      trailing: const Icon(AppIconography.chevronRight),
       onTap: () => showQuestionSheet(context, controller, question),
     );
   }
@@ -668,7 +672,7 @@ class ActivityFormTile extends StatelessWidget {
       key: ValueKey('form-request-tile-${form.id}'),
       minTileHeight: 66,
       leading: Icon(
-        Icons.fact_check_outlined,
+        AppIconography.checklist,
         color: Theme.of(context).colorScheme.primary,
       ),
       title: Text(form.title ?? 'Input requested'),
@@ -680,7 +684,7 @@ class ActivityFormTile extends StatelessWidget {
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: const Icon(Icons.chevron_right_rounded),
+      trailing: const Icon(AppIconography.chevronRight),
       onTap: () => presentConnectionForm(context, controller, form),
     );
   }
@@ -750,7 +754,7 @@ class _SessionRow extends StatelessWidget {
               ),
             )
           : Icon(
-              Icons.chat_bubble_outline_rounded,
+              AppIconography.chat,
               color: theme.colorScheme.onSurfaceVariant,
             ),
       title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -765,11 +769,11 @@ class _SessionRow extends StatelessWidget {
               message: '$subagents subagent${subagents == 1 ? '' : 's'}',
               child: Badge(
                 label: Text('$subagents'),
-                child: const Icon(Icons.account_tree_outlined, size: 19),
+                child: const Icon(AppIconography.branch, size: 19),
               ),
             ),
           const SizedBox(width: 4),
-          const Icon(Icons.chevron_right_rounded),
+          const Icon(AppIconography.chevronRight),
         ],
       ),
       onTap: onTap,
@@ -1078,13 +1082,13 @@ class _BackgroundUpdatesHint extends StatelessWidget {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     return ListTile(
       key: const ValueKey('activity-background-settings'),
-      leading: const Icon(Icons.notifications_outlined),
+      leading: const Icon(AppIconography.activity),
       title: Text(l10n.activityBackgroundUpdates),
       subtitle: Text(
         l10n.activityBackgroundOffDetail,
         key: const ValueKey('activity-background-hint'),
       ),
-      trailing: const Icon(Icons.chevron_right_rounded),
+      trailing: const Icon(AppIconography.chevronRight),
       onTap: onOpen,
     );
   }
@@ -1107,7 +1111,7 @@ class _ActivityStatus extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            known ? Icons.task_alt_rounded : Icons.sync_problem_rounded,
+            known ? AppIconography.checkCircle : Icons.sync_problem_rounded,
             size: 32,
             color: known
                 ? theme.colorScheme.primary
@@ -1132,7 +1136,7 @@ class _ActivityStatus extends StatelessWidget {
               padding: const EdgeInsets.only(top: 8),
               child: TextButton.icon(
                 onPressed: onRefresh,
-                icon: const Icon(Icons.refresh_rounded),
+                icon: const Icon(AppIconography.retry),
                 label: Text(l10n.activityCheckAgain),
               ),
             ),

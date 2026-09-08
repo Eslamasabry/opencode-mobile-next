@@ -7,6 +7,7 @@ import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
 import '../widgets/session_handoff.dart';
+import '../app_iconography.dart';
 
 class SessionRelationsScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -232,7 +233,7 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
         IconButton(
           tooltip: 'Refresh subagent sessions',
           onPressed: _load,
-          icon: const Icon(Icons.refresh_rounded),
+          icon: const Icon(AppIconography.retry),
         ),
       ],
     ),
@@ -264,7 +265,7 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
               session: parent,
               current: widget.sessionID == parent.id,
               busy: widget.controller.busySessions.contains(parent.id),
-              icon: Icons.chat_bubble_outline_rounded,
+              icon: AppIconography.chat,
               onTap: () => _select(parent),
               onHandoff: () => showSessionHandoff(
                 context,
@@ -290,7 +291,7 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 24, 16, 32),
                 child: ProductEmptyState(
-                  icon: Icons.account_tree_outlined,
+                  icon: AppIconography.branch,
                   title: 'No subagent sessions yet',
                   message:
                       'Delegated work will appear here without mixing child sessions into your main chat list.',
@@ -304,7 +305,7 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
                   busy: widget.controller.busySessions.contains(
                     children[index].id,
                   ),
-                  icon: Icons.subdirectory_arrow_right_rounded,
+                  icon: AppIconography.nested,
                   position: index + 1,
                   total: children.length,
                   onTap: () => _select(children[index]),
@@ -363,7 +364,7 @@ class _SessionFamilyHeader extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: Icon(
-              Icons.account_tree_outlined,
+              AppIconography.branch,
               color: theme.colorScheme.primary,
             ),
           ),

@@ -389,7 +389,7 @@ class _ChatComposer extends StatelessWidget {
             child: TextButton.icon(
               key: const Key('composer-restore-history-draft'),
               onPressed: shelfBusy ? null : onRestoreHistoryDraft,
-              icon: const Icon(Icons.undo_rounded),
+              icon: const Icon(AppIconography.undo),
               label: Text(_chatL10n(context).promptOriginalDraft),
             ),
           ),
@@ -445,7 +445,7 @@ class _ChatComposer extends StatelessWidget {
                   onPressed: shelfBusy || conversationMode
                       ? null
                       : onOpenEditor,
-                  icon: const Icon(Icons.open_in_full_rounded, size: 19),
+                  icon: const Icon(AppIconography.expand, size: 19),
                   style: IconButton.styleFrom(
                     foregroundColor: Theme.of(
                       context,
@@ -724,7 +724,7 @@ class _PromptToolsButton extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 )
-              : Icon(Icons.add_rounded, semanticLabel: label),
+              : Icon(AppIconography.add, semanticLabel: label),
         ),
       ),
     );
@@ -784,7 +784,7 @@ class _PromptToolsSheet extends StatelessWidget {
               onTap: () => Navigator.pop(context, _PromptTool.commands),
             ),
             ListTile(
-              leading: const Icon(Icons.layers_outlined),
+              leading: const Icon(AppIconography.layers),
               title: Text(_chatL10n(context).capsuleTitle),
               subtitle: Text(_chatL10n(context).capsuleEntry),
               enabled: !voiceBlocked,
@@ -796,7 +796,7 @@ class _PromptToolsSheet extends StatelessWidget {
               ListTile(
                 key: const Key('composer-tool-attach'),
                 enabled: !attachBlocked,
-                leading: const Icon(Icons.attach_file_rounded),
+                leading: const Icon(AppIconography.attach),
                 title: const Text('Attach file'),
                 subtitle: Text(
                   attachBlocked
@@ -814,7 +814,7 @@ class _PromptToolsSheet extends StatelessWidget {
               ListTile(
                 key: const Key('composer-tool-gallery'),
                 enabled: !attachBlocked,
-                leading: const Icon(Icons.photo_library_outlined),
+                leading: const Icon(AppIconography.images),
                 title: Text(_chatL10n(context).photoLibraryAction),
                 subtitle: Text(_chatL10n(context).photoLibraryDescription),
                 onTap: attachBlocked
@@ -824,7 +824,7 @@ class _PromptToolsSheet extends StatelessWidget {
               ListTile(
                 key: const Key('composer-tool-camera'),
                 enabled: !attachBlocked,
-                leading: const Icon(Icons.photo_camera_outlined),
+                leading: const Icon(AppIconography.camera),
                 title: Text(_chatL10n(context).photoCameraAction),
                 onTap: attachBlocked
                     ? null
@@ -839,7 +839,7 @@ class _PromptToolsSheet extends StatelessWidget {
               ListTile(
                 key: const Key('composer-tool-voice'),
                 enabled: !voiceBlocked,
-                leading: const Icon(Icons.mic_none_rounded),
+                leading: const Icon(AppIconography.mic),
                 title: const Text('Voice input'),
                 subtitle: Text(
                   voiceBlocked
@@ -853,7 +853,7 @@ class _PromptToolsSheet extends StatelessWidget {
             if (webSourcesSupported)
               ListTile(
                 enabled: !attachBlocked,
-                leading: const Icon(Icons.link_rounded),
+                leading: const Icon(AppIconography.link),
                 title: Text(_chatL10n(context).webSourcesTitle),
                 subtitle: Text(_chatL10n(context).webSourcesEntryDetail),
                 onTap: attachBlocked
@@ -864,7 +864,7 @@ class _PromptToolsSheet extends StatelessWidget {
               ListTile(
                 key: const Key('composer-tool-conversation'),
                 enabled: !voiceBlocked,
-                leading: const Icon(Icons.record_voice_over_outlined),
+                leading: const Icon(AppIconography.speakUser),
                 title: Text(_chatL10n(context).voiceConversationTitle),
                 subtitle: Text(_chatL10n(context).voiceConversationDescription),
                 onTap: voiceBlocked
@@ -874,7 +874,7 @@ class _PromptToolsSheet extends StatelessWidget {
             if (canReusePrompt)
               ListTile(
                 key: const Key('composer-tool-history'),
-                leading: const Icon(Icons.history_rounded),
+                leading: const Icon(AppIconography.history),
                 title: Text(_chatL10n(context).composerReuseTitle),
                 subtitle: Text(_chatL10n(context).composerReuseSubtitle),
                 onTap: () => Navigator.pop(context, _PromptTool.history),
@@ -891,7 +891,7 @@ class _PromptToolsSheet extends StatelessWidget {
               ListTile(
                 key: const Key('composer-tool-stash'),
                 enabled: canStash,
-                leading: const Icon(Icons.inventory_2_outlined),
+                leading: const Icon(AppIconography.package),
                 title: Text(_chatL10n(context).promptStashAction),
                 subtitle: Text(_chatL10n(context).promptStashDescription),
                 onTap: canStash
@@ -900,7 +900,7 @@ class _PromptToolsSheet extends StatelessWidget {
               ),
               ListTile(
                 key: const Key('composer-tool-saved'),
-                leading: const Icon(Icons.bookmarks_outlined),
+                leading: const Icon(AppIconography.bookmarks),
                 title: Text(_chatL10n(context).promptStashTitle),
                 subtitle: Text(_chatL10n(context).promptStashListDescription),
                 onTap: () => Navigator.pop(context, _PromptTool.saved),
@@ -909,7 +909,7 @@ class _PromptToolsSheet extends StatelessWidget {
             if (canClearText)
               ListTile(
                 key: const Key('composer-tool-clear'),
-                leading: const Icon(Icons.text_snippet_outlined),
+                leading: const Icon(AppIconography.textSnippet),
                 title: Text(_chatL10n(context).composerClearTextTitle),
                 subtitle: Text(_chatL10n(context).composerClearTextSubtitle),
                 onTap: () => Navigator.pop(context, _PromptTool.clearText),
@@ -970,7 +970,7 @@ class _ModelContextChip extends StatelessWidget {
               child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             const SizedBox(width: 2),
-            const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
+            const Icon(AppIconography.chevronDown, size: 18),
             if (trailing case final trailing?) ...[
               const SizedBox(width: 8),
               trailing,
@@ -1064,7 +1064,7 @@ class _ComposerSubmit extends StatelessWidget {
             dimension: 18,
             child: CircularProgressIndicator(strokeWidth: 2),
           )
-        : const Icon(Icons.arrow_upward_rounded);
+        : const Icon(AppIconography.send);
     if (!busy) {
       return IconButton(
         key: const Key('chat-send-button'),
@@ -1291,8 +1291,8 @@ class _AttachmentGlyphState extends State<_AttachmentGlyph> {
   Widget build(BuildContext context) {
     final icon = Icon(
       widget.attachment.isDirectoryReference
-          ? Icons.bookmark_outline_rounded
-          : Icons.attach_file_rounded,
+          ? AppIconography.bookmark
+          : AppIconography.attach,
       size: 18,
     );
     final bytes = _bytes;
@@ -1381,7 +1381,7 @@ class _PendingAttachmentChip extends StatelessWidget {
                         ),
                         if (!reference) ...[
                           const SizedBox(width: 8),
-                          const Icon(Icons.visibility_outlined, size: 16),
+                          const Icon(AppIconography.visible, size: 16),
                         ],
                       ],
                     ),
@@ -1400,7 +1400,7 @@ class _PendingAttachmentChip extends StatelessWidget {
               tooltip: removeLabel,
               constraints: const BoxConstraints.tightFor(width: 48, height: 48),
               onPressed: onRemove,
-              icon: const Icon(Icons.close_rounded, size: 18),
+              icon: const Icon(AppIconography.close, size: 18),
             ),
           ),
         ],
@@ -1448,13 +1448,11 @@ class _StagedReferenceChip extends StatelessWidget {
                     children: [
                       Icon(
                         switch (reference.kind) {
-                          ReviewReferenceKind.comment =>
-                            Icons.mode_comment_outlined,
-                          ReviewReferenceKind.file =>
-                            Icons.description_outlined,
+                          ReviewReferenceKind.comment => AppIconography.chat,
+                          ReviewReferenceKind.file => AppIconography.fileText,
                           ReviewReferenceKind.changedFile =>
-                            Icons.difference_outlined,
-                          _ => Icons.code_rounded,
+                            AppIconography.review,
+                          _ => AppIconography.code,
                         },
                         size: 16,
                         color: scheme.onSecondaryContainer,
@@ -1486,7 +1484,7 @@ class _StagedReferenceChip extends StatelessWidget {
               constraints: const BoxConstraints.tightFor(width: 48, height: 48),
               onPressed: onRemove,
               icon: Icon(
-                Icons.close_rounded,
+                AppIconography.close,
                 size: 18,
                 color: scheme.onSecondaryContainer,
               ),

@@ -13,6 +13,7 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/termux/bridge.dart';
 import 'package:opencode_mobile/ui/screens/termux_setup_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:opencode_mobile/ui/app_iconography.dart';
 
 class _MemoryProfileStore extends ProfileStore {
   _MemoryProfileStore({required super.prefs});
@@ -1208,7 +1209,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Checking Termux...'), findsOneWidget);
-    expect(find.byIcon(Icons.check_rounded), findsNothing);
+    expect(find.byIcon(AppIconography.check), findsNothing);
 
     capabilities.complete({
       'installed': false,

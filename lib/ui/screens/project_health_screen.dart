@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../api/product_repository.dart';
 import '../widgets/product_states.dart';
+import '../app_iconography.dart';
 
 class ProjectHealthScreen extends StatefulWidget {
   final ServerOperationsGateway repository;
@@ -192,7 +193,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
                     dimension: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.refresh_rounded),
+                : const Icon(AppIconography.retry),
           ),
         ],
       ),
@@ -255,7 +256,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
       return [
         const ListTile(
           key: ValueKey('git-not-initialized'),
-          leading: Icon(Icons.account_tree_outlined),
+          leading: Icon(AppIconography.branch),
           title: Text('Git is not initialized'),
           subtitle: Text(
             'Initialize this project to enable branches, working-tree changes, and Review.',
@@ -268,7 +269,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
             feature: 'git-init',
             title: 'Initialize Git',
             explainer: 'Run `git init` from a terminal',
-            leading: Icon(Icons.terminal_rounded),
+            leading: Icon(AppIconography.terminal),
           )
         else
           Padding(
@@ -286,7 +287,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
           ),
         if (_gitInitializationError != null)
           ListTile(
-            leading: const Icon(Icons.error_outline_rounded),
+            leading: const Icon(AppIconography.error),
             title: const Text('Git initialization failed'),
             subtitle: Text(
               _gitInitializationError!,
@@ -304,7 +305,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
     final defaultBranch = vcs.defaultBranch?.trim();
     return [
       ListTile(
-        leading: const Icon(Icons.account_tree_outlined),
+        leading: const Icon(AppIconography.branch),
         title: Text(branch?.isNotEmpty == true ? branch! : 'No active branch'),
         subtitle: Text(
           defaultBranch?.isNotEmpty == true
@@ -314,12 +315,12 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
               : '${vcs.changes.length} changed files',
         ),
         trailing: vcs.changes.isEmpty
-            ? const Icon(Icons.check_circle_outline_rounded)
+            ? const Icon(AppIconography.checkCircle)
             : _ChangeCounts(additions: vcs.additions, deletions: vcs.deletions),
       ),
       if (vcs.changes.isEmpty)
         const ListTile(
-          leading: Icon(Icons.done_all_rounded),
+          leading: Icon(AppIconography.checks),
           title: Text('No uncommitted changes'),
         )
       else
@@ -356,8 +357,8 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
         ListTile(
           leading: Icon(
             service.connected
-                ? Icons.check_circle_outline_rounded
-                : Icons.error_outline_rounded,
+                ? AppIconography.checkCircle
+                : AppIconography.error,
           ),
           title: Text(service.name),
           subtitle: Text(
@@ -387,7 +388,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
     if (formatters.isEmpty) {
       return const [
         ListTile(
-          leading: Icon(Icons.format_align_left_rounded),
+          leading: Icon(AppIconography.alignLeft),
           title: Text('No formatters configured'),
         ),
       ];
@@ -397,8 +398,8 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
         ListTile(
           leading: Icon(
             formatter.enabled
-                ? Icons.check_circle_outline_rounded
-                : Icons.remove_circle_outline_rounded,
+                ? AppIconography.checkCircle
+                : AppIconography.removeCircle,
           ),
           title: Text(formatter.name),
           subtitle: Text(
@@ -439,9 +440,9 @@ class _VersionControlFileTile extends StatelessWidget {
   );
 
   static IconData _statusIcon(String status) => switch (status) {
-    'added' => Icons.add_circle_outline_rounded,
-    'deleted' => Icons.remove_circle_outline_rounded,
-    _ => Icons.edit_outlined,
+    'added' => AppIconography.addCircle,
+    'deleted' => AppIconography.removeCircle,
+    _ => AppIconography.edit,
   };
 }
 
@@ -491,7 +492,7 @@ class _HealthErrorTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-    leading: const Icon(Icons.error_outline_rounded),
+    leading: const Icon(AppIconography.error),
     title: const Text('Status unavailable'),
     subtitle: Text(message, maxLines: 3, overflow: TextOverflow.ellipsis),
     trailing: TextButton(onPressed: onRetry, child: const Text('Try again')),

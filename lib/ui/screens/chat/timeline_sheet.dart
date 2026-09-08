@@ -169,7 +169,7 @@ class _TimelineSheetState extends State<_TimelineSheet> {
                   IconButton(
                     tooltip: 'Close timeline',
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded),
+                    icon: const Icon(AppIconography.close),
                   ),
                 ],
               ),
@@ -183,7 +183,7 @@ class _TimelineSheetState extends State<_TimelineSheet> {
                 textInputAction: TextInputAction.search,
                 decoration: const InputDecoration(
                   hintText: 'Search messages',
-                  prefixIcon: Icon(Icons.search_rounded),
+                  prefixIcon: Icon(AppIconography.search),
                   isDense: true,
                 ),
               ),
@@ -248,8 +248,8 @@ class _TimelineSheetState extends State<_TimelineSheet> {
                           minVerticalPadding: 10,
                           leading: Icon(
                             isUser
-                                ? Icons.person_outline_rounded
-                                : Icons.auto_awesome_outlined,
+                                ? AppIconography.person
+                                : AppIconography.sparkle,
                             size: 20,
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -273,7 +273,7 @@ class _TimelineSheetState extends State<_TimelineSheet> {
                           subtitle: Text(footer),
                           trailing: widget.forkAvailable && _isForkable(message)
                               ? widget.forkMode
-                                    ? const Icon(Icons.call_split_rounded)
+                                    ? const Icon(AppIconography.branch)
                                     : IconButton(
                                         key: ValueKey(
                                           'timeline-fork-${message.info.id}',
@@ -286,9 +286,7 @@ class _TimelineSheetState extends State<_TimelineSheet> {
                                             fork: true,
                                           ),
                                         ),
-                                        icon: const Icon(
-                                          Icons.call_split_rounded,
-                                        ),
+                                        icon: const Icon(AppIconography.branch),
                                       )
                               : null,
                           onTap: () => Navigator.pop(

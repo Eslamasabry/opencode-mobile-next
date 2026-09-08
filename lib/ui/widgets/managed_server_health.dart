@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../termux/bridge.dart';
 import '../../termux/managed_server_recovery.dart';
+import '../app_iconography.dart';
 
 /// Explicit health checks plus a separately opted-in foreground recovery policy.
 class ManagedServerHealth extends StatefulWidget {
@@ -263,7 +264,7 @@ class _ManagedServerHealthState extends State<ManagedServerHealth> {
                   minimumSize: const Size(48, 48),
                 ),
                 onPressed: _checking ? null : _check,
-                icon: const Icon(Icons.refresh_rounded),
+                icon: const Icon(AppIconography.retry),
                 label: Text(l10n.managedHealthCheck),
               ),
               TextButton(

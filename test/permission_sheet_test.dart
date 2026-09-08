@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/ui/screens/chat/permission_sheet.dart';
+import 'package:opencode_mobile/ui/app_iconography.dart';
 
 PermissionRequest _permission({
   List<String> patterns = const ['git push origin main'],
@@ -321,7 +322,7 @@ void _previewTests() {
       onReply: (reply, {message}) async {},
     );
     expect(find.byKey(const Key('permission-file-path')), findsOneWidget);
-    expect(find.byIcon(Icons.folder_outlined), findsOneWidget);
+    expect(find.byIcon(AppIconography.files), findsOneWidget);
     expect(find.byKey(const Key('permission-command-preview')), findsNothing);
     final preview = find.byKey(const Key('permission-diff-preview'));
     expect(preview, findsOneWidget);

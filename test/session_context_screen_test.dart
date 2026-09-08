@@ -10,6 +10,7 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/session_context_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:opencode_mobile/ui/app_iconography.dart';
 
 class _ContextApi extends OpenCodeApi with CompleteMessageHistory {
   _ContextApi() : super(baseUrl: 'http://localhost');
@@ -176,7 +177,7 @@ void main() {
       expect(
         tester
             .widget<IconButton>(
-              find.widgetWithIcon(IconButton, Icons.refresh_rounded),
+              find.widgetWithIcon(IconButton, AppIconography.retry),
             )
             .onPressed,
         isNull,

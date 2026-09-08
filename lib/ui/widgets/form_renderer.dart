@@ -437,7 +437,7 @@ class _FormRendererState extends State<FormRenderer> {
       title: 'Dismiss this request?',
       message: 'The agent continues without your answers.',
       confirmLabel: 'Dismiss',
-      icon: Icons.block_rounded,
+      icon: AppIconography.blocked,
       destructive: true,
       sheetKey: const Key('form-dismiss-confirm'),
       confirmKey: const Key('form-dismiss-confirm-button'),
@@ -680,9 +680,7 @@ class _FormRendererState extends State<FormRenderer> {
         errorText: _errors[field.key],
         errorMaxLines: 3,
         suffixIcon: Icon(
-          _isDateTime(field)
-              ? Icons.schedule_rounded
-              : Icons.calendar_today_rounded,
+          _isDateTime(field) ? AppIconography.clock : AppIconography.calendar,
         ),
       ),
     );
@@ -1002,7 +1000,7 @@ class _FormRendererState extends State<FormRenderer> {
         labelText: 'Add your own',
         suffixIcon: IconButton(
           tooltip: 'Add answer',
-          icon: const Icon(Icons.add_rounded),
+          icon: const Icon(AppIconography.add),
           onPressed: () => _addCustomValue(field),
         ),
       ),
@@ -1157,7 +1155,10 @@ class _FormRendererState extends State<FormRenderer> {
                 ),
               ),
               const SizedBox(width: 12),
-              Icon(Icons.open_in_new_rounded, color: theme.colorScheme.primary),
+              Icon(
+                AppIconography.externalLink,
+                color: theme.colorScheme.primary,
+              ),
             ],
           ),
         ),
@@ -1189,7 +1190,7 @@ class _FormRendererState extends State<FormRenderer> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
-              Icons.error_outline_rounded,
+              AppIconography.error,
               size: 18,
               color: scheme.onErrorContainer,
             ),

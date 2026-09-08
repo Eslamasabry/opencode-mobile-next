@@ -1033,7 +1033,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (unavailable.isNotEmpty) {
         final accepted = await showConfirmSheet(
           context,
-          icon: Icons.attachment_rounded,
+          icon: AppIconography.attach,
           title: _chatL10n(context).promptAttachmentsUnavailable,
           message: _chatL10n(
             context,
@@ -1046,7 +1046,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (!current.isEmpty) {
         final accepted = await showConfirmSheet(
           context,
-          icon: Icons.inventory_2_outlined,
+          icon: AppIconography.package,
           title: _chatL10n(context).promptRestoreTitle,
           message: _chatL10n(context).promptRestorePreserve,
           confirmLabel: _chatL10n(context).promptRestore,
@@ -2271,7 +2271,7 @@ class _ChatScreenState extends State<ChatScreen>
     final l10n = _chatL10n(context);
     return showConfirmSheet(
       context,
-      icon: Icons.delete_sweep_outlined,
+      icon: AppIconography.clearAll,
       title: 'Discard queued draft?',
       message: asked.dispatched
           ? l10n.queuedDiscardUnconfirmedMessage
@@ -2293,7 +2293,7 @@ class _ChatScreenState extends State<ChatScreen>
     final l10n = _chatL10n(context);
     final confirmed = await showConfirmSheet(
       context,
-      icon: Icons.send_rounded,
+      icon: AppIconography.send,
       title: l10n.queuedResendTitle,
       message: l10n.queuedResendMessage,
       confirmLabel: l10n.queuedResendConfirm,
@@ -2312,7 +2312,7 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _cancelInboxSend(Api2InboxItem item) async {
     final confirmed = await showConfirmSheet(
       context,
-      icon: Icons.delete_sweep_outlined,
+      icon: AppIconography.clearAll,
       title: 'Cancel this pending message?',
       message: 'Its text returns to the composer as a draft.',
       confirmLabel: 'Cancel message',
@@ -3362,7 +3362,7 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _share() async {
     final confirmed = await showConfirmSheet(
       context,
-      icon: Icons.public_rounded,
+      icon: AppIconography.globe,
       title: 'Share this session?',
       message:
           'Anyone with the link can view this session’s conversation and shared context. '
@@ -3877,21 +3877,21 @@ class _ChatScreenState extends State<ChatScreen>
       ContextMenuAction(
         menuKey: const ValueKey('message-menu-fork'),
         label: 'Fork from this prompt',
-        icon: Icons.fork_right_rounded,
+        icon: AppIconography.fork,
         onSelected: () => unawaited(_forkFromMessage(message)),
       ),
     if (_canStageFrom(message))
       ContextMenuAction(
         menuKey: const ValueKey('message-menu-revert'),
         label: _chatL10n(context).revertFromHere,
-        icon: Icons.history_rounded,
+        icon: AppIconography.history,
         onSelected: () => unawaited(_stageFromMessage(message)),
       ),
     if (_conn.capabilities.messageDelete)
       ContextMenuAction(
         menuKey: const ValueKey('message-menu-delete'),
         label: 'Delete message',
-        icon: Icons.delete_outline_rounded,
+        icon: AppIconography.delete,
         destructive: true,
         onSelected: () => unawaited(_deleteMessage(message)),
       ),
@@ -3921,7 +3921,7 @@ class _ChatScreenState extends State<ChatScreen>
             if (canFork)
               ListTile(
                 key: const ValueKey('message-action-fork'),
-                leading: const Icon(Icons.fork_right_rounded),
+                leading: const Icon(AppIconography.fork),
                 title: const Text('Fork from this prompt'),
                 subtitle: const Text(
                   'Start a new session with this prompt in the composer',
@@ -3930,13 +3930,13 @@ class _ChatScreenState extends State<ChatScreen>
               ),
             if (_canReadReply(message))
               ListTile(
-                leading: const Icon(Icons.volume_up_outlined),
+                leading: const Icon(AppIconography.volume),
                 title: Text(_chatL10n(context).readAloudAction),
                 onTap: () => Navigator.pop(context, 'readAloud'),
               ),
             if (_canReadReply(message) && _readAloudConsented)
               ListTile(
-                leading: const Icon(Icons.record_voice_over_outlined),
+                leading: const Icon(AppIconography.speakUser),
                 title: Text(_chatL10n(context).readAloudOtherVoice),
                 onTap: () => Navigator.pop(context, 'readAloudOtherVoice'),
               ),
@@ -3945,7 +3945,7 @@ class _ChatScreenState extends State<ChatScreen>
             if (_canStageFrom(message))
               ListTile(
                 key: const ValueKey('message-action-revert'),
-                leading: const Icon(Icons.history_rounded),
+                leading: const Icon(AppIconography.history),
                 title: Text(_chatL10n(context).revertFromHere),
                 onTap: () => Navigator.pop(context, 'revert'),
               ),
@@ -3953,7 +3953,7 @@ class _ChatScreenState extends State<ChatScreen>
               ListTile(
                 key: const ValueKey('message-action-delete'),
                 leading: Icon(
-                  Icons.delete_outline_rounded,
+                  AppIconography.delete,
                   color: theme.colorScheme.error,
                 ),
                 title: Text(
@@ -3982,7 +3982,7 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _deleteMessage(MessageWithParts message) async {
     final confirmed = await showConfirmSheet(
       context,
-      icon: Icons.delete_outline_rounded,
+      icon: AppIconography.delete,
       title: 'Delete this message?',
       message:
           'The message and all of its parts are permanently removed from the '
@@ -4130,7 +4130,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     final confirmed = await showConfirmSheet(
       context,
-      icon: Icons.history_rounded,
+      icon: AppIconography.history,
       title: 'Revert from this prompt?',
       message:
           'Messages and file changes after the most recent prompt will be rolled back.',
@@ -5957,7 +5957,7 @@ class _ChatScreenState extends State<ChatScreen>
       final leave = await showConfirmSheet(
         context,
         sheetKey: const ValueKey('leave-unsaved-draft'),
-        icon: Icons.save_outlined,
+        icon: AppIconography.save,
         title: _chatL10n(context).draftLeaveTitle,
         message: _chatL10n(context).draftLeaveMessage,
         confirmLabel: _chatL10n(context).draftLeaveAction,
@@ -6182,7 +6182,7 @@ class _ChatScreenState extends State<ChatScreen>
                   if (_readAloudRequestBusy || _readAloud?.speaking == true)
                     IconButton(
                       tooltip: _chatL10n(context).readAloudStop,
-                      icon: const Icon(Icons.stop_circle_outlined),
+                      icon: const Icon(AppIconography.stopCircle),
                       onPressed: () => unawaited(_stopReading()),
                     ),
                   if (busy)
@@ -6194,14 +6194,14 @@ class _ChatScreenState extends State<ChatScreen>
                   if (_conn.isIsolated)
                     IconButton(
                       tooltip: _chatL10n(context).demoReviewChanges,
-                      icon: const Icon(Icons.difference_outlined),
+                      icon: const Icon(AppIconography.review),
                       onPressed: _showDiff,
                     ),
                   if (!_conn.isIsolated)
                     IconButton(
                       key: const ValueKey('session-actions-button'),
                       tooltip: 'Session menu',
-                      icon: const Icon(Icons.more_vert_rounded),
+                      icon: const Icon(AppIconography.menu),
                       onPressed: () => unawaited(
                         _openSessionMenu(
                           reverted: session?.reverted == true,
@@ -6221,7 +6221,7 @@ class _ChatScreenState extends State<ChatScreen>
                   message: _chatL10n(context).demoReviewChanges,
                   child: TextButton.icon(
                     onPressed: _showDiff,
-                    icon: const Icon(Icons.difference_outlined, size: 18),
+                    icon: const Icon(AppIconography.review, size: 18),
                     label: Text(_chatL10n(context).demoReviewChanges),
                   ),
                 ),
@@ -6265,7 +6265,7 @@ class _ChatScreenState extends State<ChatScreen>
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.history_rounded, size: 20),
+                      const Icon(AppIconography.history, size: 20),
                       const SizedBox(width: 8),
                       Expanded(child: Text(_chatL10n(context).revertStaged)),
                       TextButton(
@@ -6577,10 +6577,7 @@ class _ChatScreenState extends State<ChatScreen>
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(
-                                      Icons.sticky_note_2_outlined,
-                                      size: 18,
-                                    ),
+                                    const Icon(AppIconography.note, size: 18),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Semantics(
@@ -6609,7 +6606,7 @@ class _ChatScreenState extends State<ChatScreen>
                                           _conn.dismissSessionNoteReceipt(
                                             widget.sessionID,
                                           ),
-                                      icon: const Icon(Icons.close_rounded),
+                                      icon: const Icon(AppIconography.close),
                                     ),
                                   ],
                                 ),
@@ -6727,7 +6724,7 @@ class _ChatScreenState extends State<ChatScreen>
                                         onPressed: _photoBusy
                                             ? null
                                             : () => _discardPendingPhoto(photo),
-                                        icon: const Icon(Icons.close_rounded),
+                                        icon: const Icon(AppIconography.close),
                                       ),
                                     ],
                                   ),
@@ -6777,7 +6774,7 @@ class _ChatScreenState extends State<ChatScreen>
                                                 text: _composer.text,
                                               ),
                                             ),
-                                      icon: const Icon(Icons.copy_rounded),
+                                      icon: const Icon(AppIconography.copy),
                                     ),
                                     IconButton(
                                       tooltip: _chatL10n(
@@ -6786,7 +6783,7 @@ class _ChatScreenState extends State<ChatScreen>
                                       onPressed: _restoringDraftAttachments
                                           ? null
                                           : _retryDraftPersistence,
-                                      icon: const Icon(Icons.refresh_rounded),
+                                      icon: const Icon(AppIconography.retry),
                                     ),
                                   ],
                                 ),
@@ -6829,7 +6826,7 @@ class _ChatScreenState extends State<ChatScreen>
                                               ),
                                             )
                                           : const Icon(
-                                              Icons.low_priority_rounded,
+                                              AppIconography.lowPriority,
                                               size: 20,
                                             ),
                                       label: Text(
@@ -6867,7 +6864,7 @@ class _ChatScreenState extends State<ChatScreen>
                                           minimumSize: const Size(48, 48),
                                         ),
                                         icon: const Icon(
-                                          Icons.account_tree_outlined,
+                                          AppIconography.branch,
                                           size: 20,
                                         ),
                                         label: Text(
@@ -7151,7 +7148,7 @@ class _FormRequestCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.fact_check_outlined,
+                      AppIconography.checklist,
                       color: theme.colorScheme.primary,
                     ),
                     const SizedBox(width: 12),

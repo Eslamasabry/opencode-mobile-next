@@ -173,7 +173,7 @@ class _PluginsScreenState extends State<PluginsScreen> {
             IconButton(
               tooltip: l10n.pluginsRefresh,
               onPressed: _loading ? null : _load,
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const Icon(AppIconography.retry),
             ),
         ],
       ),
@@ -186,7 +186,7 @@ class _PluginsScreenState extends State<PluginsScreen> {
               Align(
                 alignment: AlignmentDirectional.centerStart,
                 child: TextButton.icon(
-                  icon: const Icon(Icons.link_off_rounded),
+                  icon: const Icon(AppIconography.unlink),
                   label: Text(l10n.pluginMappingClearAll),
                   onPressed: _editingMapping ? null : _clearMappings,
                 ),
@@ -244,7 +244,7 @@ class _PluginsScreenState extends State<PluginsScreen> {
         message: _l10n.pluginMappingClearDescription,
         confirmLabel: _l10n.pluginMappingClearConfirm,
         cancelLabel: MaterialLocalizations.of(context).cancelButtonLabel,
-        icon: Icons.link_off_rounded,
+        icon: AppIconography.unlink,
         destructive: true,
       );
       if (!confirmed || !mounted) return;
@@ -495,10 +495,10 @@ class _PluginsScreenState extends State<PluginsScreen> {
         children: [
           Icon(
             plugin.status == PluginStatus.active
-                ? Icons.check_circle_outline
+                ? AppIconography.checkCircle
                 : plugin.status == PluginStatus.failed
-                ? Icons.error_outline
-                : Icons.help_outline,
+                ? AppIconography.error
+                : AppIconography.question,
             color: AppTheme.statusColor(theme, tone),
           ),
           const SizedBox(width: 12),
@@ -527,7 +527,7 @@ class _PluginsScreenState extends State<PluginsScreen> {
                     Align(
                       alignment: AlignmentDirectional.centerStart,
                       child: TextButton.icon(
-                        icon: const Icon(Icons.play_arrow_rounded),
+                        icon: const Icon(AppIconography.play),
                         label: Text(l10n.pluginMappingReview(name)),
                         onPressed:
                             !_connected ||
@@ -541,7 +541,7 @@ class _PluginsScreenState extends State<PluginsScreen> {
                     Align(
                       alignment: AlignmentDirectional.centerStart,
                       child: TextButton.icon(
-                        icon: const Icon(Icons.link_rounded),
+                        icon: const Icon(AppIconography.link),
                         label: Text(l10n.pluginMappingManage),
                         onPressed: !_connected || _editingMapping
                             ? null

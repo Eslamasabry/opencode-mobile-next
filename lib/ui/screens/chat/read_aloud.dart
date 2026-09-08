@@ -101,7 +101,7 @@ extension _ChatReadAloud on _ChatScreenState {
       try {
         accepted = await showConfirmSheet(
           context,
-          icon: Icons.volume_up_outlined,
+          icon: AppIconography.volume,
           title: _chatL10n(context).readAloudConsentTitle,
           message: _chatL10n(context).readAloudConsentDetail,
           confirmLabel: _chatL10n(context).readAloudContinue,

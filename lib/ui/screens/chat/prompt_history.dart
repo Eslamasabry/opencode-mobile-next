@@ -54,7 +54,7 @@ class _PromptHistorySheetState extends State<_PromptHistorySheet> {
                   key: const Key('prompt-history-search'),
                   decoration: InputDecoration(
                     hintText: _chatL10n(context).composerReuseSearch,
-                    prefixIcon: const Icon(Icons.search_rounded),
+                    prefixIcon: const Icon(AppIconography.search),
                   ),
                   onChanged: (value) =>
                       setState(() => _query = value.trim().toLowerCase()),
@@ -79,7 +79,7 @@ class _PromptHistorySheetState extends State<_PromptHistorySheet> {
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  trailing: const Icon(Icons.add_rounded),
+                  trailing: const Icon(AppIconography.add),
                   onTap: () => Navigator.pop(context, matches[index]),
                 ),
               ],

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../app_iconography.dart';
 
 /// Chat-local shortcuts also work with a hardware keyboard on Android.
 /// A sheet or dialog above the chat must keep ownership of the keyboard.
@@ -78,7 +79,7 @@ class ModelCycleButton extends StatelessWidget {
     tooltip: lookupAppLocalizations(
       Localizations.localeOf(context),
     ).modelSwitchSession,
-    icon: const Icon(Icons.swap_horiz_rounded),
+    icon: const Icon(AppIconography.swap),
     onSelected: (value) => unawaited(
       onCycle(reverse: value == 'previous', favoritesOnly: value == 'favorite'),
     ),

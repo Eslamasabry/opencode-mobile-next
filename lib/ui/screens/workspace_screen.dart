@@ -421,10 +421,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           key: const ValueKey('location-recovery-notice'),
                           dense: true,
                           visualDensity: VisualDensity.compact,
-                          leading: const Icon(
-                            Icons.info_outline_rounded,
-                            size: 18,
-                          ),
+                          leading: const Icon(AppIconography.info, size: 18),
                           title: Text(
                             widget.controller.locationNotice!,
                             style: Theme.of(context).textTheme.bodySmall,
@@ -433,7 +430,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                             key: const ValueKey('location-recovery-dismiss'),
                             tooltip: l10n.workspaceDismissNotice,
                             onPressed: widget.controller.dismissLocationNotice,
-                            icon: const Icon(Icons.close_rounded, size: 18),
+                            icon: const Icon(AppIconography.close, size: 18),
                           ),
                         ),
                       // The project catalog and session inventory are separate.
@@ -454,7 +451,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                               if (capabilities.globalSessionSearch)
                                 TextButton.icon(
                                   onPressed: _openAllSessions,
-                                  icon: const Icon(Icons.manage_search_rounded),
+                                  icon: const Icon(AppIconography.searchList),
                                   label: Text(l10n.workspaceSearchAllSessions),
                                 ),
                             ],
@@ -485,14 +482,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                                 children: [
                                   TextButton.icon(
                                     onPressed: _load,
-                                    icon: const Icon(Icons.refresh_rounded),
+                                    icon: const Icon(AppIconography.retry),
                                     label: Text(l10n.workspaceRetryProjects),
                                   ),
                                   if (capabilities.globalSessionSearch)
                                     TextButton.icon(
                                       onPressed: _openAllSessions,
                                       icon: const Icon(
-                                        Icons.manage_search_rounded,
+                                        AppIconography.searchList,
                                       ),
                                       label: Text(
                                         l10n.workspaceSearchAllSessions,
@@ -534,7 +531,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           horizontalTitleGap: 12,
                           leading: const SizedBox.square(
                             dimension: 32,
-                            child: Icon(Icons.folder_outlined, size: 24),
+                            child: Icon(AppIconography.files, size: 24),
                           ),
                           title: Text(
                             _selectedProject?.name ?? 'Choose a project',
@@ -568,7 +565,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                               if (!largeProjectText &&
                                   ManageProjectScreen.isAvailable(capabilities))
                                 _manageProjectAction(l10n),
-                              const Icon(Icons.unfold_more_rounded),
+                              const Icon(AppIconography.unfoldMore),
                             ],
                           ),
                           onTap: _openContextSheet,
@@ -586,10 +583,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           horizontalTitleGap: 12,
                           leading: const SizedBox.square(
                             dimension: 32,
-                            child: Icon(
-                              Icons.subdirectory_arrow_right,
-                              size: 24,
-                            ),
+                            child: Icon(AppIconography.nested, size: 24),
                           ),
                           title: Text(_basename(_selectedDirectory!)),
                           subtitle: Text(
@@ -623,7 +617,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           horizontalTitleGap: 12,
                           leading: const SizedBox.square(
                             dimension: 32,
-                            child: Icon(Icons.folder_rounded, size: 24),
+                            child: Icon(AppIconography.files, size: 24),
                           ),
                           title: Text(_basename(widget.controller.directory!)),
                           subtitle: Text(
@@ -744,7 +738,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 26),
                       child: ProductInlineEmpty(
-                        icon: Icons.chat_bubble_outline_rounded,
+                        icon: AppIconography.chat,
                         title: partial
                             ? l10n.sessionsNoLoadedRecent
                             : pinned.isNotEmpty
@@ -789,7 +783,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       horizontalTitleGap: 12,
                       leading: const SizedBox.square(
                         dimension: 32,
-                        child: Icon(Icons.archive_outlined, size: 24),
+                        child: Icon(AppIconography.archive, size: 24),
                       ),
                       title: const Text('Archived sessions'),
                       subtitle: Text(
@@ -797,7 +791,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                             ? l10n.sessionsLoadedCount(archived.length)
                             : '${archived.length} hidden from recents',
                       ),
-                      trailing: const Icon(Icons.chevron_right_rounded),
+                      trailing: const Icon(AppIconography.chevronRight),
                       onTap: _showArchived,
                     ),
                   ),
@@ -928,7 +922,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ListTile(
-                leading: const Icon(Icons.folder_rounded),
+                leading: const Icon(AppIconography.files),
                 title: Text(_selectedProject?.name ?? 'No project selected'),
                 subtitle: SelectableText(
                   _contextSubtitle,
@@ -938,10 +932,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               const Divider(height: 1),
               ListTile(
                 key: const ValueKey('context-switch-project'),
-                leading: const Icon(Icons.swap_horiz_rounded),
+                leading: const Icon(AppIconography.swap),
                 title: const Text('Switch project'),
                 subtitle: Text('${_projects?.length ?? 0} open on this server'),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                trailing: const Icon(AppIconography.chevronRight),
                 onTap: () => Navigator.of(
                   sheetContext,
                 ).pop(const _ContextChoice.switchProject()),
@@ -950,10 +944,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 const SectionLabel('Workspace'),
                 ListTile(
                   key: const ValueKey('workspace-option-local'),
-                  leading: const Icon(Icons.computer_rounded),
+                  leading: const Icon(AppIconography.computer),
                   title: const Text('This computer'),
                   trailing: _selectedWorkspaceID == null
-                      ? const Icon(Icons.check_rounded)
+                      ? const Icon(AppIconography.check)
                       : null,
                   selected: _selectedWorkspaceID == null,
                   onTap: () => Navigator.of(
@@ -963,7 +957,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 for (final workspace in _workspaces)
                   ListTile(
                     key: ValueKey('workspace-option-${workspace.id}'),
-                    leading: const Icon(Icons.cloud_outlined),
+                    leading: const Icon(AppIconography.cloud),
                     title: Text(
                       workspace.branch?.isNotEmpty == true
                           ? workspace.branch!
@@ -975,7 +969,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     trailing: workspace.id == _selectedWorkspaceID
-                        ? const Icon(Icons.check_rounded)
+                        ? const Icon(AppIconography.check)
                         : null,
                     selected: workspace.id == _selectedWorkspaceID,
                     onTap: () => Navigator.of(
@@ -1132,7 +1126,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   Future<bool> _confirmArchive(Session session) => showConfirmSheet(
     context,
-    icon: Icons.archive_outlined,
+    icon: AppIconography.archive,
     title: 'Archive session?',
     message:
         '“${session.title?.isNotEmpty == true ? session.title : 'Untitled session'}” will be hidden from recent sessions.',
@@ -1141,7 +1135,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   Future<bool> _confirmShare(Session session) => showConfirmSheet(
     context,
-    icon: Icons.public_rounded,
+    icon: AppIconography.globe,
     title: 'Share this session?',
     message:
         'Anyone with the link can view “${session.title?.isNotEmpty == true ? session.title : 'Untitled session'}”, '
@@ -1151,7 +1145,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   Future<bool> _confirmDelete(Session session) => showConfirmSheet(
     context,
-    icon: Icons.delete_outline_rounded,
+    icon: AppIconography.delete,
     title: 'Delete session?',
     message:
         '“${session.title?.isNotEmpty == true ? session.title : 'Untitled session'}” and its history will be permanently removed.',
@@ -1207,7 +1201,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   actions: () => [
                     ContextMenuAction(
                       label: 'Open',
-                      icon: Icons.open_in_new_rounded,
+                      icon: AppIconography.externalLink,
                       onSelected: () {
                         Navigator.pop(sheetContext);
                         _openSession(session);
@@ -1215,14 +1209,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     ),
                     ContextMenuAction(
                       label: 'Delete',
-                      icon: Icons.delete_outline_rounded,
+                      icon: AppIconography.delete,
                       destructive: true,
                       onSelected: () => run('delete'),
                     ),
                   ],
                   child: ListTile(
                     key: ValueKey('archived-session-${session.id}'),
-                    leading: const Icon(Icons.inventory_2_outlined, size: 21),
+                    leading: const Icon(AppIconography.package, size: 21),
                     title: Text(
                       title,
                       maxLines: 1,
@@ -1360,14 +1354,14 @@ class _SessionRow extends StatelessWidget {
           child: needsAttention
               ? Icon(
                   key: ValueKey('session-attention-icon-${session.id}'),
-                  Icons.notification_important_outlined,
+                  AppIconography.notificationImportant,
                   size: 21,
                   color: AppTheme.statusColor(theme, AppStatusTone.attention),
                 )
               : busy
               ? const _BreathingDot()
               : Icon(
-                  pinned ? Icons.push_pin : Icons.chat_bubble_outline_rounded,
+                  pinned ? AppIconography.pin : AppIconography.chat,
                   size: 21,
                   semanticLabel: pinned ? l10n.sessionPinned : null,
                 ),
@@ -1453,26 +1447,26 @@ class _SessionRow extends StatelessWidget {
         if (controller.canPinSessions)
           ContextMenuAction(
             label: pinned ? l10n.sessionUnpin : l10n.sessionPin,
-            icon: pinned ? Icons.push_pin : Icons.push_pin_outlined,
+            icon: pinned ? AppIconography.pin : AppIconography.pin,
             onSelected: () => unawaited(togglePin()),
           ),
         ContextMenuAction(
           menuKey: const ValueKey('session-menu-open'),
           label: 'Open',
-          icon: Icons.open_in_new_rounded,
+          icon: AppIconography.externalLink,
           onSelected: () => onOpen(session),
         ),
         ContextMenuAction(
           menuKey: const ValueKey('session-menu-rename'),
           label: 'Rename',
-          icon: Icons.edit_outlined,
+          icon: AppIconography.edit,
           onSelected: () => unawaited(onAction('rename', session)),
         ),
         if (sharingAvailable)
           ContextMenuAction(
             menuKey: const ValueKey('session-menu-share'),
             label: session.shareUrl == null ? 'Share' : 'Stop sharing',
-            icon: Icons.public_rounded,
+            icon: AppIconography.globe,
             onSelected: () => unawaited(
               onAction(session.shareUrl == null ? 'share' : 'unshare', session),
             ),
@@ -1481,13 +1475,13 @@ class _SessionRow extends StatelessWidget {
           ContextMenuAction(
             menuKey: const ValueKey('session-menu-archive'),
             label: 'Archive',
-            icon: Icons.archive_outlined,
+            icon: AppIconography.archive,
             onSelected: () => unawaited(onAction('archive', session)),
           ),
         ContextMenuAction(
           menuKey: const ValueKey('session-menu-delete'),
           label: 'Delete',
-          icon: Icons.delete_outline_rounded,
+          icon: AppIconography.delete,
           destructive: true,
           onSelected: () => unawaited(onAction('delete', session)),
         ),
@@ -1589,7 +1583,7 @@ class _SectionActions extends StatelessWidget {
               key: const ValueKey('search-all-sessions'),
               tooltip: l10n.workspaceSearchAllSessions,
               onPressed: onSearch,
-              icon: const Icon(Icons.manage_search_rounded, size: 21),
+              icon: const Icon(AppIconography.searchList, size: 21),
             )
           else
             Tooltip(
@@ -1601,7 +1595,7 @@ class _SectionActions extends StatelessWidget {
                   minimumSize: const Size(48, 48),
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                 ),
-                icon: const Icon(Icons.manage_search_rounded, size: 19),
+                icon: const Icon(AppIconography.searchList, size: 19),
                 label: Text(l10n.workspaceAllSessions),
               ),
             ),
@@ -1623,7 +1617,7 @@ class _SectionActions extends StatelessWidget {
               value: _SectionAction.refresh,
               enabled: !controller.sessionsLoading,
               child: _MenuRow(
-                icon: Icons.refresh_rounded,
+                icon: AppIconography.retry,
                 label: l10n.sessionsReload,
               ),
             ),
@@ -1634,7 +1628,7 @@ class _SectionActions extends StatelessWidget {
                 key: const ValueKey('workspace-terminal'),
                 value: _SectionAction.terminal,
                 child: _MenuRow(
-                  icon: Icons.terminal_outlined,
+                  icon: AppIconography.terminal,
                   label: l10n.libraryTerminalTitle,
                 ),
               ),
@@ -1647,8 +1641,8 @@ class _SectionActions extends StatelessWidget {
                 value: _SectionAction.background,
                 child: _MenuRow(
                   icon: keepLive
-                      ? Icons.cloud_sync_outlined
-                      : Icons.cloud_off_outlined,
+                      ? AppIconography.sync
+                      : AppIconography.cloudOff,
                   label: keepLive
                       ? 'Stays connected in the background'
                       : 'Background updates off',
@@ -1692,7 +1686,7 @@ class _SwipeArchiveBackground extends StatelessWidget {
       color: scheme.secondaryContainer,
       alignment: AlignmentDirectional.centerEnd,
       padding: const EdgeInsetsDirectional.only(end: 24),
-      child: Icon(Icons.archive_outlined, color: scheme.onSecondaryContainer),
+      child: Icon(AppIconography.archive, color: scheme.onSecondaryContainer),
     );
   }
 }
@@ -1810,7 +1804,7 @@ class _QuickAskPill extends StatelessWidget {
                       dimension: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.add_rounded),
+                  : const Icon(AppIconography.add),
               label: Text(
                 l10n.workspaceNewSession,
                 maxLines: 1,
@@ -1826,7 +1820,7 @@ class _QuickAskPill extends StatelessWidget {
                 tooltip: isolatedTaskLabel ?? l10n.workspaceIsolatedTask,
                 constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 onPressed: creating ? null : isolated,
-                icon: const Icon(Icons.account_tree_outlined),
+                icon: const Icon(AppIconography.branch),
               )
             else
               Tooltip(
@@ -1835,7 +1829,7 @@ class _QuickAskPill extends StatelessWidget {
                   key: const ValueKey('workspace-isolated-task'),
                   onPressed: creating ? null : isolated,
                   style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-                  icon: const Icon(Icons.account_tree_outlined, size: 20),
+                  icon: const Icon(AppIconography.branch, size: 20),
                   label: Text(
                     l10n.workspaceIsolatedTask,
                     maxLines: 1,
@@ -1903,12 +1897,12 @@ class _WorkspaceFolderChooser extends StatelessWidget {
           ListTile(
             key: const ValueKey('location-recovery-notice'),
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.info_outline_rounded),
+            leading: const Icon(AppIconography.info),
             title: Text(notice!),
           ),
         const SizedBox(height: 8),
         Icon(
-          Icons.create_new_folder_outlined,
+          AppIconography.folderAdd,
           size: 40,
           color: theme.colorScheme.primary,
         ),
@@ -1924,21 +1918,21 @@ class _WorkspaceFolderChooser extends StatelessWidget {
           FilledButton.icon(
             key: const ValueKey('workspace-create-folder'),
             onPressed: onCreate,
-            icon: const Icon(Icons.create_new_folder_rounded),
+            icon: const Icon(AppIconography.folderAdd),
             label: Text(l10n.projectFolderCreate),
           ),
         if (canCreate) const SizedBox(height: 8),
         FilledButton.tonalIcon(
           key: const ValueKey('workspace-open-folder'),
           onPressed: onOpen,
-          icon: const Icon(Icons.folder_open_rounded),
+          icon: const Icon(AppIconography.folderOpen),
           label: Text(l10n.projectFolderOpen),
         ),
         const SizedBox(height: 8),
         OutlinedButton.icon(
           key: const ValueKey('workspace-browse-projects'),
           onPressed: onBrowse,
-          icon: const Icon(Icons.folder_copy_outlined),
+          icon: const Icon(AppIconography.folders),
           label: Text(l10n.projectFolderBrowse),
         ),
         if (!canCreate) ...[
@@ -1953,7 +1947,7 @@ class _WorkspaceFolderChooser extends StatelessWidget {
           Text(projectError!, style: TextStyle(color: theme.colorScheme.error)),
           TextButton.icon(
             onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(AppIconography.retry),
             label: Text(l10n.workspaceRetryProjects),
           ),
         ],
@@ -1962,7 +1956,7 @@ class _WorkspaceFolderChooser extends StatelessWidget {
           TextButton.icon(
             key: const ValueKey('workspace-chooser-search-all'),
             onPressed: onSearchAll,
-            icon: const Icon(Icons.manage_search_rounded),
+            icon: const Icon(AppIconography.searchList),
             label: Text(l10n.workspaceSearchAllSessions),
           ),
         ],

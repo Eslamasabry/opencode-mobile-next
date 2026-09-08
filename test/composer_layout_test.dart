@@ -16,6 +16,7 @@ import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:opencode_mobile/state/prompt_photos.dart';
+import 'package:opencode_mobile/ui/app_iconography.dart';
 
 /// Audit UX-P0-03: the composer used to ring the prompt field with five
 /// equal-weight controls, so the field was the least stable element on a
@@ -500,8 +501,8 @@ void main() {
     expect(find.byKey(const Key('composer-tools-button')), findsOneWidget);
     expect(find.byKey(const Key('composer-model-context')), findsOneWidget);
     expect(find.byKey(const Key('chat-send-button')), findsOneWidget);
-    expect(find.byIcon(Icons.attach_file_rounded), findsNothing);
-    expect(find.byIcon(Icons.mic_none_rounded), findsNothing);
+    expect(find.byIcon(AppIconography.attach), findsNothing);
+    expect(find.byIcon(AppIconography.mic), findsNothing);
 
     expect(_fieldShare(tester), greaterThanOrEqualTo(0.9));
     // Measure the actual typing area, not the decoration that used to
@@ -519,8 +520,8 @@ void main() {
     await _pumpChat(tester, controller, size: const Size(360, 420));
 
     expect(find.byKey(const Key('composer-tools-button')), findsOneWidget);
-    expect(find.byIcon(Icons.attach_file_rounded), findsNothing);
-    expect(find.byIcon(Icons.mic_none_rounded), findsNothing);
+    expect(find.byIcon(AppIconography.attach), findsNothing);
+    expect(find.byIcon(AppIconography.mic), findsNothing);
     expect(find.byKey(const Key('composer-model-context')), findsOneWidget);
 
     expect(_fieldShare(tester), greaterThanOrEqualTo(0.9));

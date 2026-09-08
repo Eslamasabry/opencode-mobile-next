@@ -448,19 +448,19 @@ class _ToolCardState extends State<ToolCard> {
 
   IconData _iconFor(_ToolKind kind) {
     return switch (kind) {
-      _ToolKind.shell => Icons.terminal_rounded,
+      _ToolKind.shell => AppIconography.terminal,
       _ToolKind.edit ||
       _ToolKind.write ||
-      _ToolKind.patch => Icons.edit_note_rounded,
-      _ToolKind.read => Icons.description_rounded,
-      _ToolKind.list || _ToolKind.glob => Icons.folder_open_rounded,
-      _ToolKind.grep => Icons.search_rounded,
-      _ToolKind.webFetch || _ToolKind.webSearch => Icons.public_rounded,
-      _ToolKind.todo => Icons.checklist_rounded,
-      _ToolKind.task => Icons.smart_toy_rounded,
-      _ToolKind.question => Icons.help_outline_rounded,
-      _ToolKind.lsp => Icons.description_rounded,
-      _ToolKind.skill || _ToolKind.generic => Icons.build_rounded,
+      _ToolKind.patch => AppIconography.editNote,
+      _ToolKind.read => AppIconography.fileText,
+      _ToolKind.list || _ToolKind.glob => AppIconography.folderOpen,
+      _ToolKind.grep => AppIconography.search,
+      _ToolKind.webFetch || _ToolKind.webSearch => AppIconography.globe,
+      _ToolKind.todo => AppIconography.checklist,
+      _ToolKind.task => AppIconography.agent,
+      _ToolKind.question => AppIconography.question,
+      _ToolKind.lsp => AppIconography.fileText,
+      _ToolKind.skill || _ToolKind.generic => AppIconography.tools,
     };
   }
 
@@ -654,7 +654,7 @@ class _ToolCardState extends State<ToolCard> {
                           )
                         else if (!widget.state.executed)
                           Icon(
-                            Icons.block_rounded,
+                            AppIconography.blocked,
                             size: 14,
                             color: AppTheme.statusColor(
                               theme,
@@ -664,10 +664,10 @@ class _ToolCardState extends State<ToolCard> {
                         else
                           Icon(
                             _running
-                                ? Icons.hourglass_top_rounded
+                                ? AppIconography.waitingStart
                                 : widget.state.status == 'error'
-                                ? Icons.error_outline_rounded
-                                : Icons.check_circle_outline_rounded,
+                                ? AppIconography.error
+                                : AppIconography.checkCircle,
                             size: 14,
                             color: _statusColor,
                           ),
@@ -679,7 +679,7 @@ class _ToolCardState extends State<ToolCard> {
                                 ? Duration.zero
                                 : const Duration(milliseconds: 150),
                             child: Icon(
-                              Icons.expand_more_rounded,
+                              AppIconography.chevronDown,
                               size: 16,
                               color: AppTheme.mutedOf(theme),
                             ),
@@ -1078,7 +1078,7 @@ class _ToolContractBody extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
                 padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
-              icon: const Icon(Icons.open_in_new_rounded, size: 14),
+              icon: const Icon(AppIconography.externalLink, size: 14),
               label: Text(
                 'Open subagent session',
                 style: Theme.of(context).textTheme.labelSmall,
@@ -1231,7 +1231,7 @@ class _TaskHeader extends StatelessWidget {
           const _TaskBadge(
             key: Key('task-background-badge'),
             label: 'background',
-            icon: Icons.schedule_rounded,
+            icon: AppIconography.clock,
           ),
         ],
       ],
@@ -1260,7 +1260,7 @@ class _AgentChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.smart_toy_rounded, size: 12, color: color),
+          Icon(AppIconography.agent, size: 12, color: color),
           const SizedBox(width: 4),
           Text(
             name,
@@ -1424,8 +1424,8 @@ class _TaskPromptState extends State<_TaskPrompt> {
               ),
               icon: Icon(
                 _showFull
-                    ? Icons.unfold_less_rounded
-                    : Icons.unfold_more_rounded,
+                    ? AppIconography.unfoldLess
+                    : AppIconography.unfoldMore,
                 size: 14,
               ),
               label: Text(
@@ -1453,7 +1453,7 @@ class _TaskWorking extends StatelessWidget {
       key: const Key('task-working'),
       children: [
         if (reduceMotion)
-          Icon(Icons.hourglass_top_rounded, size: 12, color: muted)
+          Icon(AppIconography.waitingStart, size: 12, color: muted)
         else
           SizedBox.square(
             dimension: 11,
@@ -1845,7 +1845,7 @@ class _ToolOutputPreview extends StatelessWidget {
             child: Row(
               children: [
                 Icon(
-                  Icons.broken_image_outlined,
+                  AppIconography.imageBroken,
                   size: 18,
                   color: theme.colorScheme.error,
                 ),
@@ -1874,7 +1874,7 @@ class _ToolOutputPreview extends StatelessWidget {
                 IconButton(
                   tooltip: 'Retry image preview',
                   onPressed: onRetry,
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  icon: const Icon(AppIconography.retry, size: 18),
                 ),
               ],
             ),
@@ -1945,7 +1945,7 @@ class _ToolOutputPreview extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.image_outlined, size: 14),
+                            const Icon(AppIconography.image, size: 14),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
@@ -1955,7 +1955,7 @@ class _ToolOutputPreview extends StatelessWidget {
                                 style: theme.textTheme.labelSmall,
                               ),
                             ),
-                            const Icon(Icons.visibility_outlined, size: 13),
+                            const Icon(AppIconography.visible, size: 13),
                           ],
                         ),
                       ),
@@ -2032,10 +2032,7 @@ class _ToolOutputFileTileState extends State<_ToolOutputFileTile> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.insert_drive_file_outlined,
-                    color: theme.colorScheme.primary,
-                  ),
+                  Icon(AppIconography.file, color: theme.colorScheme.primary),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -2066,7 +2063,7 @@ class _ToolOutputFileTileState extends State<_ToolOutputFileTile> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   else
-                    const Icon(Icons.open_in_new_rounded, size: 18),
+                    const Icon(AppIconography.externalLink, size: 18),
                 ],
               ),
             ),
@@ -2099,7 +2096,7 @@ class _SeeAllButton extends StatelessWidget {
         visualDensity: VisualDensity.compact,
         padding: const EdgeInsets.symmetric(horizontal: 8),
       ),
-      icon: const Icon(Icons.open_in_full_rounded, size: 14),
+      icon: const Icon(AppIconography.expand, size: 14),
       label: Text(label, style: Theme.of(context).textTheme.labelSmall),
     ),
   );
@@ -2196,7 +2193,7 @@ class _PrunedNote extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.content_cut_rounded, size: 13, color: muted),
+            Icon(AppIconography.cut, size: 13, color: muted),
             const SizedBox(width: 6),
             Text(
               'Output pruned',

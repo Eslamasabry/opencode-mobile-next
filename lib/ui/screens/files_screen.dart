@@ -809,7 +809,7 @@ class _FilesScreenState extends State<FilesScreen> {
             focusNode: _searchFocus,
             decoration: InputDecoration(
               isDense: true,
-              prefixIcon: const Icon(Icons.search_rounded, size: 20),
+              prefixIcon: const Icon(AppIconography.search, size: 20),
               hintText: _surface == _FileSurface.symbols
                   ? 'Search symbols'
                   : 'Search files',
@@ -820,7 +820,7 @@ class _FilesScreenState extends State<FilesScreen> {
                           ? 'Clear symbol search'
                           : 'Clear file search',
                       icon: Icon(
-                        Icons.clear_rounded,
+                        AppIconography.close,
                         size: 18,
                         semanticLabel: _surface == _FileSurface.symbols
                             ? 'Clear symbol search'
@@ -1012,9 +1012,9 @@ class _FilesScreenState extends State<FilesScreen> {
                 selected: node.path == _selectedPath,
                 leading: Icon(
                   node.isDir
-                      ? Icons.folder_rounded
+                      ? AppIconography.files
                       : change?.status == 'deleted'
-                      ? Icons.remove_circle_outline_rounded
+                      ? AppIconography.removeCircle
                       : _fileTypeIcon(node.name),
                   size: 20,
                   color: change?.status == 'deleted'
@@ -1078,7 +1078,7 @@ class _FilesScreenState extends State<FilesScreen> {
                   dense: true,
                   leading: Icon(
                     node.isDir
-                        ? Icons.folder_rounded
+                        ? AppIconography.files
                         : _fileTypeIcon(node.name),
                   ),
                   title: Text(
@@ -1135,21 +1135,21 @@ class _FilesScreenState extends State<FilesScreen> {
         ContextMenuAction(
           menuKey: const ValueKey('file-menu-open'),
           label: 'Open folder',
-          icon: Icons.folder_open_rounded,
+          icon: AppIconography.folderOpen,
           onSelected: () => _navigateTo(node.path),
         )
       else if (!deleted) ...[
         ContextMenuAction(
           menuKey: const ValueKey('file-menu-open'),
           label: 'Open',
-          icon: Icons.open_in_new_rounded,
+          icon: AppIconography.externalLink,
           onSelected: () => _openFile(node),
         ),
         if (widget.onAttachFile != null)
           ContextMenuAction(
             menuKey: const ValueKey('file-menu-attach'),
             label: 'Attach to prompt',
-            icon: Icons.attach_file_rounded,
+            icon: AppIconography.attach,
             onSelected: () => unawaited(_attachFile(path)),
           ),
         if (widget.handoff != null)
@@ -1164,7 +1164,7 @@ class _FilesScreenState extends State<FilesScreen> {
         ContextMenuAction(
           menuKey: const ValueKey('file-menu-review'),
           label: 'Open in Review',
-          icon: Icons.difference_outlined,
+          icon: AppIconography.review,
           onSelected: () => unawaited(_reviewFileChange(node)),
         ),
       ContextMenuAction(
@@ -1257,15 +1257,15 @@ class _FilesScreenState extends State<FilesScreen> {
       'cs' ||
       'rb' ||
       'php' ||
-      'sh' => Icons.code_rounded,
+      'sh' => AppIconography.code,
       'png' ||
       'jpg' ||
       'jpeg' ||
       'gif' ||
       'webp' ||
       'svg' ||
-      'ico' => Icons.image_outlined,
-      'md' || 'txt' || 'rst' || 'pdf' => Icons.article_outlined,
+      'ico' => AppIconography.image,
+      'md' || 'txt' || 'rst' || 'pdf' => AppIconography.article,
       'json' ||
       'yaml' ||
       'yml' ||
@@ -1274,9 +1274,9 @@ class _FilesScreenState extends State<FilesScreen> {
       'ini' ||
       'lock' ||
       'gradle' ||
-      'properties' => Icons.data_object_rounded,
-      'zip' || 'tar' || 'gz' || 'jar' || 'apk' => Icons.folder_zip_outlined,
-      _ => Icons.description_outlined,
+      'properties' => AppIconography.dataObject,
+      'zip' || 'tar' || 'gz' || 'jar' || 'apk' => AppIconography.zip,
+      _ => AppIconography.fileText,
     };
   }
 
@@ -1356,7 +1356,7 @@ class _FilesScreenState extends State<FilesScreen> {
     }
     if (_search.text.trim().isEmpty) {
       return const ProductEmptyState(
-        icon: Icons.data_object_rounded,
+        icon: AppIconography.dataObject,
         title: 'Search workspace symbols',
         message: 'Find classes, functions, methods, and variables by name.',
       );
@@ -1398,7 +1398,7 @@ class _FilesScreenState extends State<FilesScreen> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              trailing: const Icon(Icons.chevron_right_rounded),
+              trailing: const Icon(AppIconography.chevronRight),
               onTap: () => _openSymbol(symbol),
             );
           },
@@ -1431,11 +1431,11 @@ class _FilesScreenState extends State<FilesScreen> {
   };
 
   static IconData _symbolIcon(int kind) => switch (kind) {
-    5 || 10 || 11 || 23 => Icons.category_outlined,
-    6 || 9 || 12 => Icons.functions_rounded,
-    7 || 8 || 13 || 14 => Icons.data_object_rounded,
-    1 || 2 || 3 || 4 => Icons.folder_copy_outlined,
-    _ => Icons.code_rounded,
+    5 || 10 || 11 || 23 => AppIconography.category,
+    6 || 9 || 12 => AppIconography.function,
+    7 || 8 || 13 || 14 => AppIconography.dataObject,
+    1 || 2 || 3 || 4 => AppIconography.folders,
+    _ => AppIconography.code,
   };
 
   @override
@@ -1544,7 +1544,7 @@ class _ChangesCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.chevron_right_rounded, size: 20),
+                  const Icon(AppIconography.chevronRight, size: 20),
                 ],
               ),
             ),
@@ -1616,7 +1616,7 @@ class _ChangesSheet extends StatelessWidget {
                       context,
                       const _ChangeChoice(_ChangeAction.reviewAll),
                     ),
-                    icon: const Icon(Icons.rate_review_outlined, size: 18),
+                    icon: const Icon(AppIconography.feedback, size: 18),
                     label: const Text('Review all changes'),
                   ),
                 ),
@@ -1704,7 +1704,7 @@ class _FileStatusNotice extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            Icons.info_outline_rounded,
+            AppIconography.info,
             size: 18,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
@@ -2074,7 +2074,7 @@ class __FileViewerState extends State<_FileViewer> {
                               dimension: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.attach_file_rounded, size: 19),
+                          : const Icon(AppIconography.attach, size: 19),
                     ),
                   TextButton.icon(
                     key: const Key('project-file-download'),
@@ -2087,11 +2087,11 @@ class __FileViewerState extends State<_FileViewer> {
                             dimension: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.download_rounded, size: 19),
+                        : const Icon(AppIconography.download, size: 19),
                   ),
                   TextButton.icon(
                     label: Text(l10n.fileReload),
-                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    icon: const Icon(AppIconography.retry, size: 18),
                     onPressed: _scopeInvalid ? null : _fetch,
                   ),
                 ],

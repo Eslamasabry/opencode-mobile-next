@@ -126,7 +126,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'Disconnect from ${widget.controller.profile?.name ?? 'this server'}?',
       message: _disconnectDisclosure(),
       confirmLabel: 'Disconnect',
-      icon: Icons.link_off_rounded,
+      icon: AppIconography.unlink,
       destructive: true,
       sheetKey: const ValueKey('disconnect-confirm-sheet'),
       confirmKey: const ValueKey('confirm-disconnect'),
@@ -172,7 +172,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 minLeadingWidth: 32,
                 horizontalTitleGap: 12,
                 leading: _CategoryIcon(
-                  icon: Icons.dns_outlined,
+                  icon: AppIconography.server,
                   color: healthy
                       ? AppTheme.successOf(theme)
                       : _healthError != null
@@ -193,20 +193,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           dimension: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.refresh_rounded),
+                      : const Icon(AppIconography.retry),
                 ),
               ),
             ),
             const SizedBox(height: 8),
             _CategoryRow(
               rowKey: 'settings-category-server',
-              icon: Icons.dns_outlined,
+              icon: AppIconography.server,
               title: 'Server',
               onTap: () => _open(ServerSettingsScreen(controller: controller)),
             ),
             _CategoryRow(
               rowKey: 'settings-category-coding',
-              icon: Icons.terminal_rounded,
+              icon: AppIconography.terminal,
               title: 'Coding defaults',
               onTap: () => _open(CodingSettingsScreen(controller: controller)),
             ),
@@ -215,7 +215,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             if (platformCapabilities.supportsBackgroundService)
               _CategoryRow(
                 rowKey: 'settings-category-background',
-                icon: Icons.notifications_active_outlined,
+                icon: AppIconography.notificationImportant,
                 title: 'Notifications & background',
                 subtitle: _backgroundSummary(controller),
                 onTap: () =>
@@ -223,7 +223,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             _CategoryRow(
               rowKey: 'settings-category-appearance',
-              icon: Icons.palette_outlined,
+              icon: AppIconography.appearance,
               title: 'Appearance',
               subtitle:
                   '${appearanceLabel(controller.appearance.value)} · ${themePackLabels[controller.themePack.value]}',
@@ -232,14 +232,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             _CategoryRow(
               rowKey: 'settings-category-privacy',
-              icon: Icons.admin_panel_settings_outlined,
+              icon: AppIconography.privacy,
               title: 'Privacy & permissions',
               onTap: () => _open(PrivacySettingsScreen(controller: controller)),
             ),
             if (controller.supportsUsageStatistics)
               _CategoryRow(
                 rowKey: 'settings-category-usage',
-                icon: Icons.bar_chart_rounded,
+                icon: AppIconography.usage,
                 title: lookupAppLocalizations(
                   Localizations.localeOf(context),
                 ).usageTitle,
@@ -248,7 +248,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             if (profile != null)
               _CategoryRow(
                 rowKey: 'settings-category-quota',
-                icon: Icons.speed_rounded,
+                icon: AppIconography.speed,
                 title: lookupAppLocalizations(
                   Localizations.localeOf(context),
                 ).quotaTitle,
@@ -259,14 +259,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             _CategoryRow(
               rowKey: 'settings-category-diagnostics',
-              icon: Icons.health_and_safety_outlined,
+              icon: AppIconography.privacy,
               title: 'Diagnostics',
               onTap: () =>
                   _open(DiagnosticsSettingsScreen(controller: controller)),
             ),
             _CategoryRow(
               rowKey: 'settings-category-about',
-              icon: Icons.info_outline_rounded,
+              icon: AppIconography.info,
               title: 'About',
               onTap: () => _open(AboutSettingsScreen(controller: controller)),
             ),
@@ -279,7 +279,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 key: const ValueKey('settings-disconnect'),
                 onPressed: _disconnect,
-                icon: const Icon(Icons.link_off_rounded),
+                icon: const Icon(AppIconography.unlink),
                 label: const Text('Disconnect'),
               ),
             ),
@@ -322,7 +322,7 @@ class _CategoryRow extends StatelessWidget {
       leading: _CategoryIcon(icon: icon),
       title: Text(title),
       subtitle: subtitle == null ? null : Text(subtitle!),
-      trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+      trailing: const Icon(AppIconography.chevronRight, size: 20),
       onTap: onTap,
     );
   }

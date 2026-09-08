@@ -64,7 +64,7 @@ class _CommandAuthSheetState extends State<_CommandAuthSheet> {
     try {
       final confirmed = await showConfirmSheet(
         context,
-        icon: Icons.terminal_rounded,
+        icon: AppIconography.terminal,
         title: _l10n.commandAuthConfirmTitle,
         message: _l10n.commandAuthConfirmDetail,
         confirmLabel: _l10n.commandAuthStart,

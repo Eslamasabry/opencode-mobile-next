@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'desktop_interaction.dart';
+import '../app_iconography.dart';
 
 // =====================================================================
 // Intents
@@ -473,7 +474,7 @@ class _CommandPaletteState extends State<_CommandPalette> {
                   onSubmitted: (_) => _runHighlighted(),
                   decoration: const InputDecoration(
                     isDense: true,
-                    prefixIcon: Icon(Icons.bolt_rounded, size: 20),
+                    prefixIcon: Icon(AppIconography.lightning, size: 20),
                     hintText: 'Type a command…',
                     border: OutlineInputBorder(),
                   ),

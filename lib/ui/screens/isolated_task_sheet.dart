@@ -189,7 +189,7 @@ class _IsolatedTaskSheetState extends State<IsolatedTaskSheet> {
                       minHeight: 48,
                     ),
                     onPressed: busy ? null : _close,
-                    icon: const Icon(Icons.close_rounded),
+                    icon: const Icon(AppIconography.close),
                   ),
                 ],
               ),
@@ -237,7 +237,7 @@ class _IsolatedTaskSheetState extends State<IsolatedTaskSheet> {
     FilledButton.icon(
       key: const Key('isolated-task-start'),
       onPressed: _start,
-      icon: const Icon(Icons.account_tree_outlined),
+      icon: const Icon(AppIconography.branch),
       label: Text(l10n.isolatedTaskStart),
     ),
   ];
@@ -313,11 +313,12 @@ class _IsolatedTaskSheetState extends State<IsolatedTaskSheet> {
                       )
                     : Icon(
                         switch (launch.phase) {
-                          IsolatedTaskPhase.failed => Icons.error_outline,
-                          IsolatedTaskPhase.unconfirmed => Icons.help_outline,
+                          IsolatedTaskPhase.failed => AppIconography.error,
+                          IsolatedTaskPhase.unconfirmed =>
+                            AppIconography.question,
                           IsolatedTaskPhase.opened =>
-                            Icons.check_circle_outline,
-                          _ => Icons.info_outline,
+                            AppIconography.checkCircle,
+                          _ => AppIconography.info,
                         },
                         size: 20,
                         color: launch.phase == IsolatedTaskPhase.failed

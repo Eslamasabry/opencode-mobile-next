@@ -10,6 +10,7 @@ import '../../state/connection.dart';
 import '../../state/shell_output.dart';
 import '../widgets/product_states.dart';
 import '../widgets/running_agents_strip.dart';
+import '../app_iconography.dart';
 
 AppLocalizations _strings(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
@@ -207,12 +208,12 @@ class _RunningWorkSheetState extends State<RunningWorkSheet>
                 IconButton(
                   tooltip: l10n.workRefresh,
                   onPressed: disconnected || !_scopeMatches ? null : _refresh,
-                  icon: const Icon(Icons.refresh_rounded),
+                  icon: const Icon(AppIconography.retry),
                 ),
                 IconButton(
                   tooltip: l10n.workClose,
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(AppIconography.close),
                 ),
               ],
             ),
@@ -237,7 +238,7 @@ class _RunningWorkSheetState extends State<RunningWorkSheet>
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Column(
                     children: [
-                      const Icon(Icons.task_alt_rounded, size: 32),
+                      const Icon(AppIconography.checkCircle, size: 32),
                       const SizedBox(height: 12),
                       Text(l10n.workEmpty, style: theme.textTheme.titleMedium),
                       const SizedBox(height: 4),
@@ -254,14 +255,14 @@ class _RunningWorkSheetState extends State<RunningWorkSheet>
                   ListTile(
                     key: ValueKey('work-agent-${entry.session.id}'),
                     contentPadding: const EdgeInsets.symmetric(vertical: 4),
-                    leading: const Icon(Icons.account_tree_outlined),
+                    leading: const Icon(AppIconography.branch),
                     title: Text(
                       entry.label,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     subtitle: Text(l10n.workRunning),
-                    trailing: const Icon(Icons.chevron_right_rounded),
+                    trailing: const Icon(AppIconography.chevronRight),
                     onTap: () => Navigator.pop(context, entry.session.id),
                   ),
               ],
@@ -272,7 +273,7 @@ class _RunningWorkSheetState extends State<RunningWorkSheet>
                   ListTile(
                     key: ValueKey('work-shell-${shell.id}'),
                     contentPadding: const EdgeInsets.symmetric(vertical: 6),
-                    leading: const Icon(Icons.terminal_rounded),
+                    leading: const Icon(AppIconography.terminal),
                     title: Text(
                       shell.command,
                       maxLines: 3,
@@ -284,7 +285,7 @@ class _RunningWorkSheetState extends State<RunningWorkSheet>
                         _elapsed(shell),
                       ),
                     ),
-                    trailing: const Icon(Icons.chevron_right_rounded),
+                    trailing: const Icon(AppIconography.chevronRight),
                     onTap: disconnected
                         ? null
                         : () async {
@@ -564,14 +565,14 @@ class _ShellOutputScreenState extends State<ShellOutputScreen>
                       ).showSnackBar(SnackBar(content: Text(l10n.workCopied)));
                     }
                   },
-            icon: const Icon(Icons.copy_rounded),
+            icon: const Icon(AppIconography.copy),
           ),
           IconButton(
             tooltip: l10n.workRefresh,
             onPressed: _sameScope && _connected && !_stopped
                 ? () => _refresh(reconcile: true)
                 : null,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(AppIconography.retry),
           ),
         ],
       ),
@@ -614,7 +615,7 @@ class _ShellOutputScreenState extends State<ShellOutputScreen>
                   children: [
                     OutlinedButton.icon(
                       onPressed: _canMutate ? _timeout : null,
-                      icon: const Icon(Icons.timer_outlined),
+                      icon: const Icon(AppIconography.timer),
                       label: Text(l10n.workTimeout),
                     ),
                     TextButton.icon(
@@ -622,7 +623,7 @@ class _ShellOutputScreenState extends State<ShellOutputScreen>
                         foregroundColor: theme.colorScheme.error,
                       ),
                       onPressed: _canMutate ? _stop : null,
-                      icon: const Icon(Icons.stop_circle_outlined),
+                      icon: const Icon(AppIconography.stopCircle),
                       label: Text(l10n.workStop),
                     ),
                   ],

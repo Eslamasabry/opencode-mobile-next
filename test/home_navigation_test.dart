@@ -153,7 +153,9 @@ void main() {
         );
         await tester.pumpAndSettle();
         final dock = tester.getRect(find.byType(GlassSurface));
-        final icon = tester.getRect(find.byIcon(Icons.workspaces_rounded));
+        final icon = tester.getRect(
+          find.byIcon(AppIconography.workspaceSelected),
+        );
         expect(icon.top, greaterThanOrEqualTo(dock.top + 4));
         for (final label in ['Workspace', 'Files', 'Activity', 'More']) {
           final rect = tester.getRect(
@@ -209,7 +211,7 @@ void main() {
         ),
       );
       await _pumpShell(tester, controller);
-      await tester.tap(find.byIcon(Icons.folder_outlined));
+      await tester.tap(find.byIcon(AppIconography.files));
       await tester.pumpAndSettle();
       await tester.tap(find.text('lib'));
       await tester.pumpAndSettle();
@@ -272,11 +274,11 @@ void main() {
       ..api = api;
     addTearDown(controller.dispose);
     await _pumpShell(tester, controller);
-    await tester.tap(find.byIcon(Icons.folder_outlined));
+    await tester.tap(find.byIcon(AppIconography.files));
     await tester.pumpAndSettle();
     await tester.tap(find.text('lib'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.more_horiz_rounded));
+    await tester.tap(find.byIcon(AppIconography.more));
     await tester.pumpAndSettle();
     final loads = api.paths.length;
     await tester.binding.handlePopRoute();
@@ -297,7 +299,7 @@ void main() {
       ..api = api;
     addTearDown(controller.dispose);
     await _pumpShell(tester, controller);
-    await tester.tap(find.byIcon(Icons.folder_outlined));
+    await tester.tap(find.byIcon(AppIconography.files));
     await tester.pumpAndSettle();
     await tester.tap(find.text('lib'));
     await tester.pumpAndSettle();
@@ -305,9 +307,9 @@ void main() {
     await tester.enterText(search, 'needle');
     await tester.pump(const Duration(milliseconds: 400));
     final loads = api.paths.length;
-    await tester.tap(find.byIcon(Icons.more_horiz_rounded));
+    await tester.tap(find.byIcon(AppIconography.more));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.folder_outlined));
+    await tester.tap(find.byIcon(AppIconography.files));
     await tester.pumpAndSettle();
     expect(tester.widget<TextField>(search).controller!.text, 'needle');
     expect(api.paths.last, 'lib');
@@ -321,7 +323,7 @@ void main() {
     final controller = await _controller();
     addTearDown(controller.dispose);
     await _pumpShell(tester, controller);
-    await tester.tap(find.byIcon(Icons.notifications_outlined));
+    await tester.tap(find.byIcon(AppIconography.activity));
     await tester.pumpAndSettle();
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
@@ -348,7 +350,7 @@ void main() {
           .animationDuration,
       Duration.zero,
     );
-    await tester.tap(find.byIcon(Icons.more_horiz_rounded));
+    await tester.tap(find.byIcon(AppIconography.more));
     await tester.pump();
     expect(
       tester.widget<Text>(find.byKey(const ValueKey('current-tab-title'))).data,
@@ -373,7 +375,7 @@ void main() {
     expect(dock.left, 16);
     expect(dock.right, 374);
     expect(dock.height, 72);
-    final icon = tester.getRect(find.byIcon(Icons.workspaces_rounded));
+    final icon = tester.getRect(find.byIcon(AppIconography.workspaceSelected));
     expect(icon.top - dock.top, greaterThanOrEqualTo(8));
     final label = tester.getRect(
       find.descendant(
@@ -440,7 +442,7 @@ void main() {
     addTearDown(controller.dispose);
 
     await _pumpShell(tester, controller);
-    await tester.tap(find.byIcon(Icons.notifications_outlined));
+    await tester.tap(find.byIcon(AppIconography.activity));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 

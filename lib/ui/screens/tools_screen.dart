@@ -128,7 +128,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
           IconButton(
             tooltip: 'Refresh tools',
             onPressed: _model == null ? null : _load,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(AppIconography.retry),
           ),
         ],
       ),
@@ -137,7 +137,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
   }
 
   Widget _noModel() => ProductEmptyState(
-    icon: Icons.build_circle_outlined,
+    icon: AppIconography.tools,
     title: 'Choose a model',
     message:
         'OpenCode tools depend on the provider and model used by the active chat.',
@@ -158,7 +158,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
             padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
             child: Row(
               children: [
-                const Icon(Icons.model_training_outlined),
+                const Icon(AppIconography.model),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -184,7 +184,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
                   IconButton(
                     tooltip: 'Refresh tools',
                     onPressed: _load,
-                    icon: const Icon(Icons.refresh_rounded),
+                    icon: const Icon(AppIconography.retry),
                   ),
                 TextButton(
                   onPressed: _chooseModel,
@@ -206,7 +206,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
               hintText: tools == null
                   ? 'Search tools'
                   : 'Search ${tools.length} tools',
-              prefixIcon: const Icon(Icons.search_rounded),
+              prefixIcon: const Icon(AppIconography.search),
               suffixIcon: _query.isEmpty
                   ? null
                   : IconButton(
@@ -215,7 +215,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
                         _search.clear();
                         setState(() => _query = '');
                       },
-                      icon: const Icon(Icons.close_rounded),
+                      icon: const Icon(AppIconography.close),
                     ),
               border: const OutlineInputBorder(),
               isDense: true,
@@ -295,9 +295,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
     ];
     if (callable.isEmpty && registeredOnly.isEmpty) {
       return ProductEmptyState(
-        icon: _query.isEmpty
-            ? Icons.build_circle_outlined
-            : Icons.search_off_rounded,
+        icon: _query.isEmpty ? AppIconography.tools : Icons.search_off_rounded,
         title: _query.isEmpty ? 'No tools for this model' : 'No matching tools',
         message: _query.isEmpty
             ? 'OpenCode returned no callable tools for this provider and model.'
@@ -360,7 +358,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          const Icon(Icons.chevron_right_rounded),
+          const Icon(AppIconography.chevronRight),
         ],
       ),
     ),

@@ -21,6 +21,7 @@ import 'package:opencode_mobile/ui/widgets/provider_logo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fixtures.dart';
+import 'package:opencode_mobile/ui/app_iconography.dart';
 
 const _outputDir = 'docs/qa/isolated-task';
 const _worktreeDirectory = '/home/dev/worktrees/shopfront/checkout-retry';
@@ -128,7 +129,7 @@ Widget _host(_Controller controller) => Scaffold(
   body: Builder(
     builder: (context) => Center(
       child: FilledButton.icon(
-        icon: const Icon(Icons.account_tree_outlined),
+        icon: const Icon(AppIconography.branch),
         label: const Text('Start a task in a fresh worktree'),
         onPressed: () => showIsolatedTaskSheet(
           context,

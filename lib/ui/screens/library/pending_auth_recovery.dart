@@ -58,7 +58,7 @@ class _PendingAuthRecoveryTileState extends State<_PendingAuthRecoveryTile> {
       if (forget) {
         final confirmed = await showConfirmSheet(
           context,
-          icon: Icons.delete_outline_rounded,
+          icon: AppIconography.delete,
           title: _l10n.pendingAuthForget,
           message: _l10n.pendingAuthForgetDetail,
           confirmLabel: _l10n.pendingAuthForget,
@@ -190,7 +190,7 @@ class _UncertainAuthRecoveryTile extends StatelessWidget {
               final location = controller.locationRevision;
               final confirmed = await showConfirmSheet(
                 context,
-                icon: Icons.delete_outline_rounded,
+                icon: AppIconography.delete,
                 title: l10n.uncertainAuthForgetTitle,
                 message: l10n.uncertainAuthForgetDetail,
                 confirmLabel: l10n.uncertainAuthForget,

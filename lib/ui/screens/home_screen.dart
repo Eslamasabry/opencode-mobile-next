@@ -128,8 +128,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       (
         id: 0,
         destination: const NavigationDestination(
-          icon: Icon(Icons.workspaces_outline),
-          selectedIcon: Icon(Icons.workspaces_rounded),
+          icon: AppGlyph(AppIconography.workspace),
+          selectedIcon: AppGlyph(AppIconography.workspaceSelected),
           label: 'Workspace',
         ),
       ),
@@ -137,21 +137,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         (
           id: 1,
           destination: const NavigationDestination(
-            icon: Icon(Icons.folder_outlined),
-            selectedIcon: Icon(Icons.folder_rounded),
+            icon: AppGlyph(AppIconography.files),
+            selectedIcon: AppGlyph(AppIconography.filesSelected),
             label: 'Files',
           ),
         ),
       (
         id: 2,
         destination: NavigationDestination(
-          icon: _ActivityIcon(
-            pending: pending,
-            icon: Icons.notifications_outlined,
-          ),
+          icon: _ActivityIcon(pending: pending, icon: AppIconography.activity),
           selectedIcon: _ActivityIcon(
             pending: pending,
-            icon: Icons.notifications_rounded,
+            icon: AppIconography.activitySelected,
           ),
           label: 'Activity',
         ),
@@ -159,8 +156,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       (
         id: 3,
         destination: const NavigationDestination(
-          icon: Icon(Icons.more_horiz_rounded),
-          selectedIcon: Icon(Icons.more_horiz_rounded),
+          icon: Icon(AppIconography.more),
+          selectedIcon: Icon(AppIconography.more),
           label: 'More',
         ),
       ),
@@ -187,7 +184,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             // the More tab; this overflow holds only connection-level acts.
             IconButton(
               tooltip: 'Model / agent',
-              icon: const Icon(Icons.tune_rounded),
+              icon: const Icon(AppIconography.settings),
               onPressed: () => showModelPicker(context),
             ),
             PopupMenuButton<String>(
@@ -405,13 +402,13 @@ class _ActivityIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (pending <= 0) return Icon(icon);
+    if (pending <= 0) return AppGlyph(icon);
     return Semantics(
       label: '$pending item${pending == 1 ? '' : 's'} need attention',
       child: Badge(
         key: const ValueKey('activity-pending-badge'),
         label: Text('$pending'),
-        child: Icon(icon),
+        child: AppGlyph(icon),
       ),
     );
   }

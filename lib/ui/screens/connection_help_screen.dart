@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../platform/connection_advice.dart';
+import '../app_iconography.dart';
 
 /// Visit-scoped text only: no profile, repository, transport or persistence.
 class ConnectionHelpScreen extends StatefulWidget {
@@ -130,7 +131,7 @@ class _ConnectionHelpScreenState extends State<ConnectionHelpScreen> {
           Expanded(child: SelectableText(example)),
           IconButton(
             tooltip: l10n.connectionHelpCopyExample,
-            icon: const Icon(Icons.copy_rounded),
+            icon: const Icon(AppIconography.copy),
             onPressed: () async {
               var copied = false;
               try {

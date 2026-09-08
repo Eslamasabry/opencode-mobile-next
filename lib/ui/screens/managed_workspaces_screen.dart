@@ -90,7 +90,8 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
     setState(() => _syncing = true);
     try {
       final repository = await widget.controller.prepareActionRepository();
-      if (repository == null) throw const ProductException('OpenCode is reconnecting.');
+      if (repository == null)
+        throw const ProductException('OpenCode is reconnecting.');
       await repository.syncWorkspaceList(
         projectDirectory: widget.project.directory,
       );
@@ -114,7 +115,8 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
     setState(() => _creating = true);
     try {
       final repository = await widget.controller.prepareActionRepository();
-      if (repository == null) throw const ProductException('OpenCode is reconnecting.');
+      if (repository == null)
+        throw const ProductException('OpenCode is reconnecting.');
       final workspace = await repository.createManagedWorkspace(
         projectDirectory: widget.project.directory,
         type: draft.type,
@@ -168,7 +170,8 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
         if (locationError != null) throw ProductException(locationError);
       }
       final repository = await widget.controller.prepareActionRepository();
-      if (repository == null) throw const ProductException('OpenCode is reconnecting.');
+      if (repository == null)
+        throw const ProductException('OpenCode is reconnecting.');
       await repository.removeManagedWorkspace(
         projectDirectory: widget.project.directory,
         id: workspace.id,
@@ -204,12 +207,12 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
                     dimension: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.sync_rounded),
+                : const Icon(AppIconography.sync),
           ),
           IconButton(
             tooltip: 'Refresh cloud environments',
             onPressed: busy || _loading ? null : _load,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(AppIconography.retry),
           ),
         ],
       ),
@@ -222,7 +225,7 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
                       dimension: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.add_rounded),
+                  : const Icon(AppIconography.add),
               label: const Text('New environment'),
             )
           : null,
@@ -244,7 +247,7 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
               ),
               if (workspaces?.isEmpty == true)
                 ProductEmptyState(
-                  icon: Icons.cloud_queue_rounded,
+                  icon: AppIconography.cloud,
                   title: 'No cloud environments',
                   message:
                       'Adapter-backed environments for ${widget.project.name} '
@@ -263,13 +266,13 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
                   ),
               if (_workspaceError != null && workspaces != null)
                 ListTile(
-                  leading: const Icon(Icons.error_outline_rounded),
+                  leading: const Icon(AppIconography.error),
                   title: const Text('Environment refresh failed'),
                   subtitle: Text(_workspaceError!),
                   trailing: IconButton(
                     tooltip: 'Retry cloud environments',
                     onPressed: _load,
-                    icon: const Icon(Icons.refresh_rounded),
+                    icon: const Icon(AppIconography.retry),
                   ),
                 ),
             ],
@@ -277,13 +280,13 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
             if (_adapterError != null && adapters == null)
               ListTile(
                 key: const ValueKey('workspace-adapter-error'),
-                leading: const Icon(Icons.error_outline_rounded),
+                leading: const Icon(AppIconography.error),
                 title: const Text('Adapters unavailable'),
                 subtitle: Text(_adapterError!),
                 trailing: IconButton(
                   tooltip: 'Retry workspace adapters',
                   onPressed: _load,
-                  icon: const Icon(Icons.refresh_rounded),
+                  icon: const Icon(AppIconography.retry),
                 ),
               )
             else if (adapters?.isEmpty == true)
@@ -297,7 +300,7 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
             else
               for (final adapter in adapters ?? const <WorkspaceAdapterInfo>[])
                 ListTile(
-                  leading: const Icon(Icons.extension_outlined),
+                  leading: const Icon(AppIconography.extensions),
                   title: Text(adapter.name),
                   subtitle: Text(
                     '${adapter.description}\n${adapter.type}',
@@ -307,13 +310,13 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
                 ),
             if (_adapterError != null && adapters != null)
               ListTile(
-                leading: const Icon(Icons.error_outline_rounded),
+                leading: const Icon(AppIconography.error),
                 title: const Text('Adapter refresh failed'),
                 subtitle: Text(_adapterError!),
                 trailing: IconButton(
                   tooltip: 'Retry workspace adapters',
                   onPressed: _load,
-                  icon: const Icon(Icons.refresh_rounded),
+                  icon: const Icon(AppIconography.retry),
                 ),
               ),
           ],
@@ -343,23 +346,19 @@ class _WorkspaceTile extends StatelessWidget {
     final status = workspace.status?.toLowerCase();
     final theme = Theme.of(context);
     final (icon, tone, label) = switch (status) {
-      'connected' => (Icons.cloud_done_outlined, AppStatusTone.ok, 'Connected'),
+      'connected' => (AppIconography.cloudCheck, AppStatusTone.ok, 'Connected'),
       'connecting' => (
-        Icons.cloud_sync_outlined,
+        AppIconography.sync,
         AppStatusTone.progress,
         'Connecting',
       ),
-      'error' => (Icons.cloud_off_outlined, AppStatusTone.failure, 'Error'),
+      'error' => (AppIconography.cloudOff, AppStatusTone.failure, 'Error'),
       'disconnected' => (
-        Icons.cloud_off_outlined,
+        AppIconography.cloudOff,
         AppStatusTone.neutral,
         'Disconnected',
       ),
-      _ => (
-        Icons.cloud_queue_outlined,
-        AppStatusTone.neutral,
-        'Status unknown',
-      ),
+      _ => (AppIconography.cloud, AppStatusTone.neutral, 'Status unknown'),
     };
     final color = AppTheme.statusColor(theme, tone);
     final detail = [
@@ -406,13 +405,13 @@ class _WorkspaceTile extends StatelessWidget {
               ContextMenuAction(
                 menuKey: const ValueKey('environment-menu-open'),
                 label: active ? 'Open again' : 'Open',
-                icon: Icons.open_in_new_rounded,
+                icon: AppIconography.externalLink,
                 onSelected: onOpen,
               ),
               ContextMenuAction(
                 menuKey: const ValueKey('environment-menu-remove'),
                 label: 'Remove',
-                icon: Icons.delete_outline_rounded,
+                icon: AppIconography.delete,
                 destructive: true,
                 onSelected: onRemove,
               ),

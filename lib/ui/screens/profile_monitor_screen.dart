@@ -100,7 +100,7 @@ class ProfileMonitorScreen extends StatelessWidget {
           IconButton(
             tooltip: l10n.monitorRefresh,
             onPressed: controller.profileMonitor.refresh,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(AppIconography.retry),
           ),
         ],
       ),
@@ -145,7 +145,7 @@ class ProfileMonitorInbox extends StatelessWidget {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final monitor = controller.profileMonitor;
     final summary = ListTile(
-      leading: const Icon(Icons.dns_outlined),
+      leading: const Icon(AppIconography.server),
       title: Text(compact ? l10n.activitySavedServers : l10n.monitorTitle),
       subtitle: Text(
         compact
@@ -163,7 +163,7 @@ class ProfileMonitorInbox extends StatelessWidget {
                 controller.unknownAttentionProfileCount,
               ),
       ),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: const Icon(AppIconography.chevronRight),
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => ProfileMonitorScreen(controller: controller),
@@ -226,7 +226,7 @@ class _MonitorRequestRow extends StatelessWidget {
       child: ListTile(
         key: ValueKey('monitor-row-${request.identity}'),
         leading: request.kind == MonitoredRequestKind.checkIn
-            ? const Icon(Icons.hourglass_top_rounded, size: 20)
+            ? const Icon(AppIconography.waitingStart, size: 20)
             : const ServerAttentionDot(current: true),
         title: Text(
           request.title?.trim().isNotEmpty == true
@@ -275,7 +275,7 @@ class ServerAttentionDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ExcludeSemantics(
     child: Icon(
-      Icons.circle,
+      AppIconography.statusDot,
       size: 12,
       color: AppTheme.statusColor(
         Theme.of(context),
@@ -561,12 +561,12 @@ class _BusyIntervalRow extends StatelessWidget {
       key: ValueKey('monitor-busy-${interval.sessionID}'),
       contentPadding: EdgeInsets.zero,
       leading: Icon(
-        due ? Icons.hourglass_top_rounded : Icons.hourglass_empty_rounded,
+        due ? AppIconography.waitingStart : AppIconography.waitingEmpty,
         color: due ? Theme.of(context).colorScheme.primary : null,
       ),
       title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
       subtitle: Text(due ? '${l10n.monitorCheckInDue} · $observed' : observed),
-      trailing: due ? const Icon(Icons.chevron_right) : null,
+      trailing: due ? const Icon(AppIconography.chevronRight) : null,
       onTap: () => openMonitoredRequest(
         context,
         controller,

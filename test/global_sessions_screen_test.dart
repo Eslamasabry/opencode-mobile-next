@@ -11,6 +11,7 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/global_sessions_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:opencode_mobile/ui/app_iconography.dart';
 
 typedef _SessionQuery = ({
   String? search,
@@ -769,7 +770,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Continue here lives in each row's overflow menu, never as a row icon.
-    expect(find.byIcon(Icons.move_to_inbox_rounded), findsNothing);
+    expect(find.byIcon(AppIconography.inbox), findsNothing);
     for (final (id, offered) in const [
       ('ses_1', false),
       ('ses_2', false),

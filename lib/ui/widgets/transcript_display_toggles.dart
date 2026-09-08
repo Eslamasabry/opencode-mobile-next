@@ -69,7 +69,7 @@ class _TranscriptDisplayTogglesState extends State<TranscriptDisplayToggles> {
         SwitchListTile(
           key: const ValueKey('session-view-thinking'),
           dense: widget.dense,
-          secondary: const Icon(Icons.psychology_alt_outlined),
+          secondary: const Icon(AppIconography.model),
           title: const Text('Reasoning'),
           subtitle: Text(
             _reasoning
@@ -83,7 +83,7 @@ class _TranscriptDisplayTogglesState extends State<TranscriptDisplayToggles> {
         SwitchListTile(
           key: const ValueKey('session-view-timestamps'),
           dense: widget.dense,
-          secondary: const Icon(Icons.schedule_rounded),
+          secondary: const Icon(AppIconography.clock),
           title: const Text('Timestamps & usage'),
           subtitle: Text(
             _timestamps

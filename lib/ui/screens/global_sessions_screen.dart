@@ -471,7 +471,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
     final title = presentedSessionTitle(session, fallback: 'Untitled session');
     final confirmed = await showConfirmSheet(
       context,
-      icon: Icons.move_to_inbox_rounded,
+      icon: AppIconography.inbox,
       title: 'Continue this session here?',
       message:
           '“$title” will belong to your current workspace through the '
@@ -546,7 +546,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
               decoration: InputDecoration(
                 labelText: l10n.globalSessionsSearchLabel,
                 hintText: l10n.globalSessionsSearchHint,
-                prefixIcon: const Icon(Icons.search_rounded),
+                prefixIcon: const Icon(AppIconography.search),
                 suffixIcon: _search.text.isEmpty
                     ? null
                     : IconButton(
@@ -557,7 +557,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
                           unawaited(_reload());
                           setState(() {});
                         },
-                        icon: const Icon(Icons.close_rounded),
+                        icon: const Icon(AppIconography.close),
                       ),
               ),
             ),
@@ -579,8 +579,8 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
                     showCheckmark: false,
                     avatar: Icon(
                       _includeArchived
-                          ? Icons.inventory_2_rounded
-                          : Icons.inventory_2_outlined,
+                          ? AppIconography.package
+                          : AppIconography.package,
                       size: 16,
                     ),
                     label: Text(
@@ -614,7 +614,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
                         ),
                         selected: filter == group.directory,
                         showCheckmark: false,
-                        avatar: const Icon(Icons.folder_rounded, size: 16),
+                        avatar: const Icon(AppIconography.files, size: 16),
                         label: Text(group.label),
                         onSelected: (_) => setState(
                           () => _folderFilter = filter == group.directory
@@ -657,7 +657,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
     if (_results.isEmpty && !_hasMore) {
       final query = _search.text.trim();
       return ProductEmptyState(
-        icon: Icons.manage_search_rounded,
+        icon: AppIconography.searchList,
         title: query.isEmpty
             ? l10n.globalSessionsEmptyTitle
             : l10n.globalSessionsNoMatchTitle,
@@ -746,7 +746,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
     if (_error != null) {
       return ListTile(
         leading: Icon(
-          Icons.error_outline_rounded,
+          AppIconography.error,
           color: Theme.of(context).colorScheme.error,
         ),
         title: Text(
@@ -862,7 +862,7 @@ class _FolderCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
-                        Icons.folder_rounded,
+                        AppIconography.files,
                         size: 18,
                         color: theme.colorScheme.onPrimaryContainer,
                       ),
@@ -1091,14 +1091,14 @@ class _GlobalSessionRow extends StatelessWidget {
           ContextMenuAction(
             menuKey: const ValueKey('global-session-menu-open'),
             label: l10n.globalSessionsOpen,
-            icon: Icons.open_in_new_rounded,
+            icon: AppIconography.externalLink,
             onSelected: onTap,
           ),
         if (onSteal != null && !busy)
           ContextMenuAction(
             menuKey: const ValueKey('global-session-menu-steal'),
             label: l10n.globalSessionsContinueHere,
-            icon: Icons.move_to_inbox_rounded,
+            icon: AppIconography.inbox,
             onSelected: onSteal!,
           ),
       ],

@@ -7,6 +7,7 @@ import '../../api2/transport.dart';
 import '../../domain/server_gateway.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
+import '../app_iconography.dart';
 
 class SessionImportFile {
   final String name;
@@ -266,8 +267,8 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
                   ListTile(
                     leading: Icon(
                       choice.destination.workspaceID == null
-                          ? Icons.folder_outlined
-                          : Icons.cloud_outlined,
+                          ? AppIconography.files
+                          : AppIconography.cloud,
                     ),
                     title: Text(choice.label),
                     subtitle: Text(choice.destination.directory),
@@ -433,7 +434,7 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
                             _destination != null
                         ? _import
                         : null,
-                    icon: const Icon(Icons.file_download_outlined),
+                    icon: const Icon(AppIconography.download),
                     label: Text(l10n.importAction),
                   ),
               ],
@@ -455,7 +456,7 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
                   const SizedBox(height: 20),
                   OutlinedButton.icon(
                     onPressed: !_busy && _current && _supported ? _pick : null,
-                    icon: const Icon(Icons.upload_file_outlined),
+                    icon: const Icon(AppIconography.fileUpload),
                     label: Text(
                       _fileName == null
                           ? l10n.importChoose
@@ -506,7 +507,7 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
                     ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.folder_outlined),
+                    leading: const Icon(AppIconography.files),
                     title: Text(
                       _destination?.directory ?? l10n.importChooseDestination,
                     ),

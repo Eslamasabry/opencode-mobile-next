@@ -8,6 +8,7 @@ import '../../state/connection.dart';
 import '../desktop/context_menu.dart';
 import '../widgets/info_label.dart';
 import '../widgets/product_states.dart';
+import '../app_iconography.dart';
 
 class WorktreesScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -358,7 +359,7 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
           IconButton(
             tooltip: 'Refresh worktrees',
             onPressed: _busyDirectory == null && !_creating ? _load : null,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(AppIconography.retry),
           ),
         ],
       ),
@@ -373,7 +374,7 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
                       dimension: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.add_rounded),
+                  : const Icon(AppIconography.add),
               label: const Text('New worktree'),
             )
           : null,
@@ -402,7 +403,7 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
             else if (worktrees!.isEmpty)
               const ProductInlineEmpty(
                 key: ValueKey('no-worktrees'),
-                icon: Icons.account_tree_outlined,
+                icon: AppIconography.branch,
                 title: 'No isolated worktrees yet',
                 message:
                     'Use isolated branches for parallel coding without mixing '
@@ -480,7 +481,7 @@ class _LocationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListTile(
     selected: current,
-    leading: Icon(primary ? Icons.home_work_outlined : Icons.account_tree),
+    leading: Icon(primary ? AppIconography.projects : AppIconography.branch),
     title: Text(name),
     subtitle: Text(
       primary ? 'Default project · $directory' : directory,
@@ -493,8 +494,8 @@ class _LocationTile extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 2),
           )
         : current
-        ? const Icon(Icons.check_circle_rounded)
-        : const Icon(Icons.chevron_right_rounded),
+        ? const Icon(AppIconography.checkCircle)
+        : const Icon(AppIconography.chevronRight),
     onTap: busy || current ? null : onOpen,
   );
 }
@@ -583,9 +584,7 @@ class _WorktreeTile extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : Icon(
-              failure == null
-                  ? Icons.account_tree_outlined
-                  : Icons.error_outline_rounded,
+              failure == null ? AppIconography.branch : AppIconography.error,
               color: failure == null
                   ? null
                   : Theme.of(context).colorScheme.error,
@@ -599,7 +598,7 @@ class _WorktreeTile extends StatelessWidget {
           if (current)
             const Padding(
               padding: EdgeInsets.only(right: 2),
-              child: Icon(Icons.check_circle_rounded, size: 20),
+              child: Icon(AppIconography.checkCircle, size: 20),
             ),
           PopupMenuButton<String>(
             tooltip: 'Worktree actions',
@@ -630,20 +629,20 @@ class _WorktreeTile extends StatelessWidget {
                 ContextMenuAction(
                   menuKey: const ValueKey('worktree-menu-open'),
                   label: 'Open',
-                  icon: Icons.open_in_new_rounded,
+                  icon: AppIconography.externalLink,
                   onSelected: onOpen,
                 ),
               if (resetAvailable && !preparing && failure == null)
                 ContextMenuAction(
                   menuKey: const ValueKey('worktree-menu-reset'),
                   label: 'Reset',
-                  icon: Icons.restart_alt_rounded,
+                  icon: AppIconography.restart,
                   onSelected: onReset,
                 ),
               ContextMenuAction(
                 menuKey: const ValueKey('worktree-menu-remove'),
                 label: 'Remove',
-                icon: Icons.delete_outline_rounded,
+                icon: AppIconography.delete,
                 destructive: true,
                 onSelected: onRemove,
               ),
@@ -665,7 +664,7 @@ class _ChangeWarning extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(
-          clean ? Icons.check_circle_outline_rounded : Icons.warning_amber,
+          clean ? AppIconography.checkCircle : AppIconography.warning,
           color: clean ? null : Theme.of(context).colorScheme.error,
         ),
         const SizedBox(width: 10),

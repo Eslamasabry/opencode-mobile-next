@@ -45,7 +45,7 @@ class SessionsTab extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.forum_outlined,
+                      AppIconography.workspace,
                       size: 44,
                       color: AppTheme.mutedOf(Theme.of(context)),
                     ),
@@ -54,7 +54,7 @@ class SessionsTab extends StatelessWidget {
                     const SizedBox(height: 12),
                     FilledButton.icon(
                       onPressed: () => _newChat(context),
-                      icon: const Icon(Icons.add_rounded),
+                      icon: const Icon(AppIconography.add),
                       label: const Text('Start one'),
                     ),
                   ],
@@ -85,7 +85,7 @@ class SessionsTab extends StatelessWidget {
                             ContextMenuAction(
                               menuKey: const ValueKey('session-menu-open'),
                               label: 'Open',
-                              icon: Icons.open_in_new_rounded,
+                              icon: AppIconography.externalLink,
                               onSelected: () => Navigator.of(
                                 context,
                               ).pushNamed('/chat/${s.id}'),
@@ -93,7 +93,7 @@ class SessionsTab extends StatelessWidget {
                             ContextMenuAction(
                               menuKey: const ValueKey('session-menu-rename'),
                               label: 'Rename',
-                              icon: Icons.edit_outlined,
+                              icon: AppIconography.edit,
                               onSelected: () => unawaited(
                                 _sessionAction(context, 'rename', s),
                               ),
@@ -101,7 +101,7 @@ class SessionsTab extends StatelessWidget {
                             ContextMenuAction(
                               menuKey: const ValueKey('session-menu-delete'),
                               label: 'Delete',
-                              icon: Icons.delete_outline_rounded,
+                              icon: AppIconography.delete,
                               destructive: true,
                               onSelected: () => unawaited(
                                 _sessionAction(context, 'delete', s),
@@ -126,7 +126,7 @@ class SessionsTab extends StatelessWidget {
                                       key: Key(
                                         'session-attention-icon-${s.id}',
                                       ),
-                                      Icons.notification_important_outlined,
+                                      AppIconography.notificationImportant,
                                       size: 20,
                                       color: AppTheme.statusColor(
                                         Theme.of(context),
@@ -155,7 +155,7 @@ class SessionsTab extends StatelessWidget {
                                       ),
                                     )
                                   : Icon(
-                                      Icons.chat_bubble_outline_rounded,
+                                      AppIconography.chat,
                                       size: 20,
                                       color: AppTheme.mutedOf(
                                         Theme.of(context),
@@ -206,7 +206,7 @@ class SessionsTab extends StatelessWidget {
               child: FloatingActionButton.extended(
                 heroTag: 'newChat',
                 onPressed: () => _newChat(context),
-                icon: const Icon(Icons.add_rounded),
+                icon: const Icon(AppIconography.add),
                 label: const Text('New chat'),
               ),
             ),
@@ -250,7 +250,7 @@ class SessionsTab extends StatelessWidget {
     Session session,
   ) => showConfirmSheet(
     context,
-    icon: Icons.delete_outline_rounded,
+    icon: AppIconography.delete,
     title: 'Delete chat?',
     message:
         '“${session.title?.isNotEmpty == true ? session.title : 'Untitled chat'}” and its history will be permanently removed.',

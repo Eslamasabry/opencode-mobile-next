@@ -6,6 +6,7 @@ import '../../state/connection.dart';
 import '../widgets/product_states.dart';
 import 'profile_monitor_screen.dart';
 import '../../l10n/app_localizations.dart';
+import '../app_iconography.dart';
 
 /// Local overview only. The host owns navigation and any profile-switch guard.
 class AttentionOverviewScreen extends StatelessWidget {
@@ -31,7 +32,7 @@ class AttentionOverviewScreen extends StatelessWidget {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.settings_outlined),
+          icon: const Icon(AppIconography.settings),
           tooltip: lookupAppLocalizations(
             Localizations.localeOf(context),
           ).monitorConfigure,
@@ -53,7 +54,7 @@ class AttentionOverviewScreen extends StatelessWidget {
           final overview = AttentionOverview.fromController(controller);
           if (overview.items.isEmpty) {
             return const ProductEmptyState(
-              icon: Icons.dns_outlined,
+              icon: AppIconography.server,
               title: 'No saved servers',
               message: 'Add a server from Home to see it here.',
             );

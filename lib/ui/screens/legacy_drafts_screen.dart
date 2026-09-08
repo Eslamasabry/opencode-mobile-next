@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../../state/session_drafts.dart';
 import '../widgets/confirm_sheet.dart';
+import '../app_iconography.dart';
 
 class LegacyDraftsScreen extends StatefulWidget {
   const LegacyDraftsScreen({super.key, required this.controller});
@@ -59,7 +60,7 @@ class _LegacyDraftsScreenState extends State<LegacyDraftsScreen> {
                         : () => Clipboard.setData(
                             ClipboardData(text: draft.text),
                           ),
-                    icon: const Icon(Icons.copy_outlined),
+                    icon: const Icon(AppIconography.copy),
                   ),
                   OutlinedButton(
                     onPressed: () async {
@@ -133,7 +134,7 @@ class _LegacyDraftsScreenState extends State<LegacyDraftsScreen> {
                     key: const ValueKey('legacy-drafts-search'),
                     decoration: InputDecoration(
                       labelText: l10n.legacyDraftSearch,
-                      prefixIcon: const Icon(Icons.search),
+                      prefixIcon: const Icon(AppIconography.search),
                     ),
                     onChanged: (value) =>
                         setState(() => _query = value.toLowerCase()),
@@ -152,7 +153,7 @@ class _LegacyDraftsScreenState extends State<LegacyDraftsScreen> {
                     final draft = drafts[index];
                     return ListTile(
                       key: ValueKey('legacy-draft-${draft.sessionID}'),
-                      leading: const Icon(Icons.history_rounded),
+                      leading: const Icon(AppIconography.history),
                       title: Text(
                         draft.text.isEmpty
                             ? l10n.legacyDraftTextOnly
@@ -165,7 +166,7 @@ class _LegacyDraftsScreenState extends State<LegacyDraftsScreen> {
                           DateTime.fromMillisecondsSinceEpoch(draft.updatedAt),
                         ),
                       ),
-                      trailing: const Icon(Icons.chevron_right),
+                      trailing: const Icon(AppIconography.chevronRight),
                       onTap: () => _review(draft),
                     );
                   },

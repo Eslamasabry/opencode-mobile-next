@@ -73,7 +73,7 @@ class _ReferencesScreenState extends State<ReferencesScreen> {
       ? RefreshIndicator(
           onRefresh: _load,
           child: const ProductEmptyState(
-            icon: Icons.bookmarks_outlined,
+            icon: AppIconography.bookmarks,
             title: 'No references configured',
             message: 'References attached to this project appear here.',
           ),
@@ -88,7 +88,7 @@ class _ReferencesScreenState extends State<ReferencesScreen> {
               final reference = _references![index];
               return ListTile(
                 key: ValueKey('reference-${reference.name}'),
-                leading: const Icon(Icons.bookmark_outline_rounded),
+                leading: const Icon(AppIconography.bookmark),
                 title: Text(reference.name),
                 subtitle: Text(
                   reference.description?.isNotEmpty == true

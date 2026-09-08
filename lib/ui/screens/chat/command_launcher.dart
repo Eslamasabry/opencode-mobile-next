@@ -249,7 +249,7 @@ class _CommandLauncherSheetState extends State<_CommandLauncherSheet>
                   IconButton(
                     tooltip: 'Close composer tools',
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded),
+                    icon: const Icon(AppIconography.close),
                   ),
                 ],
               ),
@@ -275,7 +275,7 @@ class _CommandLauncherSheetState extends State<_CommandLauncherSheet>
                       ),
                       Tab(
                         key: Key('composer-tools-agents-tab'),
-                        icon: Icon(Icons.smart_toy_outlined),
+                        icon: Icon(AppIconography.agent),
                         text: 'Delegate',
                       ),
                     ],
@@ -290,7 +290,7 @@ class _CommandLauncherSheetState extends State<_CommandLauncherSheet>
                   hintText: agentTab
                       ? 'Find a subagent'
                       : 'Find a command or action',
-                  prefixIcon: const Icon(Icons.search_rounded),
+                  prefixIcon: const Icon(AppIconography.search),
                   suffixIcon: _search.text.isEmpty
                       ? null
                       : IconButton(
@@ -299,7 +299,7 @@ class _CommandLauncherSheetState extends State<_CommandLauncherSheet>
                             _search.clear();
                             setState(() {});
                           },
-                          icon: const Icon(Icons.close_rounded),
+                          icon: const Icon(AppIconography.close),
                         ),
                   border: const OutlineInputBorder(),
                   isDense: true,
@@ -327,7 +327,7 @@ class _CommandLauncherSheetState extends State<_CommandLauncherSheet>
                 trailing: IconButton(
                   tooltip: 'Retry server commands',
                   onPressed: _refresh,
-                  icon: const Icon(Icons.refresh_rounded),
+                  icon: const Icon(AppIconography.retry),
                 ),
               ),
             Expanded(
@@ -424,7 +424,7 @@ class _AgentPickerList extends StatelessWidget {
           children: [
             SizedBox(height: MediaQuery.sizeOf(context).height * .12),
             Icon(
-              loading ? Icons.sync_rounded : Icons.smart_toy_outlined,
+              loading ? AppIconography.sync : AppIconography.agent,
               size: 36,
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -444,7 +444,7 @@ class _AgentPickerList extends StatelessWidget {
               Center(
                 child: TextButton.icon(
                   onPressed: onRefresh,
-                  icon: const Icon(Icons.refresh_rounded),
+                  icon: const Icon(AppIconography.retry),
                   label: const Text('Refresh'),
                 ),
               ),
@@ -488,7 +488,7 @@ class _AgentPickerList extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             isThreeLine: model != null && model.isNotEmpty,
-            trailing: const Icon(Icons.add_rounded),
+            trailing: const Icon(AppIconography.add),
             onTap: () => onSelected(agent),
           );
         },
@@ -697,7 +697,7 @@ class _InlineAgentSuggestions extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(
-                    Icons.smart_toy_outlined,
+                    AppIconography.agent,
                     size: 18,
                     color: theme.colorScheme.primary,
                   ),

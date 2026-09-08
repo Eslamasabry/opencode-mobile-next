@@ -88,7 +88,7 @@ class _PromptEditorScreenState extends State<_PromptEditorScreen> {
     _closing = true;
     final discard = await showConfirmSheet(
       context,
-      icon: Icons.delete_sweep_outlined,
+      icon: AppIconography.clearAll,
       title: 'Discard prompt changes?',
       message:
           'Your original composer draft and attachments will stay unchanged.',
@@ -113,7 +113,7 @@ class _PromptEditorScreenState extends State<_PromptEditorScreen> {
           leading: IconButton(
             tooltip: 'Close prompt editor',
             onPressed: _cancel,
-            icon: const Icon(Icons.close_rounded),
+            icon: const Icon(AppIconography.close),
           ),
           title: const Text('Prompt editor'),
           actions: [
@@ -126,7 +126,7 @@ class _PromptEditorScreenState extends State<_PromptEditorScreen> {
                 onPressed: _attachments.length >= _maxAttachmentCount
                     ? null
                     : _addAttachment,
-                icon: const Icon(Icons.attach_file_rounded),
+                icon: const Icon(AppIconography.attach),
               ),
             TextButton(
               key: const Key('prompt-editor-done'),

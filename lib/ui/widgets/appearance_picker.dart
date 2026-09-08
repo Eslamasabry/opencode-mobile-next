@@ -4,6 +4,7 @@ import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../../state/profiles.dart';
 import 'product_states.dart';
+import '../app_iconography.dart';
 
 String appearanceLabel(AppAppearance appearance) => switch (appearance) {
   AppAppearance.system =>
@@ -22,9 +23,9 @@ String _appearanceDescription(AppAppearance appearance) => switch (appearance) {
 };
 
 IconData _appearanceIcon(AppAppearance appearance) => switch (appearance) {
-  AppAppearance.system => Icons.settings_brightness_outlined,
-  AppAppearance.light => Icons.light_mode_outlined,
-  AppAppearance.dark => Icons.dark_mode_outlined,
+  AppAppearance.system => AppIconography.systemTheme,
+  AppAppearance.light => AppIconography.lightMode,
+  AppAppearance.dark => AppIconography.darkMode,
 };
 
 Future<void> showAppearancePicker(
@@ -58,7 +59,7 @@ Future<void> showAppearancePicker(
               title: Text(appearanceLabel(appearance)),
               subtitle: Text(_appearanceDescription(appearance)),
               trailing: current == appearance
-                  ? const Icon(Icons.check_rounded)
+                  ? const Icon(AppIconography.check)
                   : null,
               onTap: () => Navigator.of(context).pop(appearance),
             ),

@@ -98,7 +98,7 @@ class _PromptStashSheetState extends State<_PromptStashSheet> {
     try {
       final confirmed = await showConfirmSheet(
         context,
-        icon: Icons.delete_outline_rounded,
+        icon: AppIconography.delete,
         title: _chatL10n(context).promptStashDeleteTitle,
         message: _chatL10n(context).promptStashDeleteDetail,
         confirmLabel: _chatL10n(context).promptStashDelete,
@@ -186,7 +186,7 @@ class _PromptStashSheetState extends State<_PromptStashSheet> {
                 onChanged: (value) => setState(() => _query = value),
                 decoration: InputDecoration(
                   labelText: l10n.promptStashSearch,
-                  prefixIcon: const Icon(Icons.search_rounded),
+                  prefixIcon: const Icon(AppIconography.search),
                   suffixIcon: _query.isEmpty
                       ? null
                       : IconButton(
@@ -195,7 +195,7 @@ class _PromptStashSheetState extends State<_PromptStashSheet> {
                             _search.clear();
                             setState(() => _query = '');
                           },
-                          icon: const Icon(Icons.close_rounded),
+                          icon: const Icon(AppIconography.close),
                         ),
                 ),
               ),
@@ -311,7 +311,7 @@ class _PromptStashSheetState extends State<_PromptStashSheet> {
                                       setState(() => _deleting = true);
                                       Navigator.pop(context, prompt);
                                     },
-                              icon: const Icon(Icons.unarchive_outlined),
+                              icon: const Icon(AppIconography.unarchive),
                               label: Text(l10n.promptRestore),
                             ),
                             TextButton.icon(
@@ -320,7 +320,7 @@ class _PromptStashSheetState extends State<_PromptStashSheet> {
                                 minimumSize: const Size(48, 48),
                               ),
                               onPressed: _unsafe ? null : () => _delete(prompt),
-                              icon: const Icon(Icons.delete_outline_rounded),
+                              icon: const Icon(AppIconography.delete),
                               label: Text(l10n.promptStashDelete),
                             ),
                           ],

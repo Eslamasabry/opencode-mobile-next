@@ -10,6 +10,7 @@ import '../../state/connection.dart';
 import '../../state/usage_overview.dart';
 import '../../state/usage_budgets.dart';
 import '../widgets/product_states.dart';
+import '../app_iconography.dart';
 
 AppLocalizations _strings(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
@@ -84,7 +85,7 @@ class _UsageScreenState extends State<UsageScreen> {
               onPressed: available && !_overview.loading
                   ? _overview.refresh
                   : null,
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const Icon(AppIconography.retry),
             ),
           ],
         ),
@@ -548,7 +549,7 @@ class _UsageReport extends StatelessWidget {
           initialValue: overview.modelSearch,
           decoration: InputDecoration(
             labelText: l10n.usageSearchRecords,
-            prefixIcon: const Icon(Icons.search),
+            prefixIcon: const Icon(AppIconography.search),
             border: const OutlineInputBorder(),
           ),
           onChanged: overview.setModelSearch,
@@ -559,7 +560,7 @@ class _UsageReport extends StatelessWidget {
             onPressed: overview.hasInspectionFilters
                 ? overview.clearInspectionFilters
                 : null,
-            icon: const Icon(Icons.filter_alt_off_outlined),
+            icon: const Icon(AppIconography.filterOff),
             label: Text(l10n.usageClearFilters),
           ),
         ),

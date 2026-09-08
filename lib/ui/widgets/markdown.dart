@@ -958,7 +958,7 @@ class _PathCodeChipState extends State<_PathCodeChip> {
                   child: Padding(
                     padding: const EdgeInsets.only(left: 3),
                     child: Icon(
-                      Icons.open_in_new_rounded,
+                      AppIconography.externalLink,
                       size: (widget.base.fontSize ?? 14) - 2,
                       color: theme.colorScheme.primary,
                     ),
@@ -1298,7 +1298,7 @@ class _CodeBlockState extends State<CodeBlock> {
                       tooltip: l10n.markdownExpandCode,
                       style: _toolbarStyle(theme),
                       onPressed: _openReader,
-                      icon: const Icon(Icons.open_in_full_rounded),
+                      icon: const Icon(AppIconography.expand),
                     ),
                   IconButton(
                     tooltip: l10n.markdownCopyCode,

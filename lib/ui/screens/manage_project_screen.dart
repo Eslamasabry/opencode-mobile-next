@@ -10,6 +10,7 @@ import 'project_health_screen.dart';
 import 'projects_screen.dart';
 import 'worktrees_screen.dart';
 import 'development_services_screen.dart';
+import '../app_iconography.dart';
 
 /// Audit UX-P0-02 / UX-101: every low-frequency project management surface —
 /// project switching, worktrees, managed workspaces, and project health —
@@ -55,7 +56,7 @@ class _ManageProjectScreenState extends State<ManageProjectScreen> {
           children: [
             ListTile(
               key: const ValueKey('manage-project-context'),
-              leading: const Icon(Icons.folder_rounded),
+              leading: const Icon(AppIconography.files),
               title: Text(project?.name ?? 'No project selected'),
               subtitle: Text(
                 project?.directory ??
@@ -67,10 +68,10 @@ class _ManageProjectScreenState extends State<ManageProjectScreen> {
             const Divider(height: 1),
             const SectionLabel('Project'),
             ListTile(
-              leading: const Icon(Icons.developer_board_rounded),
+              leading: const Icon(AppIconography.processor),
               title: Text(l10n.servicesTitle),
               subtitle: Text(l10n.servicesSubtitle),
-              trailing: const Icon(Icons.chevron_right_rounded),
+              trailing: const Icon(AppIconography.chevronRight),
               onTap: widget.controller.directory?.isNotEmpty == true
                   ? () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
@@ -84,25 +85,25 @@ class _ManageProjectScreenState extends State<ManageProjectScreen> {
             if (capabilities.projectManagement) ...[
               ListTile(
                 key: const ValueKey('switch-project-entry'),
-                leading: const Icon(Icons.swap_horiz_rounded),
+                leading: const Icon(AppIconography.swap),
                 title: const Text('Switch project'),
                 subtitle: const Text(
                   'Choose another project opened by this server',
                 ),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                trailing: const Icon(AppIconography.chevronRight),
                 onTap: _switchProject,
               ),
               const SectionLabel('Coding'),
               ListTile(
                 key: const ValueKey('worktrees-entry'),
-                leading: const Icon(Icons.call_split_rounded),
+                leading: const Icon(AppIconography.branch),
                 title: const Text('Worktrees'),
                 subtitle: Text(
                   project == null
                       ? 'Choose a project first'
                       : 'Create and manage isolated Git branches',
                 ),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                trailing: const Icon(AppIconography.chevronRight),
                 onTap: project == null ? null : _openWorktrees,
               ),
             ],
@@ -111,25 +112,25 @@ class _ManageProjectScreenState extends State<ManageProjectScreen> {
             if (capabilities.managedWorkspaces)
               ListTile(
                 key: const ValueKey('managed-workspaces-entry'),
-                leading: const Icon(Icons.cloud_outlined),
+                leading: const Icon(AppIconography.cloud),
                 title: const Text('Managed workspaces'),
                 subtitle: Text(
                   project == null
                       ? 'Choose a project first'
                       : 'Create, discover, open, and remove adapter-backed environments',
                 ),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                trailing: const Icon(AppIconography.chevronRight),
                 onTap: project == null ? null : _openManagedWorkspaces,
               ),
             if (capabilities.projectManagement)
               ListTile(
                 key: const ValueKey('project-health-entry'),
-                leading: const Icon(Icons.monitor_heart_outlined),
+                leading: const Icon(AppIconography.diagnostics),
                 title: const Text('Project health'),
                 subtitle: const Text(
                   'Branch, changed files, language services, and formatters',
                 ),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                trailing: const Icon(AppIconography.chevronRight),
                 onTap: _openProjectHealth,
               ),
           ],

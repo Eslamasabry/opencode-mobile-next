@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../app_iconography.dart';
 
 /// What [openExternalLink] did, so callers can react without re-deriving it.
 enum ExternalLinkOutcome {
@@ -67,7 +68,7 @@ Future<ExternalLinkOutcome> openExternalLink(
     context: context,
     builder: (context) => AlertDialog(
       icon: Icon(
-        insecure ? Icons.warning_amber_rounded : Icons.open_in_new_rounded,
+        insecure ? AppIconography.warning : AppIconography.externalLink,
       ),
       title: Text(
         insecure ? 'Open insecure HTTP link?' : 'Open external link?',

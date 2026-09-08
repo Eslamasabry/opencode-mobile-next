@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../api/sse.dart';
 import '../../state/connection.dart';
 import '../../l10n/app_localizations.dart';
+import '../app_iconography.dart';
 
 /// A shared, flat connection state for retained product surfaces.
 class ConnectionStatusBanner extends StatelessWidget {
@@ -107,7 +108,7 @@ class ConnectionStatusBanner extends StatelessWidget {
                 dimension: 20,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : const Icon(Icons.cloud_off_outlined),
+            : const Icon(AppIconography.cloudOff),
         content: Text(
           content,
           maxLines: codexReconnect && note != null && note!.isNotEmpty ? 3 : 2,

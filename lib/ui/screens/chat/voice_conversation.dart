@@ -493,7 +493,7 @@ extension _ChatVoiceConversation on _ChatScreenState {
                           _voiceOpening || _sending || !_conversationCanSend
                           ? null
                           : _openVoice,
-                      icon: const Icon(Icons.mic_none_rounded),
+                      icon: const Icon(AppIconography.mic),
                       label: Text(l10n.voiceConversationListen),
                     ),
                     if (speaking || waiting)
@@ -503,7 +503,7 @@ extension _ChatVoiceConversation on _ChatScreenState {
                           minimumSize: const Size(48, 48),
                         ),
                         onPressed: () => unawaited(_stopReading()),
-                        icon: const Icon(Icons.stop_rounded),
+                        icon: const Icon(AppIconography.stop),
                         label: Text(l10n.voiceConversationStopReply),
                       ),
                     if (offerRead)
@@ -521,7 +521,7 @@ extension _ChatVoiceConversation on _ChatScreenState {
                                 );
                                 unawaited(_readReply(latest));
                               },
-                        icon: const Icon(Icons.volume_up_outlined),
+                        icon: const Icon(AppIconography.volume),
                         label: Text(l10n.voiceConversationReadReply),
                       ),
                     TextButton.icon(
@@ -529,7 +529,7 @@ extension _ChatVoiceConversation on _ChatScreenState {
                         minimumSize: const Size(48, 48),
                       ),
                       onPressed: _interruptVoiceConversation,
-                      icon: const Icon(Icons.close_rounded),
+                      icon: const Icon(AppIconography.close),
                       label: Text(l10n.voiceConversationExit),
                     ),
                   ],

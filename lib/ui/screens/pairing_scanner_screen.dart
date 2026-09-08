@@ -6,6 +6,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../platform/camera.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/pairing.dart';
+import '../app_iconography.dart';
 
 /// Scans the QR that `opencode2 pair` prints and returns the parsed payload.
 ///
@@ -158,7 +159,7 @@ class _PairingScannerScreenState extends State<PairingScannerScreen> {
         leading: IconButton(
           tooltip: 'Close the scanner',
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.close_rounded),
+          icon: const Icon(AppIconography.close),
         ),
         title: const Text('Scan pairing code'),
       ),
@@ -171,7 +172,7 @@ class _PairingScannerScreenState extends State<PairingScannerScreen> {
           _ScanStage.scanning => _preview(theme),
           _ScanStage.denied => _Recovery(
             key: const ValueKey('pairing-scanner-denied'),
-            icon: Icons.photo_camera_outlined,
+            icon: AppIconography.camera,
             title: 'Camera access is needed to scan',
             body:
                 'The camera is used only to read the QR that opencode2 pair '
@@ -187,7 +188,7 @@ class _PairingScannerScreenState extends State<PairingScannerScreen> {
           ),
           _ScanStage.permanentlyDenied => _Recovery(
             key: const ValueKey('pairing-scanner-blocked'),
-            icon: Icons.no_photography_outlined,
+            icon: AppIconography.cameraOff,
             title: 'Camera access is turned off',
             body:
                 'Android will not ask again, so this has to be changed in '
@@ -200,7 +201,7 @@ class _PairingScannerScreenState extends State<PairingScannerScreen> {
           ),
           _ScanStage.noCamera => _Recovery(
             key: const ValueKey('pairing-scanner-no-camera'),
-            icon: Icons.no_photography_outlined,
+            icon: AppIconography.cameraOff,
             title: 'This device has no camera',
             body:
                 'There is nothing to scan with. Run opencode2 pair on the '
@@ -211,7 +212,7 @@ class _PairingScannerScreenState extends State<PairingScannerScreen> {
           ),
           _ScanStage.failed => _Recovery(
             key: const ValueKey('pairing-scanner-failed'),
-            icon: Icons.error_outline_rounded,
+            icon: AppIconography.error,
             title: 'The camera could not be opened',
             body: [
               ?_rejected,

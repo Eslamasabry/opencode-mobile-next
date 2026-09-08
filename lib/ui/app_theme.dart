@@ -51,10 +51,10 @@ enum AppStatusTone {
 /// and call sites name the verb.
 abstract final class AppIcons {
   static const copy = AppIconography.copy;
-  static const run = Icons.electric_bolt_outlined;
+  static const run = AppIconography.lightning;
   static const stop = AppIconography.stop;
   static const send = AppIconography.send;
-  static const queue = Icons.hourglass_bottom_rounded;
+  static const queue = AppIconography.waiting;
   static const retry = AppIconography.retry;
   static const externalLink = AppIconography.externalLink;
 }

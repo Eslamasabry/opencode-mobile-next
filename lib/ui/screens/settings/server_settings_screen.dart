@@ -94,7 +94,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
           'The install keeps server data in place, but the OpenCode process '
           'must be restarted on its host before the new version takes effect.',
       confirmLabel: 'Install $target',
-      icon: Icons.download_rounded,
+      icon: AppIconography.download,
       confirmKey: const Key('confirm-server-upgrade'),
     );
     if (!confirmed || !mounted) return;
@@ -156,7 +156,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       serverUpdateTitle = 'Update managed OpenCode';
       serverUpdateSubtitle =
           'Install the latest stable server, refresh models, restart safely, and reconnect.';
-      serverUpdateIcon = Icons.chevron_right_rounded;
+      serverUpdateIcon = AppIconography.chevronRight;
       serverUpdateAction = () =>
           Navigator.of(context).pushNamed('/termux-setup');
     } else if (installedVersion != null) {
@@ -164,14 +164,14 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       serverUpdateSubtitle = _serverUpgradeError != null
           ? '${_serverUpgradeError!} Tap to retry.'
           : '$installedVersion is installed. The current process is still ${controller.version ?? 'the previous version'}.';
-      serverUpdateIcon = Icons.restart_alt_rounded;
+      serverUpdateIcon = AppIconography.restart;
       serverUpdateAction = () => _showRemoteRestartNotice(installedVersion);
     } else if (availableVersion != null) {
       serverUpdateTitle = 'Update OpenCode to $availableVersion';
       serverUpdateSubtitle = _serverUpgradeError != null
           ? '${_serverUpgradeError!} Tap to retry.'
           : 'Current server: ${controller.version ?? 'unknown'}. Uses OpenCode\'s official installer; host restart required.';
-      serverUpdateIcon = Icons.download_rounded;
+      serverUpdateIcon = AppIconography.download;
       serverUpdateAction = () => _upgradeRemoteServer(availableVersion);
     } else {
       serverUpdateTitle = 'Server updates are managed externally';
@@ -186,7 +186,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
         padding: const EdgeInsets.only(bottom: 24),
         children: [
           ListTile(
-            leading: const Icon(Icons.dns_outlined),
+            leading: const Icon(AppIconography.server),
             title: Text(profile?.name ?? 'OpenCode server'),
             subtitle: SelectableText(
               profile?.baseUrl ?? 'Not connected',
@@ -203,7 +203,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                       dimension: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.refresh_rounded),
+                  : const Icon(AppIconography.retry),
             ),
           ),
           // Neutral until the first probe answers: a red "unavailable" row
@@ -227,8 +227,8 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
               key: const Key('server-health-result'),
               leading: Icon(
                 _health?.healthy == true
-                    ? Icons.check_circle_outline_rounded
-                    : Icons.error_outline_rounded,
+                    ? AppIconography.checkCircle
+                    : AppIconography.error,
                 color: _health?.healthy == true
                     ? AppTheme.successOf(Theme.of(context))
                     : Theme.of(context).colorScheme.error,
@@ -244,7 +244,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
               ),
             ),
           ListTile(
-            leading: const Icon(Icons.person_outline_rounded),
+            leading: const Icon(AppIconography.person),
             title: const Text('Authentication'),
             subtitle: Text(
               profile?.password.isNotEmpty == true
@@ -253,23 +253,23 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.storage_outlined),
+            leading: const Icon(AppIconography.database),
             title: const Text('Manage server profiles'),
             subtitle: const Text('Add, edit, or switch OpenCode servers'),
-            trailing: const Icon(Icons.chevron_right_rounded),
+            trailing: const Icon(AppIconography.chevronRight),
             onTap: () => Navigator.of(context).pushNamed('/servers'),
           ),
           if (!managedLocally)
             ListTile(
               key: const Key('host-management-entry'),
-              leading: const Icon(Icons.terminal_outlined),
+              leading: const Icon(AppIconography.terminal),
               title: const Text('Run as a Linux service'),
               subtitle: const Text(
                 'Keep OpenCode running on your computer after you close the '
                 'terminal; copy setup, status, restart, log, and update '
                 'commands',
               ),
-              trailing: const Icon(Icons.chevron_right_rounded),
+              trailing: const Icon(AppIconography.chevronRight),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => HostManagementScreen(controller: controller),
@@ -283,12 +283,12 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
               feature: 'remote-upgrade',
               title: 'Server updates',
               explainer: 'Upgrade from the machine running the server',
-              leading: Icon(Icons.system_update_alt_rounded),
+              leading: Icon(AppIconography.systemDownload),
             )
           else
             ListTile(
               key: const Key('server-updates-tile'),
-              leading: const Icon(Icons.system_update_alt_rounded),
+              leading: const Icon(AppIconography.systemDownload),
               title: Text(serverUpdateTitle),
               subtitle: Text(serverUpdateSubtitle),
               trailing: _upgradingServer

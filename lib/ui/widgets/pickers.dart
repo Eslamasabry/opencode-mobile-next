@@ -335,7 +335,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
           IconButton(
             tooltip: 'Close model selector',
             onPressed: widget.onClose,
-            icon: const Icon(Icons.close_rounded),
+            icon: const Icon(AppIconography.close),
           ),
       ],
     ),
@@ -355,7 +355,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
             onChanged: (value) => setState(() => _query = value),
             decoration: InputDecoration(
               hintText: _strings.modelSearchHint,
-              prefixIcon: const Icon(Icons.search_rounded),
+              prefixIcon: const Icon(AppIconography.search),
               isDense: true,
               suffixIcon: _query.isEmpty
                   ? null
@@ -365,7 +365,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                         _search.clear();
                         setState(() => _query = '');
                       },
-                      icon: const Icon(Icons.close_rounded),
+                      icon: const Icon(AppIconography.close),
                     ),
             ),
           ),
@@ -416,7 +416,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
           onPressed: controller.catalogLoading
               ? null
               : controller.refreshCatalog,
-          icon: const Icon(Icons.refresh_rounded),
+          icon: const Icon(AppIconography.retry),
           label: const Text('Try again'),
         ),
       );
@@ -485,14 +485,11 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
         _intent != _ModelIntent.all;
     final leadItems = <Widget>[
       if (!_sameScope)
-        _Notice(
-          icon: Icons.info_outline_rounded,
-          text: _strings.modelScopeChanged,
-        ),
+        _Notice(icon: AppIconography.info, text: _strings.modelScopeChanged),
       if (_currentModel != null &&
           !widget.controller.modelAvailable(_currentModel!))
         _Notice(
-          icon: Icons.info_outline_rounded,
+          icon: AppIconography.info,
           text:
               '${_currentModel!.wireName}\n${_strings.modelUnavailableSelection}',
         ),
@@ -502,7 +499,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
       ],
       if (!widget.controller.catalogDetailed)
         const _Notice(
-          icon: Icons.info_outline_rounded,
+          icon: AppIconography.info,
           text:
               'This server returned a basic catalog. Capability and context details are unavailable.',
         ),
@@ -546,7 +543,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                       padding: const EdgeInsets.all(12),
                       child: Row(
                         children: [
-                          const Icon(Icons.info_outline_rounded, size: 20),
+                          const Icon(AppIconography.info, size: 20),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -567,7 +564,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                   onPressed: widget.controller.catalogLoading
                       ? null
                       : widget.controller.reloadProviderRuntime,
-                  icon: const Icon(Icons.refresh_rounded),
+                  icon: const Icon(AppIconography.retry),
                 ),
               ],
             ),
@@ -590,7 +587,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                   tooltip: filtered ? 'Edit model filters' : 'Filter models',
                   isSelected: _showFilters || filtered,
                   onPressed: () => setState(() => _showFilters = !_showFilters),
-                  icon: const Icon(Icons.tune_rounded),
+                  icon: const Icon(AppIconography.settings),
                 )
               else
                 TextButton.icon(
@@ -598,8 +595,8 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                   onPressed: () => setState(() => _showFilters = !_showFilters),
                   icon: Icon(
                     _showFilters
-                        ? Icons.expand_less_rounded
-                        : Icons.tune_rounded,
+                        ? AppIconography.chevronUp
+                        : AppIconography.settings,
                     size: 18,
                   ),
                   label: Text(filtered ? 'Filtered' : 'Filters'),
@@ -615,7 +612,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                         dimension: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.refresh_rounded, size: 20),
+                    : const Icon(AppIconography.retry, size: 20),
               ),
             ],
           ),
@@ -650,11 +647,11 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
       if (models.isEmpty)
         _PickerState(
           icon: catalog.models.isEmpty
-              ? Icons.inventory_2_outlined
+              ? AppIconography.package
               : !filtered && _collection == _ModelCollection.favorites
-              ? Icons.star_outline_rounded
+              ? AppIconography.star
               : !filtered && _collection == _ModelCollection.recent
-              ? Icons.history_rounded
+              ? AppIconography.history
               : Icons.search_off_rounded,
           title: catalog.models.isEmpty
               ? 'No models available'
@@ -720,7 +717,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
         initialValue: value,
         decoration: InputDecoration(
           labelText: 'Agent',
-          prefixIcon: const Icon(Icons.support_agent_outlined),
+          prefixIcon: const Icon(AppIconography.support),
           helperText: _strings.modelChoiceStagedAgentHint,
           helperMaxLines: 3,
         ),
@@ -790,7 +787,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
           : '*',
       decoration: const InputDecoration(
         labelText: 'Provider',
-        prefixIcon: Icon(Icons.cloud_outlined),
+        prefixIcon: Icon(AppIconography.cloud),
       ),
       items: [
         const DropdownMenuItem(value: '*', child: Text('All providers')),
@@ -854,7 +851,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                   SizedBox.square(
                     dimension: 28,
                     child: draft
-                        ? Icon(Icons.check_rounded, color: scheme.primary)
+                        ? Icon(AppIconography.check, color: scheme.primary)
                         : ProviderLogo(model.providerID, size: 24),
                   ),
                   const SizedBox(width: 12),
@@ -903,8 +900,8 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                         : null,
                     icon: Icon(
                       favorite
-                          ? Icons.star_rounded
-                          : Icons.star_outline_rounded,
+                          ? AppIconography.starFilled
+                          : AppIconography.star,
                       color: favorite ? scheme.primary : scheme.outline,
                     ),
                   ),

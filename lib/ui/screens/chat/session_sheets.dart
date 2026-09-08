@@ -51,7 +51,7 @@ class _TodosSheetState extends State<_TodosSheet> {
             ? const SizedBox(height: 240, child: LoadingList(rows: 4))
             : _todos!.isEmpty
             ? const ProductInlineEmpty(
-                icon: Icons.checklist_rounded,
+                icon: AppIconography.checklist,
                 title: 'No todos in this session',
                 message:
                     'When the assistant plans work as a todo list, the items appear here.',
@@ -155,7 +155,7 @@ class _DiffSheetState extends State<_DiffSheet> {
               ? const LoadingList(rows: 6)
               : _diffs!.isEmpty
               ? const ProductInlineEmpty(
-                  icon: Icons.difference_outlined,
+                  icon: AppIconography.review,
                   title: 'No file changes yet',
                   message:
                       'File edits made in this session will be listed here.',
@@ -176,7 +176,7 @@ class _DiffSheetState extends State<_DiffSheet> {
                             child: ListTile(
                               dense: true,
                               leading: const Icon(
-                                Icons.description_outlined,
+                                AppIconography.fileText,
                                 size: 20,
                               ),
                               title: Text(
@@ -213,7 +213,7 @@ class _DiffSheetState extends State<_DiffSheet> {
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  const Icon(Icons.chevron_right_rounded),
+                                  const Icon(AppIconography.chevronRight),
                                 ],
                               ),
                               onTap: () {

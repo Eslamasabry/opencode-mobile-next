@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/return_brief.dart';
 import '../../l10n/app_localizations.dart';
+import '../app_iconography.dart';
 
 /// A compact summary, never a read receipt or a request decision.
 class ReturnBriefCard extends StatelessWidget {
@@ -79,7 +80,7 @@ class ReturnBriefCard extends StatelessWidget {
                 children: [
                   const SizedBox(
                     width: 32,
-                    child: Icon(Icons.info_outline_rounded, size: 16),
+                    child: Icon(AppIconography.info, size: 16),
                   ),
                   const SizedBox(width: 12),
                   Flexible(child: Text(l10n.returnBriefStatusUnknown)),
@@ -98,7 +99,7 @@ class ReturnBriefCard extends StatelessWidget {
             SizedBox(
               width: 32,
               child: Icon(
-                Icons.info_outline_rounded,
+                AppIconography.info,
                 size: 16,
                 color: colors.onSurfaceVariant,
               ),
@@ -135,7 +136,7 @@ class ReturnBriefCard extends StatelessWidget {
               runSpacing: 8,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Icon(Icons.auto_stories_outlined, color: colors.primary),
+                Icon(AppIconography.guide, color: colors.primary),
                 Text(l10n.returnBriefTitle, style: theme.textTheme.titleLarge),
               ],
             ),
@@ -174,7 +175,7 @@ class ReturnBriefCard extends StatelessWidget {
                 alignment: AlignmentDirectional.centerStart,
                 child: FilledButton.tonalIcon(
                   onPressed: () => onAnswer(request),
-                  icon: const Icon(Icons.reply_rounded),
+                  icon: const Icon(AppIconography.reply),
                   label: Text(l10n.returnBriefAnswer),
                 ),
               ),

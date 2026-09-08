@@ -7,6 +7,7 @@ import '../../api2/transport.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
+import '../app_iconography.dart';
 
 /// One editor for the mobile-owned note, never a generic instruction browser.
 class SessionNoteScreen extends StatefulWidget {
@@ -293,7 +294,7 @@ class _SessionNoteScreenState extends State<SessionNoteScreen> {
                                       strokeWidth: 2,
                                     ),
                                   )
-                                : const Icon(Icons.check_rounded),
+                                : const Icon(AppIconography.check),
                             label: Text(l10n.sessionNoteSave),
                           ),
                           if (_review!.value != null)

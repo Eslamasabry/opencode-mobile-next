@@ -15,9 +15,13 @@ enum ReviewDiffMode { unified, split }
 enum ReviewDiffScope { session, workingTree, branch }
 
 bool _sameReviewDiff(FileDiff? a, FileDiff? b) =>
-    a != null && b != null &&
-    _ReviewWorkspaceState._normalizedPath(a.file) == _ReviewWorkspaceState._normalizedPath(b.file) &&
-    a.patch == b.patch && a.before == b.before && a.after == b.after &&
+    a != null &&
+    b != null &&
+    _ReviewWorkspaceState._normalizedPath(a.file) ==
+        _ReviewWorkspaceState._normalizedPath(b.file) &&
+    a.patch == b.patch &&
+    a.before == b.before &&
+    a.after == b.after &&
     a.status == b.status;
 
 class ReviewWorkspace extends StatefulWidget {
@@ -108,7 +112,8 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
       // opened a different cached file while this request was in flight.
       final previous = _diffs;
       final previousSelected = previous != null && previous.isNotEmpty
-          ? previous[_selectedFile] : null;
+          ? previous[_selectedFile]
+          : null;
       var resetPosition = false;
       setState(() {
         _diffs = diffs;
@@ -126,9 +131,11 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
           _selectedFile = 0;
         }
         final current = diffs.isEmpty ? null : diffs[_selectedFile];
-        _viewedFiles.removeWhere((key, viewed) =>
-          key.startsWith('$_scope:') &&
-          !diffs.any((diff) => _sameReviewDiff(viewed, diff)));
+        _viewedFiles.removeWhere(
+          (key, viewed) =>
+              key.startsWith('$_scope:') &&
+              !diffs.any((diff) => _sameReviewDiff(viewed, diff)),
+        );
         if (previous == null) _markViewed(_selectedFile);
         _pendingInitialFile = null;
         resetPosition = !_sameReviewDiff(previousSelected, current);
@@ -159,8 +166,10 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
     _viewedFiles['$_scope:${_normalizedPath(diff.file)}'] = diff;
   }
 
-  bool _isViewed(FileDiff diff) =>
-      _sameReviewDiff(_viewedFiles['$_scope:${_normalizedPath(diff.file)}'], diff);
+  bool _isViewed(FileDiff diff) => _sameReviewDiff(
+    _viewedFiles['$_scope:${_normalizedPath(diff.file)}'],
+    diff,
+  );
 
   ReviewDiffLoader _loaderFor(ReviewDiffScope scope) => switch (scope) {
     ReviewDiffScope.session => widget.loadDiffs!,
@@ -277,7 +286,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
                   child: TextButton.icon(
                     key: const Key('review-staged-count'),
                     onPressed: () => Navigator.of(context).maybePop(),
-                    icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                    icon: const Icon(AppIconography.back, size: 18),
                     label: Text('$staged on prompt'),
                   ),
                 );
@@ -288,8 +297,11 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
             tooltip: 'Refresh changes',
             onPressed: _diffs == null || _refreshing ? null : _load,
             icon: _refreshing
-                ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.refresh_rounded),
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(AppIconography.retry),
           ),
         ],
       ),
@@ -299,7 +311,9 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
 
   Widget _body(BuildContext context) {
     final content = ProductRefreshBody(
-      message: _diffs != null && _error != null ? productErrorText(_error!) : null,
+      message: _diffs != null && _error != null
+          ? productErrorText(_error!)
+          : null,
       onRetry: _load,
       child: _reviewContent(context),
     );
@@ -907,7 +921,7 @@ class _ReviewFileTab extends StatelessWidget {
                         if (viewed && !selected) ...[
                           const SizedBox(width: 4),
                           Icon(
-                            Icons.check_circle_rounded,
+                            AppIconography.checkCircle,
                             size: 13,
                             color: AppTheme.successOf(theme),
                           ),
@@ -1122,13 +1136,13 @@ class _ReviewDiffToolbar extends StatelessWidget {
               onPressed: hunks.isEmpty ? null : () => onHunk(-1, hunks),
               icon: const RotatedBox(
                 quarterTurns: 2,
-                child: Icon(Icons.arrow_forward_rounded, size: 18),
+                child: Icon(AppIconography.forward, size: 18),
               ),
             ),
             IconButton(
               tooltip: 'Next hunk',
               onPressed: hunks.isEmpty ? null : () => onHunk(1, hunks),
-              icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+              icon: const Icon(AppIconography.forward, size: 18),
             ),
             TextButton(onPressed: onAsk, child: const Text('Ask')),
             if (onAddFile != null)
@@ -1210,13 +1224,13 @@ class _ReviewDiffToolbar extends StatelessWidget {
                   onPressed: hunks.isEmpty ? null : () => onHunk(-1, hunks),
                   icon: const RotatedBox(
                     quarterTurns: 2,
-                    child: Icon(Icons.arrow_forward_rounded, size: 18),
+                    child: Icon(AppIconography.forward, size: 18),
                   ),
                 ),
                 IconButton(
                   tooltip: 'Next hunk',
                   onPressed: hunks.isEmpty ? null : () => onHunk(1, hunks),
-                  icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                  icon: const Icon(AppIconography.forward, size: 18),
                 ),
                 TextButton(
                   onPressed: (diff.patch ?? diff.after ?? '').isEmpty
@@ -1324,7 +1338,7 @@ class _ReviewPhoneDiffToolbar extends StatelessWidget {
                       value: _ReviewFileAction.ask,
                       child: ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: Icon(Icons.chat_bubble_outline_rounded),
+                        leading: Icon(AppIconography.chat),
                         title: Text('Ask about file'),
                       ),
                     ),
@@ -1347,7 +1361,7 @@ class _ReviewPhoneDiffToolbar extends StatelessWidget {
                       ),
                     ),
                   ],
-                  icon: const Icon(Icons.more_horiz_rounded),
+                  icon: const Icon(AppIconography.more),
                 ),
               ],
             ),
@@ -1385,13 +1399,13 @@ class _ReviewPhoneDiffToolbar extends StatelessWidget {
                   key: const Key('review-previous-hunk'),
                   tooltip: 'Previous hunk',
                   onPressed: hunks.isEmpty ? null : () => onHunk(-1, hunks),
-                  icon: const Icon(Icons.arrow_upward_rounded, size: 20),
+                  icon: const Icon(AppIconography.send, size: 20),
                 ),
                 IconButton(
                   key: const Key('review-next-hunk'),
                   tooltip: 'Next hunk',
                   onPressed: hunks.isEmpty ? null : () => onHunk(1, hunks),
-                  icon: const Icon(Icons.arrow_downward_rounded, size: 20),
+                  icon: const Icon(AppIconography.down, size: 20),
                 ),
               ],
             ),
@@ -1511,7 +1525,8 @@ class _ReviewDiffCanvasState extends State<_ReviewDiffCanvas> {
   /// Expansion belongs to one file's diff; a different file (or a reloaded
   /// diff of a different shape) starts collapsed again.
   void _resetExpansionIfNeeded() {
-    if (_sameReviewDiff(widget.diff, _expansionDiff) && widget.lines.length == _expansionLength) {
+    if (_sameReviewDiff(widget.diff, _expansionDiff) &&
+        widget.lines.length == _expansionLength) {
       return;
     }
     _expansionDiff = widget.diff;
@@ -2146,7 +2161,7 @@ class _CompactHunkBar extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.keyboard_arrow_up_rounded,
+                        AppIconography.chevronUp,
                         size: 20,
                         color: onExpand == null
                             ? AppTheme.mutedOf(theme)
@@ -2221,11 +2236,7 @@ class _CompactExpandBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Row(
             children: [
-              Icon(
-                Icons.keyboard_arrow_down_rounded,
-                size: 20,
-                color: scheme.primary,
-              ),
+              Icon(AppIconography.chevronDown, size: 20, color: scheme.primary),
               const SizedBox(width: 6),
               Text(
                 'Expand',
@@ -2576,7 +2587,7 @@ class _ReviewSelectionBar extends StatelessWidget {
             key: const Key('review-selection-clear'),
             tooltip: 'Clear selection',
             onPressed: onClear,
-            icon: const Icon(Icons.close_rounded, size: 20),
+            icon: const Icon(AppIconography.close, size: 20),
           ),
           IconButton(
             key: const Key('review-selection-copy'),
@@ -2636,13 +2647,13 @@ class _ReviewHunkBar extends StatelessWidget {
             key: const Key('review-hunk-bar-previous'),
             tooltip: 'Previous hunk',
             onPressed: () => onHunk(-1, hunks),
-            icon: const Icon(Icons.arrow_upward_rounded, size: 20),
+            icon: const Icon(AppIconography.send, size: 20),
           ),
           IconButton(
             key: const Key('review-hunk-bar-next'),
             tooltip: 'Next hunk',
             onPressed: () => onHunk(1, hunks),
-            icon: const Icon(Icons.arrow_downward_rounded, size: 20),
+            icon: const Icon(AppIconography.down, size: 20),
           ),
         ],
       ),
@@ -2806,7 +2817,7 @@ class _ReviewEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) => const ProductEmptyState(
     key: Key('review-empty'),
-    icon: Icons.difference_outlined,
+    icon: AppIconography.review,
     title: 'No changes to review',
     message: 'OpenCode has not changed any files in this session.',
   );
@@ -2832,7 +2843,7 @@ class _NoDiffContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) => const ProductEmptyState(
     key: Key('review-no-content'),
-    icon: Icons.description_outlined,
+    icon: AppIconography.fileText,
     title: 'Diff content unavailable',
     message:
         'The server reported this file but did not include a patch or file contents.',

@@ -283,7 +283,7 @@ void main() {
         ),
       );
       await _settle(tester, 1);
-      await tester.tap(find.byIcon(Icons.notifications_outlined));
+      await tester.tap(find.byIcon(AppIconography.activity));
       await _settle(tester, 2);
       expect(find.text('Run a shell command'), findsOneWidget);
       expect(find.text('Theme source'), findsOneWidget);

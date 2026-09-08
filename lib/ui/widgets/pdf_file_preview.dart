@@ -7,6 +7,7 @@ import '../../l10n/app_localizations.dart';
 import '../../platform/local_pdf.dart';
 import '../../platform/platform_capabilities.dart';
 import 'markdown.dart';
+import '../app_iconography.dart';
 
 class PdfFilePreview extends StatefulWidget {
   const PdfFilePreview({super.key, required this.bytes});
@@ -143,7 +144,7 @@ class _PdfFilePreviewState extends State<PdfFilePreview>
                       _enabled && _foreground && !loading && image.page > 0
                       ? () => setState(() => unawaited(_load(image.page - 1)))
                       : null,
-                  icon: const Icon(Icons.chevron_left),
+                  icon: const Icon(AppIconography.chevronLeft),
                   label: Text(l10n.filePrevious),
                   style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
                 ),
@@ -156,7 +157,7 @@ class _PdfFilePreviewState extends State<PdfFilePreview>
                           image.page + 1 < LocalPdf.maxPages
                       ? () => setState(() => unawaited(_load(image.page + 1)))
                       : null,
-                  icon: const Icon(Icons.chevron_right),
+                  icon: const Icon(AppIconography.chevronRight),
                   label: Text(l10n.fileNext),
                   style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
                 ),

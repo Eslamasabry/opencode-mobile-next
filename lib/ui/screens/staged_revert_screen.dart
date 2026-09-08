@@ -7,6 +7,7 @@ import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../../domain/server_gateway.dart';
 import '../widgets/diff_view.dart';
+import '../app_iconography.dart';
 
 AppLocalizations _strings(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
@@ -345,7 +346,7 @@ class _FileRow extends StatelessWidget {
     contentPadding: EdgeInsets.zero,
     title: Text(file.file),
     subtitle: Text('+${file.counts.added}  −${file.counts.removed}'),
-    trailing: const Icon(Icons.chevron_right_rounded),
+    trailing: const Icon(AppIconography.chevronRight),
     enabled: enabled,
     onTap: enabled
         ? () => Navigator.of(

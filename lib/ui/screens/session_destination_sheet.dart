@@ -6,6 +6,7 @@ import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
 import '../widgets/session_handoff.dart';
+import '../app_iconography.dart';
 
 enum SessionDestinationMode { move, warp }
 
@@ -371,7 +372,7 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
               tooltip: 'Close',
               constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               onPressed: _working ? null : () => Navigator.pop(context),
-              icon: const Icon(Icons.close_rounded),
+              icon: const Icon(AppIconography.close),
             ),
           ],
           bottom: _working
@@ -403,7 +404,7 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
                   onChanged: (value) => setState(() => _query = value),
                   decoration: const InputDecoration(
                     labelText: 'Filter destinations',
-                    prefixIcon: Icon(Icons.search_rounded),
+                    prefixIcon: Icon(AppIconography.search),
                   ),
                 ),
               ),
@@ -459,8 +460,8 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
           enabled: !_working && !item.current && !unavailable,
           leading: Icon(
             item.current
-                ? Icons.radio_button_checked_rounded
-                : Icons.radio_button_unchecked_rounded,
+                ? AppIconography.radioSelected
+                : AppIconography.radioEmpty,
           ),
           title: Text(item.title),
           subtitle: Text(label, maxLines: 3, overflow: TextOverflow.ellipsis),
@@ -468,7 +469,7 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
               ? const Text('Current')
               : unavailable
               ? Text(item.status ?? 'Unavailable')
-              : const Icon(Icons.chevron_right_rounded),
+              : const Icon(AppIconography.chevronRight),
           onTap: () => _select(item),
         );
       },
@@ -584,7 +585,7 @@ class _ConsoleOrganizationSheetState extends State<_ConsoleOrganizationSheet> {
               tooltip: 'Close',
               constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               onPressed: _working ? null : () => Navigator.pop(context),
-              icon: const Icon(Icons.close_rounded),
+              icon: const Icon(AppIconography.close),
             ),
           ],
           bottom: _working
@@ -638,14 +639,14 @@ class _ConsoleOrganizationSheetState extends State<_ConsoleOrganizationSheet> {
                       enabled: !_working && !organizations[index].active,
                       leading: Icon(
                         organizations[index].active
-                            ? Icons.radio_button_checked_rounded
-                            : Icons.radio_button_unchecked_rounded,
+                            ? AppIconography.radioSelected
+                            : AppIconography.radioEmpty,
                       ),
                       title: Text(organizations[index].orgName),
                       subtitle: Text(organizations[index].orgID),
                       trailing: organizations[index].active
                           ? const Text('Current')
-                          : const Icon(Icons.chevron_right_rounded),
+                          : const Icon(AppIconography.chevronRight),
                       onTap: () => _switch(organizations[index]),
                     ),
                   ],

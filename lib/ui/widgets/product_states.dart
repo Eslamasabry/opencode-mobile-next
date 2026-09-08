@@ -228,10 +228,7 @@ class ProductErrorState extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.error_outline_rounded,
-                    color: theme.colorScheme.error,
-                  ),
+                  Icon(AppIconography.error, color: theme.colorScheme.error),
                   const SizedBox(height: 10),
                   Text(message, textAlign: TextAlign.center),
                   const SizedBox(height: 14),
@@ -246,7 +243,7 @@ class ProductErrorState extends StatelessWidget {
                   TextButton.icon(
                     key: const ValueKey('product-error-report-bug'),
                     onPressed: () => unawaited(openBugReport(context)),
-                    icon: const Icon(Icons.bug_report_outlined, size: 18),
+                    icon: const Icon(AppIconography.bug, size: 18),
                     label: const Text('Report a bug'),
                   ),
                 ],

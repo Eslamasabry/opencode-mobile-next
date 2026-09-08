@@ -179,7 +179,7 @@ class _CredentialManagementSheetState
       } else if (action == _CredentialAction.remove) {
         final confirmed = await showConfirmSheet(
           context,
-          icon: Icons.person_remove_outlined,
+          icon: AppIconography.personRemove,
           title: _l10n.credentialRemoveTitle(label),
           message: _l10n.credentialRemoveDetail,
           confirmLabel: _l10n.mcpRemove,
@@ -299,7 +299,7 @@ class _CredentialManagementSheetState
                 alignment: AlignmentDirectional.centerStart,
                 child: TextButton.icon(
                   onPressed: _loading || _busyCredential != null ? null : _load,
-                  icon: const Icon(Icons.refresh_rounded),
+                  icon: const Icon(AppIconography.retry),
                   label: Text(l10n.credentialRefresh),
                 ),
               ),
@@ -312,7 +312,7 @@ class _CredentialManagementSheetState
               ))
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.lock_outline_rounded),
+                  leading: const Icon(AppIconography.locked),
                   title: Text(connection.label),
                   subtitle: Text(l10n.credentialEnvironment),
                 ),

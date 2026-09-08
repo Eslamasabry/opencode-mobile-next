@@ -105,8 +105,8 @@ class _SavedServerConnectionCardState extends State<SavedServerConnectionCard> {
                         ),
                         child: Icon(
                           failed
-                              ? Icons.cloud_off_outlined
-                              : Icons.terminal_rounded,
+                              ? AppIconography.cloudOff
+                              : AppIconography.terminal,
                           color: failed
                               ? scheme.onErrorContainer
                               : scheme.onPrimaryContainer,
@@ -197,7 +197,7 @@ class _AddressRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.dns_outlined, size: 18, color: scheme.onSurfaceVariant),
+          Icon(AppIconography.server, size: 18, color: scheme.onSurfaceVariant),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -289,7 +289,7 @@ class _DetailsExpander extends StatelessWidget {
             key: const ValueKey('saved-server-details'),
             onPressed: onToggle,
             icon: Icon(
-              open ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+              open ? AppIconography.chevronUp : AppIconography.chevronDown,
               size: 18,
             ),
             label: Text(open ? 'Hide details' : 'Details'),
@@ -338,7 +338,7 @@ class _Actions extends StatelessWidget {
     final retry = OutlinedButton.icon(
       key: const ValueKey('saved-server-retry'),
       onPressed: onRetry,
-      icon: const Icon(Icons.refresh_rounded, size: 19),
+      icon: const Icon(AppIconography.retry, size: 19),
       label: const Text('Try again'),
     );
     final change = TextButton(
@@ -351,21 +351,21 @@ class _Actions extends StatelessWidget {
         FilledButton.icon(
           key: const ValueKey('saved-server-open-termux'),
           onPressed: onOpenTermuxSetup,
-          icon: const Icon(Icons.smartphone_rounded, size: 19),
+          icon: const Icon(AppIconography.phone, size: 19),
           label: const Text('Check Termux'),
         ),
       ConnectionFailureAction.updatePassword when onUpdatePassword != null =>
         FilledButton.icon(
           key: const ValueKey('saved-server-update-password'),
           onPressed: onUpdatePassword,
-          icon: const Icon(Icons.key_rounded, size: 19),
+          icon: const Icon(AppIconography.permissions, size: 19),
           label: const Text('Update password'),
         ),
       ConnectionFailureAction.updateToken when onUpdateToken != null =>
         FilledButton.icon(
           key: const ValueKey('saved-server-update-token'),
           onPressed: onUpdateToken,
-          icon: const Icon(Icons.key_rounded, size: 19),
+          icon: const Icon(AppIconography.permissions, size: 19),
           label: Text(
             lookupAppLocalizations(
               Localizations.localeOf(context),
@@ -375,13 +375,13 @@ class _Actions extends StatelessWidget {
       ConnectionFailureAction.changeServer => FilledButton.icon(
         key: const ValueKey('saved-server-change-primary'),
         onPressed: onChangeServer,
-        icon: const Icon(Icons.swap_horiz_rounded, size: 19),
+        icon: const Icon(AppIconography.swap, size: 19),
         label: const Text('Change server'),
       ),
       _ => FilledButton.icon(
         key: const ValueKey('saved-server-retry-primary'),
         onPressed: onRetry,
-        icon: const Icon(Icons.refresh_rounded, size: 19),
+        icon: const Icon(AppIconography.retry, size: 19),
         label: const Text('Try again'),
       ),
     };

@@ -240,7 +240,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
       FocusManager.instance.primaryFocus?.unfocus();
       final confirmed = await showConfirmSheet(
         context,
-        icon: Icons.delete_outline_rounded,
+        icon: AppIconography.delete,
         title: l10n.mcpRemoveTitle(server.name),
         message: l10n.mcpRemoveRuntimeDetail,
         confirmLabel: l10n.mcpRemove,
@@ -549,7 +549,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
               key: const ValueKey('add-mcp-server'),
               tooltip: 'Add MCP server',
               onPressed: _openMcpSetup,
-              icon: const Icon(Icons.add_rounded),
+              icon: const Icon(AppIconography.add),
             ),
         ],
       ),
@@ -697,7 +697,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
         const _SectionLoading(label: 'Loading providers')
       else if (integrations.isEmpty)
         ProductInlineEmpty(
-          icon: Icons.link_off_rounded,
+          icon: AppIconography.unlink,
           title: 'No provider connections available',
           message: 'This server did not return any provider integrations.',
           actionLabel: 'Refresh',
@@ -749,7 +749,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                     onPressed: _busy.contains(presented.integration.id)
                         ? null
                         : () => _connectIntegration(presented.integration),
-                    icon: const Icon(Icons.terminal_rounded),
+                    icon: const Icon(AppIconography.terminal),
                     label: Text(
                       lookupAppLocalizations(
                         Localizations.localeOf(context),
@@ -774,7 +774,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                             presented.integration,
                             presented.name,
                           ),
-                    icon: const Icon(Icons.manage_accounts_outlined),
+                    icon: const Icon(AppIconography.manageAccount),
                     label: Text(
                       lookupAppLocalizations(
                         Localizations.localeOf(context),
@@ -820,7 +820,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
         onChanged: (value) => setState(() => _providerQuery = value),
         decoration: InputDecoration(
           hintText: 'Search providers or models',
-          prefixIcon: const Icon(Icons.search_rounded),
+          prefixIcon: const Icon(AppIconography.search),
           isDense: true,
           suffixIcon: _providerQuery.isEmpty
               ? null
@@ -828,7 +828,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                   key: const ValueKey('providers-search-clear'),
                   tooltip: 'Clear provider search',
                   onPressed: _clearProviderSearch,
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(AppIconography.close),
                 ),
         ),
       ),
@@ -874,7 +874,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
         const _SectionLoading(label: 'Loading MCP servers')
       else if (servers != null && servers.isEmpty)
         ProductInlineEmpty(
-          icon: Icons.hub_outlined,
+          icon: AppIconography.network,
           title: 'No MCP servers configured',
           message: widget.controller.capabilities.mcpConfigWrites
               ? 'Save one for this project or every project on the server.'
@@ -921,7 +921,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                           _pendingMcpOAuth?.server.name == server.name
                       ? null
                       : () => _removeMcp(server),
-                  icon: const Icon(Icons.delete_outline_rounded),
+                  icon: const Icon(AppIconography.delete),
                   label: Text(
                     lookupAppLocalizations(
                       Localizations.localeOf(context),
@@ -956,7 +956,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
         const _SectionLoading(label: 'Loading available resources')
       else if (resources != null && resources.isEmpty)
         ProductInlineEmpty(
-          icon: Icons.description_outlined,
+          icon: AppIconography.fileText,
           title: 'No resources available',
           message: 'Connected MCP servers have not exposed any resources.',
           actionLabel: _servers?.isEmpty == true ? 'Add an MCP server' : null,
@@ -967,7 +967,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
           ListTile(
             leading: const BrandTile(
               size: 28,
-              child: Icon(Icons.description_outlined, size: 16),
+              child: Icon(AppIconography.fileText, size: 16),
             ),
             title: Text(resource.name),
             subtitle: Text(
@@ -1075,7 +1075,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
               ),
               FilledButton.icon(
                 onPressed: () => Navigator.pop(context, true),
-                icon: const Icon(Icons.open_in_browser_rounded),
+                icon: const Icon(AppIconography.browser),
                 label: const Text('Open browser'),
               ),
             ],
@@ -1137,7 +1137,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     final environmentRemains = integration.hasEnvironmentConnection;
     final confirmed = await showConfirmSheet(
       context,
-      icon: Icons.link_off_rounded,
+      icon: AppIconography.unlink,
       title: 'Disconnect ${presented.name}?',
       message:
           'The stored credential will be removed from this OpenCode server. '
@@ -1202,10 +1202,10 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                       minTileHeight: 56,
                       leading: Icon(
                         method.type == 'key'
-                            ? Icons.key_outlined
+                            ? AppIconography.permissions
                             : method.type == 'command'
-                            ? Icons.terminal_rounded
-                            : Icons.open_in_browser_rounded,
+                            ? AppIconography.terminal
+                            : AppIconography.browser,
                       ),
                       title: Text(method.label),
                       subtitle: Text(

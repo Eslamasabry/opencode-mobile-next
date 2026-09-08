@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../domain/completion_digest.dart';
 import '../../l10n/app_localizations.dart';
+import '../app_iconography.dart';
 
 /// Deliberately formats only allowlisted counts and app-authored copy.
 class CompletionDigestCard extends StatelessWidget {
@@ -76,7 +77,7 @@ class CompletionDigestCard extends StatelessWidget {
                 TextButton.icon(
                   key: const Key('completion-digest-run-results'),
                   onPressed: onRunResults,
-                  icon: const Icon(Icons.fact_check_outlined),
+                  icon: const Icon(AppIconography.checklist),
                   label: Text(l10n.digestRunResults),
                 ),
               TextButton.icon(
@@ -97,7 +98,7 @@ class CompletionDigestCard extends StatelessWidget {
                     );
                   }
                 },
-                icon: const Icon(Icons.copy_outlined),
+                icon: const Icon(AppIconography.copy),
                 label: Text(l10n.digestCopy),
               ),
               TextButton(onPressed: onDismiss, child: Text(l10n.digestDismiss)),

@@ -229,7 +229,7 @@ class _DevelopmentServicesScreenState extends State<DevelopmentServicesScreen>
                     onPressed: _model.busy
                         ? null
                         : () => _model.readLogs(service.id),
-                    icon: const Icon(Icons.refresh),
+                    icon: const Icon(AppIconography.retry),
                     label: Text(l.servicesRefresh),
                   ),
                 ],
@@ -253,7 +253,7 @@ class _DevelopmentServicesScreenState extends State<DevelopmentServicesScreen>
             IconButton(
               tooltip: l.servicesRefresh,
               onPressed: _model.busy ? null : _refresh,
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(AppIconography.retry),
             ),
         ],
       ),
@@ -282,7 +282,7 @@ class _DevelopmentServicesScreenState extends State<DevelopmentServicesScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Icon(
-                          Icons.developer_board_rounded,
+                          AppIconography.processor,
                           size: 32,
                           color: theme.colorScheme.primary,
                         ),
@@ -305,7 +305,7 @@ class _DevelopmentServicesScreenState extends State<DevelopmentServicesScreen>
                           onPressed: _model.busy || !_model.readable
                               ? null
                               : _register,
-                          icon: const Icon(Icons.add),
+                          icon: const Icon(AppIconography.add),
                           label: Text(l.servicesAdd),
                         ),
                       ],
@@ -367,8 +367,8 @@ class _DevelopmentServicesScreenState extends State<DevelopmentServicesScreen>
               children: [
                 Icon(
                   status == DevelopmentServiceStatus.running
-                      ? Icons.circle
-                      : Icons.radio_button_unchecked,
+                      ? AppIconography.statusDot
+                      : AppIconography.radioEmpty,
                   size: 14,
                   color: color,
                 ),
@@ -405,7 +405,7 @@ class _DevelopmentServicesScreenState extends State<DevelopmentServicesScreen>
                     onPressed: _model.canStart(service)
                         ? () => _confirm(service, 'start')
                         : null,
-                    icon: const Icon(Icons.play_arrow_rounded),
+                    icon: const Icon(AppIconography.play),
                     label: Text(l.servicesStart),
                   ),
                 if (_model.canStop(service)) ...[
@@ -423,7 +423,7 @@ class _DevelopmentServicesScreenState extends State<DevelopmentServicesScreen>
                     widget.controller.capabilities.developmentServices)
                   OutlinedButton.icon(
                     onPressed: _model.busy ? null : () => _logs(service),
-                    icon: const Icon(Icons.subject_rounded),
+                    icon: const Icon(AppIconography.text),
                     label: Text(l.servicesLogs),
                   ),
                 if (safeExternalLinkUri(service.url) != null)
@@ -433,14 +433,14 @@ class _DevelopmentServicesScreenState extends State<DevelopmentServicesScreen>
                         unawaited(openExternalLink(context, service.url));
                       }
                     },
-                    icon: const Icon(Icons.open_in_new),
+                    icon: const Icon(AppIconography.externalLink),
                     label: Text(l.servicesVisit),
                   ),
                 IconButton(
                   tooltip: l.servicesCopy,
                   onPressed: () =>
                       Clipboard.setData(ClipboardData(text: service.command)),
-                  icon: const Icon(Icons.copy_rounded),
+                  icon: const Icon(AppIconography.copy),
                 ),
               ],
             ),

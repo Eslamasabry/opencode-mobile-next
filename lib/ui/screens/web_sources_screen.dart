@@ -9,6 +9,7 @@ import '../../domain/web_source_selection.dart';
 import '../../state/connection.dart';
 import '../../state/web_sources_overview.dart';
 import '../widgets/external_link.dart';
+import '../app_iconography.dart';
 
 export '../../domain/web_source_selection.dart';
 
@@ -140,7 +141,7 @@ class _WebSourcesScreenState extends State<WebSourcesScreen> {
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               onPressed: _overview.discoverProviders,
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(AppIconography.retry),
               label: Text(l10n.webSearchRefresh),
             ),
           ),
@@ -176,7 +177,7 @@ class _WebSourcesScreenState extends State<WebSourcesScreen> {
               busy || _overview.providerID == null || _query.text.trim().isEmpty
               ? null
               : () => _overview.search(_query.text),
-          icon: const Icon(Icons.search),
+          icon: const Icon(AppIconography.search),
           label: Text(l10n.webSearchSubmit),
         ),
         if (_overview.searched && _overview.results.isEmpty)
@@ -197,7 +198,7 @@ class _WebSourcesScreenState extends State<WebSourcesScreen> {
                     openExternalLink(context, result.url);
                   }
                 },
-                icon: const Icon(Icons.open_in_new),
+                icon: const Icon(AppIconography.externalLink),
                 label: Text(l10n.webSourcesOpen),
               ),
               TextButton.icon(
@@ -205,7 +206,7 @@ class _WebSourcesScreenState extends State<WebSourcesScreen> {
                     _overview.sources.any((item) => item.url == result.url)
                     ? null
                     : () => setState(() => _error = _overview.add(result)),
-                icon: const Icon(Icons.add),
+                icon: const Icon(AppIconography.add),
                 label: Text(l10n.webSourcesAdd),
               ),
             ],
@@ -251,7 +252,7 @@ class _WebSourcesScreenState extends State<WebSourcesScreen> {
         key: const ValueKey('web-source-add'),
         style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
         onPressed: _add,
-        icon: const Icon(Icons.add),
+        icon: const Icon(AppIconography.add),
         label: Text(l10n.webSourcesAdd),
       ),
     ],
@@ -304,7 +305,7 @@ class _WebSourcesScreenState extends State<WebSourcesScreen> {
                         }
                         openExternalLink(context, sources[index].url);
                       },
-                      icon: const Icon(Icons.open_in_new),
+                      icon: const Icon(AppIconography.externalLink),
                       label: Text(l10n.webSourcesOpen),
                     ),
                     TextButton.icon(
@@ -313,7 +314,7 @@ class _WebSourcesScreenState extends State<WebSourcesScreen> {
                         minimumSize: const Size(48, 48),
                       ),
                       onPressed: () => _overview.remove(sources[index]),
-                      icon: const Icon(Icons.delete_outline),
+                      icon: const Icon(AppIconography.delete),
                       label: Text(l10n.mcpRemove),
                     ),
                   ],

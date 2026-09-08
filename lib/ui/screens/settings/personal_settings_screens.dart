@@ -17,10 +17,10 @@ class AppearanceSettingsScreen extends StatelessWidget {
             valueListenable: controller.appearance,
             builder: (context, appearance, _) => ListTile(
               key: const ValueKey('appearance-settings-entry'),
-              leading: const Icon(Icons.brightness_6_outlined),
+              leading: const Icon(AppIconography.contrast),
               title: const Text('Light or dark'),
               subtitle: Text(appearanceLabel(appearance)),
-              trailing: const Icon(Icons.chevron_right_rounded),
+              trailing: const Icon(AppIconography.chevronRight),
               onTap: () =>
                   showAppearancePicker(context, controller: controller),
             ),
@@ -102,7 +102,7 @@ class _ThemePackTile extends StatelessWidget {
       leading: SizedBox(
         width: 56,
         child: palette == null
-            ? const Icon(Icons.auto_awesome_outlined)
+            ? const Icon(AppIconography.sparkle)
             : Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -130,7 +130,7 @@ class _ThemePackTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: selected ? const Icon(Icons.check_rounded) : null,
+      trailing: selected ? const Icon(AppIconography.check) : null,
       onTap: available ? onSelect : null,
     );
   }
@@ -175,7 +175,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
       title: title,
       message: body,
       confirmLabel: 'Delete',
-      icon: Icons.delete_outline_rounded,
+      icon: AppIconography.delete,
       destructive: true,
     );
     if (!ok || !mounted) return;
@@ -251,12 +251,12 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
           ),
           ListTile(
             key: const ValueKey('saved-permissions-entry'),
-            leading: const Icon(Icons.admin_panel_settings_outlined),
+            leading: const Icon(AppIconography.privacy),
             title: const Text('Always allowed actions'),
             subtitle: const Text(
               'Review or revoke durable OpenCode permissions for this project',
             ),
-            trailing: const Icon(Icons.chevron_right_rounded),
+            trailing: const Icon(AppIconography.chevronRight),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => SavedPermissionsScreen(controller: _controller),
@@ -301,7 +301,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                   ),
                   ListTile(
                     key: const ValueKey('clear-queued-prompts'),
-                    leading: const Icon(Icons.outbox_outlined),
+                    leading: const Icon(AppIconography.outbox),
                     title: const Text('Clear queued prompts'),
                     subtitle: Text(
                       !queueReadable
@@ -331,7 +331,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                   ),
                   ListTile(
                     key: const ValueKey('clear-session-drafts'),
-                    leading: const Icon(Icons.edit_note_outlined),
+                    leading: const Icon(AppIconography.editNote),
                     title: const Text('Clear drafts'),
                     subtitle: Text(
                       drafts == 0
@@ -381,14 +381,14 @@ class DiagnosticsSettingsScreen extends StatelessWidget {
               final count = controller.diagnostics.count;
               return ListTile(
                 key: const ValueKey('app-diagnostics-entry'),
-                leading: const Icon(Icons.health_and_safety_outlined),
+                leading: const Icon(AppIconography.privacy),
                 title: const Text('App diagnostics'),
                 subtitle: Text(
                   count == 0
                       ? 'No captured errors'
                       : '$count handled error${count == 1 ? '' : 's'} kept in memory',
                 ),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                trailing: const Icon(AppIconography.chevronRight),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) =>
@@ -418,12 +418,12 @@ class AboutSettingsScreen extends StatelessWidget {
         children: [
           ListTile(
             key: const ValueKey('settings-setup-guide'),
-            leading: const Icon(Icons.menu_book_outlined),
+            leading: const Icon(AppIconography.guide),
             title: const Text('Setup guide'),
             subtitle: const Text(
               'Connect a computer or run OpenCode on this phone',
             ),
-            trailing: const Icon(Icons.chevron_right_rounded),
+            trailing: const Icon(AppIconography.chevronRight),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => GuideScreen(embedded: false),
@@ -436,7 +436,7 @@ class AboutSettingsScreen extends StatelessWidget {
             subtitle: const Text(
               'Servers, providers, voice, files, Termux, and updates',
             ),
-            trailing: const Icon(Icons.chevron_right_rounded),
+            trailing: const Icon(AppIconography.chevronRight),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const AboutScreen()),
             ),
@@ -447,21 +447,21 @@ class AboutSettingsScreen extends StatelessWidget {
           if (platformCapabilities.supportsVoice)
             ListTile(
               key: const Key('settings-voice-notices'),
-              leading: const Icon(Icons.policy_outlined),
+              leading: const Icon(AppIconography.policy),
               title: const Text('Voice licenses and provenance'),
               subtitle: const Text(
                 'Whisper models, sherpa-onnx, ONNX Runtime, and record',
               ),
-              trailing: const Icon(Icons.chevron_right_rounded),
+              trailing: const Icon(AppIconography.chevronRight),
               onTap: () => showVoiceNotices(context),
             ),
           ListTile(
-            leading: const Icon(Icons.info_outline_rounded),
+            leading: const Icon(AppIconography.info),
             title: const Text('About and open source notices'),
             subtitle: const Text(
               'App details, components, and license notices',
             ),
-            trailing: const Icon(Icons.chevron_right_rounded),
+            trailing: const Icon(AppIconography.chevronRight),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => const AboutScreen(initialTab: 1),

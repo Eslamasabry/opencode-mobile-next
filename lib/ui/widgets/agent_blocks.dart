@@ -31,9 +31,8 @@ class AgentChoiceScope extends InheritedWidget {
 
   final ValueChanged<String>? onChoice;
 
-  static ValueChanged<String>? maybeOf(BuildContext context) => context
-      .dependOnInheritedWidgetOfExactType<AgentChoiceScope>()
-      ?.onChoice;
+  static ValueChanged<String>? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<AgentChoiceScope>()?.onChoice;
 
   @override
   bool updateShouldNotify(AgentChoiceScope oldWidget) =>
@@ -51,7 +50,10 @@ class AgentChoicesBlock extends StatelessWidget {
   /// Splits the fence body into options, dropping blanks and list markers.
   static List<String> parse(String body) => body
       .split('\n')
-      .map((line) => line.trim().replaceFirst(RegExp(r'^(?:[-*+]|\d+[.)])\s+'), ''))
+      .map(
+        (line) =>
+            line.trim().replaceFirst(RegExp(r'^(?:[-*+]|\d+[.)])\s+'), ''),
+      )
       .where((line) => line.isNotEmpty)
       .toList();
 
@@ -115,7 +117,7 @@ class AgentChoicesBlock extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Icon(
-                            Icons.arrow_forward_rounded,
+                            AppIconography.forward,
                             size: 18,
                             color: theme.colorScheme.primary,
                           ),
@@ -148,9 +150,7 @@ class AgentChecklistBlock extends StatelessWidget {
 
   final List<AgentChecklistItem> items;
 
-  static final _itemPattern = RegExp(
-    r'^(?:[-*+]\s+)?\[([ xX])\]\s*(.*)$',
-  );
+  static final _itemPattern = RegExp(r'^(?:[-*+]\s+)?\[([ xX])\]\s*(.*)$');
 
   static List<AgentChecklistItem> parse(String body) {
     final items = <AgentChecklistItem>[];
@@ -194,15 +194,13 @@ class AgentChecklistBlock extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 1),
                     child: Icon(
                       item.done
-                          ? Icons.check_circle_rounded
-                          : Icons.radio_button_unchecked_rounded,
+                          ? AppIconography.checkCircle
+                          : AppIconography.radioEmpty,
                       key: Key(
                         item.done ? 'agent-check-done' : 'agent-check-open',
                       ),
                       size: 18,
-                      color: item.done
-                          ? AppTheme.successOf(theme)
-                          : muted,
+                      color: item.done ? AppTheme.successOf(theme) : muted,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -270,7 +268,7 @@ class AgentCommandBlock extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 2),
             child: Row(
               children: [
-                Icon(Icons.terminal_rounded, size: 14, color: muted),
+                Icon(AppIconography.terminal, size: 14, color: muted),
                 const SizedBox(width: 6),
                 Text(
                   'Run on your computer',

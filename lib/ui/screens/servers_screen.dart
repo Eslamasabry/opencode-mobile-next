@@ -251,7 +251,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
       title: 'Remove ${p.name}?',
       message: disclosure,
       confirmLabel: 'Remove',
-      icon: Icons.delete_outline_rounded,
+      icon: AppIconography.delete,
       destructive: true,
       sheetKey: ValueKey('remove-server-sheet-${p.id}'),
       confirmKey: ValueKey('confirm-remove-server-${p.id}'),
@@ -339,7 +339,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
               tooltip: lookupAppLocalizations(
                 Localizations.localeOf(context),
               ).attentionTitle,
-              icon: const Icon(Icons.notifications_none_rounded),
+              icon: const Icon(AppIconography.activity),
               onPressed: _busy
                   ? null
                   : () async {
@@ -367,12 +367,12 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
             ),
           IconButton(
             tooltip: 'About and open source notices',
-            icon: const Icon(Icons.info_outline_rounded),
+            icon: const Icon(AppIconography.info),
             onPressed: () => Navigator.pushNamed(context, '/about'),
           ),
           IconButton(
             tooltip: _connectionL10n(context).onboardingSetupGuide,
-            icon: const Icon(Icons.help_outline_rounded),
+            icon: const Icon(AppIconography.question),
             onPressed: () => Navigator.pushNamed(context, '/guide'),
           ),
         ],
@@ -490,8 +490,8 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                             ).colorScheme.surfaceContainerHighest,
                       child: Icon(
                         isLoopbackHost(Uri.tryParse(p.baseUrl)?.host ?? '')
-                            ? Icons.smartphone_rounded
-                            : Icons.dns_rounded,
+                            ? AppIconography.phone
+                            : AppIconography.server,
                         size: 18,
                         color: p.id == activeId
                             ? Theme.of(context).colorScheme.onPrimary
@@ -599,13 +599,13 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                 ),
               OutlinedButton.icon(
                 onPressed: _busy ? null : () => _edit(),
-                icon: const Icon(Icons.add_rounded),
+                icon: const Icon(AppIconography.add),
                 label: const Text('Add server'),
               ),
               const SizedBox(height: 8),
               TextButton.icon(
                 onPressed: _busy ? null : _demo,
-                icon: const Icon(Icons.play_circle_outline_rounded),
+                icon: const Icon(AppIconography.playCircle),
                 label: const Text(DemoCopy.tryDemo),
               ),
               const SizedBox(height: 16),
@@ -754,7 +754,7 @@ class _SetupOptions extends StatelessWidget {
         ListTile(
           key: const ValueKey('welcome-tailscale-card'),
           contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.vpn_lock_outlined),
+          leading: const Icon(AppIconography.secureNetwork),
           title: Text(_connectionL10n(context).tailscaleTitle),
           subtitle: Text(_connectionL10n(context).onboardingPrivateNetwork),
           onTap: busy ? null : onTailscale,
@@ -765,7 +765,7 @@ class _SetupOptions extends StatelessWidget {
             savedProfiles ? 'quick-add-termux-card' : 'welcome-termux-card',
           ),
           contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.smartphone_outlined),
+          leading: const Icon(AppIconography.phone),
           title: Text(_connectionL10n(context).onboardingRunOnPhone),
           subtitle: Text(_connectionL10n(context).onboardingTermuxNote),
           onTap: busy ? null : onTermux,
@@ -773,13 +773,13 @@ class _SetupOptions extends StatelessWidget {
       ListTile(
         key: const ValueKey('welcome-guide-card'),
         contentPadding: EdgeInsets.zero,
-        leading: const Icon(Icons.menu_book_outlined),
+        leading: const Icon(AppIconography.guide),
         title: Text(_connectionL10n(context).onboardingSetupGuide),
         onTap: busy ? null : onGuide,
       ),
       ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: const Icon(Icons.hub_outlined),
+        leading: const Icon(AppIconography.network),
         title: Text(_connectionL10n(context).a2aTitle),
         onTap: busy ? null : onExternalAgents,
       ),
@@ -1309,7 +1309,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
       message: 'The server profile has not been saved.',
       confirmLabel: 'Discard',
       cancelLabel: 'Keep editing',
-      icon: Icons.edit_off_rounded,
+      icon: AppIconography.editOff,
     );
     _closing = false;
     if (discard && mounted) Navigator.pop(context);
@@ -1537,15 +1537,15 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                   setState(() => _obscurePassword = !_obscurePassword),
               icon: Icon(
                 _obscurePassword
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
+                    ? AppIconography.visible
+                    : AppIconography.hidden,
               ),
             ),
             IconButton(
               key: const ValueKey('codex-token-paste'),
               tooltip: _connectionL10n(context).codexPasteToken,
               onPressed: () => unawaited(_pasteCodexToken()),
-              icon: const Icon(Icons.content_paste_rounded),
+              icon: const Icon(AppIconography.paste),
             ),
           ],
         ),
@@ -1573,9 +1573,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
-              result.ok
-                  ? Icons.check_circle_outline_rounded
-                  : Icons.error_outline_rounded,
+              result.ok ? AppIconography.checkCircle : AppIconography.error,
               size: 20,
               color: result.ok
                   ? AppTheme.successOf(theme)
@@ -1624,7 +1622,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
           leading: IconButton(
             tooltip: _connectionL10n(context).connectionCloseEditor,
             onPressed: _submitting ? null : _close,
-            icon: const Icon(Icons.close_rounded),
+            icon: const Icon(AppIconography.close),
           ),
           title: Text(title),
         ),
@@ -1666,7 +1664,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                     Text(_connectionL10n(context).tailscaleEditorDetail),
                     TextButton.icon(
                       onPressed: _tailscaleHelp,
-                      icon: const Icon(Icons.vpn_lock_outlined),
+                      icon: const Icon(AppIconography.secureNetwork),
                       label: Text(_connectionL10n(context).tailscaleHelp),
                     ),
                     if (_testResult?.ok == false || _submitFailure != null)
@@ -1887,8 +1885,8 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                               ),
                               icon: Icon(
                                 _obscurePassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
+                                    ? AppIconography.visible
+                                    : AppIconography.hidden,
                               ),
                             ),
                             // Paste is the primary affordance for the per-run
@@ -1898,7 +1896,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                               key: const ValueKey('server-password-paste'),
                               tooltip: 'Paste server password',
                               onPressed: () => unawaited(_pastePassword()),
-                              icon: const Icon(Icons.content_paste_rounded),
+                              icon: const Icon(AppIconography.paste),
                             ),
                           ],
                         ),
@@ -1914,7 +1912,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                             dimension: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.network_check_rounded),
+                        : const Icon(AppIconography.networkCheck),
                     label: Text(_testing ? 'Testing…' : 'Test connection'),
                   ),
                   if (_isCodex && _codexTestResult != null) ...[
@@ -1945,8 +1943,8 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                           children: [
                             Icon(
                               result.ok
-                                  ? Icons.check_circle_outline_rounded
-                                  : Icons.error_outline_rounded,
+                                  ? AppIconography.checkCircle
+                                  : AppIconography.error,
                               size: 20,
                               color: result.ok
                                   ? AppTheme.successOf(theme)
@@ -2124,14 +2122,14 @@ class _PairingActions extends StatelessWidget {
                       dimension: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.content_paste_rounded, size: 18),
+                  : const Icon(AppIconography.paste, size: 18),
               label: Text(busy ? 'Pairing…' : 'Paste pairing code'),
             ),
             if (onScan case final scan?)
               OutlinedButton.icon(
                 key: const ValueKey('server-pairing-scan'),
                 onPressed: busy ? null : scan,
-                icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
+                icon: const Icon(AppIconography.qrCode, size: 18),
                 label: const Text('Scan'),
               ),
           ],
@@ -2146,7 +2144,7 @@ class _PairingActions extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(
-                  Icons.check_circle_outline_rounded,
+                  AppIconography.checkCircle,
                   size: 18,
                   color: AppTheme.successOf(theme),
                 ),
@@ -2177,7 +2175,7 @@ class _PairingActions extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
-                    Icons.error_outline_rounded,
+                    AppIconography.error,
                     size: 18,
                     color: theme.colorScheme.onErrorContainer,
                   ),
@@ -2227,7 +2225,7 @@ class _InlineFailureCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
-              Icons.error_outline_rounded,
+              AppIconography.error,
               size: 20,
               color: theme.colorScheme.onErrorContainer,
             ),
@@ -2249,7 +2247,7 @@ class _InlineFailureCard extends StatelessWidget {
                 tooltip: 'Dismiss',
                 onPressed: onDismiss,
                 color: theme.colorScheme.onErrorContainer,
-                icon: const Icon(Icons.close_rounded, size: 20),
+                icon: const Icon(AppIconography.close, size: 20),
               ),
           ],
         ),

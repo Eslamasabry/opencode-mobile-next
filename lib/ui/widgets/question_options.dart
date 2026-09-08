@@ -46,11 +46,9 @@ class QuestionOptionRow extends StatelessWidget {
     final tint = enabled ? scheme.primary : AppTheme.mutedOf(theme);
     final icon = multiple
         ? (selected
-              ? Icons.check_box_rounded
-              : Icons.check_box_outline_blank_rounded)
-        : (selected
-              ? Icons.radio_button_checked_rounded
-              : Icons.radio_button_unchecked_rounded);
+              ? AppIconography.checkboxChecked
+              : AppIconography.checkboxEmpty)
+        : (selected ? AppIconography.radioSelected : AppIconography.radioEmpty);
     return Semantics(
       button: true,
       selected: selected,

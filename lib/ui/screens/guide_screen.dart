@@ -84,10 +84,10 @@ class GuideScreen extends StatelessWidget {
         const SizedBox(height: 8),
         ListTile(
           contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.help_outline_rounded),
+          leading: const Icon(AppIconography.question),
           title: Text(l10n.connectionHelpTitle),
           subtitle: Text(l10n.connectionHelpEntrySubtitle),
-          trailing: const Icon(Icons.chevron_right_rounded),
+          trailing: const Icon(AppIconography.chevronRight),
           onTap: () => Navigator.of(context).push<void>(
             MaterialPageRoute(builder: (_) => const ConnectionHelpScreen()),
           ),
@@ -99,7 +99,7 @@ class GuideScreen extends StatelessWidget {
             tilePadding: EdgeInsets.zero,
             childrenPadding: const EdgeInsets.only(top: 4),
             expandedCrossAxisAlignment: CrossAxisAlignment.start,
-            leading: const Icon(Icons.tune_rounded),
+            leading: const Icon(AppIconography.settings),
             title: const Text('Advanced'),
             subtitle: Text(
               onDevice
@@ -212,11 +212,7 @@ class GuideScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.lightbulb_outline_rounded,
-            size: 16,
-            color: theme.colorScheme.primary,
-          ),
+          Icon(AppIconography.idea, size: 16, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
           Expanded(child: Text(text, style: theme.textTheme.bodySmall)),
         ],

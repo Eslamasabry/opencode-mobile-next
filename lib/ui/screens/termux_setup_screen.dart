@@ -488,7 +488,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         'The server will be briefly unavailable. Active generation should be stopped first.',
       ].join('\n\n'),
       confirmLabel: 'Update',
-      icon: Icons.system_update_alt_rounded,
+      icon: AppIconography.systemDownload,
     );
     if (confirmed && mounted) await _installAndStart();
   }
@@ -514,7 +514,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         if (busyCount > 0) l10n.termuxRestartBusyMessage(busyCount),
       ].join('\n\n'),
       confirmLabel: l10n.termuxRestartConfirm,
-      icon: Icons.restart_alt_rounded,
+      icon: AppIconography.restart,
     );
     if (confirmed && mounted) await _restartServer(profile);
   }
@@ -1100,7 +1100,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.phonelink_off_rounded,
+                      AppIconography.deviceOff,
                       size: 40,
                       color: AppTheme.mutedOf(theme),
                     ),
@@ -1152,10 +1152,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.smartphone_rounded,
-                    color: theme.colorScheme.primary,
-                  ),
+                  Icon(AppIconography.phone, color: theme.colorScheme.primary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -1199,7 +1196,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                             children: [
                               FilledButton.icon(
                                 onPressed: _getTermux,
-                                icon: const Icon(Icons.download_rounded),
+                                icon: const Icon(AppIconography.download),
                                 label: const Text('Download page'),
                               ),
                               OutlinedButton(
@@ -1259,7 +1256,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                                             strokeWidth: 2,
                                           ),
                                         )
-                                      : const Icon(Icons.check_rounded),
+                                      : const Icon(AppIconography.check),
                                   label: Text(
                                     _busy && !_copyingToTermux
                                         ? 'Verifying...'
@@ -1269,7 +1266,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                                 OutlinedButton.icon(
                                   key: const Key('termux-copy-open'),
                                   onPressed: _busy ? null : _openTermuxAndCopy,
-                                  icon: const Icon(Icons.open_in_new_rounded),
+                                  icon: const Icon(AppIconography.externalLink),
                                   label: Text(
                                     _copyingToTermux
                                         ? l10n.termuxGuideOpening
@@ -1280,7 +1277,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                                 FilledButton.icon(
                                   key: const Key('termux-copy-open'),
                                   onPressed: _busy ? null : _openTermuxAndCopy,
-                                  icon: const Icon(Icons.open_in_new_rounded),
+                                  icon: const Icon(AppIconography.externalLink),
                                   label: Text(
                                     _copyingToTermux
                                         ? l10n.termuxGuideOpening
@@ -1354,7 +1351,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                       Row(
                         children: [
                           Icon(
-                            Icons.check_circle_rounded,
+                            AppIconography.checkCircle,
                             size: 18,
                             color: AppTheme.statusColor(
                               Theme.of(context),
@@ -1383,13 +1380,13 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                         children: [
                           FilledButton.icon(
                             onPressed: _busy ? null : _continueToApp,
-                            icon: const Icon(Icons.arrow_forward_rounded),
+                            icon: const Icon(AppIconography.forward),
                             label: const Text('Continue to app'),
                           ),
                           OutlinedButton.icon(
                             key: const Key('restart-managed-opencode'),
                             onPressed: _busy ? null : _confirmRestart,
-                            icon: const Icon(Icons.restart_alt_rounded),
+                            icon: const Icon(AppIconography.restart),
                             label: Text(
                               _restarting
                                   ? l10n.termuxRestarting
@@ -1399,7 +1396,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                           OutlinedButton.icon(
                             key: const Key('update-managed-opencode'),
                             onPressed: _busy ? null : _confirmUpdate,
-                            icon: const Icon(Icons.system_update_alt_rounded),
+                            icon: const Icon(AppIconography.systemDownload),
                             label: const Text('Update OpenCode'),
                           ),
                           OutlinedButton.icon(
@@ -1440,7 +1437,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                           children: [
                             FilledButton.icon(
                               onPressed: _busy ? null : _resumeLiveOutput,
-                              icon: const Icon(Icons.sync_rounded),
+                              icon: const Icon(AppIconography.sync),
                               label: const Text('Resume live view'),
                             ),
                             OutlinedButton(
@@ -1454,7 +1451,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                       else
                         FilledButton.icon(
                           onPressed: _busy ? null : _retry,
-                          icon: const Icon(Icons.refresh_rounded),
+                          icon: const Icon(AppIconography.retry),
                           label: const Text(
                             'Retry — resumes where setup left off',
                           ),
@@ -1515,7 +1512,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
           'existing Ubuntu environment and connect to it. This restarts only '
           'the managed local server; it does not download or update packages.',
       confirmLabel: 'Start & connect',
-      icon: Icons.play_arrow_rounded,
+      icon: AppIconography.play,
     );
     if (confirmed && mounted) {
       await _restartServer(profile, startExisting: true);
@@ -1535,7 +1532,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
           Text(_installationError!),
           TextButton.icon(
             onPressed: _busy ? null : _checkInstallation,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(AppIconography.retry),
             label: Text(AppLocalizations.of(context).setupCheckAgain),
           ),
         ] else if (installed != null) ...[
@@ -1553,7 +1550,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
           if (installed.openCodeVersion != null && _localProfile() != null)
             FilledButton.icon(
               onPressed: _busy ? null : _startInstalled,
-              icon: const Icon(Icons.play_arrow_rounded),
+              icon: const Icon(AppIconography.play),
               label: Text(AppLocalizations.of(context).setupStartInstalled),
             ),
           if (installed.openCodeVersion != null && _localProfile() == null)
@@ -1612,7 +1609,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
               onPressed: _busy || _checkingInstallation
                   ? null
                   : _reviewInstallChoice,
-              icon: const Icon(Icons.build_outlined),
+              icon: const Icon(AppIconography.tools),
               label: Text(
                 installed?.openCodeVersion == _runtime.pinnedVersion
                     ? AppLocalizations.of(context).setupReinstallStart
@@ -1626,7 +1623,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
               onPressed: _busy || _checkingInstallation
                   ? null
                   : _reviewInstallChoice,
-              icon: const Icon(Icons.rocket_launch_rounded),
+              icon: const Icon(AppIconography.launch),
               label: Text(AppLocalizations.of(context).setupInstallStart),
             ),
         ],
@@ -1647,7 +1644,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
           _runtime.pinnedVersion,
         ),
         confirmLabel: l10n.setupInstallRestart,
-        icon: Icons.build_outlined,
+        icon: AppIconography.tools,
       );
       if (!confirmed || !mounted) return;
     }
@@ -1658,7 +1655,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         title: l10n.setupUncheckedTitle,
         message: l10n.setupUncheckedDescription,
         confirmLabel: l10n.setupUncheckedContinue,
-        icon: Icons.help_outline_rounded,
+        icon: AppIconography.question,
       );
       if (!confirmed || !mounted) return;
     }
@@ -1681,7 +1678,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
           onPressed: _busy
               ? null
               : () => Navigator.of(context).pushNamed('/servers'),
-          icon: const Icon(Icons.link_rounded),
+          icon: const Icon(AppIconography.link),
           label: Text(AppLocalizations.of(context).setupConnectExisting),
         ),
       ],
@@ -1852,7 +1849,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                           backgroundColor: background,
                           child: state == _StepState.done
                               ? Icon(
-                                  Icons.check_rounded,
+                                  AppIconography.check,
                                   size: 14,
                                   color: foreground,
                                 )
@@ -1942,9 +1939,9 @@ class _TermuxPasteGuide extends StatelessWidget {
                 spacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Icon(Icons.copy_rounded, color: theme.colorScheme.primary),
+                  Icon(AppIconography.copy, color: theme.colorScheme.primary),
                   Text(l10n.termuxGuideCopied),
-                  const Icon(Icons.open_in_new_rounded),
+                  const Icon(AppIconography.externalLink),
                 ],
               ),
             ],
@@ -1982,7 +1979,7 @@ class _TermuxPasteGuide extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Icon(Icons.touch_app_rounded),
+                  const Icon(AppIconography.touch),
                 ],
               ),
             ],
@@ -2012,7 +2009,7 @@ class _TermuxPasteGuide extends StatelessWidget {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Icon(
-                        Icons.keyboard_return_rounded,
+                        AppIconography.returnKey,
                         color: theme.colorScheme.onPrimaryContainer,
                       ),
                       Text(

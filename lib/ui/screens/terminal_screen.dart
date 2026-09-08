@@ -295,7 +295,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
     final locationRevision = widget.controller.locationRevision;
     final confirmed = await showConfirmSheet(
       context,
-      icon: process.running ? AppIcons.stop : Icons.delete_outline_rounded,
+      icon: process.running ? AppIcons.stop : AppIconography.delete,
       title: process.running ? 'Stop terminal?' : 'Remove terminal?',
       message: process.running
           ? 'The running process and its child processes will be terminated.'
@@ -342,7 +342,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
           RefreshIndicator(
             onRefresh: _load,
             child: ProductEmptyState(
-              icon: Icons.terminal_rounded,
+              icon: AppIconography.terminal,
               title: 'No terminal processes',
               message: 'Start a shell in the active workspace.',
               actionLabel: 'New terminal',
@@ -412,21 +412,21 @@ class _TerminalScreenState extends State<TerminalScreen> {
                     ContextMenuAction(
                       menuKey: const ValueKey('terminal-menu-open'),
                       label: 'Open',
-                      icon: Icons.terminal_outlined,
+                      icon: AppIconography.terminal,
                       onSelected: () => unawaited(_open(process)),
                     ),
                     ContextMenuAction(
                       menuKey: const ValueKey('terminal-menu-rename'),
                       label: 'Rename',
-                      icon: Icons.edit_outlined,
+                      icon: AppIconography.edit,
                       onSelected: () => unawaited(_rename(process)),
                     ),
                     ContextMenuAction(
                       menuKey: const ValueKey('terminal-menu-remove'),
                       label: process.running ? 'Stop' : 'Remove',
                       icon: process.running
-                          ? Icons.stop_circle_outlined
-                          : Icons.delete_outline_rounded,
+                          ? AppIconography.stopCircle
+                          : AppIconography.delete,
                       destructive: true,
                       onSelected: () => unawaited(_remove(process)),
                     ),
@@ -447,7 +447,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
                     dimension: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.add_rounded),
+                : const Icon(AppIconography.add),
             label: const Text('Terminal'),
           ),
         ),
@@ -486,7 +486,7 @@ class _ProcessIndicator extends StatelessWidget {
           border: Border.all(color: color.withValues(alpha: .55)),
           borderRadius: BorderRadius.circular(AppTheme.radiusControl),
         ),
-        child: Icon(Icons.terminal_rounded, size: 20, color: color),
+        child: Icon(AppIconography.terminal, size: 20, color: color),
       ),
     );
   }
@@ -905,15 +905,15 @@ class _TerminalSurfaceState extends State<TerminalSurface>
             onPressed: () => setState(() => _accessibleMode = !_accessibleMode),
             icon: Icon(
               _accessibleMode
-                  ? Icons.terminal_rounded
-                  : Icons.accessibility_new_rounded,
+                  ? AppIconography.terminal
+                  : AppIconography.accessibility,
             ),
           ),
           IconButton(
             key: const Key('terminal-reconnect'),
             tooltip: 'Reconnect',
             onPressed: _connecting || _lifecycleSuspended ? null : _connect,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(AppIconography.retry),
           ),
         ],
       ),
@@ -1144,7 +1144,7 @@ class _AccessibleTerminal extends StatelessWidget {
                     ? 'Send command to terminal'
                     : 'Terminal input unavailable',
                 onPressed: enabled ? onSend : null,
-                icon: const Icon(Icons.keyboard_return_rounded),
+                icon: const Icon(AppIconography.returnKey),
               ),
             ],
           ),

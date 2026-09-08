@@ -8,6 +8,7 @@ import '../../l10n/app_localizations.dart';
 import '../../state/external_agents.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/external_link.dart';
+import '../app_iconography.dart';
 
 AppLocalizations _l(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
@@ -150,7 +151,7 @@ class _ExternalAgentsScreenState extends State<ExternalAgentsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     ListTile(
-                      leading: const Icon(Icons.hub_outlined),
+                      leading: const Icon(AppIconography.network),
                       title: Text(profile.card.name),
                       subtitle: Text(Uri.parse(profile.card.cardUrl).origin),
                       onTap: profile.deleting || _busy
@@ -328,7 +329,7 @@ class _AgentCardView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
-              Icons.hub_outlined,
+              AppIconography.network,
               color: theme.colorScheme.primary,
               size: 32,
             ),
@@ -523,7 +524,7 @@ class _ExternalAgentDetailScreenState extends State<ExternalAgentDetailScreen> {
                       ? l.a2aDraft
                       : externalTaskLabel(l, record.task!.state),
                 ),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                trailing: const Icon(AppIconography.chevronRight),
                 onTap: _busy || !current ? null : () => _open(record),
               ),
             ),
@@ -531,7 +532,7 @@ class _ExternalAgentDetailScreenState extends State<ExternalAgentDetailScreen> {
           if (widget.profile.card.auth == ExternalAgentAuth.bearer)
             OutlinedButton.icon(
               onPressed: _busy || !current ? null : _credential,
-              icon: const Icon(Icons.key_outlined),
+              icon: const Icon(AppIconography.permissions),
               label: Text(l.a2aUpdateCredential),
             ),
           TextButton(
@@ -816,8 +817,8 @@ class _ExternalTaskScreenState extends State<ExternalTaskScreen>
                   children: [
                     Icon(
                       task?.terminal == true
-                          ? Icons.task_alt_rounded
-                          : Icons.chat_bubble_outline_rounded,
+                          ? AppIconography.checkCircle
+                          : AppIconography.chat,
                       color: theme.colorScheme.primary,
                       size: 32,
                     ),
@@ -889,7 +890,7 @@ class _ExternalTaskScreenState extends State<ExternalTaskScreen>
                           OutlinedButton.icon(
                             onPressed: () =>
                                 openExternalLink(context, part.url),
-                            icon: const Icon(Icons.open_in_new_rounded),
+                            icon: const Icon(AppIconography.externalLink),
                             label: Text(l.a2aReviewLink),
                           ),
                         ],
@@ -926,7 +927,7 @@ class _ExternalTaskScreenState extends State<ExternalTaskScreen>
                         c.canContinue)
                     ? () => _send(continuation: !draft)
                     : null,
-                icon: const Icon(Icons.send_rounded),
+                icon: const Icon(AppIconography.send),
                 label: Text(draft ? l.a2aSend : l.a2aReplySameTask),
               ),
               const SizedBox(height: 20),
@@ -935,7 +936,7 @@ class _ExternalTaskScreenState extends State<ExternalTaskScreen>
               const SizedBox(height: 20),
               OutlinedButton.icon(
                 onPressed: c.busy || !c.current ? null : c.refresh,
-                icon: const Icon(Icons.refresh_rounded),
+                icon: const Icon(AppIconography.retry),
                 label: Text(l.a2aRefresh),
               ),
               if (!task!.terminal)

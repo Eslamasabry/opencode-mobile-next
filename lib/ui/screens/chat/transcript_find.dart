@@ -59,7 +59,7 @@ class _TranscriptFindBar extends StatelessWidget {
                       textInputAction: TextInputAction.search,
                       decoration: InputDecoration(
                         hintText: l10n.transcriptFindHint,
-                        prefixIcon: const Icon(Icons.search_rounded),
+                        prefixIcon: const Icon(AppIconography.search),
                         isDense: true,
                       ),
                     ),
@@ -67,7 +67,7 @@ class _TranscriptFindBar extends StatelessWidget {
                   IconButton(
                     onPressed: onClose,
                     tooltip: l10n.transcriptFindClose,
-                    icon: const Icon(Icons.close_rounded),
+                    icon: const Icon(AppIconography.close),
                   ),
                 ],
               ),
@@ -89,13 +89,13 @@ class _TranscriptFindBar extends StatelessWidget {
                     key: const ValueKey('transcript-find-previous'),
                     onPressed: count == 0 ? null : onPrevious,
                     tooltip: l10n.transcriptFindPrevious,
-                    icon: const Icon(Icons.keyboard_arrow_up_rounded),
+                    icon: const Icon(AppIconography.chevronUp),
                   ),
                   IconButton(
                     key: const ValueKey('transcript-find-next'),
                     onPressed: count == 0 ? null : onNext,
                     tooltip: l10n.transcriptFindNext,
-                    icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                    icon: const Icon(AppIconography.chevronDown),
                   ),
                   if (searchingAll)
                     TextButton(

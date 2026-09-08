@@ -46,7 +46,7 @@ class HostManagementScreen extends StatelessWidget {
           children: [
             const SectionLabel('This server'),
             ListTile(
-              leading: const Icon(Icons.dns_outlined),
+              leading: const Icon(AppIconography.server),
               title: Text(profile?.name ?? 'OpenCode server'),
               subtitle: SelectableText(
                 profile?.baseUrl ?? 'Not connected',
@@ -57,7 +57,7 @@ class HostManagementScreen extends StatelessWidget {
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.info_outline_rounded),
+              leading: const Icon(AppIconography.info),
               title: Text('Server version ${controller.version ?? 'unknown'}'),
               subtitle: const Text(
                 'These commands run on the computer that hosts this server — '
@@ -122,7 +122,7 @@ class HostManagementScreen extends StatelessWidget {
                     Uri.parse(docsUrl),
                     mode: LaunchMode.externalApplication,
                   ),
-                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                  icon: const Icon(AppIconography.externalLink, size: 18),
                   label: const Text('Full walkthrough (opens in browser)'),
                 ),
               ),

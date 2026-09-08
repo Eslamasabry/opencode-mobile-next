@@ -93,7 +93,7 @@ class _MobileTaskListState extends State<MobileTaskList> {
             TextButton.icon(
               key: const Key('mobile-tasks-copy-all'),
               onPressed: _copying ? null : () => _copyAll(l10n),
-              icon: const Icon(Icons.copy_rounded, size: 16),
+              icon: const Icon(AppIconography.copy, size: 16),
               label: Text(l10n.mobileTasksCopyAll),
             ),
           ],
@@ -107,11 +107,10 @@ class _MobileTaskListState extends State<MobileTaskList> {
               children: [
                 Icon(
                   switch (task.status) {
-                    MobileTaskStatus.pending => Icons.radio_button_unchecked,
-                    MobileTaskStatus.inProgress => Icons.hourglass_top_rounded,
-                    MobileTaskStatus.completed =>
-                      Icons.check_circle_outline_rounded,
-                    MobileTaskStatus.cancelled => Icons.cancel_outlined,
+                    MobileTaskStatus.pending => AppIconography.radioEmpty,
+                    MobileTaskStatus.inProgress => AppIconography.waitingStart,
+                    MobileTaskStatus.completed => AppIconography.checkCircle,
+                    MobileTaskStatus.cancelled => AppIconography.error,
                   },
                   size: 18,
                   color: task.status == MobileTaskStatus.completed
@@ -153,13 +152,13 @@ class _MobileTaskListState extends State<MobileTaskList> {
             ? FilledButton.tonalIcon(
                 key: const Key('mobile-tasks-filter'),
                 onPressed: toggle,
-                icon: const Icon(Icons.check_rounded, size: 16),
+                icon: const Icon(AppIconography.check, size: 16),
                 label: label,
               )
             : OutlinedButton.icon(
                 key: const Key('mobile-tasks-filter'),
                 onPressed: toggle,
-                icon: const Icon(Icons.filter_list_rounded, size: 16),
+                icon: const Icon(AppIconography.filter, size: 16),
                 label: label,
               ),
       ),

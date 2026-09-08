@@ -101,7 +101,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Model → gpt-5.6-sol · high'), findsOneWidget);
-      expect(find.byIcon(Icons.memory_rounded), findsOneWidget);
+      expect(find.byIcon(AppIconography.processor), findsOneWidget);
       final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
       expect(tooltip.message, 'Previously gpt-5.6-sol');
     });
@@ -120,7 +120,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Agent → plan'), findsOneWidget);
-      expect(find.byIcon(Icons.support_agent_rounded), findsOneWidget);
+      expect(find.byIcon(AppIconography.support), findsOneWidget);
       // No previous value → no tooltip.
       expect(find.byType(Tooltip), findsNothing);
     });
@@ -174,7 +174,7 @@ void main() {
         find.byKey(const ValueKey('transcript-notice-msg_4')),
         findsOneWidget,
       );
-      expect(find.byIcon(Icons.settings_suggest_outlined), findsOneWidget);
+      expect(find.byIcon(AppIconography.settingsAdvanced), findsOneWidget);
       expect(find.textContaining('System update'), findsOneWidget);
       final collapsed = tester.widget<Text>(find.text(longBody));
       expect(collapsed.maxLines, 2);
@@ -200,7 +200,7 @@ void main() {
           ),
         ),
       );
-      expect(find.byIcon(Icons.auto_awesome_outlined), findsOneWidget);
+      expect(find.byIcon(AppIconography.sparkle), findsOneWidget);
       expect(find.textContaining('Attached context'), findsOneWidget);
     });
 
@@ -218,7 +218,7 @@ void main() {
           ),
         ),
       );
-      expect(find.byIcon(Icons.electric_bolt_outlined), findsOneWidget);
+      expect(find.byIcon(AppIconography.lightning), findsOneWidget);
       expect(find.textContaining('Skill ·'), findsOneWidget);
       expect(find.textContaining('My Skill'), findsOneWidget);
     });
@@ -286,7 +286,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.textContaining('Context compacted'), findsOneWidget);
-      expect(find.byIcon(Icons.compress_rounded), findsOneWidget);
+      expect(find.byIcon(AppIconography.collapse), findsOneWidget);
 
       await tester.tap(
         find.byKey(const ValueKey('compaction-completed-msg_9')),

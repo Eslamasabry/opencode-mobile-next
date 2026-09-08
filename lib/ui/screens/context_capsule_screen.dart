@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../domain/context_capsule.dart';
 import '../../l10n/app_localizations.dart';
 import '../widgets/file_preview.dart';
+import '../app_iconography.dart';
 
 /// Edits a private working copy. Only Apply returns content to the caller.
 class ContextCapsuleScreen extends StatefulWidget {
@@ -172,7 +173,7 @@ class _ContextCapsuleScreenState extends State<ContextCapsuleScreen> {
           padding: const EdgeInsets.all(20),
           children: [
             Icon(
-              Icons.layers_outlined,
+              AppIconography.layers,
               size: 36,
               color: theme.colorScheme.primary,
             ),
@@ -200,7 +201,7 @@ class _ContextCapsuleScreenState extends State<ContextCapsuleScreen> {
                       onPressed: _busy || _excerpts.length >= 8
                           ? null
                           : () => _add(label),
-                      icon: const Icon(Icons.add, size: 18),
+                      icon: const Icon(AppIconography.add, size: 18),
                       label: Text(label),
                     ),
                 ],
@@ -243,7 +244,7 @@ class _ContextCapsuleScreenState extends State<ContextCapsuleScreen> {
                           children: [
                             TextButton.icon(
                               onPressed: _busy ? null : () => _paste(excerpt),
-                              icon: const Icon(Icons.content_paste, size: 18),
+                              icon: const Icon(AppIconography.paste, size: 18),
                               label: Text(l10n.capsulePaste),
                             ),
                             TextButton.icon(
@@ -253,7 +254,7 @@ class _ContextCapsuleScreenState extends State<ContextCapsuleScreen> {
                                       setState(() => _excerpts.remove(excerpt));
                                       excerpt.dispose();
                                     },
-                              icon: const Icon(Icons.close, size: 18),
+                              icon: const Icon(AppIconography.close, size: 18),
                               label: Text(l10n.capsuleRemove),
                             ),
                           ],
@@ -276,7 +277,7 @@ class _ContextCapsuleScreenState extends State<ContextCapsuleScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       ListTile(
-                        leading: const Icon(Icons.image_outlined),
+                        leading: const Icon(AppIconography.image),
                         title: Text(image.filename),
                         subtitle: Text(l10n.capsulePreview),
                         onTap: () => showFilePreviewSheet(
@@ -316,7 +317,7 @@ class _ContextCapsuleScreenState extends State<ContextCapsuleScreen> {
               const SizedBox(height: 24),
               FilledButton.icon(
                 onPressed: _busy || !hasContent ? null : _apply,
-                icon: const Icon(Icons.playlist_add),
+                icon: const Icon(AppIconography.queueAdd),
                 label: Text(l10n.capsuleApply),
               ),
             ],

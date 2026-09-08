@@ -105,7 +105,7 @@ class SetupTerminal extends StatelessWidget {
             child: Row(
               children: [
                 Icon(
-                  running ? Icons.graphic_eq_rounded : Icons.subject_rounded,
+                  running ? AppIconography.waveform : AppIconography.text,
                   size: 20,
                   color: scheme.primary,
                 ),

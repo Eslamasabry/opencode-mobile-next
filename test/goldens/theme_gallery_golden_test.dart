@@ -94,7 +94,10 @@ class _Gallery extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Gallery'),
         actions: [
-          IconButton(icon: const Icon(Icons.tune_rounded), onPressed: () {}),
+          IconButton(
+            icon: const Icon(AppIconography.settings),
+            onPressed: () {},
+          ),
         ],
       ),
       body: ListView(
@@ -129,10 +132,10 @@ class _Gallery extends StatelessWidget {
           const SizedBox(height: 16),
           Card(
             child: ListTile(
-              leading: const Icon(Icons.chat_bubble_outline_rounded),
+              leading: const Icon(AppIconography.chat),
               title: const Text('Session title'),
               subtitle: const Text('Updated 2 minutes ago'),
-              trailing: const Icon(Icons.chevron_right_rounded),
+              trailing: const Icon(AppIconography.chevronRight),
             ),
           ),
           const SizedBox(height: 12),
@@ -176,7 +179,7 @@ class _Gallery extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.shield_outlined, color: scheme.primary),
+                Icon(AppIconography.shield, color: scheme.primary),
                 const SizedBox(width: 10),
                 const Expanded(child: Text('Raised surface with shadow')),
               ],
@@ -188,21 +191,18 @@ class _Gallery extends StatelessWidget {
         selectedIndex: 0,
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.workspaces_outline),
+            icon: Icon(AppIconography.workspace),
             label: 'Workspace',
           ),
           NavigationDestination(
-            icon: Icon(Icons.folder_outlined),
+            icon: Icon(AppIconography.files),
             label: 'Files',
           ),
           NavigationDestination(
-            icon: Icon(Icons.notifications_outlined),
+            icon: Icon(AppIconography.activity),
             label: 'Activity',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.more_horiz_rounded),
-            label: 'More',
-          ),
+          NavigationDestination(icon: Icon(AppIconography.more), label: 'More'),
         ],
       ),
     );
