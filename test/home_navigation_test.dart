@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../tool/capture/fixtures.dart' show loadCaptureFonts;
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,6 +11,7 @@ import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/ui/widgets/glass_surface.dart';
@@ -119,6 +122,70 @@ Future<void> _pumpShell(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(loadCaptureFonts);
+
+  for (final width in [320.0, 390.0]) {
+    testWidgets(
+      'navigation stays inside its glass surface at $width and 2.5x',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 900);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final controller = await _controller();
+        addTearDown(controller.dispose);
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [connProvider.overrideWithValue(controller)],
+            child: MaterialApp(
+              theme: AppTheme.dark(),
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: const TextScaler.linear(2.5)),
+                child: child!,
+              ),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const HomeScreen(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final dock = tester.getRect(find.byType(GlassSurface));
+        final icon = tester.getRect(find.byIcon(Icons.workspaces_rounded));
+        expect(icon.top, greaterThanOrEqualTo(dock.top + 4));
+        for (final label in ['Workspace', 'Files', 'Activity', 'More']) {
+          final rect = tester.getRect(
+            find.descendant(
+              of: find.byType(NavigationBar),
+              matching: find.text(label),
+            ),
+          );
+          final paragraph = tester.renderObject<RenderParagraph>(
+            find.descendant(
+              of: find.descendant(
+                of: find.byType(NavigationBar),
+                matching: find.text(label),
+              ),
+              matching: find.byType(RichText),
+            ),
+          );
+          final lines = paragraph
+              .getBoxesForSelection(
+                TextSelection(baseOffset: 0, extentOffset: label.length),
+              )
+              .map((box) => box.top)
+              .toSet();
+          expect(lines, hasLength(1), reason: '$label stays on one line');
+          expect(rect.bottom, lessThanOrEqualTo(dock.bottom - 4));
+          expect(rect.left, greaterThanOrEqualTo(dock.left));
+          expect(rect.right, lessThanOrEqualTo(dock.right));
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   testWidgets(
     'Files Back clears search, ascends folders, returns home, then guards exit',

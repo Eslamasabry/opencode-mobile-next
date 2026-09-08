@@ -247,21 +247,72 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 top: false,
                 minimum: const EdgeInsets.fromLTRB(12, 6, 12, 8),
                 child: GlassSurface(
-                  child: NavigationBar(
-                    backgroundColor: Colors.transparent,
-                    animationDuration: GlassSurface.reduceEffects(context)
-                        ? Duration.zero
-                        : const Duration(milliseconds: 220),
-                    selectedIndex: selectedDestination,
-                    onDestinationSelected: (i) =>
-                        _selectTab(destinations[i].id),
-                    destinations: [
-                      for (final entry in destinations) entry.destination,
-                    ],
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => _buildNavigation(
+                      context,
+                      constraints.maxWidth,
+                      [for (final entry in destinations) entry.destination],
+                      selectedDestination,
+                      (index) => _selectTab(destinations[index].id),
+                    ),
                   ),
                 ),
               )
             : null,
+      ),
+    );
+  }
+
+  // Keep destination names intact. Compact navigation labels scale as far as
+  // their equal-width slots allow; content elsewhere keeps the user's full scale.
+  Widget _buildNavigation(
+    BuildContext context,
+    double width,
+    List<NavigationDestination> destinations,
+    int selectedIndex,
+    ValueChanged<int> onSelected,
+  ) {
+    final theme = Theme.of(context);
+    final navigation = theme.navigationBarTheme;
+    var maxScale = 2.0;
+    var labelHeight = 0.0;
+    for (final destination in destinations) {
+      for (final states in [
+        <WidgetState>{},
+        {WidgetState.selected},
+      ]) {
+        final painter = TextPainter(
+          text: TextSpan(
+            text: destination.label,
+            style:
+                navigation.labelTextStyle?.resolve(states) ??
+                theme.textTheme.labelMedium,
+          ),
+          textDirection: Directionality.of(context),
+        )..layout();
+        final fit = (width / destinations.length - 8) / painter.width;
+        if (fit < maxScale) maxScale = fit;
+        if (painter.height > labelHeight) labelHeight = painter.height;
+        painter.dispose();
+      }
+    }
+    maxScale = maxScale.clamp(1.0, 2.0);
+    final scaler = MediaQuery.textScalerOf(
+      context,
+    ).clamp(maxScaleFactor: maxScale);
+    final requiredHeight = 48 + 4 + scaler.scale(labelHeight) + 16;
+    final baseHeight = navigation.height ?? 80.0;
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: maxScale,
+      child: NavigationBar(
+        height: requiredHeight > baseHeight ? requiredHeight : baseHeight,
+        backgroundColor: Colors.transparent,
+        animationDuration: GlassSurface.reduceEffects(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 220),
+        selectedIndex: selectedIndex,
+        onDestinationSelected: onSelected,
+        destinations: destinations,
       ),
     );
   }
