@@ -113,7 +113,18 @@ flutter:
     # is listed: the 1024 px master beside it is the source artifact for the
     # platform launcher-icon pipelines and must not be bundled.
     - assets/branding/app-icon-256.png
+    - assets/branding/open-portal/mark.svg
   fonts:
+    # Phosphor 2.1.0 artwork (MIT), native IconData for Flutter 3.47.2.
+    - family: AppPhosphorRegular
+      fonts:
+        - asset: assets/fonts/phosphor/Phosphor.ttf
+    - family: AppPhosphorDuotone
+      fonts:
+        - asset: assets/fonts/phosphor/Phosphor-Duotone.ttf
+    - family: AppPhosphorFill
+      fonts:
+        - asset: assets/fonts/phosphor/Phosphor-Fill.ttf
     # Bundled Space Grotesk for headlines and titles: the one display face that
     # gives the product an identity beyond the platform default. Body text
     # stays on the platform face for legibility.

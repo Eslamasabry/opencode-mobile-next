@@ -24,6 +24,16 @@ table says so with a dash rather than inventing an owner.
 
 ## Bundled components
 
+### Phosphor icon artwork
+
+The regular, duotone and fill icon fonts are copied unchanged from the official
+`phosphor_flutter` 2.1.0 archive, licensed under MIT, Copyright (c) 2020-2021 Phosphor Icons.
+The complete license is bundled at `LICENSES/MIT-Phosphor.txt`. Native Flutter
+`IconData` declarations render these fonts because the upstream Dart wrapper
+extends `IconData`, which is final in our pinned Flutter 3.47.2. The package itself
+is not a runtime dependency. Archive and file hashes are recorded in
+`assets/fonts/phosphor/provenance.json`.
+
 ### Local SVG previews
 
 `flutter_svg` 2.3.0 is maintained in Flutter's packages repository and is
