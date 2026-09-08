@@ -528,6 +528,46 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  for (final scale in [1.0, 2.5]) {
+    testWidgets(
+      'composer grows with the draft and returns to idle at ${scale}x',
+      (tester) async {
+        final controller = await _controller();
+        addTearDown(controller.dispose);
+        await _pumpChat(
+          tester,
+          controller,
+          size: const Size(320, 844),
+          textScale: scale,
+        );
+        final surface = find.byKey(const Key('chat-composer-surface'));
+        final field = find.byKey(const Key('chat-composer-field'));
+        await tester.tap(field);
+        await tester.pumpAndSettle();
+        final idleHeight = tester.getSize(surface).height;
+        if (scale == 1) expect(idleHeight, lessThan(120));
+        final editable = find.descendant(
+          of: field,
+          matching: find.byType(EditableText),
+        );
+        final editor = tester.state<EditableTextState>(editable);
+        await tester.enterText(
+          field,
+          'Review the draft.\nKeep the details.\nThen explain.',
+        );
+        await tester.pump(const Duration(milliseconds: 700));
+        expect(tester.getSize(surface).height, greaterThan(idleHeight));
+        expect(tester.state<EditableTextState>(editable), same(editor));
+        expect(controller.sessionDraft('session-1'), contains('Then explain.'));
+        await tester.enterText(field, '');
+        await tester.pump(const Duration(milliseconds: 700));
+        expect(tester.getSize(surface).height, idleHeight);
+        expect(controller.sessionDraft('session-1'), isNull);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets('keyboard resizing preserves the editor and draft selection', (
     tester,
   ) async {

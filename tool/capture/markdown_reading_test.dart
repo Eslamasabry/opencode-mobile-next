@@ -95,21 +95,21 @@ void main() {
           )
           .first;
       await tester.scrollUntilVisible(
-        find.text('Wrap lines'),
+        find.byTooltip('Wrap lines'),
         250,
         scrollable: find
             .descendant(of: scroll, matching: find.byType(Scrollable))
             .first,
       );
-      await tester.tap(find.text('Wrap lines'));
+      await tester.tap(find.byTooltip('Wrap lines'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       await writePng(
         'docs/qa/markdown-reading-2026-09-08/$mode-wrap.png',
         await capturePng(tester, key),
       );
-      await tester.ensureVisible(find.text('Full screen'));
-      await tester.tap(find.text('Full screen'));
+      await tester.ensureVisible(find.byTooltip('Full screen'));
+      await tester.tap(find.byTooltip('Full screen'));
       await tester.pumpAndSettle();
       expect(find.text('Code reader'), findsOneWidget);
       expect(tester.takeException(), isNull);
