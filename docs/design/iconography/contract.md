@@ -83,7 +83,7 @@ Sizes: 24px navigation and principal toolbar glyphs, 20px inline actions/status,
 
 ## Adoption boundary
 
-This branch owns the approved bundled-font declarations, module and Android branding resources; the lockfile remains unchanged. Coordinator owns shared theme and page-adoption contracts. No broad replacements in other owners' pages. Migrate one complete toolbar/navigation family at a time to avoid a half-Material, half-Phosphor screen. Retain existing `AppIcons` until coordinator integrates a compatibility mapping; do not create two competing spellings of the same action indefinitely.
+This branch owns the approved bundled-font declarations, module, Android branding resources and shared 256px branding bitmap; the lockfile remains unchanged. Coordinator owns shared theme and page-adoption contracts. No broad replacements in other owners' pages. Migrate one complete toolbar/navigation family at a time to avoid a half-Material, half-Phosphor screen. Retain existing `AppIcons` until coordinator integrates a compatibility mapping; do not create two competing spellings of the same action indefinitely.
 
 ## Verification and remaining evidence
 
