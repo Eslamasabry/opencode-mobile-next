@@ -35,7 +35,13 @@
   "servicesLogTail": "Bounded log tail. Earlier output may be omitted. Logs are kept on the server, not saved on this phone.",
   "servicesWorking": "Updating service…",
   "servicesExit": "Recorded exit code: {code}",
-  "@servicesExit": {"placeholders": {"code": {"type": "int"}}},
+  "@servicesExit": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
   "servicesRefresh": "Refresh status",
   "isolatedTaskScopeChanged": "The server or project changed. Close this sheet and reopen the task from the intended project.",
   "@@locale": "en",
@@ -79,8 +85,12 @@
   "@aboutBuildVersion": {
     "description": "Installed app version and build shown in About",
     "placeholders": {
-      "version": {"type": "String"},
-      "buildNumber": {"type": "String"}
+      "version": {
+        "type": "String"
+      },
+      "buildNumber": {
+        "type": "String"
+      }
     }
   },
   "aboutSigningCertificate": "Signing certificate SHA-256",
@@ -88,13 +98,21 @@
     "description": "Label for the installed Android APK signer fingerprint"
   },
   "modelSwitchSession": "Switch model for this session",
-  "@modelSwitchSession": {"description": "Tooltip for the chat model cycling menu"},
+  "@modelSwitchSession": {
+    "description": "Tooltip for the chat model cycling menu"
+  },
   "modelNextRecent": "Next recent model · F2",
-  "@modelNextRecent": {"description": "Cycle forward through recent models"},
+  "@modelNextRecent": {
+    "description": "Cycle forward through recent models"
+  },
   "modelPreviousRecent": "Previous recent model · Shift+F2",
-  "@modelPreviousRecent": {"description": "Cycle backward through recent models"},
+  "@modelPreviousRecent": {
+    "description": "Cycle backward through recent models"
+  },
   "modelNextFavorite": "Next favorite model",
-  "@modelNextFavorite": {"description": "Cycle through the server profile's favorite models"},
+  "@modelNextFavorite": {
+    "description": "Cycle through the server profile's favorite models"
+  },
   "modelChooseTitle": "Choose a model",
   "modelTitleCompact": "Models",
   "modelSearchHint": "Search models",
@@ -154,11 +172,32 @@
   "workDisconnected": "Reconnecting. Output will refresh when the server is available.",
   "workContextChanged": "The server or workspace changed. Close this view and reopen Running work.",
   "workCount": "Running work · {count}",
-  "@workCount": {"placeholders": {"count": {"type": "int"}}},
+  "@workCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "workExitCode": "Exit code {code}",
-  "@workExitCode": {"placeholders": {"code": {"type": "int"}}},
+  "@workExitCode": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
   "workStatusElapsed": "{status} · {elapsed}",
-  "@workStatusElapsed": {"placeholders": {"status": {"type": "String"}, "elapsed": {"type": "String"}}},
+  "@workStatusElapsed": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "elapsed": {
+        "type": "String"
+      }
+    }
+  },
   "composerClearTextTitle": "Clear draft text",
   "composerClearTextSubtitle": "Keeps attachments · Undo available",
   "composerDraftCleared": "Draft text cleared",
@@ -185,31 +224,67 @@
   "librarySearchResults": "{count, plural, =0 {No matching tools for “{query}”.} one {1 result for “{query}”.} other {{count} results for “{query}”.}}",
   "@librarySearchResults": {
     "description": "Number of matching destinations in More",
-    "placeholders": {"count": {"type": "int"}, "query": {"type": "String"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "query": {
+        "type": "String"
+      }
+    }
   },
   "chatAttachmentUnsupported": "Only PNG, JPEG, GIF, WebP, PDF, and text files can be attached.",
   "termuxRestartServer": "Restart local server",
-  "@termuxRestartServer": {"description":"Action that restarts the app-managed OpenCode server running in Termux"},
+  "@termuxRestartServer": {
+    "description": "Action that restarts the app-managed OpenCode server running in Termux"
+  },
   "termuxRestartTitle": "Restart the local server?",
-  "@termuxRestartTitle": {"description":"Confirmation title before restarting the managed Termux server"},
+  "@termuxRestartTitle": {
+    "description": "Confirmation title before restarting the managed Termux server"
+  },
   "termuxRestartMessage": "OpenCode will be briefly unavailable. The app will keep your current workspace and reconnect automatically.",
-  "@termuxRestartMessage": {"description":"Confirmation explanation before restarting the managed Termux server"},
+  "@termuxRestartMessage": {
+    "description": "Confirmation explanation before restarting the managed Termux server"
+  },
   "termuxRestartBusyMessage": "{count, plural, =1{1 session is generating. Restarting will interrupt it.} other{{count} sessions are generating. Restarting will interrupt them.}}",
-  "@termuxRestartBusyMessage": {"description":"Additional restart warning when one or more sessions are generating","placeholders":{"count":{"type":"int"}}},
+  "@termuxRestartBusyMessage": {
+    "description": "Additional restart warning when one or more sessions are generating",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "termuxRestartConfirm": "Restart",
-  "@termuxRestartConfirm": {"description":"Confirmation button that starts a managed Termux server restart"},
+  "@termuxRestartConfirm": {
+    "description": "Confirmation button that starts a managed Termux server restart"
+  },
   "termuxRestarting": "Restarting local server...",
-  "@termuxRestarting": {"description":"Progress label while the managed Termux server restarts"},
+  "@termuxRestarting": {
+    "description": "Progress label while the managed Termux server restarts"
+  },
   "termuxRestartProgress": "The installed OpenCode version and saved credential are unchanged. The app will reconnect when the server is ready.",
-  "@termuxRestartProgress": {"description":"Progress explanation while the managed Termux server restarts"},
+  "@termuxRestartProgress": {
+    "description": "Progress explanation while the managed Termux server restarts"
+  },
   "termuxRestartSucceeded": "Local server restarted and reconnected.",
-  "@termuxRestartSucceeded": {"description":"Success message after a managed Termux server restart"},
+  "@termuxRestartSucceeded": {
+    "description": "Success message after a managed Termux server restart"
+  },
   "termuxRestartNotPerformed": "Restart was not performed. The existing local server is still running.",
-  "@termuxRestartNotPerformed": {"description":"Message after restart preflight fails while the existing managed server remains healthy"},
+  "@termuxRestartNotPerformed": {
+    "description": "Message after restart preflight fails while the existing managed server remains healthy"
+  },
   "chatCopyCompleteReply": "Copy complete reply",
   "chatCopyReplySoFar": "Copy reply so far",
   "commandRunTitle": "Run /{command}",
-  "@commandRunTitle": {"placeholders":{"command":{"type":"String"}}},
+  "@commandRunTitle": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
   "commandDestination": "Chat",
   "commandNewChat": "New chat",
   "commandUntitledChat": "Untitled chat",
@@ -221,12 +296,26 @@
   "refreshRetry": "Retry",
   "filesProjectRoot": "Project root",
   "filesOpenFolder": "Open folder {folder}",
-  "@filesOpenFolder": {"placeholders":{"folder":{"type":"String"}}},
+  "@filesOpenFolder": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
   "filesCurrentFolder": "Current folder: {folder}",
-  "@filesCurrentFolder": {"placeholders":{"folder":{"type":"String"}}},
+  "@filesCurrentFolder": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
   "globalSessionsLoadMore": "Load more sessions",
   "globalSessionsRefreshFailed": "Could not refresh sessions.",
-  "@globalSessionsRefreshFailed": {"description": "Generic failure when refreshing the global session inventory"},
+  "@globalSessionsRefreshFailed": {
+    "description": "Generic failure when refreshing the global session inventory"
+  },
   "workspaceSearchAllSessions": "Search all sessions",
   "workspaceProjectListUnavailable": "Project list unavailable",
   "workspaceProjectListFallback": "Your conversations can still be available. Search all sessions to find previous work.",
@@ -248,7 +337,13 @@
   "sessionsNoLoadedRecent": "No recent sessions in loaded results",
   "sessionsNoLoadedArchived": "No archived sessions in loaded results",
   "sessionsLoadedCount": "{count} loaded",
-  "@sessionsLoadedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@sessionsLoadedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "revertStageTitle": "Stage a revert from this prompt?",
   "revertStageDescription": "This prompt and the conversation after it will be hidden while the revert is staged. Review the result before making it permanent.",
   "revertApplyFiles": "Revert file changes too",
@@ -302,7 +397,16 @@
   "sessionNoteKeepEditing": "Keep editing",
   "sessionNoteDiscardAction": "Discard changes",
   "sessionNoteBytes": "{used} / {limit} bytes",
-  "@sessionNoteBytes": {"placeholders": {"used": {"type": "int"}, "limit": {"type": "int"}}},
+  "@sessionNoteBytes": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "usageTitle": "Usage and cost",
   "usageDescription": "Activity recorded by this OpenCode server across your sessions.",
   "usageRefresh": "Refresh usage",
@@ -351,23 +455,68 @@
   "usageUnfinished": "Unfinished",
   "usageCostDisclosure": "Costs are estimates reported by OpenCode, not a provider invoice. Unfinished tool calls are excluded from the success rate.",
   "usagePeriod": "{from} – {to}",
-  "@usagePeriod": {"placeholders":{"from":{"type":"String"},"to":{"type":"String"}}},
+  "@usagePeriod": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
   "usageTimezone": "Timezone: {timezone}",
-  "@usageTimezone": {"placeholders":{"timezone":{"type":"String"}}},
+  "@usageTimezone": {
+    "placeholders": {
+      "timezone": {
+        "type": "String"
+      }
+    }
+  },
   "usageModelSteps": "{steps} steps",
-  "@usageModelSteps": {"placeholders":{"steps":{"type":"String"}}},
+  "@usageModelSteps": {
+    "placeholders": {
+      "steps": {
+        "type": "String"
+      }
+    }
+  },
   "usageModelTokens": "{tokens} tokens",
-  "@usageModelTokens": {"placeholders":{"tokens":{"type":"String"}}},
+  "@usageModelTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
   "usageSuccessRate": "{rate} of finished calls succeeded",
-  "@usageSuccessRate": {"placeholders":{"rate":{"type":"String"}}},
+  "@usageSuccessRate": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
   "usageUpdated": "Updated at {time}",
-  "@usageUpdated": {"placeholders":{"time":{"type":"String"}}},
+  "@usageUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "mcpRuntimeTitle": "Until server restart",
   "mcpRuntimeDescription": "Adds this MCP server to the selected location and tries to connect it now. It is removed when OpenCode restarts. For permanent setup, edit the server configuration.",
   "mcpCurrentLocation": "Current location",
   "mcpDefaultLocation": "OpenCode server’s default location",
   "mcpWorkspaceLocation": "Workspace: {workspace}",
-  "@mcpWorkspaceLocation": {"placeholders":{"workspace":{"type":"String"}}},
+  "@mcpWorkspaceLocation": {
+    "placeholders": {
+      "workspace": {
+        "type": "String"
+      }
+    }
+  },
   "mcpLocationChanged": "The connection or location changed. Your draft is still here; reopen setup in the intended location before adding it.",
   "mcpAdding": "Adding MCP server",
   "mcpAdd": "Add MCP server",
@@ -404,10 +553,22 @@
   "importAction": "Import conversation",
   "importUntitled": "Untitled conversation",
   "importMessageCount": "{count} message records",
-  "@importMessageCount": {"placeholders":{"count":{"type":"int"}}},
+  "@importMessageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "importRedacted": "This file contains redacted placeholders. Import cannot recover the original text; use an unredacted export if you need it.",
   "importParent": "Parent conversation {id} must already exist on this server. Import the parent first.",
-  "@importParent": {"placeholders":{"id":{"type":"String"}}},
+  "@importParent": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "importArchived": "This conversation is archived. Import will keep its archived status.",
   "importDestination": "Import into",
   "importChooseDestination": "Choose a directory on this server",
@@ -439,9 +600,13 @@
   "promptOriginalDraft": "Restore original draft",
   "promptStashTitle": "Saved prompts",
   "promptStashSearch": "Search saved prompts",
-  "@promptStashSearch": {"description": "Search local saved prompt text, attachment names, references and locations without loading attachment payloads"},
+  "@promptStashSearch": {
+    "description": "Search local saved prompt text, attachment names, references and locations without loading attachment payloads"
+  },
   "promptStashNoMatches": "No saved prompts match your search. Clear or change the search to see more.",
-  "@promptStashNoMatches": {"description": "Filtered saved-prompts empty state, distinct from an empty stash"},
+  "@promptStashNoMatches": {
+    "description": "Filtered saved-prompts empty state, distinct from an empty stash"
+  },
   "promptStashDeleteFailed": "Could not delete this saved prompt. Try again.",
   "promptRestoreTitle": "Restore saved prompt?",
   "promptRestorePreserve": "Your current prompt will be saved to the stash first, including its attachments and references.",
@@ -468,73 +633,168 @@
   "webSourcesExcerptHint": "User-provided text, not verified page content.",
   "webSourcesAdd": "Add to review",
   "webSourcesReviewCount": "Review sources ({count}/10)",
-  "@webSourcesReviewCount": {"placeholders": {"count": {"type": "int"}}},
+  "@webSourcesReviewCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "webSourcesReviewHint": "Only checked sources will be returned to your draft.",
   "webSourcesEmpty": "No sources added yet.",
   "webSourcesOpen": "Open in browser",
   "webSourcesUseCount": "Use selected sources ({count})",
-  "@webSourcesUseCount": {"placeholders": {"count": {"type": "int"}}},
+  "@webSourcesUseCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "digestTitle": "Completion digests",
   "digestSubtitle": "On demand · cached metadata, not AI summaries",
   "digestEmpty": "No ended-run metadata available in this location. Idle alone does not establish successful completion.",
   "digestIdle": "Server idle recorded · outcome unverified",
   "digestStatusUnverified": "Server reported idle. Success or failure is not verified.",
-  "@digestStatusUnverified": {"description": "Completion digest status; idle does not prove a successful run"},
+  "@digestStatusUnverified": {
+    "description": "Completion digest status; idle does not prove a successful run"
+  },
   "digestChangedFilesUnknown": "Changed files: unknown.",
-  "@digestChangedFilesUnknown": {"description": "The server did not provide a session-wide changed-file total"},
+  "@digestChangedFilesUnknown": {
+    "description": "The server did not provide a session-wide changed-file total"
+  },
   "digestChangedFiles": "{count, plural, =0 {No changed files in the session total; this run is unknown.} one {1 changed file in the session total; this run is unknown.} other {{count} changed files in the session total; this run is unknown.}}",
-  "@digestChangedFiles": {"description": "Session-wide changed-file total; it is not evidence for this run", "placeholders": {"count": {"type": "int"}}},
+  "@digestChangedFiles": {
+    "description": "Session-wide changed-file total; it is not evidence for this run",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "digestPendingDecisionsUnknown": "Pending decisions: unknown.",
-  "@digestPendingDecisionsUnknown": {"description": "The pending-request snapshot is unavailable"},
+  "@digestPendingDecisionsUnknown": {
+    "description": "The pending-request snapshot is unavailable"
+  },
   "digestPendingDecisions": "{count, plural, =0 {No pending decisions in the current cache.} one {1 pending decision in the current cache.} other {{count} pending decisions in the current cache.}}",
-  "@digestPendingDecisions": {"description": "Known pending-request count from the current cache", "placeholders": {"count": {"type": "int"}}},
+  "@digestPendingDecisions": {
+    "description": "Known pending-request count from the current cache",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "digestOutcomesUnknown": "Tool outcomes and remaining tasks: unknown.",
-  "@digestOutcomesUnknown": {"description": "The metadata-only digest does not report tool outcomes or remaining tasks"},
+  "@digestOutcomesUnknown": {
+    "description": "The metadata-only digest does not report tool outcomes or remaining tasks"
+  },
   "digestProvenance": "Cached server metadata only. No AI summary or model call. Open the conversation to verify results and review changes or tasks.",
-  "@digestProvenance": {"description": "Provenance disclosure for a metadata-only completion digest"},
+  "@digestProvenance": {
+    "description": "Provenance disclosure for a metadata-only completion digest"
+  },
   "digestOpenConversation": "Open conversation",
   "digestReview": "Review next actions",
   "digestCopy": "Copy digest",
   "digestCopySucceeded": "Digest copied",
-  "@digestCopySucceeded": {"description": "Accessible confirmation after a completion digest is copied"},
+  "@digestCopySucceeded": {
+    "description": "Accessible confirmation after a completion digest is copied"
+  },
   "digestCopyFailed": "Could not copy digest",
   "digestDismiss": "Dismiss",
   "digestRunResults": "Run results",
-  "@digestRunResults": {"description": "Completion digest action opening the latest run's server-recorded outcome and tool evidence"},
+  "@digestRunResults": {
+    "description": "Completion digest action opening the latest run's server-recorded outcome and tool evidence"
+  },
   "runResultsScopeChanged": "The connection or project changed. Close this view and reopen Run results from the intended project.",
   "runResultsTitle": "Run results",
   "runResultsEmpty": "The latest turn has no assistant step yet, so there is nothing to show.",
-  "@runResultsEmpty": {"description": "Run results empty state: the newest user message has no assistant reply after it"},
+  "@runResultsEmpty": {
+    "description": "Run results empty state: the newest user message has no assistant reply after it"
+  },
   "runResultsRunLabel": "Run …{id}",
-  "@runResultsRunLabel": {"description": "Run identity header; the id is the tail of the first assistant message id", "placeholders": {"id": {"type": "String"}}},
+  "@runResultsRunLabel": {
+    "description": "Run identity header; the id is the tail of the first assistant message id",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "runResultsSteps": "{count, plural, =1 {1 assistant step} other {{count} assistant steps}}",
-  "@runResultsSteps": {"placeholders": {"count": {"type": "int"}}},
+  "@runResultsSteps": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "runResultsStepsAtLeast": "{count, plural, =1 {At least 1 assistant step loaded} other {At least {count} assistant steps loaded}}",
-  "@runResultsStepsAtLeast": {"description": "Step count when the run's start was not found in the loaded history", "placeholders": {"count": {"type": "int"}}},
+  "@runResultsStepsAtLeast": {
+    "description": "Step count when the run's start was not found in the loaded history",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "runResultsStarted": "Started {time}",
-  "@runResultsStarted": {"placeholders": {"time": {"type": "String"}}},
+  "@runResultsStarted": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "runResultsStartedUnknown": "Start time not recorded",
   "runResultsFinished": "Finished {time}",
-  "@runResultsFinished": {"placeholders": {"time": {"type": "String"}}},
+  "@runResultsFinished": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "runResultsFinishedUnknown": "Finish time not recorded",
   "runResultsPartialHistory": "The message that started this run was not found in the loaded history. Counts here are lower bounds and the run id is only the oldest loaded step.",
-  "@runResultsPartialHistory": {"description": "Shown when the bounded page walk never reached the latest user message"},
+  "@runResultsPartialHistory": {
+    "description": "Shown when the bounded page walk never reached the latest user message"
+  },
   "runResultsOutcomeCompleted": "Completed",
   "runResultsOutcomeCutOff": "Cut off by the provider",
   "runResultsOutcomeFailed": "Failed",
   "runResultsOutcomeAborted": "Aborted",
   "runResultsOutcomeRunning": "Still running",
   "runResultsOutcomeNotReported": "Outcome not reported",
-  "@runResultsOutcomeNotReported": {"description": "The newest step completed but the provider gave no recognised finish reason"},
+  "@runResultsOutcomeNotReported": {
+    "description": "The newest step completed but the provider gave no recognised finish reason"
+  },
   "runResultsFinishReason": "Provider finish reason: {finish}",
-  "@runResultsFinishReason": {"description": "Raw finish reason copied from the assistant message", "placeholders": {"finish": {"type": "String"}}},
+  "@runResultsFinishReason": {
+    "description": "Raw finish reason copied from the assistant message",
+    "placeholders": {
+      "finish": {
+        "type": "String"
+      }
+    }
+  },
   "runResultsFinishReasonMissing": "The provider gave no finish reason.",
   "runResultsEarlierErrors": "{count, plural, =1 {An earlier step reported an error; the newest step decides the outcome.} other {{count} earlier steps reported errors; the newest step decides the outcome.}}",
-  "@runResultsEarlierErrors": {"placeholders": {"count": {"type": "int"}}},
+  "@runResultsEarlierErrors": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "runResultsObservedLive": "This phone received the completion of the newest step live.",
-  "@runResultsObservedLive": {"description": "The controller saw the message.updated completion event for exactly this step"},
+  "@runResultsObservedLive": {
+    "description": "The controller saw the message.updated completion event for exactly this step"
+  },
   "runResultsFromHistory": "Recovered from server history. This phone did not observe the newest step complete.",
-  "@runResultsFromHistory": {"description": "No live completion event for this exact step was received on this connection"},
+  "@runResultsFromHistory": {
+    "description": "No live completion event for this exact step was received on this connection"
+  },
   "runResultsNoToolEvidence": "This run recorded no tool calls, so there is no file or command evidence. That is not the same as no changes.",
   "runResultsChangedFilesTitle": "Changed files",
   "runResultsChangedFilesSource": "From completed edit, write and patch tools in this run. Not a verified diff of the working tree.",
@@ -547,14 +807,28 @@
   "runResultsNoCommands": "No commands were run in this run.",
   "runResultsCommandEmpty": "(command text not recorded)",
   "runResultsExit": "Exit code {code}",
-  "@runResultsExit": {"placeholders": {"code": {"type": "int"}}},
+  "@runResultsExit": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
   "runResultsExitUnknown": "Exit code not recorded",
   "runResultsCommandFailed": "Tool reported failure",
   "runResultsLooksLikeTest": "Looks like a test command (from the command text only)",
-  "@runResultsLooksLikeTest": {"description": "Source-derived label; says nothing about whether tests ran or passed"},
+  "@runResultsLooksLikeTest": {
+    "description": "Source-derived label; says nothing about whether tests ran or passed"
+  },
   "runResultsOutputPruned": "Output pruned by the server",
   "runResultsPrunedTools": "{count, plural, =1 {1 tool output was pruned by the server and cannot be opened.} other {{count} tool outputs were pruned by the server and cannot be opened.}}",
-  "@runResultsPrunedTools": {"placeholders": {"count": {"type": "int"}}},
+  "@runResultsPrunedTools": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "runResultsTruncated": "Lists are capped at 50 entries. Open the conversation for the rest.",
   "runResultsSourceNote": "Everything here is copied from the server's message and tool records. Nothing is summarised by a model.",
   "runResultsOutputTitle": "Recorded tool output",
@@ -583,10 +857,24 @@
   "usageScopedProviderTotals": "Provider cards show their totals for the selected report scope, not just matching model rows.",
   "usageMatchingSubtotal": "Matching model subtotal",
   "usageMatchingRecords": "{count} matching records",
-  "@usageMatchingRecords": {"description": "Count of matched model/variant records, not distinct models", "placeholders": {"count": {"type": "String"}}},
+  "@usageMatchingRecords": {
+    "description": "Count of matched model/variant records, not distinct models",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "usageNoMatchingRecords": "No records match these filters. Clear or change the filters to see more.",
   "pendingAuthTitle": "Pending sign-in: {integration}",
-  "@pendingAuthTitle": {"description": "Recovery card for a saved sign-in attempt", "placeholders": {"integration": {"type": "String"}}},
+  "@pendingAuthTitle": {
+    "description": "Recovery card for a saved sign-in attempt",
+    "placeholders": {
+      "integration": {
+        "type": "String"
+      }
+    }
+  },
   "pendingAuthDetail": "Continue the existing browser sign-in, then explicitly check its status or enter its code. The browser link is not saved.",
   "pendingAuthResume": "Resume / check status",
   "pendingAuthEnterCode": "Enter code",
@@ -653,118 +941,241 @@
   "desktopDropFailedRecovery": "Check the attachments already added before trying again. You can also use the keyboard to open Add, then Attach file.",
   "desktopContextMenuShortcutKeys": "Right click / Shift + F10 / Menu",
   "commandAuthManage": "Server sign-in",
-  "@commandAuthManage": {"description": "Open or resume server-side command sign-in even when the provider already has a connection"},
+  "@commandAuthManage": {
+    "description": "Open or resume server-side command sign-in even when the provider already has a connection"
+  },
   "commandAuthMethodHint": "Runs the provider's sign-in method on your selected server, not on this phone. You may need to finish interactive steps on the server.",
-  "@commandAuthMethodHint": {"description": "Command authentication runs server-side; do not imply an app shell or browser flow"},
+  "@commandAuthMethodHint": {
+    "description": "Command authentication runs server-side; do not imply an app shell or browser flow"
+  },
   "commandAuthConfirmTitle": "Start sign-in on the server?",
-  "@commandAuthConfirmTitle": {"description": "Explicit consent before executing a server-side authentication method"},
+  "@commandAuthConfirmTitle": {
+    "description": "Explicit consent before executing a server-side authentication method"
+  },
   "commandAuthConfirmDetail": "OpenCode will execute this provider's declared sign-in method on the selected server. Continue only if you trust that server and provider. The app does not run or copy a shell command on your phone.",
-  "@commandAuthConfirmDetail": {"description": "Trust boundary of executable provider authentication"},
+  "@commandAuthConfirmDetail": {
+    "description": "Trust boundary of executable provider authentication"
+  },
   "commandAuthStart": "Start server sign-in",
-  "@commandAuthStart": {"description": "Launch a command authentication attempt after confirmation"},
+  "@commandAuthStart": {
+    "description": "Launch a command authentication attempt after confirmation"
+  },
   "commandAuthPending": "Sign-in is pending on the server. Finish any server-side interaction, then check its status. Closing this sheet does not cancel it.",
-  "@commandAuthPending": {"description": "Pending status without fabricated instructions or automatic cancellation"},
+  "@commandAuthPending": {
+    "description": "Pending status without fabricated instructions or automatic cancellation"
+  },
   "commandAuthCheck": "Check status",
-  "@commandAuthCheck": {"description": "Read the pinned command-auth attempt status"},
+  "@commandAuthCheck": {
+    "description": "Read the pinned command-auth attempt status"
+  },
   "commandAuthCancel": "Cancel sign-in",
-  "@commandAuthCancel": {"description": "Cancel the selected command-auth attempt, not all credentials"},
+  "@commandAuthCancel": {
+    "description": "Cancel the selected command-auth attempt, not all credentials"
+  },
   "commandAuthFailed": "Could not complete or confirm server sign-in. Check the existing attempt before starting another.",
-  "@commandAuthFailed": {"description": "Safe failure without raw provider logs or tokens"},
+  "@commandAuthFailed": {
+    "description": "Safe failure without raw provider logs or tokens"
+  },
   "commandAuthComplete": "The server reported that sign-in completed. Refresh Providers to see its current connections.",
-  "@commandAuthComplete": {"description": "Terminal status reported by the server, not proof of a particular active credential"},
+  "@commandAuthComplete": {
+    "description": "Terminal status reported by the server, not proof of a particular active credential"
+  },
   "commandAuthExpired": "This sign-in attempt expired. You can start a new attempt.",
-  "@commandAuthExpired": {"description": "Server-reported terminal expiry"},
+  "@commandAuthExpired": {
+    "description": "Server-reported terminal expiry"
+  },
   "commandAuthScopeChanged": "The server or project changed. Return to the original location and reopen sign-in to manage its attempt.",
-  "@commandAuthScopeChanged": {"description": "Reject actions against the wrong provider authentication scope"},
+  "@commandAuthScopeChanged": {
+    "description": "Reject actions against the wrong provider authentication scope"
+  },
   "commandAuthUncertainStart": "The server may have started sign-in, but the app could not safely recover its attempt. Check on the server before retrying; automatic restart is blocked to avoid duplicate processes.",
-  "@commandAuthUncertainStart": {"description": "Unknown dispatch outcome blocks duplicate executable auth attempts"},
+  "@commandAuthUncertainStart": {
+    "description": "Unknown dispatch outcome blocks duplicate executable auth attempts"
+  },
   "readAloudAction": "Read reply prose",
-  "@readAloudAction": {"description": "Explicitly read the loaded assistant reply, excluding code and tool details"},
+  "@readAloudAction": {
+    "description": "Explicitly read the loaded assistant reply, excluding code and tool details"
+  },
   "readAloudStop": "Stop reading aloud",
-  "@readAloudStop": {"description": "Visible control that stops speech or cancels pending speech setup"},
+  "@readAloudStop": {
+    "description": "Visible control that stops speech or cancels pending speech setup"
+  },
   "readAloudOtherVoice": "Read with another voice",
-  "@readAloudOtherVoice": {"description": "Choose another installed voice and read the selected reply"},
+  "@readAloudOtherVoice": {
+    "description": "Choose another installed voice and read the selected reply"
+  },
   "readAloudChooseVoice": "Choose a reading voice",
-  "@readAloudChooseVoice": {"description": "Picker of installed system voices marked offline"},
+  "@readAloudChooseVoice": {
+    "description": "Picker of installed system voices marked offline"
+  },
   "readAloudConsentTitle": "Use the system speech engine?",
-  "@readAloudConsentTitle": {"description": "Consent before any system speech engine access"},
+  "@readAloudConsentTitle": {
+    "description": "Consent before any system speech engine access"
+  },
   "readAloudConsentDetail": "The loaded reply prose will be sent to your system speech engine. Only voices marked offline are offered, but the engine is separate software and its privacy practices apply. Code blocks and tool details are omitted. Others may hear the audio. Playback stops when this chat is covered or the app goes into the background.",
-  "@readAloudConsentDetail": {"description": "Discloses external engine access and audible output without promising network isolation"},
+  "@readAloudConsentDetail": {
+    "description": "Discloses external engine access and audible output without promising network isolation"
+  },
   "readAloudContinue": "Choose voice",
-  "@readAloudContinue": {"description": "Accept speech disclosure and request installed voice metadata"},
+  "@readAloudContinue": {
+    "description": "Accept speech disclosure and request installed voice metadata"
+  },
   "readAloudUnsupported": "Read-aloud is not available on this platform.",
-  "@readAloudUnsupported": {"description": "Unsupported platform, without native calls"},
+  "@readAloudUnsupported": {
+    "description": "Unsupported platform, without native calls"
+  },
   "readAloudNoVoice": "No installed voice marked offline is available. Configure an offline voice in your system speech settings and try again.",
-  "@readAloudNoVoice": {"description": "No automatic engine or model installation is performed"},
+  "@readAloudNoVoice": {
+    "description": "No automatic engine or model installation is performed"
+  },
   "readAloudUnavailable": "The speech engine could not read this reply. Try again or choose another voice.",
-  "@readAloudUnavailable": {"description": "Safe system speech failure without spoken text or raw engine errors"},
+  "@readAloudUnavailable": {
+    "description": "Safe system speech failure without spoken text or raw engine errors"
+  },
   "readAloudTooLong": "This reply is too long to read aloud. Choose a shorter reply.",
-  "@readAloudTooLong": {"description": "Bounded speech input is rejected rather than silently truncated"},
+  "@readAloudTooLong": {
+    "description": "Bounded speech input is rejected rather than silently truncated"
+  },
   "readAloudBusy": "Speech playback is unavailable while audio capture or another audio interruption is active.",
-  "@readAloudBusy": {"description": "Audio focus or microphone conflict prevents playback"},
+  "@readAloudBusy": {
+    "description": "Audio focus or microphone conflict prevents playback"
+  },
   "readAloudNoProse": "There is no reply prose to read. Code and tool details are not spoken.",
-  "@readAloudNoProse": {"description": "Explicit empty prose result without invoking a speech engine"},
+  "@readAloudNoProse": {
+    "description": "Explicit empty prose result without invoking a speech engine"
+  },
   "credentialManage": "Manage accounts",
-  "@credentialManage": {"description": "Open individual saved provider credential management"},
+  "@credentialManage": {
+    "description": "Open individual saved provider credential management"
+  },
   "credentialMetadataOnly": "Only saved account labels are shown. API keys and login tokens stay on your server.",
-  "@credentialMetadataOnly": {"description": "Describes the metadata-only credential list"},
+  "@credentialMetadataOnly": {
+    "description": "Describes the metadata-only credential list"
+  },
   "credentialActiveUnknown": "Active account unknown. The saved-account list does not report which account is active.",
-  "@credentialActiveUnknown": {"description": "Cold start or stream gap cannot establish an active credential"},
+  "@credentialActiveUnknown": {
+    "description": "Cold start or stream gap cannot establish an active credential"
+  },
   "credentialNoneActive": "The server reported no active saved account.",
-  "@credentialNoneActive": {"description": "An explicit nullable credential-switched event reported no active credential"},
+  "@credentialNoneActive": {
+    "description": "An explicit nullable credential-switched event reported no active credential"
+  },
   "credentialActiveObserved": "The Active badge reflects the latest server event.",
-  "@credentialActiveObserved": {"description": "Distinguishes event-confirmed activation from a successful command response"},
+  "@credentialActiveObserved": {
+    "description": "Distinguishes event-confirmed activation from a successful command response"
+  },
   "credentialActiveUpdated": "Active account updated from the server.",
-  "@credentialActiveUpdated": {"description": "Live-region feedback after a valid credential-switched event"},
+  "@credentialActiveUpdated": {
+    "description": "Live-region feedback after a valid credential-switched event"
+  },
   "credentialSwitchRequested": "Switch requested. This request has not yet been confirmed by a server event.",
-  "@credentialSwitchRequested": {"description": "Accepted but unconfirmed activation, without an indefinite spinner or invented badge"},
+  "@credentialSwitchRequested": {
+    "description": "Accepted but unconfirmed activation, without an indefinite spinner or invented badge"
+  },
   "credentialActive": "Active",
-  "@credentialActive": {"description": "Server-event-confirmed active saved credential badge"},
+  "@credentialActive": {
+    "description": "Server-event-confirmed active saved credential badge"
+  },
   "credentialSetActive": "Set active",
-  "@credentialSetActive": {"description": "Request activation of one saved provider credential"},
+  "@credentialSetActive": {
+    "description": "Request activation of one saved provider credential"
+  },
   "credentialRename": "Rename account",
-  "@credentialRename": {"description": "Edit a saved credential label, not its secret"},
+  "@credentialRename": {
+    "description": "Edit a saved credential label, not its secret"
+  },
   "credentialLabel": "Account label",
-  "@credentialLabel": {"description": "Single-line saved credential label input"},
+  "@credentialLabel": {
+    "description": "Single-line saved credential label input"
+  },
   "credentialSave": "Save label",
-  "@credentialSave": {"description": "Submit only the edited credential label"},
+  "@credentialSave": {
+    "description": "Submit only the edited credential label"
+  },
   "credentialRemoveTitle": "Remove {label}?",
-  "@credentialRemoveTitle": {"description": "Destructive confirmation naming the saved provider credential", "placeholders": {"label": {"type": "String"}}},
+  "@credentialRemoveTitle": {
+    "description": "Destructive confirmation naming the saved provider credential",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "credentialRemoveDetail": "Remove this saved sign-in from the server. Other projects using it may be affected. This does not edit environment configuration; the server determines which account, if any, becomes active afterward.",
-  "@credentialRemoveDetail": {"description": "Discloses server-wide credential removal and avoids promising successor activation"},
+  "@credentialRemoveDetail": {
+    "description": "Discloses server-wide credential removal and avoids promising successor activation"
+  },
   "credentialScopeChanged": "The server or project changed. Close and reopen account management before making changes.",
-  "@credentialScopeChanged": {"description": "Blocks operations from a previous credential-management scope"},
+  "@credentialScopeChanged": {
+    "description": "Blocks operations from a previous credential-management scope"
+  },
   "credentialProviderMissing": "This provider is no longer in the server's integration list.",
-  "@credentialProviderMissing": {"description": "Fresh integration read no longer contains the selected provider"},
+  "@credentialProviderMissing": {
+    "description": "Fresh integration read no longer contains the selected provider"
+  },
   "credentialLoadFailed": "Could not refresh saved accounts. Try again.",
-  "@credentialLoadFailed": {"description": "Safe credential metadata refresh failure"},
+  "@credentialLoadFailed": {
+    "description": "Safe credential metadata refresh failure"
+  },
   "credentialMutationFailed": "Could not confirm the account change. Refresh before retrying; the server may already have applied it.",
-  "@credentialMutationFailed": {"description": "Uncertain credential mutation result without raw server or secret data"},
+  "@credentialMutationFailed": {
+    "description": "Uncertain credential mutation result without raw server or secret data"
+  },
   "credentialRefresh": "Refresh accounts",
-  "@credentialRefresh": {"description": "Refetch safe credential metadata, not a guarantee of active-state confirmation"},
+  "@credentialRefresh": {
+    "description": "Refetch safe credential metadata, not a guarantee of active-state confirmation"
+  },
   "credentialEmpty": "No saved accounts were reported for this provider.",
-  "@credentialEmpty": {"description": "Empty credential list without claiming provider disconnection"},
+  "@credentialEmpty": {
+    "description": "Empty credential list without claiming provider disconnection"
+  },
   "credentialEnvironment": "Managed by the server environment. It cannot be removed here.",
-  "@credentialEnvironment": {"description": "Environment-backed integration connection is not an editable credential"},
+  "@credentialEnvironment": {
+    "description": "Environment-backed integration connection is not an editable credential"
+  },
   "credentialUnnamed": "Saved account {index}",
-  "@credentialUnnamed": {"description": "Display-only ordinal for a credential with no label; not a server-reported identity", "placeholders": {"index": {"type": "int"}}},
+  "@credentialUnnamed": {
+    "description": "Display-only ordinal for a credential with no label; not a server-reported identity",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
   "mcpRemove": "Remove",
-  "@mcpRemove": {"description": "Remove an MCP server from the current runtime location"},
+  "@mcpRemove": {
+    "description": "Remove an MCP server from the current runtime location"
+  },
   "mcpRemoveTitle": "Remove {name}?",
-  "@mcpRemoveTitle": {"description": "Confirmation title naming the selected MCP server", "placeholders": {"name": {"type": "String"}}},
+  "@mcpRemoveTitle": {
+    "description": "Confirmation title naming the selected MCP server",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "mcpRemoveRuntimeDetail": "Remove this MCP server from the current runtime location. Its tools will no longer be available there. This does not erase persistent server configuration; it may return after a server restart.",
-  "@mcpRemoveRuntimeDetail": {"description": "Distinguishes runtime MCP removal from persistent configuration changes"},
+  "@mcpRemoveRuntimeDetail": {
+    "description": "Distinguishes runtime MCP removal from persistent configuration changes"
+  },
   "mcpRemoveFailed": "Could not confirm MCP removal. Refresh the list before trying again; the server may already have applied the change.",
-  "@mcpRemoveFailed": {"description": "Safe feedback for an uncertain removal outcome without raw configuration or server errors"},
+  "@mcpRemoveFailed": {
+    "description": "Safe feedback for an uncertain removal outcome without raw configuration or server errors"
+  },
   "mcpLoadFailed": "Could not refresh MCP data. Try again.",
-  "@mcpLoadFailed": {"description": "Generic MCP inventory or resource refresh failure"},
+  "@mcpLoadFailed": {
+    "description": "Generic MCP inventory or resource refresh failure"
+  },
   "mcpSavedStatus": "Saved in OpenCode",
   "mcpConnectionUnconfirmed": "App connection not confirmed",
   "mcpRetryReconnect": "Retry reconnect",
   "mcpReconnecting": "Reconnecting",
   "mcpStillDisconnected": "OpenCode is still disconnected. Try again.",
   "mcpScopeChanged": "The server or project changed. Refresh to load its MCP servers before making changes.",
-  "@mcpScopeChanged": {"description": "Warns against acting on MCP data from a previous profile or location"},
+  "@mcpScopeChanged": {
+    "description": "Warns against acting on MCP data from a previous profile or location"
+  },
   "promptStashRestoreFailed": "Could not finish restoring the prompt. Saved copies remain available; check the composer before trying again.",
   "promptStashEmpty": "Nothing saved yet. Use Stash current prompt in Prompt tools to keep a prompt for later.",
   "promptStashContextOnly": "Attachments and references",
@@ -772,7 +1183,9 @@
   "promptDefaultLocation": "the server default directory",
   "promptStashed": "Prompt saved to your stash.",
   "promptStashedDraftPending": "Prompt saved to your stash. The composer draft still needs to be saved; use Retry in the draft warning.",
-  "@promptStashedDraftPending": {"description": "Stash save succeeded but persisting the cleared or restored composer draft failed; the saved stash remains available"},
+  "@promptStashedDraftPending": {
+    "description": "Stash save succeeded but persisting the cleared or restored composer draft failed; the saved stash remains available"
+  },
   "promptStashReadFailed": "Could not read saved prompts. Their stored data has been kept.",
   "promptStashDeleteDetail": "This removes the saved text, attachments and references from this device.",
   "promptStashDescription": "Save text, attachments and references for later",
@@ -781,10 +1194,34 @@
   "promptStashAction": "Stash current prompt",
   "promptStashLocation": "This prompt refers to files in {directory}. Switch to its original project and workspace before restoring it.",
   "promptStashScopeChanged": "The server or location changed. Close and reopen Saved prompts.",
-  "@promptStashLocation": {"placeholders":{"directory":{"type":"String"}}},
-  "@promptAttachmentsUnavailableDetail": {"placeholders":{"names":{"type":"String"}}},
-  "@promptStashAttachments": {"placeholders":{"count":{"type":"int"}}},
-  "@promptStashReferences": {"placeholders":{"count":{"type":"int"}}},
+  "@promptStashLocation": {
+    "placeholders": {
+      "directory": {
+        "type": "String"
+      }
+    }
+  },
+  "@promptAttachmentsUnavailableDetail": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "@promptStashAttachments": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@promptStashReferences": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "transcriptFindTitle": "Find in conversation",
   "transcriptFindHint": "Search conversation",
   "transcriptFindScope": "Messages, reasoning and tool data",
@@ -793,9 +1230,24 @@
   "transcriptFindNext": "Next match",
   "transcriptFindNone": "No matches",
   "transcriptFindCount": "{total, plural, =1{1 match} other{{current} of {total} matches}}",
-  "@transcriptFindCount": {"placeholders":{"current":{"type":"int"},"total":{"type":"int"}}},
+  "@transcriptFindCount": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "transcriptFindTotal": "{count, plural, =1{1 match in message text} other{{count} matches in message text}}",
-  "@transcriptFindTotal": {"placeholders":{"count":{"type":"int"}}},
+  "@transcriptFindTotal": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "transcriptFindPartial": "Loaded messages only. Load older messages to search further.",
   "transcriptFindComplete": "All available message content searched.",
   "transcriptFindReasoning": "Reasoning",
@@ -821,7 +1273,16 @@
   "activeContextSearch": "Search active messages",
   "activeContextAll": "All",
   "activeContextCount": "{shown} of {total} messages",
-  "@activeContextCount": {"placeholders":{"shown":{"type":"int"},"total":{"type":"int"}}},
+  "@activeContextCount": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "activeContextEmpty": "The server returned no active context messages.",
   "activeContextNoMatches": "No active messages match these filters.",
   "activeContextNoText": "No supported text content in this entry.",
@@ -829,7 +1290,13 @@
   "activeContextChanged": "The connection, project or conversation changed. Reopen this inspector from the conversation.",
   "activeContextInvalid": "The server returned an invalid context snapshot. Refresh to try again.",
   "activeContextRefreshFailed": "Showing the previous snapshot. Could not refresh: {error}",
-  "@activeContextRefreshFailed": {"placeholders":{"error":{"type":"String"}}},
+  "@activeContextRefreshFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "activeContextContentHelp": "Snapshot of available message content. Binary attachment bodies, URLs and internal metadata are not displayed. This is not the complete provider request.",
   "activeContextUser": "User prompt",
   "activeContextAssistant": "Assistant",
@@ -852,9 +1319,27 @@
   "draftRetrySave": "Retry saving draft",
   "draftClearFailed": "Could not clear the saved draft. Retry before leaving.",
   "activeContextTypeCount": "{type} · {count}",
-  "@activeContextTypeCount": {"placeholders":{"type":{"type":"String"},"count":{"type":"int"}}},
+  "@activeContextTypeCount": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "activeContextPartHeading": "{kind} · {name}",
-  "@activeContextPartHeading": {"placeholders":{"kind":{"type":"String"},"name":{"type":"String"}}},
+  "@activeContextPartHeading": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "draftLeaveTitle": "Draft could not be saved",
   "draftLeaveMessage": "Keep editing to copy your text or retry saving. Leaving now may lose your unsaved changes.",
   "draftLeaveAction": "Leave without saving",
@@ -864,7 +1349,13 @@
   "draftAttachmentsFailed": "Attachments need recovery or could not be saved. Retry before sending.",
   "draftAttachmentRecoveryTitle": "Some attachments need attention",
   "draftAttachmentRecoveryDetail": "These saved attachments are missing, unreadable, or belong to another project: {names}. Use the available attachments and remove these from the draft, or keep the saved draft and retry later.",
-  "@draftAttachmentRecoveryDetail": {"placeholders":{"names":{"type":"String"}}},
+  "@draftAttachmentRecoveryDetail": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "draftUseAvailableAttachments": "Use available attachments",
   "draftKeepSavedAttachments": "Keep saved draft",
   "photoLibraryAction": "Photo library",
@@ -893,121 +1384,305 @@
   "legacyDraftsEmpty": "No older drafts found",
   "legacyDraftLocationChanged": "The project changed. Reopen Older drafts to choose where to insert the text.",
   "quotaTitle": "Remaining usage",
-  "@quotaTitle": {"description": "Read-only subscription quota screen title"},
+  "@quotaTitle": {
+    "description": "Read-only subscription quota screen title"
+  },
   "quotaSettingsSummary": "Optional Codex collector · setup required",
-  "@quotaSettingsSummary": {"description": "Settings row explaining remaining quota requires an optional server extension"},
+  "@quotaSettingsSummary": {
+    "description": "Settings row explaining remaining quota requires an optional server extension"
+  },
   "quotaDescription": "Choose a provider to view its reported account windows. These are separate from OpenCode token usage and cost.",
-  "@quotaDescription": {"description": "Distinguishes account-wide rate-limit windows from project consumption"},
+  "@quotaDescription": {
+    "description": "Distinguishes account-wide rate-limit windows from project consumption"
+  },
   "quotaSource": "Collector server",
-  "@quotaSource": {"description": "Label above the explicitly selected server origin"},
+  "@quotaSource": {
+    "description": "Label above the explicitly selected server origin"
+  },
   "quotaSourceTitle": "{profile} · {provider}",
-  "@quotaSourceTitle": {"description": "Selected quota source profile and provider heading", "placeholders": {"profile": {"type": "String"}, "provider": {"type": "String"}}},
+  "@quotaSourceTitle": {
+    "description": "Selected quota source profile and provider heading",
+    "placeholders": {
+      "profile": {
+        "type": "String"
+      },
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
   "quotaUnknownSource": "No saved server",
-  "@quotaUnknownSource": {"description": "Safe fallback when a quota source origin is unavailable"},
+  "@quotaUnknownSource": {
+    "description": "Safe fallback when a quota source origin is unavailable"
+  },
   "quotaSourceChanged": "The server or project changed, or its local data is being removed. Reopen Remaining usage to review the source again.",
-  "@quotaSourceChanged": {"description": "A retained quota screen lost its original scope or profile"},
+  "@quotaSourceChanged": {
+    "description": "A retained quota screen lost its original scope or profile"
+  },
   "quotaSetupTitle": "An optional collector is required",
-  "@quotaSetupTitle": {"description": "First-visit quota setup heading; no claim of built-in OpenCode support"},
+  "@quotaSetupTitle": {
+    "description": "First-visit quota setup heading; no claim of built-in OpenCode support"
+  },
   "quotaSetupDescription": "Your server operator must install and protect this route at the same origin as OpenCode. Reading it uses this profile's server sign-in. Confirm only if you installed or trust that deployment. Provider tokens stay on the server.",
-  "@quotaSetupDescription": {"description": "Informed consent before sending existing server authentication to an optional same-origin route"},
+  "@quotaSetupDescription": {
+    "description": "Informed consent before sending existing server authentication to an optional same-origin route"
+  },
   "quotaSetupGuide": "Setup instructions are in tool/quota/README.md in the app repository. This screen does not install services or remember permission after you leave.",
-  "@quotaSetupGuide": {"description": "Explains operator configuration and visit-only consent"},
+  "@quotaSetupGuide": {
+    "description": "Explains operator configuration and visit-only consent"
+  },
   "quotaSetupNeeded": "Use a saved server with a password and HTTPS, or phone loopback. Update its connection settings before checking the collector.",
-  "@quotaSetupNeeded": {"description": "Quota reads are unavailable for missing credentials or an unsafe source"},
+  "@quotaSetupNeeded": {
+    "description": "Quota reads are unavailable for missing credentials or an unsafe source"
+  },
   "quotaConsent": "I installed and trust this collector on this server.",
-  "@quotaConsent": {"description": "Explicit opt-in checkbox; does not install or configure a collector"},
+  "@quotaConsent": {
+    "description": "Explicit opt-in checkbox; does not install or configure a collector"
+  },
   "quotaRead": "Read remaining usage",
-  "@quotaRead": {"description": "Explicit first quota read after informed consent"},
+  "@quotaRead": {
+    "description": "Explicit first quota read after informed consent"
+  },
   "quotaRefresh": "Refresh remaining usage",
-  "@quotaRefresh": {"description": "Manual refresh or retry of the same trusted quota source"},
+  "@quotaRefresh": {
+    "description": "Manual refresh or retry of the same trusted quota source"
+  },
   "quotaLoading": "Reading remaining usage",
-  "@quotaLoading": {"description": "Progress semantics for a quota read"},
+  "@quotaLoading": {
+    "description": "Progress semantics for a quota read"
+  },
   "quotaForgetConsent": "Stop using this collector",
-  "@quotaForgetConsent": {"description": "Clear this visit's consent and in-memory quota snapshot; no remote mutation"},
+  "@quotaForgetConsent": {
+    "description": "Clear this visit's consent and in-memory quota snapshot; no remote mutation"
+  },
   "quotaCollectorAuth": "The collector route did not accept this server sign-in. Ask the server operator to check its authentication setup.",
-  "@quotaCollectorAuth": {"description": "Collector or proxy authentication failure, distinct from provider reauthentication"},
+  "@quotaCollectorAuth": {
+    "description": "Collector or proxy authentication failure, distinct from provider reauthentication"
+  },
   "quotaCollectorMissing": "The optional collector route is not available on this server. Check its installation and proxy routing.",
-  "@quotaCollectorMissing": {"description": "Optional collector returned a missing route or unsupported method"},
+  "@quotaCollectorMissing": {
+    "description": "Optional collector returned a missing route or unsupported method"
+  },
   "quotaUnavailable": "Remaining usage could not be refreshed. Check the connection and collector, then retry.",
-  "@quotaUnavailable": {"description": "Safe quota network/service failure without raw errors"},
+  "@quotaUnavailable": {
+    "description": "Safe quota network/service failure without raw errors"
+  },
   "quotaInvalidResponse": "The collector returned an unsupported or invalid snapshot. No new allowance is shown.",
-  "@quotaInvalidResponse": {"description": "Malformed or incompatible quota response"},
+  "@quotaInvalidResponse": {
+    "description": "Malformed or incompatible quota response"
+  },
   "quotaUnconfigured": "The collector has no authorized account source configured. Ask its operator to finish setup.",
-  "@quotaUnconfigured": {"description": "The collector is reachable but lacks an explicitly configured credential source"},
+  "@quotaUnconfigured": {
+    "description": "The collector is reachable but lacks an explicitly configured credential source"
+  },
   "quotaProviderUnsupported": "The selected OAuth login or provider usage route is not supported by this collector.",
-  "@quotaProviderUnsupported": {"description": "Honest first-provider/auth-method limitation"},
+  "@quotaProviderUnsupported": {
+    "description": "Honest first-provider/auth-method limitation"
+  },
   "quotaProviderAuth": "Sign in again using the provider's existing login tool on the server. This app does not read or refresh that login.",
-  "@quotaProviderAuth": {"description": "Provider login expired or was unreadable; not collector Basic authentication failure"},
+  "@quotaProviderAuth": {
+    "description": "Provider login expired or was unreadable; not collector Basic authentication failure"
+  },
   "quotaRateLimited": "The provider limited quota checks. Wait before refreshing; this does not prove your coding allowance is exhausted.",
-  "@quotaRateLimited": {"description": "A polling rate limit is distinct from an exhausted subscription window"},
+  "@quotaRateLimited": {
+    "description": "A polling rate limit is distinct from an exhausted subscription window"
+  },
   "quotaAccountUnverified": "The collector could not verify the selected account. No allowance is shown. Check the login source on the server.",
-  "@quotaAccountUnverified": {"description": "Missing or mismatched account identity must not display measurements"},
+  "@quotaAccountUnverified": {
+    "description": "Missing or mismatched account identity must not display measurements"
+  },
   "quotaCodexAccount": "Codex account windows",
-  "@quotaCodexAccount": {"description": "Heading for Codex entitlements, not all ChatGPT product allowances"},
+  "@quotaCodexAccount": {
+    "description": "Heading for Codex entitlements, not all ChatGPT product allowances"
+  },
   "quotaPlan": "Reported plan: {plan}",
-  "@quotaPlan": {"description": "Provider-reported plan label, from a safe allowlist", "placeholders": {"plan": {"type": "String"}}},
+  "@quotaPlan": {
+    "description": "Provider-reported plan label, from a safe allowlist",
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
   "quotaChecked": "Snapshot checked {time}",
-  "@quotaChecked": {"description": "Collector snapshot time, formatted in the device locale", "placeholders": {"time": {"type": "String"}}},
+  "@quotaChecked": {
+    "description": "Collector snapshot time, formatted in the device locale",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "quotaStale": "Previous snapshot — refresh to check the latest allowance.",
-  "@quotaStale": {"description": "An expired, interrupted or failed-refresh snapshot is not live provider truth"},
+  "@quotaStale": {
+    "description": "An expired, interrupted or failed-refresh snapshot is not live provider truth"
+  },
   "quotaUseBlocked": "The provider reports that ordinary Codex use is currently blocked. Window percentages alone do not determine access.",
-  "@quotaUseBlocked": {"description": "Explicit provider eligibility signal, independent of quota arithmetic"},
+  "@quotaUseBlocked": {
+    "description": "Explicit provider eligibility signal, independent of quota arithmetic"
+  },
   "quotaNotReported": "Not reported",
-  "@quotaNotReported": {"description": "Unknown allowance; never means zero or unlimited"},
+  "@quotaNotReported": {
+    "description": "Unknown allowance; never means zero or unlimited"
+  },
   "quotaPrimaryWindow": "Primary window",
-  "@quotaPrimaryWindow": {"description": "First provider rate-limit window without assuming a five-hour duration"},
+  "@quotaPrimaryWindow": {
+    "description": "First provider rate-limit window without assuming a five-hour duration"
+  },
   "quotaSecondaryWindow": "Secondary window",
-  "@quotaSecondaryWindow": {"description": "Second provider rate-limit window without assuming a weekly duration"},
+  "@quotaSecondaryWindow": {
+    "description": "Second provider rate-limit window without assuming a weekly duration"
+  },
   "quotaOtherWindow": "Usage window {number}",
-  "@quotaOtherWindow": {"description": "Safe display name for an additional bounded window", "placeholders": {"number": {"type": "int"}}},
+  "@quotaOtherWindow": {
+    "description": "Safe display name for an additional bounded window",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "quotaRemaining": "{percent} remaining",
-  "@quotaRemaining": {"description": "Percentage remaining within one reported provider window", "placeholders": {"percent": {"type": "String"}}},
+  "@quotaRemaining": {
+    "description": "Percentage remaining within one reported provider window",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
   "quotaWindowRemainingLabel": "{window}: remaining percentage",
-  "@quotaWindowRemainingLabel": {"description": "Progress-bar semantics label; its numeric value is expressed separately", "placeholders": {"window": {"type": "String"}}},
+  "@quotaWindowRemainingLabel": {
+    "description": "Progress-bar semantics label; its numeric value is expressed separately",
+    "placeholders": {
+      "window": {
+        "type": "String"
+      }
+    }
+  },
   "quotaUsed": "{percent} used",
-  "@quotaUsed": {"description": "Provider-reported percentage used within one window", "placeholders": {"percent": {"type": "String"}}},
+  "@quotaUsed": {
+    "description": "Provider-reported percentage used within one window",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
   "quotaResetAt": "Reported reset: {time}",
-  "@quotaResetAt": {"description": "Absolute provider reset time in device locale", "placeholders": {"time": {"type": "String"}}},
+  "@quotaResetAt": {
+    "description": "Absolute provider reset time in device locale",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "quotaResetUnknown": "Reset time not reported",
-  "@quotaResetUnknown": {"description": "Missing provider reset time is not fabricated"},
+  "@quotaResetUnknown": {
+    "description": "Missing provider reset time is not fabricated"
+  },
   "quotaResetPassed": "Reset time passed — refresh to check. The displayed allowance has not been replenished locally.",
-  "@quotaResetPassed": {"description": "Passing a reset deadline does not invent a new allowance"},
+  "@quotaResetPassed": {
+    "description": "Passing a reset deadline does not invent a new allowance"
+  },
   "quotaDays": "{count, plural, one{1-day window} other{{count}-day window}}",
-  "@quotaDays": {"description": "Exact whole-day provider window duration", "placeholders": {"count": {"type": "int"}}},
+  "@quotaDays": {
+    "description": "Exact whole-day provider window duration",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "quotaHours": "{count, plural, one{1-hour window} other{{count}-hour window}}",
-  "@quotaHours": {"description": "Exact whole-hour provider window duration", "placeholders": {"count": {"type": "int"}}},
+  "@quotaHours": {
+    "description": "Exact whole-hour provider window duration",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "quotaSeconds": "{count, plural, one{1-second window} other{{count}-second window}}",
-  "@quotaSeconds": {"description": "Exact duration when a provider window is not whole hours or days", "placeholders": {"count": {"type": "int"}}},
+  "@quotaSeconds": {
+    "description": "Exact duration when a provider window is not whole hours or days",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "quotaSourceDisclosure": "Read-only snapshot from the optional collector using an internal provider endpoint. Other product allowances, model-specific limits, credits and eligibility are not included. Missing data is unknown, not unlimited.",
-  "@quotaSourceDisclosure": {"description": "Honest limits and provenance of optional provider quota collectors"},
+  "@quotaSourceDisclosure": {
+    "description": "Honest limits and provenance of optional provider quota collectors"
+  },
   "quotaCodex": "Codex",
-  "@quotaCodex": {"description": "Codex provider selector"},
+  "@quotaCodex": {
+    "description": "Codex provider selector"
+  },
   "quotaClaude": "Claude",
-  "@quotaClaude": {"description": "Claude provider selector"},
+  "@quotaClaude": {
+    "description": "Claude provider selector"
+  },
   "quotaClaudeUnavailable": "Claude subscription usage is unavailable here pending a supported, permitted integration. Current OpenCode does not include Claude Pro/Max sign-in. This app will not read or reuse that subscription login.",
-  "@quotaClaudeUnavailable": {"description": "Explains the disabled Claude subscription collection path without suggesting an OAuth workaround"},
+  "@quotaClaudeUnavailable": {
+    "description": "Explains the disabled Claude subscription collection path without suggesting an OAuth workaround"
+  },
   "iosAppTitle": "OpenCode for iOS",
-  "@iosAppTitle": {"description": "iOS app identity without describing it as an Android or desktop build"},
+  "@iosAppTitle": {
+    "description": "iOS app identity without describing it as an Android or desktop build"
+  },
   "iosRemoteSummary": "A remote client for the OpenCode server you choose. On-device server hosting and background monitoring are not available in this iOS build.",
-  "@iosRemoteSummary": {"description": "Truthful initial iOS remote-control scope"},
+  "@iosRemoteSummary": {
+    "description": "Truthful initial iOS remote-control scope"
+  },
   "iosKeychainGuide": "Server passwords use this device's Keychain. They are not stored in plain profile preferences.",
-  "@iosKeychainGuide": {"description": "iOS credential storage guidance"},
+  "@iosKeychainGuide": {
+    "description": "iOS credential storage guidance"
+  },
   "platformSecureStorageGuide": "Server passwords use this platform's secure credential storage. They are not stored in plain profile preferences.",
-  "@platformSecureStorageGuide": {"description": "Platform-neutral storage copy rather than incorrectly promising Linux libsecret everywhere"},
+  "@platformSecureStorageGuide": {
+    "description": "Platform-neutral storage copy rather than incorrectly promising Linux libsecret everywhere"
+  },
   "quotaClaudeAccount": "Claude login windows",
-  "@quotaClaudeAccount": {"description": "Claude allowances for the operator-selected OAuth login"},
+  "@quotaClaudeAccount": {
+    "description": "Claude allowances for the operator-selected OAuth login"
+  },
   "quotaSourceBound": "Tied to the collector's configured Claude login. The usage response does not independently identify the account.",
-  "@quotaSourceBound": {"description": "Distinguishes credential-bound Claude usage from provider-confirmed account identity"},
+  "@quotaSourceBound": {
+    "description": "Distinguishes credential-bound Claude usage from provider-confirmed account identity"
+  },
   "usageProviders": "Providers",
-  "@usageProviders": {"description": "Provider grouping within server consumption statistics"},
+  "@usageProviders": {
+    "description": "Provider grouping within server consumption statistics"
+  },
   "usageProviderScope": "Totals from this server's returned model records for the selected scope. Not provider billing or subscription allowances.",
-  "@usageProviderScope": {"description": "Limits the meaning of provider-grouped consumption"},
+  "@usageProviderScope": {
+    "description": "Limits the meaning of provider-grouped consumption"
+  },
   "usageProviderModelCount": "{count, plural, one{1 model} other{{count} models}}",
-  "@usageProviderModelCount": {"description": "Distinct model IDs within a provider; variants are not counted as new models", "placeholders": {"count": {"type": "int"}}},
+  "@usageProviderModelCount": {
+    "description": "Distinct model IDs within a provider; variants are not counted as new models",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "usageProviderCostUnavailable": "Cost subtotal unavailable",
-  "@usageProviderCostUnavailable": {"description": "Invalid numeric aggregate is not rendered as a plausible cost"},
+  "@usageProviderCostUnavailable": {
+    "description": "Invalid numeric aggregate is not rendered as a plausible cost"
+  },
   "usageProviderCostShare": "{percent} of reported cost",
-  "@usageProviderCostShare": {"description": "Provider subtotal divided by the selected server consumption total, when consistent", "placeholders": {"percent": {"type": "String"}}},
+  "@usageProviderCostShare": {
+    "description": "Provider subtotal divided by the selected server consumption total, when consistent",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
   "setupOutputWaiting": "Waiting for Termux output…",
   "setupOutputWaitingDetail": "Setup messages will appear here when Termux responds.",
   "setupStartInstalled": "Start installed OpenCode",
@@ -1020,7 +1695,13 @@
   "setupInstallStart": "Install & start",
   "setupCheckAgain": "Check again",
   "uncertainAuthTitle": "Unconfirmed sign-in: {integrationID}",
-  "@uncertainAuthTitle": {"placeholders": {"integrationID": {"type": "String"}}},
+  "@uncertainAuthTitle": {
+    "placeholders": {
+      "integrationID": {
+        "type": "String"
+      }
+    }
+  },
   "uncertainAuthDetail": "The server may have started sign-in, but no attempt ID was received. Check on the server before starting again.",
   "uncertainAuthForgetTitle": "Forget uncertain start?",
   "uncertainAuthForgetDetail": "This clears only the local retry block. It does not cancel sign-in on the server. Check the server first to avoid running a second sign-in. No new sign-in will start.",
@@ -1169,11 +1850,47 @@
   "monitorPending": "Current pending requests",
   "monitorUnknownServers": "Servers with unknown attention",
   "monitorPendingSummary": "Current pending requests: {pendingCount}\nServers with unknown attention: {unknownCount}",
-  "@monitorPendingSummary": {"description": "Saved-server attention counts in the current inbox", "placeholders": {"pendingCount": {"type": "int"}, "unknownCount": {"type": "int"}}},
+  "@monitorPendingSummary": {
+    "description": "Saved-server attention counts in the current inbox",
+    "placeholders": {
+      "pendingCount": {
+        "type": "int"
+      },
+      "unknownCount": {
+        "type": "int"
+      }
+    }
+  },
   "monitorRequestSummary": "{profile} · {kind}\n{lastChecked}: {time}",
-  "@monitorRequestSummary": {"description": "Saved-server request row summary", "placeholders": {"profile": {"type": "String"}, "kind": {"type": "String"}, "lastChecked": {"type": "String"}, "time": {"type": "String"}}},
+  "@monitorRequestSummary": {
+    "description": "Saved-server request row summary",
+    "placeholders": {
+      "profile": {
+        "type": "String"
+      },
+      "kind": {
+        "type": "String"
+      },
+      "lastChecked": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "monitorLabeledTime": "{label}: {time}",
-  "@monitorLabeledTime": {"description": "A localized monitor timestamp with its label", "placeholders": {"label": {"type": "String"}, "time": {"type": "String"}}},
+  "@monitorLabeledTime": {
+    "description": "A localized monitor timestamp with its label",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "monitorSelected": "Selected location",
   "monitorNoNotifications": "Background notifications also require Keep live and notification permission in Background settings.",
   "monitorCheckIn": "Check in on long runs",
@@ -1181,10 +1898,27 @@
   "monitorCheckInDetailForeground": "Shows a check-in row when busy checks span the chosen time. Work may pause or restart between checks. This device cannot deliver reminders in the background.",
   "monitorCheckInAfter": "Check in after",
   "monitorMinutes": "{minutes, plural, =1{1 minute} other{{minutes} minutes}}",
-  "@monitorMinutes": {"description": "A duration choice for the check-in rule", "placeholders": {"minutes": {"type": "int"}}},
+  "@monitorMinutes": {
+    "description": "A duration choice for the check-in rule",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "monitorCheckInDue": "Time to check in",
   "monitorObservedBusy": "Busy at checks spanning {minutes} min · first check {since}",
-  "@monitorObservedBusy": {"description": "Span between busy samples, not a continuous duration or a lower bound on run length", "placeholders": {"minutes": {"type": "int"}, "since": {"type": "String"}}},
+  "@monitorObservedBusy": {
+    "description": "Span between busy samples, not a continuous duration or a lower bound on run length",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "since": {
+        "type": "String"
+      }
+    }
+  },
   "quotaBudgetClearAll": "Clear saved provider thresholds",
   "quotaBudgetClearDescription": "Remove all provider thresholds and attention settings for this saved server, including previous accounts? Consumption budgets are kept.",
   "managedStorageSummary": "Termux storage: {available} GiB free of {total} GiB",
@@ -1257,14 +1991,27 @@
   "mobileTasksProgress": "{done} of {total} done",
   "@mobileTasksProgress": {
     "description": "Task card progress caption and progress-bar semantics label: completed tasks out of tracked (non-cancelled) tasks",
-    "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
   },
   "mobileTasksCopyAll": "Copy all tasks",
-  "@mobileTasksCopyAll": {"description": "Task card button: copies the full server-reported task list as plain text, ignoring the local unfinished-only filter"},
+  "@mobileTasksCopyAll": {
+    "description": "Task card button: copies the full server-reported task list as plain text, ignoring the local unfinished-only filter"
+  },
   "mobileTasksCopied": "All tasks copied",
-  "@mobileTasksCopied": {"description": "Snackbar after the task list was placed on the clipboard"},
+  "@mobileTasksCopied": {
+    "description": "Snackbar after the task list was placed on the clipboard"
+  },
   "mobileTasksCopyFailed": "Could not copy the task list.",
-  "@mobileTasksCopyFailed": {"description": "Snackbar when the clipboard write fails"},
+  "@mobileTasksCopyFailed": {
+    "description": "Snackbar when the clipboard write fails"
+  },
   "mobileTaskPriorityHigh": "High priority",
   "mobileTaskPriorityMedium": "Medium priority",
   "mobileTaskPriorityLow": "Low priority",
@@ -1403,7 +2150,9 @@
   "@launchShortcutNewTaskFailed": {
     "description": "Snackbar shown when the New task shortcut reached a connected server but creating the session failed",
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "queuedSending": "Sending…",
@@ -1418,7 +2167,9 @@
   "@queuedDeliveryUnconfirmedWithError": {
     "description": "Queued draft bubble label for an unconfirmed send that also recorded a transport error",
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "queuedResendTooltip": "Send again",
@@ -1446,30 +2197,56 @@
     "description": "Discard sheet body for a queued draft whose send was never confirmed"
   },
   "setupRuntimeTitle": "Which OpenCode would you like to use?",
-  "@setupRuntimeTitle": {"description": "First-time on-device server runtime selection"},
+  "@setupRuntimeTitle": {
+    "description": "First-time on-device server runtime selection"
+  },
   "setupRuntimeOne": "OpenCode 1",
-  "@setupRuntimeOne": {"description": "Existing OpenCode server generation"},
+  "@setupRuntimeOne": {
+    "description": "Existing OpenCode server generation"
+  },
   "setupRuntimeOneDetail": "Recommended for the widest feature support in this app.",
-  "@setupRuntimeOneDetail": {"description": "Description of the default first-run runtime"},
+  "@setupRuntimeOneDetail": {
+    "description": "Description of the default first-run runtime"
+  },
   "setupRuntimeTwo": "OpenCode 2 beta",
-  "@setupRuntimeTwo": {"description": "Experimental new OpenCode server generation"},
+  "@setupRuntimeTwo": {
+    "description": "Experimental new OpenCode server generation"
+  },
   "setupRuntimeTwoDetail": "Try the new server API. Some features are unavailable in this beta.",
-  "@setupRuntimeTwoDetail": {"description": "Honest support note for the optional beta runtime"},
+  "@setupRuntimeTwoDetail": {
+    "description": "Honest support note for the optional beta runtime"
+  },
   "setupRuntimeInstallDetail": "Install {runtime} ({version}) in an app-managed Ubuntu environment. Existing Ubuntu files are reused.",
   "@setupRuntimeInstallDetail": {
     "description": "Names the exact runtime and pinned version before installation",
-    "placeholders": {"runtime": {"type": "String"}, "version": {"type": "String"}}
+    "placeholders": {
+      "runtime": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
   },
   "setupRuntimeUpdateDetail": "The app will install {runtime} {version}, restart only the managed local server, and reconnect this profile.",
   "@setupRuntimeUpdateDetail": {
     "description": "Names the selected runtime and pinned version in the update confirmation",
-    "placeholders": {"runtime": {"type": "String"}, "version": {"type": "String"}}
+    "placeholders": {
+      "runtime": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
   },
   "queuedBannerReview": "{count, plural, =1{1 draft with an unconfirmed send to review.} other{{count} drafts with an unconfirmed send to review.}}",
   "@queuedBannerReview": {
     "description": "Connection banner line counting queued drafts whose send was never confirmed",
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "isolatedTaskAction": "Start a task in a fresh worktree",
@@ -1484,7 +2261,9 @@
   "@isolatedTaskIntro": {
     "description": "Explanation shown before the user starts a fresh-worktree task",
     "placeholders": {
-      "project": {"type": "String"}
+      "project": {
+        "type": "String"
+      }
     }
   },
   "isolatedTaskNameLabel": "Worktree name (optional)",
@@ -1511,28 +2290,36 @@
   "@isolatedTaskPreparing": {
     "description": "Status after the server returned the worktree, before its readiness event",
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "isolatedTaskReady": "{name} is ready. Opening a blank session…",
   "@isolatedTaskReady": {
     "description": "Status once the worktree reported ready and the session is being opened",
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "isolatedTaskReadyIdle": "{name} is ready.",
   "@isolatedTaskReadyIdle": {
     "description": "Status when the worktree is ready but the last open attempt failed and nothing is in flight",
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "isolatedTaskUnconfirmed": "{name} was created, but its setup status is not confirmed.",
   "@isolatedTaskUnconfirmed": {
     "description": "Status when no readiness event arrived within the wait",
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "isolatedTaskUnconfirmedHint": "You can keep waiting or open it now. Setup may still be running.",
@@ -1551,7 +2338,9 @@
   "@isolatedTaskFailedKept": {
     "description": "Note under a failed preparation: the created worktree is kept",
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "isolatedTaskCancelled": "Stopped waiting.",
@@ -1562,7 +2351,9 @@
   "@isolatedTaskCancelledKept": {
     "description": "Note after stopping when the server had already returned the worktree",
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "isolatedTaskCancelledUnknown": "If OpenCode created the worktree, it appears under Manage project.",
@@ -1573,21 +2364,27 @@
   "@isolatedTaskOpening": {
     "description": "Status while switching scope and creating the session",
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "isolatedTaskOpened": "Session ready in {name}. Nothing has been sent.",
   "@isolatedTaskOpened": {
     "description": "Status once the blank session exists in the worktree",
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "isolatedTaskBranch": "Branch {branch}",
   "@isolatedTaskBranch": {
     "description": "Branch line under the worktree status",
     "placeholders": {
-      "branch": {"type": "String"}
+      "branch": {
+        "type": "String"
+      }
     }
   },
   "isolatedTaskStopWaiting": "Stop waiting",
@@ -1610,7 +2407,6 @@
   "@isolatedTaskClose": {
     "description": "Close action on the fresh-worktree task sheet"
   },
-
   "returnBriefTitle": "Unreviewed work",
   "returnBriefDescription": "For this project on this device. Dismissing keeps conversations unread and requests pending.",
   "returnBriefUntitled": "Untitled session",
@@ -1633,30 +2429,26 @@
   "returnBriefSaveFailed": "Dismissal was not saved. These items are still unreviewed. Try again.",
   "returnBriefSaving": "Saving dismissal...",
   "returnBriefDismiss": "Dismiss shown items",
-
-
-    "capsuleTitle":  "Context capsule",
-    "capsuleEntry":  "Collect notes, errors and screenshots for this task",
-    "capsuleDescription":  "Build a bundle for this task. Applying adds it to your existing draft; nothing is sent. Unapplied edits are kept only while this screen is open.",
-    "capsuleNote":  "Note",
-    "capsuleError":  "Error",
-    "capsuleCode":  "Code",
-    "capsuleLabel":  "Label",
-    "capsuleExcerpt":  "Excerpt",
-    "capsulePaste":  "Paste",
-    "capsuleRemove":  "Remove",
-    "capsuleAddImage":  "Add screenshot or image",
-    "capsulePreview":  "Tap to preview",
-    "capsuleApply":  "Apply to draft",
-    "capsuleApplied":  "Context added to your saved draft. Review it before sending.",
-    "capsuleScopeChanged":  "The task, connection or draft changed. Close this capsule and reopen it from the intended task.",
-    "capsuleTextOnly":  "This connection accepts text only. You can still collect notes, errors and code.",
-    "capsuleImagesOnly":  "Choose a PNG, JPEG, GIF or WebP image. Paste text into an excerpt instead.",
-    "capsuleImageFailed":  "Could not add that image. Use up to 5 attachments, 10 MB each and 20 MB total, including your existing draft.",
-    "capsulePasteFailed":  "Clipboard text is unavailable. You can type or paste into the excerpt.",
-    "capsuleTextLimit":  "Keep each excerpt under 16,000 characters and the bundle under 32,000.",
-
-
+  "capsuleTitle": "Context capsule",
+  "capsuleEntry": "Collect notes, errors and screenshots for this task",
+  "capsuleDescription": "Build a bundle for this task. Applying adds it to your existing draft; nothing is sent. Unapplied edits are kept only while this screen is open.",
+  "capsuleNote": "Note",
+  "capsuleError": "Error",
+  "capsuleCode": "Code",
+  "capsuleLabel": "Label",
+  "capsuleExcerpt": "Excerpt",
+  "capsulePaste": "Paste",
+  "capsuleRemove": "Remove",
+  "capsuleAddImage": "Add screenshot or image",
+  "capsulePreview": "Tap to preview",
+  "capsuleApply": "Apply to draft",
+  "capsuleApplied": "Context added to your saved draft. Review it before sending.",
+  "capsuleScopeChanged": "The task, connection or draft changed. Close this capsule and reopen it from the intended task.",
+  "capsuleTextOnly": "This connection accepts text only. You can still collect notes, errors and code.",
+  "capsuleImagesOnly": "Choose a PNG, JPEG, GIF or WebP image. Paste text into an excerpt instead.",
+  "capsuleImageFailed": "Could not add that image. Use up to 5 attachments, 10 MB each and 20 MB total, including your existing draft.",
+  "capsulePasteFailed": "Clipboard text is unavailable. You can type or paste into the excerpt.",
+  "capsuleTextLimit": "Keep each excerpt under 16,000 characters and the bundle under 32,000.",
   "markdownCopyCode": "Copy code",
   "markdownCopied": "Code copied",
   "markdownCopyFailed": "Could not copy code. Try again.",
@@ -1933,7 +2725,13 @@
   "projectFolderBrowse": "Choose from opened projects",
   "projectFolderNoCreateHint": "This server cannot create folders from the app. Create the folder on that machine, then open it here by its path.",
   "projectFolderCreateMessage": "The folder is created in {directory} on this device and opened as the workspace.",
-  "@projectFolderCreateMessage": {"placeholders": {"directory": {"type": "String"}}},
+  "@projectFolderCreateMessage": {
+    "placeholders": {
+      "directory": {
+        "type": "String"
+      }
+    }
+  },
   "projectFolderNameLabel": "Folder name",
   "projectFolderNameHint": "my-app",
   "projectFolderCreateAction": "Create",
@@ -1941,10 +2739,22 @@
   "projectFolderOpenMessage": "Enter the full path of a folder on the server. The home folder itself cannot be used; choose a project inside it.",
   "projectFolderPathLabel": "Folder path",
   "projectFolderPathHint": "{directory}/my-app",
-  "@projectFolderPathHint": {"placeholders": {"directory": {"type": "String"}}},
+  "@projectFolderPathHint": {
+    "placeholders": {
+      "directory": {
+        "type": "String"
+      }
+    }
+  },
   "projectFolderOpenAction": "Open",
   "projectFolderCreateSubtitle": "In {directory} on this device",
-  "@projectFolderCreateSubtitle": {"placeholders": {"directory": {"type": "String"}}},
+  "@projectFolderCreateSubtitle": {
+    "placeholders": {
+      "directory": {
+        "type": "String"
+      }
+    }
+  },
   "projectFolderOpenSubtitle": "Enter the full path of a folder on the server",
   "globalSessionsTitle": "All sessions",
   "globalSessionsSearchLabel": "Search session titles",
@@ -1954,11 +2764,35 @@
   "globalSessionsAllFolders": "All folders",
   "globalSessionsUnknownLocation": "Unknown location",
   "globalSessionsSummary": "{count} sessions in {folders} folders",
-  "@globalSessionsSummary": {"placeholders": {"count": {"type": "String"}, "folders": {"type": "int"}}},
+  "@globalSessionsSummary": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
   "globalSessionsSummaryOneFolder": "{count} sessions in one folder",
-  "@globalSessionsSummaryOneFolder": {"placeholders": {"count": {"type": "String"}}},
+  "@globalSessionsSummaryOneFolder": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "globalSessionsFilteredSummary": "{count} of {total} sessions shown",
-  "@globalSessionsFilteredSummary": {"placeholders": {"count": {"type": "int"}, "total": {"type": "String"}}},
+  "@globalSessionsFilteredSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "globalSessionsEmptyTitle": "No sessions yet",
   "globalSessionsEmptyMessage": "Sessions from every folder on this server will appear here.",
   "globalSessionsNoMatchTitle": "No matching sessions",
@@ -2048,6 +2882,15 @@
         "type": "String"
       },
       "text": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsDiscoveryNewChatsModel": "New chats: {model}",
+  "@settingsDiscoveryNewChatsModel": {
+    "description": "More destination summary showing the model used by new chats, not an existing session.",
+    "placeholders": {
+      "model": {
         "type": "String"
       }
     }

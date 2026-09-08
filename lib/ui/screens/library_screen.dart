@@ -74,6 +74,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
             _DestinationRow(
               icon: Icons.model_training_outlined,
               title: l10n.libraryModelsAgentsTitle,
+              subtitle: l10n.settingsDiscoveryNewChatsModel(
+                _defaultModelLabel(controller, l10n),
+              ),
               keywords: 'AI reasoning favorites recent',
               onTap: () =>
                   _open(context, CatalogScreen(controller: controller)),
@@ -206,7 +209,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   ),
                 ),
               ),
-              if (_query.isEmpty) _ActiveSetupCard(controller: controller),
               _DestinationGroup(
                 title: l10n.libraryBrowseSection,
                 cards: group0,
@@ -239,60 +241,23 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 }
 
-/// Terminal is a body-only tab widget; pushed from More it needs its own
-/// Scaffold and an identity in the app bar.
-
-/// The live model/agent/variant selection, promoted to the top of More so the
-/// hub reports state instead of only linking away.
-class _ActiveSetupCard extends StatelessWidget {
-  final ConnectionController controller;
-
-  const _ActiveSetupCard({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final model = controller.selectedModel;
-    final catalogModel = controller.catalog?.models
-        .where(
-          (candidate) =>
-              candidate.providerID == model?.providerID &&
-              candidate.id == model?.modelID,
-        )
-        .firstOrNull;
-    final modelLabel = model == null
-        ? AppLocalizations.of(context).libraryNoModel
-        : catalogModel?.name.trim().isNotEmpty == true
-        ? catalogModel!.name
-        : presentedModelLabel(model.providerID, model.modelID);
-    final details = <String>[
-      if (controller.selectedAgent.isNotEmpty) controller.selectedAgent,
-      if (controller.selectedVariant.isNotEmpty) controller.selectedVariant,
-    ];
-    return Card(
-      key: const ValueKey('library-active-setup'),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      clipBehavior: Clip.antiAlias,
-      child: ListTile(
-        minTileHeight: 72,
-        leading: _TileIcon(
-          icon: Icons.memory_rounded,
-          color: theme.colorScheme.primary,
-        ),
-        title: Text(modelLabel, maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: Text(
-          [
-            AppLocalizations.of(context).libraryDefaultModel,
-            ...details,
-          ].join(' · '),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: const Icon(Icons.swap_horiz_rounded),
-        onTap: () => showModelPicker(context),
-      ),
-    );
-  }
+/// Keep the default visible in its destination, using the catalog display name.
+String _defaultModelLabel(
+  ConnectionController controller,
+  AppLocalizations l10n,
+) {
+  final model = controller.selectedModel;
+  if (model == null) return l10n.libraryNoModel;
+  final catalogModel = controller.catalog?.models
+      .where(
+        (candidate) =>
+            candidate.providerID == model.providerID &&
+            candidate.id == model.modelID,
+      )
+      .firstOrNull;
+  return catalogModel?.name.trim().isNotEmpty == true
+      ? catalogModel!.name
+      : presentedModelLabel(model.providerID, model.modelID);
 }
 
 /// Grouped rows let people scan destinations without a grid of empty tiles.
@@ -310,14 +275,23 @@ class _DestinationGroup extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionLabel(title),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 24, 4, 8),
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
         Card(
           margin: const EdgeInsets.symmetric(horizontal: 4),
           clipBehavior: Clip.antiAlias,
           child: Column(
             children: [
               for (var index = 0; index < matches.length; index++) ...[
-                if (index > 0) const Divider(height: 1, indent: 64),
+                if (index > 0)
+                  const Divider(height: 1, indent: 60, endIndent: 16),
                 matches[index],
               ],
             ],
@@ -332,6 +306,7 @@ class _DestinationRow extends StatelessWidget {
   final IconData icon;
   final String title;
   final String keywords;
+  final String? subtitle;
   final VoidCallback onTap;
 
   const _DestinationRow({
@@ -339,6 +314,7 @@ class _DestinationRow extends StatelessWidget {
     required this.icon,
     required this.title,
     this.keywords = '',
+    this.subtitle,
     required this.onTap,
   });
 
@@ -349,33 +325,15 @@ class _DestinationRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      minTileHeight: 60,
-      leading: Icon(icon),
+      minTileHeight: subtitle == null ? 56 : 72,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+      minLeadingWidth: 32,
+      horizontalTitleGap: 12,
+      leading: SizedBox.square(dimension: 32, child: Icon(icon, size: 24)),
       title: Text(title),
+      subtitle: subtitle == null ? null : Text(subtitle!),
       trailing: const Icon(Icons.chevron_right_rounded, size: 20),
       onTap: onTap,
-    );
-  }
-}
-
-class _TileIcon extends StatelessWidget {
-  final IconData icon;
-  final Color? color;
-
-  const _TileIcon({required this.icon, this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tint = color ?? theme.colorScheme.onSurfaceVariant;
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        color: tint.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(AppTheme.radiusControl),
-      ),
-      child: Icon(icon, size: 20, color: tint),
     );
   }
 }

@@ -5013,4 +5013,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String reviewNoteDescription(String kind, String text) {
     return '$kind: $text';
   }
+
+  @override
+  String settingsDiscoveryNewChatsModel(String model) {
+    return 'New chats: $model';
+  }
 }

@@ -243,14 +243,23 @@ class _CodingSettingsScreenState extends State<CodingSettingsScreen>
               controller.selectedModel == null
                   ? 'Server default'
                   : [
-                      '${presentedProviderName(controller.selectedModel!.providerID, controller.catalog?.providers ?? const [])} · ${controller.selectedModel!.modelID}',
+                      controller.catalog?.models
+                              .where(
+                                (model) =>
+                                    model.providerID ==
+                                        controller.selectedModel!.providerID &&
+                                    model.id ==
+                                        controller.selectedModel!.modelID,
+                              )
+                              .firstOrNull
+                              ?.name ??
+                          presentedModelLabel(
+                            controller.selectedModel!.providerID,
+                            controller.selectedModel!.modelID,
+                          ),
                       if (controller.selectedVariant.isNotEmpty)
                         controller.selectedVariant,
                     ].join(' · '),
-              style: const TextStyle(
-                fontFamily: AppTheme.monoFamily,
-                fontSize: AppTheme.codeFontSize,
-              ),
             ),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => showModelPicker(context),
@@ -264,16 +273,7 @@ class _CodingSettingsScreenState extends State<CodingSettingsScreen>
                   : controller.selectedAgent,
             ),
             trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => showModelPicker(context),
-          ),
-          const SectionLabel('Experimental'),
-          const ListTile(
-            leading: Icon(Icons.science_outlined),
-            title: Text('Workspaces'),
-            subtitle: Text(
-              'Workspace and worktree switching is available from the Workspace tab. '
-              'Availability depends on the connected server.',
-            ),
+            onTap: () => showModelPicker(context, focusAgent: true),
           ),
         ],
       ),

@@ -56,7 +56,7 @@ void main() {
     await tester.tap(find.byTooltip('Clear search'));
     await tester.pumpAndSettle();
     expect(find.text('Providers'), findsOneWidget);
-    expect(find.byKey(const ValueKey('library-active-setup')), findsOneWidget);
+    expect(find.text('Models & agents'), findsOneWidget);
   });
 
   testWidgets(
@@ -89,9 +89,9 @@ void main() {
       );
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
-      expect(find.text('Nemotron Ultra'), findsOneWidget);
+      expect(find.textContaining('Nemotron Ultra'), findsOneWidget);
       expect(find.text('opencode/nemotron-free'), findsNothing);
-      expect(find.textContaining('Default for new chats'), findsOneWidget);
+      expect(find.textContaining('New chats:'), findsOneWidget);
     },
   );
 
@@ -120,8 +120,23 @@ void main() {
       find.widgetWithText(ListTile, 'Providers'),
     );
     expect(cardRect.bottom, lessThanOrEqualTo(providersRect.top));
-    expect(cardRect.height, lessThanOrEqualTo(72));
+    expect(cardRect.height, greaterThanOrEqualTo(72));
     expect(cardRect.left, providersRect.left);
+  });
+
+  testWidgets('group separators align with destination text, not icon slots', (
+    tester,
+  ) async {
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    final divider = find.byType(Divider).first;
+    final shape = tester.widget<Divider>(divider);
+    final titleX = tester.getTopLeft(find.text('Providers')).dx;
+    expect(tester.getTopLeft(divider).dx + (shape.indent ?? 0), titleX);
+    expect(shape.endIndent, greaterThanOrEqualTo(16));
+    expect(find.byKey(const ValueKey('library-active-setup')), findsNothing);
   });
 
   testWidgets('the hub carries no pending badge of its own', (tester) async {

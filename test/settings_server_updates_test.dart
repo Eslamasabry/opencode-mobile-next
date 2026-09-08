@@ -138,6 +138,7 @@ Future<BackgroundLiveController> _liveController(
 Future<void> _openCategory(WidgetTester tester, String key) async {
   final row = find.byKey(ValueKey(key));
   await tester.ensureVisible(row);
+  await tester.pumpAndSettle();
   await tester.tap(row);
   await tester.pumpAndSettle();
 }

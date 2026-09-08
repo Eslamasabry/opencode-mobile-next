@@ -151,18 +151,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ? 'Server healthy · ${_health?.version ?? controller.version ?? 'unknown'}'
         : 'Version ${controller.version ?? 'unknown'}';
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings and server')),
+      appBar: AppBar(
+        title: Text(
+          lookupAppLocalizations(
+            Localizations.localeOf(context),
+          ).librarySettingsTitle,
+        ),
+      ),
       body: DesktopScrollbarArea(
         builder: (scrollController) => ListView(
           controller: scrollController,
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
           children: [
-            Card(
+            Padding(
               key: const ValueKey('settings-connection-summary'),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              clipBehavior: Clip.antiAlias,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               child: ListTile(
                 minTileHeight: 72,
+                contentPadding: EdgeInsets.zero,
+                minLeadingWidth: 32,
+                horizontalTitleGap: 12,
                 leading: _CategoryIcon(
                   icon: Icons.dns_outlined,
                   color: healthy
@@ -176,15 +184,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                subtitle: Text(
-                  '${profile?.baseUrl ?? 'Not connected'}\n$healthLine',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: AppTheme.monoFamily,
-                    fontSize: AppTheme.captionFontSize,
-                  ),
-                ),
+                subtitle: Text(healthLine),
                 trailing: IconButton(
                   tooltip: 'Check again',
                   onPressed: _checking ? null : _checkHealth,
@@ -225,6 +225,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               rowKey: 'settings-category-appearance',
               icon: Icons.palette_outlined,
               title: 'Appearance',
+              subtitle:
+                  '${appearanceLabel(controller.appearance.value)} · ${themePackLabels[controller.themePack.value]}',
               onTap: () =>
                   _open(AppearanceSettingsScreen(controller: controller)),
             ),
@@ -270,7 +272,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 20),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               child: OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: theme.colorScheme.error,
@@ -313,13 +315,14 @@ class _CategoryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       key: ValueKey(rowKey),
-      minTileHeight: 56,
+      minTileHeight: subtitle == null ? 56 : 72,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+      minLeadingWidth: 32,
+      horizontalTitleGap: 12,
       leading: _CategoryIcon(icon: icon),
-      title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: subtitle == null
-          ? null
-          : Text(subtitle!, maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing: const Icon(Icons.chevron_right_rounded),
+      title: Text(title),
+      subtitle: subtitle == null ? null : Text(subtitle!),
+      trailing: const Icon(Icons.chevron_right_rounded, size: 20),
       onTap: onTap,
     );
   }
@@ -335,14 +338,9 @@ class _CategoryIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tint = color ?? theme.colorScheme.onSurfaceVariant;
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        color: tint.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(AppTheme.radiusControl),
-      ),
-      child: Icon(icon, size: 20, color: tint),
+    return SizedBox.square(
+      dimension: 32,
+      child: Icon(icon, size: 24, color: tint),
     );
   }
 }

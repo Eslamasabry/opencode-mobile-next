@@ -8402,6 +8402,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{kind}: {text}'**
   String reviewNoteDescription(String kind, String text);
+
+  /// More destination summary showing the model used by new chats, not an existing session.
+  ///
+  /// In en, this message translates to:
+  /// **'New chats: {model}'**
+  String settingsDiscoveryNewChatsModel(String model);
 }
 
 class _AppLocalizationsDelegate
