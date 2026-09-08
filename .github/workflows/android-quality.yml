@@ -11,6 +11,11 @@ on:
       - master
       - dev
   workflow_dispatch:
+    inputs:
+      native_pdf_proof:
+        description: Build an additional synthetic local-PDF proof APK for an isolated QA device
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -169,6 +174,22 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: opencode-mobile-ci-test-signed-${{ github.sha }}
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
+
+      # Keep the product APK above separate from this synthetic test target.
+      # Both use the checked stable CI signer; only an explicit manual run can
+      # produce the proof APK, and it is never the product delivery artifact.
+      - name: Compile isolated native PDF proof APK
+        if: github.event_name == 'workflow_dispatch' && inputs.native_pdf_proof
+        run: flutter build apk --release --target tool/native_pdf_proof.dart
+
+      - name: Upload native PDF proof APK
+        if: github.event_name == 'workflow_dispatch' && inputs.native_pdf_proof
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: opencode-mobile-native-pdf-proof-${{ github.sha }}
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 7
