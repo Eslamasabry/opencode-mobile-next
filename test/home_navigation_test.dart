@@ -436,7 +436,7 @@ void main() {
       'Activity',
     );
     // An empty inbox reads as success, not as a missing feature.
-    expect(find.text('All clear'), findsWidgets);
+    expect(find.text('All clear here'), findsWidgets);
   });
 
   testWidgets('failed reconnect keeps the product shell and location visible', (
