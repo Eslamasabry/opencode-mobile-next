@@ -15,9 +15,9 @@ Inspected all8 PNGs. At normal text the first selected row moves80dp upward in t
 
 Verified with Shorebird Flutter3.47.2 e16cf749ccaa38d7050335ff305def49b1c7c84c:
 
-- `flutter test --no-pub --concurrency=1 test/model_picker_test.dart test/session_model_scope_test.dart test/session_selection_sync_test.dart tool/capture/simple_model_test.dart`:40 behavioral tests and4 captures passed; one existing summary-label assertion expected `deep` instead of new `deep · build`.
-- Corrected that assertion and reran the exact affected test successfully. Final41 behavioral cases covered,4 after captures and4 controlled before captures passed.
-- Regression coverage includes dismiss-before-apply, successful agent/mode apply, per-session agent dispatch without changing defaults, direct agent entry, partial-save error/retry, provider details/reload and completion of already-authorized Apply after dismissing its sheet.
+- `flutter test --no-pub --concurrency=1 test/model_picker_test.dart test/session_selection_sync_test.dart test/session_model_scope_test.dart tool/capture/simple_model_test.dart`:42 behavioral cases and4 after captures passed on the final source. Four controlled baseline captures were previously captured and inspected.
+- Regression coverage includes dismiss-before-apply, successful agent/mode apply, per-session agent dispatch without changing defaults, direct agent entry before/after catalog loading, opening that entry only once, partial-save error/retry, provider details/reload and completion of already-authorized Apply after dismissing its sheet.
+- New journey copy uses8 unique `modelChoice` localization keys; generated with the pinned Flutter toolchain. Unused private notice key/action plumbing removed.
 - Format and `git diff --check` clean. Analyzer/full suite belongs to coordinator's integration gate. No native build, signing, deployment or live provider mutation performed.
 
 The direct `focusAgent:true` entry is available for Settings integration. It opens agent selection, stages that choice, then returns to the existing scoped Apply action. Favorites remain immediate library preferences; they are not part of model/agent Apply.
