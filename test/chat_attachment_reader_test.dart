@@ -39,6 +39,9 @@ base class _TestPlatformFile extends PlatformFile {
   Future<int> length() async => size;
 
   @override
+  int? lengthSync() => size;
+
+  @override
   Future<Uint8List> readAsBytes() async {
     if (_bytes != null) return _bytes;
     if (path != null) return File(path!).readAsBytes();

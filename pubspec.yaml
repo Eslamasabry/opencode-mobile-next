@@ -28,8 +28,8 @@ dependencies:
   # Built-in Kotlin release (0.8.2 still applies KGP under AGP < 9).
   desktop_drop: 0.8.4
   dio: ^5.7.0
-  file_picker: 12.1.3
-  flutter_riverpod: ^3.4.2
+  file_picker: 12.2.0
+  flutter_riverpod: ^3.4.3
   # Native IANA timezone IDs keep aggregate usage aligned with device days,
   # including historical daylight-saving changes.
   flutter_timezone: 5.1.0

@@ -112,6 +112,9 @@ the combined verification and fresh Android installation checks are in progress.
 
 ### Saved prompts and attachment recovery
 
+- Update the compatible file-picker and Riverpod dependencies, preserve the
+  integrated file-rendering packages, and refresh exact dependency notices.
+
 - Move new stash attachment payloads from preferences into a separate,
   app-private file vault. Ordinary draft cleanup no longer shares ownership of
   stash payloads. The existing stash feature and 50-entry limit are retained.
