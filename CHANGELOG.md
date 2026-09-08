@@ -109,6 +109,12 @@ the combined verification and fresh Android installation checks are in progress.
   retain version pinning and temporary-cache cleanup, and expose install output.
 - Keep prior sessions and global search accessible when the project list is empty.
   This session fix also appeared in the focused 1.0.35+36 CI APK.
+- Tidy **Workspace** so sessions are the subject: an empty Unreviewed work
+  brief collapses to one quiet status line, the project-recovery notice is one
+  short dismissible sentence, rows no longer repeat the open project's folder,
+  **Manage** sits on the project row instead of a session-like row below, the
+  server-wide search is labelled **All sessions**, and the composer pill is
+  replaced by explicit **New session** and **Isolated task** actions.
 - Redesign **All sessions**: conversations are grouped into one card per
   working directory, newest folder first and newest session first inside it.
   Folder chips narrow the list, a summary line counts sessions and folders,

@@ -1968,5 +1968,12 @@
   "globalSessionsContinueHere": "Continue here",
   "globalSessionsActions": "Session actions",
   "globalSessionsWorking": "Working",
-  "globalSessionsUntitled": "Untitled session"
+  "globalSessionsUntitled": "Untitled session",
+  "workspaceNewSession": "New session",
+  "workspaceIsolatedTask": "Isolated task",
+  "workspaceAllSessions": "All sessions",
+  "workspaceDismissNotice": "Dismiss",
+  "workspaceManageProject": "Manage project",
+  "workspaceManageProjectHint": "Switch project, worktrees, and project health",
+  "workspaceManage": "Manage"
 }

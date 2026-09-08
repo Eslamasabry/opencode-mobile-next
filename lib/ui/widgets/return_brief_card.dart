@@ -37,6 +37,39 @@ class ReturnBriefCard extends StatelessWidget {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    // Nothing to review: whatever the reason (unsupported read state, a
+    // partial list, a stale connection) it is a status, not a task. One
+    // quiet line keeps the sessions below as the page's subject.
+    if (brief.isEmpty) {
+      final note = stale
+          ? l10n.returnBriefStale
+          : !brief.readStateKnown
+          ? l10n.returnBriefUnknown
+          : l10n.returnBriefPartial;
+      return Padding(
+        key: const ValueKey('return-brief-status'),
+        padding: const EdgeInsets.fromLTRB(20, 2, 20, 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.info_outline_rounded,
+              size: 16,
+              color: colors.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                note,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     String title(String? text) =>
         text?.isNotEmpty == true ? text! : l10n.returnBriefUntitled;
     return Card(

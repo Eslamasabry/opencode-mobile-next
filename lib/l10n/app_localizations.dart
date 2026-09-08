@@ -8246,6 +8246,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Untitled session'**
   String get globalSessionsUntitled;
+
+  /// No description provided for @workspaceNewSession.
+  ///
+  /// In en, this message translates to:
+  /// **'New session'**
+  String get workspaceNewSession;
+
+  /// No description provided for @workspaceIsolatedTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Isolated task'**
+  String get workspaceIsolatedTask;
+
+  /// No description provided for @workspaceAllSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'All sessions'**
+  String get workspaceAllSessions;
+
+  /// No description provided for @workspaceDismissNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get workspaceDismissNotice;
+
+  /// No description provided for @workspaceManageProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage project'**
+  String get workspaceManageProject;
+
+  /// No description provided for @workspaceManageProjectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch project, worktrees, and project health'**
+  String get workspaceManageProjectHint;
+
+  /// No description provided for @workspaceManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get workspaceManage;
 }
 
 class _AppLocalizationsDelegate

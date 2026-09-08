@@ -4922,4 +4922,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get globalSessionsUntitled => 'Untitled session';
+
+  @override
+  String get workspaceNewSession => 'New session';
+
+  @override
+  String get workspaceIsolatedTask => 'Isolated task';
+
+  @override
+  String get workspaceAllSessions => 'All sessions';
+
+  @override
+  String get workspaceDismissNotice => 'Dismiss';
+
+  @override
+  String get workspaceManageProject => 'Manage project';
+
+  @override
+  String get workspaceManageProjectHint =>
+      'Switch project, worktrees, and project health';
+
+  @override
+  String get workspaceManage => 'Manage';
 }

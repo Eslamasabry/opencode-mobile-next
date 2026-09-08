@@ -418,8 +418,22 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       if (widget.controller.locationNotice != null)
                         ListTile(
                           key: const ValueKey('location-recovery-notice'),
-                          leading: const Icon(Icons.info_outline_rounded),
-                          title: Text(widget.controller.locationNotice!),
+                          dense: true,
+                          visualDensity: VisualDensity.compact,
+                          leading: const Icon(
+                            Icons.info_outline_rounded,
+                            size: 18,
+                          ),
+                          title: Text(
+                            widget.controller.locationNotice!,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          trailing: IconButton(
+                            key: const ValueKey('location-recovery-dismiss'),
+                            tooltip: l10n.workspaceDismissNotice,
+                            onPressed: widget.controller.dismissLocationNotice,
+                            icon: const Icon(Icons.close_rounded, size: 18),
+                          ),
                         ),
                       // The project catalog and session inventory are separate.
                       // An empty catalog must not hide existing conversations,
@@ -520,7 +534,33 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          trailing: const Icon(Icons.unfold_more_rounded),
+                          // Management lives with the project it manages:
+                          // a labelled action on the project row, not a row
+                          // of its own among the sessions and not a fourth
+                          // icon in the connection bar.
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (ManageProjectScreen.isAvailable(
+                                widget.controller.capabilities,
+                              ))
+                                Tooltip(
+                                  message: l10n.workspaceManageProjectHint,
+                                  child: TextButton(
+                                    key: const ValueKey('manage-project-entry'),
+                                    onPressed: _openManageProject,
+                                    style: TextButton.styleFrom(
+                                      minimumSize: const Size(48, 48),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                      ),
+                                    ),
+                                    child: Text(l10n.workspaceManage),
+                                  ),
+                                ),
+                              const Icon(Icons.unfold_more_rounded),
+                            ],
+                          ),
                           onTap: _openContextSheet,
                         ),
                       // Still context, not management: the session is running
@@ -717,25 +757,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       ),
                       trailing: const Icon(Icons.chevron_right_rounded),
                       onTap: _showArchived,
-                    ),
-                  ),
-                // 5. Everything management sits below the sessions, behind one
-                // labelled route: worktrees, managed workspaces, project
-                // health, and project switching.
-                if (capabilities.projectManagement &&
-                    ManageProjectScreen.isAvailable(
-                      widget.controller.capabilities,
-                    ))
-                  SliverToBoxAdapter(
-                    child: ListTile(
-                      key: const ValueKey('manage-project-entry'),
-                      leading: const Icon(Icons.tune_rounded),
-                      title: const Text('Manage project'),
-                      subtitle: const Text(
-                        'Switch project, worktrees, and project health',
-                      ),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: _openManageProject,
                     ),
                   ),
                 const SliverToBoxAdapter(child: SizedBox(height: 96)),
@@ -1294,7 +1315,14 @@ class _SessionRow extends StatelessWidget {
               rest: [
                 if (session.shareUrl != null) 'Shared: ${session.shareUrl}',
                 if (updated != null) _relativeTime(updated),
-                if (session.directory?.isNotEmpty == true)
+                // The folder only earns its place when it differs from the
+                // open project, e.g. a worktree; otherwise every row would
+                // repeat the header.
+                if (session.directory?.isNotEmpty == true &&
+                    !ConnectionController.sameDirectoryPath(
+                      session.directory,
+                      controller.directory,
+                    ))
                   _basename(session.directory!),
                 // Server-reported usage, when the server sends it: what the run
                 // cost and how much it touched, so a row answers "was that
@@ -1470,13 +1498,30 @@ class _SectionActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Labelled, because this search spans every folder on the server
+        // while it sits beside a list scoped to one project.
         if (onSearch case final onSearch?)
-          IconButton(
-            key: const ValueKey('search-all-sessions'),
-            tooltip: l10n.workspaceSearchAllSessions,
-            onPressed: onSearch,
-            icon: const Icon(Icons.manage_search_rounded, size: 21),
-          ),
+          if (MediaQuery.textScalerOf(context).scale(14) > 18)
+            IconButton(
+              key: const ValueKey('search-all-sessions'),
+              tooltip: l10n.workspaceSearchAllSessions,
+              onPressed: onSearch,
+              icon: const Icon(Icons.manage_search_rounded, size: 21),
+            )
+          else
+            Tooltip(
+              message: l10n.workspaceSearchAllSessions,
+              child: TextButton.icon(
+                key: const ValueKey('search-all-sessions'),
+                onPressed: onSearch,
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(48, 48),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                ),
+                icon: const Icon(Icons.manage_search_rounded, size: 19),
+                label: Text(l10n.workspaceAllSessions),
+              ),
+            ),
         PopupMenuButton<_SectionAction>(
           key: const ValueKey('workspace-section-menu'),
           onSelected: (action) {
@@ -1658,6 +1703,13 @@ class _QuickAskPill extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isolated = onIsolatedTask;
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final compact =
+        MediaQuery.sizeOf(context).width < 400 ||
+        MediaQuery.textScalerOf(context).scale(14) > 18;
+    // Two labelled actions, not a faux text field: tapping here creates a
+    // session and leaves the page, so the control says so. The isolated
+    // task keeps its own labelled target instead of an unexplained glyph.
     return Material(
       key: const ValueKey('workspace-quick-ask'),
       color: scheme.surfaceContainerLow,
@@ -1667,82 +1719,77 @@ class _QuickAskPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         side: BorderSide(color: scheme.outlineVariant.withValues(alpha: .85)),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Semantics(
-              button: true,
-              label: 'New session',
-              child: InkWell(
-                borderRadius: BorderRadius.circular(24),
-                onTap: onTap,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 14, 12, 14),
-                  child: _pillBody(theme, scheme),
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Row(
+          children: [
+            Expanded(
+              child: Semantics(
+                button: true,
+                label: l10n.workspaceNewSession,
+                child: FilledButton.icon(
+                  onPressed: onTap,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                  icon: creating
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.add_rounded),
+                  label: Text(
+                    l10n.workspaceNewSession,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
             ),
-          ),
-          if (isolated != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: IconButton(
-                key: const ValueKey('workspace-isolated-task'),
-                tooltip: isolatedTaskLabel,
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                onPressed: creating ? null : isolated,
-                icon: const Icon(Icons.account_tree_outlined),
-              ),
-            ),
-        ],
+            if (isolated != null) ...[
+              const SizedBox(width: 6),
+              // The label gives way to the icon alone on narrow phones and at
+              // large text, where two labelled buttons cannot share a row.
+              if (compact)
+                IconButton(
+                  key: const ValueKey('workspace-isolated-task'),
+                  tooltip: isolatedTaskLabel ?? l10n.workspaceIsolatedTask,
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
+                  onPressed: creating ? null : isolated,
+                  icon: const Icon(Icons.account_tree_outlined),
+                )
+              else
+                Tooltip(
+                  message: isolatedTaskLabel ?? '',
+                  child: TextButton.icon(
+                    key: const ValueKey('workspace-isolated-task'),
+                    onPressed: creating ? null : isolated,
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(48, 48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    icon: const Icon(Icons.account_tree_outlined, size: 20),
+                    label: Text(
+                      l10n.workspaceIsolatedTask,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+            ],
+          ],
+        ),
       ),
     );
   }
-
-  Widget _pillBody(ThemeData theme, ColorScheme scheme) => Row(
-    children: [
-      Text(
-        '❯',
-        style: theme.textTheme.titleMedium!.copyWith(
-          color: scheme.primary,
-          fontFamily: AppTheme.monoFamily,
-        ),
-      ),
-      const SizedBox(width: 12),
-      Expanded(
-        child: Text(
-          'Ask OpenCode…',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: AppTheme.mutedOf(theme),
-          ),
-        ),
-      ),
-      if (creating)
-        const Padding(
-          padding: EdgeInsets.all(8),
-          child: SizedBox.square(
-            dimension: 18,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        )
-      else
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: scheme.primaryContainer,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            Icons.add_rounded,
-            size: 21,
-            color: scheme.onPrimaryContainer,
-          ),
-        ),
-    ],
-  );
 }
 
 /// Compact usage labels for a session row: cost to the cent, and the diff

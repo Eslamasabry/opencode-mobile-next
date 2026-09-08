@@ -1367,8 +1367,15 @@ class ConnectionController extends ChangeNotifier {
   }
 
   String _replacementNotice(String lost, WorkspaceProject replacement) =>
-      'The last project ($lost) is no longer available on the server. '
-      'OpenCode Mobile opened ${replacement.name} instead.';
+      'Opened ${replacement.name}. The last project ($lost) is no longer on '
+      'the server.';
+
+  /// Clears the one-line location notice once the user has read it.
+  void dismissLocationNotice() {
+    if (locationNotice == null) return;
+    locationNotice = null;
+    notifyListeners();
+  }
 
   /// Resolves the location to restore for [profile]. The saved directory is
   /// kept whenever the server confirms it or cannot yet say; it is replaced

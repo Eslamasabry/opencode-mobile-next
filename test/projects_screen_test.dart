@@ -454,13 +454,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Audit UX-101 order: context header, sessions, then management.
+    // Management is a labelled action on the project row itself, above the
+    // sessions, so it reads as part of the project rather than as a session.
     double topOf(Key key) => tester.getTopLeft(find.byKey(key)).dy;
     final context = topOf(const ValueKey('current-project-entry'));
     final session = topOf(const ValueKey('session-dismiss-session-1'));
     final manage = topOf(const ValueKey('manage-project-entry'));
     expect(context, lessThan(session));
-    expect(session, lessThan(manage));
+    expect(manage, lessThan(session));
 
     // Management destinations no longer sit on the sessions screen at all.
     expect(find.byKey(const ValueKey('worktrees-entry')), findsNothing);

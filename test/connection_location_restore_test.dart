@@ -316,7 +316,7 @@ void main() {
     expect(controller.directory, '/work/newest');
     expect(controller.workspace, isNull);
     expect(controller.locationNotice, contains('/deleted/worktree'));
-    expect(controller.locationNotice, contains('opened newest instead'));
+    expect(controller.locationNotice, contains('Opened newest'));
     expect(store.locationFor('server')?.directory, '/work/newest');
     controller.dispose();
   });
@@ -370,7 +370,7 @@ void main() {
 
       expect(controller.directory, '/work/b');
       expect(controller.locationNotice, contains('/work/gone'));
-      expect(controller.locationNotice, contains('opened b instead'));
+      expect(controller.locationNotice, contains('Opened b'));
       expect(store.locationFor('server')?.directory, '/work/b');
       controller.dispose();
     },
