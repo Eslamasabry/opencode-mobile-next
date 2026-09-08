@@ -10,10 +10,17 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(loadCaptureFonts);
   for (final light in [false, true]) {
-    for (final tab in [0, 1, 2, 3]) {
-      testWidgets('fluid shell tab $tab ${light ? 'light' : 'dark'}', (
-        tester,
-      ) async {
+    for (final scenario in [
+      for (final tab in [0, 1, 2, 3])
+        (tab: tab, width: 390.0, scale: 1.0, contrast: false),
+      (tab: 0, width: 320.0, scale: 2.5, contrast: false),
+      (tab: 3, width: 320.0, scale: 2.5, contrast: false),
+      (tab: 3, width: 390.0, scale: 1.0, contrast: true),
+    ]) {
+      final tab = scenario.tab;
+      final name =
+          'tab-$tab-${light ? 'light' : 'dark'}-${scenario.width.toInt()}-${scenario.scale}x${scenario.contrast ? '-contrast' : ''}';
+      testWidgets('shell repair $name', (tester) async {
         const secure = MethodChannel(
           'plugins.it_nomads.com/flutter_secure_storage',
         );
@@ -27,7 +34,7 @@ void main() {
             null,
           ),
         );
-        tester.view.physicalSize = const Size(390, 844);
+        tester.view.physicalSize = Size(scenario.width, 844);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
@@ -37,7 +44,15 @@ void main() {
         try {
           await tester.pumpWidget(
             captureApp(
-              home: HomeScreen(initialTab: tab),
+              home: Builder(
+                builder: (context) => MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.linear(scenario.scale),
+                    highContrast: scenario.contrast,
+                  ),
+                  child: HomeScreen(initialTab: tab),
+                ),
+              ),
               boundaryKey: boundary,
               controller: controller,
               light: light,
@@ -48,9 +63,20 @@ void main() {
           expect(find.byType(NavigationBar), findsOneWidget);
           expect(tester.takeException(), isNull);
           await writePng(
-            'docs/qa/fluid-shell/tab-$tab-${light ? 'light' : 'dark'}.png',
+            'docs/qa/shell-repair/$name.png',
             await capturePng(tester, boundary, pixelRatio: 1),
           );
+          if (tab == 0 && scenario.scale == 1) {
+            await tester.tap(find.byIcon(Icons.more_horiz_rounded));
+            await tester.pump();
+            await tester.pump(const Duration(milliseconds: 60));
+            await writePng(
+              'docs/qa/shell-repair/transition-${light ? 'light' : 'dark'}-60ms.png',
+              await capturePng(tester, boundary, pixelRatio: 1),
+            );
+            await tester.pump(const Duration(milliseconds: 200));
+            expect(tester.takeException(), isNull);
+          }
         } finally {
           await tester.pumpWidget(const SizedBox.shrink());
           controller.dispose();

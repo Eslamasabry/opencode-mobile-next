@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-/// A restrained glass-like material for navigation chrome.
+/// A quiet tonal material for navigation chrome.
 ///
 /// This surface lives outside scrolling content, so a backdrop blur would only
-/// blur a solid scaffold. Tint, a light-catching edge and shallow depth provide
-/// the material without an expensive full-screen backdrop pass. Keep reading
-/// surfaces opaque. Accessibility settings remove transparency and shadows.
+/// blur a solid scaffold. A solid tint, light-catching edge and shallow depth provide
+/// separation without pretending to sample the content behind it. Accessibility
+/// settings remove decorative depth and strengthen the surface boundary.
 class GlassSurface extends StatelessWidget {
   const GlassSurface({super.key, required this.child});
 
@@ -38,8 +38,8 @@ class GlassSurface extends StatelessWidget {
             : [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: dark ? .18 : .05),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
               ],
       ),
@@ -47,9 +47,7 @@ class GlassSurface extends StatelessWidget {
         borderRadius: radius,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: opaque
-                ? scheme.surfaceContainerHigh
-                : tint.withValues(alpha: .96),
+            color: opaque ? scheme.surfaceContainerHigh : tint,
             borderRadius: radius,
             border: Border.all(
               color: opaque
