@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../tool/capture/fixtures.dart' show loadCaptureFonts;
+
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,6 +27,18 @@ class _ShellApi extends OpenCodeApi {
 
   @override
   Future<List<FileNode>> listFiles([String path = '']) async => [];
+}
+
+class _LongFilesApi extends _ShellApi {
+  @override
+  Future<List<FileNode>> listFiles([String path = '']) async => [
+    for (var i = 0; i < 30; i++)
+      FileNode(
+        name: 'file-${i.toString().padLeft(2, '0')}.dart',
+        path: 'file-${i.toString().padLeft(2, '0')}.dart',
+        isDir: false,
+      ),
+  ];
 }
 
 class _NestedFilesApi extends _ShellApi {
@@ -359,6 +373,56 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets(
+    'frosted dock preserves last file reachability and yields to keyboard',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetViewInsets);
+      final controller = await _controller()
+        ..api = _LongFilesApi();
+      addTearDown(controller.dispose);
+      await _pumpShell(tester, controller);
+      await tester.tap(find.byIcon(AppIconography.files));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<Scaffold>(find.byType(Scaffold).first).extendBody,
+        isTrue,
+      );
+      final list = find.byType(ListView).first;
+      await tester.drag(list, const Offset(0, -2200));
+      await tester.pumpAndSettle();
+      final last = find.byKey(const ValueKey('project-file-file-29.dart'));
+      await tester.ensureVisible(last);
+      await tester.pumpAndSettle();
+      // End-of-list scrolling includes the dock inset, not merely the viewport.
+      final scrollable = tester.state<ScrollableState>(
+        find.descendant(of: list, matching: find.byType(Scrollable)).first,
+      );
+      scrollable.position.jumpTo(scrollable.position.maxScrollExtent);
+      await tester.pump();
+      expect(
+        tester.getRect(last).bottom,
+        lessThanOrEqualTo(tester.getRect(find.byType(GlassSurface)).top),
+      );
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      await tester.pumpAndSettle();
+      expect(find.byType(GlassSurface), findsNothing);
+      expect(
+        tester.widget<Scaffold>(find.byType(Scaffold).first).extendBody,
+        isFalse,
+      );
+      final search = find.byKey(const ValueKey('files-search-field'));
+      expect(tester.getRect(search).bottom, lessThanOrEqualTo(544));
+      tester.view.resetViewInsets();
+      await tester.pumpAndSettle();
+      expect(find.byType(GlassSurface), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('phone shell uses product bottom navigation', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
@@ -375,6 +439,34 @@ void main() {
     expect(dock.left, 16);
     expect(dock.right, 374);
     expect(dock.height, 72);
+    final navigation = tester.widget<NavigationBar>(find.byType(NavigationBar));
+    final navigationContext = tester.element(find.byType(NavigationBar));
+    for (final states in [
+      <WidgetState>{},
+      {WidgetState.selected},
+    ]) {
+      expect(
+        navigation.labelTextStyle!.resolve(states)!.color,
+        GlassSurface.foregroundColor(Theme.of(navigationContext)),
+      );
+      expect(
+        NavigationBarTheme.of(
+          navigationContext,
+        ).iconTheme!.resolve(states)!.color,
+        GlassSurface.foregroundColor(Theme.of(navigationContext)),
+      );
+    }
+    for (final glyph in [
+      AppIconography.workspaceSelected,
+      AppIconography.files,
+    ]) {
+      final iconFinder = find.byIcon(glyph);
+      expect(tester.widget<Icon>(iconFinder).color, isNull);
+      expect(
+        IconTheme.of(tester.element(iconFinder)).color,
+        GlassSurface.foregroundColor(Theme.of(navigationContext)),
+      );
+    }
     final icon = tester.getRect(find.byIcon(AppIconography.workspaceSelected));
     expect(icon.top - dock.top, greaterThanOrEqualTo(8));
     final label = tester.getRect(

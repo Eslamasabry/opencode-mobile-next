@@ -500,7 +500,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
               builder: (scrollController) => ListView(
                 controller: scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 24),
+                padding: EdgeInsets.only(
+                  bottom: 24 + MediaQuery.paddingOf(context).bottom,
+                ),
                 children: [
                   if (loading) const LinearProgressIndicator(minHeight: 2),
                   if (error != null)
