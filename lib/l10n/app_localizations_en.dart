@@ -4059,6 +4059,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Last observed state. Reconnect or refresh to check current work and requests.';
 
   @override
+  String get returnBriefStatusUnknown => 'Review status unknown';
+
+  @override
   String get returnBriefUnknown =>
       'This server does not report read state. Unreviewed results are unknown.';
 

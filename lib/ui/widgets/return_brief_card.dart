@@ -46,6 +46,40 @@ class ReturnBriefCard extends StatelessWidget {
           : !brief.readStateKnown
           ? l10n.returnBriefUnknown
           : l10n.returnBriefPartial;
+      if (!stale && !brief.readStateKnown) {
+        return Padding(
+          key: const ValueKey('return-brief-status'),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: colors.onSurfaceVariant,
+                minimumSize: const Size(48, 48),
+                textStyle: theme.textTheme.bodySmall,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text(l10n.returnBriefStatusUnknown),
+                  content: Text(note),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(
+                        MaterialLocalizations.of(context).closeButtonLabel,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              icon: const Icon(Icons.info_outline_rounded, size: 16),
+              label: Text(l10n.returnBriefStatusUnknown),
+            ),
+          ),
+        );
+      }
       return Padding(
         key: const ValueKey('return-brief-status'),
         padding: const EdgeInsets.fromLTRB(20, 2, 20, 6),

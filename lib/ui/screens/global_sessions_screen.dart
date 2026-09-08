@@ -468,9 +468,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
     final session = result.session;
     if (_stealingSessionID != null || _openingSessionID != null) return;
     final scope = SessionNavigationScope(widget.controller);
-    final title = session.title?.trim().isNotEmpty == true
-        ? session.title!.trim()
-        : 'Untitled session';
+    final title = presentedSessionTitle(session, fallback: 'Untitled session');
     final confirmed = await showConfirmSheet(
       context,
       icon: Icons.move_to_inbox_rounded,

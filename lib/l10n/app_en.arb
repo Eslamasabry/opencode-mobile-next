@@ -1615,6 +1615,7 @@
   "returnBriefDescription": "For this project on this device. Dismissing keeps conversations unread and requests pending.",
   "returnBriefUntitled": "Untitled session",
   "returnBriefStale": "Last observed state. Reconnect or refresh to check current work and requests.",
+  "returnBriefStatusUnknown": "Review status unknown",
   "returnBriefUnknown": "This server does not report read state. Unreviewed results are unknown.",
   "returnBriefPartial": "Loaded sessions only. The session list is still incomplete.",
   "returnBriefAnswer": "Answer",
