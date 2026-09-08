@@ -12,14 +12,15 @@ import 'package:opencode_mobile/ui/screens/files_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FilesApi extends OpenCodeApi {
-  _FilesApi(this.read) : super(baseUrl: 'http://localhost');
+  _FilesApi(this.read, {this.list}) : super(baseUrl: 'http://localhost');
 
   final Future<FileContent> Function(String path) read;
+  final Future<List<FileNode>> Function(String path)? list;
 
   @override
-  Future<List<FileNode>> listFiles([String path = '']) async => [
-    FileNode(name: 'README.md', path: 'README.md', isDir: false),
-  ];
+  Future<List<FileNode>> listFiles([String path = '']) async => list != null
+      ? list!(path)
+      : [FileNode(name: 'README.md', path: 'README.md', isDir: false)];
 
   @override
   Future<List<String>> findFile(String query) async => const [];
@@ -74,6 +75,76 @@ Future<ConnectionController> _controller(OpenCodeApi api) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('retry stays in the requested folder and Back returns to root', (
+    tester,
+  ) async {
+    final requests = <String>[];
+    var fail = true;
+    final api = _FilesApi(
+      (_) async => const FileContent('contents'),
+      list: (path) async {
+        requests.add(path);
+        if (path.isEmpty) {
+          return [FileNode(name: 'src', path: 'src', isDir: true)];
+        }
+        if (fail) throw const ProductException('Folder unavailable');
+        return [
+          FileNode(name: 'main.dart', path: 'src/main.dart', isDir: false),
+        ];
+      },
+    );
+    final controller = await _controller(api);
+    final back = FilesBackController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FilesScreen(controller: controller, backController: back),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('src'));
+    await tester.pumpAndSettle();
+    expect(find.text('Folder unavailable'), findsOneWidget);
+    fail = false;
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+    expect(requests, ['', 'src', 'src']);
+    expect(find.text('main.dart'), findsOneWidget);
+    expect(back.handleBack(), isTrue);
+    await tester.pumpAndSettle();
+    expect(requests.last, '');
+    expect(find.text('main.dart'), findsNothing);
+    expect(find.text('src'), findsOneWidget);
+  });
+
+  testWidgets('empty folder refresh is actionable and keeps its location', (
+    tester,
+  ) async {
+    var loads = 0;
+    final api = _FilesApi(
+      (_) async => const FileContent('contents'),
+      list: (path) async {
+        loads++;
+        return [];
+      },
+    );
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Folder is empty'), findsOneWidget);
+    await tester.drag(find.text('Folder is empty'), const Offset(0, 350));
+    await tester.pumpAndSettle();
+    expect(loads, 2);
+    expect(find.text('Folder is empty'), findsOneWidget);
+  });
 
   testWidgets('late file read cannot publish after a transport switch', (
     tester,
