@@ -8120,6 +8120,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter the full path of a folder on the server'**
   String get projectFolderOpenSubtitle;
+
+  /// No description provided for @globalSessionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All sessions'**
+  String get globalSessionsTitle;
+
+  /// No description provided for @globalSessionsSearchLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Search session titles'**
+  String get globalSessionsSearchLabel;
+
+  /// No description provided for @globalSessionsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Across every folder on this server'**
+  String get globalSessionsSearchHint;
+
+  /// No description provided for @globalSessionsIncludeArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Include archived'**
+  String get globalSessionsIncludeArchived;
+
+  /// No description provided for @globalSessionsArchivedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get globalSessionsArchivedShort;
+
+  /// No description provided for @globalSessionsAllFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'All folders'**
+  String get globalSessionsAllFolders;
+
+  /// No description provided for @globalSessionsUnknownLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown location'**
+  String get globalSessionsUnknownLocation;
+
+  /// No description provided for @globalSessionsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sessions in {folders} folders'**
+  String globalSessionsSummary(String count, int folders);
+
+  /// No description provided for @globalSessionsSummaryOneFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sessions in one folder'**
+  String globalSessionsSummaryOneFolder(String count);
+
+  /// No description provided for @globalSessionsFilteredSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {total} sessions shown'**
+  String globalSessionsFilteredSummary(int count, String total);
+
+  /// No description provided for @globalSessionsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions yet'**
+  String get globalSessionsEmptyTitle;
+
+  /// No description provided for @globalSessionsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions from every folder on this server will appear here.'**
+  String get globalSessionsEmptyMessage;
+
+  /// No description provided for @globalSessionsNoMatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching sessions'**
+  String get globalSessionsNoMatchTitle;
+
+  /// No description provided for @globalSessionsNoMatchMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a shorter title search or include archived sessions.'**
+  String get globalSessionsNoMatchMessage;
+
+  /// No description provided for @globalSessionsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get globalSessionsRefresh;
+
+  /// No description provided for @globalSessionsLoadMoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load more sessions'**
+  String get globalSessionsLoadMoreFailed;
+
+  /// No description provided for @globalSessionsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get globalSessionsOpen;
+
+  /// No description provided for @globalSessionsContinueHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue here'**
+  String get globalSessionsContinueHere;
+
+  /// No description provided for @globalSessionsActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Session actions'**
+  String get globalSessionsActions;
+
+  /// No description provided for @globalSessionsWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working'**
+  String get globalSessionsWorking;
+
+  /// No description provided for @globalSessionsUntitled.
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled session'**
+  String get globalSessionsUntitled;
 }
 
 class _AppLocalizationsDelegate

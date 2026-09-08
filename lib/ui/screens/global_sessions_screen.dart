@@ -6,10 +6,13 @@ import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import '../../api/product_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
+import '../app_theme.dart';
 import '../desktop/context_menu.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
+import '../widgets/relative_time.dart';
 import '../widgets/session_read_state.dart';
+import '../widgets/session_title.dart';
 import '../widgets/session_handoff.dart';
 import 'session_relations_screen.dart';
 
@@ -50,6 +53,73 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
   final _search = TextEditingController();
   final _scroll = ScrollController();
   List<GlobalSessionResult> _results = const [];
+
+  /// The loaded results grouped by working directory, newest first: the
+  /// groups are ordered by their most recent session, and each group lists
+  /// its sessions from newest to oldest. Rebuilt from [_results] on every
+  /// build so a loaded page slots into the right group.
+  List<_GlobalGroup> get _groups => _groupByDirectory(_results);
+
+  /// A folder chip narrows the list to one group; null shows every group.
+  String? _folderFilter;
+
+  static int _recency(GlobalSessionResult result) =>
+      result.session.time?.updated ?? result.session.time?.created ?? 0;
+
+  static String _directoryOf(GlobalSessionResult result) {
+    final value = (result.session.directory ?? result.projectDirectory)?.trim();
+    return value == null || value.isEmpty
+        ? ''
+        : ConnectionController.normalizeDirectoryPath(value);
+  }
+
+  static List<_GlobalGroup> _groupByDirectory(
+    List<GlobalSessionResult> results,
+  ) {
+    final indexed = results.indexed.toList()
+      ..sort((a, b) {
+        final byRecency = _recency(b.$2).compareTo(_recency(a.$2));
+        return byRecency != 0 ? byRecency : a.$1.compareTo(b.$1);
+      });
+    final groups = <String, List<GlobalSessionResult>>{};
+    for (final (_, result) in indexed) {
+      groups.putIfAbsent(_directoryOf(result), () => []).add(result);
+    }
+    // Two folders can share a name (a project and its worktree, or two
+    // checkouts). Those get their parent folder in the label so the chips
+    // and card headers stay distinguishable.
+    final labels = {
+      for (final entry in groups.entries)
+        entry.key: _GlobalSessionRow._projectLabel(entry.value.first),
+    };
+    final counts = <String, int>{};
+    for (final label in labels.values) {
+      counts[label] = (counts[label] ?? 0) + 1;
+    }
+    return [
+      for (final entry in groups.entries)
+        _GlobalGroup(
+          directory: entry.key,
+          label: (counts[labels[entry.key]] ?? 0) > 1
+              ? _pathTail(entry.key, fallback: labels[entry.key]!)
+              : labels[entry.key]!,
+          results: entry.value,
+        ),
+    ];
+  }
+
+  /// The last two path segments, `parent/name`, for a label that would
+  /// otherwise collide with another folder's.
+  static String _pathTail(String directory, {required String fallback}) {
+    final parts = directory
+        .replaceAll('\\', '/')
+        .split('/')
+        .where((part) => part.isNotEmpty)
+        .toList();
+    if (parts.length < 2) return fallback;
+    return '${parts[parts.length - 2]}/${parts.last}';
+  }
+
   Timer? _debounce;
   Object? _error;
   bool _includeArchived = false;
@@ -442,20 +512,42 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
     final l10n =
         Localizations.of<AppLocalizations>(context, AppLocalizations) ??
         lookupAppLocalizations(Localizations.localeOf(context));
+    final theme = Theme.of(context);
+    final muted = AppTheme.mutedOf(theme);
+    final groups = _groups;
+    final filter = _folderFilter;
+    final visible = filter == null
+        ? groups
+        : groups.where((group) => group.directory == filter).toList();
+    final loadedCount = _hasMore ? '${_results.length}+' : '${_results.length}';
+    final shown = visible.fold<int>(
+      0,
+      (sum, group) => sum + group.results.length,
+    );
+    final summary = _results.isEmpty
+        ? null
+        : filter != null
+        ? l10n.globalSessionsFilteredSummary(shown, loadedCount)
+        : groups.length == 1
+        ? l10n.globalSessionsSummaryOneFolder(loadedCount)
+        : l10n.globalSessionsSummary(loadedCount, groups.length);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('All sessions')),
+      appBar: AppBar(title: Text(l10n.globalSessionsTitle)),
       body: Column(
         children: [
+          // 1. Search first: the page exists to find one conversation among
+          // every folder on the server.
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
             child: TextField(
               key: const ValueKey('global-session-search'),
               controller: _search,
               textInputAction: TextInputAction.search,
               onChanged: _searchChanged,
               decoration: InputDecoration(
-                labelText: 'Search session titles',
-                hintText: 'Across every OpenCode project',
+                labelText: l10n.globalSessionsSearchLabel,
+                hintText: l10n.globalSessionsSearchHint,
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _search.text.isEmpty
                     ? null
@@ -472,58 +564,91 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final compact =
-                    constraints.maxWidth < 360 ||
-                    MediaQuery.textScalerOf(context).scale(14) > 20;
-                return Row(
-                  children: [
-                    Flexible(
-                      child: FilterChip(
-                        key: const ValueKey('include-archived-sessions'),
-                        selected: _includeArchived,
-                        label: Text(
-                          compact ? 'Archived' : 'Include archived',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+          // 2. One scrolling strip of filters: archived, then a chip per
+          // folder the loaded results came from. Folder chips narrow the
+          // list on the phone without another request.
+          SizedBox(
+            height: 48,
+            child: ListView(
+              key: const ValueKey('global-session-filters'),
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                Center(
+                  child: FilterChip(
+                    key: const ValueKey('include-archived-sessions'),
+                    selected: _includeArchived,
+                    showCheckmark: false,
+                    avatar: Icon(
+                      _includeArchived
+                          ? Icons.inventory_2_rounded
+                          : Icons.inventory_2_outlined,
+                      size: 16,
+                    ),
+                    label: Text(
+                      MediaQuery.textScalerOf(context).scale(14) > 20
+                          ? l10n.globalSessionsArchivedShort
+                          : l10n.globalSessionsIncludeArchived,
+                    ),
+                    onSelected: (selected) {
+                      setState(() => _includeArchived = selected);
+                      unawaited(_reload());
+                    },
+                  ),
+                ),
+                if (groups.length > 1) ...[
+                  const SizedBox(width: 8),
+                  Center(
+                    child: ChoiceChip(
+                      key: const ValueKey('global-session-folder-all'),
+                      selected: filter == null,
+                      showCheckmark: false,
+                      label: Text(l10n.globalSessionsAllFolders),
+                      onSelected: (_) => setState(() => _folderFilter = null),
+                    ),
+                  ),
+                  for (final group in groups) ...[
+                    const SizedBox(width: 8),
+                    Center(
+                      child: ChoiceChip(
+                        key: ValueKey(
+                          'global-session-folder-${group.directory}',
                         ),
-                        onSelected: (selected) {
-                          setState(() => _includeArchived = selected);
-                          unawaited(_reload());
-                        },
+                        selected: filter == group.directory,
+                        showCheckmark: false,
+                        avatar: const Icon(Icons.folder_rounded, size: 16),
+                        label: Text(group.label),
+                        onSelected: (_) => setState(
+                          () => _folderFilter = filter == group.directory
+                              ? null
+                              : group.directory,
+                        ),
                       ),
                     ),
-                    const Spacer(),
-                    if (!_loading && _results.isNotEmpty)
-                      Text(
-                        _hasMore ? '${_results.length}+' : '${_results.length}',
-                        key: const ValueKey('global-session-count'),
-                        style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
-                      ),
                   ],
-                );
-              },
+                ],
+              ],
             ),
           ),
-          const Divider(height: 1),
-          Expanded(child: _content()),
+          if (summary != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  summary,
+                  key: const ValueKey('global-session-count'),
+                  style: theme.textTheme.labelMedium?.copyWith(color: muted),
+                ),
+              ),
+            ),
+          Expanded(child: _content(visible, l10n)),
         ],
       ),
     );
   }
 
-  Widget _content() {
-    final l10n =
-        Localizations.of<AppLocalizations>(context, AppLocalizations) ??
-        lookupAppLocalizations(Localizations.localeOf(context));
+  Widget _content(List<_GlobalGroup> groups, AppLocalizations l10n) {
     if (_loading && _results.isEmpty) return const LoadingList(rows: 7);
     if (_error != null && _results.isEmpty) {
       return ProductErrorState(
@@ -535,11 +660,15 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
       final query = _search.text.trim();
       return ProductEmptyState(
         icon: Icons.manage_search_rounded,
-        title: query.isEmpty ? 'No sessions yet' : 'No matching sessions',
+        title: query.isEmpty
+            ? l10n.globalSessionsEmptyTitle
+            : l10n.globalSessionsNoMatchTitle,
         message: query.isEmpty
-            ? 'Sessions from every OpenCode project will appear here.'
-            : 'Try a shorter title search or include archived sessions.',
-        actionLabel: query.isEmpty ? 'Refresh' : l10n.commonClearSearch,
+            ? l10n.globalSessionsEmptyMessage
+            : l10n.globalSessionsNoMatchMessage,
+        actionLabel: query.isEmpty
+            ? l10n.globalSessionsRefresh
+            : l10n.commonClearSearch,
         onAction: query.isEmpty
             ? _reload
             : () {
@@ -550,113 +679,114 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
       );
     }
 
-    final extraRows = (_error != null || _hasMore || _loading) ? 1 : 0;
+    final scope = SessionNavigationScope(widget.controller);
+    void guarded(VoidCallback action) {
+      if (!scope.matches(widget.controller)) {
+        showProductError(
+          context,
+          'Session location changed. Return and try again.',
+        );
+        return;
+      }
+      action();
+    }
+
+    // 3. One card per working directory, newest folder first, each row a
+    // conversation newest first. The card header carries the folder, so
+    // rows keep only what differs between them.
     return RefreshIndicator(
       onRefresh: _reload,
-      child: ListView.separated(
+      child: ListView(
         key: const PageStorageKey('global-sessions-list'),
         controller: _scroll,
         physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: _results.length + extraRows,
-        separatorBuilder: (_, index) => index < _results.length - 1
-            ? const Divider(height: 1)
-            : const SizedBox.shrink(),
-        itemBuilder: (context, index) {
-          if (index == _results.length) {
-            if (_error != null) {
-              return ListTile(
-                leading: Icon(
-                  Icons.error_outline_rounded,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                title: Text(
-                  _errorWasRefresh
-                      ? lookupAppLocalizations(
-                          Localizations.localeOf(context),
-                        ).globalSessionsRefreshFailed
-                      : 'Could not load more sessions',
-                ),
-                subtitle: Text(productErrorText(_error!)),
-                trailing: TextButton(
-                  onPressed: _errorWasRefresh || _restartPagination
-                      ? _reload
-                      : _loadMore,
-                  child: Text(l10n.commonRetry),
-                ),
-              );
-            }
-            if (_loading) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 18),
-                child: Center(
-                  child: SizedBox.square(
-                    dimension: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+        padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+        children: [
+          for (final group in groups)
+            _FolderCard(
+              key: ValueKey('global-session-group-${group.directory}'),
+              group: group,
+              unknownLocation: l10n.globalSessionsUnknownLocation,
+              rows: [
+                for (final result in group.results)
+                  Focus(
+                    focusNode: _rowFocus.putIfAbsent(
+                      result.session.id,
+                      FocusNode.new,
+                    ),
+                    child: _GlobalSessionRow(
+                      controller: widget.controller,
+                      result: result,
+                      opening: _openingSessionID == result.session.id,
+                      stealing: _stealingSessionID == result.session.id,
+                      onTap: () => guarded(() => _open(result)),
+                      onRelated: () =>
+                          guarded(() => _open(result, related: true)),
+                      onHandoff: () =>
+                          guarded(() => _open(result, handoff: true)),
+                      // §7 row 7: "Continue here" is steal + sync-start,
+                      // neither of which v2 has. A future rebuild is
+                      // export+import+move.
+                      onSteal:
+                          widget.controller.capabilities.sessionSteal &&
+                              _isElsewhere(result)
+                          ? () => guarded(() => unawaited(_steal(result)))
+                          : null,
+                    ),
                   ),
-                ),
-              );
-            }
-            if (!_loadingMore) {
-              final l10n =
-                  Localizations.of<AppLocalizations>(
-                    context,
-                    AppLocalizations,
-                  ) ??
-                  lookupAppLocalizations(Localizations.localeOf(context));
-              return Padding(
-                padding: const EdgeInsets.all(16),
-                child: OutlinedButton(
-                  key: const ValueKey('global-sessions-load-more'),
-                  onPressed: _loadMore,
-                  child: Text(l10n.globalSessionsLoadMore),
-                ),
-              );
-            }
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 18),
-              child: Center(
-                child: SizedBox.square(
-                  dimension: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            );
-          }
-          final result = _results[index];
-          final scope = SessionNavigationScope(widget.controller);
-          void guarded(VoidCallback action) {
-            if (!scope.matches(widget.controller)) {
-              showProductError(
-                context,
-                'Session location changed. Return and try again.',
-              );
-              return;
-            }
-            action();
-          }
-
-          return Focus(
-            focusNode: _rowFocus.putIfAbsent(result.session.id, FocusNode.new),
-            child: _GlobalSessionRow(
-              controller: widget.controller,
-              result: _results[index],
-              opening: _openingSessionID == _results[index].session.id,
-              stealing: _stealingSessionID == _results[index].session.id,
-              onTap: () => guarded(() => _open(result)),
-              onRelated: () => guarded(() => _open(result, related: true)),
-              onHandoff: () => guarded(() => _open(result, handoff: true)),
-              // §7 row 7: "Continue here" is steal + sync-start, neither of
-              // which v2 has. A future rebuild is export+import+move.
-              onSteal:
-                  widget.controller.capabilities.sessionSteal &&
-                      _isElsewhere(_results[index])
-                  ? () => guarded(() => unawaited(_steal(result)))
-                  : null,
+              ],
             ),
-          );
-        },
+          _footer(l10n),
+        ],
       ),
     );
+  }
+
+  /// The paging tail: a load error with retry, a spinner while a page
+  /// loads, or the explicit Load more control. Empty once everything is in.
+  Widget _footer(AppLocalizations l10n) {
+    if (_error != null) {
+      return ListTile(
+        leading: Icon(
+          Icons.error_outline_rounded,
+          color: Theme.of(context).colorScheme.error,
+        ),
+        title: Text(
+          _errorWasRefresh
+              ? l10n.globalSessionsRefreshFailed
+              : l10n.globalSessionsLoadMoreFailed,
+        ),
+        subtitle: Text(productErrorText(_error!)),
+        trailing: TextButton(
+          onPressed: _errorWasRefresh || _restartPagination
+              ? _reload
+              : _loadMore,
+          child: Text(l10n.commonRetry),
+        ),
+      );
+    }
+    if (_loading || _loadingMore) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 18),
+        child: Center(
+          child: SizedBox.square(
+            dimension: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+    if (_hasMore) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(4, 12, 4, 0),
+        child: OutlinedButton(
+          key: const ValueKey('global-sessions-load-more'),
+          onPressed: _loadMore,
+          child: Text(l10n.globalSessionsLoadMore),
+        ),
+      );
+    }
+    return const SizedBox.shrink();
   }
 
   @override
@@ -674,6 +804,116 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
   }
 }
 
+/// The loaded results for one working directory, newest session first.
+class _GlobalGroup {
+  const _GlobalGroup({
+    required this.directory,
+    required this.label,
+    required this.results,
+  });
+
+  /// Normalized working directory; empty when the server reported none.
+  final String directory;
+  final String label;
+  final List<GlobalSessionResult> results;
+}
+
+/// One folder's conversations: a header naming the folder, then its rows
+/// with no leading icons or hard dividers, so the eye reads title, age and
+/// state and nothing else.
+class _FolderCard extends StatelessWidget {
+  const _FolderCard({
+    super.key,
+    required this.group,
+    required this.unknownLocation,
+    required this.rows,
+  });
+
+  final _GlobalGroup group;
+  final String unknownLocation;
+  final List<Widget> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = AppTheme.mutedOf(theme);
+    final path = group.directory.isEmpty ? unknownLocation : group.directory;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Semantics(
+              header: true,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.folder_rounded,
+                        size: 18,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            group.label,
+                            style: theme.textTheme.titleMedium,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            path,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: muted,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        '${group.results.length}',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: muted,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            ...rows,
+            const SizedBox(height: 6),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _GlobalSessionRow extends StatelessWidget {
   final ConnectionController controller;
   final GlobalSessionResult result;
@@ -682,8 +922,6 @@ class _GlobalSessionRow extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onRelated;
   final VoidCallback onHandoff;
-
-  /// Non-null only when the session lives outside the active location.
   final VoidCallback? onSteal;
 
   const _GlobalSessionRow({
@@ -699,113 +937,169 @@ class _GlobalSessionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final theme = Theme.of(context);
+    final muted = AppTheme.mutedOf(theme);
     final session = result.session;
-    final title = session.title?.trim().isNotEmpty == true
-        ? session.title!.trim()
-        : 'Untitled session';
+    final title = presentedSessionTitle(
+      session,
+      fallback: l10n.globalSessionsUntitled,
+    );
     final project = _projectLabel(result);
+    final working = controller.busySessions.contains(session.id);
+    final updated = session.time?.updated ?? session.time?.created;
     final details = <String>[
-      project,
+      if (working) l10n.globalSessionsWorking,
+      if (updated != null && updated > 0) relativeTimeLabel(updated),
       if (session.path?.trim().isNotEmpty == true) session.path!.trim(),
-      _formatTimestamp(session.time?.updated ?? session.time?.created),
-      if (session.archived) 'Archived',
+    ].join(' · ');
+    // A screen reader hears the folder on every row; the card header
+    // carries it visually.
+    final spoken = [
+      project,
+      details,
+      if (session.archived) l10n.globalSessionsArchivedShort,
     ].where((value) => value.isNotEmpty).join(' · ');
+    final busy = opening || stealing;
+
     final row = Semantics(
       button: true,
-      label: 'Open $title. $details',
-      onTap: opening ? null : onTap,
+      label: 'Open $title. $spoken',
+      onTap: busy ? null : onTap,
       customSemanticsActions: {
-        if (!opening && !stealing) ...{
-          const CustomSemanticsAction(label: 'Open related'): onRelated,
-          const CustomSemanticsAction(label: 'Copy handoff'): onHandoff,
+        if (!busy) ...{
+          CustomSemanticsAction(label: l10n.sessionOpenRelated): onRelated,
+          CustomSemanticsAction(label: l10n.sessionCopyHandoff): onHandoff,
         },
-        if (onSteal != null && !opening && !stealing)
-          const CustomSemanticsAction(label: 'Continue here'): onSteal!,
+        if (onSteal != null && !busy)
+          CustomSemanticsAction(label: l10n.globalSessionsContinueHere):
+              onSteal!,
       },
       child: ExcludeSemantics(
-        child: ListTile(
+        child: InkWell(
           key: ValueKey('global-session-${session.id}'),
-          minTileHeight: 72,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 4,
-          ),
-          leading: Icon(
-            session.archived
-                ? Icons.inventory_2_outlined
-                : Icons.chat_bubble_outline_rounded,
-            size: 22,
-          ),
-          title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SessionUnreadBadge(controller: controller, session: session),
-              Text(details, maxLines: 3, overflow: TextOverflow.ellipsis),
-            ],
-          ),
-          // One overflow menu instead of a per-row icon: Open is the tap,
-          // Continue here rides in the menu (and, on desktop, right click).
-          trailing: opening || stealing
-              ? const SizedBox.square(
-                  dimension: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : PopupMenuButton<String>(
-                  key: ValueKey('global-session-actions-${session.id}'),
-                  tooltip: 'Session actions',
-                  onSelected: (value) {
-                    if (value == 'open') onTap();
-                    if (value == 'steal') onSteal?.call();
-                    if (value == 'related') onRelated();
-                    if (value == 'handoff') onHandoff();
-                  },
-                  itemBuilder: (_) => [
-                    const PopupMenuItem(value: 'open', child: Text('Open')),
-                    PopupMenuItem(
-                      value: 'related',
-                      child: Text(
-                        lookupAppLocalizations(
-                          Localizations.localeOf(context),
-                        ).sessionOpenRelated,
+          onTap: busy ? null : onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(14, 8, 4, 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          if (working)
+                            Padding(
+                              padding: const EdgeInsetsDirectional.only(end: 8),
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: theme.textTheme.bodyLarge,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (session.archived)
+                            Padding(
+                              padding: const EdgeInsetsDirectional.only(
+                                start: 8,
+                              ),
+                              child: _Pill(l10n.globalSessionsArchivedShort),
+                            ),
+                        ],
                       ),
-                    ),
-                    PopupMenuItem(
-                      value: 'handoff',
-                      child: Text(
-                        lookupAppLocalizations(
-                          Localizations.localeOf(context),
-                        ).sessionCopyHandoff,
+                      SessionUnreadBadge(
+                        controller: controller,
+                        session: session,
                       ),
-                    ),
-                    if (onSteal != null)
-                      PopupMenuItem(
-                        key: ValueKey('steal-session-${session.id}'),
-                        value: 'steal',
-                        child: const Text('Continue here'),
-                      ),
-                  ],
+                      if (details.isNotEmpty)
+                        Text(
+                          details,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: muted,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                    ],
+                  ),
                 ),
-          enabled: !opening && !stealing,
-          onTap: opening || stealing ? null : onTap,
+                // One overflow menu instead of a per-row icon: Open is the
+                // tap, Continue here rides in the menu (and, on desktop,
+                // right click).
+                if (busy)
+                  const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                else
+                  PopupMenuButton<String>(
+                    key: ValueKey('global-session-actions-${session.id}'),
+                    tooltip: l10n.globalSessionsActions,
+                    iconColor: muted,
+                    onSelected: (value) {
+                      if (value == 'open') onTap();
+                      if (value == 'steal') onSteal?.call();
+                      if (value == 'related') onRelated();
+                      if (value == 'handoff') onHandoff();
+                    },
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: 'open',
+                        child: Text(l10n.globalSessionsOpen),
+                      ),
+                      PopupMenuItem(
+                        value: 'related',
+                        child: Text(l10n.sessionOpenRelated),
+                      ),
+                      PopupMenuItem(
+                        value: 'handoff',
+                        child: Text(l10n.sessionCopyHandoff),
+                      ),
+                      if (onSteal != null)
+                        PopupMenuItem(
+                          key: ValueKey('steal-session-${session.id}'),
+                          value: 'steal',
+                          child: Text(l10n.globalSessionsContinueHere),
+                        ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );
     // Steal is offered only where it is genuinely possible, matching the
-    // trailing button's own gate. Off desktop this wrapper is a pass-through.
+    // menu's own gate. Off desktop this wrapper is a pass-through.
     return ContextMenuRegion(
       actions: () => [
-        if (!opening && !stealing)
+        if (!busy)
           ContextMenuAction(
             menuKey: const ValueKey('global-session-menu-open'),
-            label: 'Open',
+            label: l10n.globalSessionsOpen,
             icon: Icons.open_in_new_rounded,
             onSelected: onTap,
           ),
-        if (onSteal != null && !opening && !stealing)
+        if (onSteal != null && !busy)
           ContextMenuAction(
             menuKey: const ValueKey('global-session-menu-steal'),
-            label: 'Continue here',
+            label: l10n.globalSessionsContinueHere,
             icon: Icons.move_to_inbox_rounded,
             onSelected: onSteal!,
           ),
@@ -827,30 +1121,29 @@ class _GlobalSessionRow extends StatelessWidget {
     }
     return 'Unknown project';
   }
+}
 
-  static String _formatTimestamp(int? milliseconds) {
-    if (milliseconds == null || milliseconds <= 0) return '';
-    final value = DateTime.fromMillisecondsSinceEpoch(milliseconds).toLocal();
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    final now = DateTime.now();
-    final date = value.year == now.year
-        ? '${months[value.month - 1]} ${value.day}'
-        : '${months[value.month - 1]} ${value.day}, ${value.year}';
-    final hour = value.hour.toString().padLeft(2, '0');
-    final minute = value.minute.toString().padLeft(2, '0');
-    return '$date, $hour:$minute';
+/// A small outlined tag, used for the archived state.
+class _Pill extends StatelessWidget {
+  const _Pill(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Text(
+        text,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: AppTheme.mutedOf(theme),
+        ),
+      ),
+    );
   }
 }

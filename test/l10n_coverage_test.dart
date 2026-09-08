@@ -101,7 +101,7 @@ const _baseline = <String, int>{
   'lib/ui/screens/chat/timeline_sheet.dart': 4,
   'lib/ui/screens/chat_screen.dart': 27,
   'lib/ui/screens/files_screen.dart': 16,
-  'lib/ui/screens/global_sessions_screen.dart': 10,
+  'lib/ui/screens/global_sessions_screen.dart': 1,
   'lib/ui/screens/guide_screen.dart': 15,
   'lib/ui/screens/home_screen.dart': 4,
   'lib/ui/screens/host_management_screen.dart': 6,

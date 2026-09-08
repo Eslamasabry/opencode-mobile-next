@@ -109,6 +109,11 @@ the combined verification and fresh Android installation checks are in progress.
   retain version pinning and temporary-cache cleanup, and expose install output.
 - Keep prior sessions and global search accessible when the project list is empty.
   This session fix also appeared in the focused 1.0.35+36 CI APK.
+- Redesign **All sessions**: conversations are grouped into one card per
+  working directory, newest folder first and newest session first inside it.
+  Folder chips narrow the list, a summary line counts sessions and folders,
+  rows use relative times and the shared title rule, and folders that share a
+  name are told apart by their parent.
 - Never work in the server's home folder. Workspace now asks you to **Create a
   new folder** (managed Termux server) or **Open a project folder** by its path
   before a session can start; the home folder and the filesystem root are

@@ -177,6 +177,118 @@ void main() {
         .setMockMethodCallHandler(secureChannel, null);
   });
 
+  testWidgets('results are grouped by working directory, newest first', (
+    tester,
+  ) async {
+    // The server page arrives in arbitrary order. The list groups it by
+    // working directory, orders groups by their newest session, and lists
+    // each group newest first; a later page slots into the right group.
+    final repository = _FinderRepository.pages(
+      (query) async => switch (query.cursor) {
+        null => ServerPage(
+          items: [
+            _result(1, updated: 100, directory: '/work/alpha'),
+            _result(2, updated: 300, directory: '/work/beta'),
+            _result(3, updated: 200, directory: '/work/alpha'),
+          ],
+          nextCursor: 'more',
+        ),
+        _ => ServerPage(
+          items: [_result(4, updated: 400, directory: '/work/alpha/')],
+        ),
+      },
+    );
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+
+    List<String> visibleOrder() => tester
+        .widgetList<Text>(find.byType(Text))
+        .map((text) => text.data ?? '')
+        .where(
+          (text) => text.startsWith('Session ') || text.startsWith('/work'),
+        )
+        .toList();
+
+    expect(visibleOrder(), [
+      '/work/beta',
+      'Session 2',
+      '/work/alpha',
+      'Session 3',
+      'Session 1',
+    ]);
+    // The card header and the folder chip name the project; rows no longer
+    // repeat it.
+    expect(find.text('Project 2'), findsNWidgets(2));
+    expect(find.textContaining('Project 2 ·'), findsNothing);
+    expect(find.textContaining('sessions in 2 folders'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('global-sessions-load-more')));
+    await tester.pumpAndSettle();
+
+    expect(visibleOrder(), [
+      '/work/alpha',
+      'Session 4',
+      'Session 3',
+      'Session 1',
+      '/work/beta',
+      'Session 2',
+    ]);
+  });
+
+  testWidgets('folders with the same name are told apart by their parent', (
+    tester,
+  ) async {
+    final repository = _FinderRepository(
+      (_) async => [
+        GlobalSessionResult(
+          session: Session(
+            id: 'ses_a',
+            title: 'Main checkout',
+            directory: '/home/dev/Code/TradeNet',
+            time: SessionTime(created: 1, updated: 300),
+          ),
+          projectDirectory: '/home/dev/Code/TradeNet',
+        ),
+        GlobalSessionResult(
+          session: Session(
+            id: 'ses_b',
+            title: 'Worktree',
+            directory: '/home/dev/Worktrees/TradeNet',
+            time: SessionTime(created: 1, updated: 200),
+          ),
+          projectDirectory: '/home/dev/Worktrees/TradeNet',
+        ),
+      ],
+    );
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+
+    // Card header and folder chip each show the disambiguated label.
+    expect(find.text('Code/TradeNet'), findsNWidgets(2));
+    expect(find.text('Worktrees/TradeNet'), findsNWidgets(2));
+    expect(find.text('TradeNet'), findsNothing);
+
+    // A folder chip narrows the list to that folder only.
+    final worktreeChip = find.byKey(
+      const ValueKey('global-session-folder-/home/dev/Worktrees/TradeNet'),
+    );
+    await tester.ensureVisible(worktreeChip);
+    await tester.pumpAndSettle();
+    await tester.tap(worktreeChip);
+    await tester.pumpAndSettle();
+    expect(find.text('Worktree'), findsOneWidget);
+    expect(find.text('Main checkout'), findsNothing);
+    expect(find.textContaining('1 of 2 sessions shown'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('global-session-folder-all')));
+    await tester.pumpAndSettle();
+    expect(find.text('Main checkout'), findsOneWidget);
+  });
+
   testWidgets('empty and duplicate pages keep their continuation reachable', (
     tester,
   ) async {
@@ -436,7 +548,7 @@ void main() {
     await tester.pumpWidget(_app(controller));
     await tester.pumpAndSettle();
 
-    expect(find.text('50+'), findsOneWidget);
+    expect(find.textContaining('50+ sessions'), findsOneWidget);
     final list = find.byKey(
       const PageStorageKey<String>('global-sessions-list'),
     );
@@ -445,7 +557,7 @@ void main() {
 
     expect(repository.calls, hasLength(2));
     expect(repository.calls.last.cursor, 'opaque/next+token=');
-    expect(find.text('51'), findsOneWidget);
+    expect(find.textContaining('51 sessions'), findsOneWidget);
   });
 
   testWidgets('global project rows keep a useful label and tap semantics', (
@@ -534,7 +646,12 @@ void main() {
     expect(retained.calls, hasLength(1));
     expect(replacement.calls, isEmpty);
     expect(find.text('Session 1'), findsOneWidget);
-    await tester.drag(find.byType(ListView), const Offset(0, 400));
+    // Two ListViews exist now (the folder chip strip and the results); pull
+    // to refresh on the results list.
+    await tester.drag(
+      find.byKey(const PageStorageKey<String>('global-sessions-list')),
+      const Offset(0, 400),
+    );
     await tester.pumpAndSettle();
     expect(replacement.calls, hasLength(1));
     expect(find.text('Session 1'), findsNothing);

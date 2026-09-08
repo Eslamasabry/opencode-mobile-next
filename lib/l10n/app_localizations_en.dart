@@ -4851,4 +4851,75 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get projectFolderOpenSubtitle =>
       'Enter the full path of a folder on the server';
+
+  @override
+  String get globalSessionsTitle => 'All sessions';
+
+  @override
+  String get globalSessionsSearchLabel => 'Search session titles';
+
+  @override
+  String get globalSessionsSearchHint => 'Across every folder on this server';
+
+  @override
+  String get globalSessionsIncludeArchived => 'Include archived';
+
+  @override
+  String get globalSessionsArchivedShort => 'Archived';
+
+  @override
+  String get globalSessionsAllFolders => 'All folders';
+
+  @override
+  String get globalSessionsUnknownLocation => 'Unknown location';
+
+  @override
+  String globalSessionsSummary(String count, int folders) {
+    return '$count sessions in $folders folders';
+  }
+
+  @override
+  String globalSessionsSummaryOneFolder(String count) {
+    return '$count sessions in one folder';
+  }
+
+  @override
+  String globalSessionsFilteredSummary(int count, String total) {
+    return '$count of $total sessions shown';
+  }
+
+  @override
+  String get globalSessionsEmptyTitle => 'No sessions yet';
+
+  @override
+  String get globalSessionsEmptyMessage =>
+      'Sessions from every folder on this server will appear here.';
+
+  @override
+  String get globalSessionsNoMatchTitle => 'No matching sessions';
+
+  @override
+  String get globalSessionsNoMatchMessage =>
+      'Try a shorter title search or include archived sessions.';
+
+  @override
+  String get globalSessionsRefresh => 'Refresh';
+
+  @override
+  String get globalSessionsLoadMoreFailed => 'Could not load more sessions';
+
+  @override
+  String get globalSessionsOpen => 'Open';
+
+  @override
+  String get globalSessionsContinueHere => 'Continue here';
+
+  @override
+  String get globalSessionsActions => 'Session actions';
+
+  @override
+  String get globalSessionsWorking => 'Working';
+
+  @override
+  String get globalSessionsUntitled => 'Untitled session';
 }

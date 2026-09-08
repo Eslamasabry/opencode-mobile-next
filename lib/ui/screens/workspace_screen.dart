@@ -14,6 +14,7 @@ import '../navigation/chat_route.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/entrance.dart';
 import '../widgets/product_states.dart';
+import '../widgets/relative_time.dart';
 import '../widgets/session_title.dart';
 import '../widgets/session_read_state.dart';
 import '../widgets/return_brief_panel.dart';
@@ -1390,17 +1391,8 @@ class _SessionRow extends StatelessWidget {
     return parts.isEmpty ? path : parts.last;
   }
 
-  static String _relativeTime(int milliseconds) {
-    final difference = DateTime.now().difference(
-      DateTime.fromMillisecondsSinceEpoch(milliseconds),
-    );
-    if (difference.inMinutes < 1) return 'Just now';
-    if (difference.inHours < 1) return '${difference.inMinutes}m ago';
-    if (difference.inDays < 1) return '${difference.inHours}h ago';
-    if (difference.inDays < 7) return '${difference.inDays}d ago';
-    final date = DateTime.fromMillisecondsSinceEpoch(milliseconds);
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
+  static String _relativeTime(int milliseconds) =>
+      relativeTimeLabel(milliseconds);
 }
 
 /// End-swipe reveal for the archive gesture: a calm container, not the
