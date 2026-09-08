@@ -10,7 +10,9 @@ enum ProfileMonitorStatus {
   paused,
 }
 
-enum MonitoredRequestKind { permission, question, form }
+/// [checkIn] is not a server request: it is this app's own reminder that a
+/// session has been observed busy for longer than the profile's rule.
+enum MonitoredRequestKind { permission, question, form, checkIn }
 
 class ProfileNotifyRules {
   const ProfileNotifyRules({
@@ -19,7 +21,13 @@ class ProfileNotifyRules {
     this.wifiOnly = false,
     this.quietStart,
     this.quietEnd,
+    this.checkInAfterMinutes,
   });
+
+  /// The durations the settings screen offers for [checkInAfterMinutes].
+  static const checkInChoices = [15, 30, 60, 120];
+  static const defaultCheckInMinutes = 30;
+
   final bool enabled;
   final bool notifications;
   final bool wifiOnly;
@@ -27,6 +35,13 @@ class ProfileNotifyRules {
   /// Local wall-clock minutes after midnight; null disables quiet hours.
   final int? quietStart;
   final int? quietEnd;
+
+  /// Remind once per observed busy interval after this many minutes of
+  /// observed work; null (the default) never reminds.
+  final int? checkInAfterMinutes;
+  Duration? get checkInAfter => checkInAfterMinutes == null
+      ? null
+      : Duration(minutes: checkInAfterMinutes!);
   bool quietAt(DateTime now) {
     final start = quietStart;
     final end = quietEnd;
@@ -45,12 +60,17 @@ class ProfileNotifyRules {
     int? quietStart,
     int? quietEnd,
     bool clearQuiet = false,
+    int? checkInAfterMinutes,
+    bool clearCheckIn = false,
   }) => ProfileNotifyRules(
     enabled: enabled ?? this.enabled,
     notifications: notifications ?? this.notifications,
     wifiOnly: wifiOnly ?? this.wifiOnly,
     quietStart: clearQuiet ? null : quietStart ?? this.quietStart,
     quietEnd: clearQuiet ? null : quietEnd ?? this.quietEnd,
+    checkInAfterMinutes: clearCheckIn
+        ? null
+        : checkInAfterMinutes ?? this.checkInAfterMinutes,
   );
   Map<String, Object?> toJson() => {
     'enabled': enabled,
@@ -58,15 +78,127 @@ class ProfileNotifyRules {
     'wifiOnly': wifiOnly,
     'quietStart': quietStart,
     'quietEnd': quietEnd,
+    'checkInAfterMinutes': checkInAfterMinutes,
   };
   factory ProfileNotifyRules.fromJson(Map<String, dynamic> value) {
     int? minute(Object? v) => v is int && v >= 0 && v < 1440 ? v : null;
+    final checkIn = value['checkInAfterMinutes'];
     return ProfileNotifyRules(
       enabled: value['enabled'] == true,
       notifications: value['notifications'] != false,
       wifiOnly: value['wifiOnly'] == true,
       quietStart: minute(value['quietStart']),
       quietEnd: minute(value['quietEnd']),
+      // Only a positive whole number of minutes is a rule; anything else
+      // (an older build's payload, a corrupt value) reads as off.
+      checkInAfterMinutes: checkIn is int && checkIn > 0 && checkIn <= 24 * 60
+          ? checkIn
+          : null,
+    );
+  }
+}
+
+/// One stretch of polls during which a session was seen busy.
+///
+/// This is an observation, not the server's record of a run: the monitor
+/// only samples status on its poll interval, so the true start lies
+/// somewhere before a busy sample, and a session that went idle and busy
+/// again between two polls looks like one interval. The span between samples
+/// is not a lower bound on continuous work or the duration of the current run.
+class ObservedBusyInterval {
+  const ObservedBusyInterval({
+    required this.sessionID,
+    required this.firstObservedBusyAt,
+    required this.lastObservedBusyAt,
+    this.title,
+    this.directory,
+    this.workspace,
+    this.reminderClaimed = false,
+  });
+  final String sessionID;
+  final DateTime firstObservedBusyAt;
+  final DateTime lastObservedBusyAt;
+  final String? title;
+  final String? directory;
+  final String? workspace;
+
+  /// Persisted before native dispatch, independently of notification dismissal.
+  final bool reminderClaimed;
+
+  /// Stable within one interval; a later interval for the same session gets
+  /// a different id, so a reminder key derived from it fires again for it.
+  String get id => 'busy-${firstObservedBusyAt.millisecondsSinceEpoch}';
+
+  /// The time spanned by the first and latest busy observations. It says
+  /// nothing about the session's state between those samples or after them.
+  Duration get observedFor =>
+      lastObservedBusyAt.difference(firstObservedBusyAt);
+
+  /// Whether [rules] asks for a reminder and the busy samples span its threshold.
+  bool isDue(ProfileNotifyRules rules) {
+    final after = rules.checkInAfter;
+    return after != null && observedFor >= after;
+  }
+
+  ObservedBusyInterval observedAgainAt(
+    DateTime at, {
+    String? title,
+    String? directory,
+    String? workspace,
+  }) => ObservedBusyInterval(
+    sessionID: sessionID,
+    firstObservedBusyAt: firstObservedBusyAt,
+    lastObservedBusyAt: at,
+    title: title ?? this.title,
+    directory: directory ?? this.directory,
+    workspace: workspace ?? this.workspace,
+    reminderClaimed: reminderClaimed,
+  );
+
+  ObservedBusyInterval claimReminder() => ObservedBusyInterval(
+    sessionID: sessionID,
+    firstObservedBusyAt: firstObservedBusyAt,
+    lastObservedBusyAt: lastObservedBusyAt,
+    title: title,
+    directory: directory,
+    workspace: workspace,
+    reminderClaimed: true,
+  );
+
+  MonitoredRequest toRequest() => MonitoredRequest(
+    id: id,
+    sessionID: sessionID,
+    kind: MonitoredRequestKind.checkIn,
+    title: title,
+    directory: directory,
+    workspace: workspace,
+  );
+
+  Map<String, Object?> toJson() => {
+    'sessionID': sessionID,
+    'firstObservedBusyAt': firstObservedBusyAt.millisecondsSinceEpoch,
+    'lastObservedBusyAt': lastObservedBusyAt.millisecondsSinceEpoch,
+    'directory': directory,
+    'workspace': workspace,
+    'reminderClaimed': reminderClaimed,
+  };
+
+  static ObservedBusyInterval? fromJson(Object? value) {
+    if (value is! Map) return null;
+    final sessionID = value['sessionID']?.toString() ?? '';
+    final first = value['firstObservedBusyAt'];
+    final last = value['lastObservedBusyAt'];
+    if (sessionID.isEmpty || first is! int || last is! int || last < first) {
+      return null;
+    }
+    return ObservedBusyInterval(
+      sessionID: sessionID,
+      firstObservedBusyAt: DateTime.fromMillisecondsSinceEpoch(first),
+      lastObservedBusyAt: DateTime.fromMillisecondsSinceEpoch(last),
+      title: value['title']?.toString(),
+      directory: value['directory']?.toString(),
+      workspace: value['workspace']?.toString(),
+      reminderClaimed: value['reminderClaimed'] == true,
     );
   }
 }
@@ -97,6 +229,7 @@ class ProfileAttentionSnapshot {
     this.directory,
     this.workspace,
     this.requests = const [],
+    this.busyIntervals = const [],
     this.runningCount,
     this.complete = false,
     this.nextCheckAt,
@@ -108,10 +241,21 @@ class ProfileAttentionSnapshot {
   final String? directory;
   final String? workspace;
   final List<MonitoredRequest> requests;
+
+  /// Sessions seen busy on the latest successful poll, oldest first. Kept
+  /// apart from [requests]: a long run is something to check in on, not a
+  /// pending request, so it never counts as attention.
+  final List<ObservedBusyInterval> busyIntervals;
   final int? runningCount;
   final bool complete;
   bool get isCurrent => status == ProfileMonitorStatus.current && complete;
   int? get pendingCount => isCurrent ? requests.length : null;
+
+  /// The intervals [rules] would remind about right now.
+  List<ObservedBusyInterval> dueCheckIns(ProfileNotifyRules rules) => [
+    for (final interval in busyIntervals)
+      if (interval.isDue(rules)) interval,
+  ];
 }
 
 class MonitoredRoute {

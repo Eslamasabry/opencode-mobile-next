@@ -17,7 +17,11 @@ enum CodingAlertKind {
   question('question'),
   complete('complete'),
   error('error'),
-  quota('quota');
+  quota('quota'),
+
+  /// A session has been observed busy past the profile's check-in rule.
+  /// Must match the `"checkin"` branch in BackgroundConnectionService.kt.
+  checkIn('checkin');
 
   const CodingAlertKind(this.wireValue);
 

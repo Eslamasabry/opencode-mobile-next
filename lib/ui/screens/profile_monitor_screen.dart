@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../domain/profile_monitor.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
@@ -9,6 +10,7 @@ import '../app_theme.dart';
 import 'activity_screen.dart' show showQuestionSheet;
 import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
+import 'chat_screen.dart' show ChatScreen;
 
 /// Shared explicit route: revalidates profile, location and exact request before
 /// displaying the existing resolver. It never answers from monitor metadata.
@@ -66,6 +68,14 @@ Future<void> openMonitoredRequest(
           throw StateError('Changed');
         }
         await presentConnectionForm(context, controller, request);
+      case MonitoredRequestKind.checkIn:
+        // The reminder's answer is the conversation itself, on the existing
+        // chat route; nothing is sent or resolved on the user's behalf.
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => ChatScreen(sessionID: route.sessionID),
+          ),
+        );
     }
     await controller.profileMonitor.refresh();
   } catch (_) {
@@ -156,15 +166,25 @@ class ProfileMonitorInbox extends StatelessWidget {
           ),
         ),
         for (final profile in controller.store.profiles)
-          if (profile.id != controller.profile?.id &&
-              controller.isProfileReadable(profile.id))
-            for (final request in monitor.snapshotFor(profile.id).requests)
-              if (monitor.snapshotFor(profile.id).isCurrent)
+          if (controller.isProfileReadable(profile.id))
+            if (monitor.snapshotFor(profile.id) case final snapshot
+                when snapshot.isCurrent) ...[
+              if (profile.id != controller.profile?.id)
+                for (final request in snapshot.requests)
+                  _MonitorRequestRow(
+                    controller: controller,
+                    profile: profile,
+                    request: request,
+                  ),
+              for (final interval in snapshot.dueCheckIns(
+                monitor.rulesFor(profile.id),
+              ))
                 _MonitorRequestRow(
                   controller: controller,
                   profile: profile,
-                  request: request,
+                  request: interval.toRequest(),
                 ),
+            ],
       ],
     );
   }
@@ -186,7 +206,10 @@ class _MonitorRequestRow extends StatelessWidget {
     return Material(
       color: Theme.of(context).colorScheme.surfaceContainerLow,
       child: ListTile(
-        leading: const ServerAttentionDot(current: true),
+        key: ValueKey('monitor-row-${request.identity}'),
+        leading: request.kind == MonitoredRequestKind.checkIn
+            ? const Icon(Icons.hourglass_top_rounded, size: 20)
+            : const ServerAttentionDot(current: true),
         title: Text(
           request.title?.trim().isNotEmpty == true
               ? request.title!
@@ -201,6 +224,7 @@ class _MonitorRequestRow extends StatelessWidget {
               MonitoredRequestKind.permission => l10n.monitorPermission,
               MonitoredRequestKind.question => l10n.monitorQuestion,
               MonitoredRequestKind.form => l10n.monitorForm,
+              MonitoredRequestKind.checkIn => l10n.monitorCheckInDue,
             },
             l10n.monitorLastChecked,
             _time(context, checked),
@@ -409,6 +433,59 @@ class _MonitorProfileState extends State<_MonitorProfile> {
               onTap: _saving ? null : () => _quietTime(false, rules),
             ),
           ],
+          SwitchListTile(
+            key: ValueKey('monitor-check-in-${widget.profile.id}'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.monitorCheckIn),
+            subtitle: Text(
+              platformCapabilities.supportsBackgroundService
+                  ? l10n.monitorCheckInDetail
+                  : l10n.monitorCheckInDetailForeground,
+            ),
+            value: rules.checkInAfterMinutes != null,
+            onChanged: _saving
+                ? null
+                : (value) => _save(
+                    value
+                        ? rules.copyWith(
+                            checkInAfterMinutes:
+                                ProfileNotifyRules.defaultCheckInMinutes,
+                          )
+                        : rules.copyWith(clearCheckIn: true),
+                  ),
+          ),
+          if (rules.checkInAfterMinutes != null)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(l10n.monitorCheckInAfter),
+                DropdownButton<int>(
+                  isExpanded: true,
+                  key: ValueKey('monitor-check-in-after-${widget.profile.id}'),
+                  value:
+                      ProfileNotifyRules.checkInChoices.contains(
+                        rules.checkInAfterMinutes,
+                      )
+                      ? rules.checkInAfterMinutes
+                      : null,
+                  hint: Text(l10n.monitorMinutes(rules.checkInAfterMinutes!)),
+                  items: [
+                    for (final minutes in ProfileNotifyRules.checkInChoices)
+                      DropdownMenuItem(
+                        value: minutes,
+                        child: Text(l10n.monitorMinutes(minutes)),
+                      ),
+                  ],
+                  onChanged: _saving
+                      ? null
+                      : (minutes) {
+                          if (minutes != null) {
+                            _save(rules.copyWith(checkInAfterMinutes: minutes));
+                          }
+                        },
+                ),
+              ],
+            ),
           if (snapshot.isCurrent && snapshot.requests.isEmpty)
             Padding(
               padding: const EdgeInsets.all(12),
@@ -421,8 +498,72 @@ class _MonitorProfileState extends State<_MonitorProfile> {
                 profile: widget.profile,
                 request: request,
               ),
+          if (snapshot.isCurrent && rules.checkInAfterMinutes != null)
+            for (final interval in snapshot.busyIntervals)
+              _BusyIntervalRow(
+                controller: widget.controller,
+                profile: widget.profile,
+                interval: interval,
+                due: interval.isDue(rules),
+                checkedAt: snapshot.checkedAt,
+              ),
         ],
       ],
+    );
+  }
+}
+
+/// One session the last poll saw busy. The row names the time between busy
+/// samples without claiming continuous work or the current run's duration.
+class _BusyIntervalRow extends StatelessWidget {
+  const _BusyIntervalRow({
+    required this.controller,
+    required this.profile,
+    required this.interval,
+    required this.due,
+    required this.checkedAt,
+  });
+  final ConnectionController controller;
+  final ServerProfile profile;
+  final ObservedBusyInterval interval;
+  final bool due;
+  final DateTime? checkedAt;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final title = interval.title?.trim().isNotEmpty == true
+        ? interval.title!
+        : l10n.monitorSession;
+    final observed = l10n.monitorObservedBusy(
+      interval.observedFor.inMinutes,
+      _time(context, interval.firstObservedBusyAt),
+    );
+    return ListTile(
+      key: ValueKey('monitor-busy-${interval.sessionID}'),
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(
+        due ? Icons.hourglass_top_rounded : Icons.hourglass_empty_rounded,
+        color: due ? Theme.of(context).colorScheme.primary : null,
+      ),
+      title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
+      subtitle: Text(due ? '${l10n.monitorCheckInDue} · $observed' : observed),
+      trailing: due ? const Icon(Icons.chevron_right) : null,
+      onTap: () => openMonitoredRequest(
+        context,
+        controller,
+        MonitoredRoute(
+          profileID: profile.id,
+          requestID: interval.id,
+          sessionID: interval.sessionID,
+          kind: MonitoredRequestKind.checkIn,
+          createdAt: checkedAt ?? DateTime.now(),
+          serverUrl: profile.baseUrl,
+          sourceIdentity: ProfileMonitor.routeSourceIdentity(profile),
+          directory: interval.directory,
+          workspace: interval.workspace,
+        ),
+      ),
     );
   }
 }

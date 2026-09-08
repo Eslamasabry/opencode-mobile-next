@@ -304,6 +304,16 @@ class BackgroundConnectionService : Service() {
                     category = Notification.CATEGORY_ERROR,
                     priority = Notification.PRIORITY_HIGH
                 )
+                // Check-in reminder: the app observed a session busy past the
+                // user's chosen duration. Fixed copy like every other kind;
+                // the session is named only inside the app.
+                "checkin" -> CodingAlertContent(
+                    channelID = STATUS_CHANNEL_ID,
+                    title = "OpenCode is still working",
+                    text = "Tap to check in on the session.",
+                    category = Notification.CATEGORY_STATUS,
+                    priority = Notification.PRIORITY_DEFAULT
+                )
                 else -> return false
             }
 
