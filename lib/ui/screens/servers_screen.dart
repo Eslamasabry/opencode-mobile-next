@@ -322,10 +322,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.terminal_rounded,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+            const AppBrandMark(size: 28),
             const SizedBox(width: 10),
             Flexible(
               child: Text(

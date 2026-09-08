@@ -85,6 +85,11 @@ Future<void> loadCaptureFonts() async {
     'tool/capture/fonts/Roboto-Bold.ttf',
   ]);
   await load('MaterialIcons', [materialIconsPath()]);
+  await load('AppPhosphorRegular', ['assets/fonts/phosphor/Phosphor.ttf']);
+  await load('AppPhosphorFill', ['assets/fonts/phosphor/Phosphor-Fill.ttf']);
+  await load('AppPhosphorDuotone', [
+    'assets/fonts/phosphor/Phosphor-Duotone.ttf',
+  ]);
 }
 
 /// Rasterises the [RepaintBoundary] behind [key] and returns PNG bytes.

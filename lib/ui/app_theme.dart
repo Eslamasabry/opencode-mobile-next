@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'app_iconography.dart';
 import 'theme_packs.dart';
+
+export 'app_iconography.dart';
 
 /// Pack-provided colors that live outside Material's scheme, carried on the
 /// ThemeData so widgets resolve them from context.
@@ -47,13 +50,13 @@ enum AppStatusTone {
 /// bolts, two stops) read as different actions, so the vocabulary lives here
 /// and call sites name the verb.
 abstract final class AppIcons {
-  static const copy = Icons.copy_rounded;
+  static const copy = AppIconography.copy;
   static const run = Icons.electric_bolt_outlined;
-  static const stop = Icons.stop_rounded;
-  static const send = Icons.arrow_upward_rounded;
+  static const stop = AppIconography.stop;
+  static const send = AppIconography.send;
   static const queue = Icons.hourglass_bottom_rounded;
-  static const retry = Icons.refresh_rounded;
-  static const externalLink = Icons.open_in_new_rounded;
+  static const retry = AppIconography.retry;
+  static const externalLink = AppIconography.externalLink;
 }
 
 /// The shared visual system for the mobile client.
