@@ -1820,6 +1820,8 @@ class _FileViewer extends StatefulWidget {
 
 class __FileViewerState extends State<_FileViewer> {
   FileContent? _content;
+  FileContent? _previewContent;
+  FilePreviewData? _cachedPreview;
   String? _error;
   int _generation = 0;
   String? _profileID;
@@ -1856,6 +1858,8 @@ class __FileViewerState extends State<_FileViewer> {
     if (!mounted) return;
     setState(() {
       _content = null;
+      _previewContent = null;
+      _cachedPreview = null;
       _error = lookupAppLocalizations(
         Localizations.localeOf(context),
       ).filesViewerPathChanged;
@@ -1885,6 +1889,8 @@ class __FileViewerState extends State<_FileViewer> {
     if (!mounted) return;
     setState(() {
       _content = null;
+      _previewContent = null;
+      _cachedPreview = null;
       _error = lookupAppLocalizations(
         Localizations.localeOf(context),
       ).filesViewerScopeChanged;
@@ -1926,6 +1932,8 @@ class __FileViewerState extends State<_FileViewer> {
           setState(() {
             _scopeInvalid = true;
             _content = null;
+            _previewContent = null;
+            _cachedPreview = null;
             _error = lookupAppLocalizations(
               Localizations.localeOf(context),
             ).filesViewerScopeChanged;
@@ -1958,18 +1966,27 @@ class __FileViewerState extends State<_FileViewer> {
   String get _displayText {
     var text = _content?.content ?? '';
     if (text.length > maxChars) {
-      text = '${text.substring(0, maxChars)}\n... truncated';
+      var end = maxChars;
+      final unit = text.codeUnitAt(end - 1);
+      if (unit >= 0xD800 && unit <= 0xDBFF) end--;
+      text = text.substring(0, end);
     }
     return text;
   }
 
   FilePreviewData get _previewData {
     final content = _content!;
-    return FilePreviewData(
+    if (identical(_previewContent, content) && _cachedPreview != null) {
+      return _cachedPreview!;
+    }
+    _previewContent = content;
+    return _cachedPreview = FilePreviewData(
       name: _path.split('/').last,
       mimeType: content.mimeType,
       bytes: content.isBinary ? content.bytes() : null,
       text: content.isBinary ? null : _displayText,
+      originalText: content.isBinary ? null : content.content,
+      truncated: !content.isBinary && content.content.length > maxChars,
     );
   }
 

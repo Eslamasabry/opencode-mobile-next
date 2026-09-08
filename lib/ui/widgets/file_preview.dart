@@ -4,6 +4,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../domain/delimited_text.dart';
+import '../../l10n/app_localizations.dart';
+import 'delimited_file_preview.dart';
+import 'svg_file_preview.dart';
+import 'pdf_file_preview.dart';
 import 'markdown.dart';
 import 'product_states.dart';
 import '../app_theme.dart';
@@ -14,9 +19,18 @@ class FilePreviewData {
     required this.name,
     String? mimeType,
     this.bytes,
-    this.text,
+    String? text,
+    this.originalText,
+    this.truncated = false,
     this.error,
-  }) : mimeType = _normalizedMime(mimeType) ?? _mimeFromName(name);
+  }) : mimeType = _normalizedMime(mimeType) ?? _mimeFromName(name),
+       text =
+           text ??
+           _decodeText(
+             bytes,
+             _normalizedMime(mimeType) ?? _mimeFromName(name),
+             name,
+           );
 
   factory FilePreviewData.fromDataUrl({
     required String name,
@@ -43,14 +57,7 @@ class FilePreviewData {
       final data = UriData.parse(url);
       final resolvedMime = normalizedMime ?? _normalizedMime(data.mimeType);
       final bytes = Uint8List.fromList(data.contentAsBytes());
-      return FilePreviewData(
-        name: name,
-        mimeType: resolvedMime,
-        bytes: bytes,
-        text: _isTextMime(resolvedMime)
-            ? utf8.decode(bytes, allowMalformed: true)
-            : null,
-      );
+      return FilePreviewData(name: name, mimeType: resolvedMime, bytes: bytes);
     } on FormatException {
       return FilePreviewData(
         name: name,
@@ -64,7 +71,28 @@ class FilePreviewData {
   final String? mimeType;
   final Uint8List? bytes;
   final String? text;
+
+  /// Full source when the caller supplies only a bounded display excerpt.
+  final String? originalText;
+  final bool truncated;
   final String? error;
+
+  String? get copyText => originalText ?? text;
+  String? get separator => DelimitedText.separator(name, mimeType);
+
+  static String? _decodeText(Uint8List? bytes, String? mime, String name) {
+    if (bytes == null ||
+        (!_isTextMime(mime) && DelimitedText.separator(name, mime) == null)) {
+      return null;
+    }
+    try {
+      final value = utf8.decode(bytes);
+      if (value.contains('\u0000')) return null;
+      return value;
+    } on FormatException {
+      return null;
+    }
+  }
 
   bool get isRasterImage => switch (mimeType) {
     'image/png' ||
@@ -79,7 +107,7 @@ class FilePreviewData {
 
   Uint8List? get exportBytes {
     if (bytes != null) return bytes;
-    if (text != null) return Uint8List.fromList(utf8.encode(text!));
+    if (copyText != null) return Uint8List.fromList(utf8.encode(copyText!));
     return null;
   }
 
@@ -100,6 +128,8 @@ class FilePreviewData {
       'svg' => 'image/svg+xml',
       'pdf' => 'application/pdf',
       'json' => 'application/json',
+      'csv' => 'text/csv',
+      'tsv' => 'text/tab-separated-values',
       'xml' => 'application/xml',
       'md' ||
       'txt' ||
@@ -136,8 +166,22 @@ Future<void> showFilePreviewSheet(
   isScrollControlled: true,
   useSafeArea: true,
   showDragHandle: true,
-  builder: (context) =>
-      _FilePreviewSheet(data: data, onAttach: onAttach, onDownload: onDownload),
+  // Feedback and Retry must sit above this modal, not on the obscured page.
+  builder: (context) => SizedBox(
+    height: MediaQuery.sizeOf(context).height * .86,
+    child: ScaffoldMessenger(
+      child: Scaffold(
+        backgroundColor:
+            Theme.of(context).bottomSheetTheme.backgroundColor ??
+            Theme.of(context).colorScheme.surface,
+        body: _FilePreviewSheet(
+          data: data,
+          onAttach: onAttach,
+          onDownload: onDownload,
+        ),
+      ),
+    ),
+  ),
 );
 
 class _FilePreviewSheet extends StatefulWidget {
@@ -154,6 +198,28 @@ class _FilePreviewSheet extends StatefulWidget {
 class _FilePreviewSheetState extends State<_FilePreviewSheet> {
   bool _attaching = false;
   bool _downloading = false;
+
+  Future<void> _copy(String original) async {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    try {
+      await Clipboard.setData(ClipboardData(text: original));
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.fileCopied)));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.fileCopyFailed),
+          action: SnackBarAction(
+            label: l10n.markdownCopyRetry,
+            onPressed: () => _copy(original),
+          ),
+        ),
+      );
+    }
+  }
 
   Future<void> _attach() async {
     final action = widget.onAttach;
@@ -242,19 +308,10 @@ class _FilePreviewSheetState extends State<_FilePreviewSheet> {
                     ],
                   ),
                 ),
-                if (data.text != null)
+                if (data.copyText != null)
                   IconButton(
                     tooltip: 'Copy file contents',
-                    onPressed: () async {
-                      await Clipboard.setData(ClipboardData(text: data.text!));
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('File contents copied'),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    },
+                    onPressed: () => _copy(data.copyText!),
                     icon: const Icon(AppIcons.copy, size: 19),
                   ),
                 if (widget.onAttach != null)
@@ -362,18 +419,66 @@ class FilePreviewBody extends StatelessWidget {
     }
     if (data.text != null) {
       if (initialLine != null) {
-        return _FocusedSourcePreview(
+        final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+        final lineCount = '\n'.allMatches(data.text!).length + 1;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (data.truncated)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(l10n.filePreviewPartialSource),
+              ),
+            if (initialLine! < 1 || initialLine! > lineCount)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(l10n.fileLineOutsidePreview(initialLine!)),
+              ),
+            Expanded(
+              child: _FocusedSourcePreview(
+                text: data.text!,
+                initialLine: initialLine!,
+              ),
+            ),
+          ],
+        );
+      }
+      if (data.separator != null) {
+        return DelimitedFilePreview(
           text: data.text!,
-          initialLine: initialLine!,
+          original: data.copyText!,
+          separator: data.separator!,
+          truncated: data.truncated,
+        );
+      }
+      if (data.mimeType == 'image/svg+xml') {
+        return SvgFilePreview(
+          source: data.text!,
+          original: data.copyText!,
+          truncated: data.truncated,
         );
       }
       return SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: SmartTextPreview(
-          key: const Key('file-preview-text'),
-          data: data,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (data.truncated)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  lookupAppLocalizations(
+                    Localizations.localeOf(context),
+                  ).filePreviewPartialSource,
+                ),
+              ),
+            SmartTextPreview(key: const Key('file-preview-text'), data: data),
+          ],
         ),
       );
+    }
+    if (data.mimeType == 'application/pdf' && data.bytes?.isNotEmpty == true) {
+      return PdfFilePreview(bytes: data.bytes!);
     }
     return _PreviewNotice(
       icon: Icons.insert_drive_file_outlined,
@@ -406,7 +511,10 @@ class _FocusedSourcePreviewState extends State<_FocusedSourcePreview> {
   static const _trailingPadding = 24.0;
 
   late List<String> _lines = widget.text.split('\n');
-  late final int _targetLine = widget.initialLine.clamp(1, _lines.length);
+  int get _targetLine =>
+      widget.initialLine >= 1 && widget.initialLine <= _lines.length
+      ? widget.initialLine
+      : 0;
   late final ScrollController _vertical = ScrollController(
     initialScrollOffset: ((_targetLine - 1) * _lineHeight - _lineHeight * 2)
         .clamp(0, (_lines.length - 1) * _lineHeight),
@@ -517,9 +625,7 @@ class _FocusedSourcePreviewState extends State<_FocusedSourcePreview> {
                           const SizedBox(width: 12),
                           Text.rich(
                             TextSpan(
-                              text: _lines[index].isEmpty
-                                  ? ' '
-                                  : _lines[index],
+                              text: _lines[index].isEmpty ? ' ' : _lines[index],
                             ),
                             maxLines: 1,
                             softWrap: false,
@@ -666,17 +772,29 @@ class _SmartTextPreviewState extends State<SmartTextPreview> {
           ),
           const SizedBox(height: 12),
           if (_rawMarkdown)
-            CodeBlock(code: _text, language: 'markdown')
+            CodeBlock(
+              code: _text,
+              originalSource: widget.data.copyText,
+              language: 'markdown',
+            )
           else
             MarkdownText(_text),
         ],
       );
     }
     if (prettyJson != null) {
-      return CodeBlock(code: prettyJson, language: 'json');
+      return CodeBlock(
+        code: prettyJson,
+        originalSource: widget.data.copyText,
+        language: 'json',
+      );
     }
     if (language != null) {
-      return CodeBlock(code: _text, language: language);
+      return CodeBlock(
+        code: _text,
+        originalSource: widget.data.copyText,
+        language: language,
+      );
     }
     return SelectableText(
       _text,

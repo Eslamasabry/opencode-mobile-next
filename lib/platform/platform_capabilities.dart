@@ -67,6 +67,9 @@ class PlatformCapabilities {
   /// Foreground system TTS with installed offline voices; Android only.
   bool get supportsReadAloud => isAndroid;
 
+  /// Read-only raster PDF bridge; native admission requires Android 10+.
+  bool get supportsLocalPdf => isAndroid;
+
   /// Explicit foreground turns using the existing local dictation path.
   bool get supportsVoiceConversation => supportsVoice && supportsReadAloud;
   bool get supportsPromptPhotos => isAndroid;

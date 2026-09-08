@@ -4157,4 +4157,107 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get markdownSnapshot =>
       'Snapshot of the code when opened. Close and reopen to read later updates.';
+
+  @override
+  String get fileTable => 'Table';
+
+  @override
+  String get fileSource => 'Source';
+
+  @override
+  String get fileSourceExcerpt =>
+      'Up to the first 200,000 characters are displayed. Copy and Save keep the original content.';
+
+  @override
+  String get filePreviewPartialSource =>
+      'Only part of this file is shown. Copy and Save keep the original content.';
+
+  @override
+  String fileLineOutsidePreview(int line) {
+    return 'Line $line is outside this preview. Save the original to read that location.';
+  }
+
+  @override
+  String get fileTableMalformed =>
+      'This file has incomplete or inconsistent quoting. Read its source instead.';
+
+  @override
+  String get fileTableTooLarge =>
+      'Table preview supports files up to 256 KB. Read the source or save the original file.';
+
+  @override
+  String get fileTableTooWide =>
+      'This file has more than 32 columns. Read the source or save the original file.';
+
+  @override
+  String get fileTableFieldTooLong =>
+      'A cell exceeds 4,096 characters. Read the source or save the original file.';
+
+  @override
+  String get fileTableMoreRows =>
+      'Showing the first 200 rows. More data remains in the original file.';
+
+  @override
+  String fileTableRows(int rows, int columns) {
+    return '$rows rows shown · $columns columns';
+  }
+
+  @override
+  String fileTableColumn(int number) {
+    return 'Column $number';
+  }
+
+  @override
+  String get fileTableEmpty => 'This file has no rows.';
+
+  @override
+  String get fileCopied => 'File contents copied';
+
+  @override
+  String get fileCopyFailed => 'Could not copy file contents. Try again.';
+
+  @override
+  String get fileImage => 'Image';
+
+  @override
+  String get fileSvgUnsupported =>
+      'This SVG cannot be shown as a local static image. Read its source or save the original file. External resources, animation and complex SVG features are not supported.';
+
+  @override
+  String get filePdfEncrypted =>
+      'This PDF requires a password or uses unsupported protection. Save the original to open it in a PDF app.';
+
+  @override
+  String get filePdfLimit =>
+      'PDF preview supports files up to 10 MB and the first 200 pages. Save the original to read the full document.';
+
+  @override
+  String get filePdfUnavailable =>
+      'PDF viewing is available on Android 10 or newer. You can still save the original file.';
+
+  @override
+  String get filePdfCancelled =>
+      'PDF loading cancelled. Retry when you are ready.';
+
+  @override
+  String get filePdfFailed =>
+      'This PDF page could not be displayed. Retry or save the original file.';
+
+  @override
+  String get filePdfPageLimit =>
+      'Only the first 200 pages can be previewed. Save the original to read the full document.';
+
+  @override
+  String filePdfPage(int page, int count) {
+    return 'Page $page of $count';
+  }
+
+  @override
+  String get filePrevious => 'Previous';
+
+  @override
+  String get fileNext => 'Next';
+
+  @override
+  String get fileCancel => 'Cancel';
 }

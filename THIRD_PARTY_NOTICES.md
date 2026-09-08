@@ -24,6 +24,25 @@ table says so with a dash rather than inventing an owner.
 
 ## Bundled components
 
+### Local SVG previews
+
+`flutter_svg` 2.3.0 is maintained in Flutter's packages repository and is
+distributed under the MIT license, with Copyright (c) 2018 Dan Field.
+Its complete license is bundled unchanged at `LICENSES/MIT-flutter-svg.txt`.
+The text was extracted from the exact pub.dev 2.3.0 archive after verifying
+its SHA-256 against pub.dev version metadata, then matched byte for byte
+against this worktree's restored package cache.
+XML 7.0.1 remains the existing MIT-licensed dependency listed below; the
+preview now declares it directly for its static-content validation.
+
+The resolved SVG path also adds `path_parsing` 1.1.0 (MIT, Dan Field;
+`LICENSES/MIT-path-parsing.txt`), `vector_graphics` 1.2.3 and
+`vector_graphics_compiler` 1.3.0 (identical Flutter BSD 3-Clause text in
+`LICENSES/BSD-3-Clause-vector-graphics.txt`), and `vector_graphics_codec`
+1.1.13 (Flutter BSD 3-Clause, including its additional rights-reserved
+line, in `LICENSES/BSD-3-Clause-vector-graphics-codec.txt`). All four texts
+were read from the exact resolved package versions and copied unchanged.
+
 ### Photo and file selection
 
 `image_picker` 1.2.3, `image_picker_android` 0.8.13+22, and
@@ -238,6 +257,7 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `flutter_secure_storage_platform_interface` | 2.0.3 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
 | `flutter_secure_storage_web` | 2.1.1 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
 | `flutter_secure_storage_windows` | 4.2.2 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
+| `flutter_svg` | 2.3.0 | MIT | Copyright (c) 2018 Dan Field | runtime |
 | `flutter_timezone` | 5.1.0 | Apache-2.0 | — | runtime |
 | `frontend_server_client` | 4.0.0 | BSD-3-Clause | Copyright 2020, the Dart project authors | runtime |
 | `glob` | 2.2.0 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
@@ -278,6 +298,7 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `package_info_plus_platform_interface` | 4.1.0 | BSD-3-Clause | Copyright 2017 The Chromium Authors. All rights reserved | runtime |
 | `path` | 1.9.1 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
 | `path_provider` | 2.1.6 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `path_parsing` | 1.1.0 | MIT | Copyright (c) 2018 Dan Field | runtime |
 | `path_provider_android` | 2.3.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
 | `path_provider_foundation` | 2.6.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
 | `path_provider_linux` | 2.2.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
@@ -350,6 +371,9 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `url_launcher_windows` | 3.1.5 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
 | `uuid` | 4.6.0 | MIT | Copyright (c) 2021 Yulian Kuncheff | runtime |
 | `vector_math` | 2.4.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `vector_graphics` | 1.2.3 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `vector_graphics_codec` | 1.1.13 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved. | runtime |
+| `vector_graphics_compiler` | 1.3.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
 | `vm_service` | 15.3.0 | BSD-3-Clause | Copyright 2015, the Dart project authors | test-only |
 | `watcher` | 1.2.1 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
 | `web` | 1.1.1 | BSD-3-Clause | Copyright 2023, the Dart project authors | runtime |
