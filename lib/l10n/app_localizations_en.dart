@@ -4947,4 +4947,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get workspaceManage => 'Manage';
+
+  @override
+  String get reviewCopiedFile => 'Updated file copied';
+
+  @override
+  String get reviewCopiedPatch => 'Patch copied';
+
+  @override
+  String get reviewCopyFailed => 'Could not copy. Try again.';
+
+  @override
+  String get reviewCopyFile => 'Copy updated file';
+
+  @override
+  String get reviewCopyPatch => 'Copy patch';
+
+  @override
+  String get reviewNoChanges => 'No changes';
+
+  @override
+  String get reviewEmptyDiff => 'No diff content';
+
+  @override
+  String get reviewHideContext => 'Hide revealed context';
+
+  @override
+  String get reviewAdded => 'Added';
+
+  @override
+  String get reviewRemoved => 'Removed';
+
+  @override
+  String get reviewUnchanged => 'Unchanged';
+
+  @override
+  String get reviewPatchNote => 'Patch note';
+
+  @override
+  String reviewShowNext(int count) {
+    return 'Show next $count lines';
+  }
+
+  @override
+  String reviewShowPrevious(int count, int remaining) {
+    return 'Show $count previous lines ($remaining hidden)';
+  }
+
+  @override
+  String reviewMissingContext(int count) {
+    return '$count unchanged lines not included in patch';
+  }
+
+  @override
+  String reviewCounts(int added, int removed) {
+    return '$added added, $removed removed';
+  }
+
+  @override
+  String reviewLineDescription(String kind, int number, String text) {
+    return '$kind, line $number: $text';
+  }
+
+  @override
+  String reviewNoteDescription(String kind, String text) {
+    return '$kind: $text';
+  }
 }
