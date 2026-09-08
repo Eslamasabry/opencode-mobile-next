@@ -48,6 +48,22 @@ the combined verification and fresh Android installation checks are in progress.
 - Keep queued prompts whose delivery was not confirmed for review instead of
   automatically sending them again after reconnect or restart. Review, edit,
   explicitly resend, or discard; a failed local write keeps the recoverable draft.
+- Opt into check-in reminders for sessions seen busy at checks spanning the
+  chosen interval. Activity shows due check-ins separately from pending
+  decisions. Private notifications make at most one dispatch attempt per
+  observed interval; sampled observations do not claim uninterrupted work.
+
+### External agents and private connections
+
+- Open **External agents** from Servers for the supported A2A 1.0 JSON-RPC
+  text-task journey. Inspect an agent card, explicitly send a reviewed task,
+  answer requested input, inspect bounded results, reopen saved tasks or request
+  cancellation. Full unsent drafts survive Back and restart; uncertain sends
+  require review and are never automatically resent.
+- Connect through the official Android **Tailscale** app with install/open/return
+  guidance, a reviewed HTTPS address and the existing server authentication and
+  connection test. Typed fields survive the handoff. App presence is reported
+  separately from VPN or server connectivity; no tailnet is configured for you.
 
 ### Backlog follow-through
 
