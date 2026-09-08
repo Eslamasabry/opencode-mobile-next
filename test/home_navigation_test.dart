@@ -11,6 +11,7 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
+import 'package:opencode_mobile/ui/widgets/glass_surface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _ShellApi extends OpenCodeApi {
@@ -94,15 +95,22 @@ Future<ConnectionController> _controller({String? profileName}) async {
 
 Future<void> _pumpShell(
   WidgetTester tester,
-  ConnectionController controller,
-) async {
+  ConnectionController controller, {
+  bool disableAnimations = false,
+}) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [connProvider.overrideWithValue(controller)],
-      child: const MaterialApp(
+      child: MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(disableAnimations: disableAnimations),
+          child: child!,
+        ),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: HomeScreen(),
+        home: const HomeScreen(),
       ),
     ),
   );
@@ -113,7 +121,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets(
-    'Files Back clears search, ascends folders, then uses root exit guard',
+    'Files Back clears search, ascends folders, returns home, then guards exit',
     (tester) async {
       final api = _NestedFilesApi();
       final controller = await _controller()
@@ -174,6 +182,15 @@ void main() {
       await tester.pump();
       await tester.binding.handlePopRoute();
       await tester.pump();
+      expect(find.text('Press back again to exit'), findsNothing);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('current-tab-title')))
+            .data,
+        'Workspace',
+      );
+      await tester.binding.handlePopRoute();
+      await tester.pump();
       expect(find.text('Press back again to exit'), findsOneWidget);
       expect(exits, 0);
       await tester.binding.handlePopRoute();
@@ -197,8 +214,80 @@ void main() {
     final loads = api.paths.length;
     await tester.binding.handlePopRoute();
     await tester.pump();
-    expect(find.text('Press back again to exit'), findsOneWidget);
+    expect(find.text('Press back again to exit'), findsNothing);
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('current-tab-title'))).data,
+      'Workspace',
+    );
     expect(api.paths.length, loads);
+  });
+
+  testWidgets('switching destinations preserves Files search and folder', (
+    tester,
+  ) async {
+    final api = _NestedFilesApi();
+    final controller = await _controller()
+      ..api = api;
+    addTearDown(controller.dispose);
+    await _pumpShell(tester, controller);
+    await tester.tap(find.byIcon(Icons.folder_outlined));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('lib'));
+    await tester.pumpAndSettle();
+    final search = find.byKey(const ValueKey('files-search-field'));
+    await tester.enterText(search, 'needle');
+    await tester.pump(const Duration(milliseconds: 400));
+    final loads = api.paths.length;
+    await tester.tap(find.byIcon(Icons.more_horiz_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.folder_outlined));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(search).controller!.text, 'needle');
+    expect(api.paths.last, 'lib');
+    expect(api.paths.length, loads);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Activity Back returns Workspace before offering exit', (
+    tester,
+  ) async {
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await _pumpShell(tester, controller);
+    await tester.tap(find.byIcon(Icons.notifications_outlined));
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('current-tab-title'))).data,
+      'Workspace',
+    );
+    expect(find.text('Press back again to exit'), findsNothing);
+  });
+
+  testWidgets('reduced motion switches destinations without animation', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await _pumpShell(tester, controller, disableAnimations: true);
+    expect(
+      tester
+          .widget<NavigationBar>(find.byType(NavigationBar))
+          .animationDuration,
+      Duration.zero,
+    );
+    await tester.tap(find.byIcon(Icons.more_horiz_rounded));
+    await tester.pump();
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('current-tab-title'))).data,
+      'More',
+    );
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('phone shell uses product bottom navigation', (tester) async {
@@ -212,6 +301,7 @@ void main() {
     await _pumpShell(tester, controller);
 
     expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(GlassSurface), findsOneWidget);
     expect(find.byType(NavigationRail), findsNothing);
     expect(find.text('Workspace'), findsWidgets);
     expect(find.text('Files'), findsOneWidget);

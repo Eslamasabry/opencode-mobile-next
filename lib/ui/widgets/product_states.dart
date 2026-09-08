@@ -40,12 +40,16 @@ String productErrorText(Object error) {
 /// replaces any snackbar currently showing, and routes the thrown object
 /// through [productErrorText] so raw exceptions never reach users.
 void showProductError(BuildContext context, Object error) {
+  final scheme = Theme.of(context).colorScheme;
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
-        content: Text(productErrorText(error)),
-        backgroundColor: Theme.of(context).colorScheme.error,
+        content: Text(
+          productErrorText(error),
+          style: TextStyle(color: scheme.onError),
+        ),
+        backgroundColor: scheme.error,
       ),
     );
 }
