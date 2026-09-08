@@ -560,6 +560,31 @@ void main() {
     expect(controller.selectedVariant, 'fast');
   });
 
+  testWidgets('direct agent intent survives loading and opens only once', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(411, 891));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    final catalog = controller.catalog;
+    controller.catalog = null;
+    await tester.pumpWidget(_app(controller, focusAgent: true));
+    await tester.tap(find.text('Choose model'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Choose an agent'), findsNothing);
+    controller.catalog = catalog;
+    controller.notifyListeners();
+    await tester.pumpAndSettle();
+    expect(find.text('Choose an agent'), findsOneWidget);
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    controller.notifyListeners();
+    await tester.pumpAndSettle();
+    expect(find.text('Choose an agent'), findsNothing);
+    expect(controller.agentWrites, 0);
+  });
+
   testWidgets('direct agent entry opens agent choice without saving', (
     tester,
   ) async {

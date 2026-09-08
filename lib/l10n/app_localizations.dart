@@ -8294,6 +8294,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage'**
   String get workspaceManage;
+
+  /// No description provided for @modelChoiceProvidersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Providers not loaded'**
+  String get modelChoiceProvidersTitle;
+
+  /// No description provided for @modelChoiceProvidersSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 signed-in provider not loaded. View details} other{{count} signed-in providers not loaded. View details}}'**
+  String modelChoiceProvidersSummary(int count);
+
+  /// No description provided for @modelChoiceReloadProviders.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload providers'**
+  String get modelChoiceReloadProviders;
+
+  /// No description provided for @modelChoiceStagedAgentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Applied with your model choice'**
+  String get modelChoiceStagedAgentHint;
+
+  /// No description provided for @modelChoiceAgentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an agent'**
+  String get modelChoiceAgentTitle;
+
+  /// No description provided for @modelChoiceDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get modelChoiceDone;
+
+  /// No description provided for @modelChoicePartialSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Model saved. Agent choice was not confirmed. Try again.'**
+  String get modelChoicePartialSaveError;
+
+  /// No description provided for @modelChoiceModelSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm the model choice. Check your selection and try again.'**
+  String get modelChoiceModelSaveError;
 }
 
 class _AppLocalizationsDelegate

@@ -4947,4 +4947,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get workspaceManage => 'Manage';
+
+  @override
+  String get modelChoiceProvidersTitle => 'Providers not loaded';
+
+  @override
+  String modelChoiceProvidersSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count signed-in providers not loaded. View details',
+      one: '1 signed-in provider not loaded. View details',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get modelChoiceReloadProviders => 'Reload providers';
+
+  @override
+  String get modelChoiceStagedAgentHint => 'Applied with your model choice';
+
+  @override
+  String get modelChoiceAgentTitle => 'Choose an agent';
+
+  @override
+  String get modelChoiceDone => 'Done';
+
+  @override
+  String get modelChoicePartialSaveError =>
+      'Model saved. Agent choice was not confirmed. Try again.';
+
+  @override
+  String get modelChoiceModelSaveError =>
+      'Could not confirm the model choice. Check your selection and try again.';
 }

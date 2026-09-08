@@ -153,6 +153,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
   String _draftAgent = '';
   String _observedAgent = '';
   bool _optionsOpen = false;
+  bool _agentEntryOpened = false;
   String? _scopeProfile;
   int _scopeLocation = 0;
 
@@ -175,12 +176,25 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     _observedVariant = _currentVariant;
     _observedAgent = _currentAgent;
     widget.controller.addListener(_selectionChanged);
-    if (widget.focusAgent) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final catalog = widget.controller.catalog;
-        if (mounted && catalog != null) _showAgentOptions(catalog);
-      });
-    }
+    _scheduleAgentEntry();
+  }
+
+  void _scheduleAgentEntry() {
+    if (!widget.focusAgent ||
+        _agentEntryOpened ||
+        !_sameScope ||
+        widget.controller.catalog == null)
+      return;
+    _agentEntryOpened = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_sameScope) return;
+      final catalog = widget.controller.catalog;
+      if (catalog == null) {
+        _agentEntryOpened = false;
+        return;
+      }
+      _showAgentOptions(catalog);
+    });
   }
 
   @override
@@ -234,6 +248,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
 
   void _selectionChanged() {
     if (!mounted) return;
+    _scheduleAgentEntry();
     final untouched =
         _draftModel?.wireName == _observedModel?.wireName &&
         _draftVariant == _observedVariant &&
@@ -506,7 +521,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                     onTap: () => showDialog<void>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text('Providers not loaded'),
+                        title: Text(_strings.modelChoiceProvidersTitle),
                         content: Text(
                           unloadedProvidersNotice(
                             unloaded
@@ -522,7 +537,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
-                            child: const Text('Done'),
+                            child: Text(_strings.modelChoiceDone),
                           ),
                         ],
                       ),
@@ -535,7 +550,9 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              '${unloaded.length} signed-in ${unloaded.length == 1 ? 'provider not' : 'providers not'} loaded. View details',
+                              _strings.modelChoiceProvidersSummary(
+                                unloaded.length,
+                              ),
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ),
@@ -546,7 +563,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                 ),
                 IconButton(
                   key: const ValueKey('picker-reload-providers'),
-                  tooltip: 'Reload providers',
+                  tooltip: _strings.modelChoiceReloadProviders,
                   onPressed: widget.controller.catalogLoading
                       ? null
                       : widget.controller.reloadProviderRuntime,
@@ -704,7 +721,8 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
         decoration: InputDecoration(
           labelText: 'Agent',
           prefixIcon: const Icon(Icons.support_agent_outlined),
-          helperText: 'Applied with your model choice',
+          helperText: _strings.modelChoiceStagedAgentHint,
+          helperMaxLines: 3,
         ),
         hint: Text(visible.isEmpty ? 'No agents available' : 'Server default'),
         items: [
@@ -1027,7 +1045,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
         context: context,
         builder: (context) => StatefulBuilder(
           builder: (context, updateDialog) => AlertDialog(
-            title: const Text('Choose an agent'),
+            title: Text(_strings.modelChoiceAgentTitle),
             scrollable: true,
             content: _agentPicker(
               catalog,
@@ -1038,7 +1056,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Done'),
+                child: Text(_strings.modelChoiceDone),
               ),
             ],
           ),
@@ -1119,7 +1137,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Done'),
+                  child: Text(_strings.modelChoiceDone),
                 ),
               ],
             ),
@@ -1202,10 +1220,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
         }
         if (!mounted || !_sameScope) return;
         if (_currentAgent != agent) {
-          setState(
-            () => _saveError =
-                'Model saved. Agent choice was not confirmed. Try again.',
-          );
+          setState(() => _saveError = _strings.modelChoicePartialSaveError);
           return;
         }
       }
@@ -1216,8 +1231,8 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
       if (mounted) {
         setState(
           () => _saveError = modelConfirmed
-              ? 'Model saved. Agent choice was not confirmed. Try again.'
-              : 'Could not confirm the model choice. Check your selection and try again.',
+              ? _strings.modelChoicePartialSaveError
+              : _strings.modelChoiceModelSaveError,
         );
       }
     } finally {
@@ -1262,15 +1277,9 @@ String unloadedProvidersNotice(List<String> names) {
 }
 
 class _Notice extends StatelessWidget {
-  const _Notice({
-    super.key,
-    required this.icon,
-    required this.text,
-    this.action,
-  });
+  const _Notice({required this.icon, required this.text});
   final IconData icon;
   final String text;
-  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -1289,22 +1298,7 @@ class _Notice extends StatelessWidget {
             children: [
               Icon(icon, size: 19, color: scheme.onSecondaryContainer),
               const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(text),
-                    if (action case final action?)
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: action,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+              Expanded(child: Text(text)),
             ],
           ),
         ),

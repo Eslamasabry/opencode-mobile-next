@@ -1976,5 +1976,20 @@
   "workspaceDismissNotice": "Dismiss",
   "workspaceManageProject": "Manage project",
   "workspaceManageProjectHint": "Switch project, worktrees, and project health",
-  "workspaceManage": "Manage"
+  "workspaceManage": "Manage",
+  "modelChoiceProvidersTitle": "Providers not loaded",
+  "modelChoiceProvidersSummary": "{count, plural, =1{1 signed-in provider not loaded. View details} other{{count} signed-in providers not loaded. View details}}",
+  "@modelChoiceProvidersSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "modelChoiceReloadProviders": "Reload providers",
+  "modelChoiceStagedAgentHint": "Applied with your model choice",
+  "modelChoiceAgentTitle": "Choose an agent",
+  "modelChoiceDone": "Done",
+  "modelChoicePartialSaveError": "Model saved. Agent choice was not confirmed. Try again.",
+  "modelChoiceModelSaveError": "Could not confirm the model choice. Check your selection and try again."
 }
