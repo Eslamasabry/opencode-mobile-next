@@ -14,7 +14,7 @@ Candidate contract:
 - Cards: tonal separation and14dp existing radius, no automatic outline on every card. Interactive fields keep their focus/error borders; explicit intentional separators remain.
 - Iconography: Phosphor regular24 principal,20 inline; selected navigation uses same-silhouette duotone. Integration is a separate checked dependency/module.
 
-Verification pending candidate integration and actual-font captures. Historical0eabc2d full-suite result does not cover these changes.
+Combined icon/theme/navigation/model checks passed (50 cases); actual-font page captures passed (52 cases), and eight theme goldens were refreshed and default light/dark inspected. Candidate analyzer is clean at 5fc0c57. Final full-suite and native verification remain pending; historical 0eabc2d coverage does not apply to the changed candidate.
 
 ## Material and upgrade contract
 

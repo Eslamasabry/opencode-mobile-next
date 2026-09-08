@@ -1,0 +1,86 @@
+[
+  {
+    "id": "GLASS-01",
+    "page": "Frosted navigation",
+    "title": "Tonal dock lacked a real content underlay",
+    "priority": "P2",
+    "dimension": "color",
+    "evidence": [
+      "576e391:lib/ui/widgets/glass_surface.dart",
+      "docs/qa/frosted-navigation/README.md",
+      "docs/qa/frosted-navigation/dark-normal-scrolled.png",
+      "docs/qa/frosted-navigation/light-normal-scrolled.png",
+      "test/home_navigation_test.dart",
+      "test/glass_surface_test.dart"
+    ],
+    "observed": "The preceding shell kept bottomNavigationBar outside the body and painted a solid tint.",
+    "impact": "Calling this glass would overstate the material behavior.",
+    "proposal": "Extend the body and sample real scrolling content through one clipped modest backdrop filter.",
+    "status": "tested",
+    "verification": "30 nav/glass tests; targeted inheritance/contrast checks; three shell accessibility/layout cases; six capture cases/eight PNGs; scoped analyzer and format passed. Static pack minimum contrast5.46. No device/FPS claim.",
+    "commit": "ab9f923565010684f9cc9264825607c82bd43ba4"
+  },
+  {
+    "id": "GLASS-02",
+    "page": "Frosted navigation",
+    "title": "Extending content requires protected end-of-list and action geometry",
+    "priority": "P2",
+    "dimension": "layout",
+    "evidence": [
+      "576e391:lib/ui/widgets/glass_surface.dart",
+      "docs/qa/frosted-navigation/README.md",
+      "docs/qa/frosted-navigation/dark-normal-scrolled.png",
+      "docs/qa/frosted-navigation/light-normal-scrolled.png",
+      "test/home_navigation_test.dart",
+      "test/glass_surface_test.dart"
+    ],
+    "observed": "Several root pages used explicit bottom padding, and the fixed Workspace CTA did not consume a shell inset.",
+    "impact": "A naive body extension would cover final rows and the primary action.",
+    "proposal": "Consume the measured Scaffold bottom inset inside root scroll space and fixed CTA positioning; hide the dock for the keyboard.",
+    "status": "tested",
+    "verification": "30 nav/glass tests; targeted inheritance/contrast checks; three shell accessibility/layout cases; six capture cases/eight PNGs; scoped analyzer and format passed. Static pack minimum contrast5.46. No device/FPS claim.",
+    "commit": "ab9f923565010684f9cc9264825607c82bd43ba4"
+  },
+  {
+    "id": "GLASS-03",
+    "page": "Frosted navigation",
+    "title": "Translucent backdrop can reduce muted foreground contrast",
+    "priority": "P2",
+    "dimension": "accessibility",
+    "evidence": [
+      "576e391:lib/ui/widgets/glass_surface.dart",
+      "docs/qa/frosted-navigation/README.md",
+      "docs/qa/frosted-navigation/dark-normal-scrolled.png",
+      "docs/qa/frosted-navigation/light-normal-scrolled.png",
+      "test/home_navigation_test.dart",
+      "test/glass_surface_test.dart"
+    ],
+    "observed": "Muted and primary colors, then some alternate pack onSurface colors, failed worst-case compositing against contrasting backdrop samples.",
+    "impact": "Small navigation labels could fall below readable contrast over scrolled content.",
+    "proposal": "Use local neutral foreground and verify the actual translucent fill/indicator across supported static packs; preserve an opaque filter-free accessibility fallback.",
+    "status": "tested",
+    "verification": "30 nav/glass tests; targeted inheritance/contrast checks; three shell accessibility/layout cases; six capture cases/eight PNGs; scoped analyzer and format passed. Static pack minimum contrast5.46. No device/FPS claim.",
+    "commit": "ab9f923565010684f9cc9264825607c82bd43ba4"
+  },
+  {
+    "id": "GLASS-04",
+    "page": "Frosted navigation",
+    "title": "Native material terminology needs precise provenance",
+    "priority": "P3",
+    "dimension": "copy",
+    "evidence": [
+      "576e391:lib/ui/widgets/glass_surface.dart",
+      "docs/qa/frosted-navigation/README.md",
+      "docs/qa/frosted-navigation/dark-normal-scrolled.png",
+      "docs/qa/frosted-navigation/light-normal-scrolled.png",
+      "test/home_navigation_test.dart",
+      "test/glass_surface_test.dart"
+    ],
+    "observed": "The app renders through Flutter; no Android OS cross-window or Compose glass API is used.",
+    "impact": "A platform-native claim would misrepresent the implementation.",
+    "proposal": "Document this as real in-app Flutter GPU glass on Android using supported framework APIs.",
+    "status": "tested",
+    "verification": "30 nav/glass tests; targeted inheritance/contrast checks; three shell accessibility/layout cases; six capture cases/eight PNGs; scoped analyzer and format passed. Static pack minimum contrast5.46. No device/FPS claim.",
+    "commit": "ab9f923565010684f9cc9264825607c82bd43ba4"
+  }
+]

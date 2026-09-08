@@ -17,9 +17,10 @@ The original screenshots, annotated pixel review, searchable index, motion captu
 - [Files](../../qa/clear-files/README.md): quieter browser hierarchy, correct folder retry and deleted-file review access.
 - [Activity](../../qa/clear-activity/README.md): unknown status remains unknown, requests lead and detail is progressive.
 - [More and settings](../../qa/settings-discovery/README.md): consistent discovery, less repetition and readable current choices.
+- [Frosted navigation](../../qa/frosted-navigation/README.md): real clipped content blur, readable foreground, safe list/action insets, and a solid accessibility fallback.
 - [Shared typography, surfaces and Material contract](shared-visual-system.md): measured roles and readable supporting text.
 
-The page captures were refreshed from the combined typography/icon candidate. Native glass and the final integration gate are in progress. Screenshot dimensions and source/capture commands are recorded in each page evidence folder.
+The page captures were refreshed from the combined typography/icon candidate. Frosted navigation is integrated and focused checks passed. The final integration and Android gates are in progress. Screenshot dimensions and source/capture commands are recorded in each page evidence folder.
 
 ## Shipping boundary
 
