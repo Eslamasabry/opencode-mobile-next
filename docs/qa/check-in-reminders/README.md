@@ -77,7 +77,11 @@ All10 capture cases were regenerated; the narrow light, dark controls and dark
 Inbox images were inspected. The independent correction reread passed at source
 level. These remain widget checks, not Android notification-delivery evidence.
 
-Visual follow-up found during integration: the Activity empty state can still
-say "All clear" beneath a due check-in row, because reminders intentionally do
-not increase the pending-request count. The coordinator is correcting that
-empty-state presentation before the final installed-app walkthrough.
+The visual follow-up is corrected: Activity no longer says "All clear" beneath
+a due check-in row. Reminders remain separate from pending-request counts.
+The source correction received independent review; the real embedded Activity
+regression passed in the combined 61-case Activity/monitor/A2A/editor/first-run/
+Tailscale/localization checkpoint above `be50da5`. Analyzer was clean (21.6s).
+Both Inbox capture cases passed and the light/dark images were inspected: the
+due row is visible, the contradictory empty state is absent, and background
+guidance and completion digests remain reachable.

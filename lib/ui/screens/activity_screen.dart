@@ -453,6 +453,15 @@ class _ActivityScreenState extends State<ActivityScreen> {
         attentionCount == 0 &&
         running.isEmpty &&
         controller.unifiedAttentionCount == 0;
+    final hasCheckIns =
+        !controller.isIsolated &&
+        controller.store.profiles.any((profile) {
+          if (!controller.isProfileReadable(profile.id)) return false;
+          final monitor = controller.profileMonitor;
+          final snapshot = monitor.snapshotFor(profile.id);
+          return snapshot.isCurrent &&
+              snapshot.dueCheckIns(monitor.rulesFor(profile.id)).isNotEmpty;
+        });
 
     final body = RefreshIndicator(
       onRefresh: _refresh,
@@ -465,17 +474,19 @@ class _ActivityScreenState extends State<ActivityScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
                 ProfileMonitorInbox(controller: controller),
-                const SizedBox(height: 40),
-                const ProductEmptyState(
-                  key: ValueKey('activity-all-clear'),
-                  icon: Icons.task_alt_rounded,
-                  title: 'All clear',
-                  scrollable: false,
-                  message:
-                      'Nothing needs you right now. Permission requests, '
-                      'questions, and running sessions appear here the '
-                      'moment a session asks.',
-                ),
+                if (!hasCheckIns) ...[
+                  const SizedBox(height: 40),
+                  const ProductEmptyState(
+                    key: ValueKey('activity-all-clear'),
+                    icon: Icons.task_alt_rounded,
+                    title: 'All clear',
+                    scrollable: false,
+                    message:
+                        'Nothing needs you right now. Permission requests, '
+                        'questions, and running sessions appear here the '
+                        'moment a session asks.',
+                  ),
+                ],
                 // An empty inbox is only reassuring if it would fill while
                 // the app is closed; when it would not, say what to turn on.
                 if (platformCapabilities.supportsBackgroundService &&

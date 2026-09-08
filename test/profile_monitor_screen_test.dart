@@ -6,6 +6,7 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profile_monitor.dart';
 import 'package:opencode_mobile/ui/screens/profile_monitor_screen.dart';
+import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'support/profile_monitor_fixture.dart';
 
 Future<void> _reveal(WidgetTester tester, Finder target) async {
@@ -206,6 +207,18 @@ void main() {
         controller.profileMonitor.snapshotFor('profile-1').pendingCount,
         0,
       );
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: ActivityScreen(controller: controller, embedded: true),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(find.textContaining('Time to check in'), findsOneWidget);
+      expect(find.byKey(const ValueKey('activity-all-clear')), findsNothing);
       await tester.pumpWidget(
         MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,

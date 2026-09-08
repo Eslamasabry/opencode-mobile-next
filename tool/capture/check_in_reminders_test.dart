@@ -108,6 +108,10 @@ void main() {
           }
           if (scenario == 'inbox') {
             expect(find.textContaining('Time to check in'), findsOneWidget);
+            expect(
+              find.byKey(const ValueKey('activity-all-clear')),
+              findsNothing,
+            );
           }
           if (scenario == 'unavailable') {
             expect(
