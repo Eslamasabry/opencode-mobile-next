@@ -795,7 +795,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       onTap: _showArchived,
                     ),
                   ),
-                const SliverToBoxAdapter(child: SizedBox(height: 96)),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 96 + MediaQuery.paddingOf(context).bottom,
+                  ),
+                ),
               ],
             ),
           ),
@@ -805,7 +809,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         Positioned(
           left: 16,
           right: 16,
-          bottom: 6,
+          bottom: 6 + MediaQuery.paddingOf(context).bottom,
           child: _QuickAskPill(
             creating: _creating,
             onTap: _creating ? null : _createSession,
@@ -1891,7 +1895,12 @@ class _WorkspaceFolderChooser extends StatelessWidget {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     return ListView(
       key: const ValueKey('workspace-folder-chooser'),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        8,
+        16,
+        96 + MediaQuery.paddingOf(context).bottom,
+      ),
       children: [
         if (notice != null)
           ListTile(

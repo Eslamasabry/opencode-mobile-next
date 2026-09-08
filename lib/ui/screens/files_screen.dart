@@ -991,6 +991,9 @@ class _FilesScreenState extends State<FilesScreen> {
         builder: (scrollController) => ListView.builder(
           controller: scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.paddingOf(context).bottom + 12,
+          ),
           itemCount: entries.length,
           itemBuilder: (context, i) {
             final node = entries[i];
@@ -1378,6 +1381,9 @@ class _FilesScreenState extends State<FilesScreen> {
         builder: (scrollController) => ListView.builder(
           controller: scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.paddingOf(context).bottom + 12,
+          ),
           itemCount: _symbols?.length ?? 0,
           itemBuilder: (context, index) {
             final symbol = _symbols![index];

@@ -107,6 +107,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final conn = ref.watch(connProvider);
     final navigator = Navigator.of(context);
     final activeTab = _safeTab(_tab, conn.capabilities);
+    final showDock =
+        MediaQuery.sizeOf(context).width < 760 &&
+        MediaQuery.viewInsetsOf(context).bottom == 0;
 
     // Audit §5: Activity replaces Terminal in primary navigation; Terminal is
     // reachable from Session and the More hub. One destination, one badge.
@@ -170,6 +173,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       canPop: false,
       onPopInvokedWithResult: _onRootPop,
       child: Scaffold(
+        // Scaffold publishes the measured dock height as body bottom padding.
+        // Root lists consume it as scroll space, so content can pass beneath
+        // the frosted surface while final rows and fixed actions remain usable.
+        extendBody: showDock,
         appBar: AppBar(
           title: _WorkspaceAppBarTitle(
             profileName: conn.profile?.name ?? 'OpenCode',
@@ -244,7 +251,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             );
           },
         ),
-        bottomNavigationBar: MediaQuery.sizeOf(context).width < 760
+        bottomNavigationBar: showDock
             ? SafeArea(
                 top: false,
                 minimum: const EdgeInsets.fromLTRB(16, 6, 16, 8),
@@ -333,10 +340,12 @@ class _ShellNavigationState extends State<_ShellNavigation> {
     // Resolve partial theme styles before both measuring and painting labels;
     // otherwise Text inherits body metrics while TextPainter measures defaults.
     final labelBase = theme.textTheme.labelSmall!;
-    final normal = labelBase.merge(navigation.labelTextStyle?.resolve({}));
-    final selected = labelBase.merge(
-      navigation.labelTextStyle?.resolve({WidgetState.selected}),
-    );
+    final normal = labelBase
+        .merge(navigation.labelTextStyle?.resolve({}))
+        .copyWith(color: GlassSurface.foregroundColor(theme));
+    final selected = labelBase
+        .merge(navigation.labelTextStyle?.resolve({WidgetState.selected}))
+        .copyWith(color: GlassSurface.foregroundColor(theme));
     final direction = Directionality.of(context);
     final key = (
       widget.width,
@@ -375,18 +384,28 @@ class _ShellNavigationState extends State<_ShellNavigation> {
     final requiredHeight = 32 + 4 + scaler.scale(_labelHeight) + 16;
     return MediaQuery.withClampedTextScaling(
       maxScaleFactor: _maxScale,
-      child: NavigationBar(
-        height: requiredHeight > 72 ? requiredHeight : 72,
-        backgroundColor: Colors.transparent,
-        labelTextStyle: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected) ? selected : normal,
+      child: NavigationBarTheme(
+        data: navigation.copyWith(
+          // Muted/primary roles can lose contrast when a bright or dark row
+          // passes beneath the translucent dock. Keep its foreground robust.
+          iconTheme: WidgetStatePropertyAll(
+            IconThemeData(color: GlassSurface.foregroundColor(theme)),
+          ),
         ),
-        animationDuration: GlassSurface.reduceEffects(context)
-            ? Duration.zero
-            : RetainedTabView.duration,
-        selectedIndex: widget.selectedIndex,
-        onDestinationSelected: widget.onSelected,
-        destinations: widget.destinations,
+        child: NavigationBar(
+          height: requiredHeight > 72 ? requiredHeight : 72,
+          backgroundColor: Colors.transparent,
+          labelTextStyle: WidgetStateProperty.resolveWith(
+            (states) =>
+                states.contains(WidgetState.selected) ? selected : normal,
+          ),
+          animationDuration: GlassSurface.reduceEffects(context)
+              ? Duration.zero
+              : RetainedTabView.duration,
+          selectedIndex: widget.selectedIndex,
+          onDestinationSelected: widget.onSelected,
+          destinations: widget.destinations,
+        ),
       ),
     );
   }

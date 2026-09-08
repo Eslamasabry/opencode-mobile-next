@@ -184,7 +184,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
         return DesktopScrollbarArea(
           builder: (scrollController) => ListView(
             controller: scrollController,
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+            padding: EdgeInsets.fromLTRB(
+              12,
+              8,
+              12,
+              24 + MediaQuery.paddingOf(context).bottom,
+            ),
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),

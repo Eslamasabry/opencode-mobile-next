@@ -1,15 +1,21 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
-/// A quiet tonal material for navigation chrome.
+/// Bounded frosted navigation, rendered by Flutter's Android GPU pipeline.
 ///
-/// This surface lives outside scrolling content, so a backdrop blur would only
-/// blur a solid scaffold. A solid tint, light-catching edge and shallow depth provide
-/// separation without pretending to sample the content behind it. Accessibility
-/// settings remove decorative depth and strengthen the surface boundary.
+/// The shell extends scrolling content beneath this clipped backdrop filter.
+/// This is in-app Flutter glass, not Android OS cross-window or Compose blur.
+/// Accessibility settings remove the filter and use a fully opaque material.
 class GlassSurface extends StatelessWidget {
   const GlassSurface({super.key, required this.child});
 
   final Widget child;
+
+  /// Neutral ink stays readable even when contrasting content crosses behind
+  /// the translucent material; muted palette roles are not sufficient here.
+  static Color foregroundColor(ThemeData theme) =>
+      theme.brightness == Brightness.dark ? Colors.white : Colors.black;
 
   static bool reduceEffects(BuildContext context) {
     final media = MediaQuery.of(context);
@@ -30,6 +36,21 @@ class GlassSurface extends StatelessWidget {
       scheme.surfaceContainerLow,
     );
 
+    final material = DecoratedBox(
+      decoration: BoxDecoration(
+        color: opaque
+            ? scheme.surfaceContainerHigh
+            : tint.withValues(alpha: dark ? .78 : .72),
+        borderRadius: radius,
+        border: Border.all(
+          color: opaque
+              ? scheme.outline
+              : scheme.onSurface.withValues(alpha: dark ? .16 : .12),
+        ),
+      ),
+      child: child,
+    );
+
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: radius,
@@ -37,7 +58,7 @@ class GlassSurface extends StatelessWidget {
             ? const []
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: dark ? .18 : .05),
+                  color: Colors.black.withValues(alpha: dark ? .18 : .06),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -45,18 +66,12 @@ class GlassSurface extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: radius,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: opaque ? scheme.surfaceContainerHigh : tint,
-            borderRadius: radius,
-            border: Border.all(
-              color: opaque
-                  ? scheme.outline
-                  : scheme.onSurface.withValues(alpha: dark ? .14 : .10),
-            ),
-          ),
-          child: child,
-        ),
+        child: opaque
+            ? material
+            : BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: material,
+              ),
       ),
     );
   }
