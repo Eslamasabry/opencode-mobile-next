@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../api/models.dart';
+import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
+
+AppLocalizations _reviewL10n(BuildContext context) =>
+    lookupAppLocalizations(Localizations.localeOf(context));
 
 /// Full-screen diff reader shared by the Changes sheet and review surfaces.
 ///
 /// One sticky header per file (name bold, directory muted, +N/−M counts),
-/// then its lines. Unchanged context collapses into a "+N lines" bar; each
-/// hunk ends in an "Expand" bar that reveals 20 lines per tap. Changed lines
-/// carry a 3px colour bar at the far left of the gutter and an ~8% tint; line
+/// then its lines. Unchanged context can be revealed 20 lines at a time and
+/// collapsed again. Changed lines carry explicit plus/minus markers, semantic
+/// change labels, a full-height 3px rail and an ~8% tint; line
 /// numbers sit in a fixed-width muted mono gutter. Code wraps below 600dp and
 /// scrolls horizontally above it.
 ///
@@ -50,6 +54,7 @@ class DiffView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = _reviewL10n(context);
     final single = diffs.length == 1 ? diffs.single : null;
     final copyText = single == null
         ? null
@@ -67,17 +72,35 @@ class DiffView extends StatelessWidget {
           if (allowCopy && single != null)
             IconButton(
               tooltip: single.after != null
-                  ? 'Copy updated file'
-                  : 'Copy patch',
+                  ? l10n.reviewCopyFile
+                  : l10n.reviewCopyPatch,
               icon: const Icon(AppIcons.copy),
               onPressed: copyText == null || copyText.isEmpty
                   ? null
-                  : () => Clipboard.setData(ClipboardData(text: copyText)),
+                  : () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      try {
+                        await Clipboard.setData(ClipboardData(text: copyText));
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              single.after != null
+                                  ? l10n.reviewCopiedFile
+                                  : l10n.reviewCopiedPatch,
+                            ),
+                          ),
+                        );
+                      } catch (_) {
+                        messenger.showSnackBar(
+                          SnackBar(content: Text(l10n.reviewCopyFailed)),
+                        );
+                      }
+                    },
             ),
         ],
       ),
       body: diffs.isEmpty
-          ? const Center(child: Text('No changes'))
+          ? Center(child: Text(l10n.reviewNoChanges))
           : SafeArea(top: false, child: _DiffBody(diffs: diffs)),
     );
   }
@@ -99,7 +122,15 @@ class _DiffBody extends StatelessWidget {
             for (final diff in diffs) ...[
               SliverPersistentHeader(
                 pinned: true,
-                delegate: _FileHeaderDelegate(diff: diff, theme: theme),
+                delegate: _FileHeaderDelegate(
+                  diff: diff,
+                  theme: theme,
+                  extent: _fileHeaderHeight(
+                    context,
+                    diff,
+                    constraints.maxWidth,
+                  ),
+                ),
               ),
               _DiffFileLines(diff: diff, wrap: wrap),
             ],
@@ -112,10 +143,14 @@ class _DiffBody extends StatelessWidget {
         // line so no row gets its own scrollbar.
         final longest = _longestLine(diffs);
         final codeWidth = _measure(context, longest);
-        final width = (codeWidth + _gutterWidth(context, diffs) + 48).clamp(
-          constraints.maxWidth,
-          double.infinity,
-        );
+        final width =
+            (codeWidth +
+                    _gutterWidth(context, diffs) +
+                    MediaQuery.textScalerOf(
+                      context,
+                    ).scale(AppTheme.codeFontSize) +
+                    48)
+                .clamp(constraints.maxWidth, double.infinity);
         return SingleChildScrollView(
           key: const Key('diff-view-horizontal'),
           scrollDirection: Axis.horizontal,
@@ -171,16 +206,47 @@ double _gutterWidth(BuildContext context, List<FileDiff> diffs) {
   return glyph * .62 * digits + 14;
 }
 
+TextStyle _fileNameStyle(ThemeData theme) =>
+    theme.textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w600);
+
+double _fileHeaderHeight(BuildContext context, FileDiff diff, double width) {
+  final theme = Theme.of(context);
+  final scaler = MediaQuery.textScalerOf(context);
+  final name = TextPainter(
+    text: TextSpan(
+      text: diff.file.split('/').last,
+      style: _fileNameStyle(theme),
+    ),
+    textDirection: Directionality.of(context),
+    textScaler: scaler,
+    maxLines: 2,
+  )..layout(maxWidth: (width - 24).clamp(1, double.infinity));
+  final detail = TextPainter(
+    text: TextSpan(text: 'Path +0 −0', style: theme.textTheme.bodySmall),
+    textDirection: Directionality.of(context),
+    textScaler: scaler,
+  )..layout();
+  final height = name.height + detail.height + 25;
+  name.dispose();
+  detail.dispose();
+  return height;
+}
+
 class _FileHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const _FileHeaderDelegate({required this.diff, required this.theme});
+  const _FileHeaderDelegate({
+    required this.diff,
+    required this.theme,
+    required this.extent,
+  });
 
   final FileDiff diff;
   final ThemeData theme;
+  final double extent;
 
   @override
-  double get minExtent => 44;
+  double get minExtent => extent;
   @override
-  double get maxExtent => 44;
+  double get maxExtent => extent;
 
   @override
   Widget build(
@@ -193,7 +259,15 @@ class _FileHeaderDelegate extends SliverPersistentHeaderDelegate {
     final directory = segments.length > 1
         ? '${segments.sublist(0, segments.length - 1).join('/')}/'
         : '';
-    final counts = diff.counts;
+    final rows = _DiffModel.of(diff).allRows;
+    final counts = (
+      added:
+          diff.additions ??
+          rows.where((row) => row.kind == DiffRowKind.added).length,
+      removed:
+          diff.deletions ??
+          rows.where((row) => row.kind == DiffRowKind.removed).length,
+    );
     final mono = theme.textTheme.labelMedium?.copyWith(
       fontFamily: AppTheme.monoFamily,
       fontWeight: FontWeight.w600,
@@ -204,50 +278,64 @@ class _FileHeaderDelegate extends SliverPersistentHeaderDelegate {
       elevation: overlapsContent ? 1 : 0,
       child: Container(
         height: maxExtent,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           border: Border(bottom: BorderSide(color: AppTheme.hairline(theme))),
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: name,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    if (directory.isNotEmpty)
-                      TextSpan(
-                        text: '  $directory',
-                        style: TextStyle(color: AppTheme.mutedOf(theme)),
-                      ),
-                    if (diff.status case final status?)
-                      TextSpan(
-                        text: '  $status',
-                        style: TextStyle(color: AppTheme.mutedOf(theme)),
-                      ),
-                  ],
-                ),
-                maxLines: 1,
+        child: Tooltip(
+          message: diff.file,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                name,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontFamily: AppTheme.monoFamily,
-                ),
+                style: _fileNameStyle(theme),
               ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              '+${counts.added}',
-              style: mono?.copyWith(color: AppTheme.successOf(theme)),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '−${counts.removed}',
-              style: mono?.copyWith(color: theme.colorScheme.error),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      [
+                        if (directory.isNotEmpty) directory,
+                        if (diff.status != null) diff.status!,
+                      ].join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppTheme.mutedOf(theme),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Semantics(
+                    label: _reviewL10n(
+                      context,
+                    ).reviewCounts(counts.added, counts.removed),
+                    excludeSemantics: true,
+                    child: Row(
+                      children: [
+                        Text(
+                          '+${counts.added}',
+                          style: mono?.copyWith(
+                            color: AppTheme.successOf(theme),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '−${counts.removed}',
+                          style: mono?.copyWith(color: theme.colorScheme.error),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -255,7 +343,9 @@ class _FileHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_FileHeaderDelegate oldDelegate) =>
-      oldDelegate.diff != diff || oldDelegate.theme != theme;
+      oldDelegate.diff != diff ||
+      oldDelegate.theme != theme ||
+      oldDelegate.extent != extent;
 }
 
 enum DiffRowKind { context, added, removed, meta }
@@ -501,6 +591,20 @@ class _DiffFileLinesState extends State<_DiffFileLines> {
       final top = (_shownTop[index] ?? 0).clamp(0, gap.count);
       final bottom = (_shownBottom[index] ?? 0).clamp(0, gap.count - top);
       final remaining = gap.count - top - bottom;
+      if (rows != null && top + bottom > 0) {
+        entries.add(
+          _GapBar(
+            key: Key('diff-collapse-$index'),
+            label: _reviewL10n(context).reviewHideContext,
+            icon: Icons.unfold_less_rounded,
+            gutter: gutter,
+            onTap: () => setState(() {
+              _shownTop.remove(index);
+              _shownBottom.remove(index);
+            }),
+          ),
+        );
+      }
       if (rows != null) {
         for (final row in rows.take(top)) {
           entries.add(_LineRow(row: row, gutter: gutter, wrap: widget.wrap));
@@ -512,7 +616,9 @@ class _DiffFileLinesState extends State<_DiffFileLines> {
           entries.add(
             _GapBar(
               key: Key('diff-expand-down-$index'),
-              label: 'Expand',
+              label: _reviewL10n(
+                context,
+              ).reviewShowNext(remaining.clamp(1, DiffView.expandStep)),
               icon: Icons.keyboard_arrow_down_rounded,
               gutter: gutter,
               onTap: () => _expandTop(index),
@@ -522,7 +628,12 @@ class _DiffFileLinesState extends State<_DiffFileLines> {
         entries.add(
           _GapBar(
             key: Key('diff-gap-$index'),
-            label: '+$remaining ${remaining == 1 ? 'line' : 'lines'}',
+            label: expandable
+                ? _reviewL10n(context).reviewShowPrevious(
+                    remaining.clamp(1, DiffView.expandStep),
+                    remaining,
+                  )
+                : _reviewL10n(context).reviewMissingContext(remaining),
             icon: expandable ? Icons.keyboard_arrow_up_rounded : null,
             gutter: gutter,
             onTap: expandable ? () => _expandBottom(index) : null,
@@ -540,7 +651,7 @@ class _DiffFileLinesState extends State<_DiffFileLines> {
         Padding(
           padding: const EdgeInsets.all(20),
           child: Text(
-            '(empty diff)',
+            _reviewL10n(context).reviewEmptyDiff,
             style: TextStyle(color: AppTheme.mutedOf(theme)),
           ),
         ),
@@ -581,42 +692,68 @@ class _LineRow extends StatelessWidget {
             : null,
       ),
     );
-    return Container(
-      color: accent?.withValues(alpha: .08),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 3px marker at the far left of the gutter; transparent on context
-          // lines so numbers stay aligned.
-          Container(
-            width: 3,
-            color: row.kind == DiffRowKind.meta ? null : accent,
-            child: const SizedBox(height: 1),
+    final kindLabel = switch (row.kind) {
+      DiffRowKind.added => _reviewL10n(context).reviewAdded,
+      DiffRowKind.removed => _reviewL10n(context).reviewRemoved,
+      DiffRowKind.context => _reviewL10n(context).reviewUnchanged,
+      DiffRowKind.meta => _reviewL10n(context).reviewPatchNote,
+    };
+    return Semantics(
+      label: row.gutterNo == null
+          ? _reviewL10n(context).reviewNoteDescription(kindLabel, row.text)
+          : _reviewL10n(
+              context,
+            ).reviewLineDescription(kindLabel, row.gutterNo!, row.text),
+      excludeSemantics: true,
+      child: Container(
+        decoration: BoxDecoration(
+          color: accent?.withValues(alpha: .08),
+          border: Border(
+            left: BorderSide(
+              width: 3,
+              color: row.kind == DiffRowKind.meta
+                  ? Colors.transparent
+                  : accent ?? Colors.transparent,
+            ),
           ),
-          SizedBox(
-            width: gutter,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Text(
-                row.gutterNo?.toString() ?? '',
-                textAlign: TextAlign.right,
-                style: _codeStyle(
-                  theme,
-                  color: AppTheme.mutedOf(theme).withValues(alpha: .75),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: gutter,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: Text(
+                  row.gutterNo?.toString() ?? '',
+                  textAlign: TextAlign.right,
+                  style: _codeStyle(theme, color: AppTheme.mutedOf(theme)),
                 ),
               ),
             ),
-          ),
-          if (wrap)
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: text,
-              ),
-            )
-          else
-            Padding(padding: const EdgeInsets.only(right: 16), child: text),
-        ],
+            SizedBox(
+              width:
+                  MediaQuery.textScalerOf(
+                    context,
+                  ).scale(AppTheme.codeFontSize) +
+                  6,
+              child: Text(switch (row.kind) {
+                DiffRowKind.added => '+',
+                DiffRowKind.removed => '−',
+                _ => '',
+              }, style: _codeStyle(theme, color: accent)),
+            ),
+            if (wrap)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: text,
+                ),
+              )
+            else
+              Padding(padding: const EdgeInsets.only(right: 16), child: text),
+          ],
+        ),
       ),
     );
   }
@@ -647,17 +784,22 @@ class _GapBar extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 32),
+          constraints: const BoxConstraints(minHeight: 48),
           child: Row(
             children: [
               SizedBox(width: gutter + 3),
               if (icon != null) Icon(icon, size: 16, color: muted),
               if (icon != null) const SizedBox(width: 6),
-              Text(
-                label,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: muted,
-                  fontFamily: AppTheme.monoFamily,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 8,
+                  ),
+                  child: Text(
+                    label,
+                    style: theme.textTheme.labelMedium?.copyWith(color: muted),
+                  ),
                 ),
               ),
             ],

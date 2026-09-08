@@ -1976,5 +1976,80 @@
   "workspaceDismissNotice": "Dismiss",
   "workspaceManageProject": "Manage project",
   "workspaceManageProjectHint": "Switch project, worktrees, and project health",
-  "workspaceManage": "Manage"
+  "workspaceManage": "Manage",
+  "reviewCopiedFile": "Updated file copied",
+  "reviewCopiedPatch": "Patch copied",
+  "reviewCopyFailed": "Could not copy. Try again.",
+  "reviewCopyFile": "Copy updated file",
+  "reviewCopyPatch": "Copy patch",
+  "reviewNoChanges": "No changes",
+  "reviewEmptyDiff": "No diff content",
+  "reviewHideContext": "Hide revealed context",
+  "reviewAdded": "Added",
+  "reviewRemoved": "Removed",
+  "reviewUnchanged": "Unchanged",
+  "reviewPatchNote": "Patch note",
+  "reviewShowNext": "Show next {count} lines",
+  "@reviewShowNext": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reviewShowPrevious": "Show {count} previous lines ({remaining} hidden)",
+  "@reviewShowPrevious": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "reviewMissingContext": "{count} unchanged lines not included in patch",
+  "@reviewMissingContext": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reviewCounts": "{added} added, {removed} removed",
+  "@reviewCounts": {
+    "placeholders": {
+      "added": {
+        "type": "int"
+      },
+      "removed": {
+        "type": "int"
+      }
+    }
+  },
+  "reviewLineDescription": "{kind}, line {number}: {text}",
+  "@reviewLineDescription": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewNoteDescription": "{kind}: {text}",
+  "@reviewNoteDescription": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  }
 }

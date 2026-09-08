@@ -8294,6 +8294,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage'**
   String get workspaceManage;
+
+  /// No description provided for @reviewCopiedFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated file copied'**
+  String get reviewCopiedFile;
+
+  /// No description provided for @reviewCopiedPatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Patch copied'**
+  String get reviewCopiedPatch;
+
+  /// No description provided for @reviewCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy. Try again.'**
+  String get reviewCopyFailed;
+
+  /// No description provided for @reviewCopyFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy updated file'**
+  String get reviewCopyFile;
+
+  /// No description provided for @reviewCopyPatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy patch'**
+  String get reviewCopyPatch;
+
+  /// No description provided for @reviewNoChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'No changes'**
+  String get reviewNoChanges;
+
+  /// No description provided for @reviewEmptyDiff.
+  ///
+  /// In en, this message translates to:
+  /// **'No diff content'**
+  String get reviewEmptyDiff;
+
+  /// No description provided for @reviewHideContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide revealed context'**
+  String get reviewHideContext;
+
+  /// No description provided for @reviewAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get reviewAdded;
+
+  /// No description provided for @reviewRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed'**
+  String get reviewRemoved;
+
+  /// No description provided for @reviewUnchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Unchanged'**
+  String get reviewUnchanged;
+
+  /// No description provided for @reviewPatchNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Patch note'**
+  String get reviewPatchNote;
+
+  /// No description provided for @reviewShowNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Show next {count} lines'**
+  String reviewShowNext(int count);
+
+  /// No description provided for @reviewShowPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {count} previous lines ({remaining} hidden)'**
+  String reviewShowPrevious(int count, int remaining);
+
+  /// No description provided for @reviewMissingContext.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unchanged lines not included in patch'**
+  String reviewMissingContext(int count);
+
+  /// No description provided for @reviewCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'{added} added, {removed} removed'**
+  String reviewCounts(int added, int removed);
+
+  /// No description provided for @reviewLineDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind}, line {number}: {text}'**
+  String reviewLineDescription(String kind, int number, String text);
+
+  /// No description provided for @reviewNoteDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind}: {text}'**
+  String reviewNoteDescription(String kind, String text);
 }
 
 class _AppLocalizationsDelegate
