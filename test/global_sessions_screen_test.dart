@@ -112,10 +112,11 @@ GlobalSessionResult _result(
   bool archived = false,
   String? directory,
   String? workspace,
+  String? title,
 }) => GlobalSessionResult(
   session: Session(
     id: 'ses_$index',
-    title: 'Session $index',
+    title: title ?? 'Session $index',
     projectID: 'project_$index',
     workspaceID: workspace,
     directory: directory ?? '/work/project-$index',
@@ -820,6 +821,31 @@ void main() {
     expect(find.text('stolen chat opened'), findsOneWidget);
     // Opening did not re-route through the stale stored location.
     expect(controller.locations, isEmpty);
+  });
+
+  testWidgets('placeholder titles stay readable in the list and confirmation', (
+    tester,
+  ) async {
+    const rawTitle = 'New session - 2026-09-09T10:24:36.000Z';
+    final result = _result(
+      2,
+      directory: '/work/other',
+      workspace: 'ws-remote',
+      title: rawTitle,
+    );
+    final repository = _FinderRepository((query) async => [result]);
+    final controller = await _controller(repository);
+    controller.directory = '/work/active';
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    expect(find.text('New session'), findsOneWidget);
+    expect(find.textContaining('2026-09-09T10:24'), findsNothing);
+    await _continueHere(tester, 'ses_2');
+    expect(find.textContaining('“New session” will belong'), findsOneWidget);
+    expect(find.textContaining('2026-09-09T10:24'), findsNothing);
+    expect(result.session.title, rawTitle);
+    expect(repository.stealCalls, isEmpty);
   });
 
   testWidgets('a failed steal reports inline and keeps the list', (

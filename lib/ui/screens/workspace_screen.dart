@@ -377,6 +377,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         .toList();
     final archived = widget.controller.archivedSessions();
     final capabilities = widget.controller.capabilities;
+    final largeProjectText = MediaQuery.textScalerOf(context).scale(14) > 18;
     final partial =
         widget.controller.hasMoreSessions || widget.controller.sessionsLoading;
 
@@ -525,39 +526,43 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           _projects?.isNotEmpty == true)
                         ListTile(
                           key: const ValueKey('current-project-entry'),
-                          leading: const Icon(Icons.folder_rounded),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 8,
+                          ),
+                          leading: const Icon(Icons.folder_outlined, size: 24),
                           title: Text(
                             _selectedProject?.name ?? 'Choose a project',
+                            style: Theme.of(context).textTheme.titleLarge,
                           ),
-                          subtitle: Text(
-                            _contextSubtitle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                          subtitle: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _contextSubtitle,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (largeProjectText &&
+                                  ManageProjectScreen.isAvailable(capabilities))
+                                _manageProjectAction(l10n),
+                            ],
                           ),
-                          // Management lives with the project it manages:
-                          // a labelled action on the project row, not a row
-                          // of its own among the sessions and not a fourth
-                          // icon in the connection bar.
+                          // At large text the labelled management action sits
+                          // below the path, leaving the project name room.
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (ManageProjectScreen.isAvailable(
-                                widget.controller.capabilities,
-                              ))
-                                Tooltip(
-                                  message: l10n.workspaceManageProjectHint,
-                                  child: TextButton(
-                                    key: const ValueKey('manage-project-entry'),
-                                    onPressed: _openManageProject,
-                                    style: TextButton.styleFrom(
-                                      minimumSize: const Size(48, 48),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                      ),
-                                    ),
-                                    child: Text(l10n.workspaceManage),
-                                  ),
-                                ),
+                              if (!largeProjectText &&
+                                  ManageProjectScreen.isAvailable(capabilities))
+                                _manageProjectAction(l10n),
                               const Icon(Icons.unfold_more_rounded),
                             ],
                           ),
@@ -573,9 +578,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           title: Text(_basename(_selectedDirectory!)),
                           subtitle: Text(
                             'Active session directory · $_selectedDirectory',
-                            maxLines: 2,
+                            style: Theme.of(context).textTheme.bodySmall,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          onTap: () =>
+                              _showDirectoryDetails(_selectedDirectory!),
                         ),
                       if (capabilities.projectManagement &&
                           _workspaceError != null)
@@ -596,8 +604,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           title: Text(_basename(widget.controller.directory!)),
                           subtitle: Text(
                             widget.controller.directory!,
-                            maxLines: 2,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          onTap: () => _showDirectoryDetails(
+                            widget.controller.directory!,
                           ),
                         ),
                     ],
@@ -783,6 +795,33 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     );
   }
 
+  Widget _manageProjectAction(AppLocalizations l10n) => Tooltip(
+    message: l10n.workspaceManageProjectHint,
+    child: TextButton(
+      key: const ValueKey('manage-project-entry'),
+      onPressed: _openManageProject,
+      style: TextButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+      ),
+      child: Text(l10n.workspaceManage),
+    ),
+  );
+
+  Future<void> _showDirectoryDetails(String directory) => showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(_basename(directory)),
+      content: SingleChildScrollView(child: SelectableText(directory)),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(MaterialLocalizations.of(context).closeButtonLabel),
+        ),
+      ],
+    ),
+  );
+
   void _openSession(Session session) {
     Navigator.of(context).pushNamed('/chat/${session.id}');
   }
@@ -853,10 +892,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               ListTile(
                 leading: const Icon(Icons.folder_rounded),
                 title: Text(_selectedProject?.name ?? 'No project selected'),
-                subtitle: Text(
+                subtitle: SelectableText(
                   _contextSubtitle,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(sheetContext).textTheme.bodySmall,
                 ),
               ),
               const Divider(height: 1),
@@ -1701,7 +1739,6 @@ class _QuickAskPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final isolated = onIsolatedTask;
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final compact =
@@ -1712,13 +1749,10 @@ class _QuickAskPill extends StatelessWidget {
     // task keeps its own labelled target instead of an unexplained glyph.
     return Material(
       key: const ValueKey('workspace-quick-ask'),
-      color: scheme.surfaceContainerLow,
-      elevation: 6,
-      shadowColor: scheme.surfaceContainerLowest,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: .85)),
-      ),
+      // The navigation dock supplies depth. Keep this action row quiet and
+      // opaque so scrolling session text never competes behind its controls.
+      color: theme.scaffoldBackgroundColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.all(6),
         child: Row(

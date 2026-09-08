@@ -273,10 +273,15 @@ void main() {
       c.known = false;
       c.publish();
       await frames(tester);
+      expect(find.text('Review status unknown'), findsOneWidget);
+      await tester.tap(find.text('Review status unknown'));
+      await frames(tester);
       expect(
         find.textContaining('Unreviewed results are unknown.'),
         findsOneWidget,
       );
+      await tester.tap(find.text('Close'));
+      await frames(tester);
       c.known = true;
       c.partial = true;
       c.publish();

@@ -166,6 +166,32 @@ double _top(WidgetTester tester, Finder finder) => tester.getTopLeft(finder).dy;
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  testWidgets(
+    'project path is compact and its complete value can be inspected',
+    (tester) async {
+      final controller = await _controller();
+      addTearDown(controller.dispose);
+      const path = '/work/app/very-long-project-folder/nested/directory';
+      controller.directory = path;
+      await tester.pumpWidget(_app(controller));
+      await _pumpFrames(tester);
+      final project = find.byKey(const ValueKey('current-project-entry'));
+      final pathText = find.descendant(of: project, matching: find.text(path));
+      expect(tester.widget<Text>(pathText).maxLines, 1);
+      await tester.tap(
+        find.descendant(of: project, matching: find.text('OpenCode Mobile')),
+      );
+      await _pumpFrames(tester);
+      expect(find.byType(SelectableText), findsOneWidget);
+      expect(
+        tester.widget<SelectableText>(find.byType(SelectableText)).data,
+        path,
+      );
+      expect(find.text('Switch project'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   for (final width in [320.0, 390.0]) {
     for (final textScale in [1.0, 2.0]) {
       for (final dark in [false, true]) {

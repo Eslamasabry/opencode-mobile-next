@@ -6765,6 +6765,12 @@ abstract class AppLocalizations {
   /// **'Last observed state. Reconnect or refresh to check current work and requests.'**
   String get returnBriefStale;
 
+  /// No description provided for @returnBriefStatusUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Review status unknown'**
+  String get returnBriefStatusUnknown;
+
   /// No description provided for @returnBriefUnknown.
   ///
   /// In en, this message translates to:
