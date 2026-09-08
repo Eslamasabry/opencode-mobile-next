@@ -7742,6 +7742,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get fileCancel;
+
+  /// No description provided for @agentAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Codex account'**
+  String get agentAccountTitle;
+
+  /// No description provided for @agentAccountScopeLost.
+  ///
+  /// In en, this message translates to:
+  /// **'This connection changed. Return to Servers and open the account for the connected profile.'**
+  String get agentAccountScopeLost;
+
+  /// No description provided for @agentAccountRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh account'**
+  String get agentAccountRefresh;
+
+  /// No description provided for @agentAccountLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the host account'**
+  String get agentAccountLoading;
+
+  /// No description provided for @agentAccountUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Account panel unavailable'**
+  String get agentAccountUnavailable;
+
+  /// No description provided for @agentAccountReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the account'**
+  String get agentAccountReadFailed;
+
+  /// No description provided for @agentAccountDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection interrupted'**
+  String get agentAccountDisconnected;
+
+  /// No description provided for @agentAccountConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in on the host'**
+  String get agentAccountConnected;
+
+  /// No description provided for @agentAccountSignedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to sign in'**
+  String get agentAccountSignedOut;
+
+  /// No description provided for @agentAccountInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in in progress'**
+  String get agentAccountInProgress;
+
+  /// No description provided for @agentAccountNeedsAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in needs attention'**
+  String get agentAccountNeedsAttention;
+
+  /// No description provided for @agentAccountNoAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'Host does not require sign-in'**
+  String get agentAccountNoAuth;
+
+  /// No description provided for @agentAccountApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get agentAccountApiKey;
+
+  /// No description provided for @agentAccountHostAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'Host authentication'**
+  String get agentAccountHostAuth;
+
+  /// No description provided for @agentAccountPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan: {plan}'**
+  String agentAccountPlan(String plan);
+
+  /// No description provided for @agentAccountHostNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The official Codex runtime keeps your provider credentials. Account changes apply to this host, including other profiles connected to it.'**
+  String get agentAccountHostNote;
+
+  /// No description provided for @agentAccountUnsupportedDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'This panel is verified with Codex 0.153.4. The connected runtime may not support these account methods.'**
+  String get agentAccountUnsupportedDetail;
+
+  /// No description provided for @agentAccountReconnectDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Account data and the sign-in code were cleared. Reconnect to refresh. Sign-in will not restart automatically.'**
+  String get agentAccountReconnectDetail;
+
+  /// No description provided for @agentAccountSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with ChatGPT'**
+  String get agentAccountSignIn;
+
+  /// No description provided for @agentAccountSignInNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Start an official device-code sign-in on this host. Complete it in your browser; the app never receives your provider tokens.'**
+  String get agentAccountSignInNote;
+
+  /// No description provided for @agentAccountLimits.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate limits'**
+  String get agentAccountLimits;
+
+  /// No description provided for @agentAccountLimitsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate limits are unavailable for this account or host.'**
+  String get agentAccountLimitsUnavailable;
+
+  /// No description provided for @agentAccountUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Token usage'**
+  String get agentAccountUsage;
+
+  /// No description provided for @agentAccountUsageUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Token usage is unavailable for this account or host.'**
+  String get agentAccountUsageUnavailable;
+
+  /// No description provided for @agentAccountLifetimeTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifetime tokens'**
+  String get agentAccountLifetimeTokens;
+
+  /// No description provided for @agentAccountPeakTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak daily tokens'**
+  String get agentAccountPeakTokens;
+
+  /// No description provided for @agentAccountUsageNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Values are reported by the host. Missing values are unknown, not zero. Token counts are not a bill or remaining message allowance.'**
+  String get agentAccountUsageNote;
+
+  /// No description provided for @agentAccountUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last checked {time}'**
+  String agentAccountUpdated(String time);
+
+  /// No description provided for @agentAccountStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Requesting a sign-in code'**
+  String get agentAccountStarting;
+
+  /// No description provided for @agentAccountWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish sign-in in your browser'**
+  String get agentAccountWaiting;
+
+  /// No description provided for @agentAccountCancelling.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelling sign-in'**
+  String get agentAccountCancelling;
+
+  /// No description provided for @agentAccountCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in cancelled'**
+  String get agentAccountCancelled;
+
+  /// No description provided for @agentAccountLoginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in did not complete. Check the host and try again.'**
+  String get agentAccountLoginFailed;
+
+  /// No description provided for @agentAccountLoginUncertain.
+  ///
+  /// In en, this message translates to:
+  /// **'The host could not confirm sign-in or cancellation. It may still be waiting. Check the official host runtime before starting again.'**
+  String get agentAccountLoginUncertain;
+
+  /// No description provided for @agentAccountLoginCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in completed. Checking the account.'**
+  String get agentAccountLoginCompleted;
+
+  /// No description provided for @agentAccountCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter this one-time code on the official sign-in page. Keep it private.'**
+  String get agentAccountCodeHint;
+
+  /// No description provided for @agentAccountOpenSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Open official sign-in'**
+  String get agentAccountOpenSignIn;
+
+  /// No description provided for @agentAccountCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel sign-in'**
+  String get agentAccountCancel;
+
+  /// No description provided for @agentAccountAllowance.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported allowance'**
+  String get agentAccountAllowance;
+
+  /// No description provided for @agentAccountPercentUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% used'**
+  String agentAccountPercentUsed(int percent);
+
+  /// No description provided for @agentAccountWindowUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Window duration unavailable'**
+  String get agentAccountWindowUnknown;
+
+  /// No description provided for @agentAccountWindowMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}-minute window'**
+  String agentAccountWindowMinutes(int minutes);
+
+  /// No description provided for @agentAccountWindowHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}-hour window'**
+  String agentAccountWindowHours(int hours);
+
+  /// No description provided for @agentAccountWindowDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}-day window'**
+  String agentAccountWindowDays(int days);
+
+  /// No description provided for @agentAccountResetUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset time unavailable'**
+  String get agentAccountResetUnknown;
+
+  /// No description provided for @agentAccountReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Resets {time}'**
+  String agentAccountReset(String time);
 }
 
 class _AppLocalizationsDelegate

@@ -21,6 +21,7 @@ import '../widgets/managed_server_health.dart';
 import '../widgets/product_states.dart';
 import 'demo_screen.dart';
 import 'attention_overview_screen.dart';
+import 'agent_account_screen.dart';
 import 'pairing_scanner_screen.dart';
 import 'tailscale_setup_screen.dart';
 import '../../state/tailscale_address.dart';
@@ -294,6 +295,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
   @override
   Widget build(BuildContext context) {
     final bootstrap = ref.watch(bootstrapProvider);
+    final accountConnection = ref.watch(connProvider);
     return Scaffold(
       bottomNavigationBar: SafeArea(
         child: Padding(
@@ -554,11 +556,35 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                         if (v == 'edit') _edit(existing: p);
                         if (v == 'del') _delete(p);
                         if (v == 'conn') _connect(p);
+                        if (v == 'account') {
+                          Navigator.of(context).push<void>(
+                            MaterialPageRoute(
+                              builder: (_) => AgentAccountScreen(
+                                connection: accountConnection,
+                              ),
+                            ),
+                          );
+                        }
                       },
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'conn', child: Text('Connect')),
-                        PopupMenuItem(value: 'edit', child: Text('Edit')),
-                        PopupMenuItem(value: 'del', child: Text('Remove')),
+                      itemBuilder: (_) => [
+                        if (p.id == activeId &&
+                            accountConnection.isConnected &&
+                            accountConnection.capabilities.agentAccount)
+                          PopupMenuItem(
+                            value: 'account',
+                            child: Text(
+                              _connectionL10n(context).agentAccountTitle,
+                            ),
+                          ),
+                        const PopupMenuItem(
+                          value: 'conn',
+                          child: Text('Connect'),
+                        ),
+                        const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                        const PopupMenuItem(
+                          value: 'del',
+                          child: Text('Remove'),
+                        ),
                       ],
                     ),
                   ),

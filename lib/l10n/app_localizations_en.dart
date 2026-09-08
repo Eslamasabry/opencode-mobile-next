@@ -4626,4 +4626,168 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileCancel => 'Cancel';
+
+  @override
+  String get agentAccountTitle => 'Codex account';
+
+  @override
+  String get agentAccountScopeLost =>
+      'This connection changed. Return to Servers and open the account for the connected profile.';
+
+  @override
+  String get agentAccountRefresh => 'Refresh account';
+
+  @override
+  String get agentAccountLoading => 'Checking the host account';
+
+  @override
+  String get agentAccountUnavailable => 'Account panel unavailable';
+
+  @override
+  String get agentAccountReadFailed => 'Could not read the account';
+
+  @override
+  String get agentAccountDisconnected => 'Connection interrupted';
+
+  @override
+  String get agentAccountConnected => 'Signed in on the host';
+
+  @override
+  String get agentAccountSignedOut => 'Ready to sign in';
+
+  @override
+  String get agentAccountInProgress => 'Sign-in in progress';
+
+  @override
+  String get agentAccountNeedsAttention => 'Sign-in needs attention';
+
+  @override
+  String get agentAccountNoAuth => 'Host does not require sign-in';
+
+  @override
+  String get agentAccountApiKey => 'API key';
+
+  @override
+  String get agentAccountHostAuth => 'Host authentication';
+
+  @override
+  String agentAccountPlan(String plan) {
+    return 'Plan: $plan';
+  }
+
+  @override
+  String get agentAccountHostNote =>
+      'The official Codex runtime keeps your provider credentials. Account changes apply to this host, including other profiles connected to it.';
+
+  @override
+  String get agentAccountUnsupportedDetail =>
+      'This panel is verified with Codex 0.153.4. The connected runtime may not support these account methods.';
+
+  @override
+  String get agentAccountReconnectDetail =>
+      'Account data and the sign-in code were cleared. Reconnect to refresh. Sign-in will not restart automatically.';
+
+  @override
+  String get agentAccountSignIn => 'Sign in with ChatGPT';
+
+  @override
+  String get agentAccountSignInNote =>
+      'Start an official device-code sign-in on this host. Complete it in your browser; the app never receives your provider tokens.';
+
+  @override
+  String get agentAccountLimits => 'Rate limits';
+
+  @override
+  String get agentAccountLimitsUnavailable =>
+      'Rate limits are unavailable for this account or host.';
+
+  @override
+  String get agentAccountUsage => 'Token usage';
+
+  @override
+  String get agentAccountUsageUnavailable =>
+      'Token usage is unavailable for this account or host.';
+
+  @override
+  String get agentAccountLifetimeTokens => 'Lifetime tokens';
+
+  @override
+  String get agentAccountPeakTokens => 'Peak daily tokens';
+
+  @override
+  String get agentAccountUsageNote =>
+      'Values are reported by the host. Missing values are unknown, not zero. Token counts are not a bill or remaining message allowance.';
+
+  @override
+  String agentAccountUpdated(String time) {
+    return 'Last checked $time';
+  }
+
+  @override
+  String get agentAccountStarting => 'Requesting a sign-in code';
+
+  @override
+  String get agentAccountWaiting => 'Finish sign-in in your browser';
+
+  @override
+  String get agentAccountCancelling => 'Cancelling sign-in';
+
+  @override
+  String get agentAccountCancelled => 'Sign-in cancelled';
+
+  @override
+  String get agentAccountLoginFailed =>
+      'Sign-in did not complete. Check the host and try again.';
+
+  @override
+  String get agentAccountLoginUncertain =>
+      'The host could not confirm sign-in or cancellation. It may still be waiting. Check the official host runtime before starting again.';
+
+  @override
+  String get agentAccountLoginCompleted =>
+      'Sign-in completed. Checking the account.';
+
+  @override
+  String get agentAccountCodeHint =>
+      'Enter this one-time code on the official sign-in page. Keep it private.';
+
+  @override
+  String get agentAccountOpenSignIn => 'Open official sign-in';
+
+  @override
+  String get agentAccountCancel => 'Cancel sign-in';
+
+  @override
+  String get agentAccountAllowance => 'Reported allowance';
+
+  @override
+  String agentAccountPercentUsed(int percent) {
+    return '$percent% used';
+  }
+
+  @override
+  String get agentAccountWindowUnknown => 'Window duration unavailable';
+
+  @override
+  String agentAccountWindowMinutes(int minutes) {
+    return '$minutes-minute window';
+  }
+
+  @override
+  String agentAccountWindowHours(int hours) {
+    return '$hours-hour window';
+  }
+
+  @override
+  String agentAccountWindowDays(int days) {
+    return '$days-day window';
+  }
+
+  @override
+  String get agentAccountResetUnknown => 'Reset time unavailable';
+
+  @override
+  String agentAccountReset(String time) {
+    return 'Resets $time';
+  }
 }

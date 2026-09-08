@@ -119,54 +119,39 @@ repository-wide serial integration gate remain unrun. Nothing is deployed or
 released by this branch. Correlation on v2/Codex remains manual as described
 above; this does not claim automatic voice replies across all transports.
 
-## Next priority after voice correction: A2A interoperability
+## Implemented and locally verified: external A2A agents
 
-Queued by the coordinator: a phone client for external A2A agents, with card
-inspection, supported authentication, explicit task dispatch, progress and
-input-required states, results/reopen/cancel. Pin and prove the official 1.0.1
-binding against a synthetic official server before enabling an adapter. No
-hosting, public listener, or provider spend. SaaS is cancelled. This priority
-comes before resuming the account WIP; it is not implemented in this branch.
+Servers exposes the supported A2A 1.0 JSON-RPC text-task journey: inspect the
+public card, explicitly send reviewed text, continue requested input in the
+same task, inspect bounded results, reopen or request cancellation. Unsent
+drafts persist; uncertain delivery never causes an automatic resend. The
+official synthetic protocol proof and 65 focused checks are recorded in
+[A2A verification](../verification/a2a-client-2026-09-08.md). Real-agent account
+use and installed-app acceptance are separate. SaaS remains cancelled.
 
-The proposed "Try two approaches" idea stays queued behind isolation and usage
-proof: explicit separate workspaces, visible added compute, compare results,
-no automatic winner/merge. It does not authorize another feature or paid run.
+The proposed "Try two approaches" idea remains unstarted: explicit separate
+workspaces, visible added compute and result comparison, with no automatic
+winner or merge. It is not part of this release's open feature work.
 
-## Preserved WIP: Codex account panel
+## Implemented and locally verified: Codex account panel
 
-Account source was checkpointed separately at `a7e2b3a` on
-`feature/codex-account-panel`; it must not be merged. The installed 0.153.4
-schema includes the account/device-code/rate-limit/usage methods. Callable
-scratch proof, generated localization, fixtures, tests, analyzer and captures
-remain pending. The original queued scope below is context, not a finished
-feature or current verification claim.
+**Journey.** Connected Codex profile → Servers menu → Codex account → explicit
+ChatGPT device-code sign-in or owned cancellation → fresh account, reported rate
+windows and token totals. Official host runtime owns provider credentials. The
+panel stores no account data or codes; scope change/reconnect cannot replay login.
+Unknown metrics remain unavailable. Claude and phone-tool ideas below remain queued.
 
-**Evidence.** The pinned Codex app-server adapter (`lib/codex/transport.dart`,
-`lib/codex/gateway.dart`) connects with a capability token and uses
-`initialize`, `thread/*`, `turn/*`, `model/list` only. The published
-app-server surface (root-verified, https://learn.chatgpt.com/docs/app-server)
-also lists `account/login/start` (type `chatgptDeviceCode`),
-`account/login/cancel`, `account/login/completed`, `account/read`,
-`account/rateLimits/read`, `account/usage/read`. None is wired. Exact
-availability on the pinned CLI build must be verified against that binary
-before any of it is enabled.
+**Evidence.** Pinned 0.153.4 schema plus bounded empty-home stdio proof of account
+read and recognized unauthenticated rate-limit/usage methods. Device mutations,
+notifications and successful account payloads use synthetic fixtures; no real
+login/provider requests or subscription data were tested. Optional account support
+is restricted to the exact pinned initialize identity. 86 focused tests pass,
+final analyzer clean, 20 production fixture PNGs generated and visually inspected
+across light/dark/1.8x and waiting/usage/error/unavailable states.
 
-**Journey (target).** Servers → Codex profile → *Account* panel: signed-in
-state and plan as `account/read` reports it; rate limits and usage as the
-server reports them, with the server's timestamps; a *Sign in* action that
-starts device-code login through the app-server, shows the code and URL
-large and copyable, polls `account/login/completed`, and cancels cleanly.
-The host owns credential storage; the app never reads or copies auth files
-or tokens. No provider spend and no real login in development.
-
-**Feasible first slice.** Read-only panel (`account/read`,
-`account/rateLimits/read`, `account/usage/read`) with stateful, large-text
-UI and honest "not reported" states; device-code sign-in as the second
-slice once the pinned CLI is confirmed to serve it.
-
-**Blockers.** Pinned CLI capability check; whether the capability token
-grants the `account/*` methods; UI copy for plan names must come from the
-server, not be invented.
+**Limits.** No live account sign-in, native Android proof, full suite or release
+claim. Detailed commands, scope/privacy behavior and sanitized runtime evidence:
+[Codex account verification](../verification/codex-account-checkpoint-2026-09-08.md).
 
 ## Queued: Claude official-runtime route
 

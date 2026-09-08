@@ -68,6 +68,11 @@ the combined verification and fresh Android installation checks are in progress.
   guidance, a reviewed HTTPS address and the existing server authentication and
   connection test. Typed fields survive the handoff. App presence is reported
   separately from VPN or server connectivity; no tailnet is configured for you.
+- Open **Codex account** from a connected supported host's server menu. Start
+  device-code sign-in explicitly, cancel the attempt owned by this view, and
+  refresh account status and independently reported usage/rate windows. The
+  host keeps credentials; missing data stays unavailable. Initial support is
+  limited to the verified Codex CLI 0.153.4 protocol.
 
 ### Backlog follow-through
 

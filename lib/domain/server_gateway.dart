@@ -821,6 +821,9 @@ class ProductException implements Exception {
 class ServerCapabilities {
   /// Prompt dispatch preserves an app-authored message ID in the user echo.
   final bool clientPromptMessageID;
+
+  /// Optional official-runtime account panel. Disabled for other gateways.
+  final bool agentAccount;
   // Core operations differ across supported server backends.
   final bool promptAttachments;
   final bool promptAgentMentions;
@@ -902,6 +905,7 @@ class ServerCapabilities {
 
   const ServerCapabilities({
     this.clientPromptMessageID = false,
+    this.agentAccount = false,
     this.promptAttachments = true,
     this.promptAgentMentions = true,
     this.offlinePromptQueue = true,

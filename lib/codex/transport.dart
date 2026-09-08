@@ -231,7 +231,7 @@ class CodexTransport {
       cancelOnError: true,
     );
     try {
-      await _request(
+      final initialized = await _request(
         'initialize',
         {
           'clientInfo': {'name': 'opencode_mobile', 'version': '1.0.0'},
@@ -241,6 +241,9 @@ class CodexTransport {
         epoch: epoch,
         requireInitialized: false,
       );
+      final agent = initialized['userAgent'];
+      accountApiSupported =
+          agent is String && RegExp(r'(^|/)0\.153\.4(?:\s|$)').hasMatch(agent);
       _send({
         'method': 'initialized',
         'params': <String, dynamic>{},
@@ -267,6 +270,23 @@ class CodexTransport {
       requireInitialized: true,
     );
   }
+
+  /// A scope-owned mutation must not trigger or wait for a new connection.
+  Future<Map<String, dynamic>> requestInEpoch(
+    String method,
+    Map<String, dynamic> params, {
+    required int epoch,
+    bool mutation = false,
+  }) => _request(
+    method,
+    params,
+    mutation: mutation,
+    epoch: epoch,
+    requireInitialized: true,
+  );
+
+  /// Account methods are enabled only for the schema verified by this client.
+  bool accountApiSupported = false;
 
   Future<Map<String, dynamic>> _request(
     String method,
