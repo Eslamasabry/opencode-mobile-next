@@ -90,3 +90,13 @@ This branch owns the approved bundled-font declarations, module and Android bran
 Verified on Shorebird Flutter 3.47.2 (`e16cf749ccaa38d7050335ff305def49b1c7c84c`): package resolution, five focused widget tests, two light/dark font-and-SVG render fixtures, scoped Dart analysis, and Android AAPT2 36.1.0 resource compilation. The SVG brand, regular glyphs, selected duotone, disabled send and filled stop renders were visually inspected. The component fixtures are in `docs/qa/clear-iconography/`; they are not installed app screenshots. XML and density checks plus deterministic regeneration of all five legacy PNGs passed.
 
 Remaining integration evidence: whole-page adoption, large-text page layout, release font subsetting and installed Android launcher/themed-icon capture. No signing or installation occurred in this slice.
+
+## Whole-app migration map
+
+`material-mapping.json` covers the coordinator's 272-name Material inventory. Values are semantic `AppIconography` names; `KEEP_*` explicitly preserves the original icon where this family has no equivalent state or operation. Unknown/provider/platform marks must also remain unchanged. This is a reviewed vocabulary map, not proof that every calling page has adopted the family.
+
+Twenty names retain Material, including search/key/timer off, extension/folder off, sync error/lock, file move/restore and wrap-text. Replacing these with an ordinary enabled/search/upload icon would change the communicated meaning. No custom slash overlay is introduced in this batch. Distinct available states use actual Phosphor symbols: eye/eyeSlash, camera/cameraSlash, cloud/cloudSlash, pencilSimple/pencilSimpleSlash, deviceMobile/deviceMobileSlash, checked/empty radio and checkbox, warning/error/check, and filled star/stop.
+
+Some conceptual substitutions require their existing visible labels: globe-off uses a slashed network, cloud-sync uses cyclic arrows, support uses headset, model uses brain, server uses stacked drives, projects uses buildings. The map does not turn these into unlabeled commands. Glyph mirroring is limited to navigation directions; terminal, branch, code, clocks, processor and other technical shapes keep their orientation.
+
+The 120 supplemental declarations are literal native const IconData with source names in `glyph-sources.json`. Every codepoint and font style was compared against the published 2.1.0 Dart source; all mapping references resolve. These source-only additions follow the tested base commit and await the coordinator's integration format/analyze/test checkpoint. No new renderer, asset or dependency is introduced by this follow-up.

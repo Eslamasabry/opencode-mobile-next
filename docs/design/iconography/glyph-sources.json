@@ -1,0 +1,482 @@
+{
+  "accessibility": {
+    "glyph": "personArmsSpread",
+    "style": "Regular"
+  },
+  "account": {
+    "glyph": "userCircle",
+    "style": "Regular"
+  },
+  "addCircle": {
+    "glyph": "plusCircle",
+    "style": "Regular"
+  },
+  "alignLeft": {
+    "glyph": "textAlignLeft",
+    "style": "Regular"
+  },
+  "article": {
+    "glyph": "article",
+    "style": "Regular"
+  },
+  "batteryCharging": {
+    "glyph": "batteryCharging",
+    "style": "Regular"
+  },
+  "batteryWarning": {
+    "glyph": "batteryWarning",
+    "style": "Regular"
+  },
+  "blocked": {
+    "glyph": "prohibit",
+    "style": "Regular"
+  },
+  "bookmark": {
+    "glyph": "bookmarkSimple",
+    "style": "Regular"
+  },
+  "bookmarks": {
+    "glyph": "bookmarksSimple",
+    "style": "Regular"
+  },
+  "browser": {
+    "glyph": "browser",
+    "style": "Regular"
+  },
+  "calendar": {
+    "glyph": "calendarBlank",
+    "style": "Regular"
+  },
+  "cameraOff": {
+    "glyph": "cameraSlash",
+    "style": "Regular"
+  },
+  "category": {
+    "glyph": "shapes",
+    "style": "Regular"
+  },
+  "chat": {
+    "glyph": "chatCircle",
+    "style": "Regular"
+  },
+  "checkCircle": {
+    "glyph": "checkCircle",
+    "style": "Regular"
+  },
+  "checkboxChecked": {
+    "glyph": "checkSquare",
+    "style": "Regular"
+  },
+  "checkboxEmpty": {
+    "glyph": "square",
+    "style": "Regular"
+  },
+  "checklist": {
+    "glyph": "listChecks",
+    "style": "Regular"
+  },
+  "checks": {
+    "glyph": "checks",
+    "style": "Regular"
+  },
+  "chevronLeft": {
+    "glyph": "caretLeft",
+    "style": "Regular"
+  },
+  "clearAll": {
+    "glyph": "broom",
+    "style": "Regular"
+  },
+  "cloudCheck": {
+    "glyph": "cloudCheck",
+    "style": "Regular"
+  },
+  "collapse": {
+    "glyph": "arrowsInSimple",
+    "style": "Regular"
+  },
+  "contrast": {
+    "glyph": "circleHalf",
+    "style": "Regular"
+  },
+  "cut": {
+    "glyph": "scissors",
+    "style": "Regular"
+  },
+  "darkMode": {
+    "glyph": "moon",
+    "style": "Regular"
+  },
+  "dataObject": {
+    "glyph": "bracketsCurly",
+    "style": "Regular"
+  },
+  "database": {
+    "glyph": "database",
+    "style": "Regular"
+  },
+  "deviceOff": {
+    "glyph": "deviceMobileSlash",
+    "style": "Regular"
+  },
+  "down": {
+    "glyph": "arrowDown",
+    "style": "Regular"
+  },
+  "editNote": {
+    "glyph": "notePencil",
+    "style": "Regular"
+  },
+  "editOff": {
+    "glyph": "pencilSimpleSlash",
+    "style": "Regular"
+  },
+  "experiments": {
+    "glyph": "flask",
+    "style": "Regular"
+  },
+  "feedback": {
+    "glyph": "chatText",
+    "style": "Regular"
+  },
+  "fileText": {
+    "glyph": "fileText",
+    "style": "Regular"
+  },
+  "fileUpload": {
+    "glyph": "fileArrowUp",
+    "style": "Regular"
+  },
+  "filter": {
+    "glyph": "funnelSimple",
+    "style": "Regular"
+  },
+  "filterOff": {
+    "glyph": "funnelX",
+    "style": "Regular"
+  },
+  "folderOpen": {
+    "glyph": "folderOpen",
+    "style": "Regular"
+  },
+  "folders": {
+    "glyph": "folders",
+    "style": "Regular"
+  },
+  "fork": {
+    "glyph": "gitFork",
+    "style": "Regular"
+  },
+  "forward": {
+    "glyph": "arrowRight",
+    "style": "Regular"
+  },
+  "function": {
+    "glyph": "function",
+    "style": "Regular"
+  },
+  "globe": {
+    "glyph": "globe",
+    "style": "Regular"
+  },
+  "hidden": {
+    "glyph": "eyeSlash",
+    "style": "Regular"
+  },
+  "history": {
+    "glyph": "clockCounterClockwise",
+    "style": "Regular"
+  },
+  "idea": {
+    "glyph": "lightbulb",
+    "style": "Regular"
+  },
+  "imageBroken": {
+    "glyph": "imageBroken",
+    "style": "Regular"
+  },
+  "images": {
+    "glyph": "images",
+    "style": "Regular"
+  },
+  "inbox": {
+    "glyph": "trayArrowDown",
+    "style": "Regular"
+  },
+  "launch": {
+    "glyph": "rocketLaunch",
+    "style": "Regular"
+  },
+  "layers": {
+    "glyph": "stack",
+    "style": "Regular"
+  },
+  "lightMode": {
+    "glyph": "sun",
+    "style": "Regular"
+  },
+  "lightning": {
+    "glyph": "lightning",
+    "style": "Regular"
+  },
+  "locked": {
+    "glyph": "lockSimple",
+    "style": "Regular"
+  },
+  "login": {
+    "glyph": "signIn",
+    "style": "Regular"
+  },
+  "lowPriority": {
+    "glyph": "arrowDown",
+    "style": "Regular"
+  },
+  "manageAccount": {
+    "glyph": "userGear",
+    "style": "Regular"
+  },
+  "nested": {
+    "glyph": "arrowElbowDownRight",
+    "style": "Regular"
+  },
+  "network": {
+    "glyph": "network",
+    "style": "Regular"
+  },
+  "networkCheck": {
+    "glyph": "speedometer",
+    "style": "Regular"
+  },
+  "networkOff": {
+    "glyph": "networkSlash",
+    "style": "Regular"
+  },
+  "note": {
+    "glyph": "note",
+    "style": "Regular"
+  },
+  "notificationImportant": {
+    "glyph": "bellSimpleRinging",
+    "style": "Regular"
+  },
+  "outbox": {
+    "glyph": "trayArrowUp",
+    "style": "Regular"
+  },
+  "package": {
+    "glyph": "package",
+    "style": "Regular"
+  },
+  "paste": {
+    "glyph": "clipboardText",
+    "style": "Regular"
+  },
+  "person": {
+    "glyph": "user",
+    "style": "Regular"
+  },
+  "personRemove": {
+    "glyph": "userMinus",
+    "style": "Regular"
+  },
+  "phone": {
+    "glyph": "deviceMobile",
+    "style": "Regular"
+  },
+  "play": {
+    "glyph": "play",
+    "style": "Regular"
+  },
+  "playCircle": {
+    "glyph": "playCircle",
+    "style": "Regular"
+  },
+  "policy": {
+    "glyph": "shieldCheck",
+    "style": "Regular"
+  },
+  "privacyWarning": {
+    "glyph": "shieldWarning",
+    "style": "Regular"
+  },
+  "processor": {
+    "glyph": "cpu",
+    "style": "Regular"
+  },
+  "projects": {
+    "glyph": "buildings",
+    "style": "Regular"
+  },
+  "qrCode": {
+    "glyph": "qrCode",
+    "style": "Regular"
+  },
+  "queueAdd": {
+    "glyph": "listPlus",
+    "style": "Regular"
+  },
+  "radioEmpty": {
+    "glyph": "circle",
+    "style": "Regular"
+  },
+  "radioSelected": {
+    "glyph": "radioButton",
+    "style": "Regular"
+  },
+  "removeCircle": {
+    "glyph": "minusCircle",
+    "style": "Regular"
+  },
+  "reply": {
+    "glyph": "arrowBendUpLeft",
+    "style": "Regular"
+  },
+  "restart": {
+    "glyph": "arrowCounterClockwise",
+    "style": "Regular"
+  },
+  "restore": {
+    "glyph": "clockCounterClockwise",
+    "style": "Regular"
+  },
+  "returnKey": {
+    "glyph": "keyReturn",
+    "style": "Regular"
+  },
+  "save": {
+    "glyph": "floppyDisk",
+    "style": "Regular"
+  },
+  "searchList": {
+    "glyph": "listMagnifyingGlass",
+    "style": "Regular"
+  },
+  "secureNetwork": {
+    "glyph": "shieldCheck",
+    "style": "Regular"
+  },
+  "settingsAdvanced": {
+    "glyph": "gearSix",
+    "style": "Regular"
+  },
+  "shield": {
+    "glyph": "shield",
+    "style": "Regular"
+  },
+  "sparkle": {
+    "glyph": "sparkle",
+    "style": "Regular"
+  },
+  "speakUser": {
+    "glyph": "userSound",
+    "style": "Regular"
+  },
+  "speed": {
+    "glyph": "speedometer",
+    "style": "Regular"
+  },
+  "statusDot": {
+    "glyph": "circle",
+    "style": "Fill"
+  },
+  "stopCircle": {
+    "glyph": "stopCircle",
+    "style": "Regular"
+  },
+  "support": {
+    "glyph": "headset",
+    "style": "Regular"
+  },
+  "supportQuestion": {
+    "glyph": "question",
+    "style": "Regular"
+  },
+  "swap": {
+    "glyph": "arrowsLeftRight",
+    "style": "Regular"
+  },
+  "sync": {
+    "glyph": "arrowsClockwise",
+    "style": "Regular"
+  },
+  "systemDownload": {
+    "glyph": "downloadSimple",
+    "style": "Regular"
+  },
+  "systemTheme": {
+    "glyph": "circleHalf",
+    "style": "Regular"
+  },
+  "text": {
+    "glyph": "textAlignLeft",
+    "style": "Regular"
+  },
+  "textShort": {
+    "glyph": "textAlignLeft",
+    "style": "Regular"
+  },
+  "textSnippet": {
+    "glyph": "textAlignLeft",
+    "style": "Regular"
+  },
+  "timeline": {
+    "glyph": "rows",
+    "style": "Regular"
+  },
+  "timer": {
+    "glyph": "timer",
+    "style": "Regular"
+  },
+  "touch": {
+    "glyph": "handTap",
+    "style": "Regular"
+  },
+  "unarchive": {
+    "glyph": "trayArrowUp",
+    "style": "Regular"
+  },
+  "undo": {
+    "glyph": "arrowUUpLeft",
+    "style": "Regular"
+  },
+  "unfoldLess": {
+    "glyph": "arrowsInLineVertical",
+    "style": "Regular"
+  },
+  "unfoldMore": {
+    "glyph": "caretUpDown",
+    "style": "Regular"
+  },
+  "usageRing": {
+    "glyph": "chartDonut",
+    "style": "Regular"
+  },
+  "visible": {
+    "glyph": "eye",
+    "style": "Regular"
+  },
+  "volume": {
+    "glyph": "speakerHigh",
+    "style": "Regular"
+  },
+  "waiting": {
+    "glyph": "hourglassLow",
+    "style": "Regular"
+  },
+  "waitingEmpty": {
+    "glyph": "hourglass",
+    "style": "Regular"
+  },
+  "waitingStart": {
+    "glyph": "hourglassHigh",
+    "style": "Regular"
+  },
+  "waveform": {
+    "glyph": "waveform",
+    "style": "Regular"
+  },
+  "zip": {
+    "glyph": "fileZip",
+    "style": "Regular"
+  }
+}

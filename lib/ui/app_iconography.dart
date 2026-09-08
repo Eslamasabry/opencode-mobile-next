@@ -338,6 +338,607 @@ abstract final class AppIconography {
     fontFamily: 'AppPhosphorRegular',
     matchTextDirection: false,
   );
+  // Additional product vocabulary for coherent page adoption.
+  static const accessibility = IconData(
+    0xecfe,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const account = IconData(
+    0xe4c4,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const addCircle = IconData(
+    0xe3d6,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const alignLeft = IconData(
+    0xe484,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const article = IconData(
+    0xe0a8,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const batteryCharging = IconData(
+    0xe0ba,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const batteryWarning = IconData(
+    0xe0c8,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const blocked = IconData(
+    0xe3de,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const bookmark = IconData(
+    0xe0ea,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const bookmarks = IconData(
+    0xe5f0,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const browser = IconData(
+    0xe0f4,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const calendar = IconData(
+    0xe10a,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const cameraOff = IconData(
+    0xe110,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const category = IconData(
+    0xec5e,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const chat = IconData(
+    0xe168,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const checkCircle = IconData(
+    0xe184,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const checkboxChecked = IconData(
+    0xe186,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const checkboxEmpty = IconData(
+    0xe45e,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const checklist = IconData(
+    0xeadc,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const checks = IconData(
+    0xe53a,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const chevronLeft = IconData(
+    0xe138,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: true,
+  );
+  static const clearAll = IconData(
+    0xec54,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const cloudCheck = IconData(
+    0xe1b0,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const collapse = IconData(
+    0xe09e,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const contrast = IconData(
+    0xe18c,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const cut = IconData(
+    0xeae0,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const darkMode = IconData(
+    0xe330,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const dataObject = IconData(
+    0xe860,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const database = IconData(
+    0xe1de,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const deviceOff = IconData(
+    0xee46,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const down = IconData(
+    0xe03e,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const editNote = IconData(
+    0xe34c,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const editOff = IconData(
+    0xecf6,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const experiments = IconData(
+    0xe79e,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const feedback = IconData(
+    0xe17a,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const fileText = IconData(
+    0xe23a,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const fileUpload = IconData(
+    0xe61e,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const filter = IconData(
+    0xe268,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const filterOff = IconData(
+    0xe26c,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const folderOpen = IconData(
+    0xe256,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const folders = IconData(
+    0xe260,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const fork = IconData(
+    0xe27e,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const forward = IconData(
+    0xe06c,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: true,
+  );
+  static const function = IconData(
+    0xebe4,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const globe = IconData(
+    0xe288,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const hidden = IconData(
+    0xe224,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const history = IconData(
+    0xe1a0,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const idea = IconData(
+    0xe2dc,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const imageBroken = IconData(
+    0xe7a8,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const images = IconData(
+    0xe836,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const inbox = IconData(
+    0xe010,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const launch = IconData(
+    0xe3fe,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const layers = IconData(
+    0xe466,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const lightMode = IconData(
+    0xe472,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const lightning = IconData(
+    0xe2de,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const locked = IconData(
+    0xe308,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const login = IconData(
+    0xe428,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const lowPriority = IconData(
+    0xe03e,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const manageAccount = IconData(
+    0xe4cc,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const nested = IconData(
+    0xe046,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: true,
+  );
+  static const network = IconData(
+    0xedde,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const networkCheck = IconData(
+    0xee74,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const networkOff = IconData(
+    0xeddc,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const note = IconData(
+    0xe348,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const notificationImportant = IconData(
+    0xe5ea,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const outbox = IconData(
+    0xee52,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const package = IconData(
+    0xe390,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const paste = IconData(
+    0xe198,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const person = IconData(
+    0xe4c2,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const personRemove = IconData(
+    0xe4ce,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const phone = IconData(
+    0xe1e0,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const play = IconData(
+    0xe3d0,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const playCircle = IconData(
+    0xe3d2,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const policy = IconData(
+    0xe40c,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const privacyWarning = IconData(
+    0xe412,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const processor = IconData(
+    0xe610,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const projects = IconData(
+    0xe102,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const qrCode = IconData(
+    0xe3e6,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const queueAdd = IconData(
+    0xe2f8,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const radioEmpty = IconData(
+    0xe18a,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const radioSelected = IconData(
+    0xeb08,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const removeCircle = IconData(
+    0xe32c,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const reply = IconData(
+    0xe024,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: true,
+  );
+  static const restart = IconData(
+    0xe038,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const restore = IconData(
+    0xe1a0,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const returnKey = IconData(
+    0xe782,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const save = IconData(
+    0xe248,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const searchList = IconData(
+    0xebe0,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const secureNetwork = IconData(
+    0xe40c,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const settingsAdvanced = IconData(
+    0xe272,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const shield = IconData(
+    0xe40a,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const sparkle = IconData(
+    0xe6a2,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const speakUser = IconData(
+    0xeca8,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const speed = IconData(
+    0xee74,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const statusDot = IconData(
+    0xe18a,
+    fontFamily: 'AppPhosphorFill',
+    matchTextDirection: false,
+  );
+  static const stopCircle = IconData(
+    0xe46e,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const support = IconData(
+    0xe584,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const supportQuestion = IconData(
+    0xe3e8,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const swap = IconData(
+    0xe0a0,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const sync = IconData(
+    0xe094,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const systemDownload = IconData(
+    0xe20c,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const systemTheme = IconData(
+    0xe18c,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const text = IconData(
+    0xe484,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const textShort = IconData(
+    0xe484,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const textSnippet = IconData(
+    0xe484,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const timeline = IconData(
+    0xe5a2,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const timer = IconData(
+    0xe492,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const touch = IconData(
+    0xec90,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const unarchive = IconData(
+    0xee52,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const undo = IconData(
+    0xe08a,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: true,
+  );
+  static const unfoldLess = IconData(
+    0xe532,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const unfoldMore = IconData(
+    0xe140,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const usageRing = IconData(
+    0xeaa6,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const visible = IconData(
+    0xe220,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const volume = IconData(
+    0xe44a,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const waiting = IconData(
+    0xe2b6,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const waitingEmpty = IconData(
+    0xe2b2,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const waitingStart = IconData(
+    0xe2b4,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const waveform = IconData(
+    0xe802,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+  static const zip = IconData(
+    0xe958,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
 }
 
 // Static background glyphs preserve release font tree shaking.
