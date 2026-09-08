@@ -11,6 +11,17 @@ import '../../widgets/code_highlight.dart';
 import '../../widgets/diff_view.dart';
 import '../../widgets/request_routes.dart';
 
+/// The glyph identifies the requested action rather than a generic admin role.
+IconData permissionActionIcon(String permission) =>
+    switch (permission.toLowerCase()) {
+      'bash' => Icons.terminal_rounded,
+      'edit' || 'write' || 'multiedit' || 'patch' => Icons.edit_note_rounded,
+      'read' => Icons.description_outlined,
+      'webfetch' || 'websearch' => Icons.public_rounded,
+      'external_directory' => Icons.folder_open_rounded,
+      _ => Icons.key_rounded,
+    };
+
 /// Presents the OpenCode 2 permission prompt as a modal bottom sheet
 /// (design doc §3). One component serves three entry points: the chat
 /// review card, the Requests tile, and notification taps.
@@ -103,7 +114,7 @@ class _PermissionSheetState extends State<PermissionSheet> {
   late final _routes = widget.routes ?? RequestRoutes();
   final _rejectMessage = TextEditingController();
   bool _replying = false;
-  bool _confirming = false;
+  String? _pendingReply;
   bool _rejecting = false;
   Object? _error;
 
@@ -125,13 +136,12 @@ class _PermissionSheetState extends State<PermissionSheet> {
     if (_replying || !_routes.isPending) return;
     setState(() {
       _replying = true;
-      _confirming = reply == 'always';
+      _pendingReply = reply;
       _error = null;
     });
     try {
       if (reply == 'always' && !await _confirmAlways()) return;
       if (!mounted || !_routes.isPending) return;
-      setState(() => _confirming = false);
       await widget.onReply(reply, message: message);
       _routes.close();
     } catch (error) {
@@ -144,7 +154,7 @@ class _PermissionSheetState extends State<PermissionSheet> {
       if (mounted) {
         setState(() {
           _replying = false;
-          _confirming = false;
+          _pendingReply = null;
         });
       }
     }
@@ -289,7 +299,7 @@ class _PermissionSheetState extends State<PermissionSheet> {
                 Row(
                   children: [
                     Icon(
-                      Icons.admin_panel_settings_outlined,
+                      permissionActionIcon(permission.permission),
                       color: theme.colorScheme.primary,
                     ),
                     const SizedBox(width: 10),
@@ -468,34 +478,65 @@ class _PermissionSheetState extends State<PermissionSheet> {
     );
   }
 
+  Widget _pendingLabel(String label, {required bool pending}) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      if (pending) ...[
+        const SizedBox.square(
+          dimension: 16,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+        const SizedBox(width: 8),
+      ],
+      Flexible(child: Text(label, textAlign: TextAlign.center)),
+    ],
+  );
+
   Widget _triad(ThemeData theme) {
+    final allow = FilledButton(
+      key: const Key('permission-allow-once'),
+      onPressed: _replying ? null : () => _reply('once'),
+      child: _pendingLabel(
+        'Allow once',
+        pending: _replying && _pendingReply == 'once',
+      ),
+    );
+    final reject = OutlinedButton(
+      key: const Key('permission-reject'),
+      onPressed: _replying ? null : _startReject,
+      child: Text(widget.supportsRejectMessage ? 'Reject…' : 'Reject'),
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FilledButton(
-          key: const Key('permission-allow-once'),
-          onPressed: _replying ? null : () => _reply('once'),
-          child: _replying && !_confirming
-              ? const SizedBox.square(
-                  dimension: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Allow once'),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final largeText = MediaQuery.textScalerOf(context).scale(14) > 20;
+            if (largeText || constraints.maxWidth < 280) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [allow, const SizedBox(height: 8), reject],
+              );
+            }
+            return Row(
+              children: [
+                Expanded(child: reject),
+                const SizedBox(width: 12),
+                Expanded(child: allow),
+              ],
+            );
+          },
         ),
-        const SizedBox(height: 8),
-        if (widget.allowPersistentPermission)
-          OutlinedButton(
+        if (widget.allowPersistentPermission) ...[
+          const SizedBox(height: 4),
+          TextButton.icon(
             key: const Key('permission-allow-always'),
             onPressed: _replying ? null : () => _reply('always'),
-            child: const Text('Always allow'),
+            icon: const Icon(Icons.key_rounded, size: 18),
+            label: const Text('Always allow'),
           ),
-        const SizedBox(height: 4),
-        TextButton(
-          key: const Key('permission-reject'),
-          onPressed: _replying ? null : _startReject,
-          child: Text(widget.supportsRejectMessage ? 'Reject…' : 'Reject'),
-        ),
+        ],
       ],
     );
   }
@@ -524,12 +565,7 @@ class _PermissionSheetState extends State<PermissionSheet> {
             foregroundColor: theme.colorScheme.onErrorContainer,
           ),
           onPressed: _replying ? null : _sendRejection,
-          child: _replying
-              ? const SizedBox.square(
-                  dimension: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Send rejection'),
+          child: _pendingLabel('Send rejection', pending: _replying),
         ),
         const SizedBox(height: 4),
         TextButton(

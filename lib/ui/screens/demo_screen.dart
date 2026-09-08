@@ -145,12 +145,48 @@ class _DemoScreenState extends State<DemoScreen> {
               ],
               child: ChatScreen(
                 sessionID: DemoGateway.sessionID,
+                showAppBar: false,
+                emptyState: const _DemoTaskIntroduction(),
                 initialText: DemoCopy.prompt,
                 handoffStore: _handoff,
               ),
             ),
           ),
         ],
+      ),
+    ),
+  );
+}
+
+class _DemoTaskIntroduction extends StatelessWidget {
+  const _DemoTaskIntroduction();
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              lookupAppLocalizations(
+                Localizations.localeOf(context),
+              ).demoTaskTitle,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              lookupAppLocalizations(
+                Localizations.localeOf(context),
+              ).demoTaskInstruction,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ),
       ),
     ),
   );

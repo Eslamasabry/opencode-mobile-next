@@ -971,7 +971,7 @@ class _PathCodeChipState extends State<_PathCodeChip> {
         textScaler: TextScaler.noScaling,
         style: widget.base.copyWith(
           fontFamily: AppTheme.monoFamily,
-          fontSize: (widget.base.fontSize ?? 14) - 1.5,
+          fontSize: widget.base.fontSize ?? 14,
           color: _readable
               ? theme.colorScheme.primary
               : theme.colorScheme.tertiary,
@@ -1017,7 +1017,7 @@ class _CodeSpan extends WidgetSpan {
              textScaler: TextScaler.noScaling,
              style: base.copyWith(
                fontFamily: AppTheme.monoFamily,
-               fontSize: (base.fontSize ?? 14) - 1.5,
+               fontSize: base.fontSize ?? 14,
                color: Theme.of(context).colorScheme.tertiary,
              ),
            ),
@@ -1244,7 +1244,8 @@ class _CodeBlockState extends State<CodeBlock> {
       style: theme.textTheme.bodySmall!.copyWith(
         fontFamily: AppTheme.monoFamily,
         fontSize: AppTheme.codeFontSize,
-        height: 1.45,
+        // Shared typography target: 13dp code on a 19dp baseline.
+        height: 19 / 13,
       ),
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.left,

@@ -509,6 +509,7 @@ Future<ConnectionController> _pumpChat(
   ProductRepository? repository,
   ConnectionController? controller,
   ReviewHandoffStore? handoffStore,
+  bool reduceMotion = false,
 }) async {
   final activeController = controller ?? await _controller(api);
   activeController.repository = repository;
@@ -517,6 +518,12 @@ Future<ConnectionController> _pumpChat(
     ProviderScope(
       overrides: [connProvider.overrideWithValue(activeController)],
       child: MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(disableAnimations: reduceMotion),
+          child: child!,
+        ),
         home: ChatScreen(
           sessionID: 'session-1',
           // Per-test store so staged review references never leak between
@@ -3044,7 +3051,7 @@ void main() {
     expect(api.promptCalls, 0);
   });
 
-  testWidgets('timeline searches old messages and jumps to a stable anchor', (
+  testWidgets('timeline finds a stable anchor with reduced motion', (
     tester,
   ) async {
     final messages = <MessageWithParts>[];
@@ -3062,7 +3069,7 @@ void main() {
     }
     final api = _FakeOpenCodeApi()..messagesHandler = (_) async => messages;
 
-    await _pumpChat(tester, api);
+    await _pumpChat(tester, api, reduceMotion: true);
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
@@ -3100,6 +3107,7 @@ void main() {
     final highlightFinder = find.byKey(const Key('message-highlight-user-0'));
     expect(highlightFinder, findsOneWidget);
     final highlighted = tester.widget<AnimatedContainer>(highlightFinder);
+    expect(highlighted.duration, Duration.zero);
     expect(
       (highlighted.decoration as BoxDecoration?)?.color,
       isNot(Colors.transparent),
@@ -4481,9 +4489,10 @@ void main() {
     );
   });
 
-  testWidgets(
-    'composer shows known context usage below the warning threshold',
-    (tester) async {
+  for (final percent in [25, 75]) {
+    testWidgets('composer shows known context usage at $percent percent', (
+      tester,
+    ) async {
       final api = _FakeOpenCodeApi()
         ..messagesHandler = (_) async => [
           _message(
@@ -4492,7 +4501,7 @@ void main() {
             [Part(type: 'text', text: 'done')],
             providerID: 'p',
             modelID: 'm',
-            tokens: Tokens(input: 20000, output: 5000),
+            tokens: Tokens(input: percent * 1000, output: 0),
           ),
         ];
       final controller = await _controller(api);
@@ -4516,34 +4525,32 @@ void main() {
         agents: [],
       );
       await _pumpChat(tester, api, controller: controller);
-
-      final semantics = tester.ensureSemantics();
       expect(
         find.byKey(const ValueKey('composer-context-meter')),
-        findsOneWidget,
+        percent >= 70 ? findsOneWidget : findsNothing,
       );
-      expect(
-        find.bySemanticsLabel('Context window 25 percent used'),
-        findsOneWidget,
-      );
-
-      expect(find.text('25%'), findsOneWidget);
-      // The meter must paint at full height with the actual usage.
+      expect(find.text('$percent%'), findsOneWidget);
       await tester.pumpAndSettle();
-      final fillSize = tester.getSize(
-        find.byKey(const ValueKey('composer-context-meter-fill')),
-      );
-      final trackSize = tester.getSize(
-        find.byKey(const ValueKey('composer-context-meter')),
-      );
-      expect(fillSize.height, trackSize.height);
-      expect(
-        fillSize.width / trackSize.width,
-        moreOrLessEquals(.25, epsilon: .01),
-      );
-      semantics.dispose();
-    },
-  );
+      if (percent >= 70) {
+        expect(
+          find.bySemanticsLabel('Context window $percent percent used'),
+          findsOneWidget,
+        );
+        final fill = tester.getSize(
+          find.byKey(const ValueKey('composer-context-meter-fill')),
+        );
+        final track = tester.getSize(
+          find.byKey(const ValueKey('composer-context-meter')),
+        );
+        expect(fill.height, track.height);
+        expect(
+          fill.width / track.width,
+          moreOrLessEquals(percent / 100, epsilon: .01),
+        );
+      }
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('composer hides the context meter without a known limit', (
     tester,

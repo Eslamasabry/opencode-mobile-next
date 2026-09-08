@@ -1976,5 +1976,7 @@
   "workspaceDismissNotice": "Dismiss",
   "workspaceManageProject": "Manage project",
   "workspaceManageProjectHint": "Switch project, worktrees, and project health",
-  "workspaceManage": "Manage"
+  "workspaceManage": "Manage",
+  "demoTaskTitle": "Try a small change",
+  "demoTaskInstruction": "Send the sample prompt below, then review the proposed edit."
 }

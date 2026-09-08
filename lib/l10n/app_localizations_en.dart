@@ -4947,4 +4947,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get workspaceManage => 'Manage';
+
+  @override
+  String get demoTaskTitle => 'Try a small change';
+
+  @override
+  String get demoTaskInstruction =>
+      'Send the sample prompt below, then review the proposed edit.';
 }

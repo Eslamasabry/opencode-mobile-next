@@ -204,6 +204,11 @@ class ChatScreen extends StatefulWidget {
   final List<PromptAttachment> initialAttachments;
   final bool discardIfUntouched;
 
+  /// An enclosing experience can provide its own navigation and task guidance.
+  /// Defaults preserve the ordinary standalone chat presentation.
+  final bool showAppBar;
+  final Widget? emptyState;
+
   /// Overrides the app-wide review handoff store; tests inject their own so
   /// staged references do not leak between cases.
   final ReviewHandoffStore? handoffStore;
@@ -215,6 +220,8 @@ class ChatScreen extends StatefulWidget {
     this.initialText = '',
     this.initialAttachments = const [],
     this.discardIfUntouched = false,
+    this.showAppBar = true,
+    this.emptyState,
     this.handoffStore,
   });
 
@@ -404,7 +411,6 @@ class _ChatScreenState extends State<ChatScreen>
   bool _sending = false;
   bool _aborting = false;
   String? _activePermissionID;
-  bool _permissionReplying = false;
   bool _questionReplying = false;
   String? _activeFormID;
 
@@ -4433,19 +4439,6 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  /// The card's fast path: the same reply the sheet's Allow once sends.
-  Future<void> _allowPermissionOnce(PermissionRequest permission) async {
-    if (_permissionReplying) return;
-    setState(() => _permissionReplying = true);
-    try {
-      await _conn.answerPermission(permission.id, 'once');
-    } catch (error) {
-      if (mounted) _showActionError(error);
-    } finally {
-      if (mounted) setState(() => _permissionReplying = false);
-    }
-  }
-
   /// The inline question card's answer path: the same controller call the
   /// Activity sheet's Send answers makes, so the server sees one contract.
   Future<void> _answerQuestion(
@@ -6108,9 +6101,7 @@ class _ChatScreenState extends State<ChatScreen>
             : _PermissionAttentionCard(
                 key: ValueKey('permission-card-${permission.id}'),
                 permission: permission,
-                replying: _permissionReplying,
                 onReview: () => unawaited(_showPermissionDialog(permission)),
-                onAllowOnce: () => unawaited(_allowPermissionOnce(permission)),
               ),
       ),
     );
@@ -6181,46 +6172,60 @@ class _ChatScreenState extends State<ChatScreen>
         if (!didPop) unawaited(_leaveChat());
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            presentedSessionTitle(session, fallback: 'Chat'),
-            overflow: TextOverflow.ellipsis,
-          ),
-          actions: [
-            if (_readAloudRequestBusy || _readAloud?.speaking == true)
-              IconButton(
-                tooltip: _chatL10n(context).readAloudStop,
-                icon: const Icon(Icons.stop_circle_outlined),
-                onPressed: () => unawaited(_stopReading()),
-              ),
-            if (busy)
-              IconButton(
-                tooltip: 'Stop',
-                icon: Icon(AppIcons.stop, color: theme.colorScheme.error),
-                onPressed: _aborting ? null : _abort,
-              ),
-            if (_conn.isIsolated)
-              IconButton(
-                tooltip: _chatL10n(context).demoReviewChanges,
-                icon: const Icon(Icons.difference_outlined),
-                onPressed: _showDiff,
-              ),
-            if (!_conn.isIsolated)
-              IconButton(
-                key: const ValueKey('session-actions-button'),
-                tooltip: 'Session menu',
-                icon: const Icon(Icons.more_vert_rounded),
-                onPressed: () => unawaited(
-                  _openSessionMenu(
-                    reverted: session?.reverted == true,
-                    shared: shareUrl != null,
+        appBar: widget.showAppBar
+            ? AppBar(
+                title: Text(
+                  presentedSessionTitle(session, fallback: 'Chat'),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                actions: [
+                  if (_readAloudRequestBusy || _readAloud?.speaking == true)
+                    IconButton(
+                      tooltip: _chatL10n(context).readAloudStop,
+                      icon: const Icon(Icons.stop_circle_outlined),
+                      onPressed: () => unawaited(_stopReading()),
+                    ),
+                  if (busy)
+                    IconButton(
+                      tooltip: 'Stop',
+                      icon: Icon(AppIcons.stop, color: theme.colorScheme.error),
+                      onPressed: _aborting ? null : _abort,
+                    ),
+                  if (_conn.isIsolated)
+                    IconButton(
+                      tooltip: _chatL10n(context).demoReviewChanges,
+                      icon: const Icon(Icons.difference_outlined),
+                      onPressed: _showDiff,
+                    ),
+                  if (!_conn.isIsolated)
+                    IconButton(
+                      key: const ValueKey('session-actions-button'),
+                      tooltip: 'Session menu',
+                      icon: const Icon(Icons.more_vert_rounded),
+                      onPressed: () => unawaited(
+                        _openSessionMenu(
+                          reverted: session?.reverted == true,
+                          shared: shareUrl != null,
+                        ),
+                      ),
+                    ),
+                ],
+              )
+            : null,
+        body: Column(
+          children: [
+            if (!widget.showAppBar && _conn.isIsolated && _messages.isNotEmpty)
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: Tooltip(
+                  message: _chatL10n(context).demoReviewChanges,
+                  child: TextButton.icon(
+                    onPressed: _showDiff,
+                    icon: const Icon(Icons.difference_outlined, size: 18),
+                    label: Text(_chatL10n(context).demoReviewChanges),
                   ),
                 ),
               ),
-          ],
-        ),
-        body: Column(
-          children: [
             if (!_conn.isIsolated && _conn.status != StreamStatus.connected)
               ConnectionStatusBanner(controller: _conn, note: _queuedNote()),
             // At most one contextual strip below the connection truth, so
@@ -6337,9 +6342,10 @@ class _ChatScreenState extends State<ChatScreen>
                               child:
                                   _visibleHistory.isEmpty &&
                                       _olderCursor == null
-                                  ? _EmptyTranscript(
-                                      onSuggestion: _insertSuggestion,
-                                    )
+                                  ? widget.emptyState ??
+                                        _EmptyTranscript(
+                                          onSuggestion: _insertSuggestion,
+                                        )
                                   : _transcriptSelectionArea(
                                       child: MarkdownFileLinks(
                                         validate: _validatePathLink,

@@ -142,48 +142,34 @@ class _AttentionCard extends StatelessWidget {
   }
 }
 
-/// The permission flavour of [_AttentionCard]: tool title, requested
-/// patterns, Review (opens the full sheet) and Allow once (the fast path,
-/// identical to the sheet's Allow once).
+/// Permission requests first open their complete scope and available preview.
+/// Arriving requests never steal focus or authorize work from the summary.
 class _PermissionAttentionCard extends StatelessWidget {
   const _PermissionAttentionCard({
     super.key,
     required this.permission,
-    required this.replying,
     required this.onReview,
-    required this.onAllowOnce,
   });
 
   final PermissionRequest permission;
-  final bool replying;
   final VoidCallback onReview;
-  final VoidCallback onAllowOnce;
 
   @override
   Widget build(BuildContext context) {
     final title = permissionRequestTitle(permission.permission);
     return _AttentionCard(
-      icon: Icons.admin_panel_settings_outlined,
+      icon: permissionActionIcon(permission.permission),
       title: title,
       announcement: 'Permission needed: $title',
       summary: permission.patterns.isEmpty
           ? null
           : permission.patterns.join(' · '),
       detail: permission.message,
-      secondary: OutlinedButton(
+      primary: FilledButton.icon(
         key: const Key('permission-card-review'),
-        onPressed: replying ? null : onReview,
-        child: const Text('Review'),
-      ),
-      primary: FilledButton(
-        key: const Key('permission-card-allow-once'),
-        onPressed: replying ? null : onAllowOnce,
-        child: replying
-            ? const SizedBox.square(
-                dimension: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Text('Allow once'),
+        onPressed: onReview,
+        icon: const Icon(Icons.fact_check_outlined, size: 18),
+        label: const Text('Review'),
       ),
     );
   }
