@@ -8546,6 +8546,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} unknown'**
   String activityUnknownCount(int count);
+
+  /// No description provided for @demoTaskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a small change'**
+  String get demoTaskTitle;
+
+  /// No description provided for @demoTaskInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'Send the sample prompt below, then review the proposed edit.'**
+  String get demoTaskInstruction;
 }
 
 class _AppLocalizationsDelegate

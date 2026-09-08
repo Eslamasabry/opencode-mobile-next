@@ -1,0 +1,197 @@
+[
+  {
+    "page": "Chat",
+    "id": "CHAT-01",
+    "title": "Short-code controls dominated the snippet",
+    "priority": "P2",
+    "dimension": "density",
+    "evidence": [
+      "screenshots/03-chat.png",
+      "lib/ui/widgets/markdown.dart:1265"
+    ],
+    "observed": "Baseline has three labeled actions wrapping above one code line.",
+    "impact": "Reading requires scanning more chrome than content.",
+    "proposal": "Keep localized accessible 48dp icon actions in one row.",
+    "status": "integrated",
+    "verification": "Prior b057d4c focused tests and four screenshots; present in0eabc2d.",
+    "commit": "b057d4c"
+  },
+  {
+    "page": "Chat",
+    "id": "CHAT-02",
+    "title": "Idle draft reserved a second empty line",
+    "priority": "P2",
+    "dimension": "layout",
+    "evidence": [
+      "screenshots/04-keyboard.png",
+      "lib/ui/screens/chat/composer.dart:406"
+    ],
+    "observed": "Baseline empty composer starts at two lines; integration starts at one.",
+    "impact": "Keyboard leaves less conversation visible.",
+    "proposal": "Grow with typed content while retaining editor identity.",
+    "status": "integrated",
+    "verification": "Prior b057d4c growth/draft tests at320dp1x/2.5x.",
+    "commit": "b057d4c"
+  },
+  {
+    "page": "Chat",
+    "id": "CHAT-03",
+    "title": "Inline approval precedes requested-change review",
+    "priority": "P1",
+    "dimension": "flow",
+    "evidence": [
+      "screenshots/25-permission-ready.png",
+      "screenshots/26-permission-review.png",
+      "lib/ui/screens/chat/attention_card.dart:165",
+      "docs/qa/page-reviews/chat/"
+    ],
+    "observed": "Inline Allow once is stronger than Review; diff exists only inside review.",
+    "impact": "Encourages a consequential decision before its available evidence.",
+    "proposal": "One inline Review action opens scope and preview before Allow once or Reject.",
+    "status": "tested",
+    "verification": "chat_permission_test + demo_isolation_test and chat_review captures pass: no inline authorization; review exposes preview; dismiss sends nothing; allow/reject preserve identity and draft.",
+    "commit": "22c97ad3c3770796f28e5e918287b5cc53b9b76c"
+  },
+  {
+    "page": "Chat",
+    "id": "CHAT-04",
+    "title": "Persistent grant sits between ordinary decisions",
+    "priority": "P2",
+    "dimension": "flow",
+    "evidence": [
+      "screenshots/26-permission-review.png",
+      "lib/ui/screens/chat/permission_sheet.dart:470",
+      "docs/qa/page-reviews/chat/"
+    ],
+    "observed": "Allow once, Always allow, Reject are stacked in that order.",
+    "impact": "Reject is visually subordinate and farther from its peer decision.",
+    "proposal": "Pair Reject and Allow once; keep Always allow as a lower-emphasis action with broader confirmation.",
+    "status": "tested",
+    "verification": "permission_sheet_test passes at320dp1x/2.5x: both ordinary decisions are hittable48dp before persistent access; always-allow confirmation retained.",
+    "commit": "22c97ad3c3770796f28e5e918287b5cc53b9b76c"
+  },
+  {
+    "page": "Chat",
+    "id": "CHAT-05",
+    "title": "Generic permission shield repeats despite different actions",
+    "priority": "P2",
+    "dimension": "component",
+    "evidence": [
+      "screenshots/25-permission-ready.png",
+      "screenshots/26-permission-review.png",
+      "docs/qa/page-reviews/chat/"
+    ],
+    "observed": "Edit request uses same administrative shield as every other permission.",
+    "impact": "Icon does not help recognize what the agent intends to do.",
+    "proposal": "Use action-specific edit, terminal, file, web and folder symbols consistently across card and review.",
+    "status": "tested",
+    "verification": "Reviewed dark-ready/dark-review and demo-permission-light captures: edit glyph consistent and paired with action text; bash cases compile/pass focused tests.",
+    "commit": "22c97ad3c3770796f28e5e918287b5cc53b9b76c"
+  },
+  {
+    "page": "Chat",
+    "id": "CHAT-06",
+    "title": "Routine context usage is communicated twice",
+    "priority": "P2",
+    "dimension": "density",
+    "evidence": [
+      "screenshots/03-chat.png",
+      "lib/ui/screens/chat/composer.dart:414",
+      "docs/qa/page-reviews/chat/"
+    ],
+    "observed": "4% appears beside the model and as a full-width meter separating editor and controls.",
+    "impact": "Routine metadata adds a structural divider with no immediate decision.",
+    "proposal": "Retain exact known percentage; reserve meter for existing70% warning threshold and90% danger threshold.",
+    "status": "tested",
+    "verification": "Four selected chat_live_events cases pass:25% is visible without meter,75% paints actual meter, unknown limit remains absent.",
+    "commit": "22c97ad3c3770796f28e5e918287b5cc53b9b76c"
+  },
+  {
+    "page": "Chat",
+    "id": "CHAT-07",
+    "title": "Message highlight fade ignores reduced motion",
+    "priority": "P2",
+    "dimension": "motion",
+    "evidence": [
+      "lib/ui/screens/chat/message_view.dart:1376",
+      "docs/qa/page-reviews/chat/"
+    ],
+    "observed": "Highlight container always animates180ms while nearby chat transitions respect disableAnimations.",
+    "impact": "Same preference behaves inconsistently while navigating a reply.",
+    "proposal": "Honor MediaQuery.disableAnimations for message highlight.",
+    "status": "tested",
+    "verification": "Timeline stable-anchor journey passes with reduced motion; highlight transition duration is zero and selected source remains visible.",
+    "commit": "22c97ad3c3770796f28e5e918287b5cc53b9b76c"
+  },
+  {
+    "page": "Chat",
+    "id": "CHAT-08",
+    "title": "Overflow opens a dense page of mixed tasks",
+    "priority": "P2",
+    "dimension": "flow",
+    "evidence": [
+      "screenshots/05-chat-menu.png",
+      "lib/ui/screens/chat/session_sheets.dart"
+    ],
+    "observed": "Six equally framed views precede display toggles and session mutations.",
+    "impact": "Finding a result requires scanning an oversized secondary surface.",
+    "proposal": "Prioritize result review and find; defer broader command taxonomy to a dedicated navigation slice.",
+    "status": "deferred",
+    "verification": "Screenshot and source inspection only; no redesign claimed.",
+    "commit": null
+  },
+  {
+    "page": "Chat",
+    "id": "CHAT-09",
+    "title": "Draft and pending-request truth must survive review",
+    "priority": "P1",
+    "dimension": "flow",
+    "evidence": [
+      "lib/ui/screens/chat_screen.dart:5957",
+      "lib/ui/screens/chat/permission_sheet.dart:120",
+      "screenshots/27-demo-complete.png"
+    ],
+    "observed": "Draft persistence and identity-bound request retirement already exist; demo completion explicitly says simulated.",
+    "impact": "Simplification must not turn dismissal into a decision or claim an edit from an acknowledgement.",
+    "proposal": "Preserve existing persistence, request identity, failed reply recovery and capability gates.",
+    "status": "tested",
+    "verification": "Preserved safeguards verified by focused permission races/failure/dismissal, composer draft persistence, and demo isolation tests. This is retained behavior, not a newly discovered defect.",
+    "commit": "22c97ad3c3770796f28e5e918287b5cc53b9b76c"
+  },
+  {
+    "page": "Chat",
+    "id": "CHAT-10",
+    "title": "Pending permission button loses its wording",
+    "priority": "P2",
+    "dimension": "accessibility",
+    "evidence": [
+      "lib/ui/screens/chat/permission_sheet.dart:479",
+      "docs/qa/page-reviews/chat/"
+    ],
+    "observed": "Allow once and Send rejection replace labels with a spinner while sending.",
+    "impact": "The user loses the action identity at commitment.",
+    "proposal": "Keep the action label alongside a small pending indicator.",
+    "status": "tested",
+    "verification": "Pending-reply test passes: Allow once text remains visible, action disabled, duplicate tap dispatches no second request.",
+    "commit": "22c97ad3c3770796f28e5e918287b5cc53b9b76c"
+  },
+  {
+    "id": "CHAT-11",
+    "page": "Chat",
+    "title": "Embedded demo repeats navigation and contradicts its sample task",
+    "priority": "P2",
+    "dimension": "flow",
+    "evidence": [
+      "screenshots/23-demo-start.png",
+      "lib/ui/screens/demo_screen.dart",
+      "lib/ui/screens/chat_screen.dart",
+      "docs/qa/page-reviews/chat/"
+    ],
+    "observed": "Offline-demo wrapper and nested Chat app bar stack two navigation headers; generic starter prompts compete with the prefilled small-change task.",
+    "impact": "A first-time user must choose a new task instead of following the safe prepared example.",
+    "proposal": "Explicit showAppBar/emptyState presentation overrides, used only by DemoScreen; task-specific introduction and preserved contextual Review changes.",
+    "status": "tested",
+    "verification": "demo_isolation passes including320dpkeyboard/2.5x, reset/exit and real-state isolation; demo captures show one header, explicit task, retained review and truthful simulated completion.",
+    "commit": "22c97ad3c3770796f28e5e918287b5cc53b9b76c"
+  }
+]

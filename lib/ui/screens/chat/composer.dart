@@ -411,7 +411,10 @@ class _ChatComposer extends StatelessWidget {
             readOnly: shelfBusy,
           ),
         ),
-        if (contextUsage case final usage?) _ContextMeterLine(usage: usage),
+        // The percentage keeps routine usage visible; the meter signals
+        // an approaching limit instead of dividing every idle composer.
+        if (contextUsage case final usage? when usage >= .7)
+          _ContextMeterLine(usage: usage),
         Padding(
           padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
           child: Row(

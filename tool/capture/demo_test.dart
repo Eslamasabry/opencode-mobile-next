@@ -1,6 +1,6 @@
 // Captures the production offline demo route with its route-owned gateway.
 // Run: flutter test --no-pub --concurrency=1 tool/capture/demo_test.dart
-// Output: docs/qa/demo/{permission,complete}-{light,dark}.png.
+// Output: docs/qa/page-reviews/chat/demo-{start,permission,complete}-{light,dark}.png.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -56,6 +56,12 @@ void main() {
           ),
         );
         await _advance(tester);
+        expect(find.text('Try a small change'), findsOneWidget);
+        expect(find.byType(AppBar), findsNothing);
+        await writePng(
+          'docs/qa/page-reviews/chat/demo-start-$variant.png',
+          await capturePng(tester, boundary),
+        );
         await tester.tap(find.byKey(const Key('chat-send-button')));
         await _advance(tester);
         if (find.byKey(const Key('permission-sheet')).evaluate().isEmpty) {
@@ -69,7 +75,7 @@ void main() {
         );
         expect(tester.takeException(), isNull);
         await writePng(
-          'docs/qa/demo/permission-$variant.png',
+          'docs/qa/page-reviews/chat/demo-permission-$variant.png',
           await capturePng(tester, boundary),
         );
         await tester.tap(find.byKey(const Key('permission-allow-once')));
@@ -84,7 +90,7 @@ void main() {
         expect(find.byTooltip(DemoCopy.exit), findsOneWidget);
         expect(tester.takeException(), isNull);
         await writePng(
-          'docs/qa/demo/complete-$variant.png',
+          'docs/qa/page-reviews/chat/demo-complete-$variant.png',
           await capturePng(tester, boundary),
         );
       } finally {

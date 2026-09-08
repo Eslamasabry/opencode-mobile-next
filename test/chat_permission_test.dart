@@ -104,6 +104,10 @@ void main() {
     expect(find.text('git status'), findsOneWidget);
     expect(find.text('Edit a file'), findsNothing);
 
+    expect(find.text('Allow once'), findsNothing);
+    await tester.tap(find.byKey(const Key('permission-card-review')));
+    await tester.pumpAndSettle();
+    expect(api.replies, isEmpty);
     await tester.tap(find.text('Allow once'));
     await tester.pumpAndSettle();
 
@@ -239,6 +243,10 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      expect(find.text('Allow once'), findsNothing);
+      await tester.tap(find.byKey(const Key('permission-card-review')));
+      await tester.pumpAndSettle();
+      expect(api.replies, isEmpty);
       await tester.tap(find.text('Allow once'));
       await tester.pumpAndSettle();
 
@@ -294,7 +302,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Allow once'), findsOneWidget);
+    expect(find.text('Allow once'), findsNothing);
+    await tester.tap(find.byKey(const Key('permission-card-review')));
+    await tester.pumpAndSettle();
+    expect(api.replies, isEmpty);
     await tester.tap(find.text('Allow once'));
     await tester.pumpAndSettle();
     expect(api.replies, [(requestID: 'request-1', reply: 'once')]);
@@ -343,6 +354,11 @@ void main() {
       find.byKey(const Key('chat-composer-field')),
     );
     expect(field.focusNode?.hasFocus, isTrue);
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'Keep this draft',
+    );
+    await tester.pumpAndSettle();
 
     controller.handleEventForTesting(
       _permission('request-1', 'bash', 'git status'),
@@ -367,5 +383,6 @@ void main() {
     expect(find.byKey(const Key('permission-sheet')), findsNothing);
     expect(find.byKey(const Key('permission-card-request-1')), findsOneWidget);
     expect(api.replies, isEmpty);
+    expect(field.controller!.text, 'Keep this draft');
   });
 }

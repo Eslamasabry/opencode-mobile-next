@@ -5096,4 +5096,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String activityUnknownCount(int count) {
     return '$count unknown';
   }
+
+  @override
+  String get demoTaskTitle => 'Try a small change';
+
+  @override
+  String get demoTaskInstruction =>
+      'Send the sample prompt below, then review the proposed edit.';
 }

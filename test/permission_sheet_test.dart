@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
@@ -24,9 +25,16 @@ Future<void> _pump(
   required Future<void> Function(String reply, {String? message}) onReply,
   bool supportsRejectMessage = true,
   VoidCallback? onShowSource,
+  double textScale = 1,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: TextScaler.linear(textScale)),
+        child: child!,
+      ),
       home: Scaffold(
         body: PermissionSheet(
           permission: permission,
@@ -42,6 +50,66 @@ Future<void> _pump(
 
 void main() {
   _previewTests();
+  for (final scale in [1.0, 2.5]) {
+    testWidgets(
+      'ordinary permission decisions precede persistent access at ${scale}x',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(320, 740));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        await _pump(
+          tester,
+          permission: _permission(),
+          onReply: (reply, {message}) async {},
+          textScale: scale,
+        );
+        final allow = find.byKey(const Key('permission-allow-once'));
+        final reject = find.byKey(const Key('permission-reject'));
+        final always = find.byKey(const Key('permission-allow-always'));
+        for (final action in [allow, reject, always]) {
+          expect(action.hitTestable(), findsOneWidget);
+          expect(tester.getSize(action).height, greaterThanOrEqualTo(48));
+        }
+        expect(
+          tester.getBottomLeft(reject).dy,
+          lessThanOrEqualTo(tester.getTopLeft(always).dy),
+        );
+        expect(
+          tester.getBottomLeft(allow).dy,
+          lessThanOrEqualTo(tester.getTopLeft(always).dy),
+        );
+        if (scale == 1) {
+          expect(tester.getTopLeft(allow).dy, tester.getTopLeft(reject).dy);
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets(
+    'a pending permission keeps its action label and prevents duplicate submission',
+    (tester) async {
+      final pending = Completer<void>();
+      var submitted = 0;
+      await _pump(
+        tester,
+        permission: _permission(),
+        onReply: (reply, {message}) {
+          submitted++;
+          return pending.future;
+        },
+      );
+      final allow = find.byKey(const Key('permission-allow-once'));
+      await tester.tap(allow);
+      await tester.pump();
+      expect(find.text('Allow once'), findsOneWidget);
+      expect(tester.widget<FilledButton>(allow).onPressed, isNull);
+      await tester.tap(allow);
+      expect(submitted, 1);
+      pending.complete();
+      await tester.pumpAndSettle();
+    },
+  );
+
   testWidgets('renders the triad, resources card, and context line', (
     tester,
   ) async {
@@ -248,10 +316,7 @@ void _previewTests() {
         sessionID: 'ses_1',
         permission: 'edit',
         patterns: const ['/workspace/lib/main.dart'],
-        metadata: const {
-          'filePath': '/workspace/lib/main.dart',
-          'diff': patch,
-        },
+        metadata: const {'filePath': '/workspace/lib/main.dart', 'diff': patch},
       ),
       onReply: (reply, {message}) async {},
     );

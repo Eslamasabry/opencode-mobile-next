@@ -468,9 +468,11 @@ Future<void> _demoBody(WidgetTester tester, String framesDir) async {
   // --- 6. Permission card -------------------------------------------------
   controller.permissions = {samplePermission().id: samplePermission()};
   controller.notifyListeners();
-  caption.value = 'Approve without leaving the keyboard';
+  caption.value = 'Review the request before deciding';
   await run(2);
-  await tester.tap(find.byKey(const Key('permission-card-allow-once')));
+  await tester.tap(find.byKey(const Key('permission-card-review')));
+  await run(0.4);
+  await tester.tap(find.byKey(const Key('permission-allow-once')));
   await run(0.4);
 
   // --- 7. Tool completes, answer finishes, choices appear ----------------

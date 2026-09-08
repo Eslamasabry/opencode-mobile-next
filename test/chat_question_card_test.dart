@@ -286,7 +286,7 @@ void main() {
     controller.handleEventForTesting(_permission());
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('permission-card-allow-once')), findsOneWidget);
+    expect(find.byKey(const Key('permission-card-review')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('question-card-question-1')),
       findsNothing,

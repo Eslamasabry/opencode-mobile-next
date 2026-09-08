@@ -1373,7 +1373,9 @@ class _MessageView extends StatelessWidget {
         // The key must not encode the highlight flag: a highlight-driven
         // remount would kill this fade and reset per-part expansion state.
         key: ValueKey('message-highlight-${m.info.id}'),
-        duration: const Duration(milliseconds: 180),
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 180),
         padding: isUser
             ? const EdgeInsets.fromLTRB(6, 4, 6, 10)
             : const EdgeInsets.fromLTRB(6, 0, 6, 4),

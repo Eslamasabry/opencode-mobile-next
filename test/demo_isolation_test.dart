@@ -168,6 +168,8 @@ void main() {
             isNull,
             reason: 'Initial compact layout',
           );
+          expect(find.text('Try a small change'), findsOneWidget);
+          expect(find.byType(AppBar), findsNothing);
           final send = find.byKey(const Key('chat-send-button'));
           expect(tester.getRect(send).bottom, lessThanOrEqualTo(420));
           await tester.tap(send);
@@ -185,7 +187,11 @@ void main() {
           );
           expect(find.text('Set up your own server'), findsNothing);
           expect(tester.getRect(send).bottom, lessThanOrEqualTo(420));
-          final allow = find.byKey(const Key('permission-card-allow-once'));
+          final review = find.byKey(const Key('permission-card-review'));
+          await Scrollable.ensureVisible(tester.element(review), alignment: .5);
+          await tester.tap(review);
+          await _pump(tester);
+          final allow = find.byKey(const Key('permission-allow-once'));
           await Scrollable.ensureVisible(tester.element(allow), alignment: .5);
           await _pump(tester);
           expect(allow.hitTestable(), findsOneWidget);
@@ -226,6 +232,14 @@ void main() {
         await _isolatedJourney(tester, () async {
           final controller = _demoController(tester);
           final gateway = controller.api! as DemoGateway;
+          expect(find.byTooltip('Review changes'), findsNothing);
+          await tester.tap(find.byKey(const Key('chat-send-button')));
+          await _pump(tester);
+          expect(
+            controller.permissionsForSession(DemoGateway.sessionID),
+            hasLength(1),
+          );
+          expect(gateway.hasPendingTimer, isFalse);
           await tester.tap(find.byTooltip('Review changes'));
           await _pump(tester);
           expect(find.byType(DiffView), findsOneWidget);
@@ -239,13 +253,6 @@ void main() {
           );
           await tester.tap(find.byType(CloseButton));
           await _pump(tester);
-          await tester.tap(find.byKey(const Key('chat-send-button')));
-          await _pump(tester);
-          expect(
-            controller.permissionsForSession(DemoGateway.sessionID),
-            hasLength(1),
-          );
-          expect(gateway.hasPendingTimer, isFalse);
           await _review(tester);
           await tester.tap(find.byKey(const Key('permission-see-full-diff')));
           await _pump(tester);
