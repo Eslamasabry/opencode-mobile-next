@@ -7160,6 +7160,426 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your network connection is managed in Tailscale. Test connection checks this OpenCode server, not the VPN. Enter the server’s own username and password here, not your Tailscale login. Setup help keeps these fields intact.'**
   String get tailscaleEditorDetail;
+
+  /// No description provided for @a2aDraftSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft changes could not be saved. Keep this screen open and retry before leaving.'**
+  String get a2aDraftSaveError;
+
+  /// No description provided for @a2aRetryDraftSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry saving draft'**
+  String get a2aRetryDraftSave;
+
+  /// No description provided for @a2aSavingDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving draft changes…'**
+  String get a2aSavingDraft;
+
+  /// No description provided for @a2aCardVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent version: {version}'**
+  String a2aCardVersion(String version);
+
+  /// No description provided for @a2aSupportedConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'A2A 1.0 · JSON-RPC · Text tasks'**
+  String get a2aSupportedConnection;
+
+  /// No description provided for @a2aTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'External agents'**
+  String get a2aTitle;
+
+  /// No description provided for @a2aIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring an agent you trust.'**
+  String get a2aIntro;
+
+  /// No description provided for @a2aBoundary.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to an A2A agent and send a task you choose. Only the text you submit is shared. Your projects, files and other conversations stay on this phone.'**
+  String get a2aBoundary;
+
+  /// No description provided for @a2aAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add agent'**
+  String get a2aAdd;
+
+  /// No description provided for @a2aEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No external agents yet. Start with an agent\'s HTTPS address or public Agent Card URL.'**
+  String get a2aEmpty;
+
+  /// No description provided for @a2aDeleteAgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete agent'**
+  String get a2aDeleteAgent;
+
+  /// No description provided for @a2aDeleteAgentDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this agent, its saved tasks and its credential from this phone. This does not stop remote work or delete data held by the agent.'**
+  String get a2aDeleteAgentDetail;
+
+  /// No description provided for @a2aDeleteLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete local data'**
+  String get a2aDeleteLocal;
+
+  /// No description provided for @a2aDeletionPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Local deletion is incomplete. This agent is unavailable until its remaining data is removed.'**
+  String get a2aDeletionPending;
+
+  /// No description provided for @a2aRetryDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry deletion'**
+  String get a2aRetryDelete;
+
+  /// No description provided for @a2aInspectIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspect before you connect'**
+  String get a2aInspectIntro;
+
+  /// No description provided for @a2aAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent address'**
+  String get a2aAddress;
+
+  /// No description provided for @a2aInspect.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspect Agent Card'**
+  String get a2aInspect;
+
+  /// No description provided for @a2aUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable: this card does not advertise the supported A2A 1.0 JSON-RPC, text and authentication combination on the same origin, or requires an unsupported extension. No task can be sent.'**
+  String get a2aUnsupported;
+
+  /// No description provided for @a2aBearerDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Supply an HTTP bearer credential issued for this agent. It is stored in the phone\'s secure storage and sent only to the inspected origin. No sign-in or credential sharing with other agents is performed.'**
+  String get a2aBearerDetail;
+
+  /// No description provided for @a2aNoAuthDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'This card requests no authentication. Do not send private information unless you trust this agent.'**
+  String get a2aNoAuthDetail;
+
+  /// No description provided for @a2aBearer.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent bearer credential'**
+  String get a2aBearer;
+
+  /// No description provided for @a2aSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save agent'**
+  String get a2aSave;
+
+  /// No description provided for @a2aCardClaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Self-reported Agent Card. This app has not verified the agent\'s identity, skills or billing terms.'**
+  String get a2aCardClaim;
+
+  /// No description provided for @a2aSkills.
+  ///
+  /// In en, this message translates to:
+  /// **'Advertised skills'**
+  String get a2aSkills;
+
+  /// No description provided for @a2aNewTask.
+  ///
+  /// In en, this message translates to:
+  /// **'New task'**
+  String get a2aNewTask;
+
+  /// No description provided for @a2aTaskPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Task text'**
+  String get a2aTaskPrompt;
+
+  /// No description provided for @a2aSendDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Review the text and destination before sending. The agent may use its own compute or services; check its terms. This app cannot estimate or limit that usage.'**
+  String get a2aSendDetail;
+
+  /// No description provided for @a2aReviewTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Review task'**
+  String get a2aReviewTask;
+
+  /// No description provided for @a2aUpdateCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Update credential'**
+  String get a2aUpdateCredential;
+
+  /// No description provided for @a2aSavedTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved tasks'**
+  String get a2aSavedTasks;
+
+  /// No description provided for @a2aReopenDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopening checks the existing task. It never sends your task again.'**
+  String get a2aReopenDetail;
+
+  /// No description provided for @a2aDeliveryUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery unconfirmed'**
+  String get a2aDeliveryUnconfirmed;
+
+  /// No description provided for @a2aDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent'**
+  String get a2aDraft;
+
+  /// No description provided for @a2aBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get a2aBack;
+
+  /// No description provided for @a2aTaskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent task'**
+  String get a2aTaskTitle;
+
+  /// No description provided for @a2aFresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked with the agent this visit.'**
+  String get a2aFresh;
+
+  /// No description provided for @a2aSavedSnapshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved locally. Refresh a known task to check its current state.'**
+  String get a2aSavedSnapshot;
+
+  /// No description provided for @a2aCancelTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel task'**
+  String get a2aCancelTask;
+
+  /// No description provided for @a2aCancelDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask this agent to cancel this task. Work may already have finished, and the agent decides whether cancellation is possible.'**
+  String get a2aCancelDetail;
+
+  /// No description provided for @a2aRequestCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Request cancellation'**
+  String get a2aRequestCancel;
+
+  /// No description provided for @a2aForgetTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget saved task'**
+  String get a2aForgetTask;
+
+  /// No description provided for @a2aForgetDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this saved task from the phone. Remote work may continue, including a send whose delivery is unconfirmed. This cannot delete the agent\'s copy.'**
+  String get a2aForgetDetail;
+
+  /// No description provided for @a2aYourReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Your reply'**
+  String get a2aYourReply;
+
+  /// No description provided for @a2aSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to agent'**
+  String get a2aSend;
+
+  /// No description provided for @a2aReplySameTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply to this task'**
+  String get a2aReplySameTask;
+
+  /// No description provided for @a2aAgentOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent output'**
+  String get a2aAgentOutput;
+
+  /// No description provided for @a2aBlockedLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported link'**
+  String get a2aBlockedLink;
+
+  /// No description provided for @a2aReviewLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Review external link'**
+  String get a2aReviewLink;
+
+  /// No description provided for @a2aOmittedContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Some output is omitted. This view shows bounded text and links; binary or structured artifacts are not downloaded or executed.'**
+  String get a2aOmittedContent;
+
+  /// No description provided for @a2aRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh task'**
+  String get a2aRefresh;
+
+  /// No description provided for @a2aSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted'**
+  String get a2aSubmitted;
+
+  /// No description provided for @a2aWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working'**
+  String get a2aWorking;
+
+  /// No description provided for @a2aInputRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your input is needed'**
+  String get a2aInputRequired;
+
+  /// No description provided for @a2aAuthRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent requires authentication'**
+  String get a2aAuthRequired;
+
+  /// No description provided for @a2aCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get a2aCompleted;
+
+  /// No description provided for @a2aFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get a2aFailed;
+
+  /// No description provided for @a2aCanceled.
+  ///
+  /// In en, this message translates to:
+  /// **'Canceled'**
+  String get a2aCanceled;
+
+  /// No description provided for @a2aRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get a2aRejected;
+
+  /// No description provided for @a2aUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported task state'**
+  String get a2aUnknown;
+
+  /// No description provided for @a2aAddressError.
+  ///
+  /// In en, this message translates to:
+  /// **'Use an HTTPS origin or public Agent Card URL without credentials, query or fragment. HTTP is supported only on this device\'s loopback address.'**
+  String get a2aAddressError;
+
+  /// No description provided for @a2aAuthenticationError.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent rejected or could not use this credential. Return to the agent to update it, then reopen the saved task.'**
+  String get a2aAuthenticationError;
+
+  /// No description provided for @a2aUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent could not be reached or rejected this operation. Refresh a known task to check its state.'**
+  String get a2aUnavailable;
+
+  /// No description provided for @a2aInvalidResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent returned an unsupported, oversized or mismatched response. The saved task has not been replaced.'**
+  String get a2aInvalidResponse;
+
+  /// No description provided for @a2aUncertain.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent may have received this message. It will not be resent. If a task ID was confirmed, refresh to check progress; otherwise check with the agent before starting another task.'**
+  String get a2aUncertain;
+
+  /// No description provided for @a2aStorageError.
+  ///
+  /// In en, this message translates to:
+  /// **'Local data could not be saved or removed. Check device storage and retry the local operation. A message without a saved delivery marker is not sent.'**
+  String get a2aStorageError;
+
+  /// No description provided for @a2aScopeError.
+  ///
+  /// In en, this message translates to:
+  /// **'This agent, credential or saved task changed. Close this view and reopen the agent to continue.'**
+  String get a2aScopeError;
+
+  /// No description provided for @a2aCancelUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellation is not confirmed. The agent still reports an active task; refresh to check again.'**
+  String get a2aCancelUnconfirmed;
+
+  /// No description provided for @a2aAuthRequiredDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'This agent requested an additional authentication flow, which this client does not support. No automatic login or task continuation will occur.'**
+  String get a2aAuthRequiredDetail;
+
+  /// No description provided for @a2aUnknownDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'This task state is not supported. You can refresh or forget the local record; sending and cancellation remain unavailable.'**
+  String get a2aUnknownDetail;
 }
 
 class _AppLocalizationsDelegate

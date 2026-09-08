@@ -13,6 +13,7 @@ import '../../state/connection.dart';
 import '../../state/codex_connection_probe.dart';
 import '../../state/pairing.dart';
 import '../../state/profiles.dart';
+import '../../state/external_agents.dart';
 import '../../termux/bridge.dart';
 import '../app_theme.dart';
 import '../widgets/confirm_sheet.dart';
@@ -23,6 +24,7 @@ import 'attention_overview_screen.dart';
 import 'pairing_scanner_screen.dart';
 import 'tailscale_setup_screen.dart';
 import '../../state/tailscale_address.dart';
+import 'external_agents_screen.dart';
 
 /// What the servers list learns back from the editor's save: whether the
 /// profile reached the store, and the product-facing failure to show inline
@@ -293,6 +295,29 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
   Widget build(BuildContext context) {
     final bootstrap = ref.watch(bootstrapProvider);
     return Scaffold(
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.hub_outlined),
+            label: Text(_connectionL10n(context).a2aTitle),
+            onPressed: _busy
+                ? null
+                : () async {
+                    final store = ExternalAgentStore(
+                      bootstrap.store.prefs,
+                      bootstrap.store.secure,
+                    );
+                    await Navigator.of(context).push<void>(
+                      MaterialPageRoute(
+                        builder: (_) => ExternalAgentsScreen(store: store),
+                      ),
+                    );
+                    store.dispose();
+                  },
+          ),
+        ),
+      ),
       appBar: AppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,

@@ -4286,4 +4286,241 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tailscaleEditorDetail =>
       'Your network connection is managed in Tailscale. Test connection checks this OpenCode server, not the VPN. Enter the server’s own username and password here, not your Tailscale login. Setup help keeps these fields intact.';
+
+  @override
+  String get a2aDraftSaveError =>
+      'Draft changes could not be saved. Keep this screen open and retry before leaving.';
+
+  @override
+  String get a2aRetryDraftSave => 'Retry saving draft';
+
+  @override
+  String get a2aSavingDraft => 'Saving draft changes…';
+
+  @override
+  String a2aCardVersion(String version) {
+    return 'Agent version: $version';
+  }
+
+  @override
+  String get a2aSupportedConnection => 'A2A 1.0 · JSON-RPC · Text tasks';
+
+  @override
+  String get a2aTitle => 'External agents';
+
+  @override
+  String get a2aIntro => 'Bring an agent you trust.';
+
+  @override
+  String get a2aBoundary =>
+      'Connect to an A2A agent and send a task you choose. Only the text you submit is shared. Your projects, files and other conversations stay on this phone.';
+
+  @override
+  String get a2aAdd => 'Add agent';
+
+  @override
+  String get a2aEmpty =>
+      'No external agents yet. Start with an agent\'s HTTPS address or public Agent Card URL.';
+
+  @override
+  String get a2aDeleteAgent => 'Delete agent';
+
+  @override
+  String get a2aDeleteAgentDetail =>
+      'Remove this agent, its saved tasks and its credential from this phone. This does not stop remote work or delete data held by the agent.';
+
+  @override
+  String get a2aDeleteLocal => 'Delete local data';
+
+  @override
+  String get a2aDeletionPending =>
+      'Local deletion is incomplete. This agent is unavailable until its remaining data is removed.';
+
+  @override
+  String get a2aRetryDelete => 'Retry deletion';
+
+  @override
+  String get a2aInspectIntro => 'Inspect before you connect';
+
+  @override
+  String get a2aAddress => 'Agent address';
+
+  @override
+  String get a2aInspect => 'Inspect Agent Card';
+
+  @override
+  String get a2aUnsupported =>
+      'Unavailable: this card does not advertise the supported A2A 1.0 JSON-RPC, text and authentication combination on the same origin, or requires an unsupported extension. No task can be sent.';
+
+  @override
+  String get a2aBearerDetail =>
+      'Supply an HTTP bearer credential issued for this agent. It is stored in the phone\'s secure storage and sent only to the inspected origin. No sign-in or credential sharing with other agents is performed.';
+
+  @override
+  String get a2aNoAuthDetail =>
+      'This card requests no authentication. Do not send private information unless you trust this agent.';
+
+  @override
+  String get a2aBearer => 'Agent bearer credential';
+
+  @override
+  String get a2aSave => 'Save agent';
+
+  @override
+  String get a2aCardClaim =>
+      'Self-reported Agent Card. This app has not verified the agent\'s identity, skills or billing terms.';
+
+  @override
+  String get a2aSkills => 'Advertised skills';
+
+  @override
+  String get a2aNewTask => 'New task';
+
+  @override
+  String get a2aTaskPrompt => 'Task text';
+
+  @override
+  String get a2aSendDetail =>
+      'Review the text and destination before sending. The agent may use its own compute or services; check its terms. This app cannot estimate or limit that usage.';
+
+  @override
+  String get a2aReviewTask => 'Review task';
+
+  @override
+  String get a2aUpdateCredential => 'Update credential';
+
+  @override
+  String get a2aSavedTasks => 'Saved tasks';
+
+  @override
+  String get a2aReopenDetail =>
+      'Reopening checks the existing task. It never sends your task again.';
+
+  @override
+  String get a2aDeliveryUnconfirmed => 'Delivery unconfirmed';
+
+  @override
+  String get a2aDraft => 'Not sent';
+
+  @override
+  String get a2aBack => 'Back';
+
+  @override
+  String get a2aTaskTitle => 'Agent task';
+
+  @override
+  String get a2aFresh => 'Checked with the agent this visit.';
+
+  @override
+  String get a2aSavedSnapshot =>
+      'Saved locally. Refresh a known task to check its current state.';
+
+  @override
+  String get a2aCancelTask => 'Cancel task';
+
+  @override
+  String get a2aCancelDetail =>
+      'Ask this agent to cancel this task. Work may already have finished, and the agent decides whether cancellation is possible.';
+
+  @override
+  String get a2aRequestCancel => 'Request cancellation';
+
+  @override
+  String get a2aForgetTask => 'Forget saved task';
+
+  @override
+  String get a2aForgetDetail =>
+      'Remove this saved task from the phone. Remote work may continue, including a send whose delivery is unconfirmed. This cannot delete the agent\'s copy.';
+
+  @override
+  String get a2aYourReply => 'Your reply';
+
+  @override
+  String get a2aSend => 'Send to agent';
+
+  @override
+  String get a2aReplySameTask => 'Reply to this task';
+
+  @override
+  String get a2aAgentOutput => 'Agent output';
+
+  @override
+  String get a2aBlockedLink => 'Unsupported link';
+
+  @override
+  String get a2aReviewLink => 'Review external link';
+
+  @override
+  String get a2aOmittedContent =>
+      'Some output is omitted. This view shows bounded text and links; binary or structured artifacts are not downloaded or executed.';
+
+  @override
+  String get a2aRefresh => 'Refresh task';
+
+  @override
+  String get a2aSubmitted => 'Submitted';
+
+  @override
+  String get a2aWorking => 'Working';
+
+  @override
+  String get a2aInputRequired => 'Your input is needed';
+
+  @override
+  String get a2aAuthRequired => 'Agent requires authentication';
+
+  @override
+  String get a2aCompleted => 'Completed';
+
+  @override
+  String get a2aFailed => 'Failed';
+
+  @override
+  String get a2aCanceled => 'Canceled';
+
+  @override
+  String get a2aRejected => 'Rejected';
+
+  @override
+  String get a2aUnknown => 'Unsupported task state';
+
+  @override
+  String get a2aAddressError =>
+      'Use an HTTPS origin or public Agent Card URL without credentials, query or fragment. HTTP is supported only on this device\'s loopback address.';
+
+  @override
+  String get a2aAuthenticationError =>
+      'The agent rejected or could not use this credential. Return to the agent to update it, then reopen the saved task.';
+
+  @override
+  String get a2aUnavailable =>
+      'The agent could not be reached or rejected this operation. Refresh a known task to check its state.';
+
+  @override
+  String get a2aInvalidResponse =>
+      'The agent returned an unsupported, oversized or mismatched response. The saved task has not been replaced.';
+
+  @override
+  String get a2aUncertain =>
+      'The agent may have received this message. It will not be resent. If a task ID was confirmed, refresh to check progress; otherwise check with the agent before starting another task.';
+
+  @override
+  String get a2aStorageError =>
+      'Local data could not be saved or removed. Check device storage and retry the local operation. A message without a saved delivery marker is not sent.';
+
+  @override
+  String get a2aScopeError =>
+      'This agent, credential or saved task changed. Close this view and reopen the agent to continue.';
+
+  @override
+  String get a2aCancelUnconfirmed =>
+      'Cancellation is not confirmed. The agent still reports an active task; refresh to check again.';
+
+  @override
+  String get a2aAuthRequiredDetail =>
+      'This agent requested an additional authentication flow, which this client does not support. No automatic login or task continuation will occur.';
+
+  @override
+  String get a2aUnknownDetail =>
+      'This task state is not supported. You can refresh or forget the local record; sending and cancellation remain unavailable.';
 }
