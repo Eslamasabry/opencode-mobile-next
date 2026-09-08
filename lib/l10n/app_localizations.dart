@@ -6998,6 +6998,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Snapshot of the code when opened. Close and reopen to read later updates.'**
   String get markdownSnapshot;
+
+  /// No description provided for @tailscaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect with Tailscale'**
+  String get tailscaleTitle;
+
+  /// No description provided for @tailscaleQuickAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your private network and an HTTPS server address'**
+  String get tailscaleQuickAdd;
+
+  /// No description provided for @tailscaleIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach OpenCode on another computer through your own Tailscale network. You control sign-in and VPN access in the official Tailscale app.'**
+  String get tailscaleIntro;
+
+  /// No description provided for @tailscaleAppStep.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Open your private network'**
+  String get tailscaleAppStep;
+
+  /// No description provided for @tailscaleChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for the Tailscale app…'**
+  String get tailscaleChecking;
+
+  /// No description provided for @tailscaleInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Tailscale is installed. VPN connection is unverified.'**
+  String get tailscaleInstalled;
+
+  /// No description provided for @tailscaleMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Tailscale is not installed. Install the official app, then return and check again.'**
+  String get tailscaleMissing;
+
+  /// No description provided for @tailscaleUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check the app. Try again, or open Tailscale from your phone.'**
+  String get tailscaleUnknown;
+
+  /// No description provided for @tailscaleUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This device cannot open the Android app. Set up Tailscale on this device yourself, then review your HTTPS address below.'**
+  String get tailscaleUnsupported;
+
+  /// No description provided for @tailscaleVpnHandoff.
+  ///
+  /// In en, this message translates to:
+  /// **'In Tailscale, sign in to the network that can reach your server, approve Android’s VPN prompt if asked, and turn the connection on. OpenCode cannot see or change that VPN state.'**
+  String get tailscaleVpnHandoff;
+
+  /// No description provided for @tailscaleReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back. App presence was checked again; use Test connection on the next screen to check your server.'**
+  String get tailscaleReturned;
+
+  /// No description provided for @tailscaleOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Tailscale could not open. Open it from your launcher, then return here. Your address stays in this form.'**
+  String get tailscaleOpenFailed;
+
+  /// No description provided for @tailscaleOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Tailscale'**
+  String get tailscaleOpen;
+
+  /// No description provided for @tailscaleInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Get official Android app'**
+  String get tailscaleInstall;
+
+  /// No description provided for @tailscaleCheckAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Check app again'**
+  String get tailscaleCheckAgain;
+
+  /// No description provided for @tailscaleAddressStep.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Review your server address'**
+  String get tailscaleAddressStep;
+
+  /// No description provided for @tailscaleAddressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Private HTTPS server address'**
+  String get tailscaleAddressLabel;
+
+  /// No description provided for @tailscaleAddressDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the full HTTPS origin printed by Tailscale Serve, such as https://computer.tailnet-name.ts.net. Keep any HTTPS port it prints. A short device name or a raw HTTP port may not provide a valid certificate.'**
+  String get tailscaleAddressDetail;
+
+  /// No description provided for @tailscaleAddressError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an HTTPS origin with a valid port (1–65535). Remove paths, credentials, query text and fragments. Use the full address from Serve; do not replace https with http.'**
+  String get tailscaleAddressError;
+
+  /// No description provided for @tailscaleReviewDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue only with an address you recognize. The next screen reviews your server credentials before you explicitly test or save. This app cannot confirm that an address is private from its name alone.'**
+  String get tailscaleReviewDetail;
+
+  /// No description provided for @tailscaleContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to authentication'**
+  String get tailscaleContinue;
+
+  /// No description provided for @tailscaleHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Tailscale setup and recovery'**
+  String get tailscaleHelp;
+
+  /// No description provided for @tailscaleServeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'On the server computer, Tailscale Serve can provide private HTTPS for a local OpenCode port. Use Serve, not public Funnel. Your tailnet access rules still apply. Enabling HTTPS publishes the certificate’s device and tailnet names in a public certificate log, although access stays private. Review the official guide before changing your server.'**
+  String get tailscaleServeHelp;
+
+  /// No description provided for @tailscaleServeDocs.
+  ///
+  /// In en, this message translates to:
+  /// **'Read the official Serve guide'**
+  String get tailscaleServeDocs;
+
+  /// No description provided for @tailscaleAndroidDocs.
+  ///
+  /// In en, this message translates to:
+  /// **'Read the official Android guide'**
+  String get tailscaleAndroidDocs;
+
+  /// No description provided for @tailscaleRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'If the server is unreachable, check Tailscale on both devices, the full HTTPS name and port, Serve on the server, and your network’s access rules. A VPN or DNS conflict may also prevent access. Keep HTTPS enabled. Correct the server password if authentication is rejected, then retry Test connection.'**
+  String get tailscaleRecovery;
+
+  /// No description provided for @tailscaleEditorDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Your network connection is managed in Tailscale. Test connection checks this OpenCode server, not the VPN. Enter the server’s own username and password here, not your Tailscale login. Setup help keeps these fields intact.'**
+  String get tailscaleEditorDetail;
 }
 
 class _AppLocalizationsDelegate

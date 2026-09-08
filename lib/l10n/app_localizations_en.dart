@@ -4190,4 +4190,100 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get markdownSnapshot =>
       'Snapshot of the code when opened. Close and reopen to read later updates.';
+
+  @override
+  String get tailscaleTitle => 'Connect with Tailscale';
+
+  @override
+  String get tailscaleQuickAdd =>
+      'Use your private network and an HTTPS server address';
+
+  @override
+  String get tailscaleIntro =>
+      'Reach OpenCode on another computer through your own Tailscale network. You control sign-in and VPN access in the official Tailscale app.';
+
+  @override
+  String get tailscaleAppStep => '1. Open your private network';
+
+  @override
+  String get tailscaleChecking => 'Checking for the Tailscale app…';
+
+  @override
+  String get tailscaleInstalled =>
+      'Tailscale is installed. VPN connection is unverified.';
+
+  @override
+  String get tailscaleMissing =>
+      'Tailscale is not installed. Install the official app, then return and check again.';
+
+  @override
+  String get tailscaleUnknown =>
+      'Could not check the app. Try again, or open Tailscale from your phone.';
+
+  @override
+  String get tailscaleUnsupported =>
+      'This device cannot open the Android app. Set up Tailscale on this device yourself, then review your HTTPS address below.';
+
+  @override
+  String get tailscaleVpnHandoff =>
+      'In Tailscale, sign in to the network that can reach your server, approve Android’s VPN prompt if asked, and turn the connection on. OpenCode cannot see or change that VPN state.';
+
+  @override
+  String get tailscaleReturned =>
+      'Welcome back. App presence was checked again; use Test connection on the next screen to check your server.';
+
+  @override
+  String get tailscaleOpenFailed =>
+      'Tailscale could not open. Open it from your launcher, then return here. Your address stays in this form.';
+
+  @override
+  String get tailscaleOpen => 'Open Tailscale';
+
+  @override
+  String get tailscaleInstall => 'Get official Android app';
+
+  @override
+  String get tailscaleCheckAgain => 'Check app again';
+
+  @override
+  String get tailscaleAddressStep => '2. Review your server address';
+
+  @override
+  String get tailscaleAddressLabel => 'Private HTTPS server address';
+
+  @override
+  String get tailscaleAddressDetail =>
+      'Use the full HTTPS origin printed by Tailscale Serve, such as https://computer.tailnet-name.ts.net. Keep any HTTPS port it prints. A short device name or a raw HTTP port may not provide a valid certificate.';
+
+  @override
+  String get tailscaleAddressError =>
+      'Enter an HTTPS origin with a valid port (1–65535). Remove paths, credentials, query text and fragments. Use the full address from Serve; do not replace https with http.';
+
+  @override
+  String get tailscaleReviewDetail =>
+      'Continue only with an address you recognize. The next screen reviews your server credentials before you explicitly test or save. This app cannot confirm that an address is private from its name alone.';
+
+  @override
+  String get tailscaleContinue => 'Continue to authentication';
+
+  @override
+  String get tailscaleHelp => 'Tailscale setup and recovery';
+
+  @override
+  String get tailscaleServeHelp =>
+      'On the server computer, Tailscale Serve can provide private HTTPS for a local OpenCode port. Use Serve, not public Funnel. Your tailnet access rules still apply. Enabling HTTPS publishes the certificate’s device and tailnet names in a public certificate log, although access stays private. Review the official guide before changing your server.';
+
+  @override
+  String get tailscaleServeDocs => 'Read the official Serve guide';
+
+  @override
+  String get tailscaleAndroidDocs => 'Read the official Android guide';
+
+  @override
+  String get tailscaleRecovery =>
+      'If the server is unreachable, check Tailscale on both devices, the full HTTPS name and port, Serve on the server, and your network’s access rules. A VPN or DNS conflict may also prevent access. Keep HTTPS enabled. Correct the server password if authentication is rejected, then retry Test connection.';
+
+  @override
+  String get tailscaleEditorDetail =>
+      'Your network connection is managed in Tailscale. Test connection checks this OpenCode server, not the VPN. Enter the server’s own username and password here, not your Tailscale login. Setup help keeps these fields intact.';
 }

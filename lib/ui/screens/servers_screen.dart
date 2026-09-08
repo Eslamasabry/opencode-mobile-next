@@ -21,6 +21,8 @@ import '../widgets/product_states.dart';
 import 'demo_screen.dart';
 import 'attention_overview_screen.dart';
 import 'pairing_scanner_screen.dart';
+import 'tailscale_setup_screen.dart';
+import '../../state/tailscale_address.dart';
 
 /// What the servers list learns back from the editor's save: whether the
 /// profile reached the store, and the product-facing failure to show inline
@@ -122,8 +124,19 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
   Future<void> _edit({
     ServerProfile? existing,
     bool focusPassword = false,
+    bool tailscale = false,
+    String? initialUrl,
   }) async {
     final isNew = existing == null;
+    final useTailscale =
+        tailscale ||
+        (existing != null &&
+            ref
+                    .read(bootstrapProvider)
+                    .store
+                    .prefs
+                    .getBool('oc.tailscale.${existing.id}') ==
+                true);
     // The editor stays open until the save (and, for new or active profiles,
     // the connect) has succeeded, so any failure is shown where the fields
     // that fix it are — not as a snackbar over a list the user just left.
@@ -132,7 +145,10 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
         builder: (_) => _ProfileEditorScreen(
           existing: existing,
           focusPassword: focusPassword,
-          onSubmit: (profile) => _saveAndConnect(profile, isNew: isNew),
+          tailscale: useTailscale,
+          initialUrl: initialUrl,
+          onSubmit: (profile) =>
+              _saveAndConnect(profile, isNew: isNew, tailscale: useTailscale),
           secureStorageProbe: () =>
               ref.read(bootstrapProvider).store.secureStorageProblem(),
         ),
@@ -144,12 +160,21 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     }
   }
 
+  Future<void> _tailscale() async {
+    final url = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const TailscaleSetupScreen()),
+    );
+    if (!mounted || url == null) return;
+    await _edit(tailscale: true, initialUrl: url);
+  }
+
   /// Saves [result] and connects profiles whose submit action promises it.
   /// A brand-new profile and every Codex profile promise "Save & connect";
   /// edits of existing non-active OpenCode profiles keep saving only.
   Future<_SubmitOutcome> _saveAndConnect(
     ServerProfile result, {
     required bool isNew,
+    bool tailscale = false,
   }) async {
     final store = ref.read(bootstrapProvider).store;
     final wasActive = store.activeId == result.id;
@@ -161,6 +186,10 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     try {
       await store.upsert(result);
       saved = true;
+      if (tailscale &&
+          !await store.prefs.setBool('oc.tailscale.${result.id}', true)) {
+        throw StateError('Could not save connection guidance. Retry saving.');
+      }
       if (wasActive || isNew || result.backend == ServerBackend.codex) {
         final savedProfile = store.profiles.firstWhere(
           (profile) => profile.id == result.id,
@@ -333,6 +362,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
             return _WelcomeView(
               busy: _busy,
               onConnect: () => _edit(),
+              onTailscale: _tailscale,
               onTermux: () => Navigator.pushNamed(context, '/termux-setup'),
               onGuide: () => Navigator.pushNamed(context, '/guide'),
               onDemo: () => Navigator.of(context).push<void>(
@@ -536,6 +566,15 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                 ),
               ),
               const SizedBox(height: 6),
+              if (platformCapabilities.supportsTailscaleHandoff)
+                Card.filled(
+                  child: ListTile(
+                    onTap: _busy ? null : _tailscale,
+                    leading: const Icon(Icons.vpn_lock_outlined),
+                    title: Text(_connectionL10n(context).tailscaleTitle),
+                    subtitle: Text(_connectionL10n(context).tailscaleQuickAdd),
+                  ),
+                ),
               // Termux is Android-only; on desktop the sole quick-add path is
               // a remote (or local) server the user runs themselves.
               if (platformCapabilities.supportsTermux)
@@ -573,6 +612,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
 class _WelcomeView extends StatelessWidget {
   final bool busy;
   final VoidCallback onConnect;
+  final VoidCallback onTailscale;
   final VoidCallback onTermux;
   final VoidCallback onGuide;
   final VoidCallback onDemo;
@@ -580,6 +620,7 @@ class _WelcomeView extends StatelessWidget {
   const _WelcomeView({
     required this.busy,
     required this.onConnect,
+    required this.onTailscale,
     required this.onTermux,
     required this.onGuide,
     required this.onDemo,
@@ -677,6 +718,16 @@ class _WelcomeView extends StatelessWidget {
                           'paste.',
                       onTap: busy ? null : onConnect,
                     ),
+                    if (platformCapabilities.supportsTailscaleHandoff) ...[
+                      const SizedBox(height: 10),
+                      _WelcomeCard(
+                        cardKey: const ValueKey('welcome-tailscale-card'),
+                        icon: Icons.vpn_lock_outlined,
+                        title: _connectionL10n(context).tailscaleTitle,
+                        subtitle: _connectionL10n(context).tailscaleQuickAdd,
+                        onTap: busy ? null : onTailscale,
+                      ),
+                    ],
                     if (platformCapabilities.supportsTermux) ...[
                       const SizedBox(height: 10),
                       _WelcomeCard(
@@ -758,6 +809,8 @@ class _WelcomeCard extends StatelessWidget {
 
 class _ProfileEditorScreen extends StatefulWidget {
   final ServerProfile? existing;
+  final bool tailscale;
+  final String? initialUrl;
 
   /// Focus the password field on open — the path taken from the connection
   /// banner after a mid-session 401 (the serve password rotated).
@@ -774,6 +827,8 @@ class _ProfileEditorScreen extends StatefulWidget {
   final Future<String?> Function()? secureStorageProbe;
   const _ProfileEditorScreen({
     this.existing,
+    this.tailscale = false,
+    this.initialUrl,
     this.focusPassword = false,
     required this.onSubmit,
     this.secureStorageProbe,
@@ -792,7 +847,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   // New profiles start empty: the normalizer on Test/Save adds the scheme,
   // and a pre-seeded 'https://' fought typed bare hosts.
   late final TextEditingController _url = TextEditingController(
-    text: widget.existing?.baseUrl ?? '',
+    text: widget.existing?.baseUrl ?? widget.initialUrl ?? '',
   );
   late final TextEditingController _user = TextEditingController(
     text: widget.existing?.username ?? '',
@@ -946,6 +1001,13 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
       return;
     }
     final url = normalizeServerProfileUrl(_url.text);
+    if (widget.tailscale && !isValidTailscaleAddress(url)) {
+      setState(() {
+        _error = _connectionL10n(context).tailscaleAddressError;
+        _testResult = null;
+      });
+      return;
+    }
     if (url != _url.text.trim()) {
       _urlLength = url.length;
       _url.value = TextEditingValue(
@@ -1109,6 +1171,13 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   /// never logged, never put in [_pairingNotice] or [_pairingFailure], and
   /// never in a URL.
   Future<void> _applyPairing(PairingPayload payload) async {
+    if (widget.tailscale) {
+      payload.consume();
+      setState(
+        () => _pairingFailure = _connectionL10n(context).tailscaleReviewDetail,
+      );
+      return;
+    }
     if (_pairing) {
       payload.consume();
       return;
@@ -1264,6 +1333,29 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     if (discard && mounted) Navigator.pop(context);
   }
 
+  Future<void> _tailscaleHelp() async {
+    if (_submitting) return;
+    final before = _url.text;
+    final generation = ++_probeGeneration;
+    setState(() => _testing = false);
+    final reviewed = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => TailscaleSetupScreen(initialAddress: before),
+      ),
+    );
+    if (!mounted ||
+        reviewed == null ||
+        _url.text != before ||
+        generation != _probeGeneration) {
+      return;
+    }
+    setState(() {
+      _invalidateProbe();
+      _url.text = reviewed;
+      _urlLength = reviewed.length;
+    });
+  }
+
   Future<void> _save() async {
     if (_submitting) return;
     if (_isCodex) {
@@ -1271,6 +1363,10 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
       return;
     }
     var url = normalizeServerProfileUrl(_url.text);
+    if (widget.tailscale && !isValidTailscaleAddress(url)) {
+      setState(() => _error = _connectionL10n(context).tailscaleAddressError);
+      return;
+    }
     final error = validateServerProfileUrl(
       url,
       username: _user.text,
@@ -1578,7 +1674,18 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [
-                if (widget.existing == null) ...[
+                if (widget.tailscale) ...[
+                  Text(_connectionL10n(context).tailscaleEditorDetail),
+                  TextButton.icon(
+                    onPressed: _tailscaleHelp,
+                    icon: const Icon(Icons.vpn_lock_outlined),
+                    label: Text(_connectionL10n(context).tailscaleHelp),
+                  ),
+                  if (_testResult?.ok == false || _submitFailure != null)
+                    Text(_connectionL10n(context).tailscaleRecovery),
+                  const SizedBox(height: 12),
+                ],
+                if (widget.existing == null && !widget.tailscale) ...[
                   Text(
                     _connectionL10n(context).connectionTypeLabel,
                     style: theme.textTheme.labelSmall?.copyWith(
@@ -1676,17 +1783,20 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                 ],
                 if (!_isCodex) ...[
                   const SizedBox(height: 12),
-                  _PairingActions(
-                    busy: _pairing,
-                    notice: _pairingNotice,
-                    failure: _pairingFailure,
-                    onPaste: _pairing ? null : () => unawaited(_pastePairing()),
-                    // Rendered only where a camera path exists. Desktop gets no
-                    // affordance at all rather than one that opens and fails.
-                    onScan: platformCapabilities.supportsQrPairing
-                        ? () => unawaited(_scanPairing())
-                        : null,
-                  ),
+                  if (!widget.tailscale)
+                    _PairingActions(
+                      busy: _pairing,
+                      notice: _pairingNotice,
+                      failure: _pairingFailure,
+                      onPaste: _pairing
+                          ? null
+                          : () => unawaited(_pastePairing()),
+                      // Rendered only where a camera path exists. Desktop gets no
+                      // affordance at all rather than one that opens and fails.
+                      onScan: platformCapabilities.supportsQrPairing
+                          ? () => unawaited(_scanPairing())
+                          : null,
+                    ),
                   const SizedBox(height: 20),
                   TextField(
                     enabled: !_submitting,
@@ -1703,8 +1813,9 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                       hintText: '192.0.2.20:4096 or https://…',
                       errorText: _error,
                       errorMaxLines: 3,
-                      helperText:
-                          'Use HTTPS for remote machines. HTTP is limited to localhost or 127.0.0.1.',
+                      helperText: widget.tailscale
+                          ? _connectionL10n(context).tailscaleAddressDetail
+                          : 'Use HTTPS for remote machines. HTTP is limited to localhost or 127.0.0.1.',
                       helperMaxLines: 3,
                     ),
                   ),
