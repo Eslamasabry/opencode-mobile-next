@@ -51,6 +51,31 @@ void main() {
     expect(minimumButtonSize?.height, greaterThanOrEqualTo(48));
   });
 
+  test('supporting text remains readable on every default surface tier', () {
+    for (final theme in [AppTheme.dark(), AppTheme.light()]) {
+      final scheme = theme.colorScheme;
+      final foreground = AppTheme.mutedOf(theme).computeLuminance();
+      for (final surface in [
+        theme.scaffoldBackgroundColor,
+        scheme.surface,
+        scheme.surfaceContainerLowest,
+        scheme.surfaceContainerLow,
+        scheme.surfaceContainer,
+        scheme.surfaceContainerHigh,
+        scheme.surfaceContainerHighest,
+      ]) {
+        final background = surface.computeLuminance();
+        final lighter = foreground > background ? foreground : background;
+        final darker = foreground > background ? background : foreground;
+        expect(
+          (lighter + .05) / (darker + .05),
+          greaterThanOrEqualTo(4.5),
+          reason: '${theme.brightness}: supporting text on $surface',
+        );
+      }
+    }
+  });
+
   test('headlines carry the display face, body stays on the platform face', () {
     for (final theme in [AppTheme.dark(), AppTheme.light()]) {
       expect(theme.textTheme.headlineSmall?.fontFamily, AppTheme.displayFamily);

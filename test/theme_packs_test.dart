@@ -18,7 +18,7 @@ void main() {
 
   tearDown(() => harvestedDynamicPack.value = null);
 
-  test('the default OpenCode pack is byte-identical to the pre-pack theme', () {
+  test('the default OpenCode pack preserves identity and semantic colors', () {
     final dark = AppTheme.dark();
     expect(dark.colorScheme.primary, const Color(0xFF83CDAA));
     expect(dark.colorScheme.onPrimary, const Color(0xFF052117));
@@ -44,11 +44,7 @@ void main() {
       final pack = themePack(id);
       expect(pack.dark.scheme.brightness, Brightness.dark, reason: '$id');
       expect(pack.light.scheme.brightness, Brightness.light, reason: '$id');
-      expect(
-        pack.dark.background,
-        isNot(pack.light.background),
-        reason: '$id',
-      );
+      expect(pack.dark.background, isNot(pack.light.background), reason: '$id');
       // Pack-owned success reaches the ThemeData extension.
       expect(
         AppTheme.successOf(AppTheme.dark(pack)),
@@ -95,10 +91,7 @@ void main() {
     await tester.pumpAndSettle();
     context = tester.element(find.text('themed'));
     expect(Theme.of(context).colorScheme.primary, const Color(0xFFFE8019));
-    expect(
-      AppTheme.successOf(Theme.of(context)),
-      const Color(0xFFB8BB26),
-    );
+    expect(AppTheme.successOf(Theme.of(context)), const Color(0xFFB8BB26));
   });
 
   testWidgets('the appearance page picks packs and gates Material You', (

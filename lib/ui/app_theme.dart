@@ -75,7 +75,8 @@ abstract final class AppTheme {
   static const maxTextScale = 2.5;
 
   /// Font sizes for the roles that sit outside Material's type scale.
-  static const codeFontSize = 12.0;
+  static const codeFontSize = 13.0;
+  static const codeLineHeight = 19 / codeFontSize;
   static const captionFontSize = 11.0;
   static const bodyFontSize = 14.0;
 
@@ -258,11 +259,21 @@ abstract final class AppTheme {
         ),
         titleLarge: base.textTheme.titleLarge?.copyWith(
           fontFamily: displayFamily,
-          fontWeight: FontWeight.w700,
+          fontSize: 24,
+          height: 30 / 24,
+          fontWeight: FontWeight.w600,
           letterSpacing: -0.25,
         ),
         titleMedium: base.textTheme.titleMedium?.copyWith(
+          fontSize: 16,
+          height: 22 / 16,
           fontWeight: FontWeight.w600,
+        ),
+        bodyLarge: base.textTheme.bodyLarge?.copyWith(height: 23 / 16),
+        bodyMedium: base.textTheme.bodyMedium?.copyWith(height: 20 / 14),
+        bodySmall: base.textTheme.bodySmall?.copyWith(
+          fontSize: 13,
+          height: 18 / 13,
         ),
         labelLarge: base.textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.w600,
@@ -283,9 +294,7 @@ abstract final class AppTheme {
         color: scheme.surfaceContainerLow,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        shape: roundedRectangle.copyWith(
-          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: .7)),
-        ),
+        shape: roundedRectangle,
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: scheme.surfaceContainerHigh,

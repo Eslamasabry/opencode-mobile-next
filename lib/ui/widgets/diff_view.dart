@@ -190,7 +190,7 @@ class _DiffBody extends StatelessWidget {
 TextStyle _codeStyle(ThemeData theme, {Color? color}) => TextStyle(
   fontFamily: AppTheme.monoFamily,
   fontSize: AppTheme.codeFontSize,
-  height: 1.45,
+  height: AppTheme.codeLineHeight,
   color: color,
 );
 

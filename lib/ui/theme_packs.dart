@@ -93,7 +93,7 @@ ThemePack dynamicThemePack({
 
 // ---------------------------------------------------------------------------
 // OpenCode — the app's own identity. These builders are the pre-pack scheme
-// definitions moved verbatim; the default look must not drift.
+// definitions with deliberate role-level refinements to the default identity.
 // ---------------------------------------------------------------------------
 
 final ThemePack _opencode = ThemePack(
@@ -116,7 +116,7 @@ final ThemePack _opencode = ThemePack(
           onSecondaryContainer: const Color(0xFFD7E9DE),
           surface: const Color(0xFF151A17),
           onSurface: const Color(0xFFE3E8E4),
-          onSurfaceVariant: const Color(0xFFBCC5BF),
+          onSurfaceVariant: const Color(0xFF929E97),
           outline: const Color(0xFF7F8A83),
           outlineVariant: const Color(0xFF3B443F),
           error: const Color(0xFFFFB4AB),
@@ -149,7 +149,7 @@ final ThemePack _opencode = ThemePack(
           onSecondaryContainer: const Color(0xFF243A30),
           surface: const Color(0xFFFFFFFF),
           onSurface: const Color(0xFF172019),
-          onSurfaceVariant: const Color(0xFF46534B),
+          onSurfaceVariant: const Color(0xFF5B6760),
           outline: const Color(0xFF68776E),
           outlineVariant: const Color(0xFFC5D0C8),
           error: const Color(0xFFBA1A1A),

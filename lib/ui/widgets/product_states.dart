@@ -429,7 +429,7 @@ class SectionLabel extends StatelessWidget {
 
   /// Overrides the list-level inset for surfaces that already pad their own
   /// content — sheets and cards — so those can reuse this label instead of
-  /// hand-rolling the same uppercase caption.
+  /// hand-rolling the same section caption.
   final EdgeInsetsGeometry? padding;
 
   const SectionLabel(this.text, {super.key, this.trailing, this.padding});
@@ -442,15 +442,16 @@ class SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: padding ?? const EdgeInsets.fromLTRB(16, 18, 12, 6),
+      padding: padding ?? const EdgeInsets.fromLTRB(16, 24, 16, 8),
       child: Row(
         children: [
           Expanded(
             child: Text(
-              text.toUpperCase(),
-              style: theme.textTheme.labelSmall?.copyWith(
+              text,
+              style: theme.textTheme.bodySmall?.copyWith(
                 color: AppTheme.mutedOf(theme),
-                letterSpacing: 1.1,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
               ),
             ),
           ),
