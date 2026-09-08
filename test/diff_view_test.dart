@@ -46,7 +46,8 @@ void main() {
     ]);
 
     expect(find.byKey(const Key('diff-view')), findsOneWidget);
-    expect(find.text('markdown.dart'), findsNWidgets(2));
+    expect(find.text('markdown.dart'), findsOneWidget);
+    expect(find.text('Review'), findsOneWidget);
     expect(find.textContaining('lib/ui/widgets/'), findsOneWidget);
     expect(find.text('+2'), findsOneWidget);
     expect(find.text('−1'), findsOneWidget);
@@ -268,6 +269,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
+      expect(find.text('welcome_message.dart'), findsOneWidget);
+      expect(find.text('Review'), findsOneWidget);
       expect(find.text('+1'), findsOneWidget);
       expect(find.text('−1'), findsOneWidget);
       if (captureDir != null) {

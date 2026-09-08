@@ -5013,4 +5013,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String reviewNoteDescription(String kind, String text) {
     return '$kind: $text';
   }
+
+  @override
+  String get reviewTitle => 'Review';
 }

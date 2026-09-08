@@ -8402,6 +8402,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{kind}: {text}'**
   String reviewNoteDescription(String kind, String text);
+
+  /// No description provided for @reviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get reviewTitle;
 }
 
 class _AppLocalizationsDelegate
