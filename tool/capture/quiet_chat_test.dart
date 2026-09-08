@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../test/support/setup_capture_preferences.dart';
 
 import 'fixtures.dart';
 
@@ -27,7 +27,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      SharedPreferences.setMockInitialValues({});
+      final prefs = await setupCapturePreferences();
       final api = _QuietChatApi()..busy = {};
       api.messagesHandler = (_) async => [
         MessageWithParts(
@@ -49,10 +49,7 @@ void main() {
           ],
         ),
       ];
-      final controller = await captureController(
-        prefs: await SharedPreferences.getInstance(),
-        api: api,
-      );
+      final controller = await captureController(prefs: prefs, api: api);
       addTearDown(controller.dispose);
       final key = GlobalKey();
       await tester.pumpWidget(

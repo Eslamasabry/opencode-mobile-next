@@ -159,7 +159,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         id: 3,
         destination: const NavigationDestination(
           icon: Icon(Icons.more_horiz_rounded),
-          selectedIcon: Icon(Icons.more_rounded),
+          selectedIcon: Icon(Icons.more_horiz_rounded),
           label: 'More',
         ),
       ),

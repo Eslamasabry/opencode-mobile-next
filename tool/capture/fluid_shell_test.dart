@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../test/support/setup_capture_preferences.dart';
 
 import 'fixtures.dart';
 
@@ -31,10 +31,8 @@ void main() {
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
-        SharedPreferences.setMockInitialValues({});
-        final controller = await captureController(
-          prefs: await SharedPreferences.getInstance(),
-        );
+        final prefs = await setupCapturePreferences();
+        final controller = await captureController(prefs: prefs);
         final boundary = GlobalKey();
         try {
           await tester.pumpWidget(

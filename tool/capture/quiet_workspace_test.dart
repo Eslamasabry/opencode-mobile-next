@@ -7,7 +7,7 @@ import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../test/support/setup_capture_preferences.dart';
 
 import 'fixtures.dart';
 
@@ -52,9 +52,9 @@ void main() {
             TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
         messenger.setMockMethodCallHandler(storage, (_) async => null);
         addTearDown(() => messenger.setMockMethodCallHandler(storage, null));
-        SharedPreferences.setMockInitialValues({});
+        final prefs = await setupCapturePreferences();
         final store = SeededProfileStore(
-          prefs: await SharedPreferences.getInstance(),
+          prefs: prefs,
           seeded: [
             ServerProfile(
               id: 'laptop',
