@@ -5568,7 +5568,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (_conn.isIsolated || !_conn.capabilities.projectManagement) return;
     if (_conn.directory != target.directory ||
         _conn.workspace != target.workspaceID) {
-      await _conn.selectLocation(
+      await _conn.selectLocationForExistingSession(
         directory: target.directory,
         workspace: target.workspaceID,
       );

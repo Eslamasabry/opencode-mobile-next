@@ -1924,5 +1924,25 @@
         "type": "String"
       }
     }
-  }
+  },
+  "projectFolderChooserTitle": "Choose a project folder",
+  "projectFolderChooserMessage": "OpenCode Mobile does not work in the server’s home folder. Create a new folder or open a project folder to start sessions.",
+  "projectFolderCreate": "Create a new folder",
+  "projectFolderOpen": "Open a project folder",
+  "projectFolderBrowse": "Choose from opened projects",
+  "projectFolderNoCreateHint": "This server cannot create folders from the app. Create the folder on that machine, then open it here by its path.",
+  "projectFolderCreateMessage": "The folder is created in {directory} on this device and opened as the workspace.",
+  "@projectFolderCreateMessage": {"placeholders": {"directory": {"type": "String"}}},
+  "projectFolderNameLabel": "Folder name",
+  "projectFolderNameHint": "my-app",
+  "projectFolderCreateAction": "Create",
+  "projectFolderCancel": "Cancel",
+  "projectFolderOpenMessage": "Enter the full path of a folder on the server. The home folder itself cannot be used; choose a project inside it.",
+  "projectFolderPathLabel": "Folder path",
+  "projectFolderPathHint": "{directory}/my-app",
+  "@projectFolderPathHint": {"placeholders": {"directory": {"type": "String"}}},
+  "projectFolderOpenAction": "Open",
+  "projectFolderCreateSubtitle": "In {directory} on this device",
+  "@projectFolderCreateSubtitle": {"placeholders": {"directory": {"type": "String"}}},
+  "projectFolderOpenSubtitle": "Enter the full path of a folder on the server"
 }

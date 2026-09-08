@@ -118,6 +118,12 @@ class _WorkspaceLocationController extends ConnectionController {
   }
 
   @override
+  Future<void> selectLocationForExistingSession({
+    String? directory,
+    String? workspace,
+  }) => selectLocation(directory: directory, workspace: workspace);
+
+  @override
   Future<void> selectInitialLocation({String? directory, String? workspace}) =>
       selectLocation(directory: directory, workspace: workspace);
 }
@@ -138,6 +144,7 @@ Future<ConnectionController> _controller(ProductRepository repository) async {
   final preferences = await SharedPreferences.getInstance();
   return ConnectionController(ProfileStore(prefs: preferences))
     ..repository = repository
+    ..directory = '/work/app'
     ..status = StreamStatus.connected;
 }
 

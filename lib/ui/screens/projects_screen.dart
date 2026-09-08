@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../api/product_repository.dart';
-import '../../state/connection.dart';
+import '../../domain/workspace_paths.dart';
 import '../../l10n/app_localizations.dart';
+import '../../state/connection.dart';
 import '../widgets/product_states.dart';
+import 'project_folder_actions.dart';
 
 class ProjectsScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -71,8 +73,14 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     }
   }
 
+  /// Real project folders only. The server's catch-all root and any home
+  /// folder are never offered: they are not workspaces.
+  List<WorkspaceProject> get _usableProjects => (_projects ?? const [])
+      .where((project) => !isProtectedWorkspaceDirectory(project.directory))
+      .toList(growable: false);
+
   List<WorkspaceProject> get _visibleProjects {
-    final projects = _projects ?? const <WorkspaceProject>[];
+    final projects = _usableProjects;
     final query = _search.text.trim().toLowerCase();
     if (query.isEmpty) return projects;
     return projects
@@ -103,6 +111,24 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       return;
     }
     Navigator.of(context).pop(true);
+  }
+
+  Future<void> _createFolder() async {
+    if (_busyProjectID != null) return;
+    final path = await ProjectFolderActions.createFolder(
+      context,
+      widget.controller,
+    );
+    if (path != null && mounted) Navigator.of(context).pop(true);
+  }
+
+  Future<void> _openFolder() async {
+    if (_busyProjectID != null) return;
+    final path = await ProjectFolderActions.openFolder(
+      context,
+      widget.controller,
+    );
+    if (path != null && mounted) Navigator.of(context).pop(true);
   }
 
   Future<void> _rename(WorkspaceProject project) async {
@@ -204,6 +230,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     }
     final projects = _projects;
     final visible = _visibleProjects;
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     return Scaffold(
       appBar: AppBar(
         title: const Text('Projects'),
@@ -241,26 +268,43 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 ),
               ),
             ),
+            if (ProjectFolderActions.canCreate(widget.controller))
+              ListTile(
+                key: const ValueKey('projects-create-folder'),
+                leading: const Icon(Icons.create_new_folder_rounded),
+                title: Text(l10n.projectFolderCreate),
+                subtitle: Text(
+                  l10n.projectFolderCreateSubtitle(managedProjectsDirectory),
+                ),
+                onTap: _createFolder,
+              ),
+            ListTile(
+              key: const ValueKey('projects-open-folder'),
+              leading: const Icon(Icons.folder_open_rounded),
+              title: Text(l10n.projectFolderOpen),
+              subtitle: Text(l10n.projectFolderOpenSubtitle),
+              onTap: _openFolder,
+            ),
             SectionLabel(
               'Open projects',
-              trailing: Text('${visible.length} of ${projects?.length ?? 0}'),
+              trailing: Text('${visible.length} of ${_usableProjects.length}'),
             ),
             if (_loading && projects == null)
               const LinearProgressIndicator(minHeight: 2),
             if (_error != null && projects == null)
               ProductErrorState(message: _error!, onRetry: _load)
-            else if (projects?.isEmpty == true)
-              // Coherent with the Workspace empty state: a fresh server can
-              // still host a first session in its own default directory.
+            else if (projects != null && _usableProjects.isEmpty)
+              // Coherent with the Workspace chooser: the server's home folder
+              // is never a project, so a fresh server starts with a new or
+              // typed folder.
               const ProductEmptyState(
                 icon: Icons.folder_off_outlined,
                 title: 'No projects opened',
                 message:
                     'Projects opened by this server appear here; choose one '
-                    'for sessions, files, terminals, and coding tools. Open a '
-                    'project on this OpenCode server, then refresh — or ask '
-                    'from Workspace to start a session in the server’s '
-                    'default directory.',
+                    'for sessions, files, terminals, and coding tools. Create '
+                    'a new folder or open one by its path above, or open a '
+                    'project on this OpenCode server and refresh.',
               )
             else if (visible.isEmpty)
               const ProductEmptyState(

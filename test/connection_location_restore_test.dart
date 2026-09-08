@@ -388,4 +388,96 @@ void main() {
     expect(store.locationFor('server'), isNull);
     controller.dispose();
   });
+
+  testWidgets(
+    'a saved home folder is forgotten instead of restored, with a notice',
+    (tester) async {
+      // Older builds could save the server's own home folder as the
+      // location. It is never a workspace: the app forgets it and asks for
+      // a project folder, without even consulting the server about it.
+      final store = await _store();
+      await store.setLocation('server', directory: '/root/');
+      final script = _ServerScript(
+        currentProjects: {'/root': _project('global', '/root', updatedAt: 99)},
+        projects: [_project('global', '/root', updatedAt: 99)],
+      );
+      final controller = await _connect(tester, store, script);
+
+      expect(controller.directory, isNull);
+      expect(controller.workspaceChoiceRequired, isTrue);
+      expect(controller.locationNotice, contains('home folder'));
+      expect(store.locationFor('server'), isNull);
+      expect(script.seenDirectories.whereType<String>(), isEmpty);
+      controller.dispose();
+    },
+  );
+
+  testWidgets('a home-folder project never replaces a missing directory', (
+    tester,
+  ) async {
+    final store = await _store();
+    await store.setLocation('server', directory: '/deleted/worktree');
+    final controller = await _connect(
+      tester,
+      store,
+      _ServerScript(
+        projects: [
+          _project('global', '/root', updatedAt: 99),
+          _project('home', '/home/eslam', updatedAt: 98),
+        ],
+      ),
+    );
+
+    expect(controller.directory, isNull);
+    expect(controller.workspaceChoiceRequired, isTrue);
+    expect(store.locationFor('server'), isNull);
+    controller.dispose();
+  });
+
+  testWidgets('selecting a home folder is refused and leaves the location', (
+    tester,
+  ) async {
+    final store = await _store();
+    await store.setLocation('server', directory: '/work/acme');
+    final script = _ServerScript(
+      currentProjects: {'/work/acme': _project('acme', '/work/acme')},
+      projects: [_project('acme', '/work/acme')],
+    );
+    final controller = await _connect(tester, store, script);
+    expect(controller.directory, '/work/acme');
+
+    await controller.selectLocation(directory: '/root');
+    await tester.pump();
+
+    expect(controller.directory, '/work/acme');
+    expect(controller.locationError, contains('home folder'));
+    expect(controller.workspaceChoiceRequired, isFalse);
+    expect(store.locationFor('server')?.directory, '/work/acme');
+    controller.dispose();
+  });
+
+  testWidgets(
+    'an existing conversation in the home folder can still be opened',
+    (tester) async {
+      // Search all sessions may open an earlier conversation stored in the
+      // home folder. That rescopes the connection for reading it, but the
+      // folder is never remembered and Workspace still asks for a project.
+      final store = await _store();
+      await store.setLocation('server', directory: '/work/acme');
+      final script = _ServerScript(
+        currentProjects: {'/work/acme': _project('acme', '/work/acme')},
+        projects: [_project('acme', '/work/acme')],
+      );
+      final controller = await _connect(tester, store, script);
+
+      await controller.selectLocationForExistingSession(directory: '/root');
+      await tester.pump();
+
+      expect(controller.directory, '/root');
+      expect(controller.locationError, isNull);
+      expect(controller.workspaceChoiceRequired, isTrue);
+      expect(store.locationFor('server')?.directory, '/work/acme');
+      controller.dispose();
+    },
+  );
 }

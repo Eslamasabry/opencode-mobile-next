@@ -107,6 +107,12 @@ class _Controller extends ConnectionController {
     this.directory = directory;
     this.workspace = workspace;
   }
+
+  @override
+  Future<void> selectLocationForExistingSession({
+    String? directory,
+    String? workspace,
+  }) => selectLocation(directory: directory, workspace: workspace);
 }
 
 void main() {

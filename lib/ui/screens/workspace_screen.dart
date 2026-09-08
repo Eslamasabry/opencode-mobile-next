@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../api/product_repository.dart';
+import '../../domain/workspace_paths.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
@@ -20,6 +21,7 @@ import '../widgets/session_inventory_footer.dart';
 import 'global_sessions_screen.dart';
 import 'isolated_task_sheet.dart';
 import 'manage_project_screen.dart';
+import 'project_folder_actions.dart';
 import 'projects_screen.dart';
 import 'settings_screen.dart';
 import 'terminal_screen.dart';
@@ -124,10 +126,26 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             _selectedProjectID = projects.first.id;
           }
         } else {
-          final retained = projects.where(
+          // Only a real project folder is opened automatically. The server's
+          // catch-all root and any home folder are skipped, so a fresh
+          // connection lands on the folder chooser instead of `/root`.
+          final usable = projects.where(
+            (project) => !isProtectedWorkspaceDirectory(project.directory),
+          );
+          final retained = usable.where(
             (project) => project.id == _selectedProjectID,
           );
-          final selected = retained.isEmpty ? projects.first : retained.first;
+          final selected = retained.isNotEmpty
+              ? retained.first
+              : usable.isNotEmpty
+              ? usable.first
+              : null;
+          if (selected == null) {
+            _selectedProjectID = null;
+            _selectedDirectory = null;
+            _selectedWorkspaceID = null;
+            return;
+          }
           _selectedProjectID = selected.id;
           _selectedDirectory = selected.directory;
           _selectedWorkspaceID = null;
@@ -223,7 +241,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         _selectedDirectory ??
         _selectedProject?.directory;
     parts.add(
-      directory?.isNotEmpty == true ? directory! : 'Server’s default directory',
+      directory?.isNotEmpty == true ? directory! : 'No project folder chosen',
     );
     return parts.join(' · ');
   }
@@ -360,6 +378,26 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     final capabilities = widget.controller.capabilities;
     final partial =
         widget.controller.hasMoreSessions || widget.controller.sessionsLoading;
+
+    // No project folder yet (or an older build saved the server's home
+    // folder): sessions cannot start until the user creates or opens one.
+    // The chooser waits for the project list so an auto-opened project does
+    // not flash it first, and it keeps the server-wide session finder so
+    // earlier conversations stay reachable.
+    if (capabilities.projectManagement &&
+        widget.controller.workspaceChoiceRequired &&
+        (_projects != null || _projectError != null)) {
+      return _WorkspaceFolderChooser(
+        notice: widget.controller.locationNotice,
+        projectError: _projectError,
+        canCreate: ProjectFolderActions.canCreate(widget.controller),
+        onCreate: _createProjectFolder,
+        onOpen: _openProjectFolder,
+        onBrowse: _openProjects,
+        onSearchAll: capabilities.globalSessionSearch ? _openAllSessions : null,
+        onRetry: _load,
+      );
+    }
 
     return Stack(
       children: [
@@ -638,7 +676,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         message: partial
                             ? l10n.sessionsLoadedOnly
                             : widget.controller.directory == null
-                            ? 'Start a session in the server’s default directory.'
+                            ? 'Choose a project folder to start a session.'
                             : 'Start a session in the selected workspace.',
                         actionLabel: 'New session',
                         onAction: _createSession,
@@ -746,6 +784,22 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       builder: (_) => GlobalSessionsScreen(controller: widget.controller),
     ),
   );
+
+  Future<void> _createProjectFolder() async {
+    final path = await ProjectFolderActions.createFolder(
+      context,
+      widget.controller,
+    );
+    if (path != null && mounted) await _load();
+  }
+
+  Future<void> _openProjectFolder() async {
+    final path = await ProjectFolderActions.openFolder(
+      context,
+      widget.controller,
+    );
+    if (path != null && mounted) await _load();
+  }
 
   Future<void> _openProjects() async {
     await Navigator.of(context).push<bool>(
@@ -1713,4 +1767,109 @@ List<String> sessionUsageLabels(Session session) {
     }
   }
   return labels;
+}
+
+/// Blocking state shown while the connection has no usable project folder.
+/// It replaces the session list and the quick-ask pill: nothing can run in
+/// the server's home folder, so the only ways forward are creating a folder
+/// (managed server) or opening an existing one.
+class _WorkspaceFolderChooser extends StatelessWidget {
+  const _WorkspaceFolderChooser({
+    required this.notice,
+    required this.projectError,
+    required this.canCreate,
+    required this.onCreate,
+    required this.onOpen,
+    required this.onBrowse,
+    required this.onSearchAll,
+    required this.onRetry,
+  });
+
+  final String? notice;
+  final String? projectError;
+  final bool canCreate;
+  final VoidCallback onCreate;
+  final VoidCallback onOpen;
+  final VoidCallback onBrowse;
+  final VoidCallback? onSearchAll;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    return ListView(
+      key: const ValueKey('workspace-folder-chooser'),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+      children: [
+        if (notice != null)
+          ListTile(
+            key: const ValueKey('location-recovery-notice'),
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.info_outline_rounded),
+            title: Text(notice!),
+          ),
+        const SizedBox(height: 8),
+        Icon(
+          Icons.create_new_folder_outlined,
+          size: 40,
+          color: theme.colorScheme.primary,
+        ),
+        const SizedBox(height: 12),
+        Text(l10n.projectFolderChooserTitle, style: theme.textTheme.titleLarge),
+        const SizedBox(height: 8),
+        Text(
+          l10n.projectFolderChooserMessage,
+          style: theme.textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 20),
+        if (canCreate)
+          FilledButton.icon(
+            key: const ValueKey('workspace-create-folder'),
+            onPressed: onCreate,
+            icon: const Icon(Icons.create_new_folder_rounded),
+            label: Text(l10n.projectFolderCreate),
+          ),
+        if (canCreate) const SizedBox(height: 8),
+        FilledButton.tonalIcon(
+          key: const ValueKey('workspace-open-folder'),
+          onPressed: onOpen,
+          icon: const Icon(Icons.folder_open_rounded),
+          label: Text(l10n.projectFolderOpen),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          key: const ValueKey('workspace-browse-projects'),
+          onPressed: onBrowse,
+          icon: const Icon(Icons.folder_copy_outlined),
+          label: Text(l10n.projectFolderBrowse),
+        ),
+        if (!canCreate) ...[
+          const SizedBox(height: 12),
+          Text(
+            l10n.projectFolderNoCreateHint,
+            style: theme.textTheme.bodySmall,
+          ),
+        ],
+        if (projectError != null) ...[
+          const SizedBox(height: 16),
+          Text(projectError!, style: TextStyle(color: theme.colorScheme.error)),
+          TextButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded),
+            label: Text(l10n.workspaceRetryProjects),
+          ),
+        ],
+        if (onSearchAll != null) ...[
+          const Divider(height: 32),
+          TextButton.icon(
+            key: const ValueKey('workspace-chooser-search-all'),
+            onPressed: onSearchAll,
+            icon: const Icon(Icons.manage_search_rounded),
+            label: Text(l10n.workspaceSearchAllSessions),
+          ),
+        ],
+      ],
+    );
+  }
 }

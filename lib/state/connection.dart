@@ -39,6 +39,7 @@ import 'prompt_shelf.dart';
 import 'session_read_state.dart';
 import 'return_brief_state.dart';
 import '../domain/return_brief.dart';
+import '../domain/workspace_paths.dart';
 
 Map<String, dynamic> _catalogMap(Object? value) =>
     value is Map ? Map<String, dynamic>.from(value) : const {};
@@ -1323,7 +1324,7 @@ class ConnectionController extends ChangeNotifier {
     WorkspaceProject? best;
     for (final project in projects) {
       final directory = normalizeDirectoryPath(project.directory);
-      if (directory.isEmpty || directory == '/') continue;
+      if (isProtectedWorkspaceDirectory(directory)) continue;
       if (best == null || project.updatedAt > best.updatedAt) best = project;
     }
     return best;
@@ -1331,8 +1332,23 @@ class ConnectionController extends ChangeNotifier {
 
   static bool _isCatchAllProject(WorkspaceProject project) {
     final directory = normalizeDirectoryPath(project.directory);
-    return directory.isEmpty || directory == '/' || project.id == 'global';
+    return isProtectedWorkspaceDirectory(directory) || project.id == 'global';
   }
+
+  /// True while an OpenCode connection has no usable project folder: nothing
+  /// was chosen yet, or the choice resolves to a home folder or filesystem
+  /// root. Workspace blocks session creation until the user creates or opens
+  /// a real project folder; the server's own working directory is never used
+  /// as a workspace (see `workspace_paths.dart`).
+  bool get workspaceChoiceRequired {
+    if (_connectedProfile?.backend == ServerBackend.codex) return false;
+    if (!capabilities.projectManagement) return false;
+    return isProtectedWorkspaceDirectory(directory);
+  }
+
+  static const workspaceChoiceNotice =
+      'OpenCode Mobile no longer works in the server\'s home folder. '
+      'Create a new folder or open a project folder to continue.';
 
   /// Set when the saved directory was restored without the project list
   /// confirming it; [revalidateRestoredLocation] clears it once the list
@@ -1371,6 +1387,14 @@ class ConnectionController extends ChangeNotifier {
         ? null
         : normalizeDirectoryPath(savedDirectory);
     if (directory != null && directory.isEmpty) directory = null;
+    if (directory != null && isProtectedWorkspaceDirectory(directory)) {
+      // A location saved by an older build that still allowed the server's
+      // home folder. It is forgotten rather than restored, and Workspace asks
+      // for a project folder instead.
+      await _forgetSavedLocation(profile);
+      locationNotice = workspaceChoiceNotice;
+      return null;
+    }
     var workspace = saved.workspace;
     _pendingLocationRevalidation = false;
     try {
@@ -6850,8 +6874,47 @@ class ConnectionController extends ChangeNotifier {
     return list;
   }
 
+  /// Confirms a typed [directory] exists on the connected server without
+  /// touching the active location. Returns a plain-sentence problem, or null
+  /// when the folder can be opened. The listing runs on a throwaway
+  /// transport so a wrong path never rescopes live requests.
+  Future<String?> probeProjectFolder(String directory) async {
+    final profile = _connectedProfile;
+    if (profile == null || isIsolated) return 'OpenCode is not connected.';
+    final problem = workspaceDirectoryProblem(directory);
+    if (problem != null) return problem;
+    final pair = _buildTransportPair(profile);
+    pair.gateway.setLocation(
+      directory: normalizeDirectoryPath(directory),
+      workspace: null,
+    );
+    try {
+      await pair.gateway.listFiles('.');
+      return null;
+    } catch (_) {
+      return 'That folder was not found on the server. Check the path and '
+          'try again.';
+    } finally {
+      pair.gateway.close();
+    }
+  }
+
   Future<void> selectLocation({String? directory, String? workspace}) =>
       _selectLocation(directory: directory, workspace: workspace);
+
+  /// Rescopes onto the folder of a conversation that already exists there,
+  /// even when that folder is the server's home. Reading or continuing an
+  /// earlier conversation is the one thing still allowed in a home folder;
+  /// [workspaceChoiceRequired] stays true, so Workspace keeps asking for a
+  /// project folder before any new session starts.
+  Future<void> selectLocationForExistingSession({
+    String? directory,
+    String? workspace,
+  }) => _selectLocation(
+    directory: directory,
+    workspace: workspace,
+    allowProtectedDirectory: true,
+  );
 
   Future<void> selectInitialLocation({String? directory, String? workspace}) =>
       _selectLocation(
@@ -6864,6 +6927,7 @@ class ConnectionController extends ChangeNotifier {
     String? directory,
     String? workspace,
     bool preserveNotice = false,
+    bool allowProtectedDirectory = false,
   }) async {
     final profile = _connectedProfile;
     if (profile == null || api == null) return;
@@ -6875,9 +6939,21 @@ class ConnectionController extends ChangeNotifier {
         notifyListeners();
         return;
       }
+    } else if (directory != null &&
+        !allowProtectedDirectory &&
+        isProtectedWorkspaceDirectory(directory)) {
+      // Never rescope onto a home folder or the filesystem root: the server
+      // would watch and scan everything underneath it.
+      locationError = workspaceDirectoryProblem(directory);
+      notifyListeners();
+      return;
     }
     if (!preserveNotice) locationNotice = null;
     if (this.directory == directory && this.workspace == workspace) {
+      if (isProtectedWorkspaceDirectory(directory)) {
+        notifyListeners();
+        return;
+      }
       try {
         await store.setLocation(
           profile.id,
@@ -6940,7 +7016,7 @@ class ConnectionController extends ChangeNotifier {
       refreshPendingQuestions(),
     ]);
     if (!_isCurrent(generation, currentApi)) return;
-    if (locationError == null) {
+    if (locationError == null && !isProtectedWorkspaceDirectory(directory)) {
       try {
         await store.setLocation(
           profile.id,

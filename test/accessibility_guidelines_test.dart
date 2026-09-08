@@ -110,6 +110,10 @@ Future<ConnectionController> _controller({
     ..api = _Api()
     ..status = StreamStatus.connected;
   if (withRepository) controller.repository = _Repository(projects: projects);
+  // A never-connected controller cannot keep an auto-opened project, and
+  // Workspace blocks on the folder chooser without one; open the first
+  // project the way a connected controller would have.
+  if (projects.isNotEmpty) controller.directory = projects.first.directory;
   return controller;
 }
 
@@ -283,8 +287,14 @@ void main() {
         ),
       );
       await _settle(tester);
-      expect(find.byKey(const ValueKey('current-project-entry')), findsOneWidget);
-      expect(find.byKey(const ValueKey('manage-project-entry')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('current-project-entry')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('manage-project-entry')),
+        findsOneWidget,
+      );
       await _expectAccessible(tester);
     });
 

@@ -8018,6 +8018,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resets {time}'**
   String agentAccountReset(String time);
+
+  /// No description provided for @projectFolderChooserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a project folder'**
+  String get projectFolderChooserTitle;
+
+  /// No description provided for @projectFolderChooserMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode Mobile does not work in the server’s home folder. Create a new folder or open a project folder to start sessions.'**
+  String get projectFolderChooserMessage;
+
+  /// No description provided for @projectFolderCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new folder'**
+  String get projectFolderCreate;
+
+  /// No description provided for @projectFolderOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a project folder'**
+  String get projectFolderOpen;
+
+  /// No description provided for @projectFolderBrowse.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from opened projects'**
+  String get projectFolderBrowse;
+
+  /// No description provided for @projectFolderNoCreateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This server cannot create folders from the app. Create the folder on that machine, then open it here by its path.'**
+  String get projectFolderNoCreateHint;
+
+  /// No description provided for @projectFolderCreateMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The folder is created in {directory} on this device and opened as the workspace.'**
+  String projectFolderCreateMessage(String directory);
+
+  /// No description provided for @projectFolderNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder name'**
+  String get projectFolderNameLabel;
+
+  /// No description provided for @projectFolderNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'my-app'**
+  String get projectFolderNameHint;
+
+  /// No description provided for @projectFolderCreateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get projectFolderCreateAction;
+
+  /// No description provided for @projectFolderCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get projectFolderCancel;
+
+  /// No description provided for @projectFolderOpenMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the full path of a folder on the server. The home folder itself cannot be used; choose a project inside it.'**
+  String get projectFolderOpenMessage;
+
+  /// No description provided for @projectFolderPathLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder path'**
+  String get projectFolderPathLabel;
+
+  /// No description provided for @projectFolderPathHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{directory}/my-app'**
+  String projectFolderPathHint(String directory);
+
+  /// No description provided for @projectFolderOpenAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get projectFolderOpenAction;
+
+  /// No description provided for @projectFolderCreateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'In {directory} on this device'**
+  String projectFolderCreateSubtitle(String directory);
+
+  /// No description provided for @projectFolderOpenSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the full path of a folder on the server'**
+  String get projectFolderOpenSubtitle;
 }
 
 class _AppLocalizationsDelegate

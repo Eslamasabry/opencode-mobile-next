@@ -59,7 +59,7 @@ class _ManageProjectScreenState extends State<ManageProjectScreen> {
               title: Text(project?.name ?? 'No project selected'),
               subtitle: Text(
                 project?.directory ??
-                    'Sessions run in the server’s default directory.',
+                    'No project folder is open. Choose one from Workspace.',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

@@ -150,6 +150,12 @@ class _GatingController extends ConnectionController {
   }
 
   @override
+  Future<void> selectLocationForExistingSession({
+    String? directory,
+    String? workspace,
+  }) => selectLocation(directory: directory, workspace: workspace);
+
+  @override
   Future<void> selectInitialLocation({String? directory, String? workspace}) =>
       selectLocation(directory: directory, workspace: workspace);
 }

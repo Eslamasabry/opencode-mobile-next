@@ -377,7 +377,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
       if (session.directory != null &&
           (session.directory != controller.directory ||
               session.workspaceID != controller.workspace)) {
-        await controller.selectLocation(
+        await controller.selectLocationForExistingSession(
           directory: session.directory,
           workspace: session.workspaceID,
         );

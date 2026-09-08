@@ -320,7 +320,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
     }
     setState(() => _openingSessionID = session.id);
     try {
-      await widget.controller.selectLocation(
+      await widget.controller.selectLocationForExistingSession(
         directory: directory,
         workspace: session.workspaceID,
       );

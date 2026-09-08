@@ -85,6 +85,12 @@ class _FinderController extends ConnectionController {
     this.workspace = workspace;
   }
 
+  @override
+  Future<void> selectLocationForExistingSession({
+    String? directory,
+    String? workspace,
+  }) => selectLocation(directory: directory, workspace: workspace);
+
   void signalRepository(ProductRepository value) {
     repository = value;
     dataRefreshRevision += 1;

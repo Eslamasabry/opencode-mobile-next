@@ -107,7 +107,8 @@ class _WorktreeController extends ConnectionController {
   final locations = <String?>[];
 
   @override
-  Future<ServerOperationsGateway?> prepareActionRepository() async => repository;
+  Future<ServerOperationsGateway?> prepareActionRepository() async =>
+      repository;
 
   @override
   Future<void> selectLocation({String? directory, String? workspace}) async {
@@ -118,6 +119,12 @@ class _WorktreeController extends ConnectionController {
     dataRefreshRevision += 1;
     notifyListeners();
   }
+
+  @override
+  Future<void> selectLocationForExistingSession({
+    String? directory,
+    String? workspace,
+  }) => selectLocation(directory: directory, workspace: workspace);
 }
 
 Future<_WorktreeController> _controller(

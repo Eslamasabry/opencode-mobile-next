@@ -38,9 +38,7 @@ void desktopTest(
 /// widget test, so Clipboard.getData would never complete.
 List<String> _captureClipboard() {
   final written = <String>[];
-  TestDefaultBinaryMessengerBinding
-      .instance
-      .defaultBinaryMessenger
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(SystemChannels.platform, (call) async {
         if (call.method == 'Clipboard.setData') {
           written.add((call.arguments as Map)['text'] as String);
@@ -48,9 +46,7 @@ List<String> _captureClipboard() {
         return null;
       });
   addTearDown(
-    () => TestDefaultBinaryMessengerBinding
-        .instance
-        .defaultBinaryMessenger
+    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(SystemChannels.platform, null),
   );
   return written;
@@ -240,7 +236,9 @@ void main() {
     addTearDown(connection.dispose);
 
     await tester.pumpWidget(
-      MaterialApp(home: Scaffold(body: FilesScreen(controller: connection))),
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: connection)),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -281,11 +279,14 @@ void main() {
         updatedAt: 1,
       ),
     ]);
+    connection.directory = '/tmp/p1';
     addTearDown(connection.dispose);
     await connection.refreshSessions();
 
     await tester.pumpWidget(
-      MaterialApp(home: Scaffold(body: WorkspaceScreen(controller: connection))),
+      MaterialApp(
+        home: Scaffold(body: WorkspaceScreen(controller: connection)),
+      ),
     );
     await tester.pumpAndSettle();
 

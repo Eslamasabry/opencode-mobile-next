@@ -109,6 +109,13 @@ the combined verification and fresh Android installation checks are in progress.
   retain version pinning and temporary-cache cleanup, and expose install output.
 - Keep prior sessions and global search accessible when the project list is empty.
   This session fix also appeared in the focused 1.0.35+36 CI APK.
+- Never work in the server's home folder. Workspace now asks you to **Create a
+  new folder** (managed Termux server) or **Open a project folder** by its path
+  before a session can start; the home folder and the filesystem root are
+  refused everywhere a location is chosen or restored, and a previously saved
+  home-folder location is forgotten with a notice. The managed server starts in
+  `/root/projects` instead of `/root`. Earlier conversations from the home
+  folder stay reachable through **Search all sessions**.
 
 ### Saved prompts and attachment recovery
 

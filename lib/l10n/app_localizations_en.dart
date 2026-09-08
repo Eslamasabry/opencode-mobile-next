@@ -4790,4 +4790,65 @@ class AppLocalizationsEn extends AppLocalizations {
   String agentAccountReset(String time) {
     return 'Resets $time';
   }
+
+  @override
+  String get projectFolderChooserTitle => 'Choose a project folder';
+
+  @override
+  String get projectFolderChooserMessage =>
+      'OpenCode Mobile does not work in the server’s home folder. Create a new folder or open a project folder to start sessions.';
+
+  @override
+  String get projectFolderCreate => 'Create a new folder';
+
+  @override
+  String get projectFolderOpen => 'Open a project folder';
+
+  @override
+  String get projectFolderBrowse => 'Choose from opened projects';
+
+  @override
+  String get projectFolderNoCreateHint =>
+      'This server cannot create folders from the app. Create the folder on that machine, then open it here by its path.';
+
+  @override
+  String projectFolderCreateMessage(String directory) {
+    return 'The folder is created in $directory on this device and opened as the workspace.';
+  }
+
+  @override
+  String get projectFolderNameLabel => 'Folder name';
+
+  @override
+  String get projectFolderNameHint => 'my-app';
+
+  @override
+  String get projectFolderCreateAction => 'Create';
+
+  @override
+  String get projectFolderCancel => 'Cancel';
+
+  @override
+  String get projectFolderOpenMessage =>
+      'Enter the full path of a folder on the server. The home folder itself cannot be used; choose a project inside it.';
+
+  @override
+  String get projectFolderPathLabel => 'Folder path';
+
+  @override
+  String projectFolderPathHint(String directory) {
+    return '$directory/my-app';
+  }
+
+  @override
+  String get projectFolderOpenAction => 'Open';
+
+  @override
+  String projectFolderCreateSubtitle(String directory) {
+    return 'In $directory on this device';
+  }
+
+  @override
+  String get projectFolderOpenSubtitle =>
+      'Enter the full path of a folder on the server';
 }

@@ -10,6 +10,7 @@ import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/manage_project_screen.dart';
+import 'package:opencode_mobile/ui/screens/project_folder_actions.dart';
 import 'package:opencode_mobile/ui/screens/projects_screen.dart';
 import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -144,11 +145,18 @@ class _ProjectsController extends ConnectionController {
     locationError = null;
     notifyListeners();
   }
+
+  @override
+  Future<void> selectLocationForExistingSession({
+    String? directory,
+    String? workspace,
+  }) => selectLocation(directory: directory, workspace: workspace);
 }
 
-/// A fresh server with zero projects: no location is ever selected, and the
-/// session-create call must still work against the server's own default
-/// directory (the transport omits the directory parameter when none is set).
+/// A fresh server with zero projects: no location is selected, so Workspace
+/// must ask for a project folder instead of running in the server's own
+/// default directory (its home). Sessions may only start once a folder is
+/// open.
 class _FreshServerController extends _ProjectsController {
   _FreshServerController(super.store, super.projectsRepository) {
     directory = null;
@@ -156,6 +164,14 @@ class _FreshServerController extends _ProjectsController {
 
   int createSessionCalls = 0;
   String? createSessionDirectory;
+  final probed = <String>[];
+  String? probeProblem;
+
+  @override
+  Future<String?> probeProjectFolder(String directory) async {
+    probed.add(directory);
+    return probeProblem;
+  }
 
   @override
   Future<Session> createSession() async {
@@ -299,6 +315,12 @@ void main() {
     expect(find.byKey(const ValueKey('project-project-1')), findsOneWidget);
     expect(tester.takeException(), isNull);
 
+    // The create/open folder entries above the list push the row lower at
+    // large text; bring the rename control fully on screen before tapping.
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('rename-project-project-1')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('rename-project-project-1')));
     await tester.pumpAndSettle();
     expect(find.text('Rename project'), findsOneWidget);
@@ -706,7 +728,7 @@ void main() {
     },
   );
 
-  testWidgets('a fresh server with zero projects keeps the quick-ask pill', (
+  testWidgets('a fresh server with zero projects asks for a project folder', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
@@ -723,10 +745,51 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // The empty state explains the situation without dead-ending the flow.
-    expect(find.text('No projects opened'), findsOneWidget);
-    expect(find.byKey(const ValueKey('workspace-quick-ask')), findsOneWidget);
+    // The server's home folder is never a workspace: the chooser replaces
+    // the session list and the quick-ask pill, but the server-wide session
+    // finder stays reachable so earlier conversations are not lost.
+    expect(
+      find.byKey(const ValueKey('workspace-folder-chooser')),
+      findsOneWidget,
+    );
+    expect(find.text('Choose a project folder'), findsOneWidget);
+    expect(find.byKey(const ValueKey('workspace-open-folder')), findsOneWidget);
+    expect(find.byKey(const ValueKey('workspace-quick-ask')), findsNothing);
     expect(find.text('Search all sessions'), findsOneWidget);
+  });
+
+  testWidgets('a home-folder project is never opened automatically', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final repository = _ProjectsRepository()
+      ..projects = [
+        WorkspaceProject(
+          id: 'global',
+          name: 'root',
+          directory: '/root',
+          worktrees: const [],
+          updatedAt: 10,
+        ),
+      ];
+    final controller = _FreshServerController(
+      ProfileStore(prefs: await SharedPreferences.getInstance()),
+      repository,
+    );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: WorkspaceScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(controller.locations, isEmpty);
+    expect(controller.directory, isNull);
+    expect(
+      find.byKey(const ValueKey('workspace-folder-chooser')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('an empty project catalog does not hide existing sessions', (
@@ -857,7 +920,7 @@ void main() {
   });
 
   testWidgets(
-    'the quick-ask pill creates a first session with no directory selected',
+    'a first session starts only after a project folder is opened by path',
     (tester) async {
       SharedPreferences.setMockInitialValues({});
       final repository = _ProjectsRepository()..projects = const [];
@@ -879,15 +942,137 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('workspace-quick-ask')), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('workspace-open-folder')));
+      await tester.pumpAndSettle();
+
+      // The home folder is refused before the server is asked.
+      await tester.enterText(
+        find.byKey(const ValueKey('open-folder-path')),
+        '/root',
+      );
+      await tester.tap(find.byKey(const ValueKey('open-folder-confirm')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('home folder'), findsWidgets);
+      expect(controller.probed, isEmpty);
+      expect(controller.locations, isEmpty);
+
+      // A missing folder is reported from the server check and not opened.
+      controller.probeProblem = 'That folder was not found on the server.';
+      await tester.enterText(
+        find.byKey(const ValueKey('open-folder-path')),
+        '/root/projects/missing',
+      );
+      await tester.tap(find.byKey(const ValueKey('open-folder-confirm')));
+      await tester.pumpAndSettle();
+      expect(controller.probed, ['/root/projects/missing']);
+      expect(
+        find.text('That folder was not found on the server.'),
+        findsOneWidget,
+      );
+      expect(controller.locations, isEmpty);
+
+      // A real folder is opened and only then can a session start in it.
+      controller.probeProblem = null;
+      await tester.enterText(
+        find.byKey(const ValueKey('open-folder-path')),
+        '/root/projects/app',
+      );
+      await tester.tap(find.byKey(const ValueKey('open-folder-confirm')));
+      await tester.pumpAndSettle();
+      expect(controller.locations, [
+        (directory: '/root/projects/app', workspace: null),
+      ]);
+      expect(
+        find.byKey(const ValueKey('workspace-folder-chooser')),
+        findsNothing,
+      );
 
       await tester.tap(find.byKey(const ValueKey('workspace-quick-ask')));
       await tester.pumpAndSettle();
-
       expect(controller.createSessionCalls, 1);
-      // No project means no directory parameter: the transport omits it and
-      // the server scopes the session to its own default directory.
-      expect(controller.createSessionDirectory, isNull);
+      expect(controller.createSessionDirectory, '/root/projects/app');
       expect(find.text('opened:/chat/session-fresh'), findsOneWidget);
     },
   );
+
+  testWidgets('creating a folder on the managed server opens it', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final repository = _ProjectsRepository()..projects = const [];
+    final controller = _FreshServerController(
+      ProfileStore(prefs: await SharedPreferences.getInstance()),
+      repository,
+    );
+    addTearDown(controller.dispose);
+    final created = <String>[];
+    ProjectFolderActions.canCreateOverride = true;
+    ProjectFolderActions.createFolderOverride = (name) async {
+      created.add(name);
+      return '/root/projects/$name';
+    };
+    addTearDown(() {
+      ProjectFolderActions.canCreateOverride = null;
+      ProjectFolderActions.createFolderOverride = null;
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: WorkspaceScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('workspace-create-folder')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('new-folder-name')),
+      '../etc',
+    );
+    await tester.tap(find.byKey(const ValueKey('new-folder-create')));
+    await tester.pumpAndSettle();
+    expect(created, isEmpty);
+    expect(find.textContaining('single folder name'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('new-folder-name')),
+      'my-app',
+    );
+    await tester.tap(find.byKey(const ValueKey('new-folder-create')));
+    await tester.pumpAndSettle();
+    expect(created, ['my-app']);
+    expect(controller.locations, [
+      (directory: '/root/projects/my-app', workspace: null),
+    ]);
+    expect(
+      find.byKey(const ValueKey('workspace-folder-chooser')),
+      findsNothing,
+    );
+    expect(find.byKey(const ValueKey('workspace-quick-ask')), findsOneWidget);
+  });
+
+  testWidgets('remote servers offer open by path but not create', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final repository = _ProjectsRepository()..projects = const [];
+    final controller = _FreshServerController(
+      ProfileStore(prefs: await SharedPreferences.getInstance()),
+      repository,
+    );
+    addTearDown(controller.dispose);
+    ProjectFolderActions.canCreateOverride = false;
+    addTearDown(() => ProjectFolderActions.canCreateOverride = null);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: WorkspaceScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('workspace-create-folder')), findsNothing);
+    expect(find.byKey(const ValueKey('workspace-open-folder')), findsOneWidget);
+    expect(find.textContaining('cannot create folders'), findsOneWidget);
+  });
 }

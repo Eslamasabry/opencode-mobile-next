@@ -113,6 +113,12 @@ class _ManagedWorkspaceController extends ConnectionController {
     locationError = null;
     notifyListeners();
   }
+
+  @override
+  Future<void> selectLocationForExistingSession({
+    String? directory,
+    String? workspace,
+  }) => selectLocation(directory: directory, workspace: workspace);
 }
 
 Future<_ManagedWorkspaceController> _controller(

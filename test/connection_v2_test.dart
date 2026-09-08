@@ -1599,10 +1599,15 @@ void main() {
       expect(repository.runtimeRefreshCalls, 1);
       expect(store.providerRuntimeWasRefreshed('termux'), isTrue);
 
-      await controller.selectLocation(directory: '/');
+      // A location change refreshes the runtime; the filesystem root is no
+      // longer a selectable workspace, so use a project folder.
+      await controller.selectLocation(directory: '/root/projects/app');
       expect(repository.runtimeRefreshCalls, 2);
       expect(
-        store.providerRuntimeWasRefreshed('termux', directory: '/'),
+        store.providerRuntimeWasRefreshed(
+          'termux',
+          directory: '/root/projects/app',
+        ),
         isTrue,
       );
 

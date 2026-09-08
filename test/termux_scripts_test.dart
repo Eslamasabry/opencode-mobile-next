@@ -1008,6 +1008,45 @@ wait
     skip: !Platform.isLinux,
   );
 
+  test('the managed server never runs from the container home folder', () {
+    // OpenCode watches and scans everything under its working directory.
+    // Started in /root it once scanned the whole rootfs (a stray git repo
+    // at /) until chat stopped; the server now starts in /root/projects,
+    // which setup and the runner both create.
+    final manager = TermuxBridge.managerScriptForTesting();
+
+    expect(manager, contains('mkdir -p /root/projects'));
+    expect(
+      manager,
+      contains(
+        'proot-distro login --work-dir /root/projects opencode-ubuntu -- env',
+      ),
+    );
+    expect(
+      manager,
+      isNot(contains('proot-distro login opencode-ubuntu -- env')),
+    );
+  });
+
+  test('project folders are created only as one safe name under projects', () {
+    final script = TermuxBridge.createProjectFolderScript('my-app');
+
+    expect(script, contains('proot-distro login opencode-ubuntu -- sh -c'));
+    expect(script, contains('dir="/root/projects/\$name"'));
+    expect(script, contains("-- 'my-app'"));
+    expect(script, contains('*/*|.*) echo "invalid-folder-name"'));
+    expect(
+      () => TermuxBridge.createProjectFolder('../etc'),
+      throwsA(
+        isA<TermuxBridgeException>().having(
+          (e) => e.code,
+          'code',
+          'invalid_folder_name',
+        ),
+      ),
+    );
+  });
+
   test('Ubuntu setup bypasses registries and verifies Canonical archives', () {
     final manager = TermuxBridge.managerScriptForTesting();
 

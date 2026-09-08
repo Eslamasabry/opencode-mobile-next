@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 
+import '../domain/workspace_paths.dart';
 import '../platform/platform_capabilities.dart';
 
 /// The runtime selected for the one app-managed Ubuntu server. It is separate
@@ -256,6 +257,46 @@ printf "ubuntu=installed\nversion=%s\n" "$version"
   static Future<String> diagnostics() async {
     final result = await run(diagnosticsScript());
     return result.stdout.trim();
+  }
+
+  /// Shell that creates `/root/projects/<name>` inside the managed container
+  /// and prints its absolute path. [name] must already pass
+  /// `projectFolderNameProblem`, so it is a single safe path segment.
+  static String createProjectFolderScript(String name) =>
+      '''
+set -eu
+timeout -k 2s 30s proot-distro login opencode-ubuntu -- sh -c '
+set -eu
+name="\$1"
+case "\$name" in ""|.|..|*/*|.*) echo "invalid-folder-name" >&2; exit 64 ;; esac
+dir="$managedProjectsDirectory/\$name"
+mkdir -p "\$dir"
+test -d "\$dir"
+printf "%s\\n" "\$dir"
+' -- '$name'
+''';
+
+  /// Creates a project folder under `/root/projects` in the managed
+  /// container and returns its absolute path. Only the app-managed Termux
+  /// server can do this; other servers have no folder-creation API.
+  static Future<String> createProjectFolder(String name) async {
+    final problem = projectFolderNameProblem(name);
+    if (problem != null) {
+      throw TermuxBridgeException(problem, code: 'invalid_folder_name');
+    }
+    final folder = name.trim();
+    final result = await run(
+      createProjectFolderScript(folder),
+      timeout: const Duration(seconds: 45),
+    );
+    final path = result.stdout.trim().split('\n').last.trim();
+    if (path != '$managedProjectsDirectory/$folder') {
+      throw TermuxBridgeException(
+        'The folder could not be created in the managed server.',
+        code: 'folder_not_created',
+      );
+    }
+    return path;
   }
 
   static bool isLaunchAcknowledged(String output) => RegExp(
@@ -813,7 +854,11 @@ case "$runtime" in
   *) exit 64 ;;
 esac
 "$manager" rotate-log server
-proot-distro login opencode-ubuntu -- env \
+# The server never runs from the container's home folder: OpenCode would watch
+# and scan every dotfile and cache under it. Projects live in /root/projects,
+# and the app still asks the user to create or open a folder inside it.
+proot-distro login opencode-ubuntu -- mkdir -p /root/projects >/dev/null 2>&1 || true
+proot-distro login --work-dir /root/projects opencode-ubuntu -- env \
   OPENCODE_SERVER_USERNAME=opencode \
   OPENCODE_SERVER_PASSWORD="$(cat "$password_file")" \
   OPENCODE_PASSWORD="$(cat "$password_file")" \
@@ -1422,6 +1467,8 @@ if ! command -v node >/dev/null 2>&1 ||
     nodejs npm curl ca-certificates git openssh-client
 fi
 export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--dns-result-order=ipv4first"
+# Project folders live here; the server starts in it instead of /root.
+mkdir -p /root/projects
 case "${OC_RUNTIME:-opencode1}" in
   opencode1) command=opencode ;;
   opencode2) command=opencode2 ;;

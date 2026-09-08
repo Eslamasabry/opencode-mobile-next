@@ -122,6 +122,12 @@ class _Controller extends ConnectionController {
     notifyListeners();
     await duringSelection?.call();
   }
+
+  @override
+  Future<void> selectLocationForExistingSession({
+    String? directory,
+    String? workspace,
+  }) => selectLocation(directory: directory, workspace: workspace);
 }
 
 class _Gateway implements ServerGateway {
