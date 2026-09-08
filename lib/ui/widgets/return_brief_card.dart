@@ -49,15 +49,15 @@ class ReturnBriefCard extends StatelessWidget {
       if (!stale && !brief.readStateKnown) {
         return Padding(
           key: const ValueKey('return-brief-status'),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Align(
             alignment: AlignmentDirectional.centerStart,
-            child: TextButton.icon(
+            child: TextButton(
               style: TextButton.styleFrom(
                 foregroundColor: colors.onSurfaceVariant,
                 minimumSize: const Size(48, 48),
                 textStyle: theme.textTheme.bodySmall,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: EdgeInsets.zero,
               ),
               onPressed: () => showDialog<void>(
                 context: context,
@@ -74,24 +74,36 @@ class ReturnBriefCard extends StatelessWidget {
                   ],
                 ),
               ),
-              icon: const Icon(Icons.info_outline_rounded, size: 16),
-              label: Text(l10n.returnBriefStatusUnknown),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(
+                    width: 32,
+                    child: Icon(Icons.info_outline_rounded, size: 16),
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(child: Text(l10n.returnBriefStatusUnknown)),
+                ],
+              ),
             ),
           ),
         );
       }
       return Padding(
         key: const ValueKey('return-brief-status'),
-        padding: const EdgeInsets.fromLTRB(20, 2, 20, 6),
+        padding: const EdgeInsets.fromLTRB(16, 2, 16, 6),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.info_outline_rounded,
-              size: 16,
-              color: colors.onSurfaceVariant,
+            SizedBox(
+              width: 32,
+              child: Icon(
+                Icons.info_outline_rounded,
+                size: 16,
+                color: colors.onSurfaceVariant,
+              ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 note,

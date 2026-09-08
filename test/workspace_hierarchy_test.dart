@@ -59,6 +59,14 @@ class _Repository extends ProductRepository {
 class _Controller extends ConnectionController {
   _Controller(super.store);
 
+  int createCalls = 0;
+
+  @override
+  Future<Session> createSession() async {
+    createCalls++;
+    return Session(id: 'created', directory: directory);
+  }
+
   // Pins are scoped to a server profile; the bare controller has none.
   @override
   ServerProfile get profile =>
@@ -141,7 +149,9 @@ Widget _app(
   ConnectionController controller, {
   double textScale = 1,
   bool dark = false,
+  Map<String, WidgetBuilder> routes = const {},
 }) => MaterialApp(
+  routes: routes,
   theme: dark ? AppTheme.dark() : AppTheme.light(),
   builder: (context, child) => MediaQuery(
     data: MediaQuery.of(
@@ -165,6 +175,80 @@ double _top(WidgetTester tester, Finder finder) => tester.getTopLeft(finder).dy;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets(
+    'empty Workspace has one New session action that opens a session',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 760);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final controller = await _controller();
+      addTearDown(controller.dispose);
+      controller.sessionsById.clear();
+      controller.busySessions.clear();
+      await tester.pumpWidget(
+        _app(
+          controller,
+          textScale: 2,
+          routes: {
+            '/chat/created': (_) =>
+                const Scaffold(body: Text('New session opened')),
+          },
+        ),
+      );
+      await _pumpFrames(tester);
+      expect(find.text('New session'), findsOneWidget);
+      final action = find.widgetWithText(FilledButton, 'New session');
+      expect(tester.getSize(action).height, greaterThanOrEqualTo(48));
+      expect(tester.getTopLeft(action).dx, 16);
+      expect(tester.takeException(), isNull);
+      await tester.tap(action);
+      await _pumpFrames(tester);
+      expect(controller.createCalls, 1);
+      expect(find.text('New session opened'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'a two-line session name remains readable and opens that session',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final controller = await _controller();
+      addTearDown(controller.dispose);
+      controller.busySessions.clear();
+      controller.sessionsById = {
+        'resume': Session(
+          id: 'resume',
+          title: 'Fix checkout layout',
+          directory: '/work/app',
+        ),
+      };
+      await tester.pumpWidget(
+        _app(
+          controller,
+          textScale: 2,
+          routes: {
+            '/chat/resume': (_) =>
+                const Scaffold(body: Text('Existing session opened')),
+          },
+        ),
+      );
+      await _pumpFrames(tester);
+      final title = find.text('Fix checkout layout');
+      expect(tester.widget<Text>(title).maxLines, 2);
+      expect(tester.getTopLeft(title).dx, 60);
+      expect(tester.getSize(title).height, greaterThan(40));
+      expect(tester.takeException(), isNull);
+      await tester.tap(title);
+      await _pumpFrames(tester);
+      expect(find.text('Existing session opened'), findsOneWidget);
+      expect(controller.createCalls, 0);
+    },
+  );
 
   testWidgets(
     'project path is compact and its complete value can be inspected',

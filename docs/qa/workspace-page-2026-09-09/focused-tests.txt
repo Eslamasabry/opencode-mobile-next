@@ -1,0 +1,71 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-ui-workspace/test/workspace_hierarchy_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-ui-workspace/test/workspace_hierarchy_test.dart: empty Workspace has one New session action that opens a session
+00:00 +1: /home/eslam/Storage/Code/oc_app-ui-workspace/test/workspace_hierarchy_test.dart: a two-line session name remains readable and opens that session
+00:00 +2: /home/eslam/Storage/Code/oc_app-ui-workspace/test/workspace_hierarchy_test.dart: project path is compact and its complete value can be inspected
+00:01 +3: /home/eslam/Storage/Code/oc_app-ui-workspace/test/workspace_hierarchy_test.dart: 320px, 1.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:01 +4: /home/eslam/Storage/Code/oc_app-ui-workspace/test/workspace_hierarchy_test.dart: 320px, 1.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:01 +5: /home/eslam/Storage/Code/oc_app-ui-workspace/test/workspace_hierarchy_test.dart: 320px, 2.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:01 +6: /home/eslam/Storage/Code/oc_app-ui-workspace/test/workspace_hierarchy_test.dart: 320px, 2.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:01 +7: /home/eslam/Storage/Code/oc_app-ui-workspace/test/workspace_hierarchy_test.dart: 390px, 1.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:01 +8: /home/eslam/Storage/Code/oc_app-ui-workspace/test/workspace_hierarchy_test.dart: 390px, 1.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:01 +9: /home/eslam/Storage/Code/oc_app-ui-workspace/test/workspace_hierarchy_test.dart: 390px, 2.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:02 +10: /home/eslam/Storage/Code/oc_app-ui-workspace/test/workspace_hierarchy_test.dart: 390px, 2.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:02 +11: /home/eslam/Storage/Code/oc_app-ui-workspace/test/workspace_hierarchy_test.dart: one session with every blocker shows permission, then question, then form as each is answered
+00:02 +12: /home/eslam/Storage/Code/oc_app-ui-workspace/test/workspace_hierarchy_test.dart: answering the request returns a pinned session to Pinned in pin order and a busy one to Active
+00:02 +13: /home/eslam/Storage/Code/oc_app-ui-workspace/test/workspace_hierarchy_test.dart: the section menu reloads sessions and omits Terminal when the server has none
+00:02 +14: loading /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart
+00:03 +14: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: Workspace render and dismissal never view a session or answer a request
+00:04 +15: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: refused dismissal stays visible and a successful retry hides it
+00:04 +16: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: an item arriving during dismissal remains; scope switch does not hide new project
+00:04 +17: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: Review results and Continue return to the brief without implicit acknowledgement
+00:05 +18: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: scope change retires result route while history is loading
+00:05 +19: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: offline requests are labelled last observed and use the guarded permission sheet
+00:05 +20: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: form Answer closes on project switch and cannot send the old form
+00:05 +21: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: sheet form dismiss retires on request settlement without closing an unrelated route
+00:05 +22: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: sheet form dismiss retires on project change without closing an unrelated route
+00:06 +23: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: full-screen form dismiss retires on request settlement without closing an unrelated route
+00:06 +24: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: full-screen form dismiss retires on project change without closing an unrelated route
+00:06 +25: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: known empty, unsupported and partial inventories have distinct presentation
+00:06 +26: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: project switch during a save never dismisses the new project
+00:06 +27: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: form reply rejects project switch during transport wake
+00:06 +28: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: form cancel rejects project switch during transport wake
+00:06 +29: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: 320px 2x text wraps all brief controls, dark=false rtl=false
+00:06 +30: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: 320px 2x text wraps all brief controls, dark=false rtl=true
+00:06 +31: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: 320px 2x text wraps all brief controls, dark=true rtl=false
+00:06 +32: /home/eslam/Storage/Code/oc_app-ui-workspace/test/return_brief_widget_test.dart: 320px 2x text wraps all brief controls, dark=true rtl=true
+00:06 +33: loading /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart
+00:07 +33: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: archived pager remains reachable through an empty filtered first page
+00:08 +34: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: project browser and rename dialog fit compact large text
+00:08 +35: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: project search and reset-name use server project truth
+00:09 +36: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: selecting a project opens its exact local directory
+00:09 +37: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: workspace groups projects behind one compact context entry
+00:09 +38: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: workspace puts sessions above the one management route
+00:09 +39: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: the quick-ask pill stays reachable without scrolling
+00:09 +40: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: recent session end-swipe archives with an undo window
+00:09 +41: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: delete stays in the session menu behind a confirm
+00:09 +42: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: project discovery does not block already loaded conversations
+00:09 +43: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: failed project discovery still finds and opens a previous chat
+00:10 +44: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: retrying the project catalog keeps loaded conversations visible
+00:10 +45: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: a fresh server with zero projects asks for a project folder
+00:10 +46: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: a home-folder project is never opened automatically
+00:10 +47: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: an empty project catalog does not hide existing sessions
+00:10 +48: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: zero projects still allows finding and opening an older chat
+00:10 +49: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: zero projects keeps session errors and older pages reachable
+00:10 +50: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: a first session starts only after a project folder is opened by path
+00:10 +51: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: creating a folder on the managed server opens it
+00:10 +52: /home/eslam/Storage/Code/oc_app-ui-workspace/test/projects_screen_test.dart: remote servers offer open by path but not create
+00:10 +53: loading /home/eslam/Storage/Code/oc_app-ui-workspace/test/session_needs_you_test.dart
+00:11 +53: /home/eslam/Storage/Code/oc_app-ui-workspace/test/session_needs_you_test.dart: workspace row moves under Needs you and names the permission, in the attention tone, while it is pending
+00:12 +54: /home/eslam/Storage/Code/oc_app-ui-workspace/test/session_needs_you_test.dart: sessions tab row carries a Needs you chip while a permission is pending
+00:12 +55: loading /home/eslam/Storage/Code/oc_app-ui-workspace/tool/capture/quiet_workspace_test.dart
+00:13 +55: /home/eslam/Storage/Code/oc_app-ui-workspace/tool/capture/quiet_workspace_test.dart: (setUpAll)
+00:13 +55: /home/eslam/Storage/Code/oc_app-ui-workspace/tool/capture/quiet_workspace_test.dart: Workspace recent light at 1.0x
+00:14 +56: /home/eslam/Storage/Code/oc_app-ui-workspace/tool/capture/quiet_workspace_test.dart: Workspace empty light at 1.0x
+00:14 +57: /home/eslam/Storage/Code/oc_app-ui-workspace/tool/capture/quiet_workspace_test.dart: Workspace recent light at 2.0x
+00:15 +58: /home/eslam/Storage/Code/oc_app-ui-workspace/tool/capture/quiet_workspace_test.dart: Workspace empty light at 2.0x
+00:15 +59: /home/eslam/Storage/Code/oc_app-ui-workspace/tool/capture/quiet_workspace_test.dart: Workspace recent dark at 1.0x
+00:15 +60: /home/eslam/Storage/Code/oc_app-ui-workspace/tool/capture/quiet_workspace_test.dart: Workspace empty dark at 1.0x
+00:15 +61: /home/eslam/Storage/Code/oc_app-ui-workspace/tool/capture/quiet_workspace_test.dart: Workspace recent dark at 2.0x
+00:16 +62: /home/eslam/Storage/Code/oc_app-ui-workspace/tool/capture/quiet_workspace_test.dart: Workspace empty dark at 2.0x
+00:16 +63: /home/eslam/Storage/Code/oc_app-ui-workspace/tool/capture/quiet_workspace_test.dart: (tearDownAll)
+00:16 +63: All tests passed!

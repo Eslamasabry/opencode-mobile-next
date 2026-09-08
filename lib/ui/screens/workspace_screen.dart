@@ -527,10 +527,15 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         ListTile(
                           key: const ValueKey('current-project-entry'),
                           contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20,
+                            horizontal: 16,
                             vertical: 8,
                           ),
-                          leading: const Icon(Icons.folder_outlined, size: 24),
+                          minLeadingWidth: 32,
+                          horizontalTitleGap: 12,
+                          leading: const SizedBox.square(
+                            dimension: 32,
+                            child: Icon(Icons.folder_outlined, size: 24),
+                          ),
                           title: Text(
                             _selectedProject?.name ?? 'Choose a project',
                             style: Theme.of(context).textTheme.titleLarge,
@@ -552,7 +557,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                               ),
                               if (largeProjectText &&
                                   ManageProjectScreen.isAvailable(capabilities))
-                                _manageProjectAction(l10n),
+                                _manageProjectAction(l10n, alignLeading: true),
                             ],
                           ),
                           // At large text the labelled management action sits
@@ -574,7 +579,18 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           _hasExternalSessionDirectory)
                         ListTile(
                           key: const ValueKey('active-session-directory'),
-                          leading: const Icon(Icons.subdirectory_arrow_right),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                          ),
+                          minLeadingWidth: 32,
+                          horizontalTitleGap: 12,
+                          leading: const SizedBox.square(
+                            dimension: 32,
+                            child: Icon(
+                              Icons.subdirectory_arrow_right,
+                              size: 24,
+                            ),
+                          ),
                           title: Text(_basename(_selectedDirectory!)),
                           subtitle: Text(
                             'Active session directory · $_selectedDirectory',
@@ -600,7 +616,15 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           widget.controller.directory?.isNotEmpty == true)
                         ListTile(
                           key: const ValueKey('restricted-directory-context'),
-                          leading: const Icon(Icons.folder_rounded),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                          ),
+                          minLeadingWidth: 32,
+                          horizontalTitleGap: 12,
+                          leading: const SizedBox.square(
+                            dimension: 32,
+                            child: Icon(Icons.folder_rounded, size: 24),
+                          ),
                           title: Text(_basename(widget.controller.directory!)),
                           subtitle: Text(
                             widget.controller.directory!,
@@ -731,8 +755,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                             : widget.controller.directory == null
                             ? 'Choose a project folder to start a session.'
                             : 'Start a session in the selected workspace.',
-                        actionLabel: 'New session',
-                        onAction: _createSession,
                       ),
                     ),
                   )
@@ -760,7 +782,15 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 if (archived.isNotEmpty || partial)
                   SliverToBoxAdapter(
                     child: ListTile(
-                      leading: const Icon(Icons.archive_outlined),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                      ),
+                      minLeadingWidth: 32,
+                      horizontalTitleGap: 12,
+                      leading: const SizedBox.square(
+                        dimension: 32,
+                        child: Icon(Icons.archive_outlined, size: 24),
+                      ),
                       title: const Text('Archived sessions'),
                       subtitle: Text(
                         partial
@@ -779,9 +809,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         // 4. Start a prompt: a docked quick-ask pill opens a fresh session in
         // the active project without scrolling, replacing the New-session FAB.
         Positioned(
-          left: 12,
-          right: 12,
-          bottom: 12,
+          left: 16,
+          right: 16,
+          bottom: 6,
           child: _QuickAskPill(
             creating: _creating,
             onTap: _creating ? null : _createSession,
@@ -795,14 +825,22 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     );
   }
 
-  Widget _manageProjectAction(AppLocalizations l10n) => Tooltip(
+  Widget _manageProjectAction(
+    AppLocalizations l10n, {
+    bool alignLeading = false,
+  }) => Tooltip(
     message: l10n.workspaceManageProjectHint,
     child: TextButton(
       key: const ValueKey('manage-project-entry'),
       onPressed: _openManageProject,
       style: TextButton.styleFrom(
         minimumSize: const Size(48, 48),
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+        padding: alignLeading
+            ? EdgeInsets.zero
+            : const EdgeInsets.symmetric(horizontal: 10),
+        alignment: alignLeading
+            ? AlignmentDirectional.centerStart
+            : Alignment.center,
       ),
       child: Text(l10n.workspaceManage),
     ),
@@ -1314,23 +1352,29 @@ class _SessionRow extends StatelessWidget {
           : const SwipeDeleteBackground(),
       child: ListTile(
         minTileHeight: 64,
-        leading: needsAttention
-            ? Icon(
-                key: ValueKey('session-attention-icon-${session.id}'),
-                Icons.notification_important_outlined,
-                size: 21,
-                color: AppTheme.statusColor(theme, AppStatusTone.attention),
-              )
-            : busy
-            ? const _BreathingDot()
-            : Icon(
-                pinned ? Icons.push_pin : Icons.chat_bubble_outline_rounded,
-                size: 21,
-                semanticLabel: pinned ? l10n.sessionPinned : null,
-              ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+        minLeadingWidth: 32,
+        horizontalTitleGap: 12,
+        leading: SizedBox.square(
+          dimension: 32,
+          child: needsAttention
+              ? Icon(
+                  key: ValueKey('session-attention-icon-${session.id}'),
+                  Icons.notification_important_outlined,
+                  size: 21,
+                  color: AppTheme.statusColor(theme, AppStatusTone.attention),
+                )
+              : busy
+              ? const _BreathingDot()
+              : Icon(
+                  pinned ? Icons.push_pin : Icons.chat_bubble_outline_rounded,
+                  size: 21,
+                  semanticLabel: pinned ? l10n.sessionPinned : null,
+                ),
+        ),
         title: Text(
           presentedSessionTitle(session, fallback: 'Untitled session'),
-          maxLines: 1,
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Column(
@@ -1478,8 +1522,6 @@ class _SessionRowSubtitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // No explicit style: the ListTile's subtitle DefaultTextStyle applies,
-    // so the row keeps the exact typography it had as a plain Text.
     final tail = rest.join(' · ');
     return Text.rich(
       TextSpan(
@@ -1494,6 +1536,9 @@ class _SessionRowSubtitle extends StatelessWidget {
           if (status != null && tail.isNotEmpty) const TextSpan(text: ' · '),
           if (tail.isNotEmpty) TextSpan(text: tail),
         ],
+      ),
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
@@ -1749,78 +1794,57 @@ class _QuickAskPill extends StatelessWidget {
     // task keeps its own labelled target instead of an unexplained glyph.
     return Material(
       key: const ValueKey('workspace-quick-ask'),
-      // The navigation dock supplies depth. Keep this action row quiet and
-      // opaque so scrolling session text never competes behind its controls.
+      // Opaque backing protects the controls from scrolling session text.
+      // The button fill shares the page rail without an invisible inner tray.
       color: theme.scaffoldBackgroundColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Padding(
-        padding: const EdgeInsets.all(6),
-        child: Row(
-          children: [
-            Expanded(
-              child: Semantics(
-                button: true,
-                label: l10n.workspaceNewSession,
-                child: FilledButton.icon(
-                  onPressed: onTap,
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  icon: creating
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.add_rounded),
+      child: Row(
+        children: [
+          Expanded(
+            child: FilledButton.icon(
+              onPressed: onTap,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+              icon: creating
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.add_rounded),
+              label: Text(
+                l10n.workspaceNewSession,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+          if (isolated != null) ...[
+            const SizedBox(width: 8),
+            if (compact)
+              IconButton(
+                key: const ValueKey('workspace-isolated-task'),
+                tooltip: isolatedTaskLabel ?? l10n.workspaceIsolatedTask,
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                onPressed: creating ? null : isolated,
+                icon: const Icon(Icons.account_tree_outlined),
+              )
+            else
+              Tooltip(
+                message: isolatedTaskLabel ?? '',
+                child: TextButton.icon(
+                  key: const ValueKey('workspace-isolated-task'),
+                  onPressed: creating ? null : isolated,
+                  style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                  icon: const Icon(Icons.account_tree_outlined, size: 20),
                   label: Text(
-                    l10n.workspaceNewSession,
+                    l10n.workspaceIsolatedTask,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
-            ),
-            if (isolated != null) ...[
-              const SizedBox(width: 6),
-              // The label gives way to the icon alone on narrow phones and at
-              // large text, where two labelled buttons cannot share a row.
-              if (compact)
-                IconButton(
-                  key: const ValueKey('workspace-isolated-task'),
-                  tooltip: isolatedTaskLabel ?? l10n.workspaceIsolatedTask,
-                  constraints: const BoxConstraints(
-                    minWidth: 48,
-                    minHeight: 48,
-                  ),
-                  onPressed: creating ? null : isolated,
-                  icon: const Icon(Icons.account_tree_outlined),
-                )
-              else
-                Tooltip(
-                  message: isolatedTaskLabel ?? '',
-                  child: TextButton.icon(
-                    key: const ValueKey('workspace-isolated-task'),
-                    onPressed: creating ? null : isolated,
-                    style: TextButton.styleFrom(
-                      minimumSize: const Size(48, 48),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                    ),
-                    icon: const Icon(Icons.account_tree_outlined, size: 20),
-                    label: Text(
-                      l10n.workspaceIsolatedTask,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-            ],
           ],
-        ),
+        ],
       ),
     );
   }

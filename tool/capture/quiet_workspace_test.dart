@@ -39,70 +39,101 @@ void main() {
   const storage = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
   for (final light in [true, false]) {
     for (final scale in [1.0, 2.0]) {
-      testWidgets('Workspace ${light ? 'light' : 'dark'} at ${scale}x', (
-        tester,
-      ) async {
-        tester.view.physicalSize = const Size(1170, 2532);
-        tester.view.devicePixelRatio = 3;
-        tester.platformDispatcher.textScaleFactorTestValue = scale;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
-        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-        final messenger =
-            TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-        messenger.setMockMethodCallHandler(storage, (_) async => null);
-        addTearDown(() => messenger.setMockMethodCallHandler(storage, null));
-        final prefs = await setupCapturePreferences();
-        final store = SeededProfileStore(
-          prefs: prefs,
-          seeded: [
-            ServerProfile(
-              id: 'laptop',
-              name: 'Laptop',
-              baseUrl: 'http://localhost',
-            ),
-          ],
-        );
-        final controller = _Controller(store)
-          ..api = CaptureApi()
-          ..repository = _Repository()
-          ..status = StreamStatus.connected
-          ..directory = _directory
-          ..sessionsById = {
-            'design': Session(
-              id: 'design',
-              title: 'Refine the checkout experience',
-              directory: _directory,
-              time: SessionTime(
-                created: DateTime.now().millisecondsSinceEpoch - 3600000,
+      for (final empty in [false, true]) {
+        testWidgets(
+          'Workspace ${empty ? 'empty' : 'recent'} ${light ? 'light' : 'dark'} at ${scale}x',
+          (tester) async {
+            tester.view.physicalSize = const Size(1170, 2532);
+            tester.view.devicePixelRatio = 3;
+            tester.platformDispatcher.textScaleFactorTestValue = scale;
+            addTearDown(tester.view.resetPhysicalSize);
+            addTearDown(tester.view.resetDevicePixelRatio);
+            addTearDown(
+              tester.platformDispatcher.clearTextScaleFactorTestValue,
+            );
+            final messenger = TestDefaultBinaryMessengerBinding
+                .instance
+                .defaultBinaryMessenger;
+            messenger.setMockMethodCallHandler(storage, (_) async => null);
+            addTearDown(
+              () => messenger.setMockMethodCallHandler(storage, null),
+            );
+            final prefs = await setupCapturePreferences();
+            final store = SeededProfileStore(
+              prefs: prefs,
+              seeded: [
+                ServerProfile(
+                  id: 'laptop',
+                  name: 'Laptop',
+                  baseUrl: 'http://localhost',
+                ),
+              ],
+            );
+            final controller = _Controller(store)
+              ..api = CaptureApi()
+              ..repository = _Repository()
+              ..status = StreamStatus.connected
+              ..directory = _directory
+              ..sessionsById = empty
+                  ? {}
+                  : {
+                      'design': Session(
+                        id: 'design',
+                        title: 'Refine the checkout experience',
+                        directory: _directory,
+                        time: SessionTime(
+                          created:
+                              DateTime.now().millisecondsSinceEpoch - 3600000,
+                        ),
+                      ),
+                    }
+              ..busySessions = {};
+            addTearDown(controller.dispose);
+            final boundary = GlobalKey();
+            await tester.pumpWidget(
+              captureApp(
+                home: const HomeScreen(),
+                boundaryKey: boundary,
+                controller: controller,
+                light: light,
               ),
-            ),
-          }
-          ..busySessions = {};
-        addTearDown(controller.dispose);
-        final boundary = GlobalKey();
-        await tester.pumpWidget(
-          captureApp(
-            home: const HomeScreen(),
-            boundaryKey: boundary,
-            controller: controller,
-            light: light,
-          ),
+            );
+            for (var i = 0; i < 20; i++) {
+              await tester.pump(const Duration(milliseconds: 100));
+            }
+            expect(find.text('Shopfront'), findsOneWidget);
+            expect(find.text('Review status unknown'), findsOneWidget);
+            expect(find.text('New session'), findsOneWidget);
+            expect(tester.getTopLeft(find.text('Shopfront')).dx, 60);
+            expect(
+              tester.getTopLeft(find.text('Review status unknown')).dx,
+              60,
+            );
+            if (!empty) {
+              expect(
+                tester
+                    .getTopLeft(find.text('Refine the checkout experience'))
+                    .dx,
+                60,
+              );
+            }
+            expect(
+              tester
+                  .getTopLeft(find.widgetWithText(FilledButton, 'New session'))
+                  .dx,
+              16,
+            );
+            expect(tester.takeException(), isNull);
+            final tone = light ? 'light' : 'dark';
+            await writePng(
+              'docs/qa/workspace-page-2026-09-09/after-${empty ? 'empty' : 'recent'}-$tone-${scale.toInt()}x.png',
+              await capturePng(tester, boundary),
+            );
+            await tester.pumpWidget(const SizedBox.shrink());
+            await tester.pump();
+          },
         );
-        for (var i = 0; i < 20; i++) {
-          await tester.pump(const Duration(milliseconds: 100));
-        }
-        expect(find.text('Shopfront'), findsOneWidget);
-        expect(find.text('Review status unknown'), findsOneWidget);
-        expect(tester.takeException(), isNull);
-        final tone = light ? 'light' : 'dark';
-        await writePng(
-          'docs/qa/quiet-workspace/workspace-$tone-${scale.toInt()}x.png',
-          await capturePng(tester, boundary),
-        );
-        await tester.pumpWidget(const SizedBox.shrink());
-        await tester.pump();
-      });
+      }
     }
   }
 }
