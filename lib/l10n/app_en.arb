@@ -1976,5 +1976,30 @@
   "workspaceDismissNotice": "Dismiss",
   "workspaceManageProject": "Manage project",
   "workspaceManageProjectHint": "Switch project, worktrees, and project health",
-  "workspaceManage": "Manage"
+  "workspaceManage": "Manage",
+  "activityClearHere": "All clear here",
+  "activityStatusIncomplete": "Status incomplete",
+  "activityCheckedLocationsClear": "Nothing needs you in the checked locations.",
+  "activityUnknownStatusDetail": "No requests loaded. Some server activity is still unknown.",
+  "activityCheckAgain": "Check again",
+  "activitySavedServers": "Saved servers",
+  "activitySelectedLocationsOnly": "Last selected locations only",
+  "activityBackgroundUpdates": "Background updates",
+  "activityBackgroundOffDetail": "Off \u00b7 choose when to stay connected",
+  "activityPendingCount": "{count} pending",
+  "@activityPendingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "activityUnknownCount": "{count} unknown",
+  "@activityUnknownCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

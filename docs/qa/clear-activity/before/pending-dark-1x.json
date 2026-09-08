@@ -1,0 +1,28 @@
+{
+  "logicalViewport": {
+    "width": 390,
+    "height": 844
+  },
+  "textScale": 1.0,
+  "state": "pending",
+  "theme": "dark",
+  "phase": "before",
+  "Saved-server attention": {
+    "left": 56.0,
+    "top": 72.0,
+    "width": 270.0,
+    "height": 24.0
+  },
+  "Edit a file": {
+    "left": 56.0,
+    "top": 230.53125,
+    "width": 270.0,
+    "height": 24.0
+  },
+  "Completion digests": {
+    "left": 56.0,
+    "top": 452.0,
+    "width": 270.0,
+    "height": 24.0
+  }
+}

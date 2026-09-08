@@ -132,39 +132,56 @@ class ProfileMonitorScreen extends StatelessWidget {
 }
 
 class ProfileMonitorInbox extends StatelessWidget {
-  const ProfileMonitorInbox({super.key, required this.controller});
+  const ProfileMonitorInbox({
+    super.key,
+    required this.controller,
+    this.compact = false,
+  });
   final ConnectionController controller;
+  final bool compact;
   @override
   Widget build(BuildContext context) {
     if (controller.isIsolated) return const SizedBox.shrink();
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final monitor = controller.profileMonitor;
+    final summary = ListTile(
+      leading: const Icon(Icons.dns_outlined),
+      title: Text(compact ? l10n.activitySavedServers : l10n.monitorTitle),
+      subtitle: Text(
+        compact
+            ? [
+                if (controller.unifiedAttentionCount > 0)
+                  l10n.activityPendingCount(controller.unifiedAttentionCount),
+                if (controller.unknownAttentionProfileCount > 0)
+                  l10n.activityUnknownCount(
+                    controller.unknownAttentionProfileCount,
+                  ),
+                l10n.activitySelectedLocationsOnly,
+              ].join(' · ')
+            : l10n.monitorPendingSummary(
+                controller.unifiedAttentionCount,
+                controller.unknownAttentionProfileCount,
+              ),
+      ),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => ProfileMonitorScreen(controller: controller),
+        ),
+      ),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ListTile(
-          leading: const Icon(Icons.dns_outlined),
-          title: Text(l10n.monitorTitle),
-          subtitle: Text(
-            l10n.monitorPendingSummary(
-              controller.unifiedAttentionCount,
-              controller.unknownAttentionProfileCount,
+        if (!compact) summary,
+        if (!compact)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              l10n.monitorScope,
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => ProfileMonitorScreen(controller: controller),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            l10n.monitorScope,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ),
         for (final profile in controller.store.profiles)
           if (controller.isProfileReadable(profile.id))
             if (monitor.snapshotFor(profile.id) case final snapshot
@@ -185,6 +202,7 @@ class ProfileMonitorInbox extends StatelessWidget {
                   request: interval.toRequest(),
                 ),
             ],
+        if (compact) summary,
       ],
     );
   }

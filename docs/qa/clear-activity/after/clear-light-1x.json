@@ -1,0 +1,28 @@
+{
+  "logicalViewport": {
+    "width": 390,
+    "height": 844
+  },
+  "textScale": 1.0,
+  "state": "clear",
+  "theme": "light",
+  "phase": "after",
+  "All clear here": {
+    "left": 16.0,
+    "top": 144.0,
+    "width": 143.0995635986328,
+    "height": 32.0
+  },
+  "Saved servers": {
+    "left": 56.0,
+    "top": 245.86804723739624,
+    "width": 270.0,
+    "height": 24.0
+  },
+  "Completion digests": {
+    "left": 56.0,
+    "top": 392.0,
+    "width": 270.0,
+    "height": 24.0
+  }
+}
