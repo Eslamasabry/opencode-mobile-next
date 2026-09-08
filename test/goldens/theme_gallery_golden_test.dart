@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,7 +25,26 @@ void main() {
       'assets/fonts/SpaceGrotesk-Regular.ttf',
       'assets/fonts/SpaceGrotesk-Medium.ttf',
       'assets/fonts/SpaceGrotesk-SemiBold.ttf',
+      'assets/fonts/SpaceGrotesk-SemiBold.ttf',
       'assets/fonts/SpaceGrotesk-Bold.ttf',
+    ]);
+    final body = FontLoader('Roboto');
+    for (final weight in ['Regular', 'Medium', 'Bold']) {
+      body.addFont(
+        File(
+          'tool/capture/fonts/Roboto-$weight.ttf',
+        ).readAsBytes().then(ByteData.sublistView),
+      );
+    }
+    await body.load();
+    await _loadFont('AppPhosphorRegular', [
+      'assets/fonts/phosphor/Phosphor.ttf',
+    ]);
+    await _loadFont('AppPhosphorFill', [
+      'assets/fonts/phosphor/Phosphor-Fill.ttf',
+    ]);
+    await _loadFont('AppPhosphorDuotone', [
+      'assets/fonts/phosphor/Phosphor-Duotone.ttf',
     ]);
   });
 
