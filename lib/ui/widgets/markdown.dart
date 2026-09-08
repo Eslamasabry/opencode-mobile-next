@@ -1245,7 +1245,7 @@ class _CodeBlockState extends State<CodeBlock> {
         fontFamily: AppTheme.monoFamily,
         fontSize: AppTheme.codeFontSize,
         // Shared typography target: 13dp code on a 19dp baseline.
-        height: 19 / 13,
+        height: AppTheme.codeLineHeight,
       ),
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.left,
