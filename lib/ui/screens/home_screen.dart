@@ -8,6 +8,7 @@ import '../../state/connection.dart';
 import '../app_theme.dart';
 import '../desktop/shortcuts.dart';
 import '../widgets/connection_status_banner.dart';
+import '../widgets/glass_surface.dart';
 import '../widgets/pickers.dart';
 import 'activity_screen.dart';
 import 'files_screen.dart';
@@ -55,7 +56,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       case SelectDestinationIntent(:final index) when index >= 0 && index <= 3:
         final conn = ref.read(connProvider);
         final next = _safeTab(index, conn.capabilities);
-        if (_tab != next) setState(() => _tab = next);
+        _selectTab(next);
         return true;
       case FindInSurfaceIntent()
           when _tab == 1 && ref.read(connProvider).capabilities.fileBrowsing:
@@ -72,6 +73,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       default:
         return false;
     }
+  }
+
+  void _selectTab(int next) {
+    if (_tab == next) return;
+    _lastBackAt = null;
+    setState(() => _tab = next);
   }
 
   void _onConnChanged() {
@@ -219,7 +226,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   selectedIndex: selectedDestination,
                   extended: constraints.maxWidth >= 1040,
                   onDestinationSelected: (index) =>
-                      setState(() => _tab = destinations[index].id),
+                      _selectTab(destinations[index].id),
                   destinations: [
                     for (final entry in destinations)
                       NavigationRailDestination(
@@ -236,27 +243,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           },
         ),
         bottomNavigationBar: MediaQuery.sizeOf(context).width < 760
-            ? NavigationBar(
-                selectedIndex: selectedDestination,
-                onDestinationSelected: (i) =>
-                    setState(() => _tab = destinations[i].id),
-                destinations: [
-                  for (final entry in destinations) entry.destination,
-                ],
+            ? SafeArea(
+                top: false,
+                minimum: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+                child: GlassSurface(
+                  child: NavigationBar(
+                    backgroundColor: Colors.transparent,
+                    animationDuration: GlassSurface.reduceEffects(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 220),
+                    selectedIndex: selectedDestination,
+                    onDestinationSelected: (i) =>
+                        _selectTab(destinations[i].id),
+                    destinations: [
+                      for (final entry in destinations) entry.destination,
+                    ],
+                  ),
+                ),
               )
             : null,
       ),
     );
   }
 
-  /// Root back press: first press hints, a second within the window exits.
-  /// Guards against losing a connected session to an accidental gesture.
+  /// Files first unwinds its local navigation, then destinations return home.
+  /// Only Workspace uses the double-back exit guard.
   void _onRootPop(bool didPop, Object? result) {
     if (didPop) return;
     if (_tab == 1 &&
         ref.read(connProvider).capabilities.fileBrowsing &&
         _filesBack.handleBack()) {
       _lastBackAt = null;
+      return;
+    }
+    if (_tab != 0) {
+      _selectTab(0);
       return;
     }
     final now = DateTime.now();
@@ -396,7 +417,7 @@ class _StatusDot extends StatelessWidget {
       label: 'Server $label',
       child: Tooltip(
         message: label,
-        child: pulse
+        child: pulse && !GlassSurface.reduceEffects(context)
             ? SizedBox(
                 width: 12,
                 height: 12,
