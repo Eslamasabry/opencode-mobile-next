@@ -18,7 +18,16 @@ Future<(ProfileStore, ConnectionController)> _state() async {
 /// Presents saved profiles without touching the real secure-storage channel,
 /// which is unmocked in widget tests and would hang a real upsert.
 class _SeededStore extends ProfileStore {
-  _SeededStore({required super.prefs, required this.seeded});
+  _SeededStore({
+    required super.prefs,
+    required this.seeded,
+    this.activeProfile,
+  });
+
+  final String? activeProfile;
+
+  @override
+  String? get activeId => activeProfile;
 
   final List<ServerProfile> seeded;
 
@@ -95,13 +104,16 @@ void main() {
     await tester.pumpWidget(_app(store, controller));
 
     expect(find.byKey(const ValueKey('first-run-welcome')), findsOneWidget);
-    expect(find.text('Connect to your computer'), findsOneWidget);
-    expect(find.text('Run OpenCode on this phone'), findsOneWidget);
-    expect(find.text('Learn how OpenCode works'), findsOneWidget);
+    expect(find.text('Connect to a server'), findsOneWidget);
+    expect(find.text('Try demo'), findsOneWidget);
+    expect(find.text('More setup options'), findsOneWidget);
+    expect(find.text('Run OpenCode on this phone'), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('welcome-connect-card')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('server-profile-editor')), findsOneWidget);
+    expect(tester.testTextInput.isVisible, isFalse);
+    expect(find.text('Save & connect'), findsOneWidget);
   });
 
   testWidgets('welcome routes reach the guide and Termux setup', (
@@ -126,6 +138,8 @@ void main() {
       ),
     );
 
+    await tester.tap(find.text('More setup options'));
+    await tester.pumpAndSettle();
     final guideCard = find.byKey(const ValueKey('welcome-guide-card'));
     await Scrollable.ensureVisible(tester.element(guideCard), alignment: .5);
     await tester.pumpAndSettle();
@@ -167,7 +181,49 @@ void main() {
     expect(find.byKey(const ValueKey('first-run-welcome')), findsNothing);
     expect(find.text('Workstation'), findsOneWidget);
     expect(find.text('Add server'), findsOneWidget);
+    expect(find.text('Try demo'), findsOneWidget);
+    await tester.tap(find.text('Try demo'));
+    for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.text('Offline demo'), findsOneWidget);
+    expect(store.profiles.single.name, 'Workstation');
+    await tester.tap(find.byTooltip('Exit demo'));
+    await tester.pumpAndSettle();
+    expect(find.text('Workstation'), findsOneWidget);
   });
+
+  for (final active in [false, true]) {
+    testWidgets(
+      'editing ${active ? 'active' : 'inactive'} server names the save consequence',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final store = _SeededStore(
+          prefs: await SharedPreferences.getInstance(),
+          activeProfile: active ? 'work' : null,
+          seeded: [
+            ServerProfile(
+              id: 'work',
+              name: 'Workstation',
+              baseUrl: 'https://box.example',
+            ),
+          ],
+        );
+        final controller = ConnectionController(store);
+        addTearDown(controller.dispose);
+        await tester.pumpWidget(_app(store, controller));
+        await tester.tap(find.byType(PopupMenuButton<String>));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Edit'));
+        await tester.pumpAndSettle();
+        expect(
+          find.text(active ? 'Save & connect' : 'Save changes'),
+          findsOneWidget,
+        );
+        expect(tester.testTextInput.isVisible, isFalse);
+      },
+    );
+  }
 
   testWidgets('welcome renders at 320dp with 2x text', (tester) async {
     await tester.binding.setSurfaceSize(const Size(320, 640));
@@ -178,6 +234,9 @@ void main() {
 
     expect(find.byKey(const ValueKey('first-run-welcome')), findsOneWidget);
     FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('More setup options'));
+    await tester.tap(find.text('More setup options'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('welcome-guide-card')),

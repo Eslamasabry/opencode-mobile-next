@@ -47,7 +47,7 @@ void main() {
     expect(find.text('Try again'), findsNothing);
   });
 
-  testWidgets('a loopback failure explains Termux and offers to check it', (
+  testWidgets('loopback keeps retry primary and Termux setup secondary', (
     tester,
   ) async {
     var opened = false;
@@ -65,8 +65,35 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('saved-server-open-termux')));
     expect(opened, isTrue);
-    // Try again is still there, but demoted.
-    expect(find.byKey(const ValueKey('saved-server-retry')), findsOneWidget);
+    // Retry is primary; optional setup is not presented as the diagnosis.
+    expect(
+      find.byKey(const ValueKey('saved-server-retry-primary')),
+      findsOneWidget,
+    );
+    expect(
+      tester.widget(find.byKey(const ValueKey('saved-server-open-termux'))),
+      isA<TextButton>(),
+    );
+  });
+
+  testWidgets('remote failures do not offer a local Termux setup shortcut', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _card(
+        error: 'connection refused',
+        url: 'https://work.example',
+        onTermux: () {},
+      ),
+    );
+    expect(
+      find.byKey(const ValueKey('saved-server-open-termux')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('saved-server-retry-primary')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('details expander reveals the raw error', (tester) async {

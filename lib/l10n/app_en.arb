@@ -1976,5 +1976,17 @@
   "workspaceDismissNotice": "Dismiss",
   "workspaceManageProject": "Manage project",
   "workspaceManageProjectHint": "Switch project, worktrees, and project health",
-  "workspaceManage": "Manage"
+  "workspaceManage": "Manage",
+  "onboardingValueTitle": "Keep your work moving.",
+  "onboardingValueBody": "Ask your coding agent for a change, review the result, and pick up where you left off.",
+  "onboardingConnect": "Connect to a server",
+  "onboardingDemoNote": "A simulated session. No server needed.",
+  "onboardingMoreSetup": "More setup options",
+  "onboardingPrivateNetwork": "Reach a server over your private network",
+  "onboardingRunOnPhone": "Run OpenCode on this phone",
+  "onboardingTermuxNote": "Guided Termux setup",
+  "onboardingSetupGuide": "Setup guide",
+  "onboardingSaveConnect": "Save & connect",
+  "onboardingSaveChanges": "Save changes",
+  "onboardingTermuxSetup": "Termux setup"
 }

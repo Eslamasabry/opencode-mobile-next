@@ -4947,4 +4947,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get workspaceManage => 'Manage';
+
+  @override
+  String get onboardingValueTitle => 'Keep your work moving.';
+
+  @override
+  String get onboardingValueBody =>
+      'Ask your coding agent for a change, review the result, and pick up where you left off.';
+
+  @override
+  String get onboardingConnect => 'Connect to a server';
+
+  @override
+  String get onboardingDemoNote => 'A simulated session. No server needed.';
+
+  @override
+  String get onboardingMoreSetup => 'More setup options';
+
+  @override
+  String get onboardingPrivateNetwork =>
+      'Reach a server over your private network';
+
+  @override
+  String get onboardingRunOnPhone => 'Run OpenCode on this phone';
+
+  @override
+  String get onboardingTermuxNote => 'Guided Termux setup';
+
+  @override
+  String get onboardingSetupGuide => 'Setup guide';
+
+  @override
+  String get onboardingSaveConnect => 'Save & connect';
+
+  @override
+  String get onboardingSaveChanges => 'Save changes';
+
+  @override
+  String get onboardingTermuxSetup => 'Termux setup';
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_theme.dart';
+import '../../state/profiles.dart' show isLoopbackHost;
 import '../../l10n/app_localizations.dart';
 import 'connection_failure.dart';
 
@@ -157,7 +158,14 @@ class _SavedServerConnectionCardState extends State<SavedServerConnectionCard> {
                         failure: failure,
                         onChangeServer: widget.onChangeServer,
                         onRetry: widget.onRetry,
-                        onOpenTermuxSetup: widget.onOpenTermuxSetup,
+                        onOpenTermuxSetup:
+                            widget.supportsTermux &&
+                                !widget.usesConnectionToken &&
+                                isLoopbackHost(
+                                  Uri.tryParse(widget.baseUrl)?.host ?? '',
+                                )
+                            ? widget.onOpenTermuxSetup
+                            : null,
                         onUpdatePassword: widget.onUpdatePassword,
                         onUpdateToken: widget.onUpdateToken,
                       ),
@@ -389,6 +397,16 @@ class _Actions extends StatelessWidget {
         failure.primary == ConnectionFailureAction.changeServer;
     final stacked = AppTheme.stackedActions(context);
     final buttons = <Widget>[
+      if (primaryIsRetry && onOpenTermuxSetup != null)
+        TextButton(
+          key: const ValueKey('saved-server-open-termux'),
+          onPressed: onOpenTermuxSetup,
+          child: Text(
+            lookupAppLocalizations(
+              Localizations.localeOf(context),
+            ).onboardingTermuxSetup,
+          ),
+        ),
       if (!primaryIsChange) change,
       if (!primaryIsRetry) retry,
       primary,
