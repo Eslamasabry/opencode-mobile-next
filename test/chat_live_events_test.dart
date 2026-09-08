@@ -1927,6 +1927,40 @@ void main() {
     expect(find.textContaining('| File | Status |'), findsOneWidget);
   });
 
+  testWidgets(
+    'generated CSV opens as a literal table without sending a prompt',
+    (tester) async {
+      const path = '/tmp/opencode/report.csv';
+      final api = _FakeOpenCodeApi()
+        ..fileContents[path] = const FileContent(
+          'name,value\nentry,=SUM(A1)\n',
+          mimeType: 'text/csv',
+        )
+        ..messagesHandler = (_) async => [
+          _message('assistant-csv', 'assistant', [
+            Part(
+              id: 'tool-csv',
+              messageID: 'assistant-csv',
+              type: 'tool',
+              toolName: 'write',
+              toolState: ToolState.fromJson({
+                'status': 'completed',
+                'output': {'filePath': path},
+              }),
+            ),
+          ]),
+        ];
+      await _pumpChat(tester, api);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('tool-output-file')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('file-preview-sheet')), findsOneWidget);
+      expect(find.text('Column 1'), findsOneWidget);
+      expect(find.text('=SUM(A1)'), findsOneWidget);
+      expect(api.prompts, isEmpty);
+    },
+  );
+
   testWidgets('groups a tool chain until assistant text appears', (
     tester,
   ) async {

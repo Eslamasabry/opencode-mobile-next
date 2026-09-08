@@ -34,6 +34,9 @@ dependencies:
   # including historical daylight-saving changes.
   flutter_timezone: 5.1.0
   highlight: ^0.7.0
+  # Local static SVG preview; external/active content is rejected before render.
+  flutter_svg: 2.3.0
+  xml: 7.0.1
   # v10 (shipped in 1.0.31) migrated legacy Android ciphers; v11 removes the
   # deprecated algorithms. Installs that skipped 1.0.31 entirely lose stored
   # server credentials on upgrade and must pair again: acceptable for the

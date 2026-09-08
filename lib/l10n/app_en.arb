@@ -1768,5 +1768,66 @@
   "a2aScopeError": "This agent, credential or saved task changed. Close this view and reopen the agent to continue.",
   "a2aCancelUnconfirmed": "Cancellation is not confirmed. The agent still reports an active task; refresh to check again.",
   "a2aAuthRequiredDetail": "This agent requested an additional authentication flow, which this client does not support. No automatic login or task continuation will occur.",
-  "a2aUnknownDetail": "This task state is not supported. You can refresh or forget the local record; sending and cancellation remain unavailable."
+  "a2aUnknownDetail": "This task state is not supported. You can refresh or forget the local record; sending and cancellation remain unavailable.",
+  "fileTable": "Table",
+  "fileSource": "Source",
+  "fileSourceExcerpt": "Up to the first 200,000 characters are displayed. Copy and Save keep the original content.",
+  "filePreviewPartialSource": "Only part of this file is shown. Copy and Save keep the original content.",
+  "fileLineOutsidePreview": "Line {line} is outside this preview. Save the original to read that location.",
+  "@fileLineOutsidePreview": {
+    "placeholders": {
+      "line": {
+        "type": "int"
+      }
+    }
+  },
+  "fileTableMalformed": "This file has incomplete or inconsistent quoting. Read its source instead.",
+  "fileTableTooLarge": "Table preview supports files up to 256 KB. Read the source or save the original file.",
+  "fileTableTooWide": "This file has more than 32 columns. Read the source or save the original file.",
+  "fileTableFieldTooLong": "A cell exceeds 4,096 characters. Read the source or save the original file.",
+  "fileTableMoreRows": "Showing the first 200 rows. More data remains in the original file.",
+  "fileTableRows": "{rows} rows shown · {columns} columns",
+  "@fileTableRows": {
+    "placeholders": {
+      "rows": {
+        "type": "int"
+      },
+      "columns": {
+        "type": "int"
+      }
+    }
+  },
+  "fileTableColumn": "Column {number}",
+  "@fileTableColumn": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "fileTableEmpty": "This file has no rows.",
+  "fileCopied": "File contents copied",
+  "fileCopyFailed": "Could not copy file contents. Try again.",
+  "fileImage": "Image",
+  "fileSvgUnsupported": "This SVG cannot be shown as a local static image. Read its source or save the original file. External resources, animation and complex SVG features are not supported.",
+  "filePdfEncrypted": "This PDF requires a password or uses unsupported protection. Save the original to open it in a PDF app.",
+  "filePdfLimit": "PDF preview supports files up to 10 MB and the first 200 pages. Save the original to read the full document.",
+  "filePdfUnavailable": "PDF viewing is available on Android 10 or newer. You can still save the original file.",
+  "filePdfCancelled": "PDF loading cancelled. Retry when you are ready.",
+  "filePdfFailed": "This PDF page could not be displayed. Retry or save the original file.",
+  "filePdfPageLimit": "Only the first 200 pages can be previewed. Save the original to read the full document.",
+  "filePdfPage": "Page {page} of {count}",
+  "@filePdfPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filePrevious": "Previous",
+  "fileNext": "Next",
+  "fileCancel": "Cancel"
 }

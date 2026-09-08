@@ -38,10 +38,13 @@ class MainActivity : FlutterActivity() {
     private var shortcutChannel: MethodChannel? = null
     private var shortcutDartReady = false
     private var readAloud: ReadAloudBridge? = null
+    private var localPdf: LocalPdfBridge? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         TailscaleHandoff(this, flutterEngine.dartExecutor.binaryMessenger)
+        localPdf?.dispose()
+        localPdf = LocalPdfBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         readAloud?.dispose()
         readAloud = ReadAloudBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         captureCodingAlertOpen(intent)
@@ -245,6 +248,8 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        localPdf?.dispose()
+        localPdf = null
         readAloud?.dispose()
         readAloud = null
         if (backgroundChannel != null) backgroundChannel = null
@@ -266,6 +271,8 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
+        localPdf?.dispose()
+        localPdf = null
         readAloud?.dispose()
         readAloud = null
         super.onDestroy()

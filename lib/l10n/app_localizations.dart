@@ -7580,6 +7580,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This task state is not supported. You can refresh or forget the local record; sending and cancellation remain unavailable.'**
   String get a2aUnknownDetail;
+
+  /// No description provided for @fileTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Table'**
+  String get fileTable;
+
+  /// No description provided for @fileSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get fileSource;
+
+  /// No description provided for @fileSourceExcerpt.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to the first 200,000 characters are displayed. Copy and Save keep the original content.'**
+  String get fileSourceExcerpt;
+
+  /// No description provided for @filePreviewPartialSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Only part of this file is shown. Copy and Save keep the original content.'**
+  String get filePreviewPartialSource;
+
+  /// No description provided for @fileLineOutsidePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Line {line} is outside this preview. Save the original to read that location.'**
+  String fileLineOutsidePreview(int line);
+
+  /// No description provided for @fileTableMalformed.
+  ///
+  /// In en, this message translates to:
+  /// **'This file has incomplete or inconsistent quoting. Read its source instead.'**
+  String get fileTableMalformed;
+
+  /// No description provided for @fileTableTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Table preview supports files up to 256 KB. Read the source or save the original file.'**
+  String get fileTableTooLarge;
+
+  /// No description provided for @fileTableTooWide.
+  ///
+  /// In en, this message translates to:
+  /// **'This file has more than 32 columns. Read the source or save the original file.'**
+  String get fileTableTooWide;
+
+  /// No description provided for @fileTableFieldTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'A cell exceeds 4,096 characters. Read the source or save the original file.'**
+  String get fileTableFieldTooLong;
+
+  /// No description provided for @fileTableMoreRows.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing the first 200 rows. More data remains in the original file.'**
+  String get fileTableMoreRows;
+
+  /// No description provided for @fileTableRows.
+  ///
+  /// In en, this message translates to:
+  /// **'{rows} rows shown · {columns} columns'**
+  String fileTableRows(int rows, int columns);
+
+  /// No description provided for @fileTableColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Column {number}'**
+  String fileTableColumn(int number);
+
+  /// No description provided for @fileTableEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'This file has no rows.'**
+  String get fileTableEmpty;
+
+  /// No description provided for @fileCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'File contents copied'**
+  String get fileCopied;
+
+  /// No description provided for @fileCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy file contents. Try again.'**
+  String get fileCopyFailed;
+
+  /// No description provided for @fileImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get fileImage;
+
+  /// No description provided for @fileSvgUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This SVG cannot be shown as a local static image. Read its source or save the original file. External resources, animation and complex SVG features are not supported.'**
+  String get fileSvgUnsupported;
+
+  /// No description provided for @filePdfEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'This PDF requires a password or uses unsupported protection. Save the original to open it in a PDF app.'**
+  String get filePdfEncrypted;
+
+  /// No description provided for @filePdfLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF preview supports files up to 10 MB and the first 200 pages. Save the original to read the full document.'**
+  String get filePdfLimit;
+
+  /// No description provided for @filePdfUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF viewing is available on Android 10 or newer. You can still save the original file.'**
+  String get filePdfUnavailable;
+
+  /// No description provided for @filePdfCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF loading cancelled. Retry when you are ready.'**
+  String get filePdfCancelled;
+
+  /// No description provided for @filePdfFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This PDF page could not be displayed. Retry or save the original file.'**
+  String get filePdfFailed;
+
+  /// No description provided for @filePdfPageLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the first 200 pages can be previewed. Save the original to read the full document.'**
+  String get filePdfPageLimit;
+
+  /// No description provided for @filePdfPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {count}'**
+  String filePdfPage(int page, int count);
+
+  /// No description provided for @filePrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get filePrevious;
+
+  /// No description provided for @fileNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get fileNext;
+
+  /// No description provided for @fileCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get fileCancel;
 }
 
 class _AppLocalizationsDelegate

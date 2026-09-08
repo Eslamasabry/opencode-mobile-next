@@ -19,6 +19,10 @@ the combined verification and fresh Android installation checks are in progress.
   original fenced body. Copy failures have a retry. Tables grow to fit their
   content, including large text and inline-code headings; code starts at the
   beginning of the line in both left-to-right and right-to-left layouts.
+- Read CSV and TSV as literal tables or original source, view a bounded static
+  SVG locally, and turn PDF pages on Android 10 or newer. Copy and Save retain
+  original content; partial, unsupported and malformed files have explicit
+  fallbacks. PDF rendering runs in a separate isolated process.
 - Add a **Context capsule** from Chat Add: collect labeled notes, errors, code
   and selected screenshots, review them, then append to the existing draft.
   Cancel preserves that draft, and applying never sends it.

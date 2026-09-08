@@ -1052,6 +1052,59 @@ void main() {
     expect(find.byKey(const Key('project-file-attach')), findsNothing);
   });
 
+  testWidgets(
+    'project CSV uses table preview and retains full truncated source for attach',
+    (tester) async {
+      final original = 'name,value\n${List.filled(26000, 'entry,1\n').join()}';
+      final api = _TestApi(
+        files: (_) async => [
+          FileNode(name: 'small.csv', path: 'small.csv', isDir: false),
+          FileNode(name: 'large.csv', path: 'large.csv', isDir: false),
+        ],
+        contents: {
+          'small.csv': const FileContent(
+            'name,value\nentry,1\n',
+            mimeType: 'text/csv',
+          ),
+          'large.csv': FileContent(original, mimeType: 'text/csv'),
+        },
+      );
+      final controller = await _controller(
+        api: api,
+        repository: _LocationRepository(),
+      );
+      addTearDown(controller.dispose);
+      FilePreviewData? attached;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FilesScreen(
+              controller: controller,
+              onAttachFile: (_, data) async => attached = data,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('small.csv'));
+      await tester.pumpAndSettle();
+      expect(find.text('Column 1'), findsOneWidget);
+      expect(find.text('entry'), findsOneWidget);
+      Navigator.of(
+        tester.element(find.byKey(const Key('project-file-download'))),
+      ).pop();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('large.csv'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Only part of this file'), findsOneWidget);
+      expect(find.text('Column 1'), findsNothing);
+      await tester.tap(find.byKey(const Key('project-file-attach')));
+      await tester.pumpAndSettle();
+      expect(attached?.copyText, original);
+      expect(attached?.copyText, isNot(contains('... truncated')));
+    },
+  );
+
   testWidgets('chat file viewer can attach the original project file', (
     tester,
   ) async {

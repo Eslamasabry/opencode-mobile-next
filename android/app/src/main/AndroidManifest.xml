@@ -105,6 +105,11 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <service
+            android:name=".LocalPdfService"
+            android:exported="false"
+            android:isolatedProcess="true"
+            android:process=":local_pdf" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
