@@ -1,4 +1,4 @@
-"""Render legacy Android launcher PNGs from the editable open-portal vector.
+"""Render Android and bundled branding PNGs from the open-portal vector.
 
 Requires CairoSVG (development tooling only). Adaptive foreground/monochrome
 remain Android vectors; this script never edits an existing raster image.
@@ -26,8 +26,13 @@ def main() -> None:
         '<rect x="9" y="9" width="90" height="90" rx="22" fill="#101713"/>'
         f"{shapes}</svg>"
     )
-    for density, size in DENSITIES.items():
-        target = ANDROID / f"mipmap-{density}/ic_launcher.png"
+    targets = {
+        ANDROID / f"mipmap-{density}/ic_launcher.png": size
+        for density, size in DENSITIES.items()
+    }
+    # About/in-app bitmap branding and the Linux window use the same identity.
+    targets[ROOT / "assets/branding/app-icon-256.png"] = 256
+    for target, size in targets.items():
         cairosvg.svg2png(
             bytestring=source.encode(),
             write_to=str(target),

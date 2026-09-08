@@ -20,9 +20,9 @@ Android requires separately authored foreground and background layers at 108dp a
 
 ## Production state and remaining handoff
 
-Implemented: foreground and monochrome vectors, background color, and five legacy mipmaps (48/72/96/144/192px). The legacy PNGs are rendered directly from the newly authored SVG, not edited from the ImageGen raster. `tool/branding/render_android_icons.py` reproduces them using CairoSVG (verified with 2.9.1); this is development tooling only. XML parses, vector dimensions/strokes, legacy PNG dimensions/alpha, and circle/rounded-square/squircle color/themed SVG previews were checked. `mask-studies.svg` is the editable reference and `mask-studies.png` its rendering.
+Implemented: foreground and monochrome vectors, background color, five legacy mipmaps (48/72/96/144/192px), and the bundled 256px bitmap used by in-app branding/Linux window identity. The legacy PNGs are rendered directly from the newly authored SVG, not edited from the ImageGen raster. `tool/branding/render_android_icons.py` reproduces them using CairoSVG (verified with 2.9.1); this is development tooling only. XML parses, vector dimensions/strokes, legacy PNG dimensions/alpha, and circle/rounded-square/squircle color/themed SVG previews were checked. `mask-studies.svg` is the editable reference and `mask-studies.png` its rendering.
 
-Remaining: inspect a built/installed launcher at real display size, including themed icons. The source resources are updated, but no claim is made that the installed launcher changed. Marketing/iOS/Linux identity pipelines remain outside this Android slice: existing `app-icon-256.png` and `opencode-mobile-app-icon-v2.png` are preserved and therefore still show the old identity until a coordinated cross-platform update.
+Remaining: inspect a built/installed launcher at real display size, including themed icons. The source resources are updated, but no claim is made that the installed launcher changed. The bundled `app-icon-256.png` now uses this same approved vector/background and deterministic renderer; its 256px RGBA output was inspected. The large `opencode-mobile-app-icon-v2.png` remains a historical marketing reference. iOS launcher resources remain outside this Android slice.
 
 ## Generation provenance
 
