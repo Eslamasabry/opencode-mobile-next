@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Open portal silhouette, tinted by the supporting launcher. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:pathData="M36,32 L58,54 L36,76"
+        android:pathData="M61,31 H43 A12,12 0 0 0 31,43 V64"
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="10"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
     <path
-        android:fillColor="#FFFFFFFF"
-        android:fillAlpha="0.45"
-        android:pathData="M65.2,45 L70.8,45 A1.2,1.2 0 0 1 72,46.2 L72,61.8 A1.2,1.2 0 0 1 70.8,63 L65.2,63 A1.2,1.2 0 0 1 64,61.8 L64,46.2 A1.2,1.2 0 0 1 65.2,45 Z" />
+        android:pathData="M77,44 V65 A12,12 0 0 1 65,77 H44"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="10"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
 </vector>

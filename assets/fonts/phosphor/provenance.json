@@ -1,0 +1,11 @@
+{
+  "source": "https://pub.dev/api/archives/phosphor_flutter-2.1.0.tar.gz",
+  "archive_sha256": "8a14f238f28a0b54842c5a4dc20676598dd4811fcba284ed828bd5a262c11fde",
+  "license": "MIT",
+  "files": {
+    "Phosphor-Fill.ttf": "a53f5d2630cab5e3b7536ecb9d69d71519a2190298c22b1f8d770dd37bc2940a",
+    "LICENSE.txt": "81bb1bfd8e3730c19a3895ff4a82839980933504725960c52b1c207b29398f07",
+    "Phosphor.ttf": "06b91e022b7ee899a63efced879392a74f0bacbda54e4467e9f663220d173a10",
+    "Phosphor-Duotone.ttf": "80e6f0d6fa8ce96a9933f48aaabddc592c5d2b52caf8f010a7e54a17c74084bf"
+  }
+}
