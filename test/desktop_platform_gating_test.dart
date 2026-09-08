@@ -1,4 +1,5 @@
 import 'support/complete_message_history.dart';
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -129,10 +130,12 @@ void main() {
       final (store, controller) = await _emptyState();
       addTearDown(controller.dispose);
       await tester.pumpWidget(_servers(store, controller));
+      await tester.tap(find.text('More setup options'));
+      await tester.pumpAndSettle();
 
       expect(find.byKey(const ValueKey('welcome-termux-card')), findsOneWidget);
       expect(find.text('Run OpenCode on this phone'), findsOneWidget);
-      expect(find.text('A two-minute guide to both paths'), findsOneWidget);
+      expect(find.text('Setup guide'), findsOneWidget);
     });
 
     testWidgets('never mentions Termux on desktop', (tester) async {
@@ -140,6 +143,8 @@ void main() {
       final (store, controller) = await _emptyState();
       addTearDown(controller.dispose);
       await tester.pumpWidget(_servers(store, controller));
+      await tester.tap(find.text('More setup options'));
+      await tester.pumpAndSettle();
 
       expect(find.byKey(const ValueKey('welcome-termux-card')), findsNothing);
       expect(find.textContaining('Termux'), findsNothing);
@@ -158,12 +163,14 @@ void main() {
       final (store, controller) = await _seededState();
       addTearDown(controller.dispose);
       await tester.pumpWidget(_servers(store, controller));
+      await tester.tap(find.text('More setup options'));
+      await tester.pumpAndSettle();
 
       expect(
         find.byKey(const ValueKey('quick-add-termux-card')),
         findsOneWidget,
       );
-      expect(find.text('On-device (Termux)'), findsOneWidget);
+      expect(find.text('Run OpenCode on this phone'), findsOneWidget);
     });
 
     testWidgets('offers only the remote path on desktop', (tester) async {
@@ -171,10 +178,12 @@ void main() {
       final (store, controller) = await _seededState();
       addTearDown(controller.dispose);
       await tester.pumpWidget(_servers(store, controller));
+      await tester.tap(find.text('More setup options'));
+      await tester.pumpAndSettle();
 
       expect(find.byKey(const ValueKey('quick-add-termux-card')), findsNothing);
       expect(find.text('On-device (Termux)'), findsNothing);
-      expect(find.text('Another computer'), findsOneWidget);
+      expect(find.text('Add server'), findsOneWidget);
     });
   });
 

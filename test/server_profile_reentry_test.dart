@@ -238,7 +238,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Edit'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Save'));
+    await tester.tap(find.byKey(const ValueKey('save-server-profile')));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Could not save Workstation'), findsOneWidget);

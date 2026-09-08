@@ -18,17 +18,17 @@ void main() {
     attempts: attempts,
   );
 
-  test('loopback with nothing answering points at Termux or the tunnel', () {
+  test('loopback offers retry without assuming Termux hosts the endpoint', () {
     final f = d('Health check failed: connection refused');
     expect(f.title, 'Nothing is listening on this device');
-    expect(f.primary, ConnectionFailureAction.openTermuxSetup);
+    expect(f.primary, ConnectionFailureAction.retry);
     expect(f.checks.join(' '), contains('Termux'));
     expect(f.checks.join(' '), contains('adb reverse'));
   });
 
-  test('loopback without Termux support suggests changing the server', () {
+  test('loopback without Termux support retains generic retry', () {
     final f = d('Health check failed: connection refused', termux: false);
-    expect(f.primary, ConnectionFailureAction.changeServer);
+    expect(f.primary, ConnectionFailureAction.retry);
     expect(f.checks.join(' '), isNot(contains('Termux')));
   });
 

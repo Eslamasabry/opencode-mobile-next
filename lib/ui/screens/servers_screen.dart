@@ -147,6 +147,8 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
       MaterialPageRoute<ServerProfile>(
         builder: (_) => _ProfileEditorScreen(
           existing: existing,
+          reconnectOnSave:
+              existing?.id == ref.read(bootstrapProvider).store.activeId,
           focusPassword: focusPassword,
           tailscale: useTailscale,
           initialUrl: initialUrl,
@@ -292,34 +294,30 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     }
   }
 
+  Future<void> _externalAgents() async {
+    final bootstrap = ref.read(bootstrapProvider);
+    final store = ExternalAgentStore(
+      bootstrap.store.prefs,
+      bootstrap.store.secure,
+    );
+    try {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(builder: (_) => ExternalAgentsScreen(store: store)),
+      );
+    } finally {
+      store.dispose();
+    }
+  }
+
+  void _demo() => Navigator.of(
+    context,
+  ).push<void>(MaterialPageRoute<void>(builder: (_) => const DemoScreen()));
+
   @override
   Widget build(BuildContext context) {
     final bootstrap = ref.watch(bootstrapProvider);
     final accountConnection = ref.watch(connProvider);
     return Scaffold(
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: OutlinedButton.icon(
-            icon: const Icon(Icons.hub_outlined),
-            label: Text(_connectionL10n(context).a2aTitle),
-            onPressed: _busy
-                ? null
-                : () async {
-                    final store = ExternalAgentStore(
-                      bootstrap.store.prefs,
-                      bootstrap.store.secure,
-                    );
-                    await Navigator.of(context).push<void>(
-                      MaterialPageRoute(
-                        builder: (_) => ExternalAgentsScreen(store: store),
-                      ),
-                    );
-                    store.dispose();
-                  },
-          ),
-        ),
-      ),
       appBar: AppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -376,7 +374,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
             onPressed: () => Navigator.pushNamed(context, '/about'),
           ),
           IconButton(
-            tooltip: 'Setup guide',
+            tooltip: _connectionL10n(context).onboardingSetupGuide,
             icon: const Icon(Icons.help_outline_rounded),
             onPressed: () => Navigator.pushNamed(context, '/guide'),
           ),
@@ -392,9 +390,8 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
               onTailscale: _tailscale,
               onTermux: () => Navigator.pushNamed(context, '/termux-setup'),
               onGuide: () => Navigator.pushNamed(context, '/guide'),
-              onDemo: () => Navigator.of(context).push<void>(
-                MaterialPageRoute<void>(builder: (_) => const DemoScreen()),
-              ),
+              onDemo: _demo,
+              onExternalAgents: _externalAgents,
             );
           }
           final activeId = store.activeId;
@@ -608,47 +605,20 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                 icon: const Icon(Icons.add_rounded),
                 label: const Text('Add server'),
               ),
-              const SizedBox(height: 24),
-              Text(
-                'QUICK ADD',
-                style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                  color: AppTheme.mutedOf(Theme.of(context)),
-                  letterSpacing: 1,
-                ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: _busy ? null : _demo,
+                icon: const Icon(Icons.play_circle_outline_rounded),
+                label: const Text(DemoCopy.tryDemo),
               ),
-              const SizedBox(height: 6),
-              if (platformCapabilities.supportsTailscaleHandoff)
-                Card.filled(
-                  child: ListTile(
-                    onTap: _busy ? null : _tailscale,
-                    leading: const Icon(Icons.vpn_lock_outlined),
-                    title: Text(_connectionL10n(context).tailscaleTitle),
-                    subtitle: Text(_connectionL10n(context).tailscaleQuickAdd),
-                  ),
-                ),
-              // Termux is Android-only; on desktop the sole quick-add path is
-              // a remote (or local) server the user runs themselves.
-              if (platformCapabilities.supportsTermux)
-                Card.filled(
-                  key: const ValueKey('quick-add-termux-card'),
-                  margin: const EdgeInsets.symmetric(vertical: 4),
-                  child: ListTile(
-                    onTap: () => Navigator.pushNamed(context, '/termux-setup'),
-                    leading: const Icon(Icons.smartphone_rounded),
-                    title: const Text('On-device (Termux)'),
-                    subtitle: const Text(
-                      'Guided setup — the app drives Termux for you',
-                    ),
-                  ),
-                ),
-              Card.filled(
-                margin: const EdgeInsets.symmetric(vertical: 4),
-                child: ListTile(
-                  onTap: _busy ? null : () => _edit(),
-                  leading: const Icon(Icons.dns_rounded),
-                  title: const Text('Another computer'),
-                  subtitle: const Text('Pairing code or HTTPS address'),
-                ),
+              const SizedBox(height: 16),
+              _SetupOptions(
+                busy: _busy,
+                onTailscale: _tailscale,
+                onTermux: () => Navigator.pushNamed(context, '/termux-setup'),
+                onGuide: () => Navigator.pushNamed(context, '/guide'),
+                onExternalAgents: _externalAgents,
+                savedProfiles: true,
               ),
             ],
           );
@@ -658,8 +628,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
   }
 }
 
-/// The first-run experience: an identity moment plus the three concrete
-/// paths into the product. Shown only while no server profile exists.
+/// First run has two immediate jobs: connect an existing server or try safely.
 class _WelcomeView extends StatelessWidget {
   final bool busy;
   final VoidCallback onConnect;
@@ -667,6 +636,7 @@ class _WelcomeView extends StatelessWidget {
   final VoidCallback onTermux;
   final VoidCallback onGuide;
   final VoidCallback onDemo;
+  final VoidCallback onExternalAgents;
 
   const _WelcomeView({
     required this.busy,
@@ -675,132 +645,79 @@ class _WelcomeView extends StatelessWidget {
     required this.onTermux,
     required this.onGuide,
     required this.onDemo,
+    required this.onExternalAgents,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: constraints.hasBoundedHeight ? constraints.maxHeight : 0,
-          ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 440),
-                child: Column(
-                  key: const ValueKey('first-run-welcome'),
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Decorative prompt glyph and cursor block: nothing for
-                    // a screen reader to announce.
-                    ExcludeSemantics(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '❯',
-                            style: theme.textTheme.headlineMedium!.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontFamily: AppTheme.monoFamily,
-                            ),
+    return SafeArea(
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: Column(
+                    key: const ValueKey('first-run-welcome'),
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        _connectionL10n(context).onboardingValueTitle,
+                        style: theme.textTheme.headlineMedium,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        _connectionL10n(context).onboardingValueBody,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      FilledButton(
+                        key: const ValueKey('welcome-connect-card'),
+                        onPressed: busy ? null : onConnect,
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(48, 56),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
                           ),
-                          const SizedBox(width: 8),
-                          Container(
-                            width: 13,
-                            height: 26,
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: .45,
-                              ),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ],
+                        ),
+                        child: Text(
+                          _connectionL10n(context).onboardingConnect,
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 18),
-                    Text(
-                      'Your coding agent, in your pocket',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'This app drives an OpenCode server. '
-                      'Pick where yours runs.',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: busy ? null : onDemo,
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(48, 48),
+                        ),
+                        child: const Text(DemoCopy.tryDemo),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(48, 48),
-                        padding: const EdgeInsets.all(16),
+                      Text(
+                        _connectionL10n(context).onboardingDemoNote,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                      onPressed: busy ? null : onDemo,
-                      child: const Column(
-                        children: [
-                          Text(DemoCopy.tryDemo),
-                          SizedBox(height: 4),
-                          Text(
-                            DemoCopy.entryDescription,
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    _WelcomeCard(
-                      cardKey: const ValueKey('welcome-connect-card'),
-                      icon: Icons.dns_rounded,
-                      accent: true,
-                      title: 'Connect to your computer',
-                      subtitle:
-                          'Run one command on your computer, then scan or '
-                          'paste.',
-                      onTap: busy ? null : onConnect,
-                    ),
-                    if (platformCapabilities.supportsTailscaleHandoff) ...[
-                      const SizedBox(height: 10),
-                      _WelcomeCard(
-                        cardKey: const ValueKey('welcome-tailscale-card'),
-                        icon: Icons.vpn_lock_outlined,
-                        title: _connectionL10n(context).tailscaleTitle,
-                        subtitle: _connectionL10n(context).tailscaleQuickAdd,
-                        onTap: busy ? null : onTailscale,
+                      const SizedBox(height: 32),
+                      _SetupOptions(
+                        busy: busy,
+                        onTailscale: onTailscale,
+                        onTermux: onTermux,
+                        onGuide: onGuide,
+                        onExternalAgents: onExternalAgents,
                       ),
                     ],
-                    if (platformCapabilities.supportsTermux) ...[
-                      const SizedBox(height: 10),
-                      _WelcomeCard(
-                        cardKey: const ValueKey('welcome-termux-card'),
-                        icon: Icons.smartphone_rounded,
-                        title: 'Run OpenCode on this phone',
-                        subtitle:
-                            'Guided Termux setup — the app drives it for you',
-                        onTap: busy ? null : onTermux,
-                      ),
-                    ],
-                    const SizedBox(height: 10),
-                    _WelcomeCard(
-                      cardKey: const ValueKey('welcome-guide-card'),
-                      icon: Icons.menu_book_outlined,
-                      title: 'Learn how OpenCode works',
-                      subtitle: platformCapabilities.supportsTermux
-                          ? 'A two-minute guide to both paths'
-                          : 'A two-minute guide to running the server',
-                      onTap: onGuide,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -811,56 +728,72 @@ class _WelcomeView extends StatelessWidget {
   }
 }
 
-class _WelcomeCard extends StatelessWidget {
-  final Key cardKey;
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool accent;
-  final VoidCallback? onTap;
-
-  const _WelcomeCard({
-    required this.cardKey,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-    this.accent = false,
+/// Advanced setup remains discoverable without competing with connect or demo.
+class _SetupOptions extends StatelessWidget {
+  const _SetupOptions({
+    required this.busy,
+    required this.onTailscale,
+    required this.onTermux,
+    required this.onGuide,
+    required this.onExternalAgents,
+    this.savedProfiles = false,
   });
+  final bool busy;
+  final VoidCallback onTailscale;
+  final VoidCallback onTermux;
+  final VoidCallback onGuide;
+  final VoidCallback onExternalAgents;
+  final bool savedProfiles;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      key: cardKey,
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      color: accent
-          ? theme.colorScheme.primaryContainer.withValues(alpha: .35)
-          : null,
-      child: ListTile(
-        minTileHeight: 72,
-        onTap: onTap,
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: .12),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, size: 22, color: theme.colorScheme.primary),
+  Widget build(BuildContext context) => ExpansionTile(
+    title: Text(_connectionL10n(context).onboardingMoreSetup),
+    tilePadding: EdgeInsets.zero,
+    childrenPadding: EdgeInsets.zero,
+    shape: const Border(),
+    collapsedShape: const Border(),
+    children: [
+      if (platformCapabilities.supportsTailscaleHandoff)
+        ListTile(
+          key: const ValueKey('welcome-tailscale-card'),
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.vpn_lock_outlined),
+          title: Text(_connectionL10n(context).tailscaleTitle),
+          subtitle: Text(_connectionL10n(context).onboardingPrivateNetwork),
+          onTap: busy ? null : onTailscale,
         ),
-        title: Text(title),
-        subtitle: Text(subtitle, maxLines: 3, overflow: TextOverflow.ellipsis),
-        trailing: const Icon(Icons.chevron_right_rounded),
+      if (platformCapabilities.supportsTermux)
+        ListTile(
+          key: ValueKey(
+            savedProfiles ? 'quick-add-termux-card' : 'welcome-termux-card',
+          ),
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.smartphone_outlined),
+          title: Text(_connectionL10n(context).onboardingRunOnPhone),
+          subtitle: Text(_connectionL10n(context).onboardingTermuxNote),
+          onTap: busy ? null : onTermux,
+        ),
+      ListTile(
+        key: const ValueKey('welcome-guide-card'),
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.menu_book_outlined),
+        title: Text(_connectionL10n(context).onboardingSetupGuide),
+        onTap: busy ? null : onGuide,
       ),
-    );
-  }
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.hub_outlined),
+        title: Text(_connectionL10n(context).a2aTitle),
+        onTap: busy ? null : onExternalAgents,
+      ),
+    ],
+  );
 }
 
 class _ProfileEditorScreen extends StatefulWidget {
   final ServerProfile? existing;
   final bool tailscale;
+  final bool reconnectOnSave;
   final String? initialUrl;
 
   /// Focus the password field on open — the path taken from the connection
@@ -879,6 +812,7 @@ class _ProfileEditorScreen extends StatefulWidget {
   const _ProfileEditorScreen({
     this.existing,
     this.tailscale = false,
+    this.reconnectOnSave = false,
     this.initialUrl,
     this.focusPassword = false,
     required this.onSubmit,
@@ -1543,7 +1477,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
       key: const ValueKey('codex-server-address-field'),
       controller: _url,
       focusNode: _urlFocus,
-      autofocus: widget.existing == null,
+      autofocus: false,
       keyboardType: TextInputType.url,
       textInputAction: TextInputAction.next,
       onSubmitted: (_) => _codexDirectoryFocus.requestFocus(),
@@ -1682,9 +1616,6 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
         ? 'Re-enter password'
         : 'Edit server';
     final theme = Theme.of(context);
-    final compact =
-        MediaQuery.sizeOf(context).width < 360 ||
-        MediaQuery.textScalerOf(context).scale(14) > 20;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -1699,415 +1630,432 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
             icon: const Icon(Icons.close_rounded),
           ),
           title: Text(title),
-          actions: [
-            TextButton(
+        ),
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              8,
+              16,
+              12 + MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            child: FilledButton(
               key: const ValueKey('save-server-profile'),
               onPressed: _submitting ? null : _save,
               child: Text(
                 _submitting
                     ? 'Saving…'
-                    : _isCodex
-                    ? 'Save & connect'
-                    : widget.existing == null && !compact
-                    ? 'Save server'
-                    : 'Save',
+                    : _isCodex ||
+                          widget.existing == null ||
+                          widget.reconnectOnSave
+                    ? _connectionL10n(context).onboardingSaveConnect
+                    : _connectionL10n(context).onboardingSaveChanges,
               ),
             ),
-            const SizedBox(width: 4),
-          ],
+          ),
         ),
         body: AbsorbPointer(
           absorbing: _submitting,
           child: SafeArea(
             top: false,
-            child: ListView(
+            child: SingleChildScrollView(
               key: const ValueKey('server-profile-fields'),
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-              children: [
-                if (widget.tailscale) ...[
-                  Text(_connectionL10n(context).tailscaleEditorDetail),
-                  TextButton.icon(
-                    onPressed: _tailscaleHelp,
-                    icon: const Icon(Icons.vpn_lock_outlined),
-                    label: Text(_connectionL10n(context).tailscaleHelp),
-                  ),
-                  if (_testResult?.ok == false || _submitFailure != null)
-                    Text(_connectionL10n(context).tailscaleRecovery),
-                  const SizedBox(height: 12),
-                ],
-                if (widget.existing == null && !widget.tailscale) ...[
-                  Text(
-                    _connectionL10n(context).connectionTypeLabel,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      letterSpacing: 1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (widget.tailscale) ...[
+                    Text(_connectionL10n(context).tailscaleEditorDetail),
+                    TextButton.icon(
+                      onPressed: _tailscaleHelp,
+                      icon: const Icon(Icons.vpn_lock_outlined),
+                      label: Text(_connectionL10n(context).tailscaleHelp),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    key: const ValueKey('server-backend-selector'),
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      ChoiceChip(
-                        label: Text(
-                          _connectionL10n(context).openCodeConnectionLabel,
-                        ),
-                        selected: !_isCodex,
-                        onSelected: _submitting
-                            ? null
-                            : (_) => setState(() {
-                                _backend = ServerBackend.openCode;
-                                _invalidateProbe();
-                              }),
-                      ),
-                      ChoiceChip(
-                        label: Text(
-                          _connectionL10n(context).codexExperimentalLabel,
-                        ),
-                        selected: _isCodex,
-                        onSelected: _submitting
-                            ? null
-                            : (_) => setState(() {
-                                _backend = ServerBackend.codex;
-                                _invalidateProbe();
-                              }),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                // A save or connect that failed is shown first, where it is
-                // seen without scrolling, in the same verdict style as Test
-                // connection.
-                if (_submitFailure case final failure?) ...[
-                  _InlineFailureCard(
-                    key: const ValueKey('server-save-failure'),
-                    message: failure,
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                if (_secureStorageNotice case final notice?) ...[
-                  _InlineFailureCard(
-                    key: const ValueKey('server-secure-storage-notice'),
-                    message: notice,
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                if (_needsPassword) ...[
-                  const SizedBox(height: 4),
-                  Semantics(
-                    container: true,
-                    liveRegion: true,
-                    excludeSemantics: true,
-                    label:
-                        'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires a password.',
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires one.',
-                        style: TextStyle(
-                          color: theme.colorScheme.onErrorContainer,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-                if (_isCodex) ...[
-                  ..._buildCodexFields(theme),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Text(
-                      lookupAppLocalizations(
-                        Localizations.localeOf(context),
-                      ).codexApprovalRecoveryNotice,
-                      style: theme.textTheme.bodySmall?.copyWith(
+                    if (_testResult?.ok == false || _submitFailure != null)
+                      Text(_connectionL10n(context).tailscaleRecovery),
+                    const SizedBox(height: 12),
+                  ],
+                  if (widget.existing == null && !widget.tailscale) ...[
+                    Text(
+                      _connectionL10n(context).connectionTypeLabel,
+                      style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
+                        letterSpacing: 1,
                       ),
                     ),
-                  ),
-                ],
-                if (!_isCodex) ...[
-                  const SizedBox(height: 12),
-                  if (!widget.tailscale)
-                    _PairingActions(
-                      busy: _pairing,
-                      notice: _pairingNotice,
-                      failure: _pairingFailure,
-                      onPaste: _pairing
+                    const SizedBox(height: 8),
+                    Wrap(
+                      key: const ValueKey('server-backend-selector'),
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: Text(
+                            _connectionL10n(context).openCodeConnectionLabel,
+                          ),
+                          selected: !_isCodex,
+                          onSelected: _submitting
+                              ? null
+                              : (_) => setState(() {
+                                  _backend = ServerBackend.openCode;
+                                  _invalidateProbe();
+                                }),
+                        ),
+                        ChoiceChip(
+                          label: Text(
+                            _connectionL10n(context).codexExperimentalLabel,
+                          ),
+                          selected: _isCodex,
+                          onSelected: _submitting
+                              ? null
+                              : (_) => setState(() {
+                                  _backend = ServerBackend.codex;
+                                  _invalidateProbe();
+                                }),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  // A save or connect that failed is shown first, where it is
+                  // seen without scrolling, in the same verdict style as Test
+                  // connection.
+                  if (_submitFailure case final failure?) ...[
+                    _InlineFailureCard(
+                      key: const ValueKey('server-save-failure'),
+                      message: failure,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  if (_secureStorageNotice case final notice?) ...[
+                    _InlineFailureCard(
+                      key: const ValueKey('server-secure-storage-notice'),
+                      message: notice,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  if (_needsPassword) ...[
+                    const SizedBox(height: 4),
+                    Semantics(
+                      container: true,
+                      liveRegion: true,
+                      excludeSemantics: true,
+                      label:
+                          'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires a password.',
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.errorContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires one.',
+                          style: TextStyle(
+                            color: theme.colorScheme.onErrorContainer,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (_isCodex) ...[
+                    ..._buildCodexFields(theme),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Text(
+                        lookupAppLocalizations(
+                          Localizations.localeOf(context),
+                        ).codexApprovalRecoveryNotice,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (!_isCodex) ...[
+                    const SizedBox(height: 12),
+                    if (!widget.tailscale)
+                      _PairingActions(
+                        busy: _pairing,
+                        notice: _pairingNotice,
+                        failure: _pairingFailure,
+                        onPaste: _pairing
+                            ? null
+                            : () => unawaited(_pastePairing()),
+                        // Rendered only where a camera path exists. Desktop gets no
+                        // affordance at all rather than one that opens and fails.
+                        onScan: platformCapabilities.supportsQrPairing
+                            ? () => unawaited(_scanPairing())
+                            : null,
+                      ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      enabled: !_submitting,
+                      key: const ValueKey('server-url-field'),
+                      controller: _url,
+                      focusNode: _urlFocus,
+                      autofocus: false,
+                      keyboardType: TextInputType.url,
+                      textInputAction: TextInputAction.next,
+                      onSubmitted: (_) => _nameFocus.requestFocus(),
+                      onChanged: _urlChanged,
+                      decoration: InputDecoration(
+                        labelText: 'Server URL',
+                        hintText: 'https://server.example',
+                        errorText: _error,
+                        errorMaxLines: 3,
+                        helperText: widget.tailscale
+                            ? _connectionL10n(context).tailscaleAddressDetail
+                            : 'Use HTTPS for remote machines. HTTP is limited to localhost or 127.0.0.1.',
+                        helperMaxLines: 3,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      enabled: !_submitting,
+                      key: const ValueKey('server-name-field'),
+                      controller: _name,
+                      focusNode: _nameFocus,
+                      textInputAction: TextInputAction.next,
+                      onSubmitted: (_) => _userFocus.requestFocus(),
+                      onChanged: (_) => setState(_invalidateProbe),
+                      decoration: InputDecoration(
+                        labelText: _connectionL10n(
+                          context,
+                        ).connectionDisplayName,
+                        hintText: _connectionL10n(
+                          context,
+                        ).connectionDisplayNameHint,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    Text(
+                      'AUTHENTICATION',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      enabled: !_submitting,
+                      key: const ValueKey('server-username-field'),
+                      controller: _user,
+                      focusNode: _userFocus,
+                      textInputAction: TextInputAction.next,
+                      onSubmitted: (_) => _passFocus.requestFocus(),
+                      onChanged: (_) => setState(_invalidateProbe),
+                      decoration: const InputDecoration(
+                        labelText: 'Username (optional)',
+                        hintText: 'opencode',
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      enabled: !_submitting,
+                      key: const ValueKey('server-password-field'),
+                      controller: _pass,
+                      focusNode: _passFocus,
+                      autofocus: _needsPassword || widget.focusPassword,
+                      onChanged: (_) => setState(_invalidateProbe),
+                      obscureText: _obscurePassword,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      keyboardType: TextInputType.visiblePassword,
+                      style: _obscurePassword
                           ? null
-                          : () => unawaited(_pastePairing()),
-                      // Rendered only where a camera path exists. Desktop gets no
-                      // affordance at all rather than one that opens and fails.
-                      onScan: platformCapabilities.supportsQrPairing
-                          ? () => unawaited(_scanPairing())
-                          : null,
-                    ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    enabled: !_submitting,
-                    key: const ValueKey('server-url-field'),
-                    controller: _url,
-                    focusNode: _urlFocus,
-                    autofocus: widget.existing == null && !_needsPassword,
-                    keyboardType: TextInputType.url,
-                    textInputAction: TextInputAction.next,
-                    onSubmitted: (_) => _nameFocus.requestFocus(),
-                    onChanged: _urlChanged,
-                    decoration: InputDecoration(
-                      labelText: 'Server URL',
-                      hintText: '192.0.2.20:4096 or https://…',
-                      errorText: _error,
-                      errorMaxLines: 3,
-                      helperText: widget.tailscale
-                          ? _connectionL10n(context).tailscaleAddressDetail
-                          : 'Use HTTPS for remote machines. HTTP is limited to localhost or 127.0.0.1.',
-                      helperMaxLines: 3,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    enabled: !_submitting,
-                    key: const ValueKey('server-name-field'),
-                    controller: _name,
-                    focusNode: _nameFocus,
-                    textInputAction: TextInputAction.next,
-                    onSubmitted: (_) => _userFocus.requestFocus(),
-                    onChanged: (_) => setState(_invalidateProbe),
-                    decoration: InputDecoration(
-                      labelText: _connectionL10n(context).connectionDisplayName,
-                      hintText: _connectionL10n(
-                        context,
-                      ).connectionDisplayNameHint,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  Text(
-                    'AUTHENTICATION',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    enabled: !_submitting,
-                    key: const ValueKey('server-username-field'),
-                    controller: _user,
-                    focusNode: _userFocus,
-                    textInputAction: TextInputAction.next,
-                    onSubmitted: (_) => _passFocus.requestFocus(),
-                    onChanged: (_) => setState(_invalidateProbe),
-                    decoration: const InputDecoration(
-                      labelText: 'Username (optional)',
-                      hintText: 'opencode',
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    enabled: !_submitting,
-                    key: const ValueKey('server-password-field'),
-                    controller: _pass,
-                    focusNode: _passFocus,
-                    autofocus: _needsPassword || widget.focusPassword,
-                    onChanged: (_) => setState(_invalidateProbe),
-                    obscureText: _obscurePassword,
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    keyboardType: TextInputType.visiblePassword,
-                    style: _obscurePassword
-                        ? null
-                        : const TextStyle(fontFamily: AppTheme.monoFamily),
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _save(),
-                    decoration: InputDecoration(
-                      labelText: _needsPassword
-                          ? 'Re-enter password'
-                          : 'Server password',
-                      helperText: _needsPassword
-                          ? 'Leave empty only if this server no longer uses a password.'
-                          : 'Printed by opencode2 serve at startup '
-                                '("server password …"). Optional for servers '
-                                'without one.',
-                      helperMaxLines: 3,
-                      suffixIcon: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            key: const ValueKey('server-password-visibility'),
-                            tooltip: _obscurePassword
-                                ? 'Show server password'
-                                : 'Hide server password',
-                            onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword,
+                          : const TextStyle(fontFamily: AppTheme.monoFamily),
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _save(),
+                      decoration: InputDecoration(
+                        labelText: _needsPassword
+                            ? 'Re-enter password'
+                            : 'Server password',
+                        helperText: _needsPassword
+                            ? 'Leave empty only if this server no longer uses a password.'
+                            : 'Printed by opencode2 serve at startup '
+                                  '("server password …"). Optional for servers '
+                                  'without one.',
+                        helperMaxLines: 3,
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              key: const ValueKey('server-password-visibility'),
+                              tooltip: _obscurePassword
+                                  ? 'Show server password'
+                                  : 'Hide server password',
+                              onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                              ),
                             ),
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
+                            // Paste is the primary affordance for the per-run
+                            // random serve password, so it sits closest to the
+                            // field edge.
+                            IconButton(
+                              key: const ValueKey('server-password-paste'),
+                              tooltip: 'Paste server password',
+                              onPressed: () => unawaited(_pastePassword()),
+                              icon: const Icon(Icons.content_paste_rounded),
                             ),
-                          ),
-                          // Paste is the primary affordance for the per-run
-                          // random serve password, so it sits closest to the
-                          // field edge.
-                          IconButton(
-                            key: const ValueKey('server-password-paste'),
-                            tooltip: 'Paste server password',
-                            onPressed: () => unawaited(_pastePassword()),
-                            icon: const Icon(Icons.content_paste_rounded),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
+                    const SizedBox(height: 24),
+                  ],
+                  FilledButton.tonalIcon(
+                    key: const ValueKey('test-server-connection'),
+                    onPressed: _testing ? null : _testConnection,
+                    icon: _testing
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.network_check_rounded),
+                    label: Text(_testing ? 'Testing…' : 'Test connection'),
                   ),
-                  const SizedBox(height: 24),
-                ],
-                FilledButton.tonalIcon(
-                  key: const ValueKey('test-server-connection'),
-                  onPressed: _testing ? null : _testConnection,
-                  icon: _testing
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.network_check_rounded),
-                  label: Text(_testing ? 'Testing…' : 'Test connection'),
-                ),
-                if (_isCodex && _codexTestResult != null) ...[
-                  const SizedBox(height: 12),
-                  _buildCodexProbeVerdict(theme),
-                ],
-                if (_testResult case final result?) ...[
-                  const SizedBox(height: 12),
-                  Semantics(
-                    key: const ValueKey('server-probe-verdict'),
-                    container: true,
-                    liveRegion: true,
-                    child: Container(
-                      key: ValueKey(
-                        result.ok
-                            ? 'server-test-success'
-                            : 'server-test-failure',
-                      ),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: result.ok
-                            ? AppTheme.successOf(theme).withValues(alpha: .14)
-                            : theme.colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            result.ok
-                                ? Icons.check_circle_outline_rounded
-                                : Icons.error_outline_rounded,
-                            size: 20,
-                            color: result.ok
-                                ? AppTheme.successOf(theme)
-                                : theme.colorScheme.onErrorContainer,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (result.ok) ...[
-                                  Text(
-                                    result.flavor == ServerFlavor.v2
-                                        ? 'OpenCode 2 · '
-                                              '${result.version ?? 'unknown version'}'
-                                        : 'OpenCode 1 · '
-                                              '${result.version ?? 'unknown version'}'
-                                              ' — limited feature set',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      height: 1.35,
-                                    ),
-                                  ),
-                                  if (result.flavor == ServerFlavor.v1) ...[
-                                    const SizedBox(height: 2),
+                  if (_isCodex && _codexTestResult != null) ...[
+                    const SizedBox(height: 12),
+                    _buildCodexProbeVerdict(theme),
+                  ],
+                  if (_testResult case final result?) ...[
+                    const SizedBox(height: 12),
+                    Semantics(
+                      key: const ValueKey('server-probe-verdict'),
+                      container: true,
+                      liveRegion: true,
+                      child: Container(
+                        key: ValueKey(
+                          result.ok
+                              ? 'server-test-success'
+                              : 'server-test-failure',
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: result.ok
+                              ? AppTheme.successOf(theme).withValues(alpha: .14)
+                              : theme.colorScheme.errorContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              result.ok
+                                  ? Icons.check_circle_outline_rounded
+                                  : Icons.error_outline_rounded,
+                              size: 20,
+                              color: result.ok
+                                  ? AppTheme.successOf(theme)
+                                  : theme.colorScheme.onErrorContainer,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (result.ok) ...[
                                     Text(
-                                      'This app targets OpenCode 2; some '
-                                      'features are unavailable on v1 servers.',
-                                      style: theme.textTheme.labelSmall
-                                          ?.copyWith(
-                                            color: theme
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                            height: 1.35,
-                                          ),
-                                    ),
-                                  ],
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Connected — save to finish.',
-                                    style: TextStyle(
-                                      color: theme.colorScheme.onSurface,
-                                      height: 1.35,
-                                    ),
-                                  ),
-                                ] else ...[
-                                  if (result.flavor == ServerFlavor.v2) ...[
-                                    Text(
-                                      'This is an OpenCode 2 server.',
+                                      result.flavor == ServerFlavor.v2
+                                          ? 'OpenCode 2 · '
+                                                '${result.version ?? 'unknown version'}'
+                                          : 'OpenCode 1 · '
+                                                '${result.version ?? 'unknown version'}'
+                                                ' — limited feature set',
                                       style: theme.textTheme.bodyMedium
                                           ?.copyWith(
-                                            color: theme
-                                                .colorScheme
-                                                .onErrorContainer,
                                             fontWeight: FontWeight.w600,
                                             height: 1.35,
                                           ),
                                     ),
+                                    if (result.flavor == ServerFlavor.v1) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'This app targets OpenCode 2; some '
+                                        'features are unavailable on v1 servers.',
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                              height: 1.35,
+                                            ),
+                                      ),
+                                    ],
                                     const SizedBox(height: 2),
+                                    Text(
+                                      'Connected — save to finish.',
+                                      style: TextStyle(
+                                        color: theme.colorScheme.onSurface,
+                                        height: 1.35,
+                                      ),
+                                    ),
+                                  ] else ...[
+                                    if (result.flavor == ServerFlavor.v2) ...[
+                                      Text(
+                                        'This is an OpenCode 2 server.',
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: theme
+                                                  .colorScheme
+                                                  .onErrorContainer,
+                                              fontWeight: FontWeight.w600,
+                                              height: 1.35,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                    ],
+                                    Text(
+                                      result.message!,
+                                      style: TextStyle(
+                                        color:
+                                            theme.colorScheme.onErrorContainer,
+                                        height: 1.35,
+                                      ),
+                                    ),
                                   ],
-                                  Text(
-                                    result.message!,
-                                    style: TextStyle(
-                                      color: theme.colorScheme.onErrorContainer,
-                                      height: 1.35,
+                                  if (!result.ok &&
+                                      result.suggestsMissingServer) ...[
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'No server there yet? The setup guide '
+                                      'shows how to start one.',
+                                      style: TextStyle(
+                                        color:
+                                            theme.colorScheme.onErrorContainer,
+                                        height: 1.35,
+                                      ),
                                     ),
-                                  ),
+                                    TextButton(
+                                      key: const ValueKey('server-test-guide'),
+                                      style: TextButton.styleFrom(
+                                        padding: EdgeInsets.zero,
+                                        foregroundColor:
+                                            theme.colorScheme.onErrorContainer,
+                                      ),
+                                      onPressed: () => Navigator.pushNamed(
+                                        context,
+                                        '/guide',
+                                      ),
+                                      child: const Text('Open the setup guide'),
+                                    ),
+                                  ],
                                 ],
-                                if (!result.ok &&
-                                    result.suggestsMissingServer) ...[
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'No server there yet? The setup guide '
-                                    'shows how to start one.',
-                                    style: TextStyle(
-                                      color: theme.colorScheme.onErrorContainer,
-                                      height: 1.35,
-                                    ),
-                                  ),
-                                  TextButton(
-                                    key: const ValueKey('server-test-guide'),
-                                    style: TextButton.styleFrom(
-                                      padding: EdgeInsets.zero,
-                                      foregroundColor:
-                                          theme.colorScheme.onErrorContainer,
-                                    ),
-                                    onPressed: () =>
-                                        Navigator.pushNamed(context, '/guide'),
-                                    child: const Text('Open the setup guide'),
-                                  ),
-                                ],
-                              ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

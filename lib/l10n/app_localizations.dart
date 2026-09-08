@@ -8408,6 +8408,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New chats: {model}'**
   String settingsDiscoveryNewChatsModel(String model);
+
+  /// No description provided for @onboardingValueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your work moving.'**
+  String get onboardingValueTitle;
+
+  /// No description provided for @onboardingValueBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask your coding agent for a change, review the result, and pick up where you left off.'**
+  String get onboardingValueBody;
+
+  /// No description provided for @onboardingConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to a server'**
+  String get onboardingConnect;
+
+  /// No description provided for @onboardingDemoNote.
+  ///
+  /// In en, this message translates to:
+  /// **'A simulated session. No server needed.'**
+  String get onboardingDemoNote;
+
+  /// No description provided for @onboardingMoreSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'More setup options'**
+  String get onboardingMoreSetup;
+
+  /// No description provided for @onboardingPrivateNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach a server over your private network'**
+  String get onboardingPrivateNetwork;
+
+  /// No description provided for @onboardingRunOnPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Run OpenCode on this phone'**
+  String get onboardingRunOnPhone;
+
+  /// No description provided for @onboardingTermuxNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Guided Termux setup'**
+  String get onboardingTermuxNote;
+
+  /// No description provided for @onboardingSetupGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup guide'**
+  String get onboardingSetupGuide;
+
+  /// No description provided for @onboardingSaveConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & connect'**
+  String get onboardingSaveConnect;
+
+  /// No description provided for @onboardingSaveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get onboardingSaveChanges;
+
+  /// No description provided for @onboardingTermuxSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Termux setup'**
+  String get onboardingTermuxSetup;
 }
 
 class _AppLocalizationsDelegate

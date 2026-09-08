@@ -186,17 +186,16 @@ class ConnectionFailure {
         checks: [
           if (supportsTermux)
             'Running OpenCode in Termux? Open Termux and check that '
-                'opencode serve is still running. Android stops it when Termux '
-                'is closed or swiped away.',
-          'Using adb reverse or an SSH forward? It ends when the cable is '
-              'unplugged or the SSH app is closed. Start it again.',
+                'the server is still running.',
+          'Using adb reverse or an SSH forward? Check that the tunnel is '
+              'still connected, then try again.',
           'Connecting to another computer instead? Change the server to its '
               'HTTPS address or pair again.',
           ?retried,
         ],
-        primary: supportsTermux
-            ? ConnectionFailureAction.openTermuxSetup
-            : ConnectionFailureAction.changeServer,
+        // Loopback identifies an endpoint, not whether Termux or a tunnel
+        // hosts it. Retry is safe without guessing the user's setup.
+        primary: ConnectionFailureAction.retry,
         rawError: error,
       );
     }

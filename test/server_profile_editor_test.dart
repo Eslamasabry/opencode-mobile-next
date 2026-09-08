@@ -124,6 +124,8 @@ void main() {
       final (store, controller) = await _state();
       addTearDown(controller.dispose);
       await tester.pumpWidget(_app(store, controller));
+      await tester.tap(find.text('More setup options'));
+      await tester.pumpAndSettle();
       await tester.ensureVisible(
         find.byKey(const ValueKey('welcome-tailscale-card')),
       );
@@ -274,13 +276,13 @@ void main() {
     expect(find.byKey(const ValueKey('server-profile-editor')), findsOneWidget);
     expect(find.byType(AlertDialog), findsNothing);
     expect(find.text('Add server'), findsOneWidget);
-    expect(find.text('Save server'), findsOneWidget);
+    expect(find.text('Save & connect'), findsOneWidget);
     expect(find.text('AUTHENTICATION'), findsOneWidget);
 
     final url = tester.widget<TextField>(
       find.byKey(const ValueKey('server-url-field')),
     );
-    expect(url.focusNode?.hasFocus, isTrue);
+    expect(url.focusNode?.hasFocus, isFalse);
     expect(url.textInputAction, TextInputAction.next);
   });
 
