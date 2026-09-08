@@ -9,20 +9,20 @@
   "phase": "after",
   "Saved servers": {
     "left": 56.0,
-    "top": 418.0,
+    "top": 427.0,
     "width": 270.0,
-    "height": 48.0
+    "height": 46.0
   },
   "Edit a file": {
     "left": 56.0,
-    "top": 128.0,
+    "top": 140.0,
     "width": 270.0,
-    "height": 48.0
+    "height": 46.0
   },
   "Completion digests": {
     "left": 56.0,
-    "top": 722.0,
+    "top": 739.0,
     "width": 270.0,
-    "height": 96.0
+    "height": 92.0
   }
 }

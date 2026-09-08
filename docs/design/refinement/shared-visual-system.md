@@ -15,3 +15,11 @@ Candidate contract:
 - Iconography: Phosphor regular24 principal,20 inline; selected navigation uses same-silhouette duotone. Integration is a separate checked dependency/module.
 
 Verification pending candidate integration and actual-font captures. Historical0eabc2d full-suite result does not cover these changes.
+
+## Material and upgrade contract
+
+The application explicitly enables Flutter Material 3 (`useMaterial3: true`) on the repository-pinned Flutter 3.47.2. Google Material 3 Expressive is a design direction; this is not a claim that Flutter implements every latest Compose Expressive component. Core controls remain Flutter Material widgets, with centralized visual tokens and framework animations. No third-party animation framework or glass package is added.
+
+The new navigation glass uses Flutter rendering on Android, not Android cross-window blur or a Compose view. Blur is limited to navigation, clipped to its bounds, with a fully opaque accessibility fallback. Native performance still requires candidate APK evidence.
+
+Sources checked 2026-09-09: https://docs.flutter.dev/ui/design/material ; https://design.google/library/expressive-material-design-google-research ; https://api.flutter.dev/flutter/widgets/BackdropFilter-class.html . Dependency versions remain pinned; available updates are evaluated through compatibility checks rather than upgraded wholesale during a visual change.
