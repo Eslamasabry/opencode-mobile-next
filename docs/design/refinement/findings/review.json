@@ -1,0 +1,164 @@
+[
+  {
+    "id": "REVIEW-01",
+    "page": "Review diff reader",
+    "title": "Change identity relied on color",
+    "priority": "P1",
+    "dimension": "accessibility",
+    "evidence": [
+      "screenshots/28-demo-diff.png",
+      "screenshots/29-large-text-diff.png",
+      "lib/ui/widgets/diff_view.dart:_LineRow",
+      "pages/review-captures/review-normal.png",
+      "pages/review-captures/review-large.png"
+    ],
+    "observed": "Screenshots28/29 show plain changed text without plus/minus; parser removed prefixes and rows lacked kind semantics.",
+    "impact": "Readers could mistake addition for removal in grayscale or through screen readers.",
+    "proposal": "Dedicated plus/minus column and localized added/removed/unchanged line semantics.",
+    "status": "tested",
+    "verification": "Semantics and visible symbol tests pass; normal and2.5x actual-font widget captures inspected. Native TalkBack remains pending.",
+    "commit": "968972a"
+  },
+  {
+    "id": "REVIEW-02",
+    "page": "Review diff reader",
+    "title": "Change rail was a three by one pixel dash",
+    "priority": "P2",
+    "dimension": "component",
+    "evidence": [
+      "screenshots/29-large-text-diff.png",
+      "lib/ui/widgets/diff_view.dart:_LineRow",
+      "pages/review-captures/review-normal.png",
+      "pages/review-captures/review-large.png"
+    ],
+    "observed": "The source used width3 with SizedBox(height:1), also visible in screenshot29.",
+    "impact": "A nearly invisible dash failed to group wrapped changed code.",
+    "proposal": "Paint a3dp leading border spanning the rendered row, including wraps.",
+    "status": "tested",
+    "verification": "Wrapped-row geometry check and actual-font captures confirm continuous rail.",
+    "commit": "968972a"
+  },
+  {
+    "id": "REVIEW-03",
+    "page": "Review diff reader",
+    "title": "Context expansion was undersized and irreversible in place",
+    "priority": "P2",
+    "dimension": "flow",
+    "evidence": [
+      "lib/ui/widgets/diff_view.dart:_DiffFileLinesState",
+      "lib/ui/widgets/diff_view.dart:_GapBar"
+    ],
+    "observed": "Source had32dp gap InkWell, ambiguous +N lines label, and no collapse action once context was revealed.",
+    "impact": "Repeated precision taps and loss of the compact review make navigation harder.",
+    "proposal": "Use48dp minimum controls with named reveal direction/count, and Hide revealed context action.",
+    "status": "tested",
+    "verification": "Expand20 lines then collapse returns to changed line; minimum target verified. No context expansion ADB capture yet.",
+    "commit": "968972a"
+  },
+  {
+    "id": "REVIEW-04",
+    "page": "Review diff reader",
+    "title": "Unavailable patch context looked like available or added lines",
+    "priority": "P2",
+    "dimension": "copy",
+    "evidence": [
+      "lib/ui/widgets/diff_view.dart:DiffGap",
+      "test/diff_view_test.dart"
+    ],
+    "observed": "Patch gaps used +N lines even when omitted context could not be expanded.",
+    "impact": "User can confuse skipped context with additions or attempt a dead control.",
+    "proposal": "State that unchanged lines are not included in the patch; keep it noninteractive.",
+    "status": "tested",
+    "verification": "Patch gap test verifies missing-context wording and absence of expansion control.",
+    "commit": "968972a"
+  },
+  {
+    "id": "REVIEW-05",
+    "page": "Review diff reader",
+    "title": "Fixed file header could not accommodate scaled identity",
+    "priority": "P2",
+    "dimension": "layout",
+    "evidence": [
+      "lib/ui/widgets/diff_view.dart:_FileHeaderDelegate",
+      "screenshots/29-large-text-diff.png",
+      "pages/review-captures/review-normal.png",
+      "pages/review-captures/review-large.png"
+    ],
+    "observed": "Filename, path, status and counts shared one ellipsized44dp header.",
+    "impact": "File identity is lost earlier with long names and large text.",
+    "proposal": "Separate emphasized two-line name from path/counts; measure sticky height using current text scale; tooltip exposes full path.",
+    "status": "tested",
+    "verification": "320dp at2.5x layout passes; font-loaded400dp normal/2.5x captures inspected. Very long names still cap at2lines; full path is in tooltip.",
+    "commit": "968972a"
+  },
+  {
+    "id": "REVIEW-06",
+    "page": "Review diff reader",
+    "title": "Copy gave no completion feedback",
+    "priority": "P2",
+    "dimension": "flow",
+    "evidence": [
+      "lib/ui/widgets/diff_view.dart:DiffView",
+      "test/diff_view_test.dart"
+    ],
+    "observed": "Copy called Clipboard.setData with no local success or failure feedback.",
+    "impact": "The tap appears inert and encourages repeated copying.",
+    "proposal": "Confirm whether updated file or patch was copied; provide failure recovery text.",
+    "status": "tested",
+    "verification": "Mock clipboard receives updated content; success appears; Close returns to caller. Native clipboard failure not exercised.",
+    "commit": "968972a"
+  },
+  {
+    "id": "REVIEW-07",
+    "page": "Review diff reader",
+    "title": "Patch-only counts incorrectly displayed zero changes",
+    "priority": "P1",
+    "dimension": "flow",
+    "evidence": [
+      "lib/api/models.dart:FileDiff.counts",
+      "lib/ui/widgets/diff_view.dart:_FileHeaderDelegate",
+      "test/diff_view_test.dart",
+      "pages/review-captures/review-normal.png",
+      "pages/review-captures/review-large.png"
+    ],
+    "observed": "Real-font capture fixture with a patch and no supplied count rendered+0\u22120 despite one added and one removed row. FileDiff.counts only derives from before/after.",
+    "impact": "Review summary contradicts the actual changed code.",
+    "proposal": "Preserve supplied counts; derive missing counts from the parsed rows in the owned reader.",
+    "status": "tested",
+    "verification": "Patch-only regression asserts+1 and\u22121; final normal and large captures show correct counts.",
+    "commit": "968972a"
+  },
+  {
+    "id": "REVIEW-08",
+    "page": "Review diff reader",
+    "title": "Wrap preference differs from other code readers",
+    "priority": "P2",
+    "dimension": "flow",
+    "evidence": [
+      "lib/ui/widgets/diff_view.dart:_DiffBody"
+    ],
+    "observed": "Diff wraps below600dp and horizontally scrolls above; no user toggle.",
+    "impact": "User cannot choose column alignment on a phone or wrapping on a large screen.",
+    "proposal": "Consider shared wrap preference after cross-reader interaction contract is settled.",
+    "status": "deferred",
+    "verification": "Current responsive defaults preserved and tested. Deferred to coordinated reader consistency rather than adding toolbar density.",
+    "commit": null
+  },
+  {
+    "id": "REVIEW-09",
+    "page": "Review diff reader",
+    "title": "Filename repeated in route and file header",
+    "priority": "P2",
+    "dimension": "density",
+    "evidence": [
+      "pages/review-captures/review-normal-before-header-refinement.png",
+      "lib/ui/widgets/diff_view.dart:DiffView"
+    ],
+    "observed": "Actual-font normal capture repeats the same basename in the appbar and immediately below in the file header.",
+    "impact": "Duplicate hierarchy consumes attention and makes the small reader feel heavier.",
+    "proposal": "Use localized Review as the route title and keep file identity, path and counts in its adaptive sticky header. Preserve copy and path tooltip.",
+    "status": "tested",
+    "verification": "Pinned Flutter gen-l10n completed; final7/7 focused tests pass; normal and2.5x actual-font rasters inspected and confirm one filename with Review route title. Full-path tooltip, copy/navigation and counts remain covered.",
+    "commit": "854d426"
+  }
+]

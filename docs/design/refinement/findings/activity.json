@@ -1,0 +1,120 @@
+[
+  {
+    "id": "ACTIVITY-01",
+    "page": "Activity",
+    "title": "Unknown attention coexists with All clear",
+    "priority": "P1",
+    "dimension": "flow",
+    "evidence": [
+      "screenshots/09-activity.png",
+      "0eabc2d:lib/ui/screens/activity_screen.dart",
+      "0eabc2d:lib/ui/screens/profile_monitor_screen.dart",
+      "mobbin/activity/image-02.webp",
+      "https://mobbin.com/screens/e48bd893-d026-4592-a8ab-64b6490f8b32",
+      "/home/eslam/Storage/Code/oc_app-ui-activity/docs/qa/clear-activity/README.md"
+    ],
+    "observed": "Empty branch checked pending/running counts but did not exclude unknown saved-server status.",
+    "impact": "Users may stop checking when activity is unknown.",
+    "proposal": "Show Status incomplete and Check again until connected and saved-server attention is known.",
+    "status": "tested",
+    "verification": "Shorebird Flutter3.47.2:61 focused tests including12 candidate captures;12 baseline captures; analyzer no issues; diff check clean. No new native APK verification.",
+    "commit": "5e74f6cf70dc36ea732103bfecf9180f79fb3142"
+  },
+  {
+    "id": "ACTIVITY-02",
+    "page": "Activity",
+    "title": "Bookkeeping precedes the decision",
+    "priority": "P2",
+    "dimension": "density",
+    "evidence": [
+      "screenshots/09-activity.png",
+      "0eabc2d:lib/ui/screens/activity_screen.dart",
+      "0eabc2d:lib/ui/screens/profile_monitor_screen.dart",
+      "/tmp/oc-ui-audit-20260909/09-activity.xml",
+      "mobbin/activity/image-03.webp",
+      "https://mobbin.com/screens/f23940e0-7a29-4fb9-a336-f707a4de63b1",
+      "/home/eslam/Storage/Code/oc_app-ui-activity/docs/qa/clear-activity/README.md"
+    ],
+    "observed": "Baseline monitor block occupies112dp before the central success result, with zero counts and a scope paragraph.",
+    "impact": "The result takes longer to find; active request hierarchy also starts with monitor accounting.",
+    "proposal": "Lead with result or exact decision rows; retain compact nonzero counts and visible last-selected-location qualifier.",
+    "status": "tested",
+    "verification": "Shorebird Flutter3.47.2:61 focused tests including12 candidate captures;12 baseline captures; analyzer no issues; diff check clean. No new native APK verification.",
+    "commit": "5e74f6cf70dc36ea732103bfecf9180f79fb3142"
+  },
+  {
+    "id": "ACTIVITY-03",
+    "page": "Activity",
+    "title": "Background action promises a toggle but opens settings",
+    "priority": "P2",
+    "dimension": "copy",
+    "evidence": [
+      "screenshots/09-activity.png",
+      "0eabc2d:lib/ui/screens/activity_screen.dart",
+      "0eabc2d:lib/ui/screens/profile_monitor_screen.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-activity/docs/qa/clear-activity/README.md"
+    ],
+    "observed": "The largest empty-state button says Turn on background updates; its callback navigates to BackgroundSettingsScreen.",
+    "impact": "Action wording suggests a state change, and optional setup dominates an attention inbox.",
+    "proposal": "Use a secondary Background updates navigation row with Off state and chevron.",
+    "status": "tested",
+    "verification": "Shorebird Flutter3.47.2:61 focused tests including12 candidate captures;12 baseline captures; analyzer no issues; diff check clean. No new native APK verification.",
+    "commit": "5e74f6cf70dc36ea732103bfecf9180f79fb3142"
+  },
+  {
+    "id": "ACTIVITY-04",
+    "page": "Activity",
+    "title": "Empty section and digest explanations dominate no-work state",
+    "priority": "P2",
+    "dimension": "component",
+    "evidence": [
+      "screenshots/09-activity.png",
+      "0eabc2d:lib/ui/screens/activity_screen.dart",
+      "0eabc2d:lib/ui/screens/profile_monitor_screen.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-activity/docs/qa/clear-activity/README.md"
+    ],
+    "observed": "Running-only pages show a separate empty Needs attention block; collapsed Completion digests shows an implementation disclaimer.",
+    "impact": "Users read absence bookkeeping and implementation detail before their actual task.",
+    "proposal": "Omit empty sibling sections; reveal digest explanatory copy when expanded.",
+    "status": "tested",
+    "verification": "Shorebird Flutter3.47.2:61 focused tests including12 candidate captures;12 baseline captures; analyzer no issues; diff check clean. No new native APK verification.",
+    "commit": "5e74f6cf70dc36ea732103bfecf9180f79fb3142"
+  },
+  {
+    "id": "ACTIVITY-05",
+    "page": "Activity",
+    "title": "Inapplicable form state can block current inbox",
+    "priority": "P2",
+    "dimension": "flow",
+    "evidence": [
+      "screenshots/09-activity.png",
+      "0eabc2d:lib/ui/screens/activity_screen.dart",
+      "0eabc2d:lib/ui/screens/profile_monitor_screen.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-activity/docs/qa/clear-activity/README.md"
+    ],
+    "observed": "Form rows are capability gated but loading/error aggregation was unconditional.",
+    "impact": "Stale forms state can show a spinner/error on a connection without forms.",
+    "proposal": "Apply the same forms capability gate to loading and errors.",
+    "status": "tested",
+    "verification": "Shorebird Flutter3.47.2:61 focused tests including12 candidate captures;12 baseline captures; analyzer no issues; diff check clean. No new native APK verification.",
+    "commit": "5e74f6cf70dc36ea732103bfecf9180f79fb3142"
+  },
+  {
+    "id": "ACTIVITY-06",
+    "page": "Activity",
+    "title": "Shared icon and motion polish remains unverified",
+    "priority": "P3",
+    "dimension": "motion",
+    "evidence": [
+      "screenshots/09-activity.png",
+      "0eabc2d:lib/ui/screens/activity_screen.dart",
+      "0eabc2d:lib/ui/screens/profile_monitor_screen.dart"
+    ],
+    "observed": "Activity uses framework Material glyphs and the shared theme; no measured native frame-time sample is available.",
+    "impact": "Current appearance lacks a distinctive shared icon direction; static images cannot establish fluidity.",
+    "proposal": "Review shared icon family with the coordinator and measure actual Android scrolling/transition behavior.",
+    "status": "deferred",
+    "verification": "Focused tests and synthetic before/after captures pending; no new native APK verification.",
+    "commit": null
+  }
+]

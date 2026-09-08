@@ -1,0 +1,176 @@
+[
+  {
+    "id": "FILES-01",
+    "page": "Files",
+    "title": "Retry changes the failed folder destination",
+    "priority": "P1",
+    "dimension": "flow",
+    "evidence": [
+      "lib/ui/screens/files_screen.dart:_load/_refreshFiles",
+      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+    ],
+    "observed": "The requested _path was assigned only after listFiles succeeded; Retry used the previous _path.",
+    "impact": "A failed src request could recover by showing root while the user expected src.",
+    "proposal": "Record destination before loading, clear old entries on directory change, and assert retry/back request sequence.",
+    "status": "tested",
+    "verification": "Final unchanged candidate: 75 focused tests/captures passed serially; flutter analyze clean. Synthetic dark/light 1x/2x populated, empty and folder captures inspected. No updated APK or device FPS/TalkBack claim.",
+    "commit": "8c610a9ec2759580ba1383063014b4f344ae458d"
+  },
+  {
+    "id": "FILES-02",
+    "page": "Files",
+    "title": "Three enclosed header blocks compete with the file list",
+    "priority": "P2",
+    "dimension": "density",
+    "evidence": [
+      "screenshots/08-files.png",
+      "lib/ui/screens/files_screen.dart:_body/_ChangesCard",
+      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+    ],
+    "observed": "Full-width pill selector, outlined search and filled change card precede content. The change card repeats a review instruction beside a chevron.",
+    "impact": "The first file arrives after three strong shapes; the structure feels like stacked widgets rather than a browser.",
+    "proposal": "Use flat selected tabs, retain one searchable field and a 48dp review row with unboxed counts.",
+    "status": "tested",
+    "verification": "Final unchanged candidate: 75 focused tests/captures passed serially; flutter analyze clean. Synthetic dark/light 1x/2x populated, empty and folder captures inspected. No updated APK or device FPS/TalkBack claim.",
+    "commit": "8c610a9ec2759580ba1383063014b4f344ae458d"
+  },
+  {
+    "id": "FILES-03",
+    "page": "Files",
+    "title": "Change state is repeated on two rails",
+    "priority": "P2",
+    "dimension": "component",
+    "evidence": [
+      "screenshots/08-files.png",
+      "lib/ui/screens/files_screen.dart:_fileDetail/_FileChangeBadge/_FolderStatusMark",
+      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+    ],
+    "observed": "Added \u00b7 +count is repeated with A badges. src repeats 3 changed files and trailing 3.",
+    "impact": "Duplicate marks steal filename width and create a noisy secondary alignment rail. Single letters also require interpretation.",
+    "proposal": "Keep full state words and counts once beneath each filename; remove redundant right-hand badges.",
+    "status": "tested",
+    "verification": "Final unchanged candidate: 75 focused tests/captures passed serially; flutter analyze clean. Synthetic dark/light 1x/2x populated, empty and folder captures inspected. No updated APK or device FPS/TalkBack claim.",
+    "commit": "8c610a9ec2759580ba1383063014b4f344ae458d"
+  },
+  {
+    "id": "FILES-04",
+    "page": "Files",
+    "title": "Accent folders overstate dependency and system content",
+    "priority": "P2",
+    "dimension": "color",
+    "evidence": [
+      "screenshots/08-files.png",
+      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+    ],
+    "observed": "Every folder is filled mint, so .git, dist and node_modules are as prominent as src before the reader reaches source.",
+    "impact": "Accent communicates folder type rather than a useful state and draws attention away from changed files.",
+    "proposal": "Use neutral folder/file type icons; retain mint for selected tab and review entry. Keep all entries and server order.",
+    "status": "tested",
+    "verification": "Final unchanged candidate: 75 focused tests/captures passed serially; flutter analyze clean. Synthetic dark/light 1x/2x populated, empty and folder captures inspected. No updated APK or device FPS/TalkBack claim.",
+    "commit": "8c610a9ec2759580ba1383063014b4f344ae458d"
+  },
+  {
+    "id": "FILES-05",
+    "page": "Files",
+    "title": "Filename rail needs reliable geometry and room to wrap",
+    "priority": "P2",
+    "dimension": "layout",
+    "evidence": [
+      "screenshots/08-files.png",
+      "lib/ui/screens/files_screen.dart:_fileListContent",
+      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+    ],
+    "observed": "Dense ListTiles use a leading icon gutter and single-line filename; two separate state rails reduce available width.",
+    "impact": "Long names truncate despite spare space elsewhere; optical alignment depends on ListTile defaults.",
+    "proposal": "Set explicit 16dp outer rail, 24dp leading slot, 12dp title gap, 56dp minimum row and two filename lines.",
+    "status": "tested",
+    "verification": "Final unchanged candidate: 75 focused tests/captures passed serially; flutter analyze clean. Synthetic dark/light 1x/2x populated, empty and folder captures inspected. No updated APK or device FPS/TalkBack claim.",
+    "commit": "8c610a9ec2759580ba1383063014b4f344ae458d"
+  },
+  {
+    "id": "FILES-06",
+    "page": "Files",
+    "title": "Empty folder recovery is gesture-only",
+    "priority": "P2",
+    "dimension": "flow",
+    "evidence": [
+      "motion-frames/frame-03.png",
+      "lib/ui/widgets/product_states.dart:ProductEmptyState",
+      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+    ],
+    "observed": "The empty state says Pull down to refresh; shared empty-state widget is an always-scrollable SingleChildScrollView.",
+    "impact": "Gesture is discoverable in copy but not an explicit button; no refresh bug demonstrated.",
+    "proposal": "Verify pull-to-refresh. Keep truthful blank state; consider an explicit refresh control if device testing finds gesture friction.",
+    "status": "tested",
+    "verification": "Final unchanged candidate: 75 focused tests/captures passed serially; flutter analyze clean. Synthetic dark/light 1x/2x populated, empty and folder captures inspected. No updated APK or device FPS/TalkBack claim.",
+    "commit": "8c610a9ec2759580ba1383063014b4f344ae458d"
+  },
+  {
+    "id": "FILES-07",
+    "page": "Files",
+    "title": "Deleted file does not explain its tap behavior",
+    "priority": "P2",
+    "dimension": "flow",
+    "evidence": [
+      "lib/ui/screens/files_screen.dart:_fileListContent/_fileRowActions",
+      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+    ],
+    "observed": "Deleted rows have onTap null and only Copy path in their context menu, though the changed-files sheet opens them in Review.",
+    "impact": "Review remains available but the same file has different entry behavior depending on route.",
+    "proposal": "Deleted rows now tap into the existing working-tree Review flow. All changed-file context menus include Open in Review.",
+    "status": "tested",
+    "verification": "Final unchanged candidate: 75 focused tests/captures passed serially; flutter analyze clean. Synthetic dark/light 1x/2x populated, empty and folder captures inspected. No updated APK or device FPS/TalkBack claim.",
+    "commit": "8c610a9ec2759580ba1383063014b4f344ae458d"
+  },
+  {
+    "id": "FILES-08",
+    "page": "Files",
+    "title": "Technical folder ordering needs a user-visible policy",
+    "priority": "P2",
+    "dimension": "density",
+    "evidence": [
+      "screenshots/08-files.png"
+    ],
+    "observed": "The observed server order begins .git, dist, node_modules, src. No hidden-files control exists.",
+    "impact": "Daily source browsing requires scanning infrastructure folders first.",
+    "proposal": "Do not silently hide or reorder returned files. A separately scoped remembered Show all / Source-first control needs supported semantics and persistence/deletion ownership.",
+    "status": "deferred",
+    "verification": "Source and accepted baseline images inspected; no new device proof.",
+    "commit": null
+  },
+  {
+    "id": "FILES-09",
+    "page": "Files",
+    "title": "Runtime motion and touch feedback remain unproven",
+    "priority": "P2",
+    "dimension": "motion",
+    "evidence": [
+      "motion-frames/frame-03.png",
+      "lib/ui/screens/files_screen.dart:_scheduleFileSearch/_scheduleSymbolSearch"
+    ],
+    "observed": "Source debounces search by 350ms and suppresses stale requests. A static frame cannot establish input latency, dropped frames or pressed feedback.",
+    "impact": "No award-level fluidity claim is supported by page screenshots.",
+    "proposal": "Device check search typing, keyboard back, folder transitions, overscroll, long press, TalkBack and frame timings on updated signed build.",
+    "status": "deferred",
+    "verification": "Source and accepted baseline images inspected; no new device proof.",
+    "commit": null
+  },
+  {
+    "id": "FILES-10",
+    "page": "Files",
+    "title": "Folder breadcrumbs have a fixed-height clipping risk",
+    "priority": "P2",
+    "dimension": "accessibility",
+    "evidence": [
+      "lib/ui/screens/files_screen.dart:_body",
+      "tool/capture/clear_files_test.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+    ],
+    "observed": "The horizontal breadcrumb ListView was forced to 52dp despite scalable chip labels and shared chip padding.",
+    "impact": "At large text the chip content can exceed its viewport height and lose visual bounds.",
+    "proposal": "Use an intrinsically tall horizontal scroll view with the same accessible ActionChips; verify nested-folder renders at 1x and 2x.",
+    "status": "tested",
+    "verification": "Final unchanged candidate: 75 focused tests/captures passed serially; flutter analyze clean. Synthetic dark/light 1x/2x populated, empty and folder captures inspected. No updated APK or device FPS/TalkBack claim.",
+    "commit": "8c610a9ec2759580ba1383063014b4f344ae458d"
+  }
+]

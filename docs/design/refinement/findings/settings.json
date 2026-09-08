@@ -1,0 +1,163 @@
+[
+  {
+    "id": "SETTINGS-01",
+    "page": "settings",
+    "title": "Settings naming changes between entry and page",
+    "priority": "P2",
+    "dimension": "copy",
+    "evidence": [
+      "../screenshots/11-settings.png",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+    ],
+    "observed": "More entry says Settings while pushed title says Settings and server. Server is already a category and current connection is already summarized.",
+    "impact": "User must reinterpret scope after navigation.",
+    "proposal": "Use Settings title; retain server management category and explicit connection status.",
+    "status": "tested",
+    "verification": "Pinned Flutter3.47.2:35 focused cases passed; final scope-copy18 affected library/capture cases passed;24 matched before/after images. No native APK/FPS claim. Analyzer has2 inherited picker warnings.",
+    "commit": "43cf856"
+  },
+  {
+    "id": "SETTINGS-02",
+    "page": "settings",
+    "title": "Category tiles change geometry from More",
+    "priority": "P2",
+    "dimension": "layout",
+    "evidence": [
+      "../screenshots/11-settings.png",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+    ],
+    "observed": "Settings uses36dp backplates and default ListTile spacing, More24dp bare symbols. Equivalent navigable rows shift their label rails and icon mass.",
+    "impact": "The transition feels like a different component family.",
+    "proposal": "Use32dp fixed icon slots,24dp glyphs,12dp title gap and16dp visible page edges;56dp one-line /72dp two-line minimum, intrinsic growth.",
+    "status": "tested",
+    "verification": "Pinned Flutter3.47.2:35 focused cases passed; final scope-copy18 affected library/capture cases passed;24 matched before/after images. No native APK/FPS claim. Analyzer has2 inherited picker warnings.",
+    "commit": "43cf856"
+  },
+  {
+    "id": "SETTINGS-03",
+    "page": "settings",
+    "title": "Text truncates meaning on normal and large type",
+    "priority": "P2",
+    "dimension": "accessibility",
+    "evidence": [
+      "../screenshots/11-settings.png",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+    ],
+    "observed": "Category title and subtitle are forced to one line. Remaining usage subtitle visibly ends setup requi... at the normal audited width.",
+    "impact": "Hides prerequisites and makes large-text discovery less useful.",
+    "proposal": "Let titles/subtitles wrap and grow; keep navigation target intact and inspect2x captures.",
+    "status": "tested",
+    "verification": "Pinned Flutter3.47.2:35 focused cases passed; final scope-copy18 affected library/capture cases passed;24 matched before/after images. No native APK/FPS claim. Analyzer has2 inherited picker warnings.",
+    "commit": "43cf856"
+  },
+  {
+    "id": "SETTINGS-04",
+    "page": "settings",
+    "title": "Connection summary spends typography on raw URL",
+    "priority": "P2",
+    "dimension": "density",
+    "evidence": [
+      "../screenshots/11-settings.png",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+    ],
+    "observed": "Summary uses technical mono12 text for URL plus health/version above a separate Server destination. URL is already available on server subpage.",
+    "impact": "Technical identity receives more emphasis than adjustable preferences.",
+    "proposal": "Keep profile title and readable health status in an unboxed summary aligned to the same60dp text rail as categories; complete URL remains in Server. Preserve refresh and error details.",
+    "status": "tested",
+    "verification": "Pinned Flutter3.47.2:35 focused cases passed; final scope-copy18 affected library/capture cases passed;24 matched before/after images. No native APK/FPS claim. Analyzer has2 inherited picker warnings.",
+    "commit": "43cf856"
+  },
+  {
+    "id": "SETTINGS-05",
+    "page": "settings",
+    "title": "Appearance category hides its active value",
+    "priority": "P2",
+    "dimension": "flow",
+    "evidence": [
+      "../screenshots/14-light-appearance.png",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+    ],
+    "observed": "Category gives no current mode/theme; user must enter the page to learn the selected configuration.",
+    "impact": "An avoidable drill-down interrupts quick verification.",
+    "proposal": "Expose appearance mode and theme-pack label as category subtitle, refresh on return.",
+    "status": "tested",
+    "verification": "Pinned Flutter3.47.2:35 focused cases passed; final scope-copy18 affected library/capture cases passed;24 matched before/after images. No native APK/FPS claim. Analyzer has2 inherited picker warnings.",
+    "commit": "43cf856"
+  },
+  {
+    "id": "SETTINGS-06",
+    "page": "settings",
+    "title": "Model display name becomes raw technical ID",
+    "priority": "P2",
+    "dimension": "type",
+    "evidence": [
+      "../screenshots/15-coding-defaults.png",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+    ],
+    "observed": "More shows GPT-5.6 Sol 1M (OAuth); Coding defaults displays OpenAI \u00b7 gpt-5.6-sol in code-style text.",
+    "impact": "Same choice appears to be a different setting.",
+    "proposal": "Use catalog model name and presented-label fallback; keep variant and normal readable body typography.",
+    "status": "tested",
+    "verification": "Pinned Flutter3.47.2:35 focused cases passed; final scope-copy18 affected library/capture cases passed;24 matched before/after images. No native APK/FPS claim. Analyzer has2 inherited picker warnings.",
+    "commit": "43cf856"
+  },
+  {
+    "id": "SETTINGS-07",
+    "page": "settings",
+    "title": "Selected agent opens model chooser",
+    "priority": "P1",
+    "dimension": "flow",
+    "evidence": [
+      "../screenshots/15-coding-defaults.png",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+    ],
+    "observed": "Selected agent onTap calls the same showModelPicker(context) as Selected model without a requested agent focus.",
+    "impact": "Tap destination violates user expectation and adds a hunt for the actual agent control.",
+    "proposal": "Coordinate focusAgent:true with model owner; preserve transactional apply/cancel rather than immediate save.",
+    "status": "tested",
+    "verification": "Pinned Flutter3.47.2:35 focused cases passed; final scope-copy18 affected library/capture cases passed;24 matched before/after images. No native APK/FPS claim. Analyzer has2 inherited picker warnings. Direct agent tap verified with seeded catalog; cold-catalog focus issue reported to model owner.",
+    "commit": "43cf856"
+  },
+  {
+    "id": "SETTINGS-08",
+    "page": "settings",
+    "title": "Coding defaults includes a non-setting workspace essay",
+    "priority": "P2",
+    "dimension": "density",
+    "evidence": [
+      "../screenshots/15-coding-defaults.png",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+    ],
+    "observed": "Experimental/Workspaces uses a full section and long informational row without an action. Actual workspaces live in Workspace tab.",
+    "impact": "A three-setting page becomes a mixed settings/documentation page.",
+    "proposal": "Remove this duplicate explanatory row; workspace discovery remains in its actual tab and setup guide.",
+    "status": "tested",
+    "verification": "Pinned Flutter3.47.2:35 focused cases passed; final scope-copy18 affected library/capture cases passed;24 matched before/after images. No native APK/FPS claim. Analyzer has2 inherited picker warnings.",
+    "commit": "43cf856"
+  },
+  {
+    "id": "SETTINGS-09",
+    "page": "settings",
+    "title": "Appearance selection lacks a representative preview",
+    "priority": "P2",
+    "dimension": "component",
+    "evidence": [
+      "../screenshots/14-light-appearance.png",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart"
+    ],
+    "observed": "Four tiny swatches per theme communicate palette but no type, code, selection, surface or contrast relationship. Current checkmark is clear.",
+    "impact": "Choosing a theme needs trial-and-back rather than a predictable preview.",
+    "proposal": "Future appearance slice should preview a small real component sample and maintain selected check; no fabricated live content.",
+    "status": "deferred",
+    "verification": "Source change prepared; focused tests and synthetic before/after captures pending serialized test slot.",
+    "commit": null
+  }
+]

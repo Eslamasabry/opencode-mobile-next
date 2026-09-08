@@ -1,0 +1,122 @@
+[
+  {
+    "id": "MODEL-01",
+    "page": "Model and agent selector",
+    "title": "Choices have different cancellation semantics",
+    "priority": "P1",
+    "dimension": "flow",
+    "evidence": [
+      "../screenshots/06-model-picker.png",
+      "lib/ui/widgets/pickers.dart (_agentPicker, _applyDraft, _catalog, _selectionSummary)",
+      "../screenshots/simple-model/before-dark-1x.png",
+      "../screenshots/simple-model/after-dark-1x.png",
+      "../screenshots/simple-model/after-light-2x.png"
+    ],
+    "observed": "Agent saves immediately; model and mode wait for Apply. Closing can retain only the agent change.",
+    "impact": "Users cannot predict whether dismissal preserves their prior configuration.",
+    "proposal": "Draft all choices; Apply sequentially with explicit partial-save recovery.",
+    "status": "tested",
+    "verification": "Final42 behavioral cases +4 after captures pass; 4 baseline captures retained. Direct-agent cold catalog opens once. Newcopy localized. No native/live provider/FPS proof.",
+    "commit": "8e46c4f4cf23e5c2f53d5e3660f46d4c57e7d0bf"
+  },
+  {
+    "id": "MODEL-02",
+    "page": "Model and agent selector",
+    "title": "Provider administration dominates model choice",
+    "priority": "P2",
+    "dimension": "density",
+    "evidence": [
+      "../screenshots/06-model-picker.png",
+      "lib/ui/widgets/pickers.dart (_agentPicker, _applyDraft, _catalog, _selectionSummary)",
+      "../screenshots/simple-model/before-dark-1x.png",
+      "../screenshots/simple-model/after-dark-1x.png",
+      "../screenshots/simple-model/after-light-2x.png"
+    ],
+    "observed": "Latest APK has roughly431dp of chrome before first model row; provider paragraph and reload take about144dp.",
+    "impact": "Only about two complete rows remain visible in the captured modal.",
+    "proposal": "Compact availability notice; details retain provider names/explanation and direct reload remains available.",
+    "status": "tested",
+    "verification": "Final42 behavioral cases +4 after captures pass; 4 baseline captures retained. Direct-agent cold catalog opens once. Newcopy localized. No native/live provider/FPS proof.",
+    "commit": "8e46c4f4cf23e5c2f53d5e3660f46d4c57e7d0bf"
+  },
+  {
+    "id": "MODEL-03",
+    "page": "Model and agent selector",
+    "title": "Warning rails conflict with inset selection controls",
+    "priority": "P2",
+    "dimension": "layout",
+    "evidence": [
+      "../screenshots/06-model-picker.png",
+      "lib/ui/widgets/pickers.dart (_agentPicker, _applyDraft, _catalog, _selectionSummary)",
+      "../screenshots/simple-model/before-dark-1x.png",
+      "../screenshots/simple-model/after-dark-1x.png",
+      "../screenshots/simple-model/after-light-2x.png"
+    ],
+    "observed": "Full-bleed colored warning beside16dp inset search and8dp inset model rows.",
+    "impact": "Warning reads as a competing primary surface.",
+    "proposal": "Align notice to16dp rails and use neutral surfaceContainer without another outline.",
+    "status": "tested",
+    "verification": "Final42 behavioral cases +4 after captures pass; 4 baseline captures retained. Direct-agent cold catalog opens once. Newcopy localized. No native/live provider/FPS proof.",
+    "commit": "8e46c4f4cf23e5c2f53d5e3660f46d4c57e7d0bf"
+  },
+  {
+    "id": "MODEL-04",
+    "page": "Model and agent selector",
+    "title": "Apply summary hides chosen agent",
+    "priority": "P2",
+    "dimension": "copy",
+    "evidence": [
+      "../screenshots/06-model-picker.png",
+      "lib/ui/widgets/pickers.dart (_agentPicker, _applyDraft, _catalog, _selectionSummary)",
+      "../screenshots/simple-model/before-dark-1x.png",
+      "../screenshots/simple-model/after-dark-1x.png",
+      "../screenshots/simple-model/after-light-2x.png"
+    ],
+    "observed": "Footer summarizes model and default mode but not agent.",
+    "impact": "User cannot review all pending settings before Apply.",
+    "proposal": "Include draft agent and explain deferred application in agent control.",
+    "status": "tested",
+    "verification": "Final42 behavioral cases +4 after captures pass; 4 baseline captures retained. Direct-agent cold catalog opens once. Newcopy localized. No native/live provider/FPS proof.",
+    "commit": "8e46c4f4cf23e5c2f53d5e3660f46d4c57e7d0bf"
+  },
+  {
+    "id": "MODEL-05",
+    "page": "Model and agent selector",
+    "title": "Selected agent shortcut opens model choice",
+    "priority": "P2",
+    "dimension": "flow",
+    "evidence": [
+      "../screenshots/06-model-picker.png",
+      "lib/ui/widgets/pickers.dart (_agentPicker, _applyDraft, _catalog, _selectionSummary)",
+      "../screenshots/simple-model/before-dark-1x.png",
+      "../screenshots/simple-model/after-dark-1x.png",
+      "../screenshots/simple-model/after-light-2x.png"
+    ],
+    "observed": "Settings agent row invokes generic model picker.",
+    "impact": "User must rediscover Options after explicitly selecting Agent.",
+    "proposal": "Add focusAgent entry API; settings owner wires matching shortcut.",
+    "status": "tested",
+    "verification": "Final42 behavioral cases +4 after captures pass; 4 baseline captures retained. Direct-agent cold catalog opens once. Newcopy localized. No native/live provider/FPS proof.",
+    "commit": "8e46c4f4cf23e5c2f53d5e3660f46d4c57e7d0bf"
+  },
+  {
+    "id": "MODEL-06",
+    "page": "Model and agent selector",
+    "title": "Provider imagery and generic action glyphs vary in visual weight",
+    "priority": "P3",
+    "dimension": "component",
+    "evidence": [
+      "../screenshots/06-model-picker.png",
+      "lib/ui/widgets/pickers.dart (_agentPicker, _applyDraft, _catalog, _selectionSummary)",
+      "../screenshots/simple-model/before-dark-1x.png",
+      "../screenshots/simple-model/after-dark-1x.png",
+      "../screenshots/simple-model/after-light-2x.png"
+    ],
+    "observed": "Provider logos/monograms, outlined stars and selection check use different silhouettes.",
+    "impact": "A technically readable list lacks coherent brand character.",
+    "proposal": "Coordinator to review global icon family; retain recognizable favorite and selection semantics.",
+    "status": "deferred",
+    "verification": "41 behavioral cases covered after one corrected summary expectation; 4 after and4 before captures inspected. Pinned Shorebird3.47.2. No live provider mutation, native/FPS or TalkBack proof.",
+    "commit": null
+  }
+]

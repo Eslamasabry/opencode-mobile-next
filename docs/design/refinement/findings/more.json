@@ -1,0 +1,91 @@
+[
+  {
+    "id": "MORE-01",
+    "page": "more",
+    "title": "Duplicate model presentation pushes Settings lower",
+    "priority": "P2",
+    "dimension": "density",
+    "evidence": [
+      "../screenshots/10-more.png",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/library_screen.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-more-dark-1x.png"
+    ],
+    "observed": "A separate 72dp-minimum active model card appears above Models & agents and duplicates the header selection route. The page asks users to distinguish default editing from catalog browsing before finding Settings.",
+    "impact": "A routine settings visit starts by reading AI configuration twice.",
+    "proposal": "Consolidate current default name and new-chat scope into the Models & agents destination subtitle; keep catalog editing and header picker.",
+    "status": "tested",
+    "verification": "Pinned Flutter3.47.2:35 focused cases passed; final scope-copy18 affected library/capture cases passed;24 matched before/after images. No native APK/FPS claim. Analyzer has2 inherited picker warnings.",
+    "commit": "43cf856"
+  },
+  {
+    "id": "MORE-02",
+    "page": "more",
+    "title": "Dividers miss their title rail by 8dp",
+    "priority": "P2",
+    "dimension": "layout",
+    "evidence": [
+      "../screenshots/10-more.png",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/library_screen.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-more-dark-1x.png"
+    ],
+    "observed": "Card starts x16dp; baseline row text x72dp while divider starts x80dp. Separators run against the right border.",
+    "impact": "Repeated misalignment makes grouped destinations look assembled independently.",
+    "proposal": "Use 16dp inner padding +32dp leading slot +12dp gap, giving text and divider x76dp; end divider 16dp before card edge.",
+    "status": "tested",
+    "verification": "Pinned Flutter3.47.2:35 focused cases passed; final scope-copy18 affected library/capture cases passed;24 matched before/after images. No native APK/FPS claim. Analyzer has2 inherited picker warnings.",
+    "commit": "43cf856"
+  },
+  {
+    "id": "MORE-03",
+    "page": "more",
+    "title": "Icon mass and label rails change within one page",
+    "priority": "P2",
+    "dimension": "component",
+    "evidence": [
+      "../screenshots/10-more.png",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/library_screen.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-more-dark-1x.png"
+    ],
+    "observed": "The active model uses a 36dp filled icon tile; remaining 24dp bare symbols vary in silhouette. Commands uses a circle inside a box-like group and model icon is a dense circular glyph.",
+    "impact": "The strongest decoration does not correspond to the primary daily destination.",
+    "proposal": "Remove redundant card and keep explicit 32dp slots/24dp glyphs; global icon-family replacement remains coordinated work.",
+    "status": "tested",
+    "verification": "Pinned Flutter3.47.2:35 focused cases passed; final scope-copy18 affected library/capture cases passed;24 matched before/after images. No native APK/FPS claim. Analyzer has2 inherited picker warnings.",
+    "commit": "43cf856"
+  },
+  {
+    "id": "MORE-04",
+    "page": "more",
+    "title": "Section labels inherit accidental nested padding",
+    "priority": "P2",
+    "dimension": "layout",
+    "evidence": [
+      "../screenshots/10-more.png",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/library_screen.dart",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-more-dark-1x.png"
+    ],
+    "observed": "SectionLabel adds16dp inside a12dp list gutter, making headings x28dp versus group edges x16dp. Its18/6 vertical padding differs from other contexts.",
+    "impact": "Titles look detached from groups and section rhythm lacks a shared rule.",
+    "proposal": "Explicit x16dp heading rail;24dp previous-content gap and8dp heading-to-group gap.",
+    "status": "tested",
+    "verification": "Pinned Flutter3.47.2:35 focused cases passed; final scope-copy18 affected library/capture cases passed;24 matched before/after images. No native APK/FPS claim. Analyzer has2 inherited picker warnings.",
+    "commit": "43cf856"
+  },
+  {
+    "id": "MORE-05",
+    "page": "more",
+    "title": "Border and icon family remain visually heavy",
+    "priority": "P2",
+    "dimension": "color",
+    "evidence": [
+      "../screenshots/10-more.png",
+      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/library_screen.dart"
+    ],
+    "observed": "Search and grouped Card outlines all use rounded enclosures; unrelated model/hub/build icons have different optical weights despite nominal size.",
+    "impact": "Framing competes with destination labels.",
+    "proposal": "Coordinator should test shared surface/outline tokens and coherent icon family using these after captures. Avoid adding blur to opaque list surfaces.",
+    "status": "deferred",
+    "verification": "Source change prepared; focused tests and synthetic before/after captures pending serialized test slot.",
+    "commit": null
+  }
+]

@@ -1,0 +1,121 @@
+[
+  {
+    "id": "SHELL-01",
+    "page": "Shell navigation",
+    "title": "Abrupt destination replacement",
+    "priority": "P2",
+    "dimension": "motion",
+    "evidence": [
+      "0eabc2d:lib/ui/screens/home_screen.dart:218",
+      "../motion-technology-review.md"
+    ],
+    "observed": "IndexedStack changes the painted page immediately while only the navigation indicator animates.",
+    "impact": "The touched destination and arriving content lack visual continuity.",
+    "proposal": "Use a brief interruptible transition without remounting tab state.",
+    "status": "tested",
+    "verification": "Pinned Flutter 3.47.2: 18 retained-tab/navigation tests, 10 targeted capability/glass/accessibility/text-scale tests, and 14 capture cases passed; 16 PNGs inspected selectively. Scoped Dart analyzer and format passed. No ADB or measured frame-time claim.",
+    "commit": "05226e0ad0db3b580c88b6c47cddadf018dec6b4"
+  },
+  {
+    "id": "SHELL-02",
+    "page": "Shell navigation",
+    "title": "Inactive tabs retain ticker and focus eligibility",
+    "priority": "P2",
+    "dimension": "motion",
+    "evidence": [
+      "0eabc2d:lib/ui/screens/home_screen.dart:218",
+      "0eabc2d:lib/ui/screens/workspace_screen.dart:1661"
+    ],
+    "observed": "No per-tab TickerMode or explicit focus exclusion surrounds mounted destinations. Hidden work indicators may keep ticking; runtime cost was not measured.",
+    "impact": "Avoidable offscreen animation and possible focus ownership make switching less predictable.",
+    "proposal": "Only the selected destination may tick, receive focus/input or expose semantics; keep all destination state mounted.",
+    "status": "tested",
+    "verification": "Pinned Flutter 3.47.2: 18 retained-tab/navigation tests, 10 targeted capability/glass/accessibility/text-scale tests, and 14 capture cases passed; 16 PNGs inspected selectively. Scoped Dart analyzer and format passed. No ADB or measured frame-time claim.",
+    "commit": "05226e0ad0db3b580c88b6c47cddadf018dec6b4"
+  },
+  {
+    "id": "SHELL-03",
+    "page": "Shell navigation",
+    "title": "Dock spends too much height on internal hit-box accounting",
+    "priority": "P2",
+    "dimension": "density",
+    "evidence": [
+      "0eabc2d:lib/ui/screens/home_screen.dart:303",
+      "../screenshots/42-recovered-connected.png",
+      "../spacing-alignment-review.md"
+    ],
+    "observed": "Integration height formula counts 48dp for the icon plus label and 20dp spacing; default AppTheme yields an approximately 84dp dock. The icon indicator itself is 32dp. Runtime screenshot 42 is baseline, not proof of integration geometry.",
+    "impact": "Navigation consumes more vertical space than the visible controls need, competing with task content.",
+    "proposal": "Target 72dp at normal text with at least 8dp painted icon clearance and 4dp label-bottom clearance; grow only when fitted label metrics require it.",
+    "status": "tested",
+    "verification": "Pinned Flutter 3.47.2: 18 retained-tab/navigation tests, 10 targeted capability/glass/accessibility/text-scale tests, and 14 capture cases passed; 16 PNGs inspected selectively. Scoped Dart analyzer and format passed. No ADB or measured frame-time claim.",
+    "commit": "05226e0ad0db3b580c88b6c47cddadf018dec6b4"
+  },
+  {
+    "id": "SHELL-04",
+    "page": "Shell navigation",
+    "title": "Dock rail differs from the page rail",
+    "priority": "P2",
+    "dimension": "layout",
+    "evidence": [
+      "0eabc2d:lib/ui/screens/home_screen.dart:248"
+    ],
+    "observed": "Dock has 12dp side insets; coordinated page/content rail target is 16dp.",
+    "impact": "Visible edges fail to align through the daily Workspace-to-navigation flow.",
+    "proposal": "Use 16dp visible dock edges; coordinate a quiet Workspace action tray with 12dp total inter-region gap.",
+    "status": "tested",
+    "verification": "Pinned Flutter 3.47.2: 18 retained-tab/navigation tests, 10 targeted capability/glass/accessibility/text-scale tests, and 14 capture cases passed; 16 PNGs inspected selectively. Scoped Dart analyzer and format passed. No ADB or measured frame-time claim.",
+    "commit": "05226e0ad0db3b580c88b6c47cddadf018dec6b4"
+  },
+  {
+    "id": "SHELL-05",
+    "page": "Shell navigation",
+    "title": "Connection traffic repeats navigation font measurements",
+    "priority": "P2",
+    "dimension": "component",
+    "evidence": [
+      "0eabc2d:lib/ui/screens/home_screen.dart:278-297",
+      "0eabc2d:lib/ui/screens/home_screen.dart:84-87"
+    ],
+    "observed": "Each rebuild constructs two TextPainters per destination even when labels, width and typography are unchanged.",
+    "impact": "Unnecessary layout work is performed during unrelated status updates; actual frame-time impact is unmeasured.",
+    "proposal": "Cache label metrics by width, label content, text direction and resolved selected/unselected styles.",
+    "status": "tested",
+    "verification": "Pinned Flutter 3.47.2: 18 retained-tab/navigation tests, 10 targeted capability/glass/accessibility/text-scale tests, and 14 capture cases passed; 16 PNGs inspected selectively. Scoped Dart analyzer and format passed. No ADB or measured frame-time claim.",
+    "commit": "05226e0ad0db3b580c88b6c47cddadf018dec6b4"
+  },
+  {
+    "id": "SHELL-06",
+    "page": "Shell navigation",
+    "title": "Glass name overstates the painted material",
+    "priority": "P3",
+    "dimension": "color",
+    "evidence": [
+      "0eabc2d:lib/ui/widgets/glass_surface.dart:27-57"
+    ],
+    "observed": "The dock uses 96% tint opacity and a 16dp shadow blur over an unextended solid body; there is no backdrop sampling.",
+    "impact": "Extra translucency adds no useful content relationship and can be mistaken for actual glass behavior.",
+    "proposal": "Use an honest solid tonal surface, quiet edge and shallower 8dp shadow; retain strong opaque accessibility treatment.",
+    "status": "tested",
+    "verification": "Pinned Flutter 3.47.2: 18 retained-tab/navigation tests, 10 targeted capability/glass/accessibility/text-scale tests, and 14 capture cases passed; 16 PNGs inspected selectively. Scoped Dart analyzer and format passed. No ADB or measured frame-time claim.",
+    "commit": "05226e0ad0db3b580c88b6c47cddadf018dec6b4"
+  },
+  {
+    "id": "SHELL-07",
+    "page": "Shell navigation",
+    "title": "Partial label styles measure differently from their rendered text",
+    "priority": "P2",
+    "dimension": "type",
+    "evidence": [
+      "0eabc2d:lib/ui/app_theme.dart:323",
+      "shell-geometry.log",
+      "docs/qa/shell-repair/tab-3-light-320-2.5x.png"
+    ],
+    "observed": "At 320dp and 2.5x, the partial navigation label style inherited body font metrics while TextPainter used defaults. Workspace wrapped to two lines and extended below the dock.",
+    "impact": "Navigation text clipping and crowded icon clearance undermine the primary destination control.",
+    "proposal": "Resolve the partial navigation style against the localized label role, then use that identical style for text measurement and painting.",
+    "status": "tested",
+    "verification": "Pinned Flutter 3.47.2: 18 retained-tab/navigation tests, 10 targeted capability/glass/accessibility/text-scale tests, and 14 capture cases passed; 16 PNGs inspected selectively. Scoped Dart analyzer and format passed. No ADB or measured frame-time claim.",
+    "commit": "05226e0ad0db3b580c88b6c47cddadf018dec6b4"
+  }
+]

@@ -1,0 +1,239 @@
+[
+  {
+    "id": "ONBOARD-01",
+    "page": "Onboarding / connections / offline demo",
+    "title": "First run makes transport architecture the first decision",
+    "priority": "P1",
+    "dimension": "flow",
+    "evidence": [
+      "../screenshots/22-onboarding.png",
+      "lib/ui/screens/servers_screen.dart",
+      "lib/ui/screens/demo_screen.dart",
+      "https://mobbin.com/flows/b83a3666-782d-4077-a2ad-8fee91eae1cd",
+      "../mobbin/onboarding/image-01.jpg",
+      "../mobbin/onboarding/image-05.jpg"
+    ],
+    "observed": "Five large surfaces present demo, computer, Tailscale, Termux and guide; a sixth external-agent action occupies a persistent footer. Location, transport and learning choices have similar visual rank.",
+    "impact": "A developer must classify infrastructure before seeing a clear next step.",
+    "proposal": "One filled Connect to a server action and a quiet Try demo; discoverable More setup options expands existing platform-gated routes.",
+    "status": "tested",
+    "verification": "Focused behavior checks pass with pinned Shorebird Flutter3.47.2;12 synthetic real-widget screenshots in docs/qa/simple-first-run, 1080x2400 DPR2.625 light/dark1x/2x. No modified APK runtime proof.",
+    "commit": "facd97f"
+  },
+  {
+    "id": "ONBOARD-02",
+    "page": "Onboarding / connections / offline demo",
+    "title": "Border and icon-tile repetition flattens hierarchy",
+    "priority": "P2",
+    "dimension": "component",
+    "evidence": [
+      "../screenshots/22-onboarding.png",
+      "lib/ui/screens/servers_screen.dart",
+      "lib/ui/screens/demo_screen.dart"
+    ],
+    "observed": "Every setup path uses a 72dp minimum card, 40dp colored icon tile, 22dp icon and trailing chevron. Demo also has a full-width outline. The frame border repeats around almost every choice.",
+    "impact": "Scanning recognizes repeated containers before distinguishing useful decisions; advanced tools feel as important as connection.",
+    "proposal": "Remove the card grid and decorative icon tiles. Keep a filled primary button and unboxed secondary rows; use disclosure only for setup options.",
+    "status": "tested",
+    "verification": "Focused behavior checks pass with pinned Shorebird Flutter3.47.2;12 synthetic real-widget screenshots in docs/qa/simple-first-run, 1080x2400 DPR2.625 light/dark1x/2x. No modified APK runtime proof.",
+    "commit": "facd97f"
+  },
+  {
+    "id": "ONBOARD-03",
+    "page": "Onboarding / connections / offline demo",
+    "title": "Different content rails weaken alignment",
+    "priority": "P2",
+    "dimension": "layout",
+    "evidence": [
+      "../screenshots/22-onboarding.png",
+      "lib/ui/screens/servers_screen.dart",
+      "lib/ui/screens/demo_screen.dart"
+    ],
+    "observed": "Welcome uses 20dp outer padding, cards then introduce list-tile insets and 40dp icon columns; header/footer use separate 16dp rails. Centered hero text and left-aligned three-line rows change reading alignment.",
+    "impact": "The first screen has multiple competing alignment systems and a ragged rhythm.",
+    "proposal": "Use one 24dp content rail, left-aligned heading/body, full-width button, and zero-inset advanced list rows. Keep app bar standard.",
+    "status": "tested",
+    "verification": "Focused behavior checks pass with pinned Shorebird Flutter3.47.2;12 synthetic real-widget screenshots in docs/qa/simple-first-run, 1080x2400 DPR2.625 light/dark1x/2x. No modified APK runtime proof.",
+    "commit": "facd97f"
+  },
+  {
+    "id": "ONBOARD-04",
+    "page": "Onboarding / connections / offline demo",
+    "title": "Premature keyboard hides authentication context",
+    "priority": "P1",
+    "dimension": "flow",
+    "evidence": [
+      "../screenshots/20-add-server.png",
+      "lib/ui/screens/servers_screen.dart",
+      "lib/ui/screens/demo_screen.dart"
+    ],
+    "observed": "New server URL autofocus opens the keyboard immediately while pairing controls are still offered. The screenshot shows authentication cut off at the username field.",
+    "impact": "The user is pushed into typing before deciding whether to scan/paste; authentication and consequences are below the keyboard.",
+    "proposal": "No autofocus for a new address, including Codex endpoint. Preserve explicit password/token re-entry autofocus because the chosen task is already credential repair.",
+    "status": "tested",
+    "verification": "Focused behavior checks pass with pinned Shorebird Flutter3.47.2;12 synthetic real-widget screenshots in docs/qa/simple-first-run, 1080x2400 DPR2.625 light/dark1x/2x. No modified APK runtime proof.",
+    "commit": "facd97f"
+  },
+  {
+    "id": "ONBOARD-05",
+    "page": "Onboarding / connections / offline demo",
+    "title": "Save label conceals connection side effect",
+    "priority": "P1",
+    "dimension": "copy",
+    "evidence": [
+      "../screenshots/20-add-server.png",
+      "lib/ui/screens/servers_screen.dart",
+      "lib/ui/screens/demo_screen.dart"
+    ],
+    "observed": "Save server/Save action invokes save plus connect for new and active profiles. Codex already says Save & connect.",
+    "impact": "The same button wording suggests storage only yet can change live connection state.",
+    "proposal": "Save & connect for new, active or Codex; Save changes for inactive OpenCode edits. Keep truthful saved-but-not-connected failure and dirty draft protection.",
+    "status": "tested",
+    "verification": "Focused behavior checks pass with pinned Shorebird Flutter3.47.2;12 synthetic real-widget screenshots in docs/qa/simple-first-run, 1080x2400 DPR2.625 light/dark1x/2x. No modified APK runtime proof.",
+    "commit": "facd97f"
+  },
+  {
+    "id": "ONBOARD-06",
+    "page": "Onboarding / connections / offline demo",
+    "title": "Header submit competes with title and is far from thumb",
+    "priority": "P2",
+    "dimension": "layout",
+    "evidence": [
+      "../screenshots/20-add-server.png",
+      "lib/ui/screens/servers_screen.dart",
+      "lib/ui/screens/demo_screen.dart"
+    ],
+    "observed": "Add server and Save server share one app-bar row; compact mode shortens the action to Save.",
+    "impact": "Large text needs room and the label loses scope when shortened. One-handed reach is poor.",
+    "proposal": "Full-width bottom action uses explicit scope at every width and rises above keyboard; editor fields remain scrollable.",
+    "status": "tested",
+    "verification": "Focused behavior checks pass with pinned Shorebird Flutter3.47.2;12 synthetic real-widget screenshots in docs/qa/simple-first-run, 1080x2400 DPR2.625 light/dark1x/2x. No modified APK runtime proof.",
+    "commit": "facd97f"
+  },
+  {
+    "id": "ONBOARD-07",
+    "page": "Onboarding / connections / offline demo",
+    "title": "Saved list repeats the same add flow",
+    "priority": "P2",
+    "dimension": "density",
+    "evidence": [
+      "../screenshots/19-servers.png",
+      "lib/ui/screens/servers_screen.dart",
+      "lib/ui/screens/demo_screen.dart"
+    ],
+    "observed": "Add server and Another computer lead to the same editor, separated by QUICK ADD and two other full cards. External agents remain a pinned bottom action.",
+    "impact": "The list emphasizes setup taxonomy after the user has already connected.",
+    "proposal": "Retain saved profiles then one Add server action, Try demo and collapsed setup options; remove duplicate Another computer entry.",
+    "status": "tested",
+    "verification": "Focused behavior checks pass with pinned Shorebird Flutter3.47.2;12 synthetic real-widget screenshots in docs/qa/simple-first-run, 1080x2400 DPR2.625 light/dark1x/2x. No modified APK runtime proof.",
+    "commit": "facd97f"
+  },
+  {
+    "id": "ONBOARD-08",
+    "page": "Onboarding / connections / offline demo",
+    "title": "Demo disappears after the first connection",
+    "priority": "P2",
+    "dimension": "flow",
+    "evidence": [
+      "../screenshots/23-demo-start.png",
+      "lib/ui/screens/servers_screen.dart",
+      "lib/ui/screens/demo_screen.dart"
+    ],
+    "observed": "ServersScreen only renders the demo callback in the empty-profile branch. Demo itself uses an isolated controller/store and does not require profiles to be deleted.",
+    "impact": "Users cannot safely relearn review or show the app after setup through the same entry point.",
+    "proposal": "Expose Try demo in the saved-server list, preserving route-owned ephemeral state and owner profile data.",
+    "status": "tested",
+    "verification": "Focused behavior checks pass with pinned Shorebird Flutter3.47.2;12 synthetic real-widget screenshots in docs/qa/simple-first-run, 1080x2400 DPR2.625 light/dark1x/2x. No modified APK runtime proof.",
+    "commit": "facd97f"
+  },
+  {
+    "id": "ONBOARD-09",
+    "page": "Onboarding / connections / offline demo",
+    "title": "Demo teaches three tasks simultaneously",
+    "priority": "P2",
+    "dimension": "density",
+    "evidence": [
+      "../screenshots/23-demo-start.png",
+      "lib/ui/screens/servers_screen.dart",
+      "lib/ui/screens/demo_screen.dart"
+    ],
+    "observed": "The wrapper has simulation header/disclosure, nested chat has another app bar, generic Start coding suggestions differ from the prefilled welcome-message task.",
+    "impact": "The demonstration asks a novice to choose among prepared prompt, generic suggestions and slash-command lesson before the first result.",
+    "proposal": "One explicit demo chat empty state and one navigation header, with persistent simulation truth. Requires coordinated chat-library change.",
+    "status": "deferred",
+    "verification": "Explicit demo presentation seam agreed; Chat journey owner implements showAppBar and emptyState options plus DemoScreen callsite together.",
+    "commit": null
+  },
+  {
+    "id": "ONBOARD-10",
+    "page": "Onboarding / connections / offline demo",
+    "title": "Remote address example is incomplete and long",
+    "priority": "P2",
+    "dimension": "copy",
+    "evidence": [
+      "../screenshots/20-add-server.png",
+      "lib/ui/screens/servers_screen.dart",
+      "lib/ui/screens/demo_screen.dart"
+    ],
+    "observed": "The input hint is 192.0.2.20:4096 or https://\u2026 while helper text recommends HTTPS. The screenshot truncates the example.",
+    "impact": "A novice must infer whether to add a scheme and sees an ellipsis as part of an address example.",
+    "proposal": "Use https://server.example as one complete example. Retain URL normalization, localhost rules and real TLS/auth validation.",
+    "status": "tested",
+    "verification": "Focused behavior checks pass with pinned Shorebird Flutter3.47.2;12 synthetic real-widget screenshots in docs/qa/simple-first-run, 1080x2400 DPR2.625 light/dark1x/2x. No modified APK runtime proof.",
+    "commit": "facd97f"
+  },
+  {
+    "id": "ONBOARD-11",
+    "page": "Onboarding / connections / offline demo",
+    "title": "Recovery assumes the hosting method from loopback",
+    "priority": "P1",
+    "dimension": "flow",
+    "evidence": [
+      "../screenshots/41-recovered-workspace.png",
+      "lib/ui/screens/servers_screen.dart",
+      "lib/ui/screens/demo_screen.dart",
+      "lib/ui/widgets/connection_failure.dart:177"
+    ],
+    "observed": "The baseline failure page promotes Check Termux for a loopback endpoint although an ADB/SSH tunnel can also use loopback.",
+    "impact": "The prominent remedy may direct the user into an unrelated setup instead of retrying their existing connection.",
+    "proposal": "Lead with known failure, Retry and Change connection; place hosting-specific advice in troubleshoot unless supported by evidence. Shared recovery owner notified.",
+    "status": "tested",
+    "verification": "Focused behavior checks pass with pinned Shorebird Flutter3.47.2;12 synthetic real-widget screenshots in docs/qa/simple-first-run, 1080x2400 DPR2.625 light/dark1x/2x. No modified APK runtime proof.",
+    "commit": "facd97f"
+  },
+  {
+    "id": "ONBOARD-12",
+    "page": "Onboarding / connections / offline demo",
+    "title": "No motion or performance proof from static polish",
+    "priority": "P3",
+    "dimension": "motion",
+    "evidence": [
+      "../screenshots/22-onboarding.png",
+      "lib/ui/screens/servers_screen.dart",
+      "lib/ui/screens/demo_screen.dart"
+    ],
+    "observed": "Setup navigation uses MaterialPageRoute; proposed disclosure uses framework ExpansionTile. No measured frame timeline or task completion data exists for this slice.",
+    "impact": "Fluidity cannot honestly be certified by visual screenshots or line count.",
+    "proposal": "Keep native route/expansion behavior and capture reduced motion plus device interaction after integration; do not add blur or decorative animations to setup.",
+    "status": "proposed",
+    "verification": "Baseline screenshot and source inspected; no modified APK runtime proof.",
+    "commit": null
+  },
+  {
+    "id": "ONBOARD-13",
+    "page": "Connection editor",
+    "title": "Connection type and pairing still precede manual fields",
+    "priority": "P2",
+    "dimension": "density",
+    "evidence": [
+      "lib/ui/screens/servers_screen.dart",
+      "docs/qa/simple-first-run/editor-light-1x.png"
+    ],
+    "observed": "After repair, the keyboard stays closed and auth is visible, but connection-type chips and pairing instructions still consume the top of the editor. OpenCode/Codex selection remains a visible technical choice.",
+    "impact": "A user entering a known URL still scans pairing and protocol setup before reaching the form.",
+    "proposal": "Evaluate pairing-first/manual-entry disclosure in a subsequent focused journey without obscuring experimental Codex or weakening credential validation.",
+    "status": "deferred",
+    "verification": "Observed in final synthetic capture; deliberately not expanded beyond the approved repair slice.",
+    "commit": null
+  }
+]

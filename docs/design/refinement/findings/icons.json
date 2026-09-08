@@ -1,0 +1,94 @@
+[
+  {
+    "id": "ICONS-01",
+    "page": "ICONS",
+    "title": "Launcher silhouette has weak secondary shape",
+    "priority": "P2",
+    "dimension": "component",
+    "evidence": [
+      "assets/branding/opencode-mobile-app-icon-v2.png",
+      "android/app/src/main/res/drawable/ic_launcher_foreground.xml:11",
+      "android/app/src/main/res/drawable/ic_launcher_monochrome.xml:16",
+      "assets/branding/app-icon-256.png (256x256 RGBA, transparent corners)"
+    ],
+    "observed": "Current launcher identity is a generic terminal chevron plus a cursor at 45% alpha; raster branding adds glow. Both source assets were visually inspected.",
+    "impact": "The cursor fades at launcher size, leaving a familiar terminal mark rather than a distinct product identity. Glow creates softness rather than useful detail.",
+    "proposal": "Replace with the open-portal two-bracket concept; retain its full-alpha silhouette in monochrome.",
+    "status": "fixed",
+    "verification": "ImageGen concept preserved; deterministic vector and legacy resources implemented, Android AAPT2 36.1.0 compile passes. Inline AppBrandMark SVG rendered at32px and tested at24px. Circle/squircle/themed previews inspected. No installed-launcher evidence yet. Follow-up bundled app-icon-256.png regenerated from the same vector/background and visually inspected; this also unifies in-app bitmap/Linux window branding. Large marketing raster remains historical.",
+    "commit": "3e6fa90"
+  },
+  {
+    "id": "ICONS-02",
+    "page": "ICONS",
+    "title": "In-app glyphs vary in stroke and subject clarity",
+    "priority": "P2",
+    "dimension": "component",
+    "evidence": [
+      "lib/ui/screens/home_screen.dart:130",
+      "lib/ui/app_theme.dart:48",
+      "/home/eslam/Storage/Code/oc_app-ui-audit-20260909/icon-references/material-phosphor-comparison.png",
+      "docs/design/iconography/material-mapping.json at ba67d91",
+      "docs/qa/clear-iconography/glyphs-light.png",
+      "docs/qa/clear-iconography/glyphs-dark.png"
+    ],
+    "observed": "Current navigation mixes Material workspace dots, outlined folder/bell and rounded action glyphs. Actual package-font comparison shows Phosphor regular and duotone alternatives.",
+    "impact": "Different optical weights and abstract workspace dots make the interface feel assembled and weaken recognition of conversations as the main activity.",
+    "proposal": "Adopt Phosphor regular as the shared action family; duotone selected conversation/folder/bell, regular More, fill Stop. Use semantic AppIconography constants.",
+    "status": "source-only",
+    "verification": "Base shared module tested in Flutter 3.47.2 and actual light/dark renders inspected. Official package2.1.0 fails because IconData is final; approved native constants plus exact MIT fonts replace wrapper. Follow-up ba67d91 supplies272-name migration map,252 replacements and20 KEEP states; whole-page adoption and supplementary integration checks belong to coordinator.",
+    "commit": "3e6fa90"
+  },
+  {
+    "id": "ICONS-03",
+    "page": "ICONS",
+    "title": "Adaptive resources must follow the approved identity",
+    "priority": "P2",
+    "dimension": "component",
+    "evidence": [
+      "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+      "android/app/src/main/res/mipmap-anydpi-v33/ic_launcher.xml",
+      "android/app/src/main/AndroidManifest.xml:37"
+    ],
+    "observed": "Android already uses foreground/background adaptive layers and API33 monochrome; marketing raster is a separately maintained asset.",
+    "impact": "Changing the attractive raster alone would not change modern Android launchers and could create a split product identity.",
+    "proposal": "Use deterministic approved vector for adaptive foreground and monochrome, separate full-bleed background and generated legacy mipmaps; verify real launcher masks before claiming installation.",
+    "status": "tested",
+    "verification": "Foreground/monochrome two-path geometry identical, central66dp safe-circle bound checked; five legacy density assets regenerate byte-for-byte. AAPT2 36.1.0 compiles Android res. Installed launcher/theme-mask verification remains pending.",
+    "commit": "3e6fa90"
+  },
+  {
+    "id": "ICONS-04",
+    "page": "ICONS",
+    "title": "New glyph family needs a single semantics and sizing policy",
+    "priority": "P2",
+    "dimension": "accessibility",
+    "evidence": [
+      "icon-references/phosphor_flutter-2.1.0/lib/src/phosphor_icon.dart",
+      "lib/ui/app_theme.dart:398"
+    ],
+    "observed": "Published Phosphor duotone widget paints two Icon layers and propagates semanticLabel; standard app controls already enforce 48dp targets.",
+    "impact": "A naive migration risks duplicate announcements and shrinking touch areas to match the lighter glyphs.",
+    "proposal": "Use native AppGlyph with one optional semantic label;24px main/20px inline glyphs inside48dp targets, no thin/light weights; technical glyphs do not mirror, high contrast omits decorative duotone layer.",
+    "status": "tested",
+    "verification": "Pinned Flutter3.47.2: five module widget tests and two actual-font/SVG render fixtures pass; scoped analyzer clean. Semantic labels once,24px brand layout,20px action in48dp button, high contrast outline, RTL technical orientation verified. AppGlyph uses native Icon layers with one external label. No physical-device touch or TalkBack walkthrough claimed.",
+    "commit": "3e6fa90"
+  },
+  {
+    "id": "ICONS-05",
+    "page": "ICONS",
+    "title": "Delight should respond to intent",
+    "priority": "P3",
+    "dimension": "motion",
+    "evidence": [
+      "lib/ui/screens/home_screen.dart:310",
+      "lib/ui/screens/chat/composer.dart:1590"
+    ],
+    "observed": "Navigation supports a 220ms transition; composer already has continuous activity glow.",
+    "impact": "Adding bounce or pulse to every new glyph would compete with real task state.",
+    "proposal": "Use 150\u2013180ms selection fade, unchanged hit target, brief confirmation response; keep normal actions still and progress tied to real work.",
+    "status": "deferred",
+    "verification": "Module has no independent animation or perpetual pulse. Selection transition remains owned by navigation/page integration; no FPS or motion-sensitivity validation claimed.",
+    "commit": null
+  }
+]
