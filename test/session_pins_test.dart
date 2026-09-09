@@ -231,7 +231,7 @@ void main() {
       tester.getTopLeft(find.text('old')).dy,
       lessThan(tester.getTopLeft(find.text('new')).dy),
     );
-    expect(find.text('PINNED'), findsOneWidget);
+    expect(find.text('Pinned'), findsOneWidget);
     await tester.tap(find.byType(PopupMenuButton<String>).first);
     await tester.pumpAndSettle();
     expect(find.text('Unpin'), findsOneWidget);

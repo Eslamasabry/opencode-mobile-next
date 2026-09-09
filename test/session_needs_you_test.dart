@@ -139,7 +139,7 @@ void main() {
     expect(find.textContaining('Working'), findsNothing);
     // The section says "Needs you"; the row says what it needs.
     expect(find.byKey(const ValueKey('workspace-needs-you')), findsOneWidget);
-    expect(find.text('ACTIVE SESSIONS'), findsNothing);
+    expect(find.text('Active sessions'), findsNothing);
     final subtitle = find.textContaining('Permission needed');
     expect(subtitle, findsOneWidget);
     final theme = Theme.of(tester.element(subtitle));

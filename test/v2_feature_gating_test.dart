@@ -437,8 +437,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('LANGUAGE SERVICES'), findsOneWidget);
-      expect(find.text('FORMATTERS'), findsOneWidget);
+      expect(find.text('Language services'), findsOneWidget);
+      expect(find.text('Formatters'), findsOneWidget);
       expect(find.text('Dart analysis server'), findsOneWidget);
       expect(
         find.byKey(const ValueKey('initialize-git-repository')),
@@ -462,8 +462,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('LANGUAGE SERVICES'), findsNothing);
-      expect(find.text('FORMATTERS'), findsNothing);
+      expect(find.text('Language services'), findsNothing);
+      expect(find.text('Formatters'), findsNothing);
       // A hidden section spends no request.
       expect(repository.languageServiceCalls, 0);
       expect(repository.formatterCalls, 0);

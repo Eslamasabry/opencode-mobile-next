@@ -329,10 +329,10 @@ void main() {
           expect(find.textContaining('Answer needed'), findsOneWidget);
 
           // Section order top to bottom.
-          final needsYou = _top(tester, find.text('NEEDS YOU'));
-          final pinned = _top(tester, find.text('PINNED'));
-          final active = _top(tester, find.text('ACTIVE SESSIONS'));
-          final recent = _top(tester, find.text('RECENT SESSIONS'));
+          final needsYou = _top(tester, find.text('Needs you'));
+          final pinned = _top(tester, find.text('Pinned'));
+          final active = _top(tester, find.text('Active sessions'));
+          final recent = _top(tester, find.text('Recent sessions'));
           expect(needsYou, lessThan(pinned));
           expect(pinned, lessThan(active));
           expect(active, lessThan(recent));
@@ -451,14 +451,14 @@ void main() {
     );
     await _pumpFrames(tester);
     expect(find.byKey(const ValueKey('workspace-needs-you')), findsOneWidget);
-    expect(find.text('ACTIVE SESSIONS'), findsOneWidget); // busy-working
+    expect(find.text('Active sessions'), findsOneWidget); // busy-working
     expect(
       _top(tester, _row('pinned-blocked')),
-      lessThan(_top(tester, find.text('PINNED'))),
+      lessThan(_top(tester, find.text('Pinned'))),
     );
     expect(
       _top(tester, _row('busy-blocked')),
-      lessThan(_top(tester, find.text('PINNED'))),
+      lessThan(_top(tester, find.text('Pinned'))),
     );
     // The pin is still a pin: its menu offers Unpin, not Pin.
     await tester.tap(
@@ -488,8 +488,8 @@ void main() {
     expect(_row('pinned-blocked'), findsOneWidget);
     expect(_row('busy-blocked'), findsOneWidget);
     // Back under Pinned, first by recency among pins, as before.
-    final pinnedLabel = _top(tester, find.text('PINNED'));
-    final activeLabel = _top(tester, find.text('ACTIVE SESSIONS'));
+    final pinnedLabel = _top(tester, find.text('Pinned'));
+    final activeLabel = _top(tester, find.text('Active sessions'));
     expect(_top(tester, _row('pinned-blocked')), greaterThan(pinnedLabel));
     expect(
       _top(tester, _row('pinned-blocked')),

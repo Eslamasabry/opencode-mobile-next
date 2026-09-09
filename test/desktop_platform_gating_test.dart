@@ -225,7 +225,7 @@ void main() {
       // The remote-server instructions, the only path a desktop user has,
       // are still there and no longer numbered as one of two.
       expect(find.text('Paste the code in this app'), findsOneWidget);
-      expect(find.text('OLDER SERVERS WITHOUT PAIRING'), findsOneWidget);
+      expect(find.text('Older servers without pairing'), findsOneWidget);
       expect(
         find.text(
           lookupAppLocalizations(const Locale('en')).platformSecureStorageGuide,

@@ -152,10 +152,10 @@ void main() {
     await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
     await tester.pump();
 
-    expect(find.text('Needs attention'.toUpperCase()), findsOneWidget);
-    expect(find.text('Running'.toUpperCase()), findsOneWidget);
+    expect(find.text('Needs attention'), findsOneWidget);
+    expect(find.text('Running'), findsOneWidget);
     // Activity is a pure inbox: idle sessions belong to Workspace.
-    expect(find.text('Recently completed'.toUpperCase()), findsNothing);
+    expect(find.text('Recently completed'), findsNothing);
     // Permissions and questions are resolvable rows, not links.
     expect(find.text('Edit a file'), findsOneWidget);
     expect(find.text('Direction'), findsOneWidget);
@@ -292,7 +292,7 @@ void main() {
     await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
     await tester.pump();
 
-    expect(find.text('Needs attention'.toUpperCase()), findsNothing);
+    expect(find.text('Needs attention'), findsNothing);
     expect(find.text('Nothing needs attention'), findsNothing);
     expect(
       find.byKey(const ValueKey('activity-running-ses_run')),

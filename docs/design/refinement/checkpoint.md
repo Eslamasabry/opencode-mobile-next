@@ -2,7 +2,7 @@
 
 The maintainer requested a checkpoint build if the full release was not ready. This checkpoint includes the integrated page refinements, Phosphor actions and launcher identity, shared typography/surfaces, and real bounded frosted navigation with an accessible opaque fallback.
 
-Verified locally: full-app analyzer clean; 50 combined icon/theme/navigation/model checks; 52 combined capture cases; eight actual-font theme goldens; page-slice focused tests and glass reachability/contrast tests; SDK analyzer clean and 47 serial SDK tests. The full recursive serial suite is running on source candidate `36fc9f1`; no complete pass is claimed yet.
+Verified locally: full-app analyzer clean; 50 combined icon/theme/navigation/model checks; 52 combined capture cases; eight actual-font theme goldens; page-slice focused tests and glass reachability/contrast tests; SDK analyzer clean and 47 serial SDK tests. The first final-suite chunk found a stale uppercase Activity heading assertion after the shared sentence-case change. Related section-heading finders were corrected; affected checks and the complete recursive gate must pass on the updated candidate. No complete final-suite pass is claimed yet.
 
 Local native build is blocked: first attempt exhausted Storage during native library merging; the retry using a task-local Gradle cache failed because compiler-generated recorded_uses.json was missing. Release code generation and icon tree-shaking alone are not an APK build pass. Preserve the native quality workflow as a gate.
 

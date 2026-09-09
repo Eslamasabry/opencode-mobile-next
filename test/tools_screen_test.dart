@@ -183,7 +183,7 @@ void main() {
     await tester.ensureVisible(find.byKey(const ValueKey('coding-tool-read')));
     await tester.tap(find.byKey(const ValueKey('coding-tool-read')));
     await tester.pumpAndSettle();
-    expect(find.text('PARAMETER SCHEMA'), findsOneWidget);
+    expect(find.text('Parameter schema'), findsOneWidget);
     expect(find.textContaining('"filePath": {'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
