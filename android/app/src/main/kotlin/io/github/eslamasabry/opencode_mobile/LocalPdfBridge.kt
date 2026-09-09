@@ -100,6 +100,12 @@ class LocalPdfBridge(private val context: Context, messenger: BinaryMessenger) {
     }
 
     private fun bind(request: Request) {
+        // Keep the API guard at the asynchronous binding boundary as well as
+        // the channel entry point so every caller preserves the OS requirement.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            finish(request, error = "unavailable")
+            return
+        }
         val reply = Messenger(Handler(Looper.getMainLooper()) { message ->
             if (!request.finished) {
                 val data = message.data
