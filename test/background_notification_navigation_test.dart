@@ -208,6 +208,9 @@ void main() {
     final chat = tester.widget<ChatScreen>(find.byType(ChatScreen));
     expect(chat.sessionID, 'session-1');
     expect(find.text('Edit a file'), findsOneWidget);
+    expect(find.text('Allow once'), findsNothing);
+    await tester.tap(find.byKey(const Key('permission-card-review')));
+    await tester.pumpAndSettle();
     expect(find.text('Allow once'), findsOneWidget);
   });
 
