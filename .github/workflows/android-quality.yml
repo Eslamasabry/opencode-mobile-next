@@ -3,6 +3,7 @@
 # key instead. Neither certificate is the production release identity.
 
 name: Android quality gate
+run-name: ${{ inputs.apk_only && 'Android APK only' || 'Android quality gate' }} · ${{ github.ref_name }}
 
 on:
   pull_request:
@@ -12,6 +13,10 @@ on:
       - dev
   workflow_dispatch:
     inputs:
+      apk_only:
+        description: Build a signed checkpoint APK without running verification gates
+        type: boolean
+        default: false
       native_pdf_proof:
         description: Build an additional synthetic local-PDF proof APK for an isolated QA device
         type: boolean
@@ -54,11 +59,13 @@ jobs:
         run: flutter pub get
 
       - name: Set up Node for the optional quota collector tests
+        if: ${{ !inputs.apk_only }}
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: "24.19.0"
 
       - name: Test optional quota collector with synthetic inputs
+        if: ${{ !inputs.apk_only }}
         run: node --test tool/quota/collector.test.mjs
 
       - name: Generate ignored Gradle wrapper
@@ -69,9 +76,11 @@ jobs:
           --gradle-distribution-sha256-sum a3c4ba4aca8f0075688b9c5b18939fd28e8cb4357c227da5c1d9f38343791439
 
       - name: Resolve generated SDK dependencies
+        if: ${{ !inputs.apk_only }}
         run: dart pub get --directory packages/opencode_sdk --enforce-lockfile
 
       - name: Verify generated OpenCode SDK integrity
+        if: ${{ !inputs.apk_only }}
         run: |
           dart run tool/sdk/verify_contract.dart \
             contracts/opencode-openapi-f12e14cf.json \
@@ -93,17 +102,21 @@ jobs:
             contracts/opencode-sdk-matrix.md
 
       - name: Test generated OpenCode SDK
+        if: ${{ !inputs.apk_only }}
         working-directory: packages/opencode_sdk
         run: dart test
 
       - name: Analyze generated OpenCode SDK
+        if: ${{ !inputs.apk_only }}
         working-directory: packages/opencode_sdk
         run: dart analyze
 
       - name: Analyze
+        if: ${{ !inputs.apk_only }}
         run: flutter analyze
 
       - name: Test
+        if: ${{ !inputs.apk_only }}
         # Chunked into thirds so one hung invocation cannot consume the whole
         # job timeout; each chunk keeps the repo's serial --concurrency=1.
         run: |
@@ -119,6 +132,7 @@ jobs:
           done
 
       - name: Test theme goldens on Linux
+        if: ${{ !inputs.apk_only }}
         run: flutter test --concurrency=1 test/goldens
 
       - name: Configure CI signing identity
@@ -162,6 +176,7 @@ jobs:
           chmod 600 android/key.properties
 
       - name: Run Android release lint
+        if: ${{ !inputs.apk_only }}
         run: ./android/gradlew -p android :app:lintRelease --no-daemon
 
       - name: Compile test-signed release APK
