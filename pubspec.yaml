@@ -76,7 +76,7 @@ dependencies:
   # painted by our own CustomPainter (lib/ui/widgets/session_handoff_sheets.dart).
   # Chosen over qr_flutter, which wraps this same encoder in widgets we do not
   # need. mobile_scanner only decodes, so nothing in the tree could encode.
-  qr: 3.0.2
+  qr: 4.0.0
   record: 7.1.1
   scrollable_positioned_list: 0.3.8
   sherpa_onnx: 1.13.7
