@@ -41,7 +41,7 @@ dependencies:
   # deprecated algorithms. Installs that skipped 1.0.31 entirely lose stored
   # server credentials on upgrade and must pair again: acceptable for the
   # alpha line, and called out in the release notes.
-  flutter_secure_storage: 11.0.0
+  flutter_secure_storage: 11.2.0
   crypto: 3.0.7
   image_picker: 1.2.3
   # Scanning the QR that `opencode2 pair` prints. Pinned exactly, because it
@@ -67,7 +67,7 @@ dependencies:
   #    `platformCapabilities.supportsQrPairing` (Android only) and desktop
   #    never constructs a controller — but the Linux bundle does resolve a
   #    package it cannot use, exactly as record and file_picker already do.
-  mobile_scanner: 7.4.0
+  mobile_scanner: 7.4.2
   opencode_sdk:
     path: packages/opencode_sdk
   path_provider: 2.1.6
@@ -79,7 +79,7 @@ dependencies:
   qr: 3.0.2
   record: 7.1.1
   scrollable_positioned_list: 0.3.8
-  sherpa_onnx: 1.13.7
+  sherpa_onnx: 1.13.8
   shared_preferences: ^2.3.3
   shorebird_code_push: 2.0.7
   url_launcher: ^6.3.1
