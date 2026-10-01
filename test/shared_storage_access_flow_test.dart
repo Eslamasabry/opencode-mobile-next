@@ -6,6 +6,7 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/platform/storage_access.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/state/shared_project_roots.dart';
 import 'package:opencode_mobile/state/shared_storage_gate.dart';
 import 'package:opencode_mobile/ui/screens/shared_storage_access_flow.dart';
 
@@ -36,8 +37,9 @@ void main() {
   late bool grantOnOpen;
   late SharedStorageOutcome? outcome;
 
-  setUp(() {
+  setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await SharedPreferences.getInstance();
     debugPlatformCapabilities = const PlatformCapabilities(
       platform: TargetPlatform.android,
       isWeb: false,
@@ -52,6 +54,7 @@ void main() {
       if (grantOnOpen) access = StorageAccess.granted;
     };
     SharedStorageGate.termuxStorageOverride = () async => false;
+    SharedStorageAccessFlow.confinedRunningOverride = (_) async => false;
   });
 
   tearDown(() {
@@ -59,6 +62,9 @@ void main() {
     StorageAccessBridge.statusOverride = null;
     StorageAccessBridge.openOverride = null;
     SharedStorageGate.termuxStorageOverride = null;
+    SharedStorageAccessFlow.confinedRunningOverride = null;
+    SharedStorageAccessFlow.restartOverride = null;
+    SharedProjectRoots.pushOverride = null;
   });
 
   Future<void> pump(
@@ -66,6 +72,7 @@ void main() {
     ServerProfile profile,
     String path, {
     bool appSpace = false,
+    bool work = false,
   }) async {
     tester.view
       ..devicePixelRatio = 1
@@ -83,6 +90,7 @@ void main() {
                   profile,
                   path,
                   offerAppSpace: appSpace,
+                  workRunning: work,
                 ),
             child: const Text('go'),
           ),
@@ -169,5 +177,67 @@ void main() {
     await pump(tester, _termux, '/sdcard/CodeAnything');
     expect(find.text('Allow Termux storage?'), findsNothing);
     expect(outcome, SharedStorageOutcome.proceed);
+  });
+
+  group('a new folder while AI Team is on', () {
+    late int restarts;
+    late bool confined;
+    setUp(() {
+      access = StorageAccess.granted;
+      restarts = 0;
+      confined = true;
+      SharedProjectRoots.pushOverride = (_) async {};
+      SharedStorageAccessFlow.confinedRunningOverride = (_) async => confined;
+      SharedStorageAccessFlow.restartOverride = (_) async {
+        restarts++;
+        return true;
+      };
+    });
+
+    testWidgets('asks, restarts, then opens', (tester) async {
+      await pump(tester, _inApp, '/sdcard/CodeAnything');
+      expect(find.text('Restart to open folder?'), findsOneWidget);
+      expect(find.textContaining('pause and carry on'), findsOneWidget);
+      expect(restarts, 0);
+      await tester.tap(find.text('Restart and open'));
+      await tester.pumpAndSettle();
+      expect(restarts, 1);
+      expect(outcome, SharedStorageOutcome.proceed);
+      // Remembered: the same folder never asks again.
+      await pump(tester, _inApp, '/storage/emulated/0/CodeAnything');
+      expect(find.text('Restart and open'), findsNothing);
+      expect(restarts, 1);
+      expect(outcome, SharedStorageOutcome.proceed);
+    });
+
+    testWidgets('says so when work is running, and Not now opens nothing', (
+      tester,
+    ) async {
+      await pump(tester, _inApp, '/sdcard/Busy', work: true);
+      expect(find.textContaining('running right now'), findsOneWidget);
+      await tester.tap(find.text('Not now'));
+      await tester.pumpAndSettle();
+      expect(restarts, 0);
+      expect(outcome, SharedStorageOutcome.declined);
+    });
+
+    testWidgets('a failed restart does not open the folder', (tester) async {
+      SharedStorageAccessFlow.restartOverride = (_) async => false;
+      await pump(tester, _inApp, '/sdcard/Fail');
+      await tester.tap(find.text('Restart and open'));
+      await tester.pumpAndSettle();
+      expect(find.text('Restart did not finish'), findsOneWidget);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+      expect(outcome, SharedStorageOutcome.declined);
+    });
+
+    testWidgets('not confined: no sheet', (tester) async {
+      confined = false;
+      await pump(tester, _inApp, '/sdcard/Plain');
+      expect(find.text('Restart and open'), findsNothing);
+      expect(restarts, 0);
+      expect(outcome, SharedStorageOutcome.proceed);
+    });
   });
 }

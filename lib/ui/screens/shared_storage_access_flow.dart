@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../builtin/builtin_server.dart' show looksLikeInAppServer;
+import '../../builtin/builtin_linux.dart';
+import '../../builtin/builtin_server.dart'
+    show looksLikeInAppServer, startBuiltinServer;
 import '../../domain/shared_storage_path.dart';
 import '../../platform/storage_access.dart';
 import '../../state/shared_project_roots.dart';
@@ -41,17 +43,109 @@ class SharedStorageAccessFlow {
     ServerProfile? profile,
     String path, {
     bool offerAppSpace = false,
+    bool workRunning = false,
   }) async {
     final block = await SharedStorageGate.blockFor(profile, path);
-    if (block == SharedStorageBlock.none || !context.mounted) {
-      unawaited(_remember(profile, path));
-      return SharedStorageOutcome.proceed;
+    var outcome = SharedStorageOutcome.proceed;
+    if (block != SharedStorageBlock.none && context.mounted) {
+      outcome = await resolve(context, block, offerAppSpace: offerAppSpace);
     }
-    final outcome = await resolve(context, block, offerAppSpace: offerAppSpace);
-    if (outcome == SharedStorageOutcome.proceed) {
-      unawaited(_remember(profile, path));
+    if (outcome != SharedStorageOutcome.proceed || !context.mounted) {
+      return outcome;
     }
-    return outcome;
+    if (profile != null && await _needsRestart(profile, path)) {
+      if (!context.mounted) return SharedStorageOutcome.declined;
+      return _restartThenOpen(context, profile, path, workRunning);
+    }
+    unawaited(_remember(profile, path));
+    return SharedStorageOutcome.proceed;
+  }
+
+  /// Tests answer for the native side: is the in-app server running with AI
+  /// Team's confinement on?
+  @visibleForTesting
+  static Future<bool> Function(ServerProfile profile)? confinedRunningOverride;
+
+  /// Tests stand in for the real restart (true when the server came back).
+  @visibleForTesting
+  static Future<bool> Function(ServerProfile profile)? restartOverride;
+
+  /// A folder not opened before, on the in-app server that is running with
+  /// AI Team's confinement: its binds are fixed at start, so the server has
+  /// to restart before the folder shows anything.
+  static Future<bool> _needsRestart(ServerProfile profile, String path) async {
+    if (!looksLikeInAppServer(profile) || !isSharedStoragePath(path)) {
+      return false;
+    }
+    if (sharedProjectRoot(path) == null) return false;
+    if (await SharedProjectRoots.isKnown(profile.id, path)) return false;
+    final override = confinedRunningOverride;
+    if (override != null) return override(profile);
+    try {
+      final linux = BuiltinLinux();
+      final engine = await linux.phoneEngineStatus(profile.id);
+      if (!engine.protectionRequired) return false;
+      return (await linux.status()).serverRunning;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<SharedStorageOutcome> _restartThenOpen(
+    BuildContext context,
+    ServerProfile profile,
+    String path,
+    bool workRunning,
+  ) async {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final restart = await showKitConfirm(
+      context,
+      title: l10n.storageRestartTitle,
+      body: l10n.storageRestartBody,
+      consequences: [
+        workRunning ? l10n.storageRestartBusy : l10n.storageRestartPause,
+      ],
+      confirmLabel: l10n.storageRestartConfirm,
+      cancelLabel: l10n.storageAccessNotNow,
+      icon: AppIconography.folderOpen,
+      confirmKey: const ValueKey('storage-restart-confirm'),
+    );
+    if (!restart || !context.mounted) return SharedStorageOutcome.declined;
+    // Saved first: the restart rebuilds the binds from it.
+    await SharedProjectRoots.remember(profile.id, path);
+    final bool back;
+    final override = restartOverride;
+    if (override != null) {
+      back = await override(profile);
+    } else {
+      try {
+        back =
+            await startBuiltinServer(linux: BuiltinLinux(), profile: profile) ==
+            null;
+      } catch (_) {
+        return context.mounted
+            ? _restartFailed(context, l10n)
+            : SharedStorageOutcome.declined;
+      }
+    }
+    if (back) return SharedStorageOutcome.proceed;
+    return context.mounted
+        ? _restartFailed(context, l10n)
+        : SharedStorageOutcome.declined;
+  }
+
+  static Future<SharedStorageOutcome> _restartFailed(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) async {
+    await showKitAlert(
+      context,
+      title: l10n.storageRestartFailedTitle,
+      body: l10n.storageRestartFailedBody,
+      icon: AppIconography.folderOpen,
+      alertKey: const ValueKey('storage-restart-failed'),
+    );
+    return SharedStorageOutcome.declined;
   }
 
   /// Once AI Team is on, the in-app Linux sees shared storage only through the

@@ -140,6 +140,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       context,
       widget.controller.profile,
       project.directory,
+      workRunning: widget.controller.busySessions.isNotEmpty,
     );
     if (!mounted || access != SharedStorageOutcome.proceed) return;
     setState(() {

@@ -4948,5 +4948,12 @@
   "storageTermuxStillBody": "في Termux، اسمح بالتخزين عندما يسأل أندرويد (الأمر هو termux-setup-storage)، ثم افتح المجلد مرة أخرى.",
   "filesAccessNeededTitle": "الملفات مخفية",
   "filesAccessNeededBody": "هذا المجلد في التخزين المشترك بهاتفك ولا يستطيع التطبيق قراءة معظم ملفاته بعد. تظهر العناصر المخفية فقط.",
-  "filesAccessNeededTermuxBody": "هذا المجلد في التخزين المشترك بهاتفك ولا يستطيع Termux قراءة معظم ملفاته بعد. تظهر العناصر المخفية فقط."
+  "filesAccessNeededTermuxBody": "هذا المجلد في التخزين المشترك بهاتفك ولا يستطيع Termux قراءة معظم ملفاته بعد. تظهر العناصر المخفية فقط.",
+  "storageRestartTitle": "إعادة التشغيل لفتح المجلد؟",
+  "storageRestartBody": "يجب إعادة تشغيل OpenCode على هذا الهاتف قبل أن يرى هذا المجلد. يستغرق ذلك نحو 30 ثانية.",
+  "storageRestartPause": "الردود الجارية وعمل فريق الذكاء الاصطناعي يتوقفان مؤقتًا ثم يتابعان.",
+  "storageRestartBusy": "هناك رد أو مهمة لفريق الذكاء الاصطناعي قيد التنفيذ الآن. ستتوقف مؤقتًا أثناء إعادة التشغيل.",
+  "storageRestartConfirm": "أعد التشغيل وافتح",
+  "storageRestartFailedTitle": "لم تكتمل إعادة التشغيل",
+  "storageRestartFailedBody": "لم يُفتح المجلد. حاول مرة أخرى، أو شغّل OpenCode من هذا الهاتف."
 }

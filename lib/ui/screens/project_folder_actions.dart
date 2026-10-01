@@ -416,6 +416,7 @@ class ProjectFolderActions {
     controller.profile,
     path,
     offerAppSpace: canCreate(controller),
+    workRunning: controller.busySessions.isNotEmpty,
   );
 
   /// A failure with nowhere else to be said: the flow has left its

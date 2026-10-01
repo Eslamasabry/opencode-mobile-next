@@ -22,6 +22,20 @@ class SharedProjectRoots {
 
   static String keyFor(String profileId) => '$prefix$profileId';
 
+  /// Whether [path]'s folder was already opened by [profileId], so the
+  /// in-app Linux already binds it. Unknown counts as known: never restart
+  /// on a failed read.
+  static Future<bool> isKnown(String profileId, String path) async {
+    final root = sharedProjectRoot(path);
+    if (root == null) return true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getStringList(keyFor(profileId))?.contains(root) ?? false;
+    } catch (_) {
+      return true;
+    }
+  }
+
   /// Remembers [path] for [profileId] and refreshes the native copy.
   static Future<void> remember(String profileId, String path) async {
     final root = sharedProjectRoot(path);

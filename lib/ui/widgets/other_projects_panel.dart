@@ -162,6 +162,7 @@ class _OtherProjectsPanelState extends State<OtherProjectsPanel> {
       context,
       _conn.profile,
       directory,
+      workRunning: _conn.busySessions.isNotEmpty,
     );
     if (!mounted || access != SharedStorageOutcome.proceed) return;
     setState(() => _switching = directory);

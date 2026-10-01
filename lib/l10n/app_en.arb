@@ -31218,5 +31218,19 @@
   "filesAccessNeededBody": "This folder is in your phone’s shared storage and the app cannot read most of its files yet. Only hidden items show.",
   "@filesAccessNeededBody": {"description": "Files: body for the missing-access notice."},
   "filesAccessNeededTermuxBody": "This folder is in your phone’s shared storage and Termux cannot read most of its files yet. Only hidden items show.",
-  "@filesAccessNeededTermuxBody": {"description": "Files: body for the missing-access notice on a Termux server."}
+  "@filesAccessNeededTermuxBody": {"description": "Files: body for the missing-access notice on a Termux server."},
+  "storageRestartTitle": "Restart to open folder?",
+  "@storageRestartTitle": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."},
+  "storageRestartBody": "OpenCode on this phone has to restart before it can see this folder. This takes about 30 seconds.",
+  "@storageRestartBody": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."},
+  "storageRestartPause": "Running replies and AI Team work pause and carry on afterwards.",
+  "@storageRestartPause": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."},
+  "storageRestartBusy": "A reply or AI Team task is running right now. It will pause while OpenCode restarts.",
+  "@storageRestartBusy": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."},
+  "storageRestartConfirm": "Restart and open",
+  "@storageRestartConfirm": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."},
+  "storageRestartFailedTitle": "Restart did not finish",
+  "@storageRestartFailedTitle": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."},
+  "storageRestartFailedBody": "The folder was not opened. Try again, or start OpenCode from This phone.",
+  "@storageRestartFailedBody": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."}
 }
