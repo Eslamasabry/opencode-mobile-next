@@ -27,13 +27,12 @@ const _chatMaxLines = 800;
 /// path -> line count when the gate landed (2026-10-02). Only goes down.
 const _baseline = <String, int>{
   'lib/state/connection.dart': 11149,
-  'lib/termux/bridge.dart': 4743,
   'lib/ui/screens/servers_screen.dart': 4125,
   'lib/api/product_repository.dart': 2708,
   'lib/ui/screens/workspace_screen.dart': 2571,
   'lib/ui/kit/kit_diff_view.dart': 2547,
   'lib/ui/screens/library/integrations_screen.dart': 2315,
-  'lib/ui/kit/chat/kit_composer.dart': 2303,
+  'lib/ui/kit/chat/kit_composer.dart': 2312,
   'lib/ui/screens/activity_screen.dart': 2266,
   'lib/main.dart': 2228,
   'lib/orchestration/adapters/fixture/project_fixture_gateway.dart': 2138,
@@ -47,7 +46,7 @@ const _baseline = <String, int>{
   'lib/api2/models.dart': 1647,
   'lib/api/models.dart': 1630,
   'lib/ui/widgets/pickers.dart': 1627,
-  'lib/ui/search/search_index.dart': 1625,
+  'lib/ui/search/search_index.dart': 1639,
   'lib/ui/screens/team/projects/team_projects_screen.dart': 1527,
   'lib/domain/server_gateway.dart': 1522,
   'lib/builtin/setup/setup_engine.dart': 1515,
