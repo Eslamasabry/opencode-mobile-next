@@ -198,6 +198,13 @@ part 'chat/chat_composer_region.dart';
 part 'chat/chat_page.dart';
 part 'chat/chat_status_line.dart';
 part 'chat/chat_body.dart';
+part 'chat/transcript_turns.dart';
+part 'chat/transcript_rows.dart';
+part 'chat/pending_sends_strip.dart';
+part 'chat/team_conversation_parts.dart';
+part 'chat/team_agent_conversation.dart';
+part 'chat/team_conversation_actions.dart';
+part 'chat/composer_tools.dart';
 
 AppLocalizations _chatL10n(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
