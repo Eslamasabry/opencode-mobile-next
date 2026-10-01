@@ -110,6 +110,8 @@ part 'connection/team.dart';
 part 'connection/phone_chat.dart';
 part 'connection/forms_inbox.dart';
 part 'connection/events.dart';
+part 'connection/session_events.dart';
+part 'connection/request_events.dart';
 part 'connection/alerts.dart';
 part 'connection/session_notes.dart';
 part 'connection/read_state.dart';
