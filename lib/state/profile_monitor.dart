@@ -937,6 +937,7 @@ class ProfileMonitor extends ChangeNotifier {
           ? profile.requiresCodexTokenReentry ||
                 validatePaseoServerUrl(profile.baseUrl) != null
           : profile.requiresPasswordReentry ||
+                profile.cleartextUnconfirmed ||
                 validateServerProfileUrl(
                       profile.baseUrl,
                       username: profile.username,

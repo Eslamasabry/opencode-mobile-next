@@ -67,8 +67,18 @@ OpenCode 1 servers have no `pair` command, so the manual path below remains
 for them, and for anyone who prefers it.
 
 Pairing supplies credentials, not a route. The app refuses plain HTTP to
-anything but the phone's own loopback, so the server stays on `127.0.0.1`
-and you bring the connection to the phone through a tunnel that ends at
+public addresses and ordinary host names. Plain HTTP is accepted to the
+phone's own loopback, and to a private network address (10/8, 172.16/12,
+192.168/16, 169.254/16, IPv6 `fc00::/7` and `fe80::/10`, `*.local`) only after
+an inline warning that the password and conversation travel unencrypted on
+that network and an explicit "Use it anyway", recorded per server as
+`oc.cleartextOk.<profileId>` (the confirmed origin; a changed address asks
+again, and profile deletion removes it). A pairing code or QR carrying such an
+address goes through the same confirm before anything is sent. Codex and
+Paseo stay `wss://`-only off this device (Paseo also allows Tailscale), and
+quota reads are off for a plain-HTTP server. A client for plain HTTP never
+follows redirects. The safest layout still keeps the server on `127.0.0.1`
+and brings the connection to the phone through a tunnel that ends at
 `127.0.0.1` there too:
 
 - **USB / adb (simplest)** — with the phone plugged in and USB debugging on,
@@ -80,8 +90,9 @@ and you bring the connection to the phone through a tunnel that ends at
   to `http://127.0.0.1:4096`.
 - **HTTPS** — Tailscale Serve or another reverse proxy that terminates TLS
   in front of the server; connect to the `https://` address. Plain
-  `http://<hostname>:4096` across a network is rejected by the app, because
-  the password would cross it in clear text. Binding the server itself to a
+  `http://<hostname>:4096` across a network is rejected by the app (a private
+  network address is allowed only after the warning above), because the
+  password would cross it in clear text. Binding the server itself to a
   network interface is an advanced path, requires
   `OPENCODE_ALLOW_REMOTE_BIND=1`, and should only be taken behind TLS.
 - **On-device (Termux)** — tap **On-device (Termux)** on the Servers

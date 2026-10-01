@@ -6738,7 +6738,7 @@
   "@e7SetupServerPassword": {
     "description": "Setup journey: server password."
   },
-  "e7SetupHttpsHint": "https:// for other computers; http:// only on this device.",
+  "e7SetupHttpsHint": "https:// for other computers; http:// only on this device or a private network.",
   "@e7SetupHttpsHint": {
     "description": "Setup journey: https hint."
   },
@@ -7572,7 +7572,7 @@
   "@e7SetupEnterUrl": {
     "description": "Setup journey: enter url."
   },
-  "e7SetupIncludeScheme": "Include https://. Use http:// only for localhost, 127.0.0.1, or [::1].",
+  "e7SetupIncludeScheme": "Include https://. Plain http:// works only on this device or a private network address.",
   "@e7SetupIncludeScheme": {
     "description": "Setup journey: include scheme."
   },
@@ -7604,7 +7604,7 @@
   "@e7SetupRequireHttps": {
     "description": "Setup journey: require https."
   },
-  "e7SetupLocalHttp": "An http:// address only works for a server on this phone. For another computer, pair with a code, use its https:// address, or connect with Tailscale.",
+  "e7SetupLocalHttp": "An http:// address works only for this phone or a private network address such as 192.168.x.x. For anything else, pair with a code, use its https:// address, or connect with Tailscale.",
   "@e7SetupLocalHttp": {
     "description": "Setup journey: local http."
   },
@@ -31170,5 +31170,17 @@
   "teamProjectInterrupted": "Interrupted, ready to resume",
   "@teamProjectInterrupted": {"description": "Project or task status word after the app closed while work was running"},
   "teamProjectEditorContextFilesHelpReal": "Optional. One path per line. The team reads these before it plans.",
-  "@teamProjectEditorContextFilesHelpReal": {"description": "Help under the context files field for a real team (not the demo)"}
+  "@teamProjectEditorContextFilesHelpReal": {"description": "Help under the context files field for a real team (not the demo)"},
+  "addServerCleartextWarning": "This address uses plain HTTP. On this network, others could read your password and conversations. Use Tailscale or HTTPS if you can.",
+  "@addServerCleartextWarning": {
+    "description": "Add server: warning under a plain http:// address on a private network (192.168.x.x, 10.x.x.x, .local). Must be confirmed before saving or checking."
+  },
+  "addServerCleartextConfirm": "Use it anyway",
+  "@addServerCleartextConfirm": {
+    "description": "Add server: action that confirms plain HTTP to a private network address; remembered for that server."
+  },
+  "addServerCleartextConfirmed": "Plain HTTP is on for this address. Anyone on this network could read what you send.",
+  "@addServerCleartextConfirmed": {
+    "description": "Add server: line shown after the person confirmed plain HTTP for the address."
+  }
 }

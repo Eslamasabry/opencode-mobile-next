@@ -1,5 +1,9 @@
 import '../state/profiles.dart'
-    show isLoopbackHost, normalizeServerProfileUrl, validateServerProfileUrl;
+    show
+        isLoopbackHost,
+        normalizeServerProfileUrl,
+        serverUrlNeedsCleartextConfirmation,
+        validateServerProfileUrl;
 
 /// Synchronous, local-only verdict. Never retains or returns input or errors.
 enum ConnectionAdvice {
@@ -10,6 +14,7 @@ enum ConnectionAdvice {
   path,
   unsupportedScheme,
   remoteHttp,
+  privateHttp,
   https,
   loopback,
 }
@@ -26,8 +31,9 @@ ConnectionAdvice explainConnectionAddress(String input) {
     }
     // Only the shared validator can grant acceptance.
     if (rejection == null) {
-      return isLoopbackHost(uri.host)
-          ? ConnectionAdvice.loopback
+      if (isLoopbackHost(uri.host)) return ConnectionAdvice.loopback;
+      return serverUrlNeedsCleartextConfirmation(normalized)
+          ? ConnectionAdvice.privateHttp
           : ConnectionAdvice.https;
     }
     if (uri.userInfo.isNotEmpty) return ConnectionAdvice.credentials;

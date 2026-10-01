@@ -7155,7 +7155,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get e7SetupHttpsHint =>
-      'https:// for other computers; http:// only on this device.';
+      'https:// for other computers; http:// only on this device or a private network.';
 
   @override
   String get e7SetupObservedVersionSaveFailed =>
@@ -7800,7 +7800,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get e7SetupIncludeScheme =>
-      'Include https://. Use http:// only for localhost, 127.0.0.1, or [::1].';
+      'Include https://. Plain http:// works only on this device or a private network address.';
 
   @override
   String get e7SetupCompleteUrl =>
@@ -7832,7 +7832,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get e7SetupLocalHttp =>
-      'An http:// address only works for a server on this phone. For another computer, pair with a code, use its https:// address, or connect with Tailscale.';
+      'An http:// address works only for this phone or a private network address such as 192.168.x.x. For anything else, pair with a code, use its https:// address, or connect with Tailscale.';
 
   @override
   String get e7SetupRefused =>
@@ -26400,4 +26400,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get teamProjectEditorContextFilesHelpReal =>
       'Optional. One path per line. The team reads these before it plans.';
+
+  @override
+  String get addServerCleartextWarning =>
+      'This address uses plain HTTP. On this network, others could read your password and conversations. Use Tailscale or HTTPS if you can.';
+
+  @override
+  String get addServerCleartextConfirm => 'Use it anyway';
+
+  @override
+  String get addServerCleartextConfirmed =>
+      'Plain HTTP is on for this address. Anyone on this network could read what you send.';
 }

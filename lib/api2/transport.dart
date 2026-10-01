@@ -6,6 +6,7 @@ import 'dialect.dart';
 import 'http_keep_alive.dart' if (dart.library.io) 'http_keep_alive_io.dart';
 import '../diagnostics/perf_trace.dart';
 import '../ui/kit/kit_redact.dart';
+import '../domain/loopback_host.dart' show isCleartextRemoteBase;
 
 /// Transport layer for the OpenCode 2 server API (`/api/...`).
 ///
@@ -49,6 +50,8 @@ class Api2Transport {
         baseUrl: '${normalizeServerRoot(baseUrl)}/api',
         connectTimeout: connectTimeout,
         receiveTimeout: requestTimeout,
+        followRedirects: !isCleartextRemoteBase(baseUrl),
+        maxRedirects: isCleartextRemoteBase(baseUrl) ? 0 : 5,
         responseType: ResponseType.json,
         validateStatus: (s) => s != null && s >= 200 && s < 300,
       ),

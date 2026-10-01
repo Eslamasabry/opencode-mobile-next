@@ -2853,6 +2853,8 @@ class ConnectionController extends ChangeNotifier {
               : validateCodexServerUrl(profile.baseUrl) ??
                     validateCodexConnectionToken(profile.codexToken) ??
                     validateCodexProjectDirectory(profile.codexDirectory))
+        : profile.cleartextUnconfirmed
+        ? cleartextUnconfirmedMessage
         : validateServerProfileUrl(
             profile.baseUrl,
             username: profile.username,

@@ -24,7 +24,7 @@ import 'setup_audit_store.dart';
 import 'session_link_bindings.dart';
 
 export '../api/server_probe.dart' show ServerFlavor;
-export '../domain/loopback_host.dart' show isLoopbackHost;
+export '../domain/loopback_host.dart' show isLoopbackHost, isPrivateNetworkHost;
 export '../domain/orchestration_gateway.dart' show OrchestrationHostMode;
 
 /// A model (and variant) chosen for one session from inside its chat.
@@ -269,6 +269,18 @@ class ServerProfile {
   /// AI Team plugin settings; null means the plugin is off for this server.
   OrchestrationConfig? orchestration;
 
+  /// The cleartext origin the person confirmed for this profile
+  /// (`oc.cleartextOk.<profileId>`), mirrored here at runtime. Never part of
+  /// the profile JSON.
+  String? cleartextConfirmedOrigin;
+
+  /// True when this profile speaks plain HTTP to a private network address
+  /// and the person has not confirmed that for this exact address.
+  bool get cleartextUnconfirmed =>
+      !usesAgentSocket &&
+      serverUrlNeedsCleartextConfirmation(baseUrl) &&
+      cleartextConfirmedOrigin != cleartextOriginOf(baseUrl);
+
   ServerProfile({
     required this.id,
     required this.name,
@@ -399,8 +411,8 @@ String? validateServerProfileUrl(
   final raw = value.trim();
   if (raw.isEmpty) return 'Enter a server URL.';
   if (!raw.contains('://')) {
-    return 'Include https://. Use http:// only for localhost, 127.0.0.1, '
-        'or [::1].';
+    return 'Include https://. Plain http:// works only on this device or a '
+        'private network address.';
   }
   final uri = Uri.tryParse(raw);
   if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
@@ -422,14 +434,43 @@ String? validateServerProfileUrl(
   if (uri.path.isNotEmpty && uri.path != '/') {
     return 'Remove the path from the server URL. Enter only its origin.';
   }
-  if (uri.scheme == 'http' && !isLoopbackHost(uri.host)) {
+  if (uri.scheme == 'http' &&
+      !isLoopbackHost(uri.host) &&
+      !isPrivateNetworkHost(uri.host)) {
     if (username.trim().isNotEmpty || password.isNotEmpty) {
       return 'HTTPS is required outside this device. Basic credentials must never be sent over HTTP.';
     }
-    return 'HTTP is allowed only for localhost, 127.0.0.1, or [::1]. Use '
-        'HTTPS for LAN and remote servers.';
+    return 'HTTP is allowed only for localhost, 127.0.0.1, [::1], or a '
+        'private network address. Use HTTPS or Tailscale for other servers.';
   }
   return null;
+}
+
+/// What a connect says when a saved plain-HTTP server was never confirmed.
+const cleartextUnconfirmedMessage =
+    'This server uses plain HTTP on your network, and you have not confirmed '
+    'that yet. Edit the server and choose Use it anyway, or use HTTPS.';
+
+/// True when [url] is plain HTTP to a private network address: accepted by
+/// [validateServerProfileUrl], but only after the person has confirmed that
+/// the password and conversation travel unencrypted there. Loopback, and
+/// everything over HTTPS, never need it.
+bool serverUrlNeedsCleartextConfirmation(String url) {
+  final uri = Uri.tryParse(url.trim());
+  return uri != null &&
+      uri.scheme.toLowerCase() == 'http' &&
+      uri.host.isNotEmpty &&
+      !isLoopbackHost(uri.host) &&
+      isPrivateNetworkHost(uri.host);
+}
+
+/// The origin a cleartext confirmation is recorded against, so a changed
+/// address asks again. Null when [url] is not a usable URL.
+String? cleartextOriginOf(String url) {
+  final uri = Uri.tryParse(url.trim());
+  if (uri == null || uri.host.isEmpty) return null;
+  final host = uri.host.contains(':') ? '[${uri.host}]' : uri.host;
+  return '${uri.scheme.toLowerCase()}://${host.toLowerCase()}:${uri.port}';
 }
 
 /// Normalizes a bare Codex WebSocket authority without changing already
@@ -710,6 +751,11 @@ class _ProfileStoreChanges extends ChangeNotifier {
 class ProfileStore {
   static const _profilesKey = 'oc.profiles';
   static const _activeKey = 'oc.activeProfile';
+
+  /// The origin the person confirmed for plain HTTP to a private network
+  /// address, per profile: `oc.cleartextOk.<profileId>`. Named by the
+  /// `oc.<what>.<profileId>` rule so the deletion sweep removes it.
+  static const cleartextConfirmedKeyPrefix = 'oc.cleartextOk.';
   static const _passwordKey = 'pw.';
   static const _codexTokenKey = 'oc.codexToken.';
   static const teamEngineAuthKey = 'oc.teamEngineAuth.';
@@ -859,6 +905,11 @@ class ProfileStore {
     } catch (_) {
       _cache = [];
     }
+    for (final p in _cache) {
+      p.cleartextConfirmedOrigin = prefs.getString(
+        '$cleartextConfirmedKeyPrefix${p.id}',
+      );
+    }
     // Independent Keystore reads can overlap. Bound the fan-out so many
     // saved servers do not flood the platform channel. Await every secret
     // (and its redaction registration) before bootstrap may expose the shell.
@@ -979,6 +1030,7 @@ class ProfileStore {
       }
       rethrow;
     }
+    await _syncCleartextConfirmation(profile);
     profile.requiresPasswordReentry = false;
     profile.requiresCodexTokenReentry = false;
     profile.teamEngineAuth = teamEngineAuth;
@@ -993,6 +1045,32 @@ class ProfileStore {
       if (profile.id == profileId) profile.teamEngineAuth = '';
     }
     _changes.changed();
+  }
+
+  /// Records (or clears) the cleartext confirmation that goes with a saved
+  /// profile. A confirmation only stands for the exact origin it was given
+  /// for; a profile moved to another address, or to HTTPS, loses it. A
+  /// profile that carries none keeps what is stored, so an editor that
+  /// rebuilds the profile cannot erase a confirmation by accident.
+  Future<void> _syncCleartextConfirmation(ServerProfile profile) async {
+    final key = '$cleartextConfirmedKeyPrefix${profile.id}';
+    final origin = cleartextOriginOf(profile.baseUrl);
+    final needs =
+        !profile.usesAgentSocket &&
+        serverUrlNeedsCleartextConfirmation(profile.baseUrl);
+    final wanted = profile.cleartextConfirmedOrigin ?? prefs.getString(key);
+    if (!needs || wanted != origin) {
+      if (prefs.containsKey(key) && !await prefs.remove(key)) {
+        throw StateError('Could not save the server profile');
+      }
+      profile.cleartextConfirmedOrigin = null;
+      return;
+    }
+    if (prefs.getString(key) != wanted &&
+        !await prefs.setString(key, wanted!)) {
+      throw StateError('Could not save the server profile');
+    }
+    profile.cleartextConfirmedOrigin = wanted;
   }
 
   /// flutter_secure_storage reports a missing or locked keyring as a

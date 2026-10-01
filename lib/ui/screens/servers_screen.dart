@@ -1706,6 +1706,19 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   /// "Save anyway".
   bool _verdictFromSave = false;
 
+  /// The plain-HTTP origin the person confirmed ("Use it anyway"). It only
+  /// stands for that exact address: another one asks again. A saved server
+  /// starts with the confirmation it was saved with.
+  late String? _cleartextConfirmed = widget.existing?.cleartextConfirmedOrigin;
+
+  /// True when [url] is plain HTTP to a private network address the person
+  /// has not confirmed yet. Nothing is sent to it, and nothing is saved,
+  /// until they do.
+  bool _cleartextPending(String url) =>
+      !_isCodex &&
+      serverUrlNeedsCleartextConfirmation(url) &&
+      cleartextOriginOf(url) != _cleartextConfirmed;
+
   /// Save & connect is checking the connection before it stores anything.
   bool _checkingForSave = false;
 
@@ -1947,12 +1960,14 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
           : normalizeCodexServerUrl(_url.text);
       return _validateSocketFields(url) == null;
     }
+    final url = normalizeServerProfileUrl(_url.text);
     return validateServerProfileUrl(
-          normalizeServerProfileUrl(_url.text),
-          username: _user.text,
-          password: _password,
-        ) ==
-        null;
+              url,
+              username: _user.text,
+              password: _password,
+            ) ==
+            null &&
+        !_cleartextPending(url);
   }
 
   /// One test after the person pauses, never one per keystroke: each change
@@ -2030,6 +2045,15 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
         _testResult = null;
       });
       _focusField(_urlFocus);
+      return false;
+    }
+    if (_cleartextPending(url)) {
+      // The warning under the address field asks first; no request is made.
+      setState(() {
+        _error = null;
+        _testResult = null;
+      });
+      if (!auto) _revealVerdict();
       return false;
     }
     final generation = ++_probeGeneration;
@@ -2243,7 +2267,10 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
 
     final PairingSelection selection;
     try {
-      selection = await selectPairingUrl(payload);
+      selection = await selectPairingUrl(
+        payload,
+        confirmedCleartextOrigins: {?_cleartextConfirmed},
+      );
     } finally {
       payload.consume();
     }
@@ -2252,7 +2279,16 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     // Fill the fields either way. Even when nothing answered, the user now
     // has the address and credentials in front of them and can fix the tunnel
     // rather than re-copying everything by hand.
-    final chosen = selection.chosenUrl ?? normalizeServerProfileUrl(firstUrl);
+    //
+    // A private-network http:// address is held for confirmation before
+    // anything is sent: it fills the address, the warning appears under it,
+    // and "Use it anyway" runs the check with the pairing password.
+    final held = selection.outcomes
+        .where((o) => o.needsCleartextConfirm)
+        .map((o) => o.url)
+        .firstOrNull;
+    final chosen =
+        selection.chosenUrl ?? held ?? normalizeServerProfileUrl(firstUrl);
     _url.value = TextEditingValue(text: chosen);
     _urlLength = chosen.length;
     _user.text = username;
@@ -2272,7 +2308,12 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
       // many. Repeating the verdict here would be two widgets telling the
       // user the same thing.
       _testResult = selection.ok ? result : null;
-      if (selection.ok) {
+      if (!selection.ok && held != null) {
+        _pairingNotice = null;
+        _pairingFailure = null;
+        _manualForcedOpen = true;
+        _manualFold++;
+      } else if (selection.ok) {
         _pairingNotice = tried > 1
             ? lookupAppLocalizations(
                 Localizations.localeOf(context),
@@ -2614,6 +2655,10 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
       _focusField(_urlFocus);
       return;
     }
+    if (_cleartextPending(url)) {
+      _revealVerdict();
+      return;
+    }
     final uri = Uri.parse(url);
     url = uri.replace(scheme: uri.scheme.toLowerCase()).toString();
     // Cache what Test connection detected; the connection layer re-verifies
@@ -2654,6 +2699,9 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
           (endpointChanged ? null : widget.existing?.serverVersion),
       orchestration: _orchestration,
     );
+    if (serverUrlNeedsCleartextConfirmation(normalizedUrl)) {
+      profile.cleartextConfirmedOrigin = _cleartextConfirmed;
+    }
     FocusScope.of(context).unfocus();
     setState(() {
       _invalidateProbe();
@@ -2929,6 +2977,61 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     );
   }
 
+  /// The warning for plain HTTP to a private network address, under the
+  /// field it is about, with the explicit confirm. Once confirmed it stays
+  /// as one quiet line, so the person can see what they chose.
+  Widget? _cleartextWarning(AppLocalizations copy, KitTokens tokens) {
+    if (_isCodex || _tailscale) return null;
+    final url = normalizeServerProfileUrl(_url.text);
+    if (!serverUrlNeedsCleartextConfirmation(url) ||
+        validateServerProfileUrl(url) != null) {
+      return null;
+    }
+    final pending = _cleartextPending(url);
+    return Padding(
+      padding: EdgeInsetsDirectional.only(top: tokens.space2),
+      child: KitNotice(
+        key: const ValueKey('server-cleartext-warning'),
+        tone: AppStatusTone.neutral,
+        icon: pending ? AppIconography.warning : null,
+        message: pending
+            ? copy.addServerCleartextWarning
+            : copy.addServerCleartextConfirmed,
+        actions: [
+          if (pending &&
+              _stepped &&
+              platformCapabilities.supportsTailscaleHandoff)
+            KitAction(
+              key: const ValueKey('server-cleartext-tailscale'),
+              label: copy.addServerUseTailscale,
+              onPressed: _submitting ? null : _chooseTailscale,
+            ),
+          if (pending)
+            KitAction(
+              key: const ValueKey('server-cleartext-confirm'),
+              label: copy.addServerCleartextConfirm,
+              onPressed: _submitting
+                  ? null
+                  : () {
+                      setState(() {
+                        _cleartextConfirmed = cleartextOriginOf(url);
+                        _invalidateProbe();
+                      });
+                      // With a password in hand (a pairing code's, or one
+                      // typed) the check runs now; otherwise the first-run
+                      // pause applies as for any other address.
+                      if (_password.isNotEmpty) {
+                        unawaited(_testConnection());
+                      } else {
+                        _scheduleAutoTest();
+                      }
+                    },
+            ),
+        ],
+      ),
+    );
+  }
+
   /// The address and password of an OpenCode server, and the check. Folded
   /// under "Enter the address instead" for a new server (pairing is the
   /// main path); shown at once where the fields are what the person came
@@ -2963,6 +3066,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
           ),
           ?_notSameNetworkLink(),
           ?_remoteHttpAdvice(copy, tokens),
+          ?_cleartextWarning(copy, tokens),
           // What the check (or the save) found, under the field it is
           // about.
           _verdicts(copy, tokens),

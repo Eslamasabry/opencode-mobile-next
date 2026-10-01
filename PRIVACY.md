@@ -16,10 +16,16 @@ Those servers and providers are controlled by you or their respective operators,
 not by this app. Their retention and privacy practices apply to the data they
 receive.
 
-Use an HTTPS server or an encrypted tunnel. Plain HTTP is accepted only for
+Use an HTTPS server or an encrypted tunnel. Plain HTTP is accepted for
 loopback addresses used by a server running on the same device, and for
 private Tailscale addresses (100.64.0.0/10 and `*.ts.net`), where the
-tailnet already encrypts and authenticates the connection.
+tailnet already encrypts and authenticates the connection. It is also
+accepted for private network addresses (10.0.0.0/8, 172.16.0.0/12,
+192.168.0.0/16, 169.254.0.0/16, IPv6 `fc00::/7` and `fe80::/10`, and
+`*.local` names), but only after the app warns that your password and
+conversations then travel unencrypted on that network and you choose
+"Use it anyway". The choice is stored per server and removed with it. Public
+addresses and other host names stay HTTPS-only.
 
 ### Optional AI Team plugin
 

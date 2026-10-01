@@ -7250,7 +7250,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get e7SetupHttpsHint =>
-      '‏https://‏ للأجهزة الأخرى، و‏http://‏ على هذا الجهاز فقط.';
+      '‏https://‏ للأجهزة الأخرى، و‏http://‏ على هذا الجهاز أو شبكة خاصة فقط.';
 
   @override
   String get e7SetupObservedVersionSaveFailed =>
@@ -7898,7 +7898,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get e7SetupIncludeScheme =>
-      'أضف https://. استخدم http:// فقط مع localhost أو 127.0.0.1 أو [::1].';
+      'أضف https://. يعمل http:// العادي فقط على هذا الجهاز أو على عنوان شبكة خاصة.';
 
   @override
   String get e7SetupCompleteUrl =>
@@ -7930,7 +7930,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get e7SetupLocalHttp =>
-      'يُسمح بـ HTTP فقط مع localhost أو 127.0.0.1 أو [::1]. استخدم HTTPS لخوادم الشبكة المحلية والخوادم البعيدة.';
+      'يُسمح بـ HTTP فقط مع هذا الجهاز أو عنوان شبكة خاصة مثل 192.168.x.x. للخوادم الأخرى استخدم HTTPS أو Tailscale.';
 
   @override
   String get e7SetupRefused =>
@@ -26519,4 +26519,15 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get teamProjectEditorContextFilesHelpReal =>
       'اختياري. مسار واحد في كل سطر. يقرأ الفريق هذه الملفات قبل أن يخطط.';
+
+  @override
+  String get addServerCleartextWarning =>
+      'هذا العنوان يستخدم HTTP عادي. على هذه الشبكة قد يتمكن آخرون من قراءة كلمة المرور ومحادثاتك. استخدم Tailscale أو HTTPS إن أمكن.';
+
+  @override
+  String get addServerCleartextConfirm => 'استخدمه على أي حال';
+
+  @override
+  String get addServerCleartextConfirmed =>
+      'تم تفعيل HTTP العادي لهذا العنوان. يمكن لأي شخص على هذه الشبكة قراءة ما ترسله.';
 }

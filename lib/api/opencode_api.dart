@@ -12,6 +12,7 @@ import '../diagnostics/perf_trace.dart';
 import '../ui/kit/kit_redact.dart';
 
 export 'models.dart' show ApiException;
+import '../domain/loopback_host.dart' show isCleartextRemoteBase;
 
 /// HTTP client for a single opencode server (`opencode serve`).
 class OpenCodeApi
@@ -88,6 +89,8 @@ class OpenCodeApi
           : baseUrl,
       connectTimeout: connectTimeout,
       receiveTimeout: requestTimeout,
+      followRedirects: !isCleartextRemoteBase(baseUrl),
+      maxRedirects: isCleartextRemoteBase(baseUrl) ? 0 : 5,
       responseType: ResponseType.json,
       validateStatus: (s) => s != null && s >= 200 && s < 300,
     );
@@ -590,8 +593,9 @@ class OpenCodeApi
     for (final link in (headers.value('link') ?? '').split(',')) {
       if (!RegExp(r'rel="?next"?').hasMatch(link)) continue;
       final match = RegExp(r'<([^>]+)>').firstMatch(link);
-      final next = Uri.tryParse(match?.group(1) ?? '')
-          ?.queryParameters['before'];
+      final next = Uri.tryParse(
+        match?.group(1) ?? '',
+      )?.queryParameters['before'];
       if (next != null && next.isNotEmpty) return next;
     }
     return null;

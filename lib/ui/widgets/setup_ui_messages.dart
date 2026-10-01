@@ -116,7 +116,7 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
       l10n.e7SetupPairInvalid,
   'Printed by opencode2 serve at startup ("server password …"). Optional for servers without one.':
       l10n.e7SetupPasswordStartupHint,
-  'HTTP is allowed only for localhost, 127.0.0.1, or [::1]. Use HTTPS for LAN and remote servers.':
+  'HTTP is allowed only for localhost, 127.0.0.1, [::1], or a private network address. Use HTTPS or Tailscale for other servers.':
       l10n.e7SetupLocalHttp,
   'The connection timed out. Check the address, and that the server is reachable from this phone.':
       l10n.e7SetupTimeout,
@@ -160,7 +160,7 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
       l10n.e7SetupNoReturnData,
   'OpenCode server did not become authenticated and ready within 30 seconds':
       l10n.e7SetupReadinessTimeout,
-  'Include https://. Use http:// only for localhost, 127.0.0.1, or [::1].':
+  'Include https://. Plain http:// works only on this device or a private network address.':
       l10n.e7SetupIncludeScheme,
   'Could not confirm this restart. Refresh its progress before retrying.':
       l10n.e7SetupRestartUnconfirmed,

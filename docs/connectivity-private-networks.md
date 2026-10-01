@@ -69,7 +69,7 @@ the lead-owned ARB and generate localization before integration. In the table,
 | connectionHelpQuery | Remove query parameters and fragments. They can contain secrets; enter only the server origin. The pasted value has been cleared. |
 | connectionHelpPath | Remove the path. This app needs the server origin, not a page or API route. |
 | connectionHelpScheme | Use HTTPS for a remote server, or HTTP only for this device's supported loopback addresses. |
-| connectionHelpRemoteHttp | Remote HTTP is blocked, including LAN and 100.64.0.0/10 addresses. A VPN does not change this rule. Set up private HTTPS or an encrypted tunnel ending on this device. |
+| connectionHelpRemoteHttp | Remote HTTP is blocked for public addresses and ordinary host names, and for 100.64.0.0/10 addresses on OpenCode servers. A private network address (192.168.x.x, 10.x.x.x, 172.16-31.x.x, `.local`) may use HTTP after a warning and your confirmation. Set up private HTTPS or an encrypted tunnel ending on this device for anything else. |
 | connectionHelpHttps | This address passes the HTTPS address rules. That does not verify its certificate, reachability, sign-in or privacy. A bare remote address is interpreted as HTTPS. |
 | connectionHelpLoopback | This address passes the loopback address rules. Localhost means this device, not another computer. A server or tunnel must be listening here; this check does not verify that. |
 | connectionHelpPrivateTitle | Private HTTPS or reverse proxy |

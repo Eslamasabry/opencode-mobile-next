@@ -99,6 +99,9 @@ class HttpProviderQuotaGateway implements ProviderQuotaGateway {
           null) {
         return false;
       }
+      // Plain HTTP to a private network address needs a per-profile
+      // confirmation this scope does not carry; quota reads stay off there.
+      if (serverUrlNeedsCleartextConfirmation(baseUrl)) return false;
       final uri = Uri.parse(baseUrl.trim());
       return !uri.hasQuery &&
           !uri.hasFragment &&

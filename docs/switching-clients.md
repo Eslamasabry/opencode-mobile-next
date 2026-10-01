@@ -13,8 +13,9 @@ phone app, this one — is just another window onto the same sessions. To
 start here:
 
 1. Add the server address and credentials through this app's connection flow.
-   Use HTTPS outside phone loopback; another client's plaintext LAN/tailnet
-   URL is not automatically accepted here.
+   Use HTTPS outside phone loopback; another client's plaintext LAN URL is
+   accepted only after the app's plain-HTTP warning and your confirmation, and
+   a plaintext tailnet or public URL is not accepted here.
 2. Select the same project/location, open a session, and review its state
    before sending. Unsupported operations depend on server capabilities.
 

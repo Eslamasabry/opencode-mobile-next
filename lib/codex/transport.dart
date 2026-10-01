@@ -9,7 +9,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 
 import '../api/models.dart';
-import '../state/profiles.dart' show validateServerProfileUrl;
+import '../state/profiles.dart' show isLoopbackHost, validateServerProfileUrl;
 
 enum CodexFailureKind {
   invalidEndpoint,
@@ -56,6 +56,12 @@ class CodexFailure extends ApiException {
 Uri codexEndpoint(String raw) {
   final uri = Uri.tryParse(raw.trim());
   if (uri == null || !{'ws', 'wss'}.contains(uri.scheme)) {
+    throw CodexFailure(CodexFailureKind.invalidEndpoint);
+  }
+  // Codex stays HTTPS/WSS-only off this device. The plain-HTTP allowance for
+  // private network addresses belongs to OpenCode profiles, after a per-
+  // profile confirmation; a Codex token never rides cleartext.
+  if (uri.scheme == 'ws' && !isLoopbackHost(uri.host)) {
     throw CodexFailure(CodexFailureKind.invalidEndpoint);
   }
   final httpUri = uri.replace(scheme: uri.scheme == 'wss' ? 'https' : 'http');

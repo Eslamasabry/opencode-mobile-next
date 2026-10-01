@@ -252,7 +252,13 @@ class PairingUrlOutcome {
     required this.probed,
     required this.reason,
     this.result,
+    this.needsCleartextConfirm = false,
   });
+
+  /// True when the address is plain HTTP to a private network address that
+  /// the person has not yet confirmed. Nothing was sent to it: the form asks
+  /// first, and only then re-runs the check.
+  final bool needsCleartextConfirm;
 
   /// The address as this app would use it — normalized, not necessarily the
   /// exact string the server printed.
@@ -338,6 +344,10 @@ String _safePairingUrlForDisplay(String value) {
   }
 }
 
+/// Why a plain-HTTP private address was held back, until it is confirmed.
+const cleartextConfirmReason =
+    'This address uses plain HTTP. Confirm that first; nothing was sent to it.';
+
 const _probeThrewReason =
     'The connection test failed before the server could be checked. Try another address.';
 const _probeUnknownReason =
@@ -387,7 +397,9 @@ String _safePairingOutcomeReason(PairingUrlOutcome outcome) {
     _invalidPairingAddressReason,
     _probeThrewReason,
     'Enter a server URL.',
-    'Include https://. Use http:// only for localhost, 127.0.0.1, or [::1].',
+    'Include https://. Plain http:// works only on this device or a private '
+        'network address.',
+    cleartextConfirmReason,
     'Enter a complete server URL, such as https://server.example:4096.',
     'Server URLs must use https://, or http:// for local Termux.',
     'Server URLs must use https://, or http:// for a local server.',
@@ -396,8 +408,8 @@ String _safePairingOutcomeReason(PairingUrlOutcome outcome) {
     'Remove the path from the server URL. Enter only its origin.',
     'HTTPS is required outside this device. Basic credentials must never be '
         'sent over HTTP.',
-    'HTTP is allowed only for localhost, 127.0.0.1, or [::1]. Use HTTPS for '
-        'LAN and remote servers.',
+    'HTTP is allowed only for localhost, 127.0.0.1, [::1], or a private '
+        'network address. Use HTTPS or Tailscale for other servers.',
   };
   final reason = outcome.reason;
   if (reason == null) return 'Did not answer.';
@@ -444,12 +456,16 @@ List<String> orderPairingCandidates(
 /// ([validateServerProfileUrl]): a pairing code is not a licence to relax it.
 /// `opencode2 pair` emits `http://` URLs, and once the operator runs
 /// `opencode service set hostname 0.0.0.0` one of them is a cleartext LAN
-/// address. Dialing that would put HTTP Basic — the serve password, base64 of
-/// nothing — across the network in the clear, and Android's own
-/// `network_security_config.xml` would block it a layer lower anyway. Such an
-/// address is reported with the reason it was skipped rather than silently
-/// dropped, because "your server is only reachable in the clear" is exactly
-/// what the user needs to know.
+/// address. Dialing that would put HTTP Basic — the serve password — across
+/// the network in the clear. A private-network address is held until the
+/// person confirms it (see below); a public one is refused. Either is
+/// reported with the reason it was skipped rather than silently dropped,
+/// because "your server is only reachable in the clear" is exactly what the
+/// user needs to know.
+///
+/// A private-network `http://` address is accepted only for origins listed
+/// in [confirmedCleartextOrigins]; otherwise it is reported with
+/// [PairingUrlOutcome.needsCleartextConfirm] and never probed.
 ///
 /// Surviving candidates are probed in [orderPairingCandidates] order. The
 /// first that connects wins and probing stops. If none connect but one
@@ -460,6 +476,7 @@ Future<PairingSelection> selectPairingUrl(
   PairingPayload payload, {
   ServerProbe? probe,
   bool? preferLoopback,
+  Set<String> confirmedCleartextOrigins = const {},
 }) async {
   final runProbe = probe ?? serverProbe;
   final preferLocal = preferLoopback ?? platformCapabilities.isDesktop;
@@ -494,6 +511,21 @@ Future<PairingSelection> selectPairingUrl(
     }
     if (invalid != null) {
       outcomes.add(PairingUrlOutcome(url: url, probed: false, reason: invalid));
+      continue;
+    }
+    if (serverUrlNeedsCleartextConfirmation(url) &&
+        !confirmedCleartextOrigins.contains(cleartextOriginOf(url))) {
+      // Plain HTTP to a private network address is allowed, but the person
+      // confirms it first: the pairing password must not cross the network
+      // before they have.
+      outcomes.add(
+        PairingUrlOutcome(
+          url: url,
+          probed: false,
+          reason: cleartextConfirmReason,
+          needsCleartextConfirm: true,
+        ),
+      );
       continue;
     }
     candidates.add(url);

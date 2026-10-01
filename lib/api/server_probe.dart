@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'models.dart';
 import '../diagnostics/perf_trace.dart';
 import '../ui/kit/kit_redact.dart';
+import '../domain/loopback_host.dart' show isCleartextRemoteBase;
 
 /// Which protocol generation answered a probe.
 ///
@@ -101,6 +102,8 @@ Future<ServerProbeResult> probeServerConnection({
           : baseUrl,
       connectTimeout: const Duration(seconds: 8),
       receiveTimeout: const Duration(seconds: 8),
+      followRedirects: !isCleartextRemoteBase(baseUrl),
+      maxRedirects: isCleartextRemoteBase(baseUrl) ? 0 : 5,
       headers: headers,
       validateStatus: (status) =>
           status != null && status >= 200 && status < 300,

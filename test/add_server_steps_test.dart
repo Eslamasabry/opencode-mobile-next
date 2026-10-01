@@ -328,7 +328,7 @@ void main() {
     expect(_readyStep, findsOneWidget);
   });
 
-  testWidgets('an http:// address on the network explains itself and offers '
+  testWidgets('a public http:// address explains itself and offers '
       'Tailscale', (tester) async {
     var probes = 0;
     serverProbe = ({required baseUrl, username, password}) async {
@@ -337,7 +337,7 @@ void main() {
     };
     await _openAddServer(tester);
     await chooseServerKind(tester);
-    await _typeAddress(tester, 'http://192.168.1.20:4096');
+    await _typeAddress(tester, 'http://192.0.2.20:4096');
     await tester.tap(find.byKey(const ValueKey('save-server-profile')));
     await tester.pumpAndSettle();
 

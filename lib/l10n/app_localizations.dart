@@ -11836,7 +11836,7 @@ abstract class AppLocalizations {
   /// Setup journey: https hint.
   ///
   /// In en, this message translates to:
-  /// **'https:// for other computers; http:// only on this device.'**
+  /// **'https:// for other computers; http:// only on this device or a private network.'**
   String get e7SetupHttpsHint;
 
   /// Setup journey: observed version save failed.
@@ -12904,7 +12904,7 @@ abstract class AppLocalizations {
   /// Setup journey: include scheme.
   ///
   /// In en, this message translates to:
-  /// **'Include https://. Use http:// only for localhost, 127.0.0.1, or [::1].'**
+  /// **'Include https://. Plain http:// works only on this device or a private network address.'**
   String get e7SetupIncludeScheme;
 
   /// Setup journey: complete url.
@@ -12952,7 +12952,7 @@ abstract class AppLocalizations {
   /// Setup journey: local http.
   ///
   /// In en, this message translates to:
-  /// **'An http:// address only works for a server on this phone. For another computer, pair with a code, use its https:// address, or connect with Tailscale.'**
+  /// **'An http:// address works only for this phone or a private network address such as 192.168.x.x. For anything else, pair with a code, use its https:// address, or connect with Tailscale.'**
   String get e7SetupLocalHttp;
 
   /// Setup journey: refused.
@@ -41634,6 +41634,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Optional. One path per line. The team reads these before it plans.'**
   String get teamProjectEditorContextFilesHelpReal;
+
+  /// Add server: warning under a plain http:// address on a private network (192.168.x.x, 10.x.x.x, .local). Must be confirmed before saving or checking.
+  ///
+  /// In en, this message translates to:
+  /// **'This address uses plain HTTP. On this network, others could read your password and conversations. Use Tailscale or HTTPS if you can.'**
+  String get addServerCleartextWarning;
+
+  /// Add server: action that confirms plain HTTP to a private network address; remembered for that server.
+  ///
+  /// In en, this message translates to:
+  /// **'Use it anyway'**
+  String get addServerCleartextConfirm;
+
+  /// Add server: line shown after the person confirmed plain HTTP for the address.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain HTTP is on for this address. Anyone on this network could read what you send.'**
+  String get addServerCleartextConfirmed;
 }
 
 class _AppLocalizationsDelegate
