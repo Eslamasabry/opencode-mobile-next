@@ -320,3 +320,8 @@ class _WatchComposerState extends State<_WatchComposer> {
     );
   }
 }
+
+mixin _ChatWatchingFields {
+  /// Re-reads a watched transcript ([ChatWatch.pollInterval]).
+  Timer? _watchPoll;
+}

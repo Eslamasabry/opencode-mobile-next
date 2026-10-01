@@ -227,3 +227,20 @@ extension _ChatReadAloud on _ChatScreenState {
     }
   }
 }
+
+mixin _ChatReadAloudFields {
+  ReadAloudController? _readAloud;
+  Object? _speechOwnerScope;
+  bool _readAloudRequestBusy = false;
+  int _readAloudRequest = 0;
+  String? _readAloudVoiceID;
+  ReadAloudFailure? _lastReadAloudFailure;
+}
+
+extension _ChatReadAloudConsent on _ChatScreenState {
+  /// Consent to hand reply prose to the phone's speech engine: asked once
+  /// and remembered on this phone (the engine is the phone's, not a
+  /// server's), not asked again in every conversation or after a restart.
+  bool get _readAloudConsented =>
+      _conn.store.prefs.getBool(_readAloudConsentKey) ?? false;
+}

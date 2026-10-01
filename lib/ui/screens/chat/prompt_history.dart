@@ -73,3 +73,89 @@ class _PromptHistorySheetState extends State<_PromptHistorySheet> {
     );
   }
 }
+
+mixin _ChatPromptHistoryFields {
+  final _promptHistory = PromptHistoryNavigation();
+}
+
+extension _ChatPromptHistory on _ChatScreenState {
+  List<String> get _recentPrompts => {
+    for (final message in _visibleHistory.toList().reversed)
+      if (message.info.role == 'user' && !message.info.id.startsWith('local-'))
+        if (_ChatScreenState._messageText(message).trim() case final text
+            when text.isNotEmpty)
+          text,
+    ..._savedPromptHistory,
+  }.take(50).toList();
+
+  List<String> get _savedPromptHistory {
+    try {
+      return _conn.sentPromptHistory;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> _reusePrompt() async {
+    final l10n = _chatL10n(context);
+    final text = await showKitSheet<String>(
+      context,
+      sheetKey: const Key('prompt-history-sheet'),
+      title: l10n.composerReuseTitle,
+      subtitle: l10n.promptHistoryIntro,
+      icon: AppIconography.history,
+      body: (_) => _PromptHistorySheet(prompts: _recentPrompts),
+    );
+    if (!mounted || text == null) return;
+    final draft = _composer.text.trimRight();
+    final next = draft.isEmpty ? text : '$draft\n\n$text';
+    _composer.value = TextEditingValue(
+      text: next,
+      selection: TextSelection.collapsed(offset: next.length),
+    );
+    _focus.requestFocus();
+  }
+
+  KeyEventResult _navigatePromptHistory(KeyEvent event) {
+    if (_conn.isIsolated) return KeyEventResult.ignored;
+    final value = _composer.value;
+    if (_sending ||
+        _promptShelfBusy ||
+        !isPromptHistoryKey(
+          event,
+          value,
+          suggestionsOpen:
+              value.text.trimLeft().startsWith('/') ||
+              _activeAgentQuery(value) != null,
+        )) {
+      return KeyEventResult.ignored;
+    }
+    final next = _promptHistory.move(
+      event.logicalKey == LogicalKeyboardKey.arrowUp,
+      value,
+      _recentPrompts,
+    );
+    if (next == null) return KeyEventResult.ignored;
+    _setChatState(() => _composer.value = next);
+    return KeyEventResult.handled;
+  }
+
+  void _restoreHistoryDraft() {
+    final original = _promptHistory.restore();
+    if (original == null || !mounted) return;
+    _setChatState(() => _composer.value = original);
+    _persistDraft();
+    _focus.requestFocus();
+  }
+
+  Future<void> _rememberSentPrompt(String profile, String text) async {
+    if (_conn.isIsolated) return;
+    try {
+      await _conn.rememberSentPrompt(profile, text);
+    } catch (_) {
+      if (mounted && _conn.promptShelfProfileID == profile) {
+        _showComposerNote(_chatL10n(context).promptHistorySaveFailed);
+      }
+    }
+  }
+}

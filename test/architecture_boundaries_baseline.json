@@ -147,7 +147,7 @@
     }
   },
   "ARCH-2": {
-    "lib/ui/screens/chat_screen.dart": {
+    "lib/ui/screens/chat/chat_session_menu.dart": {
       ".flavor ==": 2,
       "ServerFlavor.": 2
     },

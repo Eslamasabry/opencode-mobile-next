@@ -196,3 +196,138 @@ class _TranscriptFindBarState extends State<_TranscriptFindBar> {
     );
   }
 }
+
+mixin _ChatFindFields {
+  final _findController = TextEditingController();
+  final _findFocus = FocusNode();
+  final _findNavigationFocus = FocusNode(skipTraversal: true);
+  BuildContext? _findExcerptContext;
+  final _findIndex = TranscriptSearchIndex();
+  Timer? _findDebounce;
+  bool _findOpen = false;
+  String _findQuery = '';
+  List<TranscriptMatch> _findHits = [];
+  int _findCursor = 0;
+  String? _findKey;
+  int? _findLocation;
+  bool _findAllLoading = false;
+}
+
+extension _ChatFind on _ChatScreenState {
+  void _syncFind() {
+    _findHits = _findOpen ? _findIndex.search(_visibleHistory, _findQuery) : [];
+    final retained = _findHits.indexWhere((match) => match.key == _findKey);
+    _findCursor = retained >= 0
+        ? retained
+        : _findCursor.clamp(0, math.max(0, _findHits.length - 1));
+    _findKey = _findHits.isEmpty ? null : _findHits[_findCursor].key;
+  }
+
+  void _openFind({String? query, String? messageID}) {
+    _setChatState(() {
+      _findOpen = true;
+      _findLocation = _conn.locationRevision;
+      if (query != null) {
+        _findController.text = query;
+        _findQuery = query.trim();
+        _findKey = null;
+        _findCursor = 0;
+      }
+      _syncFind();
+      if (messageID != null) {
+        final index = _findHits.indexWhere(
+          (match) => match.messageID == messageID,
+        );
+        if (index >= 0) {
+          _findCursor = index;
+          _findKey = _findHits[index].key;
+        }
+      }
+    });
+    if (messageID != null) {
+      _jumpToMessage(messageID, alignment: .85);
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_findOpen) return;
+        _findFocus.requestFocus();
+        _findController.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _findController.text.length,
+        );
+      });
+    }
+  }
+
+  void _changeFind(String query) {
+    _findDebounce?.cancel();
+    _findDebounce = Timer(const Duration(milliseconds: 220), () {
+      if (!mounted || !_findOpen) return;
+      _setChatState(() {
+        _findQuery = query.trim();
+        _findKey = null;
+        _findCursor = 0;
+        _syncFind();
+      });
+      if (_findHits.isNotEmpty) {
+        _jumpToMessage(_findHits.first.messageID, alignment: .85);
+      }
+    });
+  }
+
+  void _navigateFind(int step) {
+    _findDebounce?.cancel();
+    if (_findQuery != _findController.text.trim()) {
+      _setChatState(() {
+        _findQuery = _findController.text.trim();
+        _findCursor = 0;
+        _findKey = null;
+        _syncFind();
+      });
+      step = 0;
+    }
+    if (_findHits.isEmpty) return;
+    _findFocus.unfocus();
+    _findNavigationFocus.requestFocus();
+    _findExcerptContext = null;
+    _setChatState(() {
+      _findCursor = (_findCursor + step) % _findHits.length;
+      _findKey = _findHits[_findCursor].key;
+    });
+    _jumpToMessage(_findHits[_findCursor].messageID, alignment: .85);
+  }
+
+  void _closeFind() {
+    _findAllLoading = false;
+    _findDebounce?.cancel();
+    _findFocus.unfocus();
+    _findNavigationFocus.unfocus();
+    _findExcerptContext = null;
+    _setChatState(() {
+      _findOpen = false;
+      _findQuery = '';
+      _findController.clear();
+      _findHits = [];
+      _findKey = null;
+    });
+  }
+
+  Future<void> _searchAllHistory() async {
+    if (_findAllLoading || _loading || _loadingOlder) return;
+    _findNavigationFocus.requestFocus();
+    final location = _conn.locationRevision;
+    _setChatState(() => _findAllLoading = true);
+    try {
+      while (mounted &&
+          _findOpen &&
+          _findAllLoading &&
+          location == _conn.locationRevision &&
+          _olderCursor != null) {
+        final before = _olderCursor;
+        await _loadOlder();
+        if (_olderError != null || _olderCursor == before) break;
+      }
+    } finally {
+      if (mounted) _setChatState(() => _findAllLoading = false);
+    }
+  }
+}
