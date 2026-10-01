@@ -43,7 +43,6 @@ const _baseline = <String, int>{
   'lib/ui/widgets/pickers.dart': 1627,
   'lib/ui/screens/team/projects/team_projects_screen.dart': 1527,
   'lib/domain/server_gateway.dart': 1522,
-  'lib/builtin/setup/setup_engine.dart': 1515,
   'lib/ui/kit/kit_sheet.dart': 1506,
 };
 
