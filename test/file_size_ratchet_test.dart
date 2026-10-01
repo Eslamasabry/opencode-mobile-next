@@ -38,7 +38,6 @@ const _baseline = <String, int>{
   'lib/ui/screens/files_screen.dart': 1811,
   'lib/ui/screens/terminal_screen.dart': 1703,
   'lib/ui/widgets/tool_card.dart': 1678,
-  'lib/state/profiles.dart': 1668,
   'lib/api2/models.dart': 1647,
   'lib/api/models.dart': 1630,
   'lib/ui/widgets/pickers.dart': 1627,
