@@ -14,6 +14,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
+import 'package:opencode_mobile/diagnostics/perf_trace.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/session_inventory_cache.dart';
@@ -152,6 +153,7 @@ final _skeleton = find.byKey(const ValueKey('chat-loading'));
 final _bar = find.byKey(const ValueKey('kit-loading-bar'));
 
 void main() {
+  sendSpeedTests();
   testWidgets('the first frame shows the words saved last time, before any '
       'history has arrived', (tester) async {
     final api = _Api();
@@ -178,12 +180,30 @@ void main() {
   testWidgets('the live history replaces the excerpt with no duplicate turn', (
     tester,
   ) async {
+    PerfTrace.resetForTesting();
     final api = _Api();
     await _open(tester, api);
     expect(_excerpt, findsOneWidget);
+    await tester.pump();
+    // The performance report times the first transcript frame (the saved
+    // excerpt) before the fresh history exists.
+    expect(
+      PerfTrace.spans
+          .where((s) => s.name == 'chat.open_to_first_transcript')
+          .map((s) => s.attrs['source']),
+      ['saved_excerpt'],
+    );
+    expect(
+      PerfTrace.spans.where((s) => s.name == 'chat.open_to_fresh'),
+      isEmpty,
+    );
 
     api.hold.complete(_turn());
     await _frames(tester);
+    expect(
+      PerfTrace.spans.where((s) => s.name == 'chat.open_to_fresh'),
+      hasLength(1),
+    );
 
     expect(_excerpt, findsNothing);
     expect(_bar, findsNothing);
@@ -337,6 +357,149 @@ void main() {
     await _frames(tester);
     expect(find.text(prompt), findsOneWidget);
   });
+}
+
+Future<_HeldTransport> _openForSend(WidgetTester tester, _Api api) async {
+  api.hold.complete(_turn());
+  tester.view.physicalSize = const Size(412, 915);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  SharedPreferences.setMockInitialValues({});
+  final prefs = await SharedPreferences.getInstance();
+  final controller =
+      _HeldTransport(
+          SeededProfileStore(
+            prefs: prefs,
+            seeded: [
+              ServerProfile(
+                id: 'laptop',
+                name: 'Laptop',
+                baseUrl: 'http://192.168.1.20:4096',
+              ),
+            ],
+          ),
+        )
+        ..api = api
+        ..repository = CaptureRepository()
+        ..status = StreamStatus.connected
+        ..directory = projectDirectory
+        ..sessionsById = Map.of(api.sessionsById)
+        ..busySessions = <String>{};
+  controller.gateway = api;
+  addTearDown(() async {
+    if (!api.sendHold.isCompleted) api.sendHold.complete();
+    if (!controller.transport.isCompleted) controller.transport.complete(null);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+    controller.dispose();
+  });
+  await tester.pumpWidget(
+    captureApp(
+      home: const ChatScreen(sessionID: checkoutSessionID),
+      boundaryKey: GlobalKey(),
+      controller: controller,
+    ),
+  );
+  await _frames(tester);
+  return controller;
+}
+
+void sendSpeedTests() {
+  testWidgets('with the transport still waking (8 s), the bubble is on the '
+      'next frame and the composer is clear; the send follows the wake', (
+    tester,
+  ) async {
+    PerfTrace.resetForTesting();
+    final api = _Api();
+    final controller = await _openForSend(tester, api);
+    const prompt = 'Run the full test suite';
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      prompt,
+    );
+    await tester.pump();
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pump();
+
+    expect(controller.transport.isCompleted, isFalse);
+    expect(api.prompts, isEmpty);
+    expect(find.text(prompt), findsOneWidget); // the bubble, not the field
+    expect(
+      tester
+          .widget<EditableText>(
+            find.descendant(
+              of: find.byKey(const Key('chat-composer-field')),
+              matching: find.byType(EditableText),
+            ),
+          )
+          .controller
+          .text,
+      isEmpty,
+    );
+    expect(
+      PerfTrace.spans.where((s) => s.name == 'chat.send_to_bubble'),
+      hasLength(1),
+    );
+
+    // Eight seconds later the transport is ready: one request, one bubble.
+    await tester.pump(const Duration(seconds: 8));
+    controller.transport.complete(api);
+    await tester.pump();
+    await tester.pump();
+    expect(api.prompts, [prompt]);
+    expect(find.text(prompt), findsOneWidget);
+    api.sendHold.complete();
+    await _frames(tester);
+    expect(find.text(prompt), findsOneWidget);
+    expect(
+      PerfTrace.spans.where((s) => s.name == 'chat.send_to_ack'),
+      hasLength(1),
+    );
+  });
+
+  testWidgets('a transport that never comes back takes the bubble out, '
+      'gives the words back and sends nothing', (tester) async {
+    final api = _Api();
+    final controller = await _openForSend(tester, api);
+    const prompt = 'Run the full test suite';
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      prompt,
+    );
+    await tester.pump();
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pump();
+    expect(find.text(prompt), findsOneWidget);
+
+    controller.transport.complete(null);
+    await _frames(tester);
+    expect(api.prompts, isEmpty);
+    // Exactly one copy remains: the words are back in the composer.
+    expect(find.text(prompt), findsOneWidget);
+    expect(
+      tester
+          .widget<EditableText>(
+            find.descendant(
+              of: find.byKey(const Key('chat-composer-field')),
+              matching: find.byType(EditableText),
+            ),
+          )
+          .controller
+          .text,
+      prompt,
+    );
+  });
+}
+
+/// A controller whose action transport is ready only when the test says so.
+class _HeldTransport extends CaptureController {
+  _HeldTransport(super.store);
+
+  final transport = Completer<ServerGateway?>();
+  ServerGateway? gateway;
+
+  @override
+  Future<ServerGateway?> prepareActionTransport() => transport.future;
 }
 
 /// A controller whose session selection (model/agent choice) settles only

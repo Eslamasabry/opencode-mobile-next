@@ -125,6 +125,7 @@ import '../widgets/grace_timer.dart';
 import '../permission_presentation.dart';
 import 'activity_screen.dart' show showQuestionSheet;
 import 'app_diagnostics_screen.dart';
+import '../../diagnostics/perf_trace.dart';
 import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
 import 'files_screen.dart';
@@ -401,6 +402,11 @@ class _ChatScreenState extends State<ChatScreen>
   final _messageScroll = ItemScrollController();
   final _messagePositions = ItemPositionsListener.create();
   final _historyChanges = ValueNotifier<int>(0);
+  // Performance report: when this chat opened, and whether its first
+  // transcript frame and first fresh history merge have been timed.
+  int _openedMicros = 0;
+  bool _firstTranscriptRecorded = false;
+  bool _freshMergeRecorded = false;
   bool _awayFromLatest = false;
 
   /// What the earlier-messages pill last said, kept while it fades out.
@@ -703,6 +709,7 @@ class _ChatScreenState extends State<ChatScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _openedMicros = PerfTrace.nowMicros;
     _composer.text = widget.initialText;
     _conn = _readConn();
     if (!_conn.isIsolated) {
@@ -2193,6 +2200,10 @@ class _ChatScreenState extends State<ChatScreen>
           _composerNote = _chatL10n(context).historyRefreshed;
         }
       });
+      if (!_freshMergeRecorded) {
+        _freshMergeRecorded = true;
+        PerfTrace.recordSince('chat.open_to_fresh', _openedMicros);
+      }
       _restoreHistoryAnchor(anchor, generation);
       _landOnFailedTurn();
       _runRouteMenuAction();
@@ -2780,10 +2791,74 @@ class _ChatScreenState extends State<ChatScreen>
       ? _delivery
       : null;
 
+  /// Clears the composer and shows [pending] as the person's own bubble with
+  /// the turn's live line, before the server says it is busy.
+  void _showOptimisticBubble(_PendingSend pending) {
+    _composer.clear();
+    // On a phone the keyboard would keep three quarters of the screen from
+    // the reply the person just asked for; tapping the field brings it back.
+    // A desktop keeps focus for the next line.
+    if (desktopInteractions) {
+      _focus.requestFocus();
+    } else {
+      _focus.unfocus();
+    }
+    setState(() {
+      _localTurnSince = DateTime.fromMillisecondsSinceEpoch(pending.createdAt);
+      _stoppedPromptID = null;
+      _promptError = null;
+      _sendError = null;
+      _pendingSends.add(pending);
+      _messages.add(
+        MessageWithParts(
+          info: MessageInfo(
+            id: pending.localID,
+            sessionID: widget.sessionID,
+            role: 'user',
+            time: MsgTime(created: pending.createdAt),
+          ),
+          parts: [
+            if (pending.text.isNotEmpty) Part(type: 'text', text: pending.text),
+            for (final attachment in pending.attachments)
+              Part(
+                type: 'file',
+                mime: attachment.mime,
+                filename: attachment.filename,
+                url: attachment.url,
+              ),
+          ],
+        ),
+      );
+      _attachments.clear();
+    });
+  }
+
+  /// Takes a bubble shown before the transport was ready back out and gives
+  /// the person their text and attachments again.
+  void _rollbackOptimisticBubble(_PendingSend pending) {
+    setState(() {
+      _localTurnSince = null;
+      _pendingSends.remove(pending);
+      _messages.removeWhere((message) => message.info.id == pending.localID);
+      _attachments.insertAll(0, pending.attachments);
+    });
+    final currentText = _composer.text;
+    if (pending.text.isNotEmpty && currentText.trim() != pending.text) {
+      _composer.text = currentText.isEmpty
+          ? pending.text
+          : '${pending.text}\n$currentText';
+      _composer.selection = TextSelection.collapsed(
+        offset: _composer.text.length,
+      );
+    }
+    _persistDraft();
+  }
+
   /// [delivery] rides only on OpenCode 2 sends made while a turn runs. When
   /// it is omitted the composer's current delivery choice applies; the
   /// long-press shortcut passes an explicit steer or queue.
   Future<void> _send({PromptDelivery? delivery}) async {
+    final tapMicros = PerfTrace.nowMicros;
     final strings = _chatL10n(context);
     final conversationSend = _voiceConversation;
     final voiceEpoch = _voiceEpoch.value;
@@ -2907,6 +2982,29 @@ class _ChatScreenState extends State<ChatScreen>
       return;
     }
     setState(() => _sending = true);
+    // The bubble is on screen before the transport is awaited: after a phone
+    // wake `prepareActionTransport` can wait out the whole connect timeout,
+    // and the person must not stare at a composer that looks unsent. Steering
+    // (takes back earlier items first) and voice conversation (needs the
+    // gateway for the exact message id) keep the transport-first order.
+    final bubbleFirst = delivery != PromptDelivery.steer && !conversationSend;
+    _PendingSend? early;
+    if (bubbleFirst) {
+      final now = DateTime.now();
+      early = _PendingSend(
+        localID:
+            'local-${now.millisecondsSinceEpoch}-${now.microsecondsSinceEpoch}',
+        text: _composer.text.trim(),
+        attachments: List<PromptAttachment>.from(_attachments),
+        createdAt: now.millisecondsSinceEpoch,
+      );
+      _showOptimisticBubble(early);
+      PerfTrace.recordSince(
+        'chat.send_to_bubble',
+        tapMicros,
+        attrs: const {'order': 'bubble_first'},
+      );
+    }
     final actionApi = await _conn.prepareActionTransport();
     if (!mounted) return;
     if (!voiceSendCurrent() || (conversationSend && !_conversationCanSend)) {
@@ -2914,6 +3012,7 @@ class _ChatScreenState extends State<ChatScreen>
       return;
     }
     if (actionApi == null) {
+      if (early != null) _rollbackOptimisticBubble(early);
       setState(() => _sending = false);
       final detail = _conn.connectionError;
       _showActionError(
@@ -2930,76 +3029,48 @@ class _ChatScreenState extends State<ChatScreen>
         ? await _takeBackWaitingSteers()
         : const <String>[];
     if (!mounted) return;
-    final text = [
-      ...earlier,
-      _composer.text.trim(),
-    ].where((piece) => piece.isNotEmpty).join('\n\n');
-    if (text.isEmpty && _attachments.isEmpty) {
+    final text =
+        early?.text ??
+        [
+          ...earlier,
+          _composer.text.trim(),
+        ].where((piece) => piece.isNotEmpty).join('\n\n');
+    if (text.isEmpty && _attachments.isEmpty && early == null) {
       setState(() => _sending = false);
       return;
     }
-    final attachments = List<PromptAttachment>.from(_attachments);
+    final attachments =
+        early?.attachments ?? List<PromptAttachment>.from(_attachments);
     final agentMentions = _supportsPromptAgentMentions
         ? _promptAgentMentions(text, _subagents)
         : const <PromptAgentMention>[];
     var selection = _conn.selectionForSession(widget.sessionID);
     final selectionProfileID = _conn.profile?.id;
     var promptStarted = false;
-    final createdAt = DateTime.now().millisecondsSinceEpoch;
-    final localID = 'local-$createdAt-${DateTime.now().microsecondsSinceEpoch}';
-    final pending = _PendingSend(
-      dispatchedMessageID:
-          conversationSend &&
-              _voiceSpeakReplies &&
-              actionApi.capabilities.clientPromptMessageID &&
-              actionApi is CorrelatedPromptGateway
-          ? (actionApi as CorrelatedPromptGateway).createPromptMessageID()
-          : null,
-      localID: localID,
-      text: text,
-      attachments: attachments,
-      createdAt: createdAt,
-    );
-    _composer.clear();
-    // On a phone the keyboard would keep three quarters of the screen from
-    // the reply the person just asked for; tapping the field brings it back.
-    // A desktop keeps focus for the next line.
-    if (desktopInteractions) {
-      _focus.requestFocus();
-    } else {
-      _focus.unfocus();
-    }
-
-    // Optimistic user bubble; the turn runs from here (its live line shows
-    // at once, before the server says it is busy).
-    setState(() {
-      _localTurnSince = DateTime.fromMillisecondsSinceEpoch(createdAt);
-      _stoppedPromptID = null;
-      _promptError = null;
-      _sendError = null;
-      _pendingSends.add(pending);
-      _messages.add(
-        MessageWithParts(
-          info: MessageInfo(
-            id: localID,
-            sessionID: widget.sessionID,
-            role: 'user',
-            time: MsgTime(created: createdAt),
-          ),
-          parts: [
-            if (text.isNotEmpty) Part(type: 'text', text: text),
-            for (final attachment in attachments)
-              Part(
-                type: 'file',
-                mime: attachment.mime,
-                filename: attachment.filename,
-                url: attachment.url,
-              ),
-          ],
-        ),
+    final pending =
+        early ??
+        _PendingSend(
+          dispatchedMessageID:
+              conversationSend &&
+                  _voiceSpeakReplies &&
+                  actionApi.capabilities.clientPromptMessageID &&
+                  actionApi is CorrelatedPromptGateway
+              ? (actionApi as CorrelatedPromptGateway).createPromptMessageID()
+              : null,
+          localID:
+              'local-${DateTime.now().millisecondsSinceEpoch}-${DateTime.now().microsecondsSinceEpoch}',
+          text: text,
+          attachments: attachments,
+          createdAt: DateTime.now().millisecondsSinceEpoch,
+        );
+    if (early == null) {
+      _showOptimisticBubble(pending);
+      PerfTrace.recordSince(
+        'chat.send_to_bubble',
+        tapMicros,
+        attrs: const {'order': 'transport_first'},
       );
-      _attachments.clear();
-    });
+    }
     _persistDraft();
     try {
       await _conn.waitForSessionSelection(
@@ -3043,6 +3114,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (!conversationSend) {
         unawaited(_rememberSentPrompt(selectionProfileID ?? '', text));
       }
+      PerfTrace.recordSince('chat.send_to_ack', tapMicros);
       if (!mounted) return;
       setState(() {
         _sending = false;
@@ -8258,6 +8330,16 @@ class _ChatScreenState extends State<ChatScreen>
         ? _conn.cachedSessionTail(widget.sessionID)
         : null;
     final showExcerpt = openingExcerpt?.messages.isNotEmpty ?? false;
+    if (!_firstTranscriptRecorded && (_messages.isNotEmpty || showExcerpt)) {
+      _firstTranscriptRecorded = true;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => PerfTrace.recordSince(
+          'chat.open_to_first_transcript',
+          _openedMicros,
+          attrs: {'source': showExcerpt ? 'saved_excerpt' : 'live'},
+        ),
+      );
+    }
 
     final screen = PopScope(
       canPop: _conn.isIsolated || _allowRoutePop || _watching,
