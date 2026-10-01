@@ -1,7 +1,8 @@
 import 'dart:convert';
 
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'widget_snapshot.dart';
 
 import '../platform/platform_capabilities.dart';
 
@@ -27,22 +28,15 @@ class AttentionTileSnapshot {
   /// Read by the native tile as `flutter.oc.attentionTile`.
   static const prefsKey = 'oc.attentionTile';
 
-  static const _channel = MethodChannel('oc/background');
-
   final SharedPreferences prefs;
   final Future<void> Function() _refreshWidget;
   final bool _isAndroid;
   final DateTime Function() _now;
 
   /// The home-screen widget shows this same count, so it is redrawn after
-  /// every write through the existing `refreshHomeWidget` method.
-  static Future<void> _refreshViaChannel() async {
-    try {
-      await _channel.invokeMethod<Object?>('refreshHomeWidget');
-    } catch (_) {
-      // No engine-side handler (tests, desktop): the widget keeps its state.
-    }
-  }
+  /// every write.
+  static Future<void> _refreshViaChannel() =>
+      WidgetSessionSnapshot.refreshHomeWidget();
 
   int? _lastCount;
   String? _lastProfileID;

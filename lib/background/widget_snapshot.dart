@@ -37,6 +37,10 @@ class WidgetSessionSnapshot {
   final bool _isAndroid;
   String? _lastWritten;
 
+  /// Redraws the home-screen widget. The attention tile snapshot reuses it so
+  /// only this file and live_background.dart talk to `oc/background`.
+  static Future<void> refreshHomeWidget() => _refreshViaChannel();
+
   static Future<void> _refreshViaChannel() async {
     try {
       await _channel.invokeMethod<Object?>('refreshHomeWidget');
