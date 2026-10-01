@@ -19,6 +19,7 @@ class BackgroundConnectionService : Service() {
     override fun onCreate() {
         super.onCreate()
         active = true
+        LivePauseReceiver.setPausedByUser(this, false)
         createLiveNotificationChannel()
     }
 

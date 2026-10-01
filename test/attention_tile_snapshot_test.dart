@@ -10,6 +10,7 @@ void main() {
   Future<(AttentionTileSnapshot, SharedPreferences)> harness({
     bool isAndroid = true,
     Map<String, Object> initial = const {},
+    Future<void> Function()? refreshWidget,
   }) async {
     SharedPreferences.setMockInitialValues(initial);
     final prefs = await SharedPreferences.getInstance();
@@ -17,6 +18,7 @@ void main() {
       AttentionTileSnapshot(
         prefs: prefs,
         isAndroid: isAndroid,
+        refreshWidget: refreshWidget,
         now: () => DateTime.fromMillisecondsSinceEpoch(1_700_000_000_000),
       ),
       prefs,
@@ -35,6 +37,17 @@ void main() {
       'profileID': 'server-1',
       'updatedAt': 1_700_000_000_000,
     });
+  });
+
+  test('redraws the home widget after a write and after a clear', () async {
+    var redraws = 0;
+    final (tile, _) = await harness(refreshWidget: () async => redraws++);
+    await tile.update(pendingCount: 2, profileID: 'server-1');
+    expect(redraws, 1);
+    await tile.update(pendingCount: 2, profileID: 'server-1');
+    expect(redraws, 1);
+    await tile.clear();
+    expect(redraws, 2);
   });
 
   test('rewrites only when the count or owner changes', () async {

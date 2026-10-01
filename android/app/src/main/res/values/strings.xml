@@ -22,4 +22,10 @@
         <item quantity="one">%1$d needs you</item>
         <item quantity="other">%1$d need you</item>
     </plurals>
+    <!-- Pause/resume Quick Settings tile (PauseTileService.kt). -->
+    <string name="pause_tile_label">Background mode</string>
+    <string name="pause_tile_label_with_state">Background mode · %1$s</string>
+    <string name="pause_tile_on">On</string>
+    <string name="pause_tile_paused">Paused</string>
+    <string name="pause_tile_off">Off in Settings</string>
 </resources>
