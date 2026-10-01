@@ -186,15 +186,34 @@ extension _KitDiffRows on _KitDiffViewState {
   }
 
   Widget _textCell(KitTokens tokens, KitDiffLine? line, _Geometry g) {
-    final text = Text(
-      line?.text ?? '',
-      softWrap: g.wrap,
-      overflow: TextOverflow.clip,
-      style: KitText.styleOf(
-        context,
-        KitTextRole.mono,
-      ).copyWith(color: tokens.roles.text1),
-    );
+    final style = KitText.styleOf(
+      context,
+      KitTextRole.mono,
+    ).copyWith(color: tokens.roles.text1);
+    // Syntax colour is a foreground tint on code lines only: the row's
+    // background and the +/- glyph are untouched.
+    final highlighted =
+        line == null ||
+            line.kind == KitDiffLineKind.hunk ||
+            widget.files.isEmpty
+        ? null
+        : _FileHighlight.of(widget.files[_file]).spansFor(
+            line.text,
+            tokens.roles,
+            _DiffPalette.of(tokens.roles, tokens.detailsSurface),
+          );
+    final text = highlighted == null
+        ? Text(
+            line?.text ?? '',
+            softWrap: g.wrap,
+            overflow: TextOverflow.clip,
+            style: style,
+          )
+        : Text.rich(
+            TextSpan(style: style, children: [highlighted]),
+            softWrap: g.wrap,
+            overflow: TextOverflow.clip,
+          );
     return Padding(
       padding: EdgeInsetsDirectional.only(end: tokens.space2),
       child: text,

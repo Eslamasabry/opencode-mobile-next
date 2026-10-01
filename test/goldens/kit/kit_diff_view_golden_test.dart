@@ -89,6 +89,45 @@ List<KitDiffFile> _files() => [
 
 Widget _unified() => _page(KitDiffView(files: _files()));
 
+/// A JSON file's diff: syntax colour on a language that is not code
+/// (issue #26).
+Widget _json() => _page(
+  KitDiffView(
+    files: [
+      KitDiffFile.fromTexts(
+        'package.json',
+        before: _jsonBefore,
+        after: _jsonAfter,
+      ),
+    ],
+  ),
+);
+
+const _jsonBefore = '''
+{
+  "name": "greeting",
+  "version": "1.2.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "jest --ci"
+  },
+  "files": ["dist"]
+}''';
+
+const _jsonAfter = '''
+{
+  "name": "greeting",
+  "version": "1.3.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "jest --ci --coverage",
+    "lint": "eslint src"
+  },
+  "files": ["dist"]
+}''';
+
 Widget _selecting() => _page(
   KitDiffView(
     files: _files(),
@@ -177,6 +216,7 @@ void main() {
       final at = kitGallerySize(size);
       for (final MapEntry(key: state, value: scene) in <String, Widget>{
         'unified': _unified(),
+        'json': _json(),
         'binary_renamed': _binaryRenamed(),
         'too_big': _tooBig(),
         'loading': _loading(),

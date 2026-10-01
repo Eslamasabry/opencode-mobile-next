@@ -550,3 +550,104 @@ class _Geometry {
   /// Where the text column starts: the number cells and the glyph.
   double get indent => (split ? number : number + number) + glyph;
 }
+
+/// Syntax colour for one file's lines (issue #26). The grammar comes from
+/// the file's extension (the one [KitCodeBlock] uses); each line is parsed
+/// lazily, when its row is first built, and the parse is kept per file
+/// revision (a [KitDiffFile] is immutable, so the instance is the revision).
+/// A file with an unknown language, or over [lineLimit] lines, is plain, and
+/// so is a line too long to parse cheaply: no highlighting work, no notice.
+class _FileHighlight {
+  _FileHighlight._(this.grammar);
+
+  /// Files with more lines than this are never highlighted.
+  static const int lineLimit = 2000;
+
+  /// Lines longer than this are shown plain.
+  static const int _lineChars = 1000;
+
+  static final _cache = Expando<_FileHighlight>();
+
+  static _FileHighlight of(KitDiffFile file) =>
+      _cache[file] ??= _FileHighlight._(
+        file.binary || file.segments.length > lineLimit
+            ? null
+            : _lineGrammar(KitCodeHighlight.grammarForPath(file.path)),
+      );
+
+  /// The `highlight` package's `json` grammar rejects a lone line (it
+  /// expects a whole document) and returns it unstyled, so JSON lines are
+  /// coloured with the JavaScript grammar, which reads them as literals.
+  static String? _lineGrammar(String? grammar) =>
+      grammar == 'json' ? 'javascript' : grammar;
+
+  /// Null: this file is shown plain.
+  final String? grammar;
+
+  final _nodes = <String, List<Node>?>{};
+
+  /// [text] as styled spans, or null for plain text. [palette] keeps each
+  /// syntax colour readable on the row backgrounds.
+  TextSpan? spansFor(String text, ThemeRoles roles, _DiffPalette palette) {
+    final grammar = this.grammar;
+    if (grammar == null || text.isEmpty || text.length > _lineChars) {
+      return null;
+    }
+    final nodes = _nodes.containsKey(text)
+        ? _nodes[text]
+        : _nodes[text] = KitCodeHighlight.parseNodes(text, grammar);
+    if (nodes == null) return null;
+    return KitCodeHighlight.fromNodes(nodes, roles, legible: palette.legible);
+  }
+}
+
+/// The syntax colours a diff row may carry: each one moved only as far
+/// toward `text1` as it takes to reach 4.5:1 on the plain, added and removed
+/// row backgrounds (and the same under a selection), so a tint never makes
+/// code hard to read and the colour bar stays the primary signal.
+class _DiffPalette {
+  _DiffPalette(ThemeRoles roles, Color surface)
+    : _toward = roles.text1,
+      _grounds = [
+        for (final tint in [
+          null,
+          roles.codeAddedSurface,
+          roles.codeRemovedSurface,
+        ])
+          for (final selected in [false, true])
+            () {
+              var ground = tint == null
+                  ? surface
+                  : Color.alphaBlend(tint, surface);
+              if (selected) {
+                ground = Color.alphaBlend(
+                  roles.accent.withValues(alpha: .2),
+                  ground,
+                );
+              }
+              return ground;
+            }(),
+      ];
+
+  final Color _toward;
+  final List<Color> _grounds;
+  final _memo = <Color, Color>{};
+
+  static _DiffPalette? _last;
+  static ThemeRoles? _lastRoles;
+  static Color? _lastSurface;
+
+  static _DiffPalette of(ThemeRoles roles, Color surface) {
+    if (_last != null &&
+        _lastSurface == surface &&
+        identical(_lastRoles, roles)) {
+      return _last!;
+    }
+    _lastRoles = roles;
+    _lastSurface = surface;
+    return _last = _DiffPalette(roles, surface);
+  }
+
+  Color legible(Color color) =>
+      _memo[color] ??= readableOn(color, _grounds, 4.5, toward: _toward);
+}

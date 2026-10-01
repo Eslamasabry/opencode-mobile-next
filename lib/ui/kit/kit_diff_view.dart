@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:highlight/highlight.dart' show Node;
 
 import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
@@ -12,6 +13,7 @@ import '../theme_roles.dart';
 import 'kit_bidi.dart';
 import 'kit_buttons.dart';
 import 'kit_choice_list.dart';
+import 'kit_code_block.dart' show KitCodeHighlight;
 import 'kit_copy.dart';
 import 'kit_icon_button.dart';
 import 'kit_layout.dart';

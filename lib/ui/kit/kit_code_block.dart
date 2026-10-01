@@ -107,11 +107,46 @@ abstract final class KitCodeHighlight {
   static const _cacheLimit = 48;
   static final Map<String, List<Node>?> _cache = <String, List<Node>?>{};
 
+  /// The grammar name the `highlight` package registers for a language
+  /// hint, or null when the hint is unknown (nothing is guessed).
+  static String? grammarFor(String? language) =>
+      _languageAliases[language?.trim().toLowerCase()];
+
+  /// The grammar for the file at [path], from its extension (or, for
+  /// `Dockerfile` and `Makefile`, its name); null when unknown.
+  static String? grammarForPath(String path) {
+    final name = path.split(RegExp(r'[/\\]')).last.toLowerCase();
+    final dot = name.lastIndexOf('.');
+    final hint = dot > 0 && dot < name.length - 1
+        ? name.substring(dot + 1)
+        : name;
+    return grammarFor(hint);
+  }
+
+  /// [source] parsed with [grammar] (from [grammarFor]); null when the
+  /// grammar fails. Not cached: the caller owns the cache.
+  static List<Node>? parseNodes(String source, String grammar) {
+    try {
+      return highlight.parse(source, language: grammar).nodes;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Parsed [nodes] as styled spans painted in [roles]. [legible] may move
+  /// each syntax colour (the diff view keeps them readable on its tinted
+  /// rows).
+  static TextSpan fromNodes(
+    List<Node> nodes,
+    ThemeRoles roles, {
+    Color Function(Color color)? legible,
+  }) => TextSpan(children: _spansFor(nodes, roles, legible));
+
   /// [source] as styled spans for the [language] hint, painted in [roles].
   /// Falls back to one plain span when the language is unknown, the block
   /// is oversized, or the grammar fails.
   static TextSpan spans(String source, String? language, ThemeRoles roles) {
-    final grammar = _languageAliases[language?.trim().toLowerCase()];
+    final grammar = grammarFor(language);
     if (grammar == null || source.length > sizeLimit) {
       return TextSpan(text: source);
     }
@@ -120,24 +155,24 @@ abstract final class KitCodeHighlight {
     if (_cache.containsKey(key)) {
       nodes = _cache[key];
     } else {
-      try {
-        nodes = highlight.parse(source, language: grammar).nodes;
-      } catch (_) {
-        nodes = null;
-      }
+      nodes = parseNodes(source, grammar);
       if (_cache.length >= _cacheLimit) {
         _cache.remove(_cache.keys.first);
       }
       _cache[key] = nodes;
     }
     if (nodes == null) return TextSpan(text: source);
-    return TextSpan(children: _spansFor(nodes, roles));
+    return fromNodes(nodes, roles);
   }
 
-  static List<InlineSpan> _spansFor(List<Node> nodes, ThemeRoles roles) {
+  static List<InlineSpan> _spansFor(
+    List<Node> nodes,
+    ThemeRoles roles,
+    Color Function(Color color)? legible,
+  ) {
     final spans = <InlineSpan>[];
     for (final node in nodes) {
-      final style = _styleFor(node.className, roles);
+      final style = _styleFor(node.className, roles, legible);
       final children = node.children;
       if (children == null) {
         if (node.value?.isNotEmpty == true) {
@@ -145,12 +180,25 @@ abstract final class KitCodeHighlight {
         }
         continue;
       }
-      spans.add(TextSpan(children: _spansFor(children, roles), style: style));
+      spans.add(
+        TextSpan(children: _spansFor(children, roles, legible), style: style),
+      );
     }
     return spans;
   }
 
-  static TextStyle? _styleFor(String? className, ThemeRoles roles) =>
+  static TextStyle? _styleFor(
+    String? className,
+    ThemeRoles roles,
+    Color Function(Color color)? legible,
+  ) {
+    final style = _rawStyleFor(className, roles);
+    final color = style?.color;
+    if (legible == null || style == null || color == null) return style;
+    return style.copyWith(color: legible(color));
+  }
+
+  static TextStyle? _rawStyleFor(String? className, ThemeRoles roles) =>
       switch (className) {
         'keyword' || 'built_in' || 'literal' || 'type' || 'tag' => TextStyle(
           color: roles.codeKeyword,
