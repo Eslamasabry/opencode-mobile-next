@@ -27,16 +27,10 @@ const _chatMaxLines = 800;
 /// path -> line count when the gate landed (2026-10-02). Only goes down.
 const _baseline = <String, int>{
   'lib/api/product_repository.dart': 2708,
-  'lib/main.dart': 2228,
-  'lib/orchestration/adapters/fixture/project_fixture_gateway.dart': 2138,
-  'lib/state/orchestration.dart': 2088,
   'lib/api2/gateway_operations.dart': 1849,
-  'lib/state/profiles.dart': 1668,
   'lib/api2/models.dart': 1647,
   'lib/api/models.dart': 1630,
-  'lib/ui/search/search_index.dart': 1639,
   'lib/domain/server_gateway.dart': 1522,
-  'lib/builtin/setup/setup_engine.dart': 1515,
 };
 
 bool _generated(String path) =>
