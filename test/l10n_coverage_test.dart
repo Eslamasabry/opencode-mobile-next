@@ -82,7 +82,7 @@ Map<String, int> scan() {
 }
 
 // Recorded 2026-09-03. Only decrease these numbers.
-const _baseline = <String, int>{'lib/ui/screens/chat_screen.dart': 1};
+const _baseline = <String, int>{};
 
 void main() {
   test('hardcoded string detector', () {

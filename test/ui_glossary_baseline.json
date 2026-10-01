@@ -3,7 +3,7 @@
     "lib/ui/screens/activity_screen.dart": {
       "label workspaceDismissNotice: fewer than two words": 1
     },
-    "lib/ui/screens/chat_screen.dart": {
+    "lib/ui/screens/chat/chat_drafts.dart": {
       "title draftAttachmentRecoveryTitle: Arabic does not end with \"؟\"": 1,
       "title draftAttachmentRecoveryTitle: English does not end with \"?\"": 1
     },

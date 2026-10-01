@@ -71,7 +71,7 @@ const _allowed = <String, Map<String, String>>{
     'log = error.message;': 'shown in the server log panel, not as words',
   },
   // Transcript export, separately redacted by its local put helper.
-  'screens/chat_screen.dart': {
+  'screens/chat/chat_session_menu.dart': {
     "put('> \${l10n.chatUiError}: \$error\\n');":
         'transcript export text, masked by put through KitRedact; not UI copy',
   },

@@ -215,3 +215,15 @@ extension _ChatNudges on _ChatScreenState {
     );
   }
 }
+
+mixin _ChatNudgeFields {
+  // One-time nudges (UX plan 5.8): the rules live in the watcher, the screen
+  // only reports facts and renders the slot. See chat/nudge_slot.dart.
+  ConversationNudgeWatcher? _nudgeWatcher;
+  bool _nudgeObserveQueued = false;
+
+  /// P6.6a: the model the app picked by itself, said once per server
+  /// where it is used (the composer); null once dismissed or not to say.
+  String? _modelDefaultSaid;
+  bool _modelDefaultClaimed = false;
+}
