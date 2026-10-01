@@ -26,7 +26,6 @@ const _chatMaxLines = 800;
 
 /// path -> line count when the gate landed (2026-10-02). Only goes down.
 const _baseline = <String, int>{
-  'lib/state/connection.dart': 11149,
   'lib/api/product_repository.dart': 2708,
   'lib/ui/screens/workspace_screen.dart': 2571,
   'lib/ui/kit/kit_diff_view.dart': 2547,

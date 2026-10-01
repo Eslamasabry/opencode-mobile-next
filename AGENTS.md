@@ -67,7 +67,7 @@ flutter test --concurrency=1    # serial in the phone-hosted container; a workst
   per file going down only.
 - UI talks to the domain gateway only — never `api/` or `api2/` directly.
   Gate features on `ServerCapabilities` flags, never on the flavor enum.
-- Treat as single-owner units (one editor at a time): `lib/state/connection.dart`,
+- Treat as single-owner units (one editor at a time): `lib/state/connection.dart` **plus every `connection/*.dart` part file**,
   `lib/ui/screens/chat_screen.dart` **plus every `chat/*.dart` part file as one
   library**, `lib/domain/server_gateway.dart`, `lib/api/product_repository.dart`,
   `lib/main.dart`, `lib/l10n/` output, each protocol cluster, and both halves of
