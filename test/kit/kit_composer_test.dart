@@ -61,6 +61,7 @@ KitComposer _composer(
   KitComposerVoice? voice,
   KitComposerChips? suggestions,
   bool model = false,
+  KitComposerFailure? failure,
 }) => KitComposer(
   controller: h.controller,
   focusNode: h.focus,
@@ -89,6 +90,7 @@ KitComposer _composer(
   voiceButtonKey: _voice,
   editorKey: _editor,
   deliveryKey: _delivery,
+  failure: failure,
 );
 
 Future<void> _pump(
@@ -317,6 +319,41 @@ void main() {
       expect(_label(tester, _send), 'Add to this turn');
       semantics.dispose();
     });
+  });
+
+  testWidgets('a failed send is neutral words with Try again, never red', (
+    tester,
+  ) async {
+    final h = _host('');
+    var retries = 0;
+    await _pump(
+      tester,
+      _composer(
+        h,
+        failure: KitComposerFailure(
+          words: "Didn't send",
+          onRetry: () => retries++,
+        ),
+      ),
+    );
+    final roles = KitTokens.of(tester.element(find.byType(KitComposer))).roles;
+    Color? colorOf(String text) {
+      final rich = tester.widget<RichText>(
+        find.descendant(
+          of: find.byType(KitComposer),
+          matching: find.byWidgetPredicate(
+            (w) => w is RichText && w.text.toPlainText() == text,
+          ),
+        ),
+      );
+      return rich.text.style?.color;
+    }
+
+    expect(colorOf("Didn't send"), roles.text1);
+    expect(colorOf('· Try again'), roles.text1);
+    expect(colorOf("Didn't send"), isNot(roles.danger));
+    await tester.tap(find.text('· Try again'));
+    expect(retries, 1);
   });
 
   testWidgets('offline: Send says it queues and still sends', (tester) async {

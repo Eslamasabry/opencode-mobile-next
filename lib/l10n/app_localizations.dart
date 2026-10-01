@@ -62,7 +62,8 @@ import 'app_localizations_en.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -70,7 +71,8 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -82,17 +84,18 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
-    Locale('en')
+    Locale('en'),
   ];
 
   /// No description provided for @servicesTitle.
@@ -3867,7 +3870,12 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{profile} · {kind}\n{lastChecked}: {time}'**
-  String monitorRequestSummary(String profile, String kind, String lastChecked, String time);
+  String monitorRequestSummary(
+    String profile,
+    String kind,
+    String lastChecked,
+    String time,
+  );
 
   /// No description provided for @monitorCheckIn.
   ///
@@ -7641,7 +7649,14 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{total} of unsent work — {queued, plural, =1{1 queued prompt} other{{queued} queued prompts}} ({queueBytes}) and {drafts, plural, =1{1 draft} other{{drafts} drafts}} ({draftBytes}). Queued prompts are discarded after {days} days.'**
-  String e7SettingsStorageSummary(String total, int queued, String queueBytes, int drafts, String draftBytes, int days);
+  String e7SettingsStorageSummary(
+    String total,
+    int queued,
+    String queueBytes,
+    int drafts,
+    String draftBytes,
+    int days,
+  );
 
   /// Settings and appearance user interface.
   ///
@@ -11061,7 +11076,10 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Could not verify {detail1} before this destructive action: {detail2}'**
-  String e7LibraryCouldNotVerifyBeforeThisDestructiveAction(String detail1, String detail2);
+  String e7LibraryCouldNotVerifyBeforeThisDestructiveAction(
+    String detail1,
+    String detail2,
+  );
 
   /// Library and project tools UI: {detail1} reset to the default branch
   ///
@@ -11571,7 +11589,9 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{detail1} credential removed; server environment remains active'**
-  String e7LibraryCredentialRemovedServerEnvironmentRemainsActive(String detail1);
+  String e7LibraryCredentialRemovedServerEnvironmentRemainsActive(
+    String detail1,
+  );
 
   /// Library and project tools UI: {detail1} disconnected
   ///
@@ -13971,7 +13991,12 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{model}, {size}, {badges}. {description}'**
-  String e7VoiceUiPackSemantics(String model, String size, String badges, String description);
+  String e7VoiceUiPackSemantics(
+    String model,
+    String size,
+    String badges,
+    String description,
+  );
 
   /// Shared voice or model selection UI: e7VoiceUiLicenses
   ///
@@ -14841,7 +14866,13 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{total} agents: {working} working, {waiting} waiting, {idle} idle, {stopped} stopped'**
-  String teamUiCardAgentsSummary(int total, int working, int waiting, int idle, int stopped);
+  String teamUiCardAgentsSummary(
+    int total,
+    int working,
+    int waiting,
+    int idle,
+    int stopped,
+  );
 
   /// Workspace AI Team card empty state, second line (Sprint A: no start-a-run on the phone)
   ///
@@ -26391,7 +26422,11 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Installs OpenCode {target} on {server} (now {current}) with the server’s own installer.'**
-  String serverSettingsUpgradeBody(String target, String server, String current);
+  String serverSettingsUpgradeBody(
+    String target,
+    String server,
+    String current,
+  );
 
   /// Server update question: what happens during the install
   ///
@@ -36393,7 +36428,11 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'A leftover {helper} process in {project} has been busy for {duration} with nothing to do'**
-  String workRunawayHelperInProject(String helper, String project, String duration);
+  String workRunawayHelperInProject(
+    String helper,
+    String project,
+    String duration,
+  );
 
   /// Status line menu: opens Running on this phone, the list of processes on the phone
   ///
@@ -39147,7 +39186,12 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Today: {today} / {daily}. Total: {spent} / {total}.'**
-  String teamProjectSpend(String today, String daily, String spent, String total);
+  String teamProjectSpend(
+    String today,
+    String daily,
+    String spent,
+    String total,
+  );
 
   /// No description provided for @teamProjectEditorNewProject.
   ///
@@ -41760,7 +41804,8 @@ abstract class AppLocalizations {
   String get storageRestartFailedBody;
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -41769,25 +41814,26 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['ar', 'en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['ar', 'en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
-
-
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'ar': return AppLocalizationsAr();
-    case 'en': return AppLocalizationsEn();
+    case 'ar':
+      return AppLocalizationsAr();
+    case 'en':
+      return AppLocalizationsEn();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
+    'that was used.',
   );
 }
