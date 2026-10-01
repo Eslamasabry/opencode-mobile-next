@@ -36,8 +36,13 @@ const _serverRestartCommand = 'bash ubuntu-opencode.sh restart';
 /// The official upgrade and model refresh, run on the server's computer.
 const _serverUpdateCommands = 'opencode upgrade\nopencode models --refresh';
 
+/// Last good health per profile id, kept for the process: Settings and its
+/// server page paint it at once and refresh behind it.
+final Map<String, Health> serverHealthCache = {};
+
 class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
   Health? _health;
+  bool _blocking = false;
   String? _healthError;
   bool _checking = false;
   bool _upgradingServer = false;
@@ -56,6 +61,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
         if (mounted && target != null) Scrollable.ensureVisible(target);
       });
     }
+    _health = serverHealthCache[widget.controller.profile?.id];
     widget.controller.addListener(_connectionChanged);
     _checkHealth();
   }
@@ -84,6 +90,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     if (_checking) return;
     setState(() {
       _checking = true;
+      _blocking = _health == null;
       _healthError = null;
     });
     try {
@@ -92,11 +99,18 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
         throw ProductException(copy.e7SettingsUi18);
       }
       final health = await api.health();
+      final id = widget.controller.profile?.id;
+      if (id != null) serverHealthCache[id] = health;
       if (mounted) setState(() => _health = health);
     } catch (error) {
       if (mounted) setState(() => _healthError = productErrorText(error));
     } finally {
-      if (mounted) setState(() => _checking = false);
+      if (mounted) {
+        setState(() {
+          _checking = false;
+          _blocking = false;
+        });
+      }
     }
   }
 
@@ -282,7 +296,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       width: KitScreenWidth.reading,
       // The health check and an update in flight are the screen's one
       // loading bar (design standard §4); the rows say what is happening.
-      loading: _checking || _upgradingServer,
+      loading: _blocking || _upgradingServer,
       loadingLabel: _upgradingServer ? serverUpdateTitle : copy.e7SettingsUi11,
       body: ListView(
         padding: EdgeInsets.only(

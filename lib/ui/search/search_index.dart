@@ -399,6 +399,20 @@ bool _canImport(SearchScope scope) {
 /// Every entry, ungated, in the order results are listed: the hub's rows in
 /// hub order, then what sits inside them, then the places.
 List<SearchEntry> allSearchEntries(AppLocalizations l10n) {
+  // Static copy per language: built once, not per Settings build.
+  return _allEntriesByLanguage.putIfAbsent(l10n.localeName, () {
+    allSearchEntriesBuilds++;
+    return _buildAllSearchEntries(l10n);
+  });
+}
+
+final _allEntriesByLanguage = <String, List<SearchEntry>>{};
+
+/// Test seam: how many times the ungated index was actually built.
+@visibleForTesting
+int allSearchEntriesBuilds = 0;
+
+List<SearchEntry> _buildAllSearchEntries(AppLocalizations l10n) {
   final notifications = l10n.settingsHubGroupNotifications;
   final appearance = l10n.e7AppearanceTitle;
   final usage = l10n.settingsHubGroupUsage;

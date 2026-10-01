@@ -10,6 +10,7 @@ import '../../background/live_background.dart';
 import '../../builtin/builtin_server.dart' show looksLikeInAppServer;
 import '../../builtin/setup/phone_setup.dart';
 import '../../builtin/setup/setup_contract.dart' show SetupProgress;
+import '../../diagnostics/perf_trace.dart';
 import '../../diagnostics/report_problem_startup.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
@@ -90,6 +91,10 @@ enum SettingsGroup {
 /// per group. From expanded it
 /// is [KitScreen.twoPane]: the groups are the list pane and the chosen
 /// group's rows fill the detail pane; a row still opens its page.
+/// Test seam: builds of the Settings hub.
+@visibleForTesting
+int settingsBuildCount = 0;
+
 class SettingsScreen extends StatefulWidget {
   final ConnectionController controller;
 
@@ -119,6 +124,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String? _healthError;
   bool _checking = false;
 
+  /// True while the loading bar is shown (a first check, not a refresh).
+  bool _blocking = false;
+
+  /// The tab is offstage (TickerMode off); notifications only mark it stale.
+  bool _visible = true;
+
   /// The group in the detail pane (expanded and wider).
   SettingsGroup? _selected;
 
@@ -126,6 +137,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _selected = widget.initialGroup;
+    _openSpan = PerfTrace.begin('settings.open');
+    _health = serverHealthCache[widget.controller.profile?.id];
     widget.controller.addListener(_connectionChanged);
     _checkHealth();
     final initial = widget.initialGroup;
@@ -137,16 +150,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  PerfSpanHandle? _openSpan;
+
   void _connectionChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    if (!_visible) return;
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_connectionChanged);
+    _openSpan?.finish(attrs: {'outcome': 'closed'});
+    super.dispose();
   }
 
   Future<void> _checkHealth() async {
     // Runs from initState, so inherited lookups are not yet allowed.
     final copy = earlyAppLocalizations(context);
     if (_checking) return;
+    final cached = _health != null;
+    final span = PerfTrace.begin('settings.health', attrs: {'cached': cached});
     setState(() {
       _checking = true;
+      _blocking = !cached;
       _healthError = null;
     });
     try {
@@ -155,11 +182,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         throw ProductException(copy.e7SettingsUi18);
       }
       final health = await api.health();
+      final id = widget.controller.profile?.id;
+      if (id != null) serverHealthCache[id] = health;
       if (mounted) setState(() => _health = health);
+      span.finish();
     } catch (error) {
+      span.finish(error: error);
       if (mounted) setState(() => _healthError = productErrorText(error));
     } finally {
-      if (mounted) setState(() => _checking = false);
+      if (mounted) {
+        setState(() {
+          _checking = false;
+          _blocking = false;
+        });
+      }
     }
   }
 
@@ -212,7 +248,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _thisServerRow(ConnectionController controller) {
     final copy = _settingsCopy(context);
     final healthy = _health?.healthy == true;
-    final status = _checking
+    final status = _blocking
         ? copy.e7SettingsUi11
         : _healthError != null
         ? copy.e7SettingsHealthError(_healthError!)
@@ -501,6 +537,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    settingsBuildCount++;
+    _visible = TickerMode.valuesOf(context).enabled;
+    if (_openSpan != null) {
+      final span = _openSpan!;
+      _openSpan = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) => span.finish());
+    }
     final controller = widget.controller;
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final copy = _settingsCopy(context);
@@ -549,7 +592,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return KitScreen(
         topBar: topBar,
         // The health check of "This server" is the one thing that loads here.
-        loading: _checking,
+        loading: _blocking,
         loadingLabel: copy.e7SettingsUi11,
         width: KitScreenWidth.reading,
         body: hubList(scrollTargets: true),
@@ -588,7 +631,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
     return KitScreen.twoPane(
       topBar: topBar,
-      loading: _checking,
+      loading: _blocking,
       loadingLabel: copy.e7SettingsUi11,
       listPaneKey: const ValueKey('settings-list-pane'),
       detailPaneKey: const ValueKey('settings-detail-pane'),
@@ -609,12 +652,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: l10n.settingsHubDetailEmpty,
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_connectionChanged);
-    super.dispose();
   }
 }
 
