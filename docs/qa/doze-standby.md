@@ -121,14 +121,18 @@ notification, tells Dart (`backgroundServiceTimeout`), and stops.
 Fast check (emulator or device, Android 15+):
 
 ```sh
-adb shell cmd activity set-fgs-timeout-override $PKG dataSync 60000  # if available
-# otherwise use the platform test: wait for the real timeout on a spare device
+# Shorten the limit on an emulator or userdebug build (flag name not verified
+# on every Android 15/16 build; if it has no effect, wait for the real limit):
+adb shell device_config put activity_manager data_sync_fgs_timeout_duration 60000
+adb shell device_config get activity_manager data_sync_fgs_timeout_duration
+# restore afterwards
+adb shell device_config delete activity_manager data_sync_fgs_timeout_duration
 ```
 
 Expected: after the limit, the "session is live" notification is gone, the
 Keep running screen shows the timeout notice rather than a stale "on", and
 turning the setting back on restarts the service. Record the Android build
-and whether the override command exists on it.
+and whether the override took effect on it.
 
 ## E. OEM kill check (physical device only)
 
