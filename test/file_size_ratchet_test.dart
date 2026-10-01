@@ -28,7 +28,6 @@ const _chatMaxLines = 800;
 const _baseline = <String, int>{
   'lib/api/product_repository.dart': 2708,
   'lib/ui/screens/workspace_screen.dart': 2571,
-  'lib/ui/kit/kit_diff_view.dart': 2547,
   'lib/ui/screens/library/integrations_screen.dart': 2315,
   'lib/ui/screens/activity_screen.dart': 2266,
   'lib/main.dart': 2228,
