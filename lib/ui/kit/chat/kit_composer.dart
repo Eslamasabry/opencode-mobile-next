@@ -899,7 +899,8 @@ class _EdgeLight {
 ///   [KitTurnLive.pace] while writing, settling to a breathing hue at the
 ///   dip's edges when the server is quiet, never faster than
 ///   [KitMotion.edgeLightMaxLapsPerSecond]); at the end it fades into the
-///   border as the dip straightens. A failure washes the outline red once.
+///   border as the dip straightens. A failure washes the outline once in
+///   the neutral text colour, never red (LOOK-5).
 /// - Calm: the caption, a half-depth dip and a slow breathing hue.
 /// - Off or reduced motion: the caption and the dip, still.
 ///
@@ -1217,7 +1218,7 @@ class _LivingEdgeState extends State<_LivingEdge>
                             still: !_travels && level != KitMotionLevel.off,
                             neutral: roles.text1,
                             accent: roles.accent,
-                            danger: roles.danger,
+                            wash: roles.text1,
                             rim: roles.hairline,
                             rimWidth: KitTokens.hairlineWidth(context),
                             repaint: Listenable.merge([_repaint, _flash]),
@@ -1323,7 +1324,7 @@ class _EdgePainter extends CustomPainter {
     required this.still,
     required this.neutral,
     required this.accent,
-    required this.danger,
+    required this.wash,
     required this.rim,
     required this.rimWidth,
     required super.repaint,
@@ -1339,7 +1340,7 @@ class _EdgePainter extends CustomPainter {
   final bool still;
   final Color neutral;
   final Color accent;
-  final Color danger;
+  final Color wash;
 
   /// The glass's own edge colour and width, for the parted border's ends.
   final Color rim;
@@ -1460,14 +1461,14 @@ class _EdgePainter extends CustomPainter {
     canvas.save();
     final f = flash.value;
     if (f > 0 && f < 1) {
-      // A wash of red along the outline, gone within a moment.
+      // A neutral wash along the outline, gone within a moment.
       canvas.drawPath(
         outline,
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 6
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5)
-          ..color = danger.withValues(alpha: 0.32 * (1 - f)),
+          ..color = wash.withValues(alpha: 0.2 * (1 - f)),
       );
     }
     if (comet && light.bright > 0.02) {
@@ -1570,8 +1571,8 @@ class _EdgePainter extends CustomPainter {
 }
 
 /// What is written in the gap: the phase words with the time and a small
-/// red stop; or "Didn't send", Retry and Details. Neutral words (text2);
-/// red only for a failure and for Stop. The words are the live region: the
+/// red stop; or "Didn't send", Retry and Details. Neutral words (text2;
+/// a failure's text1 with a neutral glyph); red only for Stop. The words are the live region: the
 /// label is the phase, so it announces phase changes and not the seconds.
 class _EdgeCaption extends StatelessWidget {
   const _EdgeCaption({
@@ -1730,7 +1731,15 @@ class _EdgeCaption extends StatelessWidget {
     KitComposerFailure failure,
   ) => [
     const SizedBox(width: _railEnd),
-    _words(failure.words, failure.words, failure.words, KitTextTone.danger),
+    // A failure is neutral (LOOK-5, B2): text1 words after the neutral
+    // error glyph; only Stop on this edge is red.
+    const KitIcon(
+      AppIconography.error,
+      size: KitIconSize.small,
+      tone: KitTextTone.primary,
+    ),
+    const SizedBox(width: _stopGap),
+    _words(failure.words, failure.words, failure.words, KitTextTone.primary),
     KitTappable(
       tappableKey: failure.retryKey,
       label: l10n.kitComposerRailRetry,

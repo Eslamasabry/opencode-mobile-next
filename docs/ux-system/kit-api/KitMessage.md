@@ -108,7 +108,7 @@ class KitMessage extends StatelessWidget {
 
 **Frozen behaviour.**
 
-- **Prompt bubble.** Aligned to the end edge; at most `KitLayout.bubbleMaxShare` of the available width (0.85; pre-wave, `_new-tokens.md`) and never narrower than its content needs up to that; padding `space3` vertical, `space4` horizontal; fill `surface2`; corners `bubbleRadius` (20) except the bottom-end corner, `bubbleTailRadius` (6) (pre-wave tokens; VL §5 "20/20/6/20", mirrored under RTL). No border, shadow or glass (LOOK-20, LOOK-27). Attachments sit under the text inside the bubble as `KitComposerChips.attachments(items:, onRemove: null)` (read-only). `time` is a `caption` in `text3` under the bubble at the end edge, formatted with `MaterialLocalizations.formatTimeOfDay` (digits from the locale, COPY-30).
+- **Prompt bubble.** Aligned to the end edge; wide by default (owner decision, 1.1.0): `bubbleWidth: KitBubbleWidth.auto` hugs its words and may grow to the available width minus `KitLayout.bubbleStartInset` (48), with no 85 % cap (`kit_message.dart:30-43`, `:285-294`); `compact` (the appearance option) caps it at `KitLayout.bubbleMaxShare` (0.85) and `full` fills the width; padding `space3` vertical, `space4` horizontal; fill `surface2`; corners `bubbleRadius` (20) except the bottom-end corner, `bubbleTailRadius` (6) (pre-wave tokens; VL §5 "20/20/6/20", mirrored under RTL). No border, shadow or glass (LOOK-20, LOOK-27). Attachments sit under the text inside the bubble as `KitComposerChips.attachments(items:, onRemove: null)` (read-only). `time` is a `caption` in `text3` under the bubble at the end edge, formatted with `MaterialLocalizations.formatTimeOfDay` (digits from the locale, COPY-30).
 - **Prompt menu.** The bubble has no visible control (STATE-16). Long-press (touch) and right-click (pointer) open `showKitMenu(position: <gesture point>)`; Shift+F10 and the Menu key open it anchored; every item is also a `CustomSemanticsAction` (KIT-28, A11Y-5). An empty `menu` makes the bubble inert.
 - **Reply.** `body` on the prose's start edge, full available width, no fill, no frame.
 - **Thought.** A fold row: a 20 dp thought glyph, the title in `secondary`, and a chevron; opened, the body sits under it in `secondary`/`text2`, indented `space3` behind a one-pixel `hairline` stroke at the start edge (the work line's indent).
@@ -126,11 +126,11 @@ Declared (KIT-12): **prompt** (plain; with attachments; with time), **reply**, *
 - ThemeRoles: `surface2` (bubble), `text1` (prompt and reply text, failed notice), `text2` (thought, notice, marker words), `text3` (prompt time), `hairline` (marker rules, thought stroke), `accent` (only the working mark, via KitStatusMark).
 - KitText roles: `body` (prompt, reply, via KitMarkdown), `secondary` (thought body and title, notice), `caption` (marker, time), `mono` (notice technical).
 - KitTokens: `space1`–`space4`, `minTarget` (fold rows and the notice action), `smallIconSize` (20: glyphs, chevron), `hairlineWidth(context)` (§0.5 step 2 seam).
-- **New (pre-wave, `_new-tokens.md`):** `KitTokens.bubbleRadius` = 20 and `KitTokens.bubbleTailRadius` = 6 (VL §5; LOOK-19 has no name for them; shared with KitQueuedMessage); `KitLayout.bubbleMaxShare` = 0.85 (LAY-2 names layout widths only in KitLayout).
+- **New (pre-wave, `_new-tokens.md`):** `KitTokens.bubbleRadius` = 20 and `KitTokens.bubbleTailRadius` = 6 (VL §5; LOOK-19 has no name for them; shared with KitQueuedMessage); `KitLayout.bubbleMaxShare` = 0.85 (only the `compact` appearance option) and `KitLayout.bubbleStartInset` = 48 (the default's free margin) (LAY-2 names layout widths only in KitLayout).
 
 ## Adaptive
 
-- **compact:** the bubble takes up to 85 % of the turn width; replies use the full width.
+- **compact:** by default the bubble hugs its words up to the turn width minus 48 dp (`auto`); with the Bubbles appearance option (`compact`) it takes up to 85 %; replies use the full width.
 - **medium / expanded / large:** the same shares inside the conversation pane, which the host caps at `KitLayout.paneDetailMaxWidth` (700, LAY-5). Nothing changes by window class.
 - **Fine pointer:** right-click on a prompt opens its menu at the pointer; the thought and notice folds show a hover step (surface step, KitTappable rule); text selection by drag through the host's `KitSelectable(mode: finePointer)`.
 - **Keyboard:** a prompt with a menu is one Tab stop (focus ring on the bubble's shape, `accent`, `focusRingWidth`); Shift+F10 or the Menu key opens its menu. Folds are one Tab stop each; Enter and Space toggle. Replies are not Tab stops (links inside them are).
@@ -175,7 +175,7 @@ Declared (KIT-12): **prompt** (plain; with attachments; with time), **reply**, *
 
 `test/kit/kit_message_test.dart`:
 
-1. Prompt: the bubble sits at the end edge (right under LTR, left under RTL); its decoration is `surface2` with bottom-end radius 6 and the others 20 (read from the render object); its width is at most 85 % of a 400 dp host.
+1. Prompt: the bubble sits at the end edge (right under LTR, left under RTL); its decoration is `surface2` with bottom-end radius 6 and the others 20 (read from the render object); by default its width is at most 400 − 48 = 352 dp in a 400 dp host and a short prompt stays small; with `KitBubbleWidth.compact` at most 85 % (340 dp).
 2. Prompt has no button in its subtree (no control row); long-press opens the menu with the given items; right-click (desktop capabilities) opens the same items; the semantics node exposes them as custom actions; an empty menu opens nothing.
 3. Prompt with two attachments shows both names, without a remove control.
 4. Reply: no decoration, full width, the KitMarkdown is present.
