@@ -50,6 +50,25 @@ saying why is a fine answer.
 - [ ] **Dependencies**: `pubspec.lock` changed — `THIRD_PARTY_NOTICES.md`
       regenerated (the hygiene test will tell you)
 
+## Smoke matrix results
+
+Required for a release or sideload pull request; delete for anything else.
+Procedure and table: [docs/qa/smoke-matrix.md](../docs/qa/smoke-matrix.md).
+Link the record you filled in (`docs/qa/smoke-<version>-<date>/README.md`).
+
+- [ ] Android 12 (API 31) emulator
+- [ ] Android 13 (API 33) emulator
+- [ ] Android 14 (API 34) emulator
+- [ ] Android 15 (API 35) emulator
+- [ ] Android 16 (API 36) emulator, and 36.1 for the promoted-notification path
+- [ ] Two physical devices (model and Android version in the record)
+- [ ] Install and upgrade, connect, chat, permission, background,
+      notifications, built-in Linux, AI Team and storage access all ticked
+      per version
+- [ ] No crash or ANR in `adb logcat -b crash`
+- [ ] Doze and standby run for background changes
+      ([doze-standby.md](../docs/qa/doze-standby.md))
+
 ## Privacy, security, and release notes
 
 <!--
