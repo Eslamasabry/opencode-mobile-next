@@ -31,6 +31,8 @@ class SessionsWidgetProvider : AppWidgetProvider() {
 
     companion object {
         private const val SNAPSHOT_KEY = "flutter.oc.widgetSessions"
+        private const val ATTENTION_KEY = "flutter.oc.attentionTile"
+        private const val ATTENTION_MAX_AGE_MS = 24L * 60 * 60 * 1000
         private const val FLUTTER_PREFS = "FlutterSharedPreferences"
 
         private val rowIDs = intArrayOf(
@@ -85,6 +87,42 @@ class SessionsWidgetProvider : AppWidgetProvider() {
             views.setOnClickPendingIntent(R.id.widget_header, open)
             views.setOnClickPendingIntent(R.id.widget_empty, open)
             views.setOnClickPendingIntent(R.id.widget_new, open)
+
+            // The "N need you" badge reads the Quick Settings tile's snapshot
+            // (same key, same one-day freshness) and opens Activity.
+            val attention = readAttentionCount(context)
+            if (attention != null && attention > 0) {
+                views.setTextViewText(
+                    R.id.widget_attention,
+                    context.resources.getQuantityString(
+                        R.plurals.tile_need_you,
+                        attention,
+                        attention
+                    )
+                )
+                views.setViewVisibility(R.id.widget_attention, View.VISIBLE)
+                views.setOnClickPendingIntent(
+                    R.id.widget_attention,
+                    PendingIntent.getActivity(
+                        context,
+                        99,
+                        Intent(context, MainActivity::class.java).apply {
+                            action = Intent.ACTION_MAIN
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                                Intent.FLAG_ACTIVITY_SINGLE_TOP
+                            putExtra(
+                                MainActivity.EXTRA_LAUNCH_ACTION,
+                                AttentionTileService.LAUNCH_ACTION_ACTIVITY
+                            )
+                        },
+                        PendingIntent.FLAG_UPDATE_CURRENT or
+                            PendingIntent.FLAG_IMMUTABLE
+                    )
+                )
+            } else {
+                views.setViewVisibility(R.id.widget_attention, View.GONE)
+            }
 
             val snapshot = readSnapshot(context)
             val sessions = snapshot?.optJSONArray("sessions")
@@ -160,6 +198,26 @@ class SessionsWidgetProvider : AppWidgetProvider() {
                 )
             }
             return views
+        }
+
+        private fun readAttentionCount(context: Context): Int? {
+            val raw = context
+                .getSharedPreferences(FLUTTER_PREFS, Context.MODE_PRIVATE)
+                .getString(ATTENTION_KEY, null)
+                ?: return null
+            return try {
+                val snapshot = JSONObject(raw)
+                val updatedAt = snapshot.optLong("updatedAt", 0L)
+                if (updatedAt <= 0L ||
+                    System.currentTimeMillis() - updatedAt > ATTENTION_MAX_AGE_MS
+                ) {
+                    null
+                } else {
+                    snapshot.optInt("pendingCount", 0).coerceAtLeast(0)
+                }
+            } catch (_: Exception) {
+                null
+            }
         }
 
         private fun readSnapshot(context: Context): JSONObject? {

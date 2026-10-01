@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../platform/platform_capabilities.dart';
@@ -18,15 +19,31 @@ class AttentionTileSnapshot {
     required this.prefs,
     bool? isAndroid,
     DateTime Function()? now,
-  }) : _isAndroid = isAndroid ?? platformCapabilities.supportsQuickSettingsTile,
+    Future<void> Function()? refreshWidget,
+  }) : _refreshWidget = refreshWidget ?? _refreshViaChannel,
+       _isAndroid = isAndroid ?? platformCapabilities.supportsQuickSettingsTile,
        _now = now ?? DateTime.now;
 
   /// Read by the native tile as `flutter.oc.attentionTile`.
   static const prefsKey = 'oc.attentionTile';
 
+  static const _channel = MethodChannel('oc/background');
+
   final SharedPreferences prefs;
+  final Future<void> Function() _refreshWidget;
   final bool _isAndroid;
   final DateTime Function() _now;
+
+  /// The home-screen widget shows this same count, so it is redrawn after
+  /// every write through the existing `refreshHomeWidget` method.
+  static Future<void> _refreshViaChannel() async {
+    try {
+      await _channel.invokeMethod<Object?>('refreshHomeWidget');
+    } catch (_) {
+      // No engine-side handler (tests, desktop): the widget keeps its state.
+    }
+  }
+
   int? _lastCount;
   String? _lastProfileID;
 
@@ -49,6 +66,7 @@ class AttentionTileSnapshot {
         'updatedAt': _now().millisecondsSinceEpoch,
       }),
     );
+    await _refreshWidget();
   }
 
   /// Drops the cache so the tile falls back to "OpenCode" with no count.
@@ -58,6 +76,7 @@ class AttentionTileSnapshot {
     _lastCount = null;
     _lastProfileID = null;
     await prefs.remove(prefsKey);
+    await _refreshWidget();
   }
 
   /// Drops the cache when it belongs to [profileID]. A payload written
@@ -83,6 +102,7 @@ class AttentionTileSnapshot {
     }
     _lastCount = null;
     _lastProfileID = null;
+    if (_isAndroid) await _refreshWidget();
     return AttentionTileClear.cleared;
   }
 }

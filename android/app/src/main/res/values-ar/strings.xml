@@ -20,4 +20,9 @@
         <item quantity="many">%1$d طلبًا يحتاج إليك</item>
         <item quantity="other">%1$d طلب يحتاج إليك</item>
     </plurals>
+    <string name="pause_tile_label">الوضع في الخلفية</string>
+    <string name="pause_tile_label_with_state">الوضع في الخلفية · %1$s</string>
+    <string name="pause_tile_on">يعمل</string>
+    <string name="pause_tile_paused">متوقف مؤقتًا</string>
+    <string name="pause_tile_off">متوقف في الإعدادات</string>
 </resources>

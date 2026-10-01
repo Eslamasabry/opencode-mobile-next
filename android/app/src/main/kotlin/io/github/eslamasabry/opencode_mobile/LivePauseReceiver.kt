@@ -12,25 +12,64 @@ import android.content.Intent
  * "Android stopped it" notice.
  */
 class LivePauseReceiver : BroadcastReceiver() {
-    private companion object {
+    companion object {
         // shared_preferences' Android store and key prefix; the key matches
         // BackgroundLiveController.preferenceKey.
         const val FLUTTER_PREFERENCES = "FlutterSharedPreferences"
         const val FLUTTER_PREFERENCE_KEEP_LIVE = "flutter.oc.keepLiveInBackground"
+
+        // Native-only marker: the user paused (notification button or the
+        // Quick Settings tile) and can resume from the tile. Cleared when the
+        // service starts again or the user turns the mode off in Settings.
+        private const val NATIVE_PREFERENCES = "oc_background_native"
+        private const val KEY_PAUSED = "pausedByUser"
+
+        fun isPausedByUser(context: Context): Boolean =
+            context.getSharedPreferences(NATIVE_PREFERENCES, Context.MODE_PRIVATE)
+                .getBoolean(KEY_PAUSED, false)
+
+        fun setPausedByUser(context: Context, paused: Boolean) {
+            context.getSharedPreferences(NATIVE_PREFERENCES, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(KEY_PAUSED, paused)
+                .apply()
+        }
+
+        /** Whether background mode is switched on in the app's settings. */
+        fun isBackgroundModeOn(context: Context): Boolean =
+            BackgroundConnectionService.active ||
+                context.getSharedPreferences(FLUTTER_PREFERENCES, Context.MODE_PRIVATE)
+                    .getBoolean(FLUTTER_PREFERENCE_KEEP_LIVE, false)
+
+        /** The notification's Pause action, shared with the tile. */
+        fun pause(context: Context) {
+            BackgroundConnectionService.stop(context)
+            setPausedByUser(context, true)
+            // Flip the persisted Dart preference here as well: when no engine
+            // is alive to hear the push, the next launch would otherwise
+            // restore "on" and restart the service the user just paused.
+            context.getSharedPreferences(FLUTTER_PREFERENCES, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(FLUTTER_PREFERENCE_KEEP_LIVE, false)
+                .apply()
+            BackgroundConnectionService.notifyDartStopped(
+                BackgroundConnectionService.REASON_USER_PAUSE
+            )
+        }
+
+        /** Resume what [pause] stopped: preference back on, service started. */
+        fun resume(context: Context) {
+            context.getSharedPreferences(FLUTTER_PREFERENCES, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(FLUTTER_PREFERENCE_KEEP_LIVE, true)
+                .apply()
+            setPausedByUser(context, false)
+            BackgroundConnectionService.start(context)
+        }
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != BackgroundConnectionService.ACTION_PAUSE_LIVE) return
-        BackgroundConnectionService.stop(context)
-        // Flip the persisted Dart preference here as well: when no engine is
-        // alive to hear the push, the next launch would otherwise restore
-        // "on" and restart the service the user just paused.
-        context.getSharedPreferences(FLUTTER_PREFERENCES, Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean(FLUTTER_PREFERENCE_KEEP_LIVE, false)
-            .apply()
-        BackgroundConnectionService.notifyDartStopped(
-            BackgroundConnectionService.REASON_USER_PAUSE
-        )
+        pause(context)
     }
 }

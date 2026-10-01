@@ -232,6 +232,8 @@ class MainActivity : FlutterActivity() {
                     "enable" -> enableBackgroundConnection(result)
                     "disable" -> {
                         BackgroundConnectionService.stop(this)
+                        // Turned off in Settings: nothing left to resume from the tile.
+                        LivePauseReceiver.setPausedByUser(this, false)
                         result.success(backgroundStatus(enabled = false))
                     }
                     "requestBatteryOptimizationExemption" -> {
