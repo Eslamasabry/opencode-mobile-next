@@ -23,6 +23,10 @@ import 'mcp_catalog_screen.dart';
 import 'mcp_setup_screen.dart';
 
 part 'library/integrations_screen.dart';
+part 'library/integrations_mcp.dart';
+part 'library/integrations_page.dart';
+part 'library/integrations_signin.dart';
+part 'library/integrations_connect.dart';
 part 'library/integration_tiles.dart';
 part 'library/credential_sheet.dart';
 part 'library/command_auth_sheet.dart';
