@@ -41,7 +41,6 @@ const _baseline = <String, int>{
   'lib/api2/models.dart': 1647,
   'lib/api/models.dart': 1630,
   'lib/ui/widgets/pickers.dart': 1627,
-  'lib/ui/search/search_index.dart': 1639,
   'lib/ui/screens/team/projects/team_projects_screen.dart': 1527,
   'lib/domain/server_gateway.dart': 1522,
   'lib/builtin/setup/setup_engine.dart': 1515,
