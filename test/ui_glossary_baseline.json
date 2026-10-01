@@ -10,9 +10,11 @@
     "lib/ui/screens/local_terminal_screen.dart": {
       "label localTerminalStop: fewer than two words": 1
     },
-    "lib/ui/screens/servers_screen.dart": {
-      "label capsuleRemove: fewer than two words": 1,
+    "lib/ui/screens/servers/profile_editor_pairing.dart": {
       "label e7SetupDiscard: fewer than two words": 1
+    },
+    "lib/ui/screens/servers/servers_actions.dart": {
+      "label capsuleRemove: fewer than two words": 1
     },
     "lib/ui/screens/team/gate_sheet.dart": {
       "label teamUiGateAnswerApprove: fewer than two words": 1
