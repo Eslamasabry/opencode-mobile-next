@@ -155,9 +155,17 @@
       ".flavor ==": 1,
       "ServerFlavor.": 1
     },
-    "lib/ui/screens/servers_screen.dart": {
-      ".flavor ==": 4,
-      "ServerFlavor.": 6
+    "lib/ui/screens/servers/profile_editor_probe.dart": {
+      ".flavor ==": 1,
+      "ServerFlavor.": 1
+    },
+    "lib/ui/screens/servers/server_rows.dart": {
+      ".flavor ==": 2,
+      "ServerFlavor.": 4
+    },
+    "lib/ui/screens/servers/servers_actions.dart": {
+      ".flavor ==": 1,
+      "ServerFlavor.": 1
     },
     "lib/ui/widgets/phone_server_card.dart": {
       ".flavor ==": 2,
@@ -169,30 +177,42 @@
     }
   },
   "ARCH-2 allowlist": {
-    "lib/ui/screens/servers_screen.dart": {
+    "lib/ui/screens/servers/profile_editor_pairing.dart": {
+      "_EditorPairingAndSave._save": [
+        "The profile editor stores the flavour on the profile: the probed one, or OpenCode 1 when the endpoint changed and nothing was probed."
+      ]
+    },
+    "lib/ui/screens/servers/profile_editor_widgets.dart": {
       "_ProbeVerdict.build": [
         "Labels the connection-test verdict in the profile editor with the probed flavour (OpenCode 1 or 2 found, OpenCode 1 limits)."
-      ],
-      "_ProfileEditorScreenState._save": [
-        "The profile editor stores the flavour on the profile: the probed one, or OpenCode 1 when the endpoint changed and nothing was probed."
-      ],
-      "_ServersScreenState._enterPhoneCredentials": [
-        "Creates the phone server profile from its credentials sheet and sets its flavour (OpenCode 1 or 2) from the runtime the sheet was opened for."
-      ],
+      ]
+    },
+    "lib/ui/screens/servers/server_rows.dart": {
       "_knownOpenCodeGeneration": [
         "Labels a saved profile in the server list as OpenCode 1 or OpenCode 2; no behaviour depends on it."
+      ]
+    },
+    "lib/ui/screens/servers/servers_actions.dart": {
+      "_ServersActions._enterPhoneCredentials": [
+        "Creates the phone server profile from its credentials sheet and sets its flavour (OpenCode 1 or 2) from the runtime the sheet was opened for."
       ]
     }
   },
   "ARCH-2 allowlisted": {
-    "lib/ui/screens/servers_screen.dart": {
+    "lib/ui/screens/servers/profile_editor_pairing.dart": {
+      "_EditorPairingAndSave._save: .flavor ==": 1,
+      "_EditorPairingAndSave._save: ServerFlavor.": 3
+    },
+    "lib/ui/screens/servers/profile_editor_widgets.dart": {
       "_ProbeVerdict.build: .flavor ==": 3,
-      "_ProbeVerdict.build: ServerFlavor.": 3,
-      "_ProfileEditorScreenState._save: .flavor ==": 1,
-      "_ProfileEditorScreenState._save: ServerFlavor.": 3,
-      "_ServersScreenState._enterPhoneCredentials: ServerFlavor.": 2,
+      "_ProbeVerdict.build: ServerFlavor.": 3
+    },
+    "lib/ui/screens/servers/server_rows.dart": {
       "_knownOpenCodeGeneration: ServerFlavor.": 2,
       "_knownOpenCodeGeneration: switch (flavor)": 1
+    },
+    "lib/ui/screens/servers/servers_actions.dart": {
+      "_ServersActions._enterPhoneCredentials: ServerFlavor.": 2
     }
   }
 }
