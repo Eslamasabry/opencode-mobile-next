@@ -1,6 +1,6 @@
 {
   "G11 confirm": {
-    "lib/ui/screens/activity_screen.dart": {
+    "lib/ui/screens/activity/activity_question_form.dart": {
       "label workspaceDismissNotice: fewer than two words": 1
     },
     "lib/ui/screens/chat/chat_drafts.dart": {
@@ -19,7 +19,7 @@
     "lib/ui/screens/team/gate_sheet.dart": {
       "label teamUiGateAnswerApprove: fewer than two words": 1
     },
-    "lib/ui/screens/workspace_screen.dart": {
+    "lib/ui/screens/workspace/workspace_sheets.dart": {
       "label promptStashDelete: a bare OK/Yes/Continue/Confirm/Delete": 1
     },
     "lib/ui/widgets/safety_confirms.dart": {

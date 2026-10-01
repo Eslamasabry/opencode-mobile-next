@@ -126,6 +126,11 @@
       "G21 .toUpperCase()": 1
     },
     "lib/ui/screens/workspace_screen.dart": {},
+    "lib/ui/screens/workspace/workspace_actions.dart": {},
+    "lib/ui/screens/workspace/workspace_build.dart": {},
+    "lib/ui/screens/workspace/workspace_load.dart": {},
+    "lib/ui/screens/workspace/workspace_sheets.dart": {},
+    "lib/ui/screens/workspace/workspace_widgets.dart": {},
     "lib/ui/widgets/connection_status_banner.dart": {},
     "lib/ui/widgets/folder_browser.dart": {},
     "lib/ui/widgets/local_server_row.dart": {},
