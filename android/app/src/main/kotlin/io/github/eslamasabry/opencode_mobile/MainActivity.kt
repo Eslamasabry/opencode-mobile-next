@@ -575,6 +575,10 @@ class MainActivity : FlutterActivity() {
                 null
             }
             "projectStorage" -> inBackground { linux.projectStorage() }
+            "setSharedProjects" -> inBackground {
+                linux.setSharedProjectRoots(call.argument<List<String>>("roots") ?: emptyList())
+                null
+            }
             // The phone setup job (SetupRunner.kt). The runner is made off
             // the main thread: its first use reads setup.json.
             "startSetup" -> {

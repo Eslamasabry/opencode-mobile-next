@@ -301,10 +301,14 @@ then Android's "All files access" page, `oc/storage` / `StorageAccess.kt`,
 `MANAGE_EXTERNAL_STORAGE`), and `SharedStorageGate` names which host lacks
 access (app, or Termux via `ls /storage/emulated/0`). The Files tab shows
 "Allow access to files" when such a folder lists only hidden entries. proot
-binds `/storage` and `/storage/emulated/0` as `/sdcard`
-(`BuiltinLinux.sharedStorageBinds`) except in the confined AI Team tier, which
-keeps to the project space. Other servers are never gated. Nothing is stored,
-so profile deletion has no key to sweep.
+binds all of `/storage` and `/sdcard` until AI Team is on; from then on one
+confined launcher covers every built-in process, so only the exact folders the
+person opened are bound (own path plus `/sdcard` alias) and allowed by
+Landlock (`SharedStorageBinds`, `BuiltinLinux.protectedCommand`). Those folders
+are kept per profile as `oc.sharedProjects.<profileId>` (swept on deletion,
+`lib/state/shared_project_roots.dart`) and mirrored to a native file so binds
+survive a restart. A folder opened for the first time while AI Team is on is
+visible after the next server start. Other servers are never gated.
 
 UI talks to the gateway, never to `api/` or `api2/` directly. See
 [CONTRIBUTING.md](../CONTRIBUTING.md) for the boundaries a change must respect.

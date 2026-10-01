@@ -6,6 +6,7 @@ import 'app_locale.dart';
 import 'automation_policy.dart';
 import 'builtin_server_owner.dart';
 import 'session_link_bindings.dart';
+import 'shared_project_roots.dart';
 import 'consent_owners.dart';
 
 import 'package:flutter/foundation.dart';
@@ -7582,6 +7583,8 @@ class ConnectionController extends ChangeNotifier {
               excluding: retainedKeys,
             )
           : scopedKeys;
+      // The folders this server opened in shared storage are no longer bound.
+      if (clearedStash) await SharedProjectRoots.push(store.prefs);
       if (clearedStash && unclearedKeys.isNotEmpty) {
         failures.add(
           '${unclearedKeys.length} saved '

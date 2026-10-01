@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
@@ -36,6 +37,7 @@ void main() {
   late SharedStorageOutcome? outcome;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     debugPlatformCapabilities = const PlatformCapabilities(
       platform: TargetPlatform.android,
       isWeb: false,

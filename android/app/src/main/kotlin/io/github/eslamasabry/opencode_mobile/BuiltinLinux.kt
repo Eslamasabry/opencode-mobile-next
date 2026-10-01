@@ -292,22 +292,28 @@ class BuiltinLinux(private val context: Context) {
         return if (prootIsConfined && protectionTier() != "proot") protectedCommand(command) else command
     }
 
-    /**
-     * Shared storage inside Ubuntu: /storage/emulated/0 as /sdcard (and
-     * /storage/emulated/0 itself) plus the rest of /storage for other
-     * volumes. Android still decides what the app may read there (All files
-     * access, asked only when a shared-storage project is opened), so this
-     * shows nothing the person has not allowed. The AI Team's confined tier
-     * never gets it: [protectedCommand] allows only the project space.
-     */
-    private fun sharedStorageBinds(): List<String> {
-        if (prootIsConfined) return emptyList()
-        val primary = File("/storage/emulated/0")
-        val binds = mutableListOf<String>()
-        if (File("/storage").isDirectory) binds += "--bind=/storage"
-        if (primary.isDirectory) binds += "--bind=${primary.path}:/sdcard"
-        return binds
+    private val sharedProjectsFile = File(context.filesDir, "oc.sharedProjects")
+
+    /** The shared-storage folders the person opened as projects (canonical). */
+    @Synchronized
+    fun sharedProjectRoots(): List<String> = try {
+        if (sharedProjectsFile.isFile) {
+            sharedProjectsFile.readLines().mapNotNull { SharedStorageBinds.canonicalRoot(it) }.distinct()
+        } else emptyList()
+    } catch (_: Exception) { emptyList() }
+
+    /** Replaces the remembered folders (the union over all profiles, from Dart). */
+    @Synchronized
+    fun setSharedProjectRoots(roots: List<String>) {
+        val clean = roots.mapNotNull { SharedStorageBinds.canonicalRoot(it) }.distinct().sorted()
+        if (clean.isEmpty()) { sharedProjectsFile.delete(); return }
+        val tmp = File(sharedProjectsFile.parentFile, "oc.sharedProjects.tmp")
+        tmp.writeText(clean.joinToString("\n"))
+        if (!tmp.renameTo(sharedProjectsFile)) { tmp.delete(); throw IllegalStateException("shared projects not saved") }
     }
+
+    private fun sharedStorageBinds(): List<String> =
+        SharedStorageBinds.binds(sharedProjectRoots(), prootIsConfined)
 
     /** The executable must match argv[0], including for the native PTY bridge. */
     val prootLaunchPath: String get() =
@@ -321,7 +327,8 @@ class BuiltinLinux(private val context: Context) {
             "--read-write", home.absolutePath,
             "--read-write", projectStorage.projects.absolutePath,
             "--read-write", tmp.absolutePath,
-        ) + listOf("/system", "/apex", "/vendor", "/proc", "/sys")
+        ) + sharedProjectRoots().filter { File(it).isDirectory }
+            .flatMap { listOf("--read-write", it) } + listOf("/system", "/apex", "/vendor", "/proc", "/sys")
             .filter { File(it).exists() }.flatMap { listOf("--read-only", it) } +
             listOf("/dev/null", "/dev/zero", "/dev/random", "/dev/urandom")
                 .filter { File(it).exists() }.flatMap { listOf("--device", it) }
@@ -1846,5 +1853,58 @@ class BuiltinLinux(private val context: Context) {
 
         fun imageForDevice(): Image =
             if (Build.SUPPORTED_ABIS.firstOrNull() == "x86_64") amd64 else arm64
+    }
+}
+
+/**
+ * Shared storage inside Ubuntu. Before AI Team is on, the whole /storage and
+ * /sdcard are visible (Android still gates what the app may read). Once it is
+ * on, one confined launcher covers every process, so shared storage is limited
+ * to the exact folders the person opened as projects: each bound at its own
+ * path and, on the primary volume, its /sdcard alias, and nothing wider.
+ * Mirrors lib/domain/shared_storage_path.dart (sharedProjectRoot,
+ * sharedStorageProotBinds): keep both in step.
+ */
+object SharedStorageBinds {
+    private const val PRIMARY = "/storage/emulated/0"
+    private val aliases = listOf(
+        Regex("^/sdcard(?=/|$)"),
+        Regex("^/mnt/sdcard(?=/|$)"),
+        Regex("^/storage/self/primary(?=/|$)"),
+        Regex("^/mnt/user/\\d+/(?:emulated/(\\d+)|primary)(?=/|$)"),
+    )
+    private val volume = Regex("^/storage/(?:emulated/\\d+|[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4})(/.+)$")
+
+    fun canonicalRoot(path: String): String? {
+        val parts = ArrayList<String>()
+        for (part in path.trim().replace('\\', '/').split('/')) {
+            if (part.isEmpty() || part == ".") continue
+            if (part == "..") { if (parts.isNotEmpty()) parts.removeAt(parts.size - 1); continue }
+            parts.add(part)
+        }
+        var value = "/" + parts.joinToString("/")
+        for (alias in aliases) {
+            val match = alias.find(value) ?: continue
+            val user = match.groupValues[1].ifEmpty { "0" }
+            value = "/storage/emulated/$user" + value.substring(match.range.last + 1)
+            break
+        }
+        return if (volume.matches(value)) value else null
+    }
+
+    fun binds(roots: List<String>, confined: Boolean): List<String> {
+        if (!confined) {
+            val out = mutableListOf<String>()
+            if (File("/storage").isDirectory) out += "--bind=/storage"
+            if (File(PRIMARY).isDirectory) out += "--bind=$PRIMARY:/sdcard"
+            return out
+        }
+        val out = mutableListOf<String>()
+        for (root in roots.mapNotNull { canonicalRoot(it) }.distinct()) {
+            if (!File(root).isDirectory) continue
+            out += "--bind=$root"
+            if (root.startsWith("$PRIMARY/")) out += "--bind=$root:/sdcard${root.substring(PRIMARY.length)}"
+        }
+        return out
     }
 }

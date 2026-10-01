@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../builtin/builtin_server.dart' show looksLikeInAppServer;
+import '../../domain/shared_storage_path.dart';
 import '../../platform/storage_access.dart';
+import '../../state/shared_project_roots.dart';
 import '../../state/profiles.dart';
 import '../../state/shared_storage_gate.dart';
 import '../../termux/bridge.dart';
@@ -39,9 +44,22 @@ class SharedStorageAccessFlow {
   }) async {
     final block = await SharedStorageGate.blockFor(profile, path);
     if (block == SharedStorageBlock.none || !context.mounted) {
+      unawaited(_remember(profile, path));
       return SharedStorageOutcome.proceed;
     }
-    return resolve(context, block, offerAppSpace: offerAppSpace);
+    final outcome = await resolve(context, block, offerAppSpace: offerAppSpace);
+    if (outcome == SharedStorageOutcome.proceed) {
+      unawaited(_remember(profile, path));
+    }
+    return outcome;
+  }
+
+  /// Once AI Team is on, the in-app Linux sees shared storage only through the
+  /// folders opened here: keep this one for the next start.
+  static Future<void> _remember(ServerProfile? profile, String path) async {
+    if (profile == null || !looksLikeInAppServer(profile)) return;
+    if (!isSharedStoragePath(path)) return;
+    await SharedProjectRoots.remember(profile.id, path);
   }
 
   /// Explains [block], takes the person to the right place, and checks again

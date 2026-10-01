@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/shared_storage_path.dart';
 
 void main() {
+  sharedProjectBindTests();
   test('shared storage paths are recognised by every name Android gives', () {
     for (final path in [
       '/sdcard',
@@ -63,19 +64,21 @@ void main() {
     expect(linux, contains('--bind=/storage"'));
     expect(linux, contains(':/sdcard"'));
     expect(linux, contains('+ sharedStorageBinds() +'));
-    // The AI Team's confined tier is never given shared storage.
+    // Confined (AI Team on): only the folders the person opened, bound and
+    // allowed by exact path; never the whole of /storage.
+    expect(linux, contains('object SharedStorageBinds'));
     expect(
-      RegExp(
-        r'fun sharedStorageBinds[^}]*if \(prootIsConfined\) return emptyList\(\)',
-        dotAll: true,
-      ).hasMatch(linux),
-      isTrue,
+      linux,
+      contains(
+        'SharedStorageBinds.binds(sharedProjectRoots(), prootIsConfined)',
+      ),
     );
     final protectedBody = linux.substring(
       linux.indexOf('private fun protectedCommand'),
       linux.indexOf('private fun requirePhoneBoundaryKernel'),
     );
-    expect(protectedBody, isNot(contains('/storage')));
+    expect(protectedBody, contains('sharedProjectRoots()'));
+    expect(protectedBody, isNot(contains('"/storage"')));
     expect(protectedBody, isNot(contains('sdcard')));
 
     final activity = File('$native/MainActivity.kt').readAsStringSync();
@@ -95,5 +98,61 @@ void main() {
         isNot(contains('SharedPreferences')),
       );
     }
+  });
+}
+
+void sharedProjectBindTests() {
+  group('shared project roots and binds', () {
+    test('every spelling of an opened folder becomes one canonical root', () {
+      const want = '/storage/emulated/0/CodeAnything';
+      for (final path in [
+        '/sdcard/CodeAnything',
+        '/sdcard/CodeAnything/',
+        '/storage/self/primary/CodeAnything',
+        '/mnt/user/0/primary/CodeAnything',
+        '/root/projects/../../sdcard/CodeAnything',
+      ]) {
+        expect(sharedProjectRoot(path), want, reason: path);
+      }
+      expect(
+        sharedProjectRoot('/storage/1A2B-3C4D/Work'),
+        '/storage/1A2B-3C4D/Work',
+      );
+    });
+
+    test('a whole volume, app space and Termux are never a root', () {
+      for (final path in [
+        '/sdcard',
+        '/storage/emulated/0',
+        '/storage',
+        '/root/projects/app',
+        '/data/data/com.termux/files/home/storage/shared/x',
+        null,
+      ]) {
+        expect(sharedProjectRoot(path), isNull, reason: '$path');
+      }
+    });
+
+    test('before AI Team the whole shared storage is visible', () {
+      expect(sharedStorageProotBinds(const [], confined: false), [
+        '--bind=/storage',
+        '--bind=/storage/emulated/0:/sdcard',
+      ]);
+    });
+
+    test('with AI Team only the opened folders are bound, with alias', () {
+      final binds = sharedStorageProotBinds([
+        '/sdcard/CodeAnything',
+        '/storage/emulated/0/CodeAnything',
+        '/storage/1A2B-3C4D/Work',
+        '/sdcard',
+      ], confined: true);
+      expect(binds, [
+        '--bind=/storage/emulated/0/CodeAnything',
+        '--bind=/storage/emulated/0/CodeAnything:/sdcard/CodeAnything',
+        '--bind=/storage/1A2B-3C4D/Work',
+      ]);
+      expect(sharedStorageProotBinds(const [], confined: true), isEmpty);
+    });
   });
 }
