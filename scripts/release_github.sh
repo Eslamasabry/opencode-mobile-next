@@ -53,6 +53,7 @@ if type(actual) is not int or actual != int(sys.argv[2]):
 PYRELEASE
   }
   gh api "repos/$repo/actions/runs/$build_run" > "$scratch/build.json"
+  gh api "repos/$repo/actions/runs/$build_run/jobs?per_page=100" > "$scratch/build-jobs.json"
   gh api "repos/$repo/actions/runs/$quality_run" > "$scratch/quality.json"
   gh api "repos/$repo/actions/runs/$quality_run/jobs?per_page=100" > "$scratch/jobs.json"
   fetch_candidate_release

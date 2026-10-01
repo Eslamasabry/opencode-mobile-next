@@ -187,7 +187,7 @@ OpenAPI dumps under [contracts/](../contracts/).
 
 | Tool | Version |
 |---|---|
-| Flutter | **3.47.2** — the exact version pinned for Shorebird releases |
+| Flutter | **3.47.1** (Shorebird's fork) — the exact version pinned for Shorebird releases; CI's quality gate uses upstream 3.47.2 |
 | Android SDK | API 37 (`flutter_secure_storage` 11 requires it) |
 | Shorebird CLI | 1.6.x (only needed for release/patch work) |
 
@@ -198,11 +198,12 @@ flutter build apk --release
 flutter build linux          # desktop build, same codebase
 ```
 
-The Flutter pin matters: release artifacts and the 1,200+ test suite are
-validated against Shorebird's pinned 3.47.2
+The Flutter pin matters: release artifacts and the local test suite use
+Shorebird's pinned 3.47.1
 (`~/.shorebird/bin/cache/flutter/<rev>/bin/flutter` after installing
-Shorebird). Older local Flutters may fail to resolve packages. Run tests
-serially — `flutter test --concurrency=1`.
+Shorebird); `SHOREBIRD_FLUTTER_VERSION` in `scripts/release.sh` and
+`android-release.yml` must agree. Older local Flutters may fail to resolve
+packages. Run tests serially — `flutter test --concurrency=1`.
 
 Two integration tests run against any live server, no emulator needed:
 
@@ -214,6 +215,39 @@ dart run tool/prompt_test.dart http://127.0.0.1:4123   # needs model auth
 
 
 ## Releases and code push
+
+Every installable release is a Shorebird release, so later Dart-only fixes
+can ship as patches. There are two ways to make one:
+
+- **CI tag build** (the normal path).
+  [android-release.yml](../.github/workflows/android-release.yml) runs on a
+  `v<x.y.z+N>` tag of the current `master`. It runs
+  `shorebird release android --build-name x.y.z --build-number N
+  --flutter-version 3.47.1 --artifact apk`, with the same version derivation as
+  `scripts/release.sh`. It signs with the `RELEASE_*` keystore secrets, checks
+  the APK signer, package and version, and stages a draft GitHub release. The
+  draft notes record `Shorebird release <version>, Flutter 3.47.1 (Shorebird
+  engine)`. Only a tag run uploads to Shorebird. A manual dispatch on a branch
+  builds with `--dry-run` and uploads nothing. `./scripts/release.sh github`
+  will not publish that draft unless the build run ran on the candidate tag and
+  its `Build and upload Shorebird release APK` step succeeded. It also refuses
+  a plain `flutter build apk` or a dry-run build.
+- **Local sideload**: `./scripts/release.sh sideload --publish`.
+
+Shorebird accepts each version once. Once a tag run's Shorebird step has
+succeeded, re-running it fails. If a later step fails, bump the build number in
+`pubspec.yaml`, add the matching `docs/releases/v<version>.md`, and tag again.
+Dart-only fixes ship as `./scripts/release.sh patch --publish`, run against the
+exact released `x.y.z+N`. Changes to native code, assets or
+`pubspec.yaml`/`pubspec.lock` need a new release.
+
+**CI token (one-time owner step).** The release job fails closed without the
+`SHOREBIRD_TOKEN` repository secret. To create it, the owner runs
+`shorebird login:ci` locally, then
+`gh secret set SHOREBIRD_TOKEN --repo Eslamasabry/opencode-mobile-next` and
+pastes the token at its prompt, which keeps it out of shell history. Never
+print the token in logs, paste it into issues or chat, or commit it. To rotate
+it, run `shorebird login:ci` again and overwrite the secret.
 
 `./scripts/release.sh {release|patch|sideload}` is fail-closed: it demands a
 clean synced `master`, runs analysis, the full test suite, and a Shorebird

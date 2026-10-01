@@ -186,7 +186,7 @@ EOF
 set -euo pipefail
 printf 'flutter %s\n' "$*" >>"$MOCK_COMMAND_LOG"
 if [[ "${1:-}" == "--version" ]]; then
-  printf 'Flutter %s • channel stable\n' "${MOCK_FLUTTER_VERSION:-3.47.2}"
+  printf 'Flutter %s • channel stable\n' "${MOCK_FLUTTER_VERSION:-3.47.1}"
   exit 0
 fi
 if [[ "${MOCK_FLUTTER_FAIL:-}" == "${1:-}" ]]; then
@@ -267,7 +267,7 @@ run_release() {
       MOCK_REMOTE_TAG_EXISTS="${MOCK_REMOTE_TAG_EXISTS:-true}" \
       MOCK_REMOTE_TAG_COMMIT="${MOCK_REMOTE_TAG_COMMIT:-base-commit}" \
       MOCK_DIFF_FILES="${MOCK_DIFF_FILES:-}" \
-      MOCK_FLUTTER_VERSION="${MOCK_FLUTTER_VERSION:-3.47.2}" \
+      MOCK_FLUTTER_VERSION="${MOCK_FLUTTER_VERSION:-3.47.1}" \
       MOCK_FLUTTER_FAIL="${MOCK_FLUTTER_FAIL:-}" \
       MOCK_SHOREBIRD_FAIL="${MOCK_SHOREBIRD_FAIL:-false}" \
       MOCK_KEYSTORE_OWNER="${MOCK_KEYSTORE_OWNER:-CN=OpenCode Release}" \
@@ -407,7 +407,7 @@ test_flutter_toolchain_gate() {
   new_fixture
   MOCK_FLUTTER_VERSION='3.38.5' run_release patch --publish
   assert_status 1
-  assert_output_contains 'Flutter 3.47.2 is required'
+  assert_output_contains 'Flutter 3.47.1 is required'
   assert_output_contains 'PATH provides 3.38.5'
   assert_log_not_contains 'git status'
   assert_log_not_contains 'shorebird '
@@ -483,7 +483,7 @@ test_release_is_dry_run_by_default_and_builds_aab() {
   assert_output_contains 'nothing was uploaded'
   assert_log_contains 'flutter analyze'
   assert_log_contains 'flutter test --no-pub --concurrency=1 test/nested/release_gate_test.dart'
-  assert_log_contains 'shorebird release android --build-name 1.0.12 --build-number 13 --flutter-version 3.47.2 --artifact aab --dry-run'
+  assert_log_contains 'shorebird release android --build-name 1.0.12 --build-number 13 --flutter-version 3.47.1 --artifact aab --dry-run'
   assert_log_line_count 1 'shorebird '
   assert_log_not_contains '--artifact apk'
 
@@ -511,7 +511,7 @@ test_sideload_requires_public_lineage_and_verifies_apk() {
   assert_output_contains 'Publish explicitly with: ./scripts/release.sh sideload --publish'
   assert_log_contains 'flutter analyze'
   assert_log_contains 'flutter test --no-pub --concurrency=1 test/nested/release_gate_test.dart'
-  assert_log_contains 'shorebird release android --build-name 1.0.12 --build-number 13 --flutter-version 3.47.2 --artifact apk --dry-run'
+  assert_log_contains 'shorebird release android --build-name 1.0.12 --build-number 13 --flutter-version 3.47.1 --artifact apk --dry-run'
   assert_log_contains 'apksigner verify --print-certs build/app/outputs/flutter-apk/app-release.apk'
   assert_log_contains 'aapt dump badging build/app/outputs/flutter-apk/app-release.apk'
   assert_log_not_contains '--artifact aab'

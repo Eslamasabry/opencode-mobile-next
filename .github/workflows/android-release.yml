@@ -1,12 +1,25 @@
-# Builds the Android sideload APK on a release tag with the project's real
-# signing key, proves the signer is the public upgrade lineage and the version
-# matches the tag, keeps the APK as a workflow artifact for 90 days, and
-# creates or updates a draft stable GitHub release for a tag. A maintainer must
-# inspect and publish the draft; this workflow never announces it publicly.
+# Builds the Android sideload APK on a release tag as a Shorebird release with
+# the project's real signing key, proves the signer is the public upgrade
+# lineage and the version matches the tag, keeps the APK as a workflow artifact
+# for 90 days, and creates or updates a draft stable GitHub release for a tag.
+# A maintainer must inspect and publish the draft; this workflow never
+# announces it publicly.
 #
-# Fails closed: without the four RELEASE_* secrets the job stops before it
-# touches Gradle, so a fork or a missing secret cannot produce a misleading
-# "signed" artifact.
+# Every installable release is a Shorebird release so later Dart-only fixes
+# can ship as `scripts/release.sh patch` against the exact released version.
+# A plain `flutter build apk` cannot receive patches and is never used here.
+# Only a v* tag run uploads the release to Shorebird; any other run (a manual
+# dispatch on a branch) builds the same APK with `--dry-run` and uploads
+# nothing, and scripts/verify_github_release.py refuses to publish it.
+#
+# Shorebird accepts each version once: after a successful Shorebird upload the
+# same x.y.z+N cannot be released again, so a re-run of a tag whose Shorebird
+# step already succeeded fails. Recover from a later failure by bumping the
+# build number in pubspec.yaml and tagging the new version.
+#
+# Fails closed: without the four RELEASE_* secrets and SHOREBIRD_TOKEN the job
+# stops before it touches Gradle, so a fork or a missing secret cannot produce
+# a misleading "signed" or unpatchable artifact.
 
 name: Android release build
 
@@ -27,18 +40,26 @@ env:
   # Public sideload lineage. Must equal PUBLIC_SIDELOAD_CERT_SHA256 in
   # scripts/release.sh and the fingerprint printed in every release note.
   SIDELOAD_CERT_SHA256: 842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C
+  # Shorebird's Flutter fork the release engine is built from. Must equal
+  # SHOREBIRD_FLUTTER_VERSION in scripts/release.sh (checked below) so CI and
+  # local sideload releases ship the same engine.
+  SHOREBIRD_FLUTTER_VERSION: "3.47.1"
 
 jobs:
+  # scripts/verify_github_release.py checks this job's name and the step names
+  # in its RELEASE_STEPS and UNPATCHABLE_BUILD_STEPS before publication; rename
+  # a step there in the same change.
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
-      - name: Require the release signing secrets
+      - name: Require the release signing and Shorebird secrets
         env:
           KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
           STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
         run: |
           set -euo pipefail
           missing=()
@@ -46,26 +67,60 @@ jobs:
           [ -n "$STORE_PASSWORD" ] || missing+=(RELEASE_STORE_PASSWORD)
           [ -n "$KEY_ALIAS" ]     || missing+=(RELEASE_KEY_ALIAS)
           [ -n "$KEY_PASSWORD" ]  || missing+=(RELEASE_KEY_PASSWORD)
+          [ -n "$SHOREBIRD_TOKEN" ] || missing+=(SHOREBIRD_TOKEN)
           if [ ${#missing[@]} -gt 0 ]; then
             echo "::error::Release build blocked: repository secrets not set: ${missing[*]}"
             echo "Add them under Settings → Secrets and variables → Actions. See android/key.properties.example."
+            if [ -z "$SHOREBIRD_TOKEN" ]; then
+              echo "::error::Without SHOREBIRD_TOKEN the APK would not be a Shorebird release and could never receive patches."
+              echo "Create it with 'shorebird login:ci' and store it with 'gh secret set SHOREBIRD_TOKEN' (docs/technical-overview.md)."
+            fi
             exit 1
           fi
 
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Verify the tag matches pubspec.yaml
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Resolve the Shorebird release version
+        id: version
         run: |
           set -euo pipefail
-          version="$(sed -n 's/^version:[[:space:]]*\([^[:space:]#]*\).*/\1/p' pubspec.yaml | head -1)"
-          tag="${GITHUB_REF_NAME#v}"
-          if [ "$version" != "$tag" ]; then
-            echo "::error::Tag v$tag does not match pubspec.yaml version $version"
+          # Same derivation as scripts/release.sh: exactly one x.y.z+N version.
+          version="$(sed -n 's/^[[:space:]]*version:[[:space:]]*//p' pubspec.yaml)"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+\+[1-9][0-9]*$ ]]; then
+            echo "::error::pubspec.yaml must contain exactly one version in x.y.z+positive-build-number form. Found: ${version:-<none>}"
             exit 1
           fi
-          echo "Building $version"
+          pinned="$(sed -n 's/^readonly SHOREBIRD_FLUTTER_VERSION="\([^"]*\)"$/\1/p' scripts/release.sh)"
+          if [ "$pinned" != "$SHOREBIRD_FLUTTER_VERSION" ]; then
+            echo "::error::Workflow Shorebird Flutter $SHOREBIRD_FLUTTER_VERSION differs from scripts/release.sh (${pinned:-<none>})"
+            exit 1
+          fi
+          {
+            echo "version=$version"
+            echo "build_name=${version%%+*}"
+            echo "build_number=${version##*+}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Verify the tag matches pubspec.yaml
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$VERSION" != "$tag" ]; then
+            echo "::error::Tag v$tag does not match pubspec.yaml version $VERSION"
+            exit 1
+          fi
+          # The notes are needed after the Shorebird upload; a missing file
+          # must stop the run before a version is spent.
+          source_notes="docs/releases/v$VERSION.md"
+          if [ ! -s "$source_notes" ] || [ "$(head -n 1 "$source_notes")" != "# OpenCode Mobile $VERSION" ]; then
+            echo "::error::$source_notes must exist and start with '# OpenCode Mobile $VERSION'"
+            exit 1
+          fi
+          echo "Building $VERSION"
 
       - name: Require the exact master candidate and an unpublished tag
         if: startsWith(github.ref, 'refs/tags/v')
@@ -93,22 +148,31 @@ jobs:
         with:
           gradle-version: "9.5.0"
 
-      - name: Set up pinned Flutter
-        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
-        with:
-          flutter-version: 3.47.2
-          channel: stable
-          cache: true
+      # Shorebird brings its own Flutter fork (SHOREBIRD_FLUTTER_VERSION); no
+      # upstream Flutter is installed in this job, so nothing else can build
+      # the APK.
+      - name: Set up Shorebird
+        uses: shorebirdtech/setup-shorebird@4dd9d7dc2d7930bfeadb053b6e94b5110779d1e5 # v1.0.1
 
-      - name: Resolve dependencies
-        run: flutter pub get
+      - name: Show the Shorebird toolchain
+        run: shorebird --version
 
+      # android/settings.gradle.kts needs a Flutter SDK, which only exists
+      # once Shorebird builds, so the wrapper is generated in an empty project
+      # and copied in: the same files `gradle -p android wrapper` writes.
       - name: Generate ignored Gradle wrapper
-        run: >-
-          gradle -p android wrapper
-          --gradle-version 9.5.0
-          --distribution-type all
-          --gradle-distribution-sha256-sum a3c4ba4aca8f0075688b9c5b18939fd28e8cb4357c227da5c1d9f38343791439
+        run: |
+          set -euo pipefail
+          wrapper_project="$RUNNER_TEMP/gradle-wrapper"
+          mkdir -p "$wrapper_project"
+          : > "$wrapper_project/settings.gradle.kts"
+          gradle -p "$wrapper_project" wrapper \
+            --gradle-version 9.5.0 \
+            --distribution-type all \
+            --gradle-distribution-sha256-sum a3c4ba4aca8f0075688b9c5b18939fd28e8cb4357c227da5c1d9f38343791439
+          cp "$wrapper_project/gradlew" "$wrapper_project/gradlew.bat" android/
+          cp "$wrapper_project/gradle/wrapper/gradle-wrapper.jar" \
+            "$wrapper_project/gradle/wrapper/gradle-wrapper.properties" android/gradle/wrapper/
 
       - name: Install the release signing identity
         env:
@@ -136,16 +200,53 @@ jobs:
             "keyPassword=$KEY_PASSWORD" \
             > android/key.properties
 
-      - name: Compile signed release APK
-        run: flutter build apk --release
+      # Uploads the release to Shorebird so the exact version can be patched.
+      # Shorebird accepts each version once; see the header before re-running.
+      # Arguments mirror the sideload lane of scripts/release.sh.
+      - name: Build and upload Shorebird release APK
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+          BUILD_NAME: ${{ steps.version.outputs.build_name }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+        run: |
+          set -euo pipefail
+          rm -f build/app/outputs/flutter-apk/app-release.apk
+          shorebird release android \
+            --build-name "$BUILD_NAME" \
+            --build-number "$BUILD_NUMBER" \
+            --flutter-version "$SHOREBIRD_FLUTTER_VERSION" \
+            --artifact apk
+
+      # A manual run off a tag proves the same build without spending the
+      # version on Shorebird. Its APK is not patchable and is never published.
+      - name: Build Shorebird dry-run APK (nothing uploaded)
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+          BUILD_NAME: ${{ steps.version.outputs.build_name }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+        run: |
+          set -euo pipefail
+          rm -f build/app/outputs/flutter-apk/app-release.apk
+          shorebird release android \
+            --build-name "$BUILD_NAME" \
+            --build-number "$BUILD_NUMBER" \
+            --flutter-version "$SHOREBIRD_FLUTTER_VERSION" \
+            --artifact apk \
+            --dry-run
 
       - name: Remove the signing identity
         if: always()
         run: rm -f android/key.properties "${{ runner.temp }}/opencode-release.jks"
 
       - name: Verify APK signer and version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
+          # The APK `shorebird release android --artifact apk` writes; the
+          # build step deleted any older file before building.
           apk=build/app/outputs/flutter-apk/app-release.apk
           test -s "$apk"
           tools="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
@@ -160,7 +261,7 @@ jobs:
           [ "${#signers[@]}" = 1 ] || { echo "::error::APK has ${#signers[@]} signers, expected 1"; exit 1; }
           [ "${signers[0]}" = "$SIDELOAD_CERT_SHA256" ] || { echo "::error::APK signer ${signers[0]} is not the sideload lineage"; exit 1; }
           badging="$("$tools/aapt" dump badging "$apk" | sed -n '1p')"
-          version="$(sed -n 's/^version:[[:space:]]*\([^[:space:]#]*\).*/\1/p' pubspec.yaml | head -1)"
+          version="$VERSION"
           name="${version%%+*}"; code="${version#*+}"
           grep -q "^package: name='io.github.eslamasabry.opencode_mobile' " <<<"$badging" || { echo "::error::Package ID mismatch: $badging"; exit 1; }
           grep -q "versionCode='$code'" <<<"$badging" || { echo "::error::versionCode mismatch: $badging"; exit 1; }
@@ -176,6 +277,8 @@ jobs:
             echo '```'
             echo
             echo "Signer SHA-256: \`$SIDELOAD_CERT_SHA256\`"
+            echo
+            echo "Shorebird release $version, Flutter $SHOREBIRD_FLUTTER_VERSION (Shorebird engine)"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Prepare stable release notes
@@ -192,6 +295,7 @@ jobs:
             echo '## Verify this build'
             echo
             echo "- Source commit: \`$GITHUB_SHA\`"
+            echo "- Build: Shorebird release $version, Flutter $SHOREBIRD_FLUTTER_VERSION (Shorebird engine)"
             echo '- Package ID: `io.github.eslamasabry.opencode_mobile`'
             echo "- Signer SHA-256: \`$SIDELOAD_CERT_SHA256\`"
             echo '- APK SHA-256:'

@@ -196,6 +196,9 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # A compile check with upstream Flutter 3.47.2 and a throwaway key. Release
+  # APKs are Shorebird builds (Flutter 3.47.1 fork) made only by
+  # android-release.yml, whose step names the verifier also checks.
   build:
     name: build
     runs-on: ubuntu-latest

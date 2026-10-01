@@ -178,20 +178,27 @@ void main() {
     });
   });
 
-  test('CI pins the same Flutter version the release script does', () {
+  test('CI pins the same Flutter line the release script does', () {
     final pinned = RegExp(
       r'SHOREBIRD_FLUTTER_VERSION="([^"]+)"',
     ).firstMatch(_read('scripts/release.sh'))?.group(1);
     expect(pinned, isNotNull);
-    // Shorebird's fork cannot be installed on a runner, so CI uses upstream
-    // stable at the identical version rather than the identical toolchain.
+    // Android releases are Shorebird builds in CI too, on the exact fork
+    // version the local release script uses.
     expect(
-      _read('.github/workflows/desktop-linux.yml'),
-      contains('FLUTTER_VERSION: "$pinned"'),
+      _read('.github/workflows/android-release.yml'),
+      contains('SHOREBIRD_FLUTTER_VERSION: "$pinned"'),
     );
+    // The quality gate and desktop builds use upstream stable on the same
+    // major.minor line as the fork, and the same version in both workflows.
+    final line = pinned!.substring(0, pinned.lastIndexOf('.'));
+    final desktop = RegExp(
+      r'FLUTTER_VERSION: "([^"]+)"',
+    ).firstMatch(_read('.github/workflows/desktop-linux.yml'))?.group(1);
+    expect(desktop, startsWith('$line.'));
     expect(
       _read('.github/workflows/android-quality.yml'),
-      contains('flutter-version: $pinned'),
+      contains('flutter-version: $desktop'),
     );
   });
 }

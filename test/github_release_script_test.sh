@@ -20,7 +20,7 @@ import sys
 root = Path(sys.argv[1])
 name = 'opencode-mobile-1.0.43+49.apk'
 (root/'artifact/SHA256SUMS').write_text(hashlib.sha256((root/'artifact'/name).read_bytes()).hexdigest()+'  '+name+'\n')
-(root/'artifact/RELEASE_NOTES.md').write_text((root/'docs/releases/v1.0.43+49.md').read_text()+'\n## Verify this build\n\n- Source commit: `'+('a'*40)+'`\n')
+(root/'artifact/RELEASE_NOTES.md').write_text((root/'docs/releases/v1.0.43+49.md').read_text()+'\n## Verify this build\n\n- Source commit: `'+('a'*40)+'`\n- Build: Shorebird release 1.0.43+49, Flutter 3.47.1 (Shorebird engine)\n')
 PY
 cat > "$task_root/mock-bin/git" <<'MOCK'
 #!/usr/bin/env bash
@@ -74,9 +74,13 @@ import sys
 args = sys.argv[1:]
 root = Path(os.environ['MOCK_ROOT'])
 head = os.getenv('MOCK_CI_HEAD', 'a'*40)
-notes = (root/'artifact/RELEASE_NOTES.md').read_text()
 def flag(name):
     return os.getenv(name) == 'true'
+def without_provenance(text):
+    return ''.join(line for line in text.splitlines(True) if 'Shorebird release' not in line)
+notes = (root/'artifact/RELEASE_NOTES.md').read_text()
+if flag('MOCK_NO_PROVENANCE'):
+    notes = without_provenance(notes)
 def release():
     assets = [dict(id=1, name='opencode-mobile-1.0.43+49.apk'), dict(id=2, name='SHA256SUMS')]
     if flag('MOCK_UNEXPECTED_APK'):
@@ -117,14 +121,42 @@ def quality_jobs():
     if variant == 'gate-missing':
         jobs.pop()
     return dict(total_count=len(jobs) + (1 if variant == 'truncated' else 0), jobs=jobs)
+def release_jobs():
+    """Jobs of one android-release run; MOCK_BUILD_JOBS selects how the APK was built."""
+    variant = os.getenv('MOCK_BUILD_JOBS', 'shorebird')
+    secrets = 'Require the release signing and Shorebird secrets'
+    upload = 'Build and upload Shorebird release APK'
+    dry_run = 'Build Shorebird dry-run APK (nothing uploaded)'
+    tail = ['Verify APK signer and version', 'Prepare stable release notes', 'Upload signed APK', 'Create draft stable GitHub release']
+    steps = {
+        'shorebird': [(secrets, 'success'), (upload, 'success'), (dry_run, 'skipped')] + [(name, 'success') for name in tail],
+        # The pre-Shorebird workflow: an unpatchable plain `flutter build apk`.
+        'flutter-build': [('Require the release signing secrets', 'success'), ('Compile signed release APK', 'success')] + [(name, 'success') for name in tail],
+        # A manual run off a tag: the APK exists but Shorebird has no release.
+        'dry-run': [(secrets, 'success'), (upload, 'skipped'), (dry_run, 'success')] + [(name, 'success') for name in tail],
+        # A plain build step slipped in next to the Shorebird one.
+        'mixed': [(secrets, 'success'), (upload, 'success'), ('Compile signed release APK', 'success')] + [(name, 'success') for name in tail],
+        'upload-skipped': [(secrets, 'success'), (upload, 'skipped'), (dry_run, 'skipped')] + [(name, 'success') for name in tail],
+    }
+    if variant == 'missing':
+        jobs = []
+    else:
+        chosen = steps['shorebird' if variant == 'duplicate' else variant]
+        jobs = [dict(name='build', conclusion='success', steps=[dict(name=name, conclusion=conclusion) for name, conclusion in chosen])]
+    if variant == 'duplicate':
+        jobs = jobs * 2
+    return dict(total_count=len(jobs), jobs=jobs)
 if args[0] == 'api':
     path = args[1]
     assert path.startswith('repos/Eslamasabry/opencode-mobile-next/')
-    if '/jobs?' in path:
+    if '/runs/102/jobs?' in path:
+        print(json.dumps(release_jobs()))
+    elif '/jobs?' in path:
         print(json.dumps(quality_jobs()))
     elif '/actions/runs/' in path:
         workflow = 'android-quality' if path.endswith('/101') else 'android-release'
-        print(json.dumps(dict(head_sha=head, path=f'.github/workflows/{workflow}.yml', status='completed', conclusion='failure' if flag('MOCK_CI_FAILED') else 'success', event='workflow_dispatch')))
+        ref = os.getenv('MOCK_BUILD_REF', 'v1.0.43+49') if workflow == 'android-release' else 'master'
+        print(json.dumps(dict(head_sha=head, head_branch=ref, path=f'.github/workflows/{workflow}.yml', status='completed', conclusion='failure' if flag('MOCK_CI_FAILED') else 'success', event='workflow_dispatch')))
     elif '/releases/tags/' in path:
         print('HTTP 404: draft releases are not visible through the tag endpoint', file=sys.stderr)
         raise SystemExit(1)
@@ -145,6 +177,8 @@ elif args[:2] in (['run', 'download'], ['release', 'download']):
     target = Path(args[args.index('--dir')+1])
     for item in (root/'artifact').iterdir():
         shutil.copyfile(item, target/item.name)
+    if flag('MOCK_NO_PROVENANCE') and (target/'RELEASE_NOTES.md').exists():
+        (target/'RELEASE_NOTES.md').write_text(notes)
     if args[0] == 'run':
         assert args[args.index('--name')+1] == 'opencode-mobile-signed-'+('a'*40)
     elif flag('MOCK_DRAFT_DIFFERENT'):
@@ -247,6 +281,14 @@ run_case fail publish MOCK_TAG_MISSING=true
 run_case fail publish MOCK_TAG_HEAD=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 run_case fail publish MOCK_CI_HEAD=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 run_case fail publish MOCK_CI_FAILED=true
+# Release evidence: the APK must come from an uploaded Shorebird release built
+# on the candidate tag, never a plain flutter build or a dry-run.
+for variant in flutter-build dry-run mixed upload-skipped missing duplicate; do
+  run_case fail publish MOCK_BUILD_JOBS="$variant"
+done
+run_case fail publish MOCK_BUILD_REF=master
+run_case fail publish MOCK_BUILD_REF=v1.0.42+47
+run_case fail publish MOCK_NO_PROVENANCE=true
 # Quality evidence: one run whose checks, build, gate and every test shard of
 # the workflow passed. The old single-job shape and partial runs are refused.
 for variant in apk-only legacy shard-missing shard-failed shard-test-skipped \

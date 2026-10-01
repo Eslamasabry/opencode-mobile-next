@@ -127,6 +127,7 @@ flutter test --concurrency=1    # serial in the phone-hosted container; a workst
   Never substitute or rotate a signer.
 - `master` is fast-forwarded only at approved milestones — see
   `docs/verification/` for the branch ledger.
+- Releases are Shorebird releases (CI tag build or `scripts/release.sh sideload`); Dart-only fixes ship as `scripts/release.sh patch` against the exact released version; native/asset/pubspec changes need a new release.
 - Releases/signing go through `scripts/release.sh` / `scripts/cut-alpha.sh`
   (master-only, clean tree, dry-run by default). Never publish, tag, or use
   signing secrets without explicit maintainer approval.
