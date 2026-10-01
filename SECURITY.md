@@ -97,6 +97,14 @@ These are real security concerns, but they belong somewhere else:
   public fingerprint is published in the README and the installed fingerprint
   is shown in Settings → About.
 
+## Threat model
+
+What an attacker can do with a stolen phone, a hostile server, a LAN
+position, a notification tap, All files access or the AI Team engine, which
+mitigations exist, and which gaps are open, is written down in
+[docs/security/threat-model.md](docs/security/threat-model.md). Read it
+before reporting a gap that is already listed there.
+
 ## Things already known and documented
 
 Reporting these again is welcome but will be closed as known:

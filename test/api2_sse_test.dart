@@ -258,4 +258,64 @@ void main() {
       }
     }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
   });
+
+  test(
+    'a frame cut mid-write by a drop is discarded, not delivered half',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        var connections = 0;
+        server.listen((request) async {
+          connections += 1;
+          final response = request.response;
+          response.headers.contentType = ContentType('text', 'event-stream');
+          if (connections == 1) {
+            response.write(
+              'data: {"id":"evt_1","type":"session.text.delta","data":'
+              '{"sessionID":"ses_1","assistantMessageID":"msg_1",'
+              '"ordinal":0,"delta":"whole"}}\n\n',
+            );
+            // The connection dies in the middle of the next event.
+            response.write(
+              'data: {"id":"evt_2","type":"session.text.delta","data":'
+              '{"sessionID":"ses_1","assistantMessageID":"msg_1","ordi',
+            );
+          } else {
+            response.write(
+              'data: {"id":"evt_3","type":"session.text.delta","data":'
+              '{"sessionID":"ses_1","assistantMessageID":"msg_1",'
+              '"ordinal":0,"delta":"after"}}\n\n',
+            );
+          }
+          await response.flush();
+          await response.close();
+        });
+        final transport = Api2Transport(
+          baseUrl: 'http://${server.address.host}:${server.port}',
+          password: 'pw',
+        );
+        final deltas = <String>[];
+        final done = Completer<void>();
+        final stream = Api2EventStream(
+          transport: transport,
+          onEvent: (envelope, frame) {
+            final event = envelope.event;
+            if (event is Api2SessionTextEvent) deltas.add(event.delta ?? '');
+            if (deltas.length >= 2 && !done.isCompleted) done.complete();
+          },
+          onStatus: (_) {},
+        );
+        stream.start();
+        try {
+          await done.future.timeout(const Duration(seconds: 10));
+          expect(deltas.take(2).toList(), ['whole', 'after']);
+          expect(deltas.where((d) => d == 'whole'), hasLength(1));
+        } finally {
+          await stream.dispose();
+          transport.close();
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
 }

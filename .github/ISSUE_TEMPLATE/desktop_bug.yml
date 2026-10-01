@@ -1,0 +1,155 @@
+name: Desktop bug report
+description: Something is broken on Linux or Windows desktop (alpha, contributor-tested)
+labels: ["bug", "desktop", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **OpenCode Mobile is an independent community project. It is not
+        built, maintained, endorsed by, or affiliated with the official
+        OpenCode team.** Desktop builds are in alpha and are tested by
+        contributors on a handful of setups, so exact environment details
+        matter more here than on Android. Bugs in the OpenCode server itself
+        belong upstream; see
+        [SUPPORT.md](https://github.com/Eslamasabry/opencode-mobile-next/blob/master/SUPPORT.md).
+
+        Do not report a security vulnerability here. Report it privately
+        through a
+        [security advisory](https://github.com/Eslamasabry/opencode-mobile-next/security/advisories/new).
+
+        Redact before you paste: no server passwords, no provider API keys,
+        no real server hostnames, no unredacted transcripts.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before filing
+      options:
+        - label: I am on the current preview release (older previews are not supported)
+          required: true
+        - label: I searched existing issues
+          required: true
+        - label: This is not a security vulnerability
+          required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got instead.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - Windows
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: Distribution and version
+      description: For example Fedora 42, Ubuntu 24.04, Arch (rolling), Windows 11 23H2.
+    validations:
+      required: true
+
+  - type: input
+    id: desktop-environment
+    attributes:
+      label: Desktop environment
+      description: For example GNOME 48, KDE Plasma 6.3, Xfce, Sway. Write "n/a" on Windows.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: display-server
+    attributes:
+      label: Display server
+      description: "`echo $XDG_SESSION_TYPE` on Linux. XWayland counts as Wayland."
+      options:
+        - Wayland
+        - X11
+        - Windows (not applicable)
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: secret-service
+    attributes:
+      label: Secret service (where saved passwords are kept)
+      description: |
+        Server passwords go to the platform keyring. If saving or reading a
+        password fails, this is the first thing to tell us.
+      options:
+        - GNOME Keyring (libsecret)
+        - KWallet
+        - KeePassXC (Secret Service integration)
+        - Windows Credential Manager
+        - None running / locked / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: App version
+      description: Settings, About (for example 1.0.29+30-preview.9)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: How did you install it?
+      options:
+        - Release archive or installer
+        - Built from source
+        - Distribution package
+        - Flatpak or Snap
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: connection
+    attributes:
+      label: How is the app reaching the server?
+      options:
+        - Same machine (loopback)
+        - SSH port forward
+        - HTTPS or Tailscale Serve
+        - Private-network HTTP
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: server
+    attributes:
+      label: OpenCode server version
+      description: And whether it is v1 or the v2 beta.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Diagnostics or logs
+      description: |
+        Optional. The app's redacted diagnostics (Settings, App diagnostics)
+        or terminal output when launched from a shell. Check it for anything
+        sensitive before pasting; redaction is best-effort.
+      render: text
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots, a recording, fractional scaling or multi-monitor setup, whether it started after an update.

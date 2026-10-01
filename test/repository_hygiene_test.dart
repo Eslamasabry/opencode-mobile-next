@@ -110,6 +110,7 @@ void main() {
       '.github/PULL_REQUEST_TEMPLATE.md',
       '.github/ISSUE_TEMPLATE/config.yml',
       '.github/ISSUE_TEMPLATE/bug_report.yml',
+      '.github/ISSUE_TEMPLATE/desktop_bug.yml',
       '.github/ISSUE_TEMPLATE/feature_request.yml',
     ]) {
       expect(File(path).existsSync(), isTrue, reason: '$path is missing');
@@ -152,6 +153,37 @@ void main() {
         reason: '$path does not state the project is unaffiliated',
       );
     }
+  });
+
+  test('the generated notice inventory is current (tool/notices)', () {
+    // Offline and fast (about 50 ms): the tool only reads pubspec.lock and
+    // LICENSE files from the local pub cache. Skipped where python3 or the
+    // cache is missing (for example a bare Windows runner); the version test
+    // below still runs there.
+    final cache =
+        Platform.environment['PUB_CACHE'] ??
+        '${Platform.environment['HOME'] ?? ''}/.pub-cache';
+    if (!Directory('$cache/hosted/pub.dev').existsSync()) {
+      markTestSkipped('pub cache not found at $cache');
+      return;
+    }
+    ProcessResult result;
+    try {
+      result = Process.runSync('python3', [
+        'tool/notices/regenerate.py',
+        '--check',
+      ]);
+    } on ProcessException {
+      markTestSkipped('python3 is not available');
+      return;
+    }
+    expect(
+      result.exitCode,
+      0,
+      reason:
+          'python3 tool/notices/regenerate.py --check said: '
+          '${result.stderr}${result.stdout}',
+    );
   });
 
   test('the notice inventory matches the resolved dependency versions', () {
