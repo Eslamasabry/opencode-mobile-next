@@ -16,6 +16,7 @@ import '../kit/kit.dart';
 import '../widgets/folder_browser.dart';
 import '../widgets/product_states.dart' show productErrorText;
 import '../widgets/termux_running_server_entry.dart' show isManagedPhoneProfile;
+import 'shared_storage_access_flow.dart';
 
 /// The ways a workspace gets a project folder: create one on a server this
 /// app runs (Termux, or OpenCode inside the app), pick one of its projects,
@@ -235,6 +236,13 @@ class ProjectFolderActions {
     String path,
   ) async {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final access = await _sharedStorage(context, controller, path);
+    if (access == SharedStorageOutcome.useAppSpace) {
+      return context.mounted ? openFolder(context, controller) : null;
+    }
+    if (access == SharedStorageOutcome.declined || !context.mounted) {
+      return null;
+    }
     final ({String path, bool created}) made;
     try {
       made = await termux.create(path);
@@ -346,6 +354,15 @@ class ProjectFolderActions {
     String path,
   ) async {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    // A folder in shared storage needs the access first: making it without
+    // would fail, or look empty afterwards.
+    final access = await _sharedStorage(context, controller, path);
+    if (access == SharedStorageOutcome.useAppSpace) {
+      return context.mounted ? openFolder(context, controller) : null;
+    }
+    if (access == SharedStorageOutcome.declined || !context.mounted) {
+      return null;
+    }
     final ({String path, bool created}) made;
     try {
       made = await folders.create(path);
@@ -369,6 +386,13 @@ class ProjectFolderActions {
     String path,
   ) async {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final access = await _sharedStorage(context, controller, path);
+    if (access == SharedStorageOutcome.useAppSpace) {
+      return context.mounted ? openFolder(context, controller) : null;
+    }
+    if (access == SharedStorageOutcome.declined || !context.mounted) {
+      return null;
+    }
     await controller.selectLocation(directory: path);
     final problem = controller.locationError;
     if (problem != null) {
@@ -379,6 +403,20 @@ class ProjectFolderActions {
     }
     return path;
   }
+
+  /// A folder in the phone's shared storage is opened only once the host that
+  /// reads it can see its files: asks first, in plain words, and never opens
+  /// a folder that would list as empty. Other folders pass untouched.
+  static Future<SharedStorageOutcome> _sharedStorage(
+    BuildContext context,
+    ConnectionController controller,
+    String path,
+  ) => SharedStorageAccessFlow.ensure(
+    context,
+    controller.profile,
+    path,
+    offerAppSpace: canCreate(controller),
+  );
 
   /// A failure with nowhere else to be said: the flow has left its
   /// dialog, so a blocking alert names what did not happen and why.

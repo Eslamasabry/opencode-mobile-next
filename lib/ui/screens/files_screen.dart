@@ -14,6 +14,7 @@ import '../../l10n/app_localizations.dart';
 import '../../platform/local_pdf.dart';
 import '../../state/connection.dart';
 import '../../state/review_handoff.dart';
+import '../../state/shared_storage_gate.dart';
 import '../app_theme.dart';
 import '../kit/kit_bidi.dart';
 import '../kit/kit_breadcrumb.dart';
@@ -40,6 +41,7 @@ import '../widgets/file_preview.dart' show FilePreviewData;
 import '../widgets/product_states.dart' show productErrorText;
 import '../widgets/reader_preferences.dart';
 import 'review_workspace.dart';
+import 'shared_storage_access_flow.dart';
 
 /// Project file browser backed by `/file`, with name search (`/find/file`)
 /// and the kit's one viewer (map pages files, files-row-actions-sheet,
@@ -182,6 +184,11 @@ class _FilesScreenState extends State<FilesScreen> {
   String? _searchOriginPath;
   bool _showHidden = false;
   _FilesNotice? _notice;
+
+  /// Set when this shared-storage folder lists only hidden entries because
+  /// the host that reads it lacks storage access: the list says so instead
+  /// of looking like an empty project.
+  SharedStorageBlock _storageBlock = SharedStorageBlock.none;
 
   /// The file open in the detail pane (expanded windows only).
   _ViewerSession? _viewer;
@@ -428,12 +435,59 @@ class _FilesScreenState extends State<FilesScreen> {
     _error = null;
   }
 
+  /// A listing of only hidden entries (or none) in a shared-storage folder
+  /// may be Android hiding the rest: ask which host lacks access.
+  Future<void> _checkStorageAccess(List<FileNode> nodes, int generation) async {
+    if (!nodes.every((node) => node.name.startsWith('.'))) return;
+    final block = await SharedStorageGate.blockFor(
+      widget.controller.profile,
+      widget.controller.directory,
+    );
+    if (!mounted ||
+        generation != _requestGeneration ||
+        block == _storageBlock) {
+      return;
+    }
+    setState(() => _storageBlock = block);
+  }
+
+  Future<void> _allowStorageAccess() async {
+    final outcome = await SharedStorageAccessFlow.resolve(
+      context,
+      _storageBlock,
+    );
+    if (outcome == SharedStorageOutcome.proceed && mounted) {
+      await _refreshFiles();
+    }
+  }
+
+  Widget _storageAccessNotice(AppLocalizations l10n) {
+    final termux = _storageBlock == SharedStorageBlock.termuxAccess;
+    return KitRefresh(
+      onRefresh: _refreshFiles,
+      child: KitStateView(
+        key: const ValueKey('files-storage-access'),
+        icon: AppIconography.folderOpen,
+        title: l10n.filesAccessNeededTitle,
+        body: termux
+            ? l10n.filesAccessNeededTermuxBody
+            : l10n.filesAccessNeededBody,
+        primary: KitAction(
+          key: const ValueKey('files-storage-access-action'),
+          label: termux ? l10n.storageTermuxAllow : l10n.storageAccessAllow,
+          onPressed: () => unawaited(_allowStorageAccess()),
+        ),
+      ),
+    );
+  }
+
   Future<void> _load(String path) async {
     path = _relativePath(path);
     final generation = ++_requestGeneration;
     setState(() {
       _startLoading();
       _notice = null;
+      _storageBlock = SharedStorageBlock.none;
       // Keep the destination through errors so Retry opens the same folder.
       if (_path != path) _entries = null;
       _path = path;
@@ -462,6 +516,7 @@ class _FilesScreenState extends State<FilesScreen> {
             .toList();
         _path = path;
       });
+      unawaited(_checkStorageAccess(nodes, generation));
     } catch (e) {
       if (!mounted || generation != _requestGeneration) return;
       setState(() => _error = productErrorText(e));
@@ -1301,6 +1356,11 @@ class _FilesScreenState extends State<FilesScreen> {
         onRefresh: _refreshFiles,
         child: _loadFailed(l10n.filesLoadFailedTitle, _error!, _refreshFiles),
       );
+    }
+    if (_entries != null &&
+        _storageBlock != SharedStorageBlock.none &&
+        _search.text.isEmpty) {
+      return _storageAccessNotice(l10n);
     }
     final hidden = <FileNode>[];
     final entries = _displayEntries(hidden);

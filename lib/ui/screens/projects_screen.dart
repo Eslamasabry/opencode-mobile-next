@@ -24,6 +24,7 @@ import '../kit/kit_top_bar.dart';
 import '../kit/motion/kit_refresh.dart';
 import '../widgets/product_states.dart' show productErrorText;
 import 'project_folder_actions.dart';
+import 'shared_storage_access_flow.dart';
 
 /// Projects (map pages `projects`, `projects-rename-dialog`): the server's
 /// open project folders as one row list. A row opens its project; its menu
@@ -134,6 +135,13 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       Navigator.of(context).pop(false);
       return;
     }
+    // A project in shared storage opens only once its files can be seen.
+    final access = await SharedStorageAccessFlow.ensure(
+      context,
+      widget.controller.profile,
+      project.directory,
+    );
+    if (!mounted || access != SharedStorageOutcome.proceed) return;
     setState(() {
       _busyProjectID = project.id;
       _switchError = null;

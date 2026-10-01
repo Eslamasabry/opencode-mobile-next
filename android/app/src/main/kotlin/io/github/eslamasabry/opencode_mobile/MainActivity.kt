@@ -182,6 +182,8 @@ class MainActivity : FlutterActivity() {
             requestBatteryOptimizationExemption()
         }
         LocalTerminal.get(applicationContext).register(flutterEngine.dartExecutor.binaryMessenger)
+        // Shared-storage file access (oc/storage), asked only for such projects.
+        StorageAccess.register(this, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, VOICE_CHANNEL_NAME)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -851,6 +853,7 @@ class MainActivity : FlutterActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (voiceDownloadNotifications.onPermissionResult(requestCode, grantResults)) return
+        if (StorageAccess.onPermissionResult(this, requestCode)) return
         when (requestCode) {
             RUN_COMMAND_PERMISSION_REQUEST -> {
                 val granted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED

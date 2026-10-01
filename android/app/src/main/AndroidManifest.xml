@@ -22,6 +22,14 @@
          requests should be readable in the app's own manifest rather than
          inherited invisibly from a plugin. -->
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <!-- Shared-storage projects (a folder under /sdcard). Asked for only when
+         the person opens or creates such a project, after a plain
+         explanation (StorageAccess.kt); never at start-up and never for the
+         app's own project space. API 30+ uses All files access; older
+         Androids use the classic storage permissions. -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
     <!-- Drive the on-device opencode server through Termux's RUN_COMMAND service -->
     <uses-permission android:name="com.termux.permission.RUN_COMMAND"/>
     <!-- Package visibility (Android 11+) so we can detect Termux and launch it -->

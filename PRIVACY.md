@@ -221,6 +221,16 @@ a two-letter monogram instead.
   privacy-safe coding alerts used by optional background mode.
 - **Battery optimization exemption:** optional request for long-running coding
   sessions.
+- **All files access (optional):** asked only when you open or create a
+  project in your phone's shared storage (for example a folder under
+  `/sdcard`), after a plain explanation. Android 11+ hides other apps' files
+  in shared storage unless it is on. It lets OpenCode inside the app read and
+  change files in the folders you open as projects, and nothing else is
+  collected or sent because of it. It is never requested at start-up or for
+  projects in the app's own project space, and you can turn it off at any
+  time in Android Settings, under All files access. On Android 10 and older
+  the classic storage permission is asked instead. If the server runs in
+  Termux, that is Termux's own storage permission, not this one.
 - **Termux command permission:** optional control of an on-device OpenCode
   server.
 

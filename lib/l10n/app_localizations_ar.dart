@@ -26530,4 +26530,67 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get addServerCleartextConfirmed =>
       'تم تفعيل HTTP العادي لهذا العنوان. يمكن لأي شخص على هذه الشبكة قراءة ما ترسله.';
+
+  @override
+  String get storageAccessTitle => 'السماح بالوصول إلى الملفات؟';
+
+  @override
+  String get storageAccessBody =>
+      'هذا المجلد في التخزين المشترك بهاتفك. يخفي أندرويد ملفاته عن التطبيقات ما لم تسمح بالوصول إلى كل الملفات.';
+
+  @override
+  String get storageAccessWhyScope =>
+      'يقرأ التطبيق الملفات ويعدلها فقط في المجلدات التي تفتحها كمشاريع.';
+
+  @override
+  String get storageAccessWhyAgent =>
+      'يحتاجه الوكيل ليعمل في مجلدك مباشرة. بدونه سترى العناصر المخفية فقط مثل .git.';
+
+  @override
+  String get storageAccessWhyOff =>
+      'يمكنك إيقافه في أي وقت من إعدادات أندرويد، ضمن الوصول إلى كل الملفات.';
+
+  @override
+  String get storageAccessAllow => 'السماح بالوصول إلى الملفات';
+
+  @override
+  String get storageAccessNotNow => 'ليس الآن';
+
+  @override
+  String get storageAccessUseAppSpace => 'استخدام مساحة مشاريع التطبيق';
+
+  @override
+  String get storageAccessRefusedTitle => 'لم يُفتح المجلد';
+
+  @override
+  String get storageAccessRefusedBody =>
+      'بدون الوصول إلى الملفات لا يمكن عرض ملفات هذا المجلد، لذلك لم يُفتح. اسمح بالوصول أو اختر مجلدًا في مساحة مشاريع التطبيق.';
+
+  @override
+  String get storageTermuxTitle => 'السماح بتخزين Termux؟';
+
+  @override
+  String get storageTermuxBody =>
+      'خادمك يعمل في Termux، ولا يستطيع Termux قراءة التخزين المشترك بهاتفك بعد. بدون ذلك يعرض هذا المجلد العناصر المخفية فقط مثل .git.';
+
+  @override
+  String get storageTermuxAllow => 'فتح Termux';
+
+  @override
+  String get storageTermuxStillTitle => 'اسمح بالتخزين في Termux';
+
+  @override
+  String get storageTermuxStillBody =>
+      'في Termux، اسمح بالتخزين عندما يسأل أندرويد (الأمر هو termux-setup-storage)، ثم افتح المجلد مرة أخرى.';
+
+  @override
+  String get filesAccessNeededTitle => 'الملفات مخفية';
+
+  @override
+  String get filesAccessNeededBody =>
+      'هذا المجلد في التخزين المشترك بهاتفك ولا يستطيع التطبيق قراءة معظم ملفاته بعد. تظهر العناصر المخفية فقط.';
+
+  @override
+  String get filesAccessNeededTermuxBody =>
+      'هذا المجلد في التخزين المشترك بهاتفك ولا يستطيع Termux قراءة معظم ملفاته بعد. تظهر العناصر المخفية فقط.';
 }

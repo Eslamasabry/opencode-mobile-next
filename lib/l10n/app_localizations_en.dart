@@ -26411,4 +26411,67 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get addServerCleartextConfirmed =>
       'Plain HTTP is on for this address. Anyone on this network could read what you send.';
+
+  @override
+  String get storageAccessTitle => 'Allow access to files?';
+
+  @override
+  String get storageAccessBody =>
+      'This folder is in your phone’s shared storage. Android hides the files in it from apps unless you allow All files access.';
+
+  @override
+  String get storageAccessWhyScope =>
+      'The app reads and changes files only in folders you open as projects.';
+
+  @override
+  String get storageAccessWhyAgent =>
+      'The agent needs it to work in your folder in place. Without it you would see only hidden items such as .git.';
+
+  @override
+  String get storageAccessWhyOff =>
+      'You can turn it off any time in Android Settings, under All files access.';
+
+  @override
+  String get storageAccessAllow => 'Allow access to files';
+
+  @override
+  String get storageAccessNotNow => 'Not now';
+
+  @override
+  String get storageAccessUseAppSpace => 'Use the app’s project space';
+
+  @override
+  String get storageAccessRefusedTitle => 'Folder not opened';
+
+  @override
+  String get storageAccessRefusedBody =>
+      'Without access to files this folder’s files cannot be shown, so it was not opened. Allow access, or choose a folder in the app’s project space.';
+
+  @override
+  String get storageTermuxTitle => 'Allow Termux storage?';
+
+  @override
+  String get storageTermuxBody =>
+      'Your server runs in Termux, and Termux cannot read your phone’s shared storage yet. Without that, this folder shows only hidden items such as .git.';
+
+  @override
+  String get storageTermuxAllow => 'Open Termux';
+
+  @override
+  String get storageTermuxStillTitle => 'Allow storage in Termux';
+
+  @override
+  String get storageTermuxStillBody =>
+      'In Termux, allow storage when Android asks (the command is termux-setup-storage), then open the folder again.';
+
+  @override
+  String get filesAccessNeededTitle => 'Files are hidden';
+
+  @override
+  String get filesAccessNeededBody =>
+      'This folder is in your phone’s shared storage and the app cannot read most of its files yet. Only hidden items show.';
+
+  @override
+  String get filesAccessNeededTermuxBody =>
+      'This folder is in your phone’s shared storage and Termux cannot read most of its files yet. Only hidden items show.';
 }

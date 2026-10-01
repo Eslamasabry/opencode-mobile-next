@@ -41652,6 +41652,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Plain HTTP is on for this address. Anyone on this network could read what you send.'**
   String get addServerCleartextConfirmed;
+
+  /// Shared-storage project: title of the question asked before a folder in the phone's shared storage is opened.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow access to files?'**
+  String get storageAccessTitle;
+
+  /// Shared-storage project: what the problem is.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder is in your phone’s shared storage. Android hides the files in it from apps unless you allow All files access.'**
+  String get storageAccessBody;
+
+  /// Shared-storage project: what access allows.
+  ///
+  /// In en, this message translates to:
+  /// **'The app reads and changes files only in folders you open as projects.'**
+  String get storageAccessWhyScope;
+
+  /// Shared-storage project: why the agent needs it.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent needs it to work in your folder in place. Without it you would see only hidden items such as .git.'**
+  String get storageAccessWhyAgent;
+
+  /// Shared-storage project: how to take it back.
+  ///
+  /// In en, this message translates to:
+  /// **'You can turn it off any time in Android Settings, under All files access.'**
+  String get storageAccessWhyOff;
+
+  /// Shared-storage project: button that opens Android's All files access page.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow access to files'**
+  String get storageAccessAllow;
+
+  /// Shared-storage project: decline.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get storageAccessNotNow;
+
+  /// Shared-storage project: choose a folder in the app's own project space instead.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the app’s project space'**
+  String get storageAccessUseAppSpace;
+
+  /// Shared-storage project: title after access was not turned on.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder not opened'**
+  String get storageAccessRefusedTitle;
+
+  /// Shared-storage project: body after access was not turned on.
+  ///
+  /// In en, this message translates to:
+  /// **'Without access to files this folder’s files cannot be shown, so it was not opened. Allow access, or choose a folder in the app’s project space.'**
+  String get storageAccessRefusedBody;
+
+  /// Shared-storage project on a Termux server: title.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Termux storage?'**
+  String get storageTermuxTitle;
+
+  /// Shared-storage project on a Termux server: body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your server runs in Termux, and Termux cannot read your phone’s shared storage yet. Without that, this folder shows only hidden items such as .git.'**
+  String get storageTermuxBody;
+
+  /// Shared-storage project on a Termux server: opens Termux to run termux-setup-storage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Termux'**
+  String get storageTermuxAllow;
+
+  /// Shared-storage project on a Termux server: title of the instruction after Termux opened.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow storage in Termux'**
+  String get storageTermuxStillTitle;
+
+  /// Shared-storage project on a Termux server: what to do.
+  ///
+  /// In en, this message translates to:
+  /// **'In Termux, allow storage when Android asks (the command is termux-setup-storage), then open the folder again.'**
+  String get storageTermuxStillBody;
+
+  /// Files: title when a shared-storage folder lists only hidden items and access is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Files are hidden'**
+  String get filesAccessNeededTitle;
+
+  /// Files: body for the missing-access notice.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder is in your phone’s shared storage and the app cannot read most of its files yet. Only hidden items show.'**
+  String get filesAccessNeededBody;
+
+  /// Files: body for the missing-access notice on a Termux server.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder is in your phone’s shared storage and Termux cannot read most of its files yet. Only hidden items show.'**
+  String get filesAccessNeededTermuxBody;
 }
 
 class _AppLocalizationsDelegate

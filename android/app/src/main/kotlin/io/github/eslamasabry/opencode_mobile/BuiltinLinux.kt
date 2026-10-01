@@ -272,7 +272,7 @@ class BuiltinLinux(private val context: Context) {
             "--bind=/sys",
             "--bind=${File(rootfs, "tmp").absolutePath}:/dev/shm",
             "--bind=${projectStorage.projects.absolutePath}:/root/projects",
-        ) + fakeProcBinds + (if (protectionTier() == "proot") {
+        ) + sharedStorageBinds() + fakeProcBinds + (if (protectionTier() == "proot") {
             // PRoot exposes host proc by default. Hide native app/daemon entries
             // rather than depending on Linux cmdline permissions alone.
             val mask = File(home.canonicalFile, "proc/phone-engine-hidden").apply { mkdirs() }
@@ -290,6 +290,23 @@ class BuiltinLinux(private val context: Context) {
             "TMPDIR=/tmp",
         ) + program
         return if (prootIsConfined && protectionTier() != "proot") protectedCommand(command) else command
+    }
+
+    /**
+     * Shared storage inside Ubuntu: /storage/emulated/0 as /sdcard (and
+     * /storage/emulated/0 itself) plus the rest of /storage for other
+     * volumes. Android still decides what the app may read there (All files
+     * access, asked only when a shared-storage project is opened), so this
+     * shows nothing the person has not allowed. The AI Team's confined tier
+     * never gets it: [protectedCommand] allows only the project space.
+     */
+    private fun sharedStorageBinds(): List<String> {
+        if (prootIsConfined) return emptyList()
+        val primary = File("/storage/emulated/0")
+        val binds = mutableListOf<String>()
+        if (File("/storage").isDirectory) binds += "--bind=/storage"
+        if (primary.isDirectory) binds += "--bind=${primary.path}:/sdcard"
+        return binds
     }
 
     /** The executable must match argv[0], including for the native PTY bridge. */

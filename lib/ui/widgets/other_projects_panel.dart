@@ -15,6 +15,7 @@ import 'product_states.dart' show showProductError;
 import 'relative_time.dart';
 import 'session_title.dart';
 import '../../domain/team_directories.dart';
+import '../screens/shared_storage_access_flow.dart';
 
 /// Working in several projects at once, from the Work tab.
 ///
@@ -157,6 +158,12 @@ class _OtherProjectsPanelState extends State<OtherProjectsPanel> {
 
   Future<void> _switchTo(String directory, {String? workspace}) async {
     if (_switching != null) return;
+    final access = await SharedStorageAccessFlow.ensure(
+      context,
+      _conn.profile,
+      directory,
+    );
+    if (!mounted || access != SharedStorageOutcome.proceed) return;
     setState(() => _switching = directory);
     try {
       await _conn.selectLocation(directory: directory, workspace: workspace);

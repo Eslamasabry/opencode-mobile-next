@@ -289,6 +289,23 @@ contracts/               # OpenAPI dumps (v1 + v2 beta) + SDK coverage matrix
 video/                   # Remotion showcase project
 ```
 
+### Projects in shared storage
+
+A project under `/sdcard`, `/storage/emulated/N` or `/storage/XXXX-XXXX`
+(`lib/domain/shared_storage_path.dart`) is read by the server's host process:
+this app for OpenCode inside the app, Termux for the Termux server. Android 11+
+shows such a folder to a process without storage access but hides other apps'
+non-media files, so it lists only dot-folders such as `.git`. Opening or
+creating one therefore goes through `SharedStorageAccessFlow` (explanation,
+then Android's "All files access" page, `oc/storage` / `StorageAccess.kt`,
+`MANAGE_EXTERNAL_STORAGE`), and `SharedStorageGate` names which host lacks
+access (app, or Termux via `ls /storage/emulated/0`). The Files tab shows
+"Allow access to files" when such a folder lists only hidden entries. proot
+binds `/storage` and `/storage/emulated/0` as `/sdcard`
+(`BuiltinLinux.sharedStorageBinds`) except in the confined AI Team tier, which
+keeps to the project space. Other servers are never gated. Nothing is stored,
+so profile deletion has no key to sweep.
+
 UI talks to the gateway, never to `api/` or `api2/` directly. See
 [CONTRIBUTING.md](../CONTRIBUTING.md) for the boundaries a change must respect.
 
