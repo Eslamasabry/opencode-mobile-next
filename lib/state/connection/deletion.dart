@@ -367,7 +367,16 @@ extension _ConnectionControllerDeletionImpl on ConnectionController {
             )
           : scopedKeys;
       // The folders this server opened in shared storage are no longer bound.
-      if (clearedStash) await SharedProjectRoots.push(store.prefs);
+      // Only a server that opened some changes the bound set, and the native
+      // refresh never holds up the removal: a platform reply that is slow or
+      // never comes (no handler) would otherwise leave the server half
+      // deleted. The roots are read before the call's first await.
+      if (clearedStash &&
+          scopedKeys.contains(SharedProjectRoots.keyFor(profileId))) {
+        unawaited(
+          SharedProjectRoots.push(store.prefs).catchError((Object _) {}),
+        );
+      }
       if (clearedStash && unclearedKeys.isNotEmpty) {
         failures.add(
           '${unclearedKeys.length} saved '
