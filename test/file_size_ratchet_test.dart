@@ -34,7 +34,6 @@ const _baseline = <String, int>{
   'lib/ui/kit/chat/kit_composer.dart': 2312,
   'lib/ui/screens/activity_screen.dart': 2266,
   'lib/orchestration/adapters/fixture/project_fixture_gateway.dart': 2138,
-  'lib/state/orchestration.dart': 2088,
   'lib/ui/kit/kit_viewer.dart': 1857,
   'lib/api2/gateway_operations.dart': 1849,
   'lib/ui/screens/files_screen.dart': 1811,

@@ -18,7 +18,8 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../state/orchestration.dart' show OrchestrationController;
+import '../../state/orchestration.dart'
+    show OrchestrationController, OrchestrationControllerCycles;
 import '../../state/team_now_line.dart';
 import '../app_theme.dart';
 import '../kit/kit.dart';
