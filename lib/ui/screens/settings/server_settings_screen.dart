@@ -103,7 +103,15 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       if (id != null) serverHealthCache[id] = health;
       if (mounted) setState(() => _health = health);
     } catch (error) {
-      if (mounted) setState(() => _healthError = productErrorText(error));
+      // A failed check outdates the cached answer: never show "Server
+      // healthy" beside the reason it did not answer.
+      serverHealthCache.remove(widget.controller.profile?.id);
+      if (mounted) {
+        setState(() {
+          _health = null;
+          _healthError = productErrorText(error);
+        });
+      }
     } finally {
       if (mounted) {
         setState(() {

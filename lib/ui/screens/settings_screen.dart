@@ -188,7 +188,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       span.finish();
     } catch (error) {
       span.finish(error: error);
-      if (mounted) setState(() => _healthError = productErrorText(error));
+      // A failed check outdates the cached answer: the row loses its
+      // success colour along with the version it can no longer vouch for.
+      serverHealthCache.remove(widget.controller.profile?.id);
+      if (mounted) {
+        setState(() {
+          _health = null;
+          _healthError = productErrorText(error);
+        });
+      }
     } finally {
       if (mounted) {
         setState(() {
