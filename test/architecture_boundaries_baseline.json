@@ -128,9 +128,17 @@
     }
   },
   "ARCH-10 calls": {
-    "lib/state/connection.dart": {
-      "publishLiveStatus": 1,
-      "showCodingAlert": 5
+    "lib/state/connection/alerts.dart": {
+      "showCodingAlert": 2
+    },
+    "lib/state/connection/monitors.dart": {
+      "showCodingAlert": 2
+    },
+    "lib/state/connection/surfaces.dart": {
+      "publishLiveStatus": 1
+    },
+    "lib/state/connection/team.dart": {
+      "showCodingAlert": 1
     },
     "lib/ui/screens/settings/notifications_settings_screen.dart": {
       "sendTestNotification": 1

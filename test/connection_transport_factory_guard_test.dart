@@ -14,9 +14,24 @@ import 'package:flutter_test/flutter_test.dart';
 /// was reverted by a merge within a day. The failure mode here is
 /// reintroduction, not misbehavior at runtime, so the source is what to
 /// assert on.
+/// The controller library: `connection.dart` and its part files.
+String _connectionLibrarySource() {
+  final parts =
+      Directory('lib/state/connection')
+          .listSync()
+          .whereType<File>()
+          .where((file) => file.path.endsWith('.dart'))
+          .toList()
+        ..sort((a, b) => a.path.compareTo(b.path));
+  return [
+    File('lib/state/connection.dart'),
+    ...parts,
+  ].map((file) => file.readAsStringSync()).join('\n');
+}
+
 void main() {
   test('only _buildTransportPair constructs the v1 transport', () {
-    final source = File('lib/state/connection.dart').readAsStringSync();
+    final source = _connectionLibrarySource();
     final lines = source.split('\n');
 
     final callSites = <int>[];
@@ -49,7 +64,7 @@ void main() {
       strays,
       isEmpty,
       reason:
-          'lib/state/connection.dart calls _apiFactory(profile) outside '
+          'the connection library calls _apiFactory(profile) outside '
           '_buildTransportPair at line(s) ${strays.join(', ')}. A v2 profile '
           'rebuilt on the v1 transport cannot authenticate, and the failure '
           'looks like a wrong password. Route it through _buildTransportPair.',
@@ -57,7 +72,7 @@ void main() {
   });
 
   test('the location rescope path uses the flavor-aware builder', () {
-    final source = File('lib/state/connection.dart').readAsStringSync();
+    final source = _connectionLibrarySource();
     // _selectLocation only wraps the rescope in a performance span; the
     // body that rebuilds the transport is _selectLocationUntraced.
     final start = source.indexOf('Future<void> _selectLocationUntraced(');
