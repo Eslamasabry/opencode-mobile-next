@@ -180,10 +180,7 @@ List<Color> _roleColorList(ThemeRoles roles) => [
   roles.codeKeyword,
   roles.codeString,
   roles.codeType,
-  roles.glassRimLight,
-  roles.glassRimDark,
-  roles.glassShadow,
-  ...roles.ambient,
+  roles.elevationShadow,
   KitTerminalView.themeOf(roles).selection,
   Colors.transparent,
 ];

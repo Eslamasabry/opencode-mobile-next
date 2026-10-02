@@ -512,9 +512,7 @@ void main() {
         codeKeyword: base.codeKeyword,
         codeString: base.codeString,
         codeType: base.codeType,
-        glassRimLight: base.glassRimLight,
-        glassRimDark: base.glassRimDark,
-        glassShadow: base.glassShadow,
+        elevationShadow: base.elevationShadow,
       );
       await tester.pumpWidget(
         _host(

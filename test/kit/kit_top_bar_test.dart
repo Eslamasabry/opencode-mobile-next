@@ -362,31 +362,12 @@ void main() {
     await tester.tap(find.textContaining('Connected', findRichText: true));
     await tester.tap(find.byTooltip('Search'));
     expect((servers, searches), (1, 1));
-    // Pill and search are one pair of dim glass that joins while the page
-    // is scrolled (fluid glass; test/kit/kit_glass_test.dart).
+    // Pill and search are one solid pair that sits together while the page
+    // is scrolled.
     final glass = tester.widgetList<KitGlass>(find.byType(KitGlass));
     expect(glass.length, 1);
-    expect(glass.single.dim, isTrue);
     expect(glass.single.trailing, isNotNull);
     semantics.dispose();
-  });
-
-  testWidgets('shell: glass off makes the controls solid', (tester) async {
-    await _pump(
-      tester,
-      KitTopBar.shell(
-        controls: KitShellControls(
-          server: 'Laptop',
-          serverStatus: 'Connected',
-          onServer: () {},
-          onSearch: () {},
-        ),
-      ),
-      effects: const KitEffects(glass: false),
-    );
-    for (final element in find.byType(KitGlass).evaluate()) {
-      expect(KitGlass.lookOf(element), KitGlassLook.solid);
-    }
   });
 
   // Emulator QA F8: at 2.0 the pill cut "127.0.0.1" to "127.…" to keep

@@ -338,7 +338,7 @@ void main() {
     expect(probe.hostsPane, isFalse);
   });
 
-  testWidgets('dock and rail are dim glass at navRadius; sidebar is not', (
+  testWidgets('dock and rail are solid surfaces at navRadius; sidebar is not', (
     tester,
   ) async {
     await _pump(tester);
@@ -348,7 +348,6 @@ void main() {
         matching: find.byType(KitGlass),
       ),
     );
-    expect(glass.dim, isTrue);
     expect(glass.borderRadius, BorderRadius.circular(22));
 
     await _pump(tester, size: const Size(700, 1000));
@@ -358,7 +357,6 @@ void main() {
         matching: find.byType(KitGlass),
       ),
     );
-    expect(glass.dim, isTrue);
     expect(glass.borderRadius, BorderRadius.circular(22));
 
     await _pump(tester, size: const Size(1280, 800));
@@ -369,10 +367,6 @@ void main() {
       ),
       findsNothing,
     );
-
-    await _pump(tester, effects: const KitEffects(glass: false));
-    final context = tester.element(find.byType(KitNavBar));
-    expect(KitGlass.lookOf(context), KitGlassLook.solid);
   });
 
   for (final width in [320.0, 412.0]) {

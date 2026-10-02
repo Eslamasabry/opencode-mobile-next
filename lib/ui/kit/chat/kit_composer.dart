@@ -457,11 +457,9 @@ class _KitComposerState extends State<KitComposer> {
               note: widget.railNote,
               radius: radius,
               activityGlow: widget.activityGlow,
-              glass: KitGlass(
+              surface: KitGlass(
                 borderRadius: BorderRadius.circular(radius),
-                dim: true,
                 shadow: true,
-                flow: true,
                 child: Padding(
                   padding: EdgeInsets.all(tokens.space1),
                   child: KitSwap(

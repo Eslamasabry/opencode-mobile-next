@@ -269,8 +269,6 @@ class KitNavBar extends StatelessWidget {
           width / destinations.length,
         );
         return KitGlass(
-          dim: true,
-          respond: true,
           borderRadius: BorderRadius.circular(tokens.navRadius),
           child: SizedBox(
             height: _dockHeightFor(tokens, metrics),
@@ -328,8 +326,6 @@ class KitNavRail extends StatelessWidget {
     return SizedBox(
       width: KitLayout.railWidth,
       child: KitGlass(
-        dim: true,
-        respond: true,
         borderRadius: BorderRadius.circular(tokens.navRadius),
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: tokens.space2),
@@ -1012,9 +1008,7 @@ class _LensLayout extends SingleChildLayoutDelegate {
       old.devicePixelRatio != devicePixelRatio;
 }
 
-/// The selected tab's glass lens: a clear pill with a one physical pixel
-/// rim, never a second glass layer (glass never sits on glass, VL §6).
-/// Lifted under a finger, its rim catches the light.
+/// The selected tab's lens: a solid pill with a one physical pixel rim.
 class _KitNavLens extends StatelessWidget {
   const _KitNavLens({required this.motion});
 
@@ -1028,7 +1022,6 @@ class _KitNavLens extends StatelessWidget {
         motion: motion,
         fill: roles.surface3,
         rim: roles.hairline,
-        lit: roles.glassRimLight,
         width: KitTokens.hairlineWidth(context),
       ),
     );
@@ -1040,14 +1033,12 @@ class _LensPainter extends CustomPainter {
     required this.motion,
     required this.fill,
     required this.rim,
-    required this.lit,
     required this.width,
   }) : super(repaint: motion);
 
   final _LensMotion motion;
   final Color fill;
   final Color rim;
-  final Color lit;
   final double width;
 
   @override
@@ -1057,14 +1048,9 @@ class _LensPainter extends CustomPainter {
       Offset.zero & size,
       Radius.circular(size.shortestSide / 2),
     );
-    final lift = motion.lift.x.clamp(0.0, 1.0);
     canvas
       ..drawRRect(pill, Paint()..color = fill)
-      ..drawDRRect(
-        pill,
-        pill.deflate(width),
-        Paint()..color = Color.lerp(rim, lit, lift)!,
-      );
+      ..drawDRRect(pill, pill.deflate(width), Paint()..color = rim);
   }
 
   @override
@@ -1072,7 +1058,6 @@ class _LensPainter extends CustomPainter {
       old.motion != motion ||
       old.fill != fill ||
       old.rim != rim ||
-      old.lit != lit ||
       old.width != width;
 }
 

@@ -13,7 +13,6 @@
 // and look at every changed image before committing it.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:opencode_mobile/state/effects.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_composer.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_composer_chips.dart';
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
@@ -253,10 +252,6 @@ final _states = <String, Widget Function()>{
       ),
       activityGlow: true,
     ),
-  ),
-  'glass_off': () => KitEffectsScope(
-    effects: KitEffects.defaults.copyWith(glass: false),
-    child: _Backdrop(composer: _composer(text: _draft)),
   ),
 };
 

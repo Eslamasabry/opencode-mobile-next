@@ -76,8 +76,7 @@ abstract final class KitMotion {
   /// result-count announcement (KitSearchField.md, about 300 ms).
   static const typingSettle = Duration(milliseconds: 300);
 
-  // Fluid glass (the owner's approved "Fluid glass" sample, visual language
-  // §6): the floating navigation layer moves on springs, not on a duration.
+  // The navigation's tab lens moves on springs, not on a duration.
   // Stiffness and damping per unit mass, in logical pixels and seconds; a
   // spring is never used under [reduced], where every state is instant.
 
@@ -115,27 +114,6 @@ abstract final class KitMotion {
     mass: 1,
     stiffness: 260,
     damping: 20,
-  );
-
-  /// Glass giving under a finger and springing back on release.
-  static const glassPress = SpringDescription(
-    mass: 1,
-    stiffness: 380,
-    damping: 15,
-  );
-
-  /// Two pieces of glass joining like drops, and pulling apart.
-  static const glassJoin = SpringDescription(
-    mass: 1,
-    stiffness: 170,
-    damping: 17,
-  );
-
-  /// Glass following its content's new size (a composer growing a line).
-  static const glassFlow = SpringDescription(
-    mass: 1,
-    stiffness: 300,
-    damping: 26,
   );
 
   /// The composer's edge light (the running reply's status): calm by rule.

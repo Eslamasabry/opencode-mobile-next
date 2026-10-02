@@ -684,17 +684,10 @@ void main() {
     });
   });
 
-  testWidgets('glass: a dimmed KitGlass, solid under remove animations', (
-    tester,
-  ) async {
+  testWidgets('the pill is one solid KitGlass surface', (tester) async {
     final h = _host('');
-    await _pump(tester, _composer(h), disableAnimations: true);
-    final glass = tester.widget<KitGlass>(find.byType(KitGlass));
-    expect(glass.dim, isTrue);
-    expect(
-      KitGlass.lookOf(tester.element(find.byType(KitGlass))),
-      KitGlassLook.solid,
-    );
+    await _pump(tester, _composer(h));
+    expect(find.byType(KitGlass), findsOneWidget);
   });
 
   group('layer', () {

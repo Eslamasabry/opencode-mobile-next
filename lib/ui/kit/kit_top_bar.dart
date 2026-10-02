@@ -749,12 +749,7 @@ class KitShellControls extends StatelessWidget {
     );
     final pill = KitNeedsYou.badge(
       count: needsYou,
-      child: KitGlass(
-        dim: true,
-        respond: true,
-        borderRadius: radius,
-        child: pillButton,
-      ),
+      child: KitGlass(borderRadius: radius, child: pillButton),
     );
 
     if (!sidebar) {
@@ -822,8 +817,6 @@ class KitShellControls extends StatelessWidget {
           ),
         if (onSearch != null)
           KitGlass(
-            dim: true,
-            respond: true,
             borderRadius: radius,
             child: KitTappable(
               tappableKey: searchKey,

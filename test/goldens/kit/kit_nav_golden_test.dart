@@ -164,19 +164,6 @@ void main() {
       );
     });
 
-    testWidgets('dock solid (${light ? 'light' : 'dark'})', (tester) async {
-      await kitGalleryShot(
-        tester,
-        name: kitGalleryName('kit_nav_dock_solid', phone, light: light),
-        size: phone,
-        light: light,
-        open: (context) => _open(
-          context,
-          _scene(child: _nav(), effects: const KitEffects(glass: false)),
-        ),
-      );
-    });
-
     testWidgets('sidebar default (${light ? 'light' : 'dark'})', (
       tester,
     ) async {

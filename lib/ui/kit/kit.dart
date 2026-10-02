@@ -43,8 +43,8 @@
 /// | [KitNotice] | §3 a message inside one part of a form or list |
 /// | [KitMotion] | §10 the timings, curves and when things may loop |
 /// | [KitHaptics] | §10, kit v2 §2.13 send, done and commit: the only vibration, obeying Settings › Vibration |
-/// | [KitEffects], [KitEffectsScope] | §10 the person's glass, motion, celebration and vibration choices (Settings › Appearance) |
-/// | [KitGlass] | §10 glass: a bounded surface floating over content (liquid, frosted or solid) |
+/// | [KitEffects], [KitEffectsScope] | §10 the person's motion, celebration and vibration choices (Settings › Appearance) |
+/// | [KitGlass] | §10 a bounded solid surface floating over content (dock, rail, top controls, composer) |
 /// | [KitIllustration], [KitScene], [KitDraw], [KitPortalScene] | §10 drawings in the brand's line, drawn in code, that can move |
 /// | [KitSurface] | kit v2 §4 the one solid box: a surface step fill, token shape and padding, optional hairline edge |
 /// | [KitDivider] | kit v2 the one separator: a pixel-snapped hairline, optionally inset to a row's words |
@@ -78,7 +78,7 @@
 /// | [showKitAlert], [showKitInputDialog] | kit v2 §4.8 a blocking alert with at most one action, and one short text entry |
 /// | [KitDetailsFold], [showKitTechnicalDetails] | K2 §1.8 the one technical fold, and a raw error on its own sheet |
 /// | [KitTappable] | the one region that acts on a tap: a 48 dp hit area, focus ring and hover |
-/// | [KitTopBar], [KitShellControls] | kit v2 §1.18 a screen's header, and the shell's glass server pill and search |
+/// | [KitTopBar], [KitShellControls] | kit v2 §1.18 a screen's header, and the shell's server pill and search |
 /// | [KitNav], [KitNavBar], [KitNavRail] | kit v2 §8.1 the shell's navigation: the floating dock, the rail and the sidebar |
 /// | [KitTabSwitcher], [KitTabStrip] | §10 destinations switched with a fade-through, and a strip of tabs with counts |
 /// | [KitStatusLineSlot], [KitStatusScope], [KitStatusContribution] | §5 where a window's one status line is drawn, the app-wide conditions, and a page's own |
@@ -98,7 +98,6 @@
 /// | [KitBoardLane], [KitBoardLanes] | one board column's cards, and the board: column strip and lanes in step |
 /// | [KitWorkGraph] | a team task's items and what each needs, as a graph |
 /// | [TerminalKeyBar] | two rows of terminal keys above the phone's keyboard, with sticky Ctrl and Alt |
-/// | [LiquidGlassFilter] | §10 the liquid glass shader over a light blur, under [KitGlass] |
 /// | [KitMessage], [KitTurn], [KitWorkLine], [KitToolRow] | STATE-16 a transcript's words, one turn, a turn's work folded under one chip, and one step of it |
 /// | [KitMarkdown] | agent Markdown in kit text: the prose of a reply or a thought |
 /// | [KitComposer], [KitComposerChips], [KitComposerStatusStrip] | the composer, its chips, and the standing facts above it |
@@ -175,7 +174,6 @@ export 'motion/kit_page_transitions.dart';
 export 'motion/kit_refresh.dart';
 export 'motion/kit_reveal.dart';
 export 'motion/kit_tab_switcher.dart';
-export 'glass/glass_safety.dart';
 export 'glass/kit_glass.dart';
 export 'chat/kit_message.dart';
 export 'chat/kit_transcript_excerpt.dart';

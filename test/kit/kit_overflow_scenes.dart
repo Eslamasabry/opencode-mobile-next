@@ -877,7 +877,7 @@ final kitOverflowScenes = <KitOverflowScene>[
     const ['KitEffectsScope'],
     'default',
     build: (_, c) => KitEffectsScope(
-      effects: const KitEffects(glass: false, motion: KitMotionLevel.off),
+      effects: const KitEffects(motion: KitMotionLevel.off),
       child: _row(c),
     ),
   ),

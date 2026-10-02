@@ -15,7 +15,7 @@ import '../../state/phone_host.dart' show PhoneHostKind;
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
 import '../desktop/shortcuts.dart';
-import '../kit/glass/kit_glass.dart';
+import '../kit/kit_motion.dart';
 import '../kit/kit_buttons.dart';
 import '../kit/kit_nav.dart';
 import '../kit/kit_page_route.dart';
@@ -376,7 +376,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       // startup (docs/qa/codex-perf-2026-09-28/startup.md).
       body: KitTabSwitcher(
         index: activeTab,
-        reduceMotion: KitGlass.reduceEffects(context),
+        reduceMotion: KitMotion.reduced(context),
         lazy: true,
         preload: const {_workTab},
         children: tabs,

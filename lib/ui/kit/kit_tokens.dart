@@ -214,19 +214,13 @@ class KitTokens extends ThemeExtension<KitTokens> {
   final TextStyle cardCaption;
   final TextStyle cardTitle;
 
-  /// The one shadow in the app (visual language §4, §7; LOOK-20): under
-  /// floating glass only, one tight drop (y 6, blur 16) in the theme's
-  /// `glassShadow` role (30 % black in both brightnesses). Content, cards
-  /// and sheets get none.
-  ///
-  /// Tight, no halo (§7): the blur is CSS's (sigma 8, as the canvas), the
-  /// shadow is pulled in 6 on every side (spread -6) so none of it shows
-  /// above or much beside the glass, and KitGlass paints it only outside
-  /// the glass (owner feedback on build 2057: a wide grey halo and a ledge
-  /// on light grounds).
-  List<BoxShadow> get glassShadows => [
+  /// The one shadow in the app (visual language §4, §7): under a floating
+  /// surface only (the dock, the rail, the top controls, the composer), one
+  /// tight drop (y 6, blur 16, spread -6) in the theme's `elevationShadow`
+  /// role. Content, cards and sheets get none.
+  List<BoxShadow> get surfaceShadows => [
     BoxShadow(
-      color: roles.glassShadow,
+      color: roles.elevationShadow,
       blurRadius: 16,
       spreadRadius: -6,
       offset: const Offset(0, 6),
