@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' show Locale, PlatformDispatcher;
+import 'package:clock/clock.dart';
 import 'package:crypto/crypto.dart' as receipt_crypto;
 import '../domain/command_receipts.dart';
 import '../api/command_receipt_transport.dart';
@@ -109,6 +110,7 @@ part 'connection/sessions.dart';
 part 'connection/catalog.dart';
 part 'connection/permissions.dart';
 part 'connection/questions.dart';
+part 'connection/pending_reads.dart';
 part 'connection/session_cache.dart';
 part 'connection/team.dart';
 part 'connection/phone_chat.dart';

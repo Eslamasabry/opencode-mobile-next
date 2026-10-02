@@ -18,6 +18,7 @@ class _RefreshCountingController extends ConnectionController {
   _RefreshCountingController(super.store);
 
   int refreshCalls = 0;
+  int ensureCalls = 0;
   int reloadCalls = 0;
   bool failSelection = false;
   Future<void>? waitForModel;
@@ -51,6 +52,11 @@ class _RefreshCountingController extends ConnectionController {
   @override
   Future<void> refreshCatalog() async {
     refreshCalls++;
+  }
+
+  @override
+  Future<void> ensureCatalog() async {
+    ensureCalls++;
   }
 
   @override
@@ -348,7 +354,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Choose a model'), findsOneWidget);
-    expect(controller.refreshCalls, 1);
+    // Opening asks for a current catalog; only Reload forces a new one.
+    expect(controller.ensureCalls, 1);
+    expect(controller.refreshCalls, 0);
     expect(find.byKey(const Key('model-picker-refresh')), findsOneWidget);
     expect(find.byKey(const Key('model-picker-search')), findsOneWidget);
     expect(find.textContaining('131K context'), findsOneWidget);

@@ -2013,6 +2013,9 @@ void main() {
     apis.single.healthResult.complete(Health(healthy: true, version: '1'));
     await connect;
     await tester.pump();
+    // A catalog younger than ten minutes is not reloaded on a wake at all;
+    // this one is stale.
+    await tester.pump(const Duration(minutes: 11));
 
     controller.suspendForLifecycle();
     final action = controller.prepareActionTransport();

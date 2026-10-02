@@ -20,6 +20,10 @@ mixin _ConnectionControllerEvents on ChangeNotifier {
   VoidCallback? _streamPolicyChanged;
   StreamStatus _globalStreamStatus = StreamStatus.disconnected;
 
+  /// Counts event-stream connects, so a waiting-request read knows whether
+  /// the stream has carried every change since it started.
+  int _streamConnects = 0;
+
   @visibleForTesting
   void handleEventForTesting(EventEnvelope event) => _self._onEvent(event);
 }
@@ -75,6 +79,7 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
         if (!_isCurrentStream(generation, currentApi, stream)) return;
       }
       if (s == StreamStatus.connected) {
+        _streamConnects += 1;
         PerfTrace.mark('events.connected');
         PerfTrace.markOnce('app.first_connected');
         lastError = null;
@@ -346,8 +351,9 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
       case 'agent.updated':
       case 'config.updated':
         // Provider credentials and catalog overlays can change without a
-        // reconnect. Refetch the current catalog just like upstream clients.
-        unawaited(_loadCatalog());
+        // reconnect. Refetch the current catalog just like upstream clients,
+        // behind the list already shown; a burst shares one reload.
+        unawaited(_loadCatalog(announce: false));
         break;
     }
   }

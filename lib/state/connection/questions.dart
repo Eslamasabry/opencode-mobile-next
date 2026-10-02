@@ -12,8 +12,14 @@ mixin _ConnectionControllerQuestions on ChangeNotifier {
   final Map<String, String> _v2QuestionSessions = {};
   final Set<String> _resolvedQuestionIDs = {};
 
-  Future<void> refreshPendingQuestions() =>
-      PerfTrace.span('questions.refresh', _self._refreshPendingQuestions);
+  final _questionReads = _PendingReadGate();
+
+  /// Reads the waiting questions; a read already running for this stream
+  /// connect is shared rather than repeated.
+  Future<void> refreshPendingQuestions() => _questionReads.run(
+    _self._pendingReadEpoch,
+    () => PerfTrace.span('questions.refresh', _self._refreshPendingQuestions),
+  );
 
   Future<void> answerQuestion(
     String requestID,

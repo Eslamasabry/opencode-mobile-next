@@ -238,38 +238,43 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     await _reloadRetainedLocationData();
   }
 
-  /// Reloads what a wake or reconnect may have missed. The model catalog
-  /// goes last: on OpenCode 1 its `/provider` answer is several megabytes the
-  /// server serialises on its only thread, so sessions, permissions and
-  /// questions requested alongside it waited for it too. The previous
-  /// catalog stays on screen until the new one lands.
-  Future<void> _reloadRetainedLocationData() async {
-    await Future.wait<void>([
-      refreshSessions(),
-      refreshPendingPermissions(),
-      refreshPendingQuestions(),
-    ]);
-    await _loadCatalog();
-  }
+  /// Reloads what a wake or reconnect may have missed, behind the screen
+  /// already shown. The model catalog goes last and only when stale: on
+  /// OpenCode 1 its `/provider` answer is several megabytes the server
+  /// serialises on its only thread, and reloading it on every wake held
+  /// each resume for 2.5 s on a phone-hosted server. A change while away
+  /// still reaches it through age ([catalogFreshFor]) or Reload.
+  Future<void> _reloadRetainedLocationData() =>
+      PerfTrace.span('lifecycle.reload', () async {
+        await _refreshLocationReads();
+        await _ensureCatalog();
+      });
 
+  /// Rebuilds the transport (`lifecycle.resume`: health, then the event
+  /// stream), then reconciles by refetch (`lifecycle.reload`). The returned
+  /// future covers both; actions wait only for the transport.
   Future<void> _resumeLifecycleTransport(
     ServerProfile profile, {
     String? directory,
     String? workspace,
     void Function()? onTransportReady,
     bool automaticRecovery = false,
-  }) => PerfTrace.span(
-    'lifecycle.resume',
-    () => _resumeLifecycleTransportUntraced(
-      profile,
-      directory: directory,
-      workspace: workspace,
-      onTransportReady: onTransportReady,
-      automaticRecovery: automaticRecovery,
-    ),
-  );
+  }) async {
+    final ready = await PerfTrace.span(
+      'lifecycle.resume',
+      () => _resumeLifecycleTransportUntraced(
+        profile,
+        directory: directory,
+        workspace: workspace,
+        onTransportReady: onTransportReady,
+        automaticRecovery: automaticRecovery,
+      ),
+    );
+    if (ready) await _reloadRetainedLocationData();
+  }
 
-  Future<void> _resumeLifecycleTransportUntraced(
+  /// Returns whether the transport came up for this generation.
+  Future<bool> _resumeLifecycleTransportUntraced(
     ServerProfile profile, {
     String? directory,
     String? workspace,
@@ -278,7 +283,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   }) async {
     if (automaticRecovery &&
         !automationPolicy.allows(AutomationBehavior.reconnect)) {
-      return;
+      return false;
     }
     final generation = _beginGeneration();
     _retireTransport();
@@ -299,20 +304,20 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     try {
       _ensureLocalServerWakeLock();
       final health = await currentApi.health();
-      if (!_isCurrent(generation, currentApi)) return;
+      if (!_isCurrent(generation, currentApi)) return false;
       if (!health.healthy) {
         throw ApiException('Server health check reported unhealthy');
       }
       _acceptRunningServerVersion(health.version ?? version);
     } catch (error) {
-      if (!_isCurrent(generation, currentApi)) return;
+      if (!_isCurrent(generation, currentApi)) return false;
       _noteAuthFailure(error);
       _failCurrentConnection(
         error is ApiException
             ? error.message
             : 'Cannot reach ${profile.baseUrl}: $error',
       );
-      return;
+      return false;
     }
     if (automaticRecovery &&
         !automationPolicy.allows(AutomationBehavior.reconnect)) {
@@ -320,12 +325,12 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
       _lifecycleSuspended = true;
       status = StreamStatus.disconnected;
       _notifyListeners();
-      return;
+      return false;
     }
     _startEvents(generation, currentApi, automaticRecovery: automaticRecovery);
     onTransportReady?.call();
     _markDataRefreshReady(generation, currentApi);
-    await _reloadRetainedLocationData();
+    return true;
   }
 
   int _beginGeneration({bool preserveConnectionAttempt = false}) {
@@ -447,6 +452,11 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     _dismissAllCodingAlerts(clearActive: true);
     _sessionsRefreshGeneration += 1;
     _catalogRefreshGeneration += 1;
+    _catalogFollowUp = null;
+    _catalogFollowUpAfter = null;
+    _catalogFollowUpAnnounced = false;
+    _catalogLoadedAt = null;
+    _catalogLoadedKey = null;
     _questionsRefreshGeneration += 1;
     _questionRevision += 1;
     _questionRevisions.clear();

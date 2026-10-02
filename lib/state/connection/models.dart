@@ -78,7 +78,14 @@ mixin _ConnectionControllerModels on ChangeNotifier {
 
   Future<void> selectAgent(String name) => _self._selectAgent(name);
 
+  /// Reloads the catalog now: Reload, a finished sign-in, a model the
+  /// server no longer has. Shares a load already running.
   Future<void> refreshCatalog() => _self._loadCatalog();
+
+  /// Loads the catalog only when it is missing or stale (older than
+  /// [catalogFreshFor], or invalidated by a change event): for pickers and
+  /// sheets that open often. The shown list stays while it refreshes.
+  Future<void> ensureCatalog() => _self._ensureCatalog();
 
   bool modelAvailable(ModelRef ref) => _self._modelAvailable(ref);
 
@@ -381,7 +388,7 @@ extension _ConnectionControllerModelsImpl on ConnectionController {
   void _resumeDeferredProviderHeal() {
     if (!_providerHealDeferred || busySessions.isNotEmpty) return;
     _providerHealDeferred = false;
-    unawaited(_loadCatalog());
+    unawaited(_loadCatalog(announce: false));
   }
 
   Future<void> _refreshPreexistingProviderRuntime({

@@ -573,8 +573,8 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
     // (permissions took 6.2 s waiting for a 7.7 s catalog on the phone).
     await Future.wait<void>([
       refreshSessions(),
-      refreshPendingPermissions(),
-      refreshPendingQuestions(),
+      _syncPendingPermissions(),
+      _syncPendingQuestions(),
     ]);
     if (!_isCurrent(generation, currentApi)) return;
     locationLoading = false;
@@ -589,7 +589,7 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
         currentRepository: currentRepository,
         profile: profile,
       ).then((_) {
-        if (_isCurrent(generation, currentApi)) return _loadCatalog();
+        if (_isCurrent(generation, currentApi)) return _ensureCatalog();
       }),
     );
     if (_pendingLocationRevalidation) unawaited(revalidateRestoredLocation());

@@ -101,9 +101,9 @@ Future<void> showModelPicker(
     listen: false,
   ).read(connProvider);
   // Catalog membership is server-owned and can change while the app remains
-  // connected. Refresh on every open so removed models are not retained until
-  // a reconnect or lifecycle wake.
-  unawaited(controller.refreshCatalog());
+  // connected. Refresh on open once the list is stale (change events and
+  // Reload invalidate it at once), behind the list already shown.
+  unawaited(controller.ensureCatalog());
   if (sessionID != null && controller.serverOwnsSessionSelection) {
     unawaited(controller.ensureSession(sessionID));
   }

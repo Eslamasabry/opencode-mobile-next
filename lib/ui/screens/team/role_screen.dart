@@ -184,7 +184,7 @@ class _RoleScreenState extends State<RoleScreen> {
     final connection = widget.connection;
     if (connection == null || _remote) return;
     final l10n = _copy(context);
-    unawaited(connection.refreshCatalog());
+    unawaited(connection.ensureCatalog());
     final choice = await showTeamModelSheet(
       context,
       connection: connection,
