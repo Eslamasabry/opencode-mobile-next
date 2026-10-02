@@ -6,8 +6,8 @@
       "element": "activity-pull-refresh",
       "gesture": "pull to refresh",
       "action": "reload from the server",
-      "visibleEquivalent": "visible 'Refresh' icon button (tooltip), lib/ui/screens/activity_screen.dart:679; also automatic load on open; 'Try again' on failure (lib/ui/screens/activity_screen.dart:586)",
-      "evidence": "lib/ui/screens/activity_screen.dart:277",
+      "visibleEquivalent": "visible 'Refresh' icon button (tooltip), lib/ui/screens/activity/activity_question_form.dart:380; also automatic load on open; 'Try again' on failure (lib/ui/screens/activity_screen.dart:455)",
+      "evidence": "lib/ui/screens/activity_screen.dart:519",
       "changed": false
     },
     {
@@ -25,7 +25,7 @@
       "gesture": "refresh callback handed to the command sheet",
       "action": "reload server commands",
       "visibleEquivalent": "the command sheet's visible 'Try again' on its error notice (lib/ui/widgets/command_sheet.dart:410) runs the same callback; also loaded automatically when the conversation opens",
-      "evidence": "lib/ui/screens/chat_screen.dart:5731",
+      "evidence": "lib/ui/screens/chat/chat_command_actions.dart:82",
       "changed": false
     },
     {
@@ -96,8 +96,8 @@
       "element": "workspace-pull-refresh",
       "gesture": "pull to refresh",
       "action": "reload from the server",
-      "visibleEquivalent": "automatic load on open; 'Try again' on failure (lib/ui/screens/workspace_screen.dart:423)",
-      "evidence": "lib/ui/screens/workspace_screen.dart:86",
+      "visibleEquivalent": "automatic load on open; 'Try again' on failure (lib/ui/screens/workspace/workspace_widgets.dart:505)",
+      "evidence": "lib/ui/screens/workspace/workspace_build.dart:278",
       "changed": false
     },
     {
@@ -114,8 +114,8 @@
       "element": "files-pull-refresh",
       "gesture": "pull to refresh",
       "action": "reload from the server",
-      "visibleEquivalent": "automatic load on open; 'Try again' on failure (lib/ui/screens/files_screen.dart:1011)",
-      "evidence": "lib/ui/screens/files_screen.dart:161",
+      "visibleEquivalent": "automatic load on open; 'Try again' on failure (lib/ui/screens/files/files_body.dart:200)",
+      "evidence": "lib/ui/screens/files/files_body.dart:233",
       "changed": false
     },
     {
@@ -132,8 +132,8 @@
       "element": "terminal-pull-refresh",
       "gesture": "pull to refresh",
       "action": "reload from the server",
-      "visibleEquivalent": "automatic load on open; 'Try again' on failure (lib/ui/screens/terminal_screen.dart:382)",
-      "evidence": "lib/ui/screens/terminal_screen.dart:124",
+      "visibleEquivalent": "automatic load on open; 'Try again' on failure (lib/ui/screens/terminal/terminal_list.dart:161)",
+      "evidence": "lib/ui/screens/terminal/terminal_list.dart:509",
       "changed": false
     },
     {
@@ -195,8 +195,8 @@
       "element": "integrations-pull-refresh",
       "gesture": "pull to refresh",
       "action": "reload from the server",
-      "visibleEquivalent": "visible 'Refresh' button in the empty providers state, lib/ui/screens/library/integrations_screen.dart:751; also automatic load on open; 'Try again' on failure (lib/ui/screens/library/integrations_screen.dart:727)",
-      "evidence": "lib/ui/screens/library/integrations_screen.dart:58",
+      "visibleEquivalent": "visible 'Refresh' button in the empty providers state, lib/ui/screens/library/integrations_page.dart:208; also automatic load on open; 'Try again' on failure (lib/ui/screens/library/integrations_page.dart:326)",
+      "evidence": "lib/ui/screens/library/integrations_page.dart:28",
       "changed": false
     },
     {
@@ -249,7 +249,7 @@
       "element": "global-shortcuts-new-session",
       "gesture": "keyboard shortcut: Ctrl/Cmd+N",
       "action": "start a new conversation",
-      "visibleEquivalent": "listed in Keyboard shortcuts help; Work has a visible new-conversation control (lib/ui/screens/workspace_screen.dart:857)",
+      "visibleEquivalent": "listed in Keyboard shortcuts help; Work has a visible new-conversation control (lib/ui/screens/workspace/workspace_widgets.dart:403)",
       "evidence": "lib/ui/desktop/shortcuts.dart:115",
       "changed": false
     },
@@ -330,7 +330,7 @@
       "element": "home-shell-shortcut-find",
       "gesture": "keyboard shortcut: Ctrl/Cmd+F",
       "action": "focus the Files search field on the Project tab",
-      "visibleEquivalent": "listed in Keyboard shortcuts help; the Files search field is always visible (lib/ui/screens/files_screen.dart:776)",
+      "visibleEquivalent": "listed in Keyboard shortcuts help; the Files search field is always visible (lib/ui/screens/files/files_body.dart:85)",
       "evidence": "lib/ui/screens/home_screen.dart:85",
       "changed": false
     },
@@ -358,7 +358,7 @@
       "gesture": "keyboard shortcut: Arrow Up / Arrow Down at the caret edge",
       "action": "recall an earlier / later prompt",
       "visibleEquivalent": "visible 'Reuse a prompt' row in the composer tools sheet (composer-tool-history); now also listed in Keyboard shortcuts help (lib/ui/desktop/shortcuts.dart:130)",
-      "evidence": "lib/ui/screens/chat_screen.dart:970",
+      "evidence": "lib/ui/screens/chat/prompt_history.dart:134",
       "changed": true
     },
     {
@@ -367,7 +367,7 @@
       "gesture": "keyboard shortcut: Arrow Up / Arrow Down in composer",
       "action": "recall an earlier / later prompt",
       "visibleEquivalent": "visible 'Reuse a prompt' row in the composer tools sheet (composer-tool-history); now also listed in Keyboard shortcuts help (lib/ui/desktop/shortcuts.dart:130)",
-      "evidence": "lib/ui/screens/chat_screen.dart:970",
+      "evidence": "lib/ui/screens/chat/prompt_history.dart:134",
       "changed": true
     },
     {
@@ -385,7 +385,7 @@
       "gesture": "keyboard shortcut: Ctrl+K",
       "action": "open the conversation command launcher",
       "visibleEquivalent": "visible 'Commands' row in the composer tools sheet; listed in Keyboard shortcuts help",
-      "evidence": "lib/ui/screens/chat_screen.dart:5342",
+      "evidence": "lib/ui/screens/chat_screen.dart:574",
       "changed": false
     },
     {
@@ -393,8 +393,8 @@
       "element": "chat-shortcut-find",
       "gesture": "keyboard shortcut: Ctrl+F",
       "action": "open find in the conversation",
-      "visibleEquivalent": "visible 'Find' in the conversation menu (SessionMenuAction.find, same _openFind, lib/ui/screens/chat_screen.dart:6247); listed in Keyboard shortcuts help",
-      "evidence": "lib/ui/screens/chat_screen.dart:8118",
+      "visibleEquivalent": "visible 'Find' in the conversation menu (SessionMenuAction.find, same _openFind, lib/ui/screens/chat/chat_session_menu.dart:168); listed in Keyboard shortcuts help",
+      "evidence": "lib/ui/screens/chat/chat_page.dart:246",
       "changed": false
     },
     {
@@ -430,7 +430,7 @@
       "gesture": "keyboard shortcut: Ctrl+B",
       "action": "move running work to the background",
       "visibleEquivalent": "visible 'Move running work to background' button above the composer (key background-running-work, same _backgroundRunningWork); now also listed in Keyboard shortcuts help (lib/ui/desktop/shortcuts.dart:128)",
-      "evidence": "lib/ui/screens/chat_screen.dart:7170",
+      "evidence": "lib/ui/screens/chat/chat_page.dart:273",
       "changed": true
     },
     {
@@ -439,7 +439,7 @@
       "gesture": "keyboard shortcut: Ctrl+B",
       "action": "move running work to the background",
       "visibleEquivalent": "visible 'Move running work to background' button above the composer (key background-running-work, same _backgroundRunningWork); now also listed in Keyboard shortcuts help (lib/ui/desktop/shortcuts.dart:128)",
-      "evidence": "lib/ui/screens/chat_screen.dart:7170",
+      "evidence": "lib/ui/screens/chat/chat_page.dart:273",
       "changed": true
     },
     {
@@ -466,7 +466,7 @@
       "gesture": "keyboard shortcut: Ctrl+F",
       "action": "focus the Files search field",
       "visibleEquivalent": "the search field is always visible at the top of Files; listed in Keyboard shortcuts help",
-      "evidence": "lib/ui/screens/files_screen.dart:776",
+      "evidence": "lib/ui/screens/files_screen.dart:264",
       "changed": false
     },
     {
@@ -484,7 +484,7 @@
       "gesture": "long-press on a message",
       "action": "open the message actions sheet",
       "visibleEquivalent": "visible per-message 'Message actions' button (small 'more' disc under each message, 44dp target, tooltip and semantics label) whose onTap is the same callback as onLongPress",
-      "evidence": "lib/ui/screens/chat/message_view.dart:1561",
+      "evidence": "lib/ui/screens/chat/message_view.dart:246",
       "changed": false
     },
     {
@@ -493,7 +493,7 @@
       "gesture": "long-press on a transcript message",
       "action": "open the message actions sheet (copy, fork, read aloud, revert, delete)",
       "visibleEquivalent": "visible per-message 'Message actions' button (small 'more' disc under each message, 44dp target, tooltip and semantics label) whose onTap is the same callback as onLongPress",
-      "evidence": "lib/ui/screens/chat/message_view.dart:1561",
+      "evidence": "lib/ui/screens/chat/message_view.dart:246",
       "changed": false
     },
     {
@@ -502,7 +502,7 @@
       "gesture": "right-click on a message (desktop)",
       "action": "open the message context menu",
       "visibleEquivalent": "visible 'Message actions' button opens a sheet with the same copy / fork / revert / delete actions, same gates and handlers (_showMessageActions next to _messageContextActions)",
-      "evidence": "lib/ui/screens/chat_screen.dart:3961",
+      "evidence": "lib/ui/screens/chat/chat_transcript.dart:427",
       "changed": false
     },
     {
@@ -511,7 +511,7 @@
       "gesture": "right-click on a transcript message (desktop)",
       "action": "open the message context menu",
       "visibleEquivalent": "visible 'Message actions' button opens a sheet with the same copy / fork / revert / delete actions, same gates and handlers (_showMessageActions next to _messageContextActions)",
-      "evidence": "lib/ui/screens/chat_screen.dart:3961",
+      "evidence": "lib/ui/screens/chat/chat_transcript.dart:427",
       "changed": false
     },
     {
@@ -520,7 +520,7 @@
       "gesture": "swipe end-to-start on a conversation row",
       "action": "archive (or delete where the server cannot archive)",
       "visibleEquivalent": "the row's visible trailing overflow menu has 'Archive' and 'Delete'",
-      "evidence": "lib/ui/screens/workspace_screen.dart:1584",
+      "evidence": "lib/ui/screens/workspace/workspace_sheets.dart:260",
       "changed": false
     },
     {
@@ -529,7 +529,7 @@
       "gesture": "right-click on a conversation row (desktop)",
       "action": "open the row context menu",
       "visibleEquivalent": "same entries as the row's visible trailing overflow menu",
-      "evidence": "lib/ui/screens/workspace_screen.dart:1559",
+      "evidence": "lib/ui/screens/workspace/workspace_widgets.dart:223",
       "changed": false
     },
     {
@@ -538,7 +538,7 @@
       "gesture": "long-press on a file row",
       "action": "open the file row actions sheet (Open, Attach to prompt, Add reference, Open review, Copy path)",
       "visibleEquivalent": "NEW visible trailing 'more' button on every row (tooltip 'Actions for {name}') opens the same sheet",
-      "evidence": "lib/ui/screens/files_screen.dart:1094",
+      "evidence": "lib/ui/screens/files/files_body.dart:343",
       "changed": true
     },
     {
@@ -547,7 +547,7 @@
       "gesture": "right-click on a file row (desktop)",
       "action": "open the file row context menu",
       "visibleEquivalent": "NEW visible trailing 'more' button on every row opens a sheet built from the same _fileRowActions list",
-      "evidence": "lib/ui/screens/files_screen.dart:1094",
+      "evidence": "lib/ui/screens/files/files_body.dart:343",
       "changed": true
     },
     {
@@ -556,7 +556,7 @@
       "gesture": "right-click on a terminal row (desktop)",
       "action": "Open / Rename / Stop or Remove",
       "visibleEquivalent": "the row's visible trailing overflow menu (tooltip 'Terminal actions') has Rename and Stop/Remove; Open is the row tap",
-      "evidence": "lib/ui/screens/terminal_screen.dart:461",
+      "evidence": "lib/ui/screens/terminal/terminal_list.dart:401",
       "changed": false
     },
     {
@@ -583,7 +583,7 @@
       "gesture": "drop files onto the composer (desktop)",
       "action": "attach the dropped files",
       "visibleEquivalent": "visible 'Attach file' row in the composer tools sheet",
-      "evidence": "lib/ui/screens/chat_screen.dart:6745",
+      "evidence": "lib/ui/screens/chat/chat_top_bar.dart:86",
       "changed": false
     },
     {
@@ -592,7 +592,7 @@
       "gesture": "keyboard (IME) image/GIF insertion or image paste",
       "action": "attach the inserted image",
       "visibleEquivalent": "visible 'Attach file' and 'Photo library' rows in the composer tools sheet attach the same kind of content",
-      "evidence": "lib/ui/screens/chat_screen.dart:7303",
+      "evidence": "lib/ui/screens/chat/chat_composer_region.dart:384",
       "changed": false
     },
     {
@@ -601,7 +601,7 @@
       "gesture": "drag the tree/preview divider (desktop)",
       "action": "resize the tree pane",
       "visibleEquivalent": "view-only layout manipulation, no action; the divider is visible and shows a resize cursor",
-      "evidence": "lib/ui/screens/files_screen.dart:1563",
+      "evidence": "lib/ui/screens/files/files_body.dart:9",
       "changed": false
     },
     {
@@ -619,7 +619,7 @@
       "gesture": "system back / app bar back",
       "action": "leave the conversation (offers to keep an unsent draft)",
       "visibleEquivalent": "system navigation; the app bar back button does the same (same PopScope handler)",
-      "evidence": "lib/ui/screens/chat_screen.dart:6471",
+      "evidence": "lib/ui/screens/chat/chat_page.dart:171",
       "changed": false
     },
     {
@@ -645,8 +645,8 @@
       "element": "files-system-back",
       "gesture": "system back",
       "action": "go up a folder, clear the search, or close the keyboard",
-      "visibleEquivalent": "visible breadcrumbs (root and each parent folder) navigate up; the search field's visible clear button (lib/ui/screens/files_screen.dart:825) clears the search",
-      "evidence": "lib/ui/screens/files_screen.dart:917",
+      "visibleEquivalent": "visible breadcrumbs (root and each parent folder) navigate up; the search field's visible clear button (lib/ui/screens/files/files_body.dart:90) clears the search",
+      "evidence": "lib/ui/screens/files_screen.dart:446",
       "changed": false
     },
     {
@@ -673,7 +673,7 @@
       "gesture": "scroll the transcript",
       "action": "scroll tracking: pause follow, load older messages",
       "visibleEquivalent": "not a feature behind a gesture: scroll tracking; the visible 'Jump to latest' button returns to the end",
-      "evidence": "lib/ui/screens/chat_screen.dart:6885",
+      "evidence": "lib/ui/screens/chat/chat_body.dart:92",
       "changed": false
     },
     {
@@ -709,7 +709,7 @@
       "gesture": "tap a diff line",
       "action": "select the line (a second tap makes a range)",
       "visibleEquivalent": "Tap a numbered diff line; the visible KitDiffView selection bar offers Clear, Copy, Add to prompt and Comment.",
-      "evidence": "lib/ui/kit/kit_diff_view.dart:2161",
+      "evidence": "lib/ui/kit/diff/kit_diff_rows.dart:270",
       "changed": false
     },
     {
@@ -718,7 +718,7 @@
       "gesture": "tap a hunk header",
       "action": "select the whole hunk",
       "visibleEquivalent": "Tap the labelled hunk header; the visible KitDiffView selection bar offers Clear, Copy, Add to prompt and Comment.",
-      "evidence": "lib/ui/kit/kit_diff_view.dart:2004",
+      "evidence": "lib/ui/kit/diff/kit_diff_rows.dart:94",
       "changed": false
     },
     {
@@ -727,7 +727,7 @@
       "gesture": "tap \"+N lines\"",
       "action": "reveal hidden context above",
       "visibleEquivalent": "is itself a visible, labeled tap target ('+{count} lines')",
-      "evidence": "lib/ui/kit/kit_diff_view.dart:2350",
+      "evidence": "lib/ui/kit/diff/kit_diff_rows.dart:459",
       "changed": false
     },
     {
@@ -736,7 +736,7 @@
       "gesture": "tap \"Expand (N more)\"",
       "action": "reveal hidden context below",
       "visibleEquivalent": "is itself a visible, labeled button (semantics 'Expand. N unchanged lines hidden below')",
-      "evidence": "lib/ui/kit/kit_diff_view.dart:2337",
+      "evidence": "lib/ui/kit/diff/kit_diff_rows.dart:446",
       "changed": false
     },
     {
@@ -745,7 +745,7 @@
       "gesture": "tap \"Hide revealed context\"",
       "action": "collapse revealed context",
       "visibleEquivalent": "is itself a visible, labeled tap target",
-      "evidence": "lib/ui/kit/kit_diff_view.dart:2321",
+      "evidence": "lib/ui/kit/diff/kit_diff_rows.dart:430",
       "changed": false
     },
     {
@@ -754,7 +754,7 @@
       "gesture": "tap \"Show next N lines\"",
       "action": "reveal the next lines of a hidden gap",
       "visibleEquivalent": "is itself a visible, labeled tap target",
-      "evidence": "lib/ui/kit/kit_diff_view.dart:2337",
+      "evidence": "lib/ui/kit/diff/kit_diff_rows.dart:446",
       "changed": false
     },
     {
@@ -763,7 +763,7 @@
       "gesture": "tap \"Show N previous lines\"",
       "action": "reveal the previous lines of a hidden gap",
       "visibleEquivalent": "is itself a visible, labeled tap target",
-      "evidence": "lib/ui/kit/kit_diff_view.dart:2350",
+      "evidence": "lib/ui/kit/diff/kit_diff_rows.dart:459",
       "changed": false
     },
     {
@@ -817,7 +817,7 @@
       "gesture": "automatic OAuth loopback callback",
       "action": "finish MCP sign-in",
       "visibleEquivalent": "not a user gesture: automatic callback from the browser after the visible sign-in button",
-      "evidence": "lib/ui/screens/library/integrations_screen.dart:360",
+      "evidence": "lib/ui/screens/library/integrations_mcp.dart:181",
       "changed": false
     },
     {
