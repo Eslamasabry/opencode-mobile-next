@@ -753,7 +753,7 @@ class _LiveDotState extends State<_LiveDot>
       child: AnimatedBuilder(
         animation: _pulse,
         builder: (context, _) {
-          final t = Curves.easeInOut.transform(_pulse.value);
+          final t = KitMotion.pulse.transform(_pulse.value);
           return SizedBox.square(
             dimension: _size * 1.6,
             child: Center(

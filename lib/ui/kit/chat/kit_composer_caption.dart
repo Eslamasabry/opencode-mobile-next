@@ -239,7 +239,10 @@ class _StopRingState extends State<_StopRing>
         track: widget.track,
       ),
       // The disc keeps its size; the ring turns just outside it.
-      child: Padding(padding: const EdgeInsets.all(2), child: widget.child),
+      child: SizedBox.square(
+        dimension: KitTokens.composerActionSize + 4,
+        child: Center(child: widget.child),
+      ),
     ),
   );
 }

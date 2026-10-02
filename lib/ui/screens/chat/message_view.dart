@@ -347,7 +347,7 @@ class _MessageView extends StatelessWidget {
         metaParts.isEmpty &&
         raw == null &&
         m.info.finish != 'length') {
-      // Nothing written yet: the composer's edge already says so.
+      // Nothing written yet: the turn's live line says so.
       return const SizedBox.shrink();
     }
 

@@ -38,9 +38,8 @@ class KitEffects {
   /// The light tick on send and the confirmation on a finish.
   final bool haptics;
 
-  /// A soft glowing ring around the message box while a reply runs, in
-  /// addition to the living edge (Settings › Appearance › Effects). Off by
-  /// default.
+  /// A soft glowing ring around the message box while a reply runs
+  /// (Settings › Appearance › Effects). Off by default.
   final bool activityGlow;
 
   /// The choices in force here, or [defaults] above any scope (tests).

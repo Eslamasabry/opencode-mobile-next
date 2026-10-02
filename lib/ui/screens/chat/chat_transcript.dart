@@ -302,8 +302,6 @@ extension _ChatTranscript on _ChatScreenState {
     if (i == _renderedMessageCount) return _olderHistoryRow();
     final index = _renderedMessageCount - 1 - i;
     final m = _messages[index];
-    // The running turn's status lives on the composer's edge
-    // ([KitComposer.rail]), so no transcript row draws a live line.
     if (waitingLocalIDs.contains(m.info.id) || _isFoldedNotice(m)) {
       return const SizedBox.shrink();
     }
