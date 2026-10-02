@@ -6,6 +6,15 @@ part of '../connection.dart';
 mixin _ConnectionControllerQueue on ChangeNotifier {
   ConnectionController get _self;
 
+  /// Metadata for this conversation only; a receipt confirms admission,
+  /// not completion. No command payload or server error is included.
+  List<CommandReceipt> commandReceiptsFor(String sessionID) =>
+      _self._commandReceiptsFor(sessionID);
+
+  /// Retry checks the original receipt. It never sends the prompt again.
+  Future<bool> checkQueuedPromptReceipt(String id) =>
+      _self._checkQueuedPromptReceipt(id);
+
   /// Prompts drafted while the server was unreachable, waiting to flush.
   /// Loaded lazily from [OfflineQueueStore] and kept in memory afterward.
   List<QueuedPrompt>? _offlineQueue;
@@ -196,6 +205,100 @@ mixin _ConnectionControllerQueue on ChangeNotifier {
 }
 
 extension _ConnectionControllerQueueImpl on ConnectionController {
+  String get _commandReceiptScope => receipt_crypto.sha256
+      .convert(
+        utf8.encode(
+          jsonEncode([profile?.id, profile?.baseUrl, directory, workspace]),
+        ),
+      )
+      .toString();
+
+  List<CommandReceipt> _commandReceiptsFor(String sessionID) {
+    final id = profile?.id;
+    if (id == null) return const [];
+    return PendingCommandJournal.forProfile(store.prefs, id)
+        .read()
+        .where(
+          (receipt) =>
+              receipt.sessionID == sessionID &&
+              receipt.scope == _commandReceiptScope,
+        )
+        .toList(growable: false);
+  }
+
+  Future<bool> _checkQueuedPromptReceipt(String id) async {
+    final profileID = profile?.id;
+    final current = api;
+    if (_disposed ||
+        profileID == null ||
+        current == null ||
+        status != StreamStatus.connected ||
+        _queuedPromptInFlight == id) {
+      return false;
+    }
+    final transport = CommandReceiptTransport(current);
+    if (!transport.supported) return false;
+    final scope = _commandReceiptScope;
+    final journal = PendingCommandJournal.forProfile(store.prefs, profileID);
+    final matching = journal.read().where(
+      (receipt) => receipt.commandID == 'queue:$id' && receipt.scope == scope,
+    );
+    if (matching.isEmpty) return false;
+    final receipt = await CommandReceiptController(journal).retry('queue:$id', (
+      receipt,
+    ) async {
+      final found = await transport.lookup(receipt);
+      return !_disposed &&
+          identical(api, current) &&
+          scope == _commandReceiptScope &&
+          found;
+    });
+    if (_disposed ||
+        !identical(api, current) ||
+        scope != _commandReceiptScope ||
+        receipt.state != CommandReceiptState.confirmed) {
+      return false;
+    }
+    final removed = await _serializeQueueChange(() async {
+      if (_disposed ||
+          !identical(api, current) ||
+          scope != _commandReceiptScope) {
+        return false;
+      }
+      // A late lookup must not discard a replacement draft or another
+      // profile's entry merely because its queue ID was reused.
+      final kept = _queue
+          .where(
+            (entry) =>
+                entry.id != id ||
+                entry.profileID != profileID ||
+                entry.sessionID != receipt.sessionID ||
+                !entry.dispatched,
+          )
+          .toList();
+      if (kept.length == _queue.length) return false;
+      if (!await _queueStore.save(kept)) return false;
+      _offlineQueue = kept;
+      if (!_disposed) _notifyListeners();
+      return true;
+    });
+    if (removed) _queuedPromptsAcceptedUnrecorded.remove(id);
+    return removed;
+  }
+
+  Future<void> _reconcileQueuedCommandReceipts() async {
+    final current = api;
+    if (current == null || !CommandReceiptTransport(current).supported) return;
+    for (final entry in List.of(_queue)) {
+      if (entry.profileID != profile?.id || !entry.dispatched) continue;
+      try {
+        await _checkQueuedPromptReceipt(entry.id);
+      } catch (_) {
+        break;
+      } // Storage failure retains the dispatch marker.
+    }
+  }
+
   OfflineQueueStore get _queueStore =>
       _offlineQueueStore ??= OfflineQueueStore(prefs: store.prefs);
 
@@ -426,6 +529,15 @@ extension _ConnectionControllerQueueImpl on ConnectionController {
 
   /// The body of [resendQueuedPrompt].
   Future<bool> _resendQueuedPrompt(String id) async {
+    final profileID = profile?.id;
+    if (profileID != null &&
+        PendingCommandJournal.forProfile(
+          store.prefs,
+          profileID,
+        ).read().any((receipt) => receipt.commandID == 'queue:$id')) {
+      // A receipt-bearing command is permanently bound to its first dispatch.
+      return _checkQueuedPromptReceipt(id);
+    }
     final cleared = await _serializeQueueChange(() async {
       if (_queuedPromptInFlight == id ||
           _queuedPromptsAcceptedUnrecorded.contains(id)) {
@@ -488,10 +600,7 @@ extension _ConnectionControllerQueueImpl on ConnectionController {
 
   /// The body of [flushOfflineQueue].
   Future<void> _flushOfflineQueue() async {
-    if (_disposed ||
-        !capabilities.offlinePromptQueue ||
-        (!automationPolicy.allows(AutomationBehavior.reconcileQueuedSends) &&
-            _explicitQueueResends.isEmpty)) {
+    if (_disposed || !capabilities.offlinePromptQueue) {
       return;
     }
     if (_flushingOfflineQueue) {
@@ -507,11 +616,11 @@ extension _ConnectionControllerQueueImpl on ConnectionController {
         !entry.dispatched &&
         (_explicitQueueResends.contains(entry.id) ||
             automationPolicy.allows(AutomationBehavior.reconcileQueuedSends));
-    if (!_queue.any(eligible)) return;
     _flushingOfflineQueue = true;
     var sent = 0;
     var touched = false;
     try {
+      await _reconcileQueuedCommandReceipts();
       for (final entry in List.of(_queue)) {
         if (!eligible(entry)) continue;
         final explicitlyRequested = _explicitQueueResends.contains(entry.id);
@@ -602,15 +711,57 @@ extension _ConnectionControllerQueueImpl on ConnectionController {
             }
             _explicitQueueResends.remove(entry.id);
             dispatched = true;
-            await currentApi.promptAsync(
-              entry.sessionID,
-              text: entry.text,
-              model: entry.model,
-              agent: entry.agent?.isNotEmpty == true ? entry.agent : null,
-              variant: entry.variant?.isNotEmpty == true ? entry.variant : null,
-              attachments: entry.attachments,
-              agentMentions: entry.mentions,
-            );
+            final receiptTransport = CommandReceiptTransport(currentApi);
+            if (receiptTransport.supported) {
+              final journal = PendingCommandJournal.forProfile(
+                store.prefs,
+                profileID,
+              );
+              final receipt = await CommandReceiptController(journal).send(
+                CommandReceipt(
+                  commandID: 'queue:${entry.id}',
+                  receiptID: createCommandReceiptID(),
+                  sessionID: entry.sessionID,
+                  tabID: entry.sessionID,
+                  scope: _commandReceiptScope,
+                  createdAt: DateTime.now().millisecondsSinceEpoch,
+                  state: CommandReceiptState.sent,
+                ),
+                (receiptID) async {
+                  if (!allowed() || !identical(api, currentApi)) {
+                    throw const CommandReceiptException();
+                  }
+                  await receiptTransport.dispatch(
+                    entry,
+                    receiptID,
+                    beforeSend: () {
+                      if (!allowed() ||
+                          !identical(api, currentApi) ||
+                          !receiptTransport.matchesEndpoint(profile!.baseUrl)) {
+                        throw const CommandReceiptException();
+                      }
+                      journal
+                          .read(); // Profile deletion fences the actual send.
+                    },
+                  );
+                },
+              );
+              if (receipt.state != CommandReceiptState.confirmed) {
+                throw const CommandReceiptException();
+              }
+            } else {
+              await currentApi.promptAsync(
+                entry.sessionID,
+                text: entry.text,
+                model: entry.model,
+                agent: entry.agent?.isNotEmpty == true ? entry.agent : null,
+                variant: entry.variant?.isNotEmpty == true
+                    ? entry.variant
+                    : null,
+                attachments: entry.attachments,
+                agentMentions: entry.mentions,
+              );
+            }
             delivered = true;
             // Until this write lands the persisted marker keeps the entry
             // out of every future flush, so a refusal or a process death
@@ -675,11 +826,9 @@ extension _ConnectionControllerQueueImpl on ConnectionController {
               );
             }
           } else if (!delivered) {
-            // After dispatch nothing proves non-delivery: neither prompt
-            // endpoint offers an idempotency or receipt contract, and a
-            // status code only says who answered, not whether the prompt
-            // was enqueued first. The marker stays; only the user's review
-            // moves this entry.
+            // After dispatch a status code does not prove non-delivery.
+            // Receipt-bearing commands are checked by ID; legacy commands
+            // retain the existing explicit review behavior.
             await _replaceQueuedPrompt(
               entry.id,
               (queued) => queued.withError(error.message),

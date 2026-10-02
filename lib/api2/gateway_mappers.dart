@@ -32,6 +32,7 @@ import 'transport.dart';
 ///   reset, legacy question requests — replaced by forms, wired in a later
 ///   slice).
 const ServerCapabilities api2ServerCapabilities = ServerCapabilities(
+  commandReceipts: true,
   developmentServices: true,
   managedWorkspaces: false,
   workspaceWarp: false,

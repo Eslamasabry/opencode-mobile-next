@@ -22,6 +22,7 @@ import 'model_library.dart';
 import 'interaction_defaults.dart';
 import 'setup_audit_store.dart';
 import 'session_link_bindings.dart';
+import 'pending_command_journal.dart';
 
 export '../api/server_probe.dart' show ServerFlavor;
 export '../domain/loopback_host.dart' show isLoopbackHost, isPrivateNetworkHost;
@@ -430,7 +431,9 @@ class ProfileStore {
       profileId,
     );
     final auditDrain = SetupAuditStore.closeProfile(prefs, profileId);
+    final commandsDrain = PendingCommandJournal.closeProfile(prefs, profileId);
     await Future.wait([
+      commandsDrain,
       defaultsDrain,
       auditDrain,
       SessionLinkBindings.closeProfile(prefs, profileId),

@@ -364,7 +364,11 @@ class TeamChatApi extends OpenCodeApi with CompleteMessageHistory {
     List<PromptAttachment> attachments = const [],
     List<PromptAgentMention> agentMentions = const [],
     PromptDelivery? delivery,
-  }) async => prompts.add('$sessionID: $text');
+    void Function()? beforeSend,
+  }) async {
+    beforeSend?.call();
+    prompts.add('$sessionID: $text');
+  }
 }
 
 /// The server's all-projects list, newest first.

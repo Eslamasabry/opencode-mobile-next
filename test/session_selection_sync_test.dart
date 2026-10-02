@@ -36,6 +36,9 @@ Session _session(
 );
 
 class SelectionApi extends OpenCodeApi implements SessionSelectionGateway {
+  // Selection-only fake has no durable client-ID prompt endpoint.
+  @override
+  ServerCapabilities get capabilities => const ServerCapabilities();
   SelectionApi() : super(baseUrl: 'http://localhost');
   final values = <String, Session>{'a': _session('a'), 'b': _session('b')};
   final writes = <String>[];

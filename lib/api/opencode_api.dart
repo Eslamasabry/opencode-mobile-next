@@ -673,11 +673,13 @@ class OpenCodeApi
     List<PromptAttachment> attachments = const [],
     List<PromptAgentMention> agentMentions = const [],
     PromptDelivery? delivery,
+    void Function()? beforeSend,
   }) => PromptTrace.track(
     sessionID,
     () => _promptAsync(
       sessionID,
       messageID: messageID,
+      beforeSend: beforeSend,
       text: text,
       model: model,
       agent: agent,
@@ -690,6 +692,7 @@ class OpenCodeApi
   Future<void> _promptAsync(
     String sessionID, {
     String? messageID,
+    void Function()? beforeSend,
     required String text,
     ModelRef? model,
     String? agent,
@@ -699,6 +702,7 @@ class OpenCodeApi
   }) async {
     await beforeSessionDispatch?.call(sessionID);
     try {
+      beforeSend?.call();
       await sdkClient.getSessionApi().sessionPromptAsync(
         sessionID: sessionID,
         directory: _directory,

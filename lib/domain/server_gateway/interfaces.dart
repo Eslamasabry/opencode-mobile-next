@@ -82,6 +82,8 @@ abstract class PromptGateway {
 
 /// Optional exact dispatch correlation, separate from heuristic transcript
 /// reconciliation. This is not an idempotency or delivery-retry contract.
+/// The optional beforeSend fence runs synchronously after asynchronous preflight
+/// and immediately before HTTP dispatch; it may refuse a stale/deleted scope.
 abstract interface class CorrelatedPromptGateway {
   String createPromptMessageID();
   Future<void> promptWithMessageID(
@@ -94,6 +96,7 @@ abstract interface class CorrelatedPromptGateway {
     List<PromptAttachment> attachments,
     List<PromptAgentMention> agentMentions,
     PromptDelivery? delivery,
+    void Function()? beforeSend,
   });
 }
 
