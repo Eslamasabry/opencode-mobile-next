@@ -26499,4 +26499,43 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get storageRestartFailedBody =>
       'The folder was not opened. Try again, or start OpenCode from This phone.';
+
+  @override
+  String get kitQueuedChecking => 'Checking whether your message arrived…';
+
+  @override
+  String get kitQueuedUncertain => 'We couldn\'t confirm your message arrived.';
+
+  @override
+  String kitQueuedLastChecked(String time) {
+    return 'Last checked $time.';
+  }
+
+  @override
+  String get kitQueuedStorageFull =>
+      'This phone can\'t safely record sends right now, so your message wasn\'t sent. It is kept here.';
+
+  @override
+  String get queuedReceiptConfirmed => 'Message received.';
+
+  @override
+  String get queuedReceiptStillUncertain =>
+      'Still can\'t confirm it arrived. Nothing was sent again.';
+
+  @override
+  String get queuedReceiptStorageProblem =>
+      'This phone can\'t safely record or check sends right now. Free up some storage and try again.';
+
+  @override
+  String get queuedReceiptDetailSentAt => 'Sent';
+
+  @override
+  String get queuedReceiptDetailCommand => 'Command ID';
+
+  @override
+  String get queuedReceiptDetailReceipt => 'Receipt ID';
+
+  @override
+  String get queuedReceiptDetailNote =>
+      'The connection ended before we could confirm receipt.';
 }

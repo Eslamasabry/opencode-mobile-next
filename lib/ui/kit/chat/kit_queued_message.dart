@@ -5,7 +5,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
-import '../kit_bidi.dart';
 import '../kit_buttons.dart';
 import '../kit_divider.dart';
 import '../kit_layout.dart';
@@ -13,6 +12,7 @@ import '../kit_menu.dart';
 import '../kit_motion.dart';
 import '../kit_receipt.dart';
 import '../kit_since.dart';
+import '../kit_technical_value.dart';
 import '../kit_tappable.dart';
 import '../kit_text.dart';
 import '../kit_tokens.dart';
@@ -38,6 +38,17 @@ enum KitQueuedState {
   /// The send failed; [KitQueuedItem.reason] says why.
   failed,
 
+  /// A receipt check is running now: it only looks, it never sends.
+  checking,
+
+  /// It left and the phone holds a receipt record, but the server has not
+  /// confirmed it yet. The action only checks again; it never resends
+  /// ([KitQueuedItem.checkedAt] says when it last looked).
+  uncertain,
+
+  /// This phone could not safely record the send, so it was not sent.
+  storageFull,
+
   /// OpenCode 2: accepted, delivered when the running reply finishes.
   afterThisReply,
 
@@ -59,6 +70,9 @@ class KitQueuedItem {
     this.attachmentCount = 0,
     this.reason,
     this.since,
+    this.checkedAt,
+    this.details = const <KitTechnicalValue>[],
+    this.detailNotes = const <String>[],
     this.menu = const <KitMenuItem>[],
     this.key,
   });
@@ -77,6 +91,14 @@ class KitQueuedItem {
 
   /// sending: when it left, for the 8 s escalation.
   final DateTime? since;
+
+  /// uncertain: when the last check ran ("Last checked 14:02").
+  final DateTime? checkedAt;
+
+  /// Technical truth (ids, sent time) and plain notes, folded under Details
+  /// below the item. Never the message, a URL, a header or a raw error.
+  final List<KitTechnicalValue> details;
+  final List<String> detailNotes;
 
   /// Edit, Send now / Add to this turn / Send after, Try again, Remove.
   final List<KitMenuItem> menu;
@@ -288,7 +310,7 @@ class _Item extends StatelessWidget {
   Widget _content(BuildContext context, KitQueuedState shown) {
     final tokens = KitTokens.of(context);
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
-    final stateSpan = _stateSpan(context, shown, item.reason);
+    final stateSpan = _stateSpan(context, shown, item.reason, item.checkedAt);
     final stateWords = stateSpan.toPlainText();
     final text = item.text.trim();
     final label = l10n.kitQueuedItemLabel(
@@ -333,28 +355,46 @@ class _Item extends StatelessWidget {
       ),
     );
 
+    final Widget row;
     if (item.menu.isEmpty) {
-      return Semantics(
+      row = Semantics(
         container: true,
         label: label,
         excludeSemantics: true,
         child: KeyedSubtree(key: item.key, child: content),
       );
-    }
-    return Builder(
-      builder: (anchor) => KitTappable(
-        tappableKey: item.key,
-        label: label,
-        menu: item.menu,
-        surface: KitSurfaceLevel.surface2,
-        shape: KitShape.button,
-        onTap: () => showKitMenu(
-          anchor,
-          items: item.menu,
-          semanticsLabel: l10n.kitQueuedActions,
+    } else {
+      row = Builder(
+        builder: (anchor) => KitTappable(
+          tappableKey: item.key,
+          label: label,
+          menu: item.menu,
+          surface: KitSurfaceLevel.surface2,
+          shape: KitShape.button,
+          onTap: () => showKitMenu(
+            anchor,
+            items: item.menu,
+            semanticsLabel: l10n.kitQueuedActions,
+          ),
+          child: content,
         ),
-        child: content,
-      ),
+      );
+    }
+    if (item.details.isEmpty && item.detailNotes.isEmpty) return row;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        row,
+        Padding(
+          padding: EdgeInsetsDirectional.symmetric(horizontal: tokens.space2),
+          child: KitDetailsFold(
+            foldKey: ValueKey<Object>(('kit-queued-details', item.id)),
+            values: item.details,
+            notes: item.detailNotes,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -366,6 +406,7 @@ InlineSpan _stateSpan(
   BuildContext context,
   KitQueuedState state,
   String? reason,
+  DateTime? checkedAt,
 ) {
   final l10n = lookupAppLocalizations(Localizations.localeOf(context));
   InlineSpan receipt(KitReceiptState receiptState, {String? why}) {
@@ -390,6 +431,13 @@ InlineSpan _stateSpan(
       reason,
     ),
     KitQueuedState.failed => receipt(KitReceiptState.refused, why: reason),
+    KitQueuedState.checking => TextSpan(text: l10n.kitQueuedChecking),
+    KitQueuedState.uncertain => _uncertain(
+      context,
+      receipt(KitReceiptState.notConfirmed),
+      checkedAt,
+    ),
+    KitQueuedState.storageFull => TextSpan(text: l10n.kitQueuedStorageFull),
     KitQueuedState.reachedServer => TextSpan(text: l10n.kitQueuedReachedServer),
     KitQueuedState.waiting => TextSpan(text: l10n.kitQueuedWaiting),
     KitQueuedState.afterThisReply => TextSpan(text: l10n.kitQueuedAfterReply),
@@ -407,5 +455,23 @@ InlineSpan _withReason(BuildContext context, InlineSpan span, String? reason) {
   return TextSpan(
     text: l10n.kitReceiptActRefusedReason(span.text ?? '', KitBidi.auto(why)),
     style: span.style,
+  );
+}
+
+/// "We couldn't confirm your message arrived." in the not-confirmed colour,
+/// followed by "Last checked 14:02." once a check has run.
+InlineSpan _uncertain(BuildContext context, InlineSpan span, DateTime? at) {
+  final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+  final style = span is TextSpan ? span.style : null;
+  final time = at == null
+      ? null
+      : MaterialLocalizations.of(
+          context,
+        ).formatTimeOfDay(TimeOfDay.fromDateTime(at));
+  return TextSpan(
+    text: time == null
+        ? l10n.kitQueuedUncertain
+        : '${l10n.kitQueuedUncertain} ${l10n.kitQueuedLastChecked(time)}',
+    style: style,
   );
 }

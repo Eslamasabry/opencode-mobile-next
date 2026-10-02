@@ -14,6 +14,10 @@ class _PendingSendsStrip extends StatelessWidget {
     required this.inboxItems,
     required this.isSending,
     required this.isAcceptedUnrecorded,
+    required this.receipts,
+    required this.isChecking,
+    required this.checkedAt,
+    required this.onCheck,
     required this.onEdit,
     required this.onResend,
     required this.onRetry,
@@ -31,6 +35,19 @@ class _PendingSendsStrip extends StatelessWidget {
   /// Whether the server accepted a draft's send but the device could not
   /// record it; resending it would be a certain duplicate.
   final bool Function(QueuedPrompt entry) isAcceptedUnrecorded;
+
+  /// This conversation's command receipts by queue entry id. An entry with a
+  /// receipt is checked, never resent.
+  final Map<String, CommandReceipt> receipts;
+
+  /// Whether a receipt check for the draft is running now.
+  final bool Function(QueuedPrompt entry) isChecking;
+
+  /// When the draft's last check ran without confirming it.
+  final DateTime? Function(QueuedPrompt entry) checkedAt;
+
+  /// Check again: a lookup only. Null while there is no connection.
+  final ValueChanged<QueuedPrompt>? onCheck;
   final ValueChanged<QueuedPrompt> onEdit;
 
   /// Explicit resend of a draft whose earlier send was never confirmed.
@@ -46,7 +63,27 @@ class _PendingSendsStrip extends StatelessWidget {
   /// A draft whose send left and never came back confirmed: it can be sent
   /// again (the person decides; it never resends on its own).
   bool _unconfirmed(QueuedPrompt entry) =>
-      entry.dispatched && !isSending(entry) && !isAcceptedUnrecorded(entry);
+      entry.dispatched &&
+      !isSending(entry) &&
+      !isAcceptedUnrecorded(entry) &&
+      !_receiptBound(entry) &&
+      !_storageStopped(entry);
+
+  /// A draft that left with a receipt record: its arrival is checked by
+  /// that record, never by sending it again.
+  bool _receiptBound(QueuedPrompt entry) =>
+      entry.dispatched &&
+      !isSending(entry) &&
+      !isAcceptedUnrecorded(entry) &&
+      receipts.containsKey(entry.id);
+
+  /// The receipt could not be stored, so the send never left: the draft
+  /// stays and says so.
+  bool _storageStopped(QueuedPrompt entry) =>
+      entry.dispatched &&
+      !isSending(entry) &&
+      !receipts.containsKey(entry.id) &&
+      entry.error == const CommandReceiptException().toString();
 
   /// A draft whose send the server refused before anything was delivered:
   /// sending it again is safe, so Retry is offered.
@@ -62,10 +99,19 @@ class _PendingSendsStrip extends StatelessWidget {
     final sending = isSending(entry);
     final review = entry.dispatched && !sending;
     final accepted = review && isAcceptedUnrecorded(entry);
+    final receipt = receipts[entry.id];
+    final bound = _receiptBound(entry);
+    final storage = _storageStopped(entry);
     final state = sending
         ? KitQueuedState.sending
         : accepted
         ? KitQueuedState.reachedServer
+        : bound
+        ? (isChecking(entry)
+              ? KitQueuedState.checking
+              : KitQueuedState.uncertain)
+        : storage
+        ? KitQueuedState.storageFull
         : review
         ? KitQueuedState.notConfirmed
         : entry.error != null
@@ -79,6 +125,26 @@ class _PendingSendsStrip extends StatelessWidget {
       attachmentCount: entry.attachments.length,
       // The server's words never show as copy: its plain headline only
       // (agentErrorWords), the same words the transcript uses.
+      checkedAt: bound ? checkedAt(entry) : null,
+      details: bound && receipt != null
+          ? [
+              KitTechnicalValue(
+                strings.queuedReceiptDetailSentAt,
+                DateTime.fromMillisecondsSinceEpoch(
+                  receipt.createdAt,
+                ).toIso8601String(),
+              ),
+              KitTechnicalValue(
+                strings.queuedReceiptDetailCommand,
+                receipt.commandID,
+              ),
+              KitTechnicalValue(
+                strings.queuedReceiptDetailReceipt,
+                receipt.receiptID,
+              ),
+            ]
+          : const [],
+      detailNotes: bound ? [strings.queuedReceiptDetailNote] : const [],
       reason: switch (entry.error) {
         final raw?
             when state == KitQueuedState.failed ||
@@ -94,7 +160,15 @@ class _PendingSendsStrip extends StatelessWidget {
             label: strings.queuedRetry,
             onSelected: () => onRetry!(entry),
           ),
-        if (review && !accepted)
+        if (bound && onCheck != null)
+          KitMenuItem(
+            key: const ValueKey('queued-action-check'),
+            icon: AppIconography.retry,
+            label: strings.queuedRetry,
+            enabled: !isChecking(entry),
+            onSelected: () => onCheck!(entry),
+          ),
+        if (review && !accepted && !bound && !storage)
           KitMenuItem(
             key: const ValueKey('queued-action-resend'),
             icon: AppIconography.send,
@@ -181,7 +255,20 @@ class _PendingSendsStrip extends StatelessWidget {
         ? const <QueuedPrompt>[]
         : drafts.where(_refused).toList();
     final strings = _chatL10n(context);
-    final action = unconfirmed.length == 1
+    // A message with a receipt record is only ever checked again.
+    final checkable = onCheck == null
+        ? const <QueuedPrompt>[]
+        : drafts
+              .where((entry) => _receiptBound(entry) && !isChecking(entry))
+              .toList();
+    final action = checkable.length == 1
+        ? KitAction(
+            key: const ValueKey('queued-bubble-check'),
+            icon: AppIconography.retry,
+            label: strings.queuedRetry,
+            onPressed: () => onCheck!(checkable.single),
+          )
+        : unconfirmed.length == 1
         ? KitAction(
             key: const ValueKey('queued-bubble-resend'),
             icon: AppIconography.send,

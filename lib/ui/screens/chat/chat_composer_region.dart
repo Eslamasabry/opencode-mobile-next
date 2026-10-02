@@ -207,6 +207,12 @@ extension _ChatComposerRegion on _ChatScreenState {
               _conn.queuedPromptAcceptedUnrecorded(entry.id),
           onEdit: _editQueuedPrompt,
           onResend: _resendQueuedPrompt,
+          receipts: _queueReceipts(),
+          isChecking: (entry) => _checkingReceipts.contains(entry.id),
+          checkedAt: (entry) => _receiptCheckedAt[entry.id],
+          onCheck: _conn.status == StreamStatus.connected
+              ? (entry) => unawaited(_checkQueuedReceipt(entry))
+              : null,
           onRetry: _conn.status == StreamStatus.connected
               ? (entry) => unawaited(_retryQueuedPrompt(entry))
               : null,

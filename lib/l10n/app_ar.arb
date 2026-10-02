@@ -4955,5 +4955,16 @@
   "storageRestartBusy": "هناك رد أو مهمة لفريق الذكاء الاصطناعي قيد التنفيذ الآن. ستتوقف مؤقتًا أثناء إعادة التشغيل.",
   "storageRestartConfirm": "أعد التشغيل وافتح",
   "storageRestartFailedTitle": "لم تكتمل إعادة التشغيل",
-  "storageRestartFailedBody": "لم يُفتح المجلد. حاول مرة أخرى، أو شغّل OpenCode من هذا الهاتف."
+  "storageRestartFailedBody": "لم يُفتح المجلد. حاول مرة أخرى، أو شغّل OpenCode من هذا الهاتف.",
+  "kitQueuedChecking": "جارٍ التحقق من وصول رسالتك…",
+  "kitQueuedUncertain": "لم نتمكن من التأكد من وصول رسالتك.",
+  "kitQueuedLastChecked": "آخر تحقق {time}.",
+  "kitQueuedStorageFull": "لا يستطيع هذا الهاتف تسجيل الإرسال بأمان الآن، لذا لم تُرسل رسالتك. وهي محفوظة هنا.",
+  "queuedReceiptConfirmed": "وصلت الرسالة.",
+  "queuedReceiptStillUncertain": "ما زلنا لا نستطيع التأكد من وصولها. لم يُرسل شيء مرة أخرى.",
+  "queuedReceiptStorageProblem": "لا يستطيع هذا الهاتف تسجيل الإرسال أو التحقق منه بأمان الآن. حرّر بعض مساحة التخزين وحاول مرة أخرى.",
+  "queuedReceiptDetailSentAt": "وقت الإرسال",
+  "queuedReceiptDetailCommand": "معرّف الأمر",
+  "queuedReceiptDetailReceipt": "معرّف الإيصال",
+  "queuedReceiptDetailNote": "انقطع الاتصال قبل أن نتمكن من تأكيد الاستلام."
 }

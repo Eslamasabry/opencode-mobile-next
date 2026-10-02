@@ -26618,4 +26618,43 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get storageRestartFailedBody =>
       'لم يُفتح المجلد. حاول مرة أخرى، أو شغّل OpenCode من هذا الهاتف.';
+
+  @override
+  String get kitQueuedChecking => 'جارٍ التحقق من وصول رسالتك…';
+
+  @override
+  String get kitQueuedUncertain => 'لم نتمكن من التأكد من وصول رسالتك.';
+
+  @override
+  String kitQueuedLastChecked(String time) {
+    return 'آخر تحقق $time.';
+  }
+
+  @override
+  String get kitQueuedStorageFull =>
+      'لا يستطيع هذا الهاتف تسجيل الإرسال بأمان الآن، لذا لم تُرسل رسالتك. وهي محفوظة هنا.';
+
+  @override
+  String get queuedReceiptConfirmed => 'وصلت الرسالة.';
+
+  @override
+  String get queuedReceiptStillUncertain =>
+      'ما زلنا لا نستطيع التأكد من وصولها. لم يُرسل شيء مرة أخرى.';
+
+  @override
+  String get queuedReceiptStorageProblem =>
+      'لا يستطيع هذا الهاتف تسجيل الإرسال أو التحقق منه بأمان الآن. حرّر بعض مساحة التخزين وحاول مرة أخرى.';
+
+  @override
+  String get queuedReceiptDetailSentAt => 'وقت الإرسال';
+
+  @override
+  String get queuedReceiptDetailCommand => 'معرّف الأمر';
+
+  @override
+  String get queuedReceiptDetailReceipt => 'معرّف الإيصال';
+
+  @override
+  String get queuedReceiptDetailNote =>
+      'انقطع الاتصال قبل أن نتمكن من تأكيد الاستلام.';
 }
