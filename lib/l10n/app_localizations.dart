@@ -31432,6 +31432,18 @@ abstract class AppLocalizations {
   /// **'From now on, {patterns} runs without asking you, {context}. You can take this back in Settings under Always allowed actions.'**
   String chatRequestAlwaysScope(String patterns, String context);
 
+  /// Permission request card: the one confirm asked before Always allow saves a standing permission. {what} is the command or tool.
+  ///
+  /// In en, this message translates to:
+  /// **'Always allow {what} in this project?'**
+  String chatRequestAlwaysConfirm(String what);
+
+  /// Permission request: where an always-allow grant applies, as the {context} of the scope sentence.
+  ///
+  /// In en, this message translates to:
+  /// **'in this project'**
+  String get chatRequestAlwaysInProject;
+
   /// Permission request sheet: status words while an always-allow rule is on.
   ///
   /// In en, this message translates to:

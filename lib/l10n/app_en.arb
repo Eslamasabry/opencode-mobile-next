@@ -23360,6 +23360,19 @@
       }
     }
   },
+  "chatRequestAlwaysConfirm": "Always allow {what} in this project?",
+  "@chatRequestAlwaysConfirm": {
+    "description": "Permission request card: the one confirm asked before Always allow saves a standing permission. {what} is the command or tool.",
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "chatRequestAlwaysInProject": "in this project",
+  "@chatRequestAlwaysInProject": {
+    "description": "Permission request: where an always-allow grant applies, as the {context} of the scope sentence."
+  },
   "chatRequestAlwaysOn": "Always allowed",
   "@chatRequestAlwaysOn": {
     "description": "Permission request sheet: status words while an always-allow rule is on."

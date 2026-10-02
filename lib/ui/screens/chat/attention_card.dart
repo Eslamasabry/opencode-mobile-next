@@ -121,6 +121,12 @@ class _PermissionAttentionCardState extends State<_PermissionAttentionCard> {
             conn.permissionsForSession(permission.sessionID).length - 1,
           ),
           answered: answered,
+          alwaysAllow: permissionAlwaysStep(
+            context,
+            permission: permission,
+            supported: conn.capabilities.persistentPermissionGrants,
+            onConfirmed: () => answer('always'),
+          ),
           onAllow: () => answer('once'),
           onReject: () => answer('reject'),
           onRetry: answered == null

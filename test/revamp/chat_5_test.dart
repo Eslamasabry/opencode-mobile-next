@@ -220,6 +220,11 @@ void main() {
 
   testWidgets('Details opens the one request sheet; Always allow states its '
       'scope before anything is sent', (tester) async {
+    // The card now carries Always allow, so it is taller than the default
+    // 600 dp test window leaves room for above the composer.
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final api = _Api();
     final conn = await _controller(api);
     addTearDown(conn.dispose);

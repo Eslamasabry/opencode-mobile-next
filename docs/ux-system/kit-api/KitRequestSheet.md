@@ -215,7 +215,7 @@ All exist on `feat/visual-language-v1` unless flagged. The frame's tokens are Ki
   - Typed text held only under `dirty` is lost with the request, because the request no longer accepts an answer. The card's receipt says why ("Answered on the laptop"), so the sheet never disappears without a word (K2 §1.1).
   - If `routes` is already not pending at call time, nothing opens and the call returns `answeredElsewhere`.
 - **One answer, once.** The first answer closes the route and every later tap is ignored. A shortcut and a tap arriving together send once.
-- **Always allow (KIT-30, SEC-9):**
+- **Always allow (KIT-30, SEC-9; the card's own button, 13B, asks a one-step confirm with the same scope words):**
   - it is never the primary, and never preselected;
   - its scope and duration are shown before anything is sent;
   - choosing a duration sends the "always" answer through `onAllowAlways(until)` exactly once;

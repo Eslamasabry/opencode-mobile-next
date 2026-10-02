@@ -142,6 +142,36 @@ String _answerWords(AppLocalizations l10n, String reply) => switch (reply) {
   _ => l10n.kitRequestAllowOnce,
 };
 
+/// The card's "Always allow" (13B), or null where the server keeps no
+/// standing grants. [onConfirmed] runs only after the person confirmed
+/// "Always allow `<command or tool>` in this project?"; the confirm states
+/// what the grant covers and where to take it back.
+KitRequestAlwaysAllowStep? permissionAlwaysStep(
+  BuildContext context, {
+  required PermissionRequest permission,
+  required bool supported,
+  required VoidCallback onConfirmed,
+}) {
+  if (!supported) return null;
+  final l10n = _l10n(context);
+  final broader = permission.always.isNotEmpty
+      ? permission.always
+      : permission.patterns;
+  final what =
+      permission.commandPreview ??
+      permission.filePath ??
+      (permission.permission.isEmpty
+          ? l10n.chatUiAllMatchingRequests
+          : permission.permission);
+  return KitRequestAlwaysAllowStep(
+    what: what,
+    covers: broader.isEmpty ? null : broader.join(', '),
+    onConfirmed: onConfirmed,
+    buttonKey: const Key('permission-card-always'),
+    confirmKey: const Key('permission-card-always-confirm'),
+  );
+}
+
 /// The one card for a permission request ([KitRequestCard.ask]): the ask in
 /// plain words, the command or file, and Allow once / Reject in place.
 /// [answered] turns it into the sending line with its receipt, or puts a
@@ -155,6 +185,7 @@ KitRequestCard permissionRequestCard(
   String? disabledReason,
   VoidCallback? onDetails,
   PermissionAnswerState? answered,
+  KitRequestAlwaysAllowStep? alwaysAllow,
   VoidCallback? onRetry,
   String? detail,
   String? ifIgnored,
@@ -194,6 +225,7 @@ KitRequestCard permissionRequestCard(
       disabledReason: disabledReason,
       allowKey: const Key('permission-card-allow'),
       rejectKey: const Key('permission-card-reject'),
+      alwaysAllow: alwaysAllow,
     ),
     onDetails: onDetails,
     detailsKey: detailsKey,
@@ -266,7 +298,7 @@ Future<KitRequestSheetOutcome> showPermissionDetails(
               broader.isEmpty
                   ? l10n.chatUiAllMatchingRequests
                   : KitBidi.ltr(broader.join(', ')),
-              contextLabel ?? l10n.chatUiInThisChat,
+              contextLabel ?? l10n.chatRequestAlwaysInProject,
             ),
             onLabel: l10n.chatRequestAlwaysOn,
             until: const [KitUntil.off],
