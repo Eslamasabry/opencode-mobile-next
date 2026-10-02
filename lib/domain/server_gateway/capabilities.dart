@@ -20,6 +20,12 @@ class ServerCapabilities {
 
   /// Optional official-runtime account panel. Disabled for other gateways.
   final bool agentAccount;
+
+  /// Safe host-agent discovery, including unavailable agents and reasons.
+  final bool hostAgentProviders;
+
+  /// Exact, request-scoped host permission actions; null selection denies.
+  final bool hostAgentPermissionActions;
   // Core operations differ across supported server backends.
   final bool promptAttachments;
   final bool promptAgentMentions;
@@ -129,6 +135,8 @@ class ServerCapabilities {
     this.clientPromptMessageID = false,
     this.commandReceipts = false,
     this.agentAccount = false,
+    this.hostAgentProviders = false,
+    this.hostAgentPermissionActions = false,
     this.promptAttachments = true,
     this.promptAgentMentions = true,
     this.offlinePromptQueue = true,

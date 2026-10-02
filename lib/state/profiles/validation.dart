@@ -212,8 +212,8 @@ String normalizePaseoServerUrl(String value) {
       : 'wss://$raw';
 }
 
-/// A Paseo daemon is reached at wss://, or at ws:// on this device or a
-/// Tailscale address. The daemon's public relay is never used.
+/// A Paseo daemon is reached on this device, a Tailscale address or an
+/// SSH tunnel. TLS does not make an open-internet endpoint private.
 String? validatePaseoServerUrl(String value) {
   final raw = value.trim();
   if (raw.isEmpty) return 'Enter the Paseo daemon address.';
@@ -233,11 +233,8 @@ String? validatePaseoServerUrl(String value) {
   if (uri.path.isNotEmpty && uri.path != '/' && uri.path != '/ws') {
     return 'Remove the path from the address.';
   }
-  if (uri.scheme == 'ws' &&
-      !isLoopbackHost(uri.host) &&
-      !isTailnetHost(uri.host)) {
-    return 'Plain ws:// is allowed only on this device or a Tailscale '
-        'address. Use wss:// elsewhere.';
+  if (!isLoopbackHost(uri.host) && !isTailnetHost(uri.host)) {
+    return 'Use this device, a Tailscale address, or your SSH tunnel.';
   }
   return null;
 }

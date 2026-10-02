@@ -204,10 +204,11 @@ void main() {
       expect(paseoEndpoint('ws://127.0.0.1:6767').path, '/ws');
       expect(paseoEndpoint('ws://100.64.0.10:6767').host, '100.64.0.10');
       expect(paseoEndpoint('ws://pc.tail1234.ts.net:6767').scheme, 'ws');
-      expect(paseoEndpoint('wss://paseo.example').path, '/ws');
+      expect(paseoEndpoint('wss://pc.tail1234.ts.net').path, '/ws');
       for (final bad in [
         'ws://192.168.1.10:6767',
         'ws://paseo.example:6767',
+        'wss://paseo.example:6767',
         'http://127.0.0.1:6767',
         'ws://user:pw@127.0.0.1:6767',
         'ws://127.0.0.1:6767/other',
@@ -229,6 +230,8 @@ void main() {
     test('profile validators agree and an empty password is allowed', () {
       expect(validatePaseoServerUrl('ws://100.64.0.10:6767'), isNull);
       expect(validatePaseoServerUrl('ws://192.168.1.10:6767'), isNotNull);
+      expect(validatePaseoServerUrl('wss://public.example:6767'), isNotNull);
+      expect(validatePaseoServerUrl('wss://100.64.0.10:6767'), isNull);
       expect(normalizePaseoServerUrl('100.64.0.10:6767'), startsWith('ws://'));
       expect(normalizePaseoServerUrl('paseo.example'), startsWith('wss://'));
       expect(validatePaseoPassword(''), isNull);
@@ -616,7 +619,7 @@ void main() {
       });
     });
 
-    test('a failed turn surfaces the agent\'s own error', () async {
+    test('a failed turn surfaces safe fixed copy', () async {
       daemon.push(
         'agent_stream',
         stream('a1', {'type': 'turn_started', 'provider': 'claude'}),
@@ -633,7 +636,7 @@ void main() {
       final error = events.firstWhere((e) => e.type == 'session.error');
       expect(
         ((error.properties['error'] as Map)['data'] as Map)['message'],
-        'Not logged in',
+        'The agent could not finish this reply. Check it on your computer.',
       );
       expect(types().last, 'session.idle');
     });
@@ -887,7 +890,10 @@ void main() {
               .having((f) => f.message, 'message', isNot(contains('secret'))),
         ),
       );
-      expect(gateway.transport.lastDaemonError, 'secret internals');
+      expect(
+        gateway.transport.lastDaemonError,
+        'The agent request could not be completed.',
+      );
     },
   );
 
