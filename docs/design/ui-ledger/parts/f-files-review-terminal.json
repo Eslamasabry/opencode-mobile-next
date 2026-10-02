@@ -2759,6 +2759,46 @@
   ],
   "notPages": [
     {
+      "file": "lib/ui/screens/files/files_actions.dart",
+      "reason": "Part file of lib/ui/screens/files_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/files/files_body.dart",
+      "reason": "Part file of lib/ui/screens/files_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/files/files_entries.dart",
+      "reason": "Part file of lib/ui/screens/files_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/files/files_loading.dart",
+      "reason": "Part file of lib/ui/screens/files_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/files/files_viewer.dart",
+      "reason": "Part file of lib/ui/screens/files_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/shared_storage_access_flow.dart",
+      "reason": "Flow helper, not a surface of its own: the shared-storage access question (grant, restart prompt) run by Files and Projects before a shared folder opens; its prompts are the sheets and dialogs those screens' entries already list."
+    },
+    {
+      "file": "lib/ui/screens/terminal/terminal_accessible.dart",
+      "reason": "Part file of lib/ui/screens/terminal_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/terminal/terminal_input.dart",
+      "reason": "Part file of lib/ui/screens/terminal_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/terminal/terminal_list.dart",
+      "reason": "Part file of lib/ui/screens/terminal_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/terminal/terminal_surface.dart",
+      "reason": "Part file of lib/ui/screens/terminal_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
       "file": "lib/ui/screens/local_terminal_screen.dart",
       "reason": "LocalTerminalView: the \"This phone\" source of the Terminal page (terminal_screen.dart, same route), a shell in the built-in Ubuntu with its key bar and the shell list in the top bar's menu; not a page of its own (docs/design/local-terminal-2026-09-24.md)."
     }

@@ -862,6 +862,130 @@
   }
  ],
  "notPages": [
+   {
+     "file": "lib/ui/screens/chat/chat_attachments.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_body.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_command_actions.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_commands.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_composer_region.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_drafts.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_files.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_history.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_message_actions.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_notices.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_page.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_queue.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_requests.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_running_work.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_scroll.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_send.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_session_actions.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_session_menu.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_start.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_status_line.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_stream.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_top_bar.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_transcript.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/chat_voice.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/composer_tools.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/pending_sends_strip.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/team_agent_conversation.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/team_conversation_actions.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/team_conversation_parts.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/transcript_rows.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
+   {
+     "file": "lib/ui/screens/chat/transcript_turns.dart",
+     "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+   },
   {
    "file": "lib/ui/screens/chat/chat_states.dart",
    "reason": "part of chat_screen.dart (design standard §9 step 5): the chat page's own loading/error states and its one status line, not a surface of their own; shown inline on the chat page."

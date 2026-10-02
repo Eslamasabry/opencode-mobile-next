@@ -2577,6 +2577,26 @@
   ],
   "notPages": [
     {
+      "file": "lib/ui/screens/activity/activity_details.dart",
+      "reason": "Part file of lib/ui/screens/activity_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/activity/activity_pending.dart",
+      "reason": "Part file of lib/ui/screens/activity_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/activity/activity_question_form.dart",
+      "reason": "Part file of lib/ui/screens/activity_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/activity/activity_rows.dart",
+      "reason": "Part file of lib/ui/screens/activity_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/activity/activity_tiles.dart",
+      "reason": "Part file of lib/ui/screens/activity_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
       "file": "lib/ui/navigation/chat_route.dart",
       "reason": "ChatRouteArguments value class (discardIfUntouched) passed to '/chat/<id>'; no UI"
     },

@@ -3236,6 +3236,42 @@
   ],
   "notPages": [
     {
+      "file": "lib/ui/screens/servers/profile_editor.dart",
+      "reason": "Part file of lib/ui/screens/servers_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/servers/profile_editor_fields.dart",
+      "reason": "Part file of lib/ui/screens/servers_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/servers/profile_editor_pairing.dart",
+      "reason": "Part file of lib/ui/screens/servers_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/servers/profile_editor_probe.dart",
+      "reason": "Part file of lib/ui/screens/servers_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/servers/profile_editor_steps.dart",
+      "reason": "Part file of lib/ui/screens/servers_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/servers/profile_editor_widgets.dart",
+      "reason": "Part file of lib/ui/screens/servers_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/servers/server_rows.dart",
+      "reason": "Part file of lib/ui/screens/servers_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/servers/servers_actions.dart",
+      "reason": "Part file of lib/ui/screens/servers_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/servers/servers_state.dart",
+      "reason": "Part file of lib/ui/screens/servers_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
       "file": "lib/ui/widgets/connect_methods.dart",
       "reason": "pure helper functions (connectMethodNeedsServerBrowser, orderConnectMethods, connectMethodHint) used by lib/ui/screens/library/integrations_screen.dart; no widget, no surface, no interactive element"
     },

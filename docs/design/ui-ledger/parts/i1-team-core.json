@@ -2687,6 +2687,22 @@
   ],
   "notPages": [
     {
+      "file": "lib/ui/screens/team/projects/screen/board_timeline.dart",
+      "reason": "Part file of lib/ui/screens/team/projects/team_projects_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/team/projects/screen/overview.dart",
+      "reason": "Part file of lib/ui/screens/team/projects/team_projects_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/team/projects/screen/overview_helpers.dart",
+      "reason": "Part file of lib/ui/screens/team/projects/team_projects_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/team/projects/screen/servers_card.dart",
+      "reason": "Part file of lib/ui/screens/team/projects/team_projects_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
       "file": "lib/ui/screens/team/projects/team_digest.dart",
       "reason": "Pure function (teamDigestEvents) choosing which timeline rows 'Since you were away' lists; no surface and no interactive element."
     },

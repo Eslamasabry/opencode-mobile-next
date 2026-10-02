@@ -3788,6 +3788,26 @@
   ],
   "notPages": [
     {
+      "file": "lib/ui/screens/workspace/workspace_actions.dart",
+      "reason": "Part file of lib/ui/screens/workspace_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/workspace/workspace_build.dart",
+      "reason": "Part file of lib/ui/screens/workspace_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/workspace/workspace_load.dart",
+      "reason": "Part file of lib/ui/screens/workspace_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/workspace/workspace_sheets.dart",
+      "reason": "Part file of lib/ui/screens/workspace_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/workspace/workspace_widgets.dart",
+      "reason": "Part file of lib/ui/screens/workspace_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
       "file": "lib/ui/widgets/session_title.dart",
       "reason": "pure function presentedSessionTitle(); no widget, no surface and no interactive element"
     },
