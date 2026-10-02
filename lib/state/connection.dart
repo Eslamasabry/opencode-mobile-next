@@ -2538,7 +2538,10 @@ class ConnectionController extends ChangeNotifier {
       if (trimmed.endsWith(':')) break; // Keep a Windows drive root intact.
       value = trimmed;
     }
-    return value;
+    // Canonicalize Android shared-storage paths so /sdcard/... and
+    // /storage/self/primary/... both resolve to /storage/emulated/0/...
+    // which is what the proot bind mounts expose inside the container.
+    return canonicalizeAndroidSharedStoragePath(value);
   }
 
   static bool sameDirectoryPath(String? a, String? b) {

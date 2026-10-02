@@ -45,10 +45,37 @@ bool isProtectedWorkspaceDirectory(String? path) {
   return false;
 }
 
+/// Canonicalizes Android shared-storage paths to a single representation.
+///
+/// Maps:
+///   /sdcard/...           -> /storage/emulated/0/...
+///   /storage/self/primary/... -> /storage/emulated/0/...
+///   /storage/emulated/0/...   -> /storage/emulated/0/... (unchanged)
+/// Returns the canonical path, or the original if not a shared-storage path.
+String canonicalizeAndroidSharedStoragePath(String path) {
+  final p = path.trim();
+  if (p.startsWith('/sdcard/') || p == '/sdcard') {
+    return p.replaceFirst('/sdcard', '/storage/emulated/0');
+  }
+  if (p.startsWith('/storage/self/primary/') || p == '/storage/self/primary') {
+    return p.replaceFirst('/storage/self/primary', '/storage/emulated/0');
+  }
+  if (p.startsWith('/storage/emulated/0/') || p == '/storage/emulated/0') {
+    return p; // already canonical
+  }
+  return p;
+}
+
+/// Checks whether [path] (after canonicalization) refers to Android shared storage.
+bool isAndroidSharedStoragePath(String path) {
+  final canonical = canonicalizeAndroidSharedStoragePath(path);
+  return canonical.startsWith('/storage/emulated/0');
+}
+
 /// Plain-sentence reason a typed or restored [path] cannot be a workspace, or
 /// null when it is acceptable as a project folder.
 String? workspaceDirectoryProblem(String? path) {
-  final value = path == null ? '' : _normalize(path);
+  final value = path == null ? '' : canonicalizeAndroidSharedStoragePath(_normalize(path));
   if (value.isEmpty) return 'Enter the full path of a project folder.';
   if (value.codeUnits.any((c) => c < 0x20)) {
     return 'The folder path contains characters that cannot be used.';

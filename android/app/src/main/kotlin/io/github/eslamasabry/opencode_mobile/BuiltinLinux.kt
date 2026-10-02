@@ -258,6 +258,13 @@ class BuiltinLinux(private val context: Context) {
     fun prootCommand(program: List<String>): List<String> {
         check(!installingRuntime) { "Runtime installation is still running" }
         projectStorage.prepare()
+        // Mountpoints for the shared-storage binds below. These are just
+        // empty directories inside the rootfs that the binds overlay; they
+        // must never be treated as proof that shared storage is reachable.
+        // Reachability is decided by Dart (all-files access granted plus a
+        // real enumeration inside proot), never by the mountpoint existing.
+        File(rootfs, "storage/emulated/0").mkdirs()
+        File(rootfs, "sdcard").mkdirs()
         val command = listOf(
             prootPath,
             "--root-id",
@@ -272,6 +279,10 @@ class BuiltinLinux(private val context: Context) {
             "--bind=/sys",
             "--bind=${File(rootfs, "tmp").absolutePath}:/dev/shm",
             "--bind=${projectStorage.projects.absolutePath}:/root/projects",
+            // Bind real shared storage so /storage/emulated/0 and /sdcard resolve
+            // to the host's actual shared storage inside the container.
+            "--bind=/storage/emulated/0:/storage/emulated/0",
+            "--bind=/storage/emulated/0:/sdcard",
         ) + fakeProcBinds + (if (protectionTier() == "proot") {
             // PRoot exposes host proc by default. Hide native app/daemon entries
             // rather than depending on Linux cmdline permissions alone.
@@ -304,6 +315,7 @@ class BuiltinLinux(private val context: Context) {
             "--read-write", home.absolutePath,
             "--read-write", projectStorage.projects.absolutePath,
             "--read-write", tmp.absolutePath,
+            "--read-write", "/storage/emulated/0",
         ) + listOf("/system", "/apex", "/vendor", "/proc", "/sys")
             .filter { File(it).exists() }.flatMap { listOf("--read-only", it) } +
             listOf("/dev/null", "/dev/zero", "/dev/random", "/dev/urandom")
