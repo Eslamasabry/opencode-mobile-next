@@ -1,5 +1,7 @@
 # Kit v2 (2026-09-26)
 
+> **2026-10-02 (owner, final):** liquid and frosted glass are removed. Wherever this document or a part spec says glass, read a plain solid surface: opaque `surface2`, hairline, token radius, at most the one elevation shadow. `KitGlass` keeps its name as that thin solid part (`docs/ux-system/kit-api/KitGlass.md`).
+
 *Specification for the next version of `lib/ui/kit/`. It is built from the Phase 1 map (`docs/ux-system/map/all.json`), the Phase 2 patterns (`journeys.json` › `patterns`), the verticals (`personas-verticals.json`), the design standard, the principles, and the ui-ux-pro-max checklist. Machine-readable twin: `kit-v2.json`. Nothing here is built yet.*
 
 ## What the map says
