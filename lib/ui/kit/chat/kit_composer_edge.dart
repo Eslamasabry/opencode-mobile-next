@@ -344,7 +344,10 @@ class _LivingEdgeState extends State<_LivingEdge>
           : _GlowMode.frame,
       radius: widget.radius,
       primary: roles.accent,
-      partner: roles.attention,
+      // Never attention: amber means "needs you". The pack's keyword hue is
+      // its own second colour (blue → violet on GitHub, green → teal on
+      // Graphite) and carries no meaning.
+      partner: roles.codeKeyword,
       bendHalf: bendHalf,
       dip: dip,
     );
