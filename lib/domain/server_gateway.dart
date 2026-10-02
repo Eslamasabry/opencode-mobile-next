@@ -1,3 +1,4 @@
+export 'host_agent_providers.dart';
 export '../api/models.dart' show Session;
 export 'managed_shell.dart';
 export 'session_note.dart';

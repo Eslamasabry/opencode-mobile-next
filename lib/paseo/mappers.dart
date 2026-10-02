@@ -128,9 +128,9 @@ Map<String, dynamic> _toolInput(Map<String, dynamic> detail) {
 
 String _toolOutput(Map<String, dynamic> item, Map<String, dynamic> detail) {
   final error = item['error'];
-  if (error is String && error.isNotEmpty) return paseoText(error);
+  if (error is String && error.isNotEmpty) return 'The tool could not finish.';
   if (error is Map && error['message'] is String) {
-    return paseoText(error['message']);
+    return 'The tool could not finish.';
   }
   final output = detail['output'];
   if (output is String) return paseoText(output);
@@ -234,20 +234,12 @@ MessageWithParts? paseoItemMessage(
           id: '$id:0',
           messageID: id,
           type: 'text',
-          text: paseoText(item['message'] ?? item['text'], max: 8192),
+          text:
+              'The agent could not finish this reply. Check it on your computer.',
         ),
       );
     default:
-      final text = item['text'] ?? item['message'];
-      if (text is! String || text.isEmpty) return null;
-      parts.add(
-        Part(
-          id: '$id:0',
-          messageID: id,
-          type: 'text',
-          text: paseoText(text, max: 65536),
-        ),
-      );
+      return null;
   }
   final user = type == 'user_message';
   return MessageWithParts(

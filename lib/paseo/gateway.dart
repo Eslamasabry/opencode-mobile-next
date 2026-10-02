@@ -13,10 +13,13 @@ import 'dart:math';
 import '../api/models.dart';
 import '../domain/server_gateway.dart';
 import 'mappers.dart';
+import 'host_agent_providers.dart';
 import 'transport.dart';
 import '../diagnostics/perf_trace.dart';
 
 const paseoServerCapabilities = ServerCapabilities(
+  hostAgentProviders: true,
+  hostAgentPermissionActions: true,
   promptAttachments: false,
   promptAgentMentions: false,
   offlinePromptQueue: false,
@@ -88,7 +91,13 @@ class _PaseoPermission {
   final int epoch;
   final PermissionRequest permission;
   final List<dynamic> suggestions;
-  _PaseoPermission(this.epoch, this.permission, this.suggestions);
+  final HostAgentPermissionRequest? hostRequest;
+  _PaseoPermission(
+    this.epoch,
+    this.permission,
+    this.suggestions,
+    this.hostRequest,
+  );
 }
 
 /// Live stream bookkeeping for one agent.
@@ -105,7 +114,12 @@ class _PaseoLive {
   String? epoch;
 }
 
-class PaseoGateway implements ServerGateway, ServerOperationsGateway {
+class PaseoGateway
+    implements
+        ServerGateway,
+        ServerOperationsGateway,
+        HostAgentProviderGateway,
+        HostAgentPermissionGateway {
   final PaseoTransport transport;
   String? _directory;
   bool _closed = false;
@@ -152,11 +166,17 @@ class PaseoGateway implements ServerGateway, ServerOperationsGateway {
   bool _recoveryDegraded = false;
   Future<void>? _recovering;
   List<Map<String, dynamic>>? _providerEntries;
+  int _providerRevision = 0;
 
   PaseoGateway({required this.transport, String? directory})
     : _directory = directory {
     _daemonEvents = transport.events.listen(_onEvent);
     _daemonDisconnects = transport.disconnects.listen((_) {
+      _providerEntries = null;
+      _providerRevision++;
+      for (final id in _permissions.keys.toList()) {
+        _resolvePermission(id);
+      }
       _recoveryDegraded = true;
       _emitState(StreamStatus.reconnecting);
       _scheduleReconnect();
@@ -200,6 +220,7 @@ class PaseoGateway implements ServerGateway, ServerOperationsGateway {
     if (_directory == directory) return;
     _directory = directory;
     _locationEpoch++;
+    _providerRevision++;
     _agents.clear();
     _sessions.clear();
     _statuses.clear();
@@ -515,6 +536,17 @@ class PaseoGateway implements ServerGateway, ServerOperationsGateway {
         );
       } else {
         if (!_agents.containsKey(sessionID)) await _fetchAgent(sessionID);
+        final runtime = _agents[sessionID]?['provider'];
+        // v0.9.2 does not expose negotiated ACP loadSession proof. Never let
+        // a restored snapshot or a supplied model bypass resume-only admission.
+        if (!isExistingPaseoProvider(runtime)) {
+          throw PaseoFailure(PaseoFailureKind.unavailable);
+        }
+        if (model != null && !isExistingPaseoProvider(model.providerID)) {
+          throw PaseoFailure(PaseoFailureKind.unavailable);
+        }
+        await _checkExistingProvider(runtime as String);
+        _checkLocation(scope, epoch);
         await _applySelection(sessionID, model: model, mode: agent);
         await transport.request(
           'send_agent_message_request',
@@ -542,9 +574,16 @@ class PaseoGateway implements ServerGateway, ServerOperationsGateway {
     String? mode,
     String? variant,
   }) async {
+    final scope = _scope;
+    final locationEpoch = _locationEpoch;
     final provider = model == null || model.providerID.isEmpty
         ? paseoDefaultProvider
         : model.providerID;
+    if (!isExistingPaseoProvider(provider)) {
+      throw PaseoFailure(PaseoFailureKind.unavailable);
+    }
+    await _checkExistingProvider(provider);
+    _checkLocation(scope, locationEpoch);
     final modes = _modesFor(provider);
     final draft = _sessions[id];
     final title = draft?.title;
@@ -656,6 +695,28 @@ class PaseoGateway implements ServerGateway, ServerOperationsGateway {
             legacySessionID != pending.permission.sessionID)) {
       throw PaseoFailure(PaseoFailureKind.staleRequest);
     }
+    if (pending.hostRequest != null) {
+      if (reply == 'always') throw PaseoFailure(PaseoFailureKind.unavailable);
+      if (!{'once', 'reject', 'cancel'}.contains(reply)) {
+        throw PaseoFailure(PaseoFailureKind.unavailable);
+      }
+      String? action;
+      if (reply == 'once') {
+        final allow = pending.hostRequest!.choices
+            .where(
+              (choice) =>
+                  choice.behavior == HostAgentPermissionBehavior.allowOnce,
+            )
+            .toList();
+        // Multiple choices require the exact-action card, not a guessed choice.
+        if (allow.length != 1) throw PaseoFailure(PaseoFailureKind.unavailable);
+        action = allow.single.actionId;
+      }
+      return respondHostAgentPermission(requestID, selectedActionId: action);
+    }
+    if (reply == 'always' && pending.suggestions.isEmpty) {
+      throw PaseoFailure(PaseoFailureKind.unavailable);
+    }
     final response = switch (reply) {
       'once' => <String, dynamic>{'behavior': 'allow'},
       // The provider's own suggested rule ("accept edits for this session").
@@ -672,12 +733,12 @@ class PaseoGateway implements ServerGateway, ServerOperationsGateway {
       'cancel' => <String, dynamic>{'behavior': 'deny', 'interrupt': true},
       _ => throw PaseoFailure(PaseoFailureKind.unavailable),
     };
-    await transport.connect();
+    _checkPermissionEpoch(pending);
     transport.send('agent_permission_response', {
       'agentId': _real(pending.permission.sessionID),
       'requestId': requestID,
       'response': response,
-    });
+    }, expectedEpoch: pending.epoch);
     _answered.add(requestID);
     while (_answered.length > 256) {
       _answered.remove(_answered.first);
@@ -686,7 +747,22 @@ class PaseoGateway implements ServerGateway, ServerOperationsGateway {
   }
 
   void _addPermission(String agentID, Map<String, dynamic> request) {
-    final permission = paseoPermission(agentID, request);
+    final hostRequest = paseoHostPermission(
+      agentID,
+      request,
+      provider: _agents[agentID]?['provider'] as String?,
+    );
+    final permission = hostRequest == null
+        ? paseoPermission(agentID, request)
+        : paseoPermission(agentID, {
+            'id': hostRequest.requestId,
+            'name': 'tool',
+            'kind': 'tool',
+            // Only the known structured task preview is exposed. Raw ACP
+            // requests, diagnostic labels and arbitrary inputs stay private.
+            'detail': request['detail'],
+            'description': 'The agent needs your permission.',
+          });
     if (_permissions.containsKey(permission.id) ||
         _answered.contains(permission.id)) {
       return;
@@ -698,7 +774,8 @@ class PaseoGateway implements ServerGateway, ServerOperationsGateway {
     _permissions[permission.id] = _PaseoPermission(
       transport.epoch,
       permission,
-      suggestions is List ? suggestions : const [],
+      hostRequest == null && suggestions is List ? suggestions : const [],
+      hostRequest,
     );
     _emit('permission.asked', {
       'id': permission.id,
@@ -751,6 +828,150 @@ class PaseoGateway implements ServerGateway, ServerOperationsGateway {
     resolved.forEach(_resolvePermission);
   }
 
+  void _checkPermissionEpoch(_PaseoPermission pending) {
+    if (!transport.connected || pending.epoch != transport.epoch) {
+      throw PaseoFailure(PaseoFailureKind.staleRequest);
+    }
+  }
+
+  @override
+  Future<List<HostAgentPermissionRequest>>
+  pendingHostAgentPermissions() async => List.unmodifiable(
+    _permissions.values
+        .map((pending) => pending.hostRequest)
+        .whereType<HostAgentPermissionRequest>(),
+  );
+
+  @override
+  Future<void> respondHostAgentPermission(
+    String requestId, {
+    String? selectedActionId,
+  }) async {
+    final pending = _permissions[requestId];
+    final request = pending?.hostRequest;
+    if (pending == null || request == null) {
+      throw PaseoFailure(PaseoFailureKind.staleRequest);
+    }
+    _checkPermissionEpoch(pending);
+    final scope = _scope;
+    final locationEpoch = _locationEpoch;
+    final realAgentId = _real(request.sessionId);
+    HostAgentPermissionChoice? choice;
+    if (selectedActionId != null) {
+      for (final offered in request.choices) {
+        if (offered.actionId == selectedActionId) choice = offered;
+      }
+      if (choice == null) throw PaseoFailure(PaseoFailureKind.staleRequest);
+    } else {
+      for (final offered in request.choices) {
+        if (offered.behavior == HostAgentPermissionBehavior.rejectOnce) {
+          choice = offered;
+          break;
+        }
+      }
+    }
+    if (choice == null) {
+      // Paseo's implicit deny falls back to reject_always. Cancel the turn
+      // instead, which resolves ACP pending requests with outcome=cancelled.
+      final result = await transport.request(
+        'cancel_agent_request',
+        {'agentId': realAgentId},
+        mutation: true,
+        expectedEpoch: pending.epoch,
+      );
+      _checkLocation(scope, locationEpoch);
+      _checkPermissionEpoch(pending);
+      final current = _permissions[requestId];
+      if (current != null && !identical(current, pending)) {
+        throw PaseoFailure(PaseoFailureKind.staleRequest);
+      }
+      final agent = result['agent'];
+      final stillPending = agent is Map ? agent['pendingPermissions'] : null;
+      // An idle agent may acknowledge cancel without interrupting anything.
+      // Acknowledgement alone must not retire an unanswered approval card.
+      if (identical(_permissions[requestId], pending) &&
+          (agent is! Map ||
+              agent['id'] != realAgentId ||
+              agent['cwd'] != _scope ||
+              stillPending is! List ||
+              stillPending.any(
+                (raw) => raw is Map && raw['id'] == requestId,
+              ))) {
+        throw PaseoFailure(PaseoFailureKind.unavailable);
+      }
+    } else {
+      transport.send('agent_permission_response', {
+        'agentId': _real(request.sessionId),
+        'requestId': requestId,
+        'response': {
+          'behavior': choice.behavior == HostAgentPermissionBehavior.allowOnce
+              ? 'allow'
+              : 'deny',
+          'selectedActionId': choice.actionId,
+        },
+      }, expectedEpoch: pending.epoch);
+    }
+    _answered.add(requestId);
+    while (_answered.length > 256) {
+      _answered.remove(_answered.first);
+    }
+    _resolvePermission(requestId);
+  }
+
+  @override
+  Future<HostAgentProviderCatalog> loadHostAgentProviders({
+    bool refresh = false,
+  }) async {
+    if (refresh) {
+      _providerEntries = null;
+      _providerRevision++;
+      final scope = _scope;
+      final location = _locationEpoch;
+      await transport.request('refresh_providers_snapshot_request', {
+        'cwd': scope,
+      });
+      _checkLocation(scope, location);
+    }
+    return paseoHostAgentCatalog(await _providers());
+  }
+
+  @override
+  Future<HostAgentContinuation> loadHostAgentContinuation(
+    String sessionId,
+  ) async {
+    final scope = _scope;
+    final location = _locationEpoch;
+    if (!_agents.containsKey(sessionId)) await _fetchAgent(sessionId);
+    _checkLocation(scope, location);
+    final agent = _agents[sessionId];
+    if (agent == null) throw PaseoFailure(PaseoFailureKind.unavailable);
+    final provider = paseoString(agent['provider'], max: 128);
+    final handle = agent['persistence'];
+    final intact =
+        handle is Map &&
+        handle['provider'] == provider &&
+        handle['sessionId'] is String &&
+        (handle['sessionId'] as String).isNotEmpty &&
+        (handle['sessionId'] as String).length <= 512;
+    return HostAgentContinuation(
+      sessionId: sessionId,
+      providerId: provider,
+      state: isExistingPaseoProvider(provider)
+          ? HostAgentContinuationState.existingRoute
+          : intact
+          ? HostAgentContinuationState.resumeUnverified
+          : HostAgentContinuationState.missingHandle,
+    );
+  }
+
+  Future<void> _checkExistingProvider(String id) async {
+    for (final entry in await _providers()) {
+      if (entry['provider'] == id && entry['source'] == 'custom') {
+        throw PaseoFailure(PaseoFailureKind.unavailable);
+      }
+    }
+  }
+
   // ---- runtimes, models and modes ---------------------------------------
 
   Future<List<Map<String, dynamic>>> _providers() async {
@@ -758,6 +979,7 @@ class PaseoGateway implements ServerGateway, ServerOperationsGateway {
     if (cached != null) return cached;
     final scope = _scope;
     final epoch = _locationEpoch;
+    final revision = _providerRevision;
     // Just after the daemon starts, every runtime reports `loading` while it
     // asks each CLI for its models. The app reads providers once per
     // connection, so answering with that empty moment left the composer with
@@ -775,7 +997,7 @@ class PaseoGateway implements ServerGateway, ServerOperationsGateway {
         max: 256,
       ).whereType<Map<String, dynamic>>().toList();
       if (entries.every((entry) => entry['status'] != 'loading')) {
-        _providerEntries = entries;
+        if (revision == _providerRevision) _providerEntries = entries;
         break;
       }
     }
@@ -803,7 +1025,11 @@ class PaseoGateway implements ServerGateway, ServerOperationsGateway {
     String? defaultModel;
     for (final entry in await _providers()) {
       final id = entry['provider'];
-      if (id is! String || id.isEmpty || id.length > 128) continue;
+      if (id is! String ||
+          !isExistingPaseoProvider(id) ||
+          entry['source'] == 'custom') {
+        continue;
+      }
       if (entry['enabled'] == false || entry['status'] != 'ready') continue;
       final modelIDs = <String>[];
       final modelData = <String, Map<String, dynamic>>{};
@@ -990,6 +1216,7 @@ class PaseoGateway implements ServerGateway, ServerOperationsGateway {
         case 'agent_deleted' || 'agent_archived':
           _removed(agentID);
         case 'providers_snapshot_update':
+          _providerRevision++;
           _providerEntries = null;
       }
     } catch (_) {
@@ -1060,15 +1287,13 @@ class PaseoGateway implements ServerGateway, ServerOperationsGateway {
         _awaitingTurn.remove(id);
         _turnActive.remove(id);
         _emitStatus(id, 'idle');
-        final error = event['error'];
         _emit('session.error', {
           'sessionID': id,
           'error': {
             'name': 'PaseoTurnFailed',
             'data': {
-              'message': error is String && error.trim().isNotEmpty
-                  ? paseoText(error.trim(), max: 2000)
-                  : 'The agent turn failed.',
+              'message':
+                  'The agent could not finish this reply. Check it on your computer.',
             },
           },
         });
@@ -1248,6 +1473,7 @@ class PaseoGateway implements ServerGateway, ServerOperationsGateway {
     _closed = true;
     _listening = false;
     _locationEpoch++;
+    _providerRevision++;
     _retry?.cancel();
     _retry = null;
     _agents.clear();

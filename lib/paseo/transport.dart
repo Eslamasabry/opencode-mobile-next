@@ -42,7 +42,7 @@ class PaseoFailure extends ApiException {
     : super(
         switch (kind) {
           PaseoFailureKind.invalidEndpoint =>
-            'Use wss://, or ws:// for this device or a Tailscale address.',
+            'Use this device, a Tailscale address, or your SSH tunnel.',
           PaseoFailureKind.authentication =>
             'The Paseo daemon rejected the password.',
           PaseoFailureKind.hostRefused =>
@@ -67,7 +67,7 @@ class PaseoFailure extends ApiException {
       );
 }
 
-/// Cleartext is accepted only where the network itself is private: this
+/// Connections are accepted only where the network itself is private: this
 /// device, or a Tailscale address (WireGuard already encrypts that hop).
 bool isPaseoCleartextHost(String host) =>
     isLoopbackHost(host) || isTailnetHost(host);
@@ -83,7 +83,7 @@ Uri paseoEndpoint(String raw) {
       (uri.path.isNotEmpty && uri.path != '/' && uri.path != '/ws')) {
     throw PaseoFailure(PaseoFailureKind.invalidEndpoint);
   }
-  if (uri.scheme == 'ws' && !isPaseoCleartextHost(uri.host)) {
+  if (!isPaseoCleartextHost(uri.host)) {
     throw PaseoFailure(PaseoFailureKind.invalidEndpoint);
   }
   return uri.replace(path: '/ws');
@@ -345,8 +345,15 @@ class PaseoTransport {
     Map<String, dynamic> body, {
     bool mutation = false,
     Duration? timeout,
+    int? expectedEpoch,
   }) async {
+    if (expectedEpoch != null && (!connected || expectedEpoch != _epoch)) {
+      throw PaseoFailure(PaseoFailureKind.staleRequest);
+    }
     final epoch = await _connectReady();
+    if (expectedEpoch != null && epoch != expectedEpoch) {
+      throw PaseoFailure(PaseoFailureKind.staleRequest);
+    }
     if (_closed || epoch != _epoch || _socket == null || !_initialized) {
       throw PaseoFailure(
         mutation
@@ -455,9 +462,7 @@ class PaseoTransport {
         pending?.timer?.cancel();
         final error = payload['error'];
         if (error is String) {
-          lastDaemonError = error.length > 500
-              ? error.substring(0, 500)
-              : error;
+          lastDaemonError = 'The agent request could not be completed.';
         }
         pending?.result.completeError(
           PaseoFailure(PaseoFailureKind.unavailable),
@@ -473,9 +478,7 @@ class PaseoTransport {
         pending.timer?.cancel();
         final error = payload['error'];
         if (error is String && error.isNotEmpty) {
-          lastDaemonError = error.length > 500
-              ? error.substring(0, 500)
-              : error;
+          lastDaemonError = 'The agent request could not be completed.';
           pending.result.completeError(
             PaseoFailure(PaseoFailureKind.unavailable),
           );
