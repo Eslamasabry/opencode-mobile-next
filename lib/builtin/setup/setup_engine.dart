@@ -346,7 +346,20 @@ class ChannelSetupEngine implements SetupEngine {
   // ---- polling -------------------------------------------------------------
 
   void _watchersChanged() {
-    if (_progress.watched) _ensurePolling();
+    if (_progress.watched) {
+      _ensurePolling();
+      return;
+    }
+    // The last page stopped watching: an idle wait has nothing left to show,
+    // so it ends now instead of firing a minute later. A running job keeps
+    // its short poll.
+    final pending = _poll;
+    if (_pollIdle && pending != null && pending.isActive) {
+      pending.cancel();
+      _poll = null;
+      _pollIdle = false;
+      _polling = false;
+    }
   }
 
   /// What the trace already holds, as `job/component`, so each finished
