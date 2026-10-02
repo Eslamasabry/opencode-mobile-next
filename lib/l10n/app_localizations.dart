@@ -21630,6 +21630,18 @@ abstract class AppLocalizations {
   /// **'Your phone’s Remove animations is on, so nothing moves whatever you choose here'**
   String get effectsMotionSystemOff;
 
+  /// Settings › Appearance › Effects: switch for the soft glowing ring around the message box while a reply runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Glowing border while replying'**
+  String get effectsActivityGlow;
+
+  /// Settings › Appearance › Effects: one line under the glowing border switch.
+  ///
+  /// In en, this message translates to:
+  /// **'A soft glow circles the message box while a reply is written'**
+  String get effectsActivityGlowHint;
+
   /// Effects: a choice could not be saved; it was put back.
   ///
   /// In en, this message translates to:

@@ -35,6 +35,7 @@ import 'kit_turn.dart';
 
 part 'kit_composer_types.dart';
 part 'kit_composer_edge.dart';
+part 'kit_composer_glow.dart';
 part 'kit_composer_caption.dart';
 part 'kit_composer_layer.dart';
 
@@ -87,6 +88,7 @@ class KitComposer extends StatefulWidget {
     this.deliveryKey,
     this.hasAttachments = false,
     this.rail,
+    this.activityGlow,
     this.failure,
     this.railNote,
   });
@@ -102,6 +104,11 @@ class KitComposer extends StatefulWidget {
   /// upward by the pill's height while it shows. A live region: it
   /// announces the phase, not the seconds. Sending reads as thinking.
   final KitTurnLive? rail;
+
+  /// The soft ring sweep around the whole box while [rail] runs, in
+  /// addition to the living edge. Null follows Settings › Appearance ›
+  /// Effects ([KitEffects.activityGlow]).
+  final bool? activityGlow;
 
   /// A failed send, in the same pill: what failed, Retry, Details. Wins
   /// over [rail].
@@ -449,6 +456,7 @@ class _KitComposerState extends State<KitComposer> {
               failure: widget.failure,
               note: widget.railNote,
               radius: radius,
+              activityGlow: widget.activityGlow,
               glass: KitGlass(
                 borderRadius: BorderRadius.circular(radius),
                 dim: true,

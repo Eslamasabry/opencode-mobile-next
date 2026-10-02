@@ -13281,6 +13281,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'خيار «إزالة الرسوم المتحركة» مفعّل في هاتفك، لذا لا يتحرك شيء أيًّا كان اختيارك هنا';
 
   @override
+  String get effectsActivityGlow => 'حدّ متوهّج أثناء الرد';
+
+  @override
+  String get effectsActivityGlowHint =>
+      'وهج ناعم يدور حول مربع الرسالة أثناء كتابة الرد';
+
+  @override
   String get effectsSaveFailed =>
       'تعذّر حفظ هذا الاختيار على هذا الجهاز. حاول مرة أخرى.';
 

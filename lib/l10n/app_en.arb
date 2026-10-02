@@ -14492,6 +14492,14 @@
   "@effectsMotionSystemOff": {
     "description": "Animations: note when the system setting overrides the choice."
   },
+  "effectsActivityGlow": "Glowing border while replying",
+  "@effectsActivityGlow": {
+    "description": "Settings \u203a Appearance \u203a Effects: switch for the soft glowing ring around the message box while a reply runs."
+  },
+  "effectsActivityGlowHint": "A soft glow circles the message box while a reply is written",
+  "@effectsActivityGlowHint": {
+    "description": "Settings \u203a Appearance \u203a Effects: one line under the glowing border switch."
+  },
   "effectsSaveFailed": "Could not save this choice on this device. Try again.",
   "@effectsSaveFailed": {
     "description": "Effects: a choice could not be saved; it was put back."

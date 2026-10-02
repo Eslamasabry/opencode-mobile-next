@@ -63,10 +63,14 @@ class _LivingEdge extends StatefulWidget {
   const _LivingEdge({
     required this.glass,
     required this.radius,
+    this.activityGlow,
     this.live,
     this.failure,
     this.note,
   });
+
+  /// Null follows [KitEffects.activityGlow].
+  final bool? activityGlow;
 
   final Widget glass;
   final double radius;
@@ -322,6 +326,30 @@ class _LivingEdgeState extends State<_LivingEdge>
     return result;
   }
 
+  /// The chosen soft ring sweep (see [_ActivityGlow]): only while a reply
+  /// runs, only when on; Calm is still, Off and reduced motion draw none.
+  Widget _glow(BuildContext context, double bendHalf, double dip) {
+    final on = widget.activityGlow ?? KitEffects.of(context).activityGlow;
+    final level = _level;
+    final allowed =
+        on && level != KitMotionLevel.off && !KitMotion.reduced(context);
+    if (!allowed) return const SizedBox.shrink();
+    final roles = KitTokens.of(context).roles;
+    return _ActivityGlow(
+      active: widget.live != null,
+      mode: level == KitMotionLevel.calm
+          ? _GlowMode.calm
+          : KitMotion.loops
+          ? _GlowMode.live
+          : _GlowMode.frame,
+      radius: widget.radius,
+      primary: roles.accent,
+      partner: roles.attention,
+      bendHalf: bendHalf,
+      dip: dip,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tokens = KitTokens.of(context);
@@ -353,6 +381,7 @@ class _LivingEdgeState extends State<_LivingEdge>
                 clipper: _BendClipper(bendHalf, dip),
                 child: widget.glass,
               ),
+              _glow(context, bendHalf, dip),
               if (!idle || _light.bright > 0.01)
                 Positioned.fill(
                   child: IgnorePointer(

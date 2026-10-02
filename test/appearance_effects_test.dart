@@ -334,4 +334,46 @@ void main() {
       expect(KitMotion.reduced(underNavigator(tester)), isTrue);
     });
   });
+  group('Glowing border while replying', () {
+    test('is off until chosen, persists device-wide and restarts', () async {
+      final (controller, store) = await _controller();
+      addTearDown(controller.dispose);
+      expect(store.effects.activityGlow, isFalse);
+      await controller.setEffects(
+        controller.effects.value.copyWith(activityGlow: true),
+      );
+      expect(store.prefs.getBool('oc.effectsActivityGlow'), isTrue);
+      expect(
+        store
+            .profileScopedPreferenceKeys('3f2a9c1e-7d4b-4e21-9a0f-5c6d7e8f9a0b')
+            .contains('oc.effectsActivityGlow'),
+        isFalse,
+      );
+      final next = ProfileStore(prefs: store.prefs);
+      expect(next.effects.activityGlow, isTrue);
+      await controller.setEffects(
+        controller.effects.value.copyWith(activityGlow: false),
+      );
+      expect(ProfileStore(prefs: store.prefs).effects.activityGlow, isFalse);
+    });
+
+    testWidgets('the switch shows in Effects and toggles the setting', (
+      tester,
+    ) async {
+      final (controller, store) = await _controller();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_page(controller));
+      await tester.pumpAndSettle();
+      final row = find.byKey(const ValueKey('effects-glow'));
+      await _show(tester, row);
+      expect(find.text('Glowing border while replying'), findsOneWidget);
+      final toggle = find.byKey(const ValueKey('effects-glow-switch'));
+      expect(tester.widget<Switch>(toggle).value, isFalse);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(controller.effects.value.activityGlow, isTrue);
+      expect(store.prefs.getBool('oc.effectsActivityGlow'), isTrue);
+      expect(tester.widget<Switch>(toggle).value, isTrue);
+    });
+  });
 }

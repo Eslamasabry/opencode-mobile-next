@@ -567,6 +567,7 @@ Future<void> kitGalleryPart(
   required Widget child,
   Locale locale = const Locale('en'),
   double textScale = 1,
+  bool removeAnimations = true,
 }) async {
   final own = _themeName(light);
   if (!name.endsWith('_$own')) {
@@ -602,7 +603,7 @@ Future<void> kitGalleryPart(
             supportedLocales: AppLocalizations.supportedLocales,
             builder: (context, child) => MediaQuery(
               data: MediaQuery.of(context).copyWith(
-                disableAnimations: true,
+                disableAnimations: removeAnimations,
                 textScaler: TextScaler.linear(textScale),
               ),
               child: child!,

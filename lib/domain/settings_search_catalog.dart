@@ -30,6 +30,12 @@ List<SettingsSearchDocument> settingsSearchRows(
       l10n.effectsAnimations,
       'animations animation motion movement reduce reduced calm celebrations celebration confetti حركة تحريك رسوم تقليل هادئ احتفال احتفالات',
     ),
+    effect(
+      'glow',
+      l10n.effectsActivityGlow,
+      'glow glowing border ring light edge replying reply running blue outline box '
+          'توهج متوهج وهج حد حدود إطار حافة حلقة الرد ضوء',
+    ),
     if (supportsBackgroundService) ...[
       SettingsSearchDocument(
         id: 'inside-keep-running-battery',

@@ -24,6 +24,7 @@ class KitEffects {
     this.motion = KitMotionLevel.full,
     this.celebrations = true,
     this.haptics = true,
+    this.activityGlow = false,
   });
 
   /// Everything on: the default until the person changes it.
@@ -42,6 +43,11 @@ class KitEffects {
   /// The light tick on send and the confirmation on a finish.
   final bool haptics;
 
+  /// A soft glowing ring around the message box while a reply runs, in
+  /// addition to the living edge (Settings › Appearance › Effects). Off by
+  /// default.
+  final bool activityGlow;
+
   /// The choices in force here, or [defaults] above any scope (tests).
   static KitEffects of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<KitEffectsScope>()?.effects ??
@@ -57,11 +63,13 @@ class KitEffects {
     KitMotionLevel? motion,
     bool? celebrations,
     bool? haptics,
+    bool? activityGlow,
   }) => KitEffects(
     glass: glass ?? this.glass,
     motion: motion ?? this.motion,
     celebrations: celebrations ?? this.celebrations,
     haptics: haptics ?? this.haptics,
+    activityGlow: activityGlow ?? this.activityGlow,
   );
 
   @override
@@ -70,10 +78,12 @@ class KitEffects {
       other.glass == glass &&
       other.motion == motion &&
       other.celebrations == celebrations &&
-      other.haptics == haptics;
+      other.haptics == haptics &&
+      other.activityGlow == activityGlow;
 
   @override
-  int get hashCode => Object.hash(glass, motion, celebrations, haptics);
+  int get hashCode =>
+      Object.hash(glass, motion, celebrations, haptics, activityGlow);
 }
 
 /// Provides the person's [KitEffects] to everything below it (placed once,

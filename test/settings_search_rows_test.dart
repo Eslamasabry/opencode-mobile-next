@@ -119,6 +119,8 @@ void main() {
         ('battery', 'inside-keep-running-battery'),
         ('animations', 'inside-appearance-motion'),
         ('confetti', 'inside-appearance-motion'),
+        ('glow', 'inside-appearance-glow'),
+        ('border', 'inside-appearance-glow'),
       ]) {
         expect(_ids(controller, query).first, id, reason: query);
       }

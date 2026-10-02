@@ -13181,6 +13181,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your phone’s Remove animations is on, so nothing moves whatever you choose here';
 
   @override
+  String get effectsActivityGlow => 'Glowing border while replying';
+
+  @override
+  String get effectsActivityGlowHint =>
+      'A soft glow circles the message box while a reply is written';
+
+  @override
   String get effectsSaveFailed =>
       'Could not save this choice on this device. Try again.';
 

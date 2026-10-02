@@ -437,6 +437,19 @@ class _EffectsSectionState extends State<_EffectsSection> {
                           ),
                         ),
                       ),
+                      KitArrival(
+                        id: 'effects-glow',
+                        child: KitSwitchRow(
+                          key: const ValueKey('effects-glow'),
+                          switchKey: const ValueKey('effects-glow-switch'),
+                          leading: KitRow.icon(context, AppIconography.sparkle),
+                          title: copy.effectsActivityGlow,
+                          supporting: copy.effectsActivityGlowHint,
+                          value: effects.activityGlow,
+                          onChanged: (on) =>
+                              _choose(effects.copyWith(activityGlow: on)),
+                        ),
+                      ),
                     ],
                   ),
                 ],

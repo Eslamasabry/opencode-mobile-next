@@ -18,6 +18,7 @@ import 'package:opencode_mobile/ui/kit/chat/kit_composer.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_composer_chips.dart';
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
 import 'package:opencode_mobile/ui/kit/kit_layout.dart';
+import 'package:opencode_mobile/ui/kit/chat/kit_turn.dart';
 import 'package:opencode_mobile/ui/kit/kit_text.dart';
 import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
 
@@ -134,6 +135,8 @@ KitComposer _composer({
   bool attachments = false,
   KitComposerChips? suggestions,
   KitComposerVoice? voice,
+  KitTurnLive? rail,
+  bool? activityGlow,
 }) => KitComposer(
   controller: _text(text),
   focusNode: _focus,
@@ -153,6 +156,8 @@ KitComposer _composer({
   onVoice: _noop,
   onOpenEditor: _noop,
   voice: voice,
+  rail: rail,
+  activityGlow: activityGlow,
 );
 
 const _draft = 'Also run the unit tests for the signing config';
@@ -236,6 +241,19 @@ final _states = <String, Widget Function()>{
       ),
     ),
   ),
+  // The chosen "Glowing border while replying": one frame of the ring sweep
+  // around the box, over the living edge.
+  'running_glow': () => _Backdrop(
+    composer: _composer(
+      busy: true,
+      rail: const KitTurnLive(
+        activity: KitTurnActivity.writing,
+        pace: .5,
+        onStop: _noop,
+      ),
+      activityGlow: true,
+    ),
+  ),
   'glass_off': () => KitEffectsScope(
     effects: KitEffects.defaults.copyWith(glass: false),
     child: _Backdrop(composer: _composer(text: _draft)),
@@ -267,6 +285,9 @@ void main() {
           ),
           size: const Size(412, 915),
           light: light,
+          // The glow is drawn only where the system allows motion; its one
+          // frame is the shot.
+          removeAnimations: state != 'running_glow',
           child: build(),
         );
       });
