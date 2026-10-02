@@ -491,14 +491,15 @@ class ProfileStore {
       if (previousActive == id) await setActiveId(null);
       // Secure slots are not covered by the scoped preference sweep. Delete
       // BYO identity first; refusal keeps its metadata available for retry.
+      // Only a server adopted over SSH has that slot; other servers keep the
+      // deletion order they always had. A storage failure keeps its own type
+      // (the outer catch maps keyring failures) instead of being renamed.
       final byoKey = '$byoHostSecretsKeyPrefix$id';
-      try {
+      if (await secure.read(key: byoKey) != null) {
         await secure.delete(key: byoKey);
         if (await secure.read(key: byoKey) != null) {
           throw const ByoHostFailure(ByoHostFailureCode.storage);
         }
-      } catch (_) {
-        throw const ByoHostFailure(ByoHostFailureCode.storage);
       }
       await secure.delete(key: secretKey);
       await secure.delete(key: '$teamEngineAuthKey$id');
