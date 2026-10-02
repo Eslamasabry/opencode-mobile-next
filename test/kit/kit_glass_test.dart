@@ -1,7 +1,6 @@
 // Behaviour of KitGlass, the plain solid surface: opaque surface2, the
 // hairline, the one tight shadow, and the pair's two positions.
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/glass/kit_glass.dart';

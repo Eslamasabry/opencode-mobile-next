@@ -89,12 +89,38 @@ class KitGlass extends StatelessWidget {
     final trailing = this.trailing;
     if (trailing == null) return _piece(context, child, tokens);
     final gap = SizedBox(width: tokens.space2);
+    final lead = _piece(context, child, tokens);
+    final trail = _piece(context, trailing, tokens);
+    // The leading piece takes what the trailing one leaves, never more.
+    if (joined) {
+      return Row(
+        children: [
+          Expanded(
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(child: lead),
+                  gap,
+                  trail,
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
     return Row(
       children: [
-        _piece(context, child, tokens),
-        if (joined) gap else const Spacer(),
-        _piece(context, trailing, tokens),
-        if (joined) const Spacer(),
+        Expanded(
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: lead,
+          ),
+        ),
+        gap,
+        trail,
       ],
     );
   }
