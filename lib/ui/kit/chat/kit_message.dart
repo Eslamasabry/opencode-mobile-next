@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
+import '../../theme_roles.dart' show ThemeRoles;
 import '../kit_bidi.dart';
 import '../kit_buttons.dart';
 import '../kit_copy.dart';
@@ -34,12 +35,10 @@ enum KitMessageKind { prompt, reply, thought, notice, marker }
 /// action drops under the words"). The same threshold as KitToolRow.
 const double _kWrapTextScale = 1.3;
 
-/// How wide a [KitMessage.prompt] bubble may grow. [auto] (the default)
-/// is one rule for every prompt: the bubble hugs its words and may grow to
-/// the whole width, so a short prompt stays small and a long one wraps at
-/// the page width, with no jump between two styles. [compact] caps it at
-/// [KitLayout.bubbleMaxShare]; the default [auto] hugs up to the full width
-/// minus [KitLayout.bubbleStartInset]; [full] always fills the width.
+/// How wide a [KitMessage.prompt] bubble may grow. [auto] (the default) and
+/// [compact] hug the words and stop at [KitLayout.bubbleMaxShare] (85 %) of
+/// the column (owner decision 04A); [full] fills the width minus
+/// [KitLayout.bubbleStartInset].
 enum KitBubbleWidth { auto, compact, full }
 
 /// A transcript piece that is words (STANDARDS STATE-16, KIT-41): a prompt
@@ -253,6 +252,14 @@ class KitMessage extends StatelessWidget {
 
 // ── Prompt ────────────────────────────────────────────────────────────────
 
+/// The prompt bubble's fill. Dark: `surface2`. Light: `surface2` is white,
+/// the page's own colour, so the bubble would vanish; it is `text1` at 7 %
+/// over the ground instead, which stays visible on the ground and on white.
+/// `text1` words keep far more than 7:1 on it in both.
+Color kitPromptBubbleFill(ThemeRoles roles) => roles.isDark
+    ? roles.surface2
+    : Color.alphaBlend(roles.text1.withValues(alpha: .07), roles.ground);
+
 /// The bubble's corners: 20 everywhere but the bottom end (6), mirrored
 /// under RTL through the directional radius (VL §5 "20/20/6/20").
 const BorderRadiusDirectional _bubbleRadius = BorderRadiusDirectional.only(
@@ -289,9 +296,10 @@ class _Prompt extends StatelessWidget {
         // and a long one never wraps in a narrow column. The time stays at
         // the end edge.
         final stretch = message.bubbleWidth == KitBubbleWidth.full;
-        final maxWidth = message.bubbleWidth == KitBubbleWidth.compact
-            ? (width * KitLayout.bubbleMaxShare).floorToDouble()
-            : math.max(0.0, width - KitLayout.bubbleStartInset);
+        // 85 % of the column (owner decision 04A); replies stay full width.
+        final maxWidth = message.bubbleWidth == KitBubbleWidth.full
+            ? math.max(0.0, width - KitLayout.bubbleStartInset)
+            : (width * KitLayout.bubbleMaxShare).floorToDouble();
         return Align(
           alignment: AlignmentDirectional.centerEnd,
           child: ConstrainedBox(
@@ -468,7 +476,7 @@ class _BubbleState extends State<_Bubble> {
     Widget bubble = DecoratedBox(
       key: message.bubbleKey,
       decoration: BoxDecoration(
-        color: roles.surface2,
+        color: kitPromptBubbleFill(roles),
         borderRadius: _bubbleRadius,
       ),
       position: DecorationPosition.background,

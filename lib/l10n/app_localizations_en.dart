@@ -26532,4 +26532,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get queuedReceiptDetailNote =>
       'The connection ended before we could confirm receipt.';
+
+  @override
+  String get kitToolRetry => 'Retry';
 }

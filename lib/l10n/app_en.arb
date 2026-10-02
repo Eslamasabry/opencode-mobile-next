@@ -31274,5 +31274,9 @@
   "queuedReceiptDetailNote": "The connection ended before we could confirm receipt.",
   "@queuedReceiptDetailNote": {
     "description": "Details note under an unconfirmed message"
+  },
+  "kitToolRetry": "Retry",
+  "@kitToolRetry": {
+    "description": "KitToolRow: the quiet button under a failed step that tries it again"
   }
 }

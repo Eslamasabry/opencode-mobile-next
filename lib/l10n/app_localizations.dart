@@ -41856,6 +41856,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The connection ended before we could confirm receipt.'**
   String get queuedReceiptDetailNote;
+
+  /// KitToolRow: the quiet button under a failed step that tries it again
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get kitToolRetry;
 }
 
 class _AppLocalizationsDelegate

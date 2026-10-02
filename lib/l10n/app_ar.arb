@@ -4968,5 +4968,6 @@
   "queuedReceiptDetailSentAt": "وقت الإرسال",
   "queuedReceiptDetailCommand": "معرّف الأمر",
   "queuedReceiptDetailReceipt": "معرّف الإيصال",
-  "queuedReceiptDetailNote": "انقطع الاتصال قبل أن نتمكن من تأكيد الاستلام."
+  "queuedReceiptDetailNote": "انقطع الاتصال قبل أن نتمكن من تأكيد الاستلام.",
+  "kitToolRetry": "أعد المحاولة"
 }

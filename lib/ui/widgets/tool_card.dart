@@ -88,6 +88,12 @@ class ToolCard extends StatefulWidget {
   /// "Run this command again".
   final ValueChanged<String>? onRerunCommand;
 
+  /// Tries a failed call again (10A: the failed row offers Retry, still and
+  /// neutral). A failed shell call with [onRerunCommand] retries by running
+  /// its command again; any other failed call shows Retry only when the
+  /// host passes this.
+  final VoidCallback? onRetry;
+
   const ToolCard({
     super.key,
     required this.toolName,
@@ -103,6 +109,7 @@ class ToolCard extends StatefulWidget {
     this.onOpenSession,
     this.waitingForYou = false,
     this.onRerunCommand,
+    this.onRetry,
   });
 
   @override
@@ -350,7 +357,19 @@ class _ToolCardState extends State<ToolCard> {
     }
 
     final interleaved = _interleavedSegments;
+    final shellCommand = _valueString(widget.state.input['command']);
+    final rerun = widget.onRerunCommand;
+    final VoidCallback? retry =
+        widget.onRetry ??
+        (isShell &&
+                rerun != null &&
+                shellCommand != null &&
+                shellCommand.isNotEmpty &&
+                widget.state.executed
+            ? () => rerun(shellCommand)
+            : null);
     final Widget row = KitToolRow(
+      onRetry: retry,
       rowKey: rowKey,
       kind: contract.rowKind,
       title: heading ?? title,

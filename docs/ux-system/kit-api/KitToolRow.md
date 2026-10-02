@@ -196,3 +196,7 @@ Declared (KIT-12): **notRun**, **pending**, **running**, **waitingForYou**, **do
 ## Open questions
 
 None.
+
+## Failed step: Retry (owner decision 10A, 2 Oct)
+
+A failed step is still and neutral (neutral failed mark, the word in `text1`; no red, no shake). `KitToolRow(onRetry:)` adds a quiet tertiary "Retry" button (`kit-tool-retry`, l10n `kitToolRetry`) on its own line under a failed step, aligned with the title; it shows only while `status` is failed and `onRetry` is non-null. `ToolCard` passes `onRetry` through; for a failed shell call with `onRerunCommand` it retries by running the command again, and any other failed call shows Retry only when the host gives `ToolCard.onRetry`. Flat rows (09A): the step line has no frame or card; only its opened body is indented content.
