@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/server_probe.dart';
+import '../domain/workspace_paths.dart';
 import '../l10n/app_localizations.dart';
 import '../state/profiles.dart';
 import 'builtin_linux.dart';
@@ -497,9 +498,40 @@ class BuiltinProjectFolders {
     throw BuiltinLinuxException(_describe(result));
   }
 
+  /// Enumerates a shared-storage [path] from inside proot. Never creates
+  /// anything. Throws when the bridge itself fails.
+  Future<SharedStorageProbe> probeSharedStorage(String path) async {
+    final result = await linux.run(
+      BuiltinLinux.probeSharedStorageScript(path),
+      timeout: const Duration(seconds: 30),
+    );
+    if (!result.ok) throw BuiltinLinuxException(_describe(result));
+    return parseSharedStorageProbe(result.output);
+  }
+
   /// Makes [path] a git project unless it already is a folder. `created` is
   /// false for a folder that was already there.
+  ///
+  /// Refuses shared-storage paths without all-files access: without it the
+  /// `mkdir` would land in the container's bind mountpoint instead of the
+  /// phone's real storage.
   Future<({String path, bool created})> create(String path) async {
+    if (isAndroidSharedStoragePath(path)) {
+      final access = await linux.checkAllFilesAccess();
+      if (!access.granted) {
+        throw const BuiltinLinuxException(
+          'All files access is required before making a folder on shared storage.',
+          code: 'all_files_access_missing',
+        );
+      }
+      final probe = await probeSharedStorage(path);
+      if (probe == SharedStorageProbe.unreadable) {
+        throw const BuiltinLinuxException(
+          'That shared-storage folder cannot be reached from the app.',
+          code: 'shared_storage_unreachable',
+        );
+      }
+    }
     final result = await linux.run(
       BuiltinLinux.createFolderScript(path),
       timeout: const Duration(seconds: 60),

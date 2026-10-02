@@ -318,6 +318,20 @@ class ProjectFolderActions {
       );
       if (typed == null || !context.mounted) return null;
       final path = typed.trim();
+      if (inApp != null) {
+        final canonical = ConnectionController.normalizeDirectoryPath(path);
+        if (isAndroidSharedStoragePath(canonical)) {
+          final gated = await _openSharedStorage(
+            context,
+            controller,
+            inApp,
+            canonical,
+          );
+          if (gated != null) return gated;
+          initial = canonical;
+          continue;
+        }
+      }
       if (!missing || inApp == null) return _open(context, controller, path);
       final create = await showKitConfirm(
         context,
@@ -331,6 +345,113 @@ class ProjectFolderActions {
       if (!context.mounted) return null;
       if (create) return _createInApp(context, controller, inApp, path);
       initial = path;
+    }
+  }
+
+  /// Opens a canonical shared-storage [path] (`/storage/emulated/0/...`)
+  /// for OpenCode inside the app. Returns the opened directory, or null
+  /// when the flow goes back to the path field.
+  ///
+  /// Never offers "Create it" for a path proot cannot enumerate: without
+  /// all-files access (or without the bind) the `mkdir` would land in the
+  /// container's bind mountpoint instead of the phone's real storage.
+  static Future<String?> _openSharedStorage(
+    BuildContext context,
+    ConnectionController controller,
+    BuiltinProjectFolders folders,
+    String canonical,
+  ) async {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    AllFilesAccess access;
+    try {
+      access = await _linux.checkAllFilesAccess();
+    } on BuiltinLinuxException catch (error) {
+      if (!context.mounted) return null;
+      await _alert(
+        context,
+        l10n.projectFolderOpenFailedTitle,
+        l10n.projectFolderCheckFailed(productErrorText(error, l10n: l10n)),
+      );
+      return null;
+    }
+    if (!access.granted) {
+      if (!context.mounted) return null;
+      // Plain-language flow until these strings move to the arb files (see
+      // docs/localization-todo.md): opening shared storage needs the
+      // system "All files access" grant, which only Settings can give.
+      final open = await showKitConfirm(
+        context,
+        title: 'All files access is off',
+        body:
+            'Opening $canonical needs "All files access" for this app. '
+            'Open Settings now to turn it on, then try again.',
+        confirmLabel: 'Open Settings',
+        icon: AppIconography.folderAdd,
+        details: [KitTechnicalValue(l10n.projectFolderPathLabel, canonical)],
+      );
+      if (!context.mounted) return null;
+      if (open) {
+        try {
+          await _linux.openAllFilesAccessSettings();
+        } on BuiltinLinuxException {
+          // Stay on the path field; the message below already said why.
+        }
+        if (!context.mounted) return null;
+        try {
+          access = await _linux.checkAllFilesAccess();
+        } on BuiltinLinuxException catch (error) {
+          await _alert(
+            context,
+            l10n.projectFolderOpenFailedTitle,
+            l10n.projectFolderCheckFailed(productErrorText(error, l10n: l10n)),
+          );
+          return null;
+        }
+      }
+      if (!access.granted) return null;
+    }
+    SharedStorageProbe probe;
+    try {
+      probe = await folders.probeSharedStorage(canonical);
+    } on BuiltinLinuxException catch (error) {
+      if (!context.mounted) return null;
+      await _alert(
+        context,
+        l10n.projectFolderOpenFailedTitle,
+        l10n.projectFolderCheckFailed(productErrorText(error, l10n: l10n)),
+      );
+      return null;
+    }
+    if (!context.mounted) return null;
+    switch (probe) {
+      case SharedStorageProbe.withFiles:
+      case SharedStorageProbe.empty:
+        return _open(context, controller, canonical);
+      case SharedStorageProbe.missing:
+        // Genuinely absent on real storage, with access granted and the
+        // bind verified by the probe above: creating lands on the phone's
+        // real storage, not in the container.
+        final create = await showKitConfirm(
+          context,
+          title: l10n.projectFolderMissingTitle,
+          body: l10n.projectFolderMissing,
+          confirmLabel: l10n.projectFolderCreateIt,
+          icon: AppIconography.folderAdd,
+          details: [KitTechnicalValue(l10n.projectFolderPathLabel, canonical)],
+          confirmKey: const ValueKey('open-folder-create-missing'),
+        );
+        if (!context.mounted) return null;
+        if (create) return _createInApp(context, controller, folders, canonical);
+        return null;
+      case SharedStorageProbe.unreadable:
+        await _alert(
+          context,
+          l10n.projectFolderOpenFailedTitle,
+          'That shared-storage folder cannot be reached from the app '
+          '($canonical). Check "All files access" for this app in system '
+          'Settings, then try again.',
+        );
+        return null;
     }
   }
 

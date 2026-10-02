@@ -13,6 +13,7 @@ import android.net.Uri
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
@@ -625,6 +626,64 @@ class MainActivity : FlutterActivity() {
             // happens. Falls back to App Info on a ROM that hides it.
             "openStorageSettings" -> {
                 result.success(openStorageSettingsIntent())
+            }
+            // All files access (MANAGE_EXTERNAL_STORAGE) checks for shared storage.
+            "checkAllFilesAccess" -> {
+                val granted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    Environment.isExternalStorageManager()
+                } else {
+                    // On Android 10 and below, the legacy storage permission
+                    // is granted at install time if declared in manifest.
+                    checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                        PackageManager.PERMISSION_GRANTED
+                }
+                result.success(mapOf(
+                    "granted" to granted,
+                    "sdkAtLeastR" to (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R),
+                ))
+            }
+            "openAllFilesAccessSettings" -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                        .setData(Uri.parse("package:$packageName"))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    try {
+                        startActivity(intent)
+                        result.success(true)
+                    } catch (e: ActivityNotFoundException) {
+                        result.success(false)
+                    }
+                } else {
+                    // On Android 10 and below, open app info settings
+                    val intent = Intent(
+                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.parse("package:$packageName")
+                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    try {
+                        startActivity(intent)
+                        result.success(true)
+                    } catch (e: ActivityNotFoundException) {
+                        result.success(false)
+                    }
+                }
+            }
+            "requestAllFilesAccess" -> {
+                // For MANAGE_EXTERNAL_STORAGE, the only way to request is to open
+                // the system settings. There is no runtime permission dialog.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                        .setData(Uri.parse("package:$packageName"))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    try {
+                        startActivity(intent)
+                        result.success(true)
+                    } catch (e: ActivityNotFoundException) {
+                        result.success(false)
+                    }
+                } else {
+                    // On Android 10 and below, permission is granted at install
+                    result.success(true)
+                }
             }
             else -> result.notImplemented()
         }

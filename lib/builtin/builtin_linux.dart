@@ -169,6 +169,45 @@ class BuiltinLinuxRunResult {
   bool get ok => exitCode == 0;
 }
 
+/// Whether this app may touch shared storage through normal file paths.
+///
+/// On Android 11+ this is `Environment.isExternalStorageManager()`; below
+/// that it is the install-time storage permission. The manifest entry alone
+/// never counts: the user grants this in system settings.
+class AllFilesAccess {
+  const AllFilesAccess({required this.granted, this.sdkAtLeastR = true});
+
+  final bool granted;
+
+  /// False on Android 10 and below, where no settings page exists.
+  final bool sdkAtLeastR;
+}
+
+/// What a shared-storage probe inside proot found.
+///
+/// `missing` means nothing at the path on the real device; `unreadable`
+/// means the path exists (or cannot even be statted) but its contents cannot
+/// be enumerated from inside proot — permission missing, bind absent, or
+/// denied. Only `empty` and `withFiles` may be opened.
+enum SharedStorageProbe {
+  missing,
+  unreadable,
+  empty,
+  withFiles,
+}
+
+/// Parses the output of [BuiltinLinux.probeSharedStorageScript].
+SharedStorageProbe parseSharedStorageProbe(String output) {
+  for (final line in output.split('\n')) {
+    final value = line.trim();
+    if (value == 'status=with-files') return SharedStorageProbe.withFiles;
+    if (value == 'status=empty') return SharedStorageProbe.empty;
+    if (value == 'status=missing') return SharedStorageProbe.missing;
+    if (value == 'status=unreadable') return SharedStorageProbe.unreadable;
+  }
+  return SharedStorageProbe.unreadable;
+}
+
 class BuiltinLinuxException implements Exception {
   const BuiltinLinuxException(this.message, {this.code});
 
@@ -650,6 +689,32 @@ class BuiltinLinux {
   Future<bool> openStorageSettings() async =>
       await _invoke<bool>('openStorageSettings') ?? false;
 
+  /// Whether the app holds all-files access (`MANAGE_EXTERNAL_STORAGE`
+  /// on Android 11+, the legacy storage permission below that).
+  ///
+  /// Declaring the permission is never enough on its own: the user grants it
+  /// in system settings, so every shared-storage open checks this first and
+  /// never touches `/storage/emulated/0` through proot until it is granted.
+  Future<AllFilesAccess> checkAllFilesAccess() async {
+    final raw = await _invoke<Map<Object?, Object?>>('checkAllFilesAccess');
+    if (raw == null) return const AllFilesAccess(granted: false);
+    return AllFilesAccess(
+      granted: raw['granted'] == true,
+      sdkAtLeastR: raw['sdkAtLeastR'] == true,
+    );
+  }
+
+  /// Opens the system "All files access" settings page for this app.
+  /// Returns whether the settings page was opened.
+  Future<bool> openAllFilesAccessSettings() async =>
+      await _invoke<bool>('openAllFilesAccessSettings') ?? false;
+
+  /// Requests the MANAGE_EXTERNAL_STORAGE permission by opening the
+  /// system settings. On Android 11+, this opens the "All files access" page.
+  /// On older versions, this is a no-op (permission is granted at install).
+  Future<bool> requestAllFilesAccess() async =>
+      await _invoke<bool>('requestAllFilesAccess') ?? false;
+
   // Every call into Android is timed as `linux.<method>`; a `run` also
   // carries a label from its script (see [scriptLabel]). The status reads
   // that setup polls twice a second reach the device log only when slow.
@@ -835,6 +900,28 @@ fi
   /// typed path without asking OpenCode about it: OpenCode caches a folder
   /// it was asked about before it existed as broken.
   static String folderExistsScript(String path) => 'test -d ${_quote(path)}';
+
+  /// Verifies a shared-storage [path] from inside proot with a real
+  /// enumeration, not just `test -d` (which succeeds on an empty bind
+  /// mountpoint and cannot tell "no permission" from "empty folder").
+  ///
+  /// Prints exactly one `status=` line: `missing` (nothing at the path),
+  /// `unreadable` (exists but contents cannot be listed from proot),
+  /// `empty` (lists, nothing inside), or `with-files`. Never creates
+  /// anything: a missing folder stays missing so the caller can decide.
+  static String probeSharedStorageScript(String path) {
+    if (!path.startsWith('/') || path.contains('\n') || path.contains('\x00')) {
+      throw ArgumentError.value(path, 'path', 'Must be an absolute path.');
+    }
+    return 'dir=${_quote(path)}\n'
+        'if [ ! -e "\$dir" ]; then printf \'status=missing\\n\'; exit 0; fi\n'
+        'if [ ! -d "\$dir" ]; then printf \'status=missing\\n\'; exit 0; fi\n'
+        'if ! ls -A1 "\$dir" >/dev/null 2>&1; then '
+        'printf \'status=unreadable\\n\'; exit 0; fi\n'
+        'if [ -z "$(ls -A "\$dir")" ]; then printf \'status=empty\\n\'; '
+        'exit 0; fi\n'
+        'printf \'status=with-files\\n\'\n';
+  }
 
   /// Makes [path] a new git project, or leaves an existing folder alone.
   /// Prints `created <path>` or `exists <path>`, so the app knows whether
