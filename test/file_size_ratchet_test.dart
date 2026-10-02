@@ -26,7 +26,6 @@ const _chatMaxLines = 800;
 
 /// path -> line count when the gate landed (2026-10-02). Only goes down.
 const _baseline = <String, int>{
-  'lib/domain/server_gateway.dart': 1522,
 };
 
 bool _generated(String path) =>
