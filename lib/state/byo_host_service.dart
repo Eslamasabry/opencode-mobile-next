@@ -1,6 +1,9 @@
 import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
+import '../host/byo_host_bundle_pins.dart';
 
 import '../domain/byo_host.dart';
 import '../host/byo_host_ssh_runner.dart';
@@ -18,18 +21,20 @@ class ByoHostService {
     this.enabled = byoHostBuildEnabled,
   });
 
-  factory ByoHostService.builtin({
+  static Future<ByoHostService> builtin({
     required SharedPreferences prefs,
     required Future<void> Function(String profileId) clearLocalData,
-    ByoHostBundle? bundle,
     bool enabled = byoHostBuildEnabled,
-  }) => ByoHostService(
-    store: PersistentByoHostStore(prefs: prefs),
-    runner: BuiltinByoHostSshRunner(),
-    bundle: bundle,
-    clearLocalData: clearLocalData,
-    enabled: enabled,
-  );
+  }) async {
+    final app = await PackageInfo.fromPlatform();
+    return ByoHostService(
+      store: PersistentByoHostStore(prefs: prefs),
+      runner: BuiltinByoHostSshRunner(),
+      bundle: byoHostBundleForAppVersion('${app.version}+${app.buildNumber}'),
+      clearLocalData: clearLocalData,
+      enabled: enabled,
+    );
+  }
 
   final ByoHostStore store;
   final ByoHostSshRunner runner;

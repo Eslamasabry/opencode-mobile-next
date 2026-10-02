@@ -50,17 +50,19 @@ secret stdin safely without isolation. Its arbitrary `startService`/`stopService
 can own one long-running foreground SSH tunnel; detached children of a one-shot
 proot command cannot be assumed to survive. Android may stop that service.
 
-Implemented runner keeps secret inputs/results in random app-private rootfs tmp
-directories. Modes are set before writing bytes, shell argv contains filenames,
-and native output is redirected. Persistent generated key/token is in
-flutter_secure_storage (11.2.0), not a rootfs key file. Imported bootstrap login
-is never saved. Temp plaintext is still exposed to same-UID phone agents while
-in use and remains after SIGKILL until own-profile recovery cleanup; encrypted
-vault is not a nonexportable SSH Keystore signer. The repo's existing attestation
-Keystore key is not an OpenSSH signer. Owner must accept temporary export or fund
-a native signing/SSH transport before enabling; do not call source review a leak
-proof. Termux's different UID/private filesystem and bridge error/retry behavior
-need a separate safe transport; this slice explicitly uses built-in Linux only.
+Task B2 supersedes the initial exportable-key approach: Android Keystore creates
+P-256 `ecdsa-sha2-nistp256` keys and a private same-UID Unix-socket agent returns
+signatures to built-in Ubuntu OpenSSH. No phone SSH private bytes enter Dart,
+the vault or a file. Vault schema 2 contains alias/public key/device token only;
+legacy private-key envelopes are refused. Imported keys/passphrases are refused.
+One-operation password/pairing inputs still use private, bounded temporary files;
+these do not contain the device SSH private key. Host keys remain independently
+verified and pinned. Termux's different UID/private filesystem needs a separate
+transport; this slice uses built-in Linux only. Native compile and fake tests are
+not physical Android Keystore/proot socket proof. Only already-tailnet machine
+addresses are accepted, with numeric DNS resolution and no public SSH fallback.
+Official signer/agent evidence and owner qualification gates are in the updated
+[BYO host contract](byo-host-contract.md); the feature remains default OFF.
 
 `ProfileStore` preference suffix sweeping never swept new secure slots by itself.
 This slice explicitly adds the BYO vault to profile deletion and sign-in reset;
@@ -88,8 +90,8 @@ owner must reload and exercise denial, because disk config is not daemon truth.
 See [sshd_config(5)](https://man.openbsd.org/sshd_config.5).
 
 User systemd with linger is a prerequisite for host work surviving SSH logout.
-Installer attempts only noninteractive permitted enable-linger; otherwise reports
-owner preparation, never submits a password/sudo. Official [loginctl source
+Task B2 installer only reads and requires Linger=yes; the owner runs the exact
+manual enable-linger command before setup. It never submits a password/sudo. Official [loginctl source
 manual](https://github.com/systemd/systemd/blob/v256/man/loginctl.xml) defines this
 behavior (pinned documentation v256; actual Ubuntu systemd version is checked by
 owner). Prefer a dedicated nonroot host account; this is not hostile-workload

@@ -16,7 +16,7 @@ import struct
 import sys
 import tarfile
 
-BUNDLE_VERSION = "1.0.0"
+BUNDLE_VERSION = "1.1.0"
 OPENCODE_VERSION = "1.18.32"
 
 

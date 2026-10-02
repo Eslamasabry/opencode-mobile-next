@@ -29,6 +29,7 @@ enum ByoHostPhase {
 enum ByoHostFailureCode {
   disabled,
   invalidTarget,
+  tailnetRequired,
   unavailable,
   needsTrust,
   hostKeyChanged,
@@ -52,6 +53,8 @@ class ByoHostFailure implements Exception {
   final ByoHostFailureCode code;
   String get message => switch (code) {
     ByoHostFailureCode.disabled => 'Adding a machine is not available yet.',
+    ByoHostFailureCode.tailnetRequired =>
+      'Use a machine that is already on your Tailscale network.',
     ByoHostFailureCode.invalidTarget => 'Enter a user and machine address.',
     ByoHostFailureCode.needsTrust => 'Verify this machine before connecting.',
     ByoHostFailureCode.hostKeyChanged =>
@@ -170,8 +173,8 @@ class ByoHostLogin {
 }
 
 class ByoHostIdentity {
-  const ByoHostIdentity({required this.privateKey, required this.publicKey});
-  final String privateKey;
+  const ByoHostIdentity({required this.keyAlias, required this.publicKey});
+  final String keyAlias;
   final String publicKey;
   @override
   String toString() => 'ByoHostIdentity(<redacted>)';
@@ -274,15 +277,19 @@ class ByoHostSecrets {
   final ByoHostIdentity identity;
   final String deviceToken;
   String encode() => jsonEncode({
-    'privateKey': identity.privateKey,
+    'schema': 2,
+    'keyAlias': identity.keyAlias,
     'publicKey': identity.publicKey,
     'deviceToken': deviceToken,
   });
   factory ByoHostSecrets.decode(String value) {
     final json = jsonDecode(value) as Map<String, dynamic>;
+    if (json['schema'] != 2 || json.containsKey('privateKey')) {
+      throw const ByoHostFailure(ByoHostFailureCode.storage);
+    }
     return ByoHostSecrets(
       identity: ByoHostIdentity(
-        privateKey: json['privateKey'] as String,
+        keyAlias: json['keyAlias'] as String,
         publicKey: json['publicKey'] as String,
       ),
       deviceToken: json['deviceToken'] as String,

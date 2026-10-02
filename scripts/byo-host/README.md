@@ -1,10 +1,11 @@
 # Private BYO host bundle
 
-Original stdlib Python supervisor and deterministic packaging for bundle **1.0.0**,
+Original stdlib Python supervisor and deterministic packaging for bundle **1.1.0**,
 OpenCode **1.18.32**. This is the host half of the Ubuntu SSH adoption backend.
 No infrastructure API credential is stored here. No service is published, no
-artifact is downloaded by these files, and no real host has been provisioned by
-the offline tests.
+upstream artifact is executed by these files, and no real host has been
+provisioned by the offline tests. The release builder downloads pinned public
+OpenCode archives; packaging and host installation use reviewed digests.
 
 ## Supported host and owner prerequisites
 
@@ -12,11 +13,11 @@ Ubuntu **24.04**, amd64/arm64, Python 3, OpenSSH, an existing **nonroot** login
 account, and an available systemd user manager. A dedicated nonroot account is the
 trust domain: OpenCode tools run as this account and can access its files. The installer does
 not create users, install OS packages, change firewalls/sshd, run sudo, or prompt
-for an administrator password. Prefer already-tailnet SSH; the owner must ensure
-the SSH endpoint follows their access policy. The runner accepts an explicit
-`user@host` and does not enforce a tailnet-hostname restriction, join a tailnet or
-change firewalls. It encrypts the SSH forward and never opens public HTTP/agent
-ports.
+for an administrator password. The SSH target must already be on the owner's Tailscale tailnet; the app refuses
+public SSH addresses. It does not join a tailnet or change firewalls. It encrypts
+the SSH forward and never opens public HTTP/agent ports. The SSH endpoint must
+use a Tailscale address and ordinary OpenSSH authentication (Tailscale SSH account
+authentication is a separate unsupported flow).
 
 The existing sshd policy must permit only local TCP forwarding, deny Unix socket
 forwarding and tunnels, and use `.ssh/authorized_keys`. An example **owner-managed**
@@ -59,9 +60,9 @@ context (`UseDNS yes`) fails with `sshPolicyRequired` (exit 73) **before pairing
 This checks configuration on disk; it cannot establish that the running daemon
 was reloaded. The owner's negative-channel proof remains required.
 
-The installer verifies lingering. If absent, it attempts only the noninteractive
-`loginctl --no-ask-password enable-linger USER`; if policy denies it, it returns
-`lingerRequired`. The owner can enable lingering separately, then retry. A missing
+The installer verifies lingering and returns `lingerRequired` when absent. The
+owner enables lingering once by hand; the app never runs loginctl enable-linger
+or sudo. A missing
 user bus returns `userServiceUnavailable`; a root or unsupported OS account
 returns `unsupportedHost`.
 
@@ -77,7 +78,7 @@ python3 scripts/byo-host/package.py \
   --opencode /absolute/path/to/verified/opencode \
   --opencode-sha256 REVIEWED_BINARY_SHA256 \
   --architecture amd64 \
-  --output /absolute/path/to/oc-byo-host-1.0.0-amd64.tar.gz
+  --output /absolute/path/to/oc-byo-host-1.1.0-amd64.tar.gz
 ```
 
 Use `arm64` for that verified architecture. Output is JSON with the manifest,
@@ -93,14 +94,14 @@ extracting or executing any installer**. Then:
 
 ```text
 sh /private/staging/install.sh --archive /private/staging/bundle.tar.gz --sha256 FROZEN_SHA256
-stdin JSON: {"deviceId":"PROFILE_ID","token":"PHONE_GENERATED_TOKEN","publicKey":"ssh-ed25519 PUBLIC_KEY"}
+stdin JSON: {"deviceId":"PROFILE_ID","token":"PHONE_GENERATED_TOKEN","publicKey":"ecdsa-sha2-nistp256 PUBLIC_KEY"}
 ```
 
 No credential is supplied as an argument or embedded in a shell command. stdin
 is bounded to 16KiB. Device IDs use `[A-Za-z0-9_-]{1,128}`; tokens must be generated
 randomly by the phone with at least 256 bits of entropy, encoded base64url without
-padding (`[A-Za-z0-9_-]{32,256}` accepted). Keys must be Ed25519; comments are
-discarded. A device ID/key cannot replace another pairing. Repeating the exact
+padding (`[A-Za-z0-9_-]{32,256}` accepted). Phone keys use Android Keystore ECDSA P-256; Ed25519 remains accepted for
+existing host pairings. Comments are discarded. A device ID/key cannot replace another pairing. Repeating the exact
 same live pairing is idempotent; revoked IDs cannot be resurrected.
 
 The installer verifies archive bytes again, rejects traversal, links, duplicate
@@ -115,7 +116,7 @@ bundle. Upgrade/replacement is intentionally unavailable in this slice.
 Success stdout (and CLI `pair`) is one JSON object:
 
 ```json
-{"hostId":"STABLE_UUID","bundleVersion":"1.0.0","openCodeVersion":"1.18.32","port":4096,"deviceId":"PROFILE_ID"}
+{"hostId":"STABLE_UUID","bundleVersion":"1.1.0","openCodeVersion":"1.18.32","port":4096,"deviceId":"PROFILE_ID"}
 ```
 
 Failures return a fixed JSON `error` code and nonzero exit. Never display arbitrary
@@ -179,3 +180,62 @@ and live-install reuse without restart. They create no cloud resources and make
 no internet requests. The real pinned OpenCode process, actual systemd/sshd
 configuration, negative SSH-channel tests, app-to-host forwarding, and phone
 kill/reconnect/second-phone/revoke journeys remain owner-run throwaway-host proof.
+
+
+## Reviewed release bundle pipeline (Task B2)
+
+`.github/workflows/byo-host-bundle.yml` runs only on `v*` tag pushes in
+`Eslamasabry/opencode-mobile-next`, requires the tag to equal `pubspec.yaml`'s full
+`x.y.z+N` app version and the tagged commit to equal current `master`, and uses
+Ubuntu 24.04/Python 3.12. Its concurrency group matches `android-release.yml` so
+both workflows arrange the same draft sequentially. It never publishes a release
+or replaces an existing release asset. Its only write permission is repository
+contents in the tag job; checkout does not retain the token in Git config.
+
+The committed `release-pins.json` freezes the upstream OpenCode **1.18.32** Linux
+amd64 baseline and arm64 archive digests. These came from the official
+[release asset API](https://api.github.com/repos/anomalyco/opencode/releases/tags/v1.18.32)
+on **2026-10-02**, release published **2026-09-21**. GitHub documents the asset
+[`digest` field](https://docs.github.com/en/rest/releases/assets#get-a-release-asset).
+They are reviewed source inputs, never discovered at workflow runtime from a
+checksum sidecar. Changing a pin or host source requires a fresh bundle review.
+The builder verifies archive SHA-256 before reading its one regular `opencode`
+member, rejects other files/links and verifies ELF architecture before packaging.
+It never executes the binary, including the foreign-architecture one.
+
+Before any tag, the maintainer builds locally from reviewed source:
+
+```sh
+python3 scripts/byo-host/build_release.py build \
+  --tag vAPP_VERSION --repository Eslamasabry/opencode-mobile-next \
+  --output /tmp/reviewed-byo-host
+```
+
+This downloads public pinned archives only. To reuse already verified downloads,
+add `--upstream-directory /absolute/cache` containing `amd64.tar.gz` and
+`arm64.tar.gz`; the same frozen digest checks still run. Building twice compares
+archive bytes. Packaging normalizes order, tar owner/mode/time and gzip metadata;
+reproduction requires the same checked-out host scripts and Python/zlib toolchain.
+Output contains the two host archives, `BYO_HOST_SHA256SUMS` and
+`byo-host-manifest.json` with full app version, fixed bundle/OpenCode versions,
+versioned release URLs and SHA-256 for upstream archives, binaries and host bundles.
+
+The maintainer checks the outputs and freezes both bundle SHA-256 values under
+`release-pins.json` → `appVersions` → exact full app version → `amd64`/`arm64`, and
+in the app's compiled bundle manifest for that app version. Review and commit
+those pins before tagging. The app must never adopt a downloaded manifest as
+trust. Until this row exists, the workflow fails `bundleReviewRequired` before
+release attachment. The workflow rebuilds and requires exact equality to that
+row, catching unreviewed source changes. A draft-only release URL is not publicly
+available until a separate owner-authorized publication; building this pipeline
+is not publication.
+
+The `attach` command is reserved for the authorized tag workflow. It distinguishes
+an API 404 from authorization/network failure, creates missing releases with
+`--draft --verify-tag`, refuses published releases, and rechecks draft state
+immediately before each upload. Identical already-uploaded assets are skipped by
+GitHub's recorded digest; an unknown/different digest is blocked, with no clobber.
+Repository administrators must not publish the draft while this workflow is
+running: GitHub has no atomic “upload only if still draft” API condition. Android
+release notes/APK setup remain owned by `android-release.yml`. Publication and
+any release/tag/CI action still require the owner's separate authorization.

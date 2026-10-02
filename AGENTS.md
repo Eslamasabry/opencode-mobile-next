@@ -72,7 +72,7 @@ flutter test --concurrency=1    # serial in the phone-hosted container; a workst
   library**, `lib/domain/server_gateway.dart`, `lib/api/product_repository.dart`,
   `lib/main.dart`, `lib/l10n/` output, each protocol cluster, and both halves of
   any MethodChannel (`oc/termux`, `oc/voice`, `oc/camera`, `oc/background`,
-  `oc/share`).
+  `oc/share`, `oc/byo_host_signer`).
 - OpenCode 2 event stream is volatile: after reconnect, reconcile by refetch,
   not replay (the beta session log replays only durable events; deltas and
   `tool.progress` never replay). Wire truth: `docs/opencode2-protocol-notes.md`.

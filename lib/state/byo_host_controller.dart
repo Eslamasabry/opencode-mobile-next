@@ -116,6 +116,35 @@ class ByoHostController {
     return key;
   });
 
+  /// Public enrollment for owner-managed key-only SSH accounts. Reserve the
+  /// journal before Keystore generation so app loss never loses the profile ID.
+  Future<ByoHostIdentity> prepareSshIdentity({
+    required String verifiedFingerprint,
+  }) => _action(() async {
+    final target = _previewTarget;
+    final key = _previewKey;
+    if (target == null ||
+        key == null ||
+        key.fingerprint != verifiedFingerprint) {
+      throw const ByoHostFailure(ByoHostFailureCode.needsTrust);
+    }
+    final existing = await store.readRecord(profileId);
+    if (existing != null && existing.phase != ByoHostPhase.needsTrust) {
+      throw const ByoHostFailure(ByoHostFailureCode.busy);
+    }
+    final reservation = ByoHostRecord(
+      profileId: profileId,
+      target: target,
+      hostKey: key,
+      phase: ByoHostPhase.needsTrust,
+    );
+    await _checkKey(reservation);
+    await store.saveRecord(reservation);
+    final identity = await runner.generateIdentity(profileId);
+    _emit(ByoHostPhase.needsTrust, record: reservation, key: key);
+    return identity; // public key and alias only
+  });
+
   /// Persist the exact device tuple before any remote mutation. A killed app
   /// can retry pairing the same tuple; it never invents a second device.
   Future<void> adopt({
@@ -135,7 +164,12 @@ class ByoHostController {
         if (package == null) {
           throw const ByoHostFailure(ByoHostFailureCode.bundleUnavailable);
         }
-        if (await store.readRecord(profileId) != null) {
+        final existing = await store.readRecord(profileId);
+        if (existing != null &&
+            (existing.phase != ByoHostPhase.needsTrust ||
+                existing.hostKey.publicKey != key.publicKey ||
+                jsonEncode(existing.target.toJson()) !=
+                    jsonEncode(target.toJson()))) {
           throw const ByoHostFailure(ByoHostFailureCode.busy);
         }
         final identity = await runner.generateIdentity(profileId);
@@ -199,6 +233,15 @@ class ByoHostController {
       await _action(() async {
         final record = await store.readRecord(profileId);
         final secrets = await store.readSecrets(profileId);
+        if (record != null &&
+            record.phase == ByoHostPhase.needsTrust &&
+            secrets == null) {
+          await _checkKey(record);
+          _previewTarget = record.target;
+          _previewKey = record.hostKey;
+          _emit(ByoHostPhase.needsTrust, record: record, key: record.hostKey);
+          return;
+        }
         if (record == null || secrets == null || record.revoked) {
           throw const ByoHostFailure(ByoHostFailureCode.storage);
         }

@@ -13,6 +13,7 @@ import '../api/models.dart' show ModelRef;
 import '../api/server_probe.dart' show ServerFlavor;
 import '../domain/loopback_host.dart';
 import '../domain/byo_host.dart';
+import '../host/byo_host_signer.dart';
 import '../domain/orchestration_gateway.dart' show OrchestrationHostMode;
 import '../orchestration/adapters/gascity/gascity_probe.dart'
     show isTailnetHost;
@@ -78,9 +79,16 @@ class ProfileStore {
 
   final SharedPreferences prefs;
   final FlutterSecureStorage secure;
+  final ByoHostSigner? byoHostSigner;
 
-  ProfileStore({required this.prefs, FlutterSecureStorage? secure})
-    : secure = secure ?? const FlutterSecureStorage();
+  ProfileStore({
+    required this.prefs,
+    FlutterSecureStorage? secure,
+    ByoHostSigner? byoHostSigner,
+  }) : secure = secure ?? const FlutterSecureStorage(),
+       byoHostSigner =
+           byoHostSigner ??
+           (AndroidByoHostSigner.supported ? AndroidByoHostSigner() : null);
 
   List<ServerProfile> _cache = [];
   List<ServerProfile> get profiles => List.unmodifiable(_cache);
@@ -133,6 +141,7 @@ class ProfileStore {
       if (!await prefs.remove(_activeKey)) {
         throw const SavedSignInResetException();
       }
+      await byoHostSigner?.deleteAllIdentities();
       for (final key in owned) {
         await secure.delete(key: key);
       }
@@ -493,6 +502,7 @@ class ProfileStore {
       // BYO identity first; refusal keeps its metadata available for retry.
       final byoKey = '$byoHostSecretsKeyPrefix$id';
       try {
+        if (byoHostSafeId(id)) await byoHostSigner?.deleteIdentity(id);
         await secure.delete(key: byoKey);
         if (await secure.read(key: byoKey) != null) {
           throw const ByoHostFailure(ByoHostFailureCode.storage);
