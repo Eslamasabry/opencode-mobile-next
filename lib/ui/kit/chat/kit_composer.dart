@@ -44,7 +44,8 @@ part 'kit_composer_layer.dart';
 /// a text-colour circle with a ground square and a slowly turning ring, the
 /// only Stop in the chat. The mic stays its own button beside it. What the
 /// reply is doing is written in the turn, not here; the model chip sits
-/// above the pill with the status chips ([KitComposerStatusStrip]).
+/// above the pill with the status chips ([KitComposerStatusStrip]), or in the
+/// bottom row of a window too tight for that line ([model]).
 ///
 /// States: idle empty, idle with text, sending, busy empty, busy with text
 /// (stop + send, delivery choice), busy with text that cannot send yet,
@@ -73,6 +74,7 @@ class KitComposer extends StatefulWidget {
     this.note,
     this.attachments,
     this.suggestions,
+    this.model,
     this.onTools,
     this.toolsDisabledReason,
     this.onVoice,
@@ -152,6 +154,11 @@ class KitComposer extends StatefulWidget {
 
   /// [KitComposerChips.suggestions], above the field.
   final KitComposerChips? suggestions;
+
+  /// The model chip in the bottom row: only for a window too tight for the
+  /// status line above the field ([KitComposerStatusStrip.model], decision
+  /// 14A), where the chip would crowd the composer out. Otherwise null.
+  final Widget? model;
 
   /// "+": the host's tools sheet (attach, photos, commands…).
   final VoidCallback? onTools;
@@ -524,7 +531,15 @@ class _KitComposerState extends State<KitComposer> {
           onPressed: widget.onTools,
         ),
       if (_stopLeads) _stopControl(l10n),
-      const Spacer(),
+      if (!readOnly && widget.model != null)
+        Flexible(
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: widget.model!,
+          ),
+        )
+      else
+        const Spacer(),
       if (_micBeside)
         _Circle(
           key: const ValueKey('kit-composer-mic'),

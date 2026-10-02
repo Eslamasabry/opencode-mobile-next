@@ -4,6 +4,44 @@ part of '../chat_screen.dart';
 // itself.
 
 extension _ChatComposerRegion on _ChatScreenState {
+  /// A window too tight for a line above the field: the model chip then
+  /// stays in the composer's bottom row.
+  bool _modelChipInComposer(BoxConstraints bodyConstraints) =>
+      bodyConstraints.hasBoundedHeight && bodyConstraints.maxHeight < 480;
+
+  Widget _composerStatusStrip(BoxConstraints bodyConstraints) {
+    final chips = _composerStatusChips();
+    return KitComposerStatusStrip(
+      stripKey: chips.isEmpty ? null : const Key('composer-status-strip'),
+      chips: chips,
+      model: _conn.isIsolated || _modelChipInComposer(bodyConstraints)
+          ? null
+          : _modelChipWidget(),
+    );
+  }
+
+  Widget _modelChipWidget() => _ChatModelChip(
+    conn: _conn,
+    busy: _conn.busySessions.contains(widget.sessionID) || _live != null,
+    selectedAgent: _conn.agentForSession(widget.sessionID),
+    defaultAgent: _defaultAgentName,
+    selectedModel: _conn.modelForSession(widget.sessionID),
+    modelLabel: _presentedModelLabel,
+    selectionFallback: !_conn.serverOwnsSessionSelection
+        ? null
+        : _conn.selectionForSession(widget.sessionID).modelKnown
+        ? _chatL10n(context).modelServerDefault
+        : _chatL10n(context).modelSelectionLoading,
+    selectedVariant: _conn.variantForSession(widget.sessionID),
+    onChooseModel: () => showModelPicker(
+      context,
+      applyScope: _modelApplyScope,
+      sessionID: widget.sessionID,
+    ),
+    contextUsage: _contextWindowUsage(),
+    modelSwitch: _modelCycleButton(),
+  );
+
   /// Standing facts about this conversation's run, as labelled chips on the
   /// line above the composer's field (the model chip ends it): that approvals are automatic, and that the
   /// running work can be sent to the background. They used to be a bar and a
@@ -295,6 +333,7 @@ extension _ChatComposerRegion on _ChatScreenState {
               ? null
               : _ComposerNote(key: _composerNoteKey, text: _composerNote!),
         ),
+        _composerStatusStrip(bodyConstraints),
       ],
     );
   }
@@ -353,9 +392,11 @@ extension _ChatComposerRegion on _ChatScreenState {
       attachments: _attachments,
       promptAttachmentsSupported: _supportsPromptAttachments,
       webSourcesSupported: _conn.capabilities.webSearch,
-      statusChips: _composerStatusChips(),
       busy: busy || _live != null,
       // Send becomes Stop; nothing to stop while the prompt is on its way.
+      model: _conn.isIsolated || !_modelChipInComposer(bodyConstraints)
+          ? null
+          : _modelChipWidget(),
       onStop: _sending ? null : () => unawaited(_abort()),
       stopping: _aborting,
       sending: _sending,
@@ -367,17 +408,6 @@ extension _ChatComposerRegion on _ChatScreenState {
       onDeliveryChanged: (delivery) =>
           _setChatState(() => _delivery = delivery),
       voiceOpening: _voiceOpening,
-      selectedAgent: _conn.agentForSession(widget.sessionID),
-      defaultAgent: _defaultAgentName,
-      selectedModel: _conn.modelForSession(widget.sessionID),
-      modelLabel: _presentedModelLabel,
-      selectionFallback: !_conn.serverOwnsSessionSelection
-          ? null
-          : _conn.selectionForSession(widget.sessionID).modelKnown
-          ? _chatL10n(context).modelServerDefault
-          : _chatL10n(context).modelSelectionLoading,
-      selectedCatalogModel: _selectedCatalogModel,
-      selectedVariant: _conn.variantForSession(widget.sessionID),
       showAttachmentNote: showAttachmentNote,
       onAttach: _pickAttachment,
       onPhotoLibrary: () => _pickPhoto(ImageSource.gallery),
@@ -390,17 +420,6 @@ extension _ChatComposerRegion on _ChatScreenState {
       conversationMode: _voiceConversation,
       voice: _composerVoice(),
       onSend: _send,
-      onChooseModel: () {
-        if (!_conn.isIsolated) {
-          showModelPicker(
-            context,
-            applyScope: _modelApplyScope,
-            sessionID: widget.sessionID,
-          );
-        }
-      },
-      contextUsage: _contextWindowUsage(),
-      modelSwitch: _modelCycleButton(),
       onRemoveAttachment: (attachment) =>
           _setChatState(() => _attachments.remove(attachment)),
       // UX-103 review handoff (start).

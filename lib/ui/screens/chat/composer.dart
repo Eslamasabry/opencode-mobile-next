@@ -49,9 +49,9 @@ class _ChatComposer extends StatelessWidget {
     required this.promptAttachmentsSupported,
     required this.webSourcesSupported,
     required this.busy,
+    this.model,
     this.onStop,
     this.stopping = false,
-    this.statusChips = const [],
     required this.sending,
     this.canSendWhileBusy = false,
     this.canChooseDelivery = false,
@@ -59,13 +59,6 @@ class _ChatComposer extends StatelessWidget {
     this.delivery = PromptDelivery.queue,
     this.onDeliveryChanged,
     required this.voiceOpening,
-    required this.selectedAgent,
-    this.defaultAgent = '',
-    required this.selectedModel,
-    this.modelLabel,
-    this.selectionFallback,
-    this.selectedCatalogModel,
-    required this.selectedVariant,
     this.showAttachmentNote = true,
     required this.onAttach,
     required this.onPhotoLibrary,
@@ -77,12 +70,9 @@ class _ChatComposer extends StatelessWidget {
     this.conversationMode = false,
     this.voice,
     required this.onSend,
-    required this.onChooseModel,
     required this.onRemoveAttachment,
     this.references = const [],
     this.onRemoveReference,
-    this.contextUsage,
-    this.modelSwitch,
   });
 
   /// Who the prompt goes to ("Claude Code"); null means OpenCode.
@@ -117,8 +107,9 @@ class _ChatComposer extends StatelessWidget {
   final bool webSourcesSupported;
   final bool busy;
 
-  /// The standing facts on the line above the field; the model chip ends it.
-  final List<Widget> statusChips;
+  /// The model chip, only in a window too tight for the line above the
+  /// field (see [KitComposer.model]).
+  final Widget? model;
 
   /// Stop: the composer's Send becomes Stop while a reply runs. Null while
   /// the prompt is still on its way (nothing to stop yet).
@@ -140,22 +131,6 @@ class _ChatComposer extends StatelessWidget {
 
   /// Kept for the host (KIT-43): the voice sheet shows its own progress.
   final bool voiceOpening;
-  final String selectedAgent;
-
-  /// The agent the server would pick unprompted. The chip names the agent
-  /// only when the selection differs from it.
-  final String defaultAgent;
-  final ModelRef? selectedModel;
-
-  /// Presented model name (catalog name or provider · model).
-  final String? modelLabel;
-
-  /// The words for "no pick": the server default by name, or "Loading…".
-  final String? selectionFallback;
-
-  /// Kept for the host (KIT-43); pricing lives in the model picker.
-  final CatalogModel? selectedCatalogModel;
-  final String selectedVariant;
 
   /// The "saved with your draft" note shows once per session.
   final bool showAttachmentNote;
@@ -175,20 +150,12 @@ class _ChatComposer extends StatelessWidget {
   /// conversation.
   final KitComposerVoice? voice;
   final VoidCallback onSend;
-  final VoidCallback onChooseModel;
   final ValueChanged<PromptAttachment> onRemoveAttachment;
 
   /// Staged Files/Changes/Review references: they upload nothing and become
   /// text in the prompt when it is sent.
   final List<ReviewReference> references;
   final ValueChanged<ReviewReference>? onRemoveReference;
-
-  /// Share of the model's context window in use, or null when unknown.
-  final double? contextUsage;
-
-  /// The host's model cycle button; its three shortcuts become the model
-  /// chip's menu (long-press, right-click, custom actions).
-  final Widget? modelSwitch;
 
   bool get _hasAttachments => attachments.isNotEmpty || references.isNotEmpty;
 
@@ -243,11 +210,6 @@ class _ChatComposer extends StatelessWidget {
                 onPressed: shelfBusy ? null : restore,
               ),
             ),
-          KitComposerStatusStrip(
-            stripKey: const Key('composer-status-strip'),
-            chips: statusChips,
-            model: isolated ? null : _modelChip(context, conn),
-          ),
           KitComposer(
             controller: controller,
             focusNode: focusNode,
@@ -255,6 +217,7 @@ class _ChatComposer extends StatelessWidget {
                 ? l10n.chatUiAskOpenCode
                 : l10n.chatUiAskAgent(KitBidi.auto(agentName!)),
             onSend: _send,
+            model: model,
             // Send becomes Stop while a reply runs (the only Stop); the mic
             // stays beside it, so speaking or typing waits to send after
             // the reply. What the reply is doing is written in the turn.
@@ -329,69 +292,6 @@ class _ChatComposer extends StatelessWidget {
     ];
     return parts.isEmpty ? null : parts.join(' ');
   }
-
-  // --- model chip ------------------------------------------------------
-
-  KitComposerChips _modelChip(BuildContext context, ConnectionController conn) {
-    final model = selectedModel;
-    final picked = model != null && model.modelID.isNotEmpty;
-    final catalog = conn.catalog;
-    final noModels = catalog != null && catalog.models.isEmpty;
-    // P7.7: before the first send with nothing signed in, the chip says so.
-    // P7.5: while a reply is being written a model is answering, so the chip
-    // never asks to choose one.
-    final state = picked
-        ? KitModelChipState.chosen
-        : noModels && !busy
-        ? KitModelChipState.signInNeeded
-        : KitModelChipState.serverDefault;
-    final cycle = modelSwitch;
-    return KitComposerChips.model(
-      label: picked ? _contextLabel(context) : (selectionFallback ?? ''),
-      onPressed: onChooseModel,
-      state: state,
-      contextUsed: contextUsage?.clamp(0.0, 1.0),
-      menu: cycle is ModelCycleButton
-          ? modelCycleMenuItems(
-              _chatL10n(context),
-              onCycle: cycle.onCycle,
-              hasRecent: cycle.hasRecent,
-              hasFavorites: cycle.hasFavorites,
-            )
-          : const [],
-      chipKey: const Key('composer-model-context'),
-      contextKey: const Key('composer-context-percent'),
-    );
-  }
-
-  /// The presented model, the agent only when it is not the server's
-  /// default, the effort only when it is a real choice.
-  String _contextLabel(BuildContext context) {
-    final parts = <String>[];
-    if (selectedAgent.isNotEmpty && selectedAgent != defaultAgent) {
-      parts.add(selectedAgent);
-    }
-    final model = selectedModel;
-    if (model != null && model.modelID.isNotEmpty) {
-      final presented = modelLabel?.trim();
-      parts.add(
-        presented == null || presented.isEmpty
-            ? presentedModelLabel(model.providerID, model.modelID)
-            : presented,
-      );
-    }
-    final variant = selectedVariant.trim();
-    if (variant.isNotEmpty && !_isDefaultVariant(variant)) {
-      parts.add(presentedEffort(variant, _chatL10n(context)));
-    }
-    return parts.join(' · ');
-  }
-
-  static bool _isDefaultVariant(String variant) =>
-      switch (variant.toLowerCase()) {
-        'default' || 'medium' || 'normal' || 'standard' || 'auto' => true,
-        _ => false,
-      };
 
   // --- attachments -----------------------------------------------------
 
@@ -614,4 +514,114 @@ class _ChatComposer extends StatelessWidget {
         onOpenStash?.call();
     }
   }
+}
+
+/// The model chip: which model answers, how full its context is, and a quick
+/// way to switch. It ends the status line above the message field (owner
+/// decision 2 Oct 2026, 14A), so the field keeps its full width.
+class _ChatModelChip extends StatelessWidget {
+  const _ChatModelChip({
+    required this.conn,
+    required this.busy,
+    required this.selectedAgent,
+    this.defaultAgent = '',
+    required this.selectedModel,
+    this.modelLabel,
+    this.selectionFallback,
+    required this.selectedVariant,
+    required this.onChooseModel,
+    this.contextUsage,
+    this.modelSwitch,
+  });
+
+  final ConnectionController conn;
+  final bool busy;
+  final String selectedAgent;
+
+  /// The agent the server would pick unprompted. The chip names the agent
+  /// only when the selection differs from it.
+  final String defaultAgent;
+  final ModelRef? selectedModel;
+
+  /// Presented model name (catalog name or provider · model).
+  final String? modelLabel;
+
+  /// The words for "no pick": the server default by name, or "Loading…".
+  final String? selectionFallback;
+  final String selectedVariant;
+  final VoidCallback onChooseModel;
+
+  /// Share of the model's context window in use, or null when unknown.
+  final double? contextUsage;
+
+  /// The host's model cycle button; its three shortcuts become the model
+  /// chip's menu (long-press, right-click, custom actions).
+  final Widget? modelSwitch;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: conn,
+    builder: (context, _) => _chip(context),
+  );
+
+  KitComposerChips _chip(BuildContext context) {
+    final model = selectedModel;
+    final picked = model != null && model.modelID.isNotEmpty;
+    final catalog = conn.catalog;
+    final noModels = catalog != null && catalog.models.isEmpty;
+    // P7.7: before the first send with nothing signed in, the chip says so.
+    // P7.5: while a reply is being written a model is answering, so the chip
+    // never asks to choose one.
+    final state = picked
+        ? KitModelChipState.chosen
+        : noModels && !busy
+        ? KitModelChipState.signInNeeded
+        : KitModelChipState.serverDefault;
+    final cycle = modelSwitch;
+    return KitComposerChips.model(
+      label: picked ? _contextLabel(context) : (selectionFallback ?? ''),
+      onPressed: onChooseModel,
+      state: state,
+      contextUsed: contextUsage?.clamp(0.0, 1.0),
+      menu: cycle is ModelCycleButton
+          ? modelCycleMenuItems(
+              _chatL10n(context),
+              onCycle: cycle.onCycle,
+              hasRecent: cycle.hasRecent,
+              hasFavorites: cycle.hasFavorites,
+            )
+          : const [],
+      chipKey: const Key('composer-model-context'),
+      contextKey: const Key('composer-context-percent'),
+    );
+  }
+
+  /// The presented model, the agent only when it is not the server's
+  /// default, the effort only when it is a real choice.
+  String _contextLabel(BuildContext context) {
+    final parts = <String>[];
+    if (selectedAgent.isNotEmpty && selectedAgent != defaultAgent) {
+      parts.add(selectedAgent);
+    }
+    final model = selectedModel;
+    if (model != null && model.modelID.isNotEmpty) {
+      final presented = modelLabel?.trim();
+      parts.add(
+        presented == null || presented.isEmpty
+            ? presentedModelLabel(model.providerID, model.modelID)
+            : presented,
+      );
+    }
+    final variant = selectedVariant.trim();
+    if (variant.isNotEmpty && !_isDefaultVariant(variant)) {
+      parts.add(presentedEffort(variant, _chatL10n(context)));
+    }
+    return parts.join(' · ');
+  }
+
+  static bool _isDefaultVariant(String variant) =>
+      switch (variant.toLowerCase()) {
+        'default' || 'medium' || 'normal' || 'standard' || 'auto' => true,
+        _ => false,
+      };
 }

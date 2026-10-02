@@ -27,7 +27,7 @@ class KitComposerStatusStrip extends StatelessWidget {
   final List<Widget> chips;
 
   /// [KitComposerChips.model], at the end of the line.
-  final KitComposerChips? model;
+  final Widget? model;
 
   /// On the scrolling line, for tests (TEST-5).
   final Key? stripKey;

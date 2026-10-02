@@ -20,6 +20,77 @@ abstract final class KitMotion {
   /// A control answering a touch: a chip, a toggle, a row's state.
   static const quick = Duration(milliseconds: 150);
 
+  /// A part appearing or changing size: a notice, a section unfolding.
+  static const standard = Duration(milliseconds: 250);
+
+  /// An illustration drawing itself in. Long enough to be seen, short
+  /// enough that nobody waits for it.
+  static const entrance = Duration(milliseconds: 900);
+
+  /// A one-time moment worth marking: setup finished, a task merged.
+  static const celebration = Duration(milliseconds: 1400);
+
+  /// One breath of an ambient loop on a waiting screen.
+  static const breath = Duration(seconds: 4);
+
+  /// A wait turns into an explanation after this (KitSince.md, KitField.md,
+  /// KitStateView.md; MOT-1, kit-v2 G9 "escalate after 8 s").
+  static const escalateAfter = Duration(seconds: 8);
+
+  /// The least time a press stays visible, so a quick tap (finger down and
+  /// up between two frames) still shows its pressed fill (KitPressTracker;
+  /// Android's pressed-state duration is 64 ms, this seam rounds up so the
+  /// fill registers). A state, not a movement: it holds under reduced
+  /// motion too, where the fill still appears and clears instantly.
+  static const pressHold = Duration(milliseconds: 100);
+
+  /// How long an undo stays offered (KitReceipt.md, KitUndo.md: 8 s).
+  static const undoWindow = Duration(seconds: 8);
+
+  /// How long a copy control shows its check (KitIconButton.md,
+  /// KitAction.md). No spec states a value; 2 s is this seam's choice.
+  static const copiedHold = Duration(seconds: 2);
+
+  /// A log panel's default poll interval (KitLogPanel.md).
+  static const logPoll = Duration(seconds: 2);
+
+  /// Typing counts as settled after this: the search debounce and the
+  /// result-count announcement (KitSearchField.md, about 300 ms).
+  static const typingSettle = Duration(milliseconds: 300);
+
+  // The navigation's tab lens moves on springs, not on a duration.
+  // Stiffness and damping per unit mass, in logical pixels and seconds; a
+  // spring is never used under [reduced], where every state is instant.
+
+  /// The tab lens's leading edge after a tap: it leads, so the lens
+  /// stretches towards the new tab.
+  static const lensLead = SpringDescription(
+    mass: 1,
+    stiffness: 560,
+    damping: 32,
+  );
+
+  /// The tab lens's trailing edge after a tap: it follows, softer.
+  static const lensTrail = SpringDescription(
+    mass: 1,
+    stiffness: 210,
+    damping: 23,
+  );
+
+  /// The lens's leading edge while a finger drags it along the bar.
+  static const lensDragLead = SpringDescription(
+    mass: 1,
+    stiffness: 700,
+    damping: 36,
+  );
+
+  /// The lens's trailing edge while a finger drags it along the bar.
+  static const lensDragTrail = SpringDescription(
+    mass: 1,
+    stiffness: 260,
+    damping: 26,
+  );
+
   /// The lens lifting out of the bar while dragged, and settling back.
   static const lensLift = SpringDescription(
     mass: 1,
