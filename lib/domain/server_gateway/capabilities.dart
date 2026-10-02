@@ -15,6 +15,9 @@ class ServerCapabilities {
   /// Prompt dispatch preserves an app-authored message ID in the user echo.
   final bool clientPromptMessageID;
 
+  /// Client-ID prompt admission can be checked later. Does not authorize resend.
+  final bool commandReceipts;
+
   /// Optional official-runtime account panel. Disabled for other gateways.
   final bool agentAccount;
   // Core operations differ across supported server backends.
@@ -124,6 +127,7 @@ class ServerCapabilities {
     this.setupMcpInventory = false,
     this.setupAssistantSession = false,
     this.clientPromptMessageID = false,
+    this.commandReceipts = false,
     this.agentAccount = false,
     this.promptAttachments = true,
     this.promptAgentMentions = true,
@@ -185,6 +189,7 @@ class ServerCapabilities {
 
   static const allV1 = ServerCapabilities(
     clientPromptMessageID: true,
+    commandReceipts: true,
     setupConfigRead: true,
     setupMcpInventory: true,
   );
