@@ -188,6 +188,7 @@ Files with no surface of their own and no interactive element (also in
 - `lib/ui/screens/chat/chat_requests.dart`: Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.
 - `lib/ui/screens/chat/chat_running_work.dart`: Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.
 - `lib/ui/screens/chat/chat_scroll.dart`: Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.
+- `lib/ui/screens/chat/receipt_check.dart`: Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.
 - `lib/ui/screens/chat/chat_send.dart`: Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.
 - `lib/ui/screens/chat/chat_session_actions.dart`: Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.
 - `lib/ui/screens/chat/chat_session_menu.dart`: Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.

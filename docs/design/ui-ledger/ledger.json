@@ -40553,6 +40553,11 @@
    "part": "b1-chat-screen"
   },
   {
+    "file": "lib/ui/screens/chat/receipt_check.dart",
+    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
+    "part": "b1-chat-screen"
+  },
+  {
    "file": "lib/ui/screens/chat/chat_send.dart",
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
    "part": "b1-chat-screen"
