@@ -567,7 +567,10 @@ if [ "\$oc_got" != '$selected' ]; then
 fi
 oc_stage 'Checking that OpenCode starts'
 oc_probe=\$(mktemp -d "\${TMPDIR:-/tmp}/oc-probe.XXXXXX")
-oc_port=\$((30000 + \$\$ % 10000))
+# A busy port is not a broken OpenCode: try up to three ports.
+oc_started=
+for oc_try in 1 2 3; do
+oc_port=\$((30000 + (\$\$ + oc_try * 7919 + \$(od -An -N2 -tu2 /dev/urandom | tr -d ' ')) % 20000))
 oc_pw=\$(od -An -N12 -tx1 /dev/urandom | tr -d ' \\n')
 (
   cd "\$oc_probe"
@@ -601,6 +604,9 @@ oc_i=0
 while [ "\$oc_i" -lt 5 ] && oc_alive; do sleep "\${OC_PROBE_POLL:-1}"; oc_i=\$((oc_i + 1)); done
 kill -9 "\$oc_pid" 2>/dev/null || true
 wait "\$oc_pid" 2>/dev/null || true
+[ -z "\$oc_started" ] || break
+grep -qiE 'address already in use|EADDRINUSE' "\$oc_probe/log" 2>/dev/null || break
+done
 if [ -z "\$oc_started" ]; then
   echo "[oc] What OpenCode said:"
   tail -n 20 "\$oc_probe/log" | sed 's/^/  /'
