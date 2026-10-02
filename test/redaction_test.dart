@@ -281,7 +281,7 @@ const _verbatimOwnContent = <String, (int, String)>{
     'the reply footer copies message text, which SEC-13 counts as the '
         'person\'s own content',
   ),
-  'lib/main.dart': (
+  'lib/main_parts/share_route.dart': (
     1,
     'owner coord-main: when sharing into the app fails, Copy text copies the '
         'words the person shared from another app, their own text (SEC-13)',
