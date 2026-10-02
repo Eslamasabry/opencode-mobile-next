@@ -262,4 +262,15 @@ void main() {
     await store.resetSavedSignIns();
     expect(store.activeId, isNull);
   });
+  test(
+    'sign-in reset owns the BYO envelope while retaining its journal',
+    () async {
+      secure.values['oc.byoHostSecrets.host-a'] = 'synthetic-byo-envelope';
+      await prefs.setString('oc.byoHost.host-a', 'nonsecret-journal');
+      await store.resetSavedSignIns();
+      expect(secure.values['oc.byoHostSecrets.host-a'], isNull);
+      expect(prefs.getString('oc.byoHost.host-a'), 'nonsecret-journal');
+      expect(secure.values['other.signIn'], isNotNull);
+    },
+  );
 }
