@@ -102,7 +102,7 @@ TeamRolesModelPicker? _gatePicker(TeamProjectController controller) {
   if (connection == null) return null;
   return (context, {required current, required fallback}) {
     final l = lookupAppLocalizations(Localizations.localeOf(context));
-    unawaited(connection.refreshCatalog());
+    unawaited(connection.ensureCatalog());
     return showTeamModelSheet(
       context,
       connection: connection,

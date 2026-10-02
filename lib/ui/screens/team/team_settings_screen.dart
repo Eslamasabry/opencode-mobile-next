@@ -159,7 +159,7 @@ class _TeamSettingsScreenState extends State<TeamSettingsScreen> {
   }
 
   Future<void> _pickModel(ConnectionController owner) async {
-    unawaited(owner.refreshCatalog());
+    unawaited(owner.ensureCatalog());
     final choice = await showTeamModelSheet(
       context,
       connection: owner,

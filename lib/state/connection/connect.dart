@@ -397,11 +397,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     required ServerProfile profile,
   }) async {
     try {
-      await Future.wait<void>([
-        refreshSessions(),
-        refreshPendingPermissions(),
-        refreshPendingQuestions(),
-      ]);
+      await _refreshLocationReads();
     } catch (_) {
       // Each refresh reports its own failure; the catalog still loads.
     }
@@ -413,7 +409,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
       profile: profile,
     );
     if (!_isCurrent(generation, currentApi)) return;
-    await _loadCatalog();
+    await _ensureCatalog();
   }
 
   /// Marks a mid-session Basic-auth rejection from the v2 transport so the

@@ -115,21 +115,173 @@ mixin _ConnectionControllerCatalog on ChangeNotifier {
   bool _runtimeJustRefreshed = false;
   String? _runtimeHealKey;
   int _runtimeHealGeneration = -1;
+
+  // ---- freshness: one load per server and folder, then only when stale ----
+  //
+  // OpenCode 1 builds its multi-megabyte `/provider` answer on its only
+  // thread (1.2 s p50, 3.6 s p95 on a phone-hosted server), and the catalog
+  // used to reload on every wake, picker open and command sheet. It now
+  // loads once per server and folder and again only when something says it
+  // changed: Reload, a provider/config/agent event, a sign-in, or age.
+
+  /// The load running now; callers that arrive meanwhile share it.
+  Future<void>? _catalogInFlight;
+  int _catalogInFlightGeneration = -1;
+  int _catalogInFlightRefresh = -1;
+
+  /// One reload queued behind [_catalogInFlight] for a change that arrived
+  /// after it started, shared by every caller that asks meanwhile.
+  Future<void>? _catalogFollowUp;
+  Future<void>? _catalogFollowUpAfter;
+  bool _catalogFollowUpAnnounced = false;
+
+  /// When the shown catalog was read, for which server and folder, and
+  /// which invalidation it already reflects.
+  DateTime? _catalogLoadedAt;
+  String? _catalogLoadedKey;
+  int _catalogInvalidations = 0;
+  int _catalogLoadedInvalidations = 0;
 }
 
-extension _ConnectionControllerCatalogImpl on ConnectionController {
-  Future<void> _loadCatalog() =>
-      PerfTrace.span('catalog.load', _loadCatalogUntraced);
+/// How long a loaded catalog counts as current without any change signal.
+/// Past it the next reader refreshes it behind the list already shown.
+const catalogFreshFor = Duration(minutes: 10);
 
-  Future<void> _loadCatalogUntraced() async {
+extension _ConnectionControllerCatalogImpl on ConnectionController {
+  /// Which server and folder a catalog answer belongs to.
+  String? get _catalogScopeKey {
+    final owner = _connectedProfile;
+    if (owner == null) return null;
+    return '${owner.id}\n${owner.baseUrl}\n${directory ?? ''}'
+        '\n${workspace ?? ''}';
+  }
+
+  /// True when the shown catalog is this server's and folder's, nothing has
+  /// invalidated it since, and it is younger than [catalogFreshFor].
+  bool get _catalogFresh {
+    final loadedAt = _catalogLoadedAt;
+    return catalog != null &&
+        catalogError == null &&
+        loadedAt != null &&
+        _catalogLoadedKey == _catalogScopeKey &&
+        _catalogLoadedInvalidations == _catalogInvalidations &&
+        clock.now().difference(loadedAt) < catalogFreshFor;
+  }
+
+  /// The load running for this transport and folder, if any.
+  Future<void>? get _currentCatalogLoad {
+    final load = _catalogInFlight;
+    if (load == null ||
+        _catalogInFlightGeneration != _generation ||
+        _catalogInFlightRefresh != _catalogRefreshGeneration) {
+      return null;
+    }
+    return load;
+  }
+
+  /// Loads the catalog only when it is missing or stale; otherwise returns
+  /// at once. Concurrent callers share one load. Wakes, folder opens and
+  /// pickers come through here.
+  Future<void> _ensureCatalog() {
+    final running = _currentCatalogLoad;
+    if (running != null) return running;
+    if (_catalogFresh) return Future<void>.value();
+    return _startCatalogLoad(announce: catalog == null);
+  }
+
+  /// Reloads the catalog because something says it changed. A load already
+  /// running is not interrupted: one reload follows it, shared by every
+  /// caller that asks meanwhile. [announce] shows the loading state (an
+  /// explicit Reload); a change event refreshes behind the shown list.
+  Future<void> _loadCatalog({bool announce = true}) {
+    _catalogInvalidations += 1;
+    final running = _currentCatalogLoad;
+    if (running == null) {
+      return _startCatalogLoad(announce: announce || catalog == null);
+    }
+    if (announce && !catalogLoading) {
+      catalogLoading = true;
+      _notifyListeners();
+    }
+    _catalogFollowUpAnnounced = _catalogFollowUpAnnounced || announce;
+    final queued = _catalogFollowUp;
+    if (queued != null && identical(_catalogFollowUpAfter, running)) {
+      return queued;
+    }
+    late final Future<void> followUp;
+    followUp = running.then((_) {}, onError: (Object _) {}).then((_) {
+      final announced = _catalogFollowUpAnnounced;
+      // A server or folder switch dropped it: that switch loads its own.
+      if (_disposed || !identical(_catalogFollowUp, followUp)) {
+        return Future<void>.value();
+      }
+      _catalogFollowUp = null;
+      _catalogFollowUpAfter = null;
+      _catalogFollowUpAnnounced = false;
+      final next = _currentCatalogLoad;
+      if (next != null) return next;
+      if (_catalogFresh) return Future<void>.value();
+      return _startCatalogLoad(announce: announced || catalog == null);
+    });
+    _catalogFollowUp = followUp;
+    _catalogFollowUpAfter = running;
+    return followUp;
+  }
+
+  Future<void> _startCatalogLoad({required bool announce}) {
     final currentApi = api;
-    final currentRepository = repository;
-    final generation = _generation;
-    if (currentApi == null) return;
+    if (currentApi == null) return Future<void>.value();
     final refreshGeneration = ++_catalogRefreshGeneration;
-    catalogLoading = true;
+    final generation = _generation;
+    final invalidations = _catalogInvalidations;
+    final scope = _catalogScopeKey;
+    late final Future<void> load;
+    load =
+        PerfTrace.span(
+          'catalog.load',
+          () => _loadCatalogUntraced(
+            currentApi: currentApi,
+            generation: generation,
+            refreshGeneration: refreshGeneration,
+            invalidations: invalidations,
+            scope: scope,
+            announce: announce,
+          ),
+          attrs: {'shown': catalog != null},
+        ).whenComplete(() {
+          if (identical(_catalogInFlight, load)) _catalogInFlight = null;
+          // A wake or reconnect retired this load's transport and nothing
+          // newer started: the shown catalog stays, so stop saying it loads.
+          if (!_disposed &&
+              catalogLoading &&
+              refreshGeneration == _catalogRefreshGeneration &&
+              !_isCurrent(generation, currentApi)) {
+            catalogLoading = false;
+            _notifyListeners();
+          }
+        });
+    _catalogInFlight = load;
+    _catalogInFlightGeneration = generation;
+    _catalogInFlightRefresh = refreshGeneration;
+    return load;
+  }
+
+  Future<void> _loadCatalogUntraced({
+    required ServerGateway currentApi,
+    required int generation,
+    required int refreshGeneration,
+    required int invalidations,
+    required String? scope,
+    required bool announce,
+  }) async {
+    final currentRepository = repository;
+    // Only a load that starts after a manual runtime reload reads the
+    // rebuilt runtime; one already running answers from before it.
+    final afterRuntimeRefresh = _runtimeJustRefreshed;
+    final hadError = catalogError != null;
     catalogError = null;
-    _notifyListeners();
+    if (announce) catalogLoading = true;
+    if (announce || hadError) _notifyListeners();
     try {
       Future<CatalogSnapshot?> loadDetailedCatalog() async {
         if (currentRepository == null) return null;
@@ -173,7 +325,12 @@ extension _ConnectionControllerCatalogImpl on ConnectionController {
         currentApi.providers(),
         currentApi.agents(),
         loadDetailedCatalog(),
-        loadIntegrations(),
+        // OpenCode 1 reads connected providers from `/provider` itself; the
+        // integration list only matters to the v2 recovery below, and on v1
+        // it cost a second `/provider` plus `/provider/auth` every load.
+        comparesRuntime
+            ? Future<List<IntegrationInfo>>.value(const [])
+            : loadIntegrations(),
         loadChatDefaults(),
         comparesRuntime
             ? loadConfiguredProviders()
@@ -208,7 +365,7 @@ extension _ConnectionControllerCatalogImpl on ConnectionController {
               directory: healDirectory,
               workspace: healWorkspace,
             );
-      if (_runtimeJustRefreshed) {
+      if (afterRuntimeRefresh && _runtimeJustRefreshed) {
         // The manual reload just rebuilt the runtime: whatever is still
         // unloaded now is what this server cannot load.
         _runtimeJustRefreshed = false;
@@ -504,6 +661,9 @@ extension _ConnectionControllerCatalogImpl on ConnectionController {
       selectedAgent = nextAgent;
       selectedVariant = nextVariant;
       catalogLoading = false;
+      _catalogLoadedAt = clock.now();
+      _catalogLoadedKey = scope;
+      _catalogLoadedInvalidations = invalidations;
       _notifyListeners();
     } catch (error) {
       if (!_isCurrentCatalogRefresh(

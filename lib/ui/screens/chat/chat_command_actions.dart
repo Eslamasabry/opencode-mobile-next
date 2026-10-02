@@ -64,7 +64,7 @@ extension _ChatCommandActions on _ChatScreenState {
     }
     FocusManager.instance.primaryFocus?.unfocus();
     if (_conn.capabilities.serverCatalog) {
-      unawaited(_conn.refreshCatalog());
+      unawaited(_conn.ensureCatalog());
     }
     await showKitFramedSheet<void>(
       context,

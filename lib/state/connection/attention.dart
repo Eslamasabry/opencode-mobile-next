@@ -208,8 +208,8 @@ extension _ConnectionControllerAttentionImpl on ConnectionController {
     }
     final location = locationRevision;
     await Future.wait([
-      refreshPendingPermissions(),
-      refreshPendingQuestions(),
+      _syncPendingPermissions(),
+      _syncPendingQuestions(),
       refreshPendingForms(),
     ]);
     return !_disposed &&

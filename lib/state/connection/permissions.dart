@@ -158,8 +158,15 @@ mixin _ConnectionControllerPermissions on ChangeNotifier {
     SessionAutoApproval? setting,
   ) => _self._setSessionAutoApproval(sessionID, setting);
 
-  Future<void> refreshPendingPermissions() =>
-      PerfTrace.span('permissions.refresh', _self._refreshPendingPermissions);
+  final _permissionReads = _PendingReadGate();
+
+  /// Reads the waiting permissions; a read already running for this stream
+  /// connect is shared rather than repeated.
+  Future<void> refreshPendingPermissions() => _permissionReads.run(
+    _self._pendingReadEpoch,
+    () =>
+        PerfTrace.span('permissions.refresh', _self._refreshPendingPermissions),
+  );
 
   /// [message] rides only on v2 rejections (steering-by-rejection); the v1
   /// reply shape has no field for it and ignores it.
