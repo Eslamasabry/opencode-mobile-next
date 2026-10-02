@@ -77,16 +77,16 @@ void main() {
     }
   });
 
-  test('every role carries Geist; the one shadow is the glass shadow', () {
+  test('every role carries Geist; the one shadow is the elevation shadow', () {
     for (final theme in [AppTheme.dark(), AppTheme.light()]) {
       expect(theme.textTheme.headlineSmall?.fontFamily, AppTheme.sansFamily);
       expect(theme.textTheme.titleLarge?.fontFamily, AppTheme.sansFamily);
       expect(theme.textTheme.bodyMedium?.fontFamily, AppTheme.sansFamily);
       expect(AppTheme.liveTint(theme).a, closeTo(.06, .001));
-      // LOOK-20: one shadow, under floating glass only: y 6, blur 16, the
-      // glassShadow role at 30 % black in both brightnesses; pulled in 6 so
-      // no halo shows above the glass (slice-glass-crisp, build 2057).
-      final shadows = theme.extension<KitTokens>()!.glassShadows;
+      // One shadow, under floating surfaces only: y 6, blur 16, the
+      // elevationShadow role at 30 % black in both brightnesses; pulled in
+      // 6 so no halo shows above the surface.
+      final shadows = theme.extension<KitTokens>()!.surfaceShadows;
       expect(shadows, hasLength(1));
       expect(shadows.single.color, const Color(0x4D000000));
       expect(shadows.single.offset, const Offset(0, 6));

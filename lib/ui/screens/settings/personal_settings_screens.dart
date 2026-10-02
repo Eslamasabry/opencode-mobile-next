@@ -4,7 +4,7 @@ part of '../settings_screen.dart';
 enum AppearanceSection { mode, language, effects, theme }
 
 /// Appearance category (`appearance-settings`): light or dark in one tap,
-/// the language, the effects the person controls (glass, animations,
+/// the language, the effects the person controls (animations,
 /// celebrations, vibration; design standard §10) and the theme packs as
 /// swatches. Kit only (screen-settings-1): KitRowGroup panels of KitRow,
 /// KitSegmented, KitPickerRow and KitSwitchRow, and a KitSwatchGrid.
@@ -272,8 +272,8 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
 }
 
 /// Settings › Appearance › Motion (design standard §10): how much the app
-/// moves and whether finished moments celebrate, as one choice. Glass and
-/// vibration are fixed parts of the design. A choice shows at once and
+/// moves and whether finished moments celebrate, as one choice. Vibration is
+/// a fixed part of the design. A choice shows at once and
 /// is saved; a refused save puts it back and says so. The system's
 /// accessibility settings always win, and the rows say when they do.
 class _EffectsSection extends StatefulWidget {
@@ -331,33 +331,6 @@ class _EffectsSectionState extends State<_EffectsSection> {
                             ),
                           )
                         : null,
-                  ),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: KitGlassSafety.turnedOffAfterCrashes,
-                    builder: (context, off, _) => KitReveal(
-                      child: off
-                          ? Padding(
-                              padding: EdgeInsetsDirectional.only(
-                                start: tokens.gutter,
-                                end: tokens.gutter,
-                                bottom: tokens.space3,
-                              ),
-                              child: KitNotice(
-                                key: const ValueKey('effects-glass-crash'),
-                                message: copy.effectsGlassCrashOff,
-                                actions: [
-                                  KitAction(
-                                    key: const ValueKey(
-                                      'effects-glass-crash-on',
-                                    ),
-                                    label: copy.effectsGlassCrashOn,
-                                    onPressed: KitGlassShader.turnLiquidBackOn,
-                                  ),
-                                ],
-                              ),
-                            )
-                          : null,
-                    ),
                   ),
                   KitRowGroup(
                     label: copy.effectsSection,
@@ -463,10 +436,8 @@ class _EffectsSectionState extends State<_EffectsSection> {
 }
 
 /// A small live sample of the effects: the brand's portal drawing itself in
-/// (again on each Animations change; finished at once under Off) beside a
-/// miniature of the app's floating tab bar, the one place glass lives
-/// (LOOK-27), built by the kit. Decorative: the rows say everything in
-/// words. No loop, so the page rests.
+/// (again on each Animations change; finished at once under Off).
+/// Decorative: the rows say everything in words. No loop, so the page rests.
 class _EffectsPreview extends StatelessWidget {
   const _EffectsPreview({required this.effects});
 
@@ -475,7 +446,6 @@ class _EffectsPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = KitTokens.of(context);
-    final copy = _settingsCopy(context);
     return ExcludeSemantics(
       child: IgnorePointer(
         child: Padding(
@@ -486,27 +456,6 @@ class _EffectsPreview extends StatelessWidget {
                 key: ValueKey('effects-preview-${effects.motion.name}'),
                 scene: const KitPortalScene(),
                 width: KitTokens.illustrationInline,
-              ),
-              SizedBox(width: tokens.space3),
-              Expanded(
-                child: KeyedSubtree(
-                  key: const ValueKey('effects-preview-glass'),
-                  child: KitNavBar(
-                    destinations: [
-                      KitNavDestination(
-                        label: copy.effectsPreviewWork,
-                        icon: AppIconography.workspace,
-                        selectedIcon: AppIconography.workspaceSelected,
-                      ),
-                      KitNavDestination(
-                        label: copy.effectsPreviewSettings,
-                        icon: AppIconography.settings,
-                      ),
-                    ],
-                    selected: 0,
-                    onSelected: (_) {},
-                  ),
-                ),
               ),
             ],
           ),

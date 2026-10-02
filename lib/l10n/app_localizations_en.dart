@@ -16392,12 +16392,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appearanceModeSystem => 'System';
 
   @override
-  String get effectsPreviewWork => 'Work';
-
-  @override
-  String get effectsPreviewSettings => 'Settings';
-
-  @override
   String get privacySharedSection => 'Shared with your server';
 
   @override
@@ -24185,13 +24179,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get integrationsSignedInUnusable =>
       'Signed in, but this server can\'t use it';
-
-  @override
-  String get effectsGlassCrashOff =>
-      'Liquid glass was turned off after the app closed unexpectedly twice.';
-
-  @override
-  String get effectsGlassCrashOn => 'Turn it back on';
 
   @override
   String get chatUiCompactConfirmTitle => 'Compact this conversation?';

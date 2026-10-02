@@ -16709,7 +16709,7 @@
   },
   "kitTopBarSearch": "Search",
   "@kitTopBarSearch": {
-    "description": "KitShellControls: the glass search button in the shell's top controls, and the field-like search button in the PC sidebar header"
+    "description": "KitShellControls: the search button in the shell's top controls, and the field-like search button in the PC sidebar header"
   },
   "kitTopBarSwitchServer": "Switch server",
   "@kitTopBarSwitchServer": {
@@ -18694,14 +18694,6 @@
   "appearanceModeSystem": "System",
   "@appearanceModeSystem": {
     "description": "Appearance: segment that makes light or dark follow the device."
-  },
-  "effectsPreviewWork": "Work",
-  "@effectsPreviewWork": {
-    "description": "Appearance › Effects: first tab of the miniature tab bar that shows glass."
-  },
-  "effectsPreviewSettings": "Settings",
-  "@effectsPreviewSettings": {
-    "description": "Appearance › Effects: second tab of the miniature tab bar that shows glass."
   },
   "privacySharedSection": "Shared with your server",
   "@privacySharedSection": {
@@ -29159,14 +29151,6 @@
   "integrationsSignedInUnusable": "Signed in, but this server can't use it",
   "@integrationsSignedInUnusable": {
     "description": "Providers list: word for a provider whose saved sign-in stayed unloaded after a reload (a subscription sign-in the server has no loader for). Replaces 'Connected'; its fix is an API key."
-  },
-  "effectsGlassCrashOff": "Liquid glass was turned off after the app closed unexpectedly twice.",
-  "@effectsGlassCrashOff": {
-    "description": "Appearance › Effects: shown while liquid glass is paused because the app crashed twice with it on screen."
-  },
-  "effectsGlassCrashOn": "Turn it back on",
-  "@effectsGlassCrashOn": {
-    "description": "Appearance › Effects: action under the liquid glass paused line; turns liquid glass back on."
   },
   "chatUiCompactConfirmTitle": "Compact this conversation?",
   "@chatUiCompactConfirmTitle": {

@@ -61,7 +61,7 @@ class _EdgeLight {
 /// stops with the route (TickerMode) and the app in the background.
 class _LivingEdge extends StatefulWidget {
   const _LivingEdge({
-    required this.glass,
+    required this.surface,
     required this.radius,
     this.activityGlow,
     this.live,
@@ -72,7 +72,7 @@ class _LivingEdge extends StatefulWidget {
   /// Null follows [KitEffects.activityGlow].
   final bool? activityGlow;
 
-  final Widget glass;
+  final Widget surface;
   final double radius;
   final KitTurnLive? live;
   final KitComposerFailure? failure;
@@ -382,7 +382,7 @@ class _LivingEdgeState extends State<_LivingEdge>
             children: [
               ClipPath(
                 clipper: _BendClipper(bendHalf, dip),
-                child: widget.glass,
+                child: widget.surface,
               ),
               _glow(context, bendHalf, dip),
               if (!idle || _light.bright > 0.01)

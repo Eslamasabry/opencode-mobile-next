@@ -41,10 +41,7 @@ class ThemeRoles extends ThemeExtension<ThemeRoles> {
     required this.codeKeyword,
     required this.codeString,
     required this.codeType,
-    required this.glassRimLight,
-    required this.glassRimDark,
-    required this.glassShadow,
-    this.ambient = const [],
+    required this.elevationShadow,
   });
 
   final Brightness brightness;
@@ -114,17 +111,9 @@ class ThemeRoles extends ThemeExtension<ThemeRoles> {
   final Color codeString;
   final Color codeType;
 
-  /// Floating glass (visual language §6, §7; LOOK-20, LOOK-21): the rim's
-  /// one-physical-pixel light line along the top edge, its darker line
-  /// along the bottom edge (never a glow), and the one shadow under the
-  /// glass (30 % black in both brightnesses).
-  final Color glassRimLight;
-  final Color glassRimDark;
-  final Color glassShadow;
-
-  /// Soft colour fields a theme may lay on the ground behind content, so
-  /// glass has something to bend (§6). Empty is valid: no fields.
-  final List<Color> ambient;
+  /// The one tight shadow under a floating surface (the dock, the composer,
+  /// the top controls): 30 % black in both brightnesses.
+  final Color elevationShadow;
 
   Color get codeAdded => success;
   Color get codeRemoved => danger;
@@ -132,12 +121,6 @@ class ThemeRoles extends ThemeExtension<ThemeRoles> {
   Color get codeRemovedSurface => danger.withValues(alpha: .10);
 
   bool get isDark => brightness == Brightness.dark;
-
-  /// Neutral ink on glass (§6): pure white on dark, pure black on light, so
-  /// labels stay readable whatever crosses behind the translucent material;
-  /// the muted text roles are not enough there.
-  Color get glassInk =>
-      isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
 
   /// The roles in force: the theme's extension, or ones derived from its
   /// colour scheme (a bare `ThemeData` in a test).
@@ -192,10 +175,7 @@ class ThemeRoles extends ThemeExtension<ThemeRoles> {
     Color? codeKeyword,
     Color? codeString,
     Color? codeType,
-    Color? glassRimLight,
-    Color? glassRimDark,
-    Color? glassShadow,
-    List<Color>? ambient,
+    Color? elevationShadow,
   }) => ThemeRoles(
     brightness: brightness,
     ground: ground ?? this.ground,
@@ -221,10 +201,7 @@ class ThemeRoles extends ThemeExtension<ThemeRoles> {
     codeKeyword: codeKeyword ?? this.codeKeyword,
     codeString: codeString ?? this.codeString,
     codeType: codeType ?? this.codeType,
-    glassRimLight: glassRimLight ?? this.glassRimLight,
-    glassRimDark: glassRimDark ?? this.glassRimDark,
-    glassShadow: glassShadow ?? this.glassShadow,
-    ambient: ambient ?? this.ambient,
+    elevationShadow: elevationShadow ?? this.elevationShadow,
   );
 
   @override
@@ -256,10 +233,7 @@ class ThemeRoles extends ThemeExtension<ThemeRoles> {
       codeKeyword: c(codeKeyword, other.codeKeyword),
       codeString: c(codeString, other.codeString),
       codeType: c(codeType, other.codeType),
-      glassRimLight: c(glassRimLight, other.glassRimLight),
-      glassRimDark: c(glassRimDark, other.glassRimDark),
-      glassShadow: c(glassShadow, other.glassShadow),
-      ambient: t < .5 ? ambient : other.ambient,
+      elevationShadow: c(elevationShadow, other.elevationShadow),
     );
   }
 }
@@ -299,12 +273,7 @@ const graphiteDark = ThemeRoles(
   codeKeyword: Color(0xFFC7A6FF),
   codeString: Color(0xFFFFB88A),
   codeType: Color(0xFF7FD1FF),
-  glassRimLight: Color(0x47FFFFFF), // white .28: a crisp top line on dark
-  glassRimDark: Color(0x80000000), // black .50
-  glassShadow: Color(0x4D000000), // black .30
-  // Moderate (the owner, 2026-09-28): ambientFields over this theme's text
-  // roles gives these; test/theme_roles_test.dart holds them to it.
-  ambient: [Color(0x263DDC8A), Color(0x1C5AB0FF), Color(0x173DDC8A)],
+  elevationShadow: Color(0x4D000000), // black .30
 );
 
 /// The default theme, light.
@@ -335,13 +304,7 @@ const graphiteLight = ThemeRoles(
   codeKeyword: Color(0xFF6D4AFF),
   codeString: Color(0xFFB4480B),
   codeType: Color(0xFF0B6BA8),
-  glassRimLight: Color(0xE6FFFFFF), // white .90
-  // A light ground needs the darker line to draw the edge at all (§7).
-  glassRimDark: Color(0x2E000000), // black .18
-  glassShadow: Color(0x4D000000), // black .30 (LOOK-20: both brightnesses)
-  // Moderate: pale ground-bright tints of the canvas's green and blue, so
-  // dark text keeps its contrast (ambientFields; test/theme_roles_test.dart).
-  ambient: [Color(0xD9CDFFE6), Color(0xB3F1F6FF), Color(0x99CDFFE6)],
+  elevationShadow: Color(0x4D000000), // black .30 in both brightnesses
 );
 
 /// The accents the canvas offers for Graphite, dark and light (§3, theme
@@ -545,7 +508,6 @@ ThemeRoles deriveRoles({
   Color? attention,
   Color? danger,
   Color? success,
-  List<Color>? ambient,
 }) {
   final dark = brightness == Brightness.dark;
   final far = dark ? Colors.white : Colors.black;
@@ -635,117 +597,8 @@ ThemeRoles deriveRoles({
     codeKeyword: code(defaults.codeKeyword),
     codeString: code(defaults.codeString),
     codeType: code(defaults.codeType),
-    // The glass's rim and shadow are neutral light and shade, the same in
-    // every theme of a brightness: they describe the material, not a hue.
-    glassRimLight: defaults.glassRimLight,
-    glassRimDark: defaults.glassRimDark,
-    glassShadow: defaults.glassShadow,
-    ambient:
-        ambient ??
-        ambientFields(
-          hues: [a, a, a],
-          ground: ground,
-          brightness: brightness,
-          text: [text1, text2, text3, a, att, dng, ok],
-        ),
+    elevationShadow: defaults.elevationShadow,
   );
-}
-
-/// How strong each ambient field is at its centre, "Moderate" (the owner,
-/// 2026-09-28: between the first 6–8 % and the canvas's strong green): on
-/// dark, the field's alpha over the ground; on light, the alpha of its
-/// pale, ground-bright tint. In [ambientFields]'s order: top start, end
-/// middle, bottom start.
-const ambientStrengthDark = [.15, .11, .09];
-const ambientStrengthLight = [.85, .7, .6];
-
-/// The soft colour fields for a theme's ground (visual language §6), one
-/// per hue in [hues], as strong as [ambientStrengthDark] or
-/// [ambientStrengthLight] allow while every role in [text] keeps 4.5:1 on
-/// the ground under the field's centre, and under two fields overlapping.
-///
-/// On dark a field is the hue itself, light over the ground; its strength
-/// is capped by the weakest light text. On light the hue is drawn as the
-/// most colourful tint as bright as the ground, so dark text keeps its
-/// contrast and the glass still has colour to bend; where the ground is so
-/// white that such a tint is barely a colour, the hue itself, as far as the
-/// text's headroom allows, whichever shows more. A field that cannot
-/// be seen without hurting a text role is left out; an empty list (no
-/// fields) is valid.
-List<Color> ambientFields({
-  required List<Color> hues,
-  required Color ground,
-  required Brightness brightness,
-  required List<Color> text,
-}) {
-  final dark = brightness == Brightness.dark;
-  bool reads(Color under) =>
-      text.every((role) => contrastRatio(role, under) >= 4.5);
-  // The strongest [tint] up to [strength] under which every role reads.
-  Color? capped(Color tint, double strength) {
-    var alpha = strength;
-    while (alpha > .01 &&
-        !reads(Color.alphaBlend(tint.withValues(alpha: alpha), ground))) {
-      alpha -= .005;
-    }
-    return alpha > .01 ? tint.withValues(alpha: alpha) : null;
-  }
-
-  // How much a field changes the ground where it is strongest.
-  double seen(Color? field) {
-    if (field == null) return 0;
-    final under = Color.alphaBlend(field, ground);
-    final dr = under.r - ground.r;
-    final dg = under.g - ground.g;
-    final db = under.b - ground.b;
-    return dr * dr + dg * dg + db * db;
-  }
-
-  final fields = <Color>[];
-  for (var i = 0; i < hues.length && i < ambientStrengthDark.length; i++) {
-    final Color? field;
-    if (dark) {
-      field = capped(hues[i], ambientStrengthDark[i]);
-    } else {
-      // A pale tint as bright as the ground keeps dark text's contrast; on
-      // a ground so white that the tint is barely a colour, the hue itself
-      // as far as the text's headroom allows shows more.
-      final pale = capped(
-        _groundBrightTint(hues[i], ground),
-        ambientStrengthLight[i],
-      );
-      final hue = capped(hues[i], ambientStrengthDark[i]);
-      field = seen(hue) > seen(pale) ? hue : pale;
-    }
-    if (field != null) fields.add(field);
-  }
-  // Where two fields overlap each is at most about 60 % of its centre.
-  for (var guard = 0; guard < 40; guard++) {
-    var under = ground;
-    for (final field in fields.take(2)) {
-      under = Color.alphaBlend(field.withValues(alpha: field.a * .6), under);
-    }
-    if (reads(under)) break;
-    for (var i = 0; i < fields.length; i++) {
-      fields[i] = fields[i].withValues(alpha: fields[i].a * .95);
-    }
-  }
-  return fields;
-}
-
-/// [hue] at full saturation, as light as it must be to be about as bright
-/// as [ground] (never darker): the most
-/// colourful tint a light ground can carry without dimming its text.
-Color _groundBrightTint(Color hue, Color ground) {
-  final target = ground.computeLuminance();
-  final hsl = HSLColor.fromColor(hue).withSaturation(1);
-  var lightness = hsl.lightness;
-  var tint = hsl.withLightness(lightness).toColor();
-  while (tint.computeLuminance() < target && lightness < .99) {
-    lightness = (lightness + .01).clamp(0, .99);
-    tint = hsl.withLightness(lightness).toColor();
-  }
-  return tint;
 }
 
 /// A Material [ColorScheme] that says the same as [roles], so a stock

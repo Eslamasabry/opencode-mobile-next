@@ -15,12 +15,11 @@ enum KitMotionLevel {
 }
 
 /// The person's choices for the app's effects, from Settings › Appearance:
-/// glass, how much things move, celebrations and vibration. Read with
+/// how much things move, celebrations and vibration. Read with
 /// [KitEffects.of]; provided above the app by [KitEffectsScope].
 @immutable
 class KitEffects {
   const KitEffects({
-    this.glass = true,
     this.motion = KitMotionLevel.full,
     this.celebrations = true,
     this.haptics = true,
@@ -29,10 +28,6 @@ class KitEffects {
 
   /// Everything on: the default until the person changes it.
   static const defaults = KitEffects();
-
-  /// Translucent glass on the dock, composer, bars and sheets (where the
-  /// phone can draw it; see `lib/ui/kit/glass/`). Off: solid surfaces.
-  final bool glass;
 
   final KitMotionLevel motion;
 
@@ -59,13 +54,11 @@ class KitEffects {
       defaults;
 
   KitEffects copyWith({
-    bool? glass,
     KitMotionLevel? motion,
     bool? celebrations,
     bool? haptics,
     bool? activityGlow,
   }) => KitEffects(
-    glass: glass ?? this.glass,
     motion: motion ?? this.motion,
     celebrations: celebrations ?? this.celebrations,
     haptics: haptics ?? this.haptics,
@@ -75,15 +68,13 @@ class KitEffects {
   @override
   bool operator ==(Object other) =>
       other is KitEffects &&
-      other.glass == glass &&
       other.motion == motion &&
       other.celebrations == celebrations &&
       other.haptics == haptics &&
       other.activityGlow == activityGlow;
 
   @override
-  int get hashCode =>
-      Object.hash(glass, motion, celebrations, haptics, activityGlow);
+  int get hashCode => Object.hash(motion, celebrations, haptics, activityGlow);
 }
 
 /// Provides the person's [KitEffects] to everything below it (placed once,

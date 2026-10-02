@@ -399,126 +399,13 @@ void main() {
     }
   });
 
-  group('ambient fields (visual language §6, Moderate)', () {
-    List<Color> texts(ThemeRoles r) => [
-      r.text1,
-      r.text2,
-      r.text3,
-      r.accent,
-      r.attention,
-      r.danger,
-      r.success,
-    ];
-
-    test('Graphite is what ambientFields gives its own text', () {
-      List<int> argb(List<Color> colors) => [
-        for (final c in colors) c.toARGB32(),
-      ];
-      expect(
-        argb(graphiteDark.ambient),
-        argb(
-          ambientFields(
-            hues: const [
-              Color(0xFF3DDC8A),
-              Color(0xFF5AB0FF),
-              Color(0xFF3DDC8A),
-            ],
-            ground: graphiteDark.ground,
-            brightness: Brightness.dark,
-            text: texts(graphiteDark),
-          ),
-        ),
-      );
-      expect(
-        argb(graphiteLight.ambient),
-        argb(
-          ambientFields(
-            hues: const [
-              Color(0xFF0B8A4A),
-              Color(0xFF1F6FEB),
-              Color(0xFF0B8A4A),
-            ],
-            ground: graphiteLight.ground,
-            brightness: Brightness.light,
-            text: texts(graphiteLight),
-          ),
-        ),
-      );
-      // Moderate, not the first 6–8 %: the strongest field changes the
-      // ground visibly in both brightnesses.
-      for (final r in [graphiteDark, graphiteLight]) {
-        final under = Color.alphaBlend(r.ambient.first, r.ground);
-        expect((under.g - r.ground.g).abs(), greaterThan(.04), reason: '$r');
-      }
-    });
-
-    test('no field costs a text role its 4.5:1, in every pack', () {
-      for (final id in ThemePackId.values) {
-        final pack = themePack(id);
-        for (final palette in [pack.dark, pack.light]) {
-          final r = palette.themeRoles;
-          expect(r.ambient.length, lessThanOrEqualTo(3));
-          // Each field at its centre, and the first two overlapping at the
-          // most they meet (about 60 % each).
-          final grounds = [
-            for (final field in r.ambient) Color.alphaBlend(field, r.ground),
-            r.ambient
-                .take(2)
-                .fold<Color>(
-                  r.ground,
-                  (under, field) => Color.alphaBlend(
-                    field.withValues(alpha: field.a * .6),
-                    under,
-                  ),
-                ),
-          ];
-          for (final under in grounds) {
-            for (final role in texts(r)) {
-              expect(
-                contrastRatio(role, under),
-                greaterThanOrEqualTo(4.5),
-                reason: '${id.name} ${r.brightness.name}',
-              );
-            }
-          }
-        }
-      }
-    });
-
-    test('a theme may have no fields', () {
-      final none = graphiteDark.copyWith(ambient: const []);
-      expect(none.ambient, isEmpty);
-      final derived = deriveRoles(
-        accent: const Color(0xFF5AB0FF),
-        ground: const Color(0xFF0B0C0E),
-        brightness: Brightness.dark,
-        ambient: const [],
-      );
-      expect(derived.ambient, isEmpty);
-    });
-  });
-
-  test('floating glass has its own rim and shadow roles in every theme', () {
-    // LOOK-20: the one shadow is 30 % black in both brightnesses. LOOK-21:
-    // the rim is a light line on top and a darker line at the bottom.
+  test('a floating surface has its own shadow role in every theme', () {
+    // The one shadow is 30 % black in both brightnesses.
     const shadow = Color(0x4D000000);
-    expect(graphiteDark.glassShadow, shadow);
-    expect(graphiteLight.glassShadow, shadow);
-    expect(graphiteDark.glassRimLight, const Color(0x47FFFFFF));
-    expect(graphiteDark.glassRimDark, const Color(0x80000000));
-    expect(graphiteLight.glassRimLight, const Color(0xE6FFFFFF));
-    expect(graphiteLight.glassRimDark, const Color(0x2E000000));
-    for (final roles in [graphiteDark, graphiteLight]) {
-      expect(
-        roles.glassRimLight.computeLuminance(),
-        greaterThan(roles.glassRimDark.computeLuminance()),
-      );
-    }
-    // Derived: every pack and a custom theme carry them.
+    expect(graphiteDark.elevationShadow, shadow);
+    expect(graphiteLight.elevationShadow, shadow);
+    // Derived: every pack and a custom theme carry it.
     for (final brightness in Brightness.values) {
-      final defaults = brightness == Brightness.dark
-          ? graphiteDark
-          : graphiteLight;
       final custom = deriveRoles(
         accent: const Color(0xFFE91E63),
         ground: brightness == Brightness.dark
@@ -533,25 +420,22 @@ void main() {
           themePack(id).palette(brightness).themeRoles,
       ];
       for (final roles in [custom, ...packs]) {
-        expect(roles.glassShadow, shadow);
-        expect(roles.glassRimLight, defaults.glassRimLight);
-        expect(roles.glassRimDark, defaults.glassRimDark);
+        expect(roles.elevationShadow, shadow);
       }
     }
-    // They survive copyWith and lerp.
-    expect(graphiteDark.copyWith().glassRimLight, graphiteDark.glassRimLight);
+    // It survives copyWith and lerp.
     expect(
-      graphiteDark.lerp(graphiteLight, 1).glassRimLight,
-      graphiteLight.glassRimLight,
+      graphiteDark.copyWith().elevationShadow,
+      graphiteDark.elevationShadow,
     );
     final tokens = KitTokens.fromRoles(
       graphiteLight,
       AppTheme.light().textTheme,
     );
-    expect(tokens.glassShadows, hasLength(1));
-    expect(tokens.glassShadows.single.color, shadow);
-    expect(tokens.glassShadows.single.blurRadius, 16);
-    expect(tokens.glassShadows.single.offset, const Offset(0, 6));
+    expect(tokens.surfaceShadows, hasLength(1));
+    expect(tokens.surfaceShadows.single.color, shadow);
+    expect(tokens.surfaceShadows.single.blurRadius, 16);
+    expect(tokens.surfaceShadows.single.offset, const Offset(0, 6));
   });
 
   test('every Material type slot is one role, with no other size', () {

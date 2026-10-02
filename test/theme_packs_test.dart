@@ -4,7 +4,6 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
-import 'package:opencode_mobile/ui/kit/kit_nav.dart';
 import 'package:opencode_mobile/ui/kit/kit_undo.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/theme_packs.dart';
@@ -349,22 +348,6 @@ void main() {
           of: find.byKey(const ValueKey('appearance-language')),
           matching: find.textContaining('العربية'),
         ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('effects preview glass through the kit tab bar', (
-      tester,
-    ) async {
-      final controller = await _controller();
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(page(controller));
-      await tester.pumpAndSettle();
-      final preview = find.byKey(const ValueKey('effects-preview-glass'));
-      await tester.ensureVisible(preview);
-      await tester.pumpAndSettle();
-      expect(
-        find.descendant(of: preview, matching: find.byType(KitNavBar)),
         findsOneWidget,
       );
     });

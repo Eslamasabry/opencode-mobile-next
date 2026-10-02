@@ -192,8 +192,28 @@ class ProfileStore {
     }
   }
 
+  /// What the retired liquid glass crash guard left on the device: its
+  /// strike counters. Nothing reads them any more.
+  static const retiredGlassPreferenceKeys = [
+    'oc.glassLiquidActive',
+    'oc.glassLiquidStrikes',
+    'oc.glassLiquidOffUntil',
+  ];
+
+  /// Drops [retiredGlassPreferenceKeys]. Runs on every load; a key the
+  /// store refuses to drop stays for the next load.
+  Future<void> _retireGlassPreferences() async {
+    for (final key in retiredGlassPreferenceKeys) {
+      if (!prefs.containsKey(key)) continue;
+      try {
+        await prefs.remove(key);
+      } catch (_) {}
+    }
+  }
+
   Future<List<ServerProfile>> load() async {
     await _retireQuotaBudgets();
+    await _retireGlassPreferences();
     final raw = prefs.getString(_profilesKey);
     if (raw == null) {
       _cache = [];
@@ -928,8 +948,8 @@ class ProfileStore {
       );
 
   /// Settings › Appearance › Motion: one choice. Full plays animations and
-  /// celebrations, Calm is reduced with no celebrations, Off is none. Glass
-  /// and vibration are fixed parts of the design ([KitEffects.defaults]).
+  /// celebrations, Calm is reduced with no celebrations, Off is none. Vibration
+  /// is fixed parts of the design ([KitEffects.defaults]).
   /// Older installs stored animations and celebrations separately; those
   /// keys are read here and folded into the one choice (Full with
   /// celebrations switched off reads as Calm). Unknown values read as Full.

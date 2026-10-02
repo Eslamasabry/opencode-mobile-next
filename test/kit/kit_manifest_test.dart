@@ -198,7 +198,6 @@ const _uiElementTypes = <String>{
 const _creationAllowlist = <String, List<String>>{
   'exported': [
     'KitFoldersOpenScene',
-    'LiquidGlassFilter',
     'ServersLinkScene',
     'ServersWelcomeScene',
     'SetupPhoneScene',
@@ -249,7 +248,6 @@ const _creationAllowlist = <String, List<String>>{
     'KitSkeletonRows',
     'KitSwitchRow',
     'KitTabSwitcher',
-    'LiquidGlassFilter',
     'LoadingList',
     'ProductEmptyState',
     'ProductErrorState',
@@ -314,7 +312,6 @@ const _creationAllowlist = <String, List<String>>{
     'KitSwitchRow',
     'KitTabSwitcher',
     'KitTaskMark',
-    'LiquidGlassFilter',
     'LoadingList',
     'ProductEmptyState',
     'ProductErrorState',
@@ -365,7 +362,6 @@ const _creationAllowlist = <String, List<String>>{
     // Visual language merge (ddcb6bc7), before this gate; kit-KitText-v2
     // writes test/goldens/kit/kit_text_golden_test.dart.
     'KitText',
-    'LiquidGlassFilter',
     'LoadingList',
     'ProductEmptyState',
     'ProductErrorState',
@@ -428,7 +424,6 @@ const _creationAllowlist = <String, List<String>>{
     'KitSwitchRow',
     'KitTabSwitcher',
     'KitTaskMark',
-    'LiquidGlassFilter',
     'LoadingList',
     'ProductEmptyState',
     'ProductErrorState',
@@ -447,7 +442,6 @@ const _creationAllowlist = <String, List<String>>{
     'KitReveal',
     'KitSecretField',
     'KitTabSwitcher',
-    'LiquidGlassFilter',
     'LoadingList',
     'ProductEmptyState',
     'ProductErrorState',
@@ -508,7 +502,6 @@ const _creationAllowlist = <String, List<String>>{
     'KitSwitchRow',
     'KitTabSwitcher',
     'KitTaskMark',
-    'LiquidGlassFilter',
     'LoadingList',
     'ProductEmptyState',
     'ProductErrorState',
@@ -552,7 +545,6 @@ const _creationAllowlist = <String, List<String>>{
     'KitSwitchRow',
     'KitTabSwitcher',
     'KitTaskMark',
-    'LiquidGlassFilter',
     'LoadingList',
     'ProductEmptyState',
     'ProductErrorState',

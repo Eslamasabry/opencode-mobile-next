@@ -23982,7 +23982,7 @@ abstract class AppLocalizations {
   /// **'Close'**
   String get kitTopBarClose;
 
-  /// KitShellControls: the glass search button in the shell's top controls, and the field-like search button in the PC sidebar header
+  /// KitShellControls: the search button in the shell's top controls, and the field-like search button in the PC sidebar header
   ///
   /// In en, this message translates to:
   /// **'Search'**
@@ -26243,18 +26243,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'System'**
   String get appearanceModeSystem;
-
-  /// Appearance › Effects: first tab of the miniature tab bar that shows glass.
-  ///
-  /// In en, this message translates to:
-  /// **'Work'**
-  String get effectsPreviewWork;
-
-  /// Appearance › Effects: second tab of the miniature tab bar that shows glass.
-  ///
-  /// In en, this message translates to:
-  /// **'Settings'**
-  String get effectsPreviewSettings;
 
   /// Privacy and local data: section holding choices that send something to the server.
   ///
@@ -38059,18 +38047,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Signed in, but this server can\'t use it'**
   String get integrationsSignedInUnusable;
-
-  /// Appearance › Effects: shown while liquid glass is paused because the app crashed twice with it on screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Liquid glass was turned off after the app closed unexpectedly twice.'**
-  String get effectsGlassCrashOff;
-
-  /// Appearance › Effects: action under the liquid glass paused line; turns liquid glass back on.
-  ///
-  /// In en, this message translates to:
-  /// **'Turn it back on'**
-  String get effectsGlassCrashOn;
 
   /// Confirm sheet title before compacting the conversation
   ///

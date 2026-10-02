@@ -2,7 +2,6 @@
   "_about": "Gate G4 (STANDARDS.md §18): kit parts and openers that predate the gate, by check. This list only shrinks: a violation not on it fails, an entry that now passes fails until it is removed (KIT_MANIFEST_WRITE=1), and an entry outside the test's _creationAllowlist fails; see test/kit/kit_manifest_test.dart.",
   "exported": [
     "KitFoldersOpenScene",
-    "LiquidGlassFilter",
     "ServersLinkScene",
     "ServersWelcomeScene",
     "SetupPhoneScene",
@@ -48,7 +47,6 @@
     "KitStatusLineSlot",
     "KitStatusScope",
     "KitTabSwitcher",
-    "LiquidGlassFilter",
     "ServersLinkScene",
     "ServersWelcomeScene",
     "SetupPhoneScene",
@@ -137,7 +135,6 @@
     "KitViewer",
     "KitWorkGraph",
     "KitWorkLine",
-    "LiquidGlassFilter",
     "TerminalKeyBar"
   ],
   "stateScenes": [
@@ -182,7 +179,6 @@
     "KitStatusLineSlot",
     "KitSwitchRow",
     "KitTaskMark",
-    "LiquidGlassFilter",
     "ServersLinkScene",
     "ServersWelcomeScene",
     "SetupPhoneScene",
@@ -227,7 +223,6 @@
     "KitStatusLineSlot",
     "KitStatusScope",
     "KitTaskMark",
-    "LiquidGlassFilter",
     "TerminalKeyBar"
   ],
   "keyboard": [
