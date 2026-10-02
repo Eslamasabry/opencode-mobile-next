@@ -332,7 +332,13 @@ class _ToolCardState extends State<ToolCard> {
     final title = contract.kind == _ToolKind.task
         ? l10n.toolCardDelegatedTo(contract.title)
         : contract.title;
-    final path = contract.technical ? contract.subtitle : null;
+    final isShell = contract.kind == _ToolKind.shell;
+    final rawPath = contract.technical ? contract.subtitle : null;
+    // A command reads from its first word, on one line, cut once at the end
+    // (a middle cut glued its head to its last path).
+    final path = isShell && rawPath != null
+        ? rawPath.trim().split('\n').first.replaceAll(RegExp(r'\s+'), ' ')
+        : rawPath;
     final String? detail;
     if (path != null) {
       detail = null;
@@ -350,6 +356,7 @@ class _ToolCardState extends State<ToolCard> {
       title: heading ?? title,
       status: status,
       path: path,
+      pathCut: isShell ? KitMonoCut.end : KitMonoCut.middle,
       detail: detail,
       added: contract.added,
       removed: contract.removed,
