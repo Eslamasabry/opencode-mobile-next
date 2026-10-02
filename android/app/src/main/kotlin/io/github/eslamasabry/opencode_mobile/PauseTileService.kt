@@ -36,16 +36,35 @@ class PauseTileService : TileService() {
                     // Android refused a background service start: leave the
                     // person in the app, where the switch is one tap.
                     LivePauseReceiver.setPausedByUser(this, true)
-                    startActivityAndCollapse(
-                        android.content.Intent(this, MainActivity::class.java).apply {
-                            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-                        }
-                    )
+                    openApp()
                     return
                 }
             }
         }
         render()
+    }
+
+    /** Opens the app and closes the shade. Android 14+ takes only a
+     * PendingIntent here; the Intent form throws there, so it is used only
+     * below Android 14 (the lint check cannot see the version guard). */
+    @android.annotation.SuppressLint("StartActivityAndCollapseDeprecated")
+    private fun openApp() {
+        val intent = android.content.Intent(this, MainActivity::class.java).apply {
+            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startActivityAndCollapse(
+                android.app.PendingIntent.getActivity(
+                    this,
+                    0,
+                    intent,
+                    android.app.PendingIntent.FLAG_IMMUTABLE,
+                ),
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            startActivityAndCollapse(intent)
+        }
     }
 
     private fun render() {
