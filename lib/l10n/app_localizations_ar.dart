@@ -26659,4 +26659,7 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get queuedReceiptDetailNote =>
       'انقطع الاتصال قبل أن نتمكن من تأكيد الاستلام.';
+
+  @override
+  String get kitToolRetry => 'أعد المحاولة';
 }
