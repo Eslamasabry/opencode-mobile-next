@@ -1,0 +1,13 @@
+feat: add gated Ubuntu SSH host adoption backend [skip ci]
+
+Implement profile-scoped SSH adoption, pinned host identity and bundle verification,
+per-phone host credentials, resumable pairing, private forwarding and revocation.
+Add persistent OpenCode1 user-host bundle scripts and Claude's kit frontend contract.
+Keep the feature off pending reviewed artifact publication and phone/VPS proof.
+
+Validation: 83 focused serial Dart tests; 17 Python host tests; full Flutter
+analyzer; pinned Dart formatting; shell syntax and local documentation links.
+No UI, provider resources, live host changes, push or release.
+
+Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01K4UE4B9G3gAraoExNtCciU

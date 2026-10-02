@@ -4,6 +4,26 @@ Date: 2026-09-27. Status: **proposed, not implemented or enabled**.
 Source baseline: `1625ac02` on `codex/vps`. Research and official citations:
 [BYO VPS research](byo-vps-research-2026-09-27.md).
 
+
+## 2026-10-02 scope update: SSH adoption is slice 1
+
+The provider-create plan below is preserved as a later design, not implemented
+interfaces. The owner changed first delivery to a MonoCode-style **Add machine**
+flow: explicit `user@host`, host-key verification, one-shot admin SSH login,
+checksummed OpenCode1 + per-device supervisor user service, then private SSH local
+forward. No service of ours, no public agent listener, no credential broker.
+Hetzner, DigitalOcean and Linode creation remain subsequent slices. Existing
+Tailscale SSH is preferred; the owner's SSH-tunnel fallback is supported without
+claiming an automatic tailnet join.
+
+The implemented backend contract is [BYO host contract](byo-host-contract.md):
+`ByoHostService`, `ByoHostController`, `ByoHostSshRunner`, profile-scoped vault and
+journal, restricted per-phone forwarding key, remote revoke before local remove,
+and a default-OFF `OC_BYO_HOST` gate. UI and real phone/VPS qualification remain
+outstanding. This new slice installs OC1 1.18.32 only; it does not expose stub
+OC2/Codex/Paseo/AI Team support. The detailed older provider contracts below must
+not be treated as current callable Dart APIs.
+
 Finish line: a user can create one Hetzner Ubuntu server, or adopt a clean Ubuntu
 server over SSH, connect OpenCode 1 exclusively through their own tailnet, resume
 after killing the app, and explicitly remove the resources and local secrets.

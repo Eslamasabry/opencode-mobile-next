@@ -209,6 +209,10 @@ class OrchestrationConfig {
 
 class ServerProfile {
   final String id;
+
+  /// Runtime-only private transport lease. Its origin and credential must not
+  /// become a persisted generic profile; the owning backend resumes it.
+  final bool transientTransport;
   String name;
   String baseUrl;
   ServerBackend backend;
@@ -258,6 +262,7 @@ class ServerProfile {
     required this.id,
     required this.name,
     required this.baseUrl,
+    this.transientTransport = false,
     this.backend = ServerBackend.openCode,
     this.username = '',
     this.password = '',

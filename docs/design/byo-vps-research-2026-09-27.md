@@ -1,5 +1,9 @@
 # Bring your own VPS: research and buildable plan
 
+Current follow-up: **2026-10-02 SSH adoption backend, default OFF**. Read
+[BYO host contract](byo-host-contract.md) for implemented APIs and qualification
+gates. The original findings and price observations below are dated research.
+
 Research date: **2026-09-27**. Repository inspected at **`1625ac02`**, branch
 `codex/vps`. Status: **research complete; implementation, live feasibility and
 release not performed**. Companion: [backend/UI contract](byo-vps-contract.md).
@@ -10,6 +14,99 @@ Non-goals: product code, paid hosting, accounts, resource creation, credential
 collection, publishing, signing or pushing. All research requests were public
 read-only documentation/catalog/schema requests. Prices are dated observations,
 not offers; no provider account or real phone-to-VPS bootstrap was tested.
+
+
+## Follow-up evidence and revised first slice — 2026-10-02
+
+The 2026-09-27 provider findings/prices below retain their observation date;
+they were not all refreshed for this implementation follow-up. The owner's new
+first slice is **adopt Ubuntu over SSH**, then Hetzner/DO/Linode creation later.
+Implementation and current UI contract: [BYO host contract](byo-host-contract.md).
+Default OFF, no real phone or VPS proof, no UI/bundle publication performed.
+
+### MonoCode: inspected actual MIT source
+
+Read the public repository at commit
+[`1e97594ddf6f40aa24671f7fa09f2048deb1d5eb`](https://github.com/hardbeat920/monocode/tree/1e97594ddf6f40aa24671f7fa09f2048deb1d5eb),
+including README remote access and docs, not only an abstract architecture.
+Original code in our slice was written for this app; no MonoCode code was copied.
+
+| Inspected source | Finding and adopted decision |
+|---|---|
+| [remote-access.md](https://github.com/hardbeat920/monocode/blob/1e97594ddf6f40aa24671f7fa09f2048deb1d5eb/docs/remote-access.md), [remote_bootstrap.sh](https://github.com/hardbeat920/monocode/blob/1e97594ddf6f40aa24671f7fa09f2048deb1d5eb/src-tauri/src/remote_bootstrap.sh) | Architecture-specific host archive, user service/linger and local listener. Our archive digest is reviewed in the app manifest before installer execution, rather than trusting a freshly fetched sidecar. |
+| [remote_ssh.rs](https://github.com/hardbeat920/monocode/blob/1e97594ddf6f40aa24671f7fa09f2048deb1d5eb/src-tauri/src/remote_ssh.rs), [remote.rs](https://github.com/hardbeat920/monocode/blob/1e97594ddf6f40aa24671f7fa09f2048deb1d5eb/src-tauri/src/remote.rs) | Local SSH forward, askpass, pinned host identity, revoke before forget. We use strict preverified Ed25519 pins and explicit safe typed failures. |
+| [host/store.ts](https://github.com/hardbeat920/monocode/blob/1e97594ddf6f40aa24671f7fa09f2048deb1d5eb/host/store.ts), [host/server.ts](https://github.com/hardbeat920/monocode/blob/1e97594ddf6f40aa24671f7fa09f2048deb1d5eb/host/server.ts), [host/service.ts](https://github.com/hardbeat920/monocode/blob/1e97594ddf6f40aa24671f7fa09f2048deb1d5eb/host/service.ts) | Host owns durable work, random per-device credentials represented as hashes on host; revoke targets one device. Our small stdlib supervisor wraps existing OC1 instead of reimplementing a session protocol. |
+| [connections.ts](https://github.com/hardbeat920/monocode/blob/1e97594ddf6f40aa24671f7fa09f2048deb1d5eb/src/features/connections/model/connections.ts), [remoteSessionState.ts](https://github.com/hardbeat920/monocode/blob/1e97594ddf6f40aa24671f7fa09f2048deb1d5eb/src/features/connections/model/remoteSessionState.ts), [session.ts](https://github.com/hardbeat920/monocode/blob/1e97594ddf6f40aa24671f7fa09f2048deb1d5eb/src/features/sessions/model/session.ts) | Saved connection and session snapshots are separate from a live client transport. Phone disconnect does not destroy host work; reconcile server truth on reconnect. |
+
+### Phone feasibility: source-proven, device proof still required
+
+Built-in setup `lib/builtin/setup/components.dart` installs openssh-client;
+`lib/builtin/builtin_linux.dart` prerequisite repair and
+`lib/termux/opencode_ubuntu_setup.dart` also install it in managed Ubuntu.
+That does not prove native outer-Termux SSH or an available installed runtime.
+`BuiltinLinux.run` dispatches shell argv, closes stdin and its native implementation
+logs merged output (`android/.../BuiltinLinux.kt`). It cannot carry SSH output or
+secret stdin safely without isolation. Its arbitrary `startService`/`stopService`
+can own one long-running foreground SSH tunnel; detached children of a one-shot
+proot command cannot be assumed to survive. Android may stop that service.
+
+Implemented runner keeps secret inputs/results in random app-private rootfs tmp
+directories. Modes are set before writing bytes, shell argv contains filenames,
+and native output is redirected. Persistent generated key/token is in
+flutter_secure_storage (11.2.0), not a rootfs key file. Imported bootstrap login
+is never saved. Temp plaintext is still exposed to same-UID phone agents while
+in use and remains after SIGKILL until own-profile recovery cleanup; encrypted
+vault is not a nonexportable SSH Keystore signer. The repo's existing attestation
+Keystore key is not an OpenSSH signer. Owner must accept temporary export or fund
+a native signing/SSH transport before enabling; do not call source review a leak
+proof. Termux's different UID/private filesystem and bridge error/retry behavior
+need a separate safe transport; this slice explicitly uses built-in Linux only.
+
+`ProfileStore` preference suffix sweeping never swept new secure slots by itself.
+This slice explicitly adds the BYO vault to profile deletion and sign-in reset;
+it rejects persisting runtime localhost profiles. Backend metadata has stable
+host/device identity, not a stale forwarded port. UI remains Claude's kit work.
+
+### Current official SSH/systemd evidence and feasibility gates
+
+Fetched official OpenSSH manuals on **2026-10-02**; living manuals are not an
+Ubuntu version pin. `ssh -L` can explicitly bind loopback and `-N` avoids a remote
+command; `SSH_ASKPASS_REQUIRE=force` supports the helper approach. Our helper
+uses private files, prompt-kind checking and one bootstrap operation. Host keys
+are verified out of band, then `StrictHostKeyChecking=yes`, explicit known_hosts,
+no user config/agent/proxy fallback. See [ssh(1)](https://man.openbsd.org/ssh.1).
+
+Authorized-key `restrict` with `port-forwarding` and `permitopen` permits the
+specific local destination but does not alone deny reverse or Unix socket
+forwarding. `permitlisten="none"` is **not** a valid authorized_keys value in
+Ubuntu's OpenSSH 9.6 parser; do not confuse it with sshd_config `PermitListen none`.
+Verified [OpenSSH 9.6 source](https://github.com/openssh/openssh-portable/blob/V_9_6_P1/auth-options.c)
+and [sshd(8)](https://man.openbsd.org/sshd.8). Installer requires effective
+local-only TCP forwarding, no streamlocal forwarding, no tunnel devices and
+unambiguous host matching; it refuses if `sshd -T -C` cannot prove this. The live
+owner must reload and exercise denial, because disk config is not daemon truth.
+See [sshd_config(5)](https://man.openbsd.org/sshd_config.5).
+
+User systemd with linger is a prerequisite for host work surviving SSH logout.
+Installer attempts only noninteractive permitted enable-linger; otherwise reports
+owner preparation, never submits a password/sudo. Official [loginctl source
+manual](https://github.com/systemd/systemd/blob/v256/man/loginctl.xml) defines this
+behavior (pinned documentation v256; actual Ubuntu systemd version is checked by
+owner). Prefer a dedicated nonroot host account; this is not hostile-workload
+isolation. No provider OAuth/tailnet key minting is needed for adoption, and no
+backend of ours is required. Bundle publication is a static reviewed artifact,
+not an infrastructure/control-plane service; absent URL/digest blocks setup.
+
+Persistent OpenCode is pinned to current repo OC1 **1.18.32**. Deterministic local
+packer checks supplied upstream digest and ELF architecture, then emits full
+bundle digest; it does not download or publish. Runtime upgrade/pinning for the
+other servers remains the original later design; do not borrow phone-specific
+proot scripts as systemd installers without a portable manifest/health proof.
+
+Proof requirements, typed UI errors, restart/deletion semantics, threat limits
+and owner options are enumerated in [the implemented contract](byo-host-contract.md).
+No real SSH connection, provider resource creation, account creation or secret
+inspection was performed in this follow-up.
 
 ## Recommendation
 

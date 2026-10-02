@@ -12,6 +12,7 @@ import '../ui/kit/kit_redact.dart';
 import '../api/models.dart' show ModelRef;
 import '../api/server_probe.dart' show ServerFlavor;
 import '../domain/loopback_host.dart';
+import '../domain/byo_host.dart';
 import '../domain/orchestration_gateway.dart' show OrchestrationHostMode;
 import '../orchestration/adapters/gascity/gascity_probe.dart'
     show isTailnetHost;
@@ -46,6 +47,7 @@ class ProfileStore {
   /// `oc.<what>.<profileId>` rule so the deletion sweep removes it.
   static const cleartextConfirmedKeyPrefix = 'oc.cleartextOk.';
   static const _passwordKey = 'pw.';
+  static const byoHostSecretsKeyPrefix = 'oc.byoHostSecrets.';
   static const _codexTokenKey = 'oc.codexToken.';
   static const teamEngineAuthKey = 'oc.teamEngineAuth.';
   static const _modelKey = 'oc.model.'; // + profileId -> "providerID|modelID"
@@ -114,7 +116,8 @@ class ProfileStore {
     bool ownsKey(String key) =>
         key.startsWith(_passwordKey) ||
         key.startsWith(_codexTokenKey) ||
-        key.startsWith(teamEngineAuthKey);
+        key.startsWith(teamEngineAuthKey) ||
+        key.startsWith(byoHostSecretsKeyPrefix);
     try {
       final secrets = await secure.readAll();
       final owned = <String>[
@@ -263,6 +266,9 @@ class ProfileStore {
   }
 
   Future<void> upsert(ServerProfile profile) async {
+    if (profile.transientTransport) {
+      throw const ByoHostFailure(ByoHostFailureCode.storage);
+    }
     // Register before persistence: a failing keyring may echo its input.
     KitRedact.registerKnownSecret(profile.password);
     KitRedact.registerKnownSecret(profile.codexToken);
@@ -480,6 +486,17 @@ class ProfileStore {
         : '$_passwordKey$id';
     try {
       if (previousActive == id) await setActiveId(null);
+      // Secure slots are not covered by the scoped preference sweep. Delete
+      // BYO identity first; refusal keeps its metadata available for retry.
+      final byoKey = '$byoHostSecretsKeyPrefix$id';
+      try {
+        await secure.delete(key: byoKey);
+        if (await secure.read(key: byoKey) != null) {
+          throw const ByoHostFailure(ByoHostFailureCode.storage);
+        }
+      } catch (_) {
+        throw const ByoHostFailure(ByoHostFailureCode.storage);
+      }
       await secure.delete(key: secretKey);
       await secure.delete(key: '$teamEngineAuthKey$id');
     } catch (error) {
