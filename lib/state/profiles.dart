@@ -75,6 +75,7 @@ class ProfileStore {
   // App-wide (no profile id segment, so the deletion sweep never matches).
   static const _effectsMotionKey = 'oc.effectsMotion';
   static const _effectsCelebrationsKey = 'oc.effectsCelebrations';
+  static const _effectsActivityGlowKey = 'oc.effectsActivityGlow';
   static const _providerRuntimeRefreshVersion = 'v1';
 
   final SharedPreferences prefs;
@@ -947,9 +948,16 @@ class ProfileStore {
     if (level == KitMotionLevel.full && celebrations == false) {
       level = KitMotionLevel.calm;
     }
+    bool glow;
+    try {
+      glow = prefs.getBool(_effectsActivityGlowKey) ?? false;
+    } catch (_) {
+      glow = false;
+    }
     return KitEffects(
       motion: level,
       celebrations: level == KitMotionLevel.full,
+      activityGlow: glow,
     );
   }
 
@@ -962,6 +970,21 @@ class ProfileStore {
         effects.motion.name,
         error,
       );
+    }
+    if (effects.activityGlow != before.activityGlow) {
+      try {
+        if (!await prefs.setBool(
+          _effectsActivityGlowKey,
+          effects.activityGlow,
+        )) {
+          throw StateError(error);
+        }
+      } catch (_) {
+        try {
+          await prefs.reload();
+        } catch (_) {}
+        rethrow;
+      }
     }
     // The old separate celebrations key would otherwise turn a saved Full
     // into Calm on the next start.

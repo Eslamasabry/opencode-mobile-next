@@ -146,6 +146,9 @@ abstract final class KitMotion {
   /// [edgeLightHueFade]. Where a status touches the border it fades out and
   /// back in over [edgeLightFadeSpan] dp instead of stopping.
   static const double edgeLightMaxLapsPerSecond = 1 / 6;
+
+  /// The composer's chosen glowing border: one lap in 8 s (never below 6 s).
+  static const double activityGlowLapsPerSecond = 1 / 8;
   static const double edgeLightThinkingLapsPerSecond = 1 / 10;
   static const Duration edgeLightSpeedEase = Duration(milliseconds: 800);
   static const Duration edgeLightHueFade = Duration(milliseconds: 450);

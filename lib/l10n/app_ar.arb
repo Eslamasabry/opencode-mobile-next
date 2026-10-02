@@ -4548,6 +4548,8 @@
   "effectsMotionOff": "متوقفة",
   "effectsMotionOffHint": "يظهر كل شيء فورًا",
   "effectsMotionSystemOff": "خيار «إزالة الرسوم المتحركة» مفعّل في هاتفك، لذا لا يتحرك شيء أيًّا كان اختيارك هنا",
+  "effectsActivityGlow": "حدّ متوهّج أثناء الرد",
+  "effectsActivityGlowHint": "وهج ناعم يدور حول مربع الرسالة أثناء كتابة الرد",
   "effectsSaveFailed": "تعذّر حفظ هذا الاختيار على هذا الجهاز. حاول مرة أخرى.",
   "teamDiscoverEntryTitle": "كلّف فريقًا بمهمة أكبر",
   "teamDiscoverEntryBody": "يخطّط الوكلاء لها وينجزونها ويراجعونها ويدمجونها. تتدخّل حين يسألونك.",

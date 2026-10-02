@@ -205,6 +205,7 @@ extension _IndexInsidePages on _IndexBuild {
       ),
       // Settings › Appearance › Effects, one result per row.
       row('inside-appearance-motion', AppIconography.playCircle),
+      row('inside-appearance-glow', AppIconography.sparkle),
       // Keep running's rows: the battery exemption, and the heat pause only
       // where the guard runs (the page hides its switch otherwise).
       row(
