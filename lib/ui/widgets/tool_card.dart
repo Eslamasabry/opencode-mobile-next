@@ -357,17 +357,9 @@ class _ToolCardState extends State<ToolCard> {
     }
 
     final interleaved = _interleavedSegments;
-    final shellCommand = _valueString(widget.state.input['command']);
-    final rerun = widget.onRerunCommand;
-    final VoidCallback? retry =
-        widget.onRetry ??
-        (isShell &&
-                rerun != null &&
-                shellCommand != null &&
-                shellCommand.isNotEmpty &&
-                widget.state.executed
-            ? () => rerun(shellCommand)
-            : null);
+    // A shell step already ends with "Run this command again"; a second
+    // "Try again" under the title would be the same action twice.
+    final VoidCallback? retry = isShell ? null : widget.onRetry;
     final Widget row = KitToolRow(
       onRetry: retry,
       rowKey: rowKey,

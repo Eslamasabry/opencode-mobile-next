@@ -161,7 +161,7 @@ void main() {
           onRetry: () => taps++,
         ),
       );
-      expect(find.text('Retry'), findsOneWidget);
+      expect(find.text('Try again'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('kit-tool-retry')));
       expect(taps, 1);
     });
@@ -176,7 +176,7 @@ void main() {
           onRetry: () {},
         ),
       );
-      expect(find.text('Retry'), findsNothing);
+      expect(find.text('Try again'), findsNothing);
     });
   });
 
