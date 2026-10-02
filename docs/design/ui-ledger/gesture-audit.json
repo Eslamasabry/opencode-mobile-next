@@ -349,7 +349,7 @@
       "gesture": "keyboard shortcut: Ctrl/Cmd+Enter (desktop: Enter)",
       "action": "send the prompt",
       "visibleEquivalent": "visible Send button (tooltip 'Send'); also listed in Keyboard shortcuts help (lib/ui/desktop/shortcuts.dart:121)",
-      "evidence": "lib/ui/kit/chat/kit_composer.dart:450",
+      "evidence": "lib/ui/kit/chat/kit_composer.dart:511",
       "changed": false
     },
     {
@@ -385,7 +385,7 @@
       "gesture": "keyboard shortcut: Ctrl+K",
       "action": "open the conversation command launcher",
       "visibleEquivalent": "visible 'Commands' row in the composer tools sheet; listed in Keyboard shortcuts help",
-      "evidence": "lib/ui/screens/chat_screen.dart:574",
+      "evidence": "lib/ui/screens/chat_screen.dart:577",
       "changed": false
     },
     {
@@ -484,7 +484,7 @@
       "gesture": "long-press on a message",
       "action": "open the message actions sheet",
       "visibleEquivalent": "visible per-message 'Message actions' button (small 'more' disc under each message, 44dp target, tooltip and semantics label) whose onTap is the same callback as onLongPress",
-      "evidence": "lib/ui/screens/chat/message_view.dart:246",
+      "evidence": "lib/ui/screens/chat/message_view.dart:245",
       "changed": false
     },
     {
@@ -493,7 +493,7 @@
       "gesture": "long-press on a transcript message",
       "action": "open the message actions sheet (copy, fork, read aloud, revert, delete)",
       "visibleEquivalent": "visible per-message 'Message actions' button (small 'more' disc under each message, 44dp target, tooltip and semantics label) whose onTap is the same callback as onLongPress",
-      "evidence": "lib/ui/screens/chat/message_view.dart:246",
+      "evidence": "lib/ui/screens/chat/message_view.dart:245",
       "changed": false
     },
     {
@@ -502,7 +502,7 @@
       "gesture": "right-click on a message (desktop)",
       "action": "open the message context menu",
       "visibleEquivalent": "visible 'Message actions' button opens a sheet with the same copy / fork / revert / delete actions, same gates and handlers (_showMessageActions next to _messageContextActions)",
-      "evidence": "lib/ui/screens/chat/chat_transcript.dart:427",
+      "evidence": "lib/ui/screens/chat/chat_transcript.dart:374",
       "changed": false
     },
     {
@@ -511,7 +511,7 @@
       "gesture": "right-click on a transcript message (desktop)",
       "action": "open the message context menu",
       "visibleEquivalent": "visible 'Message actions' button opens a sheet with the same copy / fork / revert / delete actions, same gates and handlers (_showMessageActions next to _messageContextActions)",
-      "evidence": "lib/ui/screens/chat/chat_transcript.dart:427",
+      "evidence": "lib/ui/screens/chat/chat_transcript.dart:374",
       "changed": false
     },
     {
@@ -592,7 +592,7 @@
       "gesture": "keyboard (IME) image/GIF insertion or image paste",
       "action": "attach the inserted image",
       "visibleEquivalent": "visible 'Attach file' and 'Photo library' rows in the composer tools sheet attach the same kind of content",
-      "evidence": "lib/ui/screens/chat/chat_composer_region.dart:384",
+      "evidence": "lib/ui/screens/chat/chat_composer_region.dart:415",
       "changed": false
     },
     {
