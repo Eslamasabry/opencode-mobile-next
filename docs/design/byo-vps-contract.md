@@ -13,8 +13,9 @@ flow: explicit `user@host`, host-key verification, one-shot admin SSH login,
 checksummed OpenCode1 + per-device supervisor user service, then private SSH local
 forward. No service of ours, no public agent listener, no credential broker.
 Hetzner, DigitalOcean and Linode creation remain subsequent slices. Existing
-Tailscale SSH is preferred; the owner's SSH-tunnel fallback is supported without
-claiming an automatic tailnet join.
+Tailscale is required for the SSH destination; there is no public SSH fallback
+or automatic tailnet join. Task B2 uses a nonexportable Android Keystore signer,
+manual owner admin preparation, and version-pinned draft-release bundle tooling.
 
 The implemented backend contract is [BYO host contract](byo-host-contract.md):
 `ByoHostService`, `ByoHostController`, `ByoHostSshRunner`, profile-scoped vault and

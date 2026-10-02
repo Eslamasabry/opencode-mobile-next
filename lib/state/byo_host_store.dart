@@ -4,17 +4,25 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/byo_host.dart';
+import '../host/byo_host_signer.dart';
 
 /// Profile-scoped metadata and a single, separately encrypted secret envelope.
 ///
 /// The profile deletion coordinator must call [remove]: the ordinary scoped
 /// preference sweep does not delete secure-storage entries.
 class PersistentByoHostStore implements ByoHostStore {
-  PersistentByoHostStore({required this.prefs, FlutterSecureStorage? secure})
-    : secure = secure ?? const FlutterSecureStorage();
+  PersistentByoHostStore({
+    required this.prefs,
+    FlutterSecureStorage? secure,
+    ByoHostSigner? signer,
+  }) : secure = secure ?? const FlutterSecureStorage(),
+       signer =
+           signer ??
+           (AndroidByoHostSigner.supported ? AndroidByoHostSigner() : null);
 
   final SharedPreferences prefs;
   final FlutterSecureStorage secure;
+  final ByoHostSigner? signer;
 
   // Order operations on this store so an overlapping save cannot resurrect a
   // secret between the two deletion steps. Callers share one store instance.
@@ -81,7 +89,12 @@ class PersistentByoHostStore implements ByoHostStore {
   Future<ByoHostSecrets?> readSecrets(String profileId) => _ordered(() async {
     _validateId(profileId);
     final raw = await secure.read(key: _secretKey(profileId));
-    return raw == null ? null : ByoHostSecrets.decode(raw);
+    if (raw == null) return null;
+    final secrets = ByoHostSecrets.decode(raw);
+    if (secrets.identity.keyAlias != 'oc.byoHostSsh.$profileId') {
+      throw const ByoHostFailure(ByoHostFailureCode.storage);
+    }
+    return secrets;
   });
 
   @override
@@ -99,6 +112,9 @@ class PersistentByoHostStore implements ByoHostStore {
   Future<void> saveSecrets(String profileId, ByoHostSecrets secrets) =>
       _ordered(() async {
         _validateId(profileId);
+        if (secrets.identity.keyAlias != 'oc.byoHostSsh.$profileId') {
+          throw const ByoHostFailure(ByoHostFailureCode.storage);
+        }
         await secure.write(key: _secretKey(profileId), value: secrets.encode());
       });
 
@@ -106,6 +122,7 @@ class PersistentByoHostStore implements ByoHostStore {
   Future<void> remove(String profileId) => _ordered(() async {
     _validateId(profileId);
     final key = _secretKey(profileId);
+    await signer?.deleteIdentity(profileId);
     await secure.delete(key: key);
     // Refuse to discard the cleanup record if a platform reports success but
     // retains the vault entry. Either partial deletion is safe to retry.

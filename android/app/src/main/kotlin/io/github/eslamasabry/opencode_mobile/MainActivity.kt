@@ -47,11 +47,14 @@ class MainActivity : FlutterActivity() {
     private var localPdf: LocalPdfBridge? = null
     private var networkMonitor: NetworkMonitor? = null
     private var projectExport: ProjectExportBridge? = null
+    private var byoHostSigner: ByoHostSigner? = null
     private val voiceDownloadNotifications by lazy { VoiceDownloadNotifications(this) }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         TailscaleHandoff(this, flutterEngine.dartExecutor.binaryMessenger)
+        byoHostSigner?.dispose()
+        byoHostSigner = ByoHostSigner(this, flutterEngine.dartExecutor.binaryMessenger)
         networkMonitor?.dispose()
         networkMonitor = NetworkMonitor(this, flutterEngine.dartExecutor.binaryMessenger)
         localPdf?.dispose()
@@ -381,6 +384,8 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
+        byoHostSigner?.dispose()
+        byoHostSigner = null
         networkMonitor?.dispose()
         networkMonitor = null
         voiceDownloadNotifications.dispose()

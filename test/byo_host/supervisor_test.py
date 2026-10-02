@@ -82,6 +82,37 @@ class StateTests(unittest.TestCase):
         self.assertIn('command="/bin/false"', key)
         self.assertTrue(self.state.authenticate("phone-a", phone()["token"]))
 
+    def test_keystore_p256_public_key_pairs_without_private_material(self):
+        x = bytes.fromhex("6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296")
+        y = bytes.fromhex("4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5")
+        fields = [b"ecdsa-sha2-nistp256", b"nistp256", b"\x04" + x + y]
+        wire = b"".join(struct.pack(">I", len(field)) + field for field in fields)
+        public = "ecdsa-sha2-nistp256 " + base64.b64encode(wire).decode()
+        payload = dict(phone(), publicKey=public)
+        self.state.pair(payload)
+        self.assertIn(public, self.state.authorized_keys.read_text())
+        self.assertNotIn(payload["token"], self.state.path.read_text())
+        invalid = wire[:-1] + bytes([wire[-1] ^ 1])
+        with self.assertRaisesRegex(host.ProtocolError, "invalidPublicKey"):
+            self.state.pair(dict(payload, publicKey="ecdsa-sha2-nistp256 " + base64.b64encode(invalid).decode()))
+
+    def test_owner_enrolled_marker_is_restricted_then_revoked(self):
+        path = self.state.authorized_keys
+        path.parent.mkdir()
+        path.write_text(phone()["publicKey"] + " oc-byo-phone-a\n")
+        self.state.pair(phone())
+        self.assertTrue(path.read_text().startswith("restrict,port-forwarding"))
+        self.state.revoke("phone-a")
+        self.assertEqual(path.read_text(), "")
+
+    def test_unmarked_duplicate_key_cannot_bypass_revocation(self):
+        path = self.state.authorized_keys
+        path.parent.mkdir()
+        path.write_text(phone()["publicKey"] + " other-comment\n")
+        with self.assertRaisesRegex(host.ProtocolError, "deviceKeyConflict"):
+            self.state.pair(phone())
+        self.assertIn("other-comment", path.read_text())
+
     def test_pair_conflicts_never_replace_identity(self):
         descriptor = self.state.pair(phone())
         with self.assertRaisesRegex(host.ProtocolError, "deviceConflict"):
@@ -380,6 +411,10 @@ class ProxyTests(unittest.TestCase):
 
 
 class BundleTests(unittest.TestCase):
+    def check_policy(self):
+        with mock.patch.object(installer, "check_ssh_listener"):
+            installer.check_ssh_policy("alice", Path("/home/alice"))
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
@@ -407,7 +442,7 @@ class BundleTests(unittest.TestCase):
             manifest = installer.safe_bundle(
                 self.archive, first["archiveSha256"], destination
             )
-        self.assertEqual(manifest["bundleVersion"], "1.0.0")
+        self.assertEqual(manifest["bundleVersion"], "1.1.0")
         self.assertEqual(manifest["openCodeVersion"], "1.18.32")
         self.assertEqual(
             set(x.name for x in destination.iterdir()),
@@ -515,8 +550,7 @@ class BundleTests(unittest.TestCase):
             with self.assertRaisesRegex(installer.InstallError, "lingerRequired"):
                 installer.install(args, phone())
         self.assertFalse((home / ".ssh/authorized_keys").exists())
-        enable = next(call for call in calls if "enable-linger" in call)
-        self.assertIn("--no-ask-password", enable)
+        self.assertFalse(any("enable-linger" in call or "sudo" in call for call in calls))
 
     def test_root_or_wrong_os_install_refused(self):
         with (
@@ -554,7 +588,7 @@ class BundleTests(unittest.TestCase):
             mock.patch.object(installer, "command") as run,
         ):
             run.return_value = subprocess.CompletedProcess([], 0, safe.encode())
-            installer.check_ssh_policy("alice", Path("/home/alice"))
+            self.check_policy()
             self.assertIn(
                 "user=alice,host=100.64.0.1,addr=100.64.0.1,laddr=100.64.0.2,lport=22",
                 run.call_args[0][0],
@@ -574,7 +608,7 @@ class BundleTests(unittest.TestCase):
                 with self.assertRaisesRegex(
                     installer.InstallError, "sshPolicyRequired"
                 ):
-                    installer.check_ssh_policy("alice", Path("/home/alice"))
+                    self.check_policy()
             run.return_value = subprocess.CompletedProcess(
                 [],
                 0,
@@ -582,10 +616,21 @@ class BundleTests(unittest.TestCase):
                 .replace("permitlisten any", "permitlisten none")
                 .encode(),
             )
-            installer.check_ssh_policy("alice", Path("/home/alice"))
+            self.check_policy()
         with mock.patch.dict(installer.os.environ, {}, clear=True):
             with self.assertRaisesRegex(installer.InstallError, "sshPolicyRequired"):
-                installer.check_ssh_policy("alice", Path("/home/alice"))
+                self.check_policy()
+
+
+class ListenerTests(unittest.TestCase):
+    def test_actual_private_ssh_listener_required(self):
+        for address in ("100.80.1.2", "[fd7a:115c:a1e0::1234]", "127.0.0.1"):
+            with mock.patch.object(installer, "command", return_value=subprocess.CompletedProcess([], 0, f"LISTEN 0 128 {address}:22 *:*\n".encode())):
+                installer.check_ssh_listener("22")
+        for text in ("", "LISTEN 0 128 0.0.0.0:22 *:*", "LISTEN 0 128 [::]:22 *:*", "LISTEN 0 128 203.0.113.1:22 *:*", "malformed"):
+            with mock.patch.object(installer, "command", return_value=subprocess.CompletedProcess([], 0, text.encode())):
+                with self.assertRaisesRegex(installer.InstallError, "sshPolicyRequired"):
+                    installer.check_ssh_listener("22")
 
 
 class ChildProcessTests(unittest.TestCase):
@@ -634,7 +679,7 @@ HTTPServer((a.hostname,a.port),H).serve_forever()
             )
 
             def request(method, path, payload):
-                connection = http.client.HTTPConnection("127.0.0.1", port, timeout=1)
+                connection = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
                 try:
                     connection.request(
                         method, path, headers={"Authorization": auth(payload)}

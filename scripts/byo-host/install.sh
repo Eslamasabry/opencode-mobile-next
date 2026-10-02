@@ -62,6 +62,28 @@ def command(arguments, check=True):
     return result
 
 
+def check_ssh_listener(port):
+    """Read actual listening sockets: no wildcard/public SSH endpoint allowed."""
+    try:
+        result = command(["ss", "-H", "-ltn", "sport", "=", ":" + port], check=False)
+        if result.returncode:
+            raise ValueError()
+        rows = result.stdout.decode().splitlines()
+        if not rows:
+            raise ValueError()
+        for row in rows:
+            endpoint = row.split()[3]
+            address, observed_port = endpoint.rsplit(":", 1)
+            ip = ipaddress.ip_address(address.strip("[]"))
+            if observed_port != port or not (
+                ip.is_loopback or ip in ipaddress.ip_network("100.64.0.0/10") or
+                ip in ipaddress.ip_network("fd7a:115c:a1e0::/48")
+            ):
+                raise ValueError()
+    except (OSError, ValueError, IndexError, UnicodeError, subprocess.SubprocessError):
+        raise InstallError("sshPolicyRequired") from None
+
+
 def check_ssh_policy(username, home):
     """Prove the existing on-disk sshd policy for this admin connection.
 
@@ -80,8 +102,9 @@ def check_ssh_policy(username, home):
             for port in (source_port, destination_port)
         ):
             raise ValueError()
-        if not re.fullmatch(r"[A-Za-z0-9_-]+", username):
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.-]{0,63}", username):
             raise ValueError()
+        check_ssh_listener(destination_port)
         executable = shutil.which("sshd") or "/usr/sbin/sshd"
         # sshd -T otherwise tries reading root-only host private keys. Override
         # only that parsing input with a throwaway key; never run/reload a daemon.
@@ -173,7 +196,7 @@ def safe_bundle(archive_path, expected, destination):
         machine = {"x86_64": "amd64", "aarch64": "arm64"}.get(platform.machine())
         if (
             manifest.get("schemaVersion") != 1
-            or manifest.get("bundleVersion") != "1.0.0"
+            or manifest.get("bundleVersion") != "1.1.0"
             or manifest.get("openCodeVersion") != "1.18.32"
             or manifest.get("port") != 4096
             or machine is None
@@ -290,17 +313,8 @@ def install(args, payload):
                 check=False,
             )
             if linger.returncode or linger.stdout.strip() != b"yes":
-                # Never invoke sudo or an interactive polkit/password prompt.
-                command(
-                    ["loginctl", "--no-ask-password", "enable-linger", username],
-                    check=False,
-                )
-                linger = command(
-                    ["loginctl", "show-user", username, "--property=Linger", "--value"],
-                    check=False,
-                )
-                if linger.returncode or linger.stdout.strip() != b"yes":
-                    raise InstallError("lingerRequired")
+                # Owner prepares lingering manually; no bootstrap escalation.
+                raise InstallError("lingerRequired")
             command(["systemctl", "--user", "show-environment"])
             release = directory / ("bundle-" + args.sha256)
             if release.exists():

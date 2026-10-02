@@ -8,7 +8,7 @@ import 'package:opencode_mobile/state/byo_host_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
-const _sensitiveError = 'fixture-private-key-and-device-token';
+const _sensitiveError = 'oc.byoHostSsh.key-and-device-token';
 
 class _Vault extends FlutterSecureStorage {
   final values = <String, String>{};
@@ -116,14 +116,14 @@ ByoHostRecord _record(String id) => ByoHostRecord(
   ),
   phase: ByoHostPhase.ready,
   hostId: 'host-$id',
-  bundleVersion: '1.0.0',
+  bundleVersion: '1.1.0',
   openCodeVersion: '1.18.32',
   remotePort: 4096,
 );
 
 ByoHostSecrets _secrets(String id) => ByoHostSecrets(
   identity: ByoHostIdentity(
-    privateKey: 'fixture-private-$id',
+    keyAlias: 'oc.byoHostSsh.$id',
     publicKey: 'fixture-public-$id',
   ),
   deviceToken: 'fixture-token-$id',
@@ -158,13 +158,30 @@ void main() {
     store = PersistentByoHostStore(prefs: prefs, secure: vault);
   });
 
+  test(
+    'legacy exportable identities are refused without returning private data',
+    () async {
+      vault.values['oc.byoHostSecrets.one'] = jsonEncode({
+        'schema': 1,
+        'privateKey': 'LEGACY_PRIVATE_SENTINEL',
+        'publicKey': 'old',
+        'deviceToken': 'old',
+      });
+      await expectLater(store.readSecrets('one'), throwsA(_safeStorageFailure));
+      expect(
+        vault.values['oc.byoHostSecrets.one'],
+        contains('LEGACY_PRIVATE_SENTINEL'),
+      );
+    },
+  );
+
   test('round trips after reopening with secrets only in the vault', () async {
     await store.saveRecord(_record('one'));
     await store.saveSecrets('one', _secrets('one'));
     await store.saveRecord(_record('one'));
     await store.saveSecrets('one', _secrets('one'));
     final metadata = prefs.getString('oc.byoHost.one')!;
-    expect(metadata, isNot(contains('fixture-private-one')));
+    expect(metadata, isNot(contains('oc.byoHostSsh.one')));
     expect(metadata, isNot(contains('fixture-token-one')));
     expect(jsonDecode(metadata), isNot(contains('privateKey')));
     expect(prefs.getKeys(), {'oc.byoHost.one'});
@@ -176,8 +193,8 @@ void main() {
       _record('one').toJson(),
     );
     expect(
-      (await reopened.readSecrets('one'))!.identity.privateKey,
-      'fixture-private-one',
+      (await reopened.readSecrets('one'))!.identity.keyAlias,
+      'oc.byoHostSsh.one',
     );
     expect(
       (await reopened.readSecrets('one'))!.deviceToken,

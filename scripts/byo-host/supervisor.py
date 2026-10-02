@@ -31,7 +31,7 @@ import time
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-BUNDLE_VERSION = "1.0.0"
+BUNDLE_VERSION = "1.1.0"
 OPENCODE_VERSION = "1.18.32"
 DEFAULT_PORT = 4096
 MAX_BODY = 16 * 1024 * 1024
@@ -108,19 +108,27 @@ def validate_pair(payload):
         raise ProtocolError("invalidPairing")
     if not isinstance(public_key, str) or "\n" in public_key or "\r" in public_key:
         raise ProtocolError("invalidPublicKey")
-    # Only Ed25519, no authorized_keys options supplied by a caller.
+    # Device public keys only; private signing stays in Android Keystore.
     parts = public_key.split()
-    if len(parts) not in (2, 3) or parts[0] != "ssh-ed25519":
+    if len(parts) not in (2, 3):
         raise ProtocolError("invalidPublicKey")
     try:
         key = base64.b64decode(parts[1], validate=True)
-        if (
-            key
-            != struct.pack(">I", 11)
-            + b"ssh-ed25519"
-            + struct.pack(">I", 32)
-            + key[-32:]
-        ):
+        if parts[0] == "ssh-ed25519":
+            if key != struct.pack(">I", 11) + b"ssh-ed25519" + struct.pack(">I", 32) + key[-32:]:
+                raise ValueError()
+        elif parts[0] == "ecdsa-sha2-nistp256":
+            prefix = (struct.pack(">I", len(b"ecdsa-sha2-nistp256")) + b"ecdsa-sha2-nistp256"
+                      + struct.pack(">I", 8) + b"nistp256" + struct.pack(">I", 65))
+            if len(key) != len(prefix) + 65 or not key.startswith(prefix + b"\x04"):
+                raise ValueError()
+            point = key[len(prefix):]
+            x, y = int.from_bytes(point[1:33], "big"), int.from_bytes(point[33:], "big")
+            prime = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
+            b = 0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b
+            if x >= prime or y >= prime or (y*y - (x*x*x - 3*x + b)) % prime:
+                raise ValueError()
+        else:
             raise ValueError()
     except (ValueError, TypeError):
         raise ProtocolError("invalidPublicKey") from None
@@ -184,6 +192,8 @@ class State:
             line for line in lines if not line.split() or line.split()[-1] != marker
         ]
         if public_key is not None:
+            if any(public_key.split()[1] in line.split() for line in kept):
+                raise ProtocolError("deviceKeyConflict")
             kept.append(
                 'restrict,port-forwarding,permitopen="127.0.0.1:%d",'
                 'command="/bin/false" %s %s' % (self.port, public_key, marker)

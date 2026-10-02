@@ -1,13 +1,18 @@
-feat: add gated Ubuntu SSH host adoption backend [skip ci]
+feat: add Keystore SSH host signer and draft bundle pipeline [skip ci]
 
-Implement profile-scoped SSH adoption, pinned host identity and bundle verification,
-per-phone host credentials, resumable pairing, private forwarding and revocation.
-Add persistent OpenCode1 user-host bundle scripts and Claude's kit frontend contract.
-Keep the feature off pending reviewed artifact publication and phone/VPS proof.
+Use profile-scoped nonexportable Android P-256 keys through a private SSH-agent
+socket. Preserve strict host pins and require numeric tailnet destinations.
+Provide resumable public-key enrollment and owner-only linger/sshd preparation;
+verify private SSH listeners before pairing, without automatic admin changes.
+Build reproducible pinned OC1 host bundles and attach only to draft v* releases;
+compile exact app-version URL/digest pins. Keep the feature disabled for owner
+artifact review and physical phone/host qualification. Update Claude's kit UI
+contract and the earlier VPS plan.
 
-Validation: 83 focused serial Dart tests; 17 Python host tests; full Flutter
-analyzer; pinned Dart formatting; shell syntax and local documentation links.
-No UI, provider resources, live host changes, push or release.
+Validation: 89 focused serial Dart tests; 35 offline Python tests; 112 Kotlin
+agent-protocol checks; clean Flutter analyzer; release Kotlin compile; byte-identical
+bundle builds and release-pin verification; formatting, syntax and link checks.
+No UI, live host changes, provider resources, signing, push, tag or publication.
 
 Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01K4UE4B9G3gAraoExNtCciU

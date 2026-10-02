@@ -5,9 +5,79 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:crypto/crypto.dart';
 import 'package:opencode_mobile/domain/byo_host.dart';
 import 'package:opencode_mobile/host/byo_host_ssh_runner.dart';
+import 'package:opencode_mobile/host/byo_host_signer.dart';
+import 'package:opencode_mobile/host/byo_host_tailnet.dart';
 
 String publicKey() =>
     'ssh-ed25519 ${base64Encode([0, 0, 0, 11, ...ascii.encode('ssh-ed25519'), 0, 0, 0, 32, ...List.generate(32, (index) => index)])}';
+
+String devicePublicKey() {
+  List<int> text(String value) => [
+    0,
+    0,
+    0,
+    value.length,
+    ...ascii.encode(value),
+  ];
+  List<int> hex(String value) => List.generate(
+    value.length ~/ 2,
+    (i) => int.parse(value.substring(i * 2, i * 2 + 2), radix: 16),
+  );
+  final point = [
+    4,
+    ...hex('6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296'),
+    ...hex('4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5'),
+  ];
+  return 'ecdsa-sha2-nistp256 ${base64Encode([...text('ecdsa-sha2-nistp256'), ...text('nistp256'), 0, 0, 0, point.length, ...point])}';
+}
+
+class FakeSigner implements ByoHostSigner {
+  final List<String> ensured = [];
+  final Map<String, String> agents = {};
+  final List<String> closed = [];
+  final List<String> deleted = [];
+  int resets = 0;
+  @override
+  Future<ByoHostSignerIdentity> ensureIdentity(String profileId) async {
+    ensured.add(profileId);
+    return ByoHostSignerIdentity(
+      keyAlias: 'oc.byoHostSsh.$profileId',
+      publicKey: devicePublicKey(),
+    );
+  }
+
+  @override
+  Future<void> openAgent({
+    required String profileId,
+    required String socketPath,
+    required String user,
+  }) async {
+    expect(user, 'ubuntu');
+    expect(socketPath, contains('/linux/ubuntu/tmp/.oa-'));
+    expect(await Directory(File(socketPath).parent.path).exists(), isTrue);
+    agents[profileId] = socketPath;
+  }
+
+  @override
+  Future<void> closeAgent(String profileId) async {
+    closed.add(profileId);
+    agents.remove(profileId);
+  }
+
+  @override
+  Future<void> deleteIdentity(String profileId) async {
+    deleted.add(profileId);
+  }
+
+  @override
+  Future<void> deleteAllIdentities() async {
+    resets++;
+  }
+}
+
+ByoHostTailnetResolver fakeTailnet() => ByoHostTailnetResolver(
+  lookup: (_) async => [InternetAddress('100.64.0.10')],
+);
 
 class FakeShell implements ByoHostLocalShell {
   FakeShell(this.root);
@@ -16,18 +86,27 @@ class FakeShell implements ByoHostLocalShell {
   final List<String> privateCommands = [];
   final List<String> stopped = [];
   String? installInput;
+  final Map<String, String> observedFiles = {};
+  Future<void> observeFiles() async {
+    await for (final entry in Directory(
+      '${root.path}/linux/ubuntu/tmp',
+    ).list(recursive: true)) {
+      if (entry is File) observedFiles[entry.path] = await entry.readAsString();
+    }
+  }
+
   final Map<String, ServerSocket> listeners = {};
   bool supported = true;
   bool failInstall = false;
   String failureOutput = 'PRIVATE_ERROR_SENTINEL';
   @override
   Future<bool> available() async => supported;
-  String translate(String script) => script.replaceAll(
-    '/tmp/oc-byo-',
-    '${root.path}/linux/ubuntu/tmp/oc-byo-',
-  );
+  String translate(String script) => script
+      .replaceAll('/tmp/oc-byo-', '${root.path}/linux/ubuntu/tmp/oc-byo-')
+      .replaceAll('/tmp/.oa-', '${root.path}/linux/ubuntu/tmp/.oa-');
   @override
   Future<int> run(String script, {required Duration timeout}) async {
+    await observeFiles();
     nativeScripts.add(script);
     if (script.startsWith('umask')) {
       return (await Process.run('sh', ['-c', translate(script)])).exitCode;
@@ -39,11 +118,6 @@ class FakeShell implements ByoHostLocalShell {
     var output = '';
     if (command.contains('ssh-keyscan')) {
       output = 'server.example ${publicKey()}\n';
-    } else if (command.contains('ssh-keygen')) {
-      await File('${dir.path}/identity').writeAsString('PRIVATE_KEY_SENTINEL');
-      await File(
-        '${dir.path}/identity.pub',
-      ).writeAsString('${publicKey()} oc-byo');
     } else if (command.contains('uname -m')) {
       output = 'x86_64\n';
     } else if (command.contains('sh -s')) {
@@ -52,7 +126,7 @@ class FakeShell implements ByoHostLocalShell {
           ? failureOutput
           : jsonEncode({
               'hostId': 'machine_1',
-              'bundleVersion': '1.0.0',
+              'bundleVersion': '1.1.0',
               'openCodeVersion': '1.18.32',
               'port': 4096,
             });
@@ -63,6 +137,7 @@ class FakeShell implements ByoHostLocalShell {
 
   @override
   Future<void> start(String name, String script, int port) async {
+    await observeFiles();
     nativeScripts.add(script);
     final listener = await ServerSocket.bind(
       InternetAddress.loopbackIPv4,
@@ -94,12 +169,16 @@ void main() {
   late Directory root;
   late FakeShell shell;
   late BuiltinByoHostSshRunner runner;
+  late FakeSigner signer;
   setUp(() async {
     root = await Directory.systemTemp.createTemp('byo-ssh-test-');
     await Directory('${root.path}/linux/ubuntu/tmp').create(recursive: true);
     shell = FakeShell(root);
+    signer = FakeSigner();
     runner = BuiltinByoHostSshRunner(
       shell: shell,
+      signer: signer,
+      tailnet: fakeTailnet(),
       supportDirectory: () async => root,
     );
   });
@@ -122,6 +201,8 @@ void main() {
         contains('ssh-keyscan -T 10 -t ed25519'),
       );
       expect(shell.privateCommands.single, isNot(contains('ssh -')));
+      expect(shell.privateCommands.single, contains("'100.64.0.10'"));
+      expect(shell.privateCommands.single, isNot(contains('server.example')));
       expect(
         await Directory('${root.path}/linux/ubuntu/tmp').list().toList(),
         isEmpty,
@@ -139,8 +220,11 @@ void main() {
     'key generation never returns secrets through native command/output',
     () async {
       final identity = await runner.generateIdentity('profile_1');
-      expect(identity.privateKey, 'PRIVATE_KEY_SENTINEL');
-      expect(identity.publicKey, publicKey());
+      expect(identity.keyAlias, 'oc.byoHostSsh.profile_1');
+      expect(identity.publicKey, devicePublicKey());
+      expect(signer.ensured, ['profile_1']);
+      expect(shell.privateCommands, isEmpty);
+      expect(shell.observedFiles, isEmpty);
       expect(
         shell.nativeScripts.join('\n'),
         isNot(contains('PRIVATE_KEY_SENTINEL')),
@@ -158,12 +242,12 @@ void main() {
     hostKey: BuiltinByoHostSshRunner.keyFromPublicKey(publicKey()),
     login: login,
     identity: ByoHostIdentity(
-      privateKey: 'DEVICE_KEY_SENTINEL',
-      publicKey: publicKey(),
+      keyAlias: 'oc.byoHostSsh.profile_1',
+      publicKey: devicePublicKey(),
     ),
     deviceToken: 'DEVICE_TOKEN_SENTINEL_1234567890123456',
     bundle: ByoHostBundle(
-      version: '1.0.0',
+      version: '1.1.0',
       openCodeVersion: '1.18.32',
       artifacts: {
         'x64': ByoHostArtifact(
@@ -201,6 +285,16 @@ void main() {
         expect(command, contains(option));
       }
       expect(command, isNot(contains('PASSWORD_SENTINEL')));
+      expect(command, contains("'100.64.0.10'"));
+      expect(command, isNot(contains('server.example')));
+      expect(
+        shell.observedFiles.keys.any(
+          (path) => path.endsWith('/identity') || path.endsWith('/private_key'),
+        ),
+        isFalse,
+      );
+      expect(signer.ensured, isEmpty);
+      expect(signer.agents, isEmpty);
       expect(shell.installInput, contains('DEVICE_TOKEN_SENTINEL'));
       expect(
         shell.installInput!.indexOf('sha256sum -c'),
@@ -239,6 +333,28 @@ void main() {
       );
     },
   );
+
+  test('changed host key is rejected before bootstrap success', () async {
+    shell.failInstall = true;
+    shell.failureOutput = 'Host key verification failed';
+    final login = ByoHostLogin(password: 'PASSWORD_SENTINEL');
+    await expectLater(
+      install(login),
+      throwsA(
+        isA<ByoHostFailure>().having(
+          (error) => error.code,
+          'code',
+          ByoHostFailureCode.hostKeyChanged,
+        ),
+      ),
+    );
+    expect(login.password, isNull);
+    expect(signer.agents, isEmpty);
+    expect(
+      await Directory('${root.path}/linux/ubuntu/tmp').list().toList(),
+      isEmpty,
+    );
+  });
 
   test(
     'unavailable runner consumes initial credentials without shell activity',
@@ -282,59 +398,167 @@ void main() {
     },
   );
 
-  test('tunnel holds key only until exact service closes', () async {
-    final tunnel = await runner.forward(
-      profileId: 'profile_1',
-      target: ByoHostTarget.parse('ubuntu@server.example'),
-      hostKey: BuiltinByoHostSshRunner.keyFromPublicKey(publicKey()),
-      identity: ByoHostIdentity(
-        privateKey: 'DEVICE_KEY_SENTINEL',
-        publicKey: publicKey(),
-      ),
-      remotePort: 4096,
+  for (final login in [
+    ByoHostLogin(privateKey: '-----BEGIN OPENSSH PRIVATE KEY-----'),
+    ByoHostLogin(passphrase: 'PHRASE_SENTINEL'),
+  ]) {
+    test(
+      'imported key/passphrase is refused without writing anything: ${login.privateKey != null ? 'key' : 'passphrase'}',
+      () async {
+        await expectLater(
+          install(login),
+          throwsA(
+            isA<ByoHostFailure>().having(
+              (error) => error.code,
+              'code',
+              ByoHostFailureCode.authentication,
+            ),
+          ),
+        );
+        expect(login.privateKey, isNull);
+        expect(login.passphrase, isNull);
+        expect(shell.nativeScripts, isEmpty);
+        expect(shell.observedFiles, isEmpty);
+        expect(signer.ensured, isEmpty);
+      },
     );
-    expect(shell.listeners, hasLength(1));
-    expect(shell.nativeScripts.last, contains('-N -L'));
-    expect(
-      shell.nativeScripts.last,
-      contains('127.0.0.1:${tunnel.localPort}:127.0.0.1:4096'),
-    );
-    expect(
-      shell.nativeScripts.join('\n'),
-      isNot(contains('DEVICE_KEY_SENTINEL')),
-    );
-    final dirs = await Directory(
-      '${root.path}/linux/ubuntu/tmp',
-    ).list().toList();
-    expect(dirs, hasLength(1));
-    expect(
-      await File('${dirs.single.path}/identity').readAsString(),
-      'DEVICE_KEY_SENTINEL',
-    );
-    await tunnel.close();
-    await tunnel.close();
-    expect(shell.listeners, isEmpty);
-    expect(shell.stopped, hasLength(1));
-    expect(
-      await Directory('${root.path}/linux/ubuntu/tmp').list().toList(),
-      isEmpty,
-    );
-    await expectLater(
-      runner.describe(
-        tunnel: tunnel,
-        deviceId: 'profile_1',
-        deviceToken: 't' * 32,
-      ),
-      throwsA(isA<ByoHostFailure>()),
-    );
-  });
+  }
+
+  test(
+    'non-tailnet SSH is refused before scan login or signer activity',
+    () async {
+      final target = ByoHostTarget.parse('ubuntu@203.0.113.7');
+      final denial = throwsA(
+        isA<ByoHostFailure>().having(
+          (error) => error.code,
+          'code',
+          ByoHostFailureCode.tailnetRequired,
+        ),
+      );
+      await expectLater(runner.inspectKey(target), denial);
+      final login = ByoHostLogin(password: 'PASSWORD_SENTINEL');
+      await expectLater(
+        runner.install(
+          profileId: 'profile_1',
+          target: target,
+          hostKey: BuiltinByoHostSshRunner.keyFromPublicKey(publicKey()),
+          login: login,
+          identity: ByoHostIdentity(
+            keyAlias: 'oc.byoHostSsh.profile_1',
+            publicKey: devicePublicKey(),
+          ),
+          deviceToken: 't' * 32,
+          bundle: ByoHostBundle(
+            version: '1.1.0',
+            openCodeVersion: '1.18.32',
+            artifacts: {
+              'x64': ByoHostArtifact(
+                url: 'https://downloads.example.invalid/pinned.tar.gz',
+                sha256: 'a' * 64,
+              ),
+            },
+          ),
+        ),
+        denial,
+      );
+      await expectLater(
+        runner.forward(
+          profileId: 'profile_1',
+          target: target,
+          hostKey: BuiltinByoHostSshRunner.keyFromPublicKey(publicKey()),
+          identity: ByoHostIdentity(
+            keyAlias: 'oc.byoHostSsh.profile_1',
+            publicKey: devicePublicKey(),
+          ),
+          remotePort: 4096,
+        ),
+        denial,
+      );
+      expect(login.password, isNull);
+      expect(shell.nativeScripts, isEmpty);
+      expect(signer.ensured, isEmpty);
+      expect(shell.listeners, isEmpty);
+    },
+  );
+
+  test(
+    'tunnel uses public key plus native agent and never writes a private key',
+    () async {
+      final tunnel = await runner.forward(
+        profileId: 'profile_1',
+        target: ByoHostTarget.parse('ubuntu@server.example'),
+        hostKey: BuiltinByoHostSshRunner.keyFromPublicKey(publicKey()),
+        identity: ByoHostIdentity(
+          keyAlias: 'oc.byoHostSsh.profile_1',
+          publicKey: devicePublicKey(),
+        ),
+        remotePort: 4096,
+      );
+      expect(shell.listeners, hasLength(1));
+      expect(shell.nativeScripts.last, contains('-N -L'));
+      expect(shell.nativeScripts.last, contains("'100.64.0.10'"));
+      expect(shell.nativeScripts.last, isNot(contains('server.example')));
+      expect(
+        shell.nativeScripts.last,
+        contains('127.0.0.1:${tunnel.localPort}:127.0.0.1:4096'),
+      );
+      expect(
+        shell.nativeScripts.join('\n'),
+        isNot(contains('DEVICE_KEY_SENTINEL')),
+      );
+      final dirs = await Directory(
+        '${root.path}/linux/ubuntu/tmp',
+      ).list().toList();
+      expect(dirs, hasLength(2));
+      final work = dirs.singleWhere((entry) => entry.path.contains('/oc-byo-'));
+      expect(
+        await File('${work.path}/device.pub').readAsString(),
+        '${devicePublicKey()}\n',
+      );
+      expect(await File('${work.path}/identity').exists(), isFalse);
+      expect(signer.agents.keys, ['profile_1']);
+      expect(shell.nativeScripts.last, contains('IdentityAgent=/tmp/.oa-'));
+      expect(
+        shell.nativeScripts.last,
+        contains('PubkeyAcceptedAlgorithms=ecdsa-sha2-nistp256'),
+      );
+      expect(
+        shell.observedFiles.keys.any(
+          (path) => path.endsWith('/identity') || path.endsWith('/private_key'),
+        ),
+        isFalse,
+      );
+      expect(
+        shell.observedFiles.values.join('\n'),
+        isNot(contains('PRIVATE KEY')),
+      );
+      expect(shell.privateCommands.join('\n'), isNot(contains('ssh-keygen')));
+      await tunnel.close();
+      await tunnel.close();
+      expect(shell.listeners, isEmpty);
+      expect(signer.agents, isEmpty);
+      expect(shell.stopped, hasLength(1));
+      expect(
+        await Directory('${root.path}/linux/ubuntu/tmp').list().toList(),
+        isEmpty,
+      );
+      await expectLater(
+        runner.describe(
+          tunnel: tunnel,
+          deviceId: 'profile_1',
+          deviceToken: 't' * 32,
+        ),
+        throwsA(isA<ByoHostFailure>()),
+      );
+    },
+  );
 
   test(
     'startup recovers only this profile orphan, preserving live and foreign data',
     () async {
       final identity = ByoHostIdentity(
-        privateKey: 'DEVICE_KEY_SENTINEL',
-        publicKey: publicKey(),
+        keyAlias: 'oc.byoHostSsh.profile_1',
+        publicKey: devicePublicKey(),
       );
       final tunnel = await runner.forward(
         profileId: 'profile_1',
@@ -346,7 +570,7 @@ void main() {
       final dirs = await Directory(
         '${root.path}/linux/ubuntu/tmp',
       ).list().toList();
-      final live = dirs.single;
+      final live = dirs.singleWhere((entry) => entry.path.contains('/oc-byo-'));
       final stale = Directory(
         '${live.path.substring(0, live.path.length - 24)}${'a' * 24}',
       );
@@ -379,6 +603,8 @@ void main() {
       await foreign.create();
       final fresh = BuiltinByoHostSshRunner(
         shell: shell,
+        signer: signer,
+        tailnet: fakeTailnet(),
         supportDirectory: () async => root,
       );
       try {
@@ -388,6 +614,8 @@ void main() {
         expect(await foreign.exists(), isTrue);
         expect(shell.stopped, ['byo-${'b' * 24}']);
         expect(shell.nativeScripts, isEmpty);
+        expect(signer.ensured, isEmpty);
+        expect(signer.deleted, ['profile_1', 'profile_1']);
       } finally {
         await fresh.dispose();
       }
@@ -399,14 +627,28 @@ void main() {
       profileId: 'profile_1',
       target: ByoHostTarget.parse('ubuntu@server.example'),
       hostKey: BuiltinByoHostSshRunner.keyFromPublicKey(publicKey()),
-      identity: ByoHostIdentity(privateKey: 'LIVE_KEY', publicKey: publicKey()),
+      identity: ByoHostIdentity(
+        keyAlias: 'oc.byoHostSsh.profile_1',
+        publicKey: devicePublicKey(),
+      ),
       remotePort: 4096,
     );
-    await runner.cleanup('profile_1');
+    await expectLater(
+      runner.cleanup('profile_1'),
+      throwsA(
+        isA<ByoHostFailure>().having(
+          (e) => e.code,
+          'code',
+          ByoHostFailureCode.busy,
+        ),
+      ),
+    );
+    expect(signer.agents.keys, ['profile_1']);
+    expect(signer.deleted, isEmpty);
     expect(shell.listeners, hasLength(1));
     expect(
       await Directory('${root.path}/linux/ubuntu/tmp').list().toList(),
-      hasLength(1),
+      hasLength(2),
     );
     await tunnel.close();
     await runner.cleanup('profile_1');
@@ -517,7 +759,7 @@ void main() {
             request.uri.path == '/_oc/host'
                 ? {
                     'hostId': 'machine_1',
-                    'bundleVersion': '1.0.0',
+                    'bundleVersion': '1.1.0',
                     'openCodeVersion': '1.18.32',
                     'port': 4096,
                   }

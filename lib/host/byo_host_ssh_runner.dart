@@ -8,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 
 import '../builtin/builtin_linux.dart';
 import '../domain/byo_host.dart';
+import 'byo_host_signer.dart';
+import 'byo_host_tailnet.dart';
 
 /// Native output is deliberately ignored: every operation redirects output to
 /// an app-private file before invoking a program which may print credentials.
@@ -58,11 +60,19 @@ class BuiltinByoHostSshRunner implements ByoHostSshRunner {
     ByoHostLocalShell? shell,
     Future<Directory> Function()? supportDirectory,
     HttpClient Function()? httpClient,
+    ByoHostSigner? signer,
+    ByoHostTailnetResolver? tailnet,
   }) : _shell = shell ?? BuiltinByoHostLocalShell(),
        _supportDirectory = supportDirectory ?? getApplicationSupportDirectory,
-       _httpClient = httpClient ?? HttpClient.new;
+       _httpClient = httpClient ?? HttpClient.new,
+       _signer = signer ?? AndroidByoHostSigner(),
+       _tailnet = tailnet ?? ByoHostTailnetResolver();
 
   final ByoHostLocalShell _shell;
+  final ByoHostSigner _signer;
+  final ByoHostTailnetResolver _tailnet;
+  final Map<String, Directory> _agentDirectories = {};
+  final Set<String> _forwardingProfiles = {};
   final Future<Directory> Function() _supportDirectory;
   final HttpClient Function() _httpClient;
   final Set<_SshTunnel> _tunnels = {};
@@ -151,7 +161,17 @@ class BuiltinByoHostSshRunner implements ByoHostSshRunner {
   @override
   Future<void> cleanup(String profileId) async {
     try {
-      await _cleanupProfile(profileId, await _privateRoot(profileId));
+      if (_forwardingProfiles.contains(profileId)) {
+        throw const ByoHostFailure(ByoHostFailureCode.busy);
+      }
+      final root = await _privateRoot(profileId);
+      await _closeAgent(profileId);
+      final stale = Directory(
+        '${root.path}/tmp/.oa-${sha256.convert(utf8.encode(profileId)).toString().substring(0, 16)}',
+      );
+      if (await stale.exists()) await stale.delete(recursive: true);
+      await _cleanupProfile(profileId, root);
+      await _signer.deleteIdentity(profileId);
     } on ByoHostFailure {
       rethrow;
     } catch (_) {
@@ -222,6 +242,7 @@ class BuiltinByoHostSshRunner implements ByoHostSshRunner {
 
   @override
   Future<ByoHostKey> inspectKey(ByoHostTarget target) async {
+    target = await _tailnet.resolve(target);
     final work = await _work('scan');
     try {
       final result = await work.execute(
@@ -253,25 +274,74 @@ class BuiltinByoHostSshRunner implements ByoHostSshRunner {
 
   @override
   Future<ByoHostIdentity> generateIdentity(String profileId) async {
-    final work = await _work(profileId);
     try {
-      final result = await work.execute(
-        'ssh-keygen -q -t ed25519 -N "" -C oc-byo -f ${_q('${work.remote}/identity')}',
-      );
-      if (result.code != 0) {
+      if (!await available()) {
         throw const ByoHostFailure(ByoHostFailureCode.unavailable);
       }
-      final public = keyFromPublicKey(await work.read('identity.pub'));
+      final root = await _privateRoot(profileId);
+      await _cleanupProfile(profileId, root);
+      final identity = await _signer.ensureIdentity(profileId);
       return ByoHostIdentity(
-        privateKey: await work.read('identity'),
-        publicKey: public.publicKey,
+        keyAlias: identity.keyAlias,
+        publicKey: identity.publicKey,
       );
     } on ByoHostFailure {
       rethrow;
     } catch (_) {
-      throw const ByoHostFailure(ByoHostFailureCode.transport);
-    } finally {
-      await work.remove();
+      throw const ByoHostFailure(ByoHostFailureCode.unavailable);
+    }
+  }
+
+  Future<String> _openAgent(
+    String profileId,
+    ByoHostTarget target,
+    ByoHostIdentity identity,
+  ) async {
+    final actual = await _signer.ensureIdentity(profileId);
+    if (actual.keyAlias != identity.keyAlias ||
+        actual.publicKey != identity.publicKey) {
+      throw const ByoHostFailure(ByoHostFailureCode.identityChanged);
+    }
+    await _closeAgent(profileId);
+    final root = await _privateRoot(profileId);
+    final leaf =
+        '.oa-${sha256.convert(utf8.encode(profileId)).toString().substring(0, 16)}';
+    final local = Directory('${root.path}/tmp/$leaf');
+    if (await FileSystemEntity.type(local.path, followLinks: false) !=
+        FileSystemEntityType.notFound) {
+      if (await FileSystemEntity.type(local.path, followLinks: false) !=
+          FileSystemEntityType.directory) {
+        throw const ByoHostFailure(ByoHostFailureCode.storage);
+      }
+      await local.delete(
+        recursive: true,
+      ); // previous process's dead socket, no key bytes
+    }
+    final remote = '/tmp/$leaf';
+    final code = await _shell.run(
+      'umask 077; mkdir ${_q(remote)} >/dev/null 2>&1 && chmod 700 ${_q(remote)} >/dev/null 2>&1',
+      timeout: _short,
+    );
+    if (code != 0) throw const ByoHostFailure(ByoHostFailureCode.storage);
+    _agentDirectories[profileId] = local;
+    try {
+      await _signer.openAgent(
+        profileId: profileId,
+        socketPath: '${local.path}/s',
+        user: target.user,
+      );
+      return '$remote/s';
+    } catch (_) {
+      await _closeAgent(profileId);
+      throw const ByoHostFailure(ByoHostFailureCode.unavailable);
+    }
+  }
+
+  Future<void> _closeAgent(String profileId) async {
+    await _signer.closeAgent(profileId);
+    final directory = _agentDirectories.remove(profileId);
+    if (directory != null && await directory.exists()) {
+      await directory.delete(recursive: true);
     }
   }
 
@@ -279,8 +349,10 @@ class BuiltinByoHostSshRunner implements ByoHostSshRunner {
     _PrivateWork work,
     ByoHostTarget target,
     ByoHostKey pin,
-    ByoHostLogin login,
-  ) async {
+    ByoHostLogin login, {
+    String? agentSocket,
+    String? publicKey,
+  }) async {
     _validatePin(pin);
     await work.write('known_hosts', 'oc-byo-host ${pin.publicKey}\n');
     final args = <String>[
@@ -305,7 +377,9 @@ class BuiltinByoHostSshRunner implements ByoHostSshRunner {
       '-o',
       'VerifyHostKeyDNS=no',
       '-o',
-      'IdentityAgent=none',
+      'IdentityAgent=${agentSocket ?? 'none'}',
+      '-o',
+      'IdentityFile=none',
       '-o',
       'IdentitiesOnly=yes',
       '-o',
@@ -339,24 +413,29 @@ class BuiltinByoHostSshRunner implements ByoHostSshRunner {
       '-o',
       'RequestTTY=no',
     ];
-    final key = login.privateKey;
-    if (key != null && key.isNotEmpty) {
-      await work.write('identity', key);
-      args.addAll(['-i', '${work.remote}/identity']);
+    // Imported bootstrap keys are unsupported: no private key may touch disk.
+    if (login.privateKey != null || login.passphrase != null) {
+      throw const ByoHostFailure(ByoHostFailureCode.authentication);
+    }
+    if (agentSocket != null && publicKey != null) {
+      await work.write('device.pub', '$publicKey\n');
+      args.addAll([
+        '-i',
+        '${work.remote}/device.pub',
+        '-o',
+        'PubkeyAcceptedAlgorithms=ecdsa-sha2-nistp256',
+      ]);
     } else {
       args.addAll(['-o', 'PubkeyAuthentication=no']);
     }
-    if (login.passphrase != null && login.password != null) {
-      throw const ByoHostFailure(ByoHostFailureCode.authentication);
-    }
-    final password = login.passphrase ?? login.password;
+    final password = login.password;
     String environment = '';
     if (password != null) {
       if (password.contains('\n') || password.contains('\r')) {
         throw const ByoHostFailure(ByoHostFailureCode.authentication);
       }
       await work.write('password', password);
-      final prompt = login.passphrase != null ? '*passphrase*' : '*assword*';
+      const prompt = '*assword*';
       await work.write(
         'askpass',
         '#!/bin/sh\ncase "\$1" in $prompt) exec cat ${_q('${work.remote}/password')};; *) exit 1;; esac\n',
@@ -368,7 +447,7 @@ class BuiltinByoHostSshRunner implements ByoHostSshRunner {
         '-o',
         'BatchMode=no',
         '-o',
-        'PreferredAuthentications=${login.passphrase != null ? 'publickey' : 'password'}',
+        'PreferredAuthentications=password',
       ]);
     } else {
       args.addAll([
@@ -395,13 +474,29 @@ class BuiltinByoHostSshRunner implements ByoHostSshRunner {
     required ByoHostBundle bundle,
   }) async {
     _PrivateWork? work;
+    var usesAgent = false;
     try {
+      target = await _tailnet.resolve(target);
+      if (login.privateKey != null || login.passphrase != null) {
+        throw const ByoHostFailure(ByoHostFailureCode.authentication);
+      }
       work = await _work(profileId);
       if (!RegExp(r'^[A-Za-z0-9_-]{32,256}$').hasMatch(deviceToken)) {
         throw const ByoHostFailure(ByoHostFailureCode.authentication);
       }
-      keyFromPublicKey(identity.publicKey);
-      final ssh = await _ssh(work, target, hostKey, login);
+      String? agentSocket;
+      if (login.password == null) {
+        agentSocket = await _openAgent(profileId, target, identity);
+        usesAgent = true;
+      }
+      final ssh = await _ssh(
+        work,
+        target,
+        hostKey,
+        login,
+        agentSocket: agentSocket,
+        publicKey: agentSocket == null ? null : identity.publicKey,
+      );
       final architecture = await work.execute(
         '$ssh ${_q(target.host)} uname -m',
       );
@@ -454,6 +549,7 @@ OC_BYO_INPUT
       throw const ByoHostFailure(ByoHostFailureCode.uncertain);
     } finally {
       login.consume();
+      if (usesAgent) await _closeAgent(profileId);
       await work?.remove();
     }
   }
@@ -466,6 +562,10 @@ OC_BYO_INPUT
     required ByoHostIdentity identity,
     required int remotePort,
   }) async {
+    target = await _tailnet.resolve(target);
+    if (_forwardingProfiles.contains(profileId)) {
+      throw const ByoHostFailure(ByoHostFailureCode.busy);
+    }
     if (remotePort < 1 || remotePort > 65535) {
       throw const ByoHostFailure(ByoHostFailureCode.invalidTarget);
     }
@@ -476,7 +576,9 @@ OC_BYO_INPUT
         work,
         target,
         hostKey,
-        ByoHostLogin(privateKey: identity.privateKey),
+        ByoHostLogin(),
+        agentSocket: await _openAgent(profileId, target, identity),
+        publicKey: identity.publicKey,
       );
       final listener = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
       final port = listener.port;
@@ -485,10 +587,13 @@ OC_BYO_INPUT
       final script =
           'ulimit -f 128; exec $ssh -o ExitOnForwardFailure=yes -N -L ${_q('127.0.0.1:$port:127.0.0.1:$remotePort')} ${_q(target.host)} > ${_q(output)} 2>&1';
       await _shell.start(name, script, port);
+      _forwardingProfiles.add(profileId);
       late final _SshTunnel tunnel;
       tunnel = _SshTunnel(port, () => _shell.running(name), () async {
         await _shell.stop(name);
+        await _closeAgent(profileId);
         await work.remove();
+        _forwardingProfiles.remove(profileId);
         _tunnels.remove(tunnel);
       });
       _tunnels.add(tunnel);
@@ -520,18 +625,24 @@ OC_BYO_INPUT
       _tunnels.remove(tunnel);
       throw failure;
     } on ByoHostFailure {
-      await _stopWork(name, work);
+      await _stopWork(name, work, profileId);
       rethrow;
     } catch (_) {
-      await _stopWork(name, work);
+      await _stopWork(name, work, profileId);
       throw const ByoHostFailure(ByoHostFailureCode.transport);
     }
   }
 
-  Future<void> _stopWork(String name, _PrivateWork work) async {
+  Future<void> _stopWork(
+    String name,
+    _PrivateWork work,
+    String profileId,
+  ) async {
     try {
       await _shell.stop(name);
+      await _closeAgent(profileId);
       await work.remove();
+      _forwardingProfiles.remove(profileId);
     } on ByoHostFailure {
       rethrow;
     } catch (_) {
@@ -701,6 +812,9 @@ OC_BYO_INPUT
     for (final tunnel in _tunnels.toList()) {
       await tunnel.close();
       _tunnels.remove(tunnel);
+    }
+    for (final id in _agentDirectories.keys.toList()) {
+      await _closeAgent(id);
     }
   }
 }

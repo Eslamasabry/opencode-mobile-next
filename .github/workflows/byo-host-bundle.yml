@@ -1,0 +1,60 @@
+# Builds from reviewed source/pins and attaches only to a draft v* app release.
+# No manual/PR/branch trigger, no release publication and no upstream checksum TOFU.
+name: BYO host bundle draft
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+# Serialize with Android release build, which uses this same group and draft.
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bundle:
+    if: github.repository == 'Eslamasabry/opencode-mobile-next' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Require the exact master candidate
+        env:
+          RELEASE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch --quiet origin master --depth=1
+          test "$(git rev-parse origin/master)" = "$RELEASE_COMMIT"
+          python3 -c 'import sys; assert sys.version_info[:2] == (3, 12)'
+
+      - name: Build reproducible host bundles
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          python3 scripts/byo-host/build_release.py build \
+            --tag "$RELEASE_TAG" --repository "$RELEASE_REPOSITORY" --output dist/byo-host
+          python3 scripts/byo-host/build_release.py verify \
+            --tag "$RELEASE_TAG" --repository "$RELEASE_REPOSITORY" --output dist/byo-host
+          cat dist/byo-host/BYO_HOST_SHA256SUMS >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Attach reviewed bundles to draft only
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          python3 scripts/byo-host/build_release.py attach \
+            --tag "$RELEASE_TAG" --repository "$RELEASE_REPOSITORY" --output dist/byo-host

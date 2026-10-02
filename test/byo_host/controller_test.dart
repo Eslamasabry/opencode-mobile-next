@@ -77,7 +77,7 @@ class FakeRunner implements ByoHostSshRunner {
   @override
   Future<ByoHostIdentity> generateIdentity(String id) async =>
       const ByoHostIdentity(
-        privateKey: 'fake-private-key',
+        keyAlias: 'oc.byoHostSsh.phone-a',
         publicKey: 'fake-public-key',
       );
   @override
@@ -99,7 +99,7 @@ class FakeRunner implements ByoHostSshRunner {
 
   ByoHostDescriptor get descriptor => ByoHostDescriptor(
     hostId: hostId,
-    bundleVersion: '1.0.0',
+    bundleVersion: '1.1.0',
     openCodeVersion: '1.18.32',
     port: 4096,
   );
@@ -142,7 +142,7 @@ void main() {
   late FakeRunner runner;
   late ByoHostController controller;
   final bundle = ByoHostBundle(
-    version: '1.0.0',
+    version: '1.1.0',
     openCodeVersion: '1.18.32',
     artifacts: {
       'x64': ByoHostArtifact(
@@ -176,6 +176,37 @@ void main() {
 
   Matcher code(ByoHostFailureCode value) =>
       isA<ByoHostFailure>().having((e) => e.code, 'safe code', value);
+
+  test(
+    'key-only enrollment survives restart and pairs the reserved phone',
+    () async {
+      final pin = await controller.inspect(
+        ByoHostTarget.parse('ubuntu@100.80.1.2'),
+      );
+      final identity = await controller.prepareSshIdentity(
+        verifiedFingerprint: pin.fingerprint,
+      );
+      expect(identity.keyAlias, 'oc.byoHostSsh.phone-a');
+      expect(store.record!.phase, ByoHostPhase.needsTrust);
+      expect(store.secrets, isNull);
+      await controller.dispose();
+      controller = ByoHostController(
+        profileId: 'phone-a',
+        runner: runner,
+        store: store,
+        bundle: bundle,
+        enabled: true,
+      );
+      await controller.resume();
+      expect(controller.snapshot.phase, ByoHostPhase.needsTrust);
+      await controller.adopt(
+        verifiedFingerprint: pin.fingerprint,
+        login: ByoHostLogin(),
+      );
+      expect(controller.snapshot.phase, ByoHostPhase.ready);
+      expect(runner.installs, 1);
+    },
+  );
 
   test('default off and unknown host never mutates remote', () async {
     final disabled = ByoHostController(
