@@ -562,6 +562,18 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
                 tokens.space1,
                 tokens.space1,
               )
+            : header != null &&
+                  (plan.wrapToggle || (widget.copyable && !_labelledCopy))
+            // The header's 48 dp icon targets already carry their own room:
+            // a full space4 above them left a tall empty band over the
+            // status line. The top and end insets shrink to space1 like the
+            // first-line Copy case; the text keeps its space4 start.
+            ? EdgeInsetsDirectional.fromSTEB(
+                tokens.space4,
+                tokens.space1,
+                tokens.space1,
+                tokens.space4,
+              )
             : EdgeInsetsDirectional.all(tokens.space4);
         return DecoratedBox(
           decoration: ShapeDecoration(

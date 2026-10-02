@@ -170,27 +170,32 @@ class _CodeScrollerState extends State<_CodeScroller> {
           setState(() {});
           return false;
         },
-        child: Stack(
-          children: [
-            Scrollbar(
-              controller: _controller,
-              thumbVisibility: finePointer || _overflowing,
-              notificationPredicate: (n) => true,
-              child: SingleChildScrollView(
+        // Clipped to the block: the scroll thumb lives inside it and never
+        // paints across the rows around it (a bar through "Run this command
+        // again" on a phone).
+        child: ClipRect(
+          child: Stack(
+            children: [
+              Scrollbar(
                 controller: _controller,
-                scrollDirection: Axis.horizontal,
-                // While the scroll cue shows, its thumb lies along the
-                // bottom edge: leave that strip below the last line so the
-                // thumb never sits on readable text.
-                padding: (finePointer || _overflowing)
-                    ? EdgeInsets.only(bottom: KitTokens.of(context).space2)
-                    : EdgeInsets.zero,
-                child: widget.child,
+                thumbVisibility: finePointer || _overflowing,
+                notificationPredicate: (n) => true,
+                child: SingleChildScrollView(
+                  controller: _controller,
+                  scrollDirection: Axis.horizontal,
+                  // While the scroll cue shows, its thumb lies along the
+                  // bottom edge: leave that strip below the last line so the
+                  // thumb never sits on readable text.
+                  padding: (finePointer || _overflowing)
+                      ? EdgeInsets.only(bottom: KitTokens.of(context).space2)
+                      : EdgeInsets.zero,
+                  child: widget.child,
+                ),
               ),
-            ),
-            if (_showStartFade) _edge(context, end: false),
-            if (_showFade) _edge(context, end: true),
-          ],
+              if (_showStartFade) _edge(context, end: false),
+              if (_showFade) _edge(context, end: true),
+            ],
+          ),
         ),
       ),
     );

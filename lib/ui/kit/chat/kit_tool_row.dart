@@ -86,6 +86,7 @@ class KitToolRow extends StatefulWidget {
     required this.status,
     this.detail,
     this.path,
+    this.pathCut = KitMonoCut.middle,
     this.added,
     this.removed,
     this.duration,
@@ -122,6 +123,7 @@ class KitToolRow extends StatefulWidget {
   }) : kind = KitToolKind.agent,
        detail = null,
        path = null,
+       pathCut = KitMonoCut.middle,
        added = null,
        removed = null,
        duration = null,
@@ -147,6 +149,11 @@ class KitToolRow extends StatefulWidget {
   /// The file or folder touched: mono, LTR-isolated, middle ellipsis; the
   /// full value in semantics and the tooltip.
   final String? path;
+
+  /// Where [path] gives way when it does not fit: the middle for a path (it
+  /// keeps its root and file name), the end for a shell command (it reads
+  /// from its first word).
+  final KitMonoCut pathCut;
 
   /// An edit's "+n".
   final int? added;
@@ -344,7 +351,7 @@ class _KitToolRowState extends State<KitToolRow>
 
     Widget? second;
     if (path != null && path.isNotEmpty) {
-      second = KitText.mono(path, cut: KitMonoCut.middle, maxLines: 1);
+      second = KitText.mono(path, cut: row.pathCut, maxLines: 1);
       if (!_opens) {
         // A row that opens shows the full path through its KitTappable
         // tooltip; a plain row carries it on the value itself.

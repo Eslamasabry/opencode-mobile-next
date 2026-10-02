@@ -137,8 +137,8 @@ extension _ChatTopBar on _ChatScreenState {
             label: l10n.demoReviewChanges,
             onPressed: _showDiff,
           ),
-        // Watching: one tap folds every open step and fold on the page.
-        if (_watching && _transcriptExpansion.anyOpen)
+        // One tap folds every open step and fold on the page, in any chat.
+        if (_transcriptExpansion.anyOpen)
           KitAction(
             key: const Key('chat-collapse-all'),
             icon: AppIconography.unfoldLess,
