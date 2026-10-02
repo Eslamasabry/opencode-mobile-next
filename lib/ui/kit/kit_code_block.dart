@@ -336,6 +336,21 @@ List<String> _splitLines(String text) {
   return trimmed.split('\n');
 }
 
+/// The block's frame. Light: `detailsSurface` is the page's own ground (the
+/// code colours are built for it), so a block had no visible edge and its
+/// Copy and Wrap controls floated over bare page; a hairline in `text1` at
+/// 16 % draws the edge. Dark has its own surface and needs none.
+ShapeBorder _blockShape(BuildContext context, KitTokens tokens) {
+  final shape = tokens.shapeOf(KitShape.code);
+  if (tokens.roles.isDark || shape is! RoundedRectangleBorder) return shape;
+  return shape.copyWith(
+    side: BorderSide(
+      width: KitTokens.hairlineWidth(context),
+      color: tokens.roles.text1.withValues(alpha: .16),
+    ),
+  );
+}
+
 class _KitCodeBlockState extends State<KitCodeBlock> {
   bool? _wrap;
   bool _expanded = false;
@@ -526,7 +541,9 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(child: body),
-              SizedBox(width: tokens.space2),
+              // A real gap before the controls, so a long line's clipped end
+              // never meets the Copy and Wrap glyphs.
+              SizedBox(width: tokens.space3),
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -578,7 +595,7 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
         return DecoratedBox(
           decoration: ShapeDecoration(
             color: tokens.detailsSurface,
-            shape: tokens.shapeOf(KitShape.code),
+            shape: _blockShape(context, tokens),
           ),
           child: Padding(padding: padding, child: column),
         );
@@ -611,7 +628,7 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
     return DecoratedBox(
       decoration: ShapeDecoration(
         color: tokens.detailsSurface,
-        shape: tokens.shapeOf(KitShape.code),
+        shape: _blockShape(context, tokens),
       ),
       child: Padding(padding: EdgeInsets.all(tokens.space4), child: text),
     );
@@ -665,7 +682,7 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
                 tokens.space4 -
                 tokens.space1 -
                 tokens.minTarget -
-                tokens.space2
+                tokens.space3
           : maxWidth - tokens.space4 * 2;
       if (_hasGutter) {
         room -= _gutterWidth(context, monoStyle, lines.length) + tokens.space2;

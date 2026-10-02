@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
+import 'package:opencode_mobile/ui/kit/chat/kit_message.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_queued_message.dart';
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
 import 'package:opencode_mobile/ui/kit/kit_icon_button.dart';
@@ -130,7 +131,7 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('2. three items in order in one end-aligned surface2 bubble '
+  testWidgets('2. three items in order in one end-aligned prompt-fill bubble '
       'with 20/20/6/20 corners, no border, no danger', (tester) async {
     await _pump(
       tester,
@@ -165,7 +166,7 @@ void main() {
     final roles = KitTokens.of(tester.element(find.byKey(_bubbleKey))).roles;
     final box = tester.widget<DecoratedBox>(find.byKey(_bubbleKey));
     final decoration = box.decoration as ShapeDecoration;
-    expect(decoration.color, roles.surface2);
+    expect(decoration.color, kitPromptBubbleFill(roles));
     final shape = decoration.shape as RoundedRectangleBorder;
     expect(shape.side, BorderSide.none);
     expect(

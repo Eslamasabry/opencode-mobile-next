@@ -110,7 +110,27 @@ final _states = <String, Widget>{
       ],
     ),
   ]),
+  'prompt_long': _scene([
+    const KitMessage.prompt(
+      body: KitMarkdown(
+        'Make the coupon test deterministic, run the whole suite twice '
+        'before you commit, and tell me if anything else is flaky.',
+        selectable: false,
+      ),
+    ),
+    _replyMessage,
+  ]),
   'reply': _scene([_replyMessage]),
+  'reply_code': _scene([
+    const KitMessage.reply(
+      body: KitMarkdown(
+        'Run this, then the longer one:\n\n'
+        '```sh\nflutter test --concurrency=1 test/checkout_test.dart\n```\n\n'
+        '```dart\nfinal total = await bloc.stream.firstWhere((s) => s.settled && s.total > 0);\nexpect(total, 42);\n```',
+        selectable: false,
+      ),
+    ),
+  ]),
   'thought_folded': _scene([
     const KitMessage.thought(body: _thoughtBody, working: true),
     const KitMessage.thought(body: _thoughtBody, took: Duration(seconds: 12)),

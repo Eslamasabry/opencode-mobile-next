@@ -137,6 +137,17 @@ final _states = <String, List<Widget> Function()>{
       duration: Duration(seconds: 38),
     ),
   ],
+  'failed_retry': () => [
+    _read,
+    KitToolRow(
+      kind: KitToolKind.shell,
+      title: 'Ran flutter test',
+      detail: 'Exit code 1 · 2 tests failed',
+      status: KitToolStatus.failed,
+      duration: const Duration(seconds: 38),
+      onRetry: () {},
+    ),
+  ],
   'not_run': () => [
     _read,
     const KitToolRow(

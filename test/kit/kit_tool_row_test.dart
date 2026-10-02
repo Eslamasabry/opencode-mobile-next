@@ -147,6 +147,39 @@ void main() {
     },
   );
 
+  group('failed step retry (10A)', () {
+    testWidgets('a failed step offers a neutral Retry that fires', (
+      tester,
+    ) async {
+      var taps = 0;
+      await _pump(
+        tester,
+        KitToolRow(
+          kind: KitToolKind.shell,
+          title: 'Run flutter test',
+          status: KitToolStatus.failed,
+          onRetry: () => taps++,
+        ),
+      );
+      expect(find.text('Retry'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('kit-tool-retry')));
+      expect(taps, 1);
+    });
+
+    testWidgets('no Retry while the step is not failed', (tester) async {
+      await _pump(
+        tester,
+        KitToolRow(
+          kind: KitToolKind.shell,
+          title: 'Run flutter test',
+          status: KitToolStatus.done,
+          onRetry: () {},
+        ),
+      );
+      expect(find.text('Retry'), findsNothing);
+    });
+  });
+
   group('status marks and words', () {
     final expectations = <KitToolStatus, (String?, Type?)>{
       KitToolStatus.notRun: ('Not run', null),

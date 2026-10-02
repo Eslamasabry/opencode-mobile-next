@@ -164,16 +164,17 @@ void main() {
           } else {
             expect(rect.left, 16);
           }
+          // Owner decision 04A: at most 85 % of the column.
           expect(
             rect.width,
-            lessThanOrEqualTo(400 - KitLayout.bubbleStartInset),
+            lessThanOrEqualTo((400 * KitLayout.bubbleMaxShare).floorToDouble()),
           );
 
           final box = tester.renderObject<RenderDecoratedBox>(
             find.byKey(_bubbleKey),
           );
           final decoration = box.decoration as BoxDecoration;
-          expect(decoration.color, _roles(tester).surface2);
+          expect(decoration.color, kitPromptBubbleFill(_roles(tester)));
           expect(decoration.border, isNull);
           expect(decoration.boxShadow, isNull);
           final radius = decoration.borderRadius!.resolve(direction);
@@ -715,4 +716,18 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  test('the prompt bubble is visible on the page in light and dark', () {
+    for (final roles in [graphiteLight, graphiteDark]) {
+      final fill = kitPromptBubbleFill(roles);
+      for (final page in [roles.ground, if (!roles.isDark) roles.surface1]) {
+        expect(
+          contrastRatio(fill, page),
+          greaterThanOrEqualTo(1.12),
+          reason: '${roles.brightness} bubble against $page',
+        );
+      }
+      expect(contrastRatio(roles.text1, fill), greaterThanOrEqualTo(7));
+    }
+  });
 }

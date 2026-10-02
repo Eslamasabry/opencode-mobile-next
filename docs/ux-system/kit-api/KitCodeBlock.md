@@ -253,3 +253,7 @@ In `test/kit/kit_code_block_test.dart`:
 ## Open questions
 
 None.
+
+## Light frame and control gap (2 Oct)
+
+In light, `detailsSurface` is the page ground, so a block had no edge: it now draws a 1 px hairline (`text1` at 16 %) around its shape (dark unchanged). The Copy and Wrap column sits `space3` clear of the text, never over it.

@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
+import '../kit_buttons.dart';
 import '../kit_motion.dart';
 import '../kit_since.dart';
 import '../kit_status_mark.dart';
@@ -97,6 +98,7 @@ class KitToolRow extends StatefulWidget {
     this.rowKey,
     this.onOpen,
     this.openLabel,
+    this.onRetry,
   }) : assert(
          onOpen == null || note == null,
          'KitToolRow: a step either opens elsewhere (onOpen) or folds its '
@@ -131,6 +133,7 @@ class KitToolRow extends StatefulWidget {
        body = const <Widget>[],
        expanded = null,
        onExpansionChanged = null,
+       onRetry = null,
        _agent = true;
 
   /// The glyph; `.agent` is always [KitToolKind.agent].
@@ -197,6 +200,11 @@ class KitToolRow extends StatefulWidget {
   /// The semantics hint of [onOpen]; null reads "Open its conversation"
   /// (`.agent`) or "Open its details" (a step).
   final String? openLabel;
+
+  /// A failed step: "Retry", a quiet neutral text button under the line
+  /// (owner decision 10A: still, no red, no shake). Null shows none; it is
+  /// shown only while [status] is [KitToolStatus.failed].
+  final VoidCallback? onRetry;
 
   /// On the line's tap target or text (today's `Key('embedded-tool-row')`,
   /// `ValueKey('team-conversation-agent-<id>')`).
@@ -521,13 +529,38 @@ class _KitToolRowState extends State<KitToolRow>
       );
     }
 
-    if (!open) return header;
+    // A failed step offers Retry on its own line: a quiet neutral button,
+    // no frame, no motion (10A).
+    final onRetry = status == KitToolStatus.failed ? row.onRetry : null;
+    final Widget? retry = onRetry == null
+        ? null
+        : Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Padding(
+              padding: EdgeInsetsDirectional.only(start: tokens.space4),
+              child: KitButton.tertiary(
+                key: const ValueKey('kit-tool-retry'),
+                label: l10n.kitToolRetry,
+                onPressed: onRetry,
+              ),
+            ),
+          );
+
+    if (!open) {
+      if (retry == null) return header;
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [header, retry],
+      );
+    }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         header,
+        ?retry,
         FadeTransition(
           opacity: _fadeCurve,
           child: _Body(children: [?row.note, ...row.body]),

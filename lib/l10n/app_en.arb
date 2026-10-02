@@ -14494,11 +14494,11 @@
   },
   "effectsActivityGlow": "Glowing border while replying",
   "@effectsActivityGlow": {
-    "description": "Settings \u203a Appearance \u203a Effects: switch for the soft glowing ring around the message box while a reply runs."
+    "description": "Settings › Appearance › Effects: switch for the soft glowing ring around the message box while a reply runs."
   },
   "effectsActivityGlowHint": "A soft glow circles the message box while a reply is written",
   "@effectsActivityGlowHint": {
-    "description": "Settings \u203a Appearance \u203a Effects: one line under the glowing border switch."
+    "description": "Settings › Appearance › Effects: one line under the glowing border switch."
   },
   "effectsSaveFailed": "Could not save this choice on this device. Try again.",
   "@effectsSaveFailed": {
@@ -31141,41 +31141,82 @@
     "description": "One line shown when the team is ready: its files are fenced by Android's file protection (Landlock)"
   },
   "teamRefusalRepositoryEmpty": "This repository has no commits yet.",
-  "@teamRefusalRepositoryEmpty": {"description": "AI Team: why a project command was refused (repository_empty)."},
+  "@teamRefusalRepositoryEmpty": {
+    "description": "AI Team: why a project command was refused (repository_empty)."
+  },
   "teamRefusalRepositoryEmptyNext": "Make a first commit in it, then start planning again.",
-  "@teamRefusalRepositoryEmptyNext": {"description": "AI Team: what to do next after repository_empty."},
+  "@teamRefusalRepositoryEmptyNext": {
+    "description": "AI Team: what to do next after repository_empty."
+  },
   "teamRefusalRepositoryLink": "The team couldn't safely copy this repository.",
-  "@teamRefusalRepositoryLink": {"description": "AI Team: why a project command was refused (invalid_proot_object_link)."},
+  "@teamRefusalRepositoryLink": {
+    "description": "AI Team: why a project command was refused (invalid_proot_object_link)."
+  },
   "teamRefusalRepositoryLinkNext": "Try again. If it keeps happening, report the problem.",
-  "@teamRefusalRepositoryLinkNext": {"description": "AI Team: what to do next after invalid_proot_object_link."},
+  "@teamRefusalRepositoryLinkNext": {
+    "description": "AI Team: what to do next after invalid_proot_object_link."
+  },
   "teamRefusalRepositoryDamaged": "The repository copy didn't match the original.",
-  "@teamRefusalRepositoryDamaged": {"description": "AI Team: why a project command was refused (repository_object_hash_mismatch)."},
+  "@teamRefusalRepositoryDamaged": {
+    "description": "AI Team: why a project command was refused (repository_object_hash_mismatch)."
+  },
   "teamRefusalRepositoryDamagedNext": "Try again. If it keeps happening, report the problem.",
-  "@teamRefusalRepositoryDamagedNext": {"description": "AI Team: what to do next after repository_object_hash_mismatch."},
+  "@teamRefusalRepositoryDamagedNext": {
+    "description": "AI Team: what to do next after repository_object_hash_mismatch."
+  },
   "teamRefusalPlanTaskName": "A task in the plan has no name.",
-  "@teamRefusalPlanTaskName": {"description": "AI Team: why a project command was refused (planTaskTitleRequired)."},
+  "@teamRefusalPlanTaskName": {
+    "description": "AI Team: why a project command was refused (planTaskTitleRequired)."
+  },
   "teamRefusalPlanTaskNameNext": "Give every task a name, then approve again.",
-  "@teamRefusalPlanTaskNameNext": {"description": "AI Team: what to do next after planTaskTitleRequired."},
+  "@teamRefusalPlanTaskNameNext": {
+    "description": "AI Team: what to do next after planTaskTitleRequired."
+  },
   "teamRefusalPlanPhase": "A phase in the plan isn't complete.",
-  "@teamRefusalPlanPhase": {"description": "AI Team: why a project command was refused (planPhaseInvalid)."},
+  "@teamRefusalPlanPhase": {
+    "description": "AI Team: why a project command was refused (planPhaseInvalid)."
+  },
   "teamRefusalPlanPhaseNext": "Check each phase has tasks and criteria, then approve again.",
-  "@teamRefusalPlanPhaseNext": {"description": "AI Team: what to do next after planPhaseInvalid."},
+  "@teamRefusalPlanPhaseNext": {
+    "description": "AI Team: what to do next after planPhaseInvalid."
+  },
   "teamServerPhoneFailed": "AI Team on this phone isn't answering, so its work can't be reached.",
-  "@teamServerPhoneFailed": {"description": "Project Servers page: why This phone is not reachable when the team's engine did not answer."},
+  "@teamServerPhoneFailed": {
+    "description": "Project Servers page: why This phone is not reachable when the team's engine did not answer."
+  },
   "teamServerPhoneNotReady": "AI Team on this phone isn't ready: its safety check hasn't passed.",
-  "@teamServerPhoneNotReady": {"description": "Project Servers page: why This phone is not reachable when the engine cannot run work yet."},
+  "@teamServerPhoneNotReady": {
+    "description": "Project Servers page: why This phone is not reachable when the engine cannot run work yet."
+  },
   "teamServerPhoneNoAnswer": "OpenCode on this phone didn't answer the last check.",
-  "@teamServerPhoneNoAnswer": {"description": "Project Servers page: why This phone is not reachable when the team is ready but OpenCode did not answer."},
+  "@teamServerPhoneNoAnswer": {
+    "description": "Project Servers page: why This phone is not reachable when the team is ready but OpenCode did not answer."
+  },
   "phoneTeamOffReview": "Review and choose when",
-  "@phoneTeamOffReview": {"description": "Button on the AI Team page when the automatic check waits for the person to allow an OpenCode restart"},
+  "@phoneTeamOffReview": {
+    "description": "Button on the AI Team page when the automatic check waits for the person to allow an OpenCode restart"
+  },
   "teamProjectInterruptedRow": "{name}: work was interrupted, tap to resume",
-  "@teamProjectInterruptedRow": {"placeholders": {"name": {"type": "String"}}, "description": "Project list row for a project whose work stopped when the app closed"},
+  "@teamProjectInterruptedRow": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    },
+    "description": "Project list row for a project whose work stopped when the app closed"
+  },
   "teamProjectResumeUnavailable": "This version of AI Team can't resume interrupted work yet. You can stop the project and start it again.",
-  "@teamProjectResumeUnavailable": {"description": "Notice on an interrupted project when the engine does not offer Resume"},
+  "@teamProjectResumeUnavailable": {
+    "description": "Notice on an interrupted project when the engine does not offer Resume"
+  },
   "teamProjectInterrupted": "Interrupted, ready to resume",
-  "@teamProjectInterrupted": {"description": "Project or task status word after the app closed while work was running"},
+  "@teamProjectInterrupted": {
+    "description": "Project or task status word after the app closed while work was running"
+  },
   "teamProjectEditorContextFilesHelpReal": "Optional. One path per line. The team reads these before it plans.",
-  "@teamProjectEditorContextFilesHelpReal": {"description": "Help under the context files field for a real team (not the demo)"},
+  "@teamProjectEditorContextFilesHelpReal": {
+    "description": "Help under the context files field for a real team (not the demo)"
+  },
   "addServerCleartextWarning": "This address uses plain HTTP. On this network, others could read your password and conversations. Use Tailscale or HTTPS if you can.",
   "@addServerCleartextWarning": {
     "description": "Add server: warning under a plain http:// address on a private network (192.168.x.x, 10.x.x.x, .local). Must be confirmed before saving or checking."
@@ -31189,55 +31230,105 @@
     "description": "Add server: line shown after the person confirmed plain HTTP for the address."
   },
   "storageAccessTitle": "Allow access to files?",
-  "@storageAccessTitle": {"description": "Shared-storage project: title of the question asked before a folder in the phone's shared storage is opened."},
+  "@storageAccessTitle": {
+    "description": "Shared-storage project: title of the question asked before a folder in the phone's shared storage is opened."
+  },
   "storageAccessBody": "This folder is in your phone’s shared storage. Android hides the files in it from apps unless you allow All files access.",
-  "@storageAccessBody": {"description": "Shared-storage project: what the problem is."},
+  "@storageAccessBody": {
+    "description": "Shared-storage project: what the problem is."
+  },
   "storageAccessWhyScope": "The app reads and changes files only in folders you open as projects.",
-  "@storageAccessWhyScope": {"description": "Shared-storage project: what access allows."},
+  "@storageAccessWhyScope": {
+    "description": "Shared-storage project: what access allows."
+  },
   "storageAccessWhyAgent": "The agent needs it to work in your folder in place. Without it you would see only hidden items such as .git.",
-  "@storageAccessWhyAgent": {"description": "Shared-storage project: why the agent needs it."},
+  "@storageAccessWhyAgent": {
+    "description": "Shared-storage project: why the agent needs it."
+  },
   "storageAccessWhyOff": "You can turn it off any time in Android Settings, under All files access.",
-  "@storageAccessWhyOff": {"description": "Shared-storage project: how to take it back."},
+  "@storageAccessWhyOff": {
+    "description": "Shared-storage project: how to take it back."
+  },
   "storageAccessAllow": "Allow access to files",
-  "@storageAccessAllow": {"description": "Shared-storage project: button that opens Android's All files access page."},
+  "@storageAccessAllow": {
+    "description": "Shared-storage project: button that opens Android's All files access page."
+  },
   "storageAccessNotNow": "Not now",
-  "@storageAccessNotNow": {"description": "Shared-storage project: decline."},
+  "@storageAccessNotNow": {
+    "description": "Shared-storage project: decline."
+  },
   "storageAccessUseAppSpace": "Use the app’s project space",
-  "@storageAccessUseAppSpace": {"description": "Shared-storage project: choose a folder in the app's own project space instead."},
+  "@storageAccessUseAppSpace": {
+    "description": "Shared-storage project: choose a folder in the app's own project space instead."
+  },
   "storageAccessRefusedTitle": "Folder not opened",
-  "@storageAccessRefusedTitle": {"description": "Shared-storage project: title after access was not turned on."},
+  "@storageAccessRefusedTitle": {
+    "description": "Shared-storage project: title after access was not turned on."
+  },
   "storageAccessRefusedBody": "Without access to files this folder’s files cannot be shown, so it was not opened. Allow access, or choose a folder in the app’s project space.",
-  "@storageAccessRefusedBody": {"description": "Shared-storage project: body after access was not turned on."},
+  "@storageAccessRefusedBody": {
+    "description": "Shared-storage project: body after access was not turned on."
+  },
   "storageTermuxTitle": "Allow Termux storage?",
-  "@storageTermuxTitle": {"description": "Shared-storage project on a Termux server: title."},
+  "@storageTermuxTitle": {
+    "description": "Shared-storage project on a Termux server: title."
+  },
   "storageTermuxBody": "Your server runs in Termux, and Termux cannot read your phone’s shared storage yet. Without that, this folder shows only hidden items such as .git.",
-  "@storageTermuxBody": {"description": "Shared-storage project on a Termux server: body."},
+  "@storageTermuxBody": {
+    "description": "Shared-storage project on a Termux server: body."
+  },
   "storageTermuxAllow": "Open Termux",
-  "@storageTermuxAllow": {"description": "Shared-storage project on a Termux server: opens Termux to run termux-setup-storage."},
+  "@storageTermuxAllow": {
+    "description": "Shared-storage project on a Termux server: opens Termux to run termux-setup-storage."
+  },
   "storageTermuxStillTitle": "Allow storage in Termux",
-  "@storageTermuxStillTitle": {"description": "Shared-storage project on a Termux server: title of the instruction after Termux opened."},
+  "@storageTermuxStillTitle": {
+    "description": "Shared-storage project on a Termux server: title of the instruction after Termux opened."
+  },
   "storageTermuxStillBody": "In Termux, allow storage when Android asks (the command is termux-setup-storage), then open the folder again.",
-  "@storageTermuxStillBody": {"description": "Shared-storage project on a Termux server: what to do."},
+  "@storageTermuxStillBody": {
+    "description": "Shared-storage project on a Termux server: what to do."
+  },
   "filesAccessNeededTitle": "Files are hidden",
-  "@filesAccessNeededTitle": {"description": "Files: title when a shared-storage folder lists only hidden items and access is off."},
+  "@filesAccessNeededTitle": {
+    "description": "Files: title when a shared-storage folder lists only hidden items and access is off."
+  },
   "filesAccessNeededBody": "This folder is in your phone’s shared storage and the app cannot read most of its files yet. Only hidden items show.",
-  "@filesAccessNeededBody": {"description": "Files: body for the missing-access notice."},
+  "@filesAccessNeededBody": {
+    "description": "Files: body for the missing-access notice."
+  },
   "filesAccessNeededTermuxBody": "This folder is in your phone’s shared storage and Termux cannot read most of its files yet. Only hidden items show.",
-  "@filesAccessNeededTermuxBody": {"description": "Files: body for the missing-access notice on a Termux server."},
+  "@filesAccessNeededTermuxBody": {
+    "description": "Files: body for the missing-access notice on a Termux server."
+  },
   "storageRestartTitle": "Restart to open folder?",
-  "@storageRestartTitle": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."},
+  "@storageRestartTitle": {
+    "description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."
+  },
   "storageRestartBody": "OpenCode on this phone has to restart before it can see this folder. This takes about 30 seconds.",
-  "@storageRestartBody": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."},
+  "@storageRestartBody": {
+    "description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."
+  },
   "storageRestartPause": "Running replies and AI Team work pause and carry on afterwards.",
-  "@storageRestartPause": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."},
+  "@storageRestartPause": {
+    "description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."
+  },
   "storageRestartBusy": "A reply or AI Team task is running right now. It will pause while OpenCode restarts.",
-  "@storageRestartBusy": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."},
+  "@storageRestartBusy": {
+    "description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."
+  },
   "storageRestartConfirm": "Restart and open",
-  "@storageRestartConfirm": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."},
+  "@storageRestartConfirm": {
+    "description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."
+  },
   "storageRestartFailedTitle": "Restart did not finish",
-  "@storageRestartFailedTitle": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."},
+  "@storageRestartFailedTitle": {
+    "description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."
+  },
   "storageRestartFailedBody": "The folder was not opened. Try again, or start OpenCode from This phone.",
-  "@storageRestartFailedBody": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."},
+  "@storageRestartFailedBody": {
+    "description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."
+  },
   "kitQueuedChecking": "Checking whether your message arrived…",
   "@kitQueuedChecking": {
     "description": "Kit queued message: a receipt check is running; it only looks, it never sends again"
@@ -31287,5 +31378,9 @@
   "queuedReceiptDetailNote": "The connection ended before we could confirm receipt.",
   "@queuedReceiptDetailNote": {
     "description": "Details note under an unconfirmed message"
+  },
+  "kitToolRetry": "Retry",
+  "@kitToolRetry": {
+    "description": "KitToolRow: the quiet button under a failed step that tries it again"
   }
 }

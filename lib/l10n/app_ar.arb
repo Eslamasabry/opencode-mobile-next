@@ -4970,5 +4970,6 @@
   "queuedReceiptDetailReceipt": "معرّف الإيصال",
   "queuedReceiptDetailNote": "انقطع الاتصال قبل أن نتمكن من تأكيد الاستلام.",
   "chatRequestAlwaysConfirm": "السماح دائمًا بـ {what} في هذا المشروع؟",
-  "chatRequestAlwaysInProject": "في هذا المشروع"
+  "chatRequestAlwaysInProject": "في هذا المشروع",
+  "kitToolRetry": "أعد المحاولة"
 }

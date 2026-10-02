@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 // Everything waiting to reach the agent, as one bubble at the end of the
 // conversation (docs/ux-system/kit-api/KitQueuedMessage.md; STATE-17,
 // STATE-10, STATE-5, DATA-7, DATA-11, KIT-28, A11Y-5, LOOK-26, LOOK-5).
@@ -16,6 +15,7 @@ import '../kit_technical_value.dart';
 import '../kit_tappable.dart';
 import '../kit_text.dart';
 import '../kit_tokens.dart';
+import 'kit_message.dart' show kitPromptBubbleFill;
 import '../motion/kit_animated_rows.dart';
 
 /// Where one waiting message stands. The host maps its queue entry or its
@@ -247,7 +247,7 @@ class _Bubble extends StatelessWidget {
     final bubble = DecoratedBox(
       key: bubbleKey,
       decoration: ShapeDecoration(
-        color: roles.surface2,
+        color: kitPromptBubbleFill(roles),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadiusDirectional.only(
             topStart: Radius.circular(KitTokens.bubbleRadius),
@@ -269,7 +269,7 @@ class _Bubble extends StatelessWidget {
           alignment: AlignmentDirectional.centerEnd,
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth: math.max(0.0, width - KitLayout.bubbleStartInset),
+              maxWidth: (width * KitLayout.bubbleMaxShare).floorToDouble(),
             ),
             child: Semantics(
               container: true,
