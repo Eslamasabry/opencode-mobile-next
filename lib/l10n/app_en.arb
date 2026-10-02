@@ -31232,5 +31232,55 @@
   "storageRestartFailedTitle": "Restart did not finish",
   "@storageRestartFailedTitle": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."},
   "storageRestartFailedBody": "The folder was not opened. Try again, or start OpenCode from This phone.",
-  "@storageRestartFailedBody": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."}
+  "@storageRestartFailedBody": {"description": "Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible."},
+  "kitQueuedChecking": "Checking whether your message arrived…",
+  "@kitQueuedChecking": {
+    "description": "Kit queued message: a receipt check is running; it only looks, it never sends again"
+  },
+  "kitQueuedUncertain": "We couldn't confirm your message arrived.",
+  "@kitQueuedUncertain": {
+    "description": "Kit queued message: the message left but the server has not confirmed it; it is never resent automatically"
+  },
+  "kitQueuedLastChecked": "Last checked {time}.",
+  "@kitQueuedLastChecked": {
+    "description": "Kit queued message: when the last receipt check ran",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "2:41 PM"
+      }
+    }
+  },
+  "kitQueuedStorageFull": "This phone can't safely record sends right now, so your message wasn't sent. It is kept here.",
+  "@kitQueuedStorageFull": {
+    "description": "Kit queued message: the send receipt could not be stored, so sending stopped and the draft stays"
+  },
+  "queuedReceiptConfirmed": "Message received.",
+  "@queuedReceiptConfirmed": {
+    "description": "Note after a check finds the server has the message"
+  },
+  "queuedReceiptStillUncertain": "Still can't confirm it arrived. Nothing was sent again.",
+  "@queuedReceiptStillUncertain": {
+    "description": "Note after a check could not confirm the message"
+  },
+  "queuedReceiptStorageProblem": "This phone can't safely record or check sends right now. Free up some storage and try again.",
+  "@queuedReceiptStorageProblem": {
+    "description": "Note when the receipt record cannot be read or written"
+  },
+  "queuedReceiptDetailSentAt": "Sent",
+  "@queuedReceiptDetailSentAt": {
+    "description": "Details label: when the message left the phone"
+  },
+  "queuedReceiptDetailCommand": "Command ID",
+  "@queuedReceiptDetailCommand": {
+    "description": "Details label: the opaque command identifier"
+  },
+  "queuedReceiptDetailReceipt": "Receipt ID",
+  "@queuedReceiptDetailReceipt": {
+    "description": "Details label: the opaque receipt identifier"
+  },
+  "queuedReceiptDetailNote": "The connection ended before we could confirm receipt.",
+  "@queuedReceiptDetailNote": {
+    "description": "Details note under an unconfirmed message"
+  }
 }

@@ -41802,6 +41802,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The folder was not opened. Try again, or start OpenCode from This phone.'**
   String get storageRestartFailedBody;
+
+  /// Kit queued message: a receipt check is running; it only looks, it never sends again
+  ///
+  /// In en, this message translates to:
+  /// **'Checking whether your message arrived…'**
+  String get kitQueuedChecking;
+
+  /// Kit queued message: the message left but the server has not confirmed it; it is never resent automatically
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t confirm your message arrived.'**
+  String get kitQueuedUncertain;
+
+  /// Kit queued message: when the last receipt check ran
+  ///
+  /// In en, this message translates to:
+  /// **'Last checked {time}.'**
+  String kitQueuedLastChecked(String time);
+
+  /// Kit queued message: the send receipt could not be stored, so sending stopped and the draft stays
+  ///
+  /// In en, this message translates to:
+  /// **'This phone can\'t safely record sends right now, so your message wasn\'t sent. It is kept here.'**
+  String get kitQueuedStorageFull;
+
+  /// Note after a check finds the server has the message
+  ///
+  /// In en, this message translates to:
+  /// **'Message received.'**
+  String get queuedReceiptConfirmed;
+
+  /// Note after a check could not confirm the message
+  ///
+  /// In en, this message translates to:
+  /// **'Still can\'t confirm it arrived. Nothing was sent again.'**
+  String get queuedReceiptStillUncertain;
+
+  /// Note when the receipt record cannot be read or written
+  ///
+  /// In en, this message translates to:
+  /// **'This phone can\'t safely record or check sends right now. Free up some storage and try again.'**
+  String get queuedReceiptStorageProblem;
+
+  /// Details label: when the message left the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get queuedReceiptDetailSentAt;
+
+  /// Details label: the opaque command identifier
+  ///
+  /// In en, this message translates to:
+  /// **'Command ID'**
+  String get queuedReceiptDetailCommand;
+
+  /// Details label: the opaque receipt identifier
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt ID'**
+  String get queuedReceiptDetailReceipt;
+
+  /// Details note under an unconfirmed message
+  ///
+  /// In en, this message translates to:
+  /// **'The connection ended before we could confirm receipt.'**
+  String get queuedReceiptDetailNote;
 }
 
 class _AppLocalizationsDelegate

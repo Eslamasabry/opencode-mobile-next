@@ -20,6 +20,7 @@ import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../api/server_probe.dart' show ServerFlavor;
 import '../../api/sse.dart';
+import '../../domain/command_receipts.dart';
 import '../../domain/prompt_attachment.dart';
 import '../../domain/background_work.dart';
 import '../../domain/background_agent_result.dart';
@@ -179,6 +180,7 @@ part 'chat/chat_running_work.dart';
 part 'chat/chat_stream.dart';
 part 'chat/chat_history.dart';
 part 'chat/chat_queue.dart';
+part 'chat/receipt_check.dart';
 part 'chat/chat_send.dart';
 part 'chat/chat_voice.dart';
 part 'chat/chat_attachments.dart';
@@ -291,6 +293,7 @@ class _ChatScreenState extends State<ChatScreen>
         _ChatStreamFields,
         _ChatHistoryFields,
         _ChatSendFields,
+        _ChatReceiptFields,
         _ChatVoiceFields,
         _ChatReadAloudFields,
         _ChatNudgeFields,
