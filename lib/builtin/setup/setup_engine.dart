@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleState, WidgetsBinding;
 
 import '../../diagnostics/perf_trace.dart';
 import '../../l10n/app_localizations.dart';
@@ -70,9 +71,12 @@ class ChannelSetupEngine implements SetupEngine {
     )?
     components,
     this.pollInterval = const Duration(milliseconds: 500),
+    this.idlePollInterval = const Duration(seconds: 60),
     this.readTimeout = const Duration(seconds: 10),
     DateTime Function()? clock,
-  }) : _linux = linux ?? BuiltinLinux(),
+    bool Function()? foreground,
+  }) : _foreground = foreground ?? _appInForeground,
+       _linux = linux ?? BuiltinLinux(),
        strings = strings ?? deviceStrings,
        _components =
            components ??
@@ -93,8 +97,10 @@ class ChannelSetupEngine implements SetupEngine {
     )?
     components,
     Duration pollInterval = const Duration(milliseconds: 500),
+    Duration idlePollInterval = const Duration(seconds: 60),
     Duration readTimeout = const Duration(seconds: 10),
     DateTime Function()? clock,
+    bool Function()? foreground,
   }) => ChannelSetupEngine(
     linux: TermuxSetupHost(),
     finisher: finisher,
@@ -104,8 +110,10 @@ class ChannelSetupEngine implements SetupEngine {
         ((l10n, params) =>
             setupComponents(l10n, params: params, host: SetupHostKind.termux)),
     pollInterval: pollInterval,
+    idlePollInterval: idlePollInterval,
     readTimeout: readTimeout,
     clock: clock,
+    foreground: foreground,
   );
 
   /// Fixed for this instance, including restoration and the finish request.
@@ -122,7 +130,30 @@ class ChannelSetupEngine implements SetupEngine {
   )
   _components;
   final DateTime Function() _clock;
+
+  /// How often a job is read while it runs (or its hand-over is unsure).
   final Duration pollInterval;
+
+  /// How often a watched engine reads when no job runs. A page that shows
+  /// setup can stay built behind the chat (a kept tab, a route below), and
+  /// at [pollInterval] it read the job twice a second for the whole session
+  /// long after setup had finished. Not read at all in the background.
+  final Duration idlePollInterval;
+
+  /// Whether the app is in the foreground; idle polling skips its read
+  /// otherwise (a running job is still followed).
+  final bool Function() _foreground;
+
+  static bool _appInForeground() {
+    try {
+      final state = WidgetsBinding.instance.lifecycleState;
+      return state == null ||
+          state == AppLifecycleState.resumed ||
+          state == AppLifecycleState.inactive;
+    } catch (_) {
+      return true;
+    }
+  }
 
   /// How long one read of the job may take before the poll gives up on it
   /// and tries again; a reply lost on the way back must not stop polling.
@@ -190,6 +221,9 @@ class ChannelSetupEngine implements SetupEngine {
   DateTime? _appLiveShown;
   Timer? _poll;
   bool _polling = false;
+
+  /// The pending [_poll] waits [idlePollInterval], not [pollInterval].
+  bool _pollIdle = false;
   bool _disposed = false;
 
   @override

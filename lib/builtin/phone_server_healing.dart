@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/server_probe.dart';
+import '../domain/server_gateway.dart' show StreamStatus;
 import '../domain/while_away.dart';
 import '../state/automation_policy.dart';
 import '../state/builtin_server_owner.dart';
@@ -41,8 +42,10 @@ class PhoneServerHealing {
     recovery = createRecovery(_recordRestart);
     report = LifecycleReportController(linux: recovery.linux);
     recovery.addListener(_recoveryChanged);
+    recovery.connectionUnsettled = _connectionUnsettled;
     connection.store.changes.addListener(_syncProfile);
     connection.addListener(_syncProfile);
+    connection.addListener(_connectionChanged);
     starter.beforeManualStart = _claimProfile;
     _syncProfile();
     setForeground(
@@ -107,6 +110,20 @@ class PhoneServerHealing {
       report.invalidate();
     }
     recovery.setProfile(selected);
+  }
+
+  /// The app is on this phone's server and its connection is down: the
+  /// recovery checks (which reconnect it once the server answers) run at
+  /// their quick pace instead of the steady one.
+  bool _connectionUnsettled() {
+    final owner = _owner;
+    return owner != null &&
+        connection.profile?.id == owner.id &&
+        connection.status != StreamStatus.connected;
+  }
+
+  void _connectionChanged() {
+    if (!_disposed && _connectionUnsettled()) recovery.expedite();
   }
 
   void setForeground(bool value) {
@@ -349,6 +366,7 @@ class PhoneServerHealing {
     _foregroundWaiter = null;
     connection.store.changes.removeListener(_syncProfile);
     connection.removeListener(_syncProfile);
+    connection.removeListener(_connectionChanged);
     starter.beforeManualStart = null;
     recovery.removeListener(_recoveryChanged);
     recovery.dispose();

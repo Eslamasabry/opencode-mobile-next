@@ -3,25 +3,50 @@ part of '../setup_engine.dart';
 extension _SetupEnginePoll on ChannelSetupEngine {
   bool get _jobRunning => _record?.state == 'running';
 
+  /// Reads within [pollInterval]: a job started, a hand-over is unsure, or
+  /// a page began watching. Brings an idle wait forward.
   void _ensurePolling() {
-    if (_polling || _disposed) return;
+    if (_disposed) return;
+    if (_polling) {
+      final pending = _poll;
+      if (_pollIdle && pending != null && pending.isActive) {
+        pending.cancel();
+        _pollIdle = false;
+        _poll = Timer(pollInterval, _tick);
+      }
+      return;
+    }
     _polling = true;
+    _pollIdle = false;
     _poll = Timer(pollInterval, _tick);
   }
 
   Future<void> _tick() async {
-    try {
-      await _refresh(timeout: readTimeout);
-    } catch (error, stack) {
-      // Polling is the only way the screens see the job, and the only way
-      // the app's own step gets run: one bad read must never end it.
-      debugPrint(KitRedact.text('setup: status poll failed: $error\n$stack'));
+    final following = _jobRunning || _handoverUncertain;
+    // A watched engine with no job reads only while the app is in front.
+    if (following || _foreground()) {
+      try {
+        await _refresh(timeout: readTimeout);
+      } catch (error, stack) {
+        // Polling is the only way the screens see the job, and the only way
+        // the app's own step gets run: one bad read must never end it.
+        debugPrint(KitRedact.text('setup: status poll failed: $error\n$stack'));
+      }
     }
-    if (!_disposed &&
-        (_progress.watched || _jobRunning || _handoverUncertain)) {
+    if (_disposed) {
+      _polling = false;
+      _poll = null;
+    } else if (_jobRunning || _handoverUncertain) {
+      _pollIdle = false;
       _poll = Timer(pollInterval, _tick);
+    } else if (_progress.watched) {
+      // Nothing runs: a page merely shows the last job. A job this engine
+      // starts brings the next read forward (see [_ensurePolling]).
+      _pollIdle = true;
+      _poll = Timer(idlePollInterval, _tick);
     } else {
       _polling = false;
+      _pollIdle = false;
       _poll = null;
     }
   }

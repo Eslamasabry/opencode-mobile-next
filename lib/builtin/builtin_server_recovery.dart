@@ -57,6 +57,8 @@ class BuiltinServerRecovery extends ChangeNotifier {
     required this.starter,
     required this.onRestart,
     DateTime Function()? now,
+    this.recoveringInterval = const Duration(seconds: 5),
+    this.steadyInterval = const Duration(seconds: 45),
   }) : _now = now ?? DateTime.now {
     _manualCount = starter.manualReadyCount;
     starter.addListener(_starterChanged);
@@ -79,6 +81,17 @@ class BuiltinServerRecovery extends ChangeNotifier {
   }
 
   static const maxAttempts = 3;
+
+  /// How soon the next check runs while a restart is under way or its
+  /// outcome is unconfirmed.
+  final Duration recoveringInterval;
+
+  /// How soon the next check runs while the server is up, stopped on
+  /// purpose, or out of attempts. Each check is two native status reads and
+  /// a health probe (`/api/health`, then `/global/health` on OpenCode 1);
+  /// every 5 s that was most of the app's traffic while a person chatted.
+  /// A resume still checks at once ([setForeground]).
+  final Duration steadyInterval;
   static const retryDelay = Duration(seconds: 15);
   static String keyFor(String profileId) => 'oc.builtinRecovery.$profileId';
 
@@ -102,6 +115,8 @@ class BuiltinServerRecovery extends ChangeNotifier {
   ServerProfile? _profile;
   bool _profileBound = false;
   Timer? _timer;
+  int _scheduleId = 0;
+  bool _steadyWait = false;
   AutomationPolicyController? _policy;
 
   /// Selects the saved phone profile even when a remote profile is selected.
@@ -143,14 +158,63 @@ class BuiltinServerRecovery extends ChangeNotifier {
     _schedule();
   }
 
+  /// Checks now, then again after each check at a pace set by its outcome:
+  /// [recoveringInterval] while a restart is in play or the app's own
+  /// connection to this server is down ([connectionUnsettled]),
+  /// [steadyInterval] otherwise. Only in the foreground.
   void _schedule() {
     _timer?.cancel();
     _timer = null;
+    _scheduleId++;
+    _steadyWait = false;
     if (_disposed || !_foreground || _profile == null) return;
-    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
-      unawaited(check(_profile));
-    });
-    unawaited(check(_profile));
+    unawaited(_tick(_scheduleId, _profile));
+  }
+
+  Future<void> _tick(int schedule, ServerProfile? profile) async {
+    await check(profile);
+    if (_disposed ||
+        !_foreground ||
+        schedule != _scheduleId ||
+        !identical(profile, _profile)) {
+      return;
+    }
+    final steady = _steadyNow;
+    _steadyWait = steady;
+    _timer = Timer(
+      steady ? steadyInterval : recoveringInterval,
+      () => unawaited(_tick(schedule, profile)),
+    );
+  }
+
+  bool get _steadyNow =>
+      !(connectionUnsettled?.call() ?? false) &&
+      switch (_value.phase) {
+        BuiltinRecoveryPhase.checking ||
+        BuiltinRecoveryPhase.restarting ||
+        BuiltinRecoveryPhase.waiting ||
+        BuiltinRecoveryPhase.unconfirmed => false,
+        _ => true,
+      };
+
+  /// True while the app's own connection to this server is down: checks
+  /// then run at [recoveringInterval], since a ready check is what
+  /// reconnects it. Set by the owner ([PhoneServerHealing]).
+  bool Function()? connectionUnsettled;
+
+  /// Brings a steady wait forward to [recoveringInterval]: the connection
+  /// to this server just dropped.
+  void expedite() {
+    final pending = _timer;
+    if (!_steadyWait || pending == null || !pending.isActive) return;
+    pending.cancel();
+    _steadyWait = false;
+    final schedule = _scheduleId;
+    final profile = _profile;
+    _timer = Timer(
+      recoveringInterval,
+      () => unawaited(_tick(schedule, profile)),
+    );
   }
 
   void setForeground(bool value) {
