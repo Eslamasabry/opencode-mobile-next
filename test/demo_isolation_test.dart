@@ -151,6 +151,11 @@ Future<void> _isolatedJourney(
 }
 
 Future<void> _review(WidgetTester tester) async {
+  // The card carries Always allow now: give it room above the composer.
+  tester.view.physicalSize = const Size(800, 1400);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  await tester.pump();
   if (find.byKey(const Key('permission-sheet')).evaluate().isEmpty) {
     await tester.tap(find.byKey(const Key('permission-card-review')));
     await _pump(tester);

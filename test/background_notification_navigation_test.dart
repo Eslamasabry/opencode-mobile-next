@@ -198,6 +198,10 @@ void main() {
   testWidgets('permission notification opens its exact chat and request', (
     tester,
   ) async {
+    // The card carries Always allow now: give it room above the composer.
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final controller = await _controllerFor(CodingAlertKind.permission);
     addTearDown(controller.dispose);
 

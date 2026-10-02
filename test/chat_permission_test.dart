@@ -125,6 +125,11 @@ void main() {
   testWidgets('Always allow states its scope in the sheet before it sends', (
     tester,
   ) async {
+    // The card now carries Always allow, so it is taller than the default
+    // 600 dp test window leaves room for above the composer.
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final api = _FakeOpenCodeApi();
     final controller = await _controller(api);
     controller.handleEventForTesting(
@@ -308,6 +313,11 @@ void main() {
 
   testWidgets('the attention card keeps the composer focus and Details opens '
       'a dismissible sheet', (tester) async {
+    // The card now carries Always allow, so it is taller than the default
+    // 600 dp test window leaves room for above the composer.
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final api = _FakeOpenCodeApi();
     final controller = await _controller(api);
     await pumpChat(tester, controller);

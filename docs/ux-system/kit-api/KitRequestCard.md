@@ -69,6 +69,7 @@ final class KitRequestDecide extends KitRequestAnswers {
     this.disabledReason,   // required when a callback is null (STATE-8)
     this.allowKey,
     this.rejectKey,
+    this.alwaysAllow,      // KitRequestAlwaysAllowStep?: null where the server keeps no standing grants
   }) : assert((onAllow != null && onReject != null) || disabledReason != null);
   final VoidCallback? onAllow;
   final VoidCallback? onReject;
@@ -77,6 +78,16 @@ final class KitRequestDecide extends KitRequestAnswers {
   final String? disabledReason;
   final Key? allowKey;
   final Key? rejectKey;
+  final KitRequestAlwaysAllowStep? alwaysAllow;
+}
+
+/// 13B: the quiet third act under Allow once and Reject (permission only).
+/// Tapping it asks one `showKitConfirm` (title "Always allow <command or tool>
+/// in this project?", body = what the grant covers and where to take it back,
+/// Always allow / Cancel); only a confirm calls `onConfirmed`, once. Cancel and
+/// dismissal send nothing.
+class KitRequestAlwaysAllowStep {
+  const KitRequestAlwaysAllowStep({required this.what, required this.covers, required this.onConfirmed, this.buttonKey, this.confirmKey});
 }
 
 /// question and choice with one answer: a tap sends (KitChoiceList.single,
@@ -153,7 +164,7 @@ class KitRequestCard extends StatefulWidget {
     KitReceipt? receipt,                // required from `sending` on (asserts below)
     VoidCallback? onDetails,            // opens showKitRequestSheet
     DateTime? since,                    // when it was asked: the age words
-    List<KitAction> tertiary = const [],// at most one more act ("See the change"); never "Always allow"
+    List<KitAction> tertiary = const [],// at most one more act ("See the change"); "Always allow" has its own slot in `KitRequestDecide.alwaysAllow`
     IconData? icon,                     // default: KitRequestCard.iconFor(kind)
     Key? titleKey,
     Key? detailsKey,
@@ -358,7 +369,7 @@ All exist on `feat/visual-language-v1` unless flagged.
   - the card never clears a draft itself.
 - **Receipts (STATE-10):** every answer shows its receipt. `answered` needs the server's echo (asserted); "Sent" is never "Done".
 - **Undo** appears only when the host passes `receipt.onUndo`, which it does only where the server exposes a withdrawal (DATA-11(a)), inside `KitMotion.undoWindow`.
-- **Always allow** is never on the card, neither as a primary nor as `tertiary` (KIT-30). It lives in the sheet as a risk switch (KitRequestSheet.md). Reviewers check `tertiary` labels.
+- **Always allow** (owner decision 13B, 2 Oct, supersedes the KIT-30 "never on the card" line) is a tertiary-weight button under Allow once and Reject, drawn only when the host passes `KitRequestDecide.alwaysAllow` (the server keeps standing grants: `ServerCapabilities.persistentPermissionGrants`). It is never a primary, never preselected, and never in `tertiary`. It always asks the one confirm first. The request sheet keeps its risk switch, with the same scope words ("in this project"). A notification action can only send Allow once or Reject, never "always".
 - **Expired** says so and offers nothing to press (K2 §2.1).
 - **Waiting words:** the conversation's work line says "Waiting for you" while a card waits (AUTO-15). That line belongs to chain link chat-1; this card only exposes `phase`.
 - **Pointing surfaces:** Inbox rows, Work lines, notifications and team rows point to this card (`KitNeedsYou.row`) and never answer it (AUTO-17, LOOK-24).

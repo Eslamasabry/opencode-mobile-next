@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -56,6 +58,7 @@ final class KitRequestDecide extends KitRequestAnswers {
     this.disabledReason,
     this.allowKey,
     this.rejectKey,
+    this.alwaysAllow,
   }) : assert(
          (onAllow != null && onReject != null) || disabledReason != null,
          'KitRequestDecide: a missing callback needs its disabledReason '
@@ -76,6 +79,37 @@ final class KitRequestDecide extends KitRequestAnswers {
   final String? disabledReason;
   final Key? allowKey;
   final Key? rejectKey;
+
+  /// "Always allow" next to the two answers (permission only, 13B). Null
+  /// where the server keeps no standing grants: the button is not drawn.
+  final KitRequestAlwaysAllowStep? alwaysAllow;
+}
+
+/// The card's "Always allow": a quiet third act that asks one plain
+/// confirm first ("Always allow `ls` in this project?" with Always allow
+/// and Cancel) and only then calls [onConfirmed]. Cancel grants nothing.
+@immutable
+class KitRequestAlwaysAllowStep {
+  const KitRequestAlwaysAllowStep({
+    required this.what,
+    required this.covers,
+    required this.onConfirmed,
+    this.buttonKey,
+    this.confirmKey,
+  });
+
+  /// The exact command, file or tool the confirm names ("Always allow
+  /// `git status` in this project?").
+  final String what;
+
+  /// What the grant covers (the server's patterns, or the command itself);
+  /// null says all matching requests. The confirm adds where to take it back.
+  final String? covers;
+
+  /// Sends the one "always" answer, after the person confirmed.
+  final VoidCallback onConfirmed;
+  final Key? buttonKey;
+  final Key? confirmKey;
 }
 
 /// question and choice with one answer: a tap sends
@@ -1043,7 +1077,8 @@ class _KitRequestCardState extends State<KitRequestCard> {
     );
     final reason = answers.disabledReason;
     final showReason = reason != null && (onAllow == null || onReject == null);
-    final buttons = LayoutBuilder(
+    final always = answers.alwaysAllow;
+    final pair = LayoutBuilder(
       builder: (context, constraints) {
         final half = (constraints.maxWidth - tokens.space2) / 2;
         final fits =
@@ -1069,6 +1104,23 @@ class _KitRequestCardState extends State<KitRequestCard> {
         );
       },
     );
+    final buttons = always == null
+        ? pair
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              pair,
+              SizedBox(height: tokens.space2),
+              KitButton.tertiary(
+                key: always.buttonKey,
+                label: l10n.chatUiAlwaysAllow,
+                onPressed: onAllow == null
+                    ? null
+                    : () => unawaited(_confirmAlways(always, l10n)),
+              ),
+            ],
+          );
     if (!showReason) return buttons;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1085,6 +1137,31 @@ class _KitRequestCardState extends State<KitRequestCard> {
         ),
       ],
     );
+  }
+
+  /// The one plain confirm before a standing grant; Cancel, a dismissal or
+  /// an answer that landed meanwhile send nothing.
+  Future<void> _confirmAlways(
+    KitRequestAlwaysAllowStep always,
+    AppLocalizations l10n,
+  ) async {
+    if (_answered || widget.phase != KitRequestPhase.waiting) return;
+    final confirmed = await showKitConfirm(
+      context,
+      title: l10n.chatRequestAlwaysConfirm(KitBidi.ltr(always.what)),
+      body: l10n.chatRequestAlwaysScope(
+        always.covers == null
+            ? l10n.chatUiAllMatchingRequests
+            : KitBidi.ltr(always.covers!),
+        l10n.chatRequestAlwaysInProject,
+      ),
+      confirmLabel: l10n.chatUiAlwaysAllow,
+      icon: AppIconography.permissions,
+      sheetKey: const ValueKey('request-always-confirm'),
+      confirmKey: always.confirmKey,
+    );
+    if (!confirmed || !mounted) return;
+    if (_mayAnswer()) always.onConfirmed();
   }
 
   /// A button's width for [label] on one line: the words at the button

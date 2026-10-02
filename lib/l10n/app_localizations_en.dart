@@ -19785,6 +19785,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String chatRequestAlwaysConfirm(String what) {
+    return 'Always allow $what in this project?';
+  }
+
+  @override
+  String get chatRequestAlwaysInProject => 'in this project';
+
+  @override
   String get chatRequestAlwaysOn => 'Always allowed';
 
   @override
