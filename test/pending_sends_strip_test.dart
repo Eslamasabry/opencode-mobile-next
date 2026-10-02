@@ -612,8 +612,8 @@ void main() {
     });
   });
 
-  testWidgets('while busy on v2 the composer keeps its mic and Send; the '
-      'toggle queues', (tester) async {
+  testWidgets('while busy on v2 Send is Stop and the mic stays; the toggle '
+      'queues', (tester) async {
     final api = _V2ChatApi();
     final controller = await _controller(api);
     addTearDown(controller.dispose);
@@ -623,14 +623,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    // Stop lives on the running turn, never in the composer: with nothing
-    // typed its one trailing control stays the mic (or a disabled Send).
-    expect(find.byKey(const ValueKey('kit-composer-stop')), findsNothing);
-    expect(
-      find.byKey(const Key('composer-voice-button')).evaluate().length +
-          find.byKey(const Key('chat-send-button')).evaluate().length,
-      1,
-    );
+    // The composer's Send is Stop (the only one); the mic, where the
+    // platform has one, stays beside it.
+    expect(find.byKey(const ValueKey('kit-composer-stop')), findsOneWidget);
+    expect(find.byKey(const Key('chat-send-button')), findsNothing);
     // Watching a run with nothing typed shows no delivery strip.
     expect(find.byKey(const Key('composer-delivery-control')), findsNothing);
 
@@ -720,11 +716,11 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    // OpenCode 1 accepts a prompt mid-turn and runs it afterwards: Stop is
-    // on the running turn, the composer keeps its mic (or Send), and it
-    // says what Send will do once something is typed.
+    // OpenCode 1 accepts a prompt mid-turn and runs it afterwards: Send is
+    // Stop while nothing is typed, and the composer says what Send will do
+    // once something is typed.
     expect(find.byKey(const Key('chat-stop-button')), findsOneWidget);
-    expect(find.byKey(const ValueKey('kit-composer-stop')), findsNothing);
+    expect(find.byKey(const ValueKey('kit-composer-stop')), findsOneWidget);
     // Nothing typed yet: no hint competes with the running reply.
     expect(find.text('Sends after this reply'), findsNothing);
 

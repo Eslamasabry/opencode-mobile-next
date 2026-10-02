@@ -49,7 +49,9 @@ class _ChatComposer extends StatelessWidget {
     required this.promptAttachmentsSupported,
     required this.webSourcesSupported,
     required this.busy,
-    this.live,
+    this.onStop,
+    this.stopping = false,
+    this.statusChips = const [],
     required this.sending,
     this.canSendWhileBusy = false,
     this.canChooseDelivery = false,
@@ -115,8 +117,13 @@ class _ChatComposer extends StatelessWidget {
   final bool webSourcesSupported;
   final bool busy;
 
-  /// The running turn's status for the composer's top edge.
-  final KitTurnLive? live;
+  /// The standing facts on the line above the field; the model chip ends it.
+  final List<Widget> statusChips;
+
+  /// Stop: the composer's Send becomes Stop while a reply runs. Null while
+  /// the prompt is still on its way (nothing to stop yet).
+  final VoidCallback? onStop;
+  final bool stopping;
   final bool sending;
 
   /// Send stays live while a reply is written (OpenCode 1 runs it after the
@@ -236,6 +243,11 @@ class _ChatComposer extends StatelessWidget {
                 onPressed: shelfBusy ? null : restore,
               ),
             ),
+          KitComposerStatusStrip(
+            stripKey: const Key('composer-status-strip'),
+            chips: statusChips,
+            model: isolated ? null : _modelChip(context, conn),
+          ),
           KitComposer(
             controller: controller,
             focusNode: focusNode,
@@ -243,11 +255,12 @@ class _ChatComposer extends StatelessWidget {
                 ? l10n.chatUiAskOpenCode
                 : l10n.chatUiAskAgent(KitBidi.auto(agentName!)),
             onSend: _send,
-            // Stop lives on the composer's own top edge (the rail's tappable
-            // caption), so the mic and Send stay here while a reply runs:
-            // speaking or typing then waits to send after the reply.
+            // Send becomes Stop while a reply runs (the only Stop); the mic
+            // stays beside it, so speaking or typing waits to send after
+            // the reply. What the reply is doing is written in the turn.
             busy: busy,
-            rail: live,
+            onStop: onStop,
+            stopping: stopping,
             sending: sending || (shelfBusy && shelfLoading),
             canSendWhileBusy: canSendWhileBusy,
             // Without an inbox (OpenCode 1) a send made during a reply
@@ -272,7 +285,6 @@ class _ChatComposer extends StatelessWidget {
             hasAttachments: _hasAttachments,
             attachments: _attachmentChips(context),
             suggestions: _suggestions(context),
-            model: isolated ? null : _modelChip(context, conn),
             onTools: isolated || conversationMode
                 ? null
                 : () => unawaited(_openTools(context)),
@@ -291,6 +303,7 @@ class _ChatComposer extends StatelessWidget {
             composerKey: const Key('chat-composer-surface'),
             fieldKey: const Key('chat-composer-field'),
             sendKey: const Key('chat-send-button'),
+            stopKey: const Key('chat-stop-button'),
             toolsKey: const Key('composer-tools-button'),
             voiceButtonKey: const Key('composer-voice-button'),
             editorKey: const Key('prompt-editor-button'),

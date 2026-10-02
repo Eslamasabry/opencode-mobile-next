@@ -339,8 +339,7 @@ void main() {
 
   group('6b · the live line of a running turn', () {
     testWidgets('says what it does, adds the time after 5 s, turns slow '
-        'after 20 s, and carries Stop reply', (tester) async {
-      var stops = 0;
+        'after 20 s, with one pulsing dot and no Stop', (tester) async {
       await _pump(
         tester,
         KitTurn(
@@ -349,7 +348,6 @@ void main() {
           live: KitTurnLive(
             activity: KitTurnActivity.waitingForModel,
             since: clock.now(),
-            onStop: () => stops++,
           ),
         ),
       );
@@ -363,12 +361,11 @@ void main() {
         find.text("Waiting for the model's first word · 1 min 5 s"),
         findsOne,
       );
-      await tester.tap(find.text('Stop reply'));
-      expect(stops, 1);
+      expect(find.text('Stop reply'), findsNothing);
+      expect(find.byKey(const ValueKey('kit-turn-live-dot')), findsOneWidget);
     });
 
-    testWidgets('on the prompt row too, and without Stop while the prompt '
-        'is on its way', (tester) async {
+    testWidgets('on the prompt row too', (tester) async {
       await _pump(
         tester,
         KitTurn(
@@ -381,7 +378,7 @@ void main() {
           ),
         ),
       );
-      expect(find.text('Sending…'), findsOneWidget);
+      expect(find.text('Thinking…'), findsOneWidget);
       expect(find.text('Stop reply'), findsNothing);
     });
   });

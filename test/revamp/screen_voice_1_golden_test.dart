@@ -183,10 +183,7 @@ void main() {
             );
             await tester.pumpAndSettle();
           }
-          expect(
-            find.textContaining('Microsoft Corporation'),
-            findsOneWidget,
-          );
+          expect(find.textContaining('Microsoft Corporation'), findsOneWidget);
         },
       );
     });

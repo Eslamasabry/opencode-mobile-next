@@ -271,13 +271,13 @@ void main() {
         );
 
         // A run starts: Send stays above the keyboard, and the delivery
-        // words do not push it off screen. Stop is on the running turn, never
-        // in the composer.
+        // words do not push it off screen. Typed words keep Send; Stop leads
+        // the row, never beside it.
         conn.busySessions.add(_sessionID);
         conn.notifyListeners();
         await _pumpFrames(tester);
         expect(tester.takeException(), isNull);
-        expect(find.byKey(const ValueKey('kit-composer-stop')), findsNothing);
+        expect(find.byKey(const ValueKey('kit-composer-stop')), findsOneWidget);
         expect(find.text('Sends after this reply'), findsOneWidget);
         expect(tester.getRect(_send).bottom, lessThanOrEqualTo(visibleBottom));
         expect(tester.getRect(_field).bottom, lessThanOrEqualTo(visibleBottom));

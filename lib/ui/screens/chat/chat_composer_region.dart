@@ -4,11 +4,11 @@ part of '../chat_screen.dart';
 // itself.
 
 extension _ChatComposerRegion on _ChatScreenState {
-  /// Standing facts about this conversation's run, as one line of labelled
-  /// chips above the composer: that approvals are automatic, and that the
+  /// Standing facts about this conversation's run, as labelled chips on the
+  /// line above the composer's field (the model chip ends it): that approvals are automatic, and that the
   /// running work can be sent to the background. They used to be a bar and a
   /// link of their own, repeated above the composer on every running turn.
-  Widget _composerStatusStrip() {
+  List<Widget> _composerStatusChips() {
     final approval = _conn.isIsolated
         ? null
         : _conn.autoApprovalFor(widget.sessionID);
@@ -30,47 +30,41 @@ extension _ChatComposerRegion on _ChatScreenState {
               .inboxItemsFor(widget.sessionID)
               .where((item) => item.type != 'user')
               .length;
-    if (!showApproval && !showBackground && pendingContext == 0) {
-      return const SizedBox.shrink();
-    }
     final strings = _chatL10n(context);
-    return KitComposerStatusStrip(
-      stripKey: const Key('composer-status-strip'),
-      chips: [
-        if (pendingContext > 0)
-          KitChip(
-            key: const Key('pending-context-chip'),
-            icon: AppIconography.sparkle,
-            label: pendingContext > 1
-                ? '${strings.chatStripContextPending} · $pendingContext'
-                : strings.chatStripContextPending,
-          ),
-        if (showApproval)
-          _AutoApprovalIndicator(
-            key: const ValueKey('auto-approval-indicator-slot'),
-            effective: approval,
-            connected: _conn.isConnected,
-            approved: _conn.autoApprovedFor(widget.sessionID),
-            onOpen: () => unawaited(
-              showSessionApprovalsSheet(
-                context,
-                controller: _conn,
-                sessionID: widget.sessionID,
-              ),
+    return [
+      if (pendingContext > 0)
+        KitChip(
+          key: const Key('pending-context-chip'),
+          icon: AppIconography.sparkle,
+          label: pendingContext > 1
+              ? '${strings.chatStripContextPending} · $pendingContext'
+              : strings.chatStripContextPending,
+        ),
+      if (showApproval)
+        _AutoApprovalIndicator(
+          key: const ValueKey('auto-approval-indicator-slot'),
+          effective: approval,
+          connected: _conn.isConnected,
+          approved: _conn.autoApprovedFor(widget.sessionID),
+          onOpen: () => unawaited(
+            showSessionApprovalsSheet(
+              context,
+              controller: _conn,
+              sessionID: widget.sessionID,
             ),
           ),
-        if (showBackground)
-          Semantics(
-            hint: strings.backgroundWorkShortcut,
-            child: KitChip.action(
-              key: const Key('background-running-work'),
-              icon: AppIconography.lowPriority,
-              label: strings.chatStripBackground,
-              onPressed: () => unawaited(_backgroundRunningWork()),
-            ),
+        ),
+      if (showBackground)
+        Semantics(
+          hint: strings.backgroundWorkShortcut,
+          child: KitChip.action(
+            key: const Key('background-running-work'),
+            icon: AppIconography.lowPriority,
+            label: strings.chatStripBackground,
+            onPressed: () => unawaited(_backgroundRunningWork()),
           ),
-      ],
-    );
+        ),
+    ];
   }
 
   /// The height the composer leaves free over itself while a request waits,
@@ -301,7 +295,6 @@ extension _ChatComposerRegion on _ChatScreenState {
               ? null
               : _ComposerNote(key: _composerNoteKey, text: _composerNote!),
         ),
-        _composerStatusStrip(),
       ],
     );
   }
@@ -360,9 +353,11 @@ extension _ChatComposerRegion on _ChatScreenState {
       attachments: _attachments,
       promptAttachmentsSupported: _supportsPromptAttachments,
       webSourcesSupported: _conn.capabilities.webSearch,
-      busy: busy,
-      // The running turn's status, written on the composer's top edge.
-      live: _live?.live,
+      statusChips: _composerStatusChips(),
+      busy: busy || _live != null,
+      // Send becomes Stop; nothing to stop while the prompt is on its way.
+      onStop: _sending ? null : () => unawaited(_abort()),
+      stopping: _aborting,
       sending: _sending,
       // OpenCode 1 runs a send made mid-turn after that turn; OpenCode 2
       // steers or queues it. Either way Send stays live.

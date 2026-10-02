@@ -14,7 +14,7 @@ enum _GlowMode {
 }
 
 /// A part of KitComposer. The owner-chosen "Glowing border while replying" (Settings › Appearance ›
-/// Effects), drawn IN ADDITION to the living edge: a soft ring sweep around
+/// Effects), drawn only when the person has turned it on: a soft ring sweep around
 /// the whole message box in the theme pack's primary and tertiary hues.
 /// Hues fade into each other and into nothing; there is no head, no seam and
 /// no sharp line. One painter on one repaint boundary, no backdrop filter.
@@ -28,8 +28,6 @@ class _ActivityGlow extends StatefulWidget {
     required this.radius,
     required this.primary,
     required this.partner,
-    this.bendHalf = 0,
-    this.dip = 0,
   });
 
   final bool active;
@@ -37,11 +35,6 @@ class _ActivityGlow extends StatefulWidget {
   final double radius;
   final Color primary;
   final Color partner;
-
-  /// The living edge's dip, so the glow follows the same outline and never
-  /// crosses the status words.
-  final double bendHalf;
-  final double dip;
 
   /// The line's width, the wash's width and blur, and their strongest alpha
   /// (from the appearance spike's ring sweep).
@@ -147,8 +140,6 @@ class _ActivityGlowState extends State<_ActivityGlow>
                 strength: () => _strength,
                 phase: () => _phase,
                 radius: widget.radius,
-                bendHalf: widget.bendHalf,
-                dip: widget.dip,
                 primary: widget.primary,
                 partner: widget.partner,
                 repaint: _repaint,
@@ -162,15 +153,13 @@ class _ActivityGlowState extends State<_ActivityGlow>
 }
 
 /// The ring sweep: one soft wash and one thin gradient line on the box's own
-/// outline (the living edge's, bend included), a [SweepGradient] turned by
+/// outline, a [SweepGradient] turned by
 /// the phase.
 class _GlowPainter extends CustomPainter {
   _GlowPainter({
     required this.strength,
     required this.phase,
     required this.radius,
-    required this.bendHalf,
-    required this.dip,
     required this.primary,
     required this.partner,
     required super.repaint,
@@ -179,8 +168,6 @@ class _GlowPainter extends CustomPainter {
   final double Function() strength;
   final double Function() phase;
   final double radius;
-  final double bendHalf;
-  final double dip;
   final Color primary;
   final Color partner;
 
@@ -188,7 +175,7 @@ class _GlowPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final level = strength();
     if (level <= 0.01) return;
-    final outline = _EdgePainter._outline(size, radius, bendHalf, dip);
+    final outline = _composerOutline(size, radius);
     const peak = _ActivityGlow.linePeak;
     final colors = [
       primary.withValues(alpha: peak),
@@ -228,9 +215,5 @@ class _GlowPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_GlowPainter old) =>
-      old.radius != radius ||
-      old.bendHalf != bendHalf ||
-      old.dip != dip ||
-      old.primary != primary ||
-      old.partner != partner;
+      old.radius != radius || old.primary != primary || old.partner != partner;
 }

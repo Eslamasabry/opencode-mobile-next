@@ -127,6 +127,11 @@ abstract final class KitMotion {
 
   /// The composer's chosen glowing border: one lap in 8 s (never below 6 s).
   static const double activityGlowLapsPerSecond = 1 / 8;
+
+  /// The ring around Stop while a reply runs: one lap in two seconds, half
+  /// that in Calm. Never faster, whatever the work does.
+  static const double stopRingLapsPerSecond = 1 / 2;
+  static const double stopRingCalmLapsPerSecond = 1 / 4;
   static const double edgeLightThinkingLapsPerSecond = 1 / 10;
   static const Duration edgeLightSpeedEase = Duration(milliseconds: 800);
   static const Duration edgeLightHueFade = Duration(milliseconds: 450);

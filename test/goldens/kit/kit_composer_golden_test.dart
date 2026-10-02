@@ -17,7 +17,8 @@ import 'package:opencode_mobile/ui/kit/chat/kit_composer.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_composer_chips.dart';
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
 import 'package:opencode_mobile/ui/kit/kit_layout.dart';
-import 'package:opencode_mobile/ui/kit/chat/kit_turn.dart';
+import 'package:opencode_mobile/ui/app_iconography.dart';
+import 'package:opencode_mobile/ui/kit/kit_chip.dart';
 import 'package:opencode_mobile/ui/kit/kit_text.dart';
 import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
 
@@ -134,7 +135,7 @@ KitComposer _composer({
   bool attachments = false,
   KitComposerChips? suggestions,
   KitComposerVoice? voice,
-  KitTurnLive? rail,
+  KitComposerFailure? failure,
   bool? activityGlow,
 }) => KitComposer(
   controller: _text(text),
@@ -148,15 +149,14 @@ KitComposer _composer({
   onDeliveryChanged: deliveryChoice ? (_) {} : null,
   offline: offline,
   readOnlyReason: readOnlyReason,
-  model: _model(),
   attachments: attachments ? _attachments() : null,
   suggestions: suggestions,
   onTools: _noop,
   onVoice: _noop,
   onOpenEditor: _noop,
   voice: voice,
-  rail: rail,
   activityGlow: activityGlow,
+  failure: failure,
 );
 
 const _draft = 'Also run the unit tests for the signing config';
@@ -241,16 +241,35 @@ final _states = <String, Widget Function()>{
     ),
   ),
   // The chosen "Glowing border while replying": one frame of the ring sweep
-  // around the box, over the living edge.
-  'running_glow': () => _Backdrop(
+  // around the box (the box itself is idle but for Stop).
+  'running_glow': () =>
+      _Backdrop(composer: _composer(busy: true, activityGlow: true)),
+  // A failed send is neutral words, Retry and Details in the pill's top row.
+  'failed_send': () => _Backdrop(
     composer: _composer(
-      busy: true,
-      rail: const KitTurnLive(
-        activity: KitTurnActivity.writing,
-        pace: .5,
-        onStop: _noop,
+      text: _draft,
+      failure: KitComposerFailure(
+        words: "Didn't send",
+        onRetry: _noop,
+        onDetails: _noop,
       ),
-      activityGlow: true,
+    ),
+  ),
+  // 14A: the model chip sits above the field, with the status chips.
+  'model_above': () => _Backdrop(
+    composer: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 6,
+      children: [
+        KitComposerStatusStrip(
+          chips: const [
+            KitChip(icon: AppIconography.sparkle, label: 'Auto-approving'),
+          ],
+          model: _model(),
+        ),
+        _composer(),
+      ],
     ),
   ),
 };
