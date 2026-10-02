@@ -1,205 +1,76 @@
 part of 'kit_composer.dart';
 
-/// What is written in the gap: the phase words with the time and a small
-/// red stop; or "Didn't send", Retry and Details. Neutral words (text2;
-/// a failure's text1 with a neutral glyph); red only for Stop. The words are the live region: the
-/// label is the phase, so it announces phase changes and not the seconds.
-class _EdgeCaption extends StatelessWidget {
-  const _EdgeCaption({
-    required this.data,
-    required this.xCentre,
-    required this.textHeight,
-    required this.size,
-  });
+/// A failed send, in the composer's top row: neutral words after the neutral
+/// error glyph, Retry, and Details when there is technical text (LOOK-5, B2:
+/// a failure is never red). The words are a live region.
+class _FailureRow extends StatelessWidget {
+  const _FailureRow({required this.failure});
 
-  final _EdgeData data;
-
-  /// Where the words' x-height centre lies below the top of their box.
-  final double xCentre;
-  final double textHeight;
-  final double size;
+  final KitComposerFailure failure;
 
   @override
   Widget build(BuildContext context) {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final tokens = KitTokens.of(context);
-    final failed = data.failure;
-    final live = data.live;
-    if (failed != null) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: _failure(context, l10n, tokens, failed),
-      );
-    }
-    if (live == null) return const SizedBox.shrink();
-    final top = 24 - xCentre;
-    final row = Padding(
-      // 48 dp tall in all, with the words' x-height centre at its middle,
-      // which is where the border line runs.
-      padding: EdgeInsets.fromLTRB(
-        _railEnd,
-        top,
-        _railEnd,
-        _railHeight - top - textHeight,
+    Widget text(String line) => KitText(
+      line,
+      role: KitTextRole.caption,
+      tone: KitTextTone.primary,
+      maxLines: 1,
+    );
+    return Padding(
+      padding: EdgeInsetsDirectional.only(
+        start: tokens.space3,
+        end: tokens.space2,
+        top: tokens.space1,
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _running(context, l10n, live),
-          if (live.onStop != null) ...[
-            const SizedBox(width: _stopGap),
-            Padding(
-              padding: EdgeInsets.only(top: xCentre - _stopGap),
-              child: _square(tokens, _stopSide),
+          const KitIcon(
+            AppIconography.error,
+            size: KitIconSize.small,
+            tone: KitTextTone.primary,
+          ),
+          SizedBox(width: tokens.space1),
+          Flexible(
+            child: Semantics(
+              liveRegion: true,
+              label: failure.words,
+              child: ExcludeSemantics(child: text(failure.words)),
             ),
-          ],
+          ),
+          KitTappable(
+            tappableKey: failure.retryKey,
+            label: l10n.kitComposerRailRetry,
+            shape: KitShape.button,
+            onTap: failure.onRetry,
+            child: SizedBox(
+              height: tokens.minTarget - 8,
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: tokens.space2),
+                  child: text('· ${l10n.kitComposerRailRetry}'),
+                ),
+              ),
+            ),
+          ),
+          if (failure.onDetails != null)
+            KitTappable(
+              label: l10n.kitDetails,
+              shape: KitShape.button,
+              onTap: failure.onDetails,
+              child: SizedBox(
+                width: tokens.minTarget - 16,
+                height: tokens.minTarget - 8,
+                child: const Center(
+                  child: KitIcon(AppIconography.info, size: KitIconSize.small),
+                ),
+              ),
+            ),
         ],
       ),
     );
-    if (live.onStop == null) return row;
-    return KitTappable(
-      tappableKey: live.stopKey,
-      label: l10n.kitTurnLiveStop,
-      shape: KitShape.button,
-      onTap: live.stopping ? null : live.onStop,
-      disabledReason: live.stopping ? l10n.kitTurnLiveStopping : null,
-      child: row,
-    );
   }
-
-  // The rail's hand-set measures, in logical pixels (48 dp tall in all).
-  static const _railHeight = 48.0;
-  static const _railEnd = 6.0;
-  static const _stopGap = 4.0;
-  static const _stopSide = 8.0;
-  static const _stopRadius = 2.0;
-
-  static Widget _square(KitTokens tokens, double side) => Container(
-    width: side,
-    height: side,
-    decoration: BoxDecoration(
-      color: tokens.roles.danger,
-      borderRadius: BorderRadius.circular(_stopRadius),
-    ),
-  );
-
-  Widget _text(String line, KitTextTone tone, {double? fontSize}) =>
-      KitText.rich(
-        TextSpan(
-          text: line,
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: fontSize ?? size,
-          ),
-        ),
-        role: KitTextRole.caption,
-        tone: tone,
-        maxLines: 1,
-        tabular: true,
-      );
-
-  Widget _words(String line, String spoken, String phase, KitTextTone tone) =>
-      Semantics(
-        liveRegion: true,
-        label: spoken,
-        child: ExcludeSemantics(
-          child: AnimatedSwitcher(
-            duration: KitMotion.quick,
-            child: KeyedSubtree(key: ValueKey(phase), child: _text(line, tone)),
-          ),
-        ),
-      );
-
-  Widget _running(
-    BuildContext context,
-    AppLocalizations l10n,
-    KitTurnLive live,
-  ) {
-    final activity = live.activity == KitTurnActivity.sending
-        ? KitTurnActivity.thinking
-        : live.activity;
-    return KitSince(
-      since: live.since,
-      ticks: KitSinceTicks.seconds,
-      builder: (context, status) {
-        final slow = status.elapsed >= KitTurnLive.slowAfter;
-        final words = switch (activity) {
-          KitTurnActivity.waitingForServer when slow =>
-            l10n.kitComposerPillNoAnswer,
-          KitTurnActivity.waitingForServer => l10n.kitTurnLiveThinking,
-          KitTurnActivity.waitingForModel when !slow =>
-            l10n.kitTurnLiveThinking,
-          _ => KitTurnLive.wordsFor(
-            l10n,
-            activity,
-            status.elapsed,
-            teamAlsoWorking: live.teamAlsoWorking,
-          ),
-        };
-        var line = status.elapsed < KitTurnLive.showElapsedAfter
-            ? l10n.kitTurnLiveNow(words)
-            : l10n.kitTurnLiveFor(
-                words,
-                KitTurnLive.elapsedText(l10n, status.elapsed),
-              );
-        if (data.note != null) line = '$line · ${data.note}';
-        return _words(
-          line,
-          data.note == null ? words : '$words. ${data.note}',
-          words,
-          KitTextTone.secondary,
-        );
-      },
-    );
-  }
-
-  List<Widget> _failure(
-    BuildContext context,
-    AppLocalizations l10n,
-    KitTokens tokens,
-    KitComposerFailure failure,
-  ) => [
-    const SizedBox(width: _railEnd),
-    // A failure is neutral (LOOK-5, B2): text1 words after the neutral
-    // error glyph; only Stop on this edge is red.
-    const KitIcon(
-      AppIconography.error,
-      size: KitIconSize.small,
-      tone: KitTextTone.primary,
-    ),
-    const SizedBox(width: _stopGap),
-    _words(failure.words, failure.words, failure.words, KitTextTone.primary),
-    KitTappable(
-      tappableKey: failure.retryKey,
-      label: l10n.kitComposerRailRetry,
-      shape: KitShape.button,
-      onTap: failure.onRetry,
-      child: SizedBox(
-        height: tokens.minTarget - 8,
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: tokens.space2),
-            child: _text('· ${l10n.kitComposerRailRetry}', KitTextTone.primary),
-          ),
-        ),
-      ),
-    ),
-    if (failure.onDetails != null)
-      KitTappable(
-        label: l10n.kitDetails,
-        shape: KitShape.button,
-        onTap: failure.onDetails,
-        child: SizedBox(
-          width: tokens.minTarget - 16,
-          height: tokens.minTarget - 8,
-          child: const Center(
-            child: KitIcon(AppIconography.info, size: KitIconSize.small),
-          ),
-        ),
-      ),
-    const SizedBox(width: _railEnd),
-  ];
 }
 
 class _Circle extends StatelessWidget {
@@ -228,15 +99,15 @@ class _Circle extends StatelessWidget {
     final roles = tokens.roles;
     final stop = kind == _CircleKind.stop;
     final disabled = kind == _CircleKind.sendDisabled;
-    // Stop is the destructive variant: the same red as a destructive kit
-    // button, so ending a run reads as ending something.
+    // Stop is neutral (owner decision 2 Oct, 02B): a text-colour circle with
+    // a ground square. Red is reserved for destructive actions.
     final fill = stop
-        ? roles.dangerFill
+        ? roles.text1
         : disabled
         ? roles.surface3
         : roles.accent;
     final ink = stop
-        ? roles.onDangerFill
+        ? roles.ground
         : disabled
         ? roles.text3
         : roles.onAccent;
@@ -281,6 +152,19 @@ class _Circle extends StatelessWidget {
       }
     }
 
+    Widget disc = SizedBox.square(
+      dimension: KitTokens.composerActionSize,
+      child: DecoratedBox(
+        key: ValueKey('kit-composer-circle-${kind.name}'),
+        decoration: BoxDecoration(color: fill, shape: BoxShape.circle),
+        child: Center(child: glyph),
+      ),
+    );
+    // Stop wears a slowly turning ring: the work has no known length.
+    if (stop) {
+      disc = _StopRing(color: roles.text2, track: roles.hairline, child: disc);
+    }
+
     return KitTappable(
       tappableKey: tappableKey,
       shape: KitShape.circle,
@@ -291,17 +175,115 @@ class _Circle extends StatelessWidget {
       onTap: onTap,
       child: SizedBox.square(
         dimension: tokens.minTarget,
-        child: Center(
-          child: SizedBox.square(
-            dimension: KitTokens.composerActionSize,
-            child: DecoratedBox(
-              key: ValueKey('kit-composer-circle-${kind.name}'),
-              decoration: BoxDecoration(color: fill, shape: BoxShape.circle),
-              child: Center(child: glyph),
-            ),
-          ),
-        ),
+        child: Center(child: disc),
       ),
     );
   }
+}
+
+/// The ring around Stop (owner decision 2 Oct, 11B): an arc that turns
+/// slowly and never stops at a value, because nobody knows how much work is
+/// left. Full motion turns at [KitMotion.stopRingLapsPerSecond], Calm at
+/// half that; Off, reduced motion and tests hold the arc still.
+class _StopRing extends StatefulWidget {
+  const _StopRing({
+    required this.color,
+    required this.track,
+    required this.child,
+  });
+
+  final Color color;
+  final Color track;
+  final Widget child;
+
+  @override
+  State<_StopRing> createState() => _StopRingState();
+}
+
+class _StopRingState extends State<_StopRing>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _turn = AnimationController(vsync: this);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final level = KitEffects.of(context).motion;
+    final turns =
+        KitMotion.loops &&
+        !KitMotion.reduced(context) &&
+        level != KitMotionLevel.off;
+    if (!turns) {
+      _turn.stop();
+      return;
+    }
+    final laps = level == KitMotionLevel.calm
+        ? KitMotion.stopRingCalmLapsPerSecond
+        : KitMotion.stopRingLapsPerSecond;
+    _turn.duration = Duration(milliseconds: (1000 / laps).round());
+    if (!_turn.isAnimating) unawaited(_turn.repeat());
+  }
+
+  @override
+  void dispose() {
+    _turn.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => RepaintBoundary(
+    child: CustomPaint(
+      key: const ValueKey('kit-composer-stop-ring'),
+      foregroundPainter: _RingPainter(
+        turn: _turn,
+        color: widget.color,
+        track: widget.track,
+      ),
+      // The disc keeps its size; the ring turns just outside it.
+      child: SizedBox.square(
+        dimension: KitTokens.composerActionSize + 4,
+        child: Center(child: widget.child),
+      ),
+    ),
+  );
+}
+
+class _RingPainter extends CustomPainter {
+  _RingPainter({required this.turn, required this.color, required this.track})
+    : super(repaint: turn);
+
+  final Animation<double> turn;
+  final Color color;
+  final Color track;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const width = 2.0;
+    final rect = (Offset.zero & size).deflate(width / 2);
+    canvas
+      ..drawArc(
+        rect,
+        0,
+        2 * math.pi,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = width
+          ..color = track,
+      )
+      ..drawArc(
+        rect,
+        2 * math.pi * turn.value - math.pi / 2,
+        2 * math.pi * 0.28,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = width
+          ..strokeCap = StrokeCap.round
+          ..color = color,
+      );
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter old) =>
+      old.color != color || old.track != track;
 }

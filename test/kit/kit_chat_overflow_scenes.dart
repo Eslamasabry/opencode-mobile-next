@@ -131,6 +131,10 @@ final kitChatOverflowScenes = <KitOverflowScene>[
         KitChip(label: c.t('Automatic approvals', 'موافقات تلقائية')),
         KitChip(label: c.t('Background', 'الخلفية')),
       ],
+      model: KitComposerChips.model(
+        label: c.t('Review model', 'نموذج المراجعة'),
+        onPressed: _noop,
+      ),
     ),
   ),
   KitOverflowScene(
@@ -444,10 +448,6 @@ class _ComposerSceneState extends State<_ComposerScene> {
             'هذه المحادثة للقراءة فقط',
           )
         : null,
-    model: KitComposerChips.model(
-      label: widget.copy.t('Review model', 'نموذج المراجعة'),
-      onPressed: _noop,
-    ),
     onTools: _noop,
     onOpenEditor: _noop,
   );

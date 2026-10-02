@@ -144,8 +144,8 @@ void main() {
     expect(api.prompts, isEmpty);
   });
 
-  testWidgets('a sent prompt runs at once: status and Stop on the composer '
-      'edge, and the composer keeps its mic or Send', (tester) async {
+  testWidgets('a sent prompt runs at once: the status in the turn, Send '
+      'becomes Stop, and the mic stays beside it', (tester) async {
     final semantics = tester.ensureSemantics();
     final api = _ComposerApi();
     await _pump(tester, api);
@@ -155,18 +155,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(api.prompts, ['go']);
 
-    // The server has not said it is busy yet; the edge still says it runs
+    // The server has not said it is busy yet; the turn still says it runs
     // (a send that has not been answered reads as thinking).
     expect(find.text('Thinking…'), findsOneWidget);
     final stop = find.byKey(const Key('chat-stop-button'));
     expect(stop, findsOneWidget);
-    expect(find.bySemanticsLabel(RegExp('Stop reply')), findsOneWidget);
-    // The composer has no Stop circle: its one trailing control is still
-    // the mic (voice builds) or Send.
+    expect(find.bySemanticsLabel(RegExp('Stop the reply')), findsOneWidget);
+    // Stop took Send's slot (nothing left to send); the mic, where the
+    // platform has one, is its own button beside it.
+    expect(find.byKey(const Key('chat-send-button')), findsNothing);
     expect(
-      find.byKey(const Key('composer-voice-button')).evaluate().length +
-          find.byKey(const Key('chat-send-button')).evaluate().length,
-      1,
+      find.byKey(const Key('composer-voice-button')).evaluate().length,
+      lessThanOrEqualTo(1),
     );
 
     await tester.tap(stop);

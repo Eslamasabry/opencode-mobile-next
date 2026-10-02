@@ -173,10 +173,7 @@ void main() {
     expect(find.text('Since you were away'), findsOneWidget);
     expect(find.textContaining('(sessionFailed)'), findsNothing);
     expect(find.text('Planning is stopped.'), findsNothing);
-    expect(
-      find.text("The planner stopped before it answered."),
-      findsWidgets,
-    );
+    expect(find.text("The planner stopped before it answered."), findsWidgets);
   });
 
   testWidgets('a failed plan offers a way forward, code only in Details', (

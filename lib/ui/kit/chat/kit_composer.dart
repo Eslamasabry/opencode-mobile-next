@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' show PathMetric;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 
 import 'package:clock/clock.dart';
@@ -28,7 +27,6 @@ import '../kit_text.dart';
 import '../kit_tokens.dart';
 import '../motion/kit_haptics.dart';
 import '../kit_effects.dart';
-import '../kit_since.dart';
 import '../motion/kit_motion_parts.dart';
 import 'kit_composer_chips.dart';
 import 'kit_turn.dart';
@@ -39,10 +37,15 @@ part 'kit_composer_glow.dart';
 part 'kit_composer_caption.dart';
 part 'kit_composer_layer.dart';
 
-/// The composer (VL §5; docs/ux-system/kit-api/KitComposer.md): a surface2
-/// glass pill (KitGlass, dimmed) holding attach, the field, the model chip,
-/// voice, and send or stop. Send is an accent circle; Stop is a danger
-/// circle with an on-danger square.
+/// The composer (VL §5; docs/ux-system/kit-api/KitComposer.md): a solid
+/// surface2 pill (KitGlass) holding attach, the field, voice, and send or
+/// stop. Send is an accent circle. While a reply runs the box is otherwise
+/// idle and Send becomes Stop (owner decisions 1 and 2 Oct, 01B, 11B, 02B):
+/// a text-colour circle with a ground square and a slowly turning ring, the
+/// only Stop in the chat. The mic stays its own button beside it. What the
+/// reply is doing is written in the turn, not here; the model chip sits
+/// above the pill with the status chips ([KitComposerStatusStrip]), or in the
+/// bottom row of a window too tight for that line ([model]).
 ///
 /// States: idle empty, idle with text, sending, busy empty, busy with text
 /// (stop + send, delivery choice), busy with text that cannot send yet,
@@ -87,36 +90,21 @@ class KitComposer extends StatefulWidget {
     this.editorKey,
     this.deliveryKey,
     this.hasAttachments = false,
-    this.rail,
     this.activityGlow,
     this.failure,
-    this.railNote,
   });
 
   /// The message carries attachments or references, so Send is live (and
   /// the editor button shows) even with an empty field (chat-3).
   final bool hasAttachments;
 
-  /// The running reply's status: a pill on the composer's top border (a
-  /// bump of the box's own outline) with a small spinner, the phase words,
-  /// the time and a red Stop. It grows out of the border line when a reply
-  /// starts and shrinks back into it when it ends; the composer grows
-  /// upward by the pill's height while it shows. A live region: it
-  /// announces the phase, not the seconds. Sending reads as thinking.
-  final KitTurnLive? rail;
-
-  /// The soft ring sweep around the whole box while [rail] runs, in
-  /// addition to the living edge. Null follows Settings › Appearance ›
-  /// Effects ([KitEffects.activityGlow]).
+  /// The soft ring sweep around the whole box while [busy], only when the
+  /// person turned it on. Null follows Settings › Appearance › Effects
+  /// ([KitEffects.activityGlow]).
   final bool? activityGlow;
 
-  /// A failed send, in the same pill: what failed, Retry, Details. Wins
-  /// over [rail].
+  /// A failed send, in the pill's top row: what failed, Retry, Details.
   final KitComposerFailure? failure;
-
-  /// A short second segment after the status words ("Sends after this
-  /// reply", the AI team's "also working" hint).
-  final String? railNote;
 
   final TextEditingController controller;
   final FocusNode focusNode;
@@ -143,9 +131,9 @@ class KitComposer extends StatefulWidget {
   /// Send queues: "Send when back online".
   final bool offline;
 
-  /// Null: no Stop in the composer (a host that cannot stop, or one whose
-  /// Stop is on the running turn's live line); while busy and empty the
-  /// trailing control is then the mic.
+  /// Stop: it takes Send's place while [busy] and the field is empty (and
+  /// leads the row when words are typed). Null: no Stop (a host that cannot
+  /// stop); while busy and empty the trailing control is then the mic.
   final VoidCallback? onStop;
   final KitComposerDelivery delivery;
 
@@ -167,8 +155,10 @@ class KitComposer extends StatefulWidget {
   /// [KitComposerChips.suggestions], above the field.
   final KitComposerChips? suggestions;
 
-  /// [KitComposerChips.model], in the bottom row.
-  final KitComposerChips? model;
+  /// The model chip in the bottom row: only for a window too tight for the
+  /// status line above the field ([KitComposerStatusStrip.model], decision
+  /// 14A), where the chip would crowd the composer out. Otherwise null.
+  final Widget? model;
 
   /// "+": the host's tools sheet (attach, photos, commands…).
   final VoidCallback? onTools;
@@ -380,6 +370,16 @@ class _KitComposerState extends State<KitComposer> {
       widget.onStop != null &&
       (widget.sending || (_hasContent && widget.canSendWhileBusy));
 
+  /// The mic as its own button: while a reply runs, Stop has Send's slot and
+  /// the mic stays reachable beside it, so a message can be spoken now and
+  /// sent after the reply.
+  bool get _micBeside =>
+      !_readOnly &&
+      widget.onVoice != null &&
+      widget.busy &&
+      _trailing() == _Trailing.stop &&
+      !_stopLeads;
+
   String _sendWords(AppLocalizations l10n) {
     if (widget.sending) return l10n.kitComposerSending;
     if (widget.offline) return l10n.kitComposerSendOffline;
@@ -451,10 +451,8 @@ class _KitComposerState extends State<KitComposer> {
           // down under the pointer and the release would land on nothing
           // (the first Send press only hid the keyboard).
           child: TextFieldTapRegion(
-            child: _LivingEdge(
-              live: widget.rail,
-              failure: widget.failure,
-              note: widget.railNote,
+            child: _ComposerFrame(
+              active: widget.busy,
               radius: radius,
               activityGlow: widget.activityGlow,
               surface: KitGlass(
@@ -542,6 +540,14 @@ class _KitComposerState extends State<KitComposer> {
         )
       else
         const Spacer(),
+      if (_micBeside)
+        _Circle(
+          key: const ValueKey('kit-composer-mic'),
+          kind: _CircleKind.mic,
+          label: l10n.kitComposerVoice,
+          tappableKey: widget.voiceButtonKey,
+          onTap: widget.onVoice,
+        ),
       KitSwap(child: _trailingControl(context, l10n)),
     ];
     // The full-screen editor opens from the field's top corner, where it
@@ -578,6 +584,7 @@ class _KitComposerState extends State<KitComposer> {
     // scroll and give their room up to the field and the send row, which
     // always stay; nothing is truncated (KIT-24).
     final accessories = <Widget>[
+      if (widget.failure case final failure?) _FailureRow(failure: failure),
       if (note != null)
         Padding(
           padding: EdgeInsetsDirectional.only(

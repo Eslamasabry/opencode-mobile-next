@@ -616,7 +616,6 @@ class _ComposerSceneState extends State<_ComposerScene> {
       readOnlyReason: state == 'read-only'
           ? c.t('Watching this worker’s conversation', 'عرض محادثة هذا العامل')
           : null,
-      model: KitComposerChips.model(label: 'Sonnet 4.5', onPressed: _noop),
       voice: voice == null
           ? null
           : KitComposerVoice(

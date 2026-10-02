@@ -949,7 +949,7 @@ void main() {
       conn.notifyListeners();
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 250));
-      // Stop is on the composer's edge, next to the running status.
+      // Send became Stop; the status is written in the turn.
       expect(find.byKey(const Key('chat-stop-button')), findsOneWidget);
       await tester.tap(find.byKey(const Key('chat-stop-button')));
       await tester.pump();
@@ -4612,11 +4612,11 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'first prompt');
       await tester.pump();
-      await tester.tap(find.byTooltip('Send'));
+      await tester.tap(find.byKey(const Key('chat-send-button')));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'second prompt');
       await tester.pump();
-      await tester.tap(find.byTooltip('Send'));
+      await tester.tap(find.byKey(const Key('chat-send-button')));
       await tester.pumpAndSettle();
 
       controller.handleEventForTesting(

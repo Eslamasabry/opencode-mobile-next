@@ -953,19 +953,7 @@ class _TeamProjectConversationState extends State<TeamProjectConversation> {
               busy: running,
               sending: c.busy,
               canSendWhileBusy: true,
-              rail:
-                  !unavailable &&
-                      (running || requests.isNotEmpty || planning || canPromote)
-                  ? KitTurnLive(
-                      activity: requests.isNotEmpty || planning || canPromote
-                          ? KitTurnActivity.waitingForYou
-                          : KitTurnActivity.working,
-                      since: DateTime.tryParse(
-                        planning || canPromote ? p.updatedAt : t.changedAt,
-                      ),
-                      onStop: c.busy ? null : () => _stop(p),
-                    )
-                  : null,
+              onStop: running && !c.busy ? () => _stop(p) : null,
             ),
           ],
         ),

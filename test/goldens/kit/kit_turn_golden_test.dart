@@ -185,6 +185,23 @@ Map<String, Widget Function()> _states() => {
       latest: true,
     ),
   ),
+  // 01B and 12A: the status is the turn's live line under the reply, with
+  // one dot and no Stop (Send in the composer is the Stop).
+  'running_live': () => _scene(
+    KitTurn(
+      prompt: _prompt,
+      blocks: [
+        _firstWords,
+        _line(KitWorkState.running, now: 'Editing test/checkout_test.dart'),
+      ],
+      phase: KitTurnPhase.running,
+      live: KitTurnLive(
+        activity: KitTurnActivity.writing,
+        since: clock.now().subtract(const Duration(seconds: 6)),
+      ),
+      latest: true,
+    ),
+  ),
   'waiting_for_you': () => _scene(
     KitTurn(
       prompt: _prompt,

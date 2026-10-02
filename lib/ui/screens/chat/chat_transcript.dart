@@ -74,14 +74,6 @@ mixin _ChatTranscriptFields {
   /// The running turn's live line and the row that carries it, worked out
   /// once per build ([_liveTurn]).
   ({KitTurnLive live, int index})? _live;
-
-  // How fast the running reply is arriving, for the composer edge's light:
-  // characters (and a weight per step) that came in since the last change,
-  // per second, eased. Kept across builds; reset when the turn changes.
-  String? _paceTurn;
-  int _paceMark = 0;
-  DateTime? _paceAt;
-  double _paceValue = 0;
 }
 
 extension _ChatTranscript on _ChatScreenState {
@@ -257,59 +249,16 @@ extension _ChatTranscript on _ChatScreenState {
     return (
       live: KitTurnLive(
         activity: activity,
-        pace: _livePace(prompt, end),
         since:
             _localTurnSince ??
             (created == null
                 ? null
                 : DateTime.fromMillisecondsSinceEpoch(created)),
-        // Not while the prompt is still on its way: there is nothing to
-        // stop yet.
-        onStop: _sending ? null : () => unawaited(_abort()),
-        stopping: _aborting,
-        stopKey: const Key('chat-stop-button'),
         teamAlsoWorking: _inAppTeamWorking(),
       ),
       // Under the reply that runs, above any prompt waiting behind it.
       index: queuedBehind ? queuedAfterIndex : _messages.length - 1,
     );
-  }
-
-  /// 0..1: about 90 characters a second and up is full pace.
-  double _livePace(int prompt, int end) {
-    var mark = 0;
-    for (var i = prompt + 1; i < end; i += 1) {
-      final message = _messages[i];
-      if (message.info.role != 'assistant') continue;
-      for (final part in message.parts) {
-        if (part.type == 'text' || part.type == 'reasoning') {
-          mark += part.text.length;
-        } else if (part.type == 'tool') {
-          mark += 60;
-        }
-      }
-    }
-    final now = DateTime.now();
-    final turn = prompt < 0 ? null : _messages[prompt].info.id;
-    if (turn != _paceTurn) {
-      _paceTurn = turn;
-      _paceMark = mark;
-      _paceAt = now;
-      _paceValue = 0;
-      return 0;
-    }
-    final at = _paceAt;
-    if (at != null && mark != _paceMark) {
-      final seconds = (now.difference(at).inMilliseconds / 1000).clamp(
-        0.05,
-        5.0,
-      );
-      final target = ((mark - _paceMark).abs() / seconds / 90).clamp(0.0, 1.0);
-      _paceValue += (target - _paceValue) * (1 - math.exp(-seconds / 0.8));
-      _paceMark = mark;
-      _paceAt = now;
-    }
-    return _paceValue;
   }
 
   /// This reply runs on the phone's own OpenCode while the AI Team on this
@@ -353,8 +302,6 @@ extension _ChatTranscript on _ChatScreenState {
     if (i == _renderedMessageCount) return _olderHistoryRow();
     final index = _renderedMessageCount - 1 - i;
     final m = _messages[index];
-    // The running turn's status lives on the composer's edge
-    // ([KitComposer.rail]), so no transcript row draws a live line.
     if (waitingLocalIDs.contains(m.info.id) || _isFoldedNotice(m)) {
       return const SizedBox.shrink();
     }
@@ -380,7 +327,7 @@ extension _ChatTranscript on _ChatScreenState {
         : null;
     return _MessageView(
       key: ValueKey('message-${m.info.id}'),
-      statusOnComposer: _live?.index == index,
+      live: _live?.index == index ? _live!.live : null,
       unanswered: !silent && unanswered?.$1 == index,
       onSendAgainNoReply: silent && !offline && unanswered?.$1 == index
           ? () => unawaited(

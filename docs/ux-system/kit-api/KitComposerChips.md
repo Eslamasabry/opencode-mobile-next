@@ -6,6 +6,8 @@ Group: chat. Unit `kit-KitComposerChips` (wave 1, tier 1c; after kit-KitChip, ki
 
 The small things that ride with a message before it is sent: the model chip (which model answers, how full its context is, and a quick way to switch), the attachments and references the message will carry, and the inline suggestions that appear when the person types `/` or `@`. The same attachment chips, read-only, show what a sent prompt carried.
 
+**Where the model chip sits** (owner decision 2 Oct 2026, 14A): above the message field, at the end of the status line (`KitComposerStatusStrip(chips:, model:)`, `kit_composer_status_strip.dart`), next to the standing-fact chips such as "Auto-approving"; it is not inside the composer pill, so the field has its full width. The strip gives it at most 60 % of the line (it ellipsizes first); the other chips scroll sideways. It draws nothing when it has neither chips nor a model.
+
 ## Replaces
 
 - **Map** (kit-v2.json, module:chat composer): `embedded-composer#embedded-composer-model-chip`, `#embedded-composer-model-cycle-menu`, `#embedded-composer-context-badge`, `#embedded-composer-attachment-chip-preview`, `#embedded-composer-inline-command-row`, `chat#chat-pending-photo-row` (6 elements). Map `statesMissing` fixed here: "no model signed in: chip says 'Choose model' identically to 'server default in use'"; the map note "Inline ListTile suggestions, descriptions truncated mid-word"; `chat-pending-photo-row` couldBeAutomatic "attach the recovered photo to this draft automatically".

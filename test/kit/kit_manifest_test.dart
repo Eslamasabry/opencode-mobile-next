@@ -579,7 +579,6 @@ const _toAssignKeyboard =
 /// line here (a line whose part left the allowlist fails).
 const _deferredAtKitMerge = <String, Map<String, String>>{
   'name': {
-    'KitComposerStatusStrip': _byChat,
     'KitStatusContribution': _toAssignName,
     'KitStatusLineSlot': _toAssignName,
     'KitStatusScope': _toAssignName,

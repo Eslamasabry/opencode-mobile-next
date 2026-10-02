@@ -60,7 +60,6 @@ KitComposer _composer(
   bool voiceButton = true,
   KitComposerVoice? voice,
   KitComposerChips? suggestions,
-  bool model = false,
   KitComposerFailure? failure,
 }) => KitComposer(
   controller: h.controller,
@@ -78,9 +77,6 @@ KitComposer _composer(
   onVoice: voiceButton ? () => h.voices++ : null,
   voice: voice,
   suggestions: suggestions,
-  model: model
-      ? KitComposerChips.model(label: 'Sonnet 4.5 · High', onPressed: () {})
-      : null,
   onTools: () => h.tools++,
   onOpenEditor: () => h.editors++,
   fieldKey: _field,
@@ -212,6 +208,23 @@ void main() {
       semantics.dispose();
     });
 
+    // Owner decisions 2 Oct, 11B: Stop takes Send's slot and the mic stays
+    // its own button beside it, so speaking while a reply runs still works.
+    testWidgets('busy, no text: Stop in the end slot, the mic beside it', (
+      tester,
+    ) async {
+      final h = _host('');
+      await _pump(tester, _composer(h, busy: true));
+      final stop = tester.getRect(find.byKey(_stop));
+      final mic = tester.getRect(find.byKey(_voice));
+      expect(find.byKey(_voice), findsOneWidget);
+      expect(mic.right, lessThanOrEqualTo(stop.left));
+      expect(mic.width, greaterThanOrEqualTo(48));
+      await tester.tap(find.byKey(_voice));
+      expect(h.voices, 1);
+      expect(h.stops, 0);
+    });
+
     testWidgets('busy with Stop on the running turn (no onStop), no text: '
         'the mic stays, so a message can be spoken while the reply runs', (
       tester,
@@ -259,18 +272,29 @@ void main() {
     expect(send.left - stop.right, greaterThanOrEqualTo(8));
   });
 
-  // Owner decision (critique 2026-09-29): Stop is always red.
-  testWidgets('Stop is a red circle', (tester) async {
+  // Owner decision 2 Oct (02B): Stop is neutral, a text-colour circle with a
+  // ground square; red is for destructive actions only.
+  testWidgets('Stop is a neutral text-colour circle with a turning ring', (
+    tester,
+  ) async {
     final h = _host('');
     await _pump(tester, _composer(h, busy: true));
     final roles = KitTokens.of(tester.element(find.byType(KitComposer))).roles;
     final circle = tester.widget<DecoratedBox>(
       find.byKey(const ValueKey('kit-composer-circle-stop')),
     );
+    expect((circle.decoration as BoxDecoration).color, roles.text1);
     expect(
-      (circle.decoration as BoxDecoration).color,
-      anyOf(roles.danger, roles.dangerFill),
+      find.byKey(const ValueKey('kit-composer-stop-ring')),
+      findsOneWidget,
     );
+  });
+
+  testWidgets('idle: no ring, and nothing about the reply is written on the '
+      'box', (tester) async {
+    final h = _host('');
+    await _pump(tester, _composer(h));
+    expect(find.byKey(const ValueKey('kit-composer-stop-ring')), findsNothing);
   });
 
   group('delivery', () {
@@ -495,7 +519,7 @@ void main() {
     final h = _host('');
     await _pump(
       tester,
-      _composer(h, readOnlyReason: 'This session is archived', model: true),
+      _composer(h, readOnlyReason: 'This session is archived'),
     );
     expect(find.text('This session is archived'), findsOneWidget);
     final field = tester.widget<TextField>(
@@ -754,10 +778,7 @@ void main() {
   testWidgets('every control is labelled and at least 48 dp', (tester) async {
     final semantics = tester.ensureSemantics();
     final h = _host('more');
-    await _pump(
-      tester,
-      _composer(h, busy: true, canSendWhileBusy: true, model: true),
-    );
+    await _pump(tester, _composer(h, busy: true, canSendWhileBusy: true));
     for (final (key, label) in [
       (_tools, 'Attach and more'),
       (_editor, 'Open full-screen editor'),
@@ -858,7 +879,6 @@ void main() {
         busy: true,
         canSendWhileBusy: true,
         deliveryChoice: true,
-        model: true,
         offline: true,
       ),
       size: const Size(320, 800),

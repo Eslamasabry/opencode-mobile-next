@@ -1,6 +1,6 @@
 // The chosen "Glowing border while replying" (KitComposer.activityGlow /
 // KitEffects.activityGlow): a soft ring sweep around the whole box while a
-// reply runs, in addition to the living edge. Off by default; Calm is still;
+// reply runs, when the person turned it on. Off by default; Calm is still;
 // Motion Off and the system's remove-animations draw none.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,10 +8,7 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/effects.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_composer.dart';
-import 'package:opencode_mobile/ui/kit/chat/kit_turn.dart';
 import 'package:opencode_mobile/ui/kit/kit_motion.dart';
-
-const _live = KitTurnLive(activity: KitTurnActivity.writing, pace: .5);
 
 Finder _glow([String? mode]) => mode == null
     ? find.byWidgetPredicate(
@@ -23,7 +20,7 @@ Finder _glow([String? mode]) => mode == null
 
 Future<void> _pump(
   WidgetTester tester, {
-  required KitTurnLive? rail,
+  required bool busy,
   bool? glow,
   KitEffects effects = KitEffects.defaults,
   bool reduced = false,
@@ -57,8 +54,7 @@ Future<void> _pump(
                 hint: 'Ask',
                 onSend: () {},
                 onStop: () {},
-                busy: rail != null,
-                rail: rail,
+                busy: busy,
                 activityGlow: glow,
               ),
             ),
@@ -72,23 +68,23 @@ Future<void> _pump(
 
 void main() {
   testWidgets('off by default: a running reply draws no glow', (tester) async {
-    await _pump(tester, rail: _live);
+    await _pump(tester, busy: true);
     expect(_glow(), findsNothing);
   });
 
   testWidgets('on: drawn only while a reply runs', (tester) async {
-    await _pump(tester, rail: null, glow: true);
+    await _pump(tester, busy: false, glow: true);
     expect(_glow(), findsNothing);
-    await _pump(tester, rail: _live, glow: true);
+    await _pump(tester, busy: true, glow: true);
     expect(_glow('frame'), findsOneWidget);
-    await _pump(tester, rail: null, glow: true);
+    await _pump(tester, busy: false, glow: true);
     expect(_glow(), findsNothing);
   });
 
   testWidgets('follows the Appearance switch when not told', (tester) async {
     await _pump(
       tester,
-      rail: _live,
+      busy: true,
       effects: KitEffects.defaults.copyWith(activityGlow: true),
     );
     expect(_glow('frame'), findsOneWidget);
@@ -97,14 +93,14 @@ void main() {
   testWidgets('Calm draws one still glow, Off draws none', (tester) async {
     await _pump(
       tester,
-      rail: _live,
+      busy: true,
       glow: true,
       effects: KitEffects.defaults.copyWith(motion: KitMotionLevel.calm),
     );
     expect(_glow('calm'), findsOneWidget);
     await _pump(
       tester,
-      rail: _live,
+      busy: true,
       glow: true,
       effects: KitEffects.defaults.copyWith(motion: KitMotionLevel.off),
     );
@@ -112,15 +108,16 @@ void main() {
   });
 
   testWidgets('the system remove-animations draws none', (tester) async {
-    await _pump(tester, rail: _live, glow: true, reduced: true);
+    await _pump(tester, busy: true, glow: true, reduced: true);
     expect(_glow(), findsNothing);
   });
 
-  testWidgets('living edge and Stop are unchanged with the glow on', (
+  testWidgets('Stop and the box are unchanged with the glow on', (
     tester,
   ) async {
-    await _pump(tester, rail: _live, glow: true);
-    expect(find.text('Writing…'), findsOneWidget);
+    await _pump(tester, busy: true, glow: true);
+    expect(find.bySemanticsLabel('Stop the reply'), findsWidgets);
+    expect(find.text('Writing…'), findsNothing);
   });
 
   testWidgets('live: travels slowly, one lap takes at least 6 s', (
@@ -143,7 +140,7 @@ void main() {
             focusNode: focus,
             hint: 'Ask',
             onSend: () {},
-            rail: _live,
+            busy: true,
             activityGlow: true,
           ),
         ),

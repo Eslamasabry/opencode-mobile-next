@@ -38,6 +38,8 @@ import '../kit_tappable.dart' show KitPressTracker;
 import '../kit_tokens.dart';
 import '../motion/kit_motion_parts.dart';
 
+export 'kit_composer_status_strip.dart';
+
 /// Which model answers, as far as the composer can say.
 enum KitModelChipState {
   /// A model the person picked: its presented name.
@@ -259,38 +261,6 @@ class KitComposerChips extends StatelessWidget {
       suggestions: suggestions,
       onSelected: onSelected!,
       onShowAll: onShowAll,
-    );
-  }
-}
-
-/// Standing facts about a conversation's run, above the composer: one line
-/// of chips (automatic approvals, context waiting for the agent's next step,
-/// "Background"). Always one line: short labels keep every chip on a
-/// phone's width, and at large text sizes the line scrolls sideways instead
-/// of stacking over the transcript. Draws nothing when [chips] is empty.
-///
-/// States: empty (nothing drawn).
-class KitComposerStatusStrip extends StatelessWidget {
-  const KitComposerStatusStrip({super.key, required this.chips, this.stripKey});
-
-  /// Kit chips ([KitChip] and its forms), in the host's order.
-  final List<Widget> chips;
-
-  /// On the scrolling line, for tests (TEST-5).
-  final Key? stripKey;
-
-  @override
-  Widget build(BuildContext context) {
-    if (chips.isEmpty) return const SizedBox.shrink();
-    final tokens = KitTokens.of(context);
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: SingleChildScrollView(
-        key: stripKey,
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsetsDirectional.symmetric(horizontal: tokens.space3),
-        child: Row(spacing: tokens.space2, children: chips),
-      ),
     );
   }
 }

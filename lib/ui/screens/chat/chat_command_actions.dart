@@ -449,19 +449,6 @@ extension _ChatCommandActions on _ChatScreenState {
     return presentedModelLabel(model.providerID, model.modelID);
   }
 
-  /// The selected model's catalog entry, when the catalog knows it.
-  CatalogModel? get _selectedCatalogModel {
-    final model = _conn.modelForSession(widget.sessionID);
-    if (model == null) return null;
-    for (final candidate in _conn.catalog?.models ?? const <CatalogModel>[]) {
-      if (candidate.id == model.modelID &&
-          candidate.providerID == model.providerID) {
-        return candidate;
-      }
-    }
-    return null;
-  }
-
   /// The agent the server would use unprompted — the first primary agent —
   /// so the composer chip only names an agent when it is a real choice.
   String get _defaultAgentName {

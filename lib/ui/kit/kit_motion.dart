@@ -20,24 +20,6 @@ abstract final class KitMotion {
   /// A control answering a touch: a chip, a toggle, a row's state.
   static const quick = Duration(milliseconds: 150);
 
-  /// The composer's edge light flashing once (a send, a stop).
-  static const composerFlash = Duration(milliseconds: 520);
-
-  /// The composer opening or closing under Animations: Full.
-  static const composerOpen = Duration(milliseconds: 380);
-
-  /// The composer opening or closing under Animations: Calm.
-  static const composerOpenCalm = Duration(milliseconds: 150);
-
-  /// The curve of the composer opening or closing.
-  static const Curve composerOpenCurve = Curves.easeInOutCubic;
-
-  /// The edge light settling after a send.
-  static const Curve sealFade = Curves.easeInOut;
-
-  /// The edge light's tail fading in along its length.
-  static const Curve tailFadeIn = Curves.easeOut;
-
   /// A part appearing or changing size: a notice, a section unfolding.
   static const standard = Duration(milliseconds: 250);
 
@@ -116,21 +98,20 @@ abstract final class KitMotion {
     damping: 20,
   );
 
-  /// The composer's edge light (the running reply's status): calm by rule.
-  /// It never travels faster than [edgeLightMaxLapsPerSecond] (one lap in
-  /// 6 s, reached only by a burst of words), rests at
-  /// [edgeLightThinkingLapsPerSecond] while the model thinks, and every
-  /// change of speed eases over [edgeLightSpeedEase] and of hue over
-  /// [edgeLightHueFade]. Where a status touches the border it fades out and
-  /// back in over [edgeLightFadeSpan] dp instead of stopping.
+  /// The most the composer's glowing border (and anything else that
+  /// travels a ring) may turn: one lap in 6 s.
   static const double edgeLightMaxLapsPerSecond = 1 / 6;
 
   /// The composer's chosen glowing border: one lap in 8 s (never below 6 s).
   static const double activityGlowLapsPerSecond = 1 / 8;
-  static const double edgeLightThinkingLapsPerSecond = 1 / 10;
-  static const Duration edgeLightSpeedEase = Duration(milliseconds: 800);
+
+  /// The ring around Stop while a reply runs: one lap in two seconds, half
+  /// that in Calm. Never faster, whatever the work does.
+  static const double stopRingLapsPerSecond = 1 / 2;
+  static const double stopRingCalmLapsPerSecond = 1 / 4;
+
+  /// The glowing border's strength easing in and out.
   static const Duration edgeLightHueFade = Duration(milliseconds: 450);
-  static const double edgeLightFadeSpan = 20;
 
   static const Curve enter = Curves.easeOutCubic;
   static const Curve exit = Curves.easeInCubic;
@@ -139,6 +120,9 @@ abstract final class KitMotion {
   /// A drawing's part landing with a small overshoot: a mark popping in, a
   /// card settling on a lane (the KitScene arrivals, MOT-1).
   static const Curve land = Curves.easeOutBack;
+
+  /// The soft in-and-out of a pulse (the working dot).
+  static const Curve pulse = Curves.easeInOut;
 
   /// Constant speed inside a drawing: a wave, a route being traced.
   static const Curve steady = Curves.linear;
