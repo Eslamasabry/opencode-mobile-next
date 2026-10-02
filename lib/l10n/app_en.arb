@@ -31379,7 +31379,7 @@
   "@queuedReceiptDetailNote": {
     "description": "Details note under an unconfirmed message"
   },
-  "kitToolRetry": "Retry",
+  "kitToolRetry": "Try again",
   "@kitToolRetry": {
     "description": "KitToolRow: the quiet button under a failed step that tries it again"
   }

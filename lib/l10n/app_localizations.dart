@@ -41872,7 +41872,7 @@ abstract class AppLocalizations {
   /// KitToolRow: the quiet button under a failed step that tries it again
   ///
   /// In en, this message translates to:
-  /// **'Retry'**
+  /// **'Try again'**
   String get kitToolRetry;
 }
 
