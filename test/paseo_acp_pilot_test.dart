@@ -142,7 +142,7 @@ Map<String, dynamic> _agent(
   ],
   'pendingPermissions': <Object>[],
   'persistence': persisted
-      ? {'provider': provider, 'sessionId': 'native-existing'}
+      ? {'provider': provider, 'sessionId': 'native-$id'}
       : null,
   'labels': <String, String>{},
   'archivedAt': null,
@@ -237,6 +237,13 @@ void main() {
       'send_agent_message_response',
       {'agentId': agent['id'], 'accepted': true, 'error': null},
     );
+    var created = 0;
+    daemon.handlers['create_agent_request'] = (request) {
+      created++;
+      final config = request['config'] as Map;
+      agent = _agent(config['provider'] as String, id: 'created-$created');
+      return ('create_agent_response', {'agent': agent});
+    };
     daemon.handlers['cancel_agent_request'] = (_) => (
       'cancel_agent_response',
       {'agentId': agent['id'], 'agent': agent, 'error': null},
@@ -279,38 +286,74 @@ void main() {
     await pumpEventQueue();
   }
 
-  test('discovery gates are additive and do not imply ready agents', () async {
-    expect(const ServerCapabilities().hostAgentProviders, isFalse);
-    expect(const ServerCapabilities().hostAgentPermissionActions, isFalse);
-    expect(gateway.capabilities.hostAgentProviders, isTrue);
-    expect(gateway.capabilities.hostAgentPermissionActions, isTrue);
-    expect((await providers().loadHostAgentProviders()).selectable, isEmpty);
-  });
+  test(
+    'discovery gates are additive and ready agents are selectable',
+    () async {
+      expect(const ServerCapabilities().hostAgentProviders, isFalse);
+      expect(const ServerCapabilities().hostAgentPermissionActions, isFalse);
+      expect(gateway.capabilities.hostAgentProviders, isTrue);
+      expect(gateway.capabilities.hostAgentPermissionActions, isTrue);
+      expect(
+        (await providers().loadHostAgentProviders()).selectable,
+        hasLength(4),
+      );
+    },
+  );
 
   test(
-    'ready ACP pilots stay unavailable until runtime resume is proven',
+    'ready agents can start new chats without inventing restoration proof',
     () async {
       final catalog = await providers().loadHostAgentProviders();
       for (final id in ['gemini', 'omp', 'fx']) {
         final provider = catalog.providers.singleWhere((row) => row.id == id);
-        expect(provider.availability.name, 'hidden');
-        expect(provider.hiddenReason?.name, 'resumeUnverified');
+        expect(provider.selectable, true);
+        expect(provider.hiddenReason, isNull);
         expect(provider.resumeSupport.name, 'unknown');
-        expect(catalog.selectable.any((row) => row.id == id), false);
+        expect(provider.resumeLabel, "Can't reopen old chats");
+        expect(provider.resumeNote, 'Starts a new chat');
       }
-      final picker = await gateway.providers();
-      expect(picker.providers.map((row) => row.id), ['claude']);
-      expect(picker.providers.single.modelIDs, ['claude-model']);
+      expect((await gateway.providers()).providers.map((row) => row.id), [
+        'claude',
+        'gemini',
+        'omp',
+        'fx',
+      ]);
       final draft = await gateway.createSession();
-      await expectLater(
-        gateway.promptAsync(
-          draft.id,
-          text: 'start',
-          model: ModelRef(providerID: 'gemini', modelID: 'gemini-model'),
-        ),
-        throwsA(isA<PaseoFailure>()),
+      await gateway.promptAsync(
+        draft.id,
+        text: 'start',
+        model: ModelRef(providerID: 'gemini', modelID: 'gemini-model'),
       );
-      expect(daemon.of('create_agent_request'), isEmpty);
+      expect(
+        (daemon.of('create_agent_request').single['config'] as Map)['provider'],
+        'gemini',
+      );
+      expect(
+        (await providers().loadHostAgentContinuation(draft.id)).state,
+        HostAgentContinuationState.liveSession,
+      );
+      await gateway.promptAsync(draft.id, text: 'follow up');
+      expect(
+        daemon.of('send_agent_message_request').single['agentId'],
+        'created-1',
+      );
+    },
+  );
+
+  test(
+    'newly visible ACP rows use catalog names rather than host labels',
+    () async {
+      entries = [_provider('qwen'), _provider('goose')];
+      final catalog = await providers().loadHostAgentProviders();
+      expect(catalog.selectable.map((row) => row.displayName), [
+        'Qwen Code',
+        'Goose',
+      ]);
+      expect((await gateway.providers()).providers.map((row) => row.name), [
+        'Qwen Code',
+        'Goose',
+      ]);
+      expect(catalog.providers.every((row) => !row.resumeVerified), true);
     },
   );
 
@@ -330,12 +373,18 @@ void main() {
         _provider('custom-agent', source: 'custom'),
       ];
       final catalog = await providers().loadHostAgentProviders();
-      expect(catalog.selectable, isEmpty);
+      expect(catalog.selectable, hasLength(2));
+      expect(catalog.providers.every((row) => !row.resumeVerified), true);
       expect(
-        catalog.providers.every((row) => row.availability.name == 'hidden'),
+        catalog.providers.every(
+          (row) => row.resumeLabel == "Can't reopen old chats",
+        ),
         true,
       );
-      expect((await gateway.providers()).providers, isEmpty);
+      expect((await gateway.providers()).providers.map((row) => row.id), [
+        'gemini',
+        'custom-agent',
+      ]);
     },
   );
 
@@ -345,8 +394,8 @@ void main() {
       entries = [_provider('gemini', status: 'error', error: 'AuthRequired')];
       final catalog = await providers().loadHostAgentProviders();
       final row = catalog.providers.single;
-      expect(row.availability.name, 'hidden');
-      expect(row.hiddenReason?.name, 'resumeUnverified');
+      expect(row.availability.name, 'needsHostSignIn');
+      expect(row.hiddenReason, isNull);
       expect(row.loginState.name, 'needsHostSignIn');
       expect(catalog.selectable, isEmpty);
       expect(events, isEmpty);
@@ -385,11 +434,16 @@ void main() {
     'explicit refresh rechecks host snapshot and invalidates native picker cache',
     () async {
       final original = await gateway.providers();
-      expect(original.providers.single.id, 'claude');
+      expect(original.providers.map((row) => row.id), [
+        'claude',
+        'gemini',
+        'omp',
+        'fx',
+      ]);
       entries = [_provider('gemini')];
       await providers().loadHostAgentProviders(refresh: true);
       expect(daemon.of('refresh_providers_snapshot_request'), hasLength(1));
-      expect((await gateway.providers()).providers, isEmpty);
+      expect((await gateway.providers()).providers.single.id, 'gemini');
       expect(
         daemon.of('get_providers_snapshot_request').length,
         greaterThanOrEqualTo(2),
@@ -685,7 +739,8 @@ void main() {
       expect(unverified.providerId, 'gemini');
       expect(unverified.state, HostAgentContinuationState.resumeUnverified);
       expect(unverified.blocked, isTrue);
-      expect(unverified.reason, contains('checked on your computer'));
+      expect(unverified.reason, "Can't reopen old chats");
+      expect(unverified.resumeNote, 'Starts a new chat');
       gateway.setLocation(directory: '/work/other');
       await expectLater(
         providers().loadHostAgentContinuation('existing'),
@@ -699,14 +754,11 @@ void main() {
     final missing = await providers().loadHostAgentContinuation('existing');
     expect(missing.state, HostAgentContinuationState.missingHandle);
     expect(missing.blocked, isTrue);
-    expect(
-      missing.reason,
-      'This agent cannot reopen this conversation. Check it on your computer.',
-    );
+    expect(missing.reason, "Can't reopen old chats");
   });
 
   test(
-    'existing ACP conversation with default persistence flags still cannot continue',
+    'reopened ACP chat requires warning before starting a new chat',
     () async {
       await gateway.sessions();
       await expectLater(
@@ -729,6 +781,161 @@ void main() {
       );
       expect(daemon.of('send_agent_message_request'), isEmpty);
       expect(daemon.of('create_agent_request'), isEmpty);
+    },
+  );
+
+  test(
+    'missing native handle also requires explicit new-chat action',
+    () async {
+      agent = _agent('claude', persisted: false);
+      await gateway.sessions();
+      expect(
+        (await providers().loadHostAgentContinuation(
+          'existing',
+        )).requiresNewChat,
+        true,
+      );
+      await expectLater(
+        gateway.promptAsync('existing', text: 'continue'),
+        throwsA(
+          isA<PaseoFailure>().having(
+            (e) => e.kind,
+            'kind',
+            PaseoFailureKind.newChatRequired,
+          ),
+        ),
+      );
+      expect(daemon.of('send_agent_message_request'), isEmpty);
+      expect(daemon.of('create_agent_request'), isEmpty);
+    },
+  );
+
+  test(
+    'new chat after resume warning requires explicit acknowledgement and a different ID',
+    () async {
+      final originalAgent = Map<String, dynamic>.from(agent);
+      daemon.handlers['fetch_agent_request'] = (request) => (
+        'fetch_agent_response',
+        {
+          'agent': request['agentId'] == originalAgent['id']
+              ? originalAgent
+              : agent,
+        },
+      );
+      await gateway.sessions();
+      await expectLater(
+        providers().startNewHostAgentChat(
+          'existing',
+          newChatAcknowledged: false,
+        ),
+        throwsA(
+          isA<PaseoFailure>().having(
+            (e) => e.kind,
+            'kind',
+            PaseoFailureKind.newChatRequired,
+          ),
+        ),
+      );
+      expect(daemon.of('create_agent_request'), isEmpty);
+      expect(daemon.of('send_agent_message_request'), isEmpty);
+      final next = await providers().startNewHostAgentChat(
+        'existing',
+        newChatAcknowledged: true,
+      );
+      expect(next, isNot('existing'));
+      expect(gateway.providerIdForSession(next), 'gemini');
+      expect(daemon.of('send_agent_message_request'), isEmpty);
+      await gateway.promptAsync(next, text: 'explicit new chat');
+      expect(daemon.of('create_agent_request'), hasLength(1));
+      expect(
+        daemon.of('create_agent_request').single['initialPrompt'],
+        'explicit new chat',
+      );
+      expect((await gateway.session('existing')).id, 'existing');
+    },
+  );
+
+  for (final unavailable in [
+    _provider('gemini', enabled: false),
+    _provider('gemini', status: 'error', error: 'not installed'),
+    _provider('gemini', error: 'not installed'),
+    _provider('gemini', error: 'AuthRequired'),
+    _provider('gemini', status: 'loading'),
+  ]) {
+    test(
+      'direct admission still refuses disabled, missing, signed-out or loading provider: ${unavailable['status']}/${unavailable['enabled']}/${unavailable['error']}',
+      () async {
+        entries = [unavailable];
+        expect((await gateway.providers()).providers, isEmpty);
+        final draft = await gateway.createSession();
+        await expectLater(
+          gateway.promptAsync(
+            draft.id,
+            text: 'start',
+            model: ModelRef(providerID: 'gemini', modelID: 'gemini-model'),
+          ),
+          throwsA(isA<PaseoFailure>()),
+        );
+        expect(daemon.of('create_agent_request'), isEmpty);
+        expect(daemon.of('send_agent_message_request'), isEmpty);
+        await expectLater(
+          providers().startNewHostAgentChat(
+            'existing',
+            newChatAcknowledged: true,
+          ),
+          throwsA(isA<PaseoFailure>()),
+        );
+      },
+    );
+  }
+
+  test(
+    'disconnect retires live ACP admission and requires a visible new-chat action',
+    () async {
+      final draft = await gateway.createSession();
+      await gateway.promptAsync(
+        draft.id,
+        text: 'start',
+        model: ModelRef(providerID: 'gemini', modelID: 'gemini-model'),
+      );
+      replacement.handlers['get_providers_snapshot_request'] = (request) =>
+          ('get_providers_snapshot_response', _snapshot(entries));
+      await daemon.close();
+      await pumpEventQueue();
+      await expectLater(
+        gateway.promptAsync(draft.id, text: 'after restart'),
+        throwsA(
+          isA<PaseoFailure>().having(
+            (e) => e.kind,
+            'kind',
+            PaseoFailureKind.newChatRequired,
+          ),
+        ),
+      );
+      expect(replacement.of('send_agent_message_request'), isEmpty);
+      expect(replacement.of('create_agent_request'), isEmpty);
+      final continuation = await providers().loadHostAgentContinuation(
+        draft.id,
+      );
+      expect(continuation.requiresNewChat, true);
+      expect(continuation.resumeNote, 'Starts a new chat');
+    },
+  );
+
+  test(
+    'future custom host agent is selectable and callable with no resume proof',
+    () async {
+      entries = [_provider('future-agent', source: 'custom')];
+      final row = (await providers().loadHostAgentProviders()).providers.single;
+      expect(row.selectable, true);
+      expect(row.resumeLabel, "Can't reopen old chats");
+      final draft = await gateway.createSession();
+      gateway.seedDraftProviderForSession(draft.id, 'future-agent');
+      await gateway.promptAsync(draft.id, text: 'hello');
+      expect(
+        (daemon.of('create_agent_request').single['config'] as Map)['provider'],
+        'future-agent',
+      );
     },
   );
 

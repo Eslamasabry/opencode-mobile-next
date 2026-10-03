@@ -197,7 +197,11 @@ extension _SetupEngineStart on ChannelSetupEngine {
         },
       };
     }
-    return {...base, 'script': withSetupPrelude(component.installScript)};
+    return {
+      ...base,
+      'script': withSetupPrelude(component.installScript),
+      if (component.agentUser) 'agentUser': true,
+    };
   }
 
   /// Checks [job]'s components: the Linux base by asking Android whether
@@ -218,21 +222,29 @@ extension _SetupEngineStart on ChannelSetupEngine {
     final apps = await _checkApps(job);
     final status = await _linux.status();
     if (!status.installed) return apps;
-    final scripts = <String, String>{
-      for (final component in job)
-        if (!component.jobStep &&
-            component.app == null &&
-            component.checkScript.trim().isNotEmpty)
-          component.id: component.checkScript,
-    };
-    final results = scripts.isEmpty
-        ? <String, SetupCheckResult>{}
-        : parseCombinedChecks(
-            (await _linux.run(
-              combinedCheckScript(scripts),
-              timeout: const Duration(minutes: 2),
-            )).output,
-          );
+    final results = <String, SetupCheckResult>{};
+    for (final agentUser in [false, true]) {
+      final scripts = <String, String>{
+        for (final component in job)
+          if (!component.jobStep &&
+              component.app == null &&
+              component.agentUser == agentUser &&
+              component.checkScript.trim().isNotEmpty)
+            component.id: component.checkScript,
+      };
+      if (scripts.isEmpty) continue;
+      try {
+        final script = combinedCheckScript(scripts);
+        final run = agentUser
+            ? await _linux.runAgentSetupCheck(script)
+            : await _linux.run(script, timeout: const Duration(minutes: 2));
+        results.addAll(parseCombinedChecks(run.output));
+      } on BuiltinLinuxException {
+        if (!agentUser) rethrow;
+        // The first agent install has not created oc yet. Its root bootstrap
+        // precedes these components; missing checks leave them pending.
+      }
+    }
     // Android's own marker is the truth for the base; its script only
     // supplies the version.
     for (final component in job.where((c) => c.native)) {

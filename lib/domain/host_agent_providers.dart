@@ -1,5 +1,7 @@
-/// Host agent availability for the pilot. A provider is not selectable until
-/// sign-in and conversation restoration have both been verified on the host.
+import 'agent_catalog.dart';
+
+/// Host availability controls new chats. Restoration proof controls reopening
+/// old chats, never visibility or admission to a new chat.
 enum HostAgentProviderAvailability { ready, needsHostSignIn, checking, hidden }
 
 enum HostAgentProviderHiddenReason {
@@ -33,6 +35,10 @@ final class HostAgentProvider {
     required this.resumeSupport,
     List<HostAgentModel> models = const [],
   }) : models = List.unmodifiable(models) {
+    if (hiddenReason == HostAgentProviderHiddenReason.resumeUnverified ||
+        hiddenReason == HostAgentProviderHiddenReason.resumeUnsupported) {
+      throw ArgumentError('Restoration alone cannot hide a host agent.');
+    }
     if (availability == HostAgentProviderAvailability.hidden) {
       if (hiddenReason == null) {
         throw ArgumentError('A hidden host agent needs a reason.');
@@ -41,16 +47,12 @@ final class HostAgentProvider {
       throw ArgumentError('Only a hidden host agent can have a hidden reason.');
     }
     if (availability == HostAgentProviderAvailability.ready &&
-        (loginState != HostAgentLoginState.ready || !_canResume)) {
-      throw ArgumentError(
-        'A ready host agent needs verified sign-in and conversation restoration.',
-      );
+        loginState == HostAgentLoginState.needsHostSignIn) {
+      throw ArgumentError('A signed-out host agent cannot be ready.');
     }
     if (availability == HostAgentProviderAvailability.needsHostSignIn &&
-        (loginState != HostAgentLoginState.needsHostSignIn || !_canResume)) {
-      throw ArgumentError(
-        'A host sign-in request needs verified conversation restoration.',
-      );
+        loginState != HostAgentLoginState.needsHostSignIn) {
+      throw ArgumentError('A host sign-in request needs host sign-in state.');
     }
   }
 
@@ -62,14 +64,16 @@ final class HostAgentProvider {
   final HostAgentResumeSupport resumeSupport;
   final List<HostAgentModel> models;
 
-  bool get _canResume =>
+  bool get resumeVerified =>
       resumeSupport == HostAgentResumeSupport.loadSession ||
       resumeSupport == HostAgentResumeSupport.listAndLoad;
 
   bool get selectable =>
       availability == HostAgentProviderAvailability.ready &&
-      loginState == HostAgentLoginState.ready &&
-      _canResume;
+      loginState != HostAgentLoginState.needsHostSignIn;
+
+  String? get resumeLabel => resumeVerified ? null : agentResumeUnverifiedLabel;
+  String? get resumeNote => resumeVerified ? null : agentStartsNewChatNote;
 
   /// App-authored copy. Never substitute raw host errors or agent output here.
   String get reason => switch (availability) {
@@ -118,10 +122,11 @@ final class HostAgentProviderCatalog {
       List.unmodifiable(providers.where((provider) => provider.selectable));
 }
 
-/// Existing routes continue through their established gateway contract. A pilot
-/// needs verified restoration before dispatch, even when a handle is present.
+/// Old chats with unknown restoration need an explicit new-chat action. A live
+/// chat in the current connection does not require restoration to continue.
 enum HostAgentContinuationState {
   existingRoute,
+  liveSession,
   resumeUnverified,
   missingHandle,
 }
@@ -137,20 +142,30 @@ final class HostAgentContinuation {
   final String providerId;
   final HostAgentContinuationState state;
 
-  bool get blocked => state != HostAgentContinuationState.existingRoute;
+  bool get requiresNewChat =>
+      state == HostAgentContinuationState.resumeUnverified ||
+      state == HostAgentContinuationState.missingHandle;
+  bool get blocked => requiresNewChat;
+  String? get resumeNote => requiresNewChat ? agentStartsNewChatNote : null;
 
   String get reason => switch (state) {
-    HostAgentContinuationState.existingRoute => '',
-    HostAgentContinuationState.resumeUnverified =>
-      'This conversation cannot continue until restoration is checked on your computer.',
-    HostAgentContinuationState.missingHandle =>
-      'This agent cannot reopen this conversation. Check it on your computer.',
+    HostAgentContinuationState.existingRoute ||
+    HostAgentContinuationState.liveSession => '',
+    HostAgentContinuationState.resumeUnverified ||
+    HostAgentContinuationState.missingHandle => agentResumeUnverifiedLabel,
   };
 }
 
 abstract interface class HostAgentProviderGateway {
   /// Scoped restart state; callers do not inspect native persistence handles.
   Future<HostAgentContinuation> loadHostAgentContinuation(String sessionId);
+
+  /// UI first shows "Starts a new chat"; this explicit action returns a new ID.
+  /// Never silently reuse the old row or replay its last prompt.
+  Future<String> startNewHostAgentChat(
+    String sessionId, {
+    required bool newChatAcknowledged,
+  });
 
   Future<HostAgentProviderCatalog> loadHostAgentProviders({
     bool refresh = false,

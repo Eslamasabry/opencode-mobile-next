@@ -17,6 +17,7 @@ extension _PaseoSessions on PaseoGateway {
     _sessions[session.id] = session;
     final status = agent['status'];
     if (status == 'error' || status == 'closed') {
+      _liveAgentSessions.remove(session.id);
       _awaitingTurn.remove(session.id);
       _turnActive.remove(session.id);
     }
@@ -25,6 +26,7 @@ extension _PaseoSessions on PaseoGateway {
         ? 'busy'
         : paseoSessionStatus(agent);
     _drafts.remove(session.id);
+    _draftProviders.remove(session.id);
     _syncPermissions(session.id, agent['pendingPermissions']);
     while (_sessions.length > 1024) {
       _forget(_sessions.keys.first);
@@ -37,6 +39,8 @@ extension _PaseoSessions on PaseoGateway {
     _sessions.remove(id);
     _statuses.remove(id);
     _drafts.remove(id);
+    _draftProviders.remove(id);
+    _liveAgentSessions.remove(id);
     _uncertain.remove(id);
     _awaitingTurn.remove(id);
     _turnActive.remove(id);

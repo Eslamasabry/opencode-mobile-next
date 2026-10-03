@@ -201,8 +201,8 @@ class BuiltinLinux(private val context: Context) {
     }
 
     /** Runs [script] with /bin/sh inside Ubuntu as root (faked by proot). */
-    fun run(script: String, timeoutSeconds: Long = 600): Result {
-        val process = start(script, null)
+    fun run(script: String, timeoutSeconds: Long = 600, agentUser: Boolean = false): Result {
+        val process = start(script, null, agentUser)
         process.outputStream.close()
         val output = StringBuilder()
         val reader = Thread {
@@ -230,10 +230,10 @@ class BuiltinLinux(private val context: Context) {
      * stops everything the script started.
      */
     @Synchronized
-    fun start(script: String, log: File?): Process {
+    fun start(script: String, log: File?, agentUser: Boolean = false): Process {
         check(installed) { "Ubuntu is not installed in the app yet" }
         processes.removeAll { !it.isAlive }
-        return ProcessBuilder(prootCommand(listOf("/bin/sh", "-c", script)))
+        return ProcessBuilder(prootCommand(listOf("/bin/sh", "-c", script), agentUser))
             .redirectErrorStream(true)
             .apply {
                 environment().clear()
@@ -255,12 +255,17 @@ class BuiltinLinux(private val context: Context) {
      * both use it, so a shell sees exactly what the app's scripts see.
      */
     @Synchronized
-    fun prootCommand(program: List<String>): List<String> {
+    fun prootCommand(program: List<String>, agentUser: Boolean = false): List<String> {
         check(!installingRuntime) { "Runtime installation is still running" }
         projectStorage.prepare()
+        val agentRoot = if (agentUser) File(home, "agent-root-view").apply {
+            mkdirs()
+            check(isDirectory && canonicalFile == absoluteFile)
+            File(this, "projects").mkdirs()
+        } else null
         val command = listOf(
             prootPath,
-            "--root-id",
+            if (agentUser) "--change-id=1000:1000" else "--root-id",
             "--kill-on-exit",
             // Android does not let apps make hard links; dpkg and git do.
             "--link2symlink",
@@ -271,8 +276,8 @@ class BuiltinLinux(private val context: Context) {
             "--bind=/proc",
             "--bind=/sys",
             "--bind=${File(rootfs, "tmp").absolutePath}:/dev/shm",
-            "--bind=${projectStorage.projects.absolutePath}:/root/projects",
-        ) + sharedStorageBinds() + fakeProcBinds + (if (protectionTier() == "proot") {
+        ) + (if (agentRoot != null) listOf("--bind=${agentRoot.absolutePath}:/root") else emptyList()) +
+            listOf("--bind=${projectStorage.projects.absolutePath}:/root/projects") + sharedStorageBinds() + fakeProcBinds + (if (protectionTier() == "proot") {
             // PRoot exposes host proc by default. Hide native app/daemon entries
             // rather than depending on Linux cmdline permissions alone.
             val mask = File(home.canonicalFile, "proc/phone-engine-hidden").apply { mkdirs() }
@@ -281,15 +286,133 @@ class BuiltinLinux(private val context: Context) {
                 listOf("--bind=${mask.absolutePath}:/proc/$it")
             }
         } else emptyList()) + listOf(
-            "--cwd=/root",
+            if (agentUser) "--cwd=/root/projects" else "--cwd=/root",
             "/usr/bin/env", "-i",
-            "HOME=/root",
+            if (agentUser) "HOME=/home/oc" else "HOME=/root",
             "LANG=C.UTF-8",
-            "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+            if (agentUser) "PATH=/home/oc/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+                else "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
             "TERM=xterm-256color",
             "TMPDIR=/tmp",
         ) + program
         return if (prootIsConfined && protectionTier() != "proot") protectedCommand(command) else command
+    }
+
+    private val blockedAgentProfiles = mutableSetOf<String>()
+    private val agentProcessProfiles = mutableMapOf<Process, String>()
+
+    /** Private agent process: fixed uid, private host home, no transcript/log. */
+    @Synchronized
+    fun startAgentProcess(profileId: String, argv: List<String>, foreground: Boolean = false): Process {
+        check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId)) { "The agent host is unavailable." }
+        check(installed && argv.isNotEmpty() && profileId !in blockedAgentProfiles) { "The agent host is unavailable." }
+        val profileHome = File(rootfs, "home/oc/.oc-profiles/$profileId")
+        check(profileHome.canonicalFile == profileHome.absoluteFile)
+        check(profileHome.mkdirs() || profileHome.isDirectory)
+        check(profileHome.canonicalFile == profileHome.absoluteFile)
+        Os.chmod(profileHome.absolutePath, 448)
+        val guestHome = "/home/oc/.oc-profiles/$profileId"
+        val command = listOf("/usr/bin/env", "HOME=$guestHome", "CLAUDE_CONFIG_DIR=$guestHome/claude",
+            "CODEX_HOME=$guestHome/codex", "DISABLE_AUTOUPDATER=1", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1") + argv
+        val process = ProcessBuilder(prootCommand(command, agentUser = true)).apply {
+            environment().clear()
+            environment().putAll(prootEnvironment())
+            redirectErrorStream(true)
+        }.start()
+        processes.add(process)
+        agentProcessProfiles.entries.removeAll { !it.key.isAlive }
+        agentProcessProfiles[process] = profileId
+        processConfinement[process] = prootIsConfined
+        if (foreground) trackPrivateAgentService("agent-auth.$profileId", process, null)
+        return process
+    }
+
+    /** Uses the existing Android foreground-service deadline and exact PID stop. */
+    @Synchronized
+    fun trackPrivateAgentService(name: String, process: Process, port: Int?) {
+        check(name.startsWith("agent-auth.") || name.startsWith("agent-host."))
+        removeService(name)
+        services[name] = Service(process, port, "Agents are working on this phone")
+        recordRunning()
+        try { BuiltinServerService.start(context, currentNotice()) }
+        catch (_: Exception) {
+            stopAgentProcess(process)
+            services.remove(name)
+            throw IllegalStateException("The agent host could not start.")
+        }
+        Thread {
+            process.waitFor()
+            synchronized(this) {
+                if (services[name]?.process === process) {
+                    services.remove(name)
+                    serviceSetChanged()
+                }
+            }
+        }.start()
+    }
+
+    /** A cancelled private flow cannot report drained while captured children survive. */
+    fun stopAgentProcess(process: Process) {
+        if (!process.isAlive) return
+        fun token(pid: Int): String? = try {
+            File("/proc/$pid/stat").readText().substringAfterLast(") ").split(' ').getOrNull(19)
+        } catch (_: Exception) { null }
+        val root = pidOf(process)
+        val children = if (root == null) emptyMap() else descendants(root).associateWith { token(it) }
+        stopTree(process)
+        children.filter { (pid, identity) -> identity != null && token(pid) == identity }
+            .forEach { (pid, _) -> signal(pid, OsConstants.SIGKILL) }
+        if (!process.waitFor(2, TimeUnit.SECONDS)) throw IllegalStateException("The agent did not stop.")
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2)
+        while (children.any { (pid, identity) -> identity != null && token(pid) == identity } &&
+            System.nanoTime() < deadline) Thread.sleep(20)
+        if (children.any { (pid, identity) -> identity != null && token(pid) == identity })
+            throw IllegalStateException("The agent did not stop.")
+    }
+
+    val agentSignIn by lazy { PhoneAgentSignIn(this) }
+    val agentHost by lazy { PhoneAgentHost(this) }
+
+    fun blockAgentProfile(profileId: String) {
+        val targets = synchronized(this) {
+            check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId))
+            blockedAgentProfiles.add(profileId)
+            agentProcessProfiles.filterValues { it == profileId }.keys.toList()
+        }
+        targets.forEach { stopAgentProcess(it) }
+    }
+
+    @Synchronized
+    fun writeAgentConfig(profileId: String, config: String) {
+        check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId) && config.length < 65536 && profileId !in blockedAgentProfiles)
+        val data = org.json.JSONObject(config)
+        check(data.optInt("version") == 1)
+        val base = File(rootfs, "home/oc/.oc-profiles")
+        check(base.canonicalFile == base.absoluteFile)
+        val dir = File(base, "$profileId/paseo")
+        check(dir.canonicalFile == dir.absoluteFile)
+        check(dir.mkdirs() || dir.isDirectory)
+        Os.chmod(dir.absolutePath, 448)
+        val temp = File(dir, "config.json.tmp")
+        check(temp.canonicalFile == temp.absoluteFile && !File(dir, "config.json").let { it.canonicalFile != it.absoluteFile })
+        temp.writeText(config)
+        Os.chmod(temp.absolutePath, 384)
+        check(temp.renameTo(File(dir, "config.json")))
+    }
+
+    fun deleteAgentHome(profileId: String) {
+        check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId))
+        val base = File(rootfs, "home/oc/.oc-profiles")
+        check(base.canonicalFile == base.absoluteFile)
+        val target = File(base, profileId)
+        fun erase(file: File) {
+            val stat = try { Os.lstat(file.absolutePath) } catch (_: Exception) { return }
+            if (OsConstants.S_ISDIR(stat.st_mode) && !OsConstants.S_ISLNK(stat.st_mode))
+                file.listFiles()?.forEach { erase(it) }
+            check(file.delete()) { "The agent sign-in could not be removed." }
+        }
+        check(target.parentFile!!.canonicalFile == base)
+        erase(target)
     }
 
     private val sharedProjectsFile = File(context.filesDir, "oc.sharedProjects")
@@ -1194,7 +1317,8 @@ class BuiltinLinux(private val context: Context) {
                 catch (error: Exception) { failure = error }
             val service = services[name]
             if (service != null) {
-                stopTree(service.process)
+                if (name.startsWith("agent-auth.") || name.startsWith("agent-host.")) stopAgentProcess(service.process)
+                else stopTree(service.process)
                 if (service.process.isAlive) throw PhoneEngineNative.Failure("engine_stop_failed")
                 services.remove(name)
             }

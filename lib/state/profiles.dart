@@ -8,6 +8,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ui/kit/kit_redact.dart';
+import '../domain/phone_agent_host.dart';
+import '../builtin/agents/agent_host_cleanup.dart';
 
 import '../api/models.dart' show ModelRef;
 import '../api/server_probe.dart' show ServerFlavor;
@@ -85,12 +87,19 @@ class ProfileStore {
   final SharedPreferences prefs;
   final FlutterSecureStorage secure;
   final ByoHostSigner? byoHostSigner;
+  final Future<void> Function(String)? agentHostCleanup;
 
   ProfileStore({
     required this.prefs,
     FlutterSecureStorage? secure,
     ByoHostSigner? byoHostSigner,
+    Future<void> Function(String)? agentHostCleanup,
   }) : secure = secure ?? const FlutterSecureStorage(),
+       agentHostCleanup =
+           agentHostCleanup ??
+           (ChannelAgentHostCleanup.supported
+               ? ChannelAgentHostCleanup().call
+               : null),
        byoHostSigner =
            byoHostSigner ??
            (AndroidByoHostSigner.supported ? AndroidByoHostSigner() : null);
@@ -131,6 +140,7 @@ class ProfileStore {
         key.startsWith(_passwordKey) ||
         key.startsWith(_codexTokenKey) ||
         key.startsWith(teamEngineAuthKey) ||
+        key.startsWith(phoneAgentHostSecretPrefix) ||
         key.startsWith(byoHostSecretsKeyPrefix);
     try {
       final secrets = await secure.readAll();
@@ -147,6 +157,13 @@ class ProfileStore {
         throw const SavedSignInResetException();
       }
       await byoHostSigner?.deleteAllIdentities();
+      for (final key in owned.where(
+        (key) => key.startsWith(phoneAgentHostSecretPrefix),
+      )) {
+        await agentHostCleanup?.call(
+          key.substring(phoneAgentHostSecretPrefix.length),
+        );
+      }
       for (final key in owned) {
         await secure.delete(key: key);
       }
@@ -541,6 +558,19 @@ class ProfileStore {
         await secure.delete(key: byoKey);
         if (await secure.read(key: byoKey) != null) {
           throw const ByoHostFailure(ByoHostFailureCode.storage);
+        }
+      }
+      final agentKey = '$phoneAgentHostSecretPrefix$id';
+      final agentSecret = await secure.read(key: agentKey);
+      if (agentSecret != null ||
+          prefs.containsKey('$phoneAgentInstallPrefix$id') ||
+          prefs.containsKey('$phoneAgentGatePrefix$id')) {
+        await agentHostCleanup?.call(id);
+      }
+      if (agentSecret != null) {
+        await secure.delete(key: agentKey);
+        if (await secure.read(key: agentKey) != null) {
+          throw const AgentHostException(AgentHostFailure.storage);
         }
       }
       await secure.delete(key: secretKey);

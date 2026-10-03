@@ -20,11 +20,10 @@ void main() {
     models: models,
   );
 
-  test('unknown login or restoration cannot become ready', () {
-    expect(
-      () => provider(loginState: HostAgentLoginState.unknown),
-      throwsArgumentError,
-    );
+  test('missing restoration does not block a host-ready provider', () {
+    final unknownLogin = provider(loginState: HostAgentLoginState.unknown);
+    expect(unknownLogin.selectable, true);
+    expect(unknownLogin.loginState, HostAgentLoginState.unknown);
     expect(
       () => provider(loginState: HostAgentLoginState.needsHostSignIn),
       throwsArgumentError,
@@ -33,33 +32,43 @@ void main() {
       HostAgentResumeSupport.unknown,
       HostAgentResumeSupport.unsupported,
     ]) {
-      expect(() => provider(resumeSupport: support), throwsArgumentError);
+      final candidate = provider(resumeSupport: support);
+      expect(candidate.selectable, true);
+      expect(candidate.resumeVerified, false);
+      expect(candidate.resumeLabel, "Can't reopen old chats");
+      expect(candidate.resumeNote, 'Starts a new chat');
     }
-    expect(provider().selectable, isTrue);
+    expect(provider().resumeLabel, isNull);
     expect(
       provider(resumeSupport: HostAgentResumeSupport.listAndLoad).selectable,
-      isTrue,
+      true,
     );
   });
 
-  test('sign-in cannot disguise missing restoration proof', () {
-    expect(
-      () => provider(
-        availability: HostAgentProviderAvailability.needsHostSignIn,
-        loginState: HostAgentLoginState.needsHostSignIn,
-        resumeSupport: HostAgentResumeSupport.unknown,
-      ),
-      throwsArgumentError,
-    );
+  test('missing sign-in still blocks without restoration proof', () {
     final needsSignIn = provider(
       availability: HostAgentProviderAvailability.needsHostSignIn,
       loginState: HostAgentLoginState.needsHostSignIn,
+      resumeSupport: HostAgentResumeSupport.unknown,
     );
-    expect(needsSignIn.selectable, isFalse);
+    expect(needsSignIn.selectable, false);
     expect(needsSignIn.reason, 'Sign in on your computer first.');
+    expect(needsSignIn.resumeLabel, "Can't reopen old chats");
   });
 
   test('hidden and checking agents remain unavailable despite known login', () {
+    for (final reason in [
+      HostAgentProviderHiddenReason.resumeUnverified,
+      HostAgentProviderHiddenReason.resumeUnsupported,
+    ]) {
+      expect(
+        () => provider(
+          availability: HostAgentProviderAvailability.hidden,
+          hiddenReason: reason,
+        ),
+        throwsArgumentError,
+      );
+    }
     final hidden = provider(
       availability: HostAgentProviderAvailability.hidden,
       hiddenReason: HostAgentProviderHiddenReason.disabled,

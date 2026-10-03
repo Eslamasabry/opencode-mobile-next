@@ -12,6 +12,9 @@
 /// [ChatFeedSource.refreshChatFeed] to ask for a fresh server read.
 library;
 
+import 'dart:async';
+import 'dart:convert';
+
 /// What a conversation needs from the person right now.
 enum ChatStatus {
   /// Stopped on a pending permission, question or form.
@@ -27,7 +30,7 @@ enum ChatStatus {
   idle,
 }
 
-/// One conversation row on Home. Immutable; compare by [sessionID].
+/// One conversation row on Home. Immutable; compare by [identity].
 class ChatFeedItem {
   const ChatFeedItem({
     required this.sessionID,
@@ -41,6 +44,8 @@ class ChatFeedItem {
     this.parentID,
     this.agentId = defaultChatAgentId,
     this.agentLabel,
+    this.sourceId,
+    this.sourceLabel,
   });
 
   /// The server's session id; pass it to `selectLocationForExistingSession`
@@ -75,17 +80,21 @@ class ChatFeedItem {
 
   bool get isSubagent => parentID != null;
 
-  /// Which agent backend owns this chat ('opencode', or later 'claude',
-  /// 'gemini', ... through Paseo). Items are self-describing so a later
-  /// source can merge several backends' feeds into one list.
+  /// Which agent backend owns this chat ('opencode', 'claude', 'gemini', ...).
+  /// Host runtime identity, independent of the selected model or mode.
   final String agentId;
 
   /// Human name of the agent ('Claude Code'). The UI shows it only when the
-  /// merged feed holds more than one agent; null for OpenCode today.
+  /// merged feed holds more than one agent.
   final String? agentLabel;
+
+  /// Set by a merged feed. Never route a merged row by session ID alone.
+  final String? sourceId, sourceLabel;
+
+  String get identity => jsonEncode([sourceId, sessionID, directory]);
 }
 
-/// [ChatFeedItem.agentId] of OpenCode chats, the only agent served today.
+/// [ChatFeedItem.agentId] of OpenCode chats.
 const defaultChatAgentId = 'opencode';
 
 /// Which rows [ChatFeedSource.chatFeed] returns. Value equality, so it can be
@@ -193,6 +202,8 @@ class ProjectSummary {
     required this.needsYouCount,
     this.lastActivity,
     this.kind,
+    this.sourceId,
+    this.sourceLabel,
   });
 
   /// Absolute folder; the stable id of the project in this contract.
@@ -214,6 +225,42 @@ class ProjectSummary {
   /// knows it (phone-hosted projects); otherwise null. A name rather than the
   /// enum because the scanner lives in `lib/platform/` and imports Flutter.
   final String? kind;
+  final String? sourceId, sourceLabel;
+}
+
+/// Optional runtime selection without changing the original start method.
+abstract interface class AgentChatFeedSource implements ChatFeedSource {
+  Future<String> startAgentChatIn(
+    String directory, {
+    required String agentId,
+    String? firstPrompt,
+  });
+}
+
+/// Optional updates; owning controllers may listen and notify their UI.
+abstract interface class ChatFeedChangeSource {
+  Stream<void> get changes;
+}
+
+bool chatFeedMatches(ChatFeedItem item, ChatFeedFilter filter) =>
+    (filter.includeSubagents || !item.isSubagent) &&
+    (filter.projectDirectory == null ||
+        item.directory == filter.projectDirectory) &&
+    (filter.agentId == null || item.agentId == filter.agentId) &&
+    (!filter.needsYou && !filter.running ||
+        filter.needsYou && item.status == ChatStatus.needsYou ||
+        filter.running && item.status == ChatStatus.running);
+
+int compareChatFeedItems(ChatFeedItem a, ChatFeedItem b) {
+  int rank(ChatStatus status) => switch (status) {
+    ChatStatus.needsYou => 0,
+    ChatStatus.running => 1,
+    _ => 2,
+  };
+  final priority = rank(a.status).compareTo(rank(b.status));
+  if (priority != 0) return priority;
+  final newest = b.lastActivity.compareTo(a.lastActivity);
+  return newest != 0 ? newest : a.identity.compareTo(b.identity);
 }
 
 /// The Home / start-screen data source. `ConnectionController` implements it.

@@ -12,14 +12,16 @@ extension _PaseoPrompts on PaseoGateway {
     final scope = _scope;
     final locationEpoch = _locationEpoch;
     final provider = model == null || model.providerID.isEmpty
-        ? paseoDefaultProvider
+        ? (_draftProviders[id] ?? paseoDefaultProvider)
         : model.providerID;
-    if (!isExistingPaseoProvider(provider)) {
-      throw PaseoFailure(PaseoFailureKind.unavailable);
-    }
-    await _checkExistingProvider(provider);
+    await _requireProviderAvailable(provider);
     _checkLocation(scope, locationEpoch);
     final modes = _modesFor(provider);
+    mode ??= defaultProviderModes[provider];
+    if (defaultProviderModes.containsKey(provider) &&
+        (mode == null || !modes.contains(mode))) {
+      throw PaseoFailure(PaseoFailureKind.unavailable);
+    }
     final draft = _sessions[id];
     final title = draft?.title;
     final Map<String, dynamic> result;
@@ -52,11 +54,21 @@ extension _PaseoPrompts on PaseoGateway {
       if (_creating == 0 && _closed) _heldEvents.clear();
     }
     final agent = paseoObject(result['agent']);
+    _checkLocation(scope, locationEpoch);
+    if (agent['provider'] != provider) {
+      throw PaseoFailure(PaseoFailureKind.invalidResponse);
+    }
     final realID = paseoString(agent['id'], max: 256);
     _realIDs[id] = realID;
     _appIDs[realID] = id;
-    _remember(agent);
+    if (_remember(agent) == null) {
+      throw PaseoFailure(PaseoFailureKind.scopeMismatch);
+    }
+    if (agent['status'] != 'error' && agent['status'] != 'closed') {
+      _liveAgentSessions.add(id);
+    }
     _drafts.remove(id);
+    _draftProviders.remove(id);
     if (_creating == 0) {
       final held = _heldEvents.toList();
       _heldEvents.clear();

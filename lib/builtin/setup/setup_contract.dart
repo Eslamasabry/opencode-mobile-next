@@ -34,6 +34,7 @@ class SetupComponent {
     this.why,
     this.summary,
     this.native = false,
+    this.agentUser = false,
     this.jobStep = false,
     this.app,
   });
@@ -85,6 +86,9 @@ class SetupComponent {
   /// Installed by native code rather than a script (the Linux base itself).
   final bool native;
 
+  /// Install in the fixed non-root oc view. Never a caller-supplied uid.
+  final bool agentUser;
+
   /// Not something installed but a step the engine itself runs at the end of
   /// every job: starting OpenCode and connecting to it. It is in the registry
   /// so the progress checklist can name it; lists of things to install
@@ -119,6 +123,7 @@ class SetupComponent {
         why: why,
         summary: summary,
         native: native,
+        agentUser: agentUser,
         jobStep: jobStep,
         app: app,
       );
