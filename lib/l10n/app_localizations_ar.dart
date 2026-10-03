@@ -27011,6 +27011,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatsFilterOpenProject => 'فتح مشروع…';
 
   @override
+  String get chatsNewSeparateCopy => 'في نسخة منفصلة';
+
+  @override
   String get chatsNewPrompt => 'على ماذا نعمل؟';
 
   @override

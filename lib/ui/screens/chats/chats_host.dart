@@ -4,6 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/chat_feed.dart';
+import '../../../domain/server_gateway.dart' show WorkspaceProject;
+import '../../../platform/platform_capabilities.dart';
+import '../../../termux/bridge.dart' show TermuxBridge;
+import '../../widgets/termux_phone_tools.dart' show TermuxRunawayWatcher;
+import '../../widgets/work_status_line.dart' show WorkRunawayNotice;
+import '../isolated_task_sheet.dart' show showIsolatedTaskSheet;
+import '../project_hub_screen.dart' show projectForDirectory;
+import '../termux_processes_screen.dart' show TermuxProcessesScreen;
 import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart';
 import '../../kit/kit.dart';
@@ -39,6 +47,24 @@ abstract interface class ChatsHost {
 
   /// The model chip for the start screen's composer.
   Widget modelChip(BuildContext context);
+
+  /// The leftover-process notice (a helper burning CPU on this phone's own
+  /// server) as a quiet status with its Stop. Draws nothing until the watcher
+  /// reports something, and never on a server that is not on this phone.
+  Widget leftoverNotice(BuildContext context);
+
+  /// The project a task can be started in a separate copy of (a worktree of
+  /// it) for [directory], or null where the server cannot make one: the
+  /// option is then not shown.
+  Future<WorkspaceProject?> separateCopyProject(String directory);
+
+  /// Starts a task in a separate copy with the existing step, moving the
+  /// connection to [project] first. Resolves with the new conversation's id
+  /// once it exists in the copy, or null when the person closed the step.
+  Future<String?> startSeparateCopy(
+    BuildContext context,
+    WorkspaceProject project,
+  );
 }
 
 /// The one place the app's connection becomes a [ChatFeedSource]. Until the
@@ -95,6 +121,57 @@ class ConnectionChatsHost implements ChatsHost {
       ProjectFolderActions.openFolder(context, _conn);
 
   @override
+  Widget leftoverNotice(BuildContext context) {
+    if (!(platformCapabilities.supportsTermux &&
+        TermuxBridge.managesServerUrl(_conn.profile?.baseUrl))) {
+      return const SizedBox.shrink();
+    }
+    return TermuxRunawayWatcher(
+      builder: (context, notice) => leftoverNoticeLine(context, notice),
+    );
+  }
+
+  @override
+  Future<WorkspaceProject?> separateCopyProject(String directory) async {
+    final capabilities = _conn.capabilities;
+    if (!capabilities.projectManagement || !capabilities.worktreeCreate) {
+      return null;
+    }
+    try {
+      final repository = await _conn.prepareActionRepository();
+      if (repository == null) return null;
+      final project = projectForDirectory(
+        await repository.listProjects(),
+        directory,
+      );
+      if (project == null || project.directory.trim().isEmpty) return null;
+      return project;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<String?> startSeparateCopy(
+    BuildContext context,
+    WorkspaceProject project,
+  ) async {
+    if (!ConnectionController.sameDirectoryPath(
+      _conn.directory ?? '',
+      project.directory,
+    )) {
+      await _conn.selectLocation(directory: project.directory);
+      if (_conn.locationError != null || !context.mounted) return null;
+    }
+    final session = await showIsolatedTaskSheet(
+      context,
+      controller: _conn,
+      project: project,
+    );
+    return session?.id;
+  }
+
+  @override
   Widget modelChip(BuildContext context) => ListenableBuilder(
     listenable: _conn,
     builder: (context, _) {
@@ -117,4 +194,33 @@ class ConnectionChatsHost implements ChatsHost {
   AppLocalizations _l10n(BuildContext context) =>
       Localizations.of<AppLocalizations>(context, AppLocalizations) ??
       lookupAppLocalizations(Localizations.localeOf(context));
+}
+
+/// The leftover-process notice as a quiet kit status (the same one the Work
+/// tab used): wording, Stop and Dismiss, and See what's running under More.
+Widget leftoverNoticeLine(BuildContext context, WorkRunawayNotice? notice) {
+  final l10n = AppLocalizations.of(context);
+  final status = notice?.status(
+    l10n,
+    onSeeRunning: () => unawaited(
+      pushKitPage<void>(context, (_) => const TermuxProcessesScreen()),
+    ),
+  );
+  return KitStatusContribution(
+    status: status == null
+        ? null
+        : KitStatus(
+            kind: KitStatusKind.work,
+            id: 'work:${status.id}',
+            key: ValueKey('work-status-${status.id}'),
+            icon: status.icon,
+            tone: status.tone,
+            message: status.message,
+            messageKey: status.messageKey,
+            action: status.action,
+            more: status.more,
+            onDismiss: status.onDismiss,
+          ),
+    child: const SizedBox.shrink(),
+  );
 }
