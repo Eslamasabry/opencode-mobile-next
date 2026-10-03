@@ -1,5 +1,5 @@
 {
- "generatedFrom": "3e86f8467ba39c5c8b173eec8e18a0852f4ece14",
+ "generatedFrom": "8a0f6b50bbe36d8ef27cfab8f1990142add2d7fd",
  "pages": [
   {
    "id": "system",
@@ -7223,6 +7223,14 @@
     {
      "page": "run-result",
      "element": "run-result-open-conversation"
+    },
+    {
+     "page": "chats-home",
+     "element": "chats-home-row"
+    },
+    {
+     "page": "chats-new-chat",
+     "element": "chats-new-send"
     }
    ],
    "gates": [
@@ -11841,6 +11849,264 @@
    ]
   },
   {
+   "id": "chats-home",
+   "title": "Conversations",
+   "kind": "tab",
+   "area": "workspace",
+   "file": "lib/ui/screens/chats/chats_home_screen.dart",
+   "widget": "ChatsHomeScreen",
+   "presentedBy": [],
+   "line": 25,
+   "purpose": "Chats first: every conversation on the connected server in one list (Needs you, Today, Earlier), the project a small label on each row and a filter chip. Reads ChatFeedSource only.",
+   "reachedFrom": [],
+   "gates": [],
+   "elements": [
+    {
+     "id": "chats-home-filter-project",
+     "type": "chip",
+     "label": "All projects | <project name>",
+     "key": "chats-filter-project",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 153,
+     "action": "open-sheet",
+     "target": "chats-project-sheet",
+     "targetWidget": null,
+     "effect": "Opens the project filter sheet.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "chats-home-filter-needs-you",
+     "type": "chip",
+     "label": "Needs you · {count}",
+     "key": "chats-filter-needs-you",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 164,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Toggles the Needs you filter; with Running also on, either matches.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "chats-home-filter-running",
+     "type": "chip",
+     "label": "Running",
+     "key": "chats-filter-running",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 173,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Toggles the Running filter.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "chats-home-new",
+     "type": "fab",
+     "label": "New conversation",
+     "key": "chats-new-chat",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 205,
+     "action": "navigate",
+     "target": "chats-new-chat",
+     "targetWidget": null,
+     "effect": "Opens the start screen on the filtered or last used project.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "chats-home-clear-filters",
+     "type": "button",
+     "label": "Clear filters",
+     "key": "chats-clear-filters",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 261,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Removes the project and status filters.",
+     "gates": [
+      "no match for the filters"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "chats-home-start-in-project",
+     "type": "button",
+     "label": "Start a conversation in <project>",
+     "key": "chats-start-in-project",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 272,
+     "action": "navigate",
+     "target": "chats-new-chat",
+     "targetWidget": null,
+     "effect": "Opens the start screen on the filtered project.",
+     "gates": [
+      "the chosen project has no conversations"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "chats-home-start",
+     "type": "button",
+     "label": "Start a conversation",
+     "key": "chats-start-chat",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 286,
+     "action": "navigate",
+     "target": "chats-new-chat",
+     "targetWidget": null,
+     "effect": "Opens the start screen on the last used project.",
+     "gates": [
+      "no conversations at all"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "chats-home-row",
+     "type": "list-tile",
+     "label": "<project> · <title> · <state or time> · <last line>",
+     "key": "chats-row-<sessionID>",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 334,
+     "action": "navigate",
+     "target": "chat",
+     "targetWidget": null,
+     "effect": "Rescopes the connection to the conversation's project and opens it.",
+     "gates": [],
+     "destructive": false
+    }
+   ]
+  },
+  {
+   "id": "chats-project-sheet",
+   "title": "Show conversations from",
+   "kind": "sheet",
+   "area": "workspace",
+   "file": "lib/ui/screens/chats/chats_project_sheet.dart",
+   "widget": "showChatsProjectSheet",
+   "presentedBy": [
+    "showChatsProjectSheet"
+   ],
+   "line": 40,
+   "purpose": "The project filter: All projects with the total, each project with its counts and Git badge, and Open a project. One sheet; Open a project closes it before the folder browser opens.",
+   "reachedFrom": [
+    {
+     "page": "chats-home",
+     "element": "chats-home-filter-project"
+    }
+   ],
+   "gates": [],
+   "elements": [
+    {
+     "id": "chats-project-sheet-all",
+     "type": "list-tile",
+     "label": "All projects",
+     "key": "chats-project-all",
+     "file": "lib/ui/screens/chats/chats_project_sheet.dart",
+     "line": 64,
+     "action": "dismiss",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Clears the project filter.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "chats-project-sheet-project",
+     "type": "list-tile",
+     "label": "<project> · n conversations · m running · needs you",
+     "key": "chats-project-<directory>",
+     "file": "lib/ui/screens/chats/chats_project_sheet.dart",
+     "line": 78,
+     "action": "dismiss",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Filters to that project.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "chats-project-sheet-open",
+     "type": "list-tile",
+     "label": "Open a project…",
+     "key": "chats-project-open",
+     "file": "lib/ui/screens/chats/chats_project_sheet.dart",
+     "line": 111,
+     "action": "dismiss",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Closes this sheet, opens the Open a project sheet; the chosen folder becomes the filter.",
+     "gates": [],
+     "destructive": false
+    }
+   ]
+  },
+  {
+   "id": "chats-new-chat",
+   "title": "New conversation",
+   "kind": "screen",
+   "area": "workspace",
+   "file": "lib/ui/screens/chats/new_chat_screen.dart",
+   "widget": "NewChatScreen",
+   "presentedBy": [
+    "showNewChat"
+   ],
+   "line": 22,
+   "purpose": "What should we work on? A project chip and the composer. Send starts the conversation in the chosen project and replaces this screen with it.",
+   "reachedFrom": [
+    {
+     "page": "chats-home",
+     "element": "chats-home-new"
+    },
+    {
+     "page": "chats-home",
+     "element": "chats-home-start-in-project"
+    },
+    {
+     "page": "chats-home",
+     "element": "chats-home-start"
+    }
+   ],
+   "gates": [],
+   "elements": [
+    {
+     "id": "chats-new-project",
+     "type": "chip",
+     "label": "<project> | Choose a project",
+     "key": "chats-new-project",
+     "file": "lib/ui/screens/chats/new_chat_screen.dart",
+     "line": 129,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Opens the Open a project sheet; its choice updates the chip.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "chats-new-send",
+     "type": "button",
+     "label": "Send",
+     "key": "chats-new-send",
+     "file": "lib/ui/screens/chats/new_chat_screen.dart",
+     "line": 173,
+     "action": "submit",
+     "target": "chat",
+     "targetWidget": null,
+     "effect": "startChatIn(directory, firstPrompt); on failure says why in plain words and keeps the draft.",
+     "gates": [
+      "a project is chosen",
+      "the field is not empty"
+     ],
+     "destructive": false
+    }
+   ]
+  },
+  {
    "id": "global-sessions",
    "title": "All conversations",
    "kind": "screen",
@@ -15702,7 +15968,7 @@
    "presentedBy": [
     "ProjectFolderActions.openFolder"
    ],
-   "line": 130,
+   "line": 131,
    "purpose": "A server on this phone: OpenCode inside the app (folders read from the built-in Ubuntu's files, so it works with the server stopped) or the OpenCode server this app runs in Termux (a short read-only script run inside Termux's Ubuntu through TermuxBridge.run, the path passed base64-encoded, bounded to 15 s in Termux and 25 s in the app). Browses from /root/projects up to /. A project (git repository, a project OpenCode knows, or any folder straight in /root/projects) opens with a tap; other folders are gone into. One primary opens the folder shown (never the home folder, / or the projects folder itself); New project makes a folder inside the folder shown (the app's Ubuntu: mkdir + git init; Termux: mkdir -p); Enter a path opens the path dialog. Remote servers, and Termux when it cannot run the app's commands, skip this sheet and go straight to the path dialog. Layout (2026-10-03, owner review): the sheet opens on a start page, title Open a project with Close in the header and no place line, menu or folder list: 1. New project (prominent; the name step swaps in place with \"Creates <folder>/<name>\", Create and open and a quiet Change folder that picks the parent in the browser and comes back; default folder is the host’s project space, else Projects on the phone’s storage), 2. Search this phone (phone-hosted servers only; the All files access consent first; a calm search step with a timer, a bar against the 10 s cap, folders checked and projects found, results as they come, Stop; then \"<m> found in 0:09\", Look deeper after the cap, an empty state with a way forward; back cancels), 3. Opened before (the recent folders with a Git badge when they hold .git, checked after and kept for the sheet; a tap opens; hidden when there are none). A quiet Choose a folder at the bottom opens the browser (one header row with back, the folder name and a more menu with Show hidden folders and Enter a path; the place menu when both places exist; one panel of folder rows; the pinned Open <folder>). A remote server keeps its own path sheet and has no search row because OpenCode lists files only inside a project.",
    "reachedFrom": [
     {
@@ -15725,7 +15991,7 @@
      "label": "Create and open",
      "key": "phone-new-folder-create",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 533,
+     "line": 534,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15739,7 +16005,7 @@
      "label": "Project name",
      "key": "phone-new-folder-name",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 544,
+     "line": 545,
      "action": "submit",
      "target": null,
      "targetWidget": null,
@@ -15753,7 +16019,7 @@
      "label": "Change (inline link after \"In <folder> ·\")",
      "key": "phone-new-folder-change",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 576,
+     "line": 577,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15767,7 +16033,7 @@
      "label": "New project (accent badge row)",
      "key": "open-project-new",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 608,
+     "line": 609,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15781,7 +16047,7 @@
      "label": "Search this phone",
      "key": "open-project-search",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 621,
+     "line": 622,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15797,7 +16063,7 @@
      "label": "Choose a folder (quiet row)",
      "key": "open-project-browse",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 653,
+     "line": 654,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15811,7 +16077,7 @@
      "label": "<folder name> / <path> / Git",
      "key": "open-project-recent-<n>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 672,
+     "line": 673,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15827,7 +16093,7 @@
      "label": "Back (search step)",
      "key": "phone-scan-back",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 760,
+     "line": 748,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15841,7 +16107,7 @@
      "label": "Stop",
      "key": "phone-scan-stop",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 767,
+     "line": 755,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15857,7 +16123,7 @@
      "label": "Look deeper",
      "key": "phone-scan-deeper",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 774,
+     "line": 762,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15873,7 +16139,7 @@
      "label": "<project name> / <kind> · <folder> / Git",
      "key": "phone-scan-<path>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 853,
+     "line": 833,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15887,7 +16153,7 @@
      "label": "Back (browser, first folder)",
      "key": "folder-browser-start",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 881,
+     "line": 861,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15901,7 +16167,7 @@
      "label": "Back chevron (Up one folder); Close at the place's first folder",
      "key": "folder-browser-up",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 886,
+     "line": 866,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15915,7 +16181,7 @@
      "label": "Enter a path (header more menu)",
      "key": "in-app-enter-path",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 899,
+     "line": 879,
      "action": "open-dialog",
      "target": "project-folder-open-dialog",
      "targetWidget": "_OpenFolderDialog",
@@ -15929,7 +16195,7 @@
      "label": "Use <folder>",
      "key": "folder-browser-use",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 916,
+     "line": 896,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15945,7 +16211,7 @@
      "label": "Open <folder>",
      "key": "folder-browser-open",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 924,
+     "line": 904,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15961,7 +16227,7 @@
      "label": "<folder name> / Git repository | OpenCode project",
      "key": "in-app-project-<name>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 1095,
+     "line": 1075,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15975,7 +16241,7 @@
      "label": "[Show the folders in <name>]",
      "key": "folder-browse-<name>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 1108,
+     "line": 1088,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15989,7 +16255,7 @@
      "label": "Try again",
      "key": "folder-browser-retry",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 1192,
+     "line": 1172,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -39649,6 +39915,36 @@
     "to": "session-export"
    },
    {
+    "from": "chats-home",
+    "element": "chats-home-filter-project",
+    "to": "chats-project-sheet"
+   },
+   {
+    "from": "chats-home",
+    "element": "chats-home-row",
+    "to": "chat"
+   },
+   {
+    "from": "chats-home",
+    "element": "chats-home-new",
+    "to": "chats-new-chat"
+   },
+   {
+    "from": "chats-home",
+    "element": "chats-home-start-in-project",
+    "to": "chats-new-chat"
+   },
+   {
+    "from": "chats-home",
+    "element": "chats-home-start",
+    "to": "chats-new-chat"
+   },
+   {
+    "from": "chats-new-chat",
+    "element": "chats-new-send",
+    "to": "chat"
+   },
+   {
     "from": "activity",
     "element": "activity-digest-review",
     "to": "question-sheet",
@@ -40930,6 +41226,11 @@
    "part": "b1-chat-screen"
   },
   {
+   "file": "lib/ui/screens/chats/chats_host.dart",
+   "reason": "No surface: the one seam between the Chats screens and the connection (feed source, server pill, opening a conversation, model chip).",
+   "part": "l-chats"
+  },
+  {
    "file": "lib/ui/screens/files/files_actions.dart",
    "reason": "Part file of lib/ui/screens/files_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
    "part": "f-files-review-terminal"
@@ -41836,6 +42137,10 @@
   {
    "part": "k-session-misc",
    "note": "session_relations_screen.dart:498 _relativeTime uses hard-coded English strings ('Now', 'm ago') rather than relative_time.dart."
+  },
+  {
+   "part": "l-chats",
+   "note": "Chats home speaks 'conversation' because the glossary (test/ui_glossary_test.dart) bans 'chat' in copy; the approved mockup says Chats."
   }
  ]
 }
