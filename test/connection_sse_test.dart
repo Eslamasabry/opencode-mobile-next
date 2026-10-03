@@ -1207,7 +1207,7 @@ void main() {
 
     expect(controller.directory, '/deleted/worktree');
     expect(controller.workspace, isNull);
-    expect(controller.locationNotice, contains('Your selection was kept'));
+    expect(controller.locationNotice, isNull);
     expect(store.locationFor('server')?.directory, '/deleted/worktree');
     controller.dispose();
   });
@@ -1252,10 +1252,7 @@ void main() {
 
     expect(controller.directory, '/work/acme');
     expect(controller.workspace, 'deleted-workspace');
-    expect(
-      controller.locationNotice,
-      contains('Couldn’t verify this workspace'),
-    );
+    expect(controller.locationNotice, isNull);
     expect(store.locationFor('server')?.directory, '/work/acme');
     expect(store.locationFor('server')?.workspace, 'deleted-workspace');
     controller.dispose();
