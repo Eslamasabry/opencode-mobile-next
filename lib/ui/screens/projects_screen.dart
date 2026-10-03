@@ -6,10 +6,12 @@ import '../../api/product_repository.dart';
 import '../../domain/team_directories.dart';
 import '../../domain/workspace_paths.dart';
 import '../../l10n/app_localizations.dart';
+import '../../platform/phone_project_scan.dart';
 import '../../state/connection.dart';
 import '../app_iconography.dart';
 import '../app_theme.dart' show AppStatusTone;
 import '../kit/kit_bidi.dart';
+import '../kit/kit_chip.dart';
 import '../kit/kit_buttons.dart';
 import '../kit/kit_dialog.dart';
 import '../kit/kit_notice.dart';
@@ -20,8 +22,10 @@ import '../kit/kit_screen.dart';
 import '../kit/kit_search_field.dart';
 import '../kit/kit_state_view.dart';
 import '../kit/kit_text.dart';
+import '../kit/kit_tokens.dart';
 import '../kit/kit_top_bar.dart';
 import '../kit/motion/kit_refresh.dart';
+import '../widgets/phone_project_kind.dart';
 import '../widgets/product_states.dart' show productErrorText;
 import 'project_folder_actions.dart';
 import 'shared_storage_access_flow.dart';
@@ -54,6 +58,11 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   String? _switchError;
   bool _loading = false;
   int _loadGeneration = 0;
+
+  /// The folders in the host's project space (null: it has none to read).
+  /// The server lists only projects it has opened, so restored or copied
+  /// folders show here until they are opened once.
+  List<PhoneProject>? _spaceFolders;
 
   AppLocalizations get _l10n =>
       lookupAppLocalizations(Localizations.localeOf(context));
@@ -91,6 +100,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         _projects = projects;
         _error = null;
       });
+      unawaited(_loadSpace(generation));
     } catch (error) {
       if (!mounted || generation != _loadGeneration) return;
       setState(() {
@@ -98,6 +108,47 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         _error = productErrorText(error);
       });
     }
+  }
+
+  Future<void> _loadSpace(int generation) async {
+    final folders = await ProjectFolderActions.projectSpaceFolders(
+      widget.controller,
+    );
+    if (!mounted || generation != _loadGeneration) return;
+    setState(() => _spaceFolders = folders);
+  }
+
+  /// The project space's folders the server has not opened: not a project
+  /// of its (nor a worktree of one), matching the search when there is one.
+  List<PhoneProject> get _unopened {
+    final folders = _spaceFolders;
+    if (folders == null) return const [];
+    final known = {
+      for (final project in _projects ?? const <WorkspaceProject>[])
+        for (final directory in [project.directory, ...project.worktrees])
+          ConnectionController.normalizeDirectoryPath(directory),
+    };
+    final query = _query.toLowerCase();
+    return [
+      for (final folder in folders)
+        if (!known.contains(
+              ConnectionController.normalizeDirectoryPath(folder.path),
+            ) &&
+            (query.isEmpty ||
+                folder.name.toLowerCase().contains(query) ||
+                folder.path.toLowerCase().contains(query)))
+          folder,
+    ];
+  }
+
+  Future<void> _openUnopened(PhoneProject folder) async {
+    if (_busyProjectID != null) return;
+    final path = await ProjectFolderActions.openKnownFolder(
+      context,
+      widget.controller,
+      folder.path,
+    );
+    if (path != null && mounted) Navigator.of(context).pop(true);
   }
 
   /// Real project folders only. The server's catch-all root and any home
@@ -350,6 +401,18 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                     _projectRow(context, l10n, project),
                 ],
               ),
+            if (_unopened.isNotEmpty)
+              KitRowGroup(
+                key: const ValueKey('projects-space-group'),
+                margin: EdgeInsets.zero,
+                label: l10n.openProjectIn(
+                  KitBidi.ltr(managedProjectsDirectory),
+                ),
+                children: [
+                  for (final folder in _unopened)
+                    _spaceRow(context, l10n, folder),
+                ],
+              ),
             if (_error != null && projects != null)
               KitNotice.error(
                 key: const ValueKey('project-refresh-error'),
@@ -365,6 +428,31 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       ),
     );
   }
+
+  /// A folder of the project space the server has not opened: its kind, a
+  /// Git badge when it is a repository, and one tap opens it.
+  Widget _spaceRow(
+    BuildContext context,
+    AppLocalizations l10n,
+    PhoneProject folder,
+  ) => KitRow(
+    key: ValueKey('project-space-${folder.name}'),
+    leading: KitRow.icon(context, phoneProjectKindIcon(folder.kind)),
+    title: folder.name,
+    supporting: TextSpan(text: phoneProjectKindLabel(l10n, folder.kind)),
+    trailing: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (folder.hasGit) ...[
+          KitChip(label: l10n.phoneScanGit, icon: AppIconography.branch),
+          SizedBox(width: KitTokens.of(context).space2),
+        ],
+        const KitChevron(),
+      ],
+    ),
+    enabled: _busyProjectID == null,
+    onTap: () => _openUnopened(folder),
+  );
 
   Widget _projectRow(
     BuildContext context,

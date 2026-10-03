@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/builtin_folders.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
+import 'package:opencode_mobile/platform/phone_project_scan.dart';
 import 'package:opencode_mobile/platform/phone_storage_folders.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/platform/storage_access.dart';
@@ -306,6 +307,48 @@ void main() {
     expect(controller.opened, ['$_root/Projects']);
     // The existing gate recorded the root for AI Team.
     expect(await SharedProjectRoots.all('builtin'), ['$_root/Projects']);
+  });
+
+  testWidgets('Search this phone also searches the project space, first', (
+    tester,
+  ) async {
+    access = StorageAccess.granted;
+    final phoneScan = PhoneProjectScan.manual();
+    ProjectFolderActions.phoneScanOverride = (_) => phoneScan;
+    addTearDown(() => ProjectFolderActions.phoneScanOverride = null);
+    await build();
+    // The project space holds a restored project the server never opened.
+    ProjectFolderActions.folderListerOverride = (path) async => [
+      const FolderEntry(name: 'restored', path: '/root/projects/restored'),
+    ];
+    await openSheet(tester);
+    await tapKey(tester, 'folder-browser-start');
+    await tester.tap(find.byKey(const ValueKey('open-project-search')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    phoneScan.emit(
+      const PhoneProject(
+        name: 'onphone',
+        path: '$_root/Documents/onphone',
+        kind: PhoneProjectKind.node,
+        hasGit: false,
+      ),
+    );
+    phoneScan.finish(PhoneScanEnd.completed);
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expect(find.text('Searching this phone'), findsNothing);
+    expect(find.text('2 found in 0:00'), findsOneWidget);
+    // The project space's result comes first, with the path as the browser
+    // shows it.
+    expect(
+      tester.getTopLeft(find.text('restored')).dy,
+      lessThan(tester.getTopLeft(find.text('onphone')).dy),
+    );
+    expect(find.textContaining('/root/projects'), findsOneWidget);
+    await tester.tap(find.text('restored'));
+    await tester.pumpAndSettle();
+    expect(result, '/root/projects/restored');
   });
 
   testWidgets('a new project can be made on the phone with Change folder', (

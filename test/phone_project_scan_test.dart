@@ -182,4 +182,85 @@ void main() {
     expect(await run.projects.toList(), isEmpty);
     expect(await run.end, PhoneScanEnd.completed);
   });
+
+  group('project space', () {
+    test(
+      'every folder straight in it is a project, with or without markers',
+      () async {
+        file('proj/a/package.json');
+        dir('proj/b/.git');
+        dir('proj/c/notes');
+        final run = PhoneProjectScanner(
+          root: '${root.path}/proj',
+          reportAs: '/root/projects',
+          childrenAreProjects: true,
+        ).start();
+        final found = await run.projects.toList();
+        final byName = {for (final p in found) p.name: p};
+        expect(byName.keys.toSet(), {'a', 'b', 'c'});
+        // Paths read the way the browser shows them.
+        expect(byName['a']!.path, '/root/projects/a');
+        expect(byName['a']!.kind, PhoneProjectKind.node);
+        expect(byName['b']!.hasGit, isTrue);
+        expect(byName['c']!.hasGit, isFalse);
+      },
+    );
+
+    test('markers still find projects deeper down', () async {
+      file('proj/group/deep/pubspec.yaml');
+      final run = PhoneProjectScanner(
+        root: '${root.path}/proj',
+        reportAs: '/root/projects',
+        childrenAreProjects: true,
+      ).start();
+      final found = await run.projects.toList();
+      expect(found.map((p) => p.path), ['/root/projects/group']);
+    });
+
+    test('in sequence: the first scan\'s results come first', () async {
+      file('proj/a/package.json');
+      file('phone/b/package.json');
+      final scan = PhoneProjectScan.sequence([
+        (limit) => PhoneProjectScanner(
+          root: '${root.path}/proj',
+          reportAs: '/root/projects',
+          childrenAreProjects: true,
+        ).start(timeLimit: limit),
+        (limit) => PhoneProjectScanner(
+          root: '${root.path}/phone',
+        ).start(timeLimit: limit),
+      ], const Duration(seconds: 10));
+      final found = await scan.projects.toList();
+      expect(found.map((p) => p.name), ['a', 'b']);
+      expect(await scan.end, PhoneScanEnd.completed);
+      expect(scan.visited, greaterThan(2));
+    });
+
+    test('a list becomes a scan', () async {
+      final scan = PhoneProjectScan.fromFuture(
+        Future.value([
+          const PhoneProject(
+            name: 'x',
+            path: '/root/projects/x',
+            kind: PhoneProjectKind.git,
+            hasGit: true,
+          ),
+        ]),
+      );
+      expect((await scan.projects.toList()).single.name, 'x');
+      expect(await scan.end, PhoneScanEnd.completed);
+    });
+
+    test('cancel stops the whole sequence', () async {
+      for (var i = 0; i < 20; i++) {
+        dir('phone/d$i/e/f');
+      }
+      final scan = PhoneProjectScan.sequence([
+        (limit) => PhoneProjectScanner(root: root.path).start(timeLimit: limit),
+      ], const Duration(seconds: 10));
+      scan.cancel();
+      await scan.projects.toList();
+      expect(await scan.end, PhoneScanEnd.cancelled);
+    });
+  });
 }

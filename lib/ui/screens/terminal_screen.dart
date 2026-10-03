@@ -132,6 +132,26 @@ class _TerminalPageState extends ConsumerState<TerminalPage> {
   }
 }
 
+/// The two labels of the host switch: the app's built-in Linux, and the
+/// connected server by its own name ("OpenCode server" when it has none).
+/// They never read the same: a server profile called "This phone" sits next
+/// to "Built-in Linux", and a name that still collides gets the runtime
+/// added.
+({String phone, String server}) terminalSourceLabels(
+  AppLocalizations l10n,
+  String? serverName,
+) {
+  final phone = l10n.localTerminalSourcePhone;
+  final name = serverName?.trim();
+  var server = name == null || name.isEmpty
+      ? l10n.localTerminalSourceServer
+      : name;
+  if (server.toLowerCase() == phone.toLowerCase()) {
+    server = '$server · ${l10n.localTerminalSourceServer}';
+  }
+  return (phone: phone, server: server);
+}
+
 /// Where the shell runs: this phone or the connected server, named
 /// ("Laptop"); "OpenCode server" only when the server has no name.
 class _SourceChoice extends StatelessWidget {
@@ -149,6 +169,7 @@ class _SourceChoice extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = _l10nOf(context);
     final tokens = KitTokens.of(context);
+    final labels = terminalSourceLabels(l10n, serverName);
     return Padding(
       padding: EdgeInsetsDirectional.fromSTEB(
         tokens.gutter,
@@ -163,15 +184,12 @@ class _SourceChoice extends StatelessWidget {
           KitSegment(
             key: const ValueKey('terminal-source-phone'),
             value: TerminalSource.phone,
-            label: l10n.localTerminalSourcePhone,
+            label: labels.phone,
           ),
           KitSegment(
             key: const ValueKey('terminal-source-server'),
             value: TerminalSource.server,
-            label: switch (serverName?.trim()) {
-              final name? when name.isNotEmpty => name,
-              _ => l10n.localTerminalSourceServer,
-            },
+            label: labels.server,
           ),
         ],
         selected: source,

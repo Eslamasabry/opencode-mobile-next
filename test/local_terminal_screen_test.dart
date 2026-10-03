@@ -283,7 +283,7 @@ void main() {
     ) async {
       await mountPage(tester);
       expect(find.byType(LocalTerminalView), findsOneWidget);
-      expect(find.text('This phone'), findsOneWidget);
+      expect(find.text('Built-in Linux'), findsOneWidget);
       expect(find.text('OpenCode server'), findsOneWidget);
     });
 

@@ -10,6 +10,7 @@ import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/builtin/builtin_folders.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
+import 'package:opencode_mobile/platform/phone_project_scan.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
@@ -1293,6 +1294,99 @@ void main() {
         await tester.pumpAndSettle();
       }
     }
+
+    Future<void> mountProjects(WidgetTester tester) async {
+      await tester.pumpWidget(
+        _direct(
+          ProjectsScreen(controller: controller, selectedProjectID: null),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('restored folders the server has not opened are listed', (
+      tester,
+    ) async {
+      ProjectFolderActions.projectSpaceOverride = () async => [
+        const PhoneProject(
+          name: 'restored',
+          path: '/root/projects/restored',
+          kind: PhoneProjectKind.node,
+          hasGit: true,
+        ),
+        const PhoneProject(
+          name: 'plain',
+          path: '/root/projects/plain',
+          kind: PhoneProjectKind.git,
+          hasGit: false,
+        ),
+      ];
+      addTearDown(() => ProjectFolderActions.projectSpaceOverride = null);
+      await mountProjects(tester);
+      expect(find.text('In \u2066/root/projects\u2069'), findsOneWidget);
+      expect(find.text('restored'), findsOneWidget);
+      expect(find.text('plain'), findsOneWidget);
+      // Each row says what it is; a repository carries the Git badge.
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('project-space-restored')),
+          matching: find.text('Git'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('project-space-plain')),
+          matching: find.text('Git'),
+        ),
+        findsNothing,
+      );
+      await tester.tap(find.text('restored'));
+      await tester.pumpAndSettle();
+      expect(controller.folderEvents, ['open:/root/projects/restored']);
+    });
+
+    testWidgets('folders already opened are not listed twice, and an empty '
+        'section is hidden', (tester) async {
+      ProjectFolderActions.projectSpaceOverride = () async => [
+        const PhoneProject(
+          name: 'known',
+          path: '/root/projects/known',
+          kind: PhoneProjectKind.node,
+          hasGit: false,
+        ),
+      ];
+      addTearDown(() => ProjectFolderActions.projectSpaceOverride = null);
+      controller = _FreshServerController(
+        _InAppStore(prefs: await SharedPreferences.getInstance()),
+        _ProjectsRepository()
+          ..projects = const [
+            WorkspaceProject(
+              id: 'k',
+              name: 'known',
+              directory: '/root/projects/known',
+              worktrees: [],
+              updatedAt: 1,
+            ),
+          ],
+      );
+      await mountProjects(tester);
+      expect(find.text('In \u2066/root/projects\u2069'), findsNothing);
+      expect(find.byKey(const ValueKey('project-space-known')), findsNothing);
+      expect(find.byKey(const ValueKey('project-k')), findsOneWidget);
+    });
+
+    testWidgets('the empty state is one short line', (tester) async {
+      ProjectFolderActions.projectSpaceOverride = () async => const [];
+      addTearDown(() => ProjectFolderActions.projectSpaceOverride = null);
+      await mountProjects(tester);
+      expect(find.text('No projects opened'), findsOneWidget);
+      expect(
+        find.text('Projects you open or create appear here.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('choose one'), findsNothing);
+    });
 
     testWidgets('its projects are listed and open with one tap', (
       tester,

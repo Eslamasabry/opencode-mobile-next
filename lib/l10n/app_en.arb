@@ -3459,7 +3459,7 @@
   "@e7ProjectProjectsEmpty": {
     "description": "Empty project catalog heading"
   },
-  "e7ProjectProjectsEmptyDetail": "Projects opened by this server appear here; choose one for conversations, files, terminals, and coding tools. Create a new folder or open one by its path above, or open a project on this OpenCode server and refresh.",
+  "e7ProjectProjectsEmptyDetail": "Projects you open or create appear here.",
   "@e7ProjectProjectsEmptyDetail": {
     "description": "Empty project catalog guidance"
   },
@@ -14276,7 +14276,7 @@
   "@pluginsDetailsId": {
     "description": "Label above a plugin's raw id in its details"
   },
-  "localTerminalSourcePhone": "This phone",
+  "localTerminalSourcePhone": "Built-in Linux",
   "@localTerminalSourcePhone": {
     "description": "Terminal source: a shell in this phone's built-in Linux"
   },

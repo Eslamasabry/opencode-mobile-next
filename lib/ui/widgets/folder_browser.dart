@@ -29,6 +29,7 @@ import '../kit/kit_tappable.dart';
 import '../kit/kit_text.dart';
 import '../kit/kit_tokens.dart';
 import '../kit/scenes/folders_open_scene.dart';
+import 'phone_project_kind.dart';
 import 'product_states.dart' show productErrorDetails;
 
 /// The pages of the sheet: it opens on [start]; the others swap in place.
@@ -694,21 +695,8 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
     ],
   );
 
-  /// The kind's glyph; a plain folder when the kind is not known (or only
-  /// a repository).
-  static IconData _kindIcon(PhoneProjectKind? kind) => switch (kind) {
-    PhoneProjectKind.dart => AppIconography.layers,
-    PhoneProjectKind.node => AppIconography.package,
-    PhoneProjectKind.python => AppIconography.dataObject,
-    PhoneProjectKind.rust => AppIconography.processor,
-    PhoneProjectKind.go => AppIconography.terminal,
-    PhoneProjectKind.java => AppIconography.code,
-    PhoneProjectKind.ruby => AppIconography.database,
-    PhoneProjectKind.php => AppIconography.globe,
-    PhoneProjectKind.dotnet => AppIconography.category,
-    PhoneProjectKind.cpp => AppIconography.function,
-    PhoneProjectKind.git || null => AppIconography.folderOpen,
-  };
+  static IconData _kindIcon(PhoneProjectKind? kind) =>
+      phoneProjectKindIcon(kind);
 
   /// A path cut at its start when long, so the folders nearest the project
   /// stay readable.
@@ -818,24 +806,16 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
   }
 
   static String _kindLabel(AppLocalizations l10n, PhoneProjectKind? kind) =>
-      switch (kind) {
-        null => l10n.phoneScanKindGit,
-        PhoneProjectKind.dart => l10n.phoneScanKindDart,
-        PhoneProjectKind.node => l10n.phoneScanKindNode,
-        PhoneProjectKind.python => l10n.phoneScanKindPython,
-        PhoneProjectKind.rust => l10n.phoneScanKindRust,
-        PhoneProjectKind.go => l10n.phoneScanKindGo,
-        PhoneProjectKind.java => l10n.phoneScanKindJava,
-        PhoneProjectKind.ruby => l10n.phoneScanKindRuby,
-        PhoneProjectKind.php => l10n.phoneScanKindPhp,
-        PhoneProjectKind.dotnet => l10n.phoneScanKindDotnet,
-        PhoneProjectKind.cpp => l10n.phoneScanKindCpp,
-        PhoneProjectKind.git => l10n.phoneScanKindGit,
-      };
+      phoneProjectKindLabel(l10n, kind);
 
   /// The folder the project is in, from the storage's top, cut at its start
   /// when long so the end (the nearest folders) stays readable.
   static String _where(String path) {
+    // The phone's storage reads from its top; the project space and other
+    // Ubuntu folders read as the browser shows them (`/root/projects`).
+    if (!path.startsWith('${PhoneStorageFolders.root}/')) {
+      return _cutStart(BuiltinRootfsFolders.parentOf(path) ?? path, 34);
+    }
     final parent = PhoneStorageFolders.parentOf(path) ?? path;
     final short = parent == PhoneStorageFolders.root
         ? '/'
