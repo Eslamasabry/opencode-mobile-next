@@ -3,15 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
-import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/state/connection.dart';
-import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/project_health_screen.dart';
-import 'package:opencode_mobile/ui/screens/project_hub_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class _HealthRepository implements ProductRepository {
   VersionControlHealth versionControl = const VersionControlHealth(
@@ -101,36 +95,6 @@ class _HealthRepository implements ProductRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _WorkspaceLocationController extends ConnectionController {
-  _WorkspaceLocationController(super.store);
-
-  final locations = <({String? directory, String? workspace})>[];
-
-  @override
-  Future<ServerOperationsGateway?> prepareActionRepository() async =>
-      repository;
-
-  @override
-  Future<void> selectLocation({String? directory, String? workspace}) async {
-    if (this.directory == directory && this.workspace == workspace) return;
-    locations.add((directory: directory, workspace: workspace));
-    this.directory = directory;
-    this.workspace = workspace;
-    dataRefreshRevision += 1;
-    notifyListeners();
-  }
-
-  @override
-  Future<void> selectLocationForExistingSession({
-    String? directory,
-    String? workspace,
-  }) => selectLocation(directory: directory, workspace: workspace);
-
-  @override
-  Future<void> selectInitialLocation({String? directory, String? workspace}) =>
-      selectLocation(directory: directory, workspace: workspace);
-}
-
 Widget _app(Widget home, {double textScale = 1}) => MaterialApp(
   localizationsDelegates: AppLocalizations.localizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
@@ -143,26 +107,6 @@ Widget _app(Widget home, {double textScale = 1}) => MaterialApp(
     ),
   ),
 );
-
-Future<ConnectionController> _controller(ProductRepository repository) async {
-  SharedPreferences.setMockInitialValues({});
-  final preferences = await SharedPreferences.getInstance();
-  return ConnectionController(ProfileStore(prefs: preferences))
-    ..repository = repository
-    ..directory = '/work/app'
-    ..status = StreamStatus.connected;
-}
-
-Future<_WorkspaceLocationController> _workspaceController(
-  ProductRepository repository,
-) async {
-  SharedPreferences.setMockInitialValues({});
-  final preferences = await SharedPreferences.getInstance();
-  return _WorkspaceLocationController(ProfileStore(prefs: preferences))
-    ..repository = repository
-    ..directory = '/work/app'
-    ..status = StreamStatus.connected;
-}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -393,99 +337,6 @@ void main() {
     expect(find.text('feature/after-wake'), findsOneWidget);
   });
 
-  testWidgets('workspace exposes project health without compact overflow', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(320, 640);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final repository = _HealthRepository();
-    final controller = await _controller(repository);
-    controller.locationNotice =
-        'The last project is no longer available. Opened the server workspace.';
-    addTearDown(controller.dispose);
-
-    await tester.pumpWidget(
-      _app(
-        Scaffold(body: WorkspaceScreen(controller: controller)),
-        textScale: 2,
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(
-      find.byKey(const ValueKey('location-recovery-notice')),
-      findsOneWidget,
-    );
-    // Sessions come first now (audit UX-101): search is reachable before the
-    // single management route at the foot of the list.
-    // The list's own scrollable: since Work is a KitScreen (9dbcc1a7,
-    // 23b2efb5) the page's status slot comes first in the tree.
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('search-all-sessions')),
-      160,
-      scrollable: find
-          .descendant(
-            of: find.byType(CustomScrollView),
-            matching: find.byType(Scrollable),
-          )
-          .first,
-    );
-    expect(find.byKey(const ValueKey('search-all-sessions')), findsOneWidget);
-    // Project health is a Project tab tool (Manage project merged into
-    // the tab, slice-P3.11a).
-    await tester.pumpWidget(
-      _app(ProjectHub(controller: controller), textScale: 2),
-    );
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('project-hub-health')),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('project-hub-health')));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(ProjectHealthScreen), findsOneWidget);
-    expect(find.text('feature/mobile'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('workspace cannot overwrite a session directory refresh', (
-    tester,
-  ) async {
-    final repository = _HealthRepository();
-    final controller = await _workspaceController(repository);
-    addTearDown(controller.dispose);
-
-    await tester.pumpWidget(
-      _app(Scaffold(body: WorkspaceScreen(controller: controller))),
-    );
-    await tester.pumpAndSettle();
-
-    await controller.selectLocation(directory: '/tmp/runtime-probe');
-    await tester.pumpAndSettle();
-
-    expect(controller.directory, '/tmp/runtime-probe');
-    expect(controller.locations, [
-      (directory: '/tmp/runtime-probe', workspace: null),
-    ]);
-    expect(find.byKey(const ValueKey('current-project-entry')), findsOneWidget);
-    expect(find.text('runtime-probe'), findsOneWidget);
-    expect(find.text('/tmp/runtime-probe'), findsNothing);
-    expect(find.text('OpenCode Mobile'), findsNothing);
-    await tester.tap(find.byKey(const ValueKey('current-project-entry')));
-    await tester.pumpAndSettle();
-    expect(find.text('/tmp/runtime-probe'), findsNothing);
-    await tester.tap(find.text('Details'));
-    await tester.pumpAndSettle();
-    expect(find.text('/tmp/runtime-probe'), findsOneWidget);
-    expect(find.text('OpenCode Mobile'), findsNothing);
-    expect(controller.directory, '/tmp/runtime-probe');
-    expect(controller.locations, [
-      (directory: '/tmp/runtime-probe', workspace: null),
-    ]);
-  });
   group('slice-R13', () {
     testWidgets('no refresh in the top bar and no counts beside the labels; '
         'pulling down reloads every section', (tester) async {

@@ -19,14 +19,12 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/kit/kit_undo.dart';
-import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/ui/screens/review_workspace.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/widgets/default_notices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../tool/capture/fixtures.dart';
-import '../support/work_tab_fixture.dart';
 
 const _phone = Size(412, 915);
 const _wide = Size(1280, 800);
@@ -152,100 +150,6 @@ Future<void> _reviewShot(
   }
 }
 
-/// A fresh connection whose picked project really opens.
-class _OpeningController extends WorkController {
-  _OpeningController(super.store);
-
-  @override
-  Future<void> selectInitialLocation({
-    String? directory,
-    String? workspace,
-  }) async {
-    selected.add(directory);
-    this.directory = directory;
-    notifyListeners();
-  }
-}
-
-Future<void> _workShot(
-  WidgetTester tester, {
-  required bool light,
-  Size size = _phone,
-}) async {
-  _mockPlatform(tester);
-  tester.view.physicalSize = size;
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.reset);
-  debugDefaultTargetPlatformOverride = TargetPlatform.android;
-  // The profile row is saved, as the app's ProfileStore keeps it: the
-  // defaults store only speaks for a server that still exists.
-  SharedPreferences.setMockInitialValues({
-    'oc.profiles': jsonEncode([
-      {'id': 'phone'},
-    ]),
-  });
-  resetDefaultNoticesForTest();
-  final prefs = await SharedPreferences.getInstance();
-  final store = SeededProfileStore(
-    prefs: prefs,
-    seeded: [
-      ServerProfile(
-        id: 'phone',
-        name: 'This device (Termux)',
-        baseUrl: 'http://127.0.0.1:4096',
-      ),
-    ],
-  );
-  final controller = _OpeningController(store)
-    ..api = CaptureApi()
-    ..repository = (WorkRepository()
-      ..projects = const [
-        WorkspaceProject(
-          id: 'p-fh3',
-          name: 'FinanceHub3',
-          directory: workCurrent,
-          worktrees: [],
-          updatedAt: 3,
-        ),
-      ])
-    ..status = StreamStatus.connected
-    ..directory = null
-    ..sessionsById = {
-      'a': workSession('a', 'Fix the checkout test', ago: workMinute),
-      'b': workSession('b', 'Explain the ledger', ago: 9 * workMinute),
-    };
-  final boundary = GlobalKey();
-  try {
-    await tester.pumpWidget(
-      captureApp(
-        home: const HomeScreen(initialTab: 0),
-        boundaryKey: boundary,
-        controller: controller,
-        light: light,
-      ),
-    );
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-    await tester.pump(const Duration(seconds: 1));
-    expect(tester.takeException(), isNull);
-    // The shot is about the notice: it must be on screen.
-    expect(
-      find.textContaining('the only project on this server'),
-      findsOneWidget,
-    );
-    await expectLater(
-      find.byKey(boundary),
-      matchesGoldenFile('goldens/${_name('work_project', size, light)}.png'),
-    );
-  } finally {
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(KitUndo.window);
-    controller.dispose();
-    debugDefaultTargetPlatformOverride = null;
-  }
-}
-
 class _Api extends CaptureApi {
   @override
   ServerCapabilities get capabilities => ServerCapabilities.allV1;
@@ -341,11 +245,6 @@ void main() {
         tester,
       ) async {
         await _reviewShot(tester, light: light, size: size);
-      });
-      testWidgets('Work opened the only project · $where · $mode', (
-        tester,
-      ) async {
-        await _workShot(tester, light: light, size: size);
       });
       testWidgets('Settings names the default model · $where · $mode', (
         tester,

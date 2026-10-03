@@ -325,35 +325,6 @@ void main() {
     await _close(tester);
   });
 
-  testWidgets('connected: Work keeps the titles until the first page, then a '
-      'fresh empty list replaces them', (tester) async {
-    await _seed();
-    final h = await _open(tester);
-    h.api.healthResult.complete(Health(healthy: true));
-    await tester.pump();
-    await tester.pump();
-    h.streams.single.connected();
-    await tester.pump();
-    await tester.pump();
-    expect(find.byType(HomeScreen), findsOneWidget);
-    // The first page is still on its way: Work shows the same titles, not
-    // skeleton rows, and no live row claims to exist yet.
-    expect(find.text(_titles.first), findsOneWidget);
-    expect(find.byKey(const ValueKey('kit-skeleton-rows')), findsNothing);
-    expect(h.controller().sessionsById, isEmpty);
-    // Lazy destinations: Settings did not run its own health check.
-    expect(h.api.healthChecksAfterFirst, 0);
-
-    h.api.firstPage.complete(const ServerPage(items: []));
-    await tester.pump();
-    await tester.pump();
-    for (final title in _titles) {
-      expect(find.text(title), findsNothing, reason: title);
-    }
-    expect(find.byType(KitLastKnown), findsNothing);
-    await _close(tester);
-  });
-
   testWidgets('titles saved for another project never show', (tester) async {
     await _seed(directory: '/elsewhere');
     await _open(tester);

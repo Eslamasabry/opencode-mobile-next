@@ -1571,14 +1571,6 @@
           "element": "team-board-move-open"
         },
         {
-          "page": "workspace",
-          "element": "workspace-team-task-row"
-        },
-        {
-          "page": "workspace",
-          "element": "workspace-new-session"
-        },
-        {
           "page": "team-home",
           "element": "team-home-runs-row"
         },

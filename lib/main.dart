@@ -52,7 +52,8 @@ import 'ui/desktop/desktop_interaction.dart';
 import 'ui/desktop/shortcuts.dart';
 import 'ui/kit/kit.dart';
 import 'ui/theme_packs.dart';
-import 'ui/navigation/attention_landing.dart' show chatLandingPage;
+import 'ui/navigation/attention_landing.dart'
+    show chatLandingPage, chatLandingRoute;
 import 'ui/navigation/chat_route.dart';
 import 'ui/screens/settings_screen.dart';
 import 'ui/widgets/product_states.dart' show productErrorText;
@@ -66,7 +67,6 @@ import 'ui/screens/about_screen.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/servers_screen.dart';
 import 'ui/screens/chat_screen.dart';
-import 'ui/screens/activity_screen.dart';
 import 'ui/screens/team/project_destination.dart';
 import 'ui/screens/team_conversation/team_conversation.dart'
     show TeamConversation;

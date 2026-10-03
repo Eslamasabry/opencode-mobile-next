@@ -26,7 +26,6 @@ import 'package:opencode_mobile/state/termux_host_setup.dart'
     show TermuxHostJob;
 import 'package:opencode_mobile/state/termux_running_server.dart';
 import 'package:opencode_mobile/termux/bridge.dart' show TermuxRuntime;
-import 'package:opencode_mobile/termux/processes.dart';
 import 'package:opencode_mobile/ui/screens/development_services_screen.dart';
 import 'package:opencode_mobile/ui/screens/local_agent_screen.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_customize_sheet.dart';
@@ -35,9 +34,7 @@ import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/ui/screens/termux_processes_screen.dart';
 import 'package:opencode_mobile/ui/screens/termux_storage_screen.dart';
 import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:opencode_mobile/ui/widgets/setup_terminal.dart';
-import 'package:opencode_mobile/ui/widgets/termux_phone_tools.dart';
 
 import '../../../../test/support/development_service_fakes.dart';
 import '../../../../test/support/phone_setup_scenes.dart';
@@ -794,27 +791,6 @@ final hTermuxArea = CensusArea(
         kit.expectVisible(
           find.byKey(const ValueKey('termux-running-server-start')),
         );
-      },
-    ),
-    CensusShot(
-      'embedded-termux-attention-line',
-      note:
-          'Host: Work. An orphaned MCP helper has used an hour of CPU (the '
-          'scan is faked through WorkspaceScreen.debugRunawayWatcher).',
-      (kit) async {
-        final report = TermuxProcessReport.parse(sampleProcessesJson());
-        WorkspaceScreen.debugRunawayWatcher = (context, builder) =>
-            TermuxRunawayWatcher(builder: builder, scan: () async => report);
-        kit.onDispose(() {
-          WorkspaceScreen.debugRunawayWatcher = null;
-          TermuxRunawayWatcher.resetDismissedForTesting();
-        });
-        final controller = await kit.connected();
-        await kit.pumpApp(
-          Scaffold(body: WorkspaceScreen(controller: controller)),
-          controller: controller,
-        );
-        kit.expectVisible(find.byKey(const ValueKey('work-status-runaway')));
       },
     ),
     CensusShot(

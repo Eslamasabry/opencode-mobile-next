@@ -230,13 +230,13 @@
     },
     {
       "id": "home-shell",
-      "title": "{server name} · Work / Inbox / Project / Settings",
+      "title": "{server name} · Chats / Files / Settings",
       "kind": "screen",
       "file": "lib/ui/screens/home_screen.dart",
       "widget": "HomeScreen",
       "presentedBy": [],
       "line": 25,
-      "purpose": "Main product shell for a connected server: app bar whose server name and status open the server switcher, current tab title, connection banner, and four retained root destinations, one per noun (Work, Inbox, Project, Settings), shown as a bottom glass dock (<760dp) or a NavigationRail (>=760dp).",
+      "purpose": "Main product shell for a connected server: top controls whose server name and status open the server switcher, and three root destinations (Chats, Files, Settings) shown as a bottom glass dock (<760dp), a rail or the PC sidebar. Chats carries the single pending badge; Files is absent when the server offers no project tools.",
       "reachedFrom": [
         {
           "page": "system",
@@ -269,48 +269,35 @@
       ],
       "gates": [
         "named route '/home' is ungated; via '/' requires conn.profile != null && conn.hasConnectedServer",
-        "cold start (HomeScreen.initialTab == null): opens on Inbox when conn.unifiedAttentionCount > 0 once the first read of pending permissions, questions and forms has settled, otherwise Work; decided once, and a tab the person picks first is final"
+        "cold start (HomeScreen.initialTab == null) opens on Chats; a notification, the Quick Settings tile, a widget or a shortcut that used to open the Inbox asks for Chats with the Needs you or Running filter (OpenChatsIntent / HomeScreen.initialChatFilter)"
       ],
       "elements": [
         {
-          "id": "home-shell-tab-workspace",
+          "id": "home-shell-tab-chats",
           "type": "tab",
-          "label": "Work",
-          "key": null,
+          "label": "Chats",
+          "key": "home-shell-tab-chats",
           "line": 180,
           "action": "navigate",
-          "target": "workspace",
-          "targetWidget": "WorkspaceScreen",
-          "effect": "_selectTab(_workTab): shows WorkspaceScreen(controller: conn) in the RetainedTabView. Rendered as NavigationBar destination (<760dp wide, keyboard closed) or NavigationRail destination (>=760dp, extended at >=1040dp).",
+          "target": "chats-home",
+          "targetWidget": "ChatsHomeScreen",
+          "effect": "_selectTab(_chatsTab): shows ChatsHomeScreen. OpenChatsIntent re-creates it on a Needs you or Running filter. The dock icon carries the pending badge (conn.unifiedAttentionCount) when > 0.",
           "gates": [],
           "destructive": false
         },
         {
           "id": "home-shell-tab-files",
           "type": "tab",
-          "label": "Project",
-          "key": null,
+          "label": "Files",
+          "key": "home-shell-tab-files",
           "line": 200,
           "action": "navigate",
           "target": "project-hub",
           "targetWidget": "ProjectHub",
-          "effect": "_selectTab(_projectTab): shows ProjectHub(controller, focusSearchSignal: _findInFiles, backController: _projectBack). _safeTab falls back to Work when the server offers no project tool.",
+          "effect": "_selectTab(_filesTab): shows ProjectHub (the Files tab: title, project chip, tools). _safeTab falls back to Chats when the server offers no project tool.",
           "gates": [
             "ProjectHub.isAvailable(conn.capabilities): fileBrowsing || terminal || projectManagement (destination hidden and body replaced by SizedBox.shrink otherwise, e.g. Codex and Paseo)"
           ],
-          "destructive": false
-        },
-        {
-          "id": "home-shell-tab-activity",
-          "type": "tab",
-          "label": "Inbox",
-          "key": "activity-pending-badge",
-          "line": 475,
-          "action": "navigate",
-          "target": "activity",
-          "targetWidget": "ActivityScreen",
-          "effect": "_selectTab(_inboxTab): shows ActivityScreen(controller: conn, embedded: true). The icon carries Badge key 'activity-pending-badge' with conn.unifiedAttentionCount (permissions, questions, forms, AI Team gates, other servers' pending counts) when > 0; no badge at zero.",
-          "gates": [],
           "destructive": false
         },
         {
@@ -335,20 +322,20 @@
           "action": "other",
           "target": null,
           "targetWidget": null,
-          "effect": "_onRootPop: on Project, ProjectHubBackController.handleBack() first unwinds Files (keyboard, search, folder) and then returns to the hub; any other tab returns to Work; on Work a second Back within 2 s calls SystemNavigator.pop().",
+          "effect": "_onRootPop: on Files, ProjectHubBackController.handleBack() first unwinds the file browser and then returns to the hub; any other tab returns to Chats; on Chats a second Back within 2 s calls SystemNavigator.pop().",
           "gates": [],
           "destructive": false
         },
         {
           "id": "home-shell-shortcut-destinations",
           "type": "gesture",
-          "label": "Ctrl/Cmd+1 … 4",
+          "label": "Ctrl/Cmd+1 … 3",
           "key": null,
           "line": 80,
           "action": "navigate",
           "target": null,
           "targetWidget": null,
-          "effect": "onAppShortcut(SelectDestinationIntent): _selectTab(_safeTab(index, conn.capabilities)); the index is the visible position (1 Work, 2 Inbox, 3 Project, 4 Settings).",
+          "effect": "onAppShortcut(SelectDestinationIntent): _selectTab(_safeTab(index, conn.capabilities)); the index is the visible position (1 Chats, 2 Files, 3 Settings).",
           "gates": [
             "desktopInteractions (AppShortcuts only installed on desktop)",
             "HomeScreen route isCurrent"
@@ -783,33 +770,8 @@
       "widget": "ActivityScreen",
       "presentedBy": [],
       "line": 48,
-      "purpose": "Single cross-conversation inbox in one order (UX plan 5.7): Waiting on you (AI Team gates and blocked agents, permissions, questions, forms, server requests, other servers' check-ins), then Running, then Finished (completion digests). Within a kind the request blocked longest comes first: AI Team rows by createdAt, the app's own requests in arrival order because they carry no time. Hosted as the Inbox root tab (embedded: true, no own Scaffold) or pushed with its own app bar.",
-      "reachedFrom": [
-        {
-          "page": "home-shell",
-          "element": "home-shell-tab-activity"
-        },
-        {
-          "page": "system",
-          "element": null,
-          "trigger": "named route '/activity' and legacy '/requests' (main.dart:1235-1236); no in-app pushNamed caller found"
-        },
-        {
-          "page": "system",
-          "element": null,
-          "trigger": "Quick Settings tile / LaunchAction.activity -> _openActivityForLaunch pushes ActivityScreen with route name '/activity/launch' (main.dart:645-663); without a saved profile opens '/servers' instead"
-        },
-        {
-          "page": "system",
-          "element": null,
-          "trigger": "notification tap, CodingAlertKind.question -> ActivityScreen(initialQuestionSessionID) which auto-opens showQuestionSheet (main.dart:1033-1041)"
-        },
-        {
-          "page": "system",
-          "element": null,
-          "trigger": "AI Team notification or opencode-mobile://team link, TeamLinkKind.gate -> ActivityScreen(initialTeamGateId) which auto-opens showGateSheet; TeamLinkKind.run without orchestration -> plain ActivityScreen (main.dart:877-897)"
-        }
-      ],
+      "purpose": "(Retired as a tab.) Single cross-conversation inbox in one order (UX plan 5.7): Waiting on you (AI Team gates and blocked agents, permissions, questions, forms, server requests, other servers' check-ins), then Running, then Finished (completion digests). Within a kind the request blocked longest comes first: AI Team rows by createdAt, the app's own requests in arrival order because they carry no time. Hosted as the Inbox root tab (embedded: true, no own Scaffold) or pushed with its own app bar. Chats absorbs the Needs you and Running lists; this screen is kept, unreachable, until its digest and automatic-acts sections move.",
+      "reachedFrom": [],
       "gates": [],
       "elements": [
         {
@@ -1198,13 +1160,6 @@
           "widget": "ChatScreen._showQuestionSheet",
           "file": "lib/ui/screens/chat_screen.dart",
           "line": 4514
-        },
-        {
-          "page": "?",
-          "element": null,
-          "widget": "ReturnBriefPanel",
-          "file": "lib/ui/widgets/return_brief_panel.dart",
-          "line": 69
         }
       ],
       "gates": [
@@ -2298,7 +2253,6 @@
       ],
       "embeddedIn": [
         "TerminalPage (terminal_screen.dart:493)",
-        "WorkspaceScreen (workspace_screen.dart:1299,1568)",
         "WorktreesScreen (worktrees_screen.dart:750)",
         "FilesScreen (files_screen.dart:1040)",
         "MessageView (chat/message_view.dart:1616)",

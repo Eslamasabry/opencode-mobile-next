@@ -14,18 +14,14 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/interaction_defaults.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
-import 'package:opencode_mobile/ui/kit/kit_bidi.dart';
-import 'package:opencode_mobile/ui/kit/kit_undo.dart';
 import 'package:opencode_mobile/ui/screens/project_folder_actions.dart';
 import 'package:opencode_mobile/ui/screens/review_workspace.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:opencode_mobile/ui/widgets/default_notices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../tool/capture/fixtures.dart'
-    show CaptureApi, CaptureController, SeededProfileStore, captureApp;
-import '../support/work_tab_fixture.dart';
+    show CaptureApi, CaptureController, SeededProfileStore;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -88,69 +84,6 @@ Future<void> _pumpReview(
 Finder _header(String path) => find.byKey(ValueKey('review-file-header-$path'));
 
 final _reviewNotice = find.byKey(const Key('review-default-scope'));
-
-/// Work's controller where opening the project it picked really opens it.
-class _OpeningController extends WorkController {
-  _OpeningController(super.store);
-
-  @override
-  Future<void> selectInitialLocation({
-    String? directory,
-    String? workspace,
-  }) async {
-    selected.add(directory);
-    this.directory = directory;
-    notifyListeners();
-  }
-}
-
-Future<_OpeningController> _freshConnection(
-  List<WorkspaceProject> projects,
-) async {
-  final prefs = await SharedPreferences.getInstance();
-  final store = SeededProfileStore(
-    prefs: prefs,
-    seeded: [
-      ServerProfile(
-        id: 'phone',
-        name: 'Laptop',
-        baseUrl: 'http://127.0.0.1:4096',
-      ),
-    ],
-  );
-  return _OpeningController(store)
-    ..api = CaptureApi()
-    ..repository = (WorkRepository()..projects = projects)
-    ..status = StreamStatus.connected
-    ..directory = null;
-}
-
-Future<void> _pumpWork(WidgetTester tester, WorkController controller) async {
-  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-    const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
-    (call) async => call.method == 'readAll' ? <String, String>{} : null,
-  );
-  tester.view.physicalSize = const Size(412, 915);
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.reset);
-  await tester.pumpWidget(
-    captureApp(
-      home: Scaffold(body: WorkspaceScreen(controller: controller)),
-      boundaryKey: GlobalKey(),
-      controller: controller,
-    ),
-  );
-  for (var i = 0; i < 8; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
-}
-
-Future<void> _disposeWork(WidgetTester tester) async {
-  await tester.pumpWidget(const SizedBox.shrink());
-  await tester.pump(KitUndo.window);
-}
-
-final _projectNotice = find.byKey(const ValueKey('work-default-project'));
 
 void main() {
   setUp(() {
@@ -245,58 +178,6 @@ void main() {
       await _pumpReview(tester, session: const [], workingTree: const []);
       expect(find.byKey(const Key('review-empty')), findsOneWidget);
       expect(_reviewNotice, findsNothing);
-    });
-  });
-
-  group('Work opens the knowable project', () {
-    testWidgets('the only project opens by itself and says so once', (
-      tester,
-    ) async {
-      final controller = await _freshConnection([
-        _project('p1', '/root/projects/shop'),
-      ]);
-      await _pumpWork(tester, controller);
-      expect(controller.selected, ['/root/projects/shop']);
-      expect(
-        find.text(_en.defaultProjectOnlyNotice(KitBidi.auto('shop'))),
-        findsOneWidget,
-      );
-      // No other project to offer.
-      expect(find.text(_en.defaultProjectChange), findsNothing);
-      await _disposeWork(tester);
-
-      // The next fresh connection to the same server: opened, not said.
-      final again = await _freshConnection([
-        _project('p1', '/root/projects/shop'),
-      ]);
-      await _pumpWork(tester, again);
-      expect(again.selected, ['/root/projects/shop']);
-      expect(_projectNotice, findsNothing);
-      await _disposeWork(tester);
-    });
-
-    testWidgets('of several, the one worked on most recently', (tester) async {
-      final controller = await _freshConnection([
-        _project('old', '/root/projects/old', updatedAt: 1),
-        _project('new', '/root/projects/new', updatedAt: 9),
-      ]);
-      await _pumpWork(tester, controller);
-      expect(controller.selected, ['/root/projects/new']);
-      expect(
-        find.text(_en.defaultProjectLastUsedNotice(KitBidi.auto('new'))),
-        findsOneWidget,
-      );
-      expect(find.text(_en.defaultProjectChange), findsOneWidget);
-      await _disposeWork(tester);
-    });
-
-    testWidgets('a restored project is the person\'s own: nothing said', (
-      tester,
-    ) async {
-      final controller = await workController();
-      await _pumpWork(tester, controller);
-      expect(_projectNotice, findsNothing);
-      await _disposeWork(tester);
     });
   });
 

@@ -20,7 +20,6 @@ import 'package:opencode_mobile/ui/kit/kit.dart'
     show KitAction, KitButton, KitNotice;
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/review_workspace.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Api extends OpenCodeApi with CompleteMessageHistory {
@@ -579,105 +578,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(_nudge(NudgeId.compact), findsNothing);
       expect(unsupported.nudges.wasShown(NudgeId.compact), isFalse);
-    });
-  });
-
-  group('pin conversations', () {
-    Session session(String id, String directory) => Session(
-      id: id,
-      title: id,
-      directory: directory,
-      time: SessionTime(created: 1, updated: 2),
-    );
-
-    Widget work(ConnectionController controller) => MaterialApp(
-      theme: AppTheme.light(),
-      home: Scaffold(body: WorkspaceScreen(controller: controller)),
-    );
-
-    testWidgets('the second project used brings the tip to Work', (
-      tester,
-    ) async {
-      final controller = await _controller(_Api());
-      addTearDown(controller.dispose);
-      controller
-        ..directory = '/work/app'
-        ..sessionsById = {
-          'one': session('one', '/work/app'),
-          'two': session('two', '/work/site'),
-        };
-      await tester.pumpWidget(work(controller));
-      await tester.pumpAndSettle();
-      expect(controller.nudges.projectsUsed, 1);
-      expect(_nudge(NudgeId.pinConversations), findsNothing);
-
-      controller.directory = '/work/site';
-      await tester.pumpWidget(work(controller));
-      await tester.pumpAndSettle();
-      expect(controller.nudges.projectsUsed, 2);
-      expect(_nudge(NudgeId.pinConversations), findsOneWidget);
-      expect(
-        find.text(
-          'Pin conversations you return to from their menu; they stay at the '
-          'top of Work.',
-        ),
-        findsOneWidget,
-      );
-
-      await tester.tap(_dismiss(NudgeId.pinConversations));
-      await tester.pumpAndSettle();
-      expect(_nudge(NudgeId.pinConversations), findsNothing);
-
-      controller.directory = '/work/app';
-      await tester.pumpWidget(work(controller));
-      await tester.pumpAndSettle();
-      expect(_nudge(NudgeId.pinConversations), findsNothing);
-    });
-
-    testWidgets('Got it closes it too', (tester) async {
-      final controller = await _controller(_Api());
-      addTearDown(controller.dispose);
-      await controller.nudges.noteProjectUsed(
-        profileID: 'server-a',
-        directory: '/work/earlier',
-      );
-      controller
-        ..directory = '/work/app'
-        ..sessionsById = {'one': session('one', '/work/app')};
-      await tester.pumpWidget(work(controller));
-      await tester.pumpAndSettle();
-      expect(_nudge(NudgeId.pinConversations), findsOneWidget);
-      await tester.tap(_action(NudgeId.pinConversations));
-      await tester.pumpAndSettle();
-      expect(_nudge(NudgeId.pinConversations), findsNothing);
-      expect(
-        controller.nudges.record(NudgeId.pinConversations)?.dismissed,
-        isTrue,
-      );
-    });
-
-    testWidgets('someone who already pins here is not told', (tester) async {
-      final controller = await _controller(_Api());
-      addTearDown(controller.dispose);
-      await controller.nudges.noteProjectUsed(
-        profileID: 'server-a',
-        directory: '/work/earlier',
-      );
-      controller
-        ..directory = '/work/app'
-        ..sessionsById = {
-          'one': session('one', '/work/app'),
-          'two': session('two', '/work/app'),
-        };
-      await controller.setSessionPinned(
-        'one',
-        true,
-        locationRevision: controller.locationRevision,
-      );
-      await tester.pumpWidget(work(controller));
-      await tester.pumpAndSettle();
-      expect(_nudge(NudgeId.pinConversations), findsNothing);
-      expect(controller.nudges.wasShown(NudgeId.pinConversations), isFalse);
     });
   });
 

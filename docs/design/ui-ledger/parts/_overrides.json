@@ -3,7 +3,7 @@
     "servers",
     "root-connecting",
     "home-shell",
-    "workspace",
+    "chats-home",
     "activity",
     "project-hub",
     "settings"
@@ -85,11 +85,6 @@
       "from": "servers",
       "to": "servers-welcome",
       "note": "ServersScreen body while the profile store is empty"
-    },
-    {
-      "from": "workspace",
-      "to": "workspace-folder-chooser",
-      "note": "replaces the Workspace body while controller.workspaceChoiceRequired"
     }
   ]
 }

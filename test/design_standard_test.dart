@@ -48,27 +48,6 @@ const _migrated = <String, List<String>>{
     'connection_starting',
     'connection_failed',
   ],
-  // §9 step 2: the Work tab and its own parts.
-  'lib/ui/screens/workspace_screen.dart': [
-    'work_restoring',
-    'work_loading',
-    'work_empty',
-    'work_loaded',
-    'work_not_answering',
-    'work_runaway',
-    'work_chooser',
-    // Step 2 leftovers: conversation rows on KitRow, the parts below.
-    'work_team',
-    'work_nudge',
-    'work_other_servers',
-  ],
-  // The Work tab's part files (split from workspace_screen.dart).
-  'lib/ui/screens/workspace/workspace_actions.dart': ['work_loaded'],
-  'lib/ui/screens/workspace/workspace_build.dart': ['work_loaded'],
-  'lib/ui/screens/workspace/workspace_load.dart': ['work_loaded'],
-  'lib/ui/screens/workspace/workspace_sheets.dart': ['work_loaded'],
-  'lib/ui/screens/workspace/workspace_widgets.dart': ['work_loaded'],
-  'lib/ui/widgets/other_projects_panel.dart': ['work_loaded'],
   'lib/ui/widgets/work_status_line.dart': [
     'work_not_answering',
     'work_runaway',
@@ -152,9 +131,9 @@ const _migrated = <String, List<String>>{
     'team_run_overview',
   ],
   // Finding the AI Team while it is off (docs/qa/team-discover-2026-09-25):
-  // Work without the offer (it moved to Settings › AI Team), and the intro
+  // Settings' AI Team row, and the intro
   // (test/goldens/team_discover_golden_test.dart).
-  'lib/ui/widgets/team_discover.dart': ['team_discover_work'],
+  'lib/ui/widgets/team_discover.dart': ['team_discover_settings'],
   'lib/ui/screens/team/team_intro_screen.dart': [
     'team_intro_phone',
     'team_intro_computer',
@@ -284,12 +263,7 @@ const _retired = <String, Map<String, String>>{
 };
 
 /// file -> (pattern, reason) exceptions. Keep it short.
-const _allowed = <String, Map<String, String>>{
-  'lib/ui/screens/workspace_screen.dart': {
-    // Not raw progress: the conversation row's breathing "working" dot is a
-    // state mark, and pull to refresh is the kit's (KitRefresh).
-  },
-};
+const _allowed = <String, Map<String, String>>{};
 
 /// A pattern of the design standard itself (§8), counted in every migrated
 /// file.
@@ -358,17 +332,10 @@ const _grandfathered = <String>{
   'lib/ui/screens/team/team_needs_you.dart',
   'lib/ui/screens/team/team_states.dart',
   'lib/ui/screens/team/work_sheet.dart',
-  'lib/ui/screens/workspace_screen.dart',
-  'lib/ui/screens/workspace/workspace_actions.dart',
-  'lib/ui/screens/workspace/workspace_build.dart',
-  'lib/ui/screens/workspace/workspace_load.dart',
-  'lib/ui/screens/workspace/workspace_sheets.dart',
-  'lib/ui/screens/workspace/workspace_widgets.dart',
   'lib/ui/widgets/connection_status_banner.dart',
   'lib/ui/widgets/folder_browser.dart',
   'lib/ui/widgets/local_server_row.dart',
   'lib/ui/widgets/managed_server_recovery_option.dart',
-  'lib/ui/widgets/other_projects_panel.dart',
   'lib/ui/widgets/other_servers_panel.dart',
   'lib/ui/widgets/phone_server_card.dart',
   'lib/ui/widgets/saved_server_connection_card.dart',

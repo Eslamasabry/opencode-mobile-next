@@ -1,10 +1,7 @@
 // Interrupting actions ask before they act (UX plan rule 6). Each test proves
 // both halves: nothing happens when the sheet is cancelled or dismissed, and
 // the action runs once it is confirmed.
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart' show kSecondaryMouseButton;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
@@ -16,7 +13,6 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Api extends OpenCodeApi {
@@ -241,101 +237,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(controller.disconnects, 1);
       expect(find.text('servers-route'), findsOneWidget);
-    });
-  });
-
-  group('Workspace Stop sharing', () {
-    final shared = Session(
-      id: 's1',
-      title: 'Ship it',
-      shareUrl: 'https://share.example/s1',
-      time: SessionTime(created: 1),
-    );
-
-    Future<_Repository> pumpWorkspace(WidgetTester tester) async {
-      // The share flow reads the clipboard channel on some paths; keep it
-      // answered so nothing hangs.
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
-      addTearDown(
-        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(SystemChannels.platform, null),
-      );
-      final repository = _Repository();
-      final controller = await _controller(
-        sessions: [shared],
-        repository: repository,
-      );
-      controller.directory = '/tmp/p1';
-      addTearDown(controller.dispose);
-      await controller.refreshSessions();
-      await tester.pumpWidget(
-        _app(Scaffold(body: WorkspaceScreen(controller: controller))),
-      );
-      await tester.pumpAndSettle();
-      return repository;
-    }
-
-    Future<void> expectConfirmGates(
-      WidgetTester tester,
-      _Repository repository,
-      Future<void> Function() choose,
-    ) async {
-      await choose();
-      expect(
-        find.byKey(const ValueKey('stop-sharing-confirm-sheet')),
-        findsOneWidget,
-      );
-      expect(
-        find.textContaining('The link stops working for anyone who has it.'),
-        findsOneWidget,
-      );
-      await tester.tap(find.text('Keep sharing'));
-      await tester.pumpAndSettle();
-      expect(repository.unshared, isEmpty);
-
-      await choose();
-      await tester.tapAt(const Offset(10, 10));
-      await tester.pumpAndSettle();
-      expect(repository.unshared, isEmpty);
-
-      await choose();
-      await tester.tap(find.byKey(const ValueKey('confirm-stop-sharing')));
-      await tester.pumpAndSettle();
-      expect(repository.unshared, ['s1']);
-    }
-
-    testWidgets('session actions menu asks first', (tester) async {
-      final repository = await pumpWorkspace(tester);
-      await expectConfirmGates(tester, repository, () async {
-        await tester.longPress(find.byKey(const ValueKey('session-row-s1')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Stop sharing'));
-        await tester.pumpAndSettle();
-      });
-    });
-
-    testWidgets('desktop context menu asks first', (tester) async {
-      debugDefaultTargetPlatformOverride = TargetPlatform.linux;
-      try {
-        final repository = await pumpWorkspace(tester);
-        await expectConfirmGates(tester, repository, () async {
-          await tester.tapAt(
-            tester.getCenter(find.text('Ship it')),
-            buttons: kSecondaryMouseButton,
-          );
-          await tester.pumpAndSettle();
-          await tester.ensureVisible(
-            find.byKey(const ValueKey('session-menu-unshare')),
-          );
-          await tester.pumpAndSettle();
-          await tester.tap(find.byKey(const ValueKey('session-menu-unshare')));
-          await tester.pumpAndSettle();
-        });
-      } finally {
-        // flutter_test asserts no debug override outlives the test body.
-        debugDefaultTargetPlatformOverride = null;
-      }
     });
   });
 }

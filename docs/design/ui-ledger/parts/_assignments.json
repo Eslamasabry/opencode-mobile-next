@@ -61,7 +61,6 @@
     "lib/ui/widgets/completion_digest.dart"
   ],
   "e-workspace": [
-    "lib/ui/screens/workspace_screen.dart",
     "lib/ui/screens/projects_screen.dart",
     "lib/ui/screens/project_folder_actions.dart",
     "lib/ui/screens/project_health_screen.dart",

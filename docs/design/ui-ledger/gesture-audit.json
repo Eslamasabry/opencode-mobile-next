@@ -92,15 +92,6 @@
       "changed": false
     },
     {
-      "page": "workspace",
-      "element": "workspace-pull-refresh",
-      "gesture": "pull to refresh",
-      "action": "reload from the server",
-      "visibleEquivalent": "automatic load on open; 'Try again' on failure (lib/ui/screens/workspace/workspace_widgets.dart:505)",
-      "evidence": "lib/ui/screens/workspace/workspace_build.dart:278",
-      "changed": false
-    },
-    {
       "page": "worktrees",
       "element": "worktrees-pull-refresh",
       "gesture": "pull to refresh",
@@ -241,7 +232,7 @@
       "gesture": "keyboard shortcut: Ctrl/Cmd+K",
       "action": "open the command launcher",
       "visibleEquivalent": "listed in Keyboard shortcuts help ('Command launcher'); the help is itself a visible row in Settings",
-      "evidence": "lib/ui/desktop/shortcuts.dart:114",
+      "evidence": "lib/ui/desktop/shortcuts.dart:108",
       "changed": false
     },
     {
@@ -249,8 +240,8 @@
       "element": "global-shortcuts-new-session",
       "gesture": "keyboard shortcut: Ctrl/Cmd+N",
       "action": "start a new conversation",
-      "visibleEquivalent": "listed in Keyboard shortcuts help; Work has a visible new-conversation control (lib/ui/screens/workspace/workspace_widgets.dart:403)",
-      "evidence": "lib/ui/desktop/shortcuts.dart:115",
+      "visibleEquivalent": "listed in Keyboard shortcuts help; Chats has a visible New chat control",
+      "evidence": "lib/ui/desktop/shortcuts.dart:109",
       "changed": false
     },
     {
@@ -259,7 +250,7 @@
       "gesture": "keyboard shortcut: Ctrl/Cmd+,",
       "action": "open Settings",
       "visibleEquivalent": "listed in Keyboard shortcuts help; same destination as the visible Settings tab",
-      "evidence": "lib/ui/desktop/shortcuts.dart:118",
+      "evidence": "lib/ui/desktop/shortcuts.dart:111",
       "changed": false
     },
     {
@@ -268,7 +259,7 @@
       "gesture": "keyboard shortcut: Ctrl/Cmd+W",
       "action": "close the current screen (maybePop)",
       "visibleEquivalent": "listed in Keyboard shortcuts help; same as the visible app bar back button",
-      "evidence": "lib/ui/desktop/shortcuts.dart:120",
+      "evidence": "lib/ui/desktop/shortcuts.dart:112",
       "changed": false
     },
     {
@@ -277,7 +268,7 @@
       "gesture": "keyboard shortcut: Ctrl/Cmd+/",
       "action": "open Keyboard shortcuts help",
       "visibleEquivalent": "listed in Keyboard shortcuts help; the visible 'Keyboard shortcuts' row in Settings calls the same showShortcutsHelp (lib/ui/screens/settings_screen.dart:586)",
-      "evidence": "lib/ui/desktop/shortcuts.dart:131",
+      "evidence": "lib/ui/desktop/shortcuts.dart:113",
       "changed": false
     },
     {
@@ -286,7 +277,7 @@
       "gesture": "keyboard shortcut: Ctrl/Cmd+F",
       "action": "focus the find field of the visible surface",
       "visibleEquivalent": "listed in Keyboard shortcuts help; the surfaces that claim it show a visible find control (Files search field, conversation menu 'Find')",
-      "evidence": "lib/ui/desktop/shortcuts.dart:116",
+      "evidence": "lib/ui/desktop/shortcuts.dart:110",
       "changed": false
     },
     {
@@ -295,7 +286,7 @@
       "gesture": "keyboard shortcut: Ctrl/Cmd+1..4",
       "action": "select a primary tab",
       "visibleEquivalent": "listed in Keyboard shortcuts help; same as tapping the visible navigation tabs",
-      "evidence": "lib/ui/desktop/shortcuts.dart:117",
+      "evidence": "lib/ui/desktop/shortcuts.dart:115",
       "changed": false
     },
     {
@@ -303,8 +294,8 @@
       "element": "global-shortcuts-terminal",
       "gesture": "keyboard shortcut: Ctrl/Cmd+`",
       "action": "open the terminal",
-      "visibleEquivalent": "listed in Keyboard shortcuts help; the Project tab has a visible Terminal row (lib/ui/screens/project_hub_screen.dart:308)",
-      "evidence": "lib/ui/desktop/shortcuts.dart:119",
+      "visibleEquivalent": "listed in Keyboard shortcuts help; the Files tab has a visible Terminal row (lib/ui/screens/project_hub_screen.dart:642)",
+      "evidence": "lib/ui/desktop/shortcuts.dart:114",
       "changed": false
     },
     {
@@ -322,7 +313,7 @@
       "gesture": "keyboard shortcut: Ctrl/Cmd+1..4",
       "action": "select a primary tab",
       "visibleEquivalent": "listed in Keyboard shortcuts help; same _selectTab as tapping the visible navigation tabs",
-      "evidence": "lib/ui/screens/home_screen.dart:80",
+      "evidence": "lib/ui/screens/home_screen.dart:131",
       "changed": false
     },
     {
@@ -331,7 +322,7 @@
       "gesture": "keyboard shortcut: Ctrl/Cmd+F",
       "action": "focus the Files search field on the Project tab",
       "visibleEquivalent": "listed in Keyboard shortcuts help; the Files search field is always visible (lib/ui/screens/files/files_body.dart:85)",
-      "evidence": "lib/ui/screens/home_screen.dart:85",
+      "evidence": "lib/ui/screens/home_screen.dart:146",
       "changed": false
     },
     {
@@ -339,8 +330,8 @@
       "element": "home-shell-shortcut-terminal",
       "gesture": "keyboard shortcut: Ctrl/Cmd+`",
       "action": "open the terminal",
-      "visibleEquivalent": "listed in Keyboard shortcuts help; the Project tab has a visible Terminal row (lib/ui/screens/project_hub_screen.dart:308)",
-      "evidence": "lib/ui/screens/home_screen.dart:90",
+      "visibleEquivalent": "listed in Keyboard shortcuts help; the Files tab has a visible Terminal row (lib/ui/screens/project_hub_screen.dart:642)",
+      "evidence": "lib/ui/screens/home_screen.dart:163",
       "changed": false
     },
     {
@@ -385,7 +376,7 @@
       "gesture": "keyboard shortcut: Ctrl+K",
       "action": "open the conversation command launcher",
       "visibleEquivalent": "visible 'Commands' row in the composer tools sheet; listed in Keyboard shortcuts help",
-      "evidence": "lib/ui/screens/chat_screen.dart:577",
+      "evidence": "lib/ui/screens/chat_screen.dart:587",
       "changed": false
     },
     {
@@ -515,24 +506,6 @@
       "changed": false
     },
     {
-      "page": "workspace",
-      "element": "workspace-session-row-swipe",
-      "gesture": "swipe end-to-start on a conversation row",
-      "action": "archive (or delete where the server cannot archive)",
-      "visibleEquivalent": "the row's visible trailing overflow menu has 'Archive' and 'Delete'",
-      "evidence": "lib/ui/screens/workspace/workspace_sheets.dart:260",
-      "changed": false
-    },
-    {
-      "page": "workspace",
-      "element": "workspace-session-context-menu",
-      "gesture": "right-click on a conversation row (desktop)",
-      "action": "open the row context menu",
-      "visibleEquivalent": "same entries as the row's visible trailing overflow menu",
-      "evidence": "lib/ui/screens/workspace/workspace_widgets.dart:223",
-      "changed": false
-    },
-    {
       "page": "files",
       "element": "files-row-long-press",
       "gesture": "long-press on a file row",
@@ -609,8 +582,8 @@
       "element": "home-shell-back-gesture",
       "gesture": "system back",
       "action": "return to Work, then double-back exit",
-      "visibleEquivalent": "system navigation; the visible navigation tabs select Work the same way",
-      "evidence": "lib/ui/screens/home_screen.dart:322",
+      "visibleEquivalent": "system navigation; the visible navigation tabs select Chats the same way",
+      "evidence": "lib/ui/screens/home_screen.dart:500",
       "changed": false
     },
     {
@@ -655,7 +628,7 @@
       "gesture": "system back",
       "action": "leave Files back to the Project hub",
       "visibleEquivalent": "visible back icon button on the Files header (project-hub-files-back)",
-      "evidence": "lib/ui/screens/project_hub_screen.dart:234",
+      "evidence": "lib/ui/screens/project_hub_screen.dart:366",
       "changed": false
     },
     {

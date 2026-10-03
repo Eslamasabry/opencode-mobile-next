@@ -1,14 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/material.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/session_pins.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
@@ -28,23 +26,6 @@ class _Controller extends ConnectionController {
   @override
   Future<ServerOperationsGateway?> prepareActionRepository() async =>
       repository;
-}
-
-class _Repo extends ProductRepository {
-  @override
-  Future<List<WorkspaceProject>> listProjects() async => [
-    const WorkspaceProject(
-      id: 'p',
-      name: 'Project',
-      directory: '/one',
-      worktrees: [],
-      updatedAt: 1,
-    ),
-  ];
-  @override
-  Future<List<WorkspaceInfo>> listWorkspaces() async => [];
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _Api extends OpenCodeApi {
@@ -205,44 +186,4 @@ void main() {
       expect(c.sortedSessions().first.id, 'old');
     },
   );
-
-  testWidgets('session menu pins a conversation and exposes Unpin', (
-    tester,
-  ) async {
-    final c = await controller();
-    c.repository = _Repo();
-    c.sessionsById.addAll({
-      'old': _session('old', 1),
-      'new': _session('new', 10),
-    });
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: WorkspaceScreen(controller: c)),
-      ),
-    );
-    await tester.pumpAndSettle();
-    // A row's actions are its long-press menu (KIT-28): no per-row ⋮.
-    await tester.longPress(find.text('old'));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Pin on this device'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Pin on this device'));
-    await tester.pumpAndSettle();
-    expect(c.isSessionPinned('old'), isTrue);
-    expect(c.sortedSessions().first.id, 'old');
-    expect(
-      tester.getTopLeft(find.text('old')).dy,
-      lessThan(tester.getTopLeft(find.text('new')).dy),
-    );
-    // One list: the pin leads it with its pin mark, under no Pinned header.
-    expect(find.text('Pinned'), findsNothing);
-    await tester.longPress(find.text('old'));
-    await tester.pumpAndSettle();
-    expect(find.text('Unpin'), findsOneWidget);
-    await tester.ensureVisible(find.text('Unpin'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Unpin'));
-    await tester.pumpAndSettle();
-    expect(c.isSessionPinned('old'), isFalse);
-  });
 }

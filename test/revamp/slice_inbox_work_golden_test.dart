@@ -1,8 +1,7 @@
 // Golden renders of slice-inbox-work (P4.2b + P5.5): the Inbox's one list
 // with the connected server's request, another server's request naming
-// its server, a failed run here, and the server whose checks are off; the
-// Work list's rows saying what each conversation is doing, live and then
-// last seen once the connection drops. Phone 412x915 and one wide window
+// its server, a failed run here, and the server whose checks are off.
+// Phone 412x915 and one wide window
 // (1280x800), with the app's real fonts at DPR 1.
 //
 // Regenerate deliberately:
@@ -22,14 +21,12 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profile_monitor.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/activity_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 
 import '../../tool/capture/fixtures.dart' show captureTheme, loadCaptureFonts;
 import '../support/profile_monitor_fixture.dart';
 import '../support/stash_memory_vault.dart';
 
 const _phone = Size(412, 915);
-const _evidence = bool.fromEnvironment('CAPTURE_EVIDENCE');
 const _wide = Size(1280, 800);
 
 String _name(String shot, Size size, bool light) => [
@@ -248,7 +245,6 @@ void main() {
   });
 
   Widget inbox(_Controller c) => ActivityScreen(controller: c, embedded: true);
-  Widget work(_Controller c) => WorkspaceScreen(controller: c);
 
   testWidgets('inbox one list · phone dark', (tester) async {
     await _shot(tester, 'inbox_work_inbox', light: false, home: inbox);
@@ -260,34 +256,6 @@ void main() {
       light: true,
       size: _wide,
       home: inbox,
-    );
-  });
-  testWidgets('work rows live · phone dark', (tester) async {
-    await _shot(tester, 'inbox_work_work', light: false, home: work);
-  });
-  testWidgets('work rows live · wide light', (tester) async {
-    await _shot(
-      tester,
-      'inbox_work_work',
-      light: true,
-      size: _wide,
-      home: work,
-    );
-  });
-  // The "as of" time is the wall clock, so this shot is evidence only:
-  //   flutter test --update-goldens --dart-define=CAPTURE_EVIDENCE=true ...
-  testWidgets('work rows last seen · phone dark', skip: !_evidence, (
-    tester,
-  ) async {
-    await _shot(
-      tester,
-      'inbox_work_work_offline',
-      light: false,
-      home: work,
-      then: (c) async {
-        c.status = StreamStatus.reconnecting;
-        c.poke();
-      },
     );
   });
 }

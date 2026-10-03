@@ -4,14 +4,12 @@
 // empty home's drawing and the merged celebration's length; New
 // conversation's Solo · Team and the team's tasks in the Work tab's lists
 // (docs/design/team-conversation-2026-09-26.md).
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:opencode_mobile/domain/phone_project_engine.dart';
 import 'package:opencode_mobile/state/phone_team_setup.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:opencode_mobile/ui/screens/team_conversation/team_conversation.dart';
 import 'package:opencode_mobile/builtin/setup/components.dart';
 import 'package:opencode_mobile/builtin/setup/aiteam_scripts.dart'
     show AiTeamPins;
@@ -22,21 +20,16 @@ import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/builtin/team/builtin_team.dart';
 import 'package:opencode_mobile/domain/orchestration_gateway.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/orchestration/adapters/fixture/fixture_gateway.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/state/connection.dart';
-import 'package:opencode_mobile/state/orchestration.dart';
-import 'package:opencode_mobile/state/orchestration_store.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/termux/team_runtime.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
-import 'package:opencode_mobile/ui/screens/new_conversation_sheet.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/team/team_home_screen.dart';
 import 'package:opencode_mobile/ui/screens/team/team_settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/team/team_intro_screen.dart';
 import 'package:opencode_mobile/ui/screens/team/team_page.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:opencode_mobile/ui/widgets/builtin_team_section.dart';
 import 'package:opencode_mobile/ui/widgets/team_discover.dart';
 import 'package:opencode_mobile/ui/widgets/team_host_form.dart';
@@ -48,7 +41,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/fake_setup_engine.dart';
 import 'support/team_golden_fixture.dart';
-import 'support/work_tab_fixture.dart';
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -195,44 +187,6 @@ void _tallScreen(WidgetTester tester) {
   addTearDown(tester.view.reset);
 }
 
-String _fixturePath() {
-  var dir = Directory.current;
-  for (var i = 0; i < 5; i++) {
-    final candidate = Directory('${dir.path}/tool/qa/gascity_fixture');
-    if (candidate.existsSync()) return candidate.path;
-    dir = dir.parent;
-  }
-  throw StateError('tool/qa/gascity_fixture not found');
-}
-
-/// The recorded Gas City fixture as the Work tab's team.
-Future<OrchestrationController> _fixtureTeam() async {
-  final prefs = await SharedPreferences.getInstance();
-  final config = OrchestrationConfig(
-    provider: OrchestrationProvider.fixture,
-    url: _fixturePath(),
-    city: 'bright-lights',
-    hostMode: OrchestrationHostMode.computer,
-    enabledAt: DateTime.utc(2026, 9, 10),
-  );
-  final team = OrchestrationController(
-    profile: ServerProfile(
-      id: 'phone',
-      name: 'pop-os',
-      baseUrl: 'http://100.100.1.2:4096',
-      orchestration: config,
-    ),
-    config: config,
-    store: OrchestrationStore(prefs),
-    gatewayFactory: (_, _) => FixtureOrchestrationGateway(
-      fixturePath: _fixturePath(),
-      hostMode: OrchestrationHostMode.computer,
-    ),
-  );
-  await team.start();
-  return team;
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late _Probe probe;
@@ -245,144 +199,6 @@ void main() {
     teamHostProbe = defaultTeamHostProbe;
     debugPlatformCapabilities = null;
     debugBuiltinTeam = null;
-  });
-
-  group('the offer', () {
-    // A computer: the tests' platform is Android, where the fixture's
-    // 127.0.0.1:4096 would be the Termux server.
-    Future<WorkController> computer(WidgetTester tester) async {
-      _tallScreen(tester);
-      _mockChannels();
-      final controller = await workController(
-        name: 'pop-os',
-        baseUrl: 'http://100.100.1.2:4096',
-      );
-      addTearDown(controller.dispose);
-      return controller;
-    }
-
-    testWidgets('Work lists conversations only; the offer is not there', (
-      tester,
-    ) async {
-      // Owner rule R4 (2026-09-27): the AI Team is reached from Settings ›
-      // AI Team, not from a row among the person's conversations.
-      final controller = await computer(tester);
-      await tester.pumpWidget(
-        _app(Scaffold(body: WorkspaceScreen(controller: controller))),
-      );
-      await _settle(tester);
-      expect(_key('team-discover-open'), findsNothing);
-      expect(_key('team-discover-row'), findsNothing);
-      await tester.pumpWidget(const SizedBox.shrink());
-    });
-  });
-
-  group('New conversation: Solo · Team', () {
-    Future<WorkController> pumpWork(
-      WidgetTester tester, {
-      OrchestrationController? team,
-    }) async {
-      _tallScreen(tester);
-      _mockChannels();
-      final controller = await workController(
-        name: 'pop-os',
-        baseUrl: 'http://100.100.1.2:4096',
-      );
-      controller.team = team;
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(
-        _app(Scaffold(body: WorkspaceScreen(controller: controller))),
-      );
-      await _settle(tester);
-      return controller;
-    }
-
-    testWidgets('Team is offered in the New conversation chooser, remembered '
-        'per server, and with the team off it opens the team page, off', (
-      tester,
-    ) async {
-      final controller = await pumpWork(tester);
-      // One New conversation; how to start is asked by its chooser.
-      expect(_key('workspace-new-mode'), findsNothing);
-      expect(find.text(_en.workspaceNewSession), findsOneWidget);
-      await tester.tap(_key('workspace-new'));
-      await _settle(tester);
-      expect(_key('new-conversation-team'), findsOneWidget);
-      await tester.tap(_key('new-conversation-team'));
-      await _settle(tester);
-      expect(find.byType(TeamIntroScreen), findsOneWidget);
-      expect(
-        controller.store.prefs.getString(NewConversationMemory.key('phone')),
-        'team',
-      );
-      // Remembered: a fresh Work tab's chooser marks Team.
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pumpWidget(
-        _app(Scaffold(body: WorkspaceScreen(controller: controller))),
-      );
-      await _settle(tester);
-      await tester.tap(_key('workspace-new'));
-      await _settle(tester);
-      expect(
-        find.descendant(
-          of: _key('new-conversation-team'),
-          matching: find.textContaining(_en.newConversationLastUsed),
-        ),
-        findsOneWidget,
-      );
-      // Swept with the server.
-      expect(
-        controller.store.profileScopedPreferenceKeys('phone'),
-        contains(NewConversationMemory.key('phone')),
-      );
-      await tester.pumpWidget(const SizedBox.shrink());
-    });
-
-    testWidgets('with the team on: its tasks are in the lists with the '
-        'team mark, and Team starts a team task', (tester) async {
-      SharedPreferences.setMockInitialValues({});
-      final team = await _fixtureTeam();
-      addTearDown(team.dispose);
-      await pumpWork(tester, team: team);
-      // The recorded convoy waits for a worker: a running row in the one
-      // list (no Running section, no caption), marked.
-      expect(_key('workspace-running'), findsNothing);
-      expect(_key('workspace-conversations'), findsNothing);
-      expect(_key('team-work-task-oc-xru'), findsOneWidget);
-      expect(_key('team-work-task-mark-oc-xru'), findsOneWidget);
-      expect(
-        tester
-            .widget<Text>(_key('team-work-task-line-oc-xru'))
-            .textSpan!
-            .toPlainText(),
-        // The recorded convoy has waited for a worker for days, on an
-        // unpinned clock: its row says Stalled, the task's own P3.5
-        // evidence (slice-P5.5), as its conversation does.
-        startsWith('${_en.teamTaskMark} · ${_en.workStalled}'),
-      );
-      // No separate card and no door row: the team's page is reached from
-      // Settings (owner rule R4).
-      expect(_key('team-card'), findsNothing);
-      expect(_key('team-work-door'), findsNothing);
-      await tester.tap(_key('team-work-task-oc-xru'));
-      await _settle(tester);
-      // A team task opens as its conversation
-      // (docs/design/team-conversation-2026-09-26.md).
-      expect(find.byType(TeamConversationScreen), findsOneWidget);
-      await tester.pageBack();
-      await _settle(tester);
-      await tester.tap(_key('workspace-new'));
-      await _settle(tester);
-      expect(
-        find.text(_en.newConversationTeamDetail),
-        findsOneWidget,
-        reason: 'with the team on, Team says what it starts',
-      );
-      await tester.tap(_key('new-conversation-team'));
-      await _settle(tester);
-      expect(_key('team-start-run-sheet'), findsOneWidget);
-      await tester.pumpWidget(const SizedBox.shrink());
-    });
   });
 
   group('the intro', () {

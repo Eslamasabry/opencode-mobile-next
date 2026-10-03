@@ -320,12 +320,6 @@ const _verbatimOwnContent = <String, (int, String)>{
 /// copied. Each is for its owner to fix (drop `redact: false`, or split the
 /// person's text from the rest); the count only goes down.
 const _verbatimFindings = <String, (int, String)>{
-  'lib/ui/screens/workspace/workspace_sheets.dart': (
-    1,
-    'owner: coordinator (workspace page): the share link is a '
-        'server-issued URL, not the person\'s own text',
-  ),
-
   'lib/ui/screens/phone_setup/phone_setup_termux_screen.dart': (
     1,
     'owner: phone setup agent: copies the app-authored Termux setup '

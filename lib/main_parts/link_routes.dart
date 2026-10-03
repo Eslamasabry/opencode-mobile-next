@@ -238,9 +238,9 @@ extension _OcAppLinkRoutes on _OcAppState {
     _pushTeamDestination(navigator, link);
   }
 
-  /// Activity with the gate's sheet opening on top (it waits for the
+  /// The project page with the gate's sheet opening on top (it waits for the
   /// plugin's first snapshot), or the task's conversation for a run. A
-  /// profile without the plugin gets the plain Activity list.
+  /// profile without the plugin gets Chats on the matching filter.
   void _pushTeamDestination(NavigatorState navigator, TeamLink link) {
     final team = _controller.orchestration;
     if (team != null &&
@@ -258,21 +258,19 @@ extension _OcAppLinkRoutes on _OcAppState {
       return;
     }
     switch (link.kind) {
+      // No project page to open: what waits on the person is on Chats.
       case TeamLinkKind.gate:
-        navigator.push(
-          KitPageRoute<void>(
-            builder: (_) => ActivityScreen(
-              controller: _controller,
-              initialTeamGateId: team == null ? null : link.id,
-            ),
-          ),
+        dispatchAtShellRoot(
+          navigator,
+          _shortcutSignals,
+          const OpenChatsIntent(needsYou: true),
         );
       case TeamLinkKind.run:
         if (team == null) {
-          navigator.push(
-            KitPageRoute<void>(
-              builder: (_) => ActivityScreen(controller: _controller),
-            ),
+          dispatchAtShellRoot(
+            navigator,
+            _shortcutSignals,
+            const OpenChatsIntent(running: true),
           );
           return;
         }

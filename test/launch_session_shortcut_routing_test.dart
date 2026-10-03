@@ -11,7 +11,9 @@ import 'package:opencode_mobile/main.dart';
 import 'package:opencode_mobile/platform/launch_shortcut.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/ui/screens/activity_screen.dart';
+import 'package:opencode_mobile/ui/screens/chats/chats_home_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/update/shorebird_update_notice.dart';
@@ -389,7 +391,7 @@ void main() {
     await _drainNotices(tester);
   });
 
-  testWidgets('the Quick Settings tile opens Activity over the shell', (
+  testWidgets('the Quick Settings tile opens Chats on Needs you', (
     tester,
   ) async {
     final controller = await _controller(connected: true);
@@ -403,17 +405,25 @@ void main() {
     shortcut.pending.value = LaunchAction.activity;
     await tester.pumpAndSettle();
 
-    expect(find.byType(ActivityScreen), findsOneWidget);
+    // The Inbox is part of Chats: the tile lands there on "Needs you".
+    expect(find.byType(ActivityScreen), findsNothing);
     expect(find.byType(ChatScreen), findsNothing);
+    expect(
+      tester
+          .widget<ChatsHomeScreen>(find.byType(ChatsHomeScreen))
+          .initialFilter,
+      const ChatFeedFilter(needsYou: true),
+    );
     expect(shortcut.pending.value, isNull);
     expect(api.created, 0);
     expect(api.prompted, 0);
     expect(_noticeShown(), isFalse);
 
-    // A second tap while Activity is on top does not stack another copy.
+    // A second tap while Chats shows does not stack anything over it.
     shortcut.pending.value = LaunchAction.activity;
     await tester.pumpAndSettle();
-    expect(find.byType(ActivityScreen), findsOneWidget);
+    expect(find.byType(ChatsHomeScreen), findsOneWidget);
+    expect(find.byType(ActivityScreen), findsNothing);
   });
 
   testWidgets('the tile without a saved server stays on server selection', (

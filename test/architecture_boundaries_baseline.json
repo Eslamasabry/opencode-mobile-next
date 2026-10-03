@@ -93,9 +93,6 @@
     "lib/ui/screens/usage_screen.dart": {
       "lib/api2/": 1
     },
-    "lib/ui/screens/workspace_screen.dart": {
-      "lib/api/": 2
-    },
     "lib/ui/screens/worktrees_screen.dart": {
       "lib/api/": 2
     },

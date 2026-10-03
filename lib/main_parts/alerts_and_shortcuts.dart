@@ -83,13 +83,16 @@ extension _OcAppAlertsAndShortcuts on _OcAppState {
         }
         return;
       }
+      // A question lands on its card in its conversation: answering is
+      // inline, the same as a permission.
       if (target.kind == CodingAlertKind.question) {
+        final waiting = _controller.questions.values
+            .where((question) => question.sessionID == target.sessionID)
+            .firstOrNull;
         navigator.push(
-          KitPageRoute<void>(
-            builder: (_) => ActivityScreen(
-              controller: _controller,
-              initialQuestionSessionID: target.sessionID,
-            ),
+          chatLandingRoute(
+            sessionID: target.sessionID,
+            landOnRequestID: waiting?.id,
           ),
         );
         return;
@@ -168,27 +171,20 @@ extension _OcAppAlertsAndShortcuts on _OcAppState {
       ),
       // Same order as the dock: the number in the hint is the tab's position.
       DesktopCommand(
-        label: l10n.e7LocaleUiActivity,
-        icon: Icons.notifications_outlined,
-        hint: l10n.e7LocaleUiActivityHint,
-        keys: '$mod + 2',
-        onInvoke: () => go(1),
-      ),
-      DesktopCommand(
         label: l10n.e7LocaleUiFiles,
         icon: Icons.folder_outlined,
         hint: l10n.e7LocaleUiFilesHint,
-        keys: '$mod + 3',
-        onInvoke: () => go(2),
+        keys: '$mod + 2',
+        onInvoke: () => go(1),
       ),
-      // One Settings command: the fourth tab is the hub. "$mod + ," still
+      // One Settings command: the third tab is the hub. "$mod + ," still
       // opens the same hub over the current screen without leaving it.
       DesktopCommand(
         label: l10n.e7LocaleUiSettings,
         icon: Icons.settings_outlined,
         hint: l10n.e7LocaleUiMoreHint,
-        keys: '$mod + 4',
-        onInvoke: () => go(3),
+        keys: '$mod + 3',
+        onInvoke: () => go(2),
       ),
       DesktopCommand(
         label: l10n.e7LocaleUiKeyboardShortcuts,
@@ -209,7 +205,7 @@ extension _OcAppAlertsAndShortcuts on _OcAppState {
       ),
       // The rest of the launcher is the app-wide search index, so a setting
       // or a Project tool is found here exactly as it is in Settings. The
-      // four tabs are the numbered commands above.
+      // three tabs are the numbered commands above.
       for (final entry in searchIndex(l10n, scope))
         if (!entry.id.startsWith('tab-') &&
             entry.id != 'library-keyboard-shortcuts' &&

@@ -29,7 +29,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// each with the reason. Everything else must be found by its title.
 const _excluded = <String, String>{
   // Not reachable by choice: the app shows them on its own.
-  'home-shell': 'the frame around the four tabs; each tab is found on its own',
+  'home-shell': 'the frame around the three tabs; each tab is found on its own',
+  'activity':
+      'the former Inbox: now part of Chats (Needs you, Running); nothing opens it',
   'root-connecting': 'shown automatically while a saved server connects',
   'bootstrap-gate': 'startup failure screen; nothing is connected yet',
   'servers-welcome': 'first run only, before any server exists',
@@ -41,7 +43,7 @@ const _excluded = <String, String>{
       'shown on its own when an old team was left on after the update',
   // Need a conversation: the conversation menu and its command launcher are
   // their search (phase 4 adds them to this index through the registry).
-  'chat': 'a conversation; opened from Work, Inbox or All conversations',
+  'chat': 'a conversation; opened from Chats or All conversations',
   'active-context': 'needs an open conversation',
   'active-context-message': 'needs an open conversation and a message',
   'prompt-editor': 'needs an open conversation (composer)',
@@ -54,8 +56,7 @@ const _excluded = <String, String>{
   'web-sources': 'adds a source to the open conversation',
   'staged-revert': 'needs a staged revert in an open conversation',
   // Need something picked first.
-  'projects': 'a picker that returns the chosen project to Work',
-  'workspace-folder-chooser': 'a state of the Work tab, not a place',
+  'projects': 'a picker that returns the chosen project to Files',
   'shell-output': 'the output of one command that was just run',
   'terminal-surface': 'one terminal process; opened from Terminal',
   'diff-view': 'one file of a review; opened from Changes',
@@ -350,9 +351,8 @@ void main() {
         expect(
           ids,
           containsAll([
-            'tab-work',
-            'tab-inbox',
-            'tab-project',
+            'tab-chats',
+            'tab-files',
             'project-files',
             'project-changes',
             'project-terminal',
@@ -460,7 +460,7 @@ void main() {
             reason: tool.name,
           );
         }
-        expect(ids.contains('tab-project'), tools.isNotEmpty);
+        expect(ids.contains('tab-files'), tools.isNotEmpty);
         expect(
           ids.contains('all-conversations'),
           capabilities.globalSessionSearch,
@@ -484,8 +484,7 @@ void main() {
           containsAll([
             'settings-category-appearance',
             'inside-appearance-language',
-            'tab-work',
-            'tab-inbox',
+            'tab-chats',
           ]),
         );
       });
@@ -544,9 +543,8 @@ void main() {
       addTearDown(controller.dispose);
       final ids = _ids(searchIndex(_en, scope(controller, hasShell: false)));
       for (final id in [
-        'tab-work',
-        'tab-inbox',
-        'tab-project',
+        'tab-chats',
+        'tab-files',
         'tab-settings',
         'project-files',
         'project-search',
@@ -710,7 +708,7 @@ void main() {
       await tester.pumpWidget(_app(controller, shell: seen));
       await tester.pumpAndSettle();
 
-      await openResult(tester, controller, _en.shellTabInbox, 'tab-inbox');
+      await openResult(tester, controller, _en.shellTabFiles, 'tab-files');
       await tester.pump();
       expect(seen.single, isA<SelectDestinationIntent>());
       expect((seen.single as SelectDestinationIntent).index, 1);
@@ -733,8 +731,8 @@ void main() {
       addTearDown(controller.dispose);
       final scope = SearchScope(controller: controller, hasShell: false);
       expect(
-        _ids(searchEntries(_en, scope, _en.shellTabInbox)),
-        isNot(contains('tab-inbox')),
+        _ids(searchEntries(_en, scope, _en.shellTabChats)),
+        isNot(contains('tab-chats')),
       );
       expect(
         _ids(searchEntries(_en, scope, 'terminal')),

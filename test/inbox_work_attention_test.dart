@@ -15,7 +15,6 @@ import 'package:opencode_mobile/state/profile_monitor.dart';
 import 'package:opencode_mobile/state/work_row_status_controller.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/activity_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:opencode_mobile/ui/widgets/attention_feed_rows.dart';
 
 import 'support/profile_monitor_fixture.dart';
@@ -336,78 +335,6 @@ void main() {
     // The connected server's own request is untouched.
     expect(
       find.byKey(const ValueKey('activity-permission-request-1')),
-      findsOneWidget,
-    );
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    controller.dispose();
-    await tester.pump();
-  });
-
-  testWidgets('Work rows: Working live, last seen still once disconnected, '
-      'live again on reconnect, Failed from a confirmed error', (tester) async {
-    _tall(tester);
-    final controller = await boot();
-    controller.sessionsById = {
-      'session-1': Session(
-        id: 'session-1',
-        title: 'Refactor parser',
-        time: SessionTime(created: 1, updated: 1),
-      ),
-    };
-    controller.busySessions.add('session-1');
-    controller.directory = '/work/app';
-    await tester.pumpWidget(_app(WorkspaceScreen(controller: controller)));
-    await _frames(tester);
-
-    expect(find.text('Refactor parser'), findsOneWidget);
-    Finder line() => find.byKey(const ValueKey('session-subtitle-session-1'));
-    String text() => _plain(
-      tester
-          .widgetList<RichText>(
-            find.descendant(of: line(), matching: find.byType(RichText)),
-          )
-          .map((w) => w.text.toPlainText())
-          .join(),
-    );
-    expect(text(), startsWith('Working'));
-    expect(find.byKey(const ValueKey('session-busy-dot')), findsOneWidget);
-
-    // The connection drops: no live mark, the last seen state and when.
-    controller.status = StreamStatus.reconnecting;
-    controller.poke();
-    await _frames(tester);
-    expect(find.byKey(const ValueKey('session-busy-dot')), findsNothing);
-    expect(
-      find.byKey(const ValueKey('session-last-seen-mark-session-1')),
-      findsOneWidget,
-    );
-    expect(text(), startsWith('Working · as of'));
-
-    // Back: live again.
-    controller.status = StreamStatus.connected;
-    controller.poke();
-    await _frames(tester);
-    expect(find.byKey(const ValueKey('session-busy-dot')), findsOneWidget);
-    expect(text(), isNot(contains('as of')));
-
-    // The run ends with a confirmed error: Failed, never Done or Working.
-    controller.busySessions.remove('session-1');
-    controller.handleEventForTesting(
-      EventEnvelope(
-        type: 'session.error',
-        properties: {
-          'sessionID': 'session-1',
-          'error': {'message': 'fixture diagnostic'},
-        },
-      ),
-    );
-    controller.poke();
-    await _frames(tester);
-    expect(text(), startsWith('Failed'));
-    expect(text(), isNot(contains('fixture diagnostic')));
-    expect(
-      find.byKey(const ValueKey('session-failed-mark-session-1')),
       findsOneWidget,
     );
 

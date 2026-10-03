@@ -2739,29 +2739,21 @@
   "@e7LocaleUiNewSessionHint": {
     "description": "Locale selection or app shell: NewSessionHint"
   },
-  "e7LocaleUiWorkspace": "Work",
+  "e7LocaleUiWorkspace": "Chats",
   "@e7LocaleUiWorkspace": {
     "description": "Locale selection or app shell: Workspace"
   },
-  "e7LocaleUiWorkspaceHint": "Recent conversations and the active project",
+  "e7LocaleUiWorkspaceHint": "Every conversation, across projects",
   "@e7LocaleUiWorkspaceHint": {
     "description": "Locale selection or app shell: WorkspaceHint"
   },
-  "e7LocaleUiFiles": "Project",
+  "e7LocaleUiFiles": "Files",
   "@e7LocaleUiFiles": {
     "description": "Locale selection or app shell: Files"
   },
   "e7LocaleUiFilesHint": "Files, changes, terminal and other project tools",
   "@e7LocaleUiFilesHint": {
     "description": "Locale selection or app shell: FilesHint"
-  },
-  "e7LocaleUiActivity": "Inbox",
-  "@e7LocaleUiActivity": {
-    "description": "Locale selection or app shell: Activity"
-  },
-  "e7LocaleUiActivityHint": "Permissions, questions, and forms",
-  "@e7LocaleUiActivityHint": {
-    "description": "Locale selection or app shell: ActivityHint"
   },
   "e7LocaleUiMoreHint": "Models, providers, notifications, settings",
   "@e7LocaleUiMoreHint": {
@@ -2795,7 +2787,7 @@
   "@e7LocaleUiFindSurface": {
     "description": "App shell command menu or routing: FindSurface"
   },
-  "e7LocaleUiDestinations": "Work, Inbox, Project, Settings",
+  "e7LocaleUiDestinations": "Switch tab",
   "@e7LocaleUiDestinations": {
     "description": "App shell command menu or routing: Destinations"
   },
@@ -11610,17 +11602,9 @@
   "@usageSectionRemaining": {
     "description": "Usage screen section (tab): what a provider account has left, with quota monitoring."
   },
-  "shellTabWork": "Work",
-  "@shellTabWork": {
-    "description": "Bottom navigation label and app bar title of the first tab: conversations in the current project."
-  },
   "shellTabInbox": "Inbox",
   "@shellTabInbox": {
     "description": "Bottom navigation label and title of the second tab: everything waiting on the person, then running and finished work."
-  },
-  "shellTabProject": "Project",
-  "@shellTabProject": {
-    "description": "Bottom navigation label and app bar title of the third tab: tools scoped to the current project."
   },
   "serverSwitcherManage": "Manage servers",
   "@serverSwitcherManage": {
@@ -11643,8 +11627,6 @@
       }
     }
   },
-  "discoverWorkAliases": "work home conversations sessions chats recent pinned new conversation",
-  "discoverInboxAliases": "inbox activity needs you approvals permissions questions forms waiting running finished",
   "discoverProjectAliases": "project tools code folder files changes terminal health worktrees",
   "discoverFilesAliases": "files browse folder tree preview code open file",
   "discoverChangesAliases": "changes review changes diff uncommitted git edits working tree",
@@ -18278,13 +18260,13 @@
   "@shortcutsHelpConversation": {
     "description": "Keyboard shortcuts sheet: section of shortcuts that work inside a conversation"
   },
-  "homeShellProjectUnavailable": "Project isn't available",
+  "homeShellProjectUnavailable": "Files isn't available",
   "@homeShellProjectUnavailable": {
-    "description": "Shell: title of the row and sheet explaining why the Project tab is missing on this server"
+    "description": "Shell: title of the row and sheet explaining why the Files tab is missing on this server"
   },
   "homeShellProjectUnavailableReason": "{server} doesn't offer files, changes or code search. Connect to an OpenCode server to use them.",
   "@homeShellProjectUnavailableReason": {
-    "description": "Shell: why the Project tab is missing; {server} is the server's display name",
+    "description": "Shell: why the Files tab is missing; {server} is the server's display name",
     "placeholders": {
       "server": {
         "type": "String"
@@ -18293,7 +18275,7 @@
   },
   "homeShellProjectUnavailableShort": "{server} has no project tools.",
   "@homeShellProjectUnavailableShort": {
-    "description": "Shell: the one-line reason on the row shown after the Project tab went away (a server switch); {server} is the server's display name",
+    "description": "Shell: the one-line reason on the row shown after the Files tab went away (a server switch); {server} is the server's display name",
     "placeholders": {
       "server": {
         "type": "String"
@@ -31907,5 +31889,27 @@
   "chatsNewFailed": "The conversation didn't start. Your message is still here.",
   "@chatsNewFailed": {
     "description": "New chat: starting failed and the draft is kept"
+  },
+  "shellTabChats": "Chats",
+  "@shellTabChats": {
+    "description": "Bottom navigation label and title of the first tab: every conversation across projects, with what needs the person and what is running as filters."
+  },
+  "shellTabFiles": "Files",
+  "@shellTabFiles": {
+    "description": "Bottom navigation label and title of the second tab: the files, changes, terminal and other tools of one project, named by the chip under the title."
+  },
+  "discoverChatsAliases": "chats conversations sessions work home recent pinned new conversation inbox activity needs you approvals permissions questions forms waiting running finished",
+  "chatProjectChipSemantics": "Project {name}. Opens a menu of its files, terminal and changes.",
+  "@chatProjectChipSemantics": {
+    "description": "Screen reader label of the small project chip under a conversation's title; {name} is the project's folder name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatProjectMenuLabel": "Project tools",
+  "@chatProjectMenuLabel": {
+    "description": "Name of the menu the conversation's project chip opens (Files, Terminal, Changes)."
   }
 }
