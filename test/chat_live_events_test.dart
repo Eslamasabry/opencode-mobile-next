@@ -10,7 +10,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart'
     show
         KitBidi,
-        KitText,
         KitCodeBlock,
         KitDiffView,
         KitMarkdown,
@@ -5157,14 +5156,9 @@ void main() {
     await _pumpChat(tester, api, controller: controller);
     await tester.pump(const Duration(milliseconds: 300));
 
-    // The header's project chip names the project too (intended): ask the
-    // start header's own name.
-    expect(
-      tester
-          .widget<KitText>(find.byKey(const ValueKey('chat-start-name')))
-          .text,
-      KitBidi.auto('oc_app'),
-    );
+    // The project is named once, by the header chip.
+    expect(find.text(KitBidi.auto('oc_app')), findsOneWidget);
+    expect(find.byKey(const ValueKey('chat-start-name')), findsNothing);
     expect(find.text('1 item'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('chat-starter-Explain this project')),

@@ -163,22 +163,26 @@ class _ChatStartHeader extends StatelessWidget {
     final strings = _chatL10n(context);
     final tokens = KitTokens.of(context);
     final textScaler = MediaQuery.textScalerOf(context);
-    final name = facts.projectName ?? strings.chatStartServerFolder;
     final factsLine = chatStartFactsLine(facts, l10n: strings);
-    final nameText = KitText(
-      KitBidi.auto(name),
-      key: const ValueKey('chat-start-name'),
-      role: KitTextRole.headline,
-      maxLines: compact ? 1 : 2,
-      overflow: TextOverflow.ellipsis,
-    );
+    // The header's project chip already names the project, so it is not
+    // said again here. Only a folder with no project name (the server's own)
+    // has no chip, and then its name stays.
+    final nameText = facts.projectName != null
+        ? null
+        : KitText(
+            KitBidi.auto(strings.chatStartServerFolder),
+            key: const ValueKey('chat-start-name'),
+            role: KitTextRole.headline,
+            maxLines: compact ? 1 : 2,
+            overflow: TextOverflow.ellipsis,
+          );
     final Widget content = compact
         ? Row(
             key: const ValueKey('chat-start-header-compact'),
             children: [
-              Flexible(child: nameText),
+              if (nameText != null) Flexible(child: nameText),
               if (factsLine != null) ...[
-                SizedBox(width: tokens.space3),
+                if (nameText != null) SizedBox(width: tokens.space3),
                 Flexible(
                   child: KitText(
                     factsLine,
@@ -206,9 +210,9 @@ class _ChatStartHeader extends StatelessWidget {
                 width: KitTokens.illustrationInline,
               ),
               SizedBox(height: tokens.space3),
-              nameText,
+              ?nameText,
               if (factsLine != null) ...[
-                SizedBox(height: tokens.space1),
+                if (nameText != null) SizedBox(height: tokens.space1),
                 KitText(
                   factsLine,
                   key: const ValueKey('chat-start-facts'),
