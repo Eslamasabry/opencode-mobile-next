@@ -11635,9 +11635,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatStripApprovalAsk => 'Asks first';
 
   @override
-  String get chatStripApprovalEverything => 'Approves everything';
-
-  @override
   String get approvalModeMenuLabel => 'Approval mode';
 
   @override
@@ -11647,7 +11644,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get approvalModeAutoTitle => 'Auto-approve this conversation';
 
   @override
-  String get approvalModeAutoDetail => 'Allows each request once, here only.';
+  String get approvalModeAutoDetail => 'Allowed once, as they arrive.';
 
   @override
   String get approvalModeEverythingTitle => 'Approve everything';
@@ -11658,12 +11655,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get approvalModeSettings => 'Approval settings…';
-
-  @override
-  String get approvalModeConfirmAutoTitle => 'Auto-approve this conversation?';
-
-  @override
-  String get approvalModeConfirmAutoAction => 'Auto-approve this conversation';
 
   @override
   String get approvalModeConfirmEverythingTitle => 'Approve everything?';
@@ -26803,4 +26794,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get effectsGlowSpeedFast => 'Fast';
+
+  @override
+  String get approvalModeAskDetail => 'You answer each request.';
+
+  @override
+  String get approvalModeConfirmEverythingBody =>
+      'Agents on this server will run commands and change files without asking, in every conversation.';
+
+  @override
+  String get approvalsSheetSubagents => 'Subagents follow this';
+
+  @override
+  String approvalsSheetSetByParent(String name) {
+    return 'Set by $name';
+  }
+
+  @override
+  String get approvalsSheetSetByServer => 'Set by this server';
+
+  @override
+  String get approvalsSheetFootnote =>
+      'Stops when the app disconnects. Server deny rules still apply.';
+
+  @override
+  String get approvalsSheetHistory => 'Approved automatically';
 }

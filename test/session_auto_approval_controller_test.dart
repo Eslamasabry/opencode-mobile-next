@@ -22,6 +22,16 @@ class _FakeApi extends OpenCodeApi {
   Completer<void>? hold;
   Object? fail;
 
+  /// What the server reports as waiting when the app (re)reads it.
+  final waiting = <PermissionRequest>[];
+
+  @override
+  Future<List<PermissionRequest>> pendingPermissions() async => [...waiting];
+
+  @override
+  Future<List<PermissionRequest>> pendingPermissionsV2() =>
+      Future.error(ApiException('V2 unavailable', statusCode: 404));
+
   Future<void> _deliver() async {
     await hold?.future;
     if (fail case final error?) throw error;
@@ -310,16 +320,18 @@ void main() {
     expect(controller.permissionsForSession('child'), hasLength(1));
     expect(controller.permissionsForSession('grandchild'), hasLength(1));
 
-    // Following the parent again re-enables it for new requests.
+    // Following the parent again re-enables it: the request that waited
+    // while asking is answered now, and new ones as they arrive.
     await controller.setSessionAutoApproval('child', null);
     controller.handleEventForTesting(_v1Ask('req-child-2', 'child'));
     await _settle();
     await _settle();
-    expect(api.legacyReplies.map((r) => r.requestID), ['req-child-2']);
-    // The request that arrived while asking is still a person's to answer.
-    expect(controller.permissionsForSession('child').map((p) => p.id), [
+    expect(api.legacyReplies.map((r) => r.requestID).toSet(), {
       'req-child',
-    ]);
+      'req-child-2',
+      'req-grandchild',
+    });
+    expect(controller.permissionsForSession('child'), isEmpty);
   });
 
   test('not connected: the request stays pending and visible', () async {
@@ -450,5 +462,89 @@ void main() {
     expect(controller.autoApprovedFor('parent'), isEmpty);
     // The stored setting outlives the connection; a reconnect resumes it.
     expect(controller.autoApprovalFor('parent').automatic, isTrue);
+  });
+
+  group('an automatic mode answers what is already waiting', () {
+    test(
+      'turning a conversation to auto answers its waiting request',
+      () async {
+        final (controller, api) = await _boot();
+        controller.handleEventForTesting(_v1Ask('wait-1', 'parent'));
+        controller.handleEventForTesting(_v1Ask('wait-2', 'other'));
+        await _settle();
+        expect(controller.permissionsForSession('parent'), hasLength(1));
+
+        await controller.setSessionAutoApproval('parent', _auto);
+        await _settle();
+        await _settle();
+
+        expect(api.legacyReplies.map((r) => r.requestID), ['wait-1']);
+        expect(controller.permissionsForSession('parent'), isEmpty);
+        // Another conversation is not affected.
+        expect(controller.permissionsForSession('other'), hasLength(1));
+      },
+    );
+
+    test(
+      'approve everything answers waiting requests on every session',
+      () async {
+        final (controller, api) = await _boot();
+        controller.handleEventForTesting(_v1Ask('wait-1', 'parent'));
+        controller.handleEventForTesting(_v1Ask('wait-2', 'other'));
+        await _settle();
+
+        await controller.setApprovesEverything(true);
+        await _settle();
+        await _settle();
+
+        expect(api.legacyReplies.map((r) => r.requestID).toSet(), {
+          'wait-1',
+          'wait-2',
+        });
+        expect(controller.permissions, isEmpty);
+      },
+    );
+
+    test('a conversation set to ask keeps its waiting request', () async {
+      final (controller, api) = await _boot();
+      await controller.setSessionAutoApproval(
+        'parent',
+        const SessionAutoApproval(),
+      );
+      controller.handleEventForTesting(_v1Ask('wait-1', 'parent'));
+      await controller.setApprovesEverything(true);
+      await _settle();
+      expect(api.legacyReplies, isEmpty);
+      expect(controller.permissionsForSession('parent'), hasLength(1));
+    });
+
+    test('requests found after a reconnect are answered too', () async {
+      final (controller, api) = await _boot();
+      await controller.setSessionAutoApproval('parent', _auto);
+      api.waiting.add(
+        PermissionRequest(
+          id: 'found-1',
+          sessionID: 'parent',
+          permission: 'external_directory',
+          patterns: const ['/root/x'],
+          metadata: const {},
+        ),
+      );
+      await controller.refreshPendingPermissions();
+      await _settle();
+      await _settle();
+
+      expect(api.legacyReplies.map((r) => r.requestID), ['found-1']);
+      expect(controller.permissionsForSession('parent'), isEmpty);
+    });
+
+    test('without the policy, switching on answers nothing', () async {
+      final (controller, api) = await _boot(allow: false);
+      controller.handleEventForTesting(_v1Ask('wait-1', 'parent'));
+      await controller.setSessionAutoApproval('parent', _auto);
+      await _settle();
+      expect(api.legacyReplies, isEmpty);
+      expect(controller.permissionsForSession('parent'), hasLength(1));
+    });
   });
 }

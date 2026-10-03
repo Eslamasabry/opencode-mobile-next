@@ -16,6 +16,7 @@ import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/api2/gateway_mappers.dart'
     show api2ServerCapabilities;
+import 'package:opencode_mobile/state/automation_policy.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/kit/kit_request_card.dart';
@@ -312,10 +313,15 @@ void main() {
     expect(find.text('Use the EU region'), findsOneWidget);
   });
 
-  testWidgets('the server-wide approval switch states its scope before it '
+  testWidgets('the server-wide approval choice states its scope before it '
       'turns on', (tester) async {
     final conn = await _controller(_Api());
     addTearDown(conn.dispose);
+    // The automatic modes are offered while the automation policy allows.
+    await AutomationPolicyController.forProfile(
+      conn.store.prefs,
+      'profile-1',
+    ).setSupervision(AutomationSupervision.balanced);
     // Tall enough that the sheet builds every section at once.
     tester.view.physicalSize = const Size(412, 2400);
     tester.view.devicePixelRatio = 1;
@@ -345,24 +351,16 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('session-approvals-sheet')), findsOneWidget);
-    // The rule for new conversations is said once, by the switch; nothing
-    // on the sheet contradicts it (review board: session approvals).
-    expect(find.textContaining('new ones and subagents included'), findsOne);
+    // The scope is said once, in the one-sentence confirm that follows the
+    // choice; nothing on the sheet contradicts it.
     expect(find.textContaining('New conversations always ask'), findsNothing);
-    expect(
-      find.descendant(
-        of: find.byKey(const Key('approvals-rules-note')),
-        matching: find.textContaining('deny rules still apply'),
-      ),
-      findsOneWidget,
-    );
 
-    await tester.tap(find.byKey(const Key('approvals-everything-switch')));
+    await tester.tap(find.byKey(const Key('approvals-mode-everything')));
     await tester.pumpAndSettle();
     expect(conn.approvesEverything, isFalse);
-    expect(find.textContaining('without asking you'), findsWidgets);
+    expect(find.textContaining('without asking'), findsOneWidget);
 
-    await tester.tap(find.text('Turn on'));
+    await tester.tap(find.text('Approve everything').last);
     await tester.pumpAndSettle();
     expect(conn.approvesEverything, isTrue);
   });

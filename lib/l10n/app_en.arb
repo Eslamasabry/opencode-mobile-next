@@ -12316,10 +12316,6 @@
   "@chatStripApprovalAsk": {
     "description": "Short chip label above the composer: every permission request waits for the person"
   },
-  "chatStripApprovalEverything": "Approves everything",
-  "@chatStripApprovalEverything": {
-    "description": "Short chip label above the composer: every conversation on this server is approved automatically"
-  },
   "approvalModeMenuLabel": "Approval mode",
   "@approvalModeMenuLabel": {
     "description": "Name of the menu that switches how this conversation answers permission requests"
@@ -12332,7 +12328,7 @@
   "@approvalModeAutoTitle": {
     "description": "Menu choice: this phone answers each request in this conversation with Allow once"
   },
-  "approvalModeAutoDetail": "Allows each request once, here only.",
+  "approvalModeAutoDetail": "Allowed once, as they arrive.",
   "@approvalModeAutoDetail": {
     "description": "One-line explanation of the Auto-approve menu choice"
   },
@@ -12347,14 +12343,6 @@
   "approvalModeSettings": "Approval settings…",
   "@approvalModeSettings": {
     "description": "Menu item that opens the full approvals sheet"
-  },
-  "approvalModeConfirmAutoTitle": "Auto-approve this conversation?",
-  "@approvalModeConfirmAutoTitle": {
-    "description": "Title of the confirmation before this conversation approves automatically"
-  },
-  "approvalModeConfirmAutoAction": "Auto-approve this conversation",
-  "@approvalModeConfirmAutoAction": {
-    "description": "Confirm button naming what it turns on"
   },
   "approvalModeConfirmEverythingTitle": "Approve everything?",
   "@approvalModeConfirmEverythingTitle": {
@@ -31744,5 +31732,38 @@
   "effectsGlowSpeedFast": "Fast",
   "@effectsGlowSpeedFast": {
     "description": "Glowing border speed: fast."
+  },
+  "approvalModeAskDetail": "You answer each request.",
+  "@approvalModeAskDetail": {
+    "description": "One-line explanation of Ask first"
+  },
+  "approvalModeConfirmEverythingBody": "Agents on this server will run commands and change files without asking, in every conversation.",
+  "@approvalModeConfirmEverythingBody": {
+    "description": "One sentence in the confirmation before approving everything on the server"
+  },
+  "approvalsSheetSubagents": "Subagents follow this",
+  "@approvalsSheetSubagents": {
+    "description": "Switch: subagent conversations follow this conversation's automatic approval"
+  },
+  "approvalsSheetSetByParent": "Set by {name}",
+  "@approvalsSheetSetByParent": {
+    "description": "Quiet line: this conversation follows its parent conversation's approval choice",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "approvalsSheetSetByServer": "Set by this server",
+  "@approvalsSheetSetByServer": {
+    "description": "Quiet line: this conversation follows the server-wide Approve everything choice"
+  },
+  "approvalsSheetFootnote": "Stops when the app disconnects. Server deny rules still apply.",
+  "@approvalsSheetFootnote": {
+    "description": "The one footnote under the approvals choices"
+  },
+  "approvalsSheetHistory": "Approved automatically",
+  "@approvalsSheetHistory": {
+    "description": "Collapsed row listing the requests this phone approved automatically"
   }
 }

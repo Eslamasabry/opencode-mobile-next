@@ -72,7 +72,11 @@ Future<(_Controller, SharedPreferences)> _boot({
   return (controller, prefs);
 }
 
-Future<void> _pump(WidgetTester tester, ConnectionController controller) async {
+Future<void> _pump(
+  WidgetTester tester,
+  ConnectionController controller, {
+  String session = 'parent',
+}) async {
   tester.view.physicalSize = const Size(412, 915);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -82,7 +86,7 @@ Future<void> _pump(WidgetTester tester, ConnectionController controller) async {
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const ChatScreen(sessionID: 'parent'),
+        home: ChatScreen(sessionID: session),
       ),
     ),
   );
@@ -129,7 +133,8 @@ void main() {
     await controller.setSessionAutoApproval('parent', null);
     await controller.setApprovesEverything(true);
     await tester.pumpAndSettle();
-    expect(find.text('Approves everything'), findsOneWidget);
+    // Both automatic modes read the same; the menu says which.
+    expect(find.text('Auto-approve'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -144,11 +149,8 @@ void main() {
     expect(find.byKey(const Key('approval-mode-everything')), findsOneWidget);
     expect(find.text('Approval settings…'), findsOneWidget);
     // One plain line each, and the current mode carries the check.
-    expect(
-      find.text('Every permission request waits for you.'),
-      findsOneWidget,
-    );
-    expect(find.text('Allows each request once, here only.'), findsOneWidget);
+    expect(find.text('You answer each request.'), findsOneWidget);
+    expect(find.text('Allowed once, as they arrive.'), findsOneWidget);
     expect(
       find.descendant(of: _menu, matching: find.byIcon(AppIconography.check)),
       findsOneWidget,
@@ -188,7 +190,7 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
   });
 
-  testWidgets('a more permissive mode confirms; Cancel keeps the old mode', (
+  testWidgets('auto-approve applies at once, with no confirm, and is saved', (
     tester,
   ) async {
     final (controller, prefs) = await _boot();
@@ -196,22 +198,7 @@ void main() {
     await _openMenu(tester);
     await _tapKey(tester, 'approval-mode-auto');
 
-    expect(find.byKey(const Key('approval-mode-confirm')), findsOneWidget);
-    expect(
-      find.textContaining('Nothing is saved as always allowed'),
-      findsOneWidget,
-    );
-    expect(controller.autoApprovalFor('parent').automatic, isFalse);
-    await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
-    expect(controller.autoApprovalFor('parent').automatic, isFalse);
-    expect(_stored(prefs).explicitFor('server-a', 'parent'), isNull);
-    expect(find.text('Asks first'), findsOneWidget);
-
-    await _openMenu(tester);
-    await _tapKey(tester, 'approval-mode-auto');
-    await tester.tap(find.text('Auto-approve this conversation').last);
-    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('approval-mode-confirm')), findsNothing);
     expect(controller.autoApprovalFor('parent').automatic, isTrue);
     expect(
       find.text('This conversation approves automatically.'),
@@ -232,7 +219,7 @@ void main() {
     await _pump(tester, controller);
     await _openMenu(tester);
     await _tapKey(tester, 'approval-mode-everything');
-    expect(find.textContaining('without asking you'), findsOneWidget);
+    expect(find.textContaining('without asking'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(controller.approvesEverything, isFalse);
@@ -243,7 +230,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(controller.approvesEverything, isTrue);
     expect(_stored(prefs).approvesEverything('server-a'), isTrue);
-    expect(find.text('Approves everything'), findsOneWidget);
+    expect(find.text('Auto-approve'), findsOneWidget);
     await tester.pump(const Duration(seconds: 4));
   });
 
@@ -278,5 +265,93 @@ void main() {
     final (controller, _) = await _boot(isolated: true);
     await _pump(tester, controller);
     expect(_chip, findsNothing);
+  });
+
+  group('the approvals sheet', () {
+    Future<void> openSheet(WidgetTester tester) async {
+      await _openMenu(tester);
+      await _tapKey(tester, 'approval-mode-settings');
+      expect(find.byKey(const Key('session-approvals-sheet')), findsOneWidget);
+    }
+
+    testWidgets('is one short choice list that writes what the menu writes', (
+      tester,
+    ) async {
+      final (controller, prefs) = await _boot();
+      await _pump(tester, controller);
+      await openSheet(tester);
+      expect(find.text('Ask first'), findsOneWidget);
+      expect(find.text('Auto-approve this conversation'), findsOneWidget);
+      expect(find.text('Approve everything'), findsOneWidget);
+      expect(find.text('You answer each request.'), findsOneWidget);
+      // Nothing that only applies to auto-approving is on screen yet.
+      expect(find.byKey(const Key('approvals-inherit-switch')), findsNothing);
+      expect(find.byKey(const Key('approvals-record')), findsNothing);
+      expect(find.byKey(const Key('approvals-rules-note')), findsNothing);
+
+      await _tapKey(tester, 'approvals-mode-auto');
+      expect(controller.autoApprovalFor('parent').automatic, isTrue);
+      expect(
+        _stored(prefs).explicitFor('server-a', 'parent')?.mode,
+        AutoApprovalMode.autoOnce,
+      );
+      expect(find.byKey(const Key('approvals-inherit-switch')), findsOneWidget);
+      expect(find.byKey(const Key('approvals-rules-note')), findsOneWidget);
+      await _tapKey(tester, 'approvals-inherit-switch');
+      expect(
+        controller.autoApprovalFor('parent').setting.inheritToChildren,
+        isTrue,
+      );
+      await _tapKey(tester, 'approvals-mode-ask');
+      expect(controller.autoApprovalFor('parent').automatic, isFalse);
+      expect(find.byKey(const Key('approvals-inherit-switch')), findsNothing);
+    });
+
+    testWidgets('Approve everything asks once, in place', (tester) async {
+      final (controller, _) = await _boot();
+      await _pump(tester, controller);
+      await openSheet(tester);
+      await _tapKey(tester, 'approvals-mode-everything');
+      expect(find.byKey(const Key('approval-mode-confirm')), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(controller.approvesEverything, isFalse);
+      await _tapKey(tester, 'approvals-mode-everything');
+      await tester.tap(find.text('Approve everything').last);
+      await tester.pumpAndSettle();
+      expect(controller.approvesEverything, isTrue);
+      expect(find.text('Set by this server'), findsOneWidget);
+    });
+
+    testWidgets('an inherited mode is one quiet line', (tester) async {
+      final (controller, _) = await _boot();
+      controller.sessionsById['child'] = Session(
+        id: 'child',
+        title: 'Child',
+        parentID: 'parent',
+      );
+      await controller.setSessionAutoApproval(
+        'parent',
+        const SessionAutoApproval(
+          mode: AutoApprovalMode.autoOnce,
+          inheritToChildren: true,
+        ),
+      );
+      await _pump(tester, controller, session: 'child');
+      await openSheet(tester);
+      expect(
+        tester
+            .widget<Text>(
+              find
+                  .descendant(
+                    of: find.byKey(const Key('approvals-set-by')),
+                    matching: find.byType(Text),
+                  )
+                  .first,
+            )
+            .data,
+        allOf(startsWith('Set by'), contains('Parent')),
+      );
+    });
   });
 }

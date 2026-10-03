@@ -157,7 +157,9 @@ void main() {
   ) async {
     for (final light in [false, true]) {
       final colors = <Color>[];
-      for (final tone in KitChipTone.values) {
+      for (final tone in KitChipTone.values.where(
+        (tone) => tone != KitChipTone.active,
+      )) {
         await _pump(
           tester,
           KitChip(label: 'Severity', tone: tone),
@@ -171,6 +173,26 @@ void main() {
         colors.add(ink);
       }
       expect(colors.toSet(), hasLength(3));
+    }
+  });
+
+  testWidgets('the active tone is readable on its own accent tint', (
+    tester,
+  ) async {
+    for (final light in [false, true]) {
+      await _pump(
+        tester,
+        const KitChip(label: 'On', tone: KitChipTone.active),
+        light: light,
+      );
+      final text = tester.widget<Text>(find.text('On'));
+      final ink = text.textSpan!.style!.color!;
+      final roles = KitTokens.of(tester.element(find.byType(KitChip))).roles;
+      final tint = Color.alphaBlend(
+        roles.accent.withValues(alpha: .22),
+        roles.surface3,
+      );
+      expect(contrastRatio(ink, tint), greaterThanOrEqualTo(4.5));
     }
   });
 

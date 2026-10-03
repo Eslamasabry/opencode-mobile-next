@@ -200,6 +200,17 @@ Future<void> _tapChip(WidgetTester tester) async {
   await _tapVisible(tester, find.byKey(const Key('approval-mode-settings')));
 }
 
+/// A choice row at 2.5x text is taller than the 740 dp window, so its
+/// centre can be off screen: tap just inside its top edge.
+Future<void> _tapChoice(WidgetTester tester, String key) async {
+  final row = find.byKey(Key(key));
+  await tester.ensureVisible(row);
+  await tester.pumpAndSettle();
+  final rect = tester.getRect(row);
+  await tester.tapAt(Offset(rect.center.dx, rect.top + 48));
+  await tester.pumpAndSettle();
+}
+
 Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
@@ -232,39 +243,22 @@ void main() {
 
         await _openApprovals(tester);
         await _captureScreen(tester, 'sheet-ask-${direction.name}');
-        // Inheritance cannot be switched on while asking.
+        // Subagent inheritance only shows once this conversation approves.
         final inherit = find.byKey(const Key('approvals-inherit-switch'));
-        expect(tester.widget<Switch>(inherit).onChanged, isNull);
-        expect(
-          find.text('Available once automatic approval is on.'),
-          findsOneWidget,
-        );
+        expect(inherit, findsNothing);
 
-        // A risky switch: turning it on first states what it covers.
-        await _tapVisible(
-          tester,
-          find.text('Approve automatically while connected'),
-        );
-        expect(controller.autoApprovalFor('parent').automatic, isFalse);
-        expect(
-          find.textContaining('Nothing is saved as always allowed'),
-          findsOneWidget,
-        );
-        await _tapVisible(tester, find.text('Turn on'));
+        // Choosing Auto-approve applies at once: no confirm step.
+        await _tapChoice(tester, 'approvals-mode-auto');
         expect(controller.autoApprovalFor('parent').automatic, isTrue);
-        expect(tester.widget<Switch>(inherit).onChanged, isNotNull);
-        await _tapVisible(tester, find.text('Subagents inherit this'));
+        expect(inherit, findsOneWidget);
+        await _tapVisible(tester, find.text('Subagents follow this'));
         expect(
           controller.autoApprovalFor('parent').setting.inheritToChildren,
           isTrue,
         );
         expect(controller.autoApprovalFor('child').inheritedFrom, 'parent');
-        // The consequences are spelled out in the sheet itself.
+        // The one footnote says what holds.
         expect(find.textContaining('deny rules still apply'), findsOneWidget);
-        expect(
-          find.textContaining('Nothing is saved as always allowed'),
-          findsOneWidget,
-        );
         await _captureScreen(tester, 'sheet-auto-${direction.name}');
         await _closeSheet(tester);
         expect(find.byKey(const Key('session-approvals-sheet')), findsNothing);
@@ -292,19 +286,15 @@ void main() {
           find.byKey(const Key('session-approvals-sheet')),
           findsOneWidget,
         );
-        expect(
-          find.text('1 request approved automatically on this server'),
-          findsOneWidget,
-        );
-        // Named on the chip (its spoken label) and listed in the sheet's
-        // record.
+        // The history is one collapsed row; open it.
+        await _tapVisible(tester, find.text('Approved automatically'));
         expect(
           find.textContaining('Auto-approved · Run a shell command'),
           findsOneWidget,
         );
         await _captureScreen(tester, 'sheet-record-${direction.name}');
         // Turning the switch off asks nothing: every request waits again.
-        await _tapVisible(tester, find.byKey(const Key('approvals-mode-auto')));
+        await _tapChoice(tester, 'approvals-mode-ask');
         expect(controller.autoApprovalFor('parent').automatic, isFalse);
         await _closeSheet(tester);
         expect(find.text('Asks first'), findsOneWidget);
@@ -340,28 +330,21 @@ void main() {
         await _captureScreen(tester, 'child-indicator-${direction.name}');
 
         await _tapChip(tester);
-        expect(
-          find.byKey(const Key('approvals-inherited-note')),
-          findsOneWidget,
-        );
-        expect(find.text('Inherited from parent conversation'), findsOneWidget);
+        // One quiet line says whose choice this is; nothing to override.
+        expect(find.byKey(const Key('approvals-set-by')), findsOneWidget);
         expect(find.byKey(const Key('approvals-follow-parent')), findsNothing);
         await _captureScreen(tester, 'child-sheet-${direction.name}');
 
-        // Override keeps the inherited choice but makes it this session's own.
-        await _tapVisible(tester, find.byKey(const Key('approvals-override')));
+        // Choosing for this conversation makes it its own, here only.
+        await _tapChoice(tester, 'approvals-mode-ask');
         expect(controller.autoApprovalFor('child').explicit, isTrue);
-        expect(controller.autoApprovalFor('child').automatic, isTrue);
-        expect(find.byKey(const Key('approvals-inherited-note')), findsNothing);
+        expect(controller.autoApprovalFor('child').automatic, isFalse);
+        expect(controller.autoApprovalFor('parent').automatic, isTrue);
+        expect(find.byKey(const Key('approvals-set-by')), findsNothing);
         expect(
           find.byKey(const Key('approvals-follow-parent')),
           findsOneWidget,
         );
-
-        // Turning it off on the override stops inherited approval here only.
-        await _tapVisible(tester, find.byKey(const Key('approvals-mode-auto')));
-        expect(controller.autoApprovalFor('child').automatic, isFalse);
-        expect(controller.autoApprovalFor('parent').automatic, isTrue);
 
         // Following the parent again restores the inherited state.
         await _tapVisible(
@@ -369,10 +352,7 @@ void main() {
           find.byKey(const Key('approvals-follow-parent')),
         );
         expect(controller.autoApprovalFor('child').inheritedFrom, 'parent');
-        expect(
-          find.byKey(const Key('approvals-inherited-note')),
-          findsOneWidget,
-        );
+        expect(find.byKey(const Key('approvals-set-by')), findsOneWidget);
         await _closeSheet(tester);
 
         controller.handleEventForTesting(_ask('req-child', 'child'));
@@ -475,32 +455,27 @@ void main() {
     await tester.pumpAndSettle();
     await _openApprovals(tester);
 
-    Future<void> tapEverything() => _tapVisible(
-      tester,
-      find.byKey(const Key('approvals-everything-switch')),
-    );
+    Future<void> tapEverything() =>
+        _tapVisible(tester, find.byKey(const Key('approvals-mode-everything')));
 
-    // Turning it on first states its scope; Not now changes nothing.
+    // Choosing it first states its scope in one sentence; Cancel changes
+    // nothing.
     await tapEverything();
-    expect(find.byKey(const ValueKey('kit-switch-risk-step')), findsOneWidget);
-    expect(find.textContaining('without asking you'), findsOneWidget);
-    await _tapVisible(tester, find.text('Not now'));
-    expect(find.byKey(const ValueKey('kit-switch-risk-step')), findsNothing);
+    expect(find.byKey(const Key('approval-mode-confirm')), findsOneWidget);
+    expect(find.textContaining('without asking'), findsOneWidget);
+    await _tapVisible(tester, find.text('Cancel'));
     expect(controller.approvesEverything, isFalse);
 
-    // Turn on applies it to conversations that never had a setting.
+    // Approve everything applies to conversations that never had a setting.
     await tapEverything();
-    await _tapVisible(tester, find.text('Turn on'));
+    await _tapVisible(tester, find.text('Approve everything').last);
     expect(controller.approvesEverything, isTrue);
     expect(controller.autoApprovalFor('parent').automatic, isTrue);
     expect(controller.autoApprovalFor('never-seen').automatic, isTrue);
-    expect(
-      find.byKey(const Key('approvals-everything-active')),
-      findsOneWidget,
-    );
+    expect(find.text('Set by this server'), findsOneWidget);
 
-    // Turning it off needs no confirmation.
-    await tapEverything();
+    // Leaving it needs no confirmation and turns the server-wide switch off.
+    await _tapChoice(tester, 'approvals-mode-ask');
     expect(controller.approvesEverything, isFalse);
     expect(controller.autoApprovalFor('never-seen').automatic, isFalse);
   });

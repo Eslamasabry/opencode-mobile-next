@@ -3,7 +3,7 @@ part of '../chat_screen.dart';
 /// How this conversation answers permission requests, least to most
 /// permissive. Each is a mode the app really has: "ask" and "auto" are this
 /// conversation's own saved setting; "everything" is the saved,
-/// server-wide switch from the approvals sheet.
+/// server-wide switch.
 enum _ApprovalChoice { ask, auto, everything }
 
 _ApprovalChoice _choiceOf(EffectiveAutoApproval effective) =>
@@ -13,30 +13,96 @@ _ApprovalChoice _choiceOf(EffectiveAutoApproval effective) =>
     ? _ApprovalChoice.auto
     : _ApprovalChoice.ask;
 
-extension _ChatApprovalModeMenu on _ChatScreenState {
-  /// The modes offered. Asking always is. The two automatic modes are offered
-  /// only while the person's automation policy lets this phone answer
-  /// requests (supervision below High); there is no server-side preset to
-  /// offer, so none is listed. The current mode is always listed, so the
-  /// check never goes missing.
-  List<_ApprovalChoice> _offeredApprovalChoices(_ApprovalChoice current) => [
-    for (final choice in _ApprovalChoice.values)
-      if (choice == _ApprovalChoice.ask ||
-          choice == current ||
-          _conn.automationPolicy.allowsAutoApproval)
-        choice,
-  ];
+/// The modes offered. Asking always is. The two automatic modes are offered
+/// only while the person's automation policy lets this phone answer
+/// requests (supervision below High); there is no server-side preset to
+/// offer, so none is listed. The current mode is always listed, so the
+/// check never goes missing.
+List<_ApprovalChoice> _offeredApprovalChoices(
+  ConnectionController conn,
+  _ApprovalChoice current,
+) => [
+  for (final choice in _ApprovalChoice.values)
+    if (choice == _ApprovalChoice.ask ||
+        choice == current ||
+        conn.automationPolicy.allowsAutoApproval)
+      choice,
+];
 
+/// Writes [choice] for [sessionID] through the controller. The one write
+/// path: the chip menu and the approvals sheet both call it, so they save
+/// exactly the same settings.
+Future<void> _writeApprovalChoice(
+  ConnectionController conn,
+  String sessionID,
+  _ApprovalChoice choice,
+) async {
+  // Leaving "Approve everything" turns the server-wide switch off: it is
+  // the mode being left, and there is no other place to undo it.
+  if (choice != _ApprovalChoice.everything &&
+      _choiceOf(conn.autoApprovalFor(sessionID)) ==
+          _ApprovalChoice.everything) {
+    await conn.setApprovesEverything(false);
+  }
+  switch (choice) {
+    case _ApprovalChoice.ask:
+      await conn.setSessionAutoApproval(
+        sessionID,
+        const SessionAutoApproval(mode: AutoApprovalMode.ask),
+      );
+    case _ApprovalChoice.auto:
+      await conn.setSessionAutoApproval(
+        sessionID,
+        const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
+      );
+    case _ApprovalChoice.everything:
+      await conn.setApprovesEverything(true);
+      // A conversation's own choice outranks the server-wide one; drop it
+      // so this conversation follows "approve everything".
+      if (conn.autoApprovalFor(sessionID).explicit) {
+        await conn.setSessionAutoApproval(sessionID, null);
+      }
+  }
+}
+
+/// Switches [sessionID] to [choice]. Only the server-wide "Approve
+/// everything" asks first (one sentence, then the act or Cancel); the
+/// conversation's own modes apply at once. Returns whether the mode
+/// changed. A failed save throws.
+Future<bool> _requestApprovalChoice(
+  BuildContext context,
+  ConnectionController conn,
+  String sessionID,
+  _ApprovalChoice choice,
+) async {
+  final current = _choiceOf(conn.autoApprovalFor(sessionID));
+  if (choice == current) return false;
+  if (choice != _ApprovalChoice.everything) {
+    await _writeApprovalChoice(conn, sessionID, choice);
+    return true;
+  }
+  final strings = _chatL10n(context);
+  return showKitConfirm(
+    context,
+    title: strings.approvalModeConfirmEverythingTitle,
+    body: strings.approvalModeConfirmEverythingBody,
+    confirmLabel: strings.approvalModeConfirmEverythingAction,
+    sheetKey: const Key('approval-mode-confirm'),
+    action: () => _writeApprovalChoice(conn, sessionID, choice),
+  );
+}
+
+extension _ChatApprovalModeMenu on _ChatScreenState {
   /// Opens the mode menu anchored to the chip ([chipContext]).
   Future<void> _showApprovalModeMenu(BuildContext chipContext) async {
     final strings = _chatL10n(chipContext);
     final current = _choiceOf(_conn.autoApprovalFor(widget.sessionID));
-    final offered = _offeredApprovalChoices(current);
+    final offered = _offeredApprovalChoices(_conn, current);
     KitMenuItem item(
       _ApprovalChoice choice,
       String key,
       String title,
-      String? detail,
+      String detail,
     ) => KitMenuItem(
       key: Key(key),
       label: title,
@@ -56,7 +122,7 @@ extension _ChatApprovalModeMenu on _ChatScreenState {
               choice,
               'approval-mode-ask',
               strings.approvalModeAskTitle,
-              strings.approvalsUiAskDetail,
+              strings.approvalModeAskDetail,
             ),
             _ApprovalChoice.auto => item(
               choice,
@@ -88,66 +154,23 @@ extension _ChatApprovalModeMenu on _ChatScreenState {
     );
   }
 
-  /// Applies [choice] to this conversation through the same controller
-  /// calls the approvals sheet uses. A stricter mode applies at once; a
-  /// more permissive one first asks, with the same scope text as the
-  /// sheet's risk step, and Cancel changes nothing.
+  /// Applies [choice] to this conversation (see [_requestApprovalChoice])
+  /// and says so in a short composer note.
   Future<void> _chooseApprovalMode(_ApprovalChoice choice) async {
     final strings = _chatL10n(context);
-    final current = _choiceOf(_conn.autoApprovalFor(widget.sessionID));
-    if (choice == current) return;
-    Future<void> apply() async {
-      switch (choice) {
-        case _ApprovalChoice.ask:
-          await _conn.setSessionAutoApproval(
-            widget.sessionID,
-            const SessionAutoApproval(mode: AutoApprovalMode.ask),
-          );
-        case _ApprovalChoice.auto:
-          await _conn.setSessionAutoApproval(
-            widget.sessionID,
-            const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
-          );
-        case _ApprovalChoice.everything:
-          await _conn.setApprovesEverything(true);
-          // A conversation's own choice outranks the server-wide one; drop
-          // it so this conversation follows "approve everything".
-          if (_conn.autoApprovalFor(widget.sessionID).explicit) {
-            await _conn.setSessionAutoApproval(widget.sessionID, null);
-          }
-      }
-    }
-
-    final note = switch (choice) {
-      _ApprovalChoice.ask => strings.approvalModeNowAsk,
-      _ApprovalChoice.auto => strings.approvalModeNowAuto,
-      _ApprovalChoice.everything => strings.approvalModeNowEverything,
-    };
     try {
-      if (choice.index > current.index) {
-        final confirmed = await showKitConfirm(
-          context,
-          title: choice == _ApprovalChoice.auto
-              ? strings.approvalModeConfirmAutoTitle
-              : strings.approvalModeConfirmEverythingTitle,
-          body: choice == _ApprovalChoice.auto
-              ? strings.approvalsUiAutoDetail
-              : strings.approvalsUiEverythingConfirmBody,
-          confirmLabel: choice == _ApprovalChoice.auto
-              ? strings.approvalModeConfirmAutoAction
-              : strings.approvalModeConfirmEverythingAction,
-          icon: choice == _ApprovalChoice.auto
-              ? AppIconography.shield
-              : AppIconography.warning,
-          sheetKey: const Key('approval-mode-confirm'),
-          action: apply,
-        );
-        if (!confirmed || !mounted) return;
-      } else {
-        await apply();
-        if (!mounted) return;
-      }
-      _showComposerNote(note, key: const Key('approval-mode-note'));
+      final changed = await _requestApprovalChoice(
+        context,
+        _conn,
+        widget.sessionID,
+        choice,
+      );
+      if (!changed || !mounted) return;
+      _showComposerNote(switch (choice) {
+        _ApprovalChoice.ask => strings.approvalModeNowAsk,
+        _ApprovalChoice.auto => strings.approvalModeNowAuto,
+        _ApprovalChoice.everything => strings.approvalModeNowEverything,
+      }, key: const Key('approval-mode-note'));
     } catch (error) {
       if (!mounted) return;
       _showComposerNote(

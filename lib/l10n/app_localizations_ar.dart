@@ -11721,9 +11721,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatStripApprovalAsk => 'يسأل أولًا';
 
   @override
-  String get chatStripApprovalEverything => 'يوافق على كل شيء';
-
-  @override
   String get approvalModeMenuLabel => 'وضع الموافقة';
 
   @override
@@ -11733,7 +11730,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get approvalModeAutoTitle => 'موافقة تلقائية هنا';
 
   @override
-  String get approvalModeAutoDetail => 'يسمح بكل طلب مرة واحدة، هنا فقط.';
+  String get approvalModeAutoDetail => 'يُسمح مرة واحدة فور وصولها.';
 
   @override
   String get approvalModeEverythingTitle => 'وافق على كل شيء';
@@ -11743,12 +11740,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get approvalModeSettings => 'إعدادات الموافقة…';
-
-  @override
-  String get approvalModeConfirmAutoTitle => 'موافقة تلقائية في هذه المحادثة؟';
-
-  @override
-  String get approvalModeConfirmAutoAction => 'وافق تلقائيًا هنا';
 
   @override
   String get approvalModeConfirmEverythingTitle => 'الموافقة على كل شيء؟';
@@ -26925,4 +26916,29 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get effectsGlowSpeedFast => 'سريعة';
+
+  @override
+  String get approvalModeAskDetail => 'أنت تجيب عن كل طلب.';
+
+  @override
+  String get approvalModeConfirmEverythingBody =>
+      'سيشغّل الوكلاء على هذا الخادم الأوامر ويغيّرون الملفات دون سؤالك، في كل محادثة.';
+
+  @override
+  String get approvalsSheetSubagents => 'الوكلاء الفرعيون يتبعون هذا';
+
+  @override
+  String approvalsSheetSetByParent(String name) {
+    return 'محدد من $name';
+  }
+
+  @override
+  String get approvalsSheetSetByServer => 'محدد من هذا الخادم';
+
+  @override
+  String get approvalsSheetFootnote =>
+      'تتوقف عند انقطاع اتصال التطبيق. وتبقى قواعد الرفض في الخادم سارية.';
+
+  @override
+  String get approvalsSheetHistory => 'تمت الموافقة تلقائيًا';
 }

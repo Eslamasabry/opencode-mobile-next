@@ -19230,12 +19230,6 @@ abstract class AppLocalizations {
   /// **'Asks first'**
   String get chatStripApprovalAsk;
 
-  /// Short chip label above the composer: every conversation on this server is approved automatically
-  ///
-  /// In en, this message translates to:
-  /// **'Approves everything'**
-  String get chatStripApprovalEverything;
-
   /// Name of the menu that switches how this conversation answers permission requests
   ///
   /// In en, this message translates to:
@@ -19257,7 +19251,7 @@ abstract class AppLocalizations {
   /// One-line explanation of the Auto-approve menu choice
   ///
   /// In en, this message translates to:
-  /// **'Allows each request once, here only.'**
+  /// **'Allowed once, as they arrive.'**
   String get approvalModeAutoDetail;
 
   /// Menu choice: every conversation on this server is approved automatically
@@ -19277,18 +19271,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Approval settings…'**
   String get approvalModeSettings;
-
-  /// Title of the confirmation before this conversation approves automatically
-  ///
-  /// In en, this message translates to:
-  /// **'Auto-approve this conversation?'**
-  String get approvalModeConfirmAutoTitle;
-
-  /// Confirm button naming what it turns on
-  ///
-  /// In en, this message translates to:
-  /// **'Auto-approve this conversation'**
-  String get approvalModeConfirmAutoAction;
 
   /// Title of the confirmation before approving everything on the server
   ///
@@ -42324,6 +42306,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fast'**
   String get effectsGlowSpeedFast;
+
+  /// One-line explanation of Ask first
+  ///
+  /// In en, this message translates to:
+  /// **'You answer each request.'**
+  String get approvalModeAskDetail;
+
+  /// One sentence in the confirmation before approving everything on the server
+  ///
+  /// In en, this message translates to:
+  /// **'Agents on this server will run commands and change files without asking, in every conversation.'**
+  String get approvalModeConfirmEverythingBody;
+
+  /// Switch: subagent conversations follow this conversation's automatic approval
+  ///
+  /// In en, this message translates to:
+  /// **'Subagents follow this'**
+  String get approvalsSheetSubagents;
+
+  /// Quiet line: this conversation follows its parent conversation's approval choice
+  ///
+  /// In en, this message translates to:
+  /// **'Set by {name}'**
+  String approvalsSheetSetByParent(String name);
+
+  /// Quiet line: this conversation follows the server-wide Approve everything choice
+  ///
+  /// In en, this message translates to:
+  /// **'Set by this server'**
+  String get approvalsSheetSetByServer;
+
+  /// The one footnote under the approvals choices
+  ///
+  /// In en, this message translates to:
+  /// **'Stops when the app disconnects. Server deny rules still apply.'**
+  String get approvalsSheetFootnote;
+
+  /// Collapsed row listing the requests this phone approved automatically
+  ///
+  /// In en, this message translates to:
+  /// **'Approved automatically'**
+  String get approvalsSheetHistory;
 }
 
 class _AppLocalizationsDelegate
