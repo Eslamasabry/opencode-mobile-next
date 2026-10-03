@@ -22,6 +22,7 @@ import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
 import '../widgets/request_routes.dart';
 import 'kit_buttons.dart';
+import 'kit_field.dart';
 import 'kit_icon_button.dart';
 import 'kit_layout.dart';
 import 'kit_motion.dart';
@@ -330,6 +331,7 @@ class KitSheet extends StatelessWidget {
     this.secondary,
     this.tertiary = const [],
     this.footer,
+    this.entry,
     this.onClose,
     this.loading = false,
     this.handle = true,
@@ -354,6 +356,7 @@ class KitSheet extends StatelessWidget {
     this.secondary,
     this.tertiary = const [],
     this.footer,
+    this.entry,
     this.onClose,
     this.loading = false,
     this.handle = true,
@@ -385,6 +388,13 @@ class KitSheet extends StatelessWidget {
   /// Pinned above the actions: a short line of settings that go with the
   /// primary (see [showKitSheet]).
   final Widget? footer;
+
+  /// A name or short text asked for in place, in the pinned block: the
+  /// field (autofocused, so the keyboard rises and the sheet stays above
+  /// it) with the one line saying what will happen. The caller swaps the
+  /// actions for the confirm and Cancel while it shows, so a second sheet
+  /// or dialog is never stacked on this one. Replaces [footer].
+  final KitSheetEntry? entry;
 
   /// Null hides the close button (while an irreversible step runs).
   final VoidCallback? onClose;
@@ -420,6 +430,7 @@ class KitSheet extends StatelessWidget {
     final tokens = KitTokens.of(context);
     final l10n = _l10n(context);
     final subtitle = this.subtitle;
+    final footer = entry == null ? this.footer : _entryField(entry!);
     final hasActions =
         primary != null ||
         secondary != null ||
@@ -563,7 +574,7 @@ class KitSheet extends StatelessWidget {
                       // empty one takes no room.
                       KeyedSubtree(
                         key: const ValueKey('kit-sheet-footer'),
-                        child: footer!,
+                        child: footer,
                       ),
                       KitActionBlock(
                         primary: primary,

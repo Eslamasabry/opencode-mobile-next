@@ -4984,6 +4984,8 @@
   "remoteFolderRecent": "مجلدات حديثة",
   "remoteFolderProjects": "مشاريع هذا الخادم",
   "folderBrowserNewProjectHere": "مشروع جديد هنا",
+  "folderBrowserNewProjectCreates": "ينشئ {path}",
+  "folderBrowserCreateAndOpen": "أنشئ وافتح",
   "folderBrowserFoldersLabel": "المجلدات",
   "folderBrowserPhoneRefused": "تخزين الهاتف متوقف. اسمح بالوصول لتصفحه هنا."
 }

@@ -12,7 +12,6 @@ import '../kit/kit_bidi.dart';
 import '../kit/kit_breadcrumb.dart';
 import '../kit/kit_buttons.dart';
 import '../kit/kit_chip.dart';
-import '../kit/kit_dialog.dart';
 import '../kit/kit_icon_button.dart';
 import '../kit/kit_motion.dart';
 import '../kit/kit_notice.dart';
@@ -150,6 +149,11 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
   bool _phone = false;
   bool _showHidden = false;
   bool _accessRefused = false;
+
+  /// The inline name field of "New project here".
+  bool _naming = false;
+  final TextEditingController _name = TextEditingController();
+  String? _nameError;
   List<String> _opened = const [];
 
   FolderLister get _lister => _phone ? widget.phone!.list : widget.list;
@@ -164,6 +168,7 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
   @override
   void dispose() {
     _skeletonTimer?.cancel();
+    _name.dispose();
     super.dispose();
   }
 
@@ -284,27 +289,35 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
     }
   }
 
-  /// "New project here": a name in a small dialog, made inside the folder
-  /// being shown (project space or phone storage), then opened.
-  Future<void> _newProject(AppLocalizations l10n) async {
-    final name = await showKitInputDialog(
-      context,
-      title: l10n.projectFolderNewProject,
-      label: l10n.projectFolderProjectNameLabel,
-      confirmLabel: l10n.projectFolderCreateAction,
-      hint: l10n.projectFolderNameHint,
-      helper: l10n.projectFolderNewProjectHelp(KitBidi.ltr(_path)),
-      cancelLabel: l10n.projectFolderCancel,
-      validate: (value) {
-        final clean = value.trim();
-        return projectFolderNameProblem(clean) ??
-            (_phone ? null : workspaceDirectoryProblem(_join(_path, clean)));
-      },
-      fieldKey: const ValueKey('phone-new-folder-name'),
-      confirmKey: const ValueKey('phone-new-folder-create'),
-    );
-    if (name == null || !mounted) return;
-    final clean = name.trim();
+  /// "New project here": the sheet's actions turn in place into a name
+  /// field (no second sheet or dialog); the project is made inside the
+  /// folder being shown (project space or phone storage), then opened.
+  void _newProject(AppLocalizations l10n) {
+    _name.clear();
+    setState(() {
+      _naming = true;
+      _nameError = null;
+    });
+  }
+
+  void _cancelNaming() => setState(() {
+    _naming = false;
+    _nameError = null;
+  });
+
+  String? _nameProblem(String value) {
+    final clean = value.trim();
+    return projectFolderNameProblem(clean) ??
+        (_phone ? null : workspaceDirectoryProblem(_join(_path, clean)));
+  }
+
+  void _submitName(AppLocalizations l10n) {
+    final clean = _name.text.trim();
+    final problem = _nameProblem(clean);
+    if (problem != null) {
+      setState(() => _nameError = problem);
+      return;
+    }
     final path = _join(_path, clean);
     // A name that is already a folder here simply opens it.
     final exists = _entries?.any((entry) => entry.name == clean) ?? false;
@@ -335,7 +348,35 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
             handle: false,
             onClose: () => KitSheet.close<FolderBrowserChoice>(context),
             loading: _loading && !_showSkeleton,
-            primary: canOpen
+            entry: _naming
+                ? KitSheetEntry(
+                    label: l10n.projectFolderProjectNameLabel,
+                    controller: _name,
+                    hint: l10n.projectFolderNameHint,
+                    helper: l10n.folderBrowserNewProjectCreates(
+                      KitBidi.ltr(
+                        _join(
+                          _path,
+                          _name.text.trim().isEmpty ? '…' : _name.text.trim(),
+                        ),
+                      ),
+                    ),
+                    error: _nameError,
+                    onChanged: (value) => setState(() {
+                      if (_nameError != null) _nameError = _nameProblem(value);
+                    }),
+                    onSubmitted: (_) => _submitName(l10n),
+                    fieldKey: const ValueKey('phone-new-folder-name'),
+                  )
+                : null,
+            primary: _naming
+                ? KitAction(
+                    key: const ValueKey('phone-new-folder-create'),
+                    label: l10n.folderBrowserCreateAndOpen,
+                    icon: AppIconography.folderAdd,
+                    onPressed: () => _submitName(l10n),
+                  )
+                : canOpen
                 ? KitAction(
                     key: const ValueKey('folder-browser-open'),
                     label: l10n.folderBrowserOpen(_nameOf(_path)),
@@ -346,7 +387,7 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
                     ),
                   )
                 : null,
-            secondary: _settled
+            secondary: _settled && !_naming
                 ? KitAction(
                     key: const ValueKey('phone-new-folder'),
                     label: l10n.folderBrowserNewProjectHere,
@@ -354,16 +395,24 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
                     onPressed: () => _newProject(l10n),
                   )
                 : null,
-            tertiary: [
-              KitAction(
-                key: const ValueKey('in-app-enter-path'),
-                label: l10n.projectFolderEnterPath,
-                onPressed: () => KitSheet.close<FolderBrowserChoice>(
-                  context,
-                  FolderBrowserEnterPath(_path),
-                ),
-              ),
-            ],
+            tertiary: _naming
+                ? [
+                    KitAction(
+                      key: const ValueKey('phone-new-folder-cancel'),
+                      label: l10n.projectFolderCancel,
+                      onPressed: _cancelNaming,
+                    ),
+                  ]
+                : [
+                    KitAction(
+                      key: const ValueKey('in-app-enter-path'),
+                      label: l10n.projectFolderEnterPath,
+                      onPressed: () => KitSheet.close<FolderBrowserChoice>(
+                        context,
+                        FolderBrowserEnterPath(_path),
+                      ),
+                    ),
+                  ],
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
