@@ -12306,11 +12306,79 @@
   },
   "chatStripAutoApprove": "Auto-approve",
   "@chatStripAutoApprove": {
-    "description": "Short chip label above the composer while permission requests are approved automatically; may be followed by a count"
+    "description": "Short chip label above the composer while permission requests are approved automatically"
   },
   "chatStripAutoApprovePaused": "Auto-approve paused",
   "@chatStripAutoApprovePaused": {
     "description": "Short chip label above the composer while automatic approval is paused because the app is disconnected"
+  },
+  "chatStripApprovalAsk": "Asks first",
+  "@chatStripApprovalAsk": {
+    "description": "Short chip label above the composer: every permission request waits for the person"
+  },
+  "chatStripApprovalEverything": "Approves everything",
+  "@chatStripApprovalEverything": {
+    "description": "Short chip label above the composer: every conversation on this server is approved automatically"
+  },
+  "approvalModeMenuLabel": "Approval mode",
+  "@approvalModeMenuLabel": {
+    "description": "Name of the menu that switches how this conversation answers permission requests"
+  },
+  "approvalModeAskTitle": "Ask first",
+  "@approvalModeAskTitle": {
+    "description": "Menu choice: every permission request waits for the person"
+  },
+  "approvalModeAutoTitle": "Auto-approve this conversation",
+  "@approvalModeAutoTitle": {
+    "description": "Menu choice: this phone answers each request in this conversation with Allow once"
+  },
+  "approvalModeAutoDetail": "Allows each request once, here only.",
+  "@approvalModeAutoDetail": {
+    "description": "One-line explanation of the Auto-approve menu choice"
+  },
+  "approvalModeEverythingTitle": "Approve everything",
+  "@approvalModeEverythingTitle": {
+    "description": "Menu choice: every conversation on this server is approved automatically"
+  },
+  "approvalModeEverythingDetail": "Every conversation on this server.",
+  "@approvalModeEverythingDetail": {
+    "description": "One-line explanation of the Approve everything menu choice"
+  },
+  "approvalModeSettings": "Approval settings…",
+  "@approvalModeSettings": {
+    "description": "Menu item that opens the full approvals sheet"
+  },
+  "approvalModeConfirmAutoTitle": "Auto-approve this conversation?",
+  "@approvalModeConfirmAutoTitle": {
+    "description": "Title of the confirmation before this conversation approves automatically"
+  },
+  "approvalModeConfirmAutoAction": "Auto-approve this conversation",
+  "@approvalModeConfirmAutoAction": {
+    "description": "Confirm button naming what it turns on"
+  },
+  "approvalModeConfirmEverythingTitle": "Approve everything?",
+  "@approvalModeConfirmEverythingTitle": {
+    "description": "Title of the confirmation before approving everything on the server"
+  },
+  "approvalModeConfirmEverythingAction": "Approve everything",
+  "@approvalModeConfirmEverythingAction": {
+    "description": "Confirm button naming what it turns on"
+  },
+  "approvalModeNowAsk": "This conversation asks first.",
+  "@approvalModeNowAsk": {
+    "description": "Short note after switching this conversation to ask first"
+  },
+  "approvalModeNowAuto": "This conversation approves automatically.",
+  "@approvalModeNowAuto": {
+    "description": "Short note after switching this conversation to automatic approval"
+  },
+  "approvalModeNowEverything": "Approving everything on this server.",
+  "@approvalModeNowEverything": {
+    "description": "Short note after turning on approve everything"
+  },
+  "approvalModeChange": "Change approval mode",
+  "@approvalModeChange": {
+    "description": "Spoken hint on the approval chip"
   },
   "chatStripBackground": "Background",
   "@chatStripBackground": {

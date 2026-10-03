@@ -294,6 +294,8 @@ These go in `test/goldens/kit/kit_menu_golden_test.dart`, rendering `KitMenuPane
 - **`default` at text 2.0 and Arabic RTL, at 412×915 and 1280×800, dark and light:** 8 PNGs.
 - **Total:** 30 PNGs.
 
+Used by the composer's approval chip (screens/chat/approval_mode_menu.dart): three checkable `supporting` items for the modes and a last "Approval settings…" item in its own group.
+
 ## Non-goals
 
 - No screen migration: the 84 popup-menu uses move in wave 2.

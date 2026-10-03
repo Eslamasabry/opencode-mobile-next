@@ -176,10 +176,11 @@ Future<void> _closeSheet(WidgetTester tester) async {
 /// The chip's full wording is its spoken label (it has no tooltip).
 Finder _spoken(String pattern) => find.bySemanticsLabel(RegExp(pattern));
 
-/// Taps the approvals chip at its leading glyph: at 2.5x the chip can be
+/// Taps the approval chip at its leading glyph: at 2.5x the chip can be
 /// wider than the sideways-scrolling strip, so its centre may be clipped.
-/// The glyph itself takes no pointer; the chip under it does.
-Future<void> _tapChip(WidgetTester tester) async {
+/// The glyph itself takes no pointer; the chip under it does. It opens the
+/// mode menu.
+Future<void> _tapChipOnly(WidgetTester tester) async {
   final glyph = find
       .descendant(
         of: find.byKey(const Key('auto-approval-indicator')),
@@ -190,6 +191,13 @@ Future<void> _tapChip(WidgetTester tester) async {
   await tester.pumpAndSettle();
   await tester.tap(glyph, warnIfMissed: false);
   await tester.pumpAndSettle();
+}
+
+/// The chip's menu, then its last item: the detailed approvals sheet.
+Future<void> _tapChip(WidgetTester tester) async {
+  await _tapChipOnly(tester);
+  expect(find.byKey(const Key('approval-mode-menu')), findsOneWidget);
+  await _tapVisible(tester, find.byKey(const Key('approval-mode-settings')));
 }
 
 Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
@@ -215,8 +223,12 @@ void main() {
         await tester.pumpWidget(_app(controller, 'parent', direction));
         await tester.pumpAndSettle();
 
-        // Default: asking, and no indicator anywhere.
-        expect(find.byKey(const Key('auto-approval-indicator')), findsNothing);
+        // Default: asking, and the chip says so, with no count.
+        expect(
+          find.byKey(const Key('auto-approval-indicator')),
+          findsOneWidget,
+        );
+        expect(find.text('Asks first'), findsOneWidget);
 
         await _openApprovals(tester);
         await _captureScreen(tester, 'sheet-ask-${direction.name}');
@@ -257,7 +269,8 @@ void main() {
         await _closeSheet(tester);
         expect(find.byKey(const Key('session-approvals-sheet')), findsNothing);
 
-        // The indicator is on while the setting is on.
+        // The chip names the mode while the setting is on, and carries no
+        // count of what it approved.
         final indicator = find.byKey(const Key('auto-approval-indicator'));
         expect(indicator, findsOneWidget);
         expect(find.text('Auto-approve'), findsOneWidget);
@@ -268,6 +281,7 @@ void main() {
         expect(api.replies, [('req-1', 'once')]);
         expect(find.byKey(const Key('permission-card-review')), findsNothing);
         expect(_spoken('Auto-approved · Run a shell command'), findsOneWidget);
+        expect(find.text('Auto-approve · 1'), findsNothing);
         await _captureScreen(tester, 'indicator-${direction.name}');
 
         // Tapping the indicator reopens the sheet, which lists the record;
@@ -293,7 +307,8 @@ void main() {
         await _tapVisible(tester, find.byKey(const Key('approvals-mode-auto')));
         expect(controller.autoApprovalFor('parent').automatic, isFalse);
         await _closeSheet(tester);
-        expect(find.byKey(const Key('auto-approval-indicator')), findsNothing);
+        expect(find.text('Asks first'), findsOneWidget);
+        expect(find.text('Auto-approve'), findsNothing);
         controller.handleEventForTesting(_ask('req-2', 'parent'));
         await tester.pumpAndSettle();
         expect(api.replies, hasLength(1));
@@ -433,9 +448,9 @@ void main() {
       find.text('Automatic approval failed. Review this request.'),
       findsOneWidget,
     );
-    // The card takes the slot while a person is needed; the strip is back
-    // as soon as the request is answered by hand.
-    expect(find.byKey(const Key('auto-approval-indicator')), findsNothing);
+    // The card is the main thing while a person is needed; the chip stays
+    // in the strip so the mode can still be switched.
+    expect(find.byKey(const Key('auto-approval-indicator')), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     api.fail = null;

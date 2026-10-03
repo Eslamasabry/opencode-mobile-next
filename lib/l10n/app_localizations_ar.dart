@@ -11718,6 +11718,57 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatStripAutoApprovePaused => 'الموافقة التلقائية متوقفة';
 
   @override
+  String get chatStripApprovalAsk => 'يسأل أولًا';
+
+  @override
+  String get chatStripApprovalEverything => 'يوافق على كل شيء';
+
+  @override
+  String get approvalModeMenuLabel => 'وضع الموافقة';
+
+  @override
+  String get approvalModeAskTitle => 'اسأل أولًا';
+
+  @override
+  String get approvalModeAutoTitle => 'موافقة تلقائية هنا';
+
+  @override
+  String get approvalModeAutoDetail => 'يسمح بكل طلب مرة واحدة، هنا فقط.';
+
+  @override
+  String get approvalModeEverythingTitle => 'وافق على كل شيء';
+
+  @override
+  String get approvalModeEverythingDetail => 'كل المحادثات على هذا الخادم.';
+
+  @override
+  String get approvalModeSettings => 'إعدادات الموافقة…';
+
+  @override
+  String get approvalModeConfirmAutoTitle => 'موافقة تلقائية في هذه المحادثة؟';
+
+  @override
+  String get approvalModeConfirmAutoAction => 'وافق تلقائيًا هنا';
+
+  @override
+  String get approvalModeConfirmEverythingTitle => 'الموافقة على كل شيء؟';
+
+  @override
+  String get approvalModeConfirmEverythingAction => 'وافق على كل شيء';
+
+  @override
+  String get approvalModeNowAsk => 'هذه المحادثة تسأل أولًا.';
+
+  @override
+  String get approvalModeNowAuto => 'هذه المحادثة توافق تلقائيًا.';
+
+  @override
+  String get approvalModeNowEverything => 'الموافقة على كل شيء على هذا الخادم.';
+
+  @override
+  String get approvalModeChange => 'تغيير وضع الموافقة';
+
+  @override
   String get chatStripBackground => 'في الخلفية';
 
   @override

@@ -171,8 +171,8 @@
      "element": "session-menu-sheet-approvals"
     },
     {
-     "page": "embedded-auto-approval-indicator",
-     "element": "embedded-auto-approval-indicator-open"
+     "page": "approval-mode-menu",
+     "element": "approval-mode-menu-settings"
     }
    ],
    "gates": [
@@ -249,30 +249,110 @@
   },
   {
    "id": "embedded-auto-approval-indicator",
-   "title": "[Auto-approval indicator strip]",
+   "title": "[Approval mode chip]",
    "kind": "overlay",
    "file": "lib/ui/screens/chat/approvals_sheet.dart",
    "widget": "_AutoApprovalIndicator",
    "presentedBy": [],
    "line": 257,
-   "purpose": "Persistent strip in the chat attention slot above the composer while automatic approval is on for the session.",
+   "purpose": "The always-present chip in the strip above the composer: names how this conversation answers permission requests (Asks first, Auto-approve, Approves everything, or paused while disconnected) with no count, and opens the mode menu.",
    "reachedFrom": [],
    "gates": [
-    "!_conn.isIsolated && _conn.autoApprovalFor(sessionID).automatic",
-    "no pending permission, question or retry state occupies the attention slot (chat_screen.dart:6319-6347)"
+    "!_conn.isIsolated",
+    "a waiting request does not hide it: the request card stays the main thing and the chip stays beside it"
    ],
    "elements": [
     {
      "id": "embedded-auto-approval-indicator-open",
      "type": "card",
-     "label": "Approving automatically / Auto-approval paused (semantics: \"… Open approval settings\")",
+     "label": "Asks first / Auto-approve / Approves everything / Auto-approve paused (semantics: \"... Change approval mode\")",
      "key": "auto-approval-indicator",
      "file": "lib/ui/screens/chat/approvals_sheet.dart",
      "line": 303,
+     "action": "open-menu",
+     "target": "approval-mode-menu",
+     "targetWidget": "_showApprovalModeMenu",
+     "effect": "KitChip.action onPressed -> onOpen(chipContext) -> ChatScreen._showApprovalModeMenu anchors the mode menu to the chip.",
+     "gates": [],
+     "destructive": false
+    }
+   ],
+   "embeddedIn": [
+    "ChatScreen"
+   ]
+  },
+  {
+   "id": "approval-mode-menu",
+   "title": "Approval mode",
+   "kind": "overlay",
+   "file": "lib/ui/screens/chat/approval_mode_menu.dart",
+   "widget": "_ChatApprovalModeMenu",
+   "presentedBy": [
+    "_showApprovalModeMenu"
+   ],
+   "line": 36,
+   "purpose": "Compact menu anchored to the approval chip: switch this conversation between asking first, auto-approving, and approving everything on the server, or open the detailed approvals sheet.",
+   "reachedFrom": [
+    {
+     "page": "embedded-auto-approval-indicator",
+     "element": "embedded-auto-approval-indicator-open"
+    }
+   ],
+   "gates": [
+    "!_conn.isIsolated",
+    "Auto-approve and Approve everything are offered only while the automation policy allows automatic answers (supervision below High); the current mode is always listed"
+   ],
+   "elements": [
+    {
+     "id": "approval-mode-menu-ask",
+     "type": "menu-item",
+     "label": "Ask first",
+     "key": "approval-mode-ask",
+     "line": 58,
+     "action": "toggle-setting",
+     "target": null,
+     "effect": "Applies at once: controller.setSessionAutoApproval(sessionID, ask); composer note says so.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "approval-mode-menu-auto",
+     "type": "menu-item",
+     "label": "Auto-approve this conversation",
+     "key": "approval-mode-auto",
+     "line": 64,
+     "action": "toggle-setting",
+     "target": null,
+     "effect": "Confirms first (same scope text as the sheet), then controller.setSessionAutoApproval(sessionID, autoOnce). Cancel changes nothing. Moving down from Approve everything applies at once.",
+     "gates": [
+      "automation policy allows automatic answers"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "approval-mode-menu-everything",
+     "type": "menu-item",
+     "label": "Approve everything",
+     "key": "approval-mode-everything",
+     "line": 70,
+     "action": "toggle-setting",
+     "target": null,
+     "effect": "Confirms first (same body as the sheet's risk step), then controller.setApprovesEverything(true) and clears this conversation's own setting so it follows. Cancel changes nothing.",
+     "gates": [
+      "automation policy allows automatic answers"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "approval-mode-menu-settings",
+     "type": "menu-item",
+     "label": "Approval settings…",
+     "key": "approval-mode-settings",
+     "line": 77,
      "action": "open-sheet",
      "target": "session-approvals-sheet",
      "targetWidget": "showSessionApprovalsSheet",
-     "effect": "InkWell.onTap -> onOpen; ChatScreen._attentionRegion passes showSessionApprovalsSheet(context, controller: _conn, sessionID).",
+     "effect": "showSessionApprovalsSheet(context, controller: _conn, sessionID).",
      "gates": [],
      "destructive": false
     }
