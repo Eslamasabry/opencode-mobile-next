@@ -7,6 +7,11 @@ import '../../domain/server_gateway.dart' show WorkspaceProject;
 import '../../domain/team_directories.dart';
 import '../../domain/workspace_paths.dart';
 import '../../l10n/app_localizations.dart';
+import '../../platform/phone_storage_folders.dart';
+import '../../platform/storage_access.dart';
+import '../../state/shared_project_roots.dart';
+import '../../state/shared_storage_gate.dart' show SharedStorageBlock;
+import '../../domain/shared_storage_path.dart';
 import '../../state/connection.dart';
 import '../../state/interaction_defaults.dart';
 import '../../termux/bridge.dart';
@@ -14,6 +19,7 @@ import '../../termux/termux_folders.dart';
 import '../app_iconography.dart';
 import '../kit/kit.dart';
 import '../widgets/folder_browser.dart';
+import '../widgets/remote_folder_picker.dart';
 import '../widgets/product_states.dart' show productErrorText;
 import '../widgets/termux_running_server_entry.dart' show isManagedPhoneProfile;
 import 'shared_storage_access_flow.dart';
@@ -134,6 +140,52 @@ class ProjectFolderActions {
   @visibleForTesting
   static FolderLister? folderListerOverride;
 
+  /// Widget tests list the phone's storage without its files.
+  @visibleForTesting
+  static FolderLister? phoneListerOverride;
+
+  /// The phone's storage as a second place in the folder browser: listed
+  /// from this app (needs All files access, asked first in plain words),
+  /// with the shared-storage folders opened before.
+  static PhoneStoragePlace _phonePlace(ConnectionController controller) =>
+      PhoneStoragePlace(
+        list: phoneListerOverride ?? PhoneStorageFolders().list,
+        ensureAccess: (context) async {
+          if (await StorageAccessBridge.status() != StorageAccess.notGranted) {
+            return true;
+          }
+          if (!context.mounted) return false;
+          final outcome = await SharedStorageAccessFlow.resolve(
+            context,
+            SharedStorageBlock.appAccess,
+          );
+          return outcome == SharedStorageOutcome.proceed;
+        },
+        openedBefore: () async => _openedSharedFolders(controller),
+      );
+
+  static Future<List<String>> _openedSharedFolders(
+    ConnectionController controller,
+  ) async {
+    final profile = controller.profile;
+    final seen = <String>{};
+    final out = <String>[];
+    void add(String? path) {
+      final root = sharedProjectRoot(path);
+      if (root != null && seen.add(root)) out.add(root);
+    }
+
+    for (final location in controller.recentLocations) {
+      add(location.directory);
+    }
+    if (profile != null) {
+      for (final root in await SharedProjectRoots.all(profile.id)) {
+        add(root);
+      }
+    }
+    return out;
+  }
+
   /// A server on this phone (OpenCode inside the app, or the one this app
   /// runs in Termux): browse its folders from the projects folder and open
   /// one, name a new project in the folder shown, or enter a path. Any other
@@ -154,6 +206,7 @@ class ProjectFolderActions {
         builder: (_) => FolderBrowserSheet(
           list: folderListerOverride ?? BuiltinFolders(linux).list,
           knownProjects: () => _knownProjects(controller),
+          phone: _phonePlace(controller),
         ),
       );
       if (choice == null || !context.mounted) return null;
@@ -182,6 +235,7 @@ class ProjectFolderActions {
         builder: (_) => FolderBrowserSheet(
           list: folderListerOverride ?? termux.list,
           knownProjects: () => _knownProjects(controller),
+          phone: _phonePlace(controller),
         ),
       );
       if (choice == null || !context.mounted) return null;
@@ -202,7 +256,36 @@ class ProjectFolderActions {
       };
     }
     if (!context.mounted) return null;
-    return _openByPath(context, controller, null);
+    return _openRemote(context, controller);
+  }
+
+  /// A server that is not on this phone cannot be browsed (OpenCode lists
+  /// only inside a project), so: the folders opened on it before and its
+  /// projects as rows, and a path field that starts from the folder used
+  /// last. A typed path is confirmed on the server before it opens.
+  static Future<String?> _openRemote(
+    BuildContext context,
+    ConnectionController controller,
+  ) async {
+    final recent = [
+      for (final location in controller.recentLocations)
+        if (location.directory != null &&
+            workspaceDirectoryProblem(location.directory!) == null)
+          location.directory!,
+    ];
+    final path = await showKitFramedSheet<String>(
+      context,
+      builder: (_) => RemoteFolderSheet(
+        recent: recent,
+        projects: () async {
+          final known = await _knownProjects(controller);
+          return known.toList()..sort();
+        },
+        probe: controller.probeProjectFolder,
+      ),
+    );
+    if (path == null || !context.mounted) return null;
+    return _open(context, controller, path);
   }
 
   /// The server in use is the one this app runs in Termux, and Termux can

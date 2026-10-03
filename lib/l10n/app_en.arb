@@ -31382,5 +31382,73 @@
   "kitToolRetry": "Try again",
   "@kitToolRetry": {
     "description": "KitToolRow: the quiet button under a failed step that tries it again"
+  },
+  "folderBrowserPlaceLabel": "Where to look",
+  "@folderBrowserPlaceLabel": {
+    "description": "Section label above the folder browser's place switch"
+  },
+  "folderBrowserPlaceProjects": "Project space",
+  "@folderBrowserPlaceProjects": {
+    "description": "Folder browser place: the app's project space"
+  },
+  "folderBrowserPlacePhone": "This phone’s storage",
+  "@folderBrowserPlacePhone": {
+    "description": "Folder browser place: the phone's internal storage"
+  },
+  "folderBrowserPhoneRefusedTitle": "Phone storage is off",
+  "@folderBrowserPhoneRefusedTitle": {
+    "description": "Notice in the folder browser after All files access was not allowed"
+  },
+  "folderBrowserPhoneRefusedBody": "Folders on this phone can’t be shown until you allow access. The project space works as before.",
+  "@folderBrowserPhoneRefusedBody": {
+    "description": "Body of the notice after All files access was not allowed"
+  },
+  "folderBrowserInternalStorage": "Internal storage",
+  "@folderBrowserInternalStorage": {
+    "description": "Root of the phone-storage breadcrumb"
+  },
+  "folderBrowserOpenedBefore": "Opened before",
+  "@folderBrowserOpenedBefore": {
+    "description": "Section label over phone folders opened as projects before"
+  },
+  "folderBrowserShowHidden": "Show hidden folders",
+  "@folderBrowserShowHidden": {
+    "description": "Switch in the phone-storage browser"
+  },
+  "folderBrowserHintEmpty": "Empty",
+  "@folderBrowserHintEmpty": {
+    "description": "Hint line of an empty folder row"
+  },
+  "folderBrowserHintMore": "{names}, {count} more",
+  "@folderBrowserHintMore": {
+    "description": "Hint line of a folder row: a few names inside and how many more",
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "folderBrowserNewFolderHere": "New folder here",
+  "@folderBrowserNewFolderHere": {
+    "description": "Secondary button of the phone-storage browser"
+  },
+  "folderBrowserNewFolderTitle": "New folder",
+  "@folderBrowserNewFolderTitle": {
+    "description": "Title of the dialog that names a new folder in phone storage"
+  },
+  "folderBrowserEmptyPhoneBody": "Open it, make a new folder in it, or go up one level.",
+  "@folderBrowserEmptyPhoneBody": {
+    "description": "Empty-state body of an empty phone-storage folder"
+  },
+  "remoteFolderRecent": "Recent folders",
+  "@remoteFolderRecent": {
+    "description": "Section label of folders opened before on a remote server"
+  },
+  "remoteFolderProjects": "Projects on this server",
+  "@remoteFolderProjects": {
+    "description": "Section label of the remote server's own projects"
   }
 }

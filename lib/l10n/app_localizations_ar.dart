@@ -26662,4 +26662,53 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get kitToolRetry => 'أعد المحاولة';
+
+  @override
+  String get folderBrowserPlaceLabel => 'أين تبحث';
+
+  @override
+  String get folderBrowserPlaceProjects => 'مساحة المشاريع';
+
+  @override
+  String get folderBrowserPlacePhone => 'تخزين هذا الهاتف';
+
+  @override
+  String get folderBrowserPhoneRefusedTitle => 'تخزين الهاتف متوقف';
+
+  @override
+  String get folderBrowserPhoneRefusedBody =>
+      'لا يمكن عرض مجلدات هذا الهاتف قبل السماح بالوصول. مساحة المشاريع تعمل كما كانت.';
+
+  @override
+  String get folderBrowserInternalStorage => 'التخزين الداخلي';
+
+  @override
+  String get folderBrowserOpenedBefore => 'فُتحت سابقًا';
+
+  @override
+  String get folderBrowserShowHidden => 'إظهار المجلدات المخفية';
+
+  @override
+  String get folderBrowserHintEmpty => 'فارغ';
+
+  @override
+  String folderBrowserHintMore(String names, int count) {
+    return '$names، و$count أخرى';
+  }
+
+  @override
+  String get folderBrowserNewFolderHere => 'مجلد جديد هنا';
+
+  @override
+  String get folderBrowserNewFolderTitle => 'مجلد جديد';
+
+  @override
+  String get folderBrowserEmptyPhoneBody =>
+      'افتحه، أو أنشئ فيه مجلدًا جديدًا، أو اصعد مستوى واحدًا.';
+
+  @override
+  String get remoteFolderRecent => 'مجلدات حديثة';
+
+  @override
+  String get remoteFolderProjects => 'مشاريع هذا الخادم';
 }

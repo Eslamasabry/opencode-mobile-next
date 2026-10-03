@@ -4971,5 +4971,20 @@
   "queuedReceiptDetailNote": "انقطع الاتصال قبل أن نتمكن من تأكيد الاستلام.",
   "chatRequestAlwaysConfirm": "السماح دائمًا بـ {what} في هذا المشروع؟",
   "chatRequestAlwaysInProject": "في هذا المشروع",
-  "kitToolRetry": "أعد المحاولة"
+  "kitToolRetry": "أعد المحاولة",
+  "folderBrowserPlaceLabel": "أين تبحث",
+  "folderBrowserPlaceProjects": "مساحة المشاريع",
+  "folderBrowserPlacePhone": "تخزين هذا الهاتف",
+  "folderBrowserPhoneRefusedTitle": "تخزين الهاتف متوقف",
+  "folderBrowserPhoneRefusedBody": "لا يمكن عرض مجلدات هذا الهاتف قبل السماح بالوصول. مساحة المشاريع تعمل كما كانت.",
+  "folderBrowserInternalStorage": "التخزين الداخلي",
+  "folderBrowserOpenedBefore": "فُتحت سابقًا",
+  "folderBrowserShowHidden": "إظهار المجلدات المخفية",
+  "folderBrowserHintEmpty": "فارغ",
+  "folderBrowserHintMore": "{names}، و{count} أخرى",
+  "folderBrowserNewFolderHere": "مجلد جديد هنا",
+  "folderBrowserNewFolderTitle": "مجلد جديد",
+  "folderBrowserEmptyPhoneBody": "افتحه، أو أنشئ فيه مجلدًا جديدًا، أو اصعد مستوى واحدًا.",
+  "remoteFolderRecent": "مجلدات حديثة",
+  "remoteFolderProjects": "مشاريع هذا الخادم"
 }
