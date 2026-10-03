@@ -36,6 +36,7 @@ class SetupRunner private constructor(private val context: Context) {
         val stage: String?,
         val labels: Map<String, String>,
         val data: Map<String, String>,
+        val agentUser: Boolean = false,
     )
 
     /** What the ongoing notification says; the app sends it localised. */
@@ -298,7 +299,7 @@ class SetupRunner private constructor(private val context: Context) {
     private fun runScript(spec: Spec, component: SetupComponentStatus): String? {
         if (!linux.installed) return "The Linux base is not installed"
         val script = spec.script ?: return "No script for ${spec.id}"
-        val started = linux.start(script, null)
+        val started = linux.start(script, null, agentUser = spec.agentUser)
         synchronized(lock) {
             if (cancelled) {
                 BuiltinLinux.stopTree(started, graceMs = 0)

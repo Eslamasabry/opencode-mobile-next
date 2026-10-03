@@ -12,7 +12,7 @@ extension _PaseoPrompts on PaseoGateway {
     final scope = _scope;
     final locationEpoch = _locationEpoch;
     final provider = model == null || model.providerID.isEmpty
-        ? paseoDefaultProvider
+        ? (_draftProviders[id] ?? paseoDefaultProvider)
         : model.providerID;
     if (!isExistingPaseoProvider(provider)) {
       throw PaseoFailure(PaseoFailureKind.unavailable);
@@ -20,6 +20,11 @@ extension _PaseoPrompts on PaseoGateway {
     await _checkExistingProvider(provider);
     _checkLocation(scope, locationEpoch);
     final modes = _modesFor(provider);
+    mode ??= defaultProviderModes[provider];
+    if (defaultProviderModes.containsKey(provider) &&
+        (mode == null || !modes.contains(mode))) {
+      throw PaseoFailure(PaseoFailureKind.unavailable);
+    }
     final draft = _sessions[id];
     final title = draft?.title;
     final Map<String, dynamic> result;
@@ -57,6 +62,7 @@ extension _PaseoPrompts on PaseoGateway {
     _appIDs[realID] = id;
     _remember(agent);
     _drafts.remove(id);
+    _draftProviders.remove(id);
     if (_creating == 0) {
       final held = _heldEvents.toList();
       _heldEvents.clear();

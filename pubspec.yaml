@@ -126,6 +126,7 @@ flutter:
     # tool/host/aiteam-manifest-<date>.json.
     - assets/aiteam/manifest.json
     - assets/aiteam/manifest-x86_64.json
+    - assets/agents/paseo-package-lock.json
   fonts:
     # Phosphor 2.1.0 artwork (MIT), native IconData for Flutter 3.47.2.
     - family: AppPhosphorRegular

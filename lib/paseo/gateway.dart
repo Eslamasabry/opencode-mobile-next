@@ -38,6 +38,7 @@ class PaseoGateway
   final _sessions = <String, Session>{};
   final _statuses = <String, String>{};
   final _drafts = <String>{};
+  final _draftProviders = <String, String>{};
   final _uncertain = <String>{};
 
   /// Sessions whose prompt was accepted but whose turn has not started. The
@@ -79,8 +80,14 @@ class PaseoGateway
   List<Map<String, dynamic>>? _providerEntries;
   int _providerRevision = 0;
 
-  PaseoGateway({required this.transport, String? directory})
-    : _directory = directory {
+  final Map<String, String> defaultProviderModes;
+
+  PaseoGateway({
+    required this.transport,
+    String? directory,
+    Map<String, String> defaultProviderModes = const {},
+  }) : defaultProviderModes = Map.unmodifiable(defaultProviderModes),
+       _directory = directory {
     _daemonEvents = transport.events.listen(_onEvent);
     _daemonDisconnects = transport.disconnects.listen((_) {
       _providerEntries = null;
@@ -136,6 +143,7 @@ class PaseoGateway
     _sessions.clear();
     _statuses.clear();
     _drafts.clear();
+    _draftProviders.clear();
     _uncertain.clear();
     _awaitingTurn.clear();
     _turnActive.clear();
@@ -252,6 +260,21 @@ class PaseoGateway
     _statuses[session.id] = 'idle';
     _drafts.add(session.id);
     return session;
+  }
+
+  /// Runtime identity of a scoped snapshot, including a local empty draft.
+  String? providerIdForSession(String sessionID) {
+    final provider = _agents[sessionID]?['provider'];
+    return provider is String ? provider : _draftProviders[sessionID];
+  }
+
+  /// Keeps the agent chip selection through an empty draft's first prompt.
+  /// Availability is rechecked against the daemon when that prompt is sent.
+  void seedDraftProviderForSession(String sessionID, String providerId) {
+    if (!_drafts.contains(sessionID) || !isExistingPaseoProvider(providerId)) {
+      throw PaseoFailure(PaseoFailureKind.unavailable);
+    }
+    _draftProviders[sessionID] = providerId;
   }
 
   @override
@@ -814,6 +837,7 @@ class PaseoGateway
     _sessions.clear();
     _statuses.clear();
     _drafts.clear();
+    _draftProviders.clear();
     _uncertain.clear();
     _awaitingTurn.clear();
     _turnActive.clear();

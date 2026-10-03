@@ -1,5 +1,6 @@
-/// Pinned native installer prepared for P1.6b. Not registered/enabled until
-/// the ARM64 runtime gate passes. Runs after setupPrelude in Ubuntu only.
+/// Original pinned manifest and installer retained for compatibility.
+/// Phone agents register these same payload pins through AgentPhoneScripts,
+/// installing as oc. Device qualification is the explicit four-step self-test.
 abstract final class ClaudeScripts {
   static const version = '2.1.283';
   static const arm64Sha256 =

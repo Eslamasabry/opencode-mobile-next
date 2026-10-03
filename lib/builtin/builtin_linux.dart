@@ -364,6 +364,24 @@ class BuiltinLinux {
     );
   }
 
+  /// Setup checks in the fixed oc view. Never use for credentials or sign-in.
+  Future<BuiltinLinuxRunResult> runAgentSetupCheck(
+    String script, {
+    Duration timeout = const Duration(minutes: 2),
+  }) async {
+    final raw = await _invoke<Map<Object?, Object?>>('run', {
+      'script': script,
+      'timeoutSeconds': timeout.inSeconds,
+      'agentUser': true,
+    });
+    return BuiltinLinuxRunResult(
+      exitCode: raw?['exitCode'] is num
+          ? (raw!['exitCode'] as num).toInt()
+          : -1,
+      output: (raw?['output'] ?? '').toString(),
+    );
+  }
+
   Future<void> startServer(String script, {int port = serverPort}) =>
       _invoke<void>('startServer', {'script': script, 'port': port});
 

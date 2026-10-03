@@ -416,6 +416,8 @@ class MainActivity : FlutterActivity() {
                             "phoneEngineCredentials", "stopPhoneEngine", "deletePhoneEngine",
                             "startProtectedPhoneServer", "runPhoneEngineBoundaryProbe")) {
                             result.error("engine_unavailable", "The phone engine is unavailable.", null)
+                        } else if (call.method in setOf("startAgentHost", "agentHostStatus", "stopAgentHost", "deleteAgentHost", "agentHostVersion", "agentHostWorkspace", "startAgentSignIn", "readAgentSignInChallenge", "submitAgentSignInCode", "cancelAgentSignIn", "agentSignInStatus")) {
+                            result.error("agent_unavailable", "The agent is unavailable. Try again.", null)
                         } else if (error is SetupPersistenceException) {
                             result.error(SetupPersistenceException.CODE, null, null)
                         } else {
@@ -426,6 +428,36 @@ class MainActivity : FlutterActivity() {
             }.start()
         }
         when (call.method) {
+            "startAgentHost", "agentHostStatus", "stopAgentHost", "deleteAgentHost", "agentHostVersion", "agentHostWorkspace" -> inBackground {
+                val profile = call.argument<String>("profileId") ?: error("Agent unavailable")
+                when (call.method) {
+                    "startAgentHost" -> linux.agentHost.start(profile,
+                        call.argument<String>("password") ?: error("Agent unavailable"),
+                        call.argument<Int>("port") ?: 4099,
+                        call.argument<String>("config") ?: error("Agent unavailable"))
+                    "agentHostWorkspace" -> linux.agentHost.workspace(profile)
+                    "agentHostStatus" -> linux.agentHost.status(profile)
+                    "stopAgentHost" -> linux.agentHost.stop(profile)
+                    "deleteAgentHost" -> { linux.agentHost.delete(profile); null }
+                    else -> linux.agentHost.version(profile,
+                        call.argument<String>("executable") ?: error("Agent unavailable"),
+                        call.argument<String>("version") ?: error("Agent unavailable"))
+                }
+            }
+            "startAgentSignIn", "readAgentSignInChallenge", "submitAgentSignInCode", "cancelAgentSignIn", "agentSignInStatus" -> inBackground {
+                val profile = call.argument<String>("profileId") ?: error("Agent unavailable")
+                val agent = call.argument<String>("agentId") ?: error("Agent unavailable")
+                val run = call.argument<String>("runId") ?: error("Agent unavailable")
+                val method = call.argument<String>("method") ?: error("Agent unavailable")
+                when (call.method) {
+                    "startAgentSignIn" -> linux.agentSignIn.start(profile, agent, run, method)
+                    "readAgentSignInChallenge" -> linux.agentSignIn.challenge(profile, agent, run, method)
+                    "submitAgentSignInCode" -> linux.agentSignIn.submit(profile, agent, run, method,
+                        call.argument<String>("code") ?: error("Agent unavailable"))
+                    "cancelAgentSignIn" -> linux.agentSignIn.cancel(profile, agent, run, method)
+                    else -> linux.agentSignIn.status(profile, agent, run, method)
+                }
+            }
             "runPhoneEngineBoundaryProbe" -> inBackground { linux.runPhoneEngineBoundaryProbe() }
             "startPhoneEngine", "phoneEngineStatus", "phoneEngineCredentials",
             "stopPhoneEngine", "deletePhoneEngine", "startProtectedPhoneServer" -> {
@@ -479,7 +511,7 @@ class MainActivity : FlutterActivity() {
                 }
                 val timeout = (call.argument<Int>("timeoutSeconds") ?: 600).toLong()
                 inBackground {
-                    val run = linux.run(script, timeout)
+                    val run = linux.run(script, timeout, agentUser = call.argument<Boolean>("agentUser") == true)
                     mapOf("exitCode" to run.exitCode, "output" to run.output)
                 }
             }
@@ -681,6 +713,7 @@ class MainActivity : FlutterActivity() {
             stage = raw["stage"] as? String,
             labels = strings(raw["labels"]),
             data = strings(raw["data"]),
+            agentUser = raw["agentUser"] == true,
         )
     }
 
