@@ -63,19 +63,46 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       projects: source.projectSummaries,
       allCount: source.chatFeed().items.length,
       selectedDirectory: _filter.projectDirectory,
+      otherFoldersCount: source
+          .chatFeed(const ChatFeedFilter(otherFolders: true))
+          .items
+          .length,
+      otherFoldersSelected: _filter.otherFolders,
     );
     if (!mounted || choice == null) return;
     switch (choice) {
       case ChatsAllProjects():
-        setState(() => _filter = _filter.copyWith(clearProject: true));
+        setState(
+          () => _filter = _filter.copyWith(
+            clearProject: true,
+            otherFolders: false,
+          ),
+        );
+      case ChatsOtherFolders():
+        setState(
+          () => _filter = _filter.copyWith(
+            clearProject: true,
+            otherFolders: true,
+          ),
+        );
       case ChatsOneProject(:final directory):
-        setState(() => _filter = _filter.copyWith(projectDirectory: directory));
+        setState(
+          () => _filter = _filter.copyWith(
+            projectDirectory: directory,
+            otherFolders: false,
+          ),
+        );
       case ChatsOpenProject():
         // The first sheet is closed; this is a second, never on top of it.
         final directory = await host.openProject(context);
         if (!mounted || directory == null) return;
         if (source.isTemporaryProject(directory)) return;
-        setState(() => _filter = _filter.copyWith(projectDirectory: directory));
+        setState(
+          () => _filter = _filter.copyWith(
+            projectDirectory: directory,
+            otherFolders: false,
+          ),
+        );
     }
   }
 
@@ -135,7 +162,12 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
         : _nameOf(projectDirectory, projects);
     // The Needs you count follows the project filter, not the status chips.
     final needsCount = source
-        .chatFeed(ChatFeedFilter(projectDirectory: projectDirectory))
+        .chatFeed(
+          ChatFeedFilter(
+            projectDirectory: projectDirectory,
+            otherFolders: _filter.otherFolders,
+          ),
+        )
         .items
         .where((item) => item.status == ChatStatus.needsYou)
         .length;
@@ -168,11 +200,13 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
         chips: [
           KitChip.summary(
             key: const ValueKey('chats-filter-project'),
-            label: projectName == null
+            label: _filter.otherFolders
+                ? l10n.chatsHomeOtherFolders
+                : projectName == null
                 ? l10n.chatsHomeAllProjects
                 : KitBidi.auto(projectName),
             expanded: false,
-            tone: projectName == null
+            tone: projectName == null && !_filter.otherFolders
                 ? KitChipTone.neutral
                 : KitChipTone.active,
             onPressed: () => unawaited(_pickProject(host)),
@@ -210,7 +244,7 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       // only while the phone's watcher reports a helper.
       host.leftoverNotice(context),
       // Quiet lines about the agents on this phone, each with its action.
-      ...agentNoticeWidgets(context, host),
+      AgentStatusNotices(host: host),
     ];
 
     final list = _list(context, host, snapshot, projectName);

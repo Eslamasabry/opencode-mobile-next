@@ -29,6 +29,7 @@ enum _Scene {
   sheetList('agents_sheet_list'),
   sheetInstall('agents_sheet_install'),
   sheetSignIn('agents_sheet_signin'),
+  sheetError('agents_sheet_error'),
   homeStatus('agents_home_status'),
   homeResume('agents_home_resume'),
   settingsAgents('agents_settings_agents'),
@@ -53,7 +54,9 @@ Future<void> _mount(
     available: scene != _Scene.settingsBuiltIn,
     rows: [
       agentRowFor('claude', switch (scene) {
-        _Scene.sheetList || _Scene.sheetInstall => FakeAgentStage.notInstalled,
+        _Scene.sheetList ||
+        _Scene.sheetInstall ||
+        _Scene.sheetError => FakeAgentStage.notInstalled,
         _Scene.sheetSignIn => FakeAgentStage.signedOut,
         _ => FakeAgentStage.ready,
       }),
@@ -127,6 +130,7 @@ Future<void> _mount(
   final Widget home = switch (scene) {
     _Scene.sheetList ||
     _Scene.sheetInstall ||
+    _Scene.sheetError ||
     _Scene.sheetSignIn => const NewChatScreen(),
     _Scene.homeStatus || _Scene.homeResume => const ChatsHomeScreen(),
     _Scene.settingsBuiltIn => const AgentsScreen(),
@@ -155,6 +159,17 @@ Future<void> _mount(
       await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('agents-install')));
+    case _Scene.sheetError:
+      agents.installError = const AgentHostException(
+        AgentHostFailure.unavailable,
+      );
+      await tester.tap(find.byKey(const ValueKey('chats-new-agent')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('agents-install')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Details'));
     case _Scene.sheetSignIn:
       await tester.tap(find.byKey(const ValueKey('chats-new-agent')));
       await tester.pumpAndSettle();

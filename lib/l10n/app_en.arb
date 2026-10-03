@@ -31929,10 +31929,6 @@
   "@agentsStateReady": {
     "description": "Agent sheet: an agent that can start conversations"
   },
-  "agentsStateReadyCantReopen": "Ready · Can't reopen old conversations",
-  "@agentsStateReadyCantReopen": {
-    "description": "Agent sheet: ready, but old conversations start new ones"
-  },
   "agentsStateCantReopen": "Can't reopen old conversations",
   "@agentsStateCantReopen": {
     "description": "Feed row note and agent state: the agent cannot reopen an old conversation"
@@ -32341,10 +32337,6 @@
   "@agentsSectionTitle": {
     "description": "This phone: section name"
   },
-  "agentsSelectFailed": "That agent can't be chosen right now. Open it to finish setup.",
-  "@agentsSelectFailed": {
-    "description": "Agent sheet: choosing refused"
-  },
   "agentsRunOnBuiltIn": "Agents run on the built-in server",
   "@agentsRunOnBuiltIn": {
     "description": "Settings: why Agents is empty on another server"
@@ -32356,5 +32348,25 @@
   "agentsChecking": "Looking for agents on this phone…",
   "@agentsChecking": {
     "description": "Settings > Agents: before the first read"
+  },
+  "agentsStateNeedsArm": "Needs a 64-bit phone",
+  "@agentsStateNeedsArm": {
+    "description": "Agent sheet: this phone's processor cannot run the agent"
+  },
+  "agentsStateNoDownload": "No verified download yet",
+  "@agentsStateNoDownload": {
+    "description": "Agent sheet: the agent has no checked download"
+  },
+  "agentsInstallHint": "Install",
+  "@agentsInstallHint": {
+    "description": "Agent sheet: quiet hint at the end of a not-installed agent's row"
+  },
+  "agentsActionFailed": "That didn't work on this phone. Open Details to see why.",
+  "@agentsActionFailed": {
+    "description": "Agents: a step failed; the technical text is under Details"
+  },
+  "chatsHomeOtherFolders": "Other folders",
+  "@chatsHomeOtherFolders": {
+    "description": "Conversations: the filter for conversations in temp, home or root folders"
   }
 }

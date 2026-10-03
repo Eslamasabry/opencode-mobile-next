@@ -10,8 +10,8 @@ import '../../../domain/phone_agents_source.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
 import '../../kit/kit.dart';
-import '../../widgets/product_states.dart' show productErrorText;
 import '../chats/chats_host.dart';
+import 'agent_error_notice.dart';
 import 'agents_text.dart';
 import 'phone_check_view.dart';
 
@@ -47,7 +47,7 @@ class AgentSheet extends ConsumerStatefulWidget {
 class _AgentSheetState extends ConsumerState<AgentSheet> {
   late AgentSheetStep _step = widget.step;
   String? _agentId;
-  String? _notice;
+  AgentFailure? _notice;
   AgentPhoneCheckResult? _check;
   bool _checking = false;
   bool _advancing = false;
@@ -124,18 +124,14 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
         try {
           await agents.resumeAgentHost();
         } catch (error) {
-          if (mounted) {
-            setState(
-              () => _notice = productErrorText(
-                error,
-                l10n: AppLocalizations.of(context),
-              ),
-            );
-          }
+          _fail(error);
         }
       case null:
+        // A real blocker: say exactly what it is.
         setState(
-          () => _notice = AppLocalizations.of(context).agentsSelectFailed,
+          () => _notice = AgentFailure(
+            agentRowLine(AppLocalizations.of(context), row),
+          ),
         );
       default:
         _enter(_stepFor(row) ?? AgentSheetStep.setup);
@@ -147,13 +143,31 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
       await _agents.selectChatAgent(id);
       if (mounted) KitSheet.close(context, true);
     } catch (error) {
-      if (!mounted) return;
-      setState(
-        () => _notice = productErrorText(
-          error,
-          l10n: AppLocalizations.of(context),
-        ),
-      );
+      _fail(error);
+    }
+  }
+
+  /// Says a step failed in plain words, with the technical text under Details.
+  void _fail(Object error) {
+    if (!mounted) return;
+    final failure = agentFailure(AppLocalizations.of(context), error);
+    setState(() => _notice = failure);
+  }
+
+  Future<void> _install(String id) async {
+    setState(() => _notice = null);
+    try {
+      await _agents.installAgent(id);
+    } catch (error) {
+      _fail(error);
+    }
+  }
+
+  Future<void> _cancelInstall() async {
+    try {
+      await _agents.cancelAgentInstall();
+    } catch (error) {
+      _fail(error);
     }
   }
 
@@ -183,7 +197,14 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
       _checking = true;
       _check = null;
     });
-    final result = await _agents.runAgentPhoneCheck(id);
+    final AgentPhoneCheckResult result;
+    try {
+      result = await _agents.runAgentPhoneCheck(id);
+    } catch (error) {
+      if (mounted) setState(() => _checking = false);
+      _fail(error);
+      return;
+    }
     if (!mounted) return;
     setState(() {
       _checking = false;
@@ -206,8 +227,8 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
       await _agents.startAgentSignIn(id);
     } on AgentSignInException {
       // The state carries the failure; the step says it in words.
-    } catch (_) {
-      // Same: the step reads the state, never the error.
+    } catch (error) {
+      _fail(error);
     }
   }
 
@@ -268,12 +289,8 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     if (open) {
       try {
         await _agents.cancelAgentSignIn(id!);
-      } catch (_) {
-        if (mounted) {
-          setState(
-            () => _notice = AppLocalizations.of(context).agentsSignInFailed,
-          );
-        }
+      } catch (error) {
+        _fail(error);
         return;
       }
     }
@@ -304,10 +321,7 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
       ? const SizedBox.shrink()
       : Padding(
           padding: EdgeInsets.only(top: KitTokens.of(context).space3),
-          child: KitNotice(
-            key: const ValueKey('agents-notice'),
-            message: _notice!,
-          ),
+          child: AgentErrorNotice(failure: _notice!),
         );
 
   // ---- the choice ---------------------------------------------------------
@@ -337,6 +351,12 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
       selected: selected,
       trailing: selected
           ? const KitIcon(AppIconography.check, size: KitIconSize.small)
+          : row?.fixAction == PhoneAgentFixAction.install
+          ? KitText(
+              l10n.agentsInstallHint,
+              role: KitTextRole.caption,
+              tone: KitTextTone.tertiary,
+            )
           : null,
       onTap: () => unawaited(_pick(id, row)),
     );
@@ -413,13 +433,13 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
               key: const ValueKey('agents-install'),
               label: l10n.agentsInstallAction(KitBidi.auto(name)),
               icon: AppIconography.download,
-              onPressed: () => unawaited(_agents.installAgent(id)),
+              onPressed: () => unawaited(_install(id)),
             ),
       secondary: installing
           ? KitAction(
               key: const ValueKey('agents-cancel-setup'),
               label: l10n.agentsCancelSetup,
-              onPressed: () => unawaited(_agents.cancelAgentInstall()),
+              onPressed: () => unawaited(_cancelInstall()),
             )
           : null,
       child: Column(

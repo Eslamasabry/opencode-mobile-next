@@ -1,5 +1,5 @@
 {
- "generatedFrom": "ee2c539408d8d6f897c84a83ca8a4e99a206aaea",
+ "generatedFrom": "d3cb2ad8f4f99e107efb160c2843c4a388803586",
  "pages": [
   {
    "id": "system",
@@ -38657,6 +38657,11 @@
    "file": "lib/ui/permission_presentation.dart",
    "reason": "permissionRequestTitle string helper; no UI",
    "part": "a-shell"
+  },
+  {
+   "file": "lib/ui/screens/agents/agent_error_notice.dart",
+   "reason": "No surface of its own: a failed agent step in plain words with a Details fold, drawn inside the agent sheet, Settings and Conversations.",
+   "part": "m-agents"
   },
   {
    "file": "lib/ui/screens/agents/agents_text.dart",

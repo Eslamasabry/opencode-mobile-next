@@ -42529,12 +42529,6 @@ abstract class AppLocalizations {
   /// **'Ready'**
   String get agentsStateReady;
 
-  /// Agent sheet: ready, but old conversations start new ones
-  ///
-  /// In en, this message translates to:
-  /// **'Ready · Can\'t reopen old conversations'**
-  String get agentsStateReadyCantReopen;
-
   /// Feed row note and agent state: the agent cannot reopen an old conversation
   ///
   /// In en, this message translates to:
@@ -42943,12 +42937,6 @@ abstract class AppLocalizations {
   /// **'Agents'**
   String get agentsSectionTitle;
 
-  /// Agent sheet: choosing refused
-  ///
-  /// In en, this message translates to:
-  /// **'That agent can\'t be chosen right now. Open it to finish setup.'**
-  String get agentsSelectFailed;
-
   /// Settings: why Agents is empty on another server
   ///
   /// In en, this message translates to:
@@ -42966,6 +42954,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Looking for agents on this phone…'**
   String get agentsChecking;
+
+  /// Agent sheet: this phone's processor cannot run the agent
+  ///
+  /// In en, this message translates to:
+  /// **'Needs a 64-bit phone'**
+  String get agentsStateNeedsArm;
+
+  /// Agent sheet: the agent has no checked download
+  ///
+  /// In en, this message translates to:
+  /// **'No verified download yet'**
+  String get agentsStateNoDownload;
+
+  /// Agent sheet: quiet hint at the end of a not-installed agent's row
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get agentsInstallHint;
+
+  /// Agents: a step failed; the technical text is under Details
+  ///
+  /// In en, this message translates to:
+  /// **'That didn\'t work on this phone. Open Details to see why.'**
+  String get agentsActionFailed;
+
+  /// Conversations: the filter for conversations in temp, home or root folders
+  ///
+  /// In en, this message translates to:
+  /// **'Other folders'**
+  String get chatsHomeOtherFolders;
 }
 
 class _AppLocalizationsDelegate

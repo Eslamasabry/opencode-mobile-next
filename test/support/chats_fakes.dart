@@ -40,6 +40,7 @@ class FakeChatFeedSource implements ChatFeedSource {
     final kept = [
       for (final item in items)
         if ((filter.includeSubagents || !item.isSubagent) &&
+            (!filter.otherFolders || item.inOtherFolder) &&
             (filter.projectDirectory == null ||
                 item.directory == filter.projectDirectory) &&
             (!(filter.needsYou || filter.running) ||

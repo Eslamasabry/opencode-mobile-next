@@ -39,6 +39,12 @@ enum PhoneAgentHiddenReason {
   limitReached,
   resumeUnverified,
   stoppedInBackground,
+
+  /// The catalog has no download for this phone's processor.
+  unsupportedArchitecture,
+
+  /// The agent has no verified download recipe yet.
+  unverifiedDownload,
 }
 
 /// Sanitized host facts for one agent. An installed artifact or an agent name
@@ -133,7 +139,23 @@ AgentRow buildAgentRow({
 }) {
   final fact = runtime?.agentId == descriptor.id ? runtime : null;
   final installable = descriptor.installableOn(architecture);
-  final catalogVisible = descriptor.availability != AgentAvailability.hidden;
+  // Server types (OpenCode 1 and 2) are not phone agents: only the agents the
+  // phone host runs are listed.
+  final runsOnPhoneHost =
+      descriptor.route == AgentRoute.paseoNative ||
+      descriptor.route == AgentRoute.acpPaseo;
+  final catalogVisible =
+      runsOnPhoneHost && descriptor.availability != AgentAvailability.hidden;
+  // Why this agent cannot be installed here at all (a real blocker), or null.
+  final PhoneAgentHiddenReason? cannotInstall = installable
+      ? null
+      : descriptor.recipe == null ||
+            descriptor.unavailableReason ==
+                AgentUnavailableReason.recipeUnverified ||
+            descriptor.unavailableReason ==
+                AgentUnavailableReason.dependencyClosureUnverified
+      ? PhoneAgentHiddenReason.unverifiedDownload
+      : PhoneAgentHiddenReason.unsupportedArchitecture;
   const noProof = AgentCapabilities();
 
   AgentRow blocked(
@@ -170,24 +192,27 @@ AgentRow buildAgentRow({
       PhoneAgentHiddenReason.catalogUnavailable,
     );
   }
-  if (fact == null) {
+  // Nothing is known about the host yet (or it could not be read): the way
+  // forward is Install. The install and the phone check that follows it are
+  // the verification, so an unverified phone is never a dead end. Only a
+  // real blocker (the processor, a missing download) stops it, and says so.
+  if (fact == null || !fact.installed) {
+    if (cannotInstall != null) {
+      return blocked(
+        PhoneAgentStatus.unavailable,
+        cannotInstall == PhoneAgentHiddenReason.unsupportedArchitecture
+            ? 'This phone cannot run this agent.'
+            : 'This agent has no verified download yet.',
+        cannotInstall,
+      );
+    }
     return blocked(
-      PhoneAgentStatus.unavailable,
-      'Check the host to see whether this agent is ready.',
-      PhoneAgentHiddenReason.runtimeUnknown,
-      PhoneAgentFixAction.resume,
-    );
-  }
-  if (!fact.installed) {
-    return blocked(
-      installable
-          ? PhoneAgentStatus.needsInstall
-          : PhoneAgentStatus.unavailable,
-      installable
-          ? 'Install this agent on your phone to get started.'
-          : 'Installation is not available for this phone yet.',
-      PhoneAgentHiddenReason.needsInstall,
-      installable ? PhoneAgentFixAction.install : null,
+      PhoneAgentStatus.needsInstall,
+      'Install this agent on your phone to get started.',
+      fact == null
+          ? PhoneAgentHiddenReason.runtimeUnknown
+          : PhoneAgentHiddenReason.needsInstall,
+      PhoneAgentFixAction.install,
     );
   }
   if (fact.stoppedInBackground) {

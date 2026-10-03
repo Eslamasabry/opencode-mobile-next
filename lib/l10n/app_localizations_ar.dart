@@ -27055,10 +27055,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get agentsStateReady => 'جاهز';
 
   @override
-  String get agentsStateReadyCantReopen =>
-      'جاهز · لا يمكنه إعادة فتح المحادثات القديمة';
-
-  @override
   String get agentsStateCantReopen => 'لا يمكنه إعادة فتح المحادثات القديمة';
 
   @override
@@ -27322,10 +27318,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get agentsSectionTitle => 'الوكلاء';
 
   @override
-  String get agentsSelectFailed =>
-      'لا يمكن اختيار هذا الوكيل الآن. افتحه لإنهاء الإعداد.';
-
-  @override
   String get agentsRunOnBuiltIn => 'يعمل الوكلاء على الخادم المدمج';
 
   @override
@@ -27333,4 +27325,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get agentsChecking => 'جارٍ البحث عن الوكلاء على هذا الهاتف…';
+
+  @override
+  String get agentsStateNeedsArm => 'يلزم هاتف 64 بت';
+
+  @override
+  String get agentsStateNoDownload => 'لا يوجد تنزيل موثّق بعد';
+
+  @override
+  String get agentsInstallHint => 'تثبيت';
+
+  @override
+  String get agentsActionFailed =>
+      'لم ينجح ذلك على هذا الهاتف. افتح التفاصيل لمعرفة السبب.';
+
+  @override
+  String get chatsHomeOtherFolders => 'مجلدات أخرى';
 }
