@@ -165,6 +165,8 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
 
   void _startGlobalEvents(int generation, ServerGateway currentApi) {
     elsewhereAttention.markStale();
+    // The volatile stream lost whatever it missed: refetch, never replay.
+    _feedScheduleRefresh();
     late final LiveEventChannel stream;
     // What this server's other projects are doing is only knowable from
     // here; a different server's tally would be wrong.
@@ -176,6 +178,11 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
     void handleEvent(EventEnvelope event) {
       if (!_isCurrentGlobalStream(generation, currentApi, stream)) return;
       elsewhereAttention.handle(event);
+      if (event.type == 'session.created' ||
+          event.type == 'session.deleted' ||
+          event.type == 'session.updated') {
+        _feedScheduleRefresh();
+      }
       // OpenCode 1's `/event` only carries its own folder's events. While it
       // is down, this server-wide stream still carries them: pass them on so
       // a running reply keeps moving instead of waiting for the 5 s list

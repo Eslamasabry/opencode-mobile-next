@@ -233,6 +233,7 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
               case _FolderCheck.missing:
                 if (!_isCurrent(generation, currentApi)) return null;
                 await _forgetSavedLocation(profile);
+                await _forgetLastUsedProject(profile.id, directory);
                 return null;
               case _FolderCheck.unknown:
                 if (!_isCurrent(generation, currentApi)) return null;
@@ -308,6 +309,7 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
         // folder is left for the person to leave on their own.
         _pendingLocationRevalidation = false;
         await _forgetSavedLocation(owner);
+        await _forgetLastUsedProject(owner.id, directory);
         return;
       }
     }
@@ -466,6 +468,7 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
         directory: directory,
         workspace: workspace,
       );
+      if (directory != null) await rememberLastUsedProject(directory);
     }();
     _locationWrite = write;
     try {

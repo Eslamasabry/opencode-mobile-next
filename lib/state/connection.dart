@@ -629,6 +629,7 @@ class ConnectionController extends ChangeNotifier
     if (_disposed) return;
     _disposed = true;
     _resetConnectionStatusClock();
+    _feedDispose();
     _savedPrompts?.dispose();
     _savedPrompts = null;
     store.changes.removeListener(_profilesSaved);
