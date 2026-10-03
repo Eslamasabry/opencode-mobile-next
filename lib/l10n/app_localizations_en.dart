@@ -26599,4 +26599,79 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get folderBrowserPhoneRefused =>
       'Phone storage is off. Allow access to look here.';
+
+  @override
+  String get folderBrowserFindProjects => 'Find projects';
+
+  @override
+  String get phoneScanTitle => 'Projects on this phone';
+
+  @override
+  String get phoneScanLooking => 'Looking…';
+
+  @override
+  String phoneScanFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count found',
+      one: '1 found',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String phoneScanStopped(int seconds, int count) {
+    return 'Stopped after $seconds seconds · $count found';
+  }
+
+  @override
+  String phoneScanFirstShown(int count) {
+    return 'First $count shown';
+  }
+
+  @override
+  String get phoneScanLookDeeper => 'Look deeper';
+
+  @override
+  String get phoneScanEmptyTitle => 'No projects found';
+
+  @override
+  String get phoneScanEmptyBody => 'Browse folders or start a New project.';
+
+  @override
+  String get phoneScanGit => 'Git';
+
+  @override
+  String get phoneScanKindDart => 'Dart';
+
+  @override
+  String get phoneScanKindNode => 'Node';
+
+  @override
+  String get phoneScanKindPython => 'Python';
+
+  @override
+  String get phoneScanKindRust => 'Rust';
+
+  @override
+  String get phoneScanKindGo => 'Go';
+
+  @override
+  String get phoneScanKindJava => 'Java';
+
+  @override
+  String get phoneScanKindRuby => 'Ruby';
+
+  @override
+  String get phoneScanKindPhp => 'PHP';
+
+  @override
+  String get phoneScanKindDotnet => '.NET';
+
+  @override
+  String get phoneScanKindCpp => 'C/C++';
+
+  @override
+  String get phoneScanKindGit => 'Git';
 }
