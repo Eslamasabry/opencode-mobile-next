@@ -12211,7 +12211,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get folderBrowserProjectsHere =>
-      'Your projects live here. Tap one to open it, or start a new one.';
+      'Your projects live here. Tap one to open it.';
 
   @override
   String get folderBrowserHomeHere =>
@@ -12228,7 +12228,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get folderBrowserEmptyBody =>
-      'Make a new project in it below, or go up one folder.';
+      'Open it as a project, or go up one folder.';
 
   @override
   String get folderBrowserErrorTitle => 'This folder can’t be shown';
@@ -26571,8 +26571,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get folderBrowserEmptyPhoneBody =>
-      'Open it, make a new folder in it, or go up one level.';
+  String get folderBrowserEmptyPhoneBody => 'Open it, or go up one level.';
 
   @override
   String get remoteFolderRecent => 'Recent folders';
@@ -26674,4 +26673,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get phoneScanKindGit => 'Git';
+
+  @override
+  String get openProjectTitle => 'Open a project';
+
+  @override
+  String get openProjectSearchPhone => 'Search this phone';
+
+  @override
+  String get openProjectChooseFolder => 'Choose a folder';
+
+  @override
+  String get openProjectChangeFolder => 'Change folder';
+
+  @override
+  String openProjectUseFolder(String name) {
+    return 'Use $name';
+  }
+
+  @override
+  String get phoneScanSearching => 'Searching this phone';
+
+  @override
+  String phoneScanChecked(int folders, int found) {
+    String _temp0 = intl.Intl.pluralLogic(
+      folders,
+      locale: localeName,
+      other: '$folders folders',
+      one: '1 folder',
+    );
+    return '$_temp0 checked · $found found';
+  }
+
+  @override
+  String phoneScanDoneIn(int count, String time) {
+    return '$count found in $time';
+  }
+
+  @override
+  String get phoneScanStop => 'Stop';
 }

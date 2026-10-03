@@ -12300,8 +12300,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get folderBrowserProjectsHere =>
-      'مشاريعك هنا. اضغط على مشروع لفتحه، أو ابدأ مشروعًا جديدًا.';
+  String get folderBrowserProjectsHere => 'مشاريعك هنا. اضغط على مشروع لفتحه.';
 
   @override
   String get folderBrowserHomeHere =>
@@ -12318,7 +12317,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get folderBrowserEmptyBody =>
-      'أنشئ فيه مشروعًا جديدًا بالأسفل، أو انتقل إلى المجلد الأعلى.';
+      'افتحه كمشروع، أو انتقل إلى المجلد الأعلى.';
 
   @override
   String get folderBrowserErrorTitle => 'تعذّر عرض هذا المجلد';
@@ -26689,8 +26688,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get folderBrowserEmptyPhoneBody =>
-      'افتحه، أو أنشئ فيه مجلدًا جديدًا، أو اصعد مستوى واحدًا.';
+  String get folderBrowserEmptyPhoneBody => 'افتحه، أو اصعد مستوى واحدًا.';
 
   @override
   String get remoteFolderRecent => 'مجلدات حديثة';
@@ -26796,4 +26794,46 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get phoneScanKindGit => 'Git';
+
+  @override
+  String get openProjectTitle => 'افتح مشروعًا';
+
+  @override
+  String get openProjectSearchPhone => 'ابحث في هذا الهاتف';
+
+  @override
+  String get openProjectChooseFolder => 'اختر مجلدًا';
+
+  @override
+  String get openProjectChangeFolder => 'غيّر المجلد';
+
+  @override
+  String openProjectUseFolder(String name) {
+    return 'استخدم $name';
+  }
+
+  @override
+  String get phoneScanSearching => 'جارٍ البحث في هذا الهاتف';
+
+  @override
+  String phoneScanChecked(int folders, int found) {
+    String _temp0 = intl.Intl.pluralLogic(
+      folders,
+      locale: localeName,
+      other: '$folders مجلد',
+      many: '$folders مجلدًا',
+      few: '$folders مجلدات',
+      two: 'مجلدان',
+      one: 'مجلد واحد',
+    );
+    return 'فُحص $_temp0 · وُجد $found';
+  }
+
+  @override
+  String phoneScanDoneIn(int count, String time) {
+    return 'وُجد $count خلال $time';
+  }
+
+  @override
+  String get phoneScanStop => 'إيقاف';
 }

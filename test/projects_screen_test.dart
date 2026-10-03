@@ -1276,7 +1276,7 @@ void main() {
       controller.dispose();
     });
 
-    Future<void> openSheet(WidgetTester tester) async {
+    Future<void> openSheet(WidgetTester tester, {bool browse = false}) async {
       await tester.pumpWidget(
         MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -1287,13 +1287,18 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('workspace-open-folder')));
       await tester.pumpAndSettle();
+      // The sheet opens on its start page; browsing is one tap away.
+      if (browse) {
+        await tester.tap(find.byKey(const ValueKey('open-project-browse')));
+        await tester.pumpAndSettle();
+      }
     }
 
     testWidgets('its projects are listed and open with one tap', (
       tester,
     ) async {
       linux.projects.addAll(['demo', 'hello']);
-      await openSheet(tester);
+      await openSheet(tester, browse: true);
       expect(find.byKey(const ValueKey('in-app-projects')), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('in-app-project-demo')));
       await tester.pumpAndSettle();
@@ -1304,8 +1309,7 @@ void main() {
 
     testWidgets('a new project needs only a safe name', (tester) async {
       await openSheet(tester);
-      expect(find.textContaining('No projects yet'), findsOneWidget);
-      await _tapAction(tester, 'phone-new-folder');
+      await _tapAction(tester, 'open-project-new');
       await tester.pumpAndSettle();
       for (final bad in const ['', '../etc', 'a/b', '.hidden']) {
         await tester.enterText(
@@ -1343,7 +1347,7 @@ void main() {
     testWidgets('a name that already exists just opens it', (tester) async {
       linux.projects.add('hello');
       await openSheet(tester);
-      await _tapAction(tester, 'phone-new-folder');
+      await _tapAction(tester, 'open-project-new');
       await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const ValueKey('phone-new-folder-name')),
@@ -1358,7 +1362,7 @@ void main() {
     testWidgets('a typed path that does not exist offers Create it', (
       tester,
     ) async {
-      await openSheet(tester);
+      await openSheet(tester, browse: true);
       await tester.tap(find.byKey(const ValueKey('kit-sheet-menu')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Enter a path'));

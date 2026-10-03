@@ -187,6 +187,8 @@ void main() {
   ) async {
     final (controller, picked) = await open(tester);
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('open-project-browse')));
+    await tester.pumpAndSettle();
     expect(shownPath(tester), 'projects');
     expect(find.text('demo'), findsOneWidget);
     expect(find.textContaining('proot'), findsNothing);
@@ -207,14 +209,12 @@ void main() {
     expect(controller.probed, isEmpty);
   });
 
-  testWidgets('a new project is made in Termux in the folder shown', (
+  testWidgets('a new project is made in Termux in the project space', (
     tester,
   ) async {
     final (controller, picked) = await open(tester);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('folder-browse-work')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('phone-new-folder')));
+    await tester.tap(find.byKey(const ValueKey('open-project-new')));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('phone-new-folder-name')),
@@ -222,16 +222,19 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('phone-new-folder-create')));
     await tester.pumpAndSettle();
-    expect(made, {'/root/projects/work/cli'});
-    expect(scripts.last, TermuxFolders.createScript('/root/projects/work/cli'));
-    expect(picked.value, '/root/projects/work/cli');
-    expect(controller.opened, ['/root/projects/work/cli']);
+    expect(made, {'/root/projects/cli'});
+    expect(scripts.last, TermuxFolders.createScript('/root/projects/cli'));
+    expect(picked.value, '/root/projects/cli');
+    expect(controller.opened, ['/root/projects/cli']);
   });
 
   testWidgets('a slow Termux shows skeleton rows, then says it took too '
       'long', (tester) async {
     hang = true;
     await open(tester);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.byKey(const ValueKey('open-project-browse')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const ValueKey('kit-skeleton-rows')), findsOneWidget);

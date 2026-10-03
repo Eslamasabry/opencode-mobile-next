@@ -113,6 +113,17 @@ class PhoneStorageFolders {
     );
   }
 
+  /// Whether [path] holds a `.git` (a folder, or the file a worktree has).
+  /// False when it cannot be read.
+  static Future<bool> hasGit(String path) async {
+    try {
+      return await FileSystemEntity.type('$path/.git', followLinks: false) !=
+          FileSystemEntityType.notFound;
+    } on FileSystemException {
+      return false;
+    }
+  }
+
   static String _name(String path) => path.substring(path.lastIndexOf('/') + 1);
 
   static FolderListProblem _problem(FileSystemException error) {

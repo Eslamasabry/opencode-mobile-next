@@ -13097,7 +13097,7 @@
       }
     }
   },
-  "folderBrowserProjectsHere": "Your projects live here. Tap one to open it, or start a new one.",
+  "folderBrowserProjectsHere": "Your projects live here. Tap one to open it.",
   "@folderBrowserProjectsHere": {
     "description": "Shown in place of the Open button while the browser shows the projects folder itself"
   },
@@ -13117,7 +13117,7 @@
   "@folderBrowserEmptyTitle": {
     "description": "Empty state title of a folder with no folders inside"
   },
-  "folderBrowserEmptyBody": "Make a new project in it below, or go up one folder.",
+  "folderBrowserEmptyBody": "Open it as a project, or go up one folder.",
   "@folderBrowserEmptyBody": {
     "description": "Empty state body of a folder with no folders inside"
   },
@@ -31423,7 +31423,7 @@
       }
     }
   },
-  "folderBrowserEmptyPhoneBody": "Open it, make a new folder in it, or go up one level.",
+  "folderBrowserEmptyPhoneBody": "Open it, or go up one level.",
   "@folderBrowserEmptyPhoneBody": {
     "description": "Empty-state body of an empty phone-storage folder"
   },
@@ -31566,5 +31566,62 @@
   "phoneScanKindGit": "Git",
   "@phoneScanKindGit": {
     "description": "Kind word of a found project in the find-projects step"
+  },
+  "openProjectTitle": "Open a project",
+  "@openProjectTitle": {
+    "description": "Title of the Open a project sheet's start page"
+  },
+  "openProjectSearchPhone": "Search this phone",
+  "@openProjectSearchPhone": {
+    "description": "Second row of the Open a project start page: looks for projects on the phone"
+  },
+  "openProjectChooseFolder": "Choose a folder",
+  "@openProjectChooseFolder": {
+    "description": "Quiet link at the bottom of the Open a project start page that opens the folder browser"
+  },
+  "openProjectChangeFolder": "Change folder",
+  "@openProjectChangeFolder": {
+    "description": "Quiet link in the New project step that picks another parent folder"
+  },
+  "openProjectUseFolder": "Use {name}",
+  "@openProjectUseFolder": {
+    "description": "Primary button when picking the parent folder of a new project",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneScanSearching": "Searching this phone",
+  "@phoneScanSearching": {
+    "description": "Title of the search step while it runs"
+  },
+  "phoneScanChecked": "{folders, plural, =1{1 folder} other{{folders} folders}} checked · {found} found",
+  "@phoneScanChecked": {
+    "description": "Running line of the search step: folders looked at and projects found",
+    "placeholders": {
+      "folders": {
+        "type": "int"
+      },
+      "found": {
+        "type": "int"
+      }
+    }
+  },
+  "phoneScanDoneIn": "{count} found in {time}",
+  "@phoneScanDoneIn": {
+    "description": "Subtitle of the search step once it is done; time is m:ss",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneScanStop": "Stop",
+  "@phoneScanStop": {
+    "description": "Action that stops a running search"
   }
 }

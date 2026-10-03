@@ -1,5 +1,5 @@
 {
- "generatedFrom": "38392553fd2c54fcd0a8f75f2f22e188d822c7c8",
+ "generatedFrom": "11624f5941494812d26c44a97858e0692dcb3f11",
  "pages": [
   {
    "id": "system",
@@ -15592,8 +15592,8 @@
    "presentedBy": [
     "ProjectFolderActions.openFolder"
    ],
-   "line": 118,
-   "purpose": "A server on this phone: OpenCode inside the app (folders read from the built-in Ubuntu's files, so it works with the server stopped) or the OpenCode server this app runs in Termux (a short read-only script run inside Termux's Ubuntu through TermuxBridge.run, the path passed base64-encoded, bounded to 15 s in Termux and 25 s in the app). Browses from /root/projects up to /. A project (git repository, a project OpenCode knows, or any folder straight in /root/projects) opens with a tap; other folders are gone into. One primary opens the folder shown (never the home folder, / or the projects folder itself); New project makes a folder inside the folder shown (the app's Ubuntu: mkdir + git init; Termux: mkdir -p); Enter a path opens the path dialog. Remote servers, and Termux when it cannot run the app's commands, skip this sheet and go straight to the path dialog. Layout (2026-10-03, after Canva Move to a folder and the iOS Files picker): one header row (back chevron or Close, the folder name, a more menu with Show hidden folders, Find projects (phone storage only) and Enter a path), the place menu (This phone / Project space) as one quiet line under the title when both exist, one panel of folder rows, and a pinned bar with the text button New project and the primary Open <folder>. New project swaps the sheet content for a name step in place; back returns to the same folder. Find projects (2026-10-03, phone storage place only) swaps it for a results step, \"Projects on this phone\": a breadth-first look through internal storage (5 levels, 10 s, skipping Android, hidden and build folders, never into a project) fills in project rows as they are found; a tap opens one like Open <folder>; back cancels the look and returns to the folder list.",
+   "line": 130,
+   "purpose": "A server on this phone: OpenCode inside the app (folders read from the built-in Ubuntu's files, so it works with the server stopped) or the OpenCode server this app runs in Termux (a short read-only script run inside Termux's Ubuntu through TermuxBridge.run, the path passed base64-encoded, bounded to 15 s in Termux and 25 s in the app). Browses from /root/projects up to /. A project (git repository, a project OpenCode knows, or any folder straight in /root/projects) opens with a tap; other folders are gone into. One primary opens the folder shown (never the home folder, / or the projects folder itself); New project makes a folder inside the folder shown (the app's Ubuntu: mkdir + git init; Termux: mkdir -p); Enter a path opens the path dialog. Remote servers, and Termux when it cannot run the app's commands, skip this sheet and go straight to the path dialog. Layout (2026-10-03, owner review): the sheet opens on a start page, title Open a project with Close in the header and no place line, menu or folder list: 1. New project (prominent; the name step swaps in place with \"Creates <folder>/<name>\", Create and open and a quiet Change folder that picks the parent in the browser and comes back; default folder is the host’s project space, else Projects on the phone’s storage), 2. Search this phone (phone-hosted servers only; the All files access consent first; a calm search step with a timer, a bar against the 10 s cap, folders checked and projects found, results as they come, Stop; then \"<m> found in 0:09\", Look deeper after the cap, an empty state with a way forward; back cancels), 3. Opened before (the recent folders with a Git badge when they hold .git, checked after and kept for the sheet; a tap opens; hidden when there are none). A quiet Choose a folder at the bottom opens the browser (one header row with back, the folder name and a more menu with Show hidden folders and Enter a path; the place menu when both places exist; one panel of folder rows; the pinned Open <folder>). A remote server keeps its own path sheet and has no search row because OpenCode lists files only inside a project.",
    "reachedFrom": [
     {
      "page": "workspace-folder-chooser",
@@ -15615,11 +15615,11 @@
      "label": "Create and open",
      "key": "phone-new-folder-create",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 413,
+     "line": 525,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
-     "effect": "_create(): projectFolderNameProblem and workspaceDirectoryProblem, then pops FolderBrowserCreate(<folder shown>/<name>) (or FolderBrowserOpen when it is already there); openFolder() makes it (the app's Ubuntu: git init; Termux: TermuxFolders.create, mkdir -p) and selects it.",
+     "effect": "Checks the name, then pops FolderBrowserCreate(<default folder>/<name>) (FolderBrowserOpen when it is already there); openFolder() makes it and selects it.",
      "gates": [],
      "destructive": false
     },
@@ -15629,26 +15629,116 @@
      "label": "Project name",
      "key": "phone-new-folder-name",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 419,
+     "line": 535,
      "action": "submit",
      "target": null,
      "targetWidget": null,
-     "effect": "New project step (replaces the sheet content in place, no second sheet or dialog): autofocused name field; helper \"Creates <path>/<name>\"; onSubmitted -> _submitName().",
+     "effect": "New project step: autofocused name field; helper \"Creates <folder>/<name>\"; onSubmitted creates and opens.",
      "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "project-folder-browser-change",
+     "type": "button",
+     "label": "Change folder",
+     "key": "phone-new-folder-change",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 557,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "New project step: swaps in the folder browser to pick the parent folder; Use <folder> returns to the name step.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "project-folder-browser-new",
+     "type": "button",
+     "label": "New project",
+     "key": "open-project-new",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 582,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Start page: swaps in the name step in place; the project is made in the default folder.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "project-folder-browser-search",
+     "type": "list-tile",
+     "label": "Search this phone",
+     "key": "open-project-search",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 593,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Start page: runs the All files access consent when missing, then swaps in the search step and starts the scan (10 s cap).",
+     "gates": [
+      "PhoneStoragePlace.scan set (phone-hosted server)"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "project-folder-browser-browse",
+     "type": "button",
+     "label": "Choose a folder",
+     "key": "open-project-browse",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 623,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Start page: swaps in the folder browser.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "project-folder-browser-recent",
+     "type": "list-tile",
+     "label": "<folder name> / <path> / Git",
+     "key": "open-project-recent-<n>",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 637,
+     "action": "mutate",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Opened before row: pops FolderBrowserOpen(path), then openFolder() selects it. Git badge from a .git check (phone: dart:io; project space: the folder above it listed), cached for the sheet.",
+     "gates": [
+      "at least one recent folder"
+     ],
      "destructive": false
     },
     {
      "id": "project-folder-browser-find-back",
      "type": "icon-button",
-     "label": "Back (results step)",
+     "label": "Back (search step)",
      "key": "phone-scan-back",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 467,
+     "line": 703,
      "action": "other",
      "target": null,
      "targetWidget": null,
-     "effect": "Cancels a running look and returns to the folder list in place.",
+     "effect": "Cancels a running search and returns to the start page.",
      "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "project-folder-browser-find-stop",
+     "type": "button",
+     "label": "Stop",
+     "key": "phone-scan-stop",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 710,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "While searching: stops the scan and keeps what was found (\"<m> found in <time>\").",
+     "gates": [
+      "a search is running"
+     ],
      "destructive": false
     },
     {
@@ -15657,27 +15747,41 @@
      "label": "Look deeper",
      "key": "phone-scan-deeper",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 474,
+     "line": 717,
      "action": "other",
      "target": null,
      "targetWidget": null,
-     "effect": "After \"Stopped after 10 seconds\": looks again from nothing with a 30 s cap.",
+     "effect": "After \"Stopped after 10 seconds\": searches again from nothing with a 30 s cap.",
      "gates": [
-      "the 10 s cap ended the look"
+      "the 10 s cap ended the search"
      ],
      "destructive": false
     },
     {
-     "id": "project-folder-browser-found",
+     "id": "project-folder-browser-find-found",
      "type": "list-tile",
      "label": "<project name> / <kind> · <folder> / Git",
      "key": "phone-scan-<path>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 535,
+     "line": 795,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
      "effect": "Pops FolderBrowserOpen(path): openFolder() then controller.selectLocation(directory: path), the same as Open <folder>.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "project-folder-browser-start-back",
+     "type": "icon-button",
+     "label": "Back (browser, first folder)",
+     "key": "folder-browser-start",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 837,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Header leading control at the place’s first folder: back to the start page (or the name step when picking a parent).",
      "gates": [],
      "destructive": false
     },
@@ -15687,7 +15791,7 @@
      "label": "Back chevron (Up one folder); Close at the place's first folder",
      "key": "folder-browser-up",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 583,
+     "line": 842,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15696,28 +15800,12 @@
      "destructive": false
     },
     {
-     "id": "project-folder-browser-find",
-     "type": "menu-item",
-     "label": "Find projects (header more menu)",
-     "key": "folder-browser-find",
-     "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 597,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Phone storage place only: swaps the sheet in place for the results step and starts a PhoneProjectScanner look (10 s cap). A finished look is kept for this sheet and shown again.",
-     "gates": [
-      "phone place chosen (consent already given); PhoneStoragePlace.scan set"
-     ],
-     "destructive": false
-    },
-    {
      "id": "project-folder-browser-enter-path",
      "type": "menu-item",
      "label": "Enter a path (header more menu)",
      "key": "in-app-enter-path",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 602,
+     "line": 855,
      "action": "open-dialog",
      "target": "project-folder-open-dialog",
      "targetWidget": "_OpenFolderDialog",
@@ -15726,12 +15814,28 @@
      "destructive": false
     },
     {
+     "id": "project-folder-browser-use",
+     "type": "button",
+     "label": "Use <folder>",
+     "key": "folder-browser-use",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 872,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Browser while picking a parent: sets the new project’s folder and returns to the name step.",
+     "gates": [
+      "browser opened from Change folder"
+     ],
+     "destructive": false
+    },
+    {
      "id": "project-folder-browser-open",
      "type": "button",
      "label": "Open <folder>",
      "key": "folder-browser-open",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 622,
+     "line": 880,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15747,7 +15851,7 @@
      "label": "<folder name> / Git repository | OpenCode project",
      "key": "in-app-project-<name>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 830,
+     "line": 1051,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15756,12 +15860,12 @@
      "destructive": false
     },
     {
-     "id": "project-folder-browser-browse",
+     "id": "project-folder-browser-show-inside",
      "type": "icon-button",
      "label": "[Show the folders in <name>]",
      "key": "folder-browse-<name>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 843,
+     "line": 1064,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15775,7 +15879,7 @@
      "label": "Try again",
      "key": "folder-browser-retry",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 927,
+     "line": 1148,
      "action": "other",
      "target": null,
      "targetWidget": null,

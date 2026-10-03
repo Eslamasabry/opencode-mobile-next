@@ -22,6 +22,7 @@ Future<void> _open(
   WidgetTester tester,
   FolderLister list, {
   String start = '/root/projects',
+  bool browse = true,
   void Function(FolderBrowserChoice?)? onClosed,
 }) async {
   tester.view.physicalSize = const Size(412, 915);
@@ -49,6 +50,12 @@ Future<void> _open(
     ),
   );
   await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
+  // The sheet opens on its start page; most of these tests browse.
+  if (browse) {
+    await tester.tap(_key('open-project-browse'));
+    await tester.pump();
+  }
 }
 
 List<FolderEntry> _folders(String path, List<String> names) => [
@@ -148,10 +155,11 @@ void main() {
     await _open(
       tester,
       (path) async => _folders(path, ['demo']),
+      browse: false,
       onClosed: (choice) => closed = choice,
     );
     await tester.pumpAndSettle();
-    await tester.tap(_key('phone-new-folder'));
+    await tester.tap(_key('open-project-new'));
     await tester.pumpAndSettle();
     await tester.enterText(_key('phone-new-folder-name'), 'fresh');
     await tester.tap(_key('phone-new-folder-create'));
