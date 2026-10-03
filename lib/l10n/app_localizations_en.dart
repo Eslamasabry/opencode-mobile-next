@@ -26888,6 +26888,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatsFilterOpenProject => 'Open a project…';
 
   @override
+  String get chatsNewSeparateCopy => 'In a separate copy';
+
+  @override
   String get chatsNewPrompt => 'What should we work on?';
 
   @override

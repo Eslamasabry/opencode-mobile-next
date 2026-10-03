@@ -42451,6 +42451,12 @@ abstract class AppLocalizations {
   /// **'Open a project…'**
   String get chatsFilterOpenProject;
 
+  /// New conversation: the quiet option under the project chip that starts the task in a separate copy (a worktree) of the project. Shown only where the server can make one.
+  ///
+  /// In en, this message translates to:
+  /// **'In a separate copy'**
+  String get chatsNewSeparateCopy;
+
   /// New chat: the centered question
   ///
   /// In en, this message translates to:

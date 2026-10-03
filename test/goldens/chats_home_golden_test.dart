@@ -11,6 +11,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
+import 'package:opencode_mobile/domain/server_gateway.dart'
+    show WorkspaceProject;
+import 'package:opencode_mobile/ui/screens/chats/chats_host.dart'
+    show leftoverNoticeLine;
+import 'package:opencode_mobile/ui/widgets/work_status_line.dart'
+    show WorkRunawayNotice;
 import 'package:opencode_mobile/ui/screens/chats/chats_home_screen.dart';
 import 'package:opencode_mobile/ui/screens/chats/new_chat_screen.dart';
 
@@ -26,7 +32,9 @@ enum _Scene {
   homeEmpty('chats_home_empty'),
   homeNoMatch('chats_home_nomatch'),
   newChatProject('chats_new_project'),
-  newChatChoose('chats_new_choose');
+  newChatChoose('chats_new_choose'),
+  homeLeftover('chats_home_leftover'),
+  newChatCopy('chats_new_copy');
 
   const _Scene(this.name);
   final String name;
@@ -107,6 +115,30 @@ Future<void> _mount(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final host = FakeChatsHost(_source(scene));
+  if (scene == _Scene.homeLeftover) {
+    host.leftover = Builder(
+      builder: (context) => leftoverNoticeLine(
+        context,
+        WorkRunawayNotice(
+          identity: 1,
+          helper: 'node',
+          project: 'beta',
+          busyFor: '12 min',
+          onStop: () {},
+          onDismiss: () {},
+        ),
+      ),
+    );
+  }
+  if (scene == _Scene.newChatCopy) {
+    host.copyProject = const WorkspaceProject(
+      id: 'p-alpha',
+      name: 'alpha',
+      directory: '/root/projects/alpha',
+      worktrees: [],
+      updatedAt: 1,
+    );
+  }
   final Widget home = switch (scene) {
     _Scene.homeNeedsYou => const ChatsHomeScreen(
       initialFilter: ChatFeedFilter(needsYou: true),
@@ -117,7 +149,9 @@ Future<void> _mount(
         projectDirectory: '/root/projects/alpha',
       ),
     ),
-    _Scene.newChatProject || _Scene.newChatChoose => const NewChatScreen(),
+    _Scene.newChatProject ||
+    _Scene.newChatChoose ||
+    _Scene.newChatCopy => const NewChatScreen(),
     _ => const ChatsHomeScreen(),
   };
   await tester.pumpWidget(

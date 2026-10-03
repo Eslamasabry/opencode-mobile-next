@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/chat_feed.dart';
+import '../../../domain/server_gateway.dart' show WorkspaceProject;
 import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
 import '../../kit/kit.dart';
@@ -36,6 +37,11 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
   bool _sending = false;
   String? _failure;
 
+  /// The project a separate copy can be made of, for [_copyFor]'s folder;
+  /// null hides the option.
+  WorkspaceProject? _copyProject;
+  String? _copyFor;
+
   @override
   void dispose() {
     _text.dispose();
@@ -57,6 +63,29 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
       }
     }
     return null;
+  }
+
+  /// Asks, once per folder, whether this server can make a separate copy.
+  void _resolveCopy(ChatsHost host, String? directory) {
+    if (directory == _copyFor) return;
+    _copyFor = directory;
+    _copyProject = null;
+    if (directory == null) return;
+    unawaited(() async {
+      final project = await host.separateCopyProject(directory);
+      if (!mounted || _copyFor != directory) return;
+      setState(() => _copyProject = project);
+    }());
+  }
+
+  Future<void> _startCopy(ChatsHost host) async {
+    final project = _copyProject;
+    if (_sending || project == null) return;
+    final id = await host.startSeparateCopy(context, project);
+    if (!mounted || id == null) return;
+    final problem = await host.showStartedChat(context, sessionID: id);
+    if (!mounted || problem == null) return;
+    setState(() => _failure = problem);
   }
 
   Future<void> _changeProject(ChatsHost host) async {
@@ -111,6 +140,7 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
     final l10n = AppLocalizations.of(context);
     final tokens = KitTokens.of(context);
     final directory = _directory;
+    _resolveCopy(host, directory);
     final summary = directory == null
         ? null
         : source.projectSummaries
@@ -155,6 +185,18 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
             ),
             SizedBox(height: tokens.space3),
             Center(child: chip),
+            // Quiet, and only where the server can make a separate copy.
+            if (_copyProject != null) ...[
+              SizedBox(height: tokens.space1),
+              Center(
+                child: KitChip.action(
+                  key: const ValueKey('chats-new-separate-copy'),
+                  label: l10n.chatsNewSeparateCopy,
+                  icon: AppIconography.branch,
+                  onPressed: () => unawaited(_startCopy(host)),
+                ),
+              ),
+            ],
           ],
         ),
       ),

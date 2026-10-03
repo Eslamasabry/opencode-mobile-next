@@ -967,7 +967,8 @@
     "test/worktrees_screen_test.dart": 2.9,
     "test/chat_project_chip_test.dart": 3.0,
     "test/files_project_chip_test.dart": 3.0,
-    "test/goldens/shell_integrated_golden_test.dart": 3.0
+    "test/goldens/shell_integrated_golden_test.dart": 3.0,
+    "test/leftover_process_notice_test.dart": 2.0
   },
   "schema_version": 1,
   "unit": "seconds"

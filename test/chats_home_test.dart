@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/ui/kit/kit_bidi.dart';
+import 'package:opencode_mobile/ui/screens/chats/chats_host.dart'
+    show leftoverNoticeLine;
+import 'package:opencode_mobile/ui/widgets/work_status_line.dart'
+    show WorkRunawayNotice;
 import 'package:opencode_mobile/ui/screens/chats/chats_home_screen.dart';
 
 import '../tool/capture/fixtures.dart' show loadCaptureFonts;
@@ -330,5 +334,34 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 300));
     expect(tester.takeException(), isNull);
+  });
+
+  clocked('the leftover-process notice shows above the list only when the '
+      'watcher reports something', (tester) async {
+    final host = FakeChatsHost(_source());
+    await _pump(tester, host);
+    expect(find.byKey(const ValueKey('work-status-runaway')), findsNothing);
+
+    host.leftover = Builder(
+      builder: (context) => leftoverNoticeLine(
+        context,
+        WorkRunawayNotice(
+          identity: 1,
+          helper: 'node',
+          busyFor: '10 min',
+          onStop: () {},
+          onDismiss: () {},
+        ),
+      ),
+    );
+    await _pump(tester, host);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(
+      find.text(
+        'A leftover node process has been busy for 10 min with nothing to do',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Stop node'), findsOneWidget);
   });
 }

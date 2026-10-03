@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/domain/server_gateway.dart'
+    show WorkspaceProject;
 import 'package:opencode_mobile/ui/kit/kit_bidi.dart';
 import 'package:opencode_mobile/ui/screens/chats/new_chat_screen.dart';
 
@@ -155,5 +157,83 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  group('In a separate copy', () {
+    const copy = WorkspaceProject(
+      id: 'p-alpha',
+      name: 'alpha',
+      directory: '/root/projects/alpha',
+      worktrees: [],
+      updatedAt: 1,
+    );
+
+    testWidgets('is not offered where the server cannot make one', (
+      tester,
+    ) async {
+      await _open(
+        tester,
+        FakeChatsHost(_source(lastUsed: '/root/projects/alpha')),
+      );
+      expect(
+        find.byKey(const ValueKey('chats-new-separate-copy')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('is a quiet option under the project chip where it can be', (
+      tester,
+    ) async {
+      final host = FakeChatsHost(_source(lastUsed: '/root/projects/alpha'))
+        ..copyProject = copy;
+      await _open(tester, host);
+      final option = find.byKey(const ValueKey('chats-new-separate-copy'));
+      expect(option, findsOneWidget);
+      expect(find.text('In a separate copy'), findsOneWidget);
+      expect(
+        tester.getTopLeft(option).dy,
+        greaterThan(
+          tester
+                  .getBottomLeft(
+                    find.byKey(const ValueKey('chats-new-project')),
+                  )
+                  .dy -
+              1,
+        ),
+      );
+      expect(host.copies, isEmpty);
+    });
+
+    testWidgets('choosing it starts the task in the copy and opens the '
+        'conversation', (tester) async {
+      final host = FakeChatsHost(_source(lastUsed: '/root/projects/alpha'))
+        ..copyProject = copy
+        ..copyResult = 'ses_copy';
+      await _open(tester, host);
+      await tester.tap(find.byKey(const ValueKey('chats-new-separate-copy')));
+      await tester.pumpAndSettle();
+      expect(host.copies, ['/root/projects/alpha']);
+      expect(host.shown, ['ses_copy']);
+    });
+
+    testWidgets('closing the step opens nothing', (tester) async {
+      final host = FakeChatsHost(_source(lastUsed: '/root/projects/alpha'))
+        ..copyProject = copy;
+      await _open(tester, host);
+      await tester.tap(find.byKey(const ValueKey('chats-new-separate-copy')));
+      await tester.pumpAndSettle();
+      expect(host.copies, hasLength(1));
+      expect(host.shown, isEmpty);
+    });
+
+    testWidgets('gone with the project: no folder, no option', (tester) async {
+      final host = FakeChatsHost(_source(lastUsed: '/tmp/scratch'))
+        ..copyProject = copy;
+      await _open(tester, host);
+      expect(
+        find.byKey(const ValueKey('chats-new-separate-copy')),
+        findsNothing,
+      );
+    });
   });
 }

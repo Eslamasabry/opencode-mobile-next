@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
+import 'package:opencode_mobile/domain/server_gateway.dart'
+    show WorkspaceProject;
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_host.dart';
@@ -88,11 +90,38 @@ class FakeChatsHost implements ChatsHost {
   /// What "Open a project" returns.
   String? openProjectResult;
 
+  /// The leftover-process notice the Conversations tab shows, if a test has
+  /// one to show.
+  Widget leftover = const SizedBox.shrink();
+
+  /// The project a separate copy is offered for (null: not offered).
+  WorkspaceProject? copyProject;
+  final copies = <String>[];
+
+  /// What the separate-copy step resolves with (null: closed).
+  String? copyResult;
+
   @override
   ChatFeedSource get source => fake;
 
   @override
   Listenable? get listenable => null;
+
+  @override
+  Widget leftoverNotice(BuildContext context) => leftover;
+
+  @override
+  Future<WorkspaceProject?> separateCopyProject(String directory) async =>
+      copyProject;
+
+  @override
+  Future<String?> startSeparateCopy(
+    BuildContext context,
+    WorkspaceProject project,
+  ) async {
+    copies.add(project.directory);
+    return copyResult;
+  }
 
   @override
   Future<String?> openChat(BuildContext context, ChatFeedItem item) async {
@@ -145,7 +174,14 @@ Widget chatsApp(
       ).copyWith(textScaler: TextScaler.linear(textScale)),
       child: child!,
     ),
-    home: home,
+    // The app's own surface: pages sit on a Material, so text carries no
+    // debug underline.
+    home: Builder(
+      builder: (context) => Material(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: home,
+      ),
+    ),
   ),
 );
 

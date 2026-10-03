@@ -31870,6 +31870,10 @@
   "@chatsFilterOpenProject": {
     "description": "Project sheet: opens the Open a project sheet"
   },
+  "chatsNewSeparateCopy": "In a separate copy",
+  "@chatsNewSeparateCopy": {
+    "description": "New conversation: the quiet option under the project chip that starts the task in a separate copy (a worktree) of the project. Shown only where the server can make one."
+  },
   "chatsNewPrompt": "What should we work on?",
   "@chatsNewPrompt": {
     "description": "New chat: the centered question"

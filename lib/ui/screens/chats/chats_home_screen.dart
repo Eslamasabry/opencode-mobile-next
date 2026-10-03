@@ -184,6 +184,9 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
         ),
       if (_notice != null)
         _QuietLine(key: const ValueKey('chats-notice'), text: _notice!),
+      // The leftover-process notice: a quiet status with its Stop, drawn
+      // only while the phone's watcher reports a helper.
+      host.leftoverNotice(context),
     ];
 
     final list = _list(context, host, snapshot, projectName);
