@@ -11,8 +11,7 @@ String lastProjectPreferenceKey(String profileID) =>
     'oc.lastProject.$profileID';
 
 /// [ConnectionController]'s [ChatFeedSource].
-mixin _ConnectionControllerChatFeed on ChangeNotifier
-    implements ChatFeedSource {
+mixin _ConnectionControllerChatFeed on ChangeNotifier {
   ConnectionController get _self;
 
   static const _feedPages = 4;
@@ -30,13 +29,18 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
   Future<void>? _feedRefreshing;
   Timer? _feedDebounce;
 
-  @override
-  bool get chatFeedAcrossProjects =>
-      _self.api != null && _self.capabilities.globalSessionSearch;
+  bool _feedAcrossKnown = false;
 
-  @override
-  bool isTemporaryProject(String? directory) =>
-      isTemporaryProjectDirectory(directory);
+  /// While a phone-agent route owns the connection the live gateway is not
+  /// OpenCode's: the last known OpenCode answer stands, and the OpenCode
+  /// source neither reads nor lists the connection's live sessions.
+  bool get _feedRouted => _self._phoneAgentRoute != null;
+
+  bool get _ocAcross {
+    if (_feedRouted) return _feedAcrossKnown;
+    return _feedAcrossKnown =
+        _self.api != null && _self.capabilities.globalSessionSearch;
+  }
 
   bool _feedEligible(String? directory) =>
       !isTemporaryProjectDirectory(directory) &&
@@ -48,8 +52,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
   /// A cache from another server is never shown on this one.
   bool get _feedCacheCurrent => _feedProfileID == _feedOwnerID;
 
-  @override
-  Future<void> refreshChatFeed() {
+  Future<void> _ocRefresh() {
     _feedWanted = true;
     return _feedRefreshing ??= _refreshFeed().whenComplete(() {
       _feedRefreshing = null;
@@ -63,13 +66,14 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
     if (!_feedWanted || _self._disposed) return;
     _feedDebounce?.cancel();
     _feedDebounce = Timer(const Duration(seconds: 2), () {
-      if (!_self._disposed) unawaited(refreshChatFeed());
+      if (!_self._disposed) unawaited(_self.refreshChatFeed());
     });
   }
 
   void _feedDispose() => _feedDebounce?.cancel();
 
   Future<void> _refreshFeed() async {
+    if (_feedRouted) return;
     final currentRepository = _self.repository;
     final currentApi = _self.api;
     final owner = _feedOwnerID;
@@ -88,7 +92,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
     if (_feedLoading) _self._notifyListeners();
     var complete = true;
     final items = <GlobalSessionResult>[];
-    if (chatFeedAcrossProjects) {
+    if (_ocAcross) {
       String? cursor;
       try {
         for (var page = 0; page < _feedPages; page++) {
@@ -122,9 +126,9 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
         _feedOwnerID != owner) {
       return;
     }
-    if (chatFeedAcrossProjects && (items.isNotEmpty || complete)) {
+    if (_ocAcross && (items.isNotEmpty || complete)) {
       _feedGlobal = items;
-    } else if (chatFeedAcrossProjects) {
+    } else if (_ocAcross) {
       complete = false; // Keep what was known.
     }
     if (projects != null) _feedProjects = projects;
@@ -180,14 +184,19 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
 
   List<ChatFeedItem> _feedAllItems({required bool includeSubagents}) {
     final here = _self.directory;
+    final live = !_feedRouted;
     final waiting = <String>{
-      for (final permission in _self.awaitingPermissions) permission.sessionID,
-      for (final question in _self.questions.values) question.sessionID,
-      for (final form in _self.forms.values) form.sessionID,
+      if (live) ...[
+        for (final permission in _self.awaitingPermissions)
+          permission.sessionID,
+        for (final question in _self.questions.values) question.sessionID,
+        for (final form in _self.forms.values) form.sessionID,
+      ],
     };
-    final running = <String>{..._self.busySessions};
+    final running = <String>{if (live) ..._self.busySessions};
     final failed = <String>{
-      for (final entry in _self._failedAttentionSessions.keys) entry,
+      if (live)
+        for (final entry in _self._failedAttentionSessions.keys) entry,
     };
     // The server-wide tally already covers other projects; the selected one
     // answers from its own live state above.
@@ -203,7 +212,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
         failed.add(observation.sessionID!);
       }
     }
-    final other = chatFeedAcrossProjects && _feedCacheCurrent;
+    final other = _ocAcross && _feedCacheCurrent;
     if (other) running.addAll(_feedBusy);
 
     final byID = <String, ChatFeedItem>{};
@@ -247,7 +256,8 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
       }
     }
     // The selected project's own list is fresher than any cached page.
-    for (final session in _self.sessionsById.values) {
+    for (final session
+        in live ? _self.sessionsById.values : const <Session>[]) {
       if (!includeSubagents && session.parentID != null) continue;
       if (_self._sessionInventoryInitialized &&
           !_self._sessionInventoryIDs.contains(session.id)) {
@@ -258,10 +268,9 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
     return byID.values.toList();
   }
 
-  @override
-  ChatFeedSnapshot chatFeed([ChatFeedFilter filter = ChatFeedFilter.all]) {
+  ChatFeedSnapshot _ocChatFeed([ChatFeedFilter filter = ChatFeedFilter.all]) {
     _feedWanted = true;
-    final across = chatFeedAcrossProjects;
+    final across = _ocAcross;
     final wantDirectory = filter.projectDirectory == null
         ? null
         : ConnectionController.normalizeDirectoryPath(filter.projectDirectory!);
@@ -299,8 +308,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
     );
   }
 
-  @override
-  List<ProjectSummary> get projectSummaries {
+  List<ProjectSummary> get _ocProjectSummaries {
     _feedWanted = true;
     final byDirectory = <String, ProjectSummary>{};
     for (final item in _feedAllItems(includeSubagents: false)) {
@@ -343,7 +351,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
         addEmpty(project.directory, name: project.name, isGit: true);
       }
     }
-    final last = lastUsedProjectDirectory;
+    final last = _ocLastUsed;
     if (last != null) {
       addEmpty(last, isGit: _feedProjectFor(last) != null);
     }
@@ -364,8 +372,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
     return List.unmodifiable(rows);
   }
 
-  @override
-  String? get lastUsedProjectDirectory {
+  String? get _ocLastUsed {
     final id = _feedOwnerID;
     if (id == null) return null;
     final saved = _self.store.prefs.getString(lastProjectPreferenceKey(id));
@@ -373,8 +380,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
     return saved;
   }
 
-  @override
-  Future<void> rememberLastUsedProject(String directory) async {
+  Future<void> _ocRemember(String directory) async {
     final id = _feedOwnerID;
     if (id == null || _self._deletingReadProfiles.contains(id)) return;
     final where = ConnectionController.normalizeDirectoryPath(directory);
@@ -404,8 +410,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
     } catch (_) {}
   }
 
-  @override
-  Future<String> startChatIn(String directory, {String? firstPrompt}) async {
+  Future<String> _ocStartChatIn(String directory, {String? firstPrompt}) async {
     final where = ConnectionController.normalizeDirectoryPath(directory);
     if (!_feedEligible(where)) {
       throw const ProductException('Choose a project folder for this chat.');
@@ -425,7 +430,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
       }
     }
     final session = await _self.createSession();
-    await rememberLastUsedProject(where);
+    await _ocRemember(where);
     final text = firstPrompt?.trim();
     if (text != null && text.isNotEmpty) {
       final transport = await _self._requireActionTransport();

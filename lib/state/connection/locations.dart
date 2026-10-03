@@ -567,7 +567,8 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
     // reads to the user as a rotated password. Guarded by
     // test/connection_transport_factory_guard_test.dart, because this fix
     // has already been lost to a merge once.
-    final pair = _buildTransportPair(profile);
+    final pair =
+        _phoneAgentConnectPair(profile) ?? _buildTransportPair(profile);
     final currentApi = pair.gateway
       ..setLocation(directory: directory, workspace: workspace);
     final currentRepository = pair.operations

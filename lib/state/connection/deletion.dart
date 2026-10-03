@@ -106,6 +106,9 @@ extension _ConnectionControllerDeletionImpl on ConnectionController {
           _closedQueueProfiles.add(profileId);
           await _profileMonitor?.drain(profileId);
           await _quotaMonitor?.drain(profileId);
+          // Phone agents first: auth, owned setup, host, feeds; ProfileStore
+          // removal (native drain, secrets) follows inside the transaction.
+          await _paCloseForDeletion(profileId);
           return _deleteProfileAndLocalData(
             profileId,
             queuedPrompts: queuedPrompts,
