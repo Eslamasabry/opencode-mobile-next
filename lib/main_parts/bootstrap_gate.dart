@@ -163,6 +163,14 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
     });
     await Future.wait(_loads.toList());
     if (!mounted) return;
+    // Phone agents keep their own sign-ins in the built-in Linux; close and
+    // drain them before the stored sign-ins they depend on are erased.
+    try {
+      await _controller?.closePhoneAgentsForSignInReset();
+    } catch (error, stack) {
+      widget.diagnostics.record(error, stack, source: 'bootstrap-reset');
+    }
+    if (!mounted) return;
     _controller?.dispose();
     _controller = null;
     _bootstrap = null;
