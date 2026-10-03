@@ -227,7 +227,11 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
             // The catalog only lists projects with history. A folder the
             // server can read is valid even with no sessions yet; only a
             // folder the server says is absent is dropped, quietly.
-            switch (await _checkFolder(profile, directory)) {
+            // An unreadable catalog means the server is not answering well
+            // enough to judge; leave it open instead of probing further.
+            switch (projects == null
+                ? _FolderCheck.unknown
+                : await _checkFolder(currentApi, directory, rescope: true)) {
               case _FolderCheck.exists:
                 break;
               case _FolderCheck.missing:
@@ -283,23 +287,20 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
     try {
       projects = await currentRepository.listProjects();
     } catch (_) {
-      projects = null; // The folder check below can still settle it.
+      return; // Still pending: try again on the next location refresh.
     }
     if (!_isCurrent(generation, currentApi) || this.directory != directory) {
       return;
     }
-    final listed =
-        projects?.any(
-          (candidate) => ConnectionController.projectContainsDirectory(
-            candidate,
-            directory,
-          ),
-        ) ??
-        false;
+    final listed = projects.any(
+      (candidate) =>
+          ConnectionController.projectContainsDirectory(candidate, directory),
+    );
     final owner = _connectedProfile;
     if (!listed) {
       if (owner == null) return;
-      final check = await _checkFolder(owner, directory);
+      // The live transport is already scoped to this folder.
+      final check = await _checkFolder(currentApi, directory, rescope: false);
       if (!_isCurrent(generation, currentApi) || this.directory != directory) {
         return;
       }
@@ -331,18 +332,18 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
     _pendingLocationRevalidation = false;
   }
 
-  /// Reads [directory] on a throwaway transport so a wrong path never
-  /// rescopes live requests. Only an explicit "not found" answer counts as
+  /// Reads [directory] through [gateway], the connection's own transport (no
+  /// extra transport is built). With [rescope] the gateway is pointed at the
+  /// folder only for this read and put back unscoped afterwards, as restore
+  /// does for the repository. Only an explicit "not found" answer counts as
   /// [_FolderCheck.missing]; any other failure leaves the question open.
   Future<_FolderCheck> _checkFolder(
-    ServerProfile profile,
-    String directory,
-  ) async {
-    if (isIsolated) return _FolderCheck.unknown;
-    ServerGateway? gateway;
+    ServerGateway gateway,
+    String directory, {
+    required bool rescope,
+  }) async {
     try {
-      gateway = _buildTransportPair(profile).gateway
-        ..setLocation(directory: directory, workspace: null);
+      if (rescope) gateway.setLocation(directory: directory, workspace: null);
       await gateway.listFiles('.').timeout(const Duration(seconds: 8));
       return _FolderCheck.exists;
     } on ApiException catch (error) {
@@ -355,7 +356,7 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
     } catch (_) {
       return _FolderCheck.unknown;
     } finally {
-      gateway?.close();
+      if (rescope) gateway.setLocation(directory: null, workspace: null);
     }
   }
 
