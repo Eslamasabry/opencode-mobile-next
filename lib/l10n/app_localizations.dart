@@ -42094,7 +42094,7 @@ abstract class AppLocalizations {
   /// Kind word of a found project in the find-projects step
   ///
   /// In en, this message translates to:
-  /// **'Git'**
+  /// **'Folder'**
   String get phoneScanKindGit;
 
   /// Title of the Open a project sheet's start page
@@ -42150,6 +42150,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stop'**
   String get phoneScanStop;
+
+  /// Quiet inline link after the folder line in the New project step
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get openProjectChange;
+
+  /// Folder line of the New project step, before the Change link
+  ///
+  /// In en, this message translates to:
+  /// **'In {folder}'**
+  String openProjectIn(String folder);
 }
 
 class _AppLocalizationsDelegate

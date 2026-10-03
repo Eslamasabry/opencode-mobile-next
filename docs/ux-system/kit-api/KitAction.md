@@ -178,6 +178,9 @@ class KitInset extends StatelessWidget {
   3. **Destructive stacking (§2.7, LAY-14):** when any `tertiary` action is `destructive`, `KitActionBlock` lays out exactly as `KitActionStack` on every window. It keeps `space2` (8 dp) between the destructive action's 48 dp area and every other target (LAY-9). A destructive action beyond the first two tertiary actions goes into "More", last, after a divider (KitMenu ordering).
   4. **Disabled reasons (§2.7, STATE-8):** each disabled action with a `disabledReason` gets one muted line (`note`) directly under its button, start-aligned. In the medium-and-up row, the reasons collect in one column under the row, end-aligned, in slot order.
   5. **One primary per block:** this is structural, since there is one `primary` slot. The debug "one visible primary per screen" check is kit-KitScreen-v2's (C06), not this unit's.
+- **`calm` and `neutral` (2026-10-03, open-project polish):** both additive, default false, carried by `KitButton.fromAction`.
+  - `calm: true` on a primary action eases the accent fill toward `surface1` (32 %) in dark mode only, so a sheet's one main action does not glare at night. Light mode and the global accent token are unchanged; no other screen is touched. The Open a project sheet's "Create and open" uses it.
+  - `neutral: true` in the primary slot draws a neutral secondary button (`surface3`), never the accent: for a control that is not the main act, such as "Stop" while a search runs.
 - **Internal keys (TEST-5):** keep `kit-actions-more` (used by 9 tests) and `kit-button-working`. Add `kit-action-reason` (each reason line; in tests, find it by its text first) and `kit-action-copied`.
 - **The "More" tooltip:** it moves from `chatUiMore` to the new key `kitMore`, with the same English "More", so tests that find it by text keep passing.
 

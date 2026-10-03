@@ -104,6 +104,20 @@ class KitText extends StatelessWidget {
        _monoSelectable = false,
        _kind = _KitTextKind.plain;
 
+  /// A quiet inline link: the secondary role in the accent tone ("In
+  /// /root/projects · Change"). Wrap it in a [KitTappable] for the tap.
+  const KitText.link(this.text, {super.key, this.maxLines, this.semanticsLabel})
+    : role = KitTextRole.secondary,
+      tone = KitTextTone.accent,
+      overflow = null,
+      textAlign = null,
+      softWrap = null,
+      tabular = false,
+      span = null,
+      cut = KitMonoCut.wrap,
+      _monoSelectable = false,
+      _kind = _KitTextKind.plain;
+
   /// Spans in one role; a span may carry its own tone colour
   /// ([KitText.toneColor]) or weight.
   const KitText.rich(

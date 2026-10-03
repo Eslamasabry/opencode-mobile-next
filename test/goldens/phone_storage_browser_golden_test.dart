@@ -86,8 +86,19 @@ Future<void> mountPhoneStorage(
           name: 'demo',
           path: '/root/projects/demo',
           isGit: true,
+          inside: ['pubspec.yaml', 'lib'],
         ),
-        const FolderEntry(name: 'notes', path: '/root/projects/notes'),
+        const FolderEntry(
+          name: 'notes',
+          path: '/root/projects/notes',
+          inside: ['package.json'],
+        ),
+        const FolderEntry(
+          name: 'dots',
+          path: '/root/projects/dots',
+          isGit: true,
+          inside: ['README.md'],
+        ),
       ],
       phone: PhoneStoragePlace(
         list: _phone,
@@ -98,7 +109,7 @@ Future<void> mountPhoneStorage(
           ? () async => [
               '/root/projects/demo',
               '/root/projects/notes',
-              '$_root/CodeAnything',
+              '/root/projects/dots',
             ]
           : null,
     ),

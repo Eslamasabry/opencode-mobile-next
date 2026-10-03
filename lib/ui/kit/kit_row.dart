@@ -61,6 +61,7 @@ class KitRow extends StatelessWidget {
     this.disabledReason,
     this.selected = false,
     this.action,
+    this.titleAccent = false,
   }) : assert(
          action == null || trailing == null,
          'KitRow: the action takes the trailing slot; pass one or the other',
@@ -68,6 +69,10 @@ class KitRow extends StatelessWidget {
        capability = null,
        enable = null,
        _unavailable = false;
+
+  /// The title in the accent colour: the row that starts something (New
+  /// project), beside an accent [KitRow.badge].
+  final bool titleAccent;
 
   /// A capability this server lacks (kit-v2.md §2.5; STATE-12): a dimmed
   /// row that says why and, when the capability can be turned on, offers
@@ -102,6 +107,7 @@ class KitRow extends StatelessWidget {
        swipe = null,
        selected = false,
        action = null,
+       titleAccent = false,
        _unavailable = true;
 
   final Widget? leading;
@@ -202,6 +208,15 @@ class KitRow extends StatelessWidget {
   static Widget icon(BuildContext context, IconData icon, {Color? color}) =>
       _KitRowIconTile(icon: icon, color: color);
 
+  /// A round icon badge for a row that starts something: [accent] tints the
+  /// circle and the glyph with the accent (the row's main act), otherwise a
+  /// quiet circle. Pair an accent badge with `titleAccent: true`.
+  static Widget badge(
+    BuildContext context,
+    IconData icon, {
+    bool accent = false,
+  }) => _KitRowIconTile(icon: icon, round: true, accent: accent);
+
   List<KitMenuItem> _menuWithTwin(BuildContext context) {
     final swipe = this.swipe;
     if (swipe == null) return menu;
@@ -255,6 +270,8 @@ class KitRow extends StatelessWidget {
         ? roles.text3
         : destructive
         ? roles.danger
+        : titleAccent
+        ? roles.accent
         : null;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final titleLines = textScale >= 1.3
@@ -474,10 +491,17 @@ class _KitRowScope extends InheritedWidget {
 }
 
 class _KitRowIconTile extends StatelessWidget {
-  const _KitRowIconTile({required this.icon, this.color});
+  const _KitRowIconTile({
+    required this.icon,
+    this.color,
+    this.round = false,
+    this.accent = false,
+  });
 
   final IconData icon;
   final Color? color;
+  final bool round;
+  final bool accent;
 
   @override
   Widget build(BuildContext context) {
@@ -487,14 +511,23 @@ class _KitRowIconTile extends StatelessWidget {
       dimension: tokens.iconTileSize,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: tokens.roles.surface3,
-          borderRadius: BorderRadius.circular(tokens.iconTileRadius),
+          color: accent
+              ? tokens.roles.accent.withValues(alpha: .18)
+              : tokens.roles.surface3,
+          shape: round ? BoxShape.circle : BoxShape.rectangle,
+          borderRadius: round
+              ? null
+              : BorderRadius.circular(tokens.iconTileRadius),
         ),
         child: Center(
           child: Icon(
             icon,
             size: tokens.smallIconSize,
-            color: dimmed ? tokens.roles.text3 : color ?? tokens.roles.text1,
+            color: dimmed
+                ? tokens.roles.text3
+                : accent
+                ? tokens.roles.accent
+                : color ?? tokens.roles.text1,
           ),
         ),
       ),

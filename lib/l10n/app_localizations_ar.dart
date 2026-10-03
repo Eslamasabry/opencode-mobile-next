@@ -26793,7 +26793,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get phoneScanKindCpp => 'C/C++';
 
   @override
-  String get phoneScanKindGit => 'Git';
+  String get phoneScanKindGit => 'مجلد';
 
   @override
   String get openProjectTitle => 'افتح مشروعًا';
@@ -26836,4 +26836,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get phoneScanStop => 'إيقاف';
+
+  @override
+  String get openProjectChange => 'غيّر';
+
+  @override
+  String openProjectIn(String folder) {
+    return 'في $folder';
+  }
 }

@@ -163,6 +163,24 @@ class PhoneProjectScanner {
     return kind == null ? null : (kind: kind, git: git);
   }
 
+  /// What [path] is, read from the folder's own entries: its kind (null
+  /// when no marker names one) and whether it holds `.git`. Unreadable folders
+  /// read as plain.
+  static Future<({PhoneProjectKind? kind, bool git})> inspect(
+    String path,
+  ) async {
+    final names = <String>[];
+    try {
+      await for (final entity in Directory(path).list(followLinks: false)) {
+        names.add(entity.path.substring(entity.path.lastIndexOf('/') + 1));
+      }
+    } on FileSystemException {
+      return (kind: null, git: false);
+    }
+    final found = classify(names);
+    return (kind: found?.kind, git: names.contains('.git'));
+  }
+
   /// Starts looking. [timeLimit] is the whole scan's cap.
   PhoneProjectScan start({Duration timeLimit = const Duration(seconds: 10)}) {
     final controller = StreamController<PhoneProject>();

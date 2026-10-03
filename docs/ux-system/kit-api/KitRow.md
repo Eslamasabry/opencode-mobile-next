@@ -222,6 +222,7 @@ class KitRowGroup extends StatelessWidget {
   - there is no hover and no tap.
 
   A disabled row with no reason renders as today, apart from the colour change. In strict mode it asserts (KitAction.md, Open question 1).
+- **`KitRow.badge` and `titleAccent` (2026-10-03, open-project polish):** `KitRow.badge(context, icon, accent: false)` is a round icon badge (same size as the tile): quiet (`surface3`) by default, or accent-tinted (accent at 18 % behind an accent glyph) for the row that starts something. `titleAccent: true` paints the title in the accent. New project (accent) and Search this phone (quiet) are siblings in one `KitRowGroup`.
 - **Internal keys (TEST-5):** `kit-row-menu-action-<index>` is for tests of the semantic actions only. Existing keys (`titleKey`, `supportingKey`, callers' `ValueKey`s such as `session-subtitle-<id>`) are unchanged.
 
 ## States

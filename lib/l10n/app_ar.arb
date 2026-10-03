@@ -5008,7 +5008,7 @@
   "phoneScanKindPhp": "PHP",
   "phoneScanKindDotnet": ".NET",
   "phoneScanKindCpp": "C/C++",
-  "phoneScanKindGit": "Git",
+  "phoneScanKindGit": "مجلد",
   "openProjectTitle": "افتح مشروعًا",
   "openProjectSearchPhone": "ابحث في هذا الهاتف",
   "openProjectChooseFolder": "اختر مجلدًا",
@@ -5017,5 +5017,7 @@
   "phoneScanSearching": "جارٍ البحث في هذا الهاتف",
   "phoneScanChecked": "فُحص {folders, plural, =1{مجلد واحد} two{مجلدان} few{{folders} مجلدات} many{{folders} مجلدًا} other{{folders} مجلد}} · وُجد {found}",
   "phoneScanDoneIn": "وُجد {count} خلال {time}",
-  "phoneScanStop": "إيقاف"
+  "phoneScanStop": "إيقاف",
+  "openProjectChange": "غيّر",
+  "openProjectIn": "في {folder}"
 }
