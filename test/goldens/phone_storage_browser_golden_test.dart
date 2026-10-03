@@ -21,6 +21,8 @@ import 'package:opencode_mobile/ui/widgets/remote_folder_picker.dart';
 import '../../tool/capture/fixtures.dart' show captureTheme, loadCaptureFonts;
 
 enum PhoneStorageScene {
+  start,
+  startrecent,
   places,
   menu,
   consent,
@@ -80,18 +82,25 @@ Future<void> mountPhoneStorage(
     ),
     _ => FolderBrowserSheet(
       list: (path) async => [
-        const FolderEntry(name: 'demo', path: '/root/projects/demo'),
+        const FolderEntry(
+          name: 'demo',
+          path: '/root/projects/demo',
+          isGit: true,
+        ),
         const FolderEntry(name: 'notes', path: '/root/projects/notes'),
       ],
       phone: PhoneStoragePlace(
         list: _phone,
         ensureAccess: (_) async => granted,
         scan: (_) => scan,
-        openedBefore: () async => [
-          '$_root/CodeAnything',
-          '$_root/Download/site',
-        ],
       ),
+      recent: scene == PhoneStorageScene.startrecent
+          ? () async => [
+              '/root/projects/demo',
+              '/root/projects/notes',
+              '$_root/CodeAnything',
+            ]
+          : null,
     ),
   };
   await tester.pumpWidget(
@@ -132,6 +141,17 @@ Future<void> mountPhoneStorage(
     await tester.pumpAndSettle();
   }
 
+  final browsing = const {
+    PhoneStorageScene.places,
+    PhoneStorageScene.menu,
+    PhoneStorageScene.root,
+    PhoneStorageScene.inside,
+    PhoneStorageScene.refused,
+  }.contains(scene);
+  if (browsing) {
+    // The start page's quiet link to the folder browser.
+    await tapKey('open-project-browse');
+  }
   if (scene == PhoneStorageScene.places) {
     // The place menu under the title, open.
     await tapKey('folder-browser-places');
@@ -139,11 +159,6 @@ Future<void> mountPhoneStorage(
   if (scene == PhoneStorageScene.root ||
       scene == PhoneStorageScene.menu ||
       scene == PhoneStorageScene.inside ||
-      scene == PhoneStorageScene.naming ||
-      scene == PhoneStorageScene.scanning ||
-      scene == PhoneStorageScene.found ||
-      scene == PhoneStorageScene.findnone ||
-      scene == PhoneStorageScene.findcapped ||
       scene == PhoneStorageScene.refused) {
     await tapKey('folder-browser-places');
     await tapKey('place-phone');
@@ -152,23 +167,25 @@ Future<void> mountPhoneStorage(
     // The header's overflow: hidden folders and the manual path.
     await tapKey('kit-sheet-menu');
   }
-  if (scene == PhoneStorageScene.inside || scene == PhoneStorageScene.naming) {
+  if (scene == PhoneStorageScene.inside) {
     await tapKey('in-app-project-CodeAnything');
   }
   if (scene == PhoneStorageScene.naming) {
-    await tapKey('phone-new-folder');
+    await tapKey('open-project-new');
   }
   if (scene.index >= PhoneStorageScene.scanning.index) {
-    // "Find projects": the menu item, then the step, in place.
-    await tester.tap(find.byKey(const ValueKey('kit-sheet-menu')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('folder-browser-find')));
+    // "Search this phone": the second row, then the step, in place.
+    await tester.tap(find.byKey(const ValueKey('open-project-search')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     if (scene == PhoneStorageScene.findnone) {
       scan.finish(PhoneScanEnd.completed);
-    } else if (scene != PhoneStorageScene.scanning) {
-      for (final (name, where, kind, hasGit) in _projects) {
+    } else {
+      scan.visited = scene == PhoneStorageScene.scanning ? 412 : 1873;
+      final shown = scene == PhoneStorageScene.scanning
+          ? _projects.take(3)
+          : _projects;
+      for (final (name, where, kind, hasGit) in shown) {
         scan.emit(
           PhoneProject(
             name: name,
@@ -178,11 +195,16 @@ Future<void> mountPhoneStorage(
           ),
         );
       }
-      scan.finish(
-        scene == PhoneStorageScene.findcapped
-            ? PhoneScanEnd.timedOut
-            : PhoneScanEnd.completed,
+      await tester.pump(
+        Duration(seconds: scene == PhoneStorageScene.scanning ? 7 : 9),
       );
+      if (scene != PhoneStorageScene.scanning) {
+        scan.finish(
+          scene == PhoneStorageScene.findcapped
+              ? PhoneScanEnd.timedOut
+              : PhoneScanEnd.completed,
+        );
+      }
     }
     if (scene == PhoneStorageScene.scanning) {
       await tester.pump(const Duration(milliseconds: 100));
@@ -228,6 +250,8 @@ void main() {
             find.byKey(boundary),
             matchesGoldenFile('${name}_$mode.png'),
           );
+          // Leave the sheet so a running search's timer is cancelled.
+          await tester.pumpWidget(const SizedBox());
         },
         variant: TargetPlatformVariant.only(TargetPlatform.android),
       );

@@ -106,6 +106,10 @@ Future<void> mountFolderBrowser(
     ),
   );
   await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
+  // The sheet opens on its start page; these scenes are the browser.
+  await tester.tap(find.byKey(const ValueKey('open-project-browse')));
+  await tester.pump();
   if (scene == FolderBrowserScene.loading) {
     // The sheet slides up; the skeleton shows once listing is slow.
     await tester.pump(const Duration(seconds: 1));

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 
 import 'phone_storage_folders.dart';
@@ -71,6 +72,13 @@ class PhoneProjectScan {
     if (!_end.isCompleted) _end.complete(reason);
     unawaited(_controller.close());
   }
+
+  /// Folders looked at so far.
+  int get visited => _visited;
+  int _visited = 0;
+
+  @visibleForTesting
+  set visited(int value) => _visited = value;
 
   /// True once [cancel] was called.
   bool get cancelled => _cancelled;
@@ -188,6 +196,7 @@ class PhoneProjectScanner {
       }
       final (path, depth) = queue.removeFirst();
       visited++;
+      scan._visited = visited;
       final folders = <String>[];
       final names = <String>[];
       try {
@@ -246,6 +255,27 @@ class PhoneProjectScanState extends ChangeNotifier {
 
   PhoneProjectScan? _scan;
   bool _disposed = false;
+  Timer? _tick;
+  DateTime? _startedAt;
+  Duration _elapsed = Duration.zero;
+  int _checked = 0;
+
+  /// How long the look has run (frozen when it stops).
+  Duration get elapsed => scanning && _startedAt != null
+      ? clock.now().difference(_startedAt!)
+      : _elapsed;
+
+  /// Folders looked at so far.
+  int get checked => scanning ? (_scan?.visited ?? 0) : _checked;
+
+  void _freeze() {
+    _tick?.cancel();
+    _tick = null;
+    _elapsed = _startedAt == null
+        ? Duration.zero
+        : clock.now().difference(_startedAt!);
+    _checked = _scan?.visited ?? _checked;
+  }
 
   bool get scanning => phase == PhoneScanPhase.scanning;
 
@@ -261,6 +291,12 @@ class PhoneProjectScanState extends ChangeNotifier {
     limit = timeLimit;
     phase = PhoneScanPhase.scanning;
     final scan = _scan = _start(timeLimit);
+    _startedAt = clock.now();
+    _tick?.cancel();
+    // The timer and the counts move a few times a second, not per folder.
+    _tick = Timer.periodic(const Duration(milliseconds: 250), (_) {
+      if (!_disposed && scanning) notifyListeners();
+    });
     notifyListeners();
     scan.projects.listen((project) {
       if (_disposed || _scan != scan) return;
@@ -270,6 +306,7 @@ class PhoneProjectScanState extends ChangeNotifier {
     unawaited(
       scan.end.then((reason) {
         if (_disposed || _scan != scan) return;
+        _freeze();
         phase = PhoneScanPhase.done;
         end = reason;
         notifyListeners();
@@ -282,6 +319,7 @@ class PhoneProjectScanState extends ChangeNotifier {
     final scan = _scan;
     if (scan == null || !scanning) return;
     scan.cancel();
+    _freeze();
     _scan = null;
     phase = PhoneScanPhase.done;
     end = PhoneScanEnd.cancelled;
@@ -291,6 +329,7 @@ class PhoneProjectScanState extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _tick?.cancel();
     _scan?.cancel();
     super.dispose();
   }

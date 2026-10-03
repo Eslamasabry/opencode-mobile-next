@@ -31,6 +31,9 @@ import '../kit/kit_tokens.dart';
 import '../kit/scenes/folders_open_scene.dart';
 import 'product_states.dart' show productErrorDetails;
 
+/// The pages of the sheet: it opens on [start]; the others swap in place.
+enum _Step { start, name, browse, find }
+
 /// Lists the folders directly inside an absolute path.
 typedef FolderLister = Future<List<FolderEntry>> Function(String path);
 
@@ -63,7 +66,6 @@ class PhoneStoragePlace {
   const PhoneStoragePlace({
     required this.list,
     required this.ensureAccess,
-    this.openedBefore,
     this.scan,
   });
 
@@ -74,9 +76,6 @@ class PhoneStoragePlace {
   /// listing can be read.
   final Future<bool> Function(BuildContext context) ensureAccess;
 
-  /// Shared-storage folders opened as projects before (absolute paths).
-  final Future<List<String>> Function()? openedBefore;
-
   /// Starts "Find projects" over the phone's storage with a time cap; null
   /// leaves the menu item out.
   final PhoneProjectScan Function(Duration timeLimit)? scan;
@@ -86,18 +85,31 @@ class PhoneStoragePlace {
 /// the one this app runs in Termux): the folders of its Ubuntu, browsed from
 /// the projects folder; [list] says how they are read.
 ///
-/// Built from kit parts only: the one sheet frame ([KitSheet]) after the
-/// Canva "Move to a folder" and iOS Files pickers. One header row: a back
-/// chevron that goes up one folder (Close at the place's first folder), the
-/// folder's name, and a more menu ("Show hidden folders", "Enter a path");
-/// under the title the place menu ("This phone", "Project space"), shown
-/// only when both exist. The body is one panel of folder rows. A project
-/// (a repository, a project OpenCode knows, or any folder straight in the
-/// projects folder) opens with a tap and its chevron shows what is in it;
-/// any other folder is gone into with a tap. The pinned bar holds the text
-/// button "New project" and "Open `<folder>`" for the folder being shown.
-/// "New project" swaps the sheet's content in place (never a second sheet or
-/// dialog) for the name step; back returns to the same folder.
+/// Built from kit parts only: the one sheet frame ([KitSheet]). It opens on a
+/// start page of three plain options and swaps its content in place (never a
+/// second sheet or dialog):
+///
+/// 1. "New project", the prominent top row: the name step ("Creates
+///    `<folder>/<name>`", "Create and open", a quiet "Change folder" that
+///    picks another parent in the browser and comes back). The default folder
+///    is the host's project space, or `Projects` on the phone's storage when
+///    the host has none ([projectSpace]);
+/// 2. "Search this phone", only where [phone] can scan (consent first): a
+///    calm search step with a timer, a bar against the time cap, folders
+///    checked and projects found, results as they come, "Stop", then
+///    "`<m>` found in 0:09", "Look deeper" after the cap, and a way forward
+///    when nothing is found; back cancels it;
+/// 3. "Opened before": [recent] folders with a Git badge where there is a
+///    `.git` (checked after, kept for the sheet's life); a tap opens one.
+///
+/// A quiet "Choose a folder" opens the browser: a back chevron that goes up
+/// one folder (Back to the start page at the place's first folder), the
+/// folder's name, a more menu ("Show hidden folders", "Enter a path"), the
+/// place menu ("This phone", "Project space") when both exist, one panel of
+/// folder rows, and the pinned "Open `<folder>`". A project (a repository, a
+/// project OpenCode knows, or any folder straight in the projects folder)
+/// opens with a tap and its chevron shows what is in it; any other folder is
+/// gone into with a tap. A server that cannot list folders has no search row.
 ///
 /// States (project-folder-browser map record):
 /// - loading: skeleton rows once a listing is slower than a touch answer;
@@ -122,7 +134,17 @@ class FolderBrowserSheet extends StatefulWidget {
     this.knownProjects,
     this.start = managedProjectsDirectory,
     this.phone,
+    this.recent,
+    this.projectSpace = true,
   });
+
+  /// The folders opened before (absolute paths, most recent first): the
+  /// start page's "Opened before" rows. Null or empty hides the section.
+  final Future<List<String>> Function()? recent;
+
+  /// The host has a project space to put new projects in; without one they
+  /// go in `Projects` on the phone's internal storage.
+  final bool projectSpace;
 
   /// Null: the project space is the only place (a test, or no storage).
   final PhoneStoragePlace? phone;
@@ -160,15 +182,29 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
   bool _showHidden = false;
   bool _accessRefused = false;
 
-  /// The inline name field of "New project here".
-  bool _naming = false;
+  /// Which page of the sheet shows: it opens on [_Step.start], and every
+  /// other page swaps in place (never a second sheet or dialog).
+  _Step _step = _Step.start;
+
+  /// The browser is picking the parent folder of a new project.
+  bool _picking = false;
+
+  /// Where "New project" makes the project: the host's project space, or
+  /// `Projects` on the phone's storage when the host has none.
+  late String _createIn = widget.projectSpace
+      ? managedProjectsDirectory
+      : '${PhoneStorageFolders.root}/Projects';
+
+  /// The name field of the New project step.
   final TextEditingController _name = TextEditingController();
   String? _nameError;
-  List<String> _opened = const [];
 
-  /// "Find projects": the step swapped in place, and its results, kept for
-  /// the life of this sheet only.
-  bool _finding = false;
+  /// "Opened before" and which of them hold a repository (checked after,
+  /// kept for the life of this sheet).
+  List<String> _recent = const [];
+  final Map<String, bool> _git = {};
+
+  /// "Search this phone": its results, kept for the life of this sheet only.
   PhoneProjectScanState? _scanState;
 
   FolderLister get _lister => _phone ? widget.phone!.list : widget.list;
@@ -178,6 +214,7 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
     super.initState();
     _load(_path);
     _loadKnown();
+    _loadRecent();
   }
 
   @override
@@ -186,6 +223,42 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
     _scanState?.dispose();
     _name.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadRecent() async {
+    final load = widget.recent;
+    if (load == null) return;
+    try {
+      final paths = await load();
+      if (!mounted) return;
+      setState(() => _recent = paths);
+      for (final path in paths) {
+        unawaited(_probeGit(path));
+      }
+    } catch (_) {
+      // Only the "Opened before" rows depend on it.
+    }
+  }
+
+  /// Whether [path] is a repository: the phone's folders are read here, the
+  /// project space's from the listing of the folder above it. A failure
+  /// leaves the badge out.
+  Future<void> _probeGit(String path) async {
+    bool git = false;
+    try {
+      if (PhoneStorageFolders.normalize(path) != null) {
+        git = await PhoneStorageFolders.hasGit(path);
+      } else {
+        final parent = BuiltinRootfsFolders.parentOf(path);
+        if (parent != null) {
+          final entries = await widget.list(parent);
+          git = entries.any((entry) => entry.path == path && entry.isGit);
+        }
+      }
+    } catch (_) {
+      git = false;
+    }
+    if (mounted && git) setState(() => _git[path] = true);
   }
 
   Future<void> _loadKnown() async {
@@ -239,6 +312,7 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
 
   bool _isProject(FolderEntry entry) =>
       !_phone &&
+      !_picking &&
       !isProtectedWorkspaceDirectory(entry.path) &&
       (entry.isGit ||
           _known.contains(entry.path) ||
@@ -282,7 +356,6 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
         _entries = null;
         _error = null;
       });
-      unawaited(_loadOpened());
       await _load(PhoneStorageFolders.root);
     } else {
       setState(() {
@@ -294,37 +367,64 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
     }
   }
 
-  Future<void> _loadOpened() async {
-    final load = widget.phone?.openedBefore;
-    if (load == null) return;
-    try {
-      final opened = await load();
-      if (mounted) setState(() => _opened = opened);
-    } catch (_) {
-      // Only the "Opened before" rows depend on it.
-    }
-  }
-
-  /// "New project here": the sheet's actions turn in place into a name
-  /// field (no second sheet or dialog); the project is made inside the
-  /// folder being shown (project space or phone storage), then opened.
-  void _newProject(AppLocalizations l10n) {
+  /// "New project": the name step, in place.
+  void _newProject() {
     _name.clear();
     setState(() {
-      _naming = true;
+      _step = _Step.name;
       _nameError = null;
     });
   }
 
   void _cancelNaming() => setState(() {
-    _naming = false;
+    _step = _Step.start;
     _nameError = null;
+  });
+
+  static bool _onPhone(String path) =>
+      PhoneStorageFolders.normalize(path) != null;
+
+  /// "Change folder": the browser, to pick the parent folder; "Use (folder)"
+  /// comes back to the name step.
+  Future<void> _changeFolder() async {
+    setState(() {
+      _picking = true;
+      _step = _Step.browse;
+    });
+    await _browseAt(_createIn);
+  }
+
+  Future<void> _browseAt(String path) async {
+    if (_onPhone(path) && !_phone) {
+      await _choosePlace(true);
+      if (_phone && path != PhoneStorageFolders.root) await _load(path);
+    } else if (!_onPhone(path) && _phone) {
+      await _choosePlace(false);
+      if (path != _path) await _load(path);
+    } else if (path != _path) {
+      await _load(path);
+    }
+  }
+
+  void _useFolder() => setState(() {
+    _createIn = _path;
+    _picking = false;
+    _step = _Step.name;
+  });
+
+  /// Back from the browser: to the name step when it was picking a folder,
+  /// else to the start page.
+  void _leaveBrowse() => setState(() {
+    _step = _picking ? _Step.name : _Step.start;
+    _picking = false;
   });
 
   String? _nameProblem(String value) {
     final clean = value.trim();
     return projectFolderNameProblem(clean) ??
-        (_phone ? null : workspaceDirectoryProblem(_join(_path, clean)));
+        (_onPhone(_createIn)
+            ? null
+            : workspaceDirectoryProblem(_join(_createIn, clean)));
   }
 
   void _submitName(AppLocalizations l10n) {
@@ -334,29 +434,41 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
       setState(() => _nameError = problem);
       return;
     }
-    final path = _join(_path, clean);
-    // A name that is already a folder here simply opens it.
-    final exists = _entries?.any((entry) => entry.name == clean) ?? false;
+    final path = _join(_createIn, clean);
+    // A name that is already a folder there simply opens it.
+    final exists =
+        _path == _createIn &&
+        (_entries?.any((entry) => entry.name == clean) ?? false);
     KitSheet.close<FolderBrowserChoice>(
       context,
       exists ? FolderBrowserOpen(path) : FolderBrowserCreate(path),
     );
   }
 
-  /// "Find projects": swaps the sheet in place for the results. What an
-  /// earlier look found is shown as it was; a look that back cut short
-  /// starts again.
-  void _findProjects() {
-    final start = widget.phone?.scan;
-    if (start == null) return;
+  /// "Search this phone": the consent first when access is missing, then
+  /// the search step. What an earlier search found is shown as it was; one
+  /// that Stop or back cut short starts again.
+  Future<void> _startSearch() async {
+    final place = widget.phone;
+    final start = place?.scan;
+    if (place == null || start == null) return;
+    final granted = await place.ensureAccess(context);
+    if (!mounted) return;
+    if (!granted) {
+      setState(() => _accessRefused = true);
+      return;
+    }
     final state = _scanState ??= PhoneProjectScanState(start);
-    setState(() => _finding = true);
+    setState(() {
+      _accessRefused = false;
+      _step = _Step.find;
+    });
     if (!state.hasResult && !state.scanning) state.run();
   }
 
   void _stopFinding() {
     _scanState?.cancel();
-    setState(() => _finding = false);
+    setState(() => _step = _Step.start);
   }
 
   bool get _settled => !_loading && _error == null && _entries != null;
@@ -385,23 +497,23 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
         padding: EdgeInsetsDirectional.only(bottom: media.viewInsets.bottom),
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxHeight),
-          child: _finding
-              ? _scanStep(l10n)
-              : _naming
-              ? _nameStep(l10n)
-              : _listStep(l10n),
+          child: switch (_step) {
+            _Step.start => _startStep(l10n),
+            _Step.name => _nameStep(l10n),
+            _Step.browse => _listStep(l10n),
+            _Step.find => _scanStep(l10n),
+          },
         ),
       ),
     );
   }
 
-  /// Step two, in place of the list (no second sheet or dialog): the name
-  /// of the new project, made inside the folder that was being shown.
+  /// The name of the new project, made inside [_createIn]; "Change folder"
+  /// picks another parent in the browser.
   Widget _nameStep(AppLocalizations l10n) => KitSheet(
     key: const ValueKey('in-app-projects'),
     step: 'name',
     title: l10n.projectFolderNewProject,
-    subtitle: l10n.folderBrowserNewProjectIn(_title(l10n)),
     handle: false,
     leading: KitAction(
       key: const ValueKey('phone-new-folder-cancel'),
@@ -415,28 +527,150 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
       icon: AppIconography.folderAdd,
       onPressed: () => _submitName(l10n),
     ),
-    child: KitField(
-      fieldKey: const ValueKey('phone-new-folder-name'),
-      label: l10n.projectFolderProjectNameLabel,
-      controller: _name,
-      hint: l10n.projectFolderNameHint,
-      helper: l10n.folderBrowserNewProjectCreates(
-        KitBidi.ltr(
-          _join(_path, _name.text.trim().isEmpty ? '…' : _name.text.trim()),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        KitField(
+          fieldKey: const ValueKey('phone-new-folder-name'),
+          label: l10n.projectFolderProjectNameLabel,
+          controller: _name,
+          hint: l10n.projectFolderNameHint,
+          helper: l10n.folderBrowserNewProjectCreates(
+            KitBidi.ltr(
+              _join(
+                _createIn,
+                _name.text.trim().isEmpty ? '…' : _name.text.trim(),
+              ),
+            ),
+          ),
+          error: _nameError,
+          autofocus: true,
+          textInputAction: TextInputAction.done,
+          onChanged: (value) => setState(() {
+            if (_nameError != null) _nameError = _nameProblem(value);
+          }),
+          onSubmitted: (_) => _submitName(l10n),
         ),
-      ),
-      error: _nameError,
-      autofocus: true,
-      textInputAction: TextInputAction.done,
-      onChanged: (value) => setState(() {
-        if (_nameError != null) _nameError = _nameProblem(value);
-      }),
-      onSubmitted: (_) => _submitName(l10n),
+        SizedBox(height: KitTokens.of(context).space2),
+        KitButton.tertiary(
+          key: const ValueKey('phone-new-folder-change'),
+          label: l10n.openProjectChangeFolder,
+          onPressed: _changeFolder,
+        ),
+      ],
     ),
   );
 
-  /// Step two, in place of the list: the projects found on the phone, as
-  /// they are found. One tap opens one, as "Open" does for a folder.
+  /// What the sheet opens on: three plain options and nothing else. New
+  /// project first, then the search (only where the host can be searched),
+  /// then the folders opened before, and a quiet link to browse any folder.
+  Widget _startStep(AppLocalizations l10n) {
+    final tokens = KitTokens.of(context);
+    final canSearch = widget.phone?.scan != null;
+    return KitSheet(
+      key: const ValueKey('in-app-projects'),
+      step: 'start',
+      title: l10n.openProjectTitle,
+      handle: false,
+      onClose: () => KitSheet.close<FolderBrowserChoice>(context),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          KitButton.primary(
+            key: const ValueKey('open-project-new'),
+            label: l10n.projectFolderNewProject,
+            icon: AppIconography.add,
+            onPressed: _newProject,
+          ),
+          SizedBox(height: tokens.space3),
+          if (canSearch)
+            KitRowGroup(
+              margin: EdgeInsetsDirectional.zero,
+              children: [
+                KitRow(
+                  key: const ValueKey('open-project-search'),
+                  leading: KitRow.icon(context, AppIconography.search),
+                  title: l10n.openProjectSearchPhone,
+                  trailing: const KitChevron(),
+                  onTap: _startSearch,
+                ),
+              ],
+            ),
+          if (_accessRefused)
+            Padding(
+              padding: EdgeInsetsDirectional.only(top: tokens.space2),
+              child: KitText(
+                l10n.folderBrowserPhoneRefused,
+                key: const ValueKey('folder-browser-phone-refused'),
+                role: KitTextRole.secondary,
+              ),
+            ),
+          if (_recent.isNotEmpty) ...[
+            KitSectionLabel(l10n.folderBrowserOpenedBefore),
+            KitRowGroup(
+              margin: EdgeInsetsDirectional.zero,
+              children: [
+                for (final (index, path) in _recent.indexed)
+                  _recentRow(l10n, index, path),
+              ],
+            ),
+          ],
+          SizedBox(height: tokens.space3),
+          Align(
+            child: KitButton.tertiary(
+              key: const ValueKey('open-project-browse'),
+              label: l10n.openProjectChooseFolder,
+              onPressed: () => setState(() {
+                _picking = false;
+                _step = _Step.browse;
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _recentRow(AppLocalizations l10n, int index, String path) => KitRow(
+    key: ValueKey('open-project-recent-$index'),
+    leading: KitRow.icon(context, AppIconography.history),
+    title: _nameOf(path),
+    supporting: TextSpan(
+      text: KitBidi.ltr(_cutStart(path)),
+      style: KitText.styleFor(KitTextRole.mono),
+    ),
+    trailing: _gitAndChevron(l10n, _git[path] ?? false),
+    onTap: () =>
+        KitSheet.close<FolderBrowserChoice>(context, FolderBrowserOpen(path)),
+  );
+
+  Widget _gitAndChevron(AppLocalizations l10n, bool git) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      if (git) ...[
+        KitChip(label: l10n.phoneScanGit),
+        SizedBox(width: KitTokens.of(context).space2),
+      ],
+      const KitChevron(),
+    ],
+  );
+
+  /// A path cut at its start when long, so the folders nearest the project
+  /// stay readable.
+  static String _cutStart(String path, [int max = 36]) =>
+      path.length <= max ? path : '…${path.substring(path.length - (max - 1))}';
+
+  /// m:ss, as the search's timer reads.
+  static String _clock(Duration time) {
+    final seconds = time.inSeconds;
+    return '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}';
+  }
+
+  /// The search, in place: a calm page with the time, a bar against the time
+  /// cap, what has been checked and found so far, and the projects as they
+  /// come. One tap on a project opens it, as "Open" does for a folder.
   Widget _scanStep(AppLocalizations l10n) {
     final state = _scanState!;
     return ListenableBuilder(
@@ -445,30 +679,39 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
         final found = state.projects;
         final end = state.end;
         final seconds = state.limit.inSeconds;
-        final String? subtitle = state.scanning
-            ? l10n.phoneScanLooking
+        final running = state.scanning;
+        final time = _clock(state.elapsed);
+        final String? subtitle = running
+            ? time
             : end == PhoneScanEnd.completed && found.isEmpty
             ? null
             : end == PhoneScanEnd.timedOut
             ? l10n.phoneScanStopped(seconds, found.length)
             : end == PhoneScanEnd.limited
             ? l10n.phoneScanFirstShown(found.length)
-            : l10n.phoneScanFound(found.length);
+            : l10n.phoneScanDoneIn(found.length, time);
         final deeper = end == PhoneScanEnd.timedOut && seconds < 30;
+        final tokens = KitTokens.of(context);
         return KitSheet(
           key: const ValueKey('in-app-projects'),
           step: 'find',
-          title: l10n.phoneScanTitle,
+          title: running ? l10n.phoneScanSearching : l10n.phoneScanTitle,
           subtitle: subtitle,
           handle: false,
-          loading: state.scanning,
           onClose: () => KitSheet.close<FolderBrowserChoice>(context),
           leading: KitAction(
             key: const ValueKey('phone-scan-back'),
             label: l10n.kitTopBarBack,
             onPressed: _stopFinding,
           ),
-          bar: deeper,
+          bar: running || deeper,
+          secondary: running
+              ? KitAction(
+                  key: const ValueKey('phone-scan-stop'),
+                  label: l10n.phoneScanStop,
+                  onPressed: state.cancel,
+                )
+              : null,
           primary: deeper
               ? KitAction(
                   key: const ValueKey('phone-scan-deeper'),
@@ -477,24 +720,41 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
                       state.run(timeLimit: const Duration(seconds: 30)),
                 )
               : null,
-          child: found.isEmpty
-              ? state.scanning
-                    ? const KitSkeletonRows(count: 4)
-                    : KitStateView(
-                        key: const ValueKey('phone-scan-empty'),
-                        size: KitStateSize.inline,
-                        icon: AppIconography.folderOpen,
-                        illustration: const KitFoldersOpenScene(),
-                        title: l10n.phoneScanEmptyTitle,
-                        body: l10n.phoneScanEmptyBody,
-                      )
-              : KitRowGroup(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (running) ...[
+                KitProgressView(
+                  progress: KitProgress.known(
+                    (state.elapsed.inMilliseconds / state.limit.inMilliseconds)
+                        .clamp(0.0, 1.0),
+                    key: const ValueKey('phone-scan-progress'),
+                    caption: l10n.phoneScanChecked(state.checked, found.length),
+                    semanticsLabel: l10n.phoneScanSearching,
+                  ),
+                ),
+                SizedBox(height: tokens.space3),
+              ],
+              if (found.isNotEmpty)
+                KitRowGroup(
                   margin: EdgeInsetsDirectional.zero,
                   children: [
                     for (final project in found)
                       _projectRow(context, l10n, project),
                   ],
+                )
+              else if (!running)
+                KitStateView(
+                  key: const ValueKey('phone-scan-empty'),
+                  size: KitStateSize.inline,
+                  icon: AppIconography.folderOpen,
+                  illustration: const KitFoldersOpenScene(),
+                  title: l10n.phoneScanEmptyTitle,
+                  body: l10n.phoneScanEmptyBody,
                 ),
+            ],
+          ),
         );
       },
     );
@@ -574,10 +834,9 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
       onClose: () => KitSheet.close<FolderBrowserChoice>(context),
       leading: _atRoot || parent == null
           ? KitAction(
-              key: const ValueKey('folder-browser-close'),
-              label: l10n.kitSheetClose,
-              icon: AppIconography.close,
-              onPressed: () => KitSheet.close<FolderBrowserChoice>(context),
+              key: const ValueKey('folder-browser-start'),
+              label: l10n.kitTopBarBack,
+              onPressed: _leaveBrowse,
             )
           : KitAction(
               key: const ValueKey('folder-browser-up'),
@@ -592,12 +851,6 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
             checked: _showHidden,
             onSelected: () => setState(() => _showHidden = !_showHidden),
           ),
-        if (_phone && widget.phone?.scan != null)
-          KitMenuItem(
-            key: const ValueKey('folder-browser-find'),
-            label: l10n.folderBrowserFindProjects,
-            onSelected: _findProjects,
-          ),
         KitMenuItem(
           key: const ValueKey('in-app-enter-path'),
           label: l10n.projectFolderEnterPath,
@@ -610,14 +863,19 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
       headerLine: widget.phone == null ? null : _placeLine(l10n),
       loading: _loading && !_showSkeleton,
       bar: true,
-      secondary: _settled
-          ? KitAction(
-              key: const ValueKey('phone-new-folder'),
-              label: l10n.projectFolderNewProject,
-              onPressed: () => _newProject(l10n),
-            )
-          : null,
-      primary: canOpen
+      primary: _picking
+          ? (_settled &&
+                    (_phone ||
+                        _canOpenHere ||
+                        _path == managedProjectsDirectory)
+                ? KitAction(
+                    key: const ValueKey('folder-browser-use'),
+                    label: l10n.openProjectUseFolder(_nameOf(_path)),
+                    icon: AppIconography.folderOpen,
+                    onPressed: _useFolder,
+                  )
+                : null)
+          : canOpen
           ? KitAction(
               key: const ValueKey('folder-browser-open'),
               label: l10n.folderBrowserOpen(_nameOf(_path)),
@@ -746,10 +1004,6 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
                   role: KitTextRole.secondary,
                 ),
               ),
-            if (_phone &&
-                _path == PhoneStorageFolders.root &&
-                _opened.isNotEmpty)
-              ..._openedBefore(context, l10n),
             if (rows.isNotEmpty)
               KitRowGroup(
                 margin: EdgeInsetsDirectional.zero,
@@ -763,39 +1017,6 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
       ),
     );
   }
-
-  /// Shared-storage folders opened as projects before: one tap opens.
-  List<Widget> _openedBefore(BuildContext context, AppLocalizations l10n) => [
-    KitSectionLabel(
-      l10n.folderBrowserOpenedBefore,
-      margin: EdgeInsets.zero,
-      gapBefore: 0,
-    ),
-    KitRowGroup(
-      margin: EdgeInsetsDirectional.only(bottom: KitTokens.of(context).space3),
-      children: [
-        for (final (index, path) in _opened.indexed)
-          KitRow(
-            key: ValueKey('phone-opened-$index'),
-            leading: KitRow.icon(context, AppIconography.history),
-            title: _nameOf(path),
-            supporting: TextSpan(
-              text: KitBidi.ltr(
-                path.startsWith('${PhoneStorageFolders.root}/')
-                    ? path.substring(PhoneStorageFolders.root.length)
-                    : path,
-              ),
-              style: KitText.styleFor(KitTextRole.mono),
-            ),
-            trailing: const KitChevron(),
-            onTap: () => KitSheet.close<FolderBrowserChoice>(
-              context,
-              FolderBrowserOpen(path),
-            ),
-          ),
-      ],
-    ),
-  ];
 
   /// "package.json, src, 12 more": what is inside, in one line.
   String? _hint(AppLocalizations l10n, FolderEntry entry) {
@@ -900,7 +1121,7 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
               key: const ValueKey('folder-browser-first-project'),
               label: l10n.folderBrowserFirstProject,
               icon: AppIconography.folderAdd,
-              onPressed: () => _newProject(l10n),
+              onPressed: _newProject,
             )
           : null,
     );

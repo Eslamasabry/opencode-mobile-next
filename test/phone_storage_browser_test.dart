@@ -199,6 +199,12 @@ void main() {
     );
     await tester.tap(find.text('go'));
     await tester.pumpAndSettle();
+    // The sheet opens on its start page; these tests browse from there.
+    final browse = find.byKey(const ValueKey('open-project-browse'));
+    if (browse.evaluate().isNotEmpty) {
+      await tester.tap(browse);
+      await tester.pumpAndSettle();
+    }
   }
 
   Future<void> tapKey(WidgetTester tester, String key) async {
@@ -302,13 +308,18 @@ void main() {
     expect(await SharedProjectRoots.all('builtin'), ['$_root/Projects']);
   });
 
-  testWidgets('New folder here makes the folder and opens it', (tester) async {
+  testWidgets('a new project can be made on the phone with Change folder', (
+    tester,
+  ) async {
     access = StorageAccess.granted;
     await build();
     await openSheet(tester);
+    await tapKey(tester, 'folder-browser-start');
+    await tapKey(tester, 'open-project-new');
+    await tapKey(tester, 'phone-new-folder-change');
     await choosePhone(tester);
     await tapKey(tester, 'in-app-project-Projects');
-    await tapKey(tester, 'phone-new-folder');
+    await tapKey(tester, 'folder-browser-use');
     await tester.enterText(
       find.byKey(const ValueKey('phone-new-folder-name')),
       'fresh',
@@ -340,16 +351,17 @@ void main() {
     expect(title(tester), 'projects');
   });
 
-  testWidgets('a folder opened before is offered at the top of the phone', (
+  testWidgets('a folder opened before is a row on the start page', (
     tester,
   ) async {
     access = StorageAccess.granted;
     await build(recent: ['/sdcard/CodeAnything', '/root/projects/demo']);
     await openSheet(tester);
-    await choosePhone(tester);
+    await tapKey(tester, 'folder-browser-start');
     expect(find.text('Opened before'), findsOneWidget);
     expect(find.text('CodeAnything'), findsOneWidget);
-    await tapKey(tester, 'phone-opened-0');
+    expect(find.text('demo'), findsOneWidget);
+    await tapKey(tester, 'open-project-recent-0');
     expect(result, '$_root/CodeAnything');
   });
 

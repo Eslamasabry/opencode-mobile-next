@@ -169,8 +169,32 @@ class ProjectFolderActions {
           );
           return outcome == SharedStorageOutcome.proceed;
         },
-        openedBefore: () async => _openedSharedFolders(controller),
       );
+
+  /// The folders opened before, most recent first: the connection's recent
+  /// locations that can be opened, then shared-storage projects opened on
+  /// this phone. The start page shows the first few.
+  static Future<List<String>> _recentFolders(
+    ConnectionController controller,
+  ) async {
+    final out = <String>[];
+    for (final location in controller.recentLocations) {
+      final raw = location.directory;
+      final directory = raw == null
+          ? null
+          : PhoneStorageFolders.normalize(raw) ?? raw;
+      if (directory != null &&
+          workspaceDirectoryProblem(directory) == null &&
+          !isProtectedWorkspaceDirectory(directory) &&
+          !out.contains(directory)) {
+        out.add(directory);
+      }
+    }
+    for (final path in await _openedSharedFolders(controller)) {
+      if (!out.contains(path)) out.add(path);
+    }
+    return out.take(6).toList();
+  }
 
   static Future<List<String>> _openedSharedFolders(
     ConnectionController controller,
@@ -215,6 +239,7 @@ class ProjectFolderActions {
           list: folderListerOverride ?? BuiltinFolders(linux).list,
           knownProjects: () => _knownProjects(controller),
           phone: _phonePlace(controller),
+          recent: () => _recentFolders(controller),
         ),
       );
       if (choice == null || !context.mounted) return null;
@@ -244,6 +269,7 @@ class ProjectFolderActions {
           list: folderListerOverride ?? termux.list,
           knownProjects: () => _knownProjects(controller),
           phone: _phonePlace(controller),
+          recent: () => _recentFolders(controller),
         ),
       );
       if (choice == null || !context.mounted) return null;

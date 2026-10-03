@@ -20121,7 +20121,7 @@ abstract class AppLocalizations {
   /// Shown in place of the Open button while the browser shows the projects folder itself
   ///
   /// In en, this message translates to:
-  /// **'Your projects live here. Tap one to open it, or start a new one.'**
+  /// **'Your projects live here. Tap one to open it.'**
   String get folderBrowserProjectsHere;
 
   /// Shown in place of the Open button while the browser shows the home folder or /
@@ -20151,7 +20151,7 @@ abstract class AppLocalizations {
   /// Empty state body of a folder with no folders inside
   ///
   /// In en, this message translates to:
-  /// **'Make a new project in it below, or go up one folder.'**
+  /// **'Open it as a project, or go up one folder.'**
   String get folderBrowserEmptyBody;
 
   /// Error state title when a folder could not be listed
@@ -41926,7 +41926,7 @@ abstract class AppLocalizations {
   /// Empty-state body of an empty phone-storage folder
   ///
   /// In en, this message translates to:
-  /// **'Open it, make a new folder in it, or go up one level.'**
+  /// **'Open it, or go up one level.'**
   String get folderBrowserEmptyPhoneBody;
 
   /// Section label of folders opened before on a remote server
@@ -42096,6 +42096,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Git'**
   String get phoneScanKindGit;
+
+  /// Title of the Open a project sheet's start page
+  ///
+  /// In en, this message translates to:
+  /// **'Open a project'**
+  String get openProjectTitle;
+
+  /// Second row of the Open a project start page: looks for projects on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Search this phone'**
+  String get openProjectSearchPhone;
+
+  /// Quiet link at the bottom of the Open a project start page that opens the folder browser
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a folder'**
+  String get openProjectChooseFolder;
+
+  /// Quiet link in the New project step that picks another parent folder
+  ///
+  /// In en, this message translates to:
+  /// **'Change folder'**
+  String get openProjectChangeFolder;
+
+  /// Primary button when picking the parent folder of a new project
+  ///
+  /// In en, this message translates to:
+  /// **'Use {name}'**
+  String openProjectUseFolder(String name);
+
+  /// Title of the search step while it runs
+  ///
+  /// In en, this message translates to:
+  /// **'Searching this phone'**
+  String get phoneScanSearching;
+
+  /// Running line of the search step: folders looked at and projects found
+  ///
+  /// In en, this message translates to:
+  /// **'{folders, plural, =1{1 folder} other{{folders} folders}} checked · {found} found'**
+  String phoneScanChecked(int folders, int found);
+
+  /// Subtitle of the search step once it is done; time is m:ss
+  ///
+  /// In en, this message translates to:
+  /// **'{count} found in {time}'**
+  String phoneScanDoneIn(int count, String time);
+
+  /// Action that stops a running search
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get phoneScanStop;
 }
 
 class _AppLocalizationsDelegate

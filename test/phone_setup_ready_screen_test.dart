@@ -334,6 +334,8 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('in-app-projects')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('open-project-browse')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('in-app-project-old-project')));
     await tester.pumpAndSettle();
 
