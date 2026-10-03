@@ -75,6 +75,10 @@ Future<T?> showKitSheet<T>(
   KitAction? secondary,
   List<KitAction> tertiary = const [],
   WidgetBuilder? footer, // slice-P3.3: settings pinned above the actions
+  // KitSheet (the frame) only, picker layout: leading (back or Close), menu
+  // (the more button), menuLabel, headerLine (the quiet line under the
+  // title), bar (text button + primary as one pinned row), step (in-place
+  // swap). `entry` was removed; see "Picker layout" below.
   ValueListenable<bool>? dirty,              // unsaved input that cannot be a draft
   KitDraft? draft,                           // preferred over dirty (DATA-2)
   ValueListenable<bool>? loading,            // code stands (KIT-39): the one loading bar
@@ -153,7 +157,7 @@ The doc comment declares: `default`, `with-icon`, `loading`, `disabled` (the pri
 - **Loading.** The 2 dp `KitLoadingBar` sits directly under the header while `loading` is true. The body shows the caller's skeleton rows (STATE-4).
 - **Empty and error.** These are the body's, drawn as an inline `KitStateView` or a `KitNotice` with Try again (STATE-20: a sheet that fetches). The frame adds nothing.
 - **Footer (slice-P3.3).** `footer` is one short line of settings that go with the primary (the model sheet's `Thinking: High` and `Agent: Build` chips). It is pinned with the actions, above them, and stays in reach while the body scrolls. A longer choice opens from it as a `KitMenu`, never a dialog over the sheet.
-- **Entry (inline name, 2026-10-03).** `KitSheet(entry: KitSheetEntry(...))` asks for a name or short text in the sheet itself: a `KitField` (autofocused, so the keyboard rises and the sheet stays above it) pinned in the footer position, with one helper line ("Creates /path/name") or the reason under it (`error`). The caller swaps `primary` to the confirm ("Create and open"), drops `secondary` and makes Cancel the tertiary, so one primary shows at a time and Cancel restores the earlier actions. Never `showKitInputDialog` from inside a sheet: no sheet or dialog is stacked on a sheet. First user: the folder browser's "New project here".
+- **Picker layout (2026-10-03).** The folder pickers follow Canva "Move to a folder", the iOS Files picker and the Apple Notes folder picker. Five options, none a new widget: `leading` (a `KitAction`; a back chevron that goes up a folder or back a step, or Close (X) at the first step; it replaces the header's close button), `menu` (a list of `KitMenuItem`s behind one ⋯ button at the end, replacing the close button; `menuLabel` names it, "More actions" by default), `headerLine` (one quiet widget under the title, such as the place menu "This phone ⌄"; it replaces `subtitle`), `bar: true` (pins `secondary` as a text button at the start and `primary` at the end, ellipsized, as one row; `tertiary` is not shown) and `step` (a key naming the step: when it changes, the whole frame cross-fades in place, so the next step replaces the first inside the one sheet; reduced motion swaps at once). A second step is never a second sheet or a dialog. First user: the folder browser ("Open a project", then "New project"). The older `entry` option (a name field pinned in the footer under the list) is removed: the name step has the sheet to itself, with an autofocused `KitField` in the body and "Create and open" pinned above the keyboard.
 - **Disabled.** A disabled primary shows its `disabledReason` line under it (KitActionBlock, kit-KitAction-v2; STATE-8).
 - **Working.** Shown by the tapped action (`KitAction.working`) and never by the frame (STATE-7).
 - **Discard.** With `dirty` and no `draft`: swipe, back, Esc, Close and a tap outside replace the content with the `KitConfirmKind.discard` question in place, with its own back step. The typed text stays underneath (KIT-16, DATA-3).

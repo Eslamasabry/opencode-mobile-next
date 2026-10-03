@@ -21,6 +21,7 @@ import '../../tool/capture/fixtures.dart' show captureTheme, loadCaptureFonts;
 
 enum PhoneStorageScene {
   places,
+  menu,
   consent,
   root,
   inside,
@@ -124,11 +125,21 @@ Future<void> mountPhoneStorage(
     await tester.pumpAndSettle();
   }
 
+  if (scene == PhoneStorageScene.places) {
+    // The place menu under the title, open.
+    await tapKey('folder-browser-places');
+  }
   if (scene == PhoneStorageScene.root ||
+      scene == PhoneStorageScene.menu ||
       scene == PhoneStorageScene.inside ||
       scene == PhoneStorageScene.naming ||
       scene == PhoneStorageScene.refused) {
+    await tapKey('folder-browser-places');
     await tapKey('place-phone');
+  }
+  if (scene == PhoneStorageScene.menu) {
+    // The header's overflow: hidden folders and the manual path.
+    await tapKey('kit-sheet-menu');
   }
   if (scene == PhoneStorageScene.inside || scene == PhoneStorageScene.naming) {
     await tapKey('in-app-project-CodeAnything');

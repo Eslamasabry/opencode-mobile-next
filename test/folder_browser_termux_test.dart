@@ -173,9 +173,13 @@ void main() {
     return (controller, picked);
   }
 
-  // The folder shown is a mono KitText (the browser is kit-only).
+  // The header's title is the folder shown.
   String shownPath(WidgetTester tester) => tester
-      .widget<KitText>(find.byKey(const ValueKey('folder-browser-path')))
+      .widget<KitText>(
+        find.byWidgetPredicate(
+          (widget) => widget is KitText && widget.role == KitTextRole.title,
+        ),
+      )
       .text;
 
   testWidgets('the Termux server browses its folders through Termux', (
@@ -183,14 +187,14 @@ void main() {
   ) async {
     final (controller, picked) = await open(tester);
     await tester.pumpAndSettle();
-    expect(shownPath(tester), '/root/projects');
+    expect(shownPath(tester), 'projects');
     expect(find.text('demo'), findsOneWidget);
     expect(find.textContaining('proot'), findsNothing);
     expect(scripts.last, TermuxFolders.listScript('/root/projects'));
 
     await tester.tap(find.byKey(const ValueKey('folder-browse-work')));
     await tester.pumpAndSettle();
-    expect(shownPath(tester), '/root/projects/work');
+    expect(shownPath(tester), 'work');
     expect(find.text('api'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('folder-browser-up')));
     await tester.pumpAndSettle();

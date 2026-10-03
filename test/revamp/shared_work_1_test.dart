@@ -65,8 +65,12 @@ void main() {
     await tester.pump(const Duration(seconds: 8));
     expect(find.text(_en.folderBrowserSlowTitle), findsOneWidget);
     expect(find.text(_en.folderBrowserSlowBody), findsOneWidget);
-    // The way out stays pinned while it waits.
+    // The way out stays in the header's menu while it waits.
+    await tester.tap(_key('kit-sheet-menu'));
+    await tester.pumpAndSettle();
     expect(find.text(_en.projectFolderEnterPath), findsOneWidget);
+    await tester.tapAt(const Offset(2, 2));
+    await tester.pumpAndSettle();
 
     pending.complete(_folders('/root/projects', ['demo']));
     await tester.pumpAndSettle();
@@ -98,11 +102,14 @@ void main() {
         );
       }
       return _folders(path, ['secret', 'notes']);
-    }, start: '/root/projects/secret');
+    });
+    await tester.pumpAndSettle();
+    await tester.tap(_key('folder-browse-secret'));
     await tester.pumpAndSettle();
     expect(find.text(_en.folderBrowserErrorDenied), findsOneWidget);
 
-    await tester.tap(_key('folder-browser-error-up'));
+    // The header's back chevron is the way out; no second "Up" in the body.
+    await tester.tap(_key('folder-browser-up'));
     await tester.pumpAndSettle();
     expect(find.text(_en.folderBrowserErrorTitle), findsNothing);
     expect(find.text('notes'), findsOneWidget);

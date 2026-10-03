@@ -169,10 +169,19 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  // The folder shown is a mono KitText (the browser is kit-only).
-  String shownPath(WidgetTester tester) => tester
-      .widget<KitText>(find.byKey(const ValueKey('folder-browser-path')))
+  // The header's title is the folder shown (the browser is kit-only).
+  String shownTitle(WidgetTester tester) => tester
+      .widget<KitText>(
+        find.byWidgetPredicate(
+          (widget) => widget is KitText && widget.role == KitTextRole.title,
+        ),
+      )
       .text;
+
+  Future<void> openMenu(WidgetTester tester) async {
+    await tester.tap(find.byKey(const ValueKey('kit-sheet-menu')));
+    await tester.pumpAndSettle();
+  }
 
   Future<void> tapKey(WidgetTester tester, String key) async {
     // Controls below the folders sit in the sheet's scrolling body.
@@ -186,24 +195,30 @@ void main() {
     tester,
   ) async {
     await openSheet(tester);
-    expect(shownPath(tester), '/root/projects');
+    expect(shownTitle(tester), 'projects');
+    // At the first folder the header offers Close, not a way up.
+    expect(find.byTooltip('Close'), findsOneWidget);
+    expect(find.byKey(const ValueKey('folder-browser-up')), findsNothing);
     expect(find.text('demo'), findsOneWidget);
     expect(find.text('work'), findsOneWidget);
 
     // A project folder opens on a tap; its chevron shows what is inside.
     await tapKey(tester, 'folder-browse-work');
-    expect(shownPath(tester), '/root/projects/work');
+    expect(shownTitle(tester), 'work');
+    expect(find.byTooltip('Up one folder'), findsOneWidget);
+    expect(find.byTooltip('Close'), findsNothing);
     expect(find.text('api'), findsOneWidget);
     expect(find.text('demo'), findsNothing);
 
     // A plain folder deeper down is gone into with a tap.
     await tapKey(tester, 'in-app-project-docs');
-    expect(shownPath(tester), '/root/projects/work/docs');
+    expect(shownTitle(tester), 'docs');
     expect(find.text('No folders in here'), findsOneWidget);
 
     await tapKey(tester, 'folder-browser-up');
+    expect(shownTitle(tester), 'work');
     await tapKey(tester, 'folder-browser-up');
-    expect(shownPath(tester), '/root/projects');
+    expect(shownTitle(tester), 'projects');
     expect(find.text('demo'), findsOneWidget);
     expect(controller.opened, isEmpty);
     expect(linux.created, isEmpty);
@@ -264,9 +279,16 @@ void main() {
     await openSheet(tester);
     await tapKey(tester, 'folder-browse-work');
     await tapKey(tester, 'phone-new-folder');
-    // No second sheet or dialog: the one sheet's actions became the field.
+    // No second sheet or dialog: the one sheet's content became the step.
     expect(find.byKey(const ValueKey('in-app-projects')), findsOneWidget);
     expect(find.byType(KitSheet), findsOneWidget);
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(shownTitle(tester), 'New project');
+    expect(find.text('In work'), findsOneWidget);
+    // The folder list is hidden during the step.
+    expect(find.text('api'), findsNothing);
+    expect(find.text('Open work'), findsNothing);
     expect(find.byKey(const ValueKey('phone-new-folder')), findsNothing);
     expect(find.byKey(const ValueKey('folder-browser-open')), findsNothing);
     expect(find.text('Create and open'), findsOneWidget);
@@ -289,7 +311,9 @@ void main() {
     expect(controller.opened, ['/root/projects/work/cli']);
   });
 
-  testWidgets('Cancel returns to Open and New project here', (tester) async {
+  testWidgets('Back returns from New project to the same folder', (
+    tester,
+  ) async {
     await openSheet(tester);
     await tapKey(tester, 'folder-browse-work');
     await tapKey(tester, 'phone-new-folder');
@@ -297,8 +321,12 @@ void main() {
       find.byKey(const ValueKey('phone-new-folder-name')),
       'x',
     );
+    expect(find.byTooltip('Back'), findsOneWidget);
     await tapKey(tester, 'phone-new-folder-cancel');
     expect(find.byKey(const ValueKey('phone-new-folder-name')), findsNothing);
+    expect(shownTitle(tester), 'work');
+    expect(find.text('api'), findsOneWidget);
+    expect(find.text('New project'), findsOneWidget);
     expect(find.byKey(const ValueKey('phone-new-folder')), findsOneWidget);
     expect(find.byKey(const ValueKey('folder-browser-open')), findsOneWidget);
     expect(linux.created, isEmpty);
@@ -342,53 +370,30 @@ void main() {
     final field = tester.getRect(
       find.byKey(const ValueKey('phone-new-folder-name')),
     );
-    final cancel = tester.getRect(
-      find.byKey(const ValueKey('phone-new-folder-cancel')),
-    );
     final create = tester.getRect(
       find.byKey(const ValueKey('phone-new-folder-create')),
     );
     final top = tester.view.physicalSize.height / tester.view.devicePixelRatio;
-    expect(cancel.bottom, lessThanOrEqualTo(top - 300));
-    expect(create.bottom, lessThanOrEqualTo(cancel.top));
+    expect(create.bottom, lessThanOrEqualTo(top - 300));
     expect(field.bottom, lessThanOrEqualTo(create.top));
   });
 
-  testWidgets('the sheet has two blocks: Place and Folders', (tester) async {
-    await openSheet(tester);
-    expect(find.text('Place'), findsOneWidget);
-    expect(find.text('Folders'), findsOneWidget);
-    expect(find.text('New project'), findsNothing);
-    expect(find.byKey(const ValueKey('in-app-new-project-name')), findsNothing);
-  });
-
-  testWidgets('the home folder and / are never offered as a project', (
+  testWidgets('the header is one row: Close, the folder, a menu', (
     tester,
   ) async {
     await openSheet(tester);
-    await tapKey(tester, 'folder-browser-up');
-    expect(shownPath(tester), '/root');
-    expect(find.byKey(const ValueKey('folder-browser-open')), findsNothing);
-    expect(find.textContaining('home folder and the root'), findsOneWidget);
-    await tapKey(tester, 'folder-browser-up');
-    expect(shownPath(tester), '/');
-    expect(find.byKey(const ValueKey('folder-browser-up')), findsNothing);
-    expect(find.byKey(const ValueKey('folder-browser-open')), findsNothing);
-    // /root is a git repository here (a stray one), and still only browses.
-    await tapKey(tester, 'in-app-project-root');
-    expect(controller.opened, isEmpty, reason: 'the home folder never opens');
-    expect(shownPath(tester), '/root');
-    // A new project named after a home folder is refused too.
-    await tapKey(tester, 'folder-browser-up');
-    await tapKey(tester, 'phone-new-folder');
-    await tester.enterText(
-      find.byKey(const ValueKey('phone-new-folder-name')),
-      'root',
-    );
-    await tapKey(tester, 'phone-new-folder-create');
-    expect(find.textContaining('home folder'), findsWidgets);
-    expect(controller.opened, isEmpty);
-    expect(result, isNull);
+    // The old blocks and rows are gone.
+    expect(find.text('Place'), findsNothing);
+    expect(find.text('Folders'), findsNothing);
+    expect(find.text('Up one folder'), findsNothing);
+    expect(find.text('Show hidden folders'), findsNothing);
+    expect(find.text('New project'), findsOneWidget);
+    // The place is one quiet line under the title; hidden folders are a
+    // phone-storage setting, so the project space's menu leaves it out.
+    expect(find.text('Project space'), findsOneWidget);
+    await openMenu(tester);
+    expect(find.text('Enter a path'), findsOneWidget);
+    expect(find.text('Show hidden folders'), findsNothing);
   });
 
   testWidgets('a folder that cannot be listed says why and can be retried', (
@@ -410,7 +415,9 @@ void main() {
   testWidgets('Enter a path starts from the folder shown', (tester) async {
     await openSheet(tester);
     await tapKey(tester, 'folder-browse-work');
-    await tapKey(tester, 'in-app-enter-path');
+    await openMenu(tester);
+    await tester.tap(find.text('Enter a path'));
+    await tester.pumpAndSettle();
     final field = tester.widget<EditableText>(
       find.descendant(
         of: find.byKey(const ValueKey('open-folder-path')),
@@ -427,16 +434,7 @@ void main() {
     addTearDown(tester.view.reset);
     await openSheet(tester, locale: const Locale('ar'), textScale: 2);
     expect(tester.takeException(), isNull);
-    // Paths are laid out left to right even in Arabic.
-    final path = tester.widget<RichText>(
-      find
-          .descendant(
-            of: find.byKey(const ValueKey('folder-browser-path')),
-            matching: find.byType(RichText),
-          )
-          .first,
-    );
-    expect(path.textDirection, TextDirection.ltr);
+    expect(shownTitle(tester), 'projects');
     // The folders sit in the sheet's scrolling body; its actions stay
     // pinned below it.
     await tester.ensureVisible(
@@ -445,7 +443,7 @@ void main() {
     await tester.pumpAndSettle();
     await tapKey(tester, 'folder-browse-work');
     expect(tester.takeException(), isNull);
-    expect(shownPath(tester), '/root/projects/work');
+    expect(shownTitle(tester), 'work');
     expect(find.text('فتح work'), findsOneWidget);
   });
 }

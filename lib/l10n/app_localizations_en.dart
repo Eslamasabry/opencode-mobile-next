@@ -26581,7 +26581,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get remoteFolderProjects => 'Projects on this server';
 
   @override
-  String get folderBrowserNewProjectHere => 'New project here';
+  String folderBrowserNewProjectIn(String name) {
+    return 'In $name';
+  }
 
   @override
   String folderBrowserNewProjectCreates(String path) {

@@ -208,18 +208,18 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  // The trail is one KitBreadcrumb; its crumbs read as text.
-  String trail(WidgetTester tester) => tester
-      .widgetList<RichText>(
-        find.descendant(
-          of: find.byKey(const ValueKey('folder-browser-path')),
-          matching: find.byType(RichText),
+  // The header's title is the folder shown.
+  String title(WidgetTester tester) => tester
+      .widget<KitText>(
+        find.byWidgetPredicate(
+          (widget) => widget is KitText && widget.role == KitTextRole.title,
         ),
       )
-      .map((text) => text.text.toPlainText())
-      .join(' > ');
+      .text;
 
   Future<void> choosePhone(WidgetTester tester) async {
+    await tester.tap(find.byKey(const ValueKey('folder-browser-places')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('place-phone')));
     await tester.pumpAndSettle();
   }
@@ -229,14 +229,16 @@ void main() {
   ) async {
     await build();
     await openSheet(tester);
-    expect(find.text('This phone'), findsOneWidget);
+    // The place is one quiet line under the title.
+    expect(find.text('Project space'), findsOneWidget);
     await choosePhone(tester);
     expect(find.byKey(const ValueKey('storage-access-allow')), findsOneWidget);
     expect(find.text('Download'), findsNothing);
     await tester.tap(find.byKey(const ValueKey('storage-access-allow')));
     await tester.pumpAndSettle();
     expect(asked, 1);
-    expect(trail(tester), contains('Inter'));
+    expect(title(tester), 'Internal storage');
+    expect(find.text('This phone'), findsOneWidget);
     // Folders first by the lister's order; hidden ones are not shown.
     expect(find.text('Download'), findsOneWidget);
     expect(find.text('.thumbnails'), findsNothing);
@@ -256,7 +258,10 @@ void main() {
     await choosePhone(tester);
     expect(find.byKey(const ValueKey('storage-access-allow')), findsNothing);
     expect(find.text('Projects'), findsOneWidget);
-    await tapKey(tester, 'folder-browser-hidden');
+    await tester.tap(find.byKey(const ValueKey('kit-sheet-menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Show hidden folders'));
+    await tester.pumpAndSettle();
     expect(find.text('.thumbnails'), findsOneWidget);
   });
 
@@ -269,10 +274,10 @@ void main() {
     await choosePhone(tester);
     await tapKey(tester, 'in-app-project-Projects');
     expect(find.text('app'), findsOneWidget);
-    expect(trail(tester), contains('Projects'));
-    expect(trail(tester), contains('Inter'));
+    expect(title(tester), 'Projects');
     expect(find.text('Open Projects'), findsOneWidget);
     await tapKey(tester, 'folder-browser-up');
+    expect(title(tester), 'Internal storage');
     expect(find.text('Download'), findsOneWidget);
     await tapKey(tester, 'in-app-project-Download');
     expect(find.text('No folders in here'), findsOneWidget);
@@ -332,12 +337,7 @@ void main() {
     );
     // The project space still works.
     expect(find.text('demo'), findsOneWidget);
-    expect(
-      tester
-          .widget<KitText>(find.byKey(const ValueKey('folder-browser-path')))
-          .text,
-      '/root/projects',
-    );
+    expect(title(tester), 'projects');
   });
 
   testWidgets('a folder opened before is offered at the top of the phone', (

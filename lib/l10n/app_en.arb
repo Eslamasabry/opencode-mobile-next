@@ -31435,9 +31435,14 @@
   "@remoteFolderProjects": {
     "description": "Section label of the remote server's own projects"
   },
-  "folderBrowserNewProjectHere": "New project here",
-  "@folderBrowserNewProjectHere": {
-    "description": "Secondary button of the folder browser: names a new project in the folder shown"
+  "folderBrowserNewProjectIn": "In {name}",
+  "@folderBrowserNewProjectIn": {
+    "description": "Quiet line under the New project step's title: the folder the project will be made in",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "folderBrowserNewProjectCreates": "Creates {path}",
   "@folderBrowserNewProjectCreates": {

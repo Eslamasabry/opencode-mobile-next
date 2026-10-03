@@ -4983,7 +4983,7 @@
   "folderBrowserEmptyPhoneBody": "افتحه، أو أنشئ فيه مجلدًا جديدًا، أو اصعد مستوى واحدًا.",
   "remoteFolderRecent": "مجلدات حديثة",
   "remoteFolderProjects": "مشاريع هذا الخادم",
-  "folderBrowserNewProjectHere": "مشروع جديد هنا",
+  "folderBrowserNewProjectIn": "في {name}",
   "folderBrowserNewProjectCreates": "ينشئ {path}",
   "folderBrowserCreateAndOpen": "أنشئ وافتح",
   "folderBrowserFoldersLabel": "المجلدات",

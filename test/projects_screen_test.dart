@@ -1294,7 +1294,7 @@ void main() {
     ) async {
       linux.projects.addAll(['demo', 'hello']);
       await openSheet(tester);
-      expect(find.text('Open a project'), findsOneWidget);
+      expect(find.byKey(const ValueKey('in-app-projects')), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('in-app-project-demo')));
       await tester.pumpAndSettle();
       expect(controller.folderEvents, ['open:/root/projects/demo']);
@@ -1315,7 +1315,12 @@ void main() {
         await _tapAction(tester, 'phone-new-folder-create');
         await tester.pumpAndSettle();
         expect(linux.created, isEmpty, reason: bad);
-        expect(find.text('Open a project'), findsOneWidget, reason: bad);
+        // Still on the name step, which says why.
+        expect(
+          find.byKey(const ValueKey('phone-new-folder-name')),
+          findsOneWidget,
+          reason: bad,
+        );
       }
 
       await tester.enterText(
@@ -1354,7 +1359,9 @@ void main() {
       tester,
     ) async {
       await openSheet(tester);
-      await tester.tap(find.byKey(const ValueKey('in-app-enter-path')));
+      await tester.tap(find.byKey(const ValueKey('kit-sheet-menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Enter a path'));
       await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const ValueKey('open-folder-path')),
