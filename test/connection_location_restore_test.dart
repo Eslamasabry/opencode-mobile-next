@@ -34,6 +34,18 @@ class _ControlledApi extends OpenCodeApi {
   Future<Map<String, String>> sessionStatuses() async => const {};
 
   @override
+  Future<List<FileNode>> listFiles(String path) async {
+    switch (script.folderProbe) {
+      case _FolderProbe.exists:
+        return const [];
+      case _FolderProbe.missing:
+        throw ApiException('List files failed', statusCode: 404);
+      case _FolderProbe.unreachable:
+        throw ApiException('Connection failed');
+    }
+  }
+
+  @override
   Future<ProvidersResponse> providers() async =>
       ProvidersResponse(providers: const []);
 
@@ -75,6 +87,8 @@ class _FakeEventStream extends EventStream {
 
 /// What the scripted server answers; shared by every gateway the controller
 /// builds for one connection, so a test can change it between phases.
+enum _FolderProbe { exists, missing, unreachable }
+
 class _ServerScript {
   _ServerScript({
     this.currentProjects = const {},
@@ -94,6 +108,7 @@ class _ServerScript {
   Completer<void>? sessionsGate;
   bool sessionsFail = false;
   bool workspacesUnavailable = false;
+  _FolderProbe folderProbe = _FolderProbe.unreachable;
   List<WorkspaceInfo> workspaces = const [];
 }
 
@@ -392,10 +407,7 @@ void main() {
         expect(controller.directory, '/work/b');
         expect(controller.workspace, 'remote-b');
         expect(store.locationFor('server')?.workspace, 'remote-b');
-        expect(
-          controller.locationNotice,
-          contains('Couldn’t verify this workspace'),
-        );
+        expect(controller.locationNotice, isNull);
         expect(controller.pendingLocationRevalidation, isTrue);
 
         script.workspacesUnavailable = false;
@@ -535,31 +547,30 @@ void main() {
     },
   );
 
-  testWidgets(
-    'catalog omission keeps the saved directory with an unverified notice',
-    (tester) async {
-      final store = await _store();
-      await store.setLocation('server', directory: '/deleted/worktree');
-      final controller = await _connect(
-        tester,
-        store,
-        _ServerScript(
-          projects: [
-            _project('old', '/work/old', updatedAt: 10),
-            _project('newest', '/work/newest', updatedAt: 30),
-            _project('global', '/', updatedAt: 99),
-            _project('middle', '/work/middle', updatedAt: 20),
-          ],
-        ),
-      );
+  testWidgets('catalog omission keeps the saved directory without a notice', (
+    tester,
+  ) async {
+    final store = await _store();
+    await store.setLocation('server', directory: '/deleted/worktree');
+    final controller = await _connect(
+      tester,
+      store,
+      _ServerScript(
+        projects: [
+          _project('old', '/work/old', updatedAt: 10),
+          _project('newest', '/work/newest', updatedAt: 30),
+          _project('global', '/', updatedAt: 99),
+          _project('middle', '/work/middle', updatedAt: 20),
+        ],
+      ),
+    );
 
-      expect(controller.directory, '/deleted/worktree');
-      expect(controller.workspace, isNull);
-      expect(controller.locationNotice, contains('Your selection was kept'));
-      expect(store.locationFor('server')?.directory, '/deleted/worktree');
-      controller.dispose();
-    },
-  );
+    expect(controller.directory, '/deleted/worktree');
+    expect(controller.workspace, isNull);
+    expect(controller.locationNotice, isNull);
+    expect(store.locationFor('server')?.directory, '/deleted/worktree');
+    controller.dispose();
+  });
 
   testWidgets(
     'an unavailable project list restores optimistically and re-checks later',
@@ -609,13 +620,66 @@ void main() {
       await tester.pump();
 
       expect(controller.directory, '/work/gone');
-      expect(controller.locationNotice, contains('Your selection was kept'));
+      expect(controller.locationNotice, isNull);
       expect(store.locationFor('server')?.directory, '/work/gone');
       controller.dispose();
     },
   );
 
-  testWidgets('an empty catalog keeps the saved directory with a notice', (
+  testWidgets(
+    'a folder the server can read stays selected with no notice even when no project lists it',
+    (tester) async {
+      final store = await _store();
+      await store.setLocation('server', directory: '/work/fresh');
+      final script = _ServerScript()..folderProbe = _FolderProbe.exists;
+      final controller = await _connect(tester, store, script);
+
+      expect(controller.directory, '/work/fresh');
+      expect(controller.locationNotice, isNull);
+      expect(controller.pendingLocationRevalidation, isFalse);
+      expect(store.locationFor('server')?.directory, '/work/fresh');
+      controller.dispose();
+    },
+  );
+
+  testWidgets(
+    'a folder that no longer exists is dropped quietly, never with a banner',
+    (tester) async {
+      final store = await _store();
+      await store.setLocation('server', directory: '/work/gone');
+      final script = _ServerScript()..folderProbe = _FolderProbe.missing;
+      final controller = await _connect(tester, store, script);
+
+      expect(controller.directory, isNull);
+      expect(controller.locationNotice, isNull);
+      expect(controller.pendingLocationRevalidation, isFalse);
+      expect(store.locationFor('server'), isNull);
+      controller.dispose();
+    },
+  );
+
+  testWidgets(
+    'when the folder check cannot run the selection is kept silently and rechecked later',
+    (tester) async {
+      final store = await _store();
+      await store.setLocation('server', directory: '/work/fresh');
+      final script = _ServerScript();
+      final controller = await _connect(tester, store, script);
+
+      expect(controller.directory, '/work/fresh');
+      expect(controller.locationNotice, isNull);
+      expect(controller.pendingLocationRevalidation, isTrue);
+
+      script.folderProbe = _FolderProbe.exists;
+      await controller.revalidateRestoredLocation();
+      expect(controller.directory, '/work/fresh');
+      expect(controller.pendingLocationRevalidation, isFalse);
+      expect(controller.locationNotice, isNull);
+      controller.dispose();
+    },
+  );
+
+  testWidgets('an empty catalog keeps the saved directory without a notice', (
     tester,
   ) async {
     final store = await _store();
@@ -623,7 +687,7 @@ void main() {
     final controller = await _connect(tester, store, _ServerScript());
 
     expect(controller.directory, '/deleted/worktree');
-    expect(controller.locationNotice, contains('Your selection was kept'));
+    expect(controller.locationNotice, isNull);
     expect(store.locationFor('server')?.directory, '/deleted/worktree');
     controller.dispose();
   });

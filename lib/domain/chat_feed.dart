@@ -39,6 +39,8 @@ class ChatFeedItem {
     required this.lastActivity,
     this.preview = '',
     this.parentID,
+    this.agentId = defaultChatAgentId,
+    this.agentLabel,
   });
 
   /// The server's session id; pass it to `selectLocationForExistingSession`
@@ -72,7 +74,19 @@ class ChatFeedItem {
   final String? parentID;
 
   bool get isSubagent => parentID != null;
+
+  /// Which agent backend owns this chat ('opencode', or later 'claude',
+  /// 'gemini', ... through Paseo). Items are self-describing so a later
+  /// source can merge several backends' feeds into one list.
+  final String agentId;
+
+  /// Human name of the agent ('Claude Code'). The UI shows it only when the
+  /// merged feed holds more than one agent; null for OpenCode today.
+  final String? agentLabel;
 }
+
+/// [ChatFeedItem.agentId] of OpenCode chats, the only agent served today.
+const defaultChatAgentId = 'opencode';
 
 /// Which rows [ChatFeedSource.chatFeed] returns. Value equality, so it can be
 /// a map key or a provider argument.
@@ -82,6 +96,7 @@ class ChatFeedFilter {
     this.needsYou = false,
     this.running = false,
     this.includeSubagents = false,
+    this.agentId,
   });
 
   /// Only this project's chats; null means every project.
@@ -97,6 +112,9 @@ class ChatFeedFilter {
   /// Include subagent child sessions (default: excluded).
   final bool includeSubagents;
 
+  /// Only this agent's chats ([ChatFeedItem.agentId]); null means all agents.
+  final String? agentId;
+
   static const all = ChatFeedFilter();
 
   ChatFeedFilter copyWith({
@@ -105,6 +123,8 @@ class ChatFeedFilter {
     bool? needsYou,
     bool? running,
     bool? includeSubagents,
+    String? agentId,
+    bool clearAgent = false,
   }) => ChatFeedFilter(
     projectDirectory: clearProject
         ? null
@@ -112,6 +132,7 @@ class ChatFeedFilter {
     needsYou: needsYou ?? this.needsYou,
     running: running ?? this.running,
     includeSubagents: includeSubagents ?? this.includeSubagents,
+    agentId: clearAgent ? null : agentId ?? this.agentId,
   );
 
   @override
@@ -120,11 +141,17 @@ class ChatFeedFilter {
       other.projectDirectory == projectDirectory &&
       other.needsYou == needsYou &&
       other.running == running &&
-      other.includeSubagents == includeSubagents;
+      other.includeSubagents == includeSubagents &&
+      other.agentId == agentId;
 
   @override
-  int get hashCode =>
-      Object.hash(projectDirectory, needsYou, running, includeSubagents);
+  int get hashCode => Object.hash(
+    projectDirectory,
+    needsYou,
+    running,
+    includeSubagents,
+    agentId,
+  );
 }
 
 /// The feed for one [ChatFeedFilter].
