@@ -203,25 +203,48 @@ class BuiltinLinux(private val context: Context) {
     /** Runs [script] with /bin/sh inside Ubuntu as root (faked by proot). */
     fun run(script: String, timeoutSeconds: Long = 600, agentUser: Boolean = false): Result {
         val process = start(script, null, agentUser)
-        process.outputStream.close()
         val output = StringBuilder()
-        val reader = Thread {
-            process.inputStream.bufferedReader().forEachLine { line ->
-                Log.i(TAG, line)
-                synchronized(output) {
-                    output.appendLine(line)
-                    // Keep the tail: that is where a failing command says why.
-                    if (output.length > OUTPUT_CAP * 2) {
-                        output.delete(0, output.length - OUTPUT_CAP)
+        val readerFailed = java.util.concurrent.atomic.AtomicBoolean()
+        var reader: Thread? = null
+        try {
+            process.outputStream.close()
+            reader = Thread({
+                try {
+                    process.inputStream.bufferedReader().use { input ->
+                        input.forEachLine { line ->
+                            val projected = if (agentUser) PhoneAgentCheckOutput.accept(line) else line
+                            if (projected != null) {
+                                if (!agentUser) Log.i(TAG, projected)
+                                synchronized(output) {
+                                    output.appendLine(projected)
+                                    if (output.length > OUTPUT_CAP * 2) {
+                                        output.delete(0, output.length - OUTPUT_CAP)
+                                    }
+                                }
+                            }
+                        }
                     }
+                } catch (_: Throwable) {
+                    readerFailed.set(true)
                 }
-            }
-        }.apply { start() }
-        val finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS)
-        if (!finished) stopTree(process)
-        reader.join(2000)
-        val text = synchronized(output) { output.takeLast(OUTPUT_CAP).toString() }
-        return Result(if (finished) process.exitValue() else -1, text)
+            }, "phone-setup-check").apply { isDaemon = true; start() }
+            val finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS)
+            if (!finished) stopTree(process)
+            reader.join(2000)
+            val complete = finished && !reader.isAlive && !readerFailed.get()
+            val text = if (complete) synchronized(output) { output.takeLast(OUTPUT_CAP).toString() } else ""
+            return Result(if (complete) process.exitValue() else -1, text)
+        } finally {
+            // IO/security failure or Thread.start refusal must not leak a child
+            // or replace the original safe channel failure during cleanup.
+            try { if (process.isAlive) stopTree(process) } catch (_: Throwable) { }
+            try { process.outputStream.close() } catch (_: Throwable) { }
+            try { process.inputStream.close() } catch (_: Throwable) { }
+            try { reader?.join(2000) }
+            catch (_: InterruptedException) { Thread.currentThread().interrupt() }
+            catch (_: Throwable) { }
+            synchronized(output) { output.setLength(0) }
+        }
     }
 
     /**
@@ -258,10 +281,8 @@ class BuiltinLinux(private val context: Context) {
     fun prootCommand(program: List<String>, agentUser: Boolean = false): List<String> {
         check(!installingRuntime) { "Runtime installation is still running" }
         projectStorage.prepare()
-        val agentRoot = if (agentUser) File(home, "agent-root-view").apply {
-            mkdirs()
-            check(isDirectory && canonicalFile == absoluteFile)
-            File(this, "projects").mkdirs()
+        val agentRoot = if (agentUser) PhoneAgentPaths.prepare(context.filesDir, "linux/agent-root-view").apply {
+            PhoneAgentPaths.prepare(this, "projects")
         } else null
         val command = listOf(
             prootPath,
@@ -306,10 +327,7 @@ class BuiltinLinux(private val context: Context) {
     fun startAgentProcess(profileId: String, argv: List<String>, foreground: Boolean = false): Process {
         check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId)) { "The agent host is unavailable." }
         check(installed && argv.isNotEmpty() && profileId !in blockedAgentProfiles) { "The agent host is unavailable." }
-        val profileHome = File(rootfs, "home/oc/.oc-profiles/$profileId")
-        check(profileHome.canonicalFile == profileHome.absoluteFile)
-        check(profileHome.mkdirs() || profileHome.isDirectory)
-        check(profileHome.canonicalFile == profileHome.absoluteFile)
+        val profileHome = PhoneAgentPaths.prepare(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId")
         Os.chmod(profileHome.absolutePath, 448)
         val guestHome = "/home/oc/.oc-profiles/$profileId"
         val command = listOf("/usr/bin/env", "HOME=$guestHome", "CLAUDE_CONFIG_DIR=$guestHome/claude",
@@ -323,8 +341,14 @@ class BuiltinLinux(private val context: Context) {
         agentProcessProfiles.entries.removeAll { !it.key.isAlive }
         agentProcessProfiles[process] = profileId
         processConfinement[process] = prootIsConfined
-        if (foreground) trackPrivateAgentService("agent-auth.$profileId", process, null)
-        return process
+        try {
+            if (foreground) trackPrivateAgentService("agent-auth.$profileId", process, null)
+            return process
+        } catch (_: Throwable) {
+            try { stopAgentProcess(process) } catch (_: Throwable) { }
+            agentProcessProfiles.remove(process)
+            throw IllegalStateException("The agent host could not start.")
+        }
     }
 
     /** Uses the existing Android foreground-service deadline and exact PID stop. */
@@ -335,20 +359,32 @@ class BuiltinLinux(private val context: Context) {
         services[name] = Service(process, port, "Agents are working on this phone")
         recordRunning()
         try { BuiltinServerService.start(context, currentNotice()) }
-        catch (_: Exception) {
-            stopAgentProcess(process)
+        catch (_: Throwable) {
+            try { stopAgentProcess(process) } catch (_: Throwable) { }
             services.remove(name)
             throw IllegalStateException("The agent host could not start.")
         }
-        Thread {
-            process.waitFor()
-            synchronized(this) {
-                if (services[name]?.process === process) {
-                    services.remove(name)
-                    serviceSetChanged()
+        try {
+            Thread({
+                try { process.waitFor() }
+                catch (_: Throwable) {
+                    try { stopAgentProcess(process) } catch (_: Throwable) { }
+                } finally {
+                    try {
+                        synchronized(this) {
+                            if (services[name]?.process === process) {
+                                services.remove(name)
+                                serviceSetChanged()
+                            }
+                        }
+                    } catch (_: Throwable) { /* Supervision must not crash the app. */ }
                 }
-            }
-        }.start()
+            }, "phone-agent-service").start()
+        } catch (_: Throwable) {
+            try { stopAgentProcess(process) } catch (_: Throwable) { }
+            services.remove(name)
+            throw IllegalStateException("The agent host could not start.")
+        }
     }
 
     /** A cancelled private flow cannot report drained while captured children survive. */
@@ -387,11 +423,7 @@ class BuiltinLinux(private val context: Context) {
         check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId) && config.length < 65536 && profileId !in blockedAgentProfiles)
         val data = org.json.JSONObject(config)
         check(data.optInt("version") == 1)
-        val base = File(rootfs, "home/oc/.oc-profiles")
-        check(base.canonicalFile == base.absoluteFile)
-        val dir = File(base, "$profileId/paseo")
-        check(dir.canonicalFile == dir.absoluteFile)
-        check(dir.mkdirs() || dir.isDirectory)
+        val dir = PhoneAgentPaths.prepare(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId/paseo")
         Os.chmod(dir.absolutePath, 448)
         val temp = File(dir, "config.json.tmp")
         check(temp.canonicalFile == temp.absoluteFile && !File(dir, "config.json").let { it.canonicalFile != it.absoluteFile })
@@ -402,16 +434,15 @@ class BuiltinLinux(private val context: Context) {
 
     fun deleteAgentHome(profileId: String) {
         check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId))
-        val base = File(rootfs, "home/oc/.oc-profiles")
-        check(base.canonicalFile == base.absoluteFile)
-        val target = File(base, profileId)
+        val base = PhoneAgentPaths.resolve(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles")
+        val target = PhoneAgentPaths.resolve(base, profileId)
         fun erase(file: File) {
             val stat = try { Os.lstat(file.absolutePath) } catch (_: Exception) { return }
             if (OsConstants.S_ISDIR(stat.st_mode) && !OsConstants.S_ISLNK(stat.st_mode))
                 file.listFiles()?.forEach { erase(it) }
             check(file.delete()) { "The agent sign-in could not be removed." }
         }
-        check(target.parentFile!!.canonicalFile == base)
+        check(target.parentFile?.canonicalFile == base)
         erase(target)
     }
 
@@ -1123,13 +1154,22 @@ class BuiltinLinux(private val context: Context) {
             confirmedRecoveryAttempt = null
             recoveryAttempt.also { recoveryAttempt = null }
         }
-        if (attempt != null) Thread {
-            synchronized(this) {
-                if (services[SERVER]?.process === attempt.process) {
-                    removeService(SERVER)
-                }
+        if (attempt != null) {
+            try {
+                Thread({
+                    try {
+                        synchronized(this) {
+                            if (services[SERVER]?.process === attempt.process) {
+                                removeService(SERVER)
+                            }
+                        }
+                    } catch (_: Throwable) { /* Lifecycle callbacks must not crash the app. */ }
+                }, "phone-recovery-cancel").start()
+            } catch (_: Throwable) {
+                // Admission was revoked synchronously. A failed worker launch
+                // cannot block or throw from Android's onPause callback.
             }
-        }.start()
+        }
     }
 
     fun confirmServerRecovery(expectedGeneration: Long) {
@@ -1289,15 +1329,25 @@ class BuiltinLinux(private val context: Context) {
         }
         // A service that exits on its own (a crash, a bad config) takes its
         // share of the "running" notification with it.
-        Thread {
-            process.waitFor()
-            synchronized(this) {
-                if (services[name]?.process === process) {
-                    services.remove(name)
-                    serviceSetChanged()
+        try {
+            Thread({
+                try { process.waitFor() }
+                catch (_: Throwable) { try { stopTree(process) } catch (_: Throwable) { } }
+                finally {
+                    try {
+                        synchronized(this) {
+                            if (services[name]?.process === process) {
+                                services.remove(name)
+                                serviceSetChanged()
+                            }
+                        }
+                    } catch (_: Throwable) { }
                 }
-            }
-        }.start()
+            }, "phone-service").start()
+        } catch (_: Throwable) {
+            try { removeService(name) } catch (_: Throwable) { }
+            throw IllegalStateException("The phone service could not start.")
+        }
         return process
     }
 
@@ -1344,7 +1394,7 @@ class BuiltinLinux(private val context: Context) {
         // awake for it.
         if (!serverRunning) releaseWork()
         if (services.values.none { it.process.isAlive }) {
-            BuiltinServerService.stop(context)
+            try { BuiltinServerService.stop(context) } catch (_: Throwable) { }
             return
         }
         // Only the words change here. Android refuses to (re)start a

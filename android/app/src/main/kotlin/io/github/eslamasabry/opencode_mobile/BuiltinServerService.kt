@@ -23,39 +23,47 @@ import android.os.IBinder
  */
 class BuiltinServerService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == ACTION_STOP) {
-            // Storage measurement/removal can hold the runtime lifecycle lock.
-            // Waiting for that lock (and stopping process trees) must not block UI.
-            val linux = BuiltinLinux.get(applicationContext)
-            linux.requestServerStop()
-            Thread {
-                linux.stopAllServices()
-                stopSelf(startId)
-            }.start()
-            return START_NOT_STICKY
-        }
-        createChannel()
-        val notification = buildNotification(intent?.getStringExtra(EXTRA_TITLE))
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+        try {
+            if (intent?.action == ACTION_STOP) {
+                stopRuntime(startId)
+                return START_NOT_STICKY
+            }
+            createChannel()
+            val notification = buildNotification(intent?.getStringExtra(EXTRA_TITLE))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+        } catch (_: Throwable) {
+            // Android invokes this after startForegroundService returned. A
+            // policy rejection cannot throw through its caller's channel guard.
+            stopRuntime(startId)
         }
         return START_NOT_STICKY
     }
 
-    // Currently specialUse, not dataSync: never assume any FGS is unbounded.
-    // If Android revokes its budget, discard intent as well as the children.
+    // No foreground service has an unbounded lifetime, including specialUse.
     override fun onTimeout(startId: Int, fgsType: Int) {
-        val linux = BuiltinLinux.get(applicationContext)
-        linux.requestServerStop()
-        Thread { linux.stopAllServices() }.start()
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
+        stopRuntime(startId)
+        try { stopForeground(STOP_FOREGROUND_REMOVE) } catch (_: Throwable) { }
+    }
+
+    private fun stopRuntime(startId: Int) {
+        try {
+            val linux = BuiltinLinux.get(applicationContext)
+            try { linux.requestServerStop() } catch (_: Throwable) { }
+            Thread({
+                try { linux.stopAllServices() } catch (_: Throwable) { }
+                finally { try { stopSelf(startId) } catch (_: Throwable) { } }
+            }, "phone-service-policy-stop").start()
+        } catch (_: Throwable) {
+            try { stopSelf(startId) } catch (_: Throwable) { }
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -63,7 +71,7 @@ class BuiltinServerService : Service() {
     private fun createChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(
+        manager?.createNotificationChannel(
             NotificationChannel(
                 CHANNEL_ID,
                 "OpenCode on this phone",

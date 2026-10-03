@@ -28,19 +28,32 @@ import android.os.IBinder
  */
 class SetupService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val channel = intent?.getStringExtra(EXTRA_CHANNEL) ?: "Setup"
-        val title = intent?.getStringExtra(EXTRA_TITLE) ?: ""
-        val text = intent?.getStringExtra(EXTRA_TEXT) ?: ""
-        createChannel(this, channel)
-        val notification = build(this, title, text, ongoing = true, LAUNCH_ACTION_PROGRESS)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+        try {
+            val channel = intent?.getStringExtra(EXTRA_CHANNEL) ?: "Setup"
+            val title = intent?.getStringExtra(EXTRA_TITLE) ?: ""
+            val text = intent?.getStringExtra(EXTRA_TEXT) ?: ""
+            createChannel(this, channel)
+            val notification = build(this, title, text, ongoing = true, LAUNCH_ACTION_PROGRESS)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+        } catch (_: Throwable) {
+            // Foreground-service/notification policy failures happen here on
+            // Android's main thread, after the channel's worker has replied.
+            // End setup instead of running it without its promised lifetime.
+            try {
+                Thread({
+                    try { SetupRunner.get(applicationContext).cancel() }
+                    catch (_: Throwable) { }
+                }, "oc-setup-policy-stop").start()
+            } catch (_: Throwable) { }
+            try { stopSelf() } catch (_: Throwable) { }
         }
         // Not sticky: a restarted service without the process's job thread
         // would only show a stale percent.
@@ -79,13 +92,16 @@ class SetupService : Service() {
 
         /** Replaces the ongoing notification's text; the service keeps running. */
         fun update(context: Context, channel: String, title: String, text: String) {
-            createChannel(context, channel)
-            context.getSystemService(NotificationManager::class.java)
-                ?.notify(NOTIFICATION_ID, build(context, title, text, ongoing = true, LAUNCH_ACTION_PROGRESS))
+            try {
+                createChannel(context, channel)
+                context.getSystemService(NotificationManager::class.java)
+                    ?.notify(NOTIFICATION_ID, build(context, title, text, ongoing = true, LAUNCH_ACTION_PROGRESS))
+            } catch (_: Throwable) { /* Notifications are best effort. */ }
         }
 
         fun stop(context: Context) {
-            context.stopService(Intent(context, SetupService::class.java))
+            try { context.stopService(Intent(context, SetupService::class.java)) }
+            catch (_: Throwable) { }
         }
 
         /**
@@ -93,11 +109,13 @@ class SetupService : Service() {
          * notification; [done] says whether the job finished or stopped.
          */
         fun finish(context: Context, channel: String, text: String, done: Boolean) {
-            stop(context)
-            createChannel(context, channel)
-            val action = if (done) LAUNCH_ACTION_DONE else LAUNCH_ACTION_PROGRESS
-            context.getSystemService(NotificationManager::class.java)
-                ?.notify(RESULT_NOTIFICATION_ID, build(context, text, null, ongoing = false, action))
+            try {
+                stop(context)
+                createChannel(context, channel)
+                val action = if (done) LAUNCH_ACTION_DONE else LAUNCH_ACTION_PROGRESS
+                context.getSystemService(NotificationManager::class.java)
+                    ?.notify(RESULT_NOTIFICATION_ID, build(context, text, null, ongoing = false, action))
+            } catch (_: Throwable) { /* Notifications are best effort. */ }
         }
 
         private fun createChannel(context: Context, name: String) {

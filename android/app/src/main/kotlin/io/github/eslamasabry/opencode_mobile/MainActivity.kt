@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class MainActivity : FlutterActivity() {
     private val handler = Handler(Looper.getMainLooper())
+    private var nativeReplies: NativeChannelReplies? = null
     private var permissionResult: MethodChannel.Result? = null
     private var runCommandAccessResult: MethodChannel.Result? = null
     private var microphonePermissionResult: MethodChannel.Result? = null
@@ -52,6 +53,9 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        nativeReplies?.detach()
+        val replies = NativeChannelReplies { action -> handler.post(action) }
+        nativeReplies = replies
         TailscaleHandoff(this, flutterEngine.dartExecutor.binaryMessenger)
         byoHostSigner?.dispose()
         byoHostSigner = ByoHostSigner(this, flutterEngine.dartExecutor.binaryMessenger)
@@ -154,34 +158,40 @@ class MainActivity : FlutterActivity() {
                 }
             }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL_NAME)
-            .setMethodCallHandler { call, result ->
-                when (call.method) {
-                    "getCapabilities" -> result.success(capabilities())
-                    "getSigningCertificateSha256" ->
-                        result.success(signingCertificateSha256())
-                    "requestRunCommandPermission" -> requestRunCommandPermission(result)
-                    "requestRunCommandAccess" -> requestRunCommandAccess(result)
-                    "openTermux" -> result.success(openTermux())
-                    "openAppSettings" -> {
-                        startActivity(
-                            Intent(
-                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                Uri.parse("package:$packageName")
+            .setMethodCallHandler { call, rawResult ->
+                val result = replies.wrap(rawResult)
+                result.guarded("termux_unavailable") {
+                    when (call.method) {
+                        "getCapabilities" -> result.success(capabilities())
+                        "getSigningCertificateSha256" ->
+                            result.success(signingCertificateSha256())
+                        "requestRunCommandPermission" -> requestRunCommandPermission(result)
+                        "requestRunCommandAccess" -> requestRunCommandAccess(result)
+                        "openTermux" -> result.success(openTermux())
+                        "openAppSettings" -> {
+                            startActivity(
+                                Intent(
+                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                    Uri.parse("package:$packageName")
+                                )
                             )
-                        )
-                        result.success(true)
+                            result.success(true)
+                        }
+                        "runInTermux" -> runInTermux(call, result)
+                        "startSetup", "setupStatus", "cancelSetup", "completeSetupStep",
+                        "setupHostInstalled", "setupRun" -> handleTermuxSetup(call, result)
+                        "openTermuxSession" -> openTermuxSession(call, result)
+                        else -> result.notImplemented()
                     }
-                    "runInTermux" -> runInTermux(call, result)
-                    "startSetup", "setupStatus", "cancelSetup", "completeSetupStep",
-                    "setupHostInstalled", "setupRun" -> handleTermuxSetup(call, result)
-                    "openTermuxSession" -> openTermuxSession(call, result)
-                    else -> result.notImplemented()
                 }
             }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, BUILTIN_LINUX_CHANNEL_NAME)
-            .setMethodCallHandler { call, result -> handleBuiltinLinux(call, result) }
+            .setMethodCallHandler { call, rawResult ->
+                val result = replies.wrap(rawResult)
+                result.guarded("builtin_linux") { handleBuiltinLinux(call, result) }
+            }
         // Why the previous process ended, and keep-alive settings (oc/lifecycle).
-        AppLifecycle.register(this, flutterEngine.dartExecutor.binaryMessenger) {
+        AppLifecycle.register(this, flutterEngine.dartExecutor.binaryMessenger, replies) {
             requestBatteryOptimizationExemption()
         }
         LocalTerminal.get(applicationContext).register(flutterEngine.dartExecutor.binaryMessenger)
@@ -348,6 +358,10 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        nativeReplies?.detach()
+        nativeReplies = null
+        permissionResult = null
+        runCommandAccessResult = null
         projectExport?.dispose()
         projectExport = null
         networkMonitor?.dispose()
@@ -373,17 +387,19 @@ class MainActivity : FlutterActivity() {
 
     override fun onResume() {
         super.onResume()
-        BuiltinLinux.get(applicationContext).setActivityResumed(true)
+        try { BuiltinLinux.get(applicationContext).setActivityResumed(true) } catch (_: Exception) { }
         readAloud?.resume()
     }
 
     override fun onPause() {
-        BuiltinLinux.get(applicationContext).setActivityResumed(false)
+        try { BuiltinLinux.get(applicationContext).setActivityResumed(false) } catch (_: Exception) { }
         readAloud?.pause()
         super.onPause()
     }
 
     override fun onDestroy() {
+        nativeReplies?.detach()
+        nativeReplies = null
         byoHostSigner?.dispose()
         byoHostSigner = null
         networkMonitor?.dispose()
@@ -421,7 +437,7 @@ class MainActivity : FlutterActivity() {
                         } else if (error is SetupPersistenceException) {
                             result.error(SetupPersistenceException.CODE, null, null)
                         } else {
-                            result.error("builtin_linux", error.message ?: error.javaClass.simpleName, null)
+                            result.error("builtin_linux", "The phone operation could not finish. Try again.", null)
                         }
                     }
                 }
