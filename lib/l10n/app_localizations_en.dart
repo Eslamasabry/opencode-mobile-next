@@ -13185,7 +13185,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get effectsActivityGlowHint =>
-      'A soft glow circles the message box while a reply is written';
+      'A glowing border circles the message box while a reply is written';
+
+  @override
+  String get effectsGlowStyle => 'Style';
+
+  @override
+  String get effectsGlowStyleClassic => 'Classic';
+
+  @override
+  String get effectsGlowStyleSoft => 'Soft ring';
+
+  @override
+  String get effectsGlowColours => 'Colours';
+
+  @override
+  String get effectsGlowColoursOne => 'One colour';
+
+  @override
+  String get effectsGlowColoursTwo => 'Two colours';
+
+  @override
+  String get effectsGlowSpeed => 'Speed';
+
+  @override
+  String get effectsGlowSpeedSlow => 'Slow';
+
+  @override
+  String get effectsGlowSpeedNormal => 'Normal';
+
+  @override
+  String get effectsGlowSpeedFast => 'Fast';
 
   @override
   String get effectsSaveFailed =>

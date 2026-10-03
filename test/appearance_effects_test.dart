@@ -308,31 +308,80 @@ void main() {
     });
   });
   group('Glowing border while replying', () {
-    test('is off until chosen, persists device-wide and restarts', () async {
+    test('is on by default: classic, one colour, normal speed', () async {
       final (controller, store) = await _controller();
       addTearDown(controller.dispose);
-      expect(store.effects.activityGlow, isFalse);
-      await controller.setEffects(
-        controller.effects.value.copyWith(activityGlow: true),
-      );
-      expect(store.prefs.getBool('oc.effectsActivityGlow'), isTrue);
-      expect(
-        store
-            .profileScopedPreferenceKeys('3f2a9c1e-7d4b-4e21-9a0f-5c6d7e8f9a0b')
-            .contains('oc.effectsActivityGlow'),
-        isFalse,
-      );
-      final next = ProfileStore(prefs: store.prefs);
-      expect(next.effects.activityGlow, isTrue);
+      final effects = store.effects;
+      expect(effects.activityGlow, isTrue);
+      expect(effects.glowStyle, KitGlowStyle.classic);
+      expect(effects.glowColours, KitGlowColours.one);
+      expect(effects.glowSpeed, KitGlowSpeed.normal);
+      expect(KitEffects.defaults.activityGlow, isTrue);
+    });
+
+    test(
+      'migration: no stored choice reads on, a stored off stays off',
+      () async {
+        // An install from before the switch was on by default: the key was
+        // never written (setEffects only writes a changed value).
+        final (controller, store) = await _controller({
+          'oc.effectsMotion': 'full',
+        });
+        addTearDown(controller.dispose);
+        expect(store.effects.activityGlow, isTrue);
+        // Someone who turned it on, and someone who turned it off, keep that.
+        final (c2, s2) = await _controller({'oc.effectsActivityGlow': false});
+        addTearDown(c2.dispose);
+        expect(s2.effects.activityGlow, isFalse);
+        final (c3, s3) = await _controller({'oc.effectsActivityGlow': true});
+        addTearDown(c3.dispose);
+        expect(s3.effects.activityGlow, isTrue);
+        // Unknown stored options fall back to the defaults.
+        final (c4, s4) = await _controller({
+          'oc.effectsGlowStyle': 'sparkles',
+          'oc.effectsGlowColours': 'rainbow',
+          'oc.effectsGlowSpeed': 'warp',
+        });
+        addTearDown(c4.dispose);
+        expect(s4.effects.glowStyle, KitGlowStyle.classic);
+        expect(s4.effects.glowColours, KitGlowColours.one);
+        expect(s4.effects.glowSpeed, KitGlowSpeed.normal);
+      },
+    );
+
+    test('switch and options persist device-wide and restart', () async {
+      final (controller, store) = await _controller();
+      addTearDown(controller.dispose);
       await controller.setEffects(
         controller.effects.value.copyWith(activityGlow: false),
       );
+      expect(store.prefs.getBool('oc.effectsActivityGlow'), isFalse);
+      expect(
+        store
+            .profileScopedPreferenceKeys('3f2a9c1e-7d4b-4e21-9a0f-5c6d7e8f9a0b')
+            .any((k) => k.startsWith('oc.effectsGlow')),
+        isFalse,
+      );
       expect(ProfileStore(prefs: store.prefs).effects.activityGlow, isFalse);
+      await controller.setEffects(
+        controller.effects.value.copyWith(
+          activityGlow: true,
+          glowStyle: KitGlowStyle.softRing,
+          glowColours: KitGlowColours.two,
+          glowSpeed: KitGlowSpeed.fast,
+        ),
+      );
+      expect(store.prefs.getString('oc.effectsGlowStyle'), 'softRing');
+      expect(store.prefs.getString('oc.effectsGlowColours'), 'two');
+      expect(store.prefs.getString('oc.effectsGlowSpeed'), 'fast');
+      final next = ProfileStore(prefs: store.prefs).effects;
+      expect(next.activityGlow, isTrue);
+      expect(next.glowStyle, KitGlowStyle.softRing);
+      expect(next.glowColours, KitGlowColours.two);
+      expect(next.glowSpeed, KitGlowSpeed.fast);
     });
 
-    testWidgets('the switch shows in Effects and toggles the setting', (
-      tester,
-    ) async {
+    testWidgets('the options show only while the switch is on', (tester) async {
       final (controller, store) = await _controller();
       addTearDown(controller.dispose);
       await tester.pumpWidget(_page(controller));
@@ -341,12 +390,39 @@ void main() {
       await _show(tester, row);
       expect(find.text('Glowing border while replying'), findsOneWidget);
       final toggle = find.byKey(const ValueKey('effects-glow-switch'));
-      expect(tester.widget<Switch>(toggle).value, isFalse);
+      expect(tester.widget<Switch>(toggle).value, isTrue);
+      for (final id in ['style', 'colours', 'speed']) {
+        expect(find.byKey(ValueKey('effects-glow-$id')), findsOneWidget);
+      }
       await tester.tap(toggle);
       await tester.pumpAndSettle();
-      expect(controller.effects.value.activityGlow, isTrue);
-      expect(store.prefs.getBool('oc.effectsActivityGlow'), isTrue);
-      expect(tester.widget<Switch>(toggle).value, isTrue);
+      expect(controller.effects.value.activityGlow, isFalse);
+      expect(store.prefs.getBool('oc.effectsActivityGlow'), isFalse);
+      for (final id in ['style', 'colours', 'speed']) {
+        expect(find.byKey(ValueKey('effects-glow-$id')), findsNothing);
+      }
+    });
+
+    testWidgets('each option saves when chosen', (tester) async {
+      final (controller, store) = await _controller();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_page(controller));
+      await tester.pumpAndSettle();
+      for (final (key, pref, value) in [
+        ('effects-glow-style-softRing', 'oc.effectsGlowStyle', 'softRing'),
+        ('effects-glow-colours-two', 'oc.effectsGlowColours', 'two'),
+        ('effects-glow-speed-fast', 'oc.effectsGlowSpeed', 'fast'),
+        ('effects-glow-speed-slow', 'oc.effectsGlowSpeed', 'slow'),
+      ]) {
+        final segment = find.byKey(ValueKey(key));
+        await _show(tester, segment);
+        await tester.tap(segment);
+        await tester.pumpAndSettle();
+        expect(store.prefs.getString(pref), value);
+      }
+      expect(controller.effects.value.glowStyle, KitGlowStyle.softRing);
+      expect(controller.effects.value.glowColours, KitGlowColours.two);
+      expect(controller.effects.value.glowSpeed, KitGlowSpeed.slow);
     });
   });
 }

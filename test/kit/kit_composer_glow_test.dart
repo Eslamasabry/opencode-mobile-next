@@ -1,7 +1,7 @@
-// The chosen "Glowing border while replying" (KitComposer.activityGlow /
-// KitEffects.activityGlow): a soft ring sweep around the whole box while a
-// reply runs, when the person turned it on. Off by default; Calm is still;
-// Motion Off and the system's remove-animations draw none.
+// "Glowing border while replying" (KitComposer.activityGlow /
+// KitEffects.activityGlow): on by default, drawn only while a reply runs, as
+// the classic ring (the restored original) or the soft ring sweep. Calm is
+// still; Motion Off and the system's remove-animations draw none.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
@@ -17,6 +17,10 @@ Finder _glow([String? mode]) => mode == null
             (w.key! as ValueKey<String>).value.startsWith('kit-activity-glow'),
       )
     : find.byKey(ValueKey('kit-activity-glow-$mode'));
+
+final _softRing = KitEffects.defaults.copyWith(
+  glowStyle: KitGlowStyle.softRing,
+);
 
 Future<void> _pump(
   WidgetTester tester, {
@@ -67,60 +71,144 @@ Future<void> _pump(
 }
 
 void main() {
-  testWidgets('off by default: a running reply draws no glow', (tester) async {
+  testWidgets('on by default: the classic ring while a reply runs', (
+    tester,
+  ) async {
+    await _pump(tester, busy: false);
+    expect(_glow(), findsNothing);
     await _pump(tester, busy: true);
-    expect(_glow(), findsNothing);
-  });
-
-  testWidgets('on: drawn only while a reply runs', (tester) async {
-    await _pump(tester, busy: false, glow: true);
-    expect(_glow(), findsNothing);
-    await _pump(tester, busy: true, glow: true);
     expect(_glow('frame'), findsOneWidget);
-    await _pump(tester, busy: false, glow: true);
+    expect(
+      find.byKey(const ValueKey('kit-activity-glow-halo')),
+      findsOneWidget,
+    );
+    await _pump(tester, busy: false);
     expect(_glow(), findsNothing);
   });
 
-  testWidgets('follows the Appearance switch when not told', (tester) async {
+  testWidgets('the classic painter strokes the box border', (tester) async {
+    await _pump(tester, busy: true);
+    final box = tester.renderObject(_glow('frame'));
+    expect(box, paints..rrect());
+    // Two colours: the same painter, the partner hue as the highlight.
     await _pump(
       tester,
       busy: true,
-      effects: KitEffects.defaults.copyWith(activityGlow: true),
+      effects: KitEffects.defaults.copyWith(glowColours: KitGlowColours.two),
     );
+    expect(tester.renderObject(_glow('frame')), paints..rrect());
+  });
+
+  testWidgets('soft ring: drawn only while a reply runs, no halo', (
+    tester,
+  ) async {
+    await _pump(tester, busy: false, effects: _softRing);
+    expect(_glow(), findsNothing);
+    await _pump(tester, busy: true, effects: _softRing);
     expect(_glow('frame'), findsOneWidget);
+    expect(find.byKey(const ValueKey('kit-activity-glow-halo')), findsNothing);
+    await _pump(tester, busy: false, effects: _softRing);
+    expect(_glow(), findsNothing);
   });
 
-  testWidgets('Calm draws one still glow, Off draws none', (tester) async {
+  testWidgets('switched off: a running reply draws no glow', (tester) async {
     await _pump(
       tester,
       busy: true,
-      glow: true,
-      effects: KitEffects.defaults.copyWith(motion: KitMotionLevel.calm),
-    );
-    expect(_glow('calm'), findsOneWidget);
-    await _pump(
-      tester,
-      busy: true,
-      glow: true,
-      effects: KitEffects.defaults.copyWith(motion: KitMotionLevel.off),
+      effects: KitEffects.defaults.copyWith(activityGlow: false),
     );
     expect(_glow(), findsNothing);
+    // The composer's own flag wins over the setting.
+    await _pump(tester, busy: true, glow: false);
+    expect(_glow(), findsNothing);
+  });
+
+  testWidgets('Calm draws one still glow, Off draws none (both styles)', (
+    tester,
+  ) async {
+    for (final base in [KitEffects.defaults, _softRing]) {
+      await _pump(
+        tester,
+        busy: true,
+        effects: base.copyWith(motion: KitMotionLevel.calm),
+      );
+      expect(_glow('calm'), findsOneWidget);
+      await _pump(
+        tester,
+        busy: true,
+        effects: base.copyWith(motion: KitMotionLevel.off),
+      );
+      expect(_glow(), findsNothing);
+      expect(
+        find.byKey(const ValueKey('kit-activity-glow-halo')),
+        findsNothing,
+      );
+    }
   });
 
   testWidgets('the system remove-animations draws none', (tester) async {
-    await _pump(tester, busy: true, glow: true, reduced: true);
+    await _pump(tester, busy: true, reduced: true);
+    expect(_glow(), findsNothing);
+    await _pump(tester, busy: true, reduced: true, effects: _softRing);
     expect(_glow(), findsNothing);
   });
 
   testWidgets('Stop and the box are unchanged with the glow on', (
     tester,
   ) async {
-    await _pump(tester, busy: true, glow: true);
+    await _pump(tester, busy: true);
     expect(find.bySemanticsLabel('Stop the reply'), findsWidgets);
     expect(find.text('Writing…'), findsNothing);
   });
 
-  testWidgets('live: travels slowly, one lap takes at least 6 s', (
+  testWidgets('live classic: one lap at Normal, Slow and Fast within the cap', (
+    tester,
+  ) async {
+    KitMotion.loops = true;
+    addTearDown(() => KitMotion.loops = false);
+    expect(1 / KitMotion.classicGlowLapsPerSecond, closeTo(3.6, 1e-9));
+    for (final speed in KitGlowSpeed.values) {
+      final controller = TextEditingController();
+      final focus = FocusNode();
+      addTearDown(controller.dispose);
+      addTearDown(focus.dispose);
+      await tester.pumpWidget(
+        KitEffectsScope(
+          effects: KitEffects.defaults.copyWith(glowSpeed: speed),
+          child: MaterialApp(
+            theme: AppTheme.dark(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: KitComposer(
+                controller: controller,
+                focusNode: focus,
+                hint: 'Ask',
+                onSend: () {},
+                busy: true,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(_glow('live'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('kit-activity-glow-halo')),
+        findsOneWidget,
+      );
+      // Halfway through the lap the highlight has moved.
+      await tester.pump(const Duration(milliseconds: 700));
+      expect(tester.hasRunningAnimations, isTrue);
+      await tester.pumpWidget(const SizedBox.shrink());
+    }
+    expect(
+      KitMotion.classicGlowLapsPerSecond * 2,
+      lessThanOrEqualTo(KitMotion.glowMaxLapsPerSecond),
+    );
+  });
+
+  testWidgets('live soft ring: travels slowly, one lap takes at least 6 s', (
     tester,
   ) async {
     KitMotion.loops = true;
@@ -130,18 +218,20 @@ void main() {
     addTearDown(controller.dispose);
     addTearDown(focus.dispose);
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.dark(),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: KitComposer(
-            controller: controller,
-            focusNode: focus,
-            hint: 'Ask',
-            onSend: () {},
-            busy: true,
-            activityGlow: true,
+      KitEffectsScope(
+        effects: _softRing.copyWith(glowSpeed: KitGlowSpeed.fast),
+        child: MaterialApp(
+          theme: AppTheme.dark(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: KitComposer(
+              controller: controller,
+              focusNode: focus,
+              hint: 'Ask',
+              onSend: () {},
+              busy: true,
+            ),
           ),
         ),
       ),
