@@ -94,6 +94,16 @@ import '../domain/workspace_paths.dart';
 import '../domain/session_title_text.dart';
 import '../domain/team_directories.dart';
 import '../domain/chat_feed.dart';
+import '../domain/merged_chat_feed.dart';
+import '../domain/phone_agent_host.dart';
+import '../domain/phone_agents.dart';
+import '../domain/phone_agents_source.dart';
+import '../domain/agent_sign_in.dart';
+import '../domain/agent_catalog.dart';
+import '../paseo/chat_feed_source.dart';
+import '../builtin/agents/phone_agents_host.dart' show BuiltinPhoneAgents;
+import '../builtin/agents/agent_sign_in.dart' show ChannelAgentSignInHost;
+import 'phone_agent_host_port.dart';
 
 part 'connection/monitors.dart';
 part 'connection/attention.dart';
@@ -129,6 +139,7 @@ part 'connection/integration_commands.dart';
 part 'connection/prompt_shelf.dart';
 part 'connection/worktrees.dart';
 part 'connection/chat_feed.dart';
+part 'connection/phone_agents.dart';
 
 /// App-wide singletons that need async init before the UI can render.
 class AppBootstrap {
@@ -224,7 +235,8 @@ class ConnectionController extends ChangeNotifier
         _ConnectionControllerIntegrationCommands,
         _ConnectionControllerPromptShelf,
         _ConnectionControllerWorktrees,
-        _ConnectionControllerChatFeed {
+        _ConnectionControllerChatFeed,
+        _ConnectionControllerPhoneAgents {
   final ProfileStore store;
   final BackgroundLiveController backgroundLive;
 
@@ -254,6 +266,9 @@ class ConnectionController extends ChangeNotifier
   final V2GatewayPairFactory _v2GatewayFactory;
   final V2GatewayPairFactory _codexGatewayFactory;
   final V2GatewayPairFactory _paseoGatewayFactory;
+  final PhoneAgentHostPort Function(ServerProfile profile)?
+  _phoneAgentHostFactory;
+  final AgentSignInHost Function()? _agentSignInHostFactory;
   final EventStreamFactory _eventStreamFactory;
   final EventStreamFactory? _globalEventStreamFactory;
   final LocalWakeLockEnsurer _localWakeLockEnsurer;
@@ -363,7 +378,11 @@ class ConnectionController extends ChangeNotifier
     PromptPhotoStore? promptPhotoStore,
     PhoneProjectEngineBridge? phoneEngineBridge,
     PhoneEngineGatewayBuilder? phoneEngineGatewayBuilder,
-  }) : _phoneEngineBridge = phoneEngineBridge,
+    PhoneAgentHostPort Function(ServerProfile profile)? phoneAgentHostFactory,
+    AgentSignInHost Function()? agentSignInHostFactory,
+  }) : _phoneAgentHostFactory = phoneAgentHostFactory,
+       _agentSignInHostFactory = agentSignInHostFactory,
+       _phoneEngineBridge = phoneEngineBridge,
        _phoneEngineGatewayBuilder = phoneEngineGatewayBuilder,
        _monitorGatewayFactory = monitorGatewayFactory,
        _promptPhotoStore = promptPhotoStore,
@@ -630,6 +649,7 @@ class ConnectionController extends ChangeNotifier
     _disposed = true;
     _resetConnectionStatusClock();
     _feedDispose();
+    _paShutdown();
     _savedPrompts?.dispose();
     _savedPrompts = null;
     store.changes.removeListener(_profilesSaved);

@@ -236,6 +236,8 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
     }
   }
 
+  String? _cachedPassword;
+
   Future<String> _password() async {
     final key = '$phoneAgentHostSecretPrefix$profileId';
     try {
@@ -256,6 +258,7 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
         throw const AgentHostException(AgentHostFailure.storage);
       }
       KitRedact.registerKnownSecret(password);
+      _cachedPassword = password;
       return password;
     } catch (_) {
       throw const AgentHostException(AgentHostFailure.storage);
@@ -335,6 +338,24 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
     }
     return PaseoGateway(
       transport: transport,
+      directory: directory,
+      defaultProviderModes: const {'claude': 'default'},
+    );
+  }
+
+  /// A gateway scoped to [directory] that connects on first use. Needs the
+  /// password a prior [openGateway]/[start] already read; the controller uses
+  /// it to rebuild a live transport synchronously.
+  PaseoGateway newGatewaySync(String directory) {
+    final password = _cachedPassword;
+    if (_disposed ||
+        password == null ||
+        !directory.startsWith('/root/projects/') ||
+        directory.split('/').any((p) => p == '..' || p == '.')) {
+      throw const AgentHostException(AgentHostFailure.unavailable);
+    }
+    return PaseoGateway(
+      transport: _transport(password),
       directory: directory,
       defaultProviderModes: const {'claude': 'default'},
     );

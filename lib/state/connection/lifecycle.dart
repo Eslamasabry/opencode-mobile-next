@@ -289,7 +289,8 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     _retireTransport();
     _connectedProfile = profile;
     _syncOrchestration(profile);
-    final pair = _buildTransportPair(profile);
+    final pair =
+        _phoneAgentConnectPair(profile) ?? _buildTransportPair(profile);
     final currentApi = pair.gateway
       ..setLocation(directory: directory, workspace: workspace);
     final currentRepository = pair.operations

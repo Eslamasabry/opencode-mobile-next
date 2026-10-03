@@ -271,7 +271,8 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     // The folder edited in a Codex connection is authoritative on connect.
     // Restoring an older OpenCode-style selection would undo that user edit.
     final initialDirectory = isCodex ? profile.codexDirectory : null;
-    final pair = _buildTransportPair(profile);
+    final pair =
+        _phoneAgentConnectPair(profile) ?? _buildTransportPair(profile);
     final currentApi = pair.gateway
       ..setLocation(directory: initialDirectory, workspace: null);
     final currentRepository = pair.operations
