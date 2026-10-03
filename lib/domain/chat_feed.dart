@@ -15,6 +15,8 @@ library;
 import 'dart:async';
 import 'dart:convert';
 
+import 'workspace_paths.dart';
+
 /// What a conversation needs from the person right now.
 enum ChatStatus {
   /// Stopped on a pending permission, question or form.
@@ -80,6 +82,10 @@ class ChatFeedItem {
 
   bool get isSubagent => parentID != null;
 
+  /// True when this chat lives in a temporary, home or root folder: it is
+  /// listed, but its folder is never offered as a project.
+  bool get inOtherFolder => isOtherFolderDirectory(directory);
+
   /// Which agent backend owns this chat ('opencode', 'claude', 'gemini', ...).
   /// Host runtime identity, independent of the selected model or mode.
   final String agentId;
@@ -106,6 +112,7 @@ class ChatFeedFilter {
     this.running = false,
     this.includeSubagents = false,
     this.agentId,
+    this.otherFolders = false,
   });
 
   /// Only this project's chats; null means every project.
@@ -124,6 +131,12 @@ class ChatFeedFilter {
   /// Only this agent's chats ([ChatFeedItem.agentId]); null means all agents.
   final String? agentId;
 
+  /// Only chats living outside every project: in a temporary folder, a home
+  /// folder or the filesystem root (see [isOtherFolderDirectory]). The
+  /// "Other folders" row of the project sheet sets this. Combine with
+  /// [projectDirectory] and nothing matches: pick one or the other.
+  final bool otherFolders;
+
   static const all = ChatFeedFilter();
 
   ChatFeedFilter copyWith({
@@ -134,6 +147,7 @@ class ChatFeedFilter {
     bool? includeSubagents,
     String? agentId,
     bool clearAgent = false,
+    bool? otherFolders,
   }) => ChatFeedFilter(
     projectDirectory: clearProject
         ? null
@@ -142,6 +156,7 @@ class ChatFeedFilter {
     running: running ?? this.running,
     includeSubagents: includeSubagents ?? this.includeSubagents,
     agentId: clearAgent ? null : agentId ?? this.agentId,
+    otherFolders: otherFolders ?? this.otherFolders,
   );
 
   @override
@@ -151,7 +166,8 @@ class ChatFeedFilter {
       other.needsYou == needsYou &&
       other.running == running &&
       other.includeSubagents == includeSubagents &&
-      other.agentId == agentId;
+      other.agentId == agentId &&
+      other.otherFolders == otherFolders;
 
   @override
   int get hashCode => Object.hash(
@@ -160,6 +176,7 @@ class ChatFeedFilter {
     running,
     includeSubagents,
     agentId,
+    otherFolders,
   );
 }
 
@@ -247,6 +264,7 @@ bool chatFeedMatches(ChatFeedItem item, ChatFeedFilter filter) =>
     (filter.projectDirectory == null ||
         item.directory == filter.projectDirectory) &&
     (filter.agentId == null || item.agentId == filter.agentId) &&
+    (!filter.otherFolders || item.inOtherFolder) &&
     (!filter.needsYou && !filter.running ||
         filter.needsYou && item.status == ChatStatus.needsYou ||
         filter.running && item.status == ChatStatus.running);
@@ -337,4 +355,25 @@ bool isTemporaryProjectDirectory(String? directory) {
   }
   return RegExp(r'^[a-z]:/windows/temp(/|$)').hasMatch(lower) ||
       RegExp(r'/appdata/local/temp(/|$)').hasMatch(lower);
+}
+
+/// True for folders that are never offered as projects but whose chats are
+/// always listed: temporary folders, home folders and the filesystem root.
+bool isOtherFolderDirectory(String? directory) =>
+    isTemporaryProjectDirectory(directory) ||
+    isProtectedWorkspaceDirectory(directory);
+
+/// Plain label for the folder of a chat that is not in a project: "Home" for
+/// a home folder, "/" for root, else the folder's last segment ('tmp').
+String otherFolderLabel(String? directory) {
+  final value = (directory ?? '').trim().replaceAll('\\', '/');
+  final trimmed = value.length > 1 && value.endsWith('/')
+      ? value.substring(0, value.length - 1)
+      : value;
+  if (trimmed.isEmpty || trimmed == '/') return '/';
+  final parts = trimmed.split('/').where((p) => p.isNotEmpty).toList();
+  if (parts.isEmpty) return '/';
+  final temp = isTemporaryProjectDirectory(trimmed);
+  if (!temp && isProtectedWorkspaceDirectory(trimmed)) return 'Home';
+  return parts.last;
 }
