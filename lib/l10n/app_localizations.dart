@@ -42510,6 +42510,444 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Project tools'**
   String get chatProjectMenuLabel;
+
+  /// Agent sheet: title
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an agent'**
+  String get agentsChooseTitle;
+
+  /// New conversation: spoken name of the agent chip
+  ///
+  /// In en, this message translates to:
+  /// **'Agent {agent}. Change agent'**
+  String agentsChipSemantics(String agent);
+
+  /// Agent sheet: an agent that can start conversations
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get agentsStateReady;
+
+  /// Agent sheet: ready, but old conversations start new ones
+  ///
+  /// In en, this message translates to:
+  /// **'Ready · Can\'t reopen old conversations'**
+  String get agentsStateReadyCantReopen;
+
+  /// Feed row note and agent state: the agent cannot reopen an old conversation
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reopen old conversations'**
+  String get agentsStateCantReopen;
+
+  /// Agent sheet: an agent that is not installed yet, with its download size
+  ///
+  /// In en, this message translates to:
+  /// **'Not installed · {size}'**
+  String agentsStateNotInstalled(String size);
+
+  /// Agent sheet: an agent that is not installed yet
+  ///
+  /// In en, this message translates to:
+  /// **'Not installed'**
+  String get agentsStateNotInstalledNoSize;
+
+  /// Agent sheet: installed but signed out
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in needed'**
+  String get agentsStateSignInNeeded;
+
+  /// Agent sheet: sign-in state not known yet
+  ///
+  /// In en, this message translates to:
+  /// **'Checking sign-in…'**
+  String get agentsStateChecking;
+
+  /// Agent sheet: the phone check has not passed
+  ///
+  /// In en, this message translates to:
+  /// **'Phone check needed'**
+  String get agentsStatePhoneCheck;
+
+  /// Agent sheet: the agent host stopped while the app was away
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped in the background'**
+  String get agentsStateStopped;
+
+  /// Agent sheet: the plan limit was reached
+  ///
+  /// In en, this message translates to:
+  /// **'Plan limit reached'**
+  String get agentsStateLimit;
+
+  /// Agent sheet: cannot run here
+  ///
+  /// In en, this message translates to:
+  /// **'Not available on this phone yet'**
+  String get agentsStateUnavailable;
+
+  /// Setup step title with the agent's own download size
+  ///
+  /// In en, this message translates to:
+  /// **'Set up {agent} · {size}'**
+  String agentsSetupTitle(String agent, String size);
+
+  /// Setup step title when the size is not known
+  ///
+  /// In en, this message translates to:
+  /// **'Set up {agent}'**
+  String agentsSetupTitleNoSize(String agent);
+
+  /// Setup step body
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} runs on this phone. Installing downloads the agent and anything it needs.'**
+  String agentsSetupBody(String agent);
+
+  /// Setup step: what the shown size covers
+  ///
+  /// In en, this message translates to:
+  /// **'{size} is the agent itself. Shared parts may add more.'**
+  String agentsSetupSizeNote(String size);
+
+  /// Setup step: the one install button
+  ///
+  /// In en, this message translates to:
+  /// **'Install {agent}'**
+  String agentsInstallAction(String agent);
+
+  /// Setup step: stops the setup job this phone started
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel setup'**
+  String get agentsCancelSetup;
+
+  /// Setup step: progress caption
+  ///
+  /// In en, this message translates to:
+  /// **'Installing {agent}…'**
+  String agentsInstalling(String agent);
+
+  /// Setup step: after install, before ready
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing the agent connection…'**
+  String get agentsPreparing;
+
+  /// Setup step: interrupted
+  ///
+  /// In en, this message translates to:
+  /// **'Setup stopped before it finished. Install again to continue.'**
+  String get agentsSetupInterrupted;
+
+  /// Setup step: failed
+  ///
+  /// In en, this message translates to:
+  /// **'Setup didn\'t finish. Install again to try once more.'**
+  String get agentsSetupFailed;
+
+  /// Phone check: title and action
+  ///
+  /// In en, this message translates to:
+  /// **'Check this phone'**
+  String get agentsCheckTitle;
+
+  /// Phone check: running
+  ///
+  /// In en, this message translates to:
+  /// **'Checking {agent}…'**
+  String agentsCheckRunning(String agent);
+
+  /// Phone check: passed
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} is ready on this phone.'**
+  String agentsCheckPassed(String agent);
+
+  /// Phone check: failed
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} didn\'t pass the check.'**
+  String agentsCheckFailed(String agent);
+
+  /// Phone check: run it for one agent
+  ///
+  /// In en, this message translates to:
+  /// **'Check {agent}'**
+  String agentsCheckAction(String agent);
+
+  /// Phone check step
+  ///
+  /// In en, this message translates to:
+  /// **'Installed'**
+  String get agentsStepInstall;
+
+  /// Phone check step
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get agentsStepVersion;
+
+  /// Phone check step
+  ///
+  /// In en, this message translates to:
+  /// **'Connection'**
+  String get agentsStepConnection;
+
+  /// Phone check step
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get agentsStepReady;
+
+  /// Phone check failure
+  ///
+  /// In en, this message translates to:
+  /// **'This phone can\'t run this agent yet.'**
+  String get agentsFailUnavailable;
+
+  /// Phone check failure
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save this setup. Free some space and run it again.'**
+  String get agentsFailStorage;
+
+  /// Phone check failure
+  ///
+  /// In en, this message translates to:
+  /// **'The agent didn\'t install. Install it again.'**
+  String get agentsFailInstall;
+
+  /// Phone check failure
+  ///
+  /// In en, this message translates to:
+  /// **'Setup stopped before it finished. Install it again.'**
+  String get agentsFailInterrupted;
+
+  /// Phone check failure
+  ///
+  /// In en, this message translates to:
+  /// **'The installed agent didn\'t pass its version check.'**
+  String get agentsFailVersion;
+
+  /// Phone check failure
+  ///
+  /// In en, this message translates to:
+  /// **'The agent connection didn\'t start.'**
+  String get agentsFailDaemon;
+
+  /// Phone check failure
+  ///
+  /// In en, this message translates to:
+  /// **'The agent started but didn\'t answer.'**
+  String get agentsFailHello;
+
+  /// Phone check failure
+  ///
+  /// In en, this message translates to:
+  /// **'This agent doesn\'t match this phone\'s processor.'**
+  String get agentsFailArchitecture;
+
+  /// Phone check failure
+  ///
+  /// In en, this message translates to:
+  /// **'This check is out of date. Run it again.'**
+  String get agentsFailStale;
+
+  /// Phone check failure
+  ///
+  /// In en, this message translates to:
+  /// **'Another setup is running. Wait for it to finish.'**
+  String get agentsFailBusy;
+
+  /// Sign-in step title
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with {agent}'**
+  String agentsSignInTitle(String agent);
+
+  /// Sign-in step body
+  ///
+  /// In en, this message translates to:
+  /// **'Use your {agent} subscription. The page opens in your browser, then you paste its code here.'**
+  String agentsSignInIntro(String agent);
+
+  /// Sign-in step: first read
+  ///
+  /// In en, this message translates to:
+  /// **'Checking sign-in…'**
+  String get agentsSignInChecking;
+
+  /// Sign-in step: starts the browser sign-in
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with {agent}'**
+  String agentsSignInStart(String agent);
+
+  /// Sign-in step: opens the browser page
+  ///
+  /// In en, this message translates to:
+  /// **'Open the {agent} sign-in page'**
+  String agentsSignInOpenPage(String agent);
+
+  /// Sign-in step: field label
+  ///
+  /// In en, this message translates to:
+  /// **'Code from the browser'**
+  String get agentsSignInCodeLabel;
+
+  /// Sign-in step: sends the pasted code
+  ///
+  /// In en, this message translates to:
+  /// **'Submit code'**
+  String get agentsSignInSubmit;
+
+  /// Sign-in step: the code was sent
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the code…'**
+  String get agentsSignInSubmitting;
+
+  /// Sign-in step: done
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in'**
+  String get agentsSignedIn;
+
+  /// Sign-in step: done body
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} is ready for new conversations.'**
+  String agentsSignedInBody(String agent);
+
+  /// Sign-in step: closes with the agent chosen
+  ///
+  /// In en, this message translates to:
+  /// **'Use {agent}'**
+  String agentsSignInDone(String agent);
+
+  /// Sign-in step: the code was refused before sending
+  ///
+  /// In en, this message translates to:
+  /// **'That code doesn\'t look right. Copy the whole code from the browser and paste it again.'**
+  String get agentsSignInBadCode;
+
+  /// Sign-in step: failed
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in didn\'t finish. Start it again.'**
+  String get agentsSignInFailed;
+
+  /// Sign-in step: rejected
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} didn\'t accept that sign-in. Start it again.'**
+  String agentsSignInRejected(String agent);
+
+  /// Sign-in step: host down
+  ///
+  /// In en, this message translates to:
+  /// **'The agent isn\'t running. Resume it, then sign in.'**
+  String get agentsSignInHostDown;
+
+  /// Sign-in step: no handler for this agent
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in isn\'t ready on this phone yet'**
+  String get agentsSignInUnavailable;
+
+  /// Sign-in step: limit
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} plan limit reached · try again later'**
+  String agentsSignInLimit(String agent);
+
+  /// Status line: limit with the reset time
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} plan limit reached · resets {time}'**
+  String agentsLimitReset(String agent, String time);
+
+  /// Status line: limit without a reset time
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} plan limit reached · try again later'**
+  String agentsLimitUnknown(String agent);
+
+  /// Status line: signed out
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} signed out'**
+  String agentsSignedOutLine(String agent);
+
+  /// Status line action
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to {agent}'**
+  String agentsSignInAction(String agent);
+
+  /// Status line: stopped
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} stopped in the background'**
+  String agentsStoppedLine(String agent);
+
+  /// Status line action
+  ///
+  /// In en, this message translates to:
+  /// **'Resume {agent}'**
+  String agentsResumeAction(String agent);
+
+  /// Resume notice: title
+  ///
+  /// In en, this message translates to:
+  /// **'Start a new conversation?'**
+  String get agentsResumeNoticeTitle;
+
+  /// Resume notice: body
+  ///
+  /// In en, this message translates to:
+  /// **'Starts a new conversation. {agent} can\'t reopen this one, and it stays as it is.'**
+  String agentsResumeNoticeBody(String agent);
+
+  /// Resume notice: confirms
+  ///
+  /// In en, this message translates to:
+  /// **'Start new conversation'**
+  String get agentsStartNew;
+
+  /// Resume notice and setup: dismiss
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get agentsCancel;
+
+  /// Restart offer line
+  ///
+  /// In en, this message translates to:
+  /// **'Close and reopen the app to finish clearing sign-ins.'**
+  String get agentsRestartLine;
+
+  /// Restart offer action
+  ///
+  /// In en, this message translates to:
+  /// **'Close the app'**
+  String get agentsRestartAction;
+
+  /// This phone: section name
+  ///
+  /// In en, this message translates to:
+  /// **'Agents'**
+  String get agentsSectionTitle;
+
+  /// Agent sheet: choosing refused
+  ///
+  /// In en, this message translates to:
+  /// **'That agent can\'t be chosen right now. Open it to finish setup.'**
+  String get agentsSelectFailed;
 }
 
 class _AppLocalizationsDelegate

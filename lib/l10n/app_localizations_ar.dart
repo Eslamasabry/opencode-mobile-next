@@ -27042,4 +27042,286 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatProjectMenuLabel => 'أدوات المشروع';
+
+  @override
+  String get agentsChooseTitle => 'اختر وكيلًا';
+
+  @override
+  String agentsChipSemantics(String agent) {
+    return 'الوكيل $agent. تغيير الوكيل';
+  }
+
+  @override
+  String get agentsStateReady => 'جاهز';
+
+  @override
+  String get agentsStateReadyCantReopen =>
+      'جاهز · لا يمكنه إعادة فتح المحادثات القديمة';
+
+  @override
+  String get agentsStateCantReopen => 'لا يمكنه إعادة فتح المحادثات القديمة';
+
+  @override
+  String agentsStateNotInstalled(String size) {
+    return 'غير مثبّت · $size';
+  }
+
+  @override
+  String get agentsStateNotInstalledNoSize => 'غير مثبّت';
+
+  @override
+  String get agentsStateSignInNeeded => 'يلزم تسجيل الدخول';
+
+  @override
+  String get agentsStateChecking => 'جارٍ التحقق من تسجيل الدخول…';
+
+  @override
+  String get agentsStatePhoneCheck => 'يلزم فحص الهاتف';
+
+  @override
+  String get agentsStateStopped => 'توقف في الخلفية';
+
+  @override
+  String get agentsStateLimit => 'بلغت حد الخطة';
+
+  @override
+  String get agentsStateUnavailable => 'غير متاح على هذا الهاتف بعد';
+
+  @override
+  String agentsSetupTitle(String agent, String size) {
+    return 'إعداد $agent · $size';
+  }
+
+  @override
+  String agentsSetupTitleNoSize(String agent) {
+    return 'إعداد $agent';
+  }
+
+  @override
+  String agentsSetupBody(String agent) {
+    return 'يعمل $agent على هذا الهاتف. يحمّل التثبيت الوكيل وما يحتاجه.';
+  }
+
+  @override
+  String agentsSetupSizeNote(String size) {
+    return '$size هو حجم الوكيل نفسه. قد تضيف الأجزاء المشتركة المزيد.';
+  }
+
+  @override
+  String agentsInstallAction(String agent) {
+    return 'تثبيت $agent';
+  }
+
+  @override
+  String get agentsCancelSetup => 'إلغاء الإعداد';
+
+  @override
+  String agentsInstalling(String agent) {
+    return 'جارٍ تثبيت $agent…';
+  }
+
+  @override
+  String get agentsPreparing => 'جارٍ تجهيز اتصال الوكيل…';
+
+  @override
+  String get agentsSetupInterrupted =>
+      'توقف الإعداد قبل أن ينتهي. ثبّت مرة أخرى للمتابعة.';
+
+  @override
+  String get agentsSetupFailed => 'لم ينتهِ الإعداد. ثبّت مرة أخرى للمحاولة.';
+
+  @override
+  String get agentsCheckTitle => 'فحص هذا الهاتف';
+
+  @override
+  String agentsCheckRunning(String agent) {
+    return 'جارٍ فحص $agent…';
+  }
+
+  @override
+  String agentsCheckPassed(String agent) {
+    return '$agent جاهز على هذا الهاتف.';
+  }
+
+  @override
+  String agentsCheckFailed(String agent) {
+    return 'لم يجتز $agent الفحص.';
+  }
+
+  @override
+  String agentsCheckAction(String agent) {
+    return 'فحص $agent';
+  }
+
+  @override
+  String get agentsStepInstall => 'مثبّت';
+
+  @override
+  String get agentsStepVersion => 'الإصدار';
+
+  @override
+  String get agentsStepConnection => 'الاتصال';
+
+  @override
+  String get agentsStepReady => 'جاهز';
+
+  @override
+  String get agentsFailUnavailable =>
+      'لا يستطيع هذا الهاتف تشغيل هذا الوكيل بعد.';
+
+  @override
+  String get agentsFailStorage =>
+      'تعذر حفظ هذا الإعداد. حرّر بعض المساحة وشغّله مرة أخرى.';
+
+  @override
+  String get agentsFailInstall => 'لم يُثبّت الوكيل. ثبّته مرة أخرى.';
+
+  @override
+  String get agentsFailInterrupted =>
+      'توقف الإعداد قبل أن ينتهي. ثبّته مرة أخرى.';
+
+  @override
+  String get agentsFailVersion => 'لم يجتز الوكيل المثبّت فحص الإصدار.';
+
+  @override
+  String get agentsFailDaemon => 'لم يبدأ اتصال الوكيل.';
+
+  @override
+  String get agentsFailHello => 'بدأ الوكيل لكنه لم يجب.';
+
+  @override
+  String get agentsFailArchitecture => 'هذا الوكيل لا يطابق معالج هذا الهاتف.';
+
+  @override
+  String get agentsFailStale => 'هذا الفحص قديم. شغّله مرة أخرى.';
+
+  @override
+  String get agentsFailBusy => 'إعداد آخر قيد التشغيل. انتظر حتى ينتهي.';
+
+  @override
+  String agentsSignInTitle(String agent) {
+    return 'تسجيل الدخول إلى $agent';
+  }
+
+  @override
+  String agentsSignInIntro(String agent) {
+    return 'استخدم اشتراكك في $agent. تُفتح الصفحة في المتصفح ثم تلصق رمزها هنا.';
+  }
+
+  @override
+  String get agentsSignInChecking => 'جارٍ التحقق من تسجيل الدخول…';
+
+  @override
+  String agentsSignInStart(String agent) {
+    return 'تسجيل الدخول إلى $agent';
+  }
+
+  @override
+  String agentsSignInOpenPage(String agent) {
+    return 'فتح صفحة تسجيل الدخول إلى $agent';
+  }
+
+  @override
+  String get agentsSignInCodeLabel => 'الرمز من المتصفح';
+
+  @override
+  String get agentsSignInSubmit => 'إرسال الرمز';
+
+  @override
+  String get agentsSignInSubmitting => 'جارٍ التحقق من الرمز…';
+
+  @override
+  String get agentsSignedIn => 'تم تسجيل الدخول';
+
+  @override
+  String agentsSignedInBody(String agent) {
+    return '$agent جاهز لمحادثات جديدة.';
+  }
+
+  @override
+  String agentsSignInDone(String agent) {
+    return 'استخدام $agent';
+  }
+
+  @override
+  String get agentsSignInBadCode =>
+      'هذا الرمز غير صحيح. انسخ الرمز كاملًا من المتصفح والصقه مرة أخرى.';
+
+  @override
+  String get agentsSignInFailed => 'لم يكتمل تسجيل الدخول. ابدأه مرة أخرى.';
+
+  @override
+  String agentsSignInRejected(String agent) {
+    return 'لم يقبل $agent تسجيل الدخول هذا. ابدأه مرة أخرى.';
+  }
+
+  @override
+  String get agentsSignInHostDown => 'الوكيل لا يعمل. استأنفه ثم سجّل الدخول.';
+
+  @override
+  String get agentsSignInUnavailable =>
+      'تسجيل الدخول غير جاهز على هذا الهاتف بعد';
+
+  @override
+  String agentsSignInLimit(String agent) {
+    return 'بلغت خطة $agent حدها · حاول لاحقًا';
+  }
+
+  @override
+  String agentsLimitReset(String agent, String time) {
+    return 'بلغت خطة $agent حدها · تتجدد $time';
+  }
+
+  @override
+  String agentsLimitUnknown(String agent) {
+    return 'بلغت خطة $agent حدها · حاول لاحقًا';
+  }
+
+  @override
+  String agentsSignedOutLine(String agent) {
+    return 'تم تسجيل الخروج من $agent';
+  }
+
+  @override
+  String agentsSignInAction(String agent) {
+    return 'تسجيل الدخول إلى $agent';
+  }
+
+  @override
+  String agentsStoppedLine(String agent) {
+    return 'توقف $agent في الخلفية';
+  }
+
+  @override
+  String agentsResumeAction(String agent) {
+    return 'استئناف $agent';
+  }
+
+  @override
+  String get agentsResumeNoticeTitle => 'بدء محادثة جديدة؟';
+
+  @override
+  String agentsResumeNoticeBody(String agent) {
+    return 'تبدأ محادثة جديدة. لا يستطيع $agent إعادة فتح هذه المحادثة وتبقى كما هي.';
+  }
+
+  @override
+  String get agentsStartNew => 'بدء محادثة جديدة';
+
+  @override
+  String get agentsCancel => 'إلغاء';
+
+  @override
+  String get agentsRestartLine =>
+      'أغلق التطبيق وافتحه مرة أخرى لإنهاء مسح عمليات تسجيل الدخول.';
+
+  @override
+  String get agentsRestartAction => 'إغلاق التطبيق';
+
+  @override
+  String get agentsSectionTitle => 'الوكلاء';
+
+  @override
+  String get agentsSelectFailed =>
+      'لا يمكن اختيار هذا الوكيل الآن. افتحه لإنهاء الإعداد.';
 }

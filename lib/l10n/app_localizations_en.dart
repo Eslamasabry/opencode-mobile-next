@@ -26920,4 +26920,291 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatProjectMenuLabel => 'Project tools';
+
+  @override
+  String get agentsChooseTitle => 'Choose an agent';
+
+  @override
+  String agentsChipSemantics(String agent) {
+    return 'Agent $agent. Change agent';
+  }
+
+  @override
+  String get agentsStateReady => 'Ready';
+
+  @override
+  String get agentsStateReadyCantReopen =>
+      'Ready · Can\'t reopen old conversations';
+
+  @override
+  String get agentsStateCantReopen => 'Can\'t reopen old conversations';
+
+  @override
+  String agentsStateNotInstalled(String size) {
+    return 'Not installed · $size';
+  }
+
+  @override
+  String get agentsStateNotInstalledNoSize => 'Not installed';
+
+  @override
+  String get agentsStateSignInNeeded => 'Sign in needed';
+
+  @override
+  String get agentsStateChecking => 'Checking sign-in…';
+
+  @override
+  String get agentsStatePhoneCheck => 'Phone check needed';
+
+  @override
+  String get agentsStateStopped => 'Stopped in the background';
+
+  @override
+  String get agentsStateLimit => 'Plan limit reached';
+
+  @override
+  String get agentsStateUnavailable => 'Not available on this phone yet';
+
+  @override
+  String agentsSetupTitle(String agent, String size) {
+    return 'Set up $agent · $size';
+  }
+
+  @override
+  String agentsSetupTitleNoSize(String agent) {
+    return 'Set up $agent';
+  }
+
+  @override
+  String agentsSetupBody(String agent) {
+    return '$agent runs on this phone. Installing downloads the agent and anything it needs.';
+  }
+
+  @override
+  String agentsSetupSizeNote(String size) {
+    return '$size is the agent itself. Shared parts may add more.';
+  }
+
+  @override
+  String agentsInstallAction(String agent) {
+    return 'Install $agent';
+  }
+
+  @override
+  String get agentsCancelSetup => 'Cancel setup';
+
+  @override
+  String agentsInstalling(String agent) {
+    return 'Installing $agent…';
+  }
+
+  @override
+  String get agentsPreparing => 'Preparing the agent connection…';
+
+  @override
+  String get agentsSetupInterrupted =>
+      'Setup stopped before it finished. Install again to continue.';
+
+  @override
+  String get agentsSetupFailed =>
+      'Setup didn\'t finish. Install again to try once more.';
+
+  @override
+  String get agentsCheckTitle => 'Check this phone';
+
+  @override
+  String agentsCheckRunning(String agent) {
+    return 'Checking $agent…';
+  }
+
+  @override
+  String agentsCheckPassed(String agent) {
+    return '$agent is ready on this phone.';
+  }
+
+  @override
+  String agentsCheckFailed(String agent) {
+    return '$agent didn\'t pass the check.';
+  }
+
+  @override
+  String agentsCheckAction(String agent) {
+    return 'Check $agent';
+  }
+
+  @override
+  String get agentsStepInstall => 'Installed';
+
+  @override
+  String get agentsStepVersion => 'Version';
+
+  @override
+  String get agentsStepConnection => 'Connection';
+
+  @override
+  String get agentsStepReady => 'Ready';
+
+  @override
+  String get agentsFailUnavailable => 'This phone can\'t run this agent yet.';
+
+  @override
+  String get agentsFailStorage =>
+      'Couldn\'t save this setup. Free some space and run it again.';
+
+  @override
+  String get agentsFailInstall =>
+      'The agent didn\'t install. Install it again.';
+
+  @override
+  String get agentsFailInterrupted =>
+      'Setup stopped before it finished. Install it again.';
+
+  @override
+  String get agentsFailVersion =>
+      'The installed agent didn\'t pass its version check.';
+
+  @override
+  String get agentsFailDaemon => 'The agent connection didn\'t start.';
+
+  @override
+  String get agentsFailHello => 'The agent started but didn\'t answer.';
+
+  @override
+  String get agentsFailArchitecture =>
+      'This agent doesn\'t match this phone\'s processor.';
+
+  @override
+  String get agentsFailStale => 'This check is out of date. Run it again.';
+
+  @override
+  String get agentsFailBusy =>
+      'Another setup is running. Wait for it to finish.';
+
+  @override
+  String agentsSignInTitle(String agent) {
+    return 'Sign in with $agent';
+  }
+
+  @override
+  String agentsSignInIntro(String agent) {
+    return 'Use your $agent subscription. The page opens in your browser, then you paste its code here.';
+  }
+
+  @override
+  String get agentsSignInChecking => 'Checking sign-in…';
+
+  @override
+  String agentsSignInStart(String agent) {
+    return 'Sign in with $agent';
+  }
+
+  @override
+  String agentsSignInOpenPage(String agent) {
+    return 'Open the $agent sign-in page';
+  }
+
+  @override
+  String get agentsSignInCodeLabel => 'Code from the browser';
+
+  @override
+  String get agentsSignInSubmit => 'Submit code';
+
+  @override
+  String get agentsSignInSubmitting => 'Checking the code…';
+
+  @override
+  String get agentsSignedIn => 'Signed in';
+
+  @override
+  String agentsSignedInBody(String agent) {
+    return '$agent is ready for new conversations.';
+  }
+
+  @override
+  String agentsSignInDone(String agent) {
+    return 'Use $agent';
+  }
+
+  @override
+  String get agentsSignInBadCode =>
+      'That code doesn\'t look right. Copy the whole code from the browser and paste it again.';
+
+  @override
+  String get agentsSignInFailed => 'Sign-in didn\'t finish. Start it again.';
+
+  @override
+  String agentsSignInRejected(String agent) {
+    return '$agent didn\'t accept that sign-in. Start it again.';
+  }
+
+  @override
+  String get agentsSignInHostDown =>
+      'The agent isn\'t running. Resume it, then sign in.';
+
+  @override
+  String get agentsSignInUnavailable =>
+      'Sign-in isn\'t ready on this phone yet';
+
+  @override
+  String agentsSignInLimit(String agent) {
+    return '$agent plan limit reached · try again later';
+  }
+
+  @override
+  String agentsLimitReset(String agent, String time) {
+    return '$agent plan limit reached · resets $time';
+  }
+
+  @override
+  String agentsLimitUnknown(String agent) {
+    return '$agent plan limit reached · try again later';
+  }
+
+  @override
+  String agentsSignedOutLine(String agent) {
+    return '$agent signed out';
+  }
+
+  @override
+  String agentsSignInAction(String agent) {
+    return 'Sign in to $agent';
+  }
+
+  @override
+  String agentsStoppedLine(String agent) {
+    return '$agent stopped in the background';
+  }
+
+  @override
+  String agentsResumeAction(String agent) {
+    return 'Resume $agent';
+  }
+
+  @override
+  String get agentsResumeNoticeTitle => 'Start a new conversation?';
+
+  @override
+  String agentsResumeNoticeBody(String agent) {
+    return 'Starts a new conversation. $agent can\'t reopen this one, and it stays as it is.';
+  }
+
+  @override
+  String get agentsStartNew => 'Start new conversation';
+
+  @override
+  String get agentsCancel => 'Cancel';
+
+  @override
+  String get agentsRestartLine =>
+      'Close and reopen the app to finish clearing sign-ins.';
+
+  @override
+  String get agentsRestartAction => 'Close the app';
+
+  @override
+  String get agentsSectionTitle => 'Agents';
+
+  @override
+  String get agentsSelectFailed =>
+      'That agent can\'t be chosen right now. Open it to finish setup.';
 }

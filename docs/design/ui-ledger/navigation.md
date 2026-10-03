@@ -420,6 +420,8 @@ graph LR
 
 ```mermaid
 graph LR
+  agents_section(["agents-section"])
+  agents_sheet(["agents-sheet"])
   chat["chat"]:::ext
   chats_home["chats-home"]
   chats_new_chat["chats-new-chat"]
@@ -445,6 +447,7 @@ graph LR
   session_relations["session-relations"]:::ext
   shell_output["shell-output"]
   shell_output_timeout_sheet(["shell-output-timeout-sheet"])
+  termux_setup_installed["termux-setup-installed"]:::ext
   worktrees["worktrees"]
   home_shell --> chats_home
   chat --> running_work_sheet
@@ -456,6 +459,7 @@ graph LR
   chats_home --> chats_project_sheet
   chats_home --> chat
   chats_home --> chats_new_chat
+  chats_home --> agents_sheet
   global_sessions --> chat
   global_sessions --> session_relations
   global_sessions --> continue_on_computer_sheet
@@ -467,6 +471,7 @@ graph LR
   project_hub --> worktrees
   project_hub --> managed_workspaces
   chats_new_chat --> chat
+  agents_section --> agents_sheet
   projects --> project_folder_browser
   global_sessions -.-> embedded_context_menu_region
   managed_workspaces -.-> embedded_context_menu_region
@@ -482,6 +487,7 @@ graph LR
   chat --> session_destination_sheet
   chat --> console_organization_sheet
   embedded_tool_card -.-> embedded_mobile_task_list
+  termux_setup_installed -.-> agents_section
   classDef ext stroke-dasharray: 4 3,opacity:0.7
 ```
 
@@ -706,6 +712,7 @@ graph LR
 
 ```mermaid
 graph LR
+  agents_section["agents-section"]:::ext
   chat["chat"]:::ext
   development_services["development-services"]
   development_services_confirm_sheet(["development-services-confirm-sheet"])
@@ -836,6 +843,7 @@ graph LR
   this_phone_add_tools_sheet -.-> team_phone_onboarding_success
   this_phone_add_tools_sheet -.-> team_phone_onboarding_failed
   this_phone_add_tools_sheet -.-> team_phone_onboarding_killed
+  termux_setup_installed -.-> agents_section
   classDef ext stroke-dasharray: 4 3,opacity:0.7
 ```
 
@@ -1395,7 +1403,9 @@ graph LR
 
 | Page | Kind | Depth | Inbound (page / element) | Outbound (element -> page) |
 |---|---|---|---|---|
-| `chats-home` | tab | 0 / 2 | `home-shell` / home-shell-tab-chats | chats-home-filter-project -> `chats-project-sheet`<br>chats-home-row -> `chat`<br>chats-home-new -> `chats-new-chat`<br>chats-home-start-in-project -> `chats-new-chat`<br>chats-home-start -> `chats-new-chat` |
+| `agents-sheet` | sheet | 1 / 2 | `chats-home` / agents-notice-sign-in<br>`agents-section` / agents-section-fix | _none_ |
+| `agents-section` | overlay | 1 / 1 | `termux-setup-installed` / (embedded) | agents-section-fix -> `agents-sheet` |
+| `chats-home` | tab | 0 / 2 | `home-shell` / home-shell-tab-chats | chats-home-filter-project -> `chats-project-sheet`<br>chats-home-row -> `chat`<br>chats-home-new -> `chats-new-chat`<br>chats-home-start-in-project -> `chats-new-chat`<br>chats-home-start -> `chats-new-chat`<br>agents-notice-sign-in -> `agents-sheet` |
 | `chats-project-sheet` | sheet | 1 / 3 | `chats-home` / chats-home-filter-project | _none_ |
 | `chats-new-chat` | screen | 1 / 3 | `chats-home` / chats-home-new<br>`chats-home` / chats-home-start-in-project<br>`chats-home` / chats-home-start | chats-new-send -> `chat` |
 | `global-sessions` | screen | 2 / 3 | `chat`<br>`command-launcher-sheet` / chat-command-sessions | global-sessions-row -> `chat`<br>global-sessions-row-menu-open -> `chat`<br>global-sessions-row-menu-related -> `session-relations`<br>global-sessions-row-menu-handoff -> `continue-on-computer-sheet`<br>global-sessions-row-menu-steal -> `global-sessions-continue-here-sheet`<br>global-sessions-row-context-open -> `chat`<br>global-sessions-row-context-steal -> `global-sessions-continue-here-sheet`<br>(embedded) -> `embedded-context-menu-region`<br>(embedded) -> `embedded-product-states` |
@@ -1503,7 +1513,7 @@ graph LR
 | `termux-processes-details-sheet` | sheet | 3 / 3 | `termux-processes` / termux-processes-row | termux-processes-details-sheet-server-controls -> `termux-setup-installed`<br>termux-processes-details-sheet-stop -> `termux-processes-stop-one-sheet` |
 | `termux-storage` | screen | 2 / 2 | `termux-setup-installed` / termux-setup-installed-storage-row | termux-storage-open-running -> `termux-processes`<br>termux-storage-category-clean -> `termux-storage-clean-sheet` |
 | `termux-storage-clean-sheet` | sheet | 3 / 3 | `termux-storage` / termux-storage-category-clean | _none_ |
-| `termux-setup-installed` | screen | 1 / 1 | `root-connecting` / root-connecting-termux-secondary<br>`server-switcher-sheet` / server-switcher-sheet-phone-manage<br>`servers` / servers-termux-setup<br>`server-settings` / server-settings-updates-managed<br>`termux-processes` / termux-processes-row-protected<br>`termux-processes-details-sheet` / termux-processes-details-sheet-server-controls<br>`embedded-termux-running-server-entry` / embedded-termux-running-server-entry-menu-manage<br>`embedded-local-agent-server-entry` / embedded-local-agent-server-entry-menu-manage<br>`embedded-phone-server-card` / embedded-phone-server-card-manage<br>`team-intro` / team-intro-set-up-termux<br>`embedded-team-phone-section` / embedded-team-phone-section-open-setup<br>`settings` / settings-on-this-phone<br>`mcp-catalog-node-sheet` / mcp-catalog-node-sheet-add-node | termux-setup-installed-set-up -> `phone-setup-start`<br>termux-setup-installed-set-up-termux -> `phone-setup-progress`<br>termux-setup-installed-progress -> `phone-setup-progress`<br>termux-setup-installed-switch-retry -> `phone-setup-progress`<br>termux-setup-installed-switch-return -> `phone-setup-progress`<br>termux-setup-installed-connect -> `home-shell`<br>termux-setup-installed-update -> `phone-setup-progress`<br>termux-setup-installed-switch -> `termux-setup-switch-runtime-sheet`<br>termux-setup-installed-add-tools -> `phone-setup-customize-sheet`<br>termux-setup-installed-add-tools-termux -> `this-phone-add-tools-sheet`<br>termux-setup-installed-storage-row -> `termux-storage`<br>termux-setup-installed-processes-row -> `termux-processes`<br>termux-setup-installed-keep-running -> `notifications-settings`<br>termux-setup-installed-terminal -> `terminal`<br>termux-setup-installed-remove -> `remove-from-phone-sheet`<br>-> `termux-migration` |
+| `termux-setup-installed` | screen | 1 / 1 | `root-connecting` / root-connecting-termux-secondary<br>`server-switcher-sheet` / server-switcher-sheet-phone-manage<br>`servers` / servers-termux-setup<br>`server-settings` / server-settings-updates-managed<br>`termux-processes` / termux-processes-row-protected<br>`termux-processes-details-sheet` / termux-processes-details-sheet-server-controls<br>`embedded-termux-running-server-entry` / embedded-termux-running-server-entry-menu-manage<br>`embedded-local-agent-server-entry` / embedded-local-agent-server-entry-menu-manage<br>`embedded-phone-server-card` / embedded-phone-server-card-manage<br>`team-intro` / team-intro-set-up-termux<br>`embedded-team-phone-section` / embedded-team-phone-section-open-setup<br>`settings` / settings-on-this-phone<br>`mcp-catalog-node-sheet` / mcp-catalog-node-sheet-add-node | termux-setup-installed-set-up -> `phone-setup-start`<br>termux-setup-installed-set-up-termux -> `phone-setup-progress`<br>termux-setup-installed-progress -> `phone-setup-progress`<br>termux-setup-installed-switch-retry -> `phone-setup-progress`<br>termux-setup-installed-switch-return -> `phone-setup-progress`<br>termux-setup-installed-connect -> `home-shell`<br>termux-setup-installed-update -> `phone-setup-progress`<br>termux-setup-installed-switch -> `termux-setup-switch-runtime-sheet`<br>termux-setup-installed-add-tools -> `phone-setup-customize-sheet`<br>termux-setup-installed-add-tools-termux -> `this-phone-add-tools-sheet`<br>termux-setup-installed-storage-row -> `termux-storage`<br>termux-setup-installed-processes-row -> `termux-processes`<br>termux-setup-installed-keep-running -> `notifications-settings`<br>termux-setup-installed-terminal -> `terminal`<br>termux-setup-installed-remove -> `remove-from-phone-sheet`<br>-> `termux-migration`<br>(embedded) -> `agents-section` |
 | `termux-setup-switch-runtime-sheet` | sheet | 2 / 2 | `termux-setup-installed` / termux-setup-installed-switch | termux-setup-switch-runtime-sheet-confirm -> `phone-setup-progress` |
 | `this-phone-add-tools-sheet` | sheet | 2 / 2 | `termux-setup-installed` / termux-setup-installed-add-tools-termux | this-phone-add-tools-sheet-claude -> `local-agent-page`<br>(embedded) -> `team-phone-onboarding-offer`<br>(embedded) -> `team-phone-onboarding-steps`<br>(embedded) -> `team-phone-onboarding-success`<br>(embedded) -> `team-phone-onboarding-failed`<br>(embedded) -> `team-phone-onboarding-killed` |
 | `embedded-local-agent-onboarding-block` | overlay | 3 / 3 | `local-agent-page` / (embedded) | embedded-local-agent-onboarding-block-open-setup -> `phone-setup-progress`<br>embedded-local-agent-onboarding-block-menu-remove -> `remove-local-agents-confirm-sheet`<br>embedded-local-agent-onboarding-block-connect -> `local-agent-project-sheet`<br>(embedded) -> `embedded-setup-terminal` |

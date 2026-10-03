@@ -437,19 +437,25 @@ class Api2EventAdapter {
             },
         ];
         return [
-          _toolPart(event.sessionID, event.assistantMessageID, event.callID, {
-            'status': event.succeeded ? 'completed' : 'error',
-            'input': call?.input ?? const <String, dynamic>{},
-            if (event.succeeded)
-              'output': text
-            else
-              'error':
-                  event.error?.message ??
-                  (text.isNotEmpty ? text : 'Tool failed'),
-            'attachments': attachments,
-            if (event.metadata != null) 'metadata': event.metadata,
-            if (event.executed != null) 'executed': event.executed,
-          }, toolName: call?.name),
+          _toolPart(
+            event.sessionID,
+            event.assistantMessageID,
+            event.callID,
+            {
+              'status': event.succeeded ? 'completed' : 'error',
+              'input': call?.input ?? const <String, dynamic>{},
+              if (event.succeeded)
+                'output': text
+              else
+                'error':
+                    event.error?.message ??
+                    (text.isNotEmpty ? text : 'Tool failed'),
+              'attachments': attachments,
+              if (event.metadata != null) 'metadata': event.metadata,
+              if (event.executed != null) 'executed': event.executed,
+            },
+            toolName: call?.name,
+          ),
         ];
 
       case Api2SessionMessageContentUpdatedEvent():

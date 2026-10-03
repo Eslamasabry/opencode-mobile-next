@@ -26,6 +26,7 @@ class KitFeedItem extends StatelessWidget {
     required this.onTap,
     this.gitLabel,
     this.agent,
+    this.notice,
     this.preview = '',
     this.tag,
     this.time,
@@ -45,6 +46,10 @@ class KitFeedItem extends StatelessWidget {
   /// The agent's name ('Claude Code'), shown after the project only when the
   /// feed holds more than one agent; null otherwise.
   final String? agent;
+
+  /// One quiet line under the last line: why opening is different
+  /// ("Can't reopen old conversations").
+  final String? notice;
 
   /// The last line; empty shows nothing.
   final String preview;
@@ -92,6 +97,7 @@ class KitFeedItem extends StatelessWidget {
           title,
           ?(tag?.label ?? time),
           if (preview.isNotEmpty) preview,
+          ?notice,
         ].join(', ');
     return KitTappable(
       tappableKey: tappableKey,
@@ -169,6 +175,12 @@ class KitFeedItem extends StatelessWidget {
                   tone: KitTextTone.secondary,
                   maxLines: large ? 2 : 1,
                   overflow: TextOverflow.ellipsis,
+                ),
+              if (notice != null)
+                KitText(
+                  notice!,
+                  role: KitTextRole.caption,
+                  tone: KitTextTone.tertiary,
                 ),
             ],
           ),
