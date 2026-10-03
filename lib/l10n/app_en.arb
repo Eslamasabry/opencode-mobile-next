@@ -31464,5 +31464,107 @@
   "folderBrowserPhoneRefused": "Phone storage is off. Allow access to look here.",
   "@folderBrowserPhoneRefused": {
     "description": "One line in the folder browser after All files access was not allowed"
+  },
+  "folderBrowserFindProjects": "Find projects",
+  "@folderBrowserFindProjects": {
+    "description": "Menu item of the phone-storage folder browser that looks for projects on the phone"
+  },
+  "phoneScanTitle": "Projects on this phone",
+  "@phoneScanTitle": {
+    "description": "Title of the find-projects step in the folder browser"
+  },
+  "phoneScanLooking": "Looking…",
+  "@phoneScanLooking": {
+    "description": "Subtitle of the find-projects step while it runs"
+  },
+  "phoneScanFound": "{count, plural, =1{1 found} other{{count} found}}",
+  "@phoneScanFound": {
+    "description": "Subtitle of the find-projects step once it is done",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "phoneScanStopped": "Stopped after {seconds} seconds · {count} found",
+  "@phoneScanStopped": {
+    "description": "Subtitle when the find-projects scan hit its time cap",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "phoneScanFirstShown": "First {count} shown",
+  "@phoneScanFirstShown": {
+    "description": "Subtitle when the find-projects scan hit its size cap",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "phoneScanLookDeeper": "Look deeper",
+  "@phoneScanLookDeeper": {
+    "description": "Action that scans again for longer after the time cap"
+  },
+  "phoneScanEmptyTitle": "No projects found",
+  "@phoneScanEmptyTitle": {
+    "description": "Empty title of the find-projects step"
+  },
+  "phoneScanEmptyBody": "Browse folders or start a New project.",
+  "@phoneScanEmptyBody": {
+    "description": "Way forward when the find-projects scan found nothing"
+  },
+  "phoneScanGit": "Git",
+  "@phoneScanGit": {
+    "description": "Badge on a found project that has a git repository"
+  },
+  "phoneScanKindDart": "Dart",
+  "@phoneScanKindDart": {
+    "description": "Kind word of a found project in the find-projects step"
+  },
+  "phoneScanKindNode": "Node",
+  "@phoneScanKindNode": {
+    "description": "Kind word of a found project in the find-projects step"
+  },
+  "phoneScanKindPython": "Python",
+  "@phoneScanKindPython": {
+    "description": "Kind word of a found project in the find-projects step"
+  },
+  "phoneScanKindRust": "Rust",
+  "@phoneScanKindRust": {
+    "description": "Kind word of a found project in the find-projects step"
+  },
+  "phoneScanKindGo": "Go",
+  "@phoneScanKindGo": {
+    "description": "Kind word of a found project in the find-projects step"
+  },
+  "phoneScanKindJava": "Java",
+  "@phoneScanKindJava": {
+    "description": "Kind word of a found project in the find-projects step"
+  },
+  "phoneScanKindRuby": "Ruby",
+  "@phoneScanKindRuby": {
+    "description": "Kind word of a found project in the find-projects step"
+  },
+  "phoneScanKindPhp": "PHP",
+  "@phoneScanKindPhp": {
+    "description": "Kind word of a found project in the find-projects step"
+  },
+  "phoneScanKindDotnet": ".NET",
+  "@phoneScanKindDotnet": {
+    "description": "Kind word of a found project in the find-projects step"
+  },
+  "phoneScanKindCpp": "C/C++",
+  "@phoneScanKindCpp": {
+    "description": "Kind word of a found project in the find-projects step"
+  },
+  "phoneScanKindGit": "Git",
+  "@phoneScanKindGit": {
+    "description": "Kind word of a found project in the find-projects step"
   }
 }

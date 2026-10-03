@@ -26717,4 +26717,83 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get folderBrowserPhoneRefused =>
       'تخزين الهاتف متوقف. اسمح بالوصول لتصفحه هنا.';
+
+  @override
+  String get folderBrowserFindProjects => 'ابحث عن المشاريع';
+
+  @override
+  String get phoneScanTitle => 'المشاريع على هذا الهاتف';
+
+  @override
+  String get phoneScanLooking => 'جارٍ البحث…';
+
+  @override
+  String phoneScanFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مشروع',
+      many: '$count مشروعًا',
+      few: '$count مشاريع',
+      two: 'اثنان',
+      one: 'واحد',
+      zero: 'لا شيء',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String phoneScanStopped(int seconds, int count) {
+    return 'توقف بعد $seconds ثانية · وُجد $count';
+  }
+
+  @override
+  String phoneScanFirstShown(int count) {
+    return 'أول $count معروضة';
+  }
+
+  @override
+  String get phoneScanLookDeeper => 'ابحث أعمق';
+
+  @override
+  String get phoneScanEmptyTitle => 'لم يُعثر على مشاريع';
+
+  @override
+  String get phoneScanEmptyBody => 'تصفح المجلدات أو ابدأ مشروعًا جديدًا.';
+
+  @override
+  String get phoneScanGit => 'Git';
+
+  @override
+  String get phoneScanKindDart => 'Dart';
+
+  @override
+  String get phoneScanKindNode => 'Node';
+
+  @override
+  String get phoneScanKindPython => 'Python';
+
+  @override
+  String get phoneScanKindRust => 'Rust';
+
+  @override
+  String get phoneScanKindGo => 'Go';
+
+  @override
+  String get phoneScanKindJava => 'Java';
+
+  @override
+  String get phoneScanKindRuby => 'Ruby';
+
+  @override
+  String get phoneScanKindPhp => 'PHP';
+
+  @override
+  String get phoneScanKindDotnet => '.NET';
+
+  @override
+  String get phoneScanKindCpp => 'C/C++';
+
+  @override
+  String get phoneScanKindGit => 'Git';
 }

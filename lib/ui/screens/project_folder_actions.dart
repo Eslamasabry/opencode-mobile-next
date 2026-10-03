@@ -7,6 +7,7 @@ import '../../domain/server_gateway.dart' show WorkspaceProject;
 import '../../domain/team_directories.dart';
 import '../../domain/workspace_paths.dart';
 import '../../l10n/app_localizations.dart';
+import '../../platform/phone_project_scan.dart';
 import '../../platform/phone_storage_folders.dart';
 import '../../platform/storage_access.dart';
 import '../../state/shared_project_roots.dart';
@@ -144,12 +145,19 @@ class ProjectFolderActions {
   @visibleForTesting
   static FolderLister? phoneListerOverride;
 
+  /// Widget tests find the phone's projects without its files.
+  @visibleForTesting
+  static PhoneProjectScan Function(Duration timeLimit)? phoneScanOverride;
+
   /// The phone's storage as a second place in the folder browser: listed
   /// from this app (needs All files access, asked first in plain words),
   /// with the shared-storage folders opened before.
   static PhoneStoragePlace _phonePlace(ConnectionController controller) =>
       PhoneStoragePlace(
         list: phoneListerOverride ?? PhoneStorageFolders().list,
+        scan:
+            phoneScanOverride ??
+            (limit) => PhoneProjectScanner().start(timeLimit: limit),
         ensureAccess: (context) async {
           if (await StorageAccessBridge.status() != StorageAccess.notGranted) {
             return true;

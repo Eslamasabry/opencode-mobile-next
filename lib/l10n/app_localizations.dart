@@ -41970,6 +41970,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Phone storage is off. Allow access to look here.'**
   String get folderBrowserPhoneRefused;
+
+  /// Menu item of the phone-storage folder browser that looks for projects on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Find projects'**
+  String get folderBrowserFindProjects;
+
+  /// Title of the find-projects step in the folder browser
+  ///
+  /// In en, this message translates to:
+  /// **'Projects on this phone'**
+  String get phoneScanTitle;
+
+  /// Subtitle of the find-projects step while it runs
+  ///
+  /// In en, this message translates to:
+  /// **'Looking…'**
+  String get phoneScanLooking;
+
+  /// Subtitle of the find-projects step once it is done
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 found} other{{count} found}}'**
+  String phoneScanFound(int count);
+
+  /// Subtitle when the find-projects scan hit its time cap
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped after {seconds} seconds · {count} found'**
+  String phoneScanStopped(int seconds, int count);
+
+  /// Subtitle when the find-projects scan hit its size cap
+  ///
+  /// In en, this message translates to:
+  /// **'First {count} shown'**
+  String phoneScanFirstShown(int count);
+
+  /// Action that scans again for longer after the time cap
+  ///
+  /// In en, this message translates to:
+  /// **'Look deeper'**
+  String get phoneScanLookDeeper;
+
+  /// Empty title of the find-projects step
+  ///
+  /// In en, this message translates to:
+  /// **'No projects found'**
+  String get phoneScanEmptyTitle;
+
+  /// Way forward when the find-projects scan found nothing
+  ///
+  /// In en, this message translates to:
+  /// **'Browse folders or start a New project.'**
+  String get phoneScanEmptyBody;
+
+  /// Badge on a found project that has a git repository
+  ///
+  /// In en, this message translates to:
+  /// **'Git'**
+  String get phoneScanGit;
+
+  /// Kind word of a found project in the find-projects step
+  ///
+  /// In en, this message translates to:
+  /// **'Dart'**
+  String get phoneScanKindDart;
+
+  /// Kind word of a found project in the find-projects step
+  ///
+  /// In en, this message translates to:
+  /// **'Node'**
+  String get phoneScanKindNode;
+
+  /// Kind word of a found project in the find-projects step
+  ///
+  /// In en, this message translates to:
+  /// **'Python'**
+  String get phoneScanKindPython;
+
+  /// Kind word of a found project in the find-projects step
+  ///
+  /// In en, this message translates to:
+  /// **'Rust'**
+  String get phoneScanKindRust;
+
+  /// Kind word of a found project in the find-projects step
+  ///
+  /// In en, this message translates to:
+  /// **'Go'**
+  String get phoneScanKindGo;
+
+  /// Kind word of a found project in the find-projects step
+  ///
+  /// In en, this message translates to:
+  /// **'Java'**
+  String get phoneScanKindJava;
+
+  /// Kind word of a found project in the find-projects step
+  ///
+  /// In en, this message translates to:
+  /// **'Ruby'**
+  String get phoneScanKindRuby;
+
+  /// Kind word of a found project in the find-projects step
+  ///
+  /// In en, this message translates to:
+  /// **'PHP'**
+  String get phoneScanKindPhp;
+
+  /// Kind word of a found project in the find-projects step
+  ///
+  /// In en, this message translates to:
+  /// **'.NET'**
+  String get phoneScanKindDotnet;
+
+  /// Kind word of a found project in the find-projects step
+  ///
+  /// In en, this message translates to:
+  /// **'C/C++'**
+  String get phoneScanKindCpp;
+
+  /// Kind word of a found project in the find-projects step
+  ///
+  /// In en, this message translates to:
+  /// **'Git'**
+  String get phoneScanKindGit;
 }
 
 class _AppLocalizationsDelegate

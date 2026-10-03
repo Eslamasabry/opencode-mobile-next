@@ -4,12 +4,14 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 
 import '../../builtin/builtin_folders.dart';
+import '../../platform/phone_project_scan.dart';
 import '../../platform/phone_storage_folders.dart';
 import '../../domain/workspace_paths.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
 import '../kit/kit_bidi.dart';
 import '../kit/kit_buttons.dart';
+import '../kit/kit_chip.dart';
 import '../kit/kit_field.dart';
 import '../kit/kit_icon.dart';
 import '../kit/kit_icon_button.dart';
@@ -62,6 +64,7 @@ class PhoneStoragePlace {
     required this.list,
     required this.ensureAccess,
     this.openedBefore,
+    this.scan,
   });
 
   /// Lists the folders of the phone's internal storage.
@@ -73,6 +76,10 @@ class PhoneStoragePlace {
 
   /// Shared-storage folders opened as projects before (absolute paths).
   final Future<List<String>> Function()? openedBefore;
+
+  /// Starts "Find projects" over the phone's storage with a time cap; null
+  /// leaves the menu item out.
+  final PhoneProjectScan Function(Duration timeLimit)? scan;
 }
 
 /// "Open a project" for a server on this phone (OpenCode inside the app, or
@@ -159,6 +166,11 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
   String? _nameError;
   List<String> _opened = const [];
 
+  /// "Find projects": the step swapped in place, and its results, kept for
+  /// the life of this sheet only.
+  bool _finding = false;
+  PhoneProjectScanState? _scanState;
+
   FolderLister get _lister => _phone ? widget.phone!.list : widget.list;
 
   @override
@@ -171,6 +183,7 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
   @override
   void dispose() {
     _skeletonTimer?.cancel();
+    _scanState?.dispose();
     _name.dispose();
     super.dispose();
   }
@@ -330,6 +343,22 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
     );
   }
 
+  /// "Find projects": swaps the sheet in place for the results. What an
+  /// earlier look found is shown as it was; a look that back cut short
+  /// starts again.
+  void _findProjects() {
+    final start = widget.phone?.scan;
+    if (start == null) return;
+    final state = _scanState ??= PhoneProjectScanState(start);
+    setState(() => _finding = true);
+    if (!state.hasResult && !state.scanning) state.run();
+  }
+
+  void _stopFinding() {
+    _scanState?.cancel();
+    setState(() => _finding = false);
+  }
+
   bool get _settled => !_loading && _error == null && _entries != null;
 
   /// The first folder of the place being shown: its header offers Close
@@ -356,7 +385,11 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
         padding: EdgeInsetsDirectional.only(bottom: media.viewInsets.bottom),
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxHeight),
-          child: _naming ? _nameStep(l10n) : _listStep(l10n),
+          child: _finding
+              ? _scanStep(l10n)
+              : _naming
+              ? _nameStep(l10n)
+              : _listStep(l10n),
         ),
       ),
     );
@@ -402,6 +435,131 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
     ),
   );
 
+  /// Step two, in place of the list: the projects found on the phone, as
+  /// they are found. One tap opens one, as "Open" does for a folder.
+  Widget _scanStep(AppLocalizations l10n) {
+    final state = _scanState!;
+    return ListenableBuilder(
+      listenable: state,
+      builder: (context, _) {
+        final found = state.projects;
+        final end = state.end;
+        final seconds = state.limit.inSeconds;
+        final String? subtitle = state.scanning
+            ? l10n.phoneScanLooking
+            : end == PhoneScanEnd.completed && found.isEmpty
+            ? null
+            : end == PhoneScanEnd.timedOut
+            ? l10n.phoneScanStopped(seconds, found.length)
+            : end == PhoneScanEnd.limited
+            ? l10n.phoneScanFirstShown(found.length)
+            : l10n.phoneScanFound(found.length);
+        final deeper = end == PhoneScanEnd.timedOut && seconds < 30;
+        return KitSheet(
+          key: const ValueKey('in-app-projects'),
+          step: 'find',
+          title: l10n.phoneScanTitle,
+          subtitle: subtitle,
+          handle: false,
+          loading: state.scanning,
+          onClose: () => KitSheet.close<FolderBrowserChoice>(context),
+          leading: KitAction(
+            key: const ValueKey('phone-scan-back'),
+            label: l10n.kitTopBarBack,
+            onPressed: _stopFinding,
+          ),
+          bar: deeper,
+          primary: deeper
+              ? KitAction(
+                  key: const ValueKey('phone-scan-deeper'),
+                  label: l10n.phoneScanLookDeeper,
+                  onPressed: () =>
+                      state.run(timeLimit: const Duration(seconds: 30)),
+                )
+              : null,
+          child: found.isEmpty
+              ? state.scanning
+                    ? const KitSkeletonRows(count: 4)
+                    : KitStateView(
+                        key: const ValueKey('phone-scan-empty'),
+                        size: KitStateSize.inline,
+                        icon: AppIconography.folderOpen,
+                        illustration: const KitFoldersOpenScene(),
+                        title: l10n.phoneScanEmptyTitle,
+                        body: l10n.phoneScanEmptyBody,
+                      )
+              : KitRowGroup(
+                  margin: EdgeInsetsDirectional.zero,
+                  children: [
+                    for (final project in found)
+                      _projectRow(context, l10n, project),
+                  ],
+                ),
+        );
+      },
+    );
+  }
+
+  static String _kindLabel(AppLocalizations l10n, PhoneProjectKind kind) =>
+      switch (kind) {
+        PhoneProjectKind.dart => l10n.phoneScanKindDart,
+        PhoneProjectKind.node => l10n.phoneScanKindNode,
+        PhoneProjectKind.python => l10n.phoneScanKindPython,
+        PhoneProjectKind.rust => l10n.phoneScanKindRust,
+        PhoneProjectKind.go => l10n.phoneScanKindGo,
+        PhoneProjectKind.java => l10n.phoneScanKindJava,
+        PhoneProjectKind.ruby => l10n.phoneScanKindRuby,
+        PhoneProjectKind.php => l10n.phoneScanKindPhp,
+        PhoneProjectKind.dotnet => l10n.phoneScanKindDotnet,
+        PhoneProjectKind.cpp => l10n.phoneScanKindCpp,
+        PhoneProjectKind.git => l10n.phoneScanKindGit,
+      };
+
+  /// The folder the project is in, from the storage's top, cut at its start
+  /// when long so the end (the nearest folders) stays readable.
+  static String _where(String path) {
+    final parent = PhoneStorageFolders.parentOf(path) ?? path;
+    final short = parent == PhoneStorageFolders.root
+        ? '/'
+        : parent.substring(PhoneStorageFolders.root.length);
+    return short.length <= 34
+        ? short
+        : '…${short.substring(short.length - 33)}';
+  }
+
+  Widget _projectRow(
+    BuildContext context,
+    AppLocalizations l10n,
+    PhoneProject project,
+  ) => KitRow(
+    key: ValueKey('phone-scan-${project.path}'),
+    leading: KitRow.icon(
+      context,
+      project.kind == PhoneProjectKind.git
+          ? AppIconography.branch
+          : AppIconography.projects,
+    ),
+    title: project.name,
+    supporting: TextSpan(
+      text:
+          '${_kindLabel(l10n, project.kind)} · ${KitBidi.ltr(_where(project.path))}',
+    ),
+    trailing: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (project.hasGit && project.kind != PhoneProjectKind.git) ...[
+          KitChip(label: l10n.phoneScanGit),
+          SizedBox(width: KitTokens.of(context).space2),
+        ],
+        const KitChevron(),
+      ],
+    ),
+    onTap: () => KitSheet.close<FolderBrowserChoice>(
+      context,
+      FolderBrowserOpen(project.path),
+    ),
+  );
+
   /// Step one: the folder being shown, one row per folder inside it, and
   /// the bar with "New project" and "Open" plus the folder name.
   Widget _listStep(AppLocalizations l10n) {
@@ -433,6 +591,12 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
             label: l10n.folderBrowserShowHidden,
             checked: _showHidden,
             onSelected: () => setState(() => _showHidden = !_showHidden),
+          ),
+        if (_phone && widget.phone?.scan != null)
+          KitMenuItem(
+            key: const ValueKey('folder-browser-find'),
+            label: l10n.folderBrowserFindProjects,
+            onSelected: _findProjects,
           ),
         KitMenuItem(
           key: const ValueKey('in-app-enter-path'),

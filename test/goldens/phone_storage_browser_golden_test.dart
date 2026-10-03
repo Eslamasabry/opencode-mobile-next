@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/builtin_folders.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
+import 'package:opencode_mobile/platform/phone_project_scan.dart';
 import 'package:opencode_mobile/platform/phone_storage_folders.dart';
 import 'package:opencode_mobile/state/shared_storage_gate.dart';
 import 'package:opencode_mobile/ui/screens/shared_storage_access_flow.dart';
@@ -28,6 +29,10 @@ enum PhoneStorageScene {
   refused,
   remote,
   naming,
+  scanning,
+  found,
+  findnone,
+  findcapped,
 }
 
 const _root = PhoneStorageFolders.root;
@@ -66,6 +71,7 @@ Future<void> mountPhoneStorage(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   var granted = scene != PhoneStorageScene.refused;
+  final scan = PhoneProjectScan.manual();
   Widget sheet() => switch (scene) {
     PhoneStorageScene.remote => RemoteFolderSheet(
       recent: const ['/home/sam/work/api', '/home/sam/notes'],
@@ -80,6 +86,7 @@ Future<void> mountPhoneStorage(
       phone: PhoneStoragePlace(
         list: _phone,
         ensureAccess: (_) async => granted,
+        scan: (_) => scan,
         openedBefore: () async => [
           '$_root/CodeAnything',
           '$_root/Download/site',
@@ -133,6 +140,10 @@ Future<void> mountPhoneStorage(
       scene == PhoneStorageScene.menu ||
       scene == PhoneStorageScene.inside ||
       scene == PhoneStorageScene.naming ||
+      scene == PhoneStorageScene.scanning ||
+      scene == PhoneStorageScene.found ||
+      scene == PhoneStorageScene.findnone ||
+      scene == PhoneStorageScene.findcapped ||
       scene == PhoneStorageScene.refused) {
     await tapKey('folder-browser-places');
     await tapKey('place-phone');
@@ -147,7 +158,52 @@ Future<void> mountPhoneStorage(
   if (scene == PhoneStorageScene.naming) {
     await tapKey('phone-new-folder');
   }
+  if (scene.index >= PhoneStorageScene.scanning.index) {
+    // "Find projects": the menu item, then the step, in place.
+    await tester.tap(find.byKey(const ValueKey('kit-sheet-menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('folder-browser-find')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    if (scene == PhoneStorageScene.findnone) {
+      scan.finish(PhoneScanEnd.completed);
+    } else if (scene != PhoneStorageScene.scanning) {
+      for (final (name, where, kind, hasGit) in _projects) {
+        scan.emit(
+          PhoneProject(
+            name: name,
+            path: '$_root/${where.isEmpty ? '' : '$where/'}$name',
+            kind: kind,
+            hasGit: hasGit,
+          ),
+        );
+      }
+      scan.finish(
+        scene == PhoneStorageScene.findcapped
+            ? PhoneScanEnd.timedOut
+            : PhoneScanEnd.completed,
+      );
+    }
+    if (scene == PhoneStorageScene.scanning) {
+      await tester.pump(const Duration(milliseconds: 100));
+    } else {
+      await tester.pumpAndSettle();
+    }
+  }
 }
+
+const _projects = [
+  ('mobile-app', 'Documents/code', PhoneProjectKind.dart, true),
+  (
+    'site',
+    'Documents/code/clients/northwind-and-sons',
+    PhoneProjectKind.node,
+    true,
+  ),
+  ('notes-cli', 'Download', PhoneProjectKind.rust, false),
+  ('scripts', 'Documents', PhoneProjectKind.python, false),
+  ('dotfiles', '', PhoneProjectKind.git, true),
+];
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

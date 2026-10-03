@@ -1,5 +1,5 @@
 {
- "generatedFrom": "35b8ae454d28dadbb9de40b90e8c034f978f3404",
+ "generatedFrom": "38392553fd2c54fcd0a8f75f2f22e188d822c7c8",
  "pages": [
   {
    "id": "system",
@@ -1813,41 +1813,6 @@
    ],
    "elements": [
     {
-     "id": "question-sheet-option",
-     "type": "list-tile",
-     "label": "<choice label>",
-     "key": null,
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 1232,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "QuestionOptionRow.onTap -> _toggle: single-select replaces the answer and clears custom text; multi-select toggles.",
-     "gates": [
-      "enabled: !_busy"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/question_options.dart"
-    },
-    {
-     "id": "question-sheet-custom-answer",
-     "type": "text-field",
-     "label": "[custom answer]",
-     "key": null,
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 1245,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "QuestionCustomAnswerField.onChanged: for single-select prompts typing clears the selected choice.",
-     "gates": [
-      "prompt.custom",
-      "enabled: !_busy"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/question_options.dart"
-    },
-    {
      "id": "question-sheet-dismiss",
      "type": "button",
      "label": "Dismiss",
@@ -1876,6 +1841,39 @@
      "effect": "_submit(): controller.answerQuestion(question.id, answers, expectedRequest: request) then routes.close(). Pinned to the sheet foot through showKitSheet primaryListenable (slice-P3.11a); enables once every prompt is answered.",
      "gates": [
       "_complete && !_busy"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "question-sheet-option",
+     "type": "list-tile",
+     "label": "<choice label>",
+     "key": null,
+     "file": "lib/ui/widgets/question_options.dart",
+     "line": 1232,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "QuestionOptionRow.onTap -> _toggle: single-select replaces the answer and clears custom text; multi-select toggles.",
+     "gates": [
+      "enabled: !_busy"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "question-sheet-custom-answer",
+     "type": "text-field",
+     "label": "[custom answer]",
+     "key": null,
+     "file": "lib/ui/widgets/question_options.dart",
+     "line": 1245,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "QuestionCustomAnswerField.onChanged: for single-select prompts typing clears the selected choice.",
+     "gates": [
+      "prompt.custom",
+      "enabled: !_busy"
      ],
      "destructive": false
     }
@@ -4506,6 +4504,56 @@
      "destructive": false
     },
     {
+     "id": "embedded-composer-inline-command-show-all",
+     "type": "button",
+     "label": "Show all commands",
+     "key": null,
+     "file": "lib/ui/screens/chat/command_launcher.dart",
+     "line": 649,
+     "action": "open-sheet",
+     "target": "command-launcher-sheet",
+     "targetWidget": "_CommandLauncherSheet",
+     "effect": "Calls onOpenCommands -> ChatScreen._openCommandLauncher() which opens the composer tools sheet on the Commands tab.",
+     "gates": [
+      "!compact && matches.length > limit (5)"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "embedded-composer-inline-agent-row",
+     "type": "list-tile",
+     "label": "@<agent id>  <description|Delegate>",
+     "key": "inline-agent-<agent id>",
+     "file": "lib/ui/screens/chat/command_launcher.dart",
+     "line": 699,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Inline @-mention suggestion; calls onSelectAgent -> ChatScreen._insertAgentMention(agent) (chat_screen.dart:2695) which inserts the @agent mention into the draft.",
+     "gates": [
+      "allowInlineCommands",
+      "_agentQuery != null (_activeAgentQuery(controller.value))",
+      "host passes agents only when _supportsPromptAgentMentions"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "embedded-composer-inline-agent-show-all",
+     "type": "button",
+     "label": "Show all subagents",
+     "key": null,
+     "file": "lib/ui/screens/chat/command_launcher.dart",
+     "line": 751,
+     "action": "open-sheet",
+     "target": "command-launcher-sheet",
+     "targetWidget": "_CommandLauncherSheet",
+     "effect": "Calls onOpenAgents -> ChatScreen._openCommandLauncher(initialTab: _ComposerToolTab.agents).",
+     "gates": [
+      "!compact && matches.length > limit (5)"
+     ],
+     "destructive": false
+    },
+    {
      "id": "embedded-composer-send",
      "type": "icon-button",
      "label": "Send | Send after this run | Queue after this run | Send now and steer this run",
@@ -4677,42 +4725,6 @@
      "widgetFile": "lib/ui/screens/chat/command_launcher.dart"
     },
     {
-     "id": "embedded-composer-inline-command-show-all",
-     "type": "button",
-     "label": "Show all commands",
-     "key": null,
-     "file": "lib/ui/screens/chat/composer.dart",
-     "line": 649,
-     "action": "open-sheet",
-     "target": "command-launcher-sheet",
-     "targetWidget": "_CommandLauncherSheet",
-     "effect": "Calls onOpenCommands -> ChatScreen._openCommandLauncher() which opens the composer tools sheet on the Commands tab.",
-     "gates": [
-      "!compact && matches.length > limit (5)"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/screens/chat/command_launcher.dart"
-    },
-    {
-     "id": "embedded-composer-inline-agent-row",
-     "type": "list-tile",
-     "label": "@<agent id>  <description|Delegate>",
-     "key": "inline-agent-<agent id>",
-     "file": "lib/ui/screens/chat/composer.dart",
-     "line": 699,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Inline @-mention suggestion; calls onSelectAgent -> ChatScreen._insertAgentMention(agent) (chat_screen.dart:2695) which inserts the @agent mention into the draft.",
-     "gates": [
-      "allowInlineCommands",
-      "_agentQuery != null (_activeAgentQuery(controller.value))",
-      "host passes agents only when _supportsPromptAgentMentions"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/screens/chat/command_launcher.dart"
-    },
-    {
      "id": "embedded-composer-field",
      "type": "text-field",
      "label": "Ask OpenCode…",
@@ -4729,23 +4741,6 @@
       "enableInteractiveSelection: !isolated"
      ],
      "destructive": false
-    },
-    {
-     "id": "embedded-composer-inline-agent-show-all",
-     "type": "button",
-     "label": "Show all subagents",
-     "key": null,
-     "file": "lib/ui/screens/chat/composer.dart",
-     "line": 751,
-     "action": "open-sheet",
-     "target": "command-launcher-sheet",
-     "targetWidget": "_CommandLauncherSheet",
-     "effect": "Calls onOpenAgents -> ChatScreen._openCommandLauncher(initialTab: _ComposerToolTab.agents).",
-     "gates": [
-      "!compact && matches.length > limit (5)"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/screens/chat/command_launcher.dart"
     },
     {
      "id": "embedded-composer-tools-button",
@@ -14234,38 +14229,6 @@
      "destructive": false
     },
     {
-     "id": "workspace-return-brief-panel",
-     "type": "card",
-     "label": "[Return brief panel]",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 610,
-     "action": "other",
-     "target": null,
-     "targetWidget": "ReturnBriefPanel",
-     "effect": "Embeds ReturnBriefPanel(controller, inventoryStatusInParent: true, unknownStatusInParent: _hasProjectDetails); its own buttons (permission/question sheets, open chat) belong to the widget's owner.",
-     "gates": [],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/return_brief_panel.dart"
-    },
-    {
-     "id": "workspace-termux-attention-line",
-     "type": "banner",
-     "label": "[Termux attention line]",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 632,
-     "action": "other",
-     "target": "embedded-termux-attention-line",
-     "targetWidget": "TermuxAttentionLine",
-     "effect": "Embeds const TermuxAttentionLine(); its tap behaviour (links to Running now) is defined by the widget's owner.",
-     "gates": [
-      "platformCapabilities.supportsTermux && TermuxBridge.managesServerUrl(widget.controller.profile?.baseUrl)"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/termux_phone_tools.dart"
-    },
-    {
      "id": "workspace-archived-sessions",
      "type": "list-tile",
      "label": "Archived sessions / {count} archived sessions",
@@ -14280,23 +14243,6 @@
       "archived.isNotEmpty || partial (controller.hasMoreSessions || sessionsLoading || sessionsError != null)"
      ],
      "destructive": false
-    },
-    {
-     "id": "workspace-team-card",
-     "type": "card",
-     "label": "[AI Team card]",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 794,
-     "action": "navigate",
-     "target": "team-home",
-     "targetWidget": "TeamHomeScreen",
-     "effect": "Embeds TeamCard(controller: team, onOpen: () => _openTeamHome(team)) after Recent and its load-more footer and before Archived; onOpen pushes TeamHomeScreen(controller: team). What the team needs from the person reaches Inbox; the card's other controls belong to the widget's owner.",
-     "gates": [
-      "retired from the Work tab (docs/design/team-conversation-2026-09-26.md): the team's tasks are rows in its lists (workspace-team-task-row) and workspace-team-door opens the team page; TeamCard stays a widget"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/team_card.dart"
     },
     {
      "id": "workspace-inventory-footer",
@@ -14362,21 +14308,6 @@
       "archive path: widget.controller.capabilities.sessionArchive; otherwise swipe = delete (confirm sheet workspace-delete-session-sheet)"
      ],
      "destructive": true
-    },
-    {
-     "id": "workspace-session-unread-badge",
-     "type": "banner",
-     "label": "[unread / review state badge on the row]",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1495,
-     "action": "other",
-     "target": null,
-     "targetWidget": "SessionUnreadBadge",
-     "effect": "SessionUnreadBadge(controller, session) is display-only (no callbacks).",
-     "gates": [],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/session_read_state.dart"
     },
     {
      "id": "workspace-session-menu",
@@ -14740,6 +14671,50 @@
      "destructive": false
     },
     {
+     "id": "workspace-return-brief-panel",
+     "type": "card",
+     "label": "[Return brief panel]",
+     "key": null,
+     "file": "lib/ui/widgets/return_brief_panel.dart",
+     "line": 610,
+     "action": "other",
+     "target": null,
+     "targetWidget": "ReturnBriefPanel",
+     "effect": "Embeds ReturnBriefPanel(controller, inventoryStatusInParent: true, unknownStatusInParent: _hasProjectDetails); its own buttons (permission/question sheets, open chat) belong to the widget's owner.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "workspace-session-unread-badge",
+     "type": "banner",
+     "label": "[unread / review state badge on the row]",
+     "key": null,
+     "file": "lib/ui/widgets/session_read_state.dart",
+     "line": 1495,
+     "action": "other",
+     "target": null,
+     "targetWidget": "SessionUnreadBadge",
+     "effect": "SessionUnreadBadge(controller, session) is display-only (no callbacks).",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "workspace-team-card",
+     "type": "card",
+     "label": "[AI Team card]",
+     "key": null,
+     "file": "lib/ui/widgets/team_card.dart",
+     "line": 794,
+     "action": "navigate",
+     "target": "team-home",
+     "targetWidget": "TeamHomeScreen",
+     "effect": "Embeds TeamCard(controller: team, onOpen: () => _openTeamHome(team)) after Recent and its load-more footer and before Archived; onOpen pushes TeamHomeScreen(controller: team). What the team needs from the person reaches Inbox; the card's other controls belong to the widget's owner.",
+     "gates": [
+      "retired from the Work tab (docs/design/team-conversation-2026-09-26.md): the team's tasks are rows in its lists (workspace-team-task-row) and workspace-team-door opens the team page; TeamCard stays a widget"
+     ],
+     "destructive": false
+    },
+    {
      "id": "workspace-team-task-row",
      "type": "list-tile",
      "label": "<team task title>",
@@ -14752,6 +14727,22 @@
      "effect": "A team task in Needs you or Running with the team mark and 'Team · <state line>'; opens the task's own conversation (TeamConversation.open, team_conversation/team_conversation.dart).",
      "gates": [
       "controller.orchestration != null; open tasks only"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "workspace-termux-attention-line",
+     "type": "banner",
+     "label": "[Termux attention line]",
+     "key": null,
+     "file": "lib/ui/widgets/termux_phone_tools.dart",
+     "line": 632,
+     "action": "other",
+     "target": "embedded-termux-attention-line",
+     "targetWidget": "TermuxAttentionLine",
+     "effect": "Embeds const TermuxAttentionLine(); its tap behaviour (links to Running now) is defined by the widget's owner.",
+     "gates": [
+      "platformCapabilities.supportsTermux && TermuxBridge.managesServerUrl(widget.controller.profile?.baseUrl)"
      ],
      "destructive": false
     }
@@ -15601,8 +15592,8 @@
    "presentedBy": [
     "ProjectFolderActions.openFolder"
    ],
-   "line": 111,
-   "purpose": "A server on this phone: OpenCode inside the app (folders read from the built-in Ubuntu's files, so it works with the server stopped) or the OpenCode server this app runs in Termux (a short read-only script run inside Termux's Ubuntu through TermuxBridge.run, the path passed base64-encoded, bounded to 15 s in Termux and 25 s in the app). Browses from /root/projects up to /. A project (git repository, a project OpenCode knows, or any folder straight in /root/projects) opens with a tap; other folders are gone into. One primary opens the folder shown (never the home folder, / or the projects folder itself); New project makes a folder inside the folder shown (the app's Ubuntu: mkdir + git init; Termux: mkdir -p); Enter a path opens the path dialog. Remote servers, and Termux when it cannot run the app's commands, skip this sheet and go straight to the path dialog. Layout (2026-10-03, after Canva Move to a folder and the iOS Files picker): one header row (back chevron or Close, the folder name, a more menu with Show hidden folders and Enter a path), the place menu (This phone / Project space) as one quiet line under the title when both exist, one panel of folder rows, and a pinned bar with the text button New project and the primary Open <folder>. New project swaps the sheet content for a name step in place; back returns to the same folder.",
+   "line": 118,
+   "purpose": "A server on this phone: OpenCode inside the app (folders read from the built-in Ubuntu's files, so it works with the server stopped) or the OpenCode server this app runs in Termux (a short read-only script run inside Termux's Ubuntu through TermuxBridge.run, the path passed base64-encoded, bounded to 15 s in Termux and 25 s in the app). Browses from /root/projects up to /. A project (git repository, a project OpenCode knows, or any folder straight in /root/projects) opens with a tap; other folders are gone into. One primary opens the folder shown (never the home folder, / or the projects folder itself); New project makes a folder inside the folder shown (the app's Ubuntu: mkdir + git init; Termux: mkdir -p); Enter a path opens the path dialog. Remote servers, and Termux when it cannot run the app's commands, skip this sheet and go straight to the path dialog. Layout (2026-10-03, after Canva Move to a folder and the iOS Files picker): one header row (back chevron or Close, the folder name, a more menu with Show hidden folders, Find projects (phone storage only) and Enter a path), the place menu (This phone / Project space) as one quiet line under the title when both exist, one panel of folder rows, and a pinned bar with the text button New project and the primary Open <folder>. New project swaps the sheet content for a name step in place; back returns to the same folder. Find projects (2026-10-03, phone storage place only) swaps it for a results step, \"Projects on this phone\": a breadth-first look through internal storage (5 levels, 10 s, skipping Android, hidden and build folders, never into a project) fills in project rows as they are found; a tap opens one like Open <folder>; back cancels the look and returns to the folder list.",
    "reachedFrom": [
     {
      "page": "workspace-folder-chooser",
@@ -15619,12 +15610,84 @@
    ],
    "elements": [
     {
+     "id": "project-folder-browser-create",
+     "type": "button",
+     "label": "Create and open",
+     "key": "phone-new-folder-create",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 413,
+     "action": "mutate",
+     "target": null,
+     "targetWidget": null,
+     "effect": "_create(): projectFolderNameProblem and workspaceDirectoryProblem, then pops FolderBrowserCreate(<folder shown>/<name>) (or FolderBrowserOpen when it is already there); openFolder() makes it (the app's Ubuntu: git init; Termux: TermuxFolders.create, mkdir -p) and selects it.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "project-folder-browser-name",
+     "type": "text-field",
+     "label": "Project name",
+     "key": "phone-new-folder-name",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 419,
+     "action": "submit",
+     "target": null,
+     "targetWidget": null,
+     "effect": "New project step (replaces the sheet content in place, no second sheet or dialog): autofocused name field; helper \"Creates <path>/<name>\"; onSubmitted -> _submitName().",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "project-folder-browser-find-back",
+     "type": "icon-button",
+     "label": "Back (results step)",
+     "key": "phone-scan-back",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 467,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Cancels a running look and returns to the folder list in place.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "project-folder-browser-find-deeper",
+     "type": "button",
+     "label": "Look deeper",
+     "key": "phone-scan-deeper",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 474,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "After \"Stopped after 10 seconds\": looks again from nothing with a 30 s cap.",
+     "gates": [
+      "the 10 s cap ended the look"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "project-folder-browser-found",
+     "type": "list-tile",
+     "label": "<project name> / <kind> · <folder> / Git",
+     "key": "phone-scan-<path>",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 535,
+     "action": "mutate",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Pops FolderBrowserOpen(path): openFolder() then controller.selectLocation(directory: path), the same as Open <folder>.",
+     "gates": [],
+     "destructive": false
+    },
+    {
      "id": "project-folder-browser-up",
      "type": "icon-button",
      "label": "Back chevron (Up one folder); Close at the place's first folder",
      "key": "folder-browser-up",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 425,
+     "line": 583,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15633,12 +15696,58 @@
      "destructive": false
     },
     {
+     "id": "project-folder-browser-find",
+     "type": "menu-item",
+     "label": "Find projects (header more menu)",
+     "key": "folder-browser-find",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 597,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Phone storage place only: swaps the sheet in place for the results step and starts a PhoneProjectScanner look (10 s cap). A finished look is kept for this sheet and shown again.",
+     "gates": [
+      "phone place chosen (consent already given); PhoneStoragePlace.scan set"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "project-folder-browser-enter-path",
+     "type": "menu-item",
+     "label": "Enter a path (header more menu)",
+     "key": "in-app-enter-path",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 602,
+     "action": "open-dialog",
+     "target": "project-folder-open-dialog",
+     "targetWidget": "_OpenFolderDialog",
+     "effect": "Pops FolderBrowserEnterPath(folder shown); openFolder() opens the path dialog starting at that folder.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "project-folder-browser-open",
+     "type": "button",
+     "label": "Open <folder>",
+     "key": "folder-browser-open",
+     "file": "lib/ui/widgets/folder_browser.dart",
+     "line": 622,
+     "action": "mutate",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Pops FolderBrowserOpen(folder shown); openFolder() selects it.",
+     "gates": [
+      "not the home folder, / or /root/projects; the folder listed"
+     ],
+     "destructive": false
+    },
+    {
      "id": "project-folder-browser-folder",
      "type": "list-tile",
      "label": "<folder name> / Git repository | OpenCode project",
      "key": "in-app-project-<name>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 666,
+     "line": 830,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15652,7 +15761,7 @@
      "label": "[Show the folders in <name>]",
      "key": "folder-browse-<name>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 679,
+     "line": 843,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15666,69 +15775,11 @@
      "label": "Try again",
      "key": "folder-browser-retry",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 763,
+     "line": 927,
      "action": "other",
      "target": null,
      "targetWidget": null,
      "effect": "After \"This folder can’t be shown\": lists the folder again.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "project-folder-browser-name",
-     "type": "text-field",
-     "label": "Project name",
-     "key": "phone-new-folder-name",
-     "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 386,
-     "action": "submit",
-     "target": null,
-     "targetWidget": null,
-     "effect": "New project step (replaces the sheet content in place, no second sheet or dialog): autofocused name field; helper \"Creates <path>/<name>\"; onSubmitted -> _submitName().",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "project-folder-browser-create",
-     "type": "button",
-     "label": "Create and open",
-     "key": "phone-new-folder-create",
-     "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 380,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_create(): projectFolderNameProblem and workspaceDirectoryProblem, then pops FolderBrowserCreate(<folder shown>/<name>) (or FolderBrowserOpen when it is already there); openFolder() makes it (the app's Ubuntu: git init; Termux: TermuxFolders.create, mkdir -p) and selects it.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "project-folder-browser-open",
-     "type": "button",
-     "label": "Open <folder>",
-     "key": "folder-browser-open",
-     "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 458,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Pops FolderBrowserOpen(folder shown); openFolder() selects it.",
-     "gates": [
-      "not the home folder, / or /root/projects; the folder listed"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "project-folder-browser-enter-path",
-     "type": "menu-item",
-     "label": "Enter a path (header more menu)",
-     "key": "in-app-enter-path",
-     "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 438,
-     "action": "open-dialog",
-     "target": "project-folder-open-dialog",
-     "targetWidget": "_OpenFolderDialog",
-     "effect": "Pops FolderBrowserEnterPath(folder shown); openFolder() opens the path dialog starting at that folder.",
      "gates": [],
      "destructive": false
     }
@@ -25407,21 +25458,6 @@
      "destructive": true
     },
     {
-     "id": "team-conversation-gate-card",
-     "type": "card",
-     "label": "[Needs-you gate card]",
-     "key": null,
-     "file": "lib/ui/screens/chat/team_conversation_view.dart",
-     "line": 397,
-     "action": "open-sheet",
-     "target": "gate-sheet",
-     "targetWidget": "showGateSheet",
-     "effect": "TeamNeedsYouCard.onOpen -> showGateSheet(context, team, gate.id, now: widget.now); one card per open gate on this task.",
-     "gates": [],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/team_needs_you.dart"
-    },
-    {
      "id": "team-conversation-menu-refresh",
      "type": "menu-item",
      "label": "Refresh",
@@ -25599,6 +25635,20 @@
      "target": "embedded-team-merge-section",
      "targetWidget": "TeamMergeSection",
      "effect": "Embeds TeamMergeSection(controller, run) (merge_section.dart, owned by i2); same widget as team-run-overview-merge-section.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "team-conversation-gate-card",
+     "type": "card",
+     "label": "[Needs-you gate card]",
+     "key": null,
+     "file": "lib/ui/widgets/team_needs_you.dart",
+     "line": 397,
+     "action": "open-sheet",
+     "target": "gate-sheet",
+     "targetWidget": "showGateSheet",
+     "effect": "TeamNeedsYouCard.onOpen -> showGateSheet(context, team, gate.id, now: widget.now); one card per open gate on this task.",
      "gates": [],
      "destructive": false
     }
@@ -31542,6 +31592,57 @@
      "destructive": true
     },
     {
+     "id": "integrations-providers-load-retry",
+     "type": "button",
+     "label": "Try again",
+     "key": null,
+     "file": "lib/ui/screens/library/integration_tiles.dart",
+     "line": 911,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "_SectionLoadError ('Could not load this section') -> _retryIntegrations(): _loadIntegrations(prepareActionRepository).",
+     "gates": [
+      "_showProviders (widget.mode != IntegrationsMode.mcp)",
+      "staleSource (scope changed) or _integrationError != null"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "integrations-mcp-load-retry",
+     "type": "button",
+     "label": "Try again",
+     "key": null,
+     "file": "lib/ui/screens/library/integration_tiles.dart",
+     "line": 911,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "_SectionLoadError -> _retryServers(): clears _removalError, prepareActionRepository, _loadServers. Shown for _serverError, _removalError and scope-changed (integrations_screen.dart:912-921).",
+     "gates": [
+      "_showMcp (widget.mode != IntegrationsMode.providers)",
+      "_serverError != null || _removalError != null || _serversSource != _mcpSource"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "integrations-resources-load-retry",
+     "type": "button",
+     "label": "Try again",
+     "key": null,
+     "file": "lib/ui/screens/library/integration_tiles.dart",
+     "line": 911,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "_SectionLoadError -> _retryResources().",
+     "gates": [
+      "_showMcp (widget.mode != IntegrationsMode.providers)",
+      "_resourceError != null"
+     ],
+     "destructive": false
+    },
+    {
      "id": "integrations-pending-resume",
      "type": "button",
      "label": "Resume / check status",
@@ -31798,60 +31899,6 @@
       "_providerQuery.isNotEmpty"
      ],
      "destructive": false
-    },
-    {
-     "id": "integrations-providers-load-retry",
-     "type": "button",
-     "label": "Try again",
-     "key": null,
-     "file": "lib/ui/screens/library/integrations_screen.dart",
-     "line": 911,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_SectionLoadError ('Could not load this section') -> _retryIntegrations(): _loadIntegrations(prepareActionRepository).",
-     "gates": [
-      "_showProviders (widget.mode != IntegrationsMode.mcp)",
-      "staleSource (scope changed) or _integrationError != null"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/screens/library/integration_tiles.dart"
-    },
-    {
-     "id": "integrations-mcp-load-retry",
-     "type": "button",
-     "label": "Try again",
-     "key": null,
-     "file": "lib/ui/screens/library/integrations_screen.dart",
-     "line": 911,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_SectionLoadError -> _retryServers(): clears _removalError, prepareActionRepository, _loadServers. Shown for _serverError, _removalError and scope-changed (integrations_screen.dart:912-921).",
-     "gates": [
-      "_showMcp (widget.mode != IntegrationsMode.providers)",
-      "_serverError != null || _removalError != null || _serversSource != _mcpSource"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/screens/library/integration_tiles.dart"
-    },
-    {
-     "id": "integrations-resources-load-retry",
-     "type": "button",
-     "label": "Try again",
-     "key": null,
-     "file": "lib/ui/screens/library/integrations_screen.dart",
-     "line": 911,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_SectionLoadError -> _retryResources().",
-     "gates": [
-      "_showMcp (widget.mode != IntegrationsMode.providers)",
-      "_resourceError != null"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/screens/library/integration_tiles.dart"
     },
     {
      "id": "integrations-mcp-remove",
@@ -40553,11 +40600,6 @@
    "part": "b1-chat-screen"
   },
   {
-   "file": "lib/ui/screens/chat/receipt_check.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
-   "part": "b1-chat-screen"
-  },
-  {
    "file": "lib/ui/screens/chat/chat_send.dart",
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
    "part": "b1-chat-screen"
@@ -40624,6 +40666,11 @@
   },
   {
    "file": "lib/ui/screens/chat/pending_sends_strip.dart",
+   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
+   "part": "b1-chat-screen"
+  },
+  {
+   "file": "lib/ui/screens/chat/receipt_check.dart",
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
    "part": "b1-chat-screen"
   },
