@@ -816,13 +816,6 @@
           "widget": "_ActivityScreenState (digest onRunResults)",
           "file": "lib/ui/screens/activity_screen.dart",
           "line": 253
-        },
-        {
-          "page": "?",
-          "element": null,
-          "widget": "_ReturnBriefPanelState._review",
-          "file": "lib/ui/widgets/return_brief_panel.dart",
-          "line": 92
         }
       ],
       "gates": [

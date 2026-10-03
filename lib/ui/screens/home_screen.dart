@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/sse.dart';
-import '../../builtin/builtin_server.dart'
-    show builtinLinuxProvider, builtinServerStarterProvider;
+import '../../builtin/builtin_server.dart' show builtinLinuxProvider;
+import '../../domain/chat_feed.dart' show ChatFeedFilter;
 import '../../domain/server_gateway.dart' show ServerCapabilities;
 import '../../domain/connection_status.dart';
 import '../../state/connection.dart';
@@ -30,15 +30,13 @@ import '../kit/kit_top_bar.dart';
 import '../kit/motion/kit_reveal.dart';
 import '../kit/motion/kit_tab_switcher.dart';
 import '../widgets/phone_server_card.dart';
-import '../widgets/phone_server_restart.dart';
 import '../widgets/server_switcher_sheet.dart';
-import 'activity_screen.dart';
+import 'chats/chats_home_screen.dart';
 import 'servers_screen.dart' show ServersRouteRequest;
 import 'project_hub_screen.dart';
 import 'settings_screen.dart';
 import 'terminal_screen.dart';
 import 'this_phone_screen.dart' show openThisPhone;
-import 'workspace_screen.dart';
 
 /// Main mobile product shell for a connected OpenCode server.
 ///
@@ -48,12 +46,15 @@ import 'workspace_screen.dart';
 /// the content is one [KitScreen] whose bar is the glass [KitShellControls]
 /// (server pill with its status word, and search) on compact and medium.
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key, this.initialTab});
+  const HomeScreen({super.key, this.initialTab, this.initialChatFilter});
 
-  /// The destination to open on, by visible position. Null is a cold start:
-  /// open on Inbox when something is waiting on the person, otherwise Work
-  /// (UX plan 5.6, "Returning").
+  /// The destination to open on, by visible position (0 Chats, 1 Files, 2
+  /// Settings). Null is a cold start, which opens on Chats.
   final int? initialTab;
+
+  /// The Chats filter to open on ("Needs you" or "Running"), for what used
+  /// to open the Inbox. Null is the plain list.
+  final ChatFeedFilter? initialChatFilter;
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -61,24 +62,23 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with AppShortcutSurface {
-  // Tab ids follow the visible order, so Ctrl/Cmd+1..4 and `initialTab` mean
+  // Tab ids follow the visible order, so Ctrl/Cmd+1..3 and `initialTab` mean
   // "the nth destination" and never drift from what the dock shows.
-  static const _workTab = 0;
-  static const _inboxTab = 1;
-  static const _projectTab = 2;
-  static const _settingsTab = 3;
+  static const _chatsTab = 0;
+  static const _filesTab = 1;
+  static const _settingsTab = 2;
 
   /// How long "Press back again to exit" stays and a second back exits.
   static const _backExitWindow = Duration(seconds: 2);
 
   late int _tab;
 
-  /// True from a cold start until the first read of what is waiting settles
-  /// or the person picks a tab. Anything that arrives later belongs to the
-  /// badge: moving someone who is already reading would be a hijack.
-  bool _choosingColdStartTab = false;
+  /// What Chats opens on. A new request while the tab shows bumps
+  /// [_chatsRequest], which re-creates the list with the new filter.
+  ChatFeedFilter? _chatsFilter;
+  int _chatsRequest = 0;
 
-  /// Bumped by Ctrl+F while the Project destination is showing. The hub opens
+  /// Bumped by Ctrl+F while the Files destination is showing. The hub opens
   /// Files and focuses its search field. Desktop-only in practice — nothing
   /// dispatches shortcuts off desktop.
   final _findInFiles = ValueNotifier<int>(0);
@@ -100,21 +100,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void initState() {
     super.initState();
     final conn = ref.read(connProvider);
-    _tab = _safeTab(widget.initialTab ?? _workTab, conn.capabilities);
+    _chatsFilter = widget.initialChatFilter;
+    _tab = _safeTab(widget.initialTab ?? _chatsTab, conn.capabilities);
     final firstRun = FirstRun(conn.store.prefs);
     if (widget.initialTab == null &&
         !conn.isIsolated &&
         firstRun.landingPending) {
-      // First run ends on Work, where the project chooser shows when one is
-      // needed. Nothing can be waiting on a server connected seconds ago, so
-      // no tab is chosen by what is waiting, and no empty conversation opens.
+      // First run ends on Chats. No empty conversation opens.
       unawaited(firstRun.markLanded());
     } else {
       unawaited(firstRun.markReturning());
-      if (widget.initialTab == null) {
-        _choosingColdStartTab = true;
-        _chooseColdStartTab(conn);
-      }
     }
     conn.addListener(_onConnChanged);
     // If the SSE stream cannot connect at all, fall back to polling.
@@ -126,26 +121,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   /// The shell's own share of the shortcut layer: primary destinations, and
   /// routing Find to the one destination that has a find field.
   ///
-  /// A shortcut or search result that leads to Project on a server without
+  /// A shortcut or search result that leads to Files on a server without
   /// project tools explains why and offers the way back (switching to a
   /// server that has them) instead of doing nothing or landing on Work.
   @override
   bool onAppShortcut(Intent intent) {
     final capabilities = ref.read(connProvider).capabilities;
     switch (intent) {
-      case SelectDestinationIntent(:final index) when index >= 0 && index <= 3:
-        if (index == _projectTab && !ProjectHub.isAvailable(capabilities)) {
+      case SelectDestinationIntent(:final index) when index >= 0 && index <= 2:
+        if (index == _filesTab && !ProjectHub.isAvailable(capabilities)) {
           unawaited(_explainProjectUnavailable());
           return true;
         }
         _selectTab(_safeTab(index, capabilities));
         return true;
+      // Everything that used to open the Inbox: Chats, with the filter.
+      case OpenChatsIntent(:final needsYou, :final running):
+        _openChats(
+          needsYou || running
+              ? ChatFeedFilter(needsYou: needsYou, running: running)
+              : null,
+        );
+        return true;
       case FindInSurfaceIntent()
-          when _tab == _projectTab && capabilities.fileBrowsing:
+          when _tab == _filesTab && capabilities.fileBrowsing:
         _findInFiles.value++;
         return true;
       // A search result that means Files or its search: both live inside the
-      // Project tab, so the tab is selected first.
+      // Files tab, so the tab is selected first.
       case OpenProjectToolIntent(:final tool)
           when tool == ProjectTool.files || tool == ProjectTool.search:
         if (!capabilities.fileBrowsing) {
@@ -170,40 +173,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
-  /// Connect starts the pending-request reads before this shell mounts, so
-  /// "nothing waiting" is only known once none of them is still loading.
-  void _chooseColdStartTab(ConnectionController conn) {
-    if (!_choosingColdStartTab) return;
-    if (conn.unifiedAttentionCount > 0) {
-      _choosingColdStartTab = false;
-      // A notification may already have opened its conversation over the
-      // shell; the tab underneath still changes, the conversation does not.
-      _tab = _inboxTab;
-      return;
-    }
-    final reading =
-        conn.permissionsLoading ||
-        conn.questionsLoading ||
-        (conn.capabilities.forms && conn.formsLoading);
-    if (!reading) _choosingColdStartTab = false;
+  /// Selects Chats, on [filter] when one is asked for. Asking while Chats
+  /// already shows re-creates the list so it opens on the new filter.
+  void _openChats(ChatFeedFilter? filter) {
+    _clearBackExit();
+    setState(() {
+      _projectWentAway = false;
+      _chatsFilter = filter;
+      _chatsRequest++;
+      _tab = _chatsTab;
+    });
   }
 
-  /// Selects Project and signals it. Destinations are built on their first
+  /// Selects Files and signals it. Destinations are built on their first
   /// visit, so a hub not showing yet hears the signal after the frame that
   /// builds it.
   void _signalProject(ValueNotifier<int> signal) {
-    if (_tab == _projectTab) {
+    if (_tab == _filesTab) {
       signal.value++;
       return;
     }
-    _selectTab(_projectTab);
+    _selectTab(_filesTab);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) signal.value++;
     });
   }
 
   void _selectTab(int next) {
-    _choosingColdStartTab = false;
     if (_projectWentAway) setState(() => _projectWentAway = false);
     if (_tab == next) return;
     _clearBackExit();
@@ -213,9 +209,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void _onConnChanged() {
     if (!mounted) return;
     final conn = ref.read(connProvider);
-    _chooseColdStartTab(conn);
     final next = _safeTab(_tab, conn.capabilities);
-    final wentAway = _tab == _projectTab && next != _projectTab;
+    final wentAway = _tab == _filesTab && next != _filesTab;
     setState(() {
       if (wentAway) _projectWentAway = true;
       // The tools came back (switched to a server that has them).
@@ -225,9 +220,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   static int _safeTab(int requested, ServerCapabilities capabilities) {
-    final tab = requested.clamp(_workTab, _settingsTab);
-    return tab == _projectTab && !ProjectHub.isAvailable(capabilities)
-        ? _workTab
+    final tab = requested.clamp(_chatsTab, _settingsTab);
+    return tab == _filesTab && !ProjectHub.isAvailable(capabilities)
+        ? _chatsTab
         : tab;
   }
 
@@ -255,23 +250,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final activeTab = _safeTab(_tab, conn.capabilities);
     final sidebar = KitNav.layoutOf(context) == KitNavLayout.sidebar;
 
-    // One tab per noun (UX plan 5.1): Work, Inbox, Project, Settings. The
-    // Inbox carries the product's single pending badge. Project is absent
-    // only when the server offers none of its tools (Codex, Paseo today);
-    // reaching for it then explains why ([_explainProjectUnavailable]).
+    // Chats first, project as a setting: Chats, Files, Settings. Chats
+    // carries the product's single pending badge (what the Inbox tab did).
+    // Files is absent only when the server offers none of the project tools
+    // (Codex, Paseo today); reaching for it then explains why
+    // ([_explainProjectUnavailable]).
     final hasProjectTools = ProjectHub.isAvailable(conn.capabilities);
-    final phoneServer = phoneServerRestartFor(
-      connection: conn,
-      builtin: ref.read(builtinServerStarterProvider),
-      context: context,
-    );
     final tabs = <Widget>[
-      WorkspaceScreen(
-        controller: conn,
-        serverOnThisPhone: phoneServer.onThisPhone,
-        onRestartServer: phoneServer.restart,
+      ChatsHomeScreen(
+        key: ValueKey('home-shell-chats-$_chatsRequest'),
+        initialFilter: _chatsFilter,
       ),
-      ActivityScreen(controller: conn, embedded: true),
       if (hasProjectTools)
         ProjectHub(
           controller: conn,
@@ -285,30 +274,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     ];
     final destinations = <({int id, KitNavDestination destination})>[
       (
-        id: _workTab,
+        id: _chatsTab,
         destination: KitNavDestination(
-          key: const ValueKey('home-shell-tab-work'),
-          label: l10n.shellTabWork,
-          icon: AppIconography.workspace,
-          selectedIcon: AppIconography.workspaceSelected,
-        ),
-      ),
-      (
-        id: _inboxTab,
-        destination: KitNavDestination(
-          key: const ValueKey('home-shell-tab-inbox'),
-          label: l10n.shellTabInbox,
-          icon: AppIconography.activity,
-          selectedIcon: AppIconography.activitySelected,
+          key: const ValueKey('home-shell-tab-chats'),
+          label: l10n.shellTabChats,
+          icon: AppIconography.chat,
           needsYou: conn.unifiedAttentionCount,
         ),
       ),
       if (hasProjectTools)
         (
-          id: _projectTab,
+          id: _filesTab,
           destination: KitNavDestination(
-            key: const ValueKey('home-shell-tab-project'),
-            label: l10n.shellTabProject,
+            key: const ValueKey('home-shell-tab-files'),
+            label: l10n.shellTabFiles,
             icon: AppIconography.files,
             selectedIcon: AppIconography.filesSelected,
           ),
@@ -349,7 +328,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       // Compact and medium: the glass top controls; the dock or rail names
       // the tab. The PC sidebar holds the controls and highlights the
       // destination, so the pane has no bar at all: it starts with the
-      // destination's own header (the project on Work, visual language
+      // destination's own header (Chats' title, visual language
       // Desktop.png), never a title repeating the sidebar (slice-R14).
       topBar: sidebar ? null : KitTopBar.shell(controls: controls),
       page: sidebar,
@@ -371,14 +350,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               : null,
         ),
       ],
-      // Each destination is built on its first visit (Work from the
+      // Each destination is built on its first visit (Chats from the
       // start, where Back returns): no hidden tab builds or reads at
       // startup (docs/qa/codex-perf-2026-09-28/startup.md).
       body: KitTabSwitcher(
         index: activeTab,
         reduceMotion: KitMotion.reduced(context),
         lazy: true,
-        preload: const {_workTab},
+        preload: const {_chatsTab},
         children: tabs,
       ),
     );
@@ -516,17 +495,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     if (mounted) setState(() {});
   }
 
-  /// Project first unwinds Files and returns to its hub, then destinations
-  /// return home.
-  /// Only Work uses the double-back exit guard.
+  /// Files first unwinds its browser and returns to its hub, then
+  /// destinations return home. Only Chats uses the double-back exit guard.
   void _onRootPop(bool didPop, Object? result) {
     if (didPop) return;
-    if (_tab == _projectTab && _projectBack.handleBack()) {
+    if (_tab == _filesTab && _projectBack.handleBack()) {
       _clearBackExit();
       return;
     }
-    if (_tab != _workTab) {
-      _selectTab(_workTab);
+    if (_tab != _chatsTab) {
+      _selectTab(_chatsTab);
       return;
     }
     final now = DateTime.now();

@@ -4136,23 +4136,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get e7LocaleUiNewSessionHint => 'ابدأ محادثة في المشروع الحالي';
 
   @override
-  String get e7LocaleUiWorkspace => 'العمل';
+  String get e7LocaleUiWorkspace => 'المحادثات';
 
   @override
-  String get e7LocaleUiWorkspaceHint => 'المحادثات الأخيرة والمشروع الحالي';
+  String get e7LocaleUiWorkspaceHint => 'كل المحادثات عبر المشاريع';
 
   @override
-  String get e7LocaleUiFiles => 'المشروع';
+  String get e7LocaleUiFiles => 'الملفات';
 
   @override
   String get e7LocaleUiFilesHint =>
       'الملفات والتغييرات والطرفية وأدوات المشروع الأخرى';
-
-  @override
-  String get e7LocaleUiActivity => 'الوارد';
-
-  @override
-  String get e7LocaleUiActivityHint => 'الأذونات والأسئلة والنماذج';
 
   @override
   String get e7LocaleUiMoreHint =>
@@ -4180,7 +4174,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get e7LocaleUiFindSurface => 'البحث في هذه الصفحة';
 
   @override
-  String get e7LocaleUiDestinations => 'العمل، الوارد، المشروع، الإعدادات';
+  String get e7LocaleUiDestinations => 'تبديل التبويب';
 
   @override
   String get e7LocaleUiTerminal => 'الطرفية';
@@ -10913,13 +10907,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get usageSectionRemaining => 'المتبقي';
 
   @override
-  String get shellTabWork => 'العمل';
+  String get shellTabChats => 'المحادثات';
+
+  @override
+  String get shellTabFiles => 'الملفات';
+
+  @override
+  String get discoverChatsAliases =>
+      'chats conversations sessions work home recent pinned inbox activity needs you approvals permissions questions forms المحادثات العمل الرئيسية الأخيرة المثبتة محادثة جديدة الوارد النشاط بانتظارك موافقات أذونات أسئلة نماذج قيد التشغيل منتهية';
+
+  @override
+  String chatProjectChipSemantics(String name) {
+    return 'المشروع $name. يفتح قائمة بملفاته وطرفيته وتغييراته.';
+  }
+
+  @override
+  String get chatProjectMenuLabel => 'أدوات المشروع';
 
   @override
   String get shellTabInbox => 'الوارد';
-
-  @override
-  String get shellTabProject => 'المشروع';
 
   @override
   String get serverSwitcherManage => 'إدارة الخوادم';
@@ -10934,14 +10940,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String discoverSearchIn(String parent) {
     return 'في $parent';
   }
-
-  @override
-  String get discoverWorkAliases =>
-      'work home conversations sessions chats recent pinned العمل الرئيسية محادثات الأخيرة المثبتة محادثة جديدة';
-
-  @override
-  String get discoverInboxAliases =>
-      'inbox activity approvals permissions questions forms الوارد النشاط بانتظارك موافقات أذونات أسئلة نماذج قيد التشغيل منتهية';
 
   @override
   String get discoverProjectAliases =>
@@ -16211,7 +16209,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shortcutsHelpConversation => 'In a conversation';
 
   @override
-  String get homeShellProjectUnavailable => 'Project isn\'t available';
+  String get homeShellProjectUnavailable => 'Files isn\'t available';
 
   @override
   String homeShellProjectUnavailableReason(String server) {

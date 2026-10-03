@@ -1,7 +1,6 @@
 // Evidence renders of slice-fix-inbox-status (emulator QA 2026-09-28):
 // the Inbox after a run with the server's untitled placeholder failed and
-// the app reconnected by itself five times (F3 title, F4), and Work while
-// the server is not answering (F5, F15). Phone 412x915 and one wide window
+// the app reconnected by itself five times (F3 title, F4). Phone 412x915 and one wide window
 // (1280x800), the app's real fonts at DPR 1.
 //
 // The rows' ages and "as of" times are the wall clock, so these shots are
@@ -25,7 +24,6 @@ import 'package:opencode_mobile/state/automation_policy.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/activity_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../tool/capture/fixtures.dart' show captureTheme, loadCaptureFonts;
@@ -217,14 +215,6 @@ void main() {
   tearDown(AutomaticActivityController.resetShared);
 
   Widget inbox(_Controller c) => ActivityScreen(controller: c, embedded: true);
-  Widget work(_Controller c) => WorkspaceScreen(controller: c);
-  Future<void> offline(_Controller c) async {
-    c
-      ..connected = false
-      ..status = StreamStatus.reconnecting
-      ..sessionsError = 'SocketException: Connection refused';
-    c.poke();
-  }
 
   for (final (size, light) in const [(_phone, false), (_wide, true)]) {
     testWidgets('inbox · ${size.width.toInt()}', skip: !_evidence, (
@@ -236,18 +226,6 @@ void main() {
         light: light,
         size: size,
         home: inbox,
-      );
-    });
-    testWidgets('work offline · ${size.width.toInt()}', skip: !_evidence, (
-      tester,
-    ) async {
-      await _shot(
-        tester,
-        'fix_inbox_status_work_offline',
-        light: light,
-        size: size,
-        home: work,
-        then: offline,
       );
     });
   }

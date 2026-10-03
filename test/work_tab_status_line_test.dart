@@ -11,7 +11,6 @@ import 'package:opencode_mobile/termux/bridge.dart' show TermuxBridgeException;
 import 'package:opencode_mobile/termux/processes.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:opencode_mobile/ui/widgets/termux_phone_tools.dart';
 import 'package:opencode_mobile/ui/widgets/app_connection_status.dart';
 import 'package:opencode_mobile/ui/widgets/connection_status_banner.dart';
@@ -55,7 +54,6 @@ TermuxProcess _orphan({
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   tearDown(() {
-    WorkspaceScreen.debugRunawayWatcher = null;
     TermuxRunawayWatcher.resetDismissedForTesting();
   });
 
@@ -320,7 +318,6 @@ void main() {
       WidgetTester tester, {
       StreamStatus status = StreamStatus.connected,
       String? error,
-      bool runaway = false,
       bool phone = true,
       Future<void> Function()? restart,
     }) async {
@@ -334,18 +331,6 @@ void main() {
                   : 'http://100.64.0.7:4096',
             )
             ..lastError = error;
-      if (runaway) {
-        WorkspaceScreen.debugRunawayWatcher = (context, builder) => builder(
-          context,
-          WorkRunawayNotice(
-            identity: 1,
-            helper: 'node',
-            busyFor: '10 min',
-            onStop: () {},
-            onDismiss: () {},
-          ),
-        );
-      }
       controller.notifyListeners();
       await tester.pumpWidget(
         _app(
@@ -360,13 +345,7 @@ void main() {
                   onRestartServer: restart,
                 ),
               ],
-              child: KitScreen(
-                body: WorkspaceScreen(
-                  controller: controller,
-                  serverOnThisPhone: phone,
-                  onRestartServer: restart,
-                ),
-              ),
+              child: KitScreen(body: const SizedBox.expand()),
             ),
           ),
         ),
@@ -396,34 +375,6 @@ void main() {
         await tester.pump(const Duration(seconds: 5));
         await _settle(tester);
         expect(find.byType(KitStatusLine), findsNothing);
-      } finally {
-        await tester.pumpWidget(const SizedBox());
-        controller.dispose();
-      }
-    });
-
-    testWidgets('a server that stopped answering outranks a leftover '
-        'process; the process shows again once it answers', (tester) async {
-      final controller = await pumpWork(
-        tester,
-        status: StreamStatus.reconnecting,
-        runaway: true,
-      );
-      try {
-        // Reconnecting itself is the highest-priority shared condition.
-        expect(line('server'), findsOneWidget);
-        expect(find.textContaining('Reconnecting to '), findsOneWidget);
-        expect(line('runaway'), findsNothing);
-        await tester.pump(const Duration(seconds: 9));
-        await _settle(tester);
-        expect(line('server'), findsOneWidget);
-        expect(line('runaway'), findsNothing);
-        controller
-          ..status = StreamStatus.connected
-          ..notifyListeners();
-        await _settle(tester);
-        expect(line('runaway'), findsOneWidget);
-        expect(find.byType(KitStatusLine), findsOneWidget);
       } finally {
         await tester.pumpWidget(const SizedBox());
         controller.dispose();
@@ -502,67 +453,6 @@ void main() {
           find.byKey(const ValueKey('connection-banner-details')),
           findsOneWidget,
         );
-      } finally {
-        await tester.pumpWidget(const SizedBox());
-        controller.dispose();
-      }
-    });
-
-    testWidgets('requests that could not be refreshed: "may be out of date" '
-        'with Refresh, only while connected', (tester) async {
-      final controller = await pumpWork(tester);
-      try {
-        expect(find.byType(KitStatusLine), findsNothing);
-        controller
-          ..permissionsError = 'timed out'
-          ..notifyListeners();
-        await _settle(tester);
-        expect(line('stale'), findsOneWidget);
-        expect(find.text('This may be out of date'), findsOneWidget);
-        expect(find.text('Last observed state.'), findsNothing);
-      } finally {
-        await tester.pumpWidget(const SizedBox());
-        controller.dispose();
-      }
-    });
-
-    testWidgets('on Work, the leftover line\'s More opens Running on this '
-        'phone', (tester) async {
-      final controller = await pumpWork(tester, runaway: true);
-      try {
-        expect(line('runaway'), findsOneWidget);
-        expect(
-          find.text(
-            'A leftover node process has been busy for 10 min with nothing '
-            'to do',
-          ),
-          findsOneWidget,
-        );
-        await tester.tap(
-          find.descendant(
-            of: line('runaway'),
-            matching: find.byKey(const ValueKey('kit-status-more')),
-          ),
-        );
-        await _settle(tester);
-        expect(find.text("See what's running"), findsOneWidget);
-      } finally {
-        await tester.pumpWidget(const SizedBox());
-        controller.dispose();
-      }
-    });
-
-    testWidgets('the line is one live region', (tester) async {
-      final controller = await pumpWork(tester, runaway: true);
-      try {
-        final live = find.descendant(
-          of: line('runaway'),
-          matching: find.byWidgetPredicate(
-            (widget) =>
-                widget is Semantics && widget.properties.liveRegion == true,
-          ),
-        );
-        expect(live, findsOneWidget);
       } finally {
         await tester.pumpWidget(const SizedBox());
         controller.dispose();

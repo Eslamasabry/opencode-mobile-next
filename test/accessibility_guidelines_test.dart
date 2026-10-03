@@ -20,7 +20,6 @@ import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:opencode_mobile/ui/widgets/form_renderer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:opencode_mobile/ui/screens/project_hub_screen.dart';
@@ -196,20 +195,6 @@ void main() {
       await _expectAccessible(tester);
     });
 
-    testWidgets('$label: workspace meets the guidelines', (tester) async {
-      final conn = await _controller();
-      addTearDown(conn.dispose);
-      await tester.pumpWidget(
-        _scoped(
-          conn,
-          Scaffold(body: WorkspaceScreen(controller: conn)),
-          brightness,
-        ),
-      );
-      await _settle(tester);
-      await _expectAccessible(tester);
-    });
-
     testWidgets('$label: Activity meets the guidelines', (tester) async {
       final conn = await _controller();
       addTearDown(conn.dispose);
@@ -272,27 +257,6 @@ void main() {
         ),
       );
       await _settle(tester);
-      await _expectAccessible(tester);
-    });
-
-    testWidgets('$label: the session-first workspace meets the guidelines', (
-      tester,
-    ) async {
-      final conn = await _controller(projects: const [_project]);
-      addTearDown(conn.dispose);
-      await tester.pumpWidget(
-        _scoped(
-          conn,
-          Scaffold(body: WorkspaceScreen(controller: conn)),
-          brightness,
-        ),
-      );
-      await _settle(tester);
-      expect(
-        find.byKey(const ValueKey('current-project-entry')),
-        findsOneWidget,
-      );
-      expect(find.byKey(const ValueKey('manage-project-entry')), findsNothing);
       await _expectAccessible(tester);
     });
 

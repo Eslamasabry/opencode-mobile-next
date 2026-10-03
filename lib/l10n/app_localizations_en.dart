@@ -4113,24 +4113,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start a conversation in the active project';
 
   @override
-  String get e7LocaleUiWorkspace => 'Work';
+  String get e7LocaleUiWorkspace => 'Chats';
 
   @override
-  String get e7LocaleUiWorkspaceHint =>
-      'Recent conversations and the active project';
+  String get e7LocaleUiWorkspaceHint => 'Every conversation, across projects';
 
   @override
-  String get e7LocaleUiFiles => 'Project';
+  String get e7LocaleUiFiles => 'Files';
 
   @override
   String get e7LocaleUiFilesHint =>
       'Files, changes, terminal and other project tools';
-
-  @override
-  String get e7LocaleUiActivity => 'Inbox';
-
-  @override
-  String get e7LocaleUiActivityHint => 'Permissions, questions, and forms';
 
   @override
   String get e7LocaleUiMoreHint => 'Models, providers, notifications, settings';
@@ -4157,7 +4150,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get e7LocaleUiFindSurface => 'Find on this screen';
 
   @override
-  String get e7LocaleUiDestinations => 'Work, Inbox, Project, Settings';
+  String get e7LocaleUiDestinations => 'Switch tab';
 
   @override
   String get e7LocaleUiTerminal => 'Terminal';
@@ -10811,13 +10804,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get usageSectionRemaining => 'Remaining';
 
   @override
-  String get shellTabWork => 'Work';
+  String get shellTabChats => 'Chats';
+
+  @override
+  String get shellTabFiles => 'Files';
+
+  @override
+  String get discoverChatsAliases =>
+      'chats conversations sessions work home recent pinned new conversation inbox activity needs you approvals permissions questions forms waiting running finished';
+
+  @override
+  String chatProjectChipSemantics(String name) {
+    return 'Project $name. Opens a menu of its files, terminal and changes.';
+  }
+
+  @override
+  String get chatProjectMenuLabel => 'Project tools';
 
   @override
   String get shellTabInbox => 'Inbox';
-
-  @override
-  String get shellTabProject => 'Project';
 
   @override
   String get serverSwitcherManage => 'Manage servers';
@@ -10832,14 +10837,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String discoverSearchIn(String parent) {
     return 'In $parent';
   }
-
-  @override
-  String get discoverWorkAliases =>
-      'work home conversations sessions chats recent pinned new conversation';
-
-  @override
-  String get discoverInboxAliases =>
-      'inbox activity needs you approvals permissions questions forms waiting running finished';
 
   @override
   String get discoverProjectAliases =>
@@ -16094,7 +16091,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortcutsHelpConversation => 'In a conversation';
 
   @override
-  String get homeShellProjectUnavailable => 'Project isn\'t available';
+  String get homeShellProjectUnavailable => 'Files isn\'t available';
 
   @override
   String homeShellProjectUnavailableReason(String server) {

@@ -205,10 +205,12 @@ extension _OcAppLaunchRoute on _OcAppState {
     unawaited(navigator.pushNamed(route));
   }
 
-  /// The Quick Settings tile opens Activity — the single needs-attention
-  /// destination — over whatever is showing. Activity reflects the
-  /// connection as it settles, so the tap never waits; without a saved
-  /// server there is nothing to show and the servers screen opens instead.
+  /// The Quick Settings tile, the sessions widget and the app shortcut open
+  /// Chats on its "Needs you" filter (the Inbox is part of Chats now) over
+  /// whatever is showing. Chats reflects the connection as it settles, so the
+  /// tap never waits; without a saved server there is nothing to show and the
+  /// servers screen opens instead. The wire id stays `activity`: the native
+  /// side is unchanged.
   void _openActivityForLaunch(NavigatorState navigator, LaunchAction action) {
     _consumeLaunchAction(action);
     if (_controller.profile == null) {
@@ -218,18 +220,12 @@ extension _OcAppLaunchRoute on _OcAppState {
       );
       return;
     }
-    if (_routeTracker.topName == _activityLaunchRoute) return;
-    unawaited(
-      navigator.push(
-        KitPageRoute<void>(
-          settings: const RouteSettings(name: _activityLaunchRoute),
-          builder: (_) => ActivityScreen(controller: _controller),
-        ),
-      ),
+    dispatchAtShellRoot(
+      navigator,
+      _shortcutSignals,
+      const OpenChatsIntent(needsYou: true),
     );
   }
-
-  static const _activityLaunchRoute = '/activity/launch';
 
   /// Consumes [action] only if it is still the pending one, so an action that
   /// arrived while this one was being handled is not swallowed with it.

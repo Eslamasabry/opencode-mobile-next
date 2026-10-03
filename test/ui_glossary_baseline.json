@@ -19,9 +19,6 @@
     "lib/ui/screens/team/gate_sheet.dart": {
       "label teamUiGateAnswerApprove: fewer than two words": 1
     },
-    "lib/ui/screens/workspace/workspace_sheets.dart": {
-      "label promptStashDelete: a bare OK/Yes/Continue/Confirm/Delete": 1
-    },
     "lib/ui/widgets/safety_confirms.dart": {
       "label e7SettingsUi8: fewer than two words": 1,
       "label termuxProcsStop: fewer than two words": 1,

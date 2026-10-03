@@ -20,6 +20,7 @@ import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../api/server_probe.dart' show ServerFlavor;
 import '../../api/sse.dart';
+import '../../domain/chat_feed.dart' show isTemporaryProjectDirectory;
 import '../../domain/command_receipts.dart';
 import '../../domain/prompt_attachment.dart';
 import '../../domain/background_work.dart';
@@ -56,6 +57,7 @@ import '../../voice/presentation.dart' show voiceErrorText;
 import '../../voice/voice_ui.dart';
 import '../../voice/read_aloud.dart';
 import '../navigation/chat_route.dart';
+import '../navigation/last_project.dart';
 import '../../domain/agent_error_text.dart';
 import '../../domain/office_text.dart';
 import '../agent_error_words.dart';
@@ -386,6 +388,11 @@ class _ChatScreenState extends State<ChatScreen>
     _draftLocation = _conn.locationRevision;
     _draftDirectory = _conn.directory;
     _draftWorkspace = _conn.workspace;
+    // Opening a conversation makes its project the last-used one (Files
+    // follows it); a watched worker or the demo is not the person's.
+    if (!_conn.isIsolated && !_watching) {
+      rememberLastUsedProject(_conn, _conn.directory);
+    }
     _offlineFlushRevision = _conn.offlineFlushRevision;
     // A watched session is someone else's: no draft of the person's.
     if (!_conn.isIsolated && !_watching && widget.initialText.isEmpty) {

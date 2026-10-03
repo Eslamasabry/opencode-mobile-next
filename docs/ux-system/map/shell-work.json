@@ -1795,7 +1795,7 @@
  {
   "pageId": "home-shell",
   "area": "a-shell",
-  "title": "{server name} · Work / Inbox / Project / Settings",
+  "title": "{server name} · Chats / Files / Settings",
   "kind": "screen",
   "file": "lib/ui/screens/home_screen.dart",
   "journey": [
@@ -3287,7 +3287,7 @@
  {
   "pageId": "workspace",
   "area": "e-workspace",
-  "title": "Work",
+  "title": "Work (retired 2026-10-03: replaced by Chats)",
   "kind": "tab",
   "file": "lib/ui/screens/workspace_screen.dart",
   "journey": [

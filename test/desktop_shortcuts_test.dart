@@ -148,8 +148,8 @@ void main() {
           ),
         );
       }
-      // 11 accelerators × Ctrl and Cmd.
-      expect(appShortcutBindings.length, 22);
+      // 10 accelerators × Ctrl and Cmd.
+      expect(appShortcutBindings.length, 20);
     });
 
     desktopTest('Ctrl+K opens the command launcher and Enter runs a command', (
@@ -326,7 +326,7 @@ void main() {
       expect(vetoed, 1);
     });
 
-    desktopTest('Ctrl+1..4 switch the shell destinations', (tester) async {
+    desktopTest('Ctrl+1..3 switch the shell destinations', (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -342,23 +342,20 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(_destination(tester), 'Work');
+      expect(_destination(tester), 'Chats');
 
       await _press(tester, LogicalKeyboardKey.digit2);
-      expect(_destination(tester), 'Inbox');
+      expect(_destination(tester), 'Files');
 
       await _press(tester, LogicalKeyboardKey.digit3);
-      expect(_destination(tester), 'Project');
-
-      await _press(tester, LogicalKeyboardKey.digit4);
       expect(_destination(tester), 'Settings');
 
       await _press(tester, LogicalKeyboardKey.digit1);
-      expect(_destination(tester), 'Work');
+      expect(_destination(tester), 'Chats');
     });
 
     desktopTest(
-      'Ctrl+1..4 and Ctrl+` return to the shell from a pushed route',
+      'Ctrl+1..3 and Ctrl+` return to the shell from a pushed route',
       (tester) async {
         tester.view.physicalSize = const Size(390, 844);
         tester.view.devicePixelRatio = 1;
@@ -391,12 +388,12 @@ void main() {
         // A destination shortcut over chat/review/terminal used to be a
         // no-op: the shell was buried and nothing else claimed it.
         await pushRoute();
-        await _press(tester, LogicalKeyboardKey.digit3);
+        await _press(tester, LogicalKeyboardKey.digit2);
         expect(find.text('pushed-route'), findsNothing);
-        expect(_destination(tester), 'Project');
+        expect(_destination(tester), 'Files');
 
         await pushRoute();
-        await _press(tester, LogicalKeyboardKey.digit4);
+        await _press(tester, LogicalKeyboardKey.digit3);
         expect(find.text('pushed-route'), findsNothing);
         expect(_destination(tester), 'Settings');
 
@@ -428,14 +425,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Workspace has no find field: nothing takes focus.
+      // Chats has no find field here: nothing takes focus.
       await _press(tester, LogicalKeyboardKey.keyF);
       expect(
         tester.binding.focusManager.primaryFocus?.debugLabel,
         isNot('files-search'),
       );
 
-      await _press(tester, LogicalKeyboardKey.digit3);
+      await _press(tester, LogicalKeyboardKey.digit2);
       await _press(tester, LogicalKeyboardKey.keyF);
       expect(
         tester.binding.focusManager.primaryFocus?.debugLabel,

@@ -6916,19 +6916,19 @@ abstract class AppLocalizations {
   /// Locale selection or app shell: Workspace
   ///
   /// In en, this message translates to:
-  /// **'Work'**
+  /// **'Chats'**
   String get e7LocaleUiWorkspace;
 
   /// Locale selection or app shell: WorkspaceHint
   ///
   /// In en, this message translates to:
-  /// **'Recent conversations and the active project'**
+  /// **'Every conversation, across projects'**
   String get e7LocaleUiWorkspaceHint;
 
   /// Locale selection or app shell: Files
   ///
   /// In en, this message translates to:
-  /// **'Project'**
+  /// **'Files'**
   String get e7LocaleUiFiles;
 
   /// Locale selection or app shell: FilesHint
@@ -6936,18 +6936,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Files, changes, terminal and other project tools'**
   String get e7LocaleUiFilesHint;
-
-  /// Locale selection or app shell: Activity
-  ///
-  /// In en, this message translates to:
-  /// **'Inbox'**
-  String get e7LocaleUiActivity;
-
-  /// Locale selection or app shell: ActivityHint
-  ///
-  /// In en, this message translates to:
-  /// **'Permissions, questions, and forms'**
-  String get e7LocaleUiActivityHint;
 
   /// Locale selection or app shell: MoreHint
   ///
@@ -7000,7 +6988,7 @@ abstract class AppLocalizations {
   /// App shell command menu or routing: Destinations
   ///
   /// In en, this message translates to:
-  /// **'Work, Inbox, Project, Settings'**
+  /// **'Switch tab'**
   String get e7LocaleUiDestinations;
 
   /// App shell command menu or routing: Terminal
@@ -17856,23 +17844,41 @@ abstract class AppLocalizations {
   /// **'Remaining'**
   String get usageSectionRemaining;
 
-  /// Bottom navigation label and app bar title of the first tab: conversations in the current project.
+  /// Bottom navigation label and title of the first tab: every conversation across projects, with what needs the person and what is running as filters.
   ///
   /// In en, this message translates to:
-  /// **'Work'**
-  String get shellTabWork;
+  /// **'Chats'**
+  String get shellTabChats;
+
+  /// Bottom navigation label and title of the second tab: the files, changes, terminal and other tools of one project, named by the chip under the title.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get shellTabFiles;
+
+  /// No description provided for @discoverChatsAliases.
+  ///
+  /// In en, this message translates to:
+  /// **'chats conversations sessions work home recent pinned new conversation inbox activity needs you approvals permissions questions forms waiting running finished'**
+  String get discoverChatsAliases;
+
+  /// Screen reader label of the small project chip under a conversation's title; {name} is the project's folder name.
+  ///
+  /// In en, this message translates to:
+  /// **'Project {name}. Opens a menu of its files, terminal and changes.'**
+  String chatProjectChipSemantics(String name);
+
+  /// Name of the menu the conversation's project chip opens (Files, Terminal, Changes).
+  ///
+  /// In en, this message translates to:
+  /// **'Project tools'**
+  String get chatProjectMenuLabel;
 
   /// Bottom navigation label and title of the second tab: everything waiting on the person, then running and finished work.
   ///
   /// In en, this message translates to:
   /// **'Inbox'**
   String get shellTabInbox;
-
-  /// Bottom navigation label and app bar title of the third tab: tools scoped to the current project.
-  ///
-  /// In en, this message translates to:
-  /// **'Project'**
-  String get shellTabProject;
 
   /// Server switcher row that opens the Servers screen.
   ///
@@ -17897,18 +17903,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'In {parent}'**
   String discoverSearchIn(String parent);
-
-  /// No description provided for @discoverWorkAliases.
-  ///
-  /// In en, this message translates to:
-  /// **'work home conversations sessions chats recent pinned new conversation'**
-  String get discoverWorkAliases;
-
-  /// No description provided for @discoverInboxAliases.
-  ///
-  /// In en, this message translates to:
-  /// **'inbox activity needs you approvals permissions questions forms waiting running finished'**
-  String get discoverInboxAliases;
 
   /// No description provided for @discoverProjectAliases.
   ///
@@ -25758,19 +25752,19 @@ abstract class AppLocalizations {
   /// **'In a conversation'**
   String get shortcutsHelpConversation;
 
-  /// Shell: title of the row and sheet explaining why the Project tab is missing on this server
+  /// Shell: title of the row and sheet explaining why the Files tab is missing on this server
   ///
   /// In en, this message translates to:
-  /// **'Project isn\'t available'**
+  /// **'Files isn\'t available'**
   String get homeShellProjectUnavailable;
 
-  /// Shell: why the Project tab is missing; {server} is the server's display name
+  /// Shell: why the Files tab is missing; {server} is the server's display name
   ///
   /// In en, this message translates to:
   /// **'{server} doesn\'t offer files, changes or code search. Connect to an OpenCode server to use them.'**
   String homeShellProjectUnavailableReason(String server);
 
-  /// Shell: the one-line reason on the row shown after the Project tab went away (a server switch); {server} is the server's display name
+  /// Shell: the one-line reason on the row shown after the Files tab went away (a server switch); {server} is the server's display name
   ///
   /// In en, this message translates to:
   /// **'{server} has no project tools.'**

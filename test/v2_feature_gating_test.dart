@@ -35,7 +35,6 @@ import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/search/search_index.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/tools_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// A transport that speaks v1 and reports the v1 superset, like today's
@@ -385,65 +384,6 @@ void main() {
       expect(find.byKey(const ValueKey('project-hub-health')), findsOneWidget);
       // Switching project stays beside the project's name.
       expect(find.byKey(const ValueKey('project-hub-menu')), findsOneWidget);
-    });
-  });
-
-  group('hidden: menu actions inside a surviving screen (§7 rows 10-12)', () {
-    setUp(() => _useTallSurface());
-
-    Future<void> openSessionMenu(WidgetTester tester) async {
-      // KIT-28 moved row actions to the long-press menu.
-      final row = find.byKey(const ValueKey('session-row-session-1'));
-      expect(row, findsOneWidget);
-      await tester.longPress(row);
-      await tester.pumpAndSettle();
-    }
-
-    testWidgets('v1 lists share and archive beside rename and delete', (
-      tester,
-    ) async {
-      final repository = _Repository();
-      final controller = await _controller(v2: false, repository: repository);
-      addTearDown(controller.dispose);
-      controller.sessionsById['session-1'] = Session(
-        id: 'session-1',
-        title: 'A session',
-        directory: '/work/app',
-      );
-
-      await tester.pumpWidget(
-        _app(Scaffold(body: WorkspaceScreen(controller: controller))),
-      );
-      await tester.pumpAndSettle();
-      await openSessionMenu(tester);
-
-      expect(find.text('Rename conversation'), findsOneWidget);
-      expect(find.text('Share conversation'), findsOneWidget);
-      expect(find.text('Archive'), findsOneWidget);
-      expect(find.text('Delete'), findsOneWidget);
-    });
-
-    testWidgets('v2 drops share and archive, keeping the rest', (tester) async {
-      final repository = _Repository();
-      final controller = await _controller(v2: true, repository: repository);
-      addTearDown(controller.dispose);
-      controller.sessionsById['session-1'] = Session(
-        id: 'session-1',
-        title: 'A session',
-        directory: '/work/app',
-      );
-
-      await tester.pumpWidget(
-        _app(Scaffold(body: WorkspaceScreen(controller: controller))),
-      );
-      await tester.pumpAndSettle();
-      await openSessionMenu(tester);
-
-      expect(find.text('Share conversation'), findsNothing);
-      expect(find.text('Archive'), findsNothing);
-      // Menus list possible actions only — no disabled rows, no explainers.
-      expect(find.text('Rename conversation'), findsOneWidget);
-      expect(find.text('Delete'), findsOneWidget);
     });
   });
 

@@ -127,7 +127,7 @@ void _phone(WidgetTester tester, [Size size = const Size(390, 844)]) {
 }
 
 Future<void> _openProjectTab(WidgetTester tester) async {
-  await tester.tap(find.byKey(const ValueKey('home-shell-tab-project')));
+  await tester.tap(find.byKey(const ValueKey('home-shell-tab-files')));
   await tester.pumpAndSettle();
 }
 
@@ -222,14 +222,14 @@ void main() {
             .map((destination) => destination.label)
             .toList();
         if (tools.isEmpty) {
-          expect(labels, ['Work', 'Inbox', 'Settings']);
+          expect(labels, ['Chats', 'Settings']);
           expect(find.byType(ProjectHub), findsNothing);
           return;
         }
-        expect(labels, ['Work', 'Inbox', 'Project', 'Settings']);
+        expect(labels, ['Chats', 'Files', 'Settings']);
         await _openProjectTab(tester);
         final navigation = tester.widget<KitNav>(find.byType(KitNav));
-        expect(navigation.destinations[navigation.selected].label, 'Project');
+        expect(navigation.destinations[navigation.selected].label, 'Files');
         for (final tool in everyTool) {
           // Terminal stays listed, dimmed with its reason, on a server
           // without one (slice-P3.11a).
@@ -271,7 +271,7 @@ void main() {
           for (final tool in displayed) tester.getTopLeft(_tool(tool)).dy,
         ];
         expect(tops, [...tops]..sort());
-        expect(find.text('app'), findsOneWidget);
+        expect(find.bySemanticsLabel(RegExp('app')), findsWidgets);
         expect(find.text('/srv/app'), findsNothing);
         await tester.tap(find.byKey(const ValueKey('project-hub-menu')));
         await tester.pumpAndSettle();

@@ -34,6 +34,11 @@ const _bannedNouns = <String>['session', 'sessions', 'chat', 'chats'];
 /// Labels allowed to keep a banned noun. Every entry names a different object
 /// from a conversation.
 const _allowedNounKeys = <String>{
+  // Chats first (owner decision 2026-10-03, mockup UxsoCXcQfjeVXxpEoWJb7Y):
+  // the first tab is named "Chats", the one place the owner chose the short
+  // word over "Conversations" for a tab label.
+  'shellTabChats',
+  'e7LocaleUiWorkspace',
   // AI Team (Gas City): an agent's *host session* is the long-lived runtime
   // process on the team host. It has an age, a name and an id, it is stopped
   // and restarted from the controls, and it is not a conversation the person

@@ -15,7 +15,7 @@ import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// After the first successful connect of a new device the shell stays on
-/// Work (the project chooser shows there when one is needed); it never opens
+/// Chats; it never opens
 /// an empty conversation. A returning person lands as before.
 
 class _Api extends OpenCodeApi {
@@ -204,7 +204,7 @@ void main() {
     }
   });
 
-  testWidgets('the first connect lands on Work, no conversation opens', (
+  testWidgets('the first connect lands on Chats, no conversation opens', (
     tester,
   ) async {
     phone(tester);
@@ -215,38 +215,13 @@ void main() {
 
     expect(controller.created, 0);
     expect(_opened, isEmpty);
-    expect(_tab(tester), 'Work');
+    expect(_tab(tester), 'Chats');
     expect(FirstRun(controller.store.prefs).landingPending, isFalse);
     expect(FirstRun(controller.store.prefs).notifyAskPending, isTrue);
   });
 
-  testWidgets('a server with no usable project shows the chooser on Work', (
-    tester,
-  ) async {
-    phone(tester);
-    final controller = await _connection({
-      FirstRun.stateKey: 'armed',
-    }, needsProject: true);
-    addTearDown(controller.dispose);
-    await tester.pumpWidget(_shell(controller));
-    await _settle(tester);
-
-    expect(
-      find.byKey(const ValueKey('workspace-folder-chooser')),
-      findsOneWidget,
-    );
-    expect(controller.created, 0);
-    expect(_opened, isEmpty);
-    expect(_tab(tester), 'Work');
-
-    controller.projectChosen();
-    await _settle(tester);
-    expect(controller.created, 0);
-    expect(_opened, isEmpty);
-  });
-
   for (final state in <String?>[null, 'done']) {
-    testWidgets('a returning person lands on Work (state: $state)', (
+    testWidgets('a returning person lands on Chats (state: $state)', (
       tester,
     ) async {
       phone(tester);
@@ -257,7 +232,7 @@ void main() {
 
       expect(controller.created, 0);
       expect(_opened, isEmpty);
-      expect(_tab(tester), 'Work');
+      expect(_tab(tester), 'Chats');
       // Someone who never saw the welcome is recorded as returning, so
       // removing their servers later does not restart first run.
       expect(controller.store.prefs.getString(FirstRun.stateKey), 'done');
@@ -265,7 +240,7 @@ void main() {
     });
   }
 
-  testWidgets('a returning person with something waiting lands on Inbox', (
+  testWidgets('a returning person with something waiting lands on Chats', (
     tester,
   ) async {
     phone(tester);
@@ -282,7 +257,8 @@ void main() {
     await tester.pumpWidget(_shell(controller));
     await _settle(tester);
 
-    expect(_tab(tester), 'Inbox');
+    // The waiting request is the badge on Chats; nothing moves the person.
+    expect(_tab(tester), 'Chats');
     expect(controller.created, 0);
   });
 }

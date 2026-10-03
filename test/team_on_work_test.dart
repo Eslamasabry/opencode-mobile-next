@@ -11,16 +11,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/orchestration_gateway.dart';
-import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/orchestration/adapters/fixture/fixture_gateway.dart';
-import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/orchestration.dart';
 import 'package:opencode_mobile/state/orchestration_store.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit_text.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:opencode_mobile/ui/widgets/team_technical_details.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -176,22 +173,6 @@ class _Gateway implements OrchestrationGateway {
   );
 }
 
-/// A connection whose plugin controller a test can set directly.
-class _Connection extends ConnectionController {
-  _Connection(super.store);
-
-  OrchestrationController? team;
-
-  @override
-  OrchestrationController? get orchestration => team;
-
-  // No project catalogue: the Workspace renders its session list at once
-  // instead of asking for a folder first.
-  @override
-  ServerCapabilities get capabilities =>
-      const ServerCapabilities(projectManagement: false);
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -284,54 +265,6 @@ void main() {
     ),
     home: Scaffold(body: scroll ? SingleChildScrollView(child: home) : home),
   );
-
-  group('N: not available', () {
-    testWidgets('config null: Work has no team rows', (tester) async {
-      final connection = _Connection(ProfileStore(prefs: prefs));
-      addTearDown(connection.dispose);
-      await tester.pumpWidget(
-        app(WorkspaceScreen(controller: connection), scroll: false),
-      );
-      await tester.pumpAndSettle();
-      expect(connection.orchestration, isNull);
-      expect(find.byKey(const ValueKey('team-card')), findsNothing);
-      expect(find.byKey(const ValueKey('work-team-strip')), findsNothing);
-      expect(
-        find.byWidgetPredicate(
-          (widget) =>
-              widget.key is ValueKey<String> &&
-              (widget.key! as ValueKey<String>).value.startsWith('team-work-'),
-        ),
-        findsNothing,
-      );
-    });
-
-    testWidgets('with a config the Work tab lists the team\'s tasks as rows', (
-      tester,
-    ) async {
-      final (controller, _) = await boot();
-      final connection = _Connection(ProfileStore(prefs: prefs))
-        ..team = controller;
-      addTearDown(connection.dispose);
-      await tester.pumpWidget(
-        app(WorkspaceScreen(controller: connection), scroll: false),
-      );
-      await tester.pumpAndSettle();
-      // The team is one strip at the top of Work (counts, then its most
-      // urgent tasks as rows); its header opens the team page.
-      expect(find.byKey(const ValueKey('work-team-strip')), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('work-team-strip-header')),
-        findsOneWidget,
-      );
-      expect(find.byKey(const ValueKey('team-card')), findsNothing);
-      expect(find.byKey(const ValueKey('team-work-door')), findsNothing);
-      expect(
-        find.byKey(const ValueKey('team-work-task-oc-xru')),
-        findsOneWidget,
-      );
-    });
-  });
 
   // TEAM-206: the one-line disclaimer of 03-onboarding §4 per host kind,
   // moved from the card to Technical details by the AI Team redesign.
