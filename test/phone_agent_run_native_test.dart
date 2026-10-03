@@ -2,12 +2,30 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+/// `KOTLINC`, then `kotlinc` on PATH, then SDKMAN's install; null when absent.
+String? _kotlinc() {
+  final configured = Platform.environment['KOTLINC'];
+  if (configured != null && configured.isNotEmpty) return configured;
+  for (final dir in (Platform.environment['PATH'] ?? '').split(':')) {
+    if (dir.isNotEmpty && File('$dir/kotlinc').existsSync()) return 'kotlinc';
+  }
+  final sdkman =
+      '${Platform.environment['HOME']}/.sdkman/candidates/kotlin/current/bin/kotlinc';
+  return File(sdkman).existsSync() ? sdkman : null;
+}
+
 void main() {
-  final compiler = Platform.environment['KOTLINC'] ?? 'kotlinc';
+  final found = _kotlinc();
+  final compiler = found ?? 'kotlinc';
+  // Without a Kotlin compiler the harness cannot run; skip, don't fail.
+  final skip = found == null
+      ? 'kotlinc not found (set KOTLINC); native harness not run'
+      : null;
   late Directory temporary;
   late String jar;
 
   setUpAll(() async {
+    if (skip != null) return;
     temporary = await Directory.systemTemp.createTemp('oc-agent-run-native-');
     jar = '${temporary.path}/run.jar';
     const sources =
@@ -60,6 +78,7 @@ object Log {
   });
 
   tearDownAll(() async {
+    if (skip != null) return;
     await temporary.delete(recursive: true);
   });
 
@@ -71,7 +90,7 @@ object Log {
     'log-failure',
     'timeout',
   ]) {
-    test('native agent setup run: $scenario', () async {
+    test('native agent setup run: $scenario', skip: skip, () async {
       final result = await Process.run(Platform.environment['JAVA'] ?? 'java', [
         '-jar',
         jar,
