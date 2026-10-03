@@ -267,7 +267,7 @@ void main() {
       await tester.tap(_action(NudgeId.approvals));
       await tester.pumpAndSettle();
       expect(find.byType(SessionApprovalsSheet), findsOneWidget);
-      expect(find.text('Approvals for this conversation'), findsOneWidget);
+      expect(find.byKey(const Key('approvals-mode-ask')), findsOneWidget);
       expect(_nudge(NudgeId.approvals), findsNothing);
 
       // Closing the sheet and meeting a fourth request does not bring it back.

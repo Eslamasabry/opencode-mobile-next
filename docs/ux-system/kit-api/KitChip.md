@@ -264,3 +264,11 @@ uses the attention text role for a worded Major finding; `danger` uses danger
 for Critical. Minor remains neutral. Text and optional icon carry the tone;
 the existing neutral pill fill and 48 dp target remain. Severity is always
 written in the label so color is never the only signal.
+
+## Accent tone (3 Oct 2026)
+
+`KitChipTone.active` is a worded "this is on" state: the pill is the accent
+at 22 % over `surface3`, and the words and glyph are made readable on that
+tint. Used by the composer's Auto-approve chip, which pairs it with
+`AppIconography.shieldFilled`; the off state stays neutral with the outline
+shield. The label always carries the state, so colour is never the only signal.

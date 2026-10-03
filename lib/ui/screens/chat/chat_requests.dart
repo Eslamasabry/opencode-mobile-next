@@ -115,7 +115,10 @@ extension _ChatRequests on _ChatScreenState {
                   ),
                   // P6.7: the third identical ask offers "Always allow"
                   // once, directly under its card.
-                  if (!_conn.isIsolated)
+                  // Not while this conversation approves automatically: the
+                  // person already chose not to be asked.
+                  if (!_conn.isIsolated &&
+                      !_conn.autoApprovalFor(permission.sessionID).automatic)
                     AlwaysAllowInvitation(
                       key: ValueKey('always-allow-${permission.id}'),
                       controller: _conn,

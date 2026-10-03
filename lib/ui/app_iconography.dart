@@ -814,6 +814,13 @@ abstract final class AppIconography {
     fontFamily: 'AppPhosphorRegular',
     matchTextDirection: false,
   );
+
+  /// The filled shield: an automatic approval mode is on.
+  static const shieldFilled = IconData(
+    0xe40a,
+    fontFamily: 'AppPhosphorFill',
+    matchTextDirection: false,
+  );
   static const sparkle = IconData(
     0xe6a2,
     fontFamily: 'AppPhosphorRegular',

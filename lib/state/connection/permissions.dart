@@ -308,7 +308,9 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
       _autoApprovalProfile,
       value,
     );
-    if (!_disposed) _notifyListeners();
+    if (_disposed) return;
+    _sweepAutoApprovals();
+    _notifyListeners();
   }
 
   /// The body of [setSessionAutoApproval].
@@ -317,24 +319,37 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
     SessionAutoApproval? setting,
   ) async {
     await sessionAutoApproval.set(_autoApprovalProfile, sessionID, setting);
-    if (!_disposed) _notifyListeners();
+    if (_disposed) return;
+    _sweepAutoApprovals();
+    _notifyListeners();
   }
 
-  /// Answers a freshly arrived request with "once" when its session runs
-  /// with automatic approval and the app is connected. The reply rides the
-  /// live transport like a notification action: no wake reconciliation, and
-  /// the same identity checks as a tap on Allow once. Questions and forms
-  /// never take this path; only permissions do. Requests found by a
-  /// reconnect hydration are not answered here: they waited while the app
-  /// was away, so a person sees them.
+  /// Answers a waiting request with "once" when its session runs with
+  /// automatic approval and the app is connected. The reply rides the live
+  /// transport like a notification action: no wake reconciliation, and the
+  /// same identity checks as a tap on Allow once. Questions and forms never
+  /// take this path; only permissions do. It runs for a request as it
+  /// arrives, for requests a reconnect hydration finds, and (through
+  /// [_sweepAutoApprovals]) for every request already waiting when an
+  /// automatic mode is switched on: a person who chose automatic approval
+  /// is not asked.
   void _maybeAutoApprove(PermissionRequest permission) {
     final currentApi = api;
     if (_disposed || currentApi == null || !isConnected) return;
     if (_autoApprovalProfile.isEmpty) return;
     if (!automationPolicy.allowsAutoApproval) return;
     if (!autoApprovalFor(permission.sessionID).automatic) return;
-    _autoApprovingPermissionIDs.add(permission.id);
+    if (_resolvedPermissionIDs.contains(permission.id)) return;
+    if (!_autoApprovingPermissionIDs.add(permission.id)) return;
     unawaited(_autoApprove(currentApi, permission));
+  }
+
+  /// Applies the effective mode to every request already waiting: the
+  /// ones in sessions that are now automatic are answered "once".
+  void _sweepAutoApprovals() {
+    for (final permission in permissions.values.toList()) {
+      _maybeAutoApprove(permission);
+    }
   }
 
   Future<void> _autoApprove(
@@ -489,6 +504,9 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
       permissionsLoading = false;
       permissionsError = null;
       _observeAttentionRead(AttentionKind.permission);
+      // Requests that waited while the app was away are answered too when
+      // their session is automatic.
+      _sweepAutoApprovals();
       _syncInputAlerts();
       _notifyListeners();
     } catch (error) {

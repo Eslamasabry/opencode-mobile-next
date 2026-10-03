@@ -30,7 +30,9 @@ import 'kit_text.dart';
 import 'kit_tokens.dart';
 
 /// Semantic severity for worded chips; neutral preserves the existing look.
-enum KitChipTone { neutral, attention, danger }
+/// [active] is a worded "this is on" state: an accent-tinted pill with
+/// accent-readable words and glyph (the composer's Auto-approve chip).
+enum KitChipTone { neutral, attention, danger, active }
 
 /// The five kinds a [KitChip] can be (KitChip.md "Purpose").
 enum KitChipKind { plain, action, removable, count, summary }
@@ -156,12 +158,18 @@ class KitChip extends StatelessWidget {
       KitChipTone.neutral => roles.text2,
       KitChipTone.attention => roles.attention,
       KitChipTone.danger => roles.danger,
+      KitChipTone.active => roles.accent,
     };
+    // An accent chip sits on an accent-tinted pill instead of the neutral
+    // one; its words are made readable on that tint.
+    final tint = tone == KitChipTone.active
+        ? Color.alphaBlend(roles.accent.withValues(alpha: .22), roles.surface3)
+        : null;
     final toneColor = tone == KitChipTone.neutral
         ? semanticColor
         : readableOn(
             semanticColor,
-            [roles.surface2, roles.surface3],
+            tint != null ? [tint] : [roles.surface2, roles.surface3],
             4.7,
             toward: roles.text1,
           );
@@ -190,6 +198,7 @@ class KitChip extends StatelessWidget {
       case KitChipKind.plain:
         return _ChipFrame(
           tokens: tokens,
+          tint: tint,
           span: TextSpan(
             text: label,
             style: quiet.copyWith(color: toneColor),
@@ -217,13 +226,17 @@ class KitChip extends StatelessWidget {
         } else if (icon != null) {
           slotChild = KeyedSubtree(
             key: const ValueKey('icon'),
-            child: startGlyph(icon, roles.text1),
+            child: startGlyph(
+              icon,
+              tone == KitChipTone.neutral ? roles.text1 : toneColor,
+            ),
           );
         } else {
           slotChild = const SizedBox.shrink(key: ValueKey('none'));
         }
         return _ChipFrame(
           tokens: tokens,
+          tint: tint,
           span: TextSpan(text: label, style: emphasized),
           textSemantics: label,
           leading: AnimatedSwitcher(
@@ -242,6 +255,7 @@ class KitChip extends StatelessWidget {
         final expanded = this.expanded;
         return _ChipFrame(
           tokens: tokens,
+          tint: tint,
           span: TextSpan(text: label, style: emphasized),
           textSemantics: label,
           leading: icon == null
@@ -278,6 +292,7 @@ class KitChip extends StatelessWidget {
         ).format(count!);
         return _ChipFrame(
           tokens: tokens,
+          tint: tint,
           span: TextSpan(
             style: quiet,
             children: [
@@ -301,6 +316,7 @@ class KitChip extends StatelessWidget {
         final l10n = lookupAppLocalizations(Localizations.localeOf(context));
         return _ChipFrame(
           tokens: tokens,
+          tint: tint,
           span: TextSpan(text: label, style: emphasized),
           textSemantics: label,
           leading: icon == null
@@ -337,6 +353,7 @@ class _ChipFrame extends StatefulWidget {
   const _ChipFrame({
     required this.tokens,
     required this.span,
+    this.tint,
     this.textSemantics,
     this.leading,
     this.leadingExtent = 0,
@@ -351,6 +368,9 @@ class _ChipFrame extends StatefulWidget {
   });
 
   final KitTokens tokens;
+
+  /// The accent tint of an accent chip's pill; null keeps the neutral fill.
+  final Color? tint;
 
   /// The words, drawn on one line with an ellipsis when they do not fit.
   final InlineSpan span;
@@ -499,9 +519,11 @@ class _ChipFrameState extends State<_ChipFrame> {
         }
         final pill = _PillSurface(
           tokens: tokens,
-          fill: _hovered.isNotEmpty || _press.values.any((p) => p.shown)
-              ? roles.surface2
-              : roles.surface3,
+          fill:
+              widget.tint ??
+              (_hovered.isNotEmpty || _press.values.any((p) => p.shown)
+                  ? roles.surface2
+                  : roles.surface3),
           focused: _focused.isNotEmpty,
           child: row,
         );

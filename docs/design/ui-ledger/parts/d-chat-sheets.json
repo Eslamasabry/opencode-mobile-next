@@ -156,7 +156,7 @@
   },
   {
    "id": "session-approvals-sheet",
-   "title": "Approvals for this session",
+   "title": "Approvals",
    "kind": "sheet",
    "file": "lib/ui/screens/chat/approvals_sheet.dart",
    "widget": "SessionApprovalsSheet",
@@ -164,7 +164,7 @@
     "showSessionApprovalsSheet"
    ],
    "line": 29,
-   "purpose": "Per-session auto-approval settings: ask each time or approve automatically while connected, subagent inheritance, and the record of automatically approved requests.",
+   "purpose": "One short choice list for how this conversation answers permission requests (Ask first, Auto-approve this conversation, Approve everything), with a Subagents switch while auto-approving, one quiet Set by line when inherited, and a collapsed Approved automatically history when not empty.",
    "reachedFrom": [
     {
      "page": "session-menu-sheet",
@@ -180,42 +180,56 @@
    ],
    "elements": [
     {
-     "id": "session-approvals-sheet-override",
-     "type": "button",
-     "label": "Override for this session",
-     "key": "approvals-override",
-     "line": 312,
+     "id": "session-approvals-sheet-ask",
+     "type": "radio",
+     "label": "Ask first",
+     "key": "approvals-mode-ask",
+     "line": 1,
      "action": "toggle-setting",
      "target": null,
-     "effect": "_write(context, setting) -> controller.setSessionAutoApproval(sessionID, <current effective setting>) making the inherited setting explicit for this session.",
+     "effect": "_requestApprovalChoice -> controller.setSessionAutoApproval(sessionID, ask); leaving Approve everything turns the server-wide switch off.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "session-approvals-sheet-auto",
+     "type": "radio",
+     "label": "Auto-approve this conversation",
+     "key": "approvals-mode-auto",
+     "line": 1,
+     "action": "toggle-setting",
+     "target": null,
+     "effect": "_requestApprovalChoice -> controller.setSessionAutoApproval(sessionID, autoOnce). No confirm.",
      "gates": [
-      "effective.inherited"
+      "automation policy allows automatic answers"
      ],
      "destructive": false
     },
     {
-     "id": "session-approvals-sheet-mode",
-     "type": "toggle",
-     "label": "Ask each time | Approve automatically while connected",
-     "key": "approvals-mode-ask / approvals-mode-auto",
-     "line": 84,
+     "id": "session-approvals-sheet-everything",
+     "type": "radio",
+     "label": "Approve everything",
+     "key": "approvals-mode-everything",
+     "line": 1,
      "action": "toggle-setting",
      "target": null,
-     "effect": "RadioGroup<AutoApprovalMode>.onChanged -> _write -> controller.setSessionAutoApproval(sessionID, SessionAutoApproval(mode, inheritToChildren kept only for autoOnce)); snackbar on failure. Radio keys: approvals-mode-ask, approvals-mode-auto.",
-     "gates": [],
+     "effect": "Confirms in one sentence (in place), then controller.setApprovesEverything(true) and clears this conversation own setting.",
+     "gates": [
+      "automation policy allows automatic answers"
+     ],
      "destructive": false
     },
     {
      "id": "session-approvals-sheet-inherit-switch",
      "type": "toggle",
-     "label": "Subagents inherit this",
+     "label": "Subagents follow this",
      "key": "approvals-inherit-switch",
-     "line": 121,
+     "line": 1,
      "action": "toggle-setting",
      "target": null,
      "effect": "controller.setSessionAutoApproval(sessionID, SessionAutoApproval(mode: autoOnce, inheritToChildren: value)).",
      "gates": [
-      "enabled only when setting.automatic"
+      "shown only while this conversation auto-approves"
      ],
      "destructive": false
     },
@@ -224,25 +238,27 @@
      "type": "button",
      "label": "Follow parent again",
      "key": "approvals-follow-parent",
-     "line": 146,
+     "line": 1,
      "action": "toggle-setting",
      "target": null,
-     "effect": "_write(context, null) -> controller.setSessionAutoApproval(sessionID, null): clears the explicit setting so the session inherits from its parent.",
+     "effect": "controller.setSessionAutoApproval(sessionID, null): the session follows its parent again.",
      "gates": [
-      "effective.explicit && controller.sessionsById[sessionID]?.parentID != null"
+      "effective.explicit && has parent"
      ],
      "destructive": false
     },
     {
-     "id": "session-approvals-sheet-done",
-     "type": "button",
-     "label": "Close",
-     "key": "approvals-done",
-     "line": 182,
-     "action": "dismiss",
+     "id": "session-approvals-sheet-history",
+     "type": "fold",
+     "label": "Approved automatically",
+     "key": "approvals-record",
+     "line": 1,
+     "action": "toggle-setting",
      "target": null,
-     "effect": "Navigator.of(context).maybePop().",
-     "gates": [],
+     "effect": "Opens the latest five automatically approved requests.",
+     "gates": [
+      "only when the list is not empty"
+     ],
      "destructive": false
     }
    ]
@@ -265,7 +281,7 @@
     {
      "id": "embedded-auto-approval-indicator-open",
      "type": "card",
-     "label": "Asks first / Auto-approve / Approves everything / Auto-approve paused (semantics: \"... Change approval mode\")",
+     "label": "Asks first (quiet) / Auto-approve (accent) / Auto-approve paused (semantics: \"... Change approval mode\")",
      "key": "auto-approval-indicator",
      "file": "lib/ui/screens/chat/approvals_sheet.dart",
      "line": 303,
@@ -311,7 +327,7 @@
      "line": 58,
      "action": "toggle-setting",
      "target": null,
-     "effect": "Applies at once: controller.setSessionAutoApproval(sessionID, ask); composer note says so.",
+     "effect": "Applies at once: controller.setSessionAutoApproval(sessionID, ask); leaving Approve everything turns the server-wide switch off.",
      "gates": [],
      "destructive": false
     },
@@ -323,7 +339,7 @@
      "line": 64,
      "action": "toggle-setting",
      "target": null,
-     "effect": "Confirms first (same scope text as the sheet), then controller.setSessionAutoApproval(sessionID, autoOnce). Cancel changes nothing. Moving down from Approve everything applies at once.",
+     "effect": "Applies at once, no confirm: controller.setSessionAutoApproval(sessionID, autoOnce).",
      "gates": [
       "automation policy allows automatic answers"
      ],
@@ -337,7 +353,7 @@
      "line": 70,
      "action": "toggle-setting",
      "target": null,
-     "effect": "Confirms first (same body as the sheet's risk step), then controller.setApprovesEverything(true) and clears this conversation's own setting so it follows. Cancel changes nothing.",
+     "effect": "Confirms in one sentence (Approve everything / Cancel), then controller.setApprovesEverything(true) and clears this conversation own setting. Cancel changes nothing.",
      "gates": [
       "automation policy allows automatic answers"
      ],

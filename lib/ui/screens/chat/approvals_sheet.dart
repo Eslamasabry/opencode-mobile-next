@@ -1,26 +1,27 @@
 part of '../chat_screen.dart';
 
-/// Opens the per-session approval settings in the one sheet frame: ask each
-/// time (the default) or let this phone answer permission requests with
-/// "Allow once" while connected, whether subagent conversations inherit
-/// that, and the server-wide switch. Both automatic switches are risky
-/// switches (KIT-30): turning one on first states what it covers.
+/// Opens the approval settings in the one sheet frame: one short list of
+/// the ways this conversation can answer permission requests, the same
+/// choices as the composer's approval chip.
 Future<void> showSessionApprovalsSheet(
   BuildContext context, {
   required ConnectionController controller,
   required String sessionID,
 }) => showKitSheet<void>(
   context,
-  title: _chatL10n(context).approvalsUiTitle,
+  title: _chatL10n(context).approvalsUiMenu,
   icon: AppIconography.permissions,
   body: (_) =>
       SessionApprovalsSheet(controller: controller, sessionID: sessionID),
 );
 
-/// The approvals sheet body. Every control writes through the controller and
-/// re-reads the effective setting, so an inheriting child session shows its
-/// parent's choice until it takes one of its own. A save that fails says so
-/// at the top, in place of a snackbar.
+/// The approvals sheet body: Ask first, Auto-approve this conversation or
+/// Approve everything as three choices (only the modes the connection
+/// supports), a "Subagents follow this" switch while this conversation
+/// auto-approves, one quiet line when the mode is inherited, and the
+/// automatically approved history only when there is some. Every control
+/// writes through [_requestApprovalChoice] / the controller, the same calls
+/// the chip's menu makes. A save that fails says so at the top.
 class SessionApprovalsSheet extends StatefulWidget {
   const SessionApprovalsSheet({
     super.key,
@@ -54,10 +55,6 @@ class _SessionApprovalsSheetState extends State<SessionApprovalsSheet> {
     }
   }
 
-  void _write(SessionAutoApproval? setting) => unawaited(
-    _save(() => _controller.setSessionAutoApproval(widget.sessionID, setting)),
-  );
-
   @override
   Widget build(BuildContext context) {
     final strings = _chatL10n(context);
@@ -66,130 +63,131 @@ class _SessionApprovalsSheetState extends State<SessionApprovalsSheet> {
       listenable: _controller,
       builder: (context, _) {
         final effective = _controller.autoApprovalFor(widget.sessionID);
-        final setting = effective.setting;
+        final current = _choiceOf(effective);
         final hasParent =
             _controller.sessionsById[widget.sessionID]?.parentID != null;
         final error = _error;
+        final approved = _controller.autoApprovedFor(widget.sessionID);
+        final offered = _offeredApprovalChoices(_controller, current);
+        KitChoice<_ApprovalChoice> choice(
+          _ApprovalChoice value,
+          String key,
+          String title,
+          String detail,
+        ) => KitChoice(
+          value: value,
+          key: Key(key),
+          title: title,
+          supporting: detail,
+        );
+        final setBy = effective.serverWide
+            ? strings.approvalsSheetSetByServer
+            : effective.inherited
+            ? strings.approvalsSheetSetByParent(
+                KitBidi.auto(
+                  _controller.sessionsById[effective.inheritedFrom]?.title ??
+                      strings.approvalsUiInheritedFrom,
+                ),
+              )
+            : null;
         final sections = <Widget>[
           if (error != null)
             KitNotice.error(
               message: error,
               messageKey: const Key('approvals-save-failed'),
             ),
-          if (setting.automatic && !_controller.isConnected)
-            KitNotice(
-              key: const Key('approvals-paused'),
-              title: strings.approvalsUiIndicatorPaused,
-              message: strings.approvalsUiPausedDetail,
-              icon: AppIconography.pause,
-            ),
-          if (effective.inherited)
-            KitNotice(
-              key: const Key('approvals-inherited-note'),
-              title: strings.approvalsUiInheritedFrom,
-              message: strings.approvalsUiInheritedDetail,
-              icon: AppIconography.nested,
-              actions: [
-                KitAction(
-                  key: const Key('approvals-override'),
-                  label: strings.approvalsUiOverride,
-                  onPressed: () => _write(setting),
-                ),
-              ],
-            ),
-          if (effective.serverWide)
-            KitNotice(
-              key: const Key('approvals-everything-active'),
-              message: strings.approvalsUiEverythingActive,
-              icon: AppIconography.shield,
-            ),
-          KitRowGroup(
-            margin: EdgeInsets.zero,
-            leadingIcons: false,
-            children: [
-              KitSwitchRow(
-                switchKey: const Key('approvals-mode-auto'),
-                title: strings.approvalsUiAutoTitle,
-                supporting: setting.automatic
-                    ? null
-                    : strings.approvalsUiAskDetail,
-                value: setting.automatic,
-                onChanged: (on) => _write(
-                  on
-                      ? const SessionAutoApproval(
-                          mode: AutoApprovalMode.autoOnce,
-                        )
-                      // Inheritance is meaningless while asking; drop it so
-                      // switching back on starts from the safe default.
-                      : const SessionAutoApproval(mode: AutoApprovalMode.ask),
-                ),
-                risk: KitRisk(
-                  scope: strings.approvalsUiAutoDetail,
-                  onLabel: strings.approvalsUiIndicatorOn,
-                  icon: AppIconography.shield,
-                  onUntil: (_) {},
+          KitChoiceList<_ApprovalChoice>.single(
+            semanticsLabel: strings.approvalModeMenuLabel,
+            selected: current,
+            choices: [
+              for (final value in offered)
+                switch (value) {
+                  _ApprovalChoice.ask => choice(
+                    value,
+                    'approvals-mode-ask',
+                    strings.approvalModeAskTitle,
+                    strings.approvalModeAskDetail,
+                  ),
+                  _ApprovalChoice.auto => choice(
+                    value,
+                    'approvals-mode-auto',
+                    strings.approvalModeAutoTitle,
+                    strings.approvalModeAutoDetail,
+                  ),
+                  _ApprovalChoice.everything => choice(
+                    value,
+                    'approvals-mode-everything',
+                    strings.approvalModeEverythingTitle,
+                    strings.approvalModeEverythingDetail,
+                  ),
+                },
+            ],
+            onSelected: (value) => unawaited(
+              _save(
+                () => _requestApprovalChoice(
+                  context,
+                  _controller,
+                  widget.sessionID,
+                  value,
                 ),
               ),
-              KitSwitchRow(
-                switchKey: const Key('approvals-inherit-switch'),
-                title: strings.approvalsUiInheritTitle,
-                supporting: strings.approvalsUiInheritDetail,
-                value: setting.automatic && setting.inheritToChildren,
-                onChanged: setting.automatic
-                    ? (value) => _write(
+            ),
+          ),
+          if (setBy != null)
+            KitInset(
+              child: KitText(
+                setBy,
+                key: const Key('approvals-set-by'),
+                role: KitTextRole.secondary,
+                tone: KitTextTone.secondary,
+              ),
+            ),
+          if (current == _ApprovalChoice.auto)
+            KitRowGroup(
+              margin: EdgeInsets.zero,
+              leadingIcons: false,
+              children: [
+                KitSwitchRow(
+                  switchKey: const Key('approvals-inherit-switch'),
+                  title: strings.approvalsSheetSubagents,
+                  value: effective.setting.inheritToChildren,
+                  onChanged: (value) => unawaited(
+                    _save(
+                      () => _controller.setSessionAutoApproval(
+                        widget.sessionID,
                         SessionAutoApproval(
                           mode: AutoApprovalMode.autoOnce,
                           inheritToChildren: value,
                         ),
-                      )
-                    : null,
-                disabledReason: strings.approvalsUiInheritUnavailable,
-              ),
-            ],
-          ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           if (effective.explicit && hasParent)
             KitInset(
               child: KitButton.tertiary(
                 key: const Key('approvals-follow-parent'),
                 icon: AppIconography.nested,
                 label: strings.approvalsUiFollowParent,
-                onPressed: () => _write(null),
-              ),
-            ),
-          // The saved, server-wide choice: the one setting here that
-          // reaches conversations you are not looking at.
-          KitRowGroup(
-            margin: EdgeInsets.zero,
-            leadingIcons: false,
-            children: [
-              KitSwitchRow(
-                switchKey: const Key('approvals-everything-switch'),
-                title: strings.approvalsUiEverythingTitle,
-                supporting: strings.approvalsUiEverythingDetail,
-                value: _controller.approvesEverything,
-                onChanged: (value) => unawaited(
-                  _save(() => _controller.setApprovesEverything(value)),
-                ),
-                risk: KitRisk(
-                  scope: strings.approvalsUiEverythingConfirmBody,
-                  onLabel: strings.approvalsUiEverythingActive,
-                  icon: AppIconography.warning,
-                  onUntil: (_) {},
+                onPressed: () => unawaited(
+                  _save(
+                    () => _controller.setSessionAutoApproval(
+                      widget.sessionID,
+                      null,
+                    ),
+                  ),
                 ),
               ),
-            ],
-          ),
-          if (setting.automatic)
-            _AutoApprovalRecord(
-              approved: _controller.autoApprovedFor(widget.sessionID),
             ),
-          // What holds whatever is chosen above. What new conversations do
-          // is said once, by the "Approve everything" switch.
-          KitNotice(
-            key: const Key('approvals-rules-note'),
-            message: strings.approvalsUiServerRulesNoteEverything,
-            liveRegion: false,
-          ),
+          if (approved.isNotEmpty) _AutoApprovalRecord(approved: approved),
+          if (effective.automatic)
+            KitNotice(
+              key: const Key('approvals-rules-note'),
+              message: strings.approvalsSheetFootnote,
+              liveRegion: false,
+            ),
         ];
         return Column(
           key: const Key('session-approvals-sheet'),
@@ -207,9 +205,9 @@ class _SessionApprovalsSheetState extends State<SessionApprovalsSheet> {
   }
 }
 
-/// What this phone approved automatically in the session since connecting:
-/// the transparency half of a setting that removes prompts. The latest five,
-/// newest first.
+/// What this phone approved automatically in the session since connecting,
+/// as one collapsed row: the transparency half of a setting that removes
+/// prompts. Opens to the latest five, newest first. Not drawn while empty.
 class _AutoApprovalRecord extends StatelessWidget {
   const _AutoApprovalRecord({required this.approved});
 
@@ -220,43 +218,38 @@ class _AutoApprovalRecord extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = _chatL10n(context);
     final recent = approved.reversed.take(_shown).toList();
-    final title = strings.approvalsUiRecordTitle(approved.length);
-    if (recent.isEmpty) {
-      return KitNotice(
-        key: const Key('approvals-record'),
-        message: title,
-        liveRegion: false,
-      );
-    }
-    return KitRowGroup(
+    return KitDetailsFold(
       key: const Key('approvals-record'),
-      margin: EdgeInsets.zero,
-      label: title,
-      children: [
-        for (final entry in recent)
-          KitRow(
-            leading: KitRowIcon(permissionActionIcon(entry.permission)),
-            title: strings.approvalsUiAutoApproved(
-              permissionRequestTitle(entry.permission, l10n: strings),
+      label: strings.approvalsSheetHistory,
+      child: KitRowGroup(
+        margin: EdgeInsets.zero,
+        children: [
+          for (final entry in recent)
+            KitRow(
+              leading: KitRowIcon(permissionActionIcon(entry.permission)),
+              title: strings.approvalsUiAutoApproved(
+                permissionRequestTitle(entry.permission, l10n: strings),
+              ),
+              supporting: entry.patterns.isEmpty
+                  ? null
+                  : TextSpan(text: KitBidi.ltr(entry.patterns.join(' · '))),
+              supportingMaxLines: 2,
             ),
-            supporting: entry.patterns.isEmpty
-                ? null
-                : TextSpan(text: KitBidi.ltr(entry.patterns.join(' · '))),
-            supportingMaxLines: 2,
-          ),
-      ],
+        ],
+      ),
     );
   }
 }
 
 /// The approval chip in the strip above the composer: always there in a
-/// conversation, naming how this conversation answers permission requests
-/// ("Asks first", "Auto-approve", "Approves everything"), and saying when
-/// automatic approval is paused because the app is disconnected. It is a
-/// switcher, not only a gauge: [onOpen] receives the chip's own context so
-/// the mode menu anchors to it. No count; the sheet keeps the record. The
-/// full wording (the latest approval, where the setting comes from) is its
-/// spoken label.
+/// conversation, and a switcher, not only a gauge. While an automatic mode
+/// is on it is an accent-tinted chip with a filled shield reading
+/// "Auto-approve" (the menu says which mode); while asking it is a quiet
+/// neutral chip with an outline shield reading "Asks first"; while
+/// automatic approval is paused (disconnected) it reads "Auto-approve
+/// paused". [onOpen] receives the chip's own context so the mode menu
+/// anchors to it. No count; the sheet keeps the record. The full wording
+/// (the latest approval, where the setting comes from) is its spoken label.
 class _AutoApprovalIndicator extends StatelessWidget {
   const _AutoApprovalIndicator({
     super.key,
@@ -286,7 +279,7 @@ class _AutoApprovalIndicator extends StatelessWidget {
       text = strings.chatStripAutoApprovePaused;
     } else if (!automatic) {
       label = strings.approvalModeAskTitle;
-      detail = strings.approvalsUiAskDetail;
+      detail = strings.approvalModeAskDetail;
       text = strings.chatStripApprovalAsk;
     } else {
       label = strings.approvalsUiIndicatorOn;
@@ -294,12 +287,12 @@ class _AutoApprovalIndicator extends StatelessWidget {
           ? strings.approvalsUiAutoApproved(
               permissionRequestTitle(last.permission, l10n: strings),
             )
+          : effective.serverWide
+          ? strings.approvalsSheetSetByServer
           : effective.inherited
           ? strings.approvalsUiInheritedFrom
           : null;
-      text = effective.serverWide
-          ? strings.chatStripApprovalEverything
-          : strings.chatStripAutoApprove;
+      text = strings.chatStripAutoApprove;
     }
     // Words, not the glyph alone, carry the state (STATE-9).
     return Semantics(
@@ -311,14 +304,11 @@ class _AutoApprovalIndicator extends StatelessWidget {
         builder: (chipContext) => KitChip.action(
           key: const Key('auto-approval-indicator'),
           onPressed: () => onOpen(chipContext),
+          tone: automatic && !paused ? KitChipTone.active : KitChipTone.neutral,
           icon: paused
               ? AppIconography.pause
-              : !automatic
-              ? AppIconography.permissions
-              : effective.serverWide
-              ? AppIconography.warning
-              : effective.inherited
-              ? AppIconography.nested
+              : automatic
+              ? AppIconography.shieldFilled
               : AppIconography.shield,
           label: text,
         ),
