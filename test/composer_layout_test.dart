@@ -570,6 +570,11 @@ void main() {
       conn.busySessions.add('session-1');
       conn.notifyListeners();
       await tester.pump();
+      // The approval chip now shares the sideways-scrolling strip.
+      await tester.ensureVisible(
+        find.byKey(const Key('background-running-work')),
+      );
+      await tester.pump();
       await tester.tap(find.byKey(const Key('background-running-work')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));

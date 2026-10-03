@@ -249,12 +249,14 @@ class _AutoApprovalRecord extends StatelessWidget {
   }
 }
 
-/// A quiet chip in the strip above the composer while automatic approval is
-/// on for this session. Never hidden while the setting is on: it names the
-/// state and counts what it approved, and says when approvals are paused
-/// because the app is disconnected. The full wording (the latest approval,
-/// where the setting comes from) is its spoken label; the sheet it opens
-/// holds the record and the switches.
+/// The approval chip in the strip above the composer: always there in a
+/// conversation, naming how this conversation answers permission requests
+/// ("Asks first", "Auto-approve", "Approves everything"), and saying when
+/// automatic approval is paused because the app is disconnected. It is a
+/// switcher, not only a gauge: [onOpen] receives the chip's own context so
+/// the mode menu anchors to it. No count; the sheet keeps the record. The
+/// full wording (the latest approval, where the setting comes from) is its
+/// spoken label.
 class _AutoApprovalIndicator extends StatelessWidget {
   const _AutoApprovalIndicator({
     super.key,
@@ -267,17 +269,25 @@ class _AutoApprovalIndicator extends StatelessWidget {
   final EffectiveAutoApproval effective;
   final bool connected;
   final List<AutoApprovedPermission> approved;
-  final VoidCallback onOpen;
+  final void Function(BuildContext chipContext) onOpen;
 
   @override
   Widget build(BuildContext context) {
     final strings = _chatL10n(context);
     final last = approved.lastOrNull;
+    final automatic = effective.automatic;
+    final paused = automatic && !connected;
     final String label;
     final String? detail;
-    if (!connected) {
+    final String text;
+    if (paused) {
       label = strings.approvalsUiIndicatorPaused;
       detail = strings.approvalsUiPausedDetail;
+      text = strings.chatStripAutoApprovePaused;
+    } else if (!automatic) {
+      label = strings.approvalModeAskTitle;
+      detail = strings.approvalsUiAskDetail;
+      text = strings.chatStripApprovalAsk;
     } else {
       label = strings.approvalsUiIndicatorOn;
       detail = last != null
@@ -287,28 +297,31 @@ class _AutoApprovalIndicator extends StatelessWidget {
           : effective.inherited
           ? strings.approvalsUiInheritedFrom
           : null;
+      text = effective.serverWide
+          ? strings.chatStripApprovalEverything
+          : strings.chatStripAutoApprove;
     }
-    // Words, not the glyph alone, carry the state (STATE-9): "paused" is in
-    // the chip's own label.
-    final text = !connected
-        ? strings.chatStripAutoApprovePaused
-        : approved.isEmpty
-        ? strings.chatStripAutoApprove
-        : '${strings.chatStripAutoApprove} · ${approved.length}';
+    // Words, not the glyph alone, carry the state (STATE-9).
     return Semantics(
       button: true,
-      label: [label, ?detail, strings.approvalsUiOpenSettings].join('. '),
+      label: [label, ?detail, strings.approvalModeChange].join('. '),
       excludeSemantics: true,
-      onTap: onOpen,
-      child: KitChip.action(
-        key: const Key('auto-approval-indicator'),
-        onPressed: onOpen,
-        icon: !connected
-            ? AppIconography.pause
-            : effective.inherited
-            ? AppIconography.nested
-            : AppIconography.shield,
-        label: text,
+      onTap: () => onOpen(context),
+      child: Builder(
+        builder: (chipContext) => KitChip.action(
+          key: const Key('auto-approval-indicator'),
+          onPressed: () => onOpen(chipContext),
+          icon: paused
+              ? AppIconography.pause
+              : !automatic
+              ? AppIconography.permissions
+              : effective.serverWide
+              ? AppIconography.warning
+              : effective.inherited
+              ? AppIconography.nested
+              : AppIconography.shield,
+          label: text,
+        ),
       ),
     );
   }

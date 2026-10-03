@@ -11632,6 +11632,59 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatStripAutoApprovePaused => 'Auto-approve paused';
 
   @override
+  String get chatStripApprovalAsk => 'Asks first';
+
+  @override
+  String get chatStripApprovalEverything => 'Approves everything';
+
+  @override
+  String get approvalModeMenuLabel => 'Approval mode';
+
+  @override
+  String get approvalModeAskTitle => 'Ask first';
+
+  @override
+  String get approvalModeAutoTitle => 'Auto-approve this conversation';
+
+  @override
+  String get approvalModeAutoDetail => 'Allows each request once, here only.';
+
+  @override
+  String get approvalModeEverythingTitle => 'Approve everything';
+
+  @override
+  String get approvalModeEverythingDetail =>
+      'Every conversation on this server.';
+
+  @override
+  String get approvalModeSettings => 'Approval settings…';
+
+  @override
+  String get approvalModeConfirmAutoTitle => 'Auto-approve this conversation?';
+
+  @override
+  String get approvalModeConfirmAutoAction => 'Auto-approve this conversation';
+
+  @override
+  String get approvalModeConfirmEverythingTitle => 'Approve everything?';
+
+  @override
+  String get approvalModeConfirmEverythingAction => 'Approve everything';
+
+  @override
+  String get approvalModeNowAsk => 'This conversation asks first.';
+
+  @override
+  String get approvalModeNowAuto => 'This conversation approves automatically.';
+
+  @override
+  String get approvalModeNowEverything =>
+      'Approving everything on this server.';
+
+  @override
+  String get approvalModeChange => 'Change approval mode';
+
+  @override
   String get chatStripBackground => 'Background';
 
   @override

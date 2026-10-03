@@ -378,9 +378,15 @@ void main() {
     expect(row, findsOneWidget);
     final rowRect = tester.getRect(row);
     final composerRect = tester.getRect(_composerField);
-    // Directly above where you type, and above the keyboard.
+    // Directly above where you type, and above the keyboard. The approval
+    // chip's strip is the only thing between them.
     expect(rowRect.bottom, lessThanOrEqualTo(composerRect.top));
-    expect(composerRect.top - rowRect.bottom, lessThan(40));
+    final chipRect = tester.getRect(
+      find.byKey(const Key('auto-approval-indicator')),
+    );
+    expect(chipRect.top, greaterThanOrEqualTo(rowRect.bottom));
+    expect(chipRect.bottom, lessThanOrEqualTo(composerRect.top));
+    expect(composerRect.top - rowRect.bottom, lessThan(72));
     expect(rowRect.bottom, lessThanOrEqualTo(800 - 320));
     // The header compacts to one line and the tip is not drawn at all.
     expect(

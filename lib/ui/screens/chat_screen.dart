@@ -167,6 +167,7 @@ part 'chat/message_view.dart';
 part 'chat/session_sheets.dart';
 part 'chat/attention_card.dart';
 part 'chat/approvals_sheet.dart';
+part 'chat/approval_mode_menu.dart';
 part 'chat/read_aloud.dart';
 part 'chat/voice_conversation.dart';
 part 'chat/nudge_slot.dart';

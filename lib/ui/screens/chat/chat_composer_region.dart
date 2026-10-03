@@ -10,7 +10,7 @@ extension _ChatComposerRegion on _ChatScreenState {
       bodyConstraints.hasBoundedHeight && bodyConstraints.maxHeight < 480;
 
   Widget _composerStatusStrip(BoxConstraints bodyConstraints) {
-    final chips = _composerStatusChips();
+    final chips = _composerStatusChips(bodyConstraints);
     return KitComposerStatusStrip(
       stripKey: chips.isEmpty ? null : const Key('composer-status-strip'),
       chips: chips,
@@ -43,19 +43,23 @@ extension _ChatComposerRegion on _ChatScreenState {
   );
 
   /// Standing facts about this conversation's run, as labelled chips on the
-  /// line above the composer's field (the model chip ends it): that approvals are automatic, and that the
+  /// line above the composer's field (the model chip ends it): how approvals are answered, and that the
   /// running work can be sent to the background. They used to be a bar and a
   /// link of their own, repeated above the composer on every running turn.
-  List<Widget> _composerStatusChips() {
+  List<Widget> _composerStatusChips(BoxConstraints bodyConstraints) {
     final approval = _conn.isIsolated
         ? null
         : _conn.autoApprovalFor(widget.sessionID);
-    // A request waiting for a person has its own card, which also says when
-    // an automatic reply failed; the chip steps aside until it is answered.
+    // Always there in a conversation (not an isolated one). A request
+    // waiting for a person has its own card, the main thing on screen; the
+    // chip stays beside it unchanged, since it is how the person switches
+    // to approving automatically. Only a window too short for a strip
+    // (under 420 dp: a phone on its side with the keyboard up) shows it just
+    // while an automatic mode is on; the sheet is still one command away.
+    final shortWindow =
+        bodyConstraints.hasBoundedHeight && bodyConstraints.maxHeight < 420;
     final showApproval =
-        approval != null &&
-        approval.automatic &&
-        _conn.permissionsForSession(widget.sessionID).isEmpty;
+        approval != null && (approval.automatic || !shortWindow);
     // While the move is in flight the chip steps aside (a chip that cannot
     // act is not shown); the composer note then says how it went.
     final showBackground = _canBackgroundWork;
@@ -84,13 +88,8 @@ extension _ChatComposerRegion on _ChatScreenState {
           effective: approval,
           connected: _conn.isConnected,
           approved: _conn.autoApprovedFor(widget.sessionID),
-          onOpen: () => unawaited(
-            showSessionApprovalsSheet(
-              context,
-              controller: _conn,
-              sessionID: widget.sessionID,
-            ),
-          ),
+          onOpen: (chipContext) =>
+              unawaited(_showApprovalModeMenu(chipContext)),
         ),
       if (showBackground)
         Semantics(

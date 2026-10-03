@@ -19212,7 +19212,7 @@ abstract class AppLocalizations {
   /// **'Context pending'**
   String get chatStripContextPending;
 
-  /// Short chip label above the composer while permission requests are approved automatically; may be followed by a count
+  /// Short chip label above the composer while permission requests are approved automatically
   ///
   /// In en, this message translates to:
   /// **'Auto-approve'**
@@ -19223,6 +19223,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Auto-approve paused'**
   String get chatStripAutoApprovePaused;
+
+  /// Short chip label above the composer: every permission request waits for the person
+  ///
+  /// In en, this message translates to:
+  /// **'Asks first'**
+  String get chatStripApprovalAsk;
+
+  /// Short chip label above the composer: every conversation on this server is approved automatically
+  ///
+  /// In en, this message translates to:
+  /// **'Approves everything'**
+  String get chatStripApprovalEverything;
+
+  /// Name of the menu that switches how this conversation answers permission requests
+  ///
+  /// In en, this message translates to:
+  /// **'Approval mode'**
+  String get approvalModeMenuLabel;
+
+  /// Menu choice: every permission request waits for the person
+  ///
+  /// In en, this message translates to:
+  /// **'Ask first'**
+  String get approvalModeAskTitle;
+
+  /// Menu choice: this phone answers each request in this conversation with Allow once
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-approve this conversation'**
+  String get approvalModeAutoTitle;
+
+  /// One-line explanation of the Auto-approve menu choice
+  ///
+  /// In en, this message translates to:
+  /// **'Allows each request once, here only.'**
+  String get approvalModeAutoDetail;
+
+  /// Menu choice: every conversation on this server is approved automatically
+  ///
+  /// In en, this message translates to:
+  /// **'Approve everything'**
+  String get approvalModeEverythingTitle;
+
+  /// One-line explanation of the Approve everything menu choice
+  ///
+  /// In en, this message translates to:
+  /// **'Every conversation on this server.'**
+  String get approvalModeEverythingDetail;
+
+  /// Menu item that opens the full approvals sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Approval settings…'**
+  String get approvalModeSettings;
+
+  /// Title of the confirmation before this conversation approves automatically
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-approve this conversation?'**
+  String get approvalModeConfirmAutoTitle;
+
+  /// Confirm button naming what it turns on
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-approve this conversation'**
+  String get approvalModeConfirmAutoAction;
+
+  /// Title of the confirmation before approving everything on the server
+  ///
+  /// In en, this message translates to:
+  /// **'Approve everything?'**
+  String get approvalModeConfirmEverythingTitle;
+
+  /// Confirm button naming what it turns on
+  ///
+  /// In en, this message translates to:
+  /// **'Approve everything'**
+  String get approvalModeConfirmEverythingAction;
+
+  /// Short note after switching this conversation to ask first
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation asks first.'**
+  String get approvalModeNowAsk;
+
+  /// Short note after switching this conversation to automatic approval
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation approves automatically.'**
+  String get approvalModeNowAuto;
+
+  /// Short note after turning on approve everything
+  ///
+  /// In en, this message translates to:
+  /// **'Approving everything on this server.'**
+  String get approvalModeNowEverything;
+
+  /// Spoken hint on the approval chip
+  ///
+  /// In en, this message translates to:
+  /// **'Change approval mode'**
+  String get approvalModeChange;
 
   /// Short chip label above the composer: send the running work to the background
   ///
