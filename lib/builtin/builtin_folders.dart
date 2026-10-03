@@ -12,11 +12,21 @@ class FolderEntry {
     required this.name,
     required this.path,
     this.isGit = false,
+    this.inside,
+    this.more = 0,
   });
 
   final String name;
   final String path;
   final bool isGit;
+
+  /// A few of the names inside (visible ones), when the lister looked: the
+  /// browser's one-line hint of what is in the folder. Empty means the
+  /// folder is empty; null means nobody looked.
+  final List<String>? inside;
+
+  /// How many more names there are beyond [inside].
+  final int more;
 }
 
 /// Why a folder could not be listed.

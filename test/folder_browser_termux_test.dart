@@ -214,6 +214,10 @@ void main() {
       find.byKey(const ValueKey('in-app-new-project-name')),
       'cli',
     );
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('in-app-new-project-create')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('in-app-new-project-create')));
     await tester.pumpAndSettle();
     expect(made, {'/root/projects/work/cli'});

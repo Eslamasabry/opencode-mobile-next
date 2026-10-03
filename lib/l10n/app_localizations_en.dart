@@ -26543,4 +26543,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kitToolRetry => 'Try again';
+
+  @override
+  String get folderBrowserPlaceLabel => 'Where to look';
+
+  @override
+  String get folderBrowserPlaceProjects => 'Project space';
+
+  @override
+  String get folderBrowserPlacePhone => 'This phone’s storage';
+
+  @override
+  String get folderBrowserPhoneRefusedTitle => 'Phone storage is off';
+
+  @override
+  String get folderBrowserPhoneRefusedBody =>
+      'Folders on this phone can’t be shown until you allow access. The project space works as before.';
+
+  @override
+  String get folderBrowserInternalStorage => 'Internal storage';
+
+  @override
+  String get folderBrowserOpenedBefore => 'Opened before';
+
+  @override
+  String get folderBrowserShowHidden => 'Show hidden folders';
+
+  @override
+  String get folderBrowserHintEmpty => 'Empty';
+
+  @override
+  String folderBrowserHintMore(String names, int count) {
+    return '$names, $count more';
+  }
+
+  @override
+  String get folderBrowserNewFolderHere => 'New folder here';
+
+  @override
+  String get folderBrowserNewFolderTitle => 'New folder';
+
+  @override
+  String get folderBrowserEmptyPhoneBody =>
+      'Open it, make a new folder in it, or go up one level.';
+
+  @override
+  String get remoteFolderRecent => 'Recent folders';
+
+  @override
+  String get remoteFolderProjects => 'Projects on this server';
 }

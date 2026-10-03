@@ -36,6 +36,16 @@ class SharedProjectRoots {
     }
   }
 
+  /// The folders [profileId] opened (canonical roots), oldest first by name.
+  static Future<List<String>> all(String profileId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getStringList(keyFor(profileId)) ?? const [];
+    } catch (_) {
+      return const [];
+    }
+  }
+
   /// Remembers [path] for [profileId] and refreshes the native copy.
   static Future<void> remember(String profileId, String path) async {
     final root = sharedProjectRoot(path);

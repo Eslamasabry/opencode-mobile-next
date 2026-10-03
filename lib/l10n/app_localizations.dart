@@ -41874,6 +41874,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get kitToolRetry;
+
+  /// Section label above the folder browser's place switch
+  ///
+  /// In en, this message translates to:
+  /// **'Where to look'**
+  String get folderBrowserPlaceLabel;
+
+  /// Folder browser place: the app's project space
+  ///
+  /// In en, this message translates to:
+  /// **'Project space'**
+  String get folderBrowserPlaceProjects;
+
+  /// Folder browser place: the phone's internal storage
+  ///
+  /// In en, this message translates to:
+  /// **'This phone’s storage'**
+  String get folderBrowserPlacePhone;
+
+  /// Notice in the folder browser after All files access was not allowed
+  ///
+  /// In en, this message translates to:
+  /// **'Phone storage is off'**
+  String get folderBrowserPhoneRefusedTitle;
+
+  /// Body of the notice after All files access was not allowed
+  ///
+  /// In en, this message translates to:
+  /// **'Folders on this phone can’t be shown until you allow access. The project space works as before.'**
+  String get folderBrowserPhoneRefusedBody;
+
+  /// Root of the phone-storage breadcrumb
+  ///
+  /// In en, this message translates to:
+  /// **'Internal storage'**
+  String get folderBrowserInternalStorage;
+
+  /// Section label over phone folders opened as projects before
+  ///
+  /// In en, this message translates to:
+  /// **'Opened before'**
+  String get folderBrowserOpenedBefore;
+
+  /// Switch in the phone-storage browser
+  ///
+  /// In en, this message translates to:
+  /// **'Show hidden folders'**
+  String get folderBrowserShowHidden;
+
+  /// Hint line of an empty folder row
+  ///
+  /// In en, this message translates to:
+  /// **'Empty'**
+  String get folderBrowserHintEmpty;
+
+  /// Hint line of a folder row: a few names inside and how many more
+  ///
+  /// In en, this message translates to:
+  /// **'{names}, {count} more'**
+  String folderBrowserHintMore(String names, int count);
+
+  /// Secondary button of the phone-storage browser
+  ///
+  /// In en, this message translates to:
+  /// **'New folder here'**
+  String get folderBrowserNewFolderHere;
+
+  /// Title of the dialog that names a new folder in phone storage
+  ///
+  /// In en, this message translates to:
+  /// **'New folder'**
+  String get folderBrowserNewFolderTitle;
+
+  /// Empty-state body of an empty phone-storage folder
+  ///
+  /// In en, this message translates to:
+  /// **'Open it, make a new folder in it, or go up one level.'**
+  String get folderBrowserEmptyPhoneBody;
+
+  /// Section label of folders opened before on a remote server
+  ///
+  /// In en, this message translates to:
+  /// **'Recent folders'**
+  String get remoteFolderRecent;
+
+  /// Section label of the remote server's own projects
+  ///
+  /// In en, this message translates to:
+  /// **'Projects on this server'**
+  String get remoteFolderProjects;
 }
 
 class _AppLocalizationsDelegate
