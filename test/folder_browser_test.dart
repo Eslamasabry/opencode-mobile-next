@@ -308,10 +308,7 @@ void main() {
     expect(shownTitle(tester), 'New project');
     expect(find.text('Change'), findsOneWidget);
     expect(find.text('Create and open'), findsOneWidget);
-    expect(
-      find.text('Creates \u2066/root/projects/\u2026\u2069'),
-      findsOneWidget,
-    );
+    expect(find.text('In \u2066/root/projects\u2069'), findsOneWidget);
     await tester.enterText(
       find.byKey(const ValueKey('phone-new-folder-name')),
       'cli',

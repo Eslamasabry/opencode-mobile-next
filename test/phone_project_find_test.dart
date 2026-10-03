@@ -246,10 +246,7 @@ void main() {
       'phone', (tester) async {
     await open(tester, projectSpace: false);
     await tapKey(tester, 'open-project-new');
-    expect(
-      find.text('Creates \u2066$_root/Projects/\u2026\u2069'),
-      findsOneWidget,
-    );
+    expect(find.text('In \u2066$_root/Projects\u2069'), findsOneWidget);
     await tester.enterText(
       find.byKey(const ValueKey('phone-new-folder-name')),
       'fresh',

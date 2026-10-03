@@ -545,16 +545,6 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
           label: l10n.projectFolderProjectNameLabel,
           controller: _name,
           hint: l10n.projectFolderNameHint,
-          helper: l10n.folderBrowserNewProjectCreates(
-            KitBidi.ltr(
-              _cutStart(
-                _join(
-                  _createIn,
-                  _name.text.trim().isEmpty ? '…' : _name.text.trim(),
-                ),
-              ),
-            ),
-          ),
           error: _nameError,
           autofocus: true,
           textInputAction: TextInputAction.done,
@@ -563,12 +553,20 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
           }),
           onSubmitted: (_) => _submitName(l10n),
         ),
-        // "In /root/projects · Change": the folder, with a quiet inline link.
+        // One line: "Creates …/projects/<name> · Change", or "In /root/projects
+        // · Change" while the name is empty. Cut at its start so the name
+        // stays visible.
         Row(
           children: [
             Flexible(
               child: KitText(
-                l10n.openProjectIn(KitBidi.ltr(_cutStart(_createIn, 30))),
+                _name.text.trim().isEmpty
+                    ? l10n.openProjectIn(KitBidi.ltr(_cutStart(_createIn, 30)))
+                    : l10n.folderBrowserNewProjectCreates(
+                        KitBidi.ltr(
+                          _cutStart(_join(_createIn, _name.text.trim()), 30),
+                        ),
+                      ),
                 role: KitTextRole.secondary,
                 maxLines: 1,
               ),
