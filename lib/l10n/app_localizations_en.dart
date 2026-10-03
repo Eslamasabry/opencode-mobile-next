@@ -4659,7 +4659,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get e7ProjectProjectsEmptyDetail =>
-      'Projects opened by this server appear here; choose one for conversations, files, terminals, and coding tools. Create a new folder or open one by its path above, or open a project on this OpenCode server and refresh.';
+      'Projects you open or create appear here.';
 
   @override
   String get e7ProjectProjectsRefreshFailed => 'Project refresh failed';
@@ -13031,7 +13031,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginsDetailsId => 'ID';
 
   @override
-  String get localTerminalSourcePhone => 'This phone';
+  String get localTerminalSourcePhone => 'Built-in Linux';
 
   @override
   String get localTerminalSourceServer => 'OpenCode server';
