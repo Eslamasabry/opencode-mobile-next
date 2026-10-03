@@ -210,15 +210,13 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('folder-browse-work')));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('phone-new-folder')));
+    await tester.pumpAndSettle();
     await tester.enterText(
-      find.byKey(const ValueKey('in-app-new-project-name')),
+      find.byKey(const ValueKey('phone-new-folder-name')),
       'cli',
     );
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('in-app-new-project-create')),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('in-app-new-project-create')));
+    await tester.tap(find.byKey(const ValueKey('phone-new-folder-create')));
     await tester.pumpAndSettle();
     expect(made, {'/root/projects/work/cli'});
     expect(scripts.last, TermuxFolders.createScript('/root/projects/work/cli'));

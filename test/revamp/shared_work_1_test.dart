@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/builtin_folders.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/ui/kit/kit_field.dart';
 import 'package:opencode_mobile/ui/kit/kit_icon_button.dart';
 import 'package:opencode_mobile/ui/widgets/folder_browser.dart';
 
@@ -84,13 +83,8 @@ void main() {
 
     await tester.tap(_key('folder-browser-first-project'));
     await tester.pumpAndSettle();
-    final editable = tester.state<EditableTextState>(
-      find.descendant(
-        of: _key('in-app-new-project-name'),
-        matching: find.byType(EditableText),
-      ),
-    );
-    expect(editable.widget.focusNode.hasFocus, isTrue);
+    // The first step opens the name dialog.
+    expect(_key('phone-new-folder-name'), findsOneWidget);
   });
 
   testWidgets('a folder the app may not read is left by going up', (
@@ -140,7 +134,7 @@ void main() {
     expect((closed! as FolderBrowserOpen).path, '/root/projects/demo');
   });
 
-  testWidgets('a new project is named in the kit field and made here', (
+  testWidgets('a new project is named in a dialog and made here', (
     tester,
   ) async {
     FolderBrowserChoice? closed;
@@ -150,16 +144,10 @@ void main() {
       onClosed: (choice) => closed = choice,
     );
     await tester.pumpAndSettle();
-    expect(
-      find.descendant(
-        of: _key('in-app-new-project-name'),
-        matching: find.byType(KitField),
-        matchRoot: true,
-      ),
-      findsOneWidget,
-    );
-    await tester.enterText(_key('in-app-new-project-name'), 'fresh');
-    await tester.tap(_key('in-app-new-project-create'));
+    await tester.tap(_key('phone-new-folder'));
+    await tester.pumpAndSettle();
+    await tester.enterText(_key('phone-new-folder-name'), 'fresh');
+    await tester.tap(_key('phone-new-folder-create'));
     await tester.pumpAndSettle();
     expect(closed, isA<FolderBrowserCreate>());
     expect((closed! as FolderBrowserCreate).path, '/root/projects/fresh');

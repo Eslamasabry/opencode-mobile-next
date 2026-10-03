@@ -12301,7 +12301,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get folderBrowserProjectsHere =>
-      'مشاريعك هنا. اضغط على مشروع لفتحه، أو أنشئ مشروعًا جديدًا بالأسفل.';
+      'مشاريعك هنا. اضغط على مشروع لفتحه، أو ابدأ مشروعًا جديدًا.';
 
   @override
   String get folderBrowserHomeHere =>
@@ -12311,8 +12311,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get folderBrowserNoProjectsTitle => 'لا توجد مشاريع بعد';
 
   @override
-  String get folderBrowserNoProjectsBody =>
-      'اكتب اسمًا بالأسفل لإنشاء مشروع هنا.';
+  String get folderBrowserNoProjectsBody => 'ابدأ مشروعًا لإنشائه هنا.';
 
   @override
   String get folderBrowserEmptyTitle => 'لا توجد مجلدات هنا';
@@ -26664,20 +26663,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kitToolRetry => 'أعد المحاولة';
 
   @override
-  String get folderBrowserPlaceLabel => 'أين تبحث';
+  String get folderBrowserPlaceLabel => 'المكان';
 
   @override
   String get folderBrowserPlaceProjects => 'مساحة المشاريع';
 
   @override
-  String get folderBrowserPlacePhone => 'تخزين هذا الهاتف';
-
-  @override
-  String get folderBrowserPhoneRefusedTitle => 'تخزين الهاتف متوقف';
-
-  @override
-  String get folderBrowserPhoneRefusedBody =>
-      'لا يمكن عرض مجلدات هذا الهاتف قبل السماح بالوصول. مساحة المشاريع تعمل كما كانت.';
+  String get folderBrowserPlacePhone => 'هذا الهاتف';
 
   @override
   String get folderBrowserInternalStorage => 'التخزين الداخلي';
@@ -26697,12 +26689,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get folderBrowserNewFolderHere => 'مجلد جديد هنا';
-
-  @override
-  String get folderBrowserNewFolderTitle => 'مجلد جديد';
-
-  @override
   String get folderBrowserEmptyPhoneBody =>
       'افتحه، أو أنشئ فيه مجلدًا جديدًا، أو اصعد مستوى واحدًا.';
 
@@ -26711,4 +26697,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get remoteFolderProjects => 'مشاريع هذا الخادم';
+
+  @override
+  String get folderBrowserNewProjectHere => 'مشروع جديد هنا';
+
+  @override
+  String get folderBrowserFoldersLabel => 'المجلدات';
+
+  @override
+  String get folderBrowserPhoneRefused =>
+      'تخزين الهاتف متوقف. اسمح بالوصول لتصفحه هنا.';
 }

@@ -229,7 +229,7 @@ void main() {
   ) async {
     await build();
     await openSheet(tester);
-    expect(find.text('This phone’s storage'), findsOneWidget);
+    expect(find.text('This phone'), findsOneWidget);
     await choosePhone(tester);
     expect(find.byKey(const ValueKey('storage-access-allow')), findsOneWidget);
     expect(find.text('Download'), findsNothing);
@@ -361,10 +361,10 @@ void main() {
       recent: ['/home/me/work/api', '/home/me/notes'],
     );
     await openSheet(tester);
-    expect(find.text('Recent folders'), findsOneWidget);
+    expect(find.text('Folders'), findsOneWidget);
     expect(find.text('api'), findsOneWidget);
     // No fake browsing, no place switch.
-    expect(find.text('This phone’s storage'), findsNothing);
+    expect(find.text('This phone'), findsNothing);
     // The field starts from the folder used last.
     final field = tester.widget<EditableText>(
       find.descendant(

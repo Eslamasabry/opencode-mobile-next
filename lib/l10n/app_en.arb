@@ -13097,7 +13097,7 @@
       }
     }
   },
-  "folderBrowserProjectsHere": "Your projects live here. Tap one to open it, or make a new one below.",
+  "folderBrowserProjectsHere": "Your projects live here. Tap one to open it, or start a new one.",
   "@folderBrowserProjectsHere": {
     "description": "Shown in place of the Open button while the browser shows the projects folder itself"
   },
@@ -13109,7 +13109,7 @@
   "@folderBrowserNoProjectsTitle": {
     "description": "Empty state title of the projects folder"
   },
-  "folderBrowserNoProjectsBody": "Name one below to make it here.",
+  "folderBrowserNoProjectsBody": "Start one to make it here.",
   "@folderBrowserNoProjectsBody": {
     "description": "Empty state body of the projects folder"
   },
@@ -31383,7 +31383,7 @@
   "@kitToolRetry": {
     "description": "KitToolRow: the quiet button under a failed step that tries it again"
   },
-  "folderBrowserPlaceLabel": "Where to look",
+  "folderBrowserPlaceLabel": "Place",
   "@folderBrowserPlaceLabel": {
     "description": "Section label above the folder browser's place switch"
   },
@@ -31391,17 +31391,9 @@
   "@folderBrowserPlaceProjects": {
     "description": "Folder browser place: the app's project space"
   },
-  "folderBrowserPlacePhone": "This phone’s storage",
+  "folderBrowserPlacePhone": "This phone",
   "@folderBrowserPlacePhone": {
     "description": "Folder browser place: the phone's internal storage"
-  },
-  "folderBrowserPhoneRefusedTitle": "Phone storage is off",
-  "@folderBrowserPhoneRefusedTitle": {
-    "description": "Notice in the folder browser after All files access was not allowed"
-  },
-  "folderBrowserPhoneRefusedBody": "Folders on this phone can’t be shown until you allow access. The project space works as before.",
-  "@folderBrowserPhoneRefusedBody": {
-    "description": "Body of the notice after All files access was not allowed"
   },
   "folderBrowserInternalStorage": "Internal storage",
   "@folderBrowserInternalStorage": {
@@ -31431,14 +31423,6 @@
       }
     }
   },
-  "folderBrowserNewFolderHere": "New folder here",
-  "@folderBrowserNewFolderHere": {
-    "description": "Secondary button of the phone-storage browser"
-  },
-  "folderBrowserNewFolderTitle": "New folder",
-  "@folderBrowserNewFolderTitle": {
-    "description": "Title of the dialog that names a new folder in phone storage"
-  },
   "folderBrowserEmptyPhoneBody": "Open it, make a new folder in it, or go up one level.",
   "@folderBrowserEmptyPhoneBody": {
     "description": "Empty-state body of an empty phone-storage folder"
@@ -31450,5 +31434,17 @@
   "remoteFolderProjects": "Projects on this server",
   "@remoteFolderProjects": {
     "description": "Section label of the remote server's own projects"
+  },
+  "folderBrowserNewProjectHere": "New project here",
+  "@folderBrowserNewProjectHere": {
+    "description": "Secondary button of the folder browser: names a new project in the folder shown"
+  },
+  "folderBrowserFoldersLabel": "Folders",
+  "@folderBrowserFoldersLabel": {
+    "description": "Section label over the folder list of the folder browser and remote folder sheet"
+  },
+  "folderBrowserPhoneRefused": "Phone storage is off. Allow access to look here.",
+  "@folderBrowserPhoneRefused": {
+    "description": "One line in the folder browser after All files access was not allowed"
   }
 }

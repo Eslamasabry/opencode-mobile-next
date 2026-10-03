@@ -19,7 +19,15 @@ import 'package:opencode_mobile/ui/widgets/remote_folder_picker.dart';
 
 import '../../tool/capture/fixtures.dart' show captureTheme, loadCaptureFonts;
 
-enum PhoneStorageScene { places, consent, root, inside, refused, remote }
+enum PhoneStorageScene {
+  places,
+  consent,
+  root,
+  inside,
+  refused,
+  remote,
+  naming,
+}
 
 const _root = PhoneStorageFolders.root;
 
@@ -118,11 +126,15 @@ Future<void> mountPhoneStorage(
 
   if (scene == PhoneStorageScene.root ||
       scene == PhoneStorageScene.inside ||
+      scene == PhoneStorageScene.naming ||
       scene == PhoneStorageScene.refused) {
     await tapKey('place-phone');
   }
-  if (scene == PhoneStorageScene.inside) {
+  if (scene == PhoneStorageScene.inside || scene == PhoneStorageScene.naming) {
     await tapKey('in-app-project-CodeAnything');
+  }
+  if (scene == PhoneStorageScene.naming) {
+    await tapKey('phone-new-folder');
   }
 }
 
@@ -134,20 +146,24 @@ void main() {
     final mode = light ? 'light' : 'dark';
     for (final scene in PhoneStorageScene.values) {
       final name = 'phone_storage_${scene.name}';
-      testWidgets('$name · $mode', (tester) async {
-        final boundary = GlobalKey();
-        await mountPhoneStorage(
-          tester,
-          scene,
-          light: light,
-          boundary: boundary,
-        );
-        expect(tester.takeException(), isNull);
-        await expectLater(
-          find.byKey(boundary),
-          matchesGoldenFile('${name}_$mode.png'),
-        );
-      });
+      testWidgets(
+        '$name · $mode',
+        (tester) async {
+          final boundary = GlobalKey();
+          await mountPhoneStorage(
+            tester,
+            scene,
+            light: light,
+            boundary: boundary,
+          );
+          expect(tester.takeException(), isNull);
+          await expectLater(
+            find.byKey(boundary),
+            matchesGoldenFile('${name}_$mode.png'),
+          );
+        },
+        variant: TargetPlatformVariant.only(TargetPlatform.android),
+      );
     }
   }
 }
