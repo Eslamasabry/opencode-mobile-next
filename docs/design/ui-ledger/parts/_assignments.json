@@ -13,13 +13,9 @@
     "lib/ui/widgets/connection_failure.dart",
     "lib/ui/widgets/saved_server_connection_card.dart",
     "lib/ui/widgets/product_states.dart",
-    "lib/ui/widgets/glass_surface.dart",
-    "lib/ui/widgets/confirm_sheet.dart",
     "lib/ui/widgets/external_link.dart",
-    "lib/ui/widgets/entrance.dart",
     "lib/ui/screens/demo_screen.dart",
     "lib/ui/screens/capabilities_screen.dart",
-    "lib/ui/screens/activity_screen.dart",
     "lib/ui/app_iconography.dart",
     "lib/ui/app_theme.dart",
     "lib/ui/theme_packs.dart",
@@ -57,11 +53,9 @@
     "lib/ui/widgets/form_renderer.dart",
     "lib/ui/widgets/question_options.dart",
     "lib/ui/widgets/markdown.dart",
-    "lib/ui/widgets/agent_blocks.dart",
-    "lib/ui/widgets/completion_digest.dart"
+    "lib/ui/widgets/agent_blocks.dart"
   ],
   "e-workspace": [
-    "lib/ui/screens/workspace_screen.dart",
     "lib/ui/screens/projects_screen.dart",
     "lib/ui/screens/project_folder_actions.dart",
     "lib/ui/screens/project_health_screen.dart",
@@ -85,8 +79,6 @@
     "lib/ui/widgets/svg_file_preview.dart",
     "lib/ui/widgets/pdf_file_preview.dart",
     "lib/ui/widgets/delimited_file_preview.dart",
-    "lib/ui/widgets/diff_view.dart",
-    "lib/ui/widgets/code_highlight.dart",
     "lib/ui/widgets/run_command_dialog.dart",
     "lib/ui/widgets/reader_preferences.dart"
   ],
@@ -125,13 +117,11 @@
     "lib/ui/screens/team/task_details_sheet.dart",
     "lib/ui/screens/team/agent_screen.dart",
     "lib/ui/screens/team/policy_block.dart",
-    "lib/ui/widgets/team_cycle_strip.dart",
     "lib/ui/widgets/team_agent_row.dart",
     "lib/ui/widgets/team_receipt.dart",
     "lib/ui/widgets/team_controls.dart",
     "lib/ui/screens/team/team_intro_screen.dart",
     "lib/ui/widgets/team_discover.dart",
-    "lib/ui/widgets/team_task_row.dart",
     "lib/ui/widgets/team_now.dart",
     "lib/ui/screens/team/team_page.dart"
   ],
@@ -190,13 +180,15 @@
     "lib/ui/screens/session_import_screen.dart",
     "lib/ui/screens/session_note_screen.dart",
     "lib/ui/screens/active_context_screen.dart",
-    "lib/ui/screens/run_result_screen.dart",
-    "lib/ui/widgets/run_result_view.dart",
     "lib/ui/widgets/session_handoff.dart",
     "lib/ui/widgets/session_handoff_sheets.dart",
-    "lib/ui/widgets/technical_direction.dart",
-    "lib/ui/widgets/agent_color.dart",
     "lib/ui/widgets/provider_logo.dart",
     "lib/ui/widgets/relative_time.dart"
+  ],
+  "l-chats": [
+    "lib/ui/screens/chats/chats_home_screen.dart",
+    "lib/ui/screens/chats/chats_project_sheet.dart",
+    "lib/ui/screens/chats/new_chat_screen.dart",
+    "lib/ui/screens/chats/chats_host.dart"
   ]
 }

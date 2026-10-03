@@ -2,11 +2,10 @@ part of '../connection.dart';
 
 // Project and workspace location: saved location restore, recent locations and switching.
 
-const _unverifiedLocationNotice =
-    'Couldn’t verify this project. Your selection was kept.';
-
-const _unverifiedWorkspaceNotice =
-    'Couldn’t verify this workspace. Your selection was kept.';
+/// Whether a folder can be read on the server: [exists] when a listing
+/// succeeded, [missing] only when the server says the folder is not there,
+/// [unknown] when the check could not run (offline, timeout, server error).
+enum _FolderCheck { exists, missing, unknown }
 
 /// [ConnectionController]'s project and workspace location.
 mixin _ConnectionControllerLocations on ChangeNotifier {
@@ -225,8 +224,26 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
               ) ??
               false;
           if (!confirmedByCatalog) {
-            _pendingLocationRevalidation = true;
-            locationNotice = _unverifiedLocationNotice;
+            // The catalog only lists projects with history. A folder the
+            // server can read is valid even with no sessions yet; only a
+            // folder the server says is absent is dropped, quietly.
+            // An unreadable catalog means the server is not answering well
+            // enough to judge; leave it open instead of probing further.
+            switch (projects == null
+                ? _FolderCheck.unknown
+                : await _checkFolder(currentApi, directory, rescope: true)) {
+              case _FolderCheck.exists:
+                break;
+              case _FolderCheck.missing:
+                if (!_isCurrent(generation, currentApi)) return null;
+                await _forgetSavedLocation(profile);
+                await _forgetLastUsedProject(profile.id, directory);
+                return null;
+              case _FolderCheck.unknown:
+                if (!_isCurrent(generation, currentApi)) return null;
+                _pendingLocationRevalidation = true;
+            }
+            if (!_isCurrent(generation, currentApi)) return null;
           }
         }
       }
@@ -241,17 +258,14 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
         if (!_isCurrent(generation, currentApi)) return null;
         if (workspaces == null ||
             !workspaces.any((candidate) => candidate.id == workspace)) {
+          // Kept silently; revalidated when the workspace list answers.
           _pendingLocationRevalidation = true;
-          locationNotice = _unverifiedWorkspaceNotice;
         }
       }
       return ProfileLocation(directory: directory, workspace: workspace);
     } catch (_) {
       if (!_isCurrent(generation, currentApi)) return null;
       _pendingLocationRevalidation = true;
-      locationNotice = workspace == null
-          ? _unverifiedLocationNotice
-          : _unverifiedWorkspaceNotice;
       return ProfileLocation(directory: directory, workspace: workspace);
     } finally {
       currentRepository.setLocation(directory: null, workspace: null);
@@ -269,7 +283,7 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
       return;
     }
     final generation = _generation;
-    List<WorkspaceProject> projects;
+    List<WorkspaceProject>? projects;
     try {
       projects = await currentRepository.listProjects();
     } catch (_) {
@@ -278,11 +292,27 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
     if (!_isCurrent(generation, currentApi) || this.directory != directory) {
       return;
     }
-    if (!projects.any(
+    final listed = projects.any(
       (candidate) =>
           ConnectionController.projectContainsDirectory(candidate, directory),
-    )) {
-      return;
+    );
+    final owner = _connectedProfile;
+    if (!listed) {
+      if (owner == null) return;
+      // The live transport is already scoped to this folder.
+      final check = await _checkFolder(currentApi, directory, rescope: false);
+      if (!_isCurrent(generation, currentApi) || this.directory != directory) {
+        return;
+      }
+      if (check == _FolderCheck.unknown) return; // Try again later.
+      if (check == _FolderCheck.missing) {
+        // Gone from the server: forget the saved choice, no banner. The open
+        // folder is left for the person to leave on their own.
+        _pendingLocationRevalidation = false;
+        await _forgetSavedLocation(owner);
+        await _forgetLastUsedProject(owner.id, directory);
+        return;
+      }
     }
     final workspace = this.workspace;
     if (workspace != null) {
@@ -300,10 +330,33 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
       }
     }
     _pendingLocationRevalidation = false;
-    if (locationNotice == _unverifiedLocationNotice ||
-        locationNotice == _unverifiedWorkspaceNotice) {
-      locationNotice = null;
-      _notifyListeners();
+  }
+
+  /// Reads [directory] through [gateway], the connection's own transport (no
+  /// extra transport is built). With [rescope] the gateway is pointed at the
+  /// folder only for this read and put back unscoped afterwards, as restore
+  /// does for the repository. Only an explicit "not found" answer counts as
+  /// [_FolderCheck.missing]; any other failure leaves the question open.
+  Future<_FolderCheck> _checkFolder(
+    ServerGateway gateway,
+    String directory, {
+    required bool rescope,
+  }) async {
+    try {
+      if (rescope) gateway.setLocation(directory: directory, workspace: null);
+      await gateway.listFiles('.').timeout(const Duration(seconds: 8));
+      return _FolderCheck.exists;
+    } on ApiException catch (error) {
+      final message = error.message.toLowerCase();
+      return error.statusCode == 404 ||
+              message.contains('enoent') ||
+              message.contains('no such file')
+          ? _FolderCheck.missing
+          : _FolderCheck.unknown;
+    } catch (_) {
+      return _FolderCheck.unknown;
+    } finally {
+      if (rescope) gateway.setLocation(directory: null, workspace: null);
     }
   }
 
@@ -416,6 +469,7 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
         directory: directory,
         workspace: workspace,
       );
+      if (directory != null) await rememberLastUsedProject(directory);
     }();
     _locationWrite = write;
     try {

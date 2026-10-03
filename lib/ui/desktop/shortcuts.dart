@@ -62,11 +62,25 @@ class OpenTerminalIntent extends Intent {
   const OpenTerminalIntent();
 }
 
-/// Ctrl/Cmd+1..4 — switch primary destination.
+/// Ctrl/Cmd+1..3 — switch primary destination (Chats, Files, Settings).
 class SelectDestinationIntent extends Intent {
   const SelectDestinationIntent(this.index);
 
   final int index;
+}
+
+/// Opens the Chats destination, optionally on its "Needs you" or "Running"
+/// filter. Not bound to a key: notifications, the Quick Settings tile,
+/// pinned shortcuts and search use it for everything that used to open the
+/// Inbox. Dispatched through [dispatchAtShellRoot] from any route.
+class OpenChatsIntent extends Intent {
+  const OpenChatsIntent({this.needsYou = false, this.running = false});
+
+  /// Open with the "Needs you" chip on.
+  final bool needsYou;
+
+  /// Open with the "Running" chip on.
+  final bool running;
 }
 
 // =====================================================================
@@ -101,7 +115,6 @@ Map<ShortcutActivator, Intent> get appShortcutBindings => {
   ..._accelerator(LogicalKeyboardKey.digit1, const SelectDestinationIntent(0)),
   ..._accelerator(LogicalKeyboardKey.digit2, const SelectDestinationIntent(1)),
   ..._accelerator(LogicalKeyboardKey.digit3, const SelectDestinationIntent(2)),
-  ..._accelerator(LogicalKeyboardKey.digit4, const SelectDestinationIntent(3)),
 };
 
 /// Where a shortcut works: the help groups its rows by it.
@@ -136,7 +149,7 @@ List<ShortcutHelpEntry> shortcutHelp(AppLocalizations l10n) {
     ShortcutHelpEntry('$mod + K', l10n.e7LocaleUiCommandLauncher),
     ShortcutHelpEntry('$mod + N', l10n.e7LocaleUiNewSession),
     ShortcutHelpEntry('$mod + F', l10n.e7LocaleUiFindSurface),
-    ShortcutHelpEntry('$mod + 1 … 4', l10n.e7LocaleUiDestinations),
+    ShortcutHelpEntry('$mod + 1 … 3', l10n.e7LocaleUiDestinations),
     ShortcutHelpEntry('$mod + ,', l10n.e7LocaleUiSettings),
     ShortcutHelpEntry('$mod + `', l10n.e7LocaleUiTerminal),
     ShortcutHelpEntry('$mod + W', l10n.e7LocaleUiCloseScreen),
@@ -210,7 +223,7 @@ class AppShortcutSignals {
 
 /// Pops every pushed route, then offers [intent] to the shell root.
 ///
-/// Ctrl+1..4 and Ctrl+` are shell-level: pressed while chat, the terminal,
+/// Ctrl+1..3 and Ctrl+` are shell-level: pressed while chat, the terminal,
 /// or review is open they must not silently do nothing. The pop is
 /// synchronous, so the root surface is current again by the time the
 /// signal is dispatched; a surface still animating in gets one more try
@@ -396,6 +409,7 @@ class _AppShortcutsState extends State<AppShortcuts> {
     // pushed route (chat, terminal, review) nothing visible claims them, so
     // the fallback returns to the root and asks the shell again.
     SelectDestinationIntent() ||
+    OpenChatsIntent() ||
     OpenTerminalIntent() => _dispatch(intent, (_) => _returnToShell(intent)),
     _ => _dispatch(intent, (_) {}),
   };
@@ -406,7 +420,7 @@ class _AppShortcutsState extends State<AppShortcuts> {
   Widget build(BuildContext context) {
     // Off desktop only the bus is installed, with no key bindings: search
     // results use it to reach the shell's tabs from any route, the same way
-    // Ctrl+1..4 does here, and the shell's search button opens the launcher.
+    // Ctrl+1..3 does here, and the shell's search button opens the launcher.
     if (!desktopInteractions) {
       return AppShortcutScope(
         signals: _signals,

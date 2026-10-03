@@ -20,6 +20,7 @@ import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../api/server_probe.dart' show ServerFlavor;
 import '../../api/sse.dart';
+import '../../domain/chat_feed.dart' show isTemporaryProjectDirectory;
 import '../../domain/command_receipts.dart';
 import '../../domain/prompt_attachment.dart';
 import '../../domain/background_work.dart';
@@ -56,6 +57,7 @@ import '../../voice/presentation.dart' show voiceErrorText;
 import '../../voice/voice_ui.dart';
 import '../../voice/read_aloud.dart';
 import '../navigation/chat_route.dart';
+import '../navigation/last_project.dart';
 import '../../domain/agent_error_text.dart';
 import '../../domain/office_text.dart';
 import '../agent_error_words.dart';
@@ -76,6 +78,7 @@ import '../widgets/model_shortcuts.dart';
 import '../widgets/product_states.dart';
 import '../widgets/prompt_history_navigation.dart';
 import '../widgets/last_known_sessions.dart' show LastKnownSessions;
+import '../widgets/request_routes.dart';
 import '../widgets/queued_prompt_move_sheet.dart'
     show showQueuedPromptMoveSheet;
 import '../widgets/transcript_highlight.dart';
@@ -124,7 +127,6 @@ import 'team_conversation/team_conversation.dart' show TeamConversation;
 import '../kit/scenes/states_scenes.dart';
 import '../widgets/grace_timer.dart';
 import '../permission_presentation.dart';
-import 'activity_screen.dart' show showQuestionSheet;
 import 'app_diagnostics_screen.dart';
 import '../../diagnostics/perf_trace.dart';
 import 'chat/form_flow.dart';
@@ -192,6 +194,7 @@ part 'chat/chat_start.dart';
 part 'chat/chat_message_actions.dart';
 part 'chat/chat_notices.dart';
 part 'chat/chat_requests.dart';
+part 'chat/question_sheet.dart';
 part 'chat/chat_commands.dart';
 part 'chat/chat_command_actions.dart';
 part 'chat/chat_session_menu.dart';
@@ -386,6 +389,11 @@ class _ChatScreenState extends State<ChatScreen>
     _draftLocation = _conn.locationRevision;
     _draftDirectory = _conn.directory;
     _draftWorkspace = _conn.workspace;
+    // Opening a conversation makes its project the last-used one (Files
+    // follows it); a watched worker or the demo is not the person's.
+    if (!_conn.isIsolated && !_watching) {
+      rememberLastUsedProject(_conn, _conn.directory);
+    }
     _offlineFlushRevision = _conn.offlineFlushRevision;
     // A watched session is someone else's: no draft of the person's.
     if (!_conn.isIsolated && !_watching && widget.initialText.isEmpty) {

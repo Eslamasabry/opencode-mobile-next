@@ -2466,22 +2466,22 @@
   }
  ],
  "notPages": [
-   {
-     "file": "lib/ui/screens/library/integrations_connect.dart",
-     "reason": "Part file of lib/ui/screens/library_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-   },
-   {
-     "file": "lib/ui/screens/library/integrations_mcp.dart",
-     "reason": "Part file of lib/ui/screens/library_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-   },
-   {
-     "file": "lib/ui/screens/library/integrations_page.dart",
-     "reason": "Part file of lib/ui/screens/library_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-   },
-   {
-     "file": "lib/ui/screens/library/integrations_signin.dart",
-     "reason": "Part file of lib/ui/screens/library_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-   },
+  {
+   "file": "lib/ui/screens/library/integrations_connect.dart",
+   "reason": "Part file of lib/ui/screens/library_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+  },
+  {
+   "file": "lib/ui/screens/library/integrations_mcp.dart",
+   "reason": "Part file of lib/ui/screens/library_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+  },
+  {
+   "file": "lib/ui/screens/library/integrations_page.dart",
+   "reason": "Part file of lib/ui/screens/library_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+  },
+  {
+   "file": "lib/ui/screens/library/integrations_signin.dart",
+   "reason": "Part file of lib/ui/screens/library_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+  },
   {
    "file": "lib/ui/screens/library/pending_auth_recovery.dart",
    "reason": "Only _authSourceFor remains: a nonvisual equality identity for an authentication action. The sign-in confirmation now lives in integrations_screen.dart."

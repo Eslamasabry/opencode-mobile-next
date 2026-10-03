@@ -1,22 +1,18 @@
 // Golden renders of the screens migrated to the design kit
-// (docs/design/design-standard.md §8): the connection states and the Work
-// tab, at 412x915, dark and light, with the app's real fonts.
+// (design-standard §8): the connection states, at 412x915, dark and light,
+// with the app's real fonts.
 //
 // Regenerate deliberately:
 //   flutter test --update-goldens test/goldens/work_tab_golden_test.dart
 // and look at every changed image before committing it.
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/ui/kit/kit_motion.dart';
-import 'package:opencode_mobile/ui/screens/home_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:opencode_mobile/ui/widgets/app_connection_status.dart';
 import 'package:opencode_mobile/ui/widgets/saved_server_connection_card.dart';
-import 'package:opencode_mobile/ui/widgets/work_status_line.dart';
 
 import '../../tool/capture/fixtures.dart' show captureApp, loadCaptureFonts;
 import '../support/work_tab_fixture.dart';
@@ -40,7 +36,7 @@ Future<void> _golden(
   String name, {
   required bool light,
   required WorkController controller,
-  Widget home = const HomeScreen(initialTab: 0),
+  required Widget home,
   Future<void> Function()? before,
 }) async {
   _mockSecureStorage(tester);
@@ -119,7 +115,6 @@ const _refused =
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(loadCaptureFonts);
-  tearDown(() => WorkspaceScreen.debugRunawayWatcher = null);
 
   for (final light in [false, true]) {
     final mode = light ? 'light' : 'dark';
@@ -190,115 +185,6 @@ void main() {
             ),
           ),
         ),
-      );
-    });
-
-    testWidgets('work · restoring · $mode', (tester) async {
-      final controller =
-          await workController(directory: null, otherProjects: true)
-            ..holdSelection = true;
-      await _golden(
-        tester,
-        'work_restoring',
-        light: light,
-        controller: controller,
-      );
-    });
-
-    testWidgets('work · loading · $mode', (tester) async {
-      final controller =
-          await workController(
-              otherProjects: true,
-              repository: WorkRepository()..holdProjects = Completer<void>(),
-            )
-            ..sessionsLoading = true;
-      await _golden(
-        tester,
-        'work_loading',
-        light: light,
-        controller: controller,
-      );
-    });
-
-    testWidgets('work · empty · $mode', (tester) async {
-      await _golden(
-        tester,
-        'work_empty',
-        light: light,
-        controller: await workController(),
-        // The empty state's drawing finishes its entrance.
-        before: () => tester.pump(KitMotion.entrance),
-      );
-    });
-
-    testWidgets('work · loaded · $mode', (tester) async {
-      final controller = await workController(
-        sessions: workLoadedSessions(),
-        busy: {'busy'},
-        otherProjects: true,
-      );
-      controller.permissions['perm'] = workPermission();
-      await _golden(
-        tester,
-        'work_loaded',
-        light: light,
-        controller: controller,
-      );
-    });
-
-    testWidgets('work · not answering · $mode', (tester) async {
-      final controller = await workController(
-        status: StreamStatus.reconnecting,
-        sessions: workLoadedSessions(),
-        otherProjects: true,
-      );
-      await _golden(
-        tester,
-        'work_not_answering',
-        light: light,
-        controller: controller,
-        before: () async {
-          await tester.pump(const Duration(seconds: 9));
-          await tester.pump(const Duration(milliseconds: 300));
-        },
-      );
-    });
-
-    testWidgets('work · runaway · $mode', (tester) async {
-      WorkspaceScreen.debugRunawayWatcher = (context, builder) => builder(
-        context,
-        WorkRunawayNotice(
-          identity: 1,
-          helper: 'node',
-          busyFor: '10 min',
-          onStop: () {},
-          onDismiss: () {},
-        ),
-      );
-      final controller = await workController(
-        sessions: workLoadedSessions(),
-        otherProjects: true,
-      );
-      await _golden(
-        tester,
-        'work_runaway',
-        light: light,
-        controller: controller,
-      );
-    });
-
-    testWidgets('work · no project yet · $mode', (tester) async {
-      final controller = await workController(
-        directory: null,
-        savedLocation: false,
-        repository: WorkRepository()..projects = const [],
-      );
-      await _golden(
-        tester,
-        'work_chooser',
-        light: light,
-        controller: controller,
-        before: () => tester.pump(KitMotion.entrance),
       );
     });
   }

@@ -11,7 +11,6 @@ import 'package:opencode_mobile/main.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/update/shorebird_update_notice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -281,17 +280,11 @@ void main() {
     // app stays on its normal root instead of pushing a chat.
     expect(find.byType(ChatScreen), findsNothing);
     // This server has a question waiting, so the normal root is the shell on
-    // its Inbox tab: the embedded Inbox, never the pushed request route.
+    // Chats: no pushed request route, and the badge says what waits.
     expect(find.byType(HomeScreen), findsOneWidget);
     expect(
       tester.state<NavigatorState>(find.byType(Navigator).first).canPop(),
       isFalse,
-    );
-    expect(
-      tester
-          .widgetList<ActivityScreen>(find.byType(ActivityScreen))
-          .where((screen) => !screen.embedded),
-      isEmpty,
     );
     expect(find.text('Send answers'), findsNothing);
     expect(controller.pendingCodingAlertOpen, isNull);

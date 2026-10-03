@@ -100,6 +100,52 @@ extension _ChatTopBar on _ChatScreenState {
     return watch.title?.call() ?? own;
   }
 
+  /// The project this conversation lives in, as a chip under the title with
+  /// a compact menu of what can be done there. Absent for a temporary folder
+  /// (never shown as a project), a watched team worker and the demo.
+  KitTopBarScope? _projectScope(Session? session, AppLocalizations l10n) {
+    if (_watching || _conn.isIsolated) return null;
+    final directory = session?.directory ?? _conn.directory;
+    if (isTemporaryProjectDirectory(directory)) return null;
+    final parts = directory!.split('/').where((part) => part.isNotEmpty);
+    final name = parts.isEmpty ? directory : parts.last;
+    final capabilities = _conn.capabilities;
+    final items = <KitMenuItem>[
+      if (capabilities.fileBrowsing)
+        KitMenuItem(
+          key: const ValueKey('chat-project-files'),
+          label: l10n.readerUiFiles,
+          icon: AppIconography.files,
+          onSelected: () =>
+              unawaited(_executeMobileCommand(_ChatCommandAction.files)),
+        ),
+      if (capabilities.terminal)
+        KitMenuItem(
+          key: const ValueKey('chat-project-terminal'),
+          label: l10n.libraryTerminalTitle,
+          icon: AppIconography.terminal,
+          onSelected: () =>
+              unawaited(_executeMobileCommand(_ChatCommandAction.terminal)),
+        ),
+      if (capabilities.sessionDiff)
+        KitMenuItem(
+          key: const ValueKey('chat-project-changes'),
+          label: l10n.readerUiChanges,
+          icon: AppIconography.review,
+          onSelected: () => unawaited(_showDiff()),
+        ),
+    ];
+    if (items.isEmpty) return null;
+    return KitTopBarScope(
+      chipKey: const ValueKey('chat-project-chip'),
+      label: KitBidi.auto(name),
+      semanticsLabel: l10n.chatProjectChipSemantics(name),
+      icon: AppIconography.folderOpen,
+      menuLabel: l10n.chatProjectMenuLabel,
+      items: items,
+    );
+  }
+
   KitTopBar _chatTopBar({
     required Session? session,
     required String? serverName,
@@ -114,6 +160,7 @@ extension _ChatTopBar on _ChatScreenState {
       // Which server (and so which agent) this conversation is with, when
       // there is more than one to be with.
       subtitle: serverName,
+      scope: _projectScope(session, l10n),
       actions: [
         if (_readAloudRequestBusy || _readAloud?.speaking == true)
           KitAction(

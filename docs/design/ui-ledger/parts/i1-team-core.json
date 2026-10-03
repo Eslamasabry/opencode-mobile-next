@@ -694,13 +694,6 @@
           "line": 79
         },
         {
-          "page": "?",
-          "element": null,
-          "widget": "ActivityAgentBlockedTile",
-          "file": "lib/ui/screens/activity_screen.dart",
-          "line": 928
-        },
-        {
           "page": "team-task-details",
           "element": "team-task-details-agent"
         }
@@ -1240,19 +1233,6 @@
           "file": "lib/ui/screens/team/team_board_screen.dart"
         },
         {
-          "id": "team-board-tabs",
-          "type": "tab",
-          "label": "Backlog | Ready | Working | Review | Done",
-          "key": null,
-          "file": "lib/ui/widgets/team_board_tabs.dart",
-          "line": 78,
-          "action": "other",
-          "target": null,
-          "effect": "TeamBoardTabs.onSelect -> _select(column): setState(() => _column = column) then pages.animateToPage (jumpToPage when motion is reduced).",
-          "gates": [],
-          "destructive": false
-        },
-        {
           "id": "team-board-add",
           "type": "icon-button",
           "label": "Give the team a task",
@@ -1571,14 +1551,6 @@
           "element": "team-board-move-open"
         },
         {
-          "page": "workspace",
-          "element": "workspace-team-task-row"
-        },
-        {
-          "page": "workspace",
-          "element": "workspace-new-session"
-        },
-        {
           "page": "team-home",
           "element": "team-home-runs-row"
         },
@@ -1719,20 +1691,6 @@
           "gates": [
             "the team is overdue (GraceTimer, 8 s) and not answering"
           ],
-          "destructive": false
-        },
-        {
-          "id": "team-conversation-gate-card",
-          "type": "card",
-          "label": "[Needs-you gate card]",
-          "key": null,
-          "file": "lib/ui/widgets/team_needs_you.dart",
-          "line": 397,
-          "action": "open-sheet",
-          "target": "gate-sheet",
-          "targetWidget": "showGateSheet",
-          "effect": "TeamNeedsYouCard.onOpen -> showGateSheet(context, team, gate.id, now: widget.now); one card per open gate on this task.",
-          "gates": [],
           "destructive": false
         },
         {

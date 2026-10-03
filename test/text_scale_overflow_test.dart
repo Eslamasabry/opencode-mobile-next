@@ -40,7 +40,6 @@ import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:opencode_mobile/ui/widgets/form_renderer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -442,17 +441,6 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byKey(const Key('chat-composer-field')), findsOneWidget);
-  });
-
-  testWidgets('workspace lays out at 2.5x', (tester) async {
-    final conn = await _controller();
-    addTearDown(conn.dispose);
-    await _pumpScaled(
-      tester,
-      _scoped(conn, Scaffold(body: WorkspaceScreen(controller: conn))),
-    );
-
-    expect(tester.takeException(), isNull);
   });
 
   testWidgets('the home shell lays out at 2.5x', (tester) async {

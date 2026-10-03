@@ -24,10 +24,8 @@ import 'package:opencode_mobile/state/orchestration.dart';
 import 'package:opencode_mobile/state/orchestration_store.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/first_run_path.dart';
@@ -350,7 +348,7 @@ void main() {
     }
   }
 
-  /// Connects [p] over a recording gateway and renders the Workspace,
+  /// Connects [p] over a recording gateway and renders nothing (the Work screen is gone),
   /// returning the controller and the gateway's call log.
   Future<(ConnectionController, _RecordingGateway)> connectAndRender(
     WidgetTester tester,
@@ -372,7 +370,7 @@ void main() {
     addTearDown(controller.dispose);
     await controller.connect(p);
     await tester.pump();
-    await tester.pumpWidget(app(WorkspaceScreen(controller: controller)));
+    await tester.pumpWidget(app(const SizedBox.shrink()));
     await settle(tester);
     return (controller, gateway);
   }
@@ -401,34 +399,6 @@ void main() {
   }
 
   group('plugin off: tree assertions', () {
-    testWidgets('Workspace has no plugin widget and no controller', (
-      tester,
-    ) async {
-      final (controller, _) = await connectAndRender(tester, profile());
-      expect(controller.status, StreamStatus.connected);
-      expect(controller.profile?.orchestration, isNull);
-      expect(controller.orchestration, isNull);
-      await expectNoPluginWidgets(tester);
-      expect(tester.takeException(), isNull);
-      await teardown(tester, controller);
-    });
-
-    testWidgets('Activity has no AI Team rows', (tester) async {
-      final (controller, _) = await connectAndRender(tester, profile());
-      await tester.pumpWidget(
-        app(
-          Scaffold(
-            body: ActivityScreen(controller: controller, embedded: true),
-          ),
-        ),
-      );
-      await settle(tester);
-      expect(controller.orchestration, isNull);
-      await expectNoPluginWidgets(tester);
-      expect(tester.takeException(), isNull);
-      await teardown(tester, controller);
-    });
-
     testWidgets('Settings hub keeps the Plugins entry and nothing else', (
       tester,
     ) async {
@@ -485,49 +455,6 @@ void main() {
 
   group('plugin on adds no ServerGateway calls', () {
     testWidgets(
-      'connect + Workspace render make the same calls with the plugin on',
-      (tester) async {
-        final (off, offGateway) = await connectAndRender(tester, profile());
-        expect(off.orchestration, isNull);
-        final offCalls = List.of(offGateway.calls);
-        await teardown(tester, off);
-
-        SharedPreferences.setMockInitialValues({});
-        prefs = await SharedPreferences.getInstance();
-        final (on, onGateway) = await connectAndRender(
-          tester,
-          profile(config: fixtureConfig()),
-        );
-        final team = on.orchestration;
-        expect(team, isNotNull, reason: 'the config builds the sibling');
-        expect(team!.config, fixtureConfig());
-        // The plugin did its reads (over the fixture, not the server).
-        expect(team.snapshot.hasData, isTrue);
-        expect(team.snapshot.agents, isNotEmpty);
-        expect(team.snapshot.runs, isNotEmpty);
-        // The team's tasks are rows in the Work tab's one list
-        // (docs/design/team-conversation-2026-09-26.md); its page is reached
-        // from Settings, so Work holds no door row (owner rule R4).
-        expect(
-          find.byKey(const ValueKey('team-work-door'), skipOffstage: false),
-          findsNothing,
-        );
-        // The predicate the plugin-off tests rely on does see the plugin's
-        // keys when they exist.
-        expect(_pluginKeys(), findsWidgets);
-
-        expect(offCalls, isNotEmpty, reason: 'the baseline connected');
-        expect(
-          onGateway.calls..sort(),
-          offCalls..sort(),
-          reason: 'the plugin must add zero calls to ServerGateway',
-        );
-        expect(tester.takeException(), isNull);
-        await teardown(tester, on);
-      },
-    );
-
-    testWidgets(
       'orchestration reads go through OrchestrationGateway, not lib/api',
       (tester) async {
         final fixture = _CountingFixture(fixturePath: fixturePath);
@@ -541,20 +468,9 @@ void main() {
         );
         addTearDown(team.dispose);
 
-        Future<void> renderActivity(ConnectionController controller) async {
-          await tester.pumpWidget(
-            app(
-              Scaffold(
-                body: ActivityScreen(controller: controller, embedded: true),
-              ),
-            ),
-          );
-          await settle(tester);
-        }
-
         // Baseline: the same connection and renders with the plugin off.
         final (off, offGateway) = await connectAndRender(tester, profile());
-        await renderActivity(off);
+        await settle(tester);
         final offCalls = List.of(offGateway.calls)..sort();
         await teardown(tester, off);
         SharedPreferences.setMockInitialValues({});
@@ -573,12 +489,6 @@ void main() {
         expect(on, same(plugged));
         await team.start();
         await settle(tester);
-        // The plugin's widgets are in the Work tab (its tasks' rows).
-        expect(_pluginKeys(), findsWidgets);
-
-        // Activity too: it reads the plugin's gates and agents for its
-        // AI Team rows (none in the fixture's normal run, so no rows).
-        await renderActivity(on);
         expect(on.orchestration, same(team));
 
         // Every scope was read from the orchestration gateway…

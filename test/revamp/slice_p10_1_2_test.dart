@@ -6,9 +6,7 @@
 //   words, and the Library's Commands tab is the same sheet;
 // - on a server whose agent does not share its commands the sheet names
 //   what is missing, and a typed "/compact" is never sent as a message;
-// - "!command" in the composer runs in the conversation's shell;
-// - a Work row's menu is the same menu, and its conversation acts open the
-//   chat with the pick.
+// - "!command" in the composer runs in the conversation's shell.
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -23,10 +21,8 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
-import 'package:opencode_mobile/ui/navigation/chat_route.dart';
 import 'package:opencode_mobile/ui/screens/capabilities_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:opencode_mobile/ui/widgets/command_sheet.dart';
 import 'package:opencode_mobile/ui/widgets/session_menu.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -462,50 +458,5 @@ void main() {
         isEmpty,
       );
     });
-  });
-
-  testWidgets('a Work row has the same menu and hands its pick to the chat', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(412, 915);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    final api = _Api(
-      sessionList: [
-        Session(id: 's1', title: 'Ship it', time: SessionTime(created: 1)),
-      ],
-    );
-    final conn = await _controller(api);
-    conn.directory = '/tmp/p1';
-    await conn.refreshSessions();
-    final pushed = <(String?, Object?)>[];
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(body: WorkspaceScreen(controller: conn)),
-        onGenerateRoute: (settings) {
-          pushed.add((settings.name, settings.arguments));
-          return MaterialPageRoute<void>(builder: (_) => const SizedBox());
-        },
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.longPress(find.text('Ship it'));
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('kit-menu-heading-Go to')),
-      findsOneWidget,
-    );
-    expect(find.byKey(const ValueKey('kit-menu-heading-Do')), findsOneWidget);
-    expect(find.byKey(const ValueKey('session-menu-fork')), findsOneWidget);
-    expect(find.byKey(const ValueKey('session-menu-find')), findsOneWidget);
-
-    await tester.tap(find.byKey(const ValueKey('session-menu-fork')));
-    await tester.pumpAndSettle();
-    expect(pushed.single.$1, '/chat/s1');
-    final arguments = pushed.single.$2! as ChatRouteArguments;
-    expect(arguments.menuAction, SessionMenuAction.fork);
   });
 }

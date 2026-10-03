@@ -6913,22 +6913,16 @@ abstract class AppLocalizations {
   /// **'Start a conversation in the active project'**
   String get e7LocaleUiNewSessionHint;
 
-  /// Locale selection or app shell: Workspace
-  ///
-  /// In en, this message translates to:
-  /// **'Work'**
-  String get e7LocaleUiWorkspace;
-
   /// Locale selection or app shell: WorkspaceHint
   ///
   /// In en, this message translates to:
-  /// **'Recent conversations and the active project'**
+  /// **'Every conversation, across projects'**
   String get e7LocaleUiWorkspaceHint;
 
   /// Locale selection or app shell: Files
   ///
   /// In en, this message translates to:
-  /// **'Project'**
+  /// **'Files'**
   String get e7LocaleUiFiles;
 
   /// Locale selection or app shell: FilesHint
@@ -6936,18 +6930,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Files, changes, terminal and other project tools'**
   String get e7LocaleUiFilesHint;
-
-  /// Locale selection or app shell: Activity
-  ///
-  /// In en, this message translates to:
-  /// **'Inbox'**
-  String get e7LocaleUiActivity;
-
-  /// Locale selection or app shell: ActivityHint
-  ///
-  /// In en, this message translates to:
-  /// **'Permissions, questions, and forms'**
-  String get e7LocaleUiActivityHint;
 
   /// Locale selection or app shell: MoreHint
   ///
@@ -7000,7 +6982,7 @@ abstract class AppLocalizations {
   /// App shell command menu or routing: Destinations
   ///
   /// In en, this message translates to:
-  /// **'Work, Inbox, Project, Settings'**
+  /// **'Switch tab'**
   String get e7LocaleUiDestinations;
 
   /// App shell command menu or routing: Terminal
@@ -17856,23 +17838,11 @@ abstract class AppLocalizations {
   /// **'Remaining'**
   String get usageSectionRemaining;
 
-  /// Bottom navigation label and app bar title of the first tab: conversations in the current project.
-  ///
-  /// In en, this message translates to:
-  /// **'Work'**
-  String get shellTabWork;
-
   /// Bottom navigation label and title of the second tab: everything waiting on the person, then running and finished work.
   ///
   /// In en, this message translates to:
   /// **'Inbox'**
   String get shellTabInbox;
-
-  /// Bottom navigation label and app bar title of the third tab: tools scoped to the current project.
-  ///
-  /// In en, this message translates to:
-  /// **'Project'**
-  String get shellTabProject;
 
   /// Server switcher row that opens the Servers screen.
   ///
@@ -17897,18 +17867,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'In {parent}'**
   String discoverSearchIn(String parent);
-
-  /// No description provided for @discoverWorkAliases.
-  ///
-  /// In en, this message translates to:
-  /// **'work home conversations sessions chats recent pinned new conversation'**
-  String get discoverWorkAliases;
-
-  /// No description provided for @discoverInboxAliases.
-  ///
-  /// In en, this message translates to:
-  /// **'inbox activity needs you approvals permissions questions forms waiting running finished'**
-  String get discoverInboxAliases;
 
   /// No description provided for @discoverProjectAliases.
   ///
@@ -25758,19 +25716,19 @@ abstract class AppLocalizations {
   /// **'In a conversation'**
   String get shortcutsHelpConversation;
 
-  /// Shell: title of the row and sheet explaining why the Project tab is missing on this server
+  /// Shell: title of the row and sheet explaining why the Files tab is missing on this server
   ///
   /// In en, this message translates to:
-  /// **'Project isn\'t available'**
+  /// **'Files isn\'t available'**
   String get homeShellProjectUnavailable;
 
-  /// Shell: why the Project tab is missing; {server} is the server's display name
+  /// Shell: why the Files tab is missing; {server} is the server's display name
   ///
   /// In en, this message translates to:
   /// **'{server} doesn\'t offer files, changes or code search. Connect to an OpenCode server to use them.'**
   String homeShellProjectUnavailableReason(String server);
 
-  /// Shell: the one-line reason on the row shown after the Project tab went away (a server switch); {server} is the server's display name
+  /// Shell: the one-line reason on the row shown after the Files tab went away (a server switch); {server} is the server's display name
   ///
   /// In en, this message translates to:
   /// **'{server} has no project tools.'**
@@ -42348,6 +42306,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Approved automatically'**
   String get approvalsSheetHistory;
+
+  /// Chats home: the screen's title
+  ///
+  /// In en, this message translates to:
+  /// **'Conversations'**
+  String get chatsHomeTitle;
+
+  /// Chats home: the project filter chip when no project is chosen, and the first row of the project sheet
+  ///
+  /// In en, this message translates to:
+  /// **'All projects'**
+  String get chatsHomeAllProjects;
+
+  /// Chats home: filter chip, section name and row tag for conversations waiting on the person
+  ///
+  /// In en, this message translates to:
+  /// **'Needs you'**
+  String get chatsHomeNeedsYou;
+
+  /// Chats home: the needs-you filter chip with how many wait
+  ///
+  /// In en, this message translates to:
+  /// **'Needs you · {count}'**
+  String chatsHomeNeedsYouCount(int count);
+
+  /// Chats home: filter chip and row tag for conversations the agent is working in
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get chatsHomeRunning;
+
+  /// Chats home: section name
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get chatsHomeToday;
+
+  /// Chats home: section name
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get chatsHomeEarlier;
+
+  /// Chats home: quiet line when the server cannot list across projects
+  ///
+  /// In en, this message translates to:
+  /// **'Showing conversations in {project} only. This server can\'t list all projects.'**
+  String chatsHomeOnlyProject(String project);
+
+  /// Chats home: quiet line when the list is partial
+  ///
+  /// In en, this message translates to:
+  /// **'Some conversations couldn\'t load'**
+  String get chatsHomeIncomplete;
+
+  /// Chats home: empty state title
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations yet'**
+  String get chatsHomeEmptyTitle;
+
+  /// Chats home: empty state body
+  ///
+  /// In en, this message translates to:
+  /// **'Start a conversation and it shows up here.'**
+  String get chatsHomeEmptyBody;
+
+  /// Chats home: empty state action
+  ///
+  /// In en, this message translates to:
+  /// **'Start a conversation'**
+  String get chatsHomeStartChat;
+
+  /// Chats home: nothing matches the filters
+  ///
+  /// In en, this message translates to:
+  /// **'No matching conversations'**
+  String get chatsHomeNoMatchTitle;
+
+  /// Chats home: nothing matches the filters, body
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing fits the filters you chose.'**
+  String get chatsHomeNoMatchBody;
+
+  /// Chats home: removes every filter
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get chatsHomeClearFilters;
+
+  /// Chats home: the chosen project has no chats
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations in {project}'**
+  String chatsHomeProjectEmptyTitle(String project);
+
+  /// Chats home: action in a project with no chats
+  ///
+  /// In en, this message translates to:
+  /// **'Start a conversation in {project}'**
+  String chatsHomeStartChatIn(String project);
+
+  /// Chats home: the floating button and the start screen's title
+  ///
+  /// In en, this message translates to:
+  /// **'New conversation'**
+  String get chatsHomeNewChat;
+
+  /// Chats home: a chat could not be opened
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation couldn\'t be opened. Pull down to refresh the list.'**
+  String get chatsHomeOpenFailed;
+
+  /// Project filter sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Show conversations from'**
+  String get chatsFilterSheetTitle;
+
+  /// Project sheet: how many chats
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 conversation} other{{count} conversations}}'**
+  String chatsFilterChatCount(int count);
+
+  /// Project sheet: how many chats are running
+  ///
+  /// In en, this message translates to:
+  /// **'{running} running'**
+  String chatsFilterRunningCount(int running);
+
+  /// Project sheet: some chat in the project needs the person
+  ///
+  /// In en, this message translates to:
+  /// **'needs you'**
+  String get chatsFilterNeedsYouWord;
+
+  /// Project sheet: opens the Open a project sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Open a project…'**
+  String get chatsFilterOpenProject;
+
+  /// New chat: the centered question
+  ///
+  /// In en, this message translates to:
+  /// **'What should we work on?'**
+  String get chatsNewPrompt;
+
+  /// New chat: project chip with no project
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a project'**
+  String get chatsNewChooseProject;
+
+  /// New chat: why sending is off
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a project to start a conversation.'**
+  String get chatsNewNeedProject;
+
+  /// New chat: starting failed and the draft is kept
+  ///
+  /// In en, this message translates to:
+  /// **'The conversation didn\'t start. Your message is still here.'**
+  String get chatsNewFailed;
+
+  /// Bottom navigation label and title of the first tab: every conversation across projects, with what needs the person and what is running as filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversations'**
+  String get shellTabChats;
+
+  /// Bottom navigation label and title of the second tab: the files, changes, terminal and other tools of one project, named by the chip under the title.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get shellTabFiles;
+
+  /// No description provided for @discoverChatsAliases.
+  ///
+  /// In en, this message translates to:
+  /// **'chats conversations sessions work home recent pinned new conversation inbox activity needs you approvals permissions questions forms waiting running finished'**
+  String get discoverChatsAliases;
+
+  /// Screen reader label of the small project chip under a conversation's title; {name} is the project's folder name.
+  ///
+  /// In en, this message translates to:
+  /// **'Project {name}. Opens a menu of its files, terminal and changes.'**
+  String chatProjectChipSemantics(String name);
+
+  /// Name of the menu the conversation's project chip opens (Files, Terminal, Changes).
+  ///
+  /// In en, this message translates to:
+  /// **'Project tools'**
+  String get chatProjectMenuLabel;
 }
 
 class _AppLocalizationsDelegate

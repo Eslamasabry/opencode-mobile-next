@@ -109,7 +109,7 @@ Widget _app(ConnectionController controller) => ProviderScope(
   child: const MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
-    home: HomeScreen(initialTab: 2),
+    home: HomeScreen(initialTab: 1),
   ),
 );
 
@@ -126,52 +126,25 @@ void main() {
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
 
-      // Project is logical destination 2, so an initial Project selection
-      // falls back to Work rather than shifting Settings left.
+      // Files is logical destination 1, so an initial Files selection falls
+      // back to Chats rather than shifting Settings left.
       expect(tester.widget<KitNav>(find.byType(KitNav)).selected, 0);
-      expect(find.text('Project'), findsNothing);
-      expect(find.text('Work'), findsWidgets);
-      expect(find.text('Inbox'), findsOneWidget);
+      expect(find.text('Files'), findsNothing);
+      expect(find.text('Conversations'), findsWidgets);
+      expect(find.text('Inbox'), findsNothing);
       expect(find.text('Settings'), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('location-recovery-notice')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const ValueKey('restricted-directory-context')),
-        findsOneWidget,
-      );
-      // One list with no caption: the pin is a row in it, no Pinned header.
-      expect(find.text('Conversations'), findsNothing);
-      expect(find.text('Pinned Codex session'), findsOneWidget);
 
       // The project catalog is not queried when project management is absent.
       expect(repository.listProjectsCalls, 0);
-      expect(find.byKey(const ValueKey('search-all-sessions')), findsNothing);
-      // No caption menu: reload is pull to refresh, background updates
-      // live in Settings (owner rule R4).
-      expect(
-        find.byKey(const ValueKey('workspace-section-menu')),
-        findsNothing,
-      );
-      expect(find.byKey(const ValueKey('workspace-terminal')), findsNothing);
 
       // The shell's KitNav keeps the logical destination mapping when
       // unsupported Project is absent, including the medium-window rail.
       expect(find.byType(KitNavRail), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('home-shell-tab-inbox')));
+      await tester.tap(find.byKey(const ValueKey('home-shell-tab-settings')));
       await tester.pumpAndSettle();
       expect(tester.widget<KitNav>(find.byType(KitNav)).selected, 1);
       expect(
         tester.widget<KitNav>(find.byType(KitNav)).destinations[1].label,
-        'Inbox',
-      );
-
-      await tester.tap(find.byKey(const ValueKey('home-shell-tab-settings')));
-      await tester.pumpAndSettle();
-      expect(tester.widget<KitNav>(find.byType(KitNav)).selected, 2);
-      expect(
-        tester.widget<KitNav>(find.byType(KitNav)).destinations[2].label,
         'Settings',
       );
       // The tab is the hub itself; what is about the app survives a Codex

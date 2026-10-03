@@ -4136,23 +4136,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get e7LocaleUiNewSessionHint => 'ابدأ محادثة في المشروع الحالي';
 
   @override
-  String get e7LocaleUiWorkspace => 'العمل';
+  String get e7LocaleUiWorkspaceHint => 'كل المحادثات عبر المشاريع';
 
   @override
-  String get e7LocaleUiWorkspaceHint => 'المحادثات الأخيرة والمشروع الحالي';
-
-  @override
-  String get e7LocaleUiFiles => 'المشروع';
+  String get e7LocaleUiFiles => 'الملفات';
 
   @override
   String get e7LocaleUiFilesHint =>
       'الملفات والتغييرات والطرفية وأدوات المشروع الأخرى';
-
-  @override
-  String get e7LocaleUiActivity => 'الوارد';
-
-  @override
-  String get e7LocaleUiActivityHint => 'الأذونات والأسئلة والنماذج';
 
   @override
   String get e7LocaleUiMoreHint =>
@@ -4180,7 +4171,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get e7LocaleUiFindSurface => 'البحث في هذه الصفحة';
 
   @override
-  String get e7LocaleUiDestinations => 'العمل، الوارد، المشروع، الإعدادات';
+  String get e7LocaleUiDestinations => 'تبديل التبويب';
 
   @override
   String get e7LocaleUiTerminal => 'الطرفية';
@@ -10913,13 +10904,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get usageSectionRemaining => 'المتبقي';
 
   @override
-  String get shellTabWork => 'العمل';
-
-  @override
   String get shellTabInbox => 'الوارد';
-
-  @override
-  String get shellTabProject => 'المشروع';
 
   @override
   String get serverSwitcherManage => 'إدارة الخوادم';
@@ -10934,14 +10919,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String discoverSearchIn(String parent) {
     return 'في $parent';
   }
-
-  @override
-  String get discoverWorkAliases =>
-      'work home conversations sessions chats recent pinned العمل الرئيسية محادثات الأخيرة المثبتة محادثة جديدة';
-
-  @override
-  String get discoverInboxAliases =>
-      'inbox activity approvals permissions questions forms الوارد النشاط بانتظارك موافقات أذونات أسئلة نماذج قيد التشغيل منتهية';
 
   @override
   String get discoverProjectAliases =>
@@ -16211,7 +16188,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shortcutsHelpConversation => 'In a conversation';
 
   @override
-  String get homeShellProjectUnavailable => 'Project isn\'t available';
+  String get homeShellProjectUnavailable => 'Files isn\'t available';
 
   @override
   String homeShellProjectUnavailableReason(String server) {
@@ -26941,4 +26918,125 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get approvalsSheetHistory => 'تمت الموافقة تلقائيًا';
+
+  @override
+  String get chatsHomeTitle => 'المحادثات';
+
+  @override
+  String get chatsHomeAllProjects => 'كل المشاريع';
+
+  @override
+  String get chatsHomeNeedsYou => 'بانتظارك';
+
+  @override
+  String chatsHomeNeedsYouCount(int count) {
+    return 'بانتظارك · $count';
+  }
+
+  @override
+  String get chatsHomeRunning => 'قيد العمل';
+
+  @override
+  String get chatsHomeToday => 'اليوم';
+
+  @override
+  String get chatsHomeEarlier => 'سابقًا';
+
+  @override
+  String chatsHomeOnlyProject(String project) {
+    return 'تُعرض المحادثات في $project فقط. لا يستطيع هذا الخادم سرد كل المشاريع.';
+  }
+
+  @override
+  String get chatsHomeIncomplete => 'تعذر تحميل بعض المحادثات';
+
+  @override
+  String get chatsHomeEmptyTitle => 'لا توجد محادثات بعد';
+
+  @override
+  String get chatsHomeEmptyBody => 'ابدأ محادثة وستظهر هنا.';
+
+  @override
+  String get chatsHomeStartChat => 'ابدأ محادثة';
+
+  @override
+  String get chatsHomeNoMatchTitle => 'لا توجد محادثات مطابقة';
+
+  @override
+  String get chatsHomeNoMatchBody => 'لا شيء يطابق المرشحات التي اخترتها.';
+
+  @override
+  String get chatsHomeClearFilters => 'مسح المرشحات';
+
+  @override
+  String chatsHomeProjectEmptyTitle(String project) {
+    return 'لا توجد محادثات في $project';
+  }
+
+  @override
+  String chatsHomeStartChatIn(String project) {
+    return 'ابدأ محادثة في $project';
+  }
+
+  @override
+  String get chatsHomeNewChat => 'محادثة جديدة';
+
+  @override
+  String get chatsHomeOpenFailed =>
+      'تعذر فتح هذه المحادثة. اسحب للأسفل لتحديث القائمة.';
+
+  @override
+  String get chatsFilterSheetTitle => 'عرض محادثات من';
+
+  @override
+  String chatsFilterChatCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count محادثات',
+      one: 'محادثة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chatsFilterRunningCount(int running) {
+    return '$running قيد العمل';
+  }
+
+  @override
+  String get chatsFilterNeedsYouWord => 'بانتظارك';
+
+  @override
+  String get chatsFilterOpenProject => 'فتح مشروع…';
+
+  @override
+  String get chatsNewPrompt => 'على ماذا نعمل؟';
+
+  @override
+  String get chatsNewChooseProject => 'اختر مشروعًا';
+
+  @override
+  String get chatsNewNeedProject => 'اختر مشروعًا لبدء محادثة.';
+
+  @override
+  String get chatsNewFailed => 'لم تبدأ المحادثة. رسالتك ما زالت هنا.';
+
+  @override
+  String get shellTabChats => 'المحادثات';
+
+  @override
+  String get shellTabFiles => 'الملفات';
+
+  @override
+  String get discoverChatsAliases =>
+      'chats conversations sessions work home recent pinned inbox activity needs you approvals permissions questions forms المحادثات العمل الرئيسية الأخيرة المثبتة محادثة جديدة الوارد النشاط بانتظارك موافقات أذونات أسئلة نماذج قيد التشغيل منتهية';
+
+  @override
+  String chatProjectChipSemantics(String name) {
+    return 'المشروع $name. يفتح قائمة بملفاته وطرفيته وتغييراته.';
+  }
+
+  @override
+  String get chatProjectMenuLabel => 'أدوات المشروع';
 }

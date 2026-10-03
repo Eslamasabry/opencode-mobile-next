@@ -11,15 +11,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:opencode_mobile/api/models.dart' show Session, SessionTime;
 import 'package:opencode_mobile/domain/orchestration_gateway.dart';
-import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/orchestration/adapters/fixture/fixture_gateway.dart';
 import 'package:opencode_mobile/orchestration/adapters/gascity/dto/dto.dart';
 import 'package:opencode_mobile/orchestration/adapters/gascity/gascity_gateway.dart';
 import 'package:opencode_mobile/orchestration/adapters/gascity/gascity_mappers.dart';
-import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/orchestration.dart';
 import 'package:opencode_mobile/state/orchestration_store.dart';
 import 'package:opencode_mobile/state/profiles.dart';
@@ -27,7 +24,6 @@ import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit_motion.dart';
 import 'package:opencode_mobile/ui/kit/kit_top_bar.dart';
 import 'package:opencode_mobile/ui/screens/team/team_home_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/gascity_recorded_city.dart';
@@ -195,20 +191,6 @@ class _Gateway implements OrchestrationGateway {
     projectId: projectId,
     requestId: requestId,
   );
-}
-
-/// A connection whose plugin controller a test can set directly.
-class _Connection extends ConnectionController {
-  _Connection(super.store);
-
-  OrchestrationController? team;
-
-  @override
-  OrchestrationController? get orchestration => team;
-
-  @override
-  ServerCapabilities get capabilities =>
-      const ServerCapabilities(projectManagement: false);
 }
 
 void main() {
@@ -1189,47 +1171,6 @@ void main() {
       expect(find.byKey(const ValueKey('team-home-data')), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
-  });
-
-  group('workspace wiring', () {
-    testWidgets(
-      'Work lists conversations only: no team door, no archived row',
-      (tester) async {
-        tester.view.physicalSize = const Size(390, 2400);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
-        final (controller, _) = await boot();
-        final connection = _Connection(ProfileStore(prefs: prefs))
-          ..team = controller;
-        addTearDown(connection.dispose);
-        connection.sessionsById = {
-          'recent': Session(
-            id: 'recent',
-            title: 'recent conversation',
-            time: SessionTime(created: 1, updated: 5),
-          ),
-          'old': Session(
-            id: 'old',
-            title: 'old conversation',
-            time: SessionTime(created: 1, updated: 2, archived: 3),
-          ),
-        };
-        await tester.pumpWidget(
-          app(Scaffold(body: WorkspaceScreen(controller: connection))),
-        );
-        await tester.pumpAndSettle();
-
-        // Owner rule R4 (2026-09-27): the team's tasks are rows in the one
-        // list; its page is reached from Settings › AI Team, and archived
-        // conversations are a filter of All conversations.
-        expect(find.text('recent conversation'), findsOneWidget);
-        expect(find.byKey(const ValueKey('team-work-door')), findsNothing);
-        expect(find.byKey(const ValueKey('team-card')), findsNothing);
-        expect(find.text('Archived conversations'), findsNothing);
-        expect(find.text('Conversations'), findsNothing);
-      },
-    );
   });
 
   // TEAM-115: the host's internals stay out of the counts and lists.

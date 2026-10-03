@@ -23,7 +23,6 @@ import 'package:opencode_mobile/builtin/builtin_server.dart';
 import 'package:opencode_mobile/builtin/local_terminal.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/state/connection.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/files_screen.dart';
 import 'package:opencode_mobile/ui/screens/global_sessions_screen.dart';
@@ -201,24 +200,6 @@ void main() {
         controller: controller,
         home: const HomeScreen(initialTab: 0),
         before: () => tester.pump(const Duration(seconds: 9)),
-      );
-    });
-
-    testWidgets('4 inbox, all caught up · $mode', (tester) async {
-      final controller = await _connected();
-      controller
-        ..busySessions = {}
-        ..permissions = {}
-        ..questions = {};
-      await _shoot(
-        tester,
-        '4-inbox-caught-up',
-        light: light,
-        controller: controller,
-        home: _page(
-          'Inbox',
-          ActivityScreen(controller: controller, embedded: true),
-        ),
       );
     });
 

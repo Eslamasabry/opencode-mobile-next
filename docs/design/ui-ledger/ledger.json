@@ -1,5 +1,5 @@
 {
- "generatedFrom": "3e86f8467ba39c5c8b173eec8e18a0852f4ece14",
+ "generatedFrom": "ba19357344ab8b4bd82c42f962d646736f5e4db1",
  "pages": [
   {
    "id": "system",
@@ -63,19 +63,6 @@
      "action": "navigate",
      "target": "home-shell",
      "effect": "session handoff link / AI Team link for a non-active saved server: _controller.connect(target) then navigator.pushNamedAndRemoveUntil('/home') (main.dart:782, 859)",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "system-activityscreen-initialquestionsessionid-from-a-question-noti-to-question-sheet",
-     "type": "gesture",
-     "label": "ActivityScreen(initialQuestionSessionID) from a question notification tap -> _scheduleInitialQuestion (activity_screen.dart:332-357)",
-     "key": null,
-     "file": "lib/main.dart",
-     "line": null,
-     "action": "open-sheet",
-     "target": "question-sheet",
-     "effect": "ActivityScreen(initialQuestionSessionID) from a question notification tap -> _scheduleInitialQuestion (activity_screen.dart:332-357)",
      "gates": [],
      "destructive": false
     },
@@ -193,19 +180,6 @@
      "action": "open-sheet",
      "target": "embedded-chat-nudge-slot",
      "effect": "ConversationNudgeWatcher offers a nudge at its moment (third permission request of one kind answered; first finished run that changed files; 60 s wait with finished-run notifications ready; context usage >= 80%)",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "system-automatic-replaces-the-workspace-tab-body-while-controller-w-to-workspace-folder-chooser",
-     "type": "gesture",
-     "label": "automatic: replaces the Workspace tab body while controller.workspaceChoiceRequired",
-     "key": null,
-     "file": "lib/main.dart",
-     "line": null,
-     "action": "navigate",
-     "target": "workspace-folder-chooser",
-     "effect": "automatic: replaces the Workspace tab body while controller.workspaceChoiceRequired",
      "gates": [],
      "destructive": false
     },
@@ -491,8 +465,9 @@
      "file": "lib/main.dart",
      "line": 645,
      "action": "navigate",
-     "target": "activity",
+     "target": null,
      "targetWidget": "ActivityScreen",
+     "unresolvedTarget": "activity",
      "effect": "_openActivityForLaunch: pushes ActivityScreen(controller) named '/activity/launch'; without a saved profile opens '/servers'.",
      "gates": [
       "_controller.profile != null"
@@ -523,8 +498,9 @@
      "file": "lib/main.dart",
      "line": 880,
      "action": "navigate",
-     "target": "activity",
+     "target": null,
      "targetWidget": "ActivityScreen",
+     "unresolvedTarget": "activity",
      "effect": "_openTeamLink/_pushTeamDestination: pushes ActivityScreen(initialTeamGateId: link.id) which opens showGateSheet once the orchestration snapshot settles; switches server first like the session link.",
      "gates": [
       "saved profile exists, no credential re-entry",
@@ -584,8 +560,9 @@
      "file": "lib/main.dart",
      "line": 1033,
      "action": "navigate",
-     "target": "activity",
+     "target": null,
      "targetWidget": "ActivityScreen",
+     "unresolvedTarget": "activity",
      "effect": "Pushes ActivityScreen(initialQuestionSessionID: target.sessionID) which auto-opens the question sheet.",
      "gates": [
       "_controller.hasConnectedServer"
@@ -1373,513 +1350,6 @@
    ]
   },
   {
-   "id": "activity",
-   "title": "Inbox",
-   "kind": "screen",
-   "area": "shell",
-   "file": "lib/ui/screens/activity_screen.dart",
-   "widget": "ActivityScreen",
-   "presentedBy": [],
-   "line": 48,
-   "purpose": "Single cross-conversation inbox in one order (UX plan 5.7): Waiting on you (AI Team gates and blocked agents, permissions, questions, forms, server requests, other servers' check-ins), then Running, then Finished (completion digests). Within a kind the request blocked longest comes first: AI Team rows by createdAt, the app's own requests in arrival order because they carry no time. Hosted as the Inbox root tab (embedded: true, no own Scaffold) or pushed with its own app bar.",
-   "reachedFrom": [
-    {
-     "page": "home-shell",
-     "element": "home-shell-tab-activity"
-    },
-    {
-     "page": "system",
-     "element": "system-entry-launch-activity"
-    },
-    {
-     "page": "system",
-     "element": "system-entry-team-link-gate"
-    },
-    {
-     "page": "system",
-     "element": "system-entry-alert-question"
-    }
-   ],
-   "gates": [],
-   "elements": [
-    {
-     "id": "activity-auto-row",
-     "type": "list-tile",
-     "label": "<what it was done to> / <what was done> · <when>",
-     "key": "activity-auto-<actId>",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "action": "navigate",
-     "target": "chat",
-     "targetWidget": "/chat/<sessionID>",
-     "effect": "P6.2 While you were away: one automatic act (reconnect, request allowed by itself, queued message sent, heat pause/stop/resume) from controller.automaticActsHere, sorted newest first together with the finished rows below everything that waits. A tap opens the conversation it was done to (_openChat); server-wide acts have no page to open.",
-     "gates": [
-      "act of the shown server or project, not acknowledged",
-      "onTap only when the act names a conversation"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "activity-auto-dismiss",
-     "type": "button",
-     "label": "Dismiss",
-     "key": "activity-auto-dismiss-<actId>",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "KitSwipeAction (and its row-menu twin): hides the act with KitUndo; on commit AutomaticActivityController.acknowledge([id]) (oc.automaticActivity.<profileId>); a refused save brings it back.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "activity-auto-undo",
-     "type": "button",
-     "label": "Undo",
-     "key": "activity-auto-undo-<actId>",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "AutomaticActivityController.undo(id): runs the act's in-memory inverse at most once; the line then says Undone, Undo didn't go through, or Undo not confirmed.",
-     "gates": [
-      "history.canUndo(id): only acts recorded with a real inverse, this process"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "activity-digests-toggle",
-     "type": "list-tile",
-     "label": "Completion digests",
-     "key": null,
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 186,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "expands/collapses the digest section (_showDigests).",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "activity-digest-session-row",
-     "type": "list-tile",
-     "label": "<session title>",
-     "key": null,
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 204,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "expands/collapses the CompletionDigestCard for that idle session (_expandedDigests).",
-     "gates": [
-      "_showDigests",
-      "idle root sessions of the current directory/workspace not busy and not dismissed"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "activity-error-retry",
-     "type": "button",
-     "label": "Try again",
-     "key": null,
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 240,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "ProductErrorState.onRetry -> _refresh().",
-     "gates": [
-      "error != null && empty"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/product_states.dart"
-    },
-    {
-     "id": "activity-error-report-bug",
-     "type": "button",
-     "label": "Report a bug",
-     "key": "product-error-report-bug",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 248,
-     "action": "other",
-     "target": null,
-     "targetWidget": "openBugReport",
-     "effect": "openBugReport(context) (lib/feedback/bug_report.dart:88).",
-     "gates": [
-      "error != null && empty"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/product_states.dart"
-    },
-    {
-     "id": "activity-pull-refresh",
-     "type": "gesture",
-     "label": "[pull to refresh]",
-     "key": null,
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 578,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_refresh(): controller.profileMonitor.refresh(), controller.prepareActionRepository(), controller.refreshSessions(), then _refreshPending() (refreshPendingPermissions/Questions/Forms).",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "activity-inline-error-retry",
-     "type": "button",
-     "label": "Try again",
-     "key": null,
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 620,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "ProductInlineEmpty 'Could not refresh' action -> _refresh().",
-     "gates": [
-      "error != null && !empty"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "activity-appbar-refresh",
-     "type": "icon-button",
-     "label": "Refresh",
-     "key": null,
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 674,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_refresh(); disabled and shows a spinner while _refreshing.",
-     "gates": [
-      "!widget.embedded (pushed Activity only)"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "activity-permission-row",
-     "type": "list-tile",
-     "label": "<permission title> / Permission required",
-     "key": "activity-permission-<permission.id>",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 709,
-     "action": "open-sheet",
-     "target": "permission-sheet",
-     "targetWidget": "showPermissionSheet",
-     "effect": "ActivityPermissionTile: showPermissionSheet(context, permission, controller, contextLabel).",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "activity-question-row",
-     "type": "list-tile",
-     "label": "<question title> / Assistant question",
-     "key": "activity-question-<question.id>",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 751,
-     "action": "open-sheet",
-     "target": "question-sheet",
-     "targetWidget": "showQuestionSheet",
-     "effect": "ActivityQuestionTile: showQuestionSheet(context, controller, question).",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "activity-form-row",
-     "type": "list-tile",
-     "label": "<form title> / Input requested",
-     "key": "form-request-tile-<form.id>",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 788,
-     "action": "open-sheet",
-     "target": "form-sheet",
-     "targetWidget": "presentConnectionForm",
-     "effect": "ActivityFormTile: presentConnectionForm(context, controller, form) (lib/ui/screens/chat/form_flow.dart). Used for session forms and the 'Server requests' (global/MCP) subsection.",
-     "gates": [
-      "controller.capabilities.forms"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "activity-team-gate-row",
-     "type": "list-tile",
-     "label": "<gate title>",
-     "key": "activity-team-gate-<gate.id>",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 861,
-     "action": "open-sheet",
-     "target": "gate-sheet",
-     "targetWidget": "showGateSheet",
-     "effect": "ActivityGateTile: showGateSheet(context, team, gate.id, now). When a mutation record exists and is not confirmed the trailing TeamReceiptChip (key 'activity-team-gate-<id>-receipt', lib/ui/widgets/team_receipt.dart) has onOpen doing the same.",
-     "gates": [
-      "controller.orchestration != null",
-      "!teamGateAnswered(team, gate)"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "activity-team-agent-blocked-row",
-     "type": "list-tile",
-     "label": "<agent name>",
-     "key": "activity-team-agent-<agent.id>",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 919,
-     "action": "navigate",
-     "target": "team-agent",
-     "targetWidget": "AgentScreen",
-     "effect": "ActivityAgentBlockedTile: pushes AgentScreen(controller: team, agentId: agent.id).",
-     "gates": [
-      "controller.orchestration != null",
-      "agent.state == AgentState.blocked"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "activity-running-row",
-     "type": "list-tile",
-     "label": "<session title>",
-     "key": "activity-running-<session.id>",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 989,
-     "action": "navigate",
-     "target": "chat",
-     "targetWidget": "/chat/<sessionID>",
-     "effect": "_openChat(session.id): controller.ensureSession, controller.selectLocationForExistingSession when the session lives in another directory/workspace, then Navigator.pushNamed('/chat/<id>'); errors via showProductError.",
-     "gates": [
-      "controller.busySessions root sessions (parentID == null)"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "activity-background-hint",
-     "type": "list-tile",
-     "label": "Background updates",
-     "key": "activity-background-settings",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 1334,
-     "action": "navigate",
-     "target": "notifications-settings",
-     "targetWidget": "NotificationsSettingsScreen",
-     "effect": "_openBackgroundSettings: pushes NotificationsSettingsScreen(controller).",
-     "gates": [
-      "empty",
-      "platformCapabilities.supportsBackgroundService && !controller.keepLiveInBackground"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "activity-status-check-again",
-     "type": "button",
-     "label": "Check again",
-     "key": null,
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 1384,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_ActivityStatus.onRefresh -> _refresh().",
-     "gates": [
-      "empty && !hasCheckIns",
-      "!known (controller.isConnected && controller.unknownAttentionProfileCount == 0 is false)"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "activity-project-decision",
-     "type": "list-tile",
-     "label": "Review project decision",
-     "key": null,
-     "file": "lib/ui/screens/team/project_destination.dart",
-     "line": 1,
-     "action": "navigate",
-     "target": "team-project-overview",
-     "targetWidget": null,
-     "effect": "Routes fixture request to owning project; legacy engines keep the existing gate flow.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "activity-digest-open-conversation",
-     "type": "button",
-     "label": "Open conversation",
-     "key": null,
-     "file": "lib/ui/widgets/completion_digest.dart",
-     "line": 72,
-     "action": "navigate",
-     "target": "chat",
-     "targetWidget": "/chat/<sessionID>",
-     "effect": "onOpenConversation -> _openChat(session.id) when the digest scope is unchanged.",
-     "gates": [
-      "digest expanded"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "activity-digest-review",
-     "type": "button",
-     "label": "Review next actions",
-     "key": null,
-     "file": "lib/ui/widgets/completion_digest.dart",
-     "line": 75,
-     "action": "open-sheet",
-     "target": "permission-sheet",
-     "targetWidget": "showPermissionSheet | showQuestionSheet | presentConnectionForm | /chat/<sessionID>",
-     "effect": "onReview -> _reviewDigest: opens the first pending showPermissionSheet, else showQuestionSheet, else presentConnectionForm (capabilities.forms) for that session; with nothing pending falls back to _openChat.",
-     "gates": [
-      "digest expanded"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "activity-digest-run-results",
-     "type": "button",
-     "label": "Run results",
-     "key": null,
-     "file": "lib/ui/widgets/completion_digest.dart",
-     "line": 79,
-     "action": "navigate",
-     "target": "run-result",
-     "targetWidget": "RunResultScreen",
-     "effect": "onRunResults -> pushes RunResultScreen(controller, sessionID).",
-     "gates": [
-      "digest expanded"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "activity-digest-dismiss",
-     "type": "button",
-     "label": "Dismiss",
-     "key": null,
-     "file": "lib/ui/widgets/completion_digest.dart",
-     "line": 104,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "onDismiss -> hides (session.id, idle) at once with KitUndo; when the window closes, controller.dismissReturnBrief(ReturnBrief.single(run)) saves it as reviewed (the same mark as Work's Mark as reviewed); a refused save brings the row back.",
-     "gates": [
-      "digest expanded"
-     ],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "question-sheet",
-   "title": "OpenCode needs input",
-   "kind": "sheet",
-   "area": "shell",
-   "file": "lib/ui/screens/activity_screen.dart",
-   "widget": "_QuestionSheet",
-   "presentedBy": [
-    "showQuestionSheet"
-   ],
-   "line": 936,
-   "purpose": "Answer surface for a pending assistant question: per-prompt choices (single/multi), optional custom answer, dismiss or send.",
-   "reachedFrom": [
-    {
-     "page": "activity",
-     "element": "activity-question-row"
-    },
-    {
-     "page": "activity",
-     "element": "activity-digest-review"
-    },
-    {
-     "page": "profile-monitor-switch-server-dialog",
-     "element": null,
-     "evidence": "lib/ui/screens/profile_monitor_screen.dart:64"
-    },
-    {
-     "page": "system",
-     "element": "system-activityscreen-initialquestionsessionid-from-a-question-noti-to-question-sheet"
-    },
-    {
-     "page": "chat",
-     "element": "chat-question-card-more"
-    },
-    {
-     "page": "embedded-question-attention-card",
-     "element": "embedded-question-attention-card-answer"
-    },
-    {
-     "page": "embedded-question-attention-card",
-     "element": "embedded-question-attention-card-more"
-    }
-   ],
-   "gates": [
-    "controller.isRequestPending(controller.questionIdentity(question))"
-   ],
-   "elements": [
-    {
-     "id": "question-sheet-dismiss",
-     "type": "button",
-     "label": "Dismiss",
-     "key": null,
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 1279,
-     "action": "open-sheet",
-     "target": "confirm-sheet",
-     "targetWidget": "showKitConfirm",
-     "effect": "_reject(): showKitConfirm (destructive, 'Dismiss this request?'); on confirm controller.rejectQuestion(question.id, expectedRequest: request) and routes.close().",
-     "gates": [
-      "!_busy"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "question-sheet-send",
-     "type": "button",
-     "label": "Send answers",
-     "key": null,
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 1283,
-     "action": "submit",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_submit(): controller.answerQuestion(question.id, answers, expectedRequest: request) then routes.close(). Pinned to the sheet foot through showKitSheet primaryListenable (slice-P3.11a); enables once every prompt is answered.",
-     "gates": [
-      "_complete && !_busy"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "question-sheet-option",
-     "type": "list-tile",
-     "label": "<choice label>",
-     "key": null,
-     "file": "lib/ui/widgets/question_options.dart",
-     "line": 1232,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "QuestionOptionRow.onTap -> _toggle: single-select replaces the answer and clears custom text; multi-select toggles.",
-     "gates": [
-      "enabled: !_busy"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "question-sheet-custom-answer",
-     "type": "text-field",
-     "label": "[custom answer]",
-     "key": null,
-     "file": "lib/ui/widgets/question_options.dart",
-     "line": 1245,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "QuestionCustomAnswerField.onChanged: for single-select prompts typing clears the selected choice.",
-     "gates": [
-      "prompt.custom",
-      "enabled: !_busy"
-     ],
-     "destructive": false
-    }
-   ]
-  },
-  {
    "id": "capabilities",
    "title": "Commands & tools",
    "kind": "screen",
@@ -1967,15 +1437,46 @@
    ]
   },
   {
+   "id": "question-sheet",
+   "title": "OpenCode needs input",
+   "kind": "sheet",
+   "area": "shell",
+   "file": "lib/ui/screens/chat/question_sheet.dart",
+   "widget": "_QuestionSheet",
+   "presentedBy": [
+    "showQuestionSheet"
+   ],
+   "line": 1,
+   "purpose": "Answer surface for a pending assistant question: per-prompt choices (single/multi), optional custom answer, dismiss or send.",
+   "reachedFrom": [
+    {
+     "page": "chat",
+     "element": "chat-question-card-more"
+    },
+    {
+     "page": "embedded-question-attention-card",
+     "element": "embedded-question-attention-card-answer"
+    },
+    {
+     "page": "embedded-question-attention-card",
+     "element": "embedded-question-attention-card-more"
+    }
+   ],
+   "gates": [
+    "controller.isRequestPending(controller.questionIdentity(question))"
+   ],
+   "elements": []
+  },
+  {
    "id": "home-shell",
-   "title": "{server name} · Work / Inbox / Project / Settings",
+   "title": "{server name} · Chats / Files / Settings",
    "kind": "screen",
    "area": "shell",
    "file": "lib/ui/screens/home_screen.dart",
    "widget": "HomeScreen",
    "presentedBy": [],
    "line": 25,
-   "purpose": "Main product shell for a connected server: app bar whose server name and status open the server switcher, current tab title, connection banner, and four retained root destinations, one per noun (Work, Inbox, Project, Settings), shown as a bottom glass dock (<760dp) or a NavigationRail (>=760dp).",
+   "purpose": "Main product shell for a connected server: top controls whose server name and status open the server switcher, and three root destinations (Chats, Files, Settings) shown as a bottom glass dock (<760dp), a rail or the PC sidebar. Chats carries the single pending badge; Files is absent when the server offers no project tools.",
    "reachedFrom": [
     {
      "page": "global-shortcuts",
@@ -2036,7 +1537,7 @@
    ],
    "gates": [
     "named route '/home' is ungated; via '/' requires conn.profile != null && conn.hasConnectedServer",
-    "cold start (HomeScreen.initialTab == null): opens on Inbox when conn.unifiedAttentionCount > 0 once the first read of pending permissions, questions and forms has settled, otherwise Work; decided once, and a tab the person picks first is final"
+    "cold start (HomeScreen.initialTab == null) opens on Chats; a notification, the Quick Settings tile, a widget or a shortcut that used to open the Inbox asks for Chats with the Needs you or Running filter (OpenChatsIntent / HomeScreen.initialChatFilter)"
    ],
    "elements": [
     {
@@ -2057,14 +1558,14 @@
     {
      "id": "home-shell-shortcut-destinations",
      "type": "gesture",
-     "label": "Ctrl/Cmd+1 … 4",
+     "label": "Ctrl/Cmd+1 … 3",
      "key": null,
      "file": "lib/ui/screens/home_screen.dart",
      "line": 80,
      "action": "navigate",
      "target": null,
      "targetWidget": null,
-     "effect": "onAppShortcut(SelectDestinationIntent): _selectTab(_safeTab(index, conn.capabilities)); the index is the visible position (1 Work, 2 Inbox, 3 Project, 4 Settings).",
+     "effect": "onAppShortcut(SelectDestinationIntent): _selectTab(_safeTab(index, conn.capabilities)); the index is the visible position (1 Chats, 2 Files, 3 Settings).",
      "gates": [
       "desktopInteractions (AppShortcuts only installed on desktop)",
       "HomeScreen route isCurrent"
@@ -2106,30 +1607,30 @@
      "destructive": false
     },
     {
-     "id": "home-shell-tab-workspace",
+     "id": "home-shell-tab-chats",
      "type": "tab",
-     "label": "Work",
-     "key": null,
+     "label": "Chats",
+     "key": "home-shell-tab-chats",
      "file": "lib/ui/screens/home_screen.dart",
      "line": 180,
      "action": "navigate",
-     "target": "workspace",
-     "targetWidget": "WorkspaceScreen",
-     "effect": "_selectTab(_workTab): shows WorkspaceScreen(controller: conn) in the RetainedTabView. Rendered as NavigationBar destination (<760dp wide, keyboard closed) or NavigationRail destination (>=760dp, extended at >=1040dp).",
+     "target": "chats-home",
+     "targetWidget": "ChatsHomeScreen",
+     "effect": "_selectTab(_chatsTab): shows ChatsHomeScreen. OpenChatsIntent re-creates it on a Needs you or Running filter. The dock icon carries the pending badge (conn.unifiedAttentionCount) when > 0.",
      "gates": [],
      "destructive": false
     },
     {
      "id": "home-shell-tab-files",
      "type": "tab",
-     "label": "Project",
-     "key": null,
+     "label": "Files",
+     "key": "home-shell-tab-files",
      "file": "lib/ui/screens/home_screen.dart",
      "line": 200,
      "action": "navigate",
      "target": "project-hub",
      "targetWidget": "ProjectHub",
-     "effect": "_selectTab(_projectTab): shows ProjectHub(controller, focusSearchSignal: _findInFiles, backController: _projectBack). _safeTab falls back to Work when the server offers no project tool.",
+     "effect": "_selectTab(_filesTab): shows ProjectHub (the Files tab: title, project chip, tools). _safeTab falls back to Chats when the server offers no project tool.",
      "gates": [
       "ProjectHub.isAvailable(conn.capabilities): fileBrowsing || terminal || projectManagement (destination hidden and body replaced by SizedBox.shrink otherwise, e.g. Codex and Paseo)"
      ],
@@ -2159,21 +1660,7 @@
      "action": "other",
      "target": null,
      "targetWidget": null,
-     "effect": "_onRootPop: on Project, ProjectHubBackController.handleBack() first unwinds Files (keyboard, search, folder) and then returns to the hub; any other tab returns to Work; on Work a second Back within 2 s calls SystemNavigator.pop().",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "home-shell-tab-activity",
-     "type": "tab",
-     "label": "Inbox",
-     "key": "activity-pending-badge",
-     "file": "lib/ui/screens/home_screen.dart",
-     "line": 475,
-     "action": "navigate",
-     "target": "activity",
-     "targetWidget": "ActivityScreen",
-     "effect": "_selectTab(_inboxTab): shows ActivityScreen(controller: conn, embedded: true). The icon carries Badge key 'activity-pending-badge' with conn.unifiedAttentionCount (permissions, questions, forms, AI Team gates, other servers' pending counts) when > 0; no badge at zero.",
+     "effect": "_onRootPop: on Files, ProjectHubBackController.handleBack() first unwinds the file browser and then returns to the hub; any other tab returns to Chats; on Chats a second Back within 2 s calls SystemNavigator.pop().",
      "gates": [],
      "destructive": false
     },
@@ -5870,20 +5357,6 @@
      "destructive": false
     },
     {
-     "id": "embedded-chat-nudge-slot-dismiss",
-     "type": "icon-button",
-     "label": "Hide tip",
-     "key": "nudge-<id>-dismiss",
-     "file": "lib/ui/screens/chat/nudge_slot.dart",
-     "line": 99,
-     "action": "dismiss",
-     "target": null,
-     "effect": "onDismiss -> NudgeRegistry.dismiss(id): records the nudge as dismissed so it never shows again (until Settings → Help → Show tips again).",
-     "gates": [],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/nudge_card.dart"
-    },
-    {
      "id": "embedded-chat-nudge-slot-compact-action",
      "type": "button",
      "label": "Compact conversation",
@@ -5936,20 +5409,8 @@
      "element": "embedded-permission-attention-card-review"
     },
     {
-     "page": "activity",
-     "element": "activity-permission-row"
-    },
-    {
-     "page": "activity",
-     "element": "activity-digest-review"
-    },
-    {
      "page": "chat",
      "element": "chat-permission-card-review"
-    },
-    {
-     "page": "embedded-completion-digest-card",
-     "element": "embedded-completion-digest-card-review"
     },
     {
      "page": "embedded-profile-monitor-inbox",
@@ -7053,18 +6514,6 @@
      "element": "chat-command-new"
     },
     {
-     "page": "activity",
-     "element": "activity-running-row"
-    },
-    {
-     "page": "activity",
-     "element": "activity-digest-open-conversation"
-    },
-    {
-     "page": "activity",
-     "element": "activity-auto-row"
-    },
-    {
      "page": "global-shortcuts",
      "element": "global-shortcuts-new-session"
     },
@@ -7137,20 +6586,8 @@
      "element": "embedded-tool-card-open-subagent-session"
     },
     {
-     "page": "embedded-completion-digest-card",
-     "element": "embedded-completion-digest-card-open-conversation"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-session-row"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-session-context-open"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-new-session"
+     "page": "chats-home",
+     "element": "chats-home-row"
     },
     {
      "page": "global-sessions",
@@ -7167,14 +6604,6 @@
     {
      "page": "running-work-sheet",
      "element": "running-work-sheet-agent"
-    },
-    {
-     "page": "new-conversation-sheet",
-     "element": "new-conversation-solo"
-    },
-    {
-     "page": "new-conversation-sheet",
-     "element": "new-conversation-cloud"
     },
     {
      "page": "phone-setup-ready",
@@ -7221,8 +6650,8 @@
      "element": "session-import-open"
     },
     {
-     "page": "run-result",
-     "element": "run-result-open-conversation"
+     "page": "chats-new-chat",
+     "element": "chats-new-send"
     }
    ],
    "gates": [
@@ -7298,48 +6727,6 @@
       "non-empty text"
      ],
      "destructive": false
-    },
-    {
-     "id": "chat-first-reply-notify-decline",
-     "type": "button",
-     "label": "Not now",
-     "key": "first-reply-notify-decline",
-     "file": "lib/ui/screens/chat_screen.dart",
-     "line": 169,
-     "action": "dismiss",
-     "target": null,
-     "effect": "_decline(): FirstRun.answerNotifyAsk(); the card is never shown again. Settings → Notifications remains the home.",
-     "gates": [
-      "FirstRun.notifyAskPending (set when first run lands in its first conversation)",
-      "this conversation holds a completed assistant reply and is not busy",
-      "platformCapabilities.supportsNotifications && supportsBackgroundService",
-      "!controller.isIsolated",
-      "!controller.keepLiveInBackground",
-      "hidden while the composer is compact (keyboard up / short window)"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/first_reply_notify_card.dart"
-    },
-    {
-     "id": "chat-first-reply-notify-accept",
-     "type": "button",
-     "label": "Notify me (card: Get told when it's done?)",
-     "key": "first-reply-notify-accept",
-     "file": "lib/ui/screens/chat_screen.dart",
-     "line": 177,
-     "action": "toggle-setting",
-     "target": null,
-     "effect": "_accept(): controller.setKeepLiveInBackground(true) (the native 'enable' call that raises POST_NOTIFICATIONS and starts the service), re-enables finished-run and request notifications if they were off, then FirstRun.answerNotifyAsk(); a refusal shows backgroundLive.lastError in a snackbar and still counts as an answer.",
-     "gates": [
-      "FirstRun.notifyAskPending (set when first run lands in its first conversation)",
-      "this conversation holds a completed assistant reply and is not busy",
-      "platformCapabilities.supportsNotifications && supportsBackgroundService",
-      "!controller.isIsolated",
-      "!controller.keepLiveInBackground",
-      "hidden while the composer is compact (keyboard up / short window)"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/first_reply_notify_card.dart"
     },
     {
      "id": "chat-prompt-history-keys",
@@ -9628,120 +9015,6 @@
    ]
   },
   {
-   "id": "run-result",
-   "title": "Run results",
-   "kind": "screen",
-   "area": "chat",
-   "file": "lib/ui/screens/run_result_screen.dart",
-   "widget": "RunResultScreen",
-   "presentedBy": [],
-   "line": 17,
-   "purpose": "Shows the outcome, changed files and commands of the latest run of a session, rebuilt from server history.",
-   "reachedFrom": [
-    {
-     "page": "activity",
-     "element": "activity-digest-run-results"
-    },
-    {
-     "page": "embedded-completion-digest-card",
-     "element": "embedded-completion-digest-card-run-results"
-    }
-   ],
-   "gates": [
-    "body replaced by scope-changed notice when !_current (profile/connection/location/directory/workspace changed)"
-   ],
-   "elements": [
-    {
-     "id": "run-result-error-retry",
-     "type": "button",
-     "label": "Retry",
-     "key": null,
-     "file": "lib/ui/screens/run_result_screen.dart",
-     "line": 183,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Calls _load() after a failed first load.",
-     "gates": [
-      "_error != null && !_loaded"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "run-result-pull-refresh",
-     "type": "gesture",
-     "label": "[pull to refresh]",
-     "key": null,
-     "file": "lib/ui/screens/run_result_screen.dart",
-     "line": 215,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "RefreshIndicator.onRefresh calls _load() (loadRunHistory via controller.prepareActionTransport()).",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "run-result-banner-retry",
-     "type": "button",
-     "label": "Retry",
-     "key": null,
-     "file": "lib/ui/screens/run_result_screen.dart",
-     "line": 223,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "MaterialBanner (key run-result-refresh-error) action calls _load() after a failed refresh.",
-     "gates": [
-      "_error != null && _loaded"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "run-result-open-conversation",
-     "type": "button",
-     "label": "Open conversation",
-     "key": "run-result-open-conversation",
-     "file": "lib/ui/widgets/run_result_view.dart",
-     "line": 117,
-     "action": "navigate",
-     "target": "chat",
-     "targetWidget": "/chat/{sessionID}",
-     "effect": "onOpenConversation -> _openConversation() (run_result_screen.dart:140): Navigator.pushNamed('/chat/<sessionID>') when _current.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "run-result-file-row",
-     "type": "list-tile",
-     "label": "<changed file path> / Edited|Written|Patched",
-     "key": "run-result-file-<path>",
-     "file": "lib/ui/widgets/run_result_view.dart",
-     "line": 305,
-     "action": "open-sheet",
-     "target": "run-result-output-sheet",
-     "targetWidget": "_openOutput",
-     "effect": "RunResultView._openOutput(toolName, state) opens the recorded tool output sheet; disabled when file.state.pruned.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "run-result-command-row",
-     "type": "list-tile",
-     "label": "<command> / exit code caption",
-     "key": "run-result-command-<partID|command>",
-     "file": "lib/ui/widgets/run_result_view.dart",
-     "line": 346,
-     "action": "open-sheet",
-     "target": "run-result-output-sheet",
-     "targetWidget": "_openOutput",
-     "effect": "RunResultView._openOutput(command.toolName, command.state); disabled when command.outputPruned.",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
    "id": "session-context",
    "title": "Session context",
    "kind": "screen",
@@ -9764,14 +9037,6 @@
     {
      "page": "session-menu-sheet",
      "element": "session-menu-sheet-context"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-session-menu-details"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-session-context-details"
     }
    ],
    "gates": [],
@@ -10433,105 +9698,6 @@
    ]
   },
   {
-   "id": "embedded-completion-digest-card",
-   "title": "Server reported idle. Success or failure is not verified.",
-   "kind": "overlay",
-   "area": "chat",
-   "file": "lib/ui/widgets/completion_digest.dart",
-   "widget": "CompletionDigestCard",
-   "presentedBy": [],
-   "line": 9,
-   "purpose": "Expanded completion digest for an idle session in Activity: counts only, with open / review / run results / copy / dismiss actions.",
-   "reachedFrom": [
-    {
-     "page": "activity",
-     "element": null,
-     "via": "embedded"
-    }
-   ],
-   "gates": [
-    "_expandedDigests.contains((session.id, idle)) in _ActivityScreenState"
-   ],
-   "embeddedIn": [
-    "ActivityScreen (activity_screen.dart:222)"
-   ],
-   "hostPages": [
-    "activity"
-   ],
-   "elements": [
-    {
-     "id": "embedded-completion-digest-card-open-conversation",
-     "type": "button",
-     "label": "Open conversation",
-     "key": null,
-     "file": "lib/ui/widgets/completion_digest.dart",
-     "line": 71,
-     "action": "navigate",
-     "target": "chat",
-     "targetWidget": "_openChat",
-     "effect": "onOpenConversation -> ActivityScreen._openChat(session.id) when the digest scope is still current.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "embedded-completion-digest-card-review",
-     "type": "button",
-     "label": "Review next actions",
-     "key": null,
-     "file": "lib/ui/widgets/completion_digest.dart",
-     "line": 75,
-     "action": "open-sheet",
-     "target": "permission-sheet",
-     "targetWidget": "_reviewDigest",
-     "effect": "onReview -> ActivityScreen._reviewDigest(sessionID, scope): opens the first pending permission (showPermissionSheet), question or form for that session.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "embedded-completion-digest-card-run-results",
-     "type": "button",
-     "label": "Run results",
-     "key": "completion-digest-run-results",
-     "file": "lib/ui/widgets/completion_digest.dart",
-     "line": 77,
-     "action": "navigate",
-     "target": "run-result",
-     "targetWidget": "RunResultScreen",
-     "effect": "onRunResults -> Navigator.push(RunResultScreen(controller, sessionID)).",
-     "gates": [
-      "onRunResults != null"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-completion-digest-card-copy",
-     "type": "button",
-     "label": "Copy digest",
-     "key": "completion-digest-copy",
-     "file": "lib/ui/widgets/completion_digest.dart",
-     "line": 83,
-     "action": "copy",
-     "target": null,
-     "effect": "Clipboard.setData(_sanitizedSummary) + success/failure snackbar.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "embedded-completion-digest-card-dismiss",
-     "type": "button",
-     "label": "Dismiss",
-     "key": null,
-     "file": "lib/ui/widgets/completion_digest.dart",
-     "line": 104,
-     "action": "other",
-     "target": null,
-     "effect": "onDismiss -> ActivityScreen setState adds the key to _dismissedDigests (local, not persisted).",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
    "id": "form-sheet",
    "title": "<form title>",
    "kind": "sheet",
@@ -10549,10 +9715,6 @@
      "page": "embedded-profile-monitor-inbox",
      "element": null,
      "evidence": "lib/ui/screens/profile_monitor_screen.dart:70"
-    },
-    {
-     "page": "activity",
-     "element": "activity-form-row"
     },
     {
      "page": "chat",
@@ -11193,11 +10355,6 @@
    "purpose": "Shared option row and free-text field for agent questions.",
    "reachedFrom": [
     {
-     "page": "activity",
-     "element": null,
-     "via": "embedded"
-    },
-    {
      "page": "chat",
      "element": null,
      "via": "embedded"
@@ -11215,11 +10372,9 @@
    ],
    "gates": [],
    "embeddedIn": [
-    "ActivityScreen question sheet (activity_screen.dart:1232,1245)",
     "_QuestionAttentionCard (ChatScreen, attention_card.dart:377,387)"
    ],
    "hostPages": [
-    "activity",
     "chat",
     "embedded-permission-attention-card",
     "embedded-question-attention-card"
@@ -11256,29 +10411,6 @@
      "destructive": false
     }
    ]
-  },
-  {
-   "id": "run-result-output-sheet",
-   "title": "Recorded tool output",
-   "kind": "sheet",
-   "area": "chat",
-   "file": "lib/ui/widgets/run_result_view.dart",
-   "widget": "_openOutput",
-   "presentedBy": [],
-   "line": 360,
-   "purpose": "Draggable sheet rendering the recorded tool call with the transcript's ToolCard.",
-   "reachedFrom": [
-    {
-     "page": "run-result",
-     "element": "run-result-file-row"
-    },
-    {
-     "page": "run-result",
-     "element": "run-result-command-row"
-    }
-   ],
-   "gates": [],
-   "elements": []
   },
   {
    "id": "continue-on-computer-sheet",
@@ -11406,28 +10538,15 @@
      "page": "embedded-prompt-error-banner",
      "element": null,
      "via": "embedded"
-    },
-    {
-     "page": "run-result",
-     "element": null,
-     "via": "embedded"
-    },
-    {
-     "page": "run-result-output-sheet",
-     "element": null,
-     "via": "embedded"
     }
    ],
    "gates": [],
    "embeddedIn": [
-    "ChatScreen (_ToolCallGroup / _AssistantMessagePart in lib/ui/screens/chat/message_view.dart:1158,1266)",
-    "RunResultView (lib/ui/widgets/run_result_view.dart:380, no file/session callbacks)"
+    "ChatScreen (_ToolCallGroup / _AssistantMessagePart in lib/ui/screens/chat/message_view.dart:1158,1266)"
    ],
    "hostPages": [
     "chat",
-    "embedded-prompt-error-banner",
-    "run-result",
-    "run-result-output-sheet"
+    "embedded-prompt-error-banner"
    ],
    "elements": [
     {
@@ -11841,6 +10960,269 @@
    ]
   },
   {
+   "id": "chats-home",
+   "title": "Chats",
+   "kind": "tab",
+   "area": "workspace",
+   "file": "lib/ui/screens/chats/chats_home_screen.dart",
+   "widget": "ChatsHomeScreen",
+   "presentedBy": [],
+   "line": 1,
+   "purpose": "The first tab: every conversation across projects, with Needs you and Running filter chips (the former Inbox). STUB in the shell branch; replaced by feat/chats-first-home.",
+   "reachedFrom": [
+    {
+     "page": "home-shell",
+     "element": "home-shell-tab-chats"
+    }
+   ],
+   "gates": [],
+   "elements": [
+    {
+     "id": "chats-home-filter-project",
+     "type": "chip",
+     "label": "All projects | <project name>",
+     "key": "chats-filter-project",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 153,
+     "action": "open-sheet",
+     "target": "chats-project-sheet",
+     "targetWidget": null,
+     "effect": "Opens the project filter sheet.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "chats-home-filter-needs-you",
+     "type": "chip",
+     "label": "Needs you · {count}",
+     "key": "chats-filter-needs-you",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 164,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Toggles the Needs you filter; with Running also on, either matches.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "chats-home-filter-running",
+     "type": "chip",
+     "label": "Running",
+     "key": "chats-filter-running",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 173,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Toggles the Running filter.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "chats-home-new",
+     "type": "fab",
+     "label": "New conversation",
+     "key": "chats-new-chat",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 205,
+     "action": "navigate",
+     "target": "chats-new-chat",
+     "targetWidget": null,
+     "effect": "Opens the start screen on the filtered or last used project.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "chats-home-clear-filters",
+     "type": "button",
+     "label": "Clear filters",
+     "key": "chats-clear-filters",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 261,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Removes the project and status filters.",
+     "gates": [
+      "no match for the filters"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "chats-home-start-in-project",
+     "type": "button",
+     "label": "Start a conversation in <project>",
+     "key": "chats-start-in-project",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 272,
+     "action": "navigate",
+     "target": "chats-new-chat",
+     "targetWidget": null,
+     "effect": "Opens the start screen on the filtered project.",
+     "gates": [
+      "the chosen project has no conversations"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "chats-home-start",
+     "type": "button",
+     "label": "Start a conversation",
+     "key": "chats-start-chat",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 286,
+     "action": "navigate",
+     "target": "chats-new-chat",
+     "targetWidget": null,
+     "effect": "Opens the start screen on the last used project.",
+     "gates": [
+      "no conversations at all"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "chats-home-row",
+     "type": "list-tile",
+     "label": "<project> · <title> · <state or time> · <last line>",
+     "key": "chats-row-<sessionID>",
+     "file": "lib/ui/screens/chats/chats_home_screen.dart",
+     "line": 334,
+     "action": "navigate",
+     "target": "chat",
+     "targetWidget": null,
+     "effect": "Rescopes the connection to the conversation's project and opens it.",
+     "gates": [],
+     "destructive": false
+    }
+   ]
+  },
+  {
+   "id": "chats-project-sheet",
+   "title": "Show conversations from",
+   "kind": "sheet",
+   "area": "workspace",
+   "file": "lib/ui/screens/chats/chats_project_sheet.dart",
+   "widget": "showChatsProjectSheet",
+   "presentedBy": [
+    "showChatsProjectSheet"
+   ],
+   "line": 40,
+   "purpose": "The project filter: All projects with the total, each project with its counts and Git badge, and Open a project. One sheet; Open a project closes it before the folder browser opens.",
+   "reachedFrom": [
+    {
+     "page": "chats-home",
+     "element": "chats-home-filter-project"
+    }
+   ],
+   "gates": [],
+   "elements": [
+    {
+     "id": "chats-project-sheet-all",
+     "type": "list-tile",
+     "label": "All projects",
+     "key": "chats-project-all",
+     "file": "lib/ui/screens/chats/chats_project_sheet.dart",
+     "line": 64,
+     "action": "dismiss",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Clears the project filter.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "chats-project-sheet-project",
+     "type": "list-tile",
+     "label": "<project> · n conversations · m running · needs you",
+     "key": "chats-project-<directory>",
+     "file": "lib/ui/screens/chats/chats_project_sheet.dart",
+     "line": 78,
+     "action": "dismiss",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Filters to that project.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "chats-project-sheet-open",
+     "type": "list-tile",
+     "label": "Open a project…",
+     "key": "chats-project-open",
+     "file": "lib/ui/screens/chats/chats_project_sheet.dart",
+     "line": 111,
+     "action": "dismiss",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Closes this sheet, opens the Open a project sheet; the chosen folder becomes the filter.",
+     "gates": [],
+     "destructive": false
+    }
+   ]
+  },
+  {
+   "id": "chats-new-chat",
+   "title": "New conversation",
+   "kind": "screen",
+   "area": "workspace",
+   "file": "lib/ui/screens/chats/new_chat_screen.dart",
+   "widget": "NewChatScreen",
+   "presentedBy": [
+    "showNewChat"
+   ],
+   "line": 22,
+   "purpose": "What should we work on? A project chip and the composer. Send starts the conversation in the chosen project and replaces this screen with it.",
+   "reachedFrom": [
+    {
+     "page": "chats-home",
+     "element": "chats-home-new"
+    },
+    {
+     "page": "chats-home",
+     "element": "chats-home-start-in-project"
+    },
+    {
+     "page": "chats-home",
+     "element": "chats-home-start"
+    }
+   ],
+   "gates": [],
+   "elements": [
+    {
+     "id": "chats-new-project",
+     "type": "chip",
+     "label": "<project> | Choose a project",
+     "key": "chats-new-project",
+     "file": "lib/ui/screens/chats/new_chat_screen.dart",
+     "line": 129,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Opens the Open a project sheet; its choice updates the chip.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "chats-new-send",
+     "type": "button",
+     "label": "Send",
+     "key": "chats-new-send",
+     "file": "lib/ui/screens/chats/new_chat_screen.dart",
+     "line": 173,
+     "action": "submit",
+     "target": "chat",
+     "targetWidget": null,
+     "effect": "startChatIn(directory, firstPrompt); on failure says why in plain words and keeps the draft.",
+     "gates": [
+      "a project is chosen",
+      "the field is not empty"
+     ],
+     "destructive": false
+    }
+   ]
+  },
+  {
    "id": "global-sessions",
    "title": "All conversations",
    "kind": "screen",
@@ -11852,22 +11234,6 @@
    "purpose": "Server-wide conversation finder: search titles across every project, narrow by project (one filter menu) and Active / Archived (archived conversations are a filter of this page, P3.12), open (switching Work to that project), open related, copy handoff or continue a conversation here.",
    "reachedFrom": [
     {
-     "page": "workspace",
-     "element": "workspace-search-all-sessions"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-error-search-all"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-no-projects-search-all"
-    },
-    {
-     "page": "workspace-folder-chooser",
-     "element": "workspace-folder-chooser-search-all"
-    },
-    {
      "page": "chat",
      "element": null,
      "evidence": "lib/ui/screens/chat_screen.dart:5124"
@@ -11875,10 +11241,6 @@
     {
      "page": "command-launcher-sheet",
      "element": "chat-command-sessions"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-archived-sessions"
     }
    ],
    "gates": [
@@ -12284,12 +11646,7 @@
    ],
    "line": 39,
    "purpose": "Create a fresh worktree for the project, wait for it to be prepared and open a new session in it (non-dismissible sheet with phase-dependent actions).",
-   "reachedFrom": [
-    {
-     "page": "new-conversation-sheet",
-     "element": "new-conversation-copy"
-    }
-   ],
+   "reachedFrom": [],
    "gates": [
     "capabilities.projectManagement && capabilities.worktreeCreate",
     "_selectedWorkspaceID == null and a project is selected"
@@ -12815,106 +12172,6 @@
    ]
   },
   {
-   "id": "new-conversation-sheet",
-   "title": "New conversation",
-   "kind": "sheet",
-   "area": "workspace",
-   "file": "lib/ui/screens/new_conversation_sheet.dart",
-   "widget": "NewConversationChoices",
-   "presentedBy": [
-    "showNewConversationSheet"
-   ],
-   "line": null,
-   "purpose": "Ask how a new conversation starts (Solo, Team, In a separate copy, On a cloud machine) where the server supports more than one way; the last way is marked and remembered per server (slice-P4.5).",
-   "reachedFrom": [
-    {
-     "page": "workspace",
-     "element": "workspace-new"
-    }
-   ],
-   "gates": [
-    "more than one way supported (NewConversationOptions.onlySolo is false)"
-   ],
-   "elements": [
-    {
-     "id": "new-conversation-solo",
-     "type": "button",
-     "label": "Solo",
-     "key": "new-conversation-solo",
-     "file": "lib/ui/screens/new_conversation_sheet.dart",
-     "line": null,
-     "action": "navigate",
-     "target": "chat",
-     "targetWidget": "ChatScreen",
-     "effect": "controller.createSession() in the current project, then pushNamed('/chat/<id>').",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "new-conversation-team",
-     "type": "button",
-     "label": "Team",
-     "key": "new-conversation-team",
-     "file": "lib/ui/screens/new_conversation_sheet.dart",
-     "line": null,
-     "action": "navigate",
-     "target": "team-conversation",
-     "targetWidget": "TeamConversation.start",
-     "effect": "Team on: TeamConversation.start. Team off: openTeamPage (the team page's off state, team-intro).",
-     "gates": [
-      "teamPossibleOn(profile) or a team controller exists"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "new-conversation-copy",
-     "type": "button",
-     "label": "In a separate copy of <project>",
-     "key": "new-conversation-copy",
-     "file": "lib/ui/screens/new_conversation_sheet.dart",
-     "line": null,
-     "action": "open-sheet",
-     "target": "isolated-task-sheet",
-     "targetWidget": "showIsolatedTaskSheet",
-     "effect": "showIsolatedTaskSheet(project); the returned session opens as a conversation.",
-     "gates": [
-      "capabilities.projectManagement && capabilities.worktreeCreate, a project selected, no workspace selected"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "new-conversation-cloud",
-     "type": "button",
-     "label": "On <cloud machine>",
-     "key": "new-conversation-cloud-<id>",
-     "file": "lib/ui/screens/new_conversation_sheet.dart",
-     "line": null,
-     "action": "navigate",
-     "target": "chat",
-     "targetWidget": "ChatScreen",
-     "effect": "selectLocation(workspace) then createSession() there and open it.",
-     "gates": [
-      "the project's managed workspaces other than the one in use"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "new-conversation-sheet-close",
-     "type": "icon-button",
-     "label": "Close",
-     "key": null,
-     "file": "lib/ui/screens/new_conversation_sheet.dart",
-     "line": null,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Closes without starting anything.",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
    "id": "project-folder-new-dialog",
    "title": "Create a new folder",
    "kind": "dialog",
@@ -12927,10 +12184,6 @@
    "line": 292,
    "purpose": "Ask for a folder name to create under the managed projects directory on the app-managed Termux server.",
    "reachedFrom": [
-    {
-     "page": "workspace-folder-chooser",
-     "element": "workspace-folder-chooser-create"
-    },
     {
      "page": "projects",
      "element": "projects-create-folder"
@@ -12997,10 +12250,6 @@
    "line": 362,
    "purpose": "Ask for an absolute server path, check it (inside the app's Ubuntu for OpenCode inside the app, on the server otherwise) and open it as the active project folder. From the folder browser the path starts at the folder it showed, and a missing folder can be created.",
    "reachedFrom": [
-    {
-     "page": "workspace-folder-chooser",
-     "element": "workspace-folder-chooser-open"
-    },
     {
      "page": "projects",
      "element": "projects-open-folder"
@@ -13272,16 +12521,7 @@
    "presentedBy": [],
    "line": 13,
    "purpose": "Pick, search, rename or add the project folder the connection works in; read-only 'Project context' variant when the backend cannot manage projects.",
-   "reachedFrom": [
-    {
-     "page": "workspace-folder-chooser",
-     "element": "workspace-folder-chooser-browse"
-    },
-    {
-     "page": "workspace-context-sheet",
-     "element": "workspace-context-sheet-switch-project"
-    }
-   ],
+   "reachedFrom": [],
    "gates": [
     "interactive list only when widget.controller.capabilities.projectManagement; otherwise a read-only 'Project context' page with no controls"
    ],
@@ -14143,1100 +13383,6 @@
    ]
   },
   {
-   "id": "workspace",
-   "title": "Work",
-   "kind": "tab",
-   "area": "workspace",
-   "file": "lib/ui/screens/workspace_screen.dart",
-   "widget": "WorkspaceScreen",
-   "presentedBy": [],
-   "line": 35,
-   "purpose": "Root tab 0 (Work). The current project is a fixed header that opens the project sheet; below it one scroll in the order every list uses (UX plan 5.7): notices and the return brief, Needs you, Running, Pinned, Recent, the AI Team card, Archived. New conversation and Isolated task stay docked in thumb reach. A conversation appears once, in the first section that fits, so a blocked or running pin returns to Pinned when it is answered or finishes.",
-   "reachedFrom": [
-    {
-     "page": "home-shell",
-     "element": "home-shell-tab-workspace"
-    }
-   ],
-   "gates": [],
-   "elements": [
-    {
-     "id": "workspace-new",
-     "type": "button",
-     "label": "New conversation",
-     "key": "workspace-new",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": null,
-     "action": "open-sheet",
-     "target": "new-conversation-sheet",
-     "targetWidget": "showNewConversationSheet",
-     "effect": "_newConversation(): with only Solo possible it creates the session and opens it; otherwise the chooser asks how to start, remembers the answer per server and starts it (slice-P4.5).",
-     "gates": [
-      "disabled while _creating or a project folder must be chosen"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-project-strip",
-     "type": "list-tile",
-     "label": "AI Team projects",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1,
-     "action": "navigate",
-     "target": "team-projects",
-     "targetWidget": null,
-     "effect": "Shows current project progress and decisions; opens selected project.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "workspace-nudge-pin-got-it",
-     "type": "button",
-     "label": "Got it",
-     "key": "nudge-pin-action",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 93,
-     "action": "dismiss",
-     "target": null,
-     "effect": "One-time tip above Recent (workspace_screen.dart:793): 'Pin conversations you return to from their menu; they stay at the top of Work.' -> controller.nudges.dismiss(NudgeId.pinConversations).",
-     "gates": [
-      "second distinct project directory used on this server (NudgeRegistry.noteProjectUsed)",
-      "registry.firstReplySeen (never during first run before the first reply)",
-      "Work visible and its route current",
-      "controller.canPinSessions, nothing pinned in this scope, Recent not empty",
-      "offered once ever; never while another nudge is showing"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/nudge_card.dart"
-    },
-    {
-     "id": "workspace-nudge-pin-dismiss",
-     "type": "icon-button",
-     "label": "Hide tip",
-     "key": "nudge-pin-dismiss",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 99,
-     "action": "dismiss",
-     "target": null,
-     "effect": "controller.nudges.dismiss(NudgeId.pinConversations).",
-     "gates": [
-      "same as workspace-nudge-pin-got-it"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/nudge_card.dart"
-    },
-    {
-     "id": "workspace-active-session-directory",
-     "type": "list-tile",
-     "label": "<directory basename> / A conversation is running in this folder · {directory}",
-     "key": "active-session-directory",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 449,
-     "action": "open-sheet",
-     "target": "workspace-context-sheet",
-     "targetWidget": "_openContextSheet",
-     "effect": "_openContextSheet(folder: <this folder>): the project sheet with its Details fold open on the folder (the folder dialog merged here, slice-P3.11a).",
-     "gates": [
-      "widget.controller.capabilities.projectManagement && _hasExternalSessionDirectory && controller.busySessions.isNotEmpty, i.e. only while a conversation is running (selected directory is neither the project root nor a listed worktree)"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-restricted-directory",
-     "type": "list-tile",
-     "label": "<directory basename> / <directory>",
-     "key": "restricted-directory-context",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 469,
-     "action": "open-sheet",
-     "target": "workspace-context-sheet",
-     "targetWidget": "_openContextSheet",
-     "effect": "_openContextSheet(folder: <this folder>): the project sheet with its Details fold open on the folder (the folder dialog merged here, slice-P3.11a).",
-     "gates": [
-      "!capabilities.projectManagement && widget.controller.directory?.isNotEmpty == true"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-retry-projects",
-     "type": "button",
-     "label": "Retry projects",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 490,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_load(): re-fetches repository.listProjects() and workspaces after a catalog failure.",
-     "gates": [
-      "widget.controller.capabilities.projectManagement && _projectError != null"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-pull-refresh",
-     "type": "gesture",
-     "label": "[pull to refresh]",
-     "key": "workspace-scroll",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 495,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_refreshWorkspace(): reloads the project catalog and workspaces via _load(), then controller.refreshSessions().",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "workspace-error-search-all",
-     "type": "button",
-     "label": "Search all sessions",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 496,
-     "action": "navigate",
-     "target": "global-sessions",
-     "targetWidget": "GlobalSessionsScreen",
-     "effect": "_openAllSessions() pushes GlobalSessionsScreen.",
-     "gates": [
-      "widget.controller.capabilities.projectManagement && _projectError != null",
-      "capabilities.globalSessionSearch"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-location-notice-dismiss",
-     "type": "icon-button",
-     "label": "Dismiss",
-     "key": "location-recovery-dismiss",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 519,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "controller.dismissLocationNotice() hides the location-recovery notice row.",
-     "gates": [
-      "widget.controller.locationNotice != null"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-no-projects-search-all",
-     "type": "button",
-     "label": "Search all sessions",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 523,
-     "action": "navigate",
-     "target": "global-sessions",
-     "targetWidget": "GlobalSessionsScreen",
-     "effect": "ProductInlineEmpty action: _openAllSessions() pushes GlobalSessionsScreen.",
-     "gates": [
-      "widget.controller.capabilities.projectManagement && _projects?.isEmpty == true && _selectedDirectory == null",
-      "capabilities.globalSessionSearch"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-archived-sessions",
-     "type": "list-tile",
-     "label": "Archived sessions / {count} archived sessions",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 790,
-     "action": "navigate",
-     "target": "global-sessions",
-     "targetWidget": "GlobalSessionsScreen",
-     "effect": "screen-work-1: opens All conversations, where archived conversations are a filter (P3.12); the archived sheet is gone.",
-     "gates": [
-      "archived.isNotEmpty || partial (controller.hasMoreSessions || sessionsLoading || sessionsError != null)"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-inventory-footer",
-     "type": "banner",
-     "label": "[end of the list: older conversations load as it comes near; a failed page says so with Try again]",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 921,
-     "action": "other",
-     "target": null,
-     "targetWidget": "OlderSessionsPager",
-     "effect": "The list pages itself (target-ia §1.4): OlderSessionsPager asks for the next page as the end comes within reach, shows skeleton rows while it loads, and a failed page, a changed list or a failed refresh as one KitNotice.error with Try again or Refresh recent conversations. Replaces the session inventory footer (removed by slice-P3.1).",
-     "gates": [
-      "renders only when controller.hasMoreSessions || a sessions error || loading"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/older_sessions_pager.dart"
-    },
-    {
-     "id": "workspace-team-door",
-     "type": "list-tile",
-     "label": "AI Team · <where it runs>",
-     "key": "work-team-door",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 943,
-     "action": "navigate",
-     "target": "team-home",
-     "targetWidget": "TeamHomeScreen",
-     "effect": "The quiet door to the team's own page, where the TeamCard was.",
-     "gates": [
-      "controller.orchestration != null"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-archive-undo",
-     "type": "button",
-     "label": "Undo (snackbar: Archived “{title}”)",
-     "key": "archive-undo-<session.id>",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1151,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "messenger.hideCurrentSnackBar(reason: action); _archiveWithUndo then removes the id from _pendingArchive so the row returns and no server call is made.",
-     "gates": [
-      "shown for 5 s after a swipe-archive"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-row-swipe",
-     "type": "gesture",
-     "label": "[swipe end-to-start: Archive (or Delete)]",
-     "key": "session-dismiss-<session.id>",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1448,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Dismissible.confirmDismiss calls onAction('swipe-archive') when archiveAvailable -> _archiveWithUndo(): hides the row, shows a 5 s Undo snackbar, then archiveRepository.archiveSession(id) + controller.refreshSessions(); when archive is unavailable it calls onAction('delete') which opens the delete confirm sheet first.",
-     "gates": [
-      "archive path: widget.controller.capabilities.sessionArchive; otherwise swipe = delete (confirm sheet workspace-delete-session-sheet)"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "workspace-session-menu",
-     "type": "icon-button",
-     "label": "Session actions",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1525,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "opens overflow menu (PopupMenuButton<String>)",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-menu-details",
-     "type": "menu-item",
-     "label": "Conversation context",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1530,
-     "action": "navigate",
-     "target": "session-context",
-     "targetWidget": "SessionContextScreen",
-     "effect": "_openSessionContext(session): pushes SessionContextScreen; its Details hold the folder and shared link (the details sheet merged here, slice-P3.11a).",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-menu-pin",
-     "type": "menu-item",
-     "label": "Pin on this device | Unpin",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1533,
-     "action": "toggle-setting",
-     "target": null,
-     "targetWidget": null,
-     "effect": "togglePin(): controller.setSessionPinned(session.id, !pinned, locationRevision: ...); failure shows sessionPinFailed.",
-     "gates": [
-      "controller.canPinSessions"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-menu-rename",
-     "type": "menu-item",
-     "label": "Rename",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1537,
-     "action": "open-dialog",
-     "target": "workspace-rename-session-dialog",
-     "targetWidget": "_rename",
-     "effect": "_sessionAction('rename') -> _rename(session) opens the rename dialog.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-menu-share",
-     "type": "menu-item",
-     "label": "Share",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1542,
-     "action": "open-sheet",
-     "target": "workspace-share-session-sheet",
-     "targetWidget": "_confirmShare",
-     "effect": "_sessionAction('share') -> _confirmShare() confirm sheet; on confirm shareSession + copy link.",
-     "gates": [
-      "widget.controller.capabilities.sessionShare",
-      "session.shareUrl == null"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-menu-unshare",
-     "type": "menu-item",
-     "label": "Stop sharing",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1542,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_sessionAction('unshare'): repository.unshareSession(session.id) with no confirmation, snackbar, then controller.refreshSessions().",
-     "gates": [
-      "widget.controller.capabilities.sessionShare",
-      "session.shareUrl != null"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "workspace-session-menu-archive",
-     "type": "menu-item",
-     "label": "Archive",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1551,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": "_archiveSwipe",
-     "effect": "screen-work-1: archives at once with Undo (showKitUndo), the same path as the swipe; the confirmation sheet is gone (P3.12).",
-     "gates": [
-      "widget.controller.capabilities.sessionArchive"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-menu-delete",
-     "type": "menu-item",
-     "label": "Delete",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1555,
-     "action": "open-sheet",
-     "target": "workspace-delete-session-sheet",
-     "targetWidget": "_confirmDelete",
-     "effect": "_sessionAction('delete') -> _confirmDelete() confirm sheet.",
-     "gates": [],
-     "destructive": true
-    },
-    {
-     "id": "workspace-session-row",
-     "type": "list-tile",
-     "label": "<conversation title> (sections: Needs you, Running, Pinned, Recent conversations)",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1563,
-     "action": "navigate",
-     "target": "chat",
-     "targetWidget": "/chat/<sessionId>",
-     "effect": "_openSession(session): Navigator.pushNamed('/chat/<session.id>').",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-context-menu",
-     "type": "gesture",
-     "label": "[right-click / secondary click on a session row]",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1568,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "ContextMenuRegion opens a desktop context menu mirroring the overflow menu plus Open.",
-     "gates": [
-      "desktop only: ContextMenuRegion (lib/ui/desktop/context_menu.dart) is a pass-through off desktop"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-context-details",
-     "type": "menu-item",
-     "label": "Conversation context",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1573,
-     "action": "navigate",
-     "target": "session-context",
-     "targetWidget": "SessionContextScreen",
-     "effect": "_openSessionContext(session): pushes SessionContextScreen; its Details hold the folder and shared link (the details sheet merged here, slice-P3.11a).",
-     "gates": [
-      "desktop only: ContextMenuRegion (lib/ui/desktop/context_menu.dart) is a pass-through off desktop"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-context-pin",
-     "type": "menu-item",
-     "label": "Pin on this device | Unpin",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1579,
-     "action": "toggle-setting",
-     "target": null,
-     "targetWidget": null,
-     "effect": "togglePin() -> controller.setSessionPinned(...).",
-     "gates": [
-      "desktop only: ContextMenuRegion (lib/ui/desktop/context_menu.dart) is a pass-through off desktop",
-      "controller.canPinSessions"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-context-open",
-     "type": "menu-item",
-     "label": "Open",
-     "key": "session-menu-open",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1614,
-     "action": "navigate",
-     "target": "chat",
-     "targetWidget": "/chat/<sessionId>",
-     "effect": "onOpen(session) -> pushNamed('/chat/<id>').",
-     "gates": [
-      "desktop only: ContextMenuRegion (lib/ui/desktop/context_menu.dart) is a pass-through off desktop"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-context-rename",
-     "type": "menu-item",
-     "label": "Rename",
-     "key": "session-menu-rename",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1620,
-     "action": "open-dialog",
-     "target": "workspace-rename-session-dialog",
-     "targetWidget": "_rename",
-     "effect": "onAction('rename', session).",
-     "gates": [
-      "desktop only: ContextMenuRegion (lib/ui/desktop/context_menu.dart) is a pass-through off desktop"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-context-share",
-     "type": "menu-item",
-     "label": "Share | Stop sharing",
-     "key": "session-menu-share",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1627,
-     "action": "open-sheet",
-     "target": "workspace-share-session-sheet",
-     "targetWidget": "_confirmShare",
-     "effect": "onAction('share' or 'unshare'): share opens the confirm sheet; unshare calls repository.unshareSession directly.",
-     "gates": [
-      "desktop only: ContextMenuRegion (lib/ui/desktop/context_menu.dart) is a pass-through off desktop",
-      "widget.controller.capabilities.sessionShare"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-context-archive",
-     "type": "menu-item",
-     "label": "Archive",
-     "key": "session-menu-archive",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1638,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": "_archiveSwipe",
-     "effect": "screen-work-1: archives at once with Undo (showKitUndo), the same path as the swipe; the confirmation sheet is gone (P3.12).",
-     "gates": [
-      "desktop only: ContextMenuRegion (lib/ui/desktop/context_menu.dart) is a pass-through off desktop",
-      "widget.controller.capabilities.sessionArchive"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-context-delete",
-     "type": "menu-item",
-     "label": "Delete",
-     "key": "session-menu-delete",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1644,
-     "action": "open-sheet",
-     "target": "workspace-delete-session-sheet",
-     "targetWidget": "_confirmDelete",
-     "effect": "onAction('delete', session).",
-     "gates": [
-      "desktop only: ContextMenuRegion (lib/ui/desktop/context_menu.dart) is a pass-through off desktop"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "workspace-project-header",
-     "type": "card",
-     "label": "<project name> | Choose a project | <folder basename> (tooltip: Switch project, worktrees, and project health)",
-     "key": "current-project-context",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1756,
-     "action": "open-sheet",
-     "target": "workspace-context-sheet",
-     "targetWidget": "_openContextSheet",
-     "effect": "_openContextSheet() opens the project sheet. The header sits above the scroll view, so it stays in place while the list scrolls.",
-     "gates": [
-      "_hasProjectDetails: capabilities.projectManagement && (_projects?.isNotEmpty == true || _selectedDirectory != null)"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-search-all-sessions",
-     "type": "button",
-     "label": "All sessions (icon-only at large text; tooltip: Search session titles across every project on this server)",
-     "key": "search-all-sessions",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1795,
-     "action": "navigate",
-     "target": "global-sessions",
-     "targetWidget": "GlobalSessionsScreen",
-     "effect": "onSearch -> _openAllSessions() pushes GlobalSessionsScreen (IconButton at 1795 when text scale > 18/14, TextButton.icon at 1803 otherwise).",
-     "gates": [
-      "capabilities.globalSessionSearch"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-section-menu",
-     "type": "icon-button",
-     "label": "[Recent sessions overflow menu]",
-     "key": "workspace-section-menu",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1850,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "opens overflow menu (PopupMenuButton<_SectionAction>)",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "workspace-section-menu-reload",
-     "type": "menu-item",
-     "label": "Reload recent sessions",
-     "key": "workspace-refresh-sessions",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1861,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "controller.refreshSessions().",
-     "gates": [
-      "enabled: !controller.sessionsLoading"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-section-menu-background",
-     "type": "menu-item",
-     "label": "Stays connected in the background | Background updates off",
-     "key": "workspace-background-toggle",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1874,
-     "action": "navigate",
-     "target": "notifications-settings",
-     "targetWidget": "NotificationsSettingsScreen",
-     "effect": "onOpenBackgroundSettings -> _openBackgroundSettings() pushes NotificationsSettingsScreen(controller); the label reflects controller.keepLiveInBackground.",
-     "gates": [
-      "platformCapabilities.supportsBackgroundService"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-new-session",
-     "type": "fab",
-     "label": "New session",
-     "key": "workspace-quick-ask",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 2157,
-     "action": "navigate",
-     "target": "chat",
-     "targetWidget": "/chat/<sessionId>",
-     "effect": "_createSession(): controller.createSession() then pushNamed('/chat/<id>', arguments: ChatRouteArguments.newlyCreated()), then refreshSessions(); docked quick-ask pill replacing a FAB. In Team mode (workspace-new-mode on), onTap is _createTeamTask instead: TeamConversation.start (team-conversation) when the team is on, else openTeamPage, whose off state is team-intro.",
-     "gates": [
-      "disabled while _creating"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-return-brief-panel",
-     "type": "card",
-     "label": "[Return brief panel]",
-     "key": null,
-     "file": "lib/ui/widgets/return_brief_panel.dart",
-     "line": 610,
-     "action": "other",
-     "target": null,
-     "targetWidget": "ReturnBriefPanel",
-     "effect": "Embeds ReturnBriefPanel(controller, inventoryStatusInParent: true, unknownStatusInParent: _hasProjectDetails); its own buttons (permission/question sheets, open chat) belong to the widget's owner.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "workspace-session-unread-badge",
-     "type": "banner",
-     "label": "[unread / review state badge on the row]",
-     "key": null,
-     "file": "lib/ui/widgets/session_read_state.dart",
-     "line": 1495,
-     "action": "other",
-     "target": null,
-     "targetWidget": "SessionUnreadBadge",
-     "effect": "SessionUnreadBadge(controller, session) is display-only (no callbacks).",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "workspace-team-card",
-     "type": "card",
-     "label": "[AI Team card]",
-     "key": null,
-     "file": "lib/ui/widgets/team_card.dart",
-     "line": 794,
-     "action": "navigate",
-     "target": "team-home",
-     "targetWidget": "TeamHomeScreen",
-     "effect": "Embeds TeamCard(controller: team, onOpen: () => _openTeamHome(team)) after Recent and its load-more footer and before Archived; onOpen pushes TeamHomeScreen(controller: team). What the team needs from the person reaches Inbox; the card's other controls belong to the widget's owner.",
-     "gates": [
-      "retired from the Work tab (docs/design/team-conversation-2026-09-26.md): the team's tasks are rows in its lists (workspace-team-task-row) and workspace-team-door opens the team page; TeamCard stays a widget"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-team-task-row",
-     "type": "list-tile",
-     "label": "<team task title>",
-     "key": "work-team-task-<runId>",
-     "file": "lib/ui/widgets/team_task_row.dart",
-     "line": 64,
-     "action": "navigate",
-     "target": "team-conversation",
-     "targetWidget": "TeamConversation.open",
-     "effect": "A team task in Needs you or Running with the team mark and 'Team · <state line>'; opens the task's own conversation (TeamConversation.open, team_conversation/team_conversation.dart).",
-     "gates": [
-      "controller.orchestration != null; open tasks only"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-termux-attention-line",
-     "type": "banner",
-     "label": "[Termux attention line]",
-     "key": null,
-     "file": "lib/ui/widgets/termux_phone_tools.dart",
-     "line": 632,
-     "action": "other",
-     "target": "embedded-termux-attention-line",
-     "targetWidget": "TermuxAttentionLine",
-     "effect": "Embeds const TermuxAttentionLine(); its tap behaviour (links to Running now) is defined by the widget's owner.",
-     "gates": [
-      "platformCapabilities.supportsTermux && TermuxBridge.managesServerUrl(widget.controller.profile?.baseUrl)"
-     ],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "workspace-context-sheet",
-   "title": "[Project and workspace context]",
-   "kind": "sheet",
-   "area": "workspace",
-   "file": "lib/ui/screens/workspace_screen.dart",
-   "widget": "_openContextSheet",
-   "presentedBy": [
-    "_openContextSheet"
-   ],
-   "line": 912,
-   "purpose": "Project context sheet: full folder path, switch project, manage project and managed-workspace selection.",
-   "reachedFrom": [
-    {
-     "page": "workspace",
-     "element": "workspace-project-header"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-active-session-directory"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-restricted-directory"
-    }
-   ],
-   "gates": [
-    "_hasProjectDetails"
-   ],
-   "elements": [
-    {
-     "id": "workspace-context-sheet-switch-project",
-     "type": "list-tile",
-     "label": "Switch project / {count} open on this server",
-     "key": "context-switch-project",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 955,
-     "action": "navigate",
-     "target": "projects",
-     "targetWidget": "ProjectsScreen",
-     "effect": "Pops the sheet with _ContextChoice.switchProject(); _openContextSheet then calls _openProjects() which pushes ProjectsScreen.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "workspace-context-sheet-local",
-     "type": "list-tile",
-     "label": "This computer",
-     "key": "workspace-option-local",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 981,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Pops with _ContextChoice.workspace(null); _selectWorkspace(null) -> controller.selectLocation(directory: _selectedDirectory, workspace: null).",
-     "gates": [
-      "_workspaces.isNotEmpty"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-context-sheet-workspace",
-     "type": "list-tile",
-     "label": "<workspace branch or name> / <directory>",
-     "key": "workspace-option-<workspace.id>",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1004,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Pops with _ContextChoice.workspace(workspace); _selectWorkspace -> controller.selectLocation(directory: workspace.directory, workspace: workspace.id); shows controller.locationError on failure.",
-     "gates": [
-      "_workspaces.isNotEmpty"
-     ],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "workspace-rename-session-dialog",
-   "title": "Rename session",
-   "kind": "dialog",
-   "area": "workspace",
-   "file": "lib/ui/screens/workspace_screen.dart",
-   "widget": "_rename",
-   "presentedBy": [],
-   "line": 1183,
-   "purpose": "Edit a session title.",
-   "reachedFrom": [
-    {
-     "page": "workspace",
-     "element": "workspace-session-menu-rename"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-session-context-rename"
-    }
-   ],
-   "gates": [],
-   "elements": [
-    {
-     "id": "workspace-rename-session-dialog-title",
-     "type": "text-field",
-     "label": "Title",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1187,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Edits the new title (prefilled with session.title).",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "workspace-rename-session-dialog-cancel",
-     "type": "button",
-     "label": "Cancel",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1196,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Navigator.pop() with no result.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "workspace-rename-session-dialog-save",
-     "type": "button",
-     "label": "Save",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1200,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Pops with the trimmed text; _rename calls controller.renameSession(session.id, title) when non-empty, then refreshSessions().",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "workspace-share-session-sheet",
-   "title": "Share this session?",
-   "kind": "sheet",
-   "area": "workspace",
-   "file": "lib/ui/screens/workspace_screen.dart",
-   "widget": "_confirmShare",
-   "presentedBy": [],
-   "line": 1226,
-   "purpose": "Confirm creating a public share link.",
-   "reachedFrom": [
-    {
-     "page": "workspace",
-     "element": "workspace-session-menu-share"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-session-context-share"
-    }
-   ],
-   "gates": [
-    "widget.controller.capabilities.sessionShare"
-   ],
-   "elements": [
-    {
-     "id": "workspace-share-session-sheet-confirm",
-     "type": "button",
-     "label": "Share session",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1226,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Returns true; _sessionAction calls repository.shareSession(session.id), copies the URL with Clipboard.setData (line 1103), shows a snackbar and refreshes sessions.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "workspace-share-session-sheet-cancel",
-     "type": "button",
-     "label": "Cancel",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1226,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Pops the confirm sheet with false (showConfirmSheet in lib/ui/widgets/confirm_sheet.dart:86); nothing changes.",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "workspace-delete-session-sheet",
-   "title": "Delete session?",
-   "kind": "sheet",
-   "area": "workspace",
-   "file": "lib/ui/screens/workspace_screen.dart",
-   "widget": "_confirmDelete",
-   "presentedBy": [],
-   "line": 1240,
-   "purpose": "Confirm deleting a session.",
-   "reachedFrom": [
-    {
-     "page": "workspace",
-     "element": "workspace-session-menu-delete"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-session-context-delete"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-session-row-swipe"
-    }
-   ],
-   "gates": [],
-   "elements": [
-    {
-     "id": "workspace-delete-session-sheet-confirm",
-     "type": "button",
-     "label": "Delete",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1240,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Returns true; _sessionAction calls controller.deleteSession(session.id) then refreshSessions().",
-     "gates": [],
-     "destructive": true
-    },
-    {
-     "id": "workspace-delete-session-sheet-cancel",
-     "type": "button",
-     "label": "Cancel",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 1240,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Pops the confirm sheet with false (showConfirmSheet in lib/ui/widgets/confirm_sheet.dart:86); nothing changes.",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "workspace-folder-chooser",
-   "title": "Choose a project folder",
-   "kind": "tab",
-   "area": "workspace",
-   "file": "lib/ui/screens/workspace_screen.dart",
-   "widget": "_WorkspaceFolderChooser",
-   "presentedBy": [],
-   "line": 2123,
-   "purpose": "Blocking state of the Workspace tab while the connection has no usable project folder: create, open or browse a folder, or search all sessions.",
-   "reachedFrom": [
-    {
-     "page": "home-shell",
-     "element": "home-shell-tab-workspace"
-    },
-    {
-     "page": "system",
-     "element": "system-automatic-replaces-the-workspace-tab-body-while-controller-w-to-workspace-folder-chooser"
-    },
-    {
-     "page": "workspace",
-     "element": null,
-     "via": "state",
-     "note": "replaces the Workspace body while controller.workspaceChoiceRequired"
-    }
-   ],
-   "gates": [
-    "capabilities.projectManagement && widget.controller.workspaceChoiceRequired && (_projects != null || _projectError != null)"
-   ],
-   "elements": [
-    {
-     "id": "workspace-folder-chooser-create",
-     "type": "button",
-     "label": "Create a new folder",
-     "key": "workspace-create-folder",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 2152,
-     "action": "open-dialog",
-     "target": "project-folder-new-dialog",
-     "targetWidget": "ProjectFolderActions.createFolder",
-     "effect": "onCreate -> _createProjectFolder() -> ProjectFolderActions.createFolder() opens the new-folder dialog, creates the folder via TermuxBridge.createProjectFolder and selects it, then _load().",
-     "gates": [
-      "ProjectFolderActions.canCreate(controller): profile != null && TermuxBridge.supported && TermuxBridge.managesServerUrl(profile.baseUrl)"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-folder-chooser-open",
-     "type": "button",
-     "label": "Open a project folder",
-     "key": "workspace-open-folder",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 2158,
-     "action": "open-dialog",
-     "target": "project-folder-open-dialog",
-     "targetWidget": "ProjectFolderActions.openFolder",
-     "effect": "onOpen -> _openProjectFolder() -> ProjectFolderActions.openFolder(): the folder browser for OpenCode inside the app, the path dialog otherwise; then controller.selectLocation(directory) and _load().",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "workspace-folder-chooser-browse",
-     "type": "button",
-     "label": "Choose from opened projects",
-     "key": "workspace-browse-projects",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 2164,
-     "action": "navigate",
-     "target": "projects",
-     "targetWidget": "ProjectsScreen",
-     "effect": "onBrowse -> _openProjects() pushes ProjectsScreen(selectedProjectID) and reloads on return.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "workspace-folder-chooser-search-all",
-     "type": "button",
-     "label": "Search all sessions",
-     "key": "workspace-chooser-search-all",
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 2171,
-     "action": "navigate",
-     "target": "global-sessions",
-     "targetWidget": "GlobalSessionsScreen",
-     "effect": "onSearchAll -> _openAllSessions() pushes GlobalSessionsScreen.",
-     "gates": [
-      "capabilities.globalSessionSearch"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-folder-chooser-retry",
-     "type": "button",
-     "label": "Retry projects",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 2191,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "onRetry -> _load().",
-     "gates": [
-      "projectError != null"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "workspace-folder-chooser-details",
-     "type": "list-tile",
-     "label": "Details",
-     "key": null,
-     "file": "lib/ui/screens/workspace_screen.dart",
-     "line": 2197,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "ExpansionTile expands the projectFolderNoCreateHint explanation.",
-     "gates": [
-      "!canCreate"
-     ],
-     "destructive": false
-    }
-   ]
-  },
-  {
    "id": "worktrees",
    "title": "Worktrees",
    "kind": "screen",
@@ -15702,13 +13848,9 @@
    "presentedBy": [
     "ProjectFolderActions.openFolder"
    ],
-   "line": 130,
+   "line": 131,
    "purpose": "A server on this phone: OpenCode inside the app (folders read from the built-in Ubuntu's files, so it works with the server stopped) or the OpenCode server this app runs in Termux (a short read-only script run inside Termux's Ubuntu through TermuxBridge.run, the path passed base64-encoded, bounded to 15 s in Termux and 25 s in the app). Browses from /root/projects up to /. A project (git repository, a project OpenCode knows, or any folder straight in /root/projects) opens with a tap; other folders are gone into. One primary opens the folder shown (never the home folder, / or the projects folder itself); New project makes a folder inside the folder shown (the app's Ubuntu: mkdir + git init; Termux: mkdir -p); Enter a path opens the path dialog. Remote servers, and Termux when it cannot run the app's commands, skip this sheet and go straight to the path dialog. Layout (2026-10-03, owner review): the sheet opens on a start page, title Open a project with Close in the header and no place line, menu or folder list: 1. New project (prominent; the name step swaps in place with \"Creates <folder>/<name>\", Create and open and a quiet Change folder that picks the parent in the browser and comes back; default folder is the host’s project space, else Projects on the phone’s storage), 2. Search this phone (phone-hosted servers only; the All files access consent first; a calm search step with a timer, a bar against the 10 s cap, folders checked and projects found, results as they come, Stop; then \"<m> found in 0:09\", Look deeper after the cap, an empty state with a way forward; back cancels), 3. Opened before (the recent folders with a Git badge when they hold .git, checked after and kept for the sheet; a tap opens; hidden when there are none). A quiet Choose a folder at the bottom opens the browser (one header row with back, the folder name and a more menu with Show hidden folders and Enter a path; the place menu when both places exist; one panel of folder rows; the pinned Open <folder>). A remote server keeps its own path sheet and has no search row because OpenCode lists files only inside a project.",
    "reachedFrom": [
-    {
-     "page": "workspace-folder-chooser",
-     "element": "workspace-folder-chooser-open"
-    },
     {
      "page": "projects",
      "element": "projects-open-folder"
@@ -15725,7 +13867,7 @@
      "label": "Create and open",
      "key": "phone-new-folder-create",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 533,
+     "line": 534,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15739,7 +13881,7 @@
      "label": "Project name",
      "key": "phone-new-folder-name",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 544,
+     "line": 545,
      "action": "submit",
      "target": null,
      "targetWidget": null,
@@ -15753,7 +13895,7 @@
      "label": "Change (inline link after \"In <folder> ·\")",
      "key": "phone-new-folder-change",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 576,
+     "line": 577,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15767,7 +13909,7 @@
      "label": "New project (accent badge row)",
      "key": "open-project-new",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 608,
+     "line": 609,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15781,7 +13923,7 @@
      "label": "Search this phone",
      "key": "open-project-search",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 621,
+     "line": 622,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15797,7 +13939,7 @@
      "label": "Choose a folder (quiet row)",
      "key": "open-project-browse",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 653,
+     "line": 654,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15811,7 +13953,7 @@
      "label": "<folder name> / <path> / Git",
      "key": "open-project-recent-<n>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 672,
+     "line": 673,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15827,7 +13969,7 @@
      "label": "Back (search step)",
      "key": "phone-scan-back",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 760,
+     "line": 748,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15841,7 +13983,7 @@
      "label": "Stop",
      "key": "phone-scan-stop",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 767,
+     "line": 755,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15857,7 +13999,7 @@
      "label": "Look deeper",
      "key": "phone-scan-deeper",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 774,
+     "line": 762,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15873,7 +14015,7 @@
      "label": "<project name> / <kind> · <folder> / Git",
      "key": "phone-scan-<path>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 853,
+     "line": 833,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15887,7 +14029,7 @@
      "label": "Back (browser, first folder)",
      "key": "folder-browser-start",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 881,
+     "line": 861,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15901,7 +14043,7 @@
      "label": "Back chevron (Up one folder); Close at the place's first folder",
      "key": "folder-browser-up",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 886,
+     "line": 866,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15915,7 +14057,7 @@
      "label": "Enter a path (header more menu)",
      "key": "in-app-enter-path",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 899,
+     "line": 879,
      "action": "open-dialog",
      "target": "project-folder-open-dialog",
      "targetWidget": "_OpenFolderDialog",
@@ -15929,7 +14071,7 @@
      "label": "Use <folder>",
      "key": "folder-browser-use",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 916,
+     "line": 896,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15945,7 +14087,7 @@
      "label": "Open <folder>",
      "key": "folder-browser-open",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 924,
+     "line": 904,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15961,7 +14103,7 @@
      "label": "<folder name> / Git repository | OpenCode project",
      "key": "in-app-project-<name>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 1095,
+     "line": 1075,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15975,7 +14117,7 @@
      "label": "[Show the folders in <name>]",
      "key": "folder-browse-<name>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 1108,
+     "line": 1088,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15989,7 +14131,7 @@
      "label": "Try again",
      "key": "folder-browser-retry",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 1192,
+     "line": 1172,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -16867,7 +15009,7 @@
   },
   {
    "id": "project-hub",
-   "title": "Project",
+   "title": "Files",
    "kind": "tab",
    "area": "files",
    "file": "lib/ui/screens/project_hub_screen.dart",
@@ -19966,27 +18108,14 @@
    "presentedBy": [],
    "line": 134,
    "purpose": "Embedded inbox rows: pending requests and due check-ins from other monitored saved servers.",
-   "reachedFrom": [
-    {
-     "page": "activity",
-     "element": null,
-     "evidence": "lib/ui/screens/activity_screen.dart:595"
-    },
-    {
-     "page": "activity",
-     "element": null,
-     "via": "embedded"
-    }
-   ],
+   "reachedFrom": [],
    "gates": [
     "!controller.isIsolated"
    ],
    "embeddedIn": [
     "ActivityScreen"
    ],
-   "hostPages": [
-    "activity"
-   ],
+   "hostPages": [],
    "elements": [
     {
      "id": "embedded-profile-monitor-inbox-request-row",
@@ -25313,17 +23442,7 @@
    "presentedBy": [],
    "line": 159,
    "purpose": "Workspace line shown only while an orphaned Termux helper has burned more than 10 minutes of CPU (polled every 60s).",
-   "reachedFrom": [
-    {
-     "page": "workspace",
-     "element": "workspace-termux-attention-line"
-    },
-    {
-     "page": "workspace",
-     "element": null,
-     "via": "embedded"
-    }
-   ],
+   "reachedFrom": [],
    "gates": [
     "`TermuxBridge.supported`",
     "`_worst != null` (an orphan over `threshold` = 10 min CPU)",
@@ -25332,9 +23451,7 @@
    "embeddedIn": [
     "WorkspaceScreen"
    ],
-   "hostPages": [
-    "workspace"
-   ],
+   "hostPages": [],
    "elements": [
     {
      "id": "embedded-termux-attention-line-open",
@@ -25580,24 +23697,12 @@
      "element": "team-board-move-open"
     },
     {
-     "page": "workspace",
-     "element": "workspace-team-task-row"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-new-session"
-    },
-    {
      "page": "team-home",
      "element": "team-home-runs-row"
     },
     {
      "page": "system",
      "element": "system-entry-team-link-run"
-    },
-    {
-     "page": "new-conversation-sheet",
-     "element": "new-conversation-team"
     },
     {
      "page": "team-role",
@@ -25851,20 +23956,6 @@
      "effect": "Embeds TeamMergeSection(controller, run) (merge_section.dart, owned by i2); same widget as team-run-overview-merge-section.",
      "gates": [],
      "destructive": false
-    },
-    {
-     "id": "team-conversation-gate-card",
-     "type": "card",
-     "label": "[Needs-you gate card]",
-     "key": null,
-     "file": "lib/ui/widgets/team_needs_you.dart",
-     "line": 397,
-     "action": "open-sheet",
-     "target": "gate-sheet",
-     "targetWidget": "showGateSheet",
-     "effect": "TeamNeedsYouCard.onOpen -> showGateSheet(context, team, gate.id, now: widget.now); one card per open gate on this task.",
-     "gates": [],
-     "destructive": false
     }
    ]
   },
@@ -25933,10 +24024,6 @@
     {
      "page": "team-task-details",
      "element": "team-task-details-agent"
-    },
-    {
-     "page": "activity",
-     "element": "activity-team-agent-blocked-row"
     },
     {
      "page": "chat",
@@ -26313,10 +24400,6 @@
    "purpose": "Needs-you sheet for one orchestration gate: shows the prompt per GateKind and, behind control capabilities, lets the person answer it, with an inline mutation receipt.",
    "reachedFrom": [
     {
-     "page": "activity",
-     "element": "activity-team-gate-row"
-    },
-    {
      "page": "system",
      "element": "system-activityscreen-opened-with-an-initial-gate-id-post-frame-sho-to-gate-sheet"
     },
@@ -26331,10 +24414,6 @@
     {
      "page": "embedded-team-receipt-chip",
      "element": "embedded-team-receipt-chip-open"
-    },
-    {
-     "page": "team-conversation",
-     "element": "team-conversation-gate-card"
     }
    ],
    "gates": [
@@ -27504,10 +25583,6 @@
      "element": "team-project-demo-projects"
     },
     {
-     "page": "workspace",
-     "element": "workspace-project-strip"
-    },
-    {
      "page": "team-intro",
      "element": "team-intro-project-demo"
     },
@@ -27634,10 +25709,6 @@
     {
      "page": "team-projects",
      "element": "team-projects-open"
-    },
-    {
-     "page": "activity",
-     "element": "activity-project-decision"
     }
    ],
    "gates": [
@@ -28558,20 +26629,6 @@
      "destructive": false
     },
     {
-     "id": "team-board-tabs",
-     "type": "tab",
-     "label": "Backlog | Ready | Working | Review | Done",
-     "key": null,
-     "file": "lib/ui/screens/team/team_board_screen.dart",
-     "line": 78,
-     "action": "other",
-     "target": null,
-     "effect": "TeamBoardTabs.onSelect -> _select(column): setState(() => _column = column) then pages.animateToPage (jumpToPage when motion is reduced).",
-     "gates": [],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/team_board_tabs.dart"
-    },
-    {
      "id": "team-board-project-item",
      "type": "menu-item",
      "label": "<project name>",
@@ -28712,14 +26769,6 @@
      "page": "settings",
      "element": null,
      "note": "opener id 'settings-search' not found; page-level edge"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-team-card"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-team-door"
     },
     {
      "page": "team-conversation",
@@ -30561,22 +28610,14 @@
    "presentedBy": [],
    "line": 86,
    "purpose": "Trailing KitReceipt on a needs-you gate row once an answer left this phone: Sending / Not confirmed yet / Not accepted (teamGateRowReceipt; the TeamReceiptChip wrapper is deleted).",
-   "reachedFrom": [
-    {
-     "page": "activity",
-     "element": null,
-     "via": "embedded"
-    }
-   ],
+   "reachedFrom": [],
    "gates": [
     "ConnectionController.orchestration != null (lib/state/connection.dart:712); _syncOrchestration (connection.dart:746) returns without building the controller when `config == null || selected == null || isIsolated || _disposed`, where `config = selected?.orchestration` (the connected ServerProfile's AI Team plugin config)"
    ],
    "embeddedIn": [
     "ActivityGateTile"
    ],
-   "hostPages": [
-    "activity"
-   ],
+   "hostPages": [],
    "elements": [
     {
      "id": "embedded-team-receipt-chip-open",
@@ -33542,14 +31583,6 @@
      "element": "settings-category-background"
     },
     {
-     "page": "activity",
-     "element": "activity-background-hint"
-    },
-    {
-     "page": "workspace",
-     "element": "workspace-section-menu-background"
-    },
-    {
      "page": "provider-quota",
      "element": "provider-quota-monitor-notification-settings"
     },
@@ -36042,11 +34075,6 @@
      "via": "embedded"
     },
     {
-     "page": "workspace",
-     "element": null,
-     "via": "embedded"
-    },
-    {
      "page": "worktrees",
      "element": null,
      "via": "embedded"
@@ -36057,7 +34085,6 @@
    ],
    "embeddedIn": [
     "TerminalPage (terminal_screen.dart:493)",
-    "WorkspaceScreen (workspace_screen.dart:1299,1568)",
     "WorktreesScreen (worktrees_screen.dart:750)",
     "FilesScreen (files_screen.dart:1040)",
     "MessageView (chat/message_view.dart:1616)",
@@ -36071,7 +34098,6 @@
     "global-sessions",
     "managed-workspaces",
     "terminal",
-    "workspace",
     "worktrees"
    ],
    "elements": [
@@ -36132,10 +34158,6 @@
    "line": 58,
    "purpose": "Shared bottom-sheet confirmation (icon, title, message, one primary action, cancel). Callers supply copy, keys and the destructive flag and perform the actual mutation after it returns true; caller agents record their own instances.",
    "reachedFrom": [
-    {
-     "page": "question-sheet",
-     "element": "question-sheet-dismiss"
-    },
     {
      "page": "prompt-stash-sheet",
      "element": "prompt-stash-sheet-delete"
@@ -36291,11 +34313,6 @@
      "via": "embedded"
     },
     {
-     "page": "activity",
-     "element": null,
-     "via": "embedded"
-    },
-    {
      "page": "chat",
      "element": null,
      "via": "embedded"
@@ -36414,7 +34431,6 @@
    ],
    "hostPages": [
     "active-context",
-    "activity",
     "chat",
     "commands",
     "files",
@@ -36537,8 +34553,7 @@
    "servers",
    "root-connecting",
    "home-shell",
-   "workspace",
-   "activity",
+   "chats-home",
    "project-hub",
    "settings"
   ],
@@ -36580,18 +34595,13 @@
    },
    {
     "from": "home-shell",
-    "element": "home-shell-tab-workspace",
-    "to": "workspace"
+    "element": "home-shell-tab-chats",
+    "to": "chats-home"
    },
    {
     "from": "home-shell",
     "element": "home-shell-tab-files",
     "to": "project-hub"
-   },
-   {
-    "from": "home-shell",
-    "element": "home-shell-tab-activity",
-    "to": "activity"
    },
    {
     "from": "home-shell",
@@ -36689,71 +34699,6 @@
     "to": "connection-status-details-sheet"
    },
    {
-    "from": "activity",
-    "element": "activity-background-hint",
-    "to": "notifications-settings"
-   },
-   {
-    "from": "activity",
-    "element": "activity-team-gate-row",
-    "to": "gate-sheet"
-   },
-   {
-    "from": "activity",
-    "element": "activity-team-agent-blocked-row",
-    "to": "team-agent"
-   },
-   {
-    "from": "activity",
-    "element": "activity-permission-row",
-    "to": "permission-sheet"
-   },
-   {
-    "from": "activity",
-    "element": "activity-question-row",
-    "to": "question-sheet"
-   },
-   {
-    "from": "activity",
-    "element": "activity-form-row",
-    "to": "form-sheet"
-   },
-   {
-    "from": "activity",
-    "element": "activity-running-row",
-    "to": "chat"
-   },
-   {
-    "from": "activity",
-    "element": "activity-digest-open-conversation",
-    "to": "chat"
-   },
-   {
-    "from": "activity",
-    "element": "activity-digest-review",
-    "to": "permission-sheet"
-   },
-   {
-    "from": "activity",
-    "element": "activity-digest-run-results",
-    "to": "run-result"
-   },
-   {
-    "from": "activity",
-    "element": "activity-auto-row",
-    "to": "chat"
-   },
-   {
-    "from": "activity",
-    "element": "activity-project-decision",
-    "to": "team-project-overview"
-   },
-   {
-    "from": "question-sheet",
-    "element": "question-sheet-dismiss",
-    "to": "confirm-sheet"
-   },
-   {
     "from": "global-shortcuts",
     "element": "global-shortcuts-palette",
     "to": "command-palette-dialog"
@@ -36845,18 +34790,8 @@
    },
    {
     "from": "system",
-    "element": "system-entry-launch-activity",
-    "to": "activity"
-   },
-   {
-    "from": "system",
     "element": "system-entry-session-link",
     "to": "chat"
-   },
-   {
-    "from": "system",
-    "element": "system-entry-team-link-gate",
-    "to": "activity"
    },
    {
     "from": "system",
@@ -36872,11 +34807,6 @@
     "from": "system",
     "element": "system-entry-alert-monitored-request",
     "to": "profile-monitor-switch-server-dialog"
-   },
-   {
-    "from": "system",
-    "element": "system-entry-alert-question",
-    "to": "activity"
    },
    {
     "from": "system",
@@ -36902,11 +34832,6 @@
     "from": "system",
     "element": "system-session-handoff-link-ai-team-link-for-a-non-active-saved-ser-to-home-shell",
     "to": "home-shell"
-   },
-   {
-    "from": "system",
-    "element": "system-activityscreen-initialquestionsessionid-from-a-question-noti-to-question-sheet",
-    "to": "question-sheet"
    },
    {
     "from": "system",
@@ -36952,11 +34877,6 @@
     "from": "system",
     "element": "system-conversationnudgewatcher-offers-a-nudge-at-its-moment-third--to-embedded-chat-nudge-slot",
     "to": "embedded-chat-nudge-slot"
-   },
-   {
-    "from": "system",
-    "element": "system-automatic-replaces-the-workspace-tab-body-while-controller-w-to-workspace-folder-chooser",
-    "to": "workspace-folder-chooser"
    },
    {
     "from": "system",
@@ -37759,21 +35679,6 @@
     "to": "markdown-code-reader"
    },
    {
-    "from": "embedded-completion-digest-card",
-    "element": "embedded-completion-digest-card-open-conversation",
-    "to": "chat"
-   },
-   {
-    "from": "embedded-completion-digest-card",
-    "element": "embedded-completion-digest-card-review",
-    "to": "permission-sheet"
-   },
-   {
-    "from": "embedded-completion-digest-card",
-    "element": "embedded-completion-digest-card-run-results",
-    "to": "run-result"
-   },
-   {
     "from": "form-sheet",
     "element": "form-sheet-date-field",
     "to": "form-sheet-date-picker"
@@ -37789,154 +35694,29 @@
     "to": "form-sheet-dismiss-confirm-sheet"
    },
    {
-    "from": "workspace",
-    "element": "workspace-error-search-all",
-    "to": "global-sessions"
+    "from": "chats-home",
+    "element": "chats-home-filter-project",
+    "to": "chats-project-sheet"
    },
    {
-    "from": "workspace",
-    "element": "workspace-no-projects-search-all",
-    "to": "global-sessions"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-project-header",
-    "to": "workspace-context-sheet"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-active-session-directory",
-    "to": "workspace-context-sheet"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-restricted-directory",
-    "to": "workspace-context-sheet"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-team-card",
-    "to": "team-home"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-termux-attention-line",
-    "to": "embedded-termux-attention-line"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-session-row",
+    "from": "chats-home",
+    "element": "chats-home-row",
     "to": "chat"
    },
    {
-    "from": "workspace",
-    "element": "workspace-session-menu-details",
-    "to": "session-context"
+    "from": "chats-home",
+    "element": "chats-home-new",
+    "to": "chats-new-chat"
    },
    {
-    "from": "workspace",
-    "element": "workspace-session-menu-rename",
-    "to": "workspace-rename-session-dialog"
+    "from": "chats-home",
+    "element": "chats-home-start-in-project",
+    "to": "chats-new-chat"
    },
    {
-    "from": "workspace",
-    "element": "workspace-session-menu-share",
-    "to": "workspace-share-session-sheet"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-session-menu-delete",
-    "to": "workspace-delete-session-sheet"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-session-context-details",
-    "to": "session-context"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-session-context-open",
-    "to": "chat"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-session-context-rename",
-    "to": "workspace-rename-session-dialog"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-session-context-share",
-    "to": "workspace-share-session-sheet"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-session-context-delete",
-    "to": "workspace-delete-session-sheet"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-search-all-sessions",
-    "to": "global-sessions"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-section-menu-background",
-    "to": "notifications-settings"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-archived-sessions",
-    "to": "global-sessions"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-new-session",
-    "to": "chat"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-team-task-row",
-    "to": "team-conversation"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-team-door",
-    "to": "team-home"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-new",
-    "to": "new-conversation-sheet"
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-project-strip",
-    "to": "team-projects"
-   },
-   {
-    "from": "workspace-folder-chooser",
-    "element": "workspace-folder-chooser-create",
-    "to": "project-folder-new-dialog"
-   },
-   {
-    "from": "workspace-folder-chooser",
-    "element": "workspace-folder-chooser-open",
-    "to": "project-folder-open-dialog"
-   },
-   {
-    "from": "workspace-folder-chooser",
-    "element": "workspace-folder-chooser-browse",
-    "to": "projects"
-   },
-   {
-    "from": "workspace-folder-chooser",
-    "element": "workspace-folder-chooser-search-all",
-    "to": "global-sessions"
-   },
-   {
-    "from": "workspace-context-sheet",
-    "element": "workspace-context-sheet-switch-project",
-    "to": "projects"
+    "from": "chats-home",
+    "element": "chats-home-start",
+    "to": "chats-new-chat"
    },
    {
     "from": "projects",
@@ -38077,26 +35857,6 @@
     "from": "shell-output",
     "element": "shell-output-stop",
     "to": "shell-output-stop-dialog"
-   },
-   {
-    "from": "new-conversation-sheet",
-    "element": "new-conversation-solo",
-    "to": "chat"
-   },
-   {
-    "from": "new-conversation-sheet",
-    "element": "new-conversation-team",
-    "to": "team-conversation"
-   },
-   {
-    "from": "new-conversation-sheet",
-    "element": "new-conversation-copy",
-    "to": "isolated-task-sheet"
-   },
-   {
-    "from": "new-conversation-sheet",
-    "element": "new-conversation-cloud",
-    "to": "chat"
    },
    {
     "from": "project-hub",
@@ -39040,11 +36800,6 @@
    },
    {
     "from": "team-conversation",
-    "element": "team-conversation-gate-card",
-    "to": "gate-sheet"
-   },
-   {
-    "from": "team-conversation",
     "element": "team-conversation-merge-section",
     "to": "embedded-team-merge-section"
    },
@@ -39629,30 +37384,14 @@
     "to": "session-note-discard-dialog"
    },
    {
-    "from": "run-result",
-    "element": "run-result-file-row",
-    "to": "run-result-output-sheet"
-   },
-   {
-    "from": "run-result",
-    "element": "run-result-command-row",
-    "to": "run-result-output-sheet"
-   },
-   {
-    "from": "run-result",
-    "element": "run-result-open-conversation",
-    "to": "chat"
-   },
-   {
     "from": "continue-on-computer-sheet",
     "element": "continue-on-computer-sheet-export",
     "to": "session-export"
    },
    {
-    "from": "activity",
-    "element": "activity-digest-review",
-    "to": "question-sheet",
-    "secondary": true
+    "from": "chats-new-chat",
+    "element": "chats-new-send",
+    "to": "chat"
    },
    {
     "from": "chat-stash-attachments-unavailable-sheet",
@@ -39691,24 +37430,6 @@
     "secondary": true
    },
    {
-    "from": "home-shell",
-    "element": "home-shell-tab-workspace",
-    "to": "workspace-folder-chooser",
-    "secondary": true
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-session-row-swipe",
-    "to": "workspace-delete-session-sheet",
-    "secondary": true
-   },
-   {
-    "from": "workspace-folder-chooser",
-    "element": "workspace-folder-chooser-open",
-    "to": "project-folder-browser",
-    "secondary": true
-   },
-   {
     "from": "projects",
     "element": "projects-open-folder",
     "to": "project-folder-browser",
@@ -39742,12 +37463,6 @@
     "from": "settings",
     "element": "settings-ai-team",
     "to": "team-settings",
-    "secondary": true
-   },
-   {
-    "from": "workspace",
-    "element": "workspace-new-session",
-    "to": "team-conversation",
     "secondary": true
    },
    {
@@ -39829,11 +37544,6 @@
     "via": "embedded"
    },
    {
-    "from": "profile-monitor-switch-server-dialog",
-    "element": null,
-    "to": "question-sheet"
-   },
-   {
     "from": "settings",
     "element": null,
     "to": "shortcuts-help-dialog"
@@ -39896,12 +37606,6 @@
     "via": "embedded"
    },
    {
-    "from": "workspace",
-    "element": null,
-    "to": "embedded-context-menu-region",
-    "via": "embedded"
-   },
-   {
     "from": "worktrees",
     "element": null,
     "to": "embedded-context-menu-region",
@@ -39909,12 +37613,6 @@
    },
    {
     "from": "active-context",
-    "element": null,
-    "to": "embedded-product-states",
-    "via": "embedded"
-   },
-   {
-    "from": "activity",
     "element": null,
     "to": "embedded-product-states",
     "via": "embedded"
@@ -40254,18 +37952,6 @@
     "via": "embedded"
    },
    {
-    "from": "run-result",
-    "element": null,
-    "to": "embedded-tool-card",
-    "via": "embedded"
-   },
-   {
-    "from": "run-result-output-sheet",
-    "element": null,
-    "to": "embedded-tool-card",
-    "via": "embedded"
-   },
-   {
     "from": "about",
     "element": null,
     "to": "embedded-markdown-text",
@@ -40308,12 +37994,6 @@
     "via": "embedded"
    },
    {
-    "from": "activity",
-    "element": null,
-    "to": "embedded-question-options",
-    "via": "embedded"
-   },
-   {
     "from": "chat",
     "element": null,
     "to": "embedded-question-options",
@@ -40332,21 +38012,9 @@
     "via": "embedded"
    },
    {
-    "from": "activity",
-    "element": null,
-    "to": "embedded-completion-digest-card",
-    "via": "embedded"
-   },
-   {
     "from": "embedded-profile-monitor-inbox",
     "element": null,
     "to": "form-sheet"
-   },
-   {
-    "from": "workspace",
-    "element": null,
-    "to": "workspace-folder-chooser",
-    "via": "state"
    },
    {
     "from": "chat",
@@ -40435,17 +38103,6 @@
     "to": "profile-editor"
    },
    {
-    "from": "activity",
-    "element": null,
-    "to": "embedded-profile-monitor-inbox"
-   },
-   {
-    "from": "activity",
-    "element": null,
-    "to": "embedded-profile-monitor-inbox",
-    "via": "embedded"
-   },
-   {
     "from": "server-switcher-sheet",
     "element": null,
     "to": "embedded-termux-running-server-entry",
@@ -40455,12 +38112,6 @@
     "from": "servers",
     "element": null,
     "to": "embedded-termux-running-server-entry",
-    "via": "embedded"
-   },
-   {
-    "from": "workspace",
-    "element": null,
-    "to": "embedded-termux-attention-line",
     "via": "embedded"
    },
    {
@@ -40534,12 +38185,6 @@
     "from": "settings",
     "element": null,
     "to": "team-home"
-   },
-   {
-    "from": "activity",
-    "element": null,
-    "to": "embedded-team-receipt-chip",
-    "via": "embedded"
    },
    {
     "from": "team-conversation",
@@ -40717,31 +38362,6 @@
   {
    "file": "lib/ui/permission_presentation.dart",
    "reason": "permissionRequestTitle string helper; no UI",
-   "part": "a-shell"
-  },
-  {
-   "file": "lib/ui/screens/activity/activity_details.dart",
-   "reason": "Part file of lib/ui/screens/activity_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
-   "part": "a-shell"
-  },
-  {
-   "file": "lib/ui/screens/activity/activity_pending.dart",
-   "reason": "Part file of lib/ui/screens/activity_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
-   "part": "a-shell"
-  },
-  {
-   "file": "lib/ui/screens/activity/activity_question_form.dart",
-   "reason": "Part file of lib/ui/screens/activity_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
-   "part": "a-shell"
-  },
-  {
-   "file": "lib/ui/screens/activity/activity_rows.dart",
-   "reason": "Part file of lib/ui/screens/activity_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
-   "part": "a-shell"
-  },
-  {
-   "file": "lib/ui/screens/activity/activity_tiles.dart",
-   "reason": "Part file of lib/ui/screens/activity_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
    "part": "a-shell"
   },
   {
@@ -40930,6 +38550,16 @@
    "part": "b1-chat-screen"
   },
   {
+   "file": "lib/ui/screens/chats/chats_host.dart",
+   "reason": "No surface: the one seam between the Chats screens and the connection (feed source, server pill, opening a conversation, model chip).",
+   "part": "l-chats"
+  },
+  {
+   "file": "lib/ui/screens/chats/new_chat_screen.dart",
+   "reason": "showNewChat(): STUB in the shell branch (feat/chats-first-home owns the real sheet and its ledger pages).",
+   "part": "e-workspace"
+  },
+  {
    "file": "lib/ui/screens/files/files_actions.dart",
    "reason": "Part file of lib/ui/screens/files_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
    "part": "f-files-review-terminal"
@@ -41085,6 +38715,11 @@
    "part": "i1-team-core"
   },
   {
+   "file": "lib/ui/screens/team/project_destination.dart",
+   "reason": "teamProjectDestination(): picks the AI Team project page for a link; no surface of its own",
+   "part": "a-shell"
+  },
+  {
    "file": "lib/ui/screens/team/projects/screen/board_timeline.dart",
    "reason": "Part file of lib/ui/screens/team/projects/team_projects_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
    "part": "i1-team-core"
@@ -41173,31 +38808,6 @@
    "file": "lib/ui/screens/usage_refresh_slot.dart",
    "reason": "UsageRefreshSlot is a ChangeNotifier holding refresh callbacks for the Usage page, with no visual surface or gestures.",
    "part": "j1-settings-more"
-  },
-  {
-   "file": "lib/ui/screens/workspace/workspace_actions.dart",
-   "reason": "Part file of lib/ui/screens/workspace_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
-   "part": "e-workspace"
-  },
-  {
-   "file": "lib/ui/screens/workspace/workspace_build.dart",
-   "reason": "Part file of lib/ui/screens/workspace_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
-   "part": "e-workspace"
-  },
-  {
-   "file": "lib/ui/screens/workspace/workspace_load.dart",
-   "reason": "Part file of lib/ui/screens/workspace_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
-   "part": "e-workspace"
-  },
-  {
-   "file": "lib/ui/screens/workspace/workspace_sheets.dart",
-   "reason": "Part file of lib/ui/screens/workspace_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
-   "part": "e-workspace"
-  },
-  {
-   "file": "lib/ui/screens/workspace/workspace_widgets.dart",
-   "reason": "Part file of lib/ui/screens/workspace_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
-   "part": "e-workspace"
   },
   {
    "file": "lib/ui/theme_packs.dart",
@@ -41836,6 +39446,10 @@
   {
    "part": "k-session-misc",
    "note": "session_relations_screen.dart:498 _relativeTime uses hard-coded English strings ('Now', 'm ago') rather than relative_time.dart."
+  },
+  {
+   "part": "l-chats",
+   "note": "Chats home speaks 'conversation' because the glossary (test/ui_glossary_test.dart) bans 'chat' in copy; the approved mockup says Chats."
   }
  ]
 }

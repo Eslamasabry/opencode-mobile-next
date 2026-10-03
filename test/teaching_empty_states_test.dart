@@ -16,22 +16,13 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
-import 'package:opencode_mobile/ui/kit/kit.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/library_screen.dart';
 import 'package:opencode_mobile/ui/screens/review_workspace.dart';
 import 'package:opencode_mobile/ui/screens/saved_permissions_screen.dart';
 import 'package:opencode_mobile/ui/screens/tools_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:opencode_mobile/ui/screens/worktrees_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const _inboxTeaching =
-    'Nothing needs you. Approvals and questions from running work appear '
-    'here.';
-const _workTeaching =
-    'Conversations you start in this project are listed here, with the ones '
-    'that need you first. Start one with New conversation.';
 const _changesTeaching = 'Edits the agent makes show up here to review.';
 const _worktreesTeaching =
     'A worktree is a separate copy of this project on its own branch, so '
@@ -208,14 +199,6 @@ Widget _app(
   home: home,
 );
 
-/// Work has rows that animate forever once a conversation is busy, and the
-/// screens under test load asynchronously; a few frames settle both.
-Future<void> _frames(WidgetTester tester) async {
-  for (var i = 0; i < 8; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
-}
-
 void _phone(WidgetTester tester, [Size size = const Size(400, 800)]) {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -232,134 +215,6 @@ void main() {
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(storage, null);
-  });
-
-  group('Inbox', () {
-    testWidgets('empty: says what will appear here', (tester) async {
-      _phone(tester);
-      final controller = await _controller();
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
-      await _frames(tester);
-
-      expect(find.byKey(const ValueKey('activity-all-clear')), findsOneWidget);
-      expect(find.text(_inboxTeaching), findsOneWidget);
-      expect(find.text('Try again'), findsNothing);
-    });
-
-    testWidgets('failed: Try again, and no claim that nothing needs you', (
-      tester,
-    ) async {
-      _phone(tester);
-      final controller = await _controller()
-        ..permissionsError = 'The server did not answer.';
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
-      await _frames(tester);
-
-      expect(find.text('The server did not answer.'), findsOneWidget);
-      expect(find.text('Try again'), findsOneWidget);
-      expect(find.text(_inboxTeaching), findsNothing);
-      expect(find.byKey(const ValueKey('activity-all-clear')), findsNothing);
-    });
-  });
-
-  group('Work', () {
-    testWidgets('empty: teaches and New conversation starts one', (
-      tester,
-    ) async {
-      _phone(tester);
-      final controller = await _controller(
-        capabilities: const ServerCapabilities(),
-      );
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(
-        _app(
-          Scaffold(body: WorkspaceScreen(controller: controller)),
-          routes: {
-            '/chat/created': (_) =>
-                const Scaffold(body: Text('Created conversation')),
-          },
-        ),
-      );
-      await _frames(tester);
-
-      final empty = find.byKey(const ValueKey('work-empty-teaching'));
-      expect(empty, findsOneWidget);
-      expect(find.text('No conversations yet'), findsOneWidget);
-      expect(find.text(_workTeaching), findsOneWidget);
-
-      // The copy names the docked button rather than repeating it: one New
-      // conversation action on the screen, and it fills the list.
-      final action = find.widgetWithText(KitButton, 'New conversation');
-      expect(action, findsOneWidget);
-      expect(
-        find.descendant(of: empty, matching: find.byType(KitButton)),
-        findsNothing,
-      );
-      await tester.tap(action);
-      await _frames(tester);
-      // P4.5 asks how to start before creating the conversation.
-      expect(controller.createCalls, 0);
-      await tester.tap(find.byKey(const ValueKey('new-conversation-solo')));
-      await _frames(tester);
-      expect(controller.createCalls, 1);
-      expect(find.text('Created conversation'), findsOneWidget);
-    });
-
-    testWidgets('an existing conversation anywhere removes the teaching', (
-      tester,
-    ) async {
-      _phone(tester);
-      final controller = await _controller(
-        capabilities: const ServerCapabilities(),
-      );
-      addTearDown(controller.dispose);
-      controller.sessionsById = {
-        'ses-1': Session(
-          id: 'ses-1',
-          title: 'Fix the build',
-          directory: '/work/app',
-          time: SessionTime(created: 1, updated: 2),
-        ),
-      };
-      await tester.pumpWidget(
-        _app(Scaffold(body: WorkspaceScreen(controller: controller))),
-      );
-      await _frames(tester);
-
-      expect(find.text('Fix the build'), findsOneWidget);
-      expect(find.byKey(const ValueKey('work-empty-teaching')), findsNothing);
-      expect(find.text(_workTeaching), findsNothing);
-    });
-
-    testWidgets('failed: Try again, and no "No conversations yet"', (
-      tester,
-    ) async {
-      _phone(tester);
-      final controller =
-          await _controller(capabilities: const ServerCapabilities())
-            ..sessionsError = 'The server did not answer.';
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(
-        _app(Scaffold(body: WorkspaceScreen(controller: controller))),
-      );
-      await _frames(tester);
-
-      // The end of the list owns the retry for a failed conversation load,
-      // said in words (the raw error is under Details).
-      expect(find.text('Could not load your conversations.'), findsOneWidget);
-      expect(
-        find.descendant(
-          of: find.byKey(const ValueKey('sessions-older-error')),
-          matching: find.text('Try again'),
-        ),
-        findsOneWidget,
-      );
-      expect(find.byKey(const ValueKey('work-empty-teaching')), findsNothing);
-      expect(find.text('No conversations yet'), findsNothing);
-      expect(find.text(_workTeaching), findsNothing);
-    });
   });
 
   group('Changes', () {
@@ -617,57 +472,6 @@ void main() {
     for (final locale in const [Locale('en'), Locale('ar')]) {
       final code = locale.languageCode;
       final copy = lookupAppLocalizations(locale);
-
-      testWidgets('Inbox empty state, $code', (tester) async {
-        _phone(tester, phone);
-        final controller = await _controller();
-        addTearDown(controller.dispose);
-        await tester.pumpWidget(
-          _app(
-            ActivityScreen(controller: controller),
-            locale: locale,
-            textScale: AppTheme.maxTextScale,
-          ),
-        );
-        await _frames(tester);
-
-        expect(find.text(copy.emptyTeachInboxMessage), findsOneWidget);
-        expect(tester.takeException(), isNull);
-      });
-
-      testWidgets('Work empty state, $code', (tester) async {
-        _phone(tester, phone);
-        final controller = await _controller(
-          capabilities: const ServerCapabilities(),
-        );
-        addTearDown(controller.dispose);
-        await tester.pumpWidget(
-          _app(
-            Scaffold(body: WorkspaceScreen(controller: controller)),
-            locale: locale,
-            textScale: AppTheme.maxTextScale,
-          ),
-        );
-        await _frames(tester);
-        expect(tester.takeException(), isNull);
-
-        // At this size the header and section caption fill the first screen,
-        // so the empty state is built only once it is scrolled to.
-        final empty = find.byKey(const ValueKey('work-empty-teaching'));
-        await tester.scrollUntilVisible(
-          find.text(copy.emptyTeachWorkMessage),
-          120,
-          scrollable: find
-              .descendant(
-                of: find.byType(CustomScrollView),
-                matching: find.byType(Scrollable),
-              )
-              .first,
-        );
-        expect(find.text(copy.emptyTeachWorkMessage), findsOneWidget);
-        expect(tester.takeException(), isNull);
-        expect(tester.getSize(empty).width, lessThanOrEqualTo(phone.width));
-      });
 
       testWidgets('Changes empty state, $code', (tester) async {
         _phone(tester, phone);

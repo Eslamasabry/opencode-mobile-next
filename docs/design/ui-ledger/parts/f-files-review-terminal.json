@@ -3,7 +3,7 @@
   "pages": [
     {
       "id": "project-hub",
-      "title": "Project",
+      "title": "Files",
       "kind": "tab",
       "file": "lib/ui/screens/project_hub_screen.dart",
       "widget": "ProjectHub",

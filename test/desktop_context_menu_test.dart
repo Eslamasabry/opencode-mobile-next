@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
-import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
@@ -16,7 +15,6 @@ import 'package:opencode_mobile/ui/desktop/context_menu.dart';
 import 'package:opencode_mobile/ui/kit/kit_viewer.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/files_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:opencode_mobile/ui/app_iconography.dart';
 
@@ -62,14 +60,12 @@ Future<void> _rightClick(WidgetTester tester, Finder target) async {
 }
 
 class _MenuApi extends OpenCodeApi with CompleteMessageHistory {
-  _MenuApi({this.sessionList = const [], this.messageList = const []})
-    : super(baseUrl: 'http://localhost');
+  _MenuApi({this.messageList = const []}) : super(baseUrl: 'http://localhost');
 
-  final List<Session> sessionList;
   final List<MessageWithParts> messageList;
 
   @override
-  Future<List<Session>> sessions() async => sessionList;
+  Future<List<Session>> sessions() async => const [];
 
   @override
   Future<Map<String, String>> sessionStatuses() async => const {};
@@ -88,31 +84,6 @@ class _MenuApi extends OpenCodeApi with CompleteMessageHistory {
   Future<List<FileNode>> listFiles([String path = '']) async => [
     FileNode(name: 'main.dart', path: 'main.dart', isDir: false),
   ];
-}
-
-class _MenuRepository implements ProductRepository {
-  _MenuRepository(this.projects);
-
-  final List<WorkspaceProject> projects;
-
-  @override
-  void setLocation({String? directory, String? workspace}) {}
-
-  @override
-  Future<List<WorkspaceProject>> listProjects() async => projects;
-
-  @override
-  Future<List<WorkspaceInfo>> listWorkspaces() async => [];
-
-  @override
-  Future<List<TerminalProcess>> listTerminals() async => [];
-
-  @override
-  Future<CatalogSnapshot> loadCatalog() async =>
-      const CatalogSnapshot(providers: [], models: [], agents: []);
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 Future<ConnectionController> _controller(_MenuApi api) async {
@@ -273,48 +244,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(KitViewer), findsOneWidget);
     expect(find.textContaining('void main() {}'), findsOneWidget);
-  });
-
-  desktopTest('a session row offers the same actions as its overflow menu', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(800, 1200);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final api = _MenuApi(
-      sessionList: [
-        Session(id: 's1', title: 'Ship it', time: SessionTime(created: 1)),
-      ],
-    );
-    final connection = await _controller(api);
-    connection.repository = _MenuRepository([
-      WorkspaceProject(
-        id: 'p1',
-        name: 'p1',
-        directory: '/tmp/p1',
-        worktrees: const [],
-        updatedAt: 1,
-      ),
-    ]);
-    connection.directory = '/tmp/p1';
-    addTearDown(connection.dispose);
-    await connection.refreshSessions();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: WorkspaceScreen(controller: connection)),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await _rightClick(tester, find.text('Ship it'));
-    expect(find.byKey(const ValueKey('session-menu-open')), findsOneWidget);
-    expect(find.byKey(const ValueKey('session-menu-rename')), findsOneWidget);
-    expect(find.byKey(const ValueKey('session-menu-delete')), findsOneWidget);
-
-    await tester.tap(find.byKey(const ValueKey('session-menu-rename')));
-    await tester.pumpAndSettle();
-    expect(find.text('Rename conversation'), findsOneWidget);
   });
 }

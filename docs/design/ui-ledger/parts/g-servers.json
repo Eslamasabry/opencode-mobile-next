@@ -2462,13 +2462,6 @@
           "page": "system",
           "element": null,
           "trigger": "notification tap for a monitored request -> openMonitoredRequest (lib/main.dart:1018)"
-        },
-        {
-          "page": "?",
-          "element": null,
-          "widget": "OtherServersPanel / attention feed rows (openMonitoredRequest)",
-          "file": "lib/ui/widgets/other_servers_panel.dart",
-          "line": 98
         }
       ],
       "gates": [
@@ -2512,22 +2505,7 @@
       "presentedBy": [],
       "line": 134,
       "purpose": "Embedded inbox rows: pending requests and due check-ins from other monitored saved servers.",
-      "reachedFrom": [
-        {
-          "page": "?",
-          "element": null,
-          "widget": "ActivityScreen (ProfileMonitorInbox(compact: true))",
-          "file": "lib/ui/screens/activity_screen.dart",
-          "line": 595
-        },
-        {
-          "page": "?",
-          "element": null,
-          "widget": "ActivityScreen (ProfileMonitorInbox(compact: true))",
-          "file": "lib/ui/screens/activity_screen.dart",
-          "line": 648
-        }
-      ],
+      "reachedFrom": [],
       "gates": [
         "!controller.isIsolated"
       ],

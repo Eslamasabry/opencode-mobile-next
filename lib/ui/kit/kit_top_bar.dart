@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -6,6 +8,7 @@ import 'glass/kit_glass.dart';
 import 'kit_screen.dart';
 import 'kit_bidi.dart';
 import 'kit_buttons.dart';
+import 'kit_chip.dart';
 import 'kit_divider.dart';
 import 'kit_icon.dart';
 import 'kit_icon_button.dart';
@@ -30,6 +33,36 @@ enum KitTopBarExit {
 }
 
 void _noop() {}
+
+/// The small chip under the title that names the thing the page belongs to
+/// (a conversation's project) and opens a compact menu of what can be done
+/// there. It is its own control: the chip's semantics label is
+/// [semanticsLabel], and the title's header label does not repeat it.
+class KitTopBarScope {
+  const KitTopBarScope({
+    required this.label,
+    required this.semanticsLabel,
+    required this.items,
+    this.icon,
+    this.chipKey,
+    this.menuLabel,
+  });
+
+  /// The name shown on the chip; wrap a name the person or server chose
+  /// with `KitBidi.auto`.
+  final String label;
+
+  /// What a screen reader says: "Project IPTV_King, opens a menu".
+  final String semanticsLabel;
+
+  /// The menu the chip opens; at least one entry.
+  final List<KitMenuItem> items;
+  final IconData? icon;
+  final Key? chipKey;
+
+  /// The menu's name for a screen reader.
+  final String? menuLabel;
+}
 
 bool _actionsHaveIcons(List<KitAction> actions) {
   for (final action in actions) {
@@ -75,6 +108,7 @@ class KitTopBar extends StatelessWidget {
     this.exitKey,
     this.menuKey,
     this.menuLabel,
+    this.scope,
   }) : controls = null,
        assert(
          onTitleTap == null || (titleTapLabel ?? '') != '',
@@ -106,7 +140,8 @@ class KitTopBar extends StatelessWidget {
        exit = KitTopBarExit.none,
        onExit = null,
        titleKey = null,
-       exitKey = null;
+       exitKey = null,
+       scope = null;
 
   /// Non-null only for [KitTopBar.shell].
   final KitShellControls? controls;
@@ -138,6 +173,10 @@ class KitTopBar extends StatelessWidget {
 
   /// The product mark in place of the title (root pages only).
   final bool brand;
+
+  /// The chip under the title (and the subtitle) naming what the page
+  /// belongs to, with its menu. Null shows none.
+  final KitTopBarScope? scope;
   final KitTopBarExit exit;
 
   /// Overrides the pop (the shell's nested Files back).
@@ -262,6 +301,7 @@ class KitTopBar extends StatelessWidget {
                 titleTapLabel: titleTapLabel,
                 brand: brand,
                 titleKey: titleKey,
+                scope: scope,
               ),
             ),
             if (actions.isNotEmpty || menu.isNotEmpty) ...[
@@ -322,6 +362,7 @@ class _KitTopBarTitle extends StatelessWidget {
     required this.titleTapLabel,
     required this.brand,
     required this.titleKey,
+    required this.scope,
   });
 
   final String title;
@@ -332,6 +373,7 @@ class _KitTopBarTitle extends StatelessWidget {
   final String? titleTapLabel;
   final bool brand;
   final Key? titleKey;
+  final KitTopBarScope? scope;
 
   static KitTextTone _tone(AppStatusTone tone) => switch (tone) {
     AppStatusTone.neutral => KitTextTone.secondary,
@@ -442,8 +484,9 @@ class _KitTopBarTitle extends StatelessWidget {
       ],
     );
 
+    final scope = this.scope;
     if (!switcher) {
-      return Semantics(
+      final titleBlock = Semantics(
         key: titleKey,
         container: true,
         header: true,
@@ -455,6 +498,41 @@ class _KitTopBarTitle extends StatelessWidget {
             child: block,
           ),
         ),
+      );
+      if (scope == null) return titleBlock;
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          titleBlock,
+          Builder(
+            builder: (chipContext) => Semantics(
+              container: true,
+              label: scope.semanticsLabel,
+              button: true,
+              excludeSemantics: true,
+              onTap: () => unawaited(
+                showKitMenu(
+                  chipContext,
+                  items: scope.items,
+                  semanticsLabel: scope.menuLabel,
+                ),
+              ),
+              child: KitChip.action(
+                key: scope.chipKey,
+                label: scope.label,
+                icon: scope.icon,
+                onPressed: () => unawaited(
+                  showKitMenu(
+                    chipContext,
+                    items: scope.items,
+                    semanticsLabel: scope.menuLabel,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       );
     }
     block = Padding(

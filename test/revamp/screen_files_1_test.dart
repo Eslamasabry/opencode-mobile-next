@@ -14,7 +14,7 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/kit/kit_bidi.dart';
 import 'package:opencode_mobile/ui/screens/files_screen.dart';
 import 'package:opencode_mobile/ui/screens/project_hub_screen.dart';
-import 'package:opencode_mobile/ui/screens/projects_screen.dart';
+import 'package:opencode_mobile/ui/widgets/remote_folder_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Api extends OpenCodeApi {
@@ -103,14 +103,14 @@ void main() {
     await tester.tap(choose);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
-    expect(find.byType(ProjectsScreen), findsOneWidget);
+    expect(find.byType(RemoteFolderSheet), findsOneWidget);
   });
 
-  testWidgets('the project is the title; Changes first; no Search row', (
-    tester,
-  ) async {
+  testWidgets('Files is the title, the project is a chip; Changes first; no '
+      'Search row', (tester) async {
     await _pump(tester, directory: '/srv/shopfront');
-    expect(find.text('shopfront'), findsOneWidget);
+    expect(find.text('Files'), findsWidgets);
+    expect(find.bySemanticsLabel(RegExp('shopfront')), findsWidgets);
     // The path is no longer repeated in the header.
     expect(find.text('/srv/shopfront'), findsNothing);
     expect(find.byKey(const ValueKey('project-hub-search')), findsNothing);

@@ -196,7 +196,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    for (final destination in const ['Work', 'Inbox', 'Project', 'Settings']) {
+    // Chats is the list screen of feat/chats-first-home; its own scrollbar
+    // is pinned in that slice's tests.
+    for (final destination in const ['Files', 'Settings']) {
       await tester.tap(
         // The dock is KitNavBar since c36409dc (KitNav: dock, rail and
         // sidebar from one destination list).

@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/l10n/app_localizations_en.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:opencode_mobile/ui/widgets/relative_time.dart';
 import 'package:opencode_mobile/ui/widgets/session_title.dart';
 
@@ -18,8 +17,6 @@ class _ArabicHelperStrings extends AppLocalizationsEn {
   String e7WorkspaceHoursAgo(int count) => 'قبل $count س';
   @override
   String e7WorkspaceDaysAgo(int count) => 'قبل $count ي';
-  @override
-  String e7WorkspaceFileCount(int count) => '$count ملفات';
 }
 
 void main() {
@@ -46,7 +43,7 @@ void main() {
       'جلسة بلا عنوان',
     );
   });
-  test('relative time and usage follow supplied locale', () {
+  test('relative time follows supplied locale', () {
     final now = DateTime(2026, 9, 10, 12);
     String age(Duration elapsed) => relativeTimeLabel(
       now.subtract(elapsed).millisecondsSinceEpoch,
@@ -57,19 +54,5 @@ void main() {
     expect(age(const Duration(minutes: 5)), 'قبل 5 د');
     expect(age(const Duration(hours: 3)), 'قبل 3 س');
     expect(age(const Duration(days: 2)), 'قبل 2 ي');
-    expect(
-      sessionUsageLabels(
-        Session(
-          id: 's',
-          summary: const SessionDiffSummary(
-            additions: 2,
-            deletions: 1,
-            files: 3,
-          ),
-        ),
-        l10n: l10n,
-      ),
-      ['+2 −1', '3 ملفات'],
-    );
   });
 }

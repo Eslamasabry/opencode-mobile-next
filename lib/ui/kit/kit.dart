@@ -50,6 +50,10 @@
 /// | [KitDivider] | kit v2 the one separator: a pixel-snapped hairline, optionally inset to a row's words |
 /// | [KitIcon], [KitIconSize], [KitBrandMark] | kit v2 §9 the one way to draw a glyph at a designed size, and the open-portal mark |
 /// | [KitChip], [KitChipKind], [KitChipTone], [KitChipWrap] | kit v2 §4-§5 a small rounded label, always with a word, and its wrapping row |
+/// | [KitFeedItem] | Chats home: one conversation with its project, title, state and last line |
+/// | [KitStatusTag], [KitStatusTagTone] | a small worded state tag at the end of a feed row |
+/// | [KitFilterChips], [KitFilterChip] | one scrolling line of filter chips under a title |
+/// | [KitFloatingAction] | a screen's one floating primary, clearing the dock |
 /// | [KitSegmented], [KitSegment] | kit v2 §1.6 one choice among 2–4 short, always-visible options |
 /// | [KitMenuItem], [KitMenuGroup], [showKitMenu], [KitMenuPanel] | kit v2 the one popup menu: groups (a named group gets a heading), checks, disabled reasons, destructive last |
 /// | [KitTerm], [showKitTerm] | K2 §1.20 a term that explains itself |
@@ -145,6 +149,11 @@ export 'kit_tokens.dart';
 export 'kit_task_mark.dart';
 export 'kit_bottom_inset.dart';
 export 'kit_chip.dart';
+export 'kit_feed_item.dart';
+export 'kit_filter_chip.dart';
+export 'kit_filter_chips.dart';
+export 'kit_floating_action.dart';
+export 'kit_status_tag.dart';
 export 'kit_code_block.dart';
 export 'kit_divider.dart';
 // The retired AppGlyph and AppBrandMark stay reachable only through

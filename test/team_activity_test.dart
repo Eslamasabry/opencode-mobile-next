@@ -26,7 +26,6 @@ import 'package:opencode_mobile/state/orchestration_store.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/team/gate_sheet.dart';
 import 'package:opencode_mobile/ui/widgets/team_vocabulary.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -489,18 +488,31 @@ void main() {
     home: home,
   );
 
+  // The Inbox that listed gates is gone; the sheet is still opened from the
+  // conversation and Team cards. This host stands in for them: one button
+  // per gate the snapshot holds, opening the sheet as those cards do.
   Future<void> pumpActivity(WidgetTester tester, _Connection connection) async {
     tester.view.physicalSize = const Size(800, 2000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    final team = connection.team!;
     await tester.pumpWidget(
       app(
         Scaffold(
-          body: ActivityScreen(
-            controller: connection,
-            embedded: true,
-            now: () => clock,
+          body: ListenableBuilder(
+            listenable: team,
+            builder: (context, _) => ListView(
+              children: [
+                for (final gate in team.snapshot.gates)
+                  TextButton(
+                    key: ValueKey('activity-team-gate-${gate.id}'),
+                    onPressed: () =>
+                        showGateSheet(context, team, gate.id, now: () => clock),
+                    child: const Text('open gate'),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -519,157 +531,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(sheet, findsOneWidget);
   }
-
-  // ---------------------------------------------------------------------
-  // Activity
-  // ---------------------------------------------------------------------
-
-  group('activity', () {
-    testWidgets(
-      'ordered decision → run failed → permission → review → gate → agent',
-      (tester) async {
-        final (team, _) = await boot(configure: everyKind);
-        final connection = await connect(team);
-        await pumpActivity(tester, connection);
-
-        final order = [
-          gateRow('req-1'),
-          gateRow('run:oc-loy'),
-          find.byKey(const ValueKey('activity-permission-perm-1')),
-          find.byKey(const ValueKey('activity-question-q-1')),
-          gateRow('review:w-done'),
-          gateRow('bead:w-gate'),
-          find.byKey(const ValueKey('activity-team-agent-a-bear')),
-        ];
-        for (final row in order) {
-          expect(row, findsOneWidget);
-        }
-        for (var i = 1; i < order.length; i++) {
-          expect(
-            top(tester, order[i - 1]),
-            lessThan(top(tester, order[i])),
-            reason: 'row $i below row ${i - 1}',
-          );
-        }
-        // One list with no section header (owner rule R1).
-        expect(find.text('Needs attention'), findsNothing);
-        // Row: the needs-you word, kind, what it belongs to, the server and
-        // the age.
-        expect(
-          find.text(
-            'Needs you · Decision · Agent Wolf · Workstation · 2 min ago',
-          ),
-          findsOneWidget,
-        );
-        expect(
-          find.text(
-            'Needs you · Run failed · Task Add subtract() to calc.py · '
-            'Workstation · Yesterday',
-          ),
-          findsOneWidget,
-        );
-        expect(
-          find.text(
-            'Needs you · Agent blocked · Work Write tests for calc.py · '
-            'Workstation · 9 min ago',
-          ),
-          findsOneWidget,
-        );
-        // A waiting agent is a decision already; it is not listed twice.
-        expect(
-          find.byKey(const ValueKey('activity-team-agent-a-wolf')),
-          findsNothing,
-        );
-        expect(tester.takeException(), isNull);
-      },
-    );
-
-    testWidgets('within a kind, the request blocked longest comes first', (
-      tester,
-    ) async {
-      final (team, _) = await boot(configure: variants);
-      final connection = await connect(team);
-      connection.permissions = {
-        for (final id in ['perm-first', 'perm-second', 'perm-third'])
-          id: PermissionRequest(
-            id: id,
-            sessionID: 'ses_run',
-            permission: 'edit',
-            patterns: const ['lib/main.dart'],
-          ),
-      };
-      await pumpActivity(tester, connection);
-
-      // UX plan 5.7. The four decisions share a rank; they were raised 5, 4,
-      // 3 and 2 minutes ago. Permissions carry no time: arrival order.
-      final order = [
-        gateRow('text'),
-        gateRow('confirm-safe'),
-        gateRow('confirm'),
-        gateRow('choice'),
-        find.byKey(const ValueKey('activity-permission-perm-first')),
-        find.byKey(const ValueKey('activity-permission-perm-second')),
-        find.byKey(const ValueKey('activity-permission-perm-third')),
-        find.byKey(const ValueKey('activity-question-q-1')),
-      ];
-      for (final row in order) {
-        expect(row, findsOneWidget);
-      }
-      for (var i = 1; i < order.length; i++) {
-        expect(
-          top(tester, order[i - 1]),
-          lessThan(top(tester, order[i])),
-          reason: 'row $i below row ${i - 1}',
-        );
-      }
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('disconnecting removes the rows', (tester) async {
-      final (team, _) = await boot(configure: everyKind);
-      final connection = await connect(team);
-      await pumpActivity(tester, connection);
-      expect(gateRow('req-1'), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('activity-team-agent-a-bear')),
-        findsOneWidget,
-      );
-
-      connection.dropTeam();
-      await tester.pump();
-      expect(find.byType(ActivityGateTile), findsNothing);
-      expect(find.byType(ActivityAgentBlockedTile), findsNothing);
-      // The app's own rows stay.
-      expect(
-        find.byKey(const ValueKey('activity-permission-perm-1')),
-        findsOneWidget,
-      );
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('a server without the plugin lists nothing of it', (
-      tester,
-    ) async {
-      final connection = await connect(null);
-      await pumpActivity(tester, connection);
-      expect(find.byType(ActivityGateTile), findsNothing);
-      expect(
-        find.byKey(const ValueKey('activity-permission-perm-1')),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('a blocked agent row opens the agent', (tester) async {
-      final (team, _) = await boot(configure: everyKind);
-      final connection = await connect(team);
-      await pumpActivity(tester, connection);
-      await tester.tap(
-        find.byKey(const ValueKey('activity-team-agent-a-bear')),
-      );
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('team-agent')), findsOneWidget);
-    });
-  });
 
   // ---------------------------------------------------------------------
   // Gate sheet variants

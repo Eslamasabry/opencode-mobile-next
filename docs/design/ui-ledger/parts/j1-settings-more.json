@@ -499,14 +499,6 @@
           "element": "settings-category-background"
         },
         {
-          "page": "activity",
-          "element": "activity-background-hint"
-        },
-        {
-          "page": "workspace",
-          "element": "workspace-section-menu-background"
-        },
-        {
           "page": "provider-quota",
           "element": "provider-quota-monitor-notification-settings"
         }

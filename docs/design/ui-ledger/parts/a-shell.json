@@ -230,13 +230,13 @@
     },
     {
       "id": "home-shell",
-      "title": "{server name} · Work / Inbox / Project / Settings",
+      "title": "{server name} · Chats / Files / Settings",
       "kind": "screen",
       "file": "lib/ui/screens/home_screen.dart",
       "widget": "HomeScreen",
       "presentedBy": [],
       "line": 25,
-      "purpose": "Main product shell for a connected server: app bar whose server name and status open the server switcher, current tab title, connection banner, and four retained root destinations, one per noun (Work, Inbox, Project, Settings), shown as a bottom glass dock (<760dp) or a NavigationRail (>=760dp).",
+      "purpose": "Main product shell for a connected server: top controls whose server name and status open the server switcher, and three root destinations (Chats, Files, Settings) shown as a bottom glass dock (<760dp), a rail or the PC sidebar. Chats carries the single pending badge; Files is absent when the server offers no project tools.",
       "reachedFrom": [
         {
           "page": "system",
@@ -269,48 +269,35 @@
       ],
       "gates": [
         "named route '/home' is ungated; via '/' requires conn.profile != null && conn.hasConnectedServer",
-        "cold start (HomeScreen.initialTab == null): opens on Inbox when conn.unifiedAttentionCount > 0 once the first read of pending permissions, questions and forms has settled, otherwise Work; decided once, and a tab the person picks first is final"
+        "cold start (HomeScreen.initialTab == null) opens on Chats; a notification, the Quick Settings tile, a widget or a shortcut that used to open the Inbox asks for Chats with the Needs you or Running filter (OpenChatsIntent / HomeScreen.initialChatFilter)"
       ],
       "elements": [
         {
-          "id": "home-shell-tab-workspace",
+          "id": "home-shell-tab-chats",
           "type": "tab",
-          "label": "Work",
-          "key": null,
+          "label": "Chats",
+          "key": "home-shell-tab-chats",
           "line": 180,
           "action": "navigate",
-          "target": "workspace",
-          "targetWidget": "WorkspaceScreen",
-          "effect": "_selectTab(_workTab): shows WorkspaceScreen(controller: conn) in the RetainedTabView. Rendered as NavigationBar destination (<760dp wide, keyboard closed) or NavigationRail destination (>=760dp, extended at >=1040dp).",
+          "target": "chats-home",
+          "targetWidget": "ChatsHomeScreen",
+          "effect": "_selectTab(_chatsTab): shows ChatsHomeScreen. OpenChatsIntent re-creates it on a Needs you or Running filter. The dock icon carries the pending badge (conn.unifiedAttentionCount) when > 0.",
           "gates": [],
           "destructive": false
         },
         {
           "id": "home-shell-tab-files",
           "type": "tab",
-          "label": "Project",
-          "key": null,
+          "label": "Files",
+          "key": "home-shell-tab-files",
           "line": 200,
           "action": "navigate",
           "target": "project-hub",
           "targetWidget": "ProjectHub",
-          "effect": "_selectTab(_projectTab): shows ProjectHub(controller, focusSearchSignal: _findInFiles, backController: _projectBack). _safeTab falls back to Work when the server offers no project tool.",
+          "effect": "_selectTab(_filesTab): shows ProjectHub (the Files tab: title, project chip, tools). _safeTab falls back to Chats when the server offers no project tool.",
           "gates": [
             "ProjectHub.isAvailable(conn.capabilities): fileBrowsing || terminal || projectManagement (destination hidden and body replaced by SizedBox.shrink otherwise, e.g. Codex and Paseo)"
           ],
-          "destructive": false
-        },
-        {
-          "id": "home-shell-tab-activity",
-          "type": "tab",
-          "label": "Inbox",
-          "key": "activity-pending-badge",
-          "line": 475,
-          "action": "navigate",
-          "target": "activity",
-          "targetWidget": "ActivityScreen",
-          "effect": "_selectTab(_inboxTab): shows ActivityScreen(controller: conn, embedded: true). The icon carries Badge key 'activity-pending-badge' with conn.unifiedAttentionCount (permissions, questions, forms, AI Team gates, other servers' pending counts) when > 0; no badge at zero.",
-          "gates": [],
           "destructive": false
         },
         {
@@ -335,20 +322,20 @@
           "action": "other",
           "target": null,
           "targetWidget": null,
-          "effect": "_onRootPop: on Project, ProjectHubBackController.handleBack() first unwinds Files (keyboard, search, folder) and then returns to the hub; any other tab returns to Work; on Work a second Back within 2 s calls SystemNavigator.pop().",
+          "effect": "_onRootPop: on Files, ProjectHubBackController.handleBack() first unwinds the file browser and then returns to the hub; any other tab returns to Chats; on Chats a second Back within 2 s calls SystemNavigator.pop().",
           "gates": [],
           "destructive": false
         },
         {
           "id": "home-shell-shortcut-destinations",
           "type": "gesture",
-          "label": "Ctrl/Cmd+1 … 4",
+          "label": "Ctrl/Cmd+1 … 3",
           "key": null,
           "line": 80,
           "action": "navigate",
           "target": null,
           "targetWidget": null,
-          "effect": "onAppShortcut(SelectDestinationIntent): _selectTab(_safeTab(index, conn.capabilities)); the index is the visible position (1 Work, 2 Inbox, 3 Project, 4 Settings).",
+          "effect": "onAppShortcut(SelectDestinationIntent): _selectTab(_safeTab(index, conn.capabilities)); the index is the visible position (1 Chats, 2 Files, 3 Settings).",
           "gates": [
             "desktopInteractions (AppShortcuts only installed on desktop)",
             "HomeScreen route isCurrent"
@@ -776,505 +763,21 @@
       ]
     },
     {
-      "id": "activity",
-      "title": "Inbox",
-      "kind": "screen",
-      "file": "lib/ui/screens/activity_screen.dart",
-      "widget": "ActivityScreen",
-      "presentedBy": [],
-      "line": 48,
-      "purpose": "Single cross-conversation inbox in one order (UX plan 5.7): Waiting on you (AI Team gates and blocked agents, permissions, questions, forms, server requests, other servers' check-ins), then Running, then Finished (completion digests). Within a kind the request blocked longest comes first: AI Team rows by createdAt, the app's own requests in arrival order because they carry no time. Hosted as the Inbox root tab (embedded: true, no own Scaffold) or pushed with its own app bar.",
-      "reachedFrom": [
-        {
-          "page": "home-shell",
-          "element": "home-shell-tab-activity"
-        },
-        {
-          "page": "system",
-          "element": null,
-          "trigger": "named route '/activity' and legacy '/requests' (main.dart:1235-1236); no in-app pushNamed caller found"
-        },
-        {
-          "page": "system",
-          "element": null,
-          "trigger": "Quick Settings tile / LaunchAction.activity -> _openActivityForLaunch pushes ActivityScreen with route name '/activity/launch' (main.dart:645-663); without a saved profile opens '/servers' instead"
-        },
-        {
-          "page": "system",
-          "element": null,
-          "trigger": "notification tap, CodingAlertKind.question -> ActivityScreen(initialQuestionSessionID) which auto-opens showQuestionSheet (main.dart:1033-1041)"
-        },
-        {
-          "page": "system",
-          "element": null,
-          "trigger": "AI Team notification or opencode-mobile://team link, TeamLinkKind.gate -> ActivityScreen(initialTeamGateId) which auto-opens showGateSheet; TeamLinkKind.run without orchestration -> plain ActivityScreen (main.dart:877-897)"
-        }
-      ],
-      "gates": [],
-      "elements": [
-        {
-          "id": "activity-pull-refresh",
-          "type": "gesture",
-          "label": "[pull to refresh]",
-          "key": null,
-          "line": 578,
-          "action": "mutate",
-          "target": null,
-          "targetWidget": null,
-          "effect": "_refresh(): controller.profileMonitor.refresh(), controller.prepareActionRepository(), controller.refreshSessions(), then _refreshPending() (refreshPendingPermissions/Questions/Forms).",
-          "gates": [],
-          "destructive": false
-        },
-        {
-          "id": "activity-appbar-refresh",
-          "type": "icon-button",
-          "label": "Refresh",
-          "key": null,
-          "line": 674,
-          "action": "mutate",
-          "target": null,
-          "targetWidget": null,
-          "effect": "_refresh(); disabled and shows a spinner while _refreshing.",
-          "gates": [
-            "!widget.embedded (pushed Activity only)"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-error-retry",
-          "type": "button",
-          "label": "Try again",
-          "key": null,
-          "file": "lib/ui/widgets/product_states.dart",
-          "line": 240,
-          "action": "mutate",
-          "target": null,
-          "targetWidget": null,
-          "effect": "ProductErrorState.onRetry -> _refresh().",
-          "gates": [
-            "error != null && empty"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-error-report-bug",
-          "type": "button",
-          "label": "Report a bug",
-          "key": "product-error-report-bug",
-          "file": "lib/ui/widgets/product_states.dart",
-          "line": 248,
-          "action": "other",
-          "target": null,
-          "targetWidget": "openBugReport",
-          "effect": "openBugReport(context) (lib/feedback/bug_report.dart:88).",
-          "gates": [
-            "error != null && empty"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-inline-error-retry",
-          "type": "button",
-          "label": "Try again",
-          "key": null,
-          "line": 620,
-          "action": "mutate",
-          "target": null,
-          "targetWidget": null,
-          "effect": "ProductInlineEmpty 'Could not refresh' action -> _refresh().",
-          "gates": [
-            "error != null && !empty"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-status-check-again",
-          "type": "button",
-          "label": "Check again",
-          "key": null,
-          "line": 1384,
-          "action": "mutate",
-          "target": null,
-          "targetWidget": null,
-          "effect": "_ActivityStatus.onRefresh -> _refresh().",
-          "gates": [
-            "empty && !hasCheckIns",
-            "!known (controller.isConnected && controller.unknownAttentionProfileCount == 0 is false)"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-background-hint",
-          "type": "list-tile",
-          "label": "Background updates",
-          "key": "activity-background-settings",
-          "line": 1334,
-          "action": "navigate",
-          "target": "notifications-settings",
-          "targetWidget": "NotificationsSettingsScreen",
-          "effect": "_openBackgroundSettings: pushes NotificationsSettingsScreen(controller).",
-          "gates": [
-            "empty",
-            "platformCapabilities.supportsBackgroundService && !controller.keepLiveInBackground"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-team-gate-row",
-          "type": "list-tile",
-          "label": "<gate title>",
-          "key": "activity-team-gate-<gate.id>",
-          "line": 861,
-          "action": "open-sheet",
-          "target": "gate-sheet",
-          "targetWidget": "showGateSheet",
-          "effect": "ActivityGateTile: showGateSheet(context, team, gate.id, now). When a mutation record exists and is not confirmed the trailing TeamReceiptChip (key 'activity-team-gate-<id>-receipt', lib/ui/widgets/team_receipt.dart) has onOpen doing the same.",
-          "gates": [
-            "controller.orchestration != null",
-            "!teamGateAnswered(team, gate)"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-team-agent-blocked-row",
-          "type": "list-tile",
-          "label": "<agent name>",
-          "key": "activity-team-agent-<agent.id>",
-          "line": 919,
-          "action": "navigate",
-          "target": "agent",
-          "targetWidget": "AgentScreen",
-          "effect": "ActivityAgentBlockedTile: pushes AgentScreen(controller: team, agentId: agent.id).",
-          "gates": [
-            "controller.orchestration != null",
-            "agent.state == AgentState.blocked"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-permission-row",
-          "type": "list-tile",
-          "label": "<permission title> / Permission required",
-          "key": "activity-permission-<permission.id>",
-          "line": 709,
-          "action": "open-sheet",
-          "target": "permission-sheet",
-          "targetWidget": "showPermissionSheet",
-          "effect": "ActivityPermissionTile: showPermissionSheet(context, permission, controller, contextLabel).",
-          "gates": [],
-          "destructive": false
-        },
-        {
-          "id": "activity-question-row",
-          "type": "list-tile",
-          "label": "<question title> / Assistant question",
-          "key": "activity-question-<question.id>",
-          "line": 751,
-          "action": "open-sheet",
-          "target": "question-sheet",
-          "targetWidget": "showQuestionSheet",
-          "effect": "ActivityQuestionTile: showQuestionSheet(context, controller, question).",
-          "gates": [],
-          "destructive": false
-        },
-        {
-          "id": "activity-form-row",
-          "type": "list-tile",
-          "label": "<form title> / Input requested",
-          "key": "form-request-tile-<form.id>",
-          "line": 788,
-          "action": "open-sheet",
-          "target": "connection-form",
-          "targetWidget": "presentConnectionForm",
-          "effect": "ActivityFormTile: presentConnectionForm(context, controller, form) (lib/ui/screens/chat/form_flow.dart). Used for session forms and the 'Server requests' (global/MCP) subsection.",
-          "gates": [
-            "controller.capabilities.forms"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-running-row",
-          "type": "list-tile",
-          "label": "<session title>",
-          "key": "activity-running-<session.id>",
-          "line": 989,
-          "action": "navigate",
-          "target": "chat",
-          "targetWidget": "/chat/<sessionID>",
-          "effect": "_openChat(session.id): controller.ensureSession, controller.selectLocationForExistingSession when the session lives in another directory/workspace, then Navigator.pushNamed('/chat/<id>'); errors via showProductError.",
-          "gates": [
-            "controller.busySessions root sessions (parentID == null)"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-digests-toggle",
-          "type": "list-tile",
-          "label": "Completion digests",
-          "key": null,
-          "line": 186,
-          "action": "other",
-          "target": null,
-          "targetWidget": null,
-          "effect": "expands/collapses the digest section (_showDigests).",
-          "gates": [],
-          "destructive": false
-        },
-        {
-          "id": "activity-digest-session-row",
-          "type": "list-tile",
-          "label": "<session title>",
-          "key": null,
-          "line": 204,
-          "action": "other",
-          "target": null,
-          "targetWidget": null,
-          "effect": "expands/collapses the CompletionDigestCard for that idle session (_expandedDigests).",
-          "gates": [
-            "_showDigests",
-            "idle root sessions of the current directory/workspace not busy and not dismissed"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-digest-open-conversation",
-          "type": "button",
-          "label": "Open conversation",
-          "key": null,
-          "file": "lib/ui/widgets/completion_digest.dart",
-          "line": 72,
-          "action": "navigate",
-          "target": "chat",
-          "targetWidget": "/chat/<sessionID>",
-          "effect": "onOpenConversation -> _openChat(session.id) when the digest scope is unchanged.",
-          "gates": [
-            "digest expanded"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-digest-review",
-          "type": "button",
-          "label": "Review next actions",
-          "key": null,
-          "file": "lib/ui/widgets/completion_digest.dart",
-          "line": 75,
-          "action": "open-sheet",
-          "target": "permission-sheet",
-          "targetWidget": "showPermissionSheet | showQuestionSheet | presentConnectionForm | /chat/<sessionID>",
-          "effect": "onReview -> _reviewDigest: opens the first pending showPermissionSheet, else showQuestionSheet, else presentConnectionForm (capabilities.forms) for that session; with nothing pending falls back to _openChat.",
-          "gates": [
-            "digest expanded"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-digest-run-results",
-          "type": "button",
-          "label": "Run results",
-          "key": null,
-          "file": "lib/ui/widgets/completion_digest.dart",
-          "line": 79,
-          "action": "navigate",
-          "target": "run-result",
-          "targetWidget": "RunResultScreen",
-          "effect": "onRunResults -> pushes RunResultScreen(controller, sessionID).",
-          "gates": [
-            "digest expanded"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-digest-dismiss",
-          "type": "button",
-          "label": "Dismiss",
-          "key": null,
-          "file": "lib/ui/widgets/completion_digest.dart",
-          "line": 104,
-          "action": "other",
-          "target": null,
-          "targetWidget": null,
-          "effect": "onDismiss -> hides (session.id, idle) at once with KitUndo; when the window closes, controller.dismissReturnBrief(ReturnBrief.single(run)) saves it as reviewed (the same mark as Work's Mark as reviewed); a refused save brings the row back.",
-          "gates": [
-            "digest expanded"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-auto-row",
-          "type": "list-tile",
-          "label": "<what it was done to> / <what was done> · <when>",
-          "key": "activity-auto-<actId>",
-          "file": "lib/ui/screens/activity_screen.dart",
-          "action": "navigate",
-          "target": "chat",
-          "targetWidget": "/chat/<sessionID>",
-          "effect": "P6.2 While you were away: one automatic act (reconnect, request allowed by itself, queued message sent, heat pause/stop/resume) from controller.automaticActsHere, sorted newest first together with the finished rows below everything that waits. A tap opens the conversation it was done to (_openChat); server-wide acts have no page to open.",
-          "gates": [
-            "act of the shown server or project, not acknowledged",
-            "onTap only when the act names a conversation"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-auto-dismiss",
-          "type": "swipe",
-          "label": "Dismiss",
-          "key": "activity-auto-dismiss-<actId>",
-          "file": "lib/ui/screens/activity_screen.dart",
-          "action": "other",
-          "target": null,
-          "targetWidget": null,
-          "effect": "KitSwipeAction (and its row-menu twin): hides the act with KitUndo; on commit AutomaticActivityController.acknowledge([id]) (oc.automaticActivity.<profileId>); a refused save brings it back.",
-          "gates": [],
-          "destructive": false
-        },
-        {
-          "id": "activity-auto-undo",
-          "type": "button",
-          "label": "Undo",
-          "key": "activity-auto-undo-<actId>",
-          "file": "lib/ui/screens/activity_screen.dart",
-          "action": "other",
-          "target": null,
-          "targetWidget": null,
-          "effect": "AutomaticActivityController.undo(id): runs the act's in-memory inverse at most once; the line then says Undone, Undo didn't go through, or Undo not confirmed.",
-          "gates": [
-            "history.canUndo(id): only acts recorded with a real inverse, this process"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "activity-project-decision",
-          "type": "list-tile",
-          "label": "Review project decision",
-          "key": null,
-          "line": 1,
-          "action": "navigate",
-          "target": "team-project-overview",
-          "targetWidget": null,
-          "effect": "Routes fixture request to owning project; legacy engines keep the existing gate flow.",
-          "gates": [],
-          "destructive": false,
-          "file": "lib/ui/screens/team/project_destination.dart"
-        }
-      ]
-    },
-    {
       "id": "question-sheet",
       "title": "OpenCode needs input",
       "kind": "sheet",
-      "file": "lib/ui/screens/activity_screen.dart",
+      "file": "lib/ui/screens/chat/question_sheet.dart",
       "widget": "_QuestionSheet",
       "presentedBy": [
         "showQuestionSheet"
       ],
-      "line": 936,
+      "line": 1,
       "purpose": "Answer surface for a pending assistant question: per-prompt choices (single/multi), optional custom answer, dismiss or send.",
-      "reachedFrom": [
-        {
-          "page": "activity",
-          "element": "activity-question-row"
-        },
-        {
-          "page": "activity",
-          "element": "activity-digest-review"
-        },
-        {
-          "page": "system",
-          "element": null,
-          "trigger": "ActivityScreen(initialQuestionSessionID) from a question notification tap -> _scheduleInitialQuestion (activity_screen.dart:332-357)"
-        },
-        {
-          "page": "?",
-          "element": null,
-          "widget": "openMonitoredRequest / ProfileMonitor",
-          "file": "lib/ui/screens/profile_monitor_screen.dart",
-          "line": 64
-        },
-        {
-          "page": "?",
-          "element": null,
-          "widget": "ChatScreen._showQuestionSheet",
-          "file": "lib/ui/screens/chat_screen.dart",
-          "line": 4514
-        },
-        {
-          "page": "?",
-          "element": null,
-          "widget": "ReturnBriefPanel",
-          "file": "lib/ui/widgets/return_brief_panel.dart",
-          "line": 69
-        }
-      ],
+      "reachedFrom": [],
       "gates": [
         "controller.isRequestPending(controller.questionIdentity(question))"
       ],
-      "elements": [
-        {
-          "id": "question-sheet-option",
-          "type": "list-tile",
-          "label": "<choice label>",
-          "key": null,
-          "file": "lib/ui/widgets/question_options.dart",
-          "line": 1232,
-          "action": "other",
-          "target": null,
-          "targetWidget": null,
-          "effect": "QuestionOptionRow.onTap -> _toggle: single-select replaces the answer and clears custom text; multi-select toggles.",
-          "gates": [
-            "enabled: !_busy"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "question-sheet-custom-answer",
-          "type": "text-field",
-          "label": "[custom answer]",
-          "key": null,
-          "file": "lib/ui/widgets/question_options.dart",
-          "line": 1245,
-          "action": "other",
-          "target": null,
-          "targetWidget": null,
-          "effect": "QuestionCustomAnswerField.onChanged: for single-select prompts typing clears the selected choice.",
-          "gates": [
-            "prompt.custom",
-            "enabled: !_busy"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "question-sheet-dismiss",
-          "type": "button",
-          "label": "Dismiss",
-          "key": null,
-          "line": 1279,
-          "action": "open-sheet",
-          "target": "confirm-sheet",
-          "targetWidget": "showKitConfirm",
-          "effect": "_reject(): showKitConfirm (destructive, 'Dismiss this request?'); on confirm controller.rejectQuestion(question.id, expectedRequest: request) and routes.close().",
-          "gates": [
-            "!_busy"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "question-sheet-send",
-          "type": "button",
-          "label": "Send answers",
-          "key": null,
-          "line": 1283,
-          "action": "submit",
-          "target": null,
-          "targetWidget": null,
-          "effect": "_submit(): controller.answerQuestion(question.id, answers, expectedRequest: request) then routes.close(). Pinned to the sheet foot through showKitSheet primaryListenable (slice-P3.11a); enables once every prompt is answered.",
-          "gates": [
-            "_complete && !_busy"
-          ],
-          "destructive": false
-        }
-      ]
+      "elements": []
     },
     {
       "id": "global-shortcuts",
@@ -2298,7 +1801,6 @@
       ],
       "embeddedIn": [
         "TerminalPage (terminal_screen.dart:493)",
-        "WorkspaceScreen (workspace_screen.dart:1299,1568)",
         "WorktreesScreen (worktrees_screen.dart:750)",
         "FilesScreen (files_screen.dart:1040)",
         "MessageView (chat/message_view.dart:1616)",
@@ -2577,26 +2079,6 @@
   ],
   "notPages": [
     {
-      "file": "lib/ui/screens/activity/activity_details.dart",
-      "reason": "Part file of lib/ui/screens/activity_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-    },
-    {
-      "file": "lib/ui/screens/activity/activity_pending.dart",
-      "reason": "Part file of lib/ui/screens/activity_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-    },
-    {
-      "file": "lib/ui/screens/activity/activity_question_form.dart",
-      "reason": "Part file of lib/ui/screens/activity_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-    },
-    {
-      "file": "lib/ui/screens/activity/activity_rows.dart",
-      "reason": "Part file of lib/ui/screens/activity_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-    },
-    {
-      "file": "lib/ui/screens/activity/activity_tiles.dart",
-      "reason": "Part file of lib/ui/screens/activity_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-    },
-    {
       "file": "lib/ui/navigation/chat_route.dart",
       "reason": "ChatRouteArguments value class (discardIfUntouched) passed to '/chat/<id>'; no UI"
     },
@@ -2627,6 +2109,10 @@
     {
       "file": "lib/ui/permission_presentation.dart",
       "reason": "permissionRequestTitle string helper; no UI"
+    },
+    {
+      "file": "lib/ui/screens/team/project_destination.dart",
+      "reason": "teamProjectDestination(): picks the AI Team project page for a link; no surface of its own"
     }
   ],
   "notes": [

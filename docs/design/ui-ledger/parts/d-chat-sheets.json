@@ -23,20 +23,6 @@
      "widget": "ProfileMonitorScreen",
      "file": "lib/ui/screens/profile_monitor_screen.dart",
      "line": 54
-    },
-    {
-     "page": "?",
-     "element": null,
-     "widget": "ActivityScreen (notification/auto open)",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 131
-    },
-    {
-     "page": "?",
-     "element": null,
-     "widget": "ActivityScreen permission tile",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 727
     }
    ],
    "gates": [
@@ -1450,8 +1436,7 @@
     }
    ],
    "embeddedIn": [
-    "ChatScreen (_ToolCallGroup / _AssistantMessagePart in lib/ui/screens/chat/message_view.dart:1158,1266)",
-    "RunResultView (lib/ui/widgets/run_result_view.dart:380, no file/session callbacks)"
+    "ChatScreen (_ToolCallGroup / _AssistantMessagePart in lib/ui/screens/chat/message_view.dart:1158,1266)"
    ]
   },
   {
@@ -1691,97 +1676,7 @@
     }
    ],
    "embeddedIn": [
-    "ActivityScreen question sheet (activity_screen.dart:1232,1245)",
     "_QuestionAttentionCard (ChatScreen, attention_card.dart:377,387)"
-   ]
-  },
-  {
-   "id": "embedded-completion-digest-card",
-   "title": "Server reported idle. Success or failure is not verified.",
-   "kind": "overlay",
-   "file": "lib/ui/widgets/completion_digest.dart",
-   "widget": "CompletionDigestCard",
-   "presentedBy": [],
-   "line": 9,
-   "purpose": "Expanded completion digest for an idle session in Activity: counts only, with open / review / run results / copy / dismiss actions.",
-   "reachedFrom": [],
-   "gates": [
-    "_expandedDigests.contains((session.id, idle)) in _ActivityScreenState"
-   ],
-   "elements": [
-    {
-     "id": "embedded-completion-digest-card-open-conversation",
-     "type": "button",
-     "label": "Open conversation",
-     "key": null,
-     "file": "lib/ui/widgets/completion_digest.dart",
-     "line": 71,
-     "action": "navigate",
-     "target": "chat",
-     "targetWidget": "_openChat",
-     "effect": "onOpenConversation -> ActivityScreen._openChat(session.id) when the digest scope is still current.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "embedded-completion-digest-card-review",
-     "type": "button",
-     "label": "Review next actions",
-     "key": null,
-     "file": "lib/ui/widgets/completion_digest.dart",
-     "line": 75,
-     "action": "open-sheet",
-     "target": "permission-sheet",
-     "targetWidget": "_reviewDigest",
-     "effect": "onReview -> ActivityScreen._reviewDigest(sessionID, scope): opens the first pending permission (showPermissionSheet), question or form for that session.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "embedded-completion-digest-card-run-results",
-     "type": "button",
-     "label": "Run results",
-     "key": "completion-digest-run-results",
-     "file": "lib/ui/widgets/completion_digest.dart",
-     "line": 77,
-     "action": "navigate",
-     "target": "run-result",
-     "targetWidget": "RunResultScreen",
-     "effect": "onRunResults -> Navigator.push(RunResultScreen(controller, sessionID)).",
-     "gates": [
-      "onRunResults != null"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-completion-digest-card-copy",
-     "type": "button",
-     "label": "Copy digest",
-     "key": "completion-digest-copy",
-     "file": "lib/ui/widgets/completion_digest.dart",
-     "line": 83,
-     "action": "copy",
-     "target": null,
-     "effect": "Clipboard.setData(_sanitizedSummary) + success/failure snackbar.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "embedded-completion-digest-card-dismiss",
-     "type": "button",
-     "label": "Dismiss",
-     "key": null,
-     "file": "lib/ui/widgets/completion_digest.dart",
-     "line": 104,
-     "action": "other",
-     "target": null,
-     "effect": "onDismiss -> ActivityScreen setState adds the key to _dismissedDigests (local, not persisted).",
-     "gates": [],
-     "destructive": false
-    }
-   ],
-   "embeddedIn": [
-    "ActivityScreen (activity_screen.dart:222)"
    ]
   },
   {
@@ -1803,20 +1698,6 @@
      "widget": "ChatScreen form card",
      "file": "lib/ui/screens/chat_screen.dart",
      "line": 4451
-    },
-    {
-     "page": "?",
-     "element": null,
-     "widget": "ActivityScreen (auto/notification)",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 148
-    },
-    {
-     "page": "?",
-     "element": null,
-     "widget": "ActivityScreen form tile",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 807
     },
     {
      "page": "?",

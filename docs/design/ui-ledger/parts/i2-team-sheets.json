@@ -21,13 +21,6 @@
           "line": 1125
         },
         {
-          "page": "?",
-          "element": null,
-          "widget": "ActivityGateTile",
-          "file": "lib/ui/screens/activity_screen.dart",
-          "line": 860
-        },
-        {
           "page": "system",
           "element": null,
           "trigger": "ActivityScreen opened with an initial gate id: post-frame showGateSheet once the team snapshot settled (lib/ui/screens/activity_screen.dart:320); upstream trigger (notification tap) not traced"
@@ -385,15 +378,7 @@
       "presentedBy": [],
       "line": 107,
       "purpose": "Merge block at the end of the run Overview: readiness lines, file counts, Review changes / Approve request / two-step Merge, and the receipts.",
-      "reachedFrom": [
-        {
-          "page": "?",
-          "element": null,
-          "widget": "_Overview",
-          "file": "lib/ui/screens/team/run_screen.dart",
-          "line": 822
-        }
-      ],
+      "reachedFrom": [],
       "gates": [
         "teamMergeEligible: controller.capabilities.mergeReadiness",
         "controller.gateway is OrchestrationMergeGateway",
@@ -606,13 +591,6 @@
         {
           "page": "embedded-work-graph",
           "element": "embedded-work-graph-node"
-        },
-        {
-          "page": "?",
-          "element": null,
-          "widget": "_RunScreenState._openWork",
-          "file": "lib/ui/screens/team/run_screen.dart",
-          "line": 144
         }
       ],
       "gates": [
@@ -705,15 +683,7 @@
       "presentedBy": [],
       "line": 218,
       "purpose": "Pan/zoom dependency graph of a run's work items in the run Work tab (graph view).",
-      "reachedFrom": [
-        {
-          "page": "?",
-          "element": null,
-          "widget": "_WorkTab",
-          "file": "lib/ui/screens/team/run_screen.dart",
-          "line": 1413
-        }
-      ],
+      "reachedFrom": [],
       "gates": [
         "run Work tab with TeamWorkView.graph selected"
       ],

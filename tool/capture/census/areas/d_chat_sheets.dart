@@ -9,7 +9,6 @@ import 'package:opencode_mobile/api2/models.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart'
     show PendingQuestion, QuestionChoice, QuestionPrompt, StreamStatus;
 import 'package:opencode_mobile/state/session_auto_approval.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat/permission_sheet.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/widgets/tool_card.dart';
@@ -829,45 +828,6 @@ final dChatSheetsArea = CensusArea(
         kit.expectText('Code reader');
       },
       note: 'Code options › Full screen on the reply code block.',
-    ),
-
-    // -- activity digest -----------------------------------------------------
-    CensusShot(
-      'embedded-completion-digest-card',
-      (kit) async {
-        final controller = await kit.connected();
-        final now = DateTime.now().millisecondsSinceEpoch;
-        final session = controller.sessionsById[darkModeSessionID]!;
-        controller
-          ..busySessions = {}
-          ..sessionsById = {
-            ...controller.sessionsById,
-            darkModeSessionID: Session(
-              id: session.id,
-              title: session.title,
-              directory: session.directory,
-              summary: session.summary,
-              time: SessionTime(
-                created: now - 40 * 60 * 1000,
-                updated: now - 5 * 60 * 1000,
-                idle: now - 5 * 60 * 1000,
-              ),
-            ),
-          };
-        await kit.pumpApp(
-          ActivityScreen(controller: controller),
-          controller: controller,
-        );
-        await kit.tap(find.text('Completion digests'));
-        await kit.tap(find.text('Add dark mode to settings').last);
-        kit.expectVisible(find.byKey(const Key('completion-digest-card')));
-        // Scroll so the card's last action row is on screen too.
-        await kit.tester.ensureVisible(
-          find.byKey(const Key('completion-digest-copy')),
-        );
-        await kit.settle(const Duration(milliseconds: 500));
-      },
-      note: 'Host: Activity › Completion digests, one idle session expanded.',
     ),
 
     // -- forms ---------------------------------------------------------------

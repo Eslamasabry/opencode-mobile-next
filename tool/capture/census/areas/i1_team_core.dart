@@ -12,7 +12,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/orchestration_gateway.dart';
 import 'package:opencode_mobile/state/orchestration.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/team/agent_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart'
     show TeamConversationScreen;
@@ -584,24 +583,6 @@ final i1TeamCoreArea = CensusArea(
       },
       note: 'Host: the Work sheet over the task\'s conversation.',
     ),
-
-    // -- Receipt chip on Activity ------------------------------------------------
-    CensusShot(
-      'embedded-team-receipt-chip',
-      state: 'unconfirmed',
-      (kit) async {
-        await _activityReceipt(kit, MutationReceiptStatus.pending);
-      },
-      note: 'Host: Activity, the AI Team question row.',
-    ),
-    CensusShot(
-      'embedded-team-receipt-chip',
-      state: 'not-accepted',
-      (kit) async {
-        await _activityReceipt(kit, MutationReceiptStatus.rejected);
-      },
-      note: 'Host: Activity, the AI Team question row.',
-    ),
   ],
 );
 
@@ -623,28 +604,4 @@ Future<void> _tapAgentControl(CensusKit kit, String key) async {
     );
   }
   await kit.tap(target, scroll: false);
-}
-
-Future<void> _activityReceipt(
-  CensusKit kit,
-  MutationReceiptStatus status,
-) async {
-  final conn = await kit.connected();
-  final (team, gateway) = await teamController(prefs: conn.store.prefs);
-  conn.adoptOrchestrationForTesting(team);
-  gateway
-    ..controlStatus = status
-    ..controlMessage = status == MutationReceiptStatus.rejected
-        ? 'The question was already answered on the host'
-        : null;
-  await team.answerGate('req-schema-1', const GateResponse.choice('SQLite'));
-  await kit.pumpApp(
-    ActivityScreen(controller: conn, now: teamNow),
-    controller: conn,
-  );
-  final chip = find.byKey(
-    const ValueKey('activity-team-gate-req-schema-1-receipt'),
-  );
-  await kit.scrollTo(chip);
-  kit.expectVisible(chip);
 }

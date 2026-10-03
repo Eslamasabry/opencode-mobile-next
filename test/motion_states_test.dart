@@ -15,18 +15,15 @@ import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/kit/scenes/states_scenes.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/files_screen.dart';
 import 'package:opencode_mobile/ui/screens/global_sessions_screen.dart';
-import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/ui/screens/local_terminal_screen.dart';
 import 'package:opencode_mobile/ui/screens/terminal_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../tool/capture/fixtures.dart';
 import 'support/fake_local_terminal.dart';
-import 'support/work_tab_fixture.dart';
 
 class _Finder extends CaptureRepository {
   _Finder({this.error});
@@ -146,79 +143,6 @@ Scaffold _page(Widget body) => Scaffold(body: SafeArea(child: body));
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   tearDown(() => KitMotion.loops = false);
-
-  group('Work', () {
-    testWidgets('no conversations yet is the fresh sheet, and it rests', (
-      tester,
-    ) async {
-      // Loops allowed, as in the app: a resting state still does not move.
-      KitMotion.loops = true;
-      await _mount(
-        tester,
-        await workController(),
-        const HomeScreen(initialTab: 0),
-      );
-      expect(_drawn(tester), [isA<StatesSheetScene>()]);
-      expect(tester.hasRunningAnimations, isFalse);
-      await _unmount(tester);
-    });
-
-    testWidgets('no project yet is the open folder', (tester) async {
-      await _mount(
-        tester,
-        await workController(
-          directory: null,
-          savedLocation: false,
-          repository: WorkRepository()..projects = const [],
-        ),
-        const HomeScreen(initialTab: 0),
-      );
-      expect(
-        find.byKey(const ValueKey('workspace-folder-chooser')),
-        findsOneWidget,
-      );
-      expect(_drawn(tester), [isA<StatesFolderScene>()]);
-      await _unmount(tester);
-    });
-
-    testWidgets('not answering with nothing listed: placeholder rows for 8 s, '
-        'then the unplugged cable', (tester) async {
-      await _mount(
-        tester,
-        await workController(status: StreamStatus.reconnecting),
-        const HomeScreen(initialTab: 0),
-      );
-      expect(find.byType(KitSkeletonRows), findsOneWidget);
-      expect(_drawn(tester).whereType<StatesUnpluggedScene>(), isEmpty);
-
-      await tester.pump(const Duration(seconds: 9));
-      await _frames(tester);
-      expect(find.byType(KitSkeletonRows), findsNothing);
-      expect(
-        find.byKey(const ValueKey('work-not-answering-list')),
-        findsOneWidget,
-      );
-      expect(find.text('Your conversations will be back'), findsOneWidget);
-      expect(_drawn(tester), [isA<StatesUnpluggedScene>()]);
-      await _unmount(tester);
-    });
-  });
-
-  testWidgets('Inbox: all caught up is the tray', (tester) async {
-    final controller = await _connected();
-    controller
-      ..busySessions = {}
-      ..permissions = {}
-      ..questions = {};
-    await _mount(
-      tester,
-      controller,
-      _page(ActivityScreen(controller: controller, embedded: true)),
-    );
-    expect(find.byKey(const ValueKey('activity-all-clear')), findsOneWidget);
-    expect(_drawn(tester), [isA<StatesTrayScene>()]);
-    await _unmount(tester);
-  });
 
   group('All conversations', () {
     testWidgets('none yet is the fresh sheet', (tester) async {

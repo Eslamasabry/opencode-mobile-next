@@ -1,8 +1,7 @@
 // Golden renders of screen-review-2's pages (wave 2b), rebuilt from kit
 // parts: Review the undo (staged-revert) with its two outcomes, the "keep
 // the undo" question (staged-revert-confirm-sheet), the undo sheet
-// (stage-revert-sheet), the done state, and Run results (run-result)
-// loaded, still running and failed. Phone 412x915 and one wide window
+// (stage-revert-sheet), the done state. Phone 412x915 and one wide window
 // (1280x800), dark and light (owner decision 2026-09-27: no Arabic), with
 // the app's real fonts at DPR 1.
 //
@@ -15,13 +14,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
-import 'package:opencode_mobile/ui/screens/run_result_screen.dart';
 import 'package:opencode_mobile/ui/screens/staged_revert_screen.dart';
 
 import '../../tool/capture/fixtures.dart' show captureTheme, loadCaptureFonts;
 import '../staged_revert_workflow_test.dart' show setup;
-import 'screen_review_2_test.dart'
-    show RunGateway, finishedRun, runController, runningRun;
 
 const _phone = Size(412, 915);
 const _wide = Size(1280, 800);
@@ -106,20 +102,8 @@ Future<void> _shot(
   }
 }
 
-Future<ConnectionController> _runs(
-  List<MessageWithParts> items, {
-  Object? failure,
-}) async {
-  final controller = await runController(RunGateway(items, failure: failure));
-  addTearDown(controller.dispose);
-  return controller;
-}
-
 Widget _revert(ConnectionController c) =>
     StagedRevertScreen(controller: c, sessionID: 'a');
-
-Widget _run(ConnectionController c) =>
-    RunResultScreen(controller: c, sessionID: 'ses_1');
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -148,16 +132,6 @@ void main() {
           light: light,
           home: _revert,
           text2: true,
-        );
-      });
-      testWidgets('run results text 2.0 · $mode', (tester) async {
-        await _shot(
-          tester,
-          'run_result_finished',
-          light: light,
-          home: _run,
-          text2: true,
-          controller: () => _runs(finishedRun()),
         );
       });
     }
@@ -206,44 +180,6 @@ void main() {
         ),
         controller: () async => (await setup()).controller,
         then: () => tester.tap(find.text('open')),
-      );
-    });
-    testWidgets('run results · $mode', (tester) async {
-      await _shot(
-        tester,
-        'run_result_finished',
-        light: light,
-        home: _run,
-        controller: () => _runs(finishedRun()),
-      );
-    });
-    testWidgets('run results wide · $mode', (tester) async {
-      await _shot(
-        tester,
-        'run_result_finished',
-        light: light,
-        home: _run,
-        size: _wide,
-        controller: () => _runs(finishedRun()),
-      );
-    });
-    testWidgets('run results still running · $mode', (tester) async {
-      await _shot(
-        tester,
-        'run_result_running',
-        light: light,
-        home: _run,
-        controller: () => _runs(runningRun()),
-      );
-    });
-    testWidgets('run results error · $mode', (tester) async {
-      await _shot(
-        tester,
-        'run_result_error',
-        light: light,
-        home: _run,
-        controller: () =>
-            _runs(finishedRun(), failure: StateError('socket closed')),
       );
     });
   }

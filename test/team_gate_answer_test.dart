@@ -35,7 +35,6 @@ import 'package:opencode_mobile/state/orchestration_store.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart' show KitReceipt;
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/team/agent_screen.dart';
 import 'package:opencode_mobile/ui/screens/team/gate_sheet.dart';
 import 'package:opencode_mobile/ui/screens/team/team_home_screen.dart';
@@ -962,112 +961,6 @@ void main() {
   // ---------------------------------------------------------------------
 
   group('rows', () {
-    Future<_Connection> connect(OrchestrationController team) async {
-      final connection = _Connection(ProfileStore(prefs: prefs))
-        ..repository = _Repository()
-        ..status = StreamStatus.connected
-        ..connected = profile
-        ..attach(team);
-      addTearDown(connection.dispose);
-      return connection;
-    }
-
-    Future<void> pumpActivity(
-      WidgetTester tester,
-      _Connection connection,
-    ) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(
-        app(
-          Scaffold(
-            body: ActivityScreen(
-              controller: connection,
-              embedded: true,
-              now: () => clock,
-            ),
-          ),
-        ),
-      );
-      await tester.pump();
-    }
-
-    testWidgets('Activity: Sending receipt, row leaves only on confirmation', (
-      tester,
-    ) async {
-      final (team, gateway) = await boot(
-        configure: (g) => g.gateList.add(choiceGate()),
-      );
-      final connection = await connect(team);
-      await pumpActivity(tester, connection);
-      final row = find.byKey(const ValueKey('activity-team-gate-req-1'));
-      // The receipt is a word in the row's line (slice-close-team).
-      String line() => tester
-          .widget<Text>(
-            find.byKey(const ValueKey('activity-team-gate-req-1-line')),
-          )
-          .textSpan!
-          .toPlainText();
-      expect(row, findsOneWidget);
-      expect(line(), isNot(contains('Sending…')));
-
-      await team.answerGate('req-1', const GateResponse.choice('SQLite'));
-      await tester.pump();
-      await tester.pump();
-      expect(row, findsOneWidget);
-      expect(line(), contains('Sending…'));
-
-      // Still sent after a while; the row stays.
-      await tester.pump(const Duration(seconds: 30));
-      expect(row, findsOneWidget);
-
-      // The host confirms: the row leaves even though the host's list has
-      // not been refetched yet.
-      gateway.push(const GateChanged(gateId: 'req-1', resolved: true));
-      await tester.pump();
-      await tester.pump();
-      expect(row, findsNothing);
-      expect(tester.takeException(), isNull);
-      await team.stop();
-    });
-
-    testWidgets('Activity: an unconfirmed row offers Retry into the sheet', (
-      tester,
-    ) async {
-      final (team, gateway) = await boot(
-        configure: (g) => g
-          ..gateList.add(choiceGate())
-          ..answer = (call) async => MutationReceipt(
-            id: call.requestId,
-            status: MutationReceiptStatus.pending,
-          ),
-      );
-      final connection = await connect(team);
-      await pumpActivity(tester, connection);
-      await team.answerGate('req-1', const GateResponse.choice('SQLite'));
-      await tester.pump();
-      await tester.pump();
-      final line = find.byKey(const ValueKey('activity-team-gate-req-1-line'));
-      expect(
-        tester.widget<Text>(line).textSpan!.toPlainText(),
-        contains('Not confirmed yet'),
-      );
-      // The row opens the gate, where Try again lives; its chevron stays.
-      await tester.tap(find.byKey(const ValueKey('activity-team-gate-req-1')));
-      await tester.pumpAndSettle();
-      expect(sheet, findsOneWidget);
-      expect(retry, findsOneWidget);
-      // Opening never sends; the person's tap does.
-      expect(gateway.calls, hasLength(1));
-      await tester.tap(retry);
-      await tester.pump();
-      await tester.pump();
-      expect(gateway.calls, hasLength(2));
-      expect(tester.takeException(), isNull);
-    });
-
     testWidgets('home Needs you: the chip and the row removal', (tester) async {
       final (team, gateway) = await boot(
         configure: (g) => g
@@ -1500,50 +1393,6 @@ void main() {
         connProvider.overrideWithValue(controller),
       ],
       child: OcApp(updateService: _NoUpdateService()),
-    );
-
-    testWidgets(
-      'a decision notification tap opens the exact sheet, sends nothing',
-      (tester) async {
-        SharedPreferences.setMockInitialValues({
-          BackgroundLiveController.preferenceKey: true,
-        });
-        prefs = await SharedPreferences.getInstance();
-        store = OrchestrationStore(prefs);
-        final (team, gateway) = await boot(
-          configure: (g) => g.gateList.addAll([textGate(), choiceGate()]),
-        );
-        final connection = await shell(
-          kind: CodingAlertKind.teamDecision,
-          id: 'req-1',
-          team: team,
-        );
-        await tester.pumpWidget(shellApp(connection));
-        await tester.pump();
-        await tester.pump();
-        await tester.pumpAndSettle();
-
-        expect(find.byType(ActivityScreen), findsOneWidget);
-        expect(
-          tester
-              .widget<ActivityScreen>(find.byType(ActivityScreen))
-              .initialTeamGateId,
-          'req-1',
-        );
-        expect(
-          find.byKey(const ValueKey('team-gate-sheet-req-1')),
-          findsOneWidget,
-        );
-        expect(find.text('Which persistence strategy?'), findsWidgets);
-        expect(
-          find.byKey(const ValueKey('team-gate-option-0')),
-          findsOneWidget,
-        );
-        // Opening the sheet answers nothing.
-        expect(gateway.calls, isEmpty);
-        expect(team.mutations, isEmpty);
-        expect(tester.takeException(), isNull);
-      },
     );
 
     testWidgets('a completed-run notification tap opens the task\'s '

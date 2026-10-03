@@ -14,11 +14,14 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/kit/kit_nav.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
-import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
+import 'package:opencode_mobile/domain/chat_feed.dart';
+import 'package:opencode_mobile/ui/desktop/shortcuts.dart';
+import 'package:opencode_mobile/ui/navigation/last_project.dart';
+import 'package:opencode_mobile/ui/screens/chats/chats_home_screen.dart';
+import 'package:opencode_mobile/ui/widgets/remote_folder_picker.dart';
 import 'package:opencode_mobile/ui/kit/glass/kit_glass.dart';
 import 'package:opencode_mobile/ui/kit/kit_bottom_inset.dart';
 import 'package:opencode_mobile/ui/widgets/app_connection_status.dart';
@@ -100,8 +103,9 @@ class _ShellProfileStore extends ProfileStore {
 Future<ConnectionController> _controller({
   String? profileName,
   String? directory,
+  Map<String, Object> seed = const {},
 }) async {
-  SharedPreferences.setMockInitialValues({});
+  SharedPreferences.setMockInitialValues({...seed});
   final prefs = await SharedPreferences.getInstance();
   final store = _ShellProfileStore(
     prefs: prefs,
@@ -187,8 +191,8 @@ Finder _dockGlass() => find.descendant(
   matching: find.byType(KitGlass),
 );
 
-Finder _inboxDestination() =>
-    find.byKey(const ValueKey('home-shell-tab-inbox'));
+Finder _chatsDestination() =>
+    find.byKey(const ValueKey('home-shell-tab-chats'));
 
 /// The dock's selection lens. Since kit-fluid-glass (71cb03cd) it rides
 /// KitMotion springs on one ticker instead of an AnimatedPositioned.
@@ -239,20 +243,22 @@ void main() {
       await tester.pumpAndSettle();
       final dock = tester.getRect(_dockGlass());
       final icon = tester.getRect(
-        find.byIcon(AppIconography.workspaceSelected),
+        find.descendant(
+          of: find.byType(KitNavBar),
+          matching: find.byIcon(AppIconography.chat),
+        ),
       );
       expect(icon.top, greaterThanOrEqualTo(dock.top + 4));
       final copy = lookupAppLocalizations(locale);
       final labels = [
-        copy.shellTabWork,
-        copy.shellTabInbox,
-        copy.shellTabProject,
+        copy.shellTabChats,
+        copy.shellTabFiles,
         copy.librarySettingsTitle,
       ];
       if (locale.languageCode == 'en') {
-        expect(labels, ['Work', 'Inbox', 'Project', 'Settings']);
+        expect(labels, ['Conversations', 'Files', 'Settings']);
       } else {
-        expect(labels, ['العمل', 'الوارد', 'المشروع', 'الإعدادات']);
+        expect(labels, ['المحادثات', 'الملفات', 'الإعدادات']);
         expect(
           Directionality.of(tester.element(find.byType(KitNavBar))),
           TextDirection.rtl,
@@ -349,11 +355,11 @@ void main() {
       expect(tester.widget<TextField>(search).focusNode?.hasFocus, isFalse);
       tester.view.resetViewInsets();
       await tester.pump();
-      // At the root of Files, Back returns to the Project hub first.
+      // At the root of Files, Back returns to the Files hub first.
       await tester.binding.handlePopRoute();
       await tester.pump();
       expect(find.text('Press back again to exit'), findsNothing);
-      expect(_selectedDestination(tester), 'Project');
+      expect(_selectedDestination(tester), 'Files');
       expect(
         find.byKey(const ValueKey('project-hub-files')).hitTestable(),
         findsOneWidget,
@@ -362,7 +368,7 @@ void main() {
       await tester.binding.handlePopRoute();
       await tester.pump();
       expect(find.text('Press back again to exit'), findsNothing);
-      expect(_selectedDestination(tester), 'Work');
+      expect(_selectedDestination(tester), 'Conversations');
       await tester.binding.handlePopRoute();
       await tester.pump();
       expect(find.text('Press back again to exit'), findsOneWidget);
@@ -391,7 +397,7 @@ void main() {
     await tester.binding.handlePopRoute();
     await tester.pump();
     expect(find.text('Press back again to exit'), findsNothing);
-    expect(_selectedDestination(tester), 'Work');
+    expect(_selectedDestination(tester), 'Conversations');
     expect(api.paths.length, loads);
   });
 
@@ -423,15 +429,17 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Inbox Back returns Work before offering exit', (tester) async {
+  testWidgets('Settings Back returns Chats before offering exit', (
+    tester,
+  ) async {
     final controller = await _controller();
     addTearDown(controller.dispose);
     await _pumpShell(tester, controller);
-    await tester.tap(find.byIcon(AppIconography.activity));
+    await tester.tap(find.byIcon(AppIconography.settings));
     await tester.pumpAndSettle();
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(_selectedDestination(tester), 'Work');
+    expect(_selectedDestination(tester), 'Conversations');
     expect(find.text('Press back again to exit'), findsNothing);
   });
 
@@ -489,20 +497,20 @@ void main() {
         )
         .opacity;
 
-    await tester.tap(find.byIcon(AppIconography.activity));
+    await tester.tap(find.byIcon(AppIconography.settings));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 40));
-    // The dock lens is on its way to Inbox, not there yet.
+    // The dock lens is on its way to Settings, not there yet.
     final lensMoving = _dockLens(tester);
-    expect(opacityOf(ActivityScreen), 0);
-    expect(opacityOf(WorkspaceScreen), inExclusiveRange(0, 1));
+    expect(opacityOf(SettingsScreen), 0);
+    expect(opacityOf(ChatsHomeScreen), inExclusiveRange(0, 1));
     await tester.pump(const Duration(milliseconds: 100));
-    expect(opacityOf(ActivityScreen), inExclusiveRange(0, 1));
+    expect(opacityOf(SettingsScreen), inExclusiveRange(0, 1));
     await tester.pumpAndSettle();
-    expect(opacityOf(ActivityScreen), 1);
-    final lensOnInbox = _dockLens(tester);
-    expect(lensOnInbox.center.dx, greaterThan(lensAtRest.center.dx));
-    expect(lensMoving, isNot(lensOnInbox));
+    expect(opacityOf(SettingsScreen), 1);
+    final lensOnSettings = _dockLens(tester);
+    expect(lensOnSettings.center.dx, greaterThan(lensAtRest.center.dx));
+    expect(lensMoving, isNot(lensOnSettings));
     // The status dot is still while connected: nothing runs at rest.
     expect(tester.binding.transientCallbackCount, 0);
   });
@@ -584,9 +592,8 @@ void main() {
       Theme.of(tester.element(find.byType(KitNavBar))),
     );
     for (final (label, glyph, color) in [
-      ('Work', AppIconography.workspaceSelected, roles.text1),
-      ('Inbox', AppIconography.activity, roles.text2),
-      ('Project', AppIconography.files, roles.text2),
+      ('Conversations', AppIconography.chat, roles.text1),
+      ('Files', AppIconography.files, roles.text2),
       ('Settings', AppIconography.settings, roles.text2),
     ]) {
       final labelFinder = find.descendant(
@@ -594,12 +601,30 @@ void main() {
         matching: find.text(label),
       );
       expect(tester.widget<Text>(labelFinder).style!.color, color);
-      expect(tester.widget<Icon>(find.byIcon(glyph)).color, color);
+      expect(
+        tester
+            .widget<Icon>(
+              find.descendant(
+                of: find.byType(KitNavBar),
+                matching: find.byIcon(glyph),
+              ),
+            )
+            .color,
+        color,
+      );
     }
-    final icon = tester.getRect(find.byIcon(AppIconography.workspaceSelected));
+    final icon = tester.getRect(
+      find.descendant(
+        of: find.byType(KitNavBar),
+        matching: find.byIcon(AppIconography.chat),
+      ),
+    );
     expect(icon.top - dock.top, greaterThanOrEqualTo(8));
     final label = tester.getRect(
-      find.descendant(of: find.byType(KitNavBar), matching: find.text('Work')),
+      find.descendant(
+        of: find.byType(KitNavBar),
+        matching: find.text('Conversations'),
+      ),
     );
     expect(dock.bottom - label.bottom, greaterThanOrEqualTo(4));
 
@@ -608,13 +633,14 @@ void main() {
     final navigationLabels = navigation.destinations
         .map((destination) => destination.label)
         .toList();
-    expect(navigationLabels, ['Work', 'Inbox', 'Project', 'Settings']);
-    expect(find.text('Work'), findsWidgets);
-    expect(find.text('Project'), findsOneWidget);
-    expect(find.text('Inbox'), findsWidgets);
+    expect(navigationLabels, ['Conversations', 'Files', 'Settings']);
+    expect(find.text('Conversations'), findsWidgets);
+    expect(find.text('Files'), findsWidgets);
+    expect(find.text('Work'), findsNothing);
+    expect(find.text('Inbox'), findsNothing);
+    expect(find.text('Project'), findsNothing);
     expect(find.text('Workspace'), findsNothing);
     expect(find.text('Activity'), findsNothing);
-    expect(find.text('Files'), findsNothing);
     expect(find.text('Terminal'), findsNothing);
     expect(find.text('Settings'), findsOneWidget);
     expect(find.text('More'), findsNothing);
@@ -622,7 +648,7 @@ void main() {
     expect(find.text('Guide'), findsNothing);
   });
 
-  testWidgets('one pending badge, on the Inbox destination', (tester) async {
+  testWidgets('one pending badge, on the Chats destination', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -632,7 +658,7 @@ void main() {
 
     await _pumpShell(tester, controller);
     expect(
-      find.descendant(of: _inboxDestination(), matching: find.text('1')),
+      find.descendant(of: _chatsDestination(), matching: find.text('1')),
       findsNothing,
     );
 
@@ -649,7 +675,7 @@ void main() {
 
     // UX-P0-01: exactly one global badge, and the duplicate app-bar entry
     // points are gone.
-    final badge = _inboxDestination();
+    final badge = _chatsDestination();
     expect(badge, findsOneWidget);
     expect(
       find.descendant(of: find.byType(KitNav), matching: find.text('1')),
@@ -663,7 +689,7 @@ void main() {
       find.descendant(of: badge, matching: find.text('1')),
       findsOneWidget,
     );
-    expect(tester.getSemantics(badge).label, 'Inbox, 1 need you');
+    expect(tester.getSemantics(badge).label, 'Conversations, 1 need you');
 
     // The badge counts everything waiting on the person, not just "some".
     controller.permissions = {
@@ -701,26 +727,7 @@ void main() {
     );
   });
 
-  testWidgets('the Inbox tab shows cross-session sections', (tester) async {
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final controller = await _controller();
-    addTearDown(controller.dispose);
-
-    await _pumpShell(tester, controller);
-    await tester.tap(find.byIcon(AppIconography.activity));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-
-    expect(find.byType(ActivityScreen), findsOneWidget);
-    expect(_selectedDestination(tester), 'Inbox');
-    // An empty inbox reads as success, not as a missing feature.
-    expect(find.text('All clear here'), findsWidgets);
-  });
-
-  group('cold start opens where the person is needed', () {
+  group('cold start opens on Chats', () {
     PermissionRequest permission(String id) => PermissionRequest(
       id: id,
       sessionID: 'session-1',
@@ -734,6 +741,7 @@ void main() {
       WidgetTester tester,
       ConnectionController controller, {
       int? initialTab,
+      ChatFeedFilter? initialChatFilter,
     }) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
@@ -745,7 +753,15 @@ void main() {
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: _shellHome(controller, initialTab: initialTab),
+            home: Builder(
+              builder: (context) => ListenableBuilder(
+                listenable: controller,
+                builder: (context, _) => HomeScreen(
+                  initialTab: initialTab,
+                  initialChatFilter: initialChatFilter,
+                ),
+              ),
+            ),
           ),
         ),
       );
@@ -753,192 +769,251 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
     }
 
-    testWidgets('nothing waiting: Work', (tester) async {
+    ChatFeedFilter? chatsFilter(WidgetTester tester) => tester
+        .widget<ChatsHomeScreen>(find.byType(ChatsHomeScreen))
+        .initialFilter;
+
+    testWidgets('nothing waiting: Chats, no badge', (tester) async {
       final controller = await _controller(profileName: 'Test server');
       addTearDown(controller.dispose);
       await pump(tester, controller);
-      expect(title(tester), 'Work');
+      expect(title(tester), 'Conversations');
       expect(
-        find.descendant(of: _inboxDestination(), matching: find.text('1')),
+        find.descendant(of: _chatsDestination(), matching: find.text('1')),
         findsNothing,
       );
     });
 
-    testWidgets('something waiting: Inbox, on the request itself', (
+    testWidgets('something waiting: still Chats, and the badge says so', (
       tester,
     ) async {
       final controller = await _controller(profileName: 'Test server');
       addTearDown(controller.dispose);
       controller.permissions = {'perm-1': permission('perm-1')};
       await pump(tester, controller);
-      expect(title(tester), 'Inbox');
+      expect(title(tester), 'Conversations');
       expect(
-        find.byKey(const ValueKey('activity-permission-perm-1')).hitTestable(),
+        find.descendant(of: _chatsDestination(), matching: find.text('1')),
         findsOneWidget,
       );
-      // Back still leads to Work, then to the exit guard.
-      await tester.binding.handlePopRoute();
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(title(tester), 'Work');
+      expect(chatsFilter(tester), isNull);
     });
 
-    testWidgets('the first read of pending requests decides, once', (
+    testWidgets('a request that arrives later only moves the badge', (
       tester,
     ) async {
       final controller = await _controller(profileName: 'Test server');
       addTearDown(controller.dispose);
-      // Connect starts this read before the shell mounts.
-      controller.permissionsLoading = true;
-      await pump(tester, controller);
-      expect(title(tester), 'Work');
-
-      controller
-        ..permissions = {'perm-1': permission('perm-1')}
-        ..permissionsLoading = false;
-      controller.notifyListeners();
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(title(tester), 'Inbox');
-
-      // Decided. Returning to Work and getting a second request only moves
-      // the badge.
-      await tester.tap(find.byIcon(AppIconography.workspace));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      controller.permissions = {
-        'perm-1': permission('perm-1'),
-        'perm-2': permission('perm-2'),
-      };
-      controller.notifyListeners();
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(title(tester), 'Work');
-      expect(
-        find.descendant(of: _inboxDestination(), matching: find.text('2')),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('a read that finds nothing leaves Work, and a late request '
-        'does not move the person', (tester) async {
-      final controller = await _controller(profileName: 'Test server');
-      addTearDown(controller.dispose);
-      controller
-        ..permissionsLoading = true
-        ..questionsLoading = true;
-      await pump(tester, controller);
-      controller.permissionsLoading = false;
-      controller.notifyListeners();
-      await tester.pump();
-      // Questions are still being read: not decided yet.
-      controller.questionsLoading = false;
-      controller.notifyListeners();
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(title(tester), 'Work');
-
-      controller.permissions = {'perm-late': permission('perm-late')};
-      controller.notifyListeners();
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(title(tester), 'Work');
-      expect(
-        find.descendant(of: _inboxDestination(), matching: find.text('1')),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('picking a tab during the read is final', (tester) async {
-      final controller = await _controller(profileName: 'Test server');
-      addTearDown(controller.dispose);
-      controller.permissionsLoading = true;
       await pump(tester, controller);
       await tester.tap(find.byIcon(AppIconography.settings));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
-      expect(title(tester), 'Settings');
-
-      controller
-        ..permissions = {'perm-1': permission('perm-1')}
-        ..permissionsLoading = false;
+      controller.permissions = {'perm-1': permission('perm-1')};
       controller.notifyListeners();
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(title(tester), 'Settings');
+      expect(
+        find.descendant(of: _chatsDestination(), matching: find.text('1')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('an explicit destination is respected', (tester) async {
       final controller = await _controller(profileName: 'Test server');
       addTearDown(controller.dispose);
       controller.permissions = {'perm-1': permission('perm-1')};
-      await pump(tester, controller, initialTab: 0);
-      expect(title(tester), 'Work');
+      await pump(tester, controller, initialTab: 2);
+      expect(title(tester), 'Settings');
+    });
+
+    testWidgets('a filter asked for at launch reaches the Chats list', (
+      tester,
+    ) async {
+      final controller = await _controller(profileName: 'Test server');
+      addTearDown(controller.dispose);
+      await pump(
+        tester,
+        controller,
+        initialChatFilter: const ChatFeedFilter(needsYou: true),
+      );
+      expect(title(tester), 'Conversations');
+      expect(chatsFilter(tester), const ChatFeedFilter(needsYou: true));
+    });
+  });
+
+  group('everything that opened the Inbox opens Chats with its filter', () {
+    Future<AppShortcutSignals> pumpWithSignals(
+      WidgetTester tester,
+      ConnectionController controller,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final signals = AppShortcutSignals();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [connProvider.overrideWithValue(controller)],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: AppShortcutScope(
+              signals: signals,
+              child: _shellHome(controller),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      return signals;
+    }
+
+    ChatFeedFilter? chatsFilter(WidgetTester tester) => tester
+        .widget<ChatsHomeScreen>(find.byType(ChatsHomeScreen))
+        .initialFilter;
+
+    testWidgets('Needs you (notification, Quick Settings tile, widget)', (
+      tester,
+    ) async {
+      final controller = await _controller(profileName: 'Test server');
+      addTearDown(controller.dispose);
+      final signals = await pumpWithSignals(tester, controller);
+      await tester.tap(find.byIcon(AppIconography.settings));
+      await tester.pumpAndSettle();
+      expect(_selectedDestination(tester), 'Settings');
+
+      expect(signals.dispatch(const OpenChatsIntent(needsYou: true)), isTrue);
+      await tester.pumpAndSettle();
+      expect(_selectedDestination(tester), 'Conversations');
+      expect(chatsFilter(tester), const ChatFeedFilter(needsYou: true));
+    });
+
+    testWidgets('Running, then asking again re-opens on the new filter', (
+      tester,
+    ) async {
+      final controller = await _controller(profileName: 'Test server');
+      addTearDown(controller.dispose);
+      final signals = await pumpWithSignals(tester, controller);
+      expect(signals.dispatch(const OpenChatsIntent(running: true)), isTrue);
+      await tester.pumpAndSettle();
+      expect(chatsFilter(tester), const ChatFeedFilter(running: true));
+
+      expect(signals.dispatch(const OpenChatsIntent(needsYou: true)), isTrue);
+      await tester.pumpAndSettle();
+      expect(chatsFilter(tester), const ChatFeedFilter(needsYou: true));
+
+      expect(signals.dispatch(const OpenChatsIntent()), isTrue);
+      await tester.pumpAndSettle();
+      expect(chatsFilter(tester), isNull);
+    });
+
+    testWidgets('Ctrl+1..3 are Chats, Files, Settings; there is no 4', (
+      tester,
+    ) async {
+      final controller = await _controller(directory: '/srv/app');
+      addTearDown(controller.dispose);
+      final signals = await pumpWithSignals(tester, controller);
+      expect(signals.dispatch(const SelectDestinationIntent(1)), isTrue);
+      await tester.pumpAndSettle();
+      expect(_selectedDestination(tester), 'Files');
+      expect(signals.dispatch(const SelectDestinationIntent(2)), isTrue);
+      await tester.pumpAndSettle();
+      expect(_selectedDestination(tester), 'Settings');
+      expect(signals.dispatch(const SelectDestinationIntent(0)), isTrue);
+      await tester.pumpAndSettle();
+      expect(_selectedDestination(tester), 'Conversations');
+      expect(signals.dispatch(const SelectDestinationIntent(3)), isFalse);
       expect(
-        find.descendant(of: _inboxDestination(), matching: find.text('1')),
-        findsOneWidget,
+        appShortcutBindings.values.whereType<SelectDestinationIntent>().map(
+          (intent) => intent.index,
+        ),
+        everyElement(inInclusiveRange(0, 2)),
       );
     });
   });
 
-  testWidgets('Inbox order: waiting on you, then running, then finished', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(390, 1400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final controller = await _controller();
-    addTearDown(controller.dispose);
-    controller.sessionsById = {
-      'running': Session(id: 'running', title: 'Running conversation'),
-      'finished': Session(
-        id: 'finished',
-        title: 'Finished conversation',
-        time: SessionTime(created: 1, updated: 2, idle: 3),
-      ),
-    };
-    controller.busySessions.add('running');
-    controller.permissions = {
-      for (final id in ['perm-old', 'perm-new'])
-        id: PermissionRequest(
-          id: id,
-          sessionID: 'running',
-          permission: 'edit',
-          patterns: const ['lib/main.dart'],
-        ),
-    };
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: ActivityScreen(controller: controller, embedded: true),
-        ),
-      ),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+  group('the Files tab is the project tools of one project', () {
+    Future<void> openFiles(WidgetTester tester, ConnectionController c) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await _pumpShell(tester, c);
+      await tester.tap(find.byIcon(AppIconography.files));
+      await tester.pumpAndSettle();
+    }
 
-    double top(Finder finder) => tester.getTopLeft(finder).dy;
-    // One list, no section headers (owner rule R1): the rows' marks and
-    // words carry the state.
-    final order = [
-      find.byKey(const ValueKey('activity-permission-perm-old')),
-      find.byKey(const ValueKey('activity-permission-perm-new')),
-      find.byKey(const ValueKey('activity-running-running')),
-      find.byKey(const ValueKey('activity-digest-finished')),
-    ];
-    for (final item in order) {
-      expect(item, findsOneWidget);
-    }
-    for (var i = 1; i < order.length; i++) {
-      expect(top(order[i - 1]), lessThan(top(order[i])), reason: 'item $i');
-    }
-    for (final header in ['Needs attention', 'Running', 'Completion digests']) {
-      expect(find.text(header), findsNothing, reason: header);
-    }
-    expect(find.text('Finished conversation'), findsOneWidget);
+    testWidgets('titled Files, with a chip naming the project', (tester) async {
+      final controller = await _controller(directory: '/srv/app');
+      addTearDown(controller.dispose);
+      await openFiles(tester, controller);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('project-hub-title')),
+          matching: find.text('Files'),
+        ),
+        findsOneWidget,
+      );
+      final chip = find.byKey(const ValueKey('project-hub-context'));
+      expect(chip, findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('app')), findsWidgets);
+      expect(find.byKey(const ValueKey('project-hub-files')), findsOneWidget);
+    });
+
+    testWidgets('the chip opens the project chooser to switch', (tester) async {
+      final controller = await _controller(directory: '/srv/app');
+      addTearDown(controller.dispose);
+      await openFiles(tester, controller);
+      await tester.tap(find.byKey(const ValueKey('project-hub-context')));
+      await tester.pumpAndSettle();
+      expect(find.byType(RemoteFolderSheet), findsOneWidget);
+    });
+
+    testWidgets('the project is the one last used for a chat', (tester) async {
+      final controller = await _controller(
+        profileName: 'Test server',
+        directory: '/srv/app',
+        seed: {'oc.lastProject.local': '/srv/app'},
+      );
+      addTearDown(controller.dispose);
+      expect(lastUsedProjectOf(controller), '/srv/app');
+      await openFiles(tester, controller);
+      expect(find.bySemanticsLabel(RegExp('app')), findsWidgets);
+      expect(controller.directory, '/srv/app');
+    });
+
+    testWidgets('a last-used temporary folder is not a project', (
+      tester,
+    ) async {
+      final controller = await _controller(
+        profileName: 'Test server',
+        directory: '/srv/app',
+        seed: {'oc.lastProject.local': '/tmp/scratch'},
+      );
+      addTearDown(controller.dispose);
+      expect(lastUsedProjectOf(controller), isNull);
+    });
+
+    testWidgets('a temporary folder is never shown as the project', (
+      tester,
+    ) async {
+      final controller = await _controller(directory: '/tmp/scratch');
+      addTearDown(controller.dispose);
+      await openFiles(tester, controller);
+      expect(find.text('scratch'), findsNothing);
+      expect(find.byKey(const ValueKey('project-hub-files')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('project-hub-choose-project')),
+        findsOneWidget,
+      );
+    });
+
+    test('which folders are temporary', () {
+      expect(isTemporaryProjectDirectory('/tmp/scratch'), isTrue);
+      expect(isTemporaryProjectDirectory('/var/folders/ab/cd'), isTrue);
+      expect(isTemporaryProjectDirectory('/root/projects/app'), isFalse);
+    });
   });
 
   testWidgets('failed reconnect keeps the product shell and location visible', (
@@ -1105,7 +1180,7 @@ void main() {
       await _pumpShell(tester, controller);
 
       final profile = find.byKey(const ValueKey('server-switcher-button'));
-      final tab = find.byKey(const ValueKey('home-shell-tab-work'));
+      final tab = find.byKey(const ValueKey('home-shell-tab-chats'));
       expect(profile, findsOneWidget);
       expect(tab, findsOneWidget);
       expect(tester.getRect(profile).bottom, lessThan(tester.getRect(tab).top));
@@ -1117,7 +1192,7 @@ void main() {
         tester.getSemantics(profile).label,
         contains('Connected, Switch server'),
       );
-      expect(_selectedDestination(tester), 'Work');
+      expect(_selectedDestination(tester), 'Conversations');
       expect(find.byKey(const ValueKey('current-tab-title')), findsNothing);
       expect(tester.takeException(), isNull);
     },
@@ -1146,9 +1221,9 @@ void main() {
         find.descendant(of: find.byType(KitNavRail), matching: profile),
         findsOneWidget,
       );
-      final tab = find.byKey(const ValueKey('home-shell-tab-work'));
+      final tab = find.byKey(const ValueKey('home-shell-tab-chats'));
       expect(tester.getRect(profile).bottom, lessThan(tester.getRect(tab).top));
-      expect(_selectedDestination(tester), 'Work');
+      expect(_selectedDestination(tester), 'Conversations');
       expect(find.byKey(const ValueKey('current-tab-title')), findsNothing);
       expect(tester.takeException(), isNull);
     },

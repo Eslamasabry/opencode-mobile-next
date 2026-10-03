@@ -6,10 +6,6 @@
     "lib/ui/screens/active_context_screen.dart": {
       "lib/api/": 1
     },
-    "lib/ui/screens/activity_screen.dart": {
-      "lib/api/": 2,
-      "lib/api2/": 1
-    },
     "lib/ui/screens/chat/form_flow.dart": {
       "lib/api/": 1,
       "lib/api2/": 1
@@ -92,9 +88,6 @@
     },
     "lib/ui/screens/usage_screen.dart": {
       "lib/api2/": 1
-    },
-    "lib/ui/screens/workspace_screen.dart": {
-      "lib/api/": 2
     },
     "lib/ui/screens/worktrees_screen.dart": {
       "lib/api/": 2

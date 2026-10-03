@@ -15,7 +15,6 @@ import 'package:opencode_mobile/termux/local_agent_runtime.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit_task_mark.dart';
 import 'package:opencode_mobile/ui/widgets/local_agent_server_entry.dart';
-import 'package:opencode_mobile/ui/widgets/other_servers_panel.dart';
 import 'package:opencode_mobile/ui/widgets/server_switcher_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -199,60 +198,6 @@ void main() {
       await tester.pump(const Duration(seconds: 8));
       expect(_rich('Reconnecting'), findsNothing);
       expect(_rich('Offline'), findsOneWidget);
-    });
-  });
-
-  group('other servers on the Work tab', () {
-    testWidgets('a waiting server leads with the needs-you mark; a working '
-        'one says its count in words', (tester) async {
-      SharedPreferences.setMockInitialValues({});
-      final controller = SwitcherController(
-        SwitcherStore(prefs: await SharedPreferences.getInstance()),
-        snapshots: {
-          'laptop': snapshot('laptop', waiting: 2),
-          'lab': snapshot('lab', running: 3),
-        },
-      );
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(
-        _app(ListView(children: [OtherServersPanel(controller: controller)])),
-      );
-      await tester.pump();
-      expect(find.text(_l10n.otherServersTitle), findsOneWidget);
-      expect(
-        find.descendant(
-          of: find.byKey(const ValueKey('other-server-laptop')),
-          matching: find.byWidgetPredicate(
-            (w) => w is KitTaskMark && w.state == KitTaskState.needsYou,
-          ),
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(
-          of: find.byKey(const ValueKey('other-server-laptop')),
-          matching: _rich('2 need you'),
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(
-          of: find.byKey(const ValueKey('other-server-lab')),
-          matching: _rich('3 working'),
-        ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('nothing going on elsewhere shows nothing', (tester) async {
-      SharedPreferences.setMockInitialValues({});
-      final controller = SwitcherController(
-        SwitcherStore(prefs: await SharedPreferences.getInstance()),
-      );
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_app(OtherServersPanel(controller: controller)));
-      await tester.pump();
-      expect(find.byKey(const ValueKey('other-servers-panel')), findsNothing);
     });
   });
 

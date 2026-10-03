@@ -4113,24 +4113,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start a conversation in the active project';
 
   @override
-  String get e7LocaleUiWorkspace => 'Work';
+  String get e7LocaleUiWorkspaceHint => 'Every conversation, across projects';
 
   @override
-  String get e7LocaleUiWorkspaceHint =>
-      'Recent conversations and the active project';
-
-  @override
-  String get e7LocaleUiFiles => 'Project';
+  String get e7LocaleUiFiles => 'Files';
 
   @override
   String get e7LocaleUiFilesHint =>
       'Files, changes, terminal and other project tools';
-
-  @override
-  String get e7LocaleUiActivity => 'Inbox';
-
-  @override
-  String get e7LocaleUiActivityHint => 'Permissions, questions, and forms';
 
   @override
   String get e7LocaleUiMoreHint => 'Models, providers, notifications, settings';
@@ -4157,7 +4147,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get e7LocaleUiFindSurface => 'Find on this screen';
 
   @override
-  String get e7LocaleUiDestinations => 'Work, Inbox, Project, Settings';
+  String get e7LocaleUiDestinations => 'Switch tab';
 
   @override
   String get e7LocaleUiTerminal => 'Terminal';
@@ -10811,13 +10801,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get usageSectionRemaining => 'Remaining';
 
   @override
-  String get shellTabWork => 'Work';
-
-  @override
   String get shellTabInbox => 'Inbox';
-
-  @override
-  String get shellTabProject => 'Project';
 
   @override
   String get serverSwitcherManage => 'Manage servers';
@@ -10832,14 +10816,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String discoverSearchIn(String parent) {
     return 'In $parent';
   }
-
-  @override
-  String get discoverWorkAliases =>
-      'work home conversations sessions chats recent pinned new conversation';
-
-  @override
-  String get discoverInboxAliases =>
-      'inbox activity needs you approvals permissions questions forms waiting running finished';
 
   @override
   String get discoverProjectAliases =>
@@ -16094,7 +16070,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortcutsHelpConversation => 'In a conversation';
 
   @override
-  String get homeShellProjectUnavailable => 'Project isn\'t available';
+  String get homeShellProjectUnavailable => 'Files isn\'t available';
 
   @override
   String homeShellProjectUnavailableReason(String server) {
@@ -26819,4 +26795,126 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get approvalsSheetHistory => 'Approved automatically';
+
+  @override
+  String get chatsHomeTitle => 'Conversations';
+
+  @override
+  String get chatsHomeAllProjects => 'All projects';
+
+  @override
+  String get chatsHomeNeedsYou => 'Needs you';
+
+  @override
+  String chatsHomeNeedsYouCount(int count) {
+    return 'Needs you · $count';
+  }
+
+  @override
+  String get chatsHomeRunning => 'Running';
+
+  @override
+  String get chatsHomeToday => 'Today';
+
+  @override
+  String get chatsHomeEarlier => 'Earlier';
+
+  @override
+  String chatsHomeOnlyProject(String project) {
+    return 'Showing conversations in $project only. This server can\'t list all projects.';
+  }
+
+  @override
+  String get chatsHomeIncomplete => 'Some conversations couldn\'t load';
+
+  @override
+  String get chatsHomeEmptyTitle => 'No conversations yet';
+
+  @override
+  String get chatsHomeEmptyBody => 'Start a conversation and it shows up here.';
+
+  @override
+  String get chatsHomeStartChat => 'Start a conversation';
+
+  @override
+  String get chatsHomeNoMatchTitle => 'No matching conversations';
+
+  @override
+  String get chatsHomeNoMatchBody => 'Nothing fits the filters you chose.';
+
+  @override
+  String get chatsHomeClearFilters => 'Clear filters';
+
+  @override
+  String chatsHomeProjectEmptyTitle(String project) {
+    return 'No conversations in $project';
+  }
+
+  @override
+  String chatsHomeStartChatIn(String project) {
+    return 'Start a conversation in $project';
+  }
+
+  @override
+  String get chatsHomeNewChat => 'New conversation';
+
+  @override
+  String get chatsHomeOpenFailed =>
+      'This conversation couldn\'t be opened. Pull down to refresh the list.';
+
+  @override
+  String get chatsFilterSheetTitle => 'Show conversations from';
+
+  @override
+  String chatsFilterChatCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count conversations',
+      one: '1 conversation',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chatsFilterRunningCount(int running) {
+    return '$running running';
+  }
+
+  @override
+  String get chatsFilterNeedsYouWord => 'needs you';
+
+  @override
+  String get chatsFilterOpenProject => 'Open a project…';
+
+  @override
+  String get chatsNewPrompt => 'What should we work on?';
+
+  @override
+  String get chatsNewChooseProject => 'Choose a project';
+
+  @override
+  String get chatsNewNeedProject => 'Choose a project to start a conversation.';
+
+  @override
+  String get chatsNewFailed =>
+      'The conversation didn\'t start. Your message is still here.';
+
+  @override
+  String get shellTabChats => 'Conversations';
+
+  @override
+  String get shellTabFiles => 'Files';
+
+  @override
+  String get discoverChatsAliases =>
+      'chats conversations sessions work home recent pinned new conversation inbox activity needs you approvals permissions questions forms waiting running finished';
+
+  @override
+  String chatProjectChipSemantics(String name) {
+    return 'Project $name. Opens a menu of its files, terminal and changes.';
+  }
+
+  @override
+  String get chatProjectMenuLabel => 'Project tools';
 }

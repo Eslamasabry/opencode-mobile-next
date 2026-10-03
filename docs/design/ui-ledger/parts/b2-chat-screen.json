@@ -1262,46 +1262,6 @@
             "_canBackgroundWork"
           ],
           "destructive": false
-        },
-        {
-          "id": "chat-first-reply-notify-accept",
-          "type": "button",
-          "label": "Notify me (card: Get told when it's done?)",
-          "key": "first-reply-notify-accept",
-          "file": "lib/ui/widgets/first_reply_notify_card.dart",
-          "line": 177,
-          "action": "toggle-setting",
-          "target": null,
-          "effect": "_accept(): controller.setKeepLiveInBackground(true) (the native 'enable' call that raises POST_NOTIFICATIONS and starts the service), re-enables finished-run and request notifications if they were off, then FirstRun.answerNotifyAsk(); a refusal shows backgroundLive.lastError in a snackbar and still counts as an answer.",
-          "gates": [
-            "FirstRun.notifyAskPending (set when first run lands in its first conversation)",
-            "this conversation holds a completed assistant reply and is not busy",
-            "platformCapabilities.supportsNotifications && supportsBackgroundService",
-            "!controller.isIsolated",
-            "!controller.keepLiveInBackground",
-            "hidden while the composer is compact (keyboard up / short window)"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "chat-first-reply-notify-decline",
-          "type": "button",
-          "label": "Not now",
-          "key": "first-reply-notify-decline",
-          "file": "lib/ui/widgets/first_reply_notify_card.dart",
-          "line": 169,
-          "action": "dismiss",
-          "target": null,
-          "effect": "_decline(): FirstRun.answerNotifyAsk(); the card is never shown again. Settings → Notifications remains the home.",
-          "gates": [
-            "FirstRun.notifyAskPending (set when first run lands in its first conversation)",
-            "this conversation holds a completed assistant reply and is not busy",
-            "platformCapabilities.supportsNotifications && supportsBackgroundService",
-            "!controller.isIsolated",
-            "!controller.keepLiveInBackground",
-            "hidden while the composer is compact (keyboard up / short window)"
-          ],
-          "destructive": false
         }
       ]
     },

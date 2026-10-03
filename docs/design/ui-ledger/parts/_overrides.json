@@ -3,8 +3,7 @@
     "servers",
     "root-connecting",
     "home-shell",
-    "workspace",
-    "activity",
+    "chats-home",
     "project-hub",
     "settings"
   ],
@@ -12,8 +11,6 @@
     "/": "root-connecting",
     "/servers": "servers",
     "/home": "home-shell",
-    "/activity": "activity",
-    "/requests": "activity",
     "/guide": "guide",
     "/about": "about",
     "/debug": "app-diagnostics",
@@ -22,8 +19,6 @@
     "/chat/<sessionID>": "chat",
     "/chat/$id": "chat",
     "_discardQueuedPrompt": "chat-discard-queued-draft-sheet",
-    "RunResultView": "run-result",
-    "ActivityGateTile": "activity",
     "/this-phone": "termux-setup-installed"
   },
   "fileToPage": {},
@@ -85,11 +80,6 @@
       "from": "servers",
       "to": "servers-welcome",
       "note": "ServersScreen body while the profile store is empty"
-    },
-    {
-      "from": "workspace",
-      "to": "workspace-folder-chooser",
-      "note": "replaces the Workspace body while controller.workspaceChoiceRequired"
     }
   ]
 }
