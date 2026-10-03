@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
-import 'package:opencode_mobile/domain/server_gateway.dart' show WorkspaceProject;
+import 'package:opencode_mobile/domain/server_gateway.dart'
+    show WorkspaceProject;
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_host.dart';
@@ -173,7 +174,14 @@ Widget chatsApp(
       ).copyWith(textScaler: TextScaler.linear(textScale)),
       child: child!,
     ),
-    home: home,
+    // The app's own surface: pages sit on a Material, so text carries no
+    // debug underline.
+    home: Builder(
+      builder: (context) => Material(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: home,
+      ),
+    ),
   ),
 );
 
