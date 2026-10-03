@@ -147,6 +147,35 @@ class BuiltinRootfsFolders {
     return cut <= 0 ? '/' : value.substring(0, cut);
   }
 
+  /// The folder on the phone that holds Ubuntu's [path] (for reading it with
+  /// dart:io), or null when it is missing, not a real folder, or Ubuntu's
+  /// files are not there. Never follows a link.
+  Future<String?> hostDirectory(String path) async {
+    final ubuntuPath = normalize(path);
+    if (ubuntuPath == null) return null;
+    try {
+      final projects = await _locateProjects();
+      final external = projects == null
+          ? null
+          : await _hostPath(projects.path, '/');
+      const projectsPath = BuiltinLinux.projectsDir;
+      if (external != null &&
+          (ubuntuPath == projectsPath ||
+              ubuntuPath.startsWith('$projectsPath/'))) {
+        return await _hostPath(
+          external,
+          ubuntuPath.substring(projectsPath.length),
+        );
+      }
+      final rootfs = await _locate();
+      return rootfs == null ? null : await _hostPath(rootfs.path, ubuntuPath);
+    } on FolderListException {
+      return null;
+    } on FileSystemException {
+      return null;
+    }
+  }
+
   /// The folders directly inside [path] (hidden ones left out), sorted by
   /// name. The projects folder that does not exist yet (a fresh install
   /// before OpenCode first started) lists as empty.

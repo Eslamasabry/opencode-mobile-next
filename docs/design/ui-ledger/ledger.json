@@ -1,5 +1,5 @@
 {
- "generatedFrom": "15f77eef0224614cc14f080eaaecd9724ce21d03",
+ "generatedFrom": "3e86f8467ba39c5c8b173eec8e18a0852f4ece14",
  "pages": [
   {
    "id": "system",
@@ -2826,6 +2826,99 @@
    ]
   },
   {
+   "id": "approval-mode-menu",
+   "title": "Approval mode",
+   "kind": "overlay",
+   "area": "chat",
+   "file": "lib/ui/screens/chat/approval_mode_menu.dart",
+   "widget": "_ChatApprovalModeMenu",
+   "presentedBy": [
+    "_showApprovalModeMenu"
+   ],
+   "line": 36,
+   "purpose": "Compact menu anchored to the approval chip: switch this conversation between asking first, auto-approving, and approving everything on the server, or open the detailed approvals sheet.",
+   "reachedFrom": [
+    {
+     "page": "embedded-auto-approval-indicator",
+     "element": "embedded-auto-approval-indicator-open"
+    },
+    {
+     "page": "chat",
+     "element": null,
+     "via": "embedded"
+    }
+   ],
+   "gates": [
+    "!_conn.isIsolated",
+    "Auto-approve and Approve everything are offered only while the automation policy allows automatic answers (supervision below High); the current mode is always listed"
+   ],
+   "embeddedIn": [
+    "ChatScreen"
+   ],
+   "hostPages": [
+    "chat"
+   ],
+   "elements": [
+    {
+     "id": "approval-mode-menu-ask",
+     "type": "menu-item",
+     "label": "Ask first",
+     "key": "approval-mode-ask",
+     "file": "lib/ui/screens/chat/approval_mode_menu.dart",
+     "line": 58,
+     "action": "toggle-setting",
+     "target": null,
+     "effect": "Applies at once: controller.setSessionAutoApproval(sessionID, ask); composer note says so.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "approval-mode-menu-auto",
+     "type": "menu-item",
+     "label": "Auto-approve this conversation",
+     "key": "approval-mode-auto",
+     "file": "lib/ui/screens/chat/approval_mode_menu.dart",
+     "line": 64,
+     "action": "toggle-setting",
+     "target": null,
+     "effect": "Confirms first (same scope text as the sheet), then controller.setSessionAutoApproval(sessionID, autoOnce). Cancel changes nothing. Moving down from Approve everything applies at once.",
+     "gates": [
+      "automation policy allows automatic answers"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "approval-mode-menu-everything",
+     "type": "menu-item",
+     "label": "Approve everything",
+     "key": "approval-mode-everything",
+     "file": "lib/ui/screens/chat/approval_mode_menu.dart",
+     "line": 70,
+     "action": "toggle-setting",
+     "target": null,
+     "effect": "Confirms first (same body as the sheet's risk step), then controller.setApprovesEverything(true) and clears this conversation's own setting so it follows. Cancel changes nothing.",
+     "gates": [
+      "automation policy allows automatic answers"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "approval-mode-menu-settings",
+     "type": "menu-item",
+     "label": "Approval settings…",
+     "key": "approval-mode-settings",
+     "file": "lib/ui/screens/chat/approval_mode_menu.dart",
+     "line": 77,
+     "action": "open-sheet",
+     "target": "session-approvals-sheet",
+     "targetWidget": "showSessionApprovalsSheet",
+     "effect": "showSessionApprovalsSheet(context, controller: _conn, sessionID).",
+     "gates": [],
+     "destructive": false
+    }
+   ]
+  },
+  {
    "id": "session-approvals-sheet",
    "title": "Approvals for this session",
    "kind": "sheet",
@@ -2843,8 +2936,8 @@
      "element": "session-menu-sheet-approvals"
     },
     {
-     "page": "embedded-auto-approval-indicator",
-     "element": "embedded-auto-approval-indicator-open"
+     "page": "approval-mode-menu",
+     "element": "approval-mode-menu-settings"
     },
     {
      "page": "chat",
@@ -2934,14 +3027,14 @@
   },
   {
    "id": "embedded-auto-approval-indicator",
-   "title": "[Auto-approval indicator strip]",
+   "title": "[Approval mode chip]",
    "kind": "overlay",
    "area": "chat",
    "file": "lib/ui/screens/chat/approvals_sheet.dart",
    "widget": "_AutoApprovalIndicator",
    "presentedBy": [],
    "line": 257,
-   "purpose": "Persistent strip in the chat attention slot above the composer while automatic approval is on for the session.",
+   "purpose": "The always-present chip in the strip above the composer: names how this conversation answers permission requests (Asks first, Auto-approve, Approves everything, or paused while disconnected) with no count, and opens the mode menu.",
    "reachedFrom": [
     {
      "page": "chat",
@@ -2950,8 +3043,8 @@
     }
    ],
    "gates": [
-    "!_conn.isIsolated && _conn.autoApprovalFor(sessionID).automatic",
-    "no pending permission, question or retry state occupies the attention slot (chat_screen.dart:6319-6347)"
+    "!_conn.isIsolated",
+    "a waiting request does not hide it: the request card stays the main thing and the chip stays beside it"
    ],
    "embeddedIn": [
     "ChatScreen"
@@ -2963,14 +3056,14 @@
     {
      "id": "embedded-auto-approval-indicator-open",
      "type": "card",
-     "label": "Approving automatically / Auto-approval paused (semantics: \"… Open approval settings\")",
+     "label": "Asks first / Auto-approve / Approves everything / Auto-approve paused (semantics: \"... Change approval mode\")",
      "key": "auto-approval-indicator",
      "file": "lib/ui/screens/chat/approvals_sheet.dart",
      "line": 303,
-     "action": "open-sheet",
-     "target": "session-approvals-sheet",
-     "targetWidget": "showSessionApprovalsSheet",
-     "effect": "InkWell.onTap -> onOpen; ChatScreen._attentionRegion passes showSessionApprovalsSheet(context, controller: _conn, sessionID).",
+     "action": "other",
+     "target": "approval-mode-menu",
+     "targetWidget": "_showApprovalModeMenu",
+     "effect": "KitChip.action onPressed -> onOpen(chipContext) -> ChatScreen._showApprovalModeMenu anchors the mode menu to the chip.",
      "gates": [],
      "destructive": false
     }
@@ -15592,7 +15685,7 @@
    "presentedBy": [
     "ProjectFolderActions.openFolder"
    ],
-   "line": 130,
+   "line": 131,
    "purpose": "A server on this phone: OpenCode inside the app (folders read from the built-in Ubuntu's files, so it works with the server stopped) or the OpenCode server this app runs in Termux (a short read-only script run inside Termux's Ubuntu through TermuxBridge.run, the path passed base64-encoded, bounded to 15 s in Termux and 25 s in the app). Browses from /root/projects up to /. A project (git repository, a project OpenCode knows, or any folder straight in /root/projects) opens with a tap; other folders are gone into. One primary opens the folder shown (never the home folder, / or the projects folder itself); New project makes a folder inside the folder shown (the app's Ubuntu: mkdir + git init; Termux: mkdir -p); Enter a path opens the path dialog. Remote servers, and Termux when it cannot run the app's commands, skip this sheet and go straight to the path dialog. Layout (2026-10-03, owner review): the sheet opens on a start page, title Open a project with Close in the header and no place line, menu or folder list: 1. New project (prominent; the name step swaps in place with \"Creates <folder>/<name>\", Create and open and a quiet Change folder that picks the parent in the browser and comes back; default folder is the host’s project space, else Projects on the phone’s storage), 2. Search this phone (phone-hosted servers only; the All files access consent first; a calm search step with a timer, a bar against the 10 s cap, folders checked and projects found, results as they come, Stop; then \"<m> found in 0:09\", Look deeper after the cap, an empty state with a way forward; back cancels), 3. Opened before (the recent folders with a Git badge when they hold .git, checked after and kept for the sheet; a tap opens; hidden when there are none). A quiet Choose a folder at the bottom opens the browser (one header row with back, the folder name and a more menu with Show hidden folders and Enter a path; the place menu when both places exist; one panel of folder rows; the pinned Open <folder>). A remote server keeps its own path sheet and has no search row because OpenCode lists files only inside a project.",
    "reachedFrom": [
     {
@@ -15615,7 +15708,7 @@
      "label": "Create and open",
      "key": "phone-new-folder-create",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 533,
+     "line": 534,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15629,7 +15722,7 @@
      "label": "Project name",
      "key": "phone-new-folder-name",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 544,
+     "line": 545,
      "action": "submit",
      "target": null,
      "targetWidget": null,
@@ -15643,7 +15736,7 @@
      "label": "Change (inline link after \"In <folder> ·\")",
      "key": "phone-new-folder-change",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 576,
+     "line": 577,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15657,7 +15750,7 @@
      "label": "New project (accent badge row)",
      "key": "open-project-new",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 608,
+     "line": 609,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15671,7 +15764,7 @@
      "label": "Search this phone",
      "key": "open-project-search",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 621,
+     "line": 622,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15687,7 +15780,7 @@
      "label": "Choose a folder (quiet row)",
      "key": "open-project-browse",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 653,
+     "line": 654,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15701,7 +15794,7 @@
      "label": "<folder name> / <path> / Git",
      "key": "open-project-recent-<n>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 672,
+     "line": 673,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15717,7 +15810,7 @@
      "label": "Back (search step)",
      "key": "phone-scan-back",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 760,
+     "line": 748,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15731,7 +15824,7 @@
      "label": "Stop",
      "key": "phone-scan-stop",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 767,
+     "line": 755,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15747,7 +15840,7 @@
      "label": "Look deeper",
      "key": "phone-scan-deeper",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 774,
+     "line": 762,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15763,7 +15856,7 @@
      "label": "<project name> / <kind> · <folder> / Git",
      "key": "phone-scan-<path>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 853,
+     "line": 833,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15777,7 +15870,7 @@
      "label": "Back (browser, first folder)",
      "key": "folder-browser-start",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 881,
+     "line": 861,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15791,7 +15884,7 @@
      "label": "Back chevron (Up one folder); Close at the place's first folder",
      "key": "folder-browser-up",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 886,
+     "line": 866,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15805,7 +15898,7 @@
      "label": "Enter a path (header more menu)",
      "key": "in-app-enter-path",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 899,
+     "line": 879,
      "action": "open-dialog",
      "target": "project-folder-open-dialog",
      "targetWidget": "_OpenFolderDialog",
@@ -15819,7 +15912,7 @@
      "label": "Use <folder>",
      "key": "folder-browser-use",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 916,
+     "line": 896,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15835,7 +15928,7 @@
      "label": "Open <folder>",
      "key": "folder-browser-open",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 924,
+     "line": 904,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15851,7 +15944,7 @@
      "label": "<folder name> / Git repository | OpenCode project",
      "key": "in-app-project-<name>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 1095,
+     "line": 1075,
      "action": "mutate",
      "target": null,
      "targetWidget": null,
@@ -15865,7 +15958,7 @@
      "label": "[Show the folders in <name>]",
      "key": "folder-browse-<name>",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 1108,
+     "line": 1088,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -15879,7 +15972,7 @@
      "label": "Try again",
      "key": "folder-browser-retry",
      "file": "lib/ui/widgets/folder_browser.dart",
-     "line": 1192,
+     "line": 1172,
      "action": "other",
      "target": null,
      "targetWidget": null,
@@ -37581,6 +37674,11 @@
    {
     "from": "embedded-auto-approval-indicator",
     "element": "embedded-auto-approval-indicator-open",
+    "to": "approval-mode-menu"
+   },
+   {
+    "from": "approval-mode-menu",
+    "element": "approval-mode-menu-settings",
     "to": "session-approvals-sheet"
    },
    {
@@ -40085,6 +40183,12 @@
     "from": "chat",
     "element": null,
     "to": "embedded-auto-approval-indicator",
+    "via": "embedded"
+   },
+   {
+    "from": "chat",
+    "element": null,
+    "to": "approval-mode-menu",
     "via": "embedded"
    },
    {

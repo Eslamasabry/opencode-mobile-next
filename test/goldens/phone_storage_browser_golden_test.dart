@@ -35,6 +35,7 @@ enum PhoneStorageScene {
   found,
   findnone,
   findcapped,
+  findspace,
 }
 
 const _root = PhoneStorageFolders.root;
@@ -195,7 +196,22 @@ Future<void> mountPhoneStorage(
       scan.visited = scene == PhoneStorageScene.scanning ? 412 : 1873;
       final shown = scene == PhoneStorageScene.scanning
           ? _projects.take(3)
+          : scene == PhoneStorageScene.findspace
+          ? _projects.take(2)
           : _projects;
+      // The project space's results come first, with their own paths.
+      if (scene == PhoneStorageScene.findspace) {
+        for (final (name, kind, hasGit) in _space) {
+          scan.emit(
+            PhoneProject(
+              name: name,
+              path: '/root/projects/$name',
+              kind: kind,
+              hasGit: hasGit,
+            ),
+          );
+        }
+      }
       for (final (name, where, kind, hasGit) in shown) {
         scan.emit(
           PhoneProject(
@@ -224,6 +240,12 @@ Future<void> mountPhoneStorage(
     }
   }
 }
+
+const _space = [
+  ('opencode-mobile', PhoneProjectKind.dart, true),
+  ('landing-page', PhoneProjectKind.node, true),
+  ('scratch', PhoneProjectKind.git, false),
+];
 
 const _projects = [
   ('mobile-app', 'Documents/code', PhoneProjectKind.dart, true),

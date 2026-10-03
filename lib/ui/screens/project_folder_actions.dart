@@ -152,24 +152,30 @@ class ProjectFolderActions {
   /// The phone's storage as a second place in the folder browser: listed
   /// from this app (needs All files access, asked first in plain words),
   /// with the shared-storage folders opened before.
-  static PhoneStoragePlace _phonePlace(ConnectionController controller) =>
-      PhoneStoragePlace(
-        list: phoneListerOverride ?? PhoneStorageFolders().list,
-        scan:
-            phoneScanOverride ??
-            (limit) => PhoneProjectScanner().start(timeLimit: limit),
-        ensureAccess: (context) async {
-          if (await StorageAccessBridge.status() != StorageAccess.notGranted) {
-            return true;
-          }
-          if (!context.mounted) return false;
-          final outcome = await SharedStorageAccessFlow.resolve(
-            context,
-            SharedStorageBlock.appAccess,
-          );
-          return outcome == SharedStorageOutcome.proceed;
-        },
+  static PhoneStoragePlace _phonePlace(
+    ConnectionController controller, {
+    required PhoneProjectScan Function(Duration limit) projectSpaceScan,
+  }) => PhoneStoragePlace(
+    list: phoneListerOverride ?? PhoneStorageFolders().list,
+    // The host's project space first (the restored projects live there),
+    // then the phone's storage: both are on this phone.
+    scan: (limit) => PhoneProjectScan.sequence([
+      projectSpaceScan,
+      phoneScanOverride ??
+          (left) => PhoneProjectScanner().start(timeLimit: left),
+    ], limit),
+    ensureAccess: (context) async {
+      if (await StorageAccessBridge.status() != StorageAccess.notGranted) {
+        return true;
+      }
+      if (!context.mounted) return false;
+      final outcome = await SharedStorageAccessFlow.resolve(
+        context,
+        SharedStorageBlock.appAccess,
       );
+      return outcome == SharedStorageOutcome.proceed;
+    },
+  );
 
   /// The folders opened before, most recent first: the connection's recent
   /// locations that can be opened, then shared-storage projects opened on
@@ -196,6 +202,10 @@ class ProjectFolderActions {
     return out.take(6).toList();
   }
 
+  static Future<List<PhoneProject>> _listProjectSpace(
+    FolderLister list,
+  ) async => projectsOfListing(await list(managedProjectsDirectory));
+
   static Future<List<String>> _openedSharedFolders(
     ConnectionController controller,
   ) async {
@@ -218,6 +228,77 @@ class ProjectFolderActions {
     return out;
   }
 
+  /// Widget tests hand in the project space's folders.
+  @visibleForTesting
+  static Future<List<PhoneProject>?> Function()? projectSpaceOverride;
+
+  /// The folders of a listing as projects: every folder straight in the
+  /// project space is one; a repository says so; the kind comes from the
+  /// names the listing gave, when it gave any.
+  static List<PhoneProject> projectsOfListing(List<FolderEntry> entries) => [
+    for (final entry in entries)
+      if (!entry.name.startsWith('.'))
+        () {
+          final found = PhoneProjectScanner.classify([
+            ...?entry.inside,
+            if (entry.isGit) '.git',
+          ]);
+          return PhoneProject(
+            name: entry.name,
+            path: entry.path,
+            kind: found?.kind ?? PhoneProjectKind.git,
+            hasGit: entry.isGit,
+          );
+        }(),
+  ];
+
+  /// The folders of the host's project space, or null when the host has none
+  /// to read (a remote server, or Termux that cannot run the app's
+  /// commands). In the app's own Ubuntu they are read from its files with
+  /// their kinds; through Termux from the server listing (no kinds).
+  static Future<List<PhoneProject>?> projectSpaceFolders(
+    ConnectionController controller,
+  ) async {
+    final override = projectSpaceOverride;
+    if (override != null) return override();
+    try {
+      final lister = folderListerOverride;
+      if (lister != null) {
+        return projectsOfListing(await lister(managedProjectsDirectory));
+      }
+      final linux = _linux;
+      if (await isInAppServer(controller.profile, linux)) {
+        final host = await BuiltinRootfsFolders().hostDirectory(
+          managedProjectsDirectory,
+        );
+        if (host == null) return const [];
+        return await PhoneProjectScanner(
+          root: host,
+          reportAs: managedProjectsDirectory,
+          maxDepth: 1,
+          childrenAreProjects: true,
+        ).start().projects.toList();
+      }
+      if (await _termuxBrowsable(controller)) {
+        return projectsOfListing(
+          await TermuxFolders().list(managedProjectsDirectory),
+        );
+      }
+    } catch (_) {
+      // A listing that fails leaves the section out.
+    }
+    return null;
+  }
+
+  /// Opens [path] (a folder already known to be there) as the project, the
+  /// way "Open `<folder>`" does. Returns the path, or null when it did not
+  /// open.
+  static Future<String?> openKnownFolder(
+    BuildContext context,
+    ConnectionController controller,
+    String path,
+  ) => _open(context, controller, path);
+
   /// A server on this phone (OpenCode inside the app, or the one this app
   /// runs in Termux): browse its folders from the projects folder and open
   /// one, name a new project in the folder shown, or enter a path. Any other
@@ -233,12 +314,32 @@ class ProjectFolderActions {
     if (await isInAppServer(controller.profile, linux)) {
       if (!context.mounted) return null;
       final folders = BuiltinProjectFolders(linux);
+      // The project space is searched from the app's own files.
+      final host = folderListerOverride != null
+          ? null
+          : await BuiltinRootfsFolders().hostDirectory(
+              managedProjectsDirectory,
+            );
+      if (!context.mounted) return null;
       final choice = await showKitFramedSheet<FolderBrowserChoice>(
         context,
         builder: (_) => FolderBrowserSheet(
           list: folderListerOverride ?? BuiltinFolders(linux).list,
           knownProjects: () => _knownProjects(controller),
-          phone: _phonePlace(controller),
+          phone: _phonePlace(
+            controller,
+            projectSpaceScan: (limit) => host == null
+                ? PhoneProjectScan.fromFuture(
+                    _listProjectSpace(
+                      folderListerOverride ?? BuiltinFolders(linux).list,
+                    ),
+                  )
+                : PhoneProjectScanner(
+                    root: host,
+                    reportAs: managedProjectsDirectory,
+                    childrenAreProjects: true,
+                  ).start(timeLimit: limit),
+          ),
           recent: () => _recentFolders(controller),
         ),
       );
@@ -268,7 +369,12 @@ class ProjectFolderActions {
         builder: (_) => FolderBrowserSheet(
           list: folderListerOverride ?? termux.list,
           knownProjects: () => _knownProjects(controller),
-          phone: _phonePlace(controller),
+          phone: _phonePlace(
+            controller,
+            projectSpaceScan: (limit) => PhoneProjectScan.fromFuture(
+              _listProjectSpace(folderListerOverride ?? termux.list),
+            ),
+          ),
           recent: () => _recentFolders(controller),
         ),
       );

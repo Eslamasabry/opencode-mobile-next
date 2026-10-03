@@ -7841,7 +7841,7 @@ abstract class AppLocalizations {
   /// Empty project catalog guidance
   ///
   /// In en, this message translates to:
-  /// **'Projects opened by this server appear here; choose one for conversations, files, terminals, and coding tools. Create a new folder or open one by its path above, or open a project on this OpenCode server and refresh.'**
+  /// **'Projects you open or create appear here.'**
   String get e7ProjectProjectsEmptyDetail;
 
   /// Cached project catalog refresh error heading
@@ -21393,7 +21393,7 @@ abstract class AppLocalizations {
   /// Terminal source: a shell in this phone's built-in Linux
   ///
   /// In en, this message translates to:
-  /// **'This phone'**
+  /// **'Built-in Linux'**
   String get localTerminalSourcePhone;
 
   /// Terminal source: the connected OpenCode server's terminals

@@ -4689,7 +4689,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get e7ProjectProjectsEmptyDetail =>
-      'تظهر هنا المشاريع المفتوحة على هذا الخادم. اختر مشروعًا للمحادثات والملفات والطرفيات وأدوات البرمجة. أنشئ مجلدًا أو افتحه بمساره من الخيارات أعلاه، أو افتح مشروعًا على خادم OpenCode هذا ثم حدّث القائمة.';
+      'تظهر هنا المشاريع التي تفتحها أو تنشئها.';
 
   @override
   String get e7ProjectProjectsRefreshFailed => 'تعذّر تحديث المشاريع';
@@ -13138,7 +13138,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pluginsDetailsId => 'المعرّف';
 
   @override
-  String get localTerminalSourcePhone => 'هذا الهاتف';
+  String get localTerminalSourcePhone => 'لينكس المدمج';
 
   @override
   String get localTerminalSourceServer => 'خادم OpenCode';

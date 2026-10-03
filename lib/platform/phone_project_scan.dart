@@ -73,8 +73,76 @@ class PhoneProjectScan {
     unawaited(_controller.close());
   }
 
+  /// A scan that runs [starts] one after the other (the first one's results
+  /// come first), sharing one [limit] between them. Cancel stops the one
+  /// running; the end is the first that was not [PhoneScanEnd.completed].
+  factory PhoneProjectScan.sequence(
+    List<PhoneProjectScan Function(Duration limit)> starts,
+    Duration limit,
+  ) {
+    final scan = PhoneProjectScan._(StreamController<PhoneProject>());
+    unawaited(scan._runSequence(starts, limit));
+    return scan;
+  }
+
+  /// A scan that is a list found elsewhere (a server's folder listing):
+  /// [load] is awaited, then every project is emitted. A failure ends it
+  /// quietly, with nothing found.
+  factory PhoneProjectScan.fromFuture(Future<List<PhoneProject>> load) {
+    final scan = PhoneProjectScan._(StreamController<PhoneProject>());
+    unawaited(() async {
+      try {
+        for (final project in await load) {
+          if (scan._cancelled) break;
+          scan._controller.add(project);
+          scan._visited++;
+        }
+      } catch (_) {
+        // Nothing found there; the other places are still searched.
+      }
+      scan._finish(
+        scan._cancelled ? PhoneScanEnd.cancelled : PhoneScanEnd.completed,
+      );
+    }());
+    return scan;
+  }
+
+  PhoneProjectScan? _current;
+  int _before = 0;
+
+  Future<void> _runSequence(
+    List<PhoneProjectScan Function(Duration limit)> starts,
+    Duration limit,
+  ) async {
+    final clock = Stopwatch()..start();
+    var end = PhoneScanEnd.completed;
+    for (final start in starts) {
+      if (_cancelled) {
+        end = PhoneScanEnd.cancelled;
+        break;
+      }
+      final left = limit - clock.elapsed;
+      if (left <= Duration.zero) {
+        end = PhoneScanEnd.timedOut;
+        break;
+      }
+      final scan = _current = start(left);
+      await for (final project in scan.projects) {
+        _controller.add(project);
+      }
+      final reason = await scan.end;
+      _before += scan._visited;
+      _current = null;
+      if (reason != PhoneScanEnd.completed) {
+        end = reason;
+        break;
+      }
+    }
+    _finish(end);
+  }
+
   /// Folders looked at so far.
-  int get visited => _visited;
+  int get visited => _before + (_current?._visited ?? _visited);
   int _visited = 0;
 
   @visibleForTesting
@@ -94,6 +162,7 @@ class PhoneProjectScan {
   /// Stops looking. Safe to call more than once or after the end.
   void cancel() {
     _cancelled = true;
+    _current?.cancel();
   }
 }
 
@@ -105,9 +174,20 @@ class PhoneProjectScanner {
     this.maxDepth = 5,
     this.maxVisited = 20000,
     this.maxResults = 200,
+    this.reportAs,
+    this.childrenAreProjects = false,
   }) : root = root ?? PhoneStorageFolders.root;
 
   final String root;
+
+  /// The path results carry in place of [root] (the project space is read
+  /// from files on the phone but shown as `/root/projects`).
+  final String? reportAs;
+
+  /// Every folder straight in [root] is a project, whatever it holds: the
+  /// project space's own rule ("any folder straight in the projects
+  /// folder"). Markers still name its kind.
+  final bool childrenAreProjects;
   final int maxDepth;
   final int maxVisited;
   final int maxResults;
@@ -227,12 +307,18 @@ class PhoneProjectScanner {
         continue; // Unreadable: skipped silently.
       }
       if (path != root) {
-        final project = classify(names);
+        final project =
+            classify(names) ??
+            (childrenAreProjects && depth == 1
+                ? (kind: PhoneProjectKind.git, git: false)
+                : null);
         if (project != null) {
           controller.add(
             PhoneProject(
               name: path.substring(path.lastIndexOf('/') + 1),
-              path: path,
+              path: reportAs == null
+                  ? path
+                  : '$reportAs${path.substring(root.length)}',
               kind: project.kind,
               hasGit: project.git,
             ),
@@ -249,7 +335,10 @@ class PhoneProjectScanner {
       folders.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
       for (final folder in folders) {
         final name = folder.substring(folder.lastIndexOf('/') + 1);
-        if (name.startsWith('.') || skipped.contains(name)) continue;
+        if (name.startsWith('.')) continue;
+        if (skipped.contains(name) && !(childrenAreProjects && depth == 0)) {
+          continue;
+        }
         queue.add((folder, depth + 1));
       }
     }
