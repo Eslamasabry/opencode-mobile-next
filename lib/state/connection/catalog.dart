@@ -139,6 +139,23 @@ mixin _ConnectionControllerCatalog on ChangeNotifier {
   /// which invalidation it already reflects.
   DateTime? _catalogLoadedAt;
   String? _catalogLoadedKey;
+
+  /// What a screen opening may reuse: the last finished load, its server and
+  /// folder, and the invalidations it reflected. Unlike [_catalogLoadedKey]
+  /// this survives a folder re-select or a wake rebuild, so Settings or a
+  /// picker opened moments after connect does not read `/provider` again.
+  DateTime? _catalogReuseAt;
+  String? _catalogReuseKey;
+  int _catalogReuseInvalidations = -1;
+
+  // ---- OpenCode 1 answers "not found" to every `/api/...` (v2) endpoint ----
+  //
+  // Each probe cost 0.35-0.75 s on a phone-hosted server and was repeated on
+  // every refresh. The first not-found for a family (permission, question,
+  // catalog) is remembered for this connection; a reconnect or another server
+  // asks again. Opening another folder keeps the memory: same server.
+  final Set<String> _v2Absent = {};
+  String? _v2AbsentScope;
   int _catalogInvalidations = 0;
   int _catalogLoadedInvalidations = 0;
 }
@@ -147,7 +164,71 @@ mixin _ConnectionControllerCatalog on ChangeNotifier {
 /// Past it the next reader refreshes it behind the list already shown.
 const catalogFreshFor = Duration(minutes: 10);
 
+/// A screen that opens (Settings, a picker) reuses a catalog read this
+/// recently for the same server and folder, whatever rebuilt the transport
+/// in between. Change events and Reload still read it again at once.
+const catalogReuseWindow = Duration(seconds: 60);
+
 extension _ConnectionControllerCatalogImpl on ConnectionController {
+  String? get _v2Scope {
+    final owner = _connectedProfile;
+    return owner == null ? null : '${owner.id}\n${owner.baseUrl}';
+  }
+
+  /// True while the v2 variant of [family] is worth asking for.
+  bool _v2Probe(String family) {
+    final scope = _v2Scope;
+    if (_v2AbsentScope != scope) {
+      _v2Absent.clear();
+      _v2AbsentScope = scope;
+    }
+    return !_v2Absent.contains(family);
+  }
+
+  /// Remembers a "not found" (or "method not allowed") from the v2 variant.
+  void _v2Failed(String family, Object error) {
+    if (_v2NotFound(error)) {
+      _v2AbsentScope = _v2Scope;
+      _v2Absent.add(family);
+    }
+  }
+
+  void _v2Reset() {
+    _v2Absent.clear();
+    _v2AbsentScope = null;
+  }
+
+  static bool _v2NotFound(Object error) {
+    bool missing(int? status) => status == 404 || status == 405;
+    if (error is ProductException) {
+      final cause = error.cause;
+      return cause != null && _v2NotFound(cause);
+    }
+    if (error is ApiException) return missing(error.statusCode);
+    if (error is sdk.OpenCodeApiException) return missing(error.statusCode);
+    try {
+      final response = (error as dynamic).response;
+      final status = response?.statusCode;
+      return status is int && missing(status);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// True when a screen opening can reuse the shown catalog: it was read in
+  /// the last [catalogReuseWindow] for this server and folder and no change
+  /// event or manual reload has invalidated it since.
+  bool get _catalogRecent {
+    final at = _catalogReuseAt;
+    return catalog != null &&
+        catalogError == null &&
+        at != null &&
+        _catalogReuseKey != null &&
+        _catalogReuseKey == _catalogScopeKey &&
+        _catalogReuseInvalidations == _catalogInvalidations &&
+        clock.now().difference(at) < catalogReuseWindow;
+  }
+
   /// Which server and folder a catalog answer belongs to.
   String? get _catalogScopeKey {
     final owner = _connectedProfile;
@@ -185,7 +266,7 @@ extension _ConnectionControllerCatalogImpl on ConnectionController {
   Future<void> _ensureCatalog() {
     final running = _currentCatalogLoad;
     if (running != null) return running;
-    if (_catalogFresh) return Future<void>.value();
+    if (_catalogFresh || _catalogRecent) return Future<void>.value();
     return _startCatalogLoad(announce: catalog == null);
   }
 
@@ -284,10 +365,11 @@ extension _ConnectionControllerCatalogImpl on ConnectionController {
     if (announce || hadError) _notifyListeners();
     try {
       Future<CatalogSnapshot?> loadDetailedCatalog() async {
-        if (currentRepository == null) return null;
+        if (currentRepository == null || !_v2Probe('catalog')) return null;
         try {
           return await currentRepository.loadCatalog();
-        } catch (_) {
+        } catch (error) {
+          _v2Failed('catalog', error);
           return null;
         }
       }
@@ -664,6 +746,9 @@ extension _ConnectionControllerCatalogImpl on ConnectionController {
       _catalogLoadedAt = clock.now();
       _catalogLoadedKey = scope;
       _catalogLoadedInvalidations = invalidations;
+      _catalogReuseAt = clock.now();
+      _catalogReuseKey = scope;
+      _catalogReuseInvalidations = invalidations;
       _notifyListeners();
     } catch (error) {
       if (!_isCurrentCatalogRefresh(

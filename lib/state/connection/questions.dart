@@ -127,7 +127,7 @@ extension _ConnectionControllerQuestionsImpl on ConnectionController {
         }
       }(),
       () async {
-        if (currentApi == null) return;
+        if (currentApi == null || !_v2Probe('question')) return;
         try {
           final raw = await currentApi.pendingQuestionsV2();
           v2 = raw
@@ -139,6 +139,7 @@ extension _ConnectionControllerQuestionsImpl on ConnectionController {
               .toList();
         } catch (error) {
           v2Error = error;
+          _v2Failed('question', error);
         }
       }(),
     ]);

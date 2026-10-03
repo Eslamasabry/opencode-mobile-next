@@ -559,10 +559,12 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
         }
       }(),
       () async {
+        if (!_v2Probe('permission')) return;
         try {
           v2 = await currentApi.pendingPermissionsV2();
         } catch (error) {
           v2Error = error;
+          _v2Failed('permission', error);
         }
       }(),
     ]);
