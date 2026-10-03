@@ -257,9 +257,11 @@ void main() {
     expect(controller.opened, ['/root/projects/work']);
   });
 
-  testWidgets('a new project is made in the folder shown', (tester) async {
+  testWidgets('a new project is named in a dialog and made in the folder '
+      'shown', (tester) async {
     await openSheet(tester);
     await tapKey(tester, 'folder-browse-work');
+    await tapKey(tester, 'phone-new-folder');
     expect(
       // The path is isolated left to right inside the sentence.
       find.text(
@@ -269,36 +271,21 @@ void main() {
       findsOneWidget,
     );
     await tester.enterText(
-      find.byKey(const ValueKey('in-app-new-project-name')),
+      find.byKey(const ValueKey('phone-new-folder-name')),
       'cli',
     );
-    await tapKey(tester, 'in-app-new-project-create');
+    await tapKey(tester, 'phone-new-folder-create');
     expect(linux.created, ['/root/projects/work/cli']);
     expect(result, '/root/projects/work/cli');
     expect(controller.opened, ['/root/projects/work/cli']);
   });
 
-  testWidgets('with the keyboard up the name field keeps its focus', (
-    tester,
-  ) async {
+  testWidgets('the sheet has two blocks: Place and Folders', (tester) async {
     await openSheet(tester);
-    final name = find.byKey(const ValueKey('in-app-new-project-name'));
-    await tester.ensureVisible(name);
-    await tester.showKeyboard(name);
-    await tester.pump();
-    tester.view.viewInsets = const FakeViewPadding(bottom: 320);
-    addTearDown(tester.view.resetViewInsets);
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    // The folders step aside for the field.
-    expect(find.byKey(const ValueKey('folder-browser-list')), findsNothing);
-    final editable = tester.state<EditableTextState>(
-      find.descendant(of: name, matching: find.byType(EditableText)),
-    );
-    expect(editable.widget.focusNode.hasFocus, isTrue);
-    await tester.enterText(name, 'fresh');
-    await tapKey(tester, 'in-app-new-project-create');
-    expect(linux.created, ['/root/projects/fresh']);
+    expect(find.text('Place'), findsOneWidget);
+    expect(find.text('Folders'), findsOneWidget);
+    expect(find.text('New project'), findsNothing);
+    expect(find.byKey(const ValueKey('in-app-new-project-name')), findsNothing);
   });
 
   testWidgets('the home folder and / are never offered as a project', (
@@ -319,11 +306,12 @@ void main() {
     expect(shownPath(tester), '/root');
     // A new project named after a home folder is refused too.
     await tapKey(tester, 'folder-browser-up');
+    await tapKey(tester, 'phone-new-folder');
     await tester.enterText(
-      find.byKey(const ValueKey('in-app-new-project-name')),
+      find.byKey(const ValueKey('phone-new-folder-name')),
       'root',
     );
-    await tapKey(tester, 'in-app-new-project-create');
+    await tapKey(tester, 'phone-new-folder-create');
     expect(find.textContaining('home folder'), findsWidgets);
     expect(controller.opened, isEmpty);
     expect(result, isNull);

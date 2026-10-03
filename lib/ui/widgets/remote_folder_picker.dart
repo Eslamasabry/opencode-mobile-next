@@ -112,32 +112,42 @@ class _RemoteFolderSheetState extends State<RemoteFolderSheet> {
     KitSheet.close<String>(context, path);
   }
 
-  List<Widget> _rows(
-    BuildContext context,
-    String label,
-    List<String> paths,
-    String keyPrefix,
-    IconData icon,
-  ) => [
-    KitSectionLabel(label, margin: EdgeInsets.zero, gapBefore: 0),
-    KitRowGroup(
-      margin: EdgeInsetsDirectional.only(bottom: KitTokens.of(context).space3),
-      children: [
-        for (final (index, path) in paths.indexed)
-          KitRow(
-            key: ValueKey('$keyPrefix-$index'),
-            leading: KitRow.icon(context, icon),
-            title: path.substring(path.lastIndexOf('/') + 1),
-            supporting: TextSpan(
-              text: KitBidi.ltr(path),
-              style: KitText.styleFor(KitTextRole.mono),
+  /// Block one: recent folders, then the server's projects, on one panel.
+  List<Widget> _rows(BuildContext context, AppLocalizations l10n) {
+    final rows = <(String, String, IconData)>[
+      for (final (index, path) in widget.recent.indexed)
+        (path, 'remote-recent-$index', AppIconography.history),
+      for (final (index, path) in _known.indexed)
+        (path, 'remote-project-$index', AppIconography.projects),
+    ];
+    if (rows.isEmpty) return const [];
+    return [
+      KitSectionLabel(
+        l10n.folderBrowserFoldersLabel,
+        margin: EdgeInsets.zero,
+        gapBefore: 0,
+      ),
+      KitRowGroup(
+        margin: EdgeInsetsDirectional.only(
+          bottom: KitTokens.of(context).space4,
+        ),
+        children: [
+          for (final (path, key, icon) in rows)
+            KitRow(
+              key: ValueKey(key),
+              leading: KitRow.icon(context, icon),
+              title: path.substring(path.lastIndexOf('/') + 1),
+              supporting: TextSpan(
+                text: KitBidi.ltr(path),
+                style: KitText.styleFor(KitTextRole.mono),
+              ),
+              trailing: const KitChevron(),
+              onTap: () => KitSheet.close<String>(context, path),
             ),
-            trailing: const KitChevron(),
-            onTap: () => KitSheet.close<String>(context, path),
-          ),
-      ],
-    ),
-  ];
+        ],
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,22 +176,7 @@ class _RemoteFolderSheetState extends State<RemoteFolderSheet> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (widget.recent.isNotEmpty)
-                  ..._rows(
-                    context,
-                    l10n.remoteFolderRecent,
-                    widget.recent,
-                    'remote-recent',
-                    AppIconography.history,
-                  ),
-                if (_known.isNotEmpty)
-                  ..._rows(
-                    context,
-                    l10n.remoteFolderProjects,
-                    _known,
-                    'remote-project',
-                    AppIconography.projects,
-                  ),
+                ..._rows(context, l10n),
                 KitField(
                   fieldKey: const ValueKey('open-folder-path'),
                   controller: _path,

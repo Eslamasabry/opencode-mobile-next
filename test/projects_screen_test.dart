@@ -1305,22 +1305,24 @@ void main() {
     testWidgets('a new project needs only a safe name', (tester) async {
       await openSheet(tester);
       expect(find.textContaining('No projects yet'), findsOneWidget);
+      await _tapAction(tester, 'phone-new-folder');
+      await tester.pumpAndSettle();
       for (final bad in const ['', '../etc', 'a/b', '.hidden']) {
         await tester.enterText(
-          find.byKey(const ValueKey('in-app-new-project-name')),
+          find.byKey(const ValueKey('phone-new-folder-name')),
           bad,
         );
-        await _tapAction(tester, 'in-app-new-project-create');
+        await _tapAction(tester, 'phone-new-folder-create');
         await tester.pumpAndSettle();
         expect(linux.created, isEmpty, reason: bad);
         expect(find.text('Open a project'), findsOneWidget, reason: bad);
       }
 
       await tester.enterText(
-        find.byKey(const ValueKey('in-app-new-project-name')),
+        find.byKey(const ValueKey('phone-new-folder-name')),
         'hello',
       );
-      await _tapAction(tester, 'in-app-new-project-create');
+      await _tapAction(tester, 'phone-new-folder-create');
       await tester.pumpAndSettle();
       expect(linux.created, ['/root/projects/hello']);
       expect(
@@ -1336,11 +1338,13 @@ void main() {
     testWidgets('a name that already exists just opens it', (tester) async {
       linux.projects.add('hello');
       await openSheet(tester);
+      await _tapAction(tester, 'phone-new-folder');
+      await tester.pumpAndSettle();
       await tester.enterText(
-        find.byKey(const ValueKey('in-app-new-project-name')),
+        find.byKey(const ValueKey('phone-new-folder-name')),
         'hello',
       );
-      await _tapAction(tester, 'in-app-new-project-create');
+      await _tapAction(tester, 'phone-new-folder-create');
       await tester.pumpAndSettle();
       expect(linux.created, isEmpty);
       expect(controller.folderEvents, ['open:/root/projects/hello']);

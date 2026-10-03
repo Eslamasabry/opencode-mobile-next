@@ -12211,7 +12211,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get folderBrowserProjectsHere =>
-      'Your projects live here. Tap one to open it, or make a new one below.';
+      'Your projects live here. Tap one to open it, or start a new one.';
 
   @override
   String get folderBrowserHomeHere =>
@@ -12221,7 +12221,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get folderBrowserNoProjectsTitle => 'No projects yet';
 
   @override
-  String get folderBrowserNoProjectsBody => 'Name one below to make it here.';
+  String get folderBrowserNoProjectsBody => 'Start one to make it here.';
 
   @override
   String get folderBrowserEmptyTitle => 'No folders in here';
@@ -26545,20 +26545,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kitToolRetry => 'Try again';
 
   @override
-  String get folderBrowserPlaceLabel => 'Where to look';
+  String get folderBrowserPlaceLabel => 'Place';
 
   @override
   String get folderBrowserPlaceProjects => 'Project space';
 
   @override
-  String get folderBrowserPlacePhone => 'This phone’s storage';
-
-  @override
-  String get folderBrowserPhoneRefusedTitle => 'Phone storage is off';
-
-  @override
-  String get folderBrowserPhoneRefusedBody =>
-      'Folders on this phone can’t be shown until you allow access. The project space works as before.';
+  String get folderBrowserPlacePhone => 'This phone';
 
   @override
   String get folderBrowserInternalStorage => 'Internal storage';
@@ -26578,12 +26571,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get folderBrowserNewFolderHere => 'New folder here';
-
-  @override
-  String get folderBrowserNewFolderTitle => 'New folder';
-
-  @override
   String get folderBrowserEmptyPhoneBody =>
       'Open it, make a new folder in it, or go up one level.';
 
@@ -26592,4 +26579,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get remoteFolderProjects => 'Projects on this server';
+
+  @override
+  String get folderBrowserNewProjectHere => 'New project here';
+
+  @override
+  String get folderBrowserFoldersLabel => 'Folders';
+
+  @override
+  String get folderBrowserPhoneRefused =>
+      'Phone storage is off. Allow access to look here.';
 }

@@ -20121,7 +20121,7 @@ abstract class AppLocalizations {
   /// Shown in place of the Open button while the browser shows the projects folder itself
   ///
   /// In en, this message translates to:
-  /// **'Your projects live here. Tap one to open it, or make a new one below.'**
+  /// **'Your projects live here. Tap one to open it, or start a new one.'**
   String get folderBrowserProjectsHere;
 
   /// Shown in place of the Open button while the browser shows the home folder or /
@@ -20139,7 +20139,7 @@ abstract class AppLocalizations {
   /// Empty state body of the projects folder
   ///
   /// In en, this message translates to:
-  /// **'Name one below to make it here.'**
+  /// **'Start one to make it here.'**
   String get folderBrowserNoProjectsBody;
 
   /// Empty state title of a folder with no folders inside
@@ -41878,7 +41878,7 @@ abstract class AppLocalizations {
   /// Section label above the folder browser's place switch
   ///
   /// In en, this message translates to:
-  /// **'Where to look'**
+  /// **'Place'**
   String get folderBrowserPlaceLabel;
 
   /// Folder browser place: the app's project space
@@ -41890,20 +41890,8 @@ abstract class AppLocalizations {
   /// Folder browser place: the phone's internal storage
   ///
   /// In en, this message translates to:
-  /// **'This phone’s storage'**
+  /// **'This phone'**
   String get folderBrowserPlacePhone;
-
-  /// Notice in the folder browser after All files access was not allowed
-  ///
-  /// In en, this message translates to:
-  /// **'Phone storage is off'**
-  String get folderBrowserPhoneRefusedTitle;
-
-  /// Body of the notice after All files access was not allowed
-  ///
-  /// In en, this message translates to:
-  /// **'Folders on this phone can’t be shown until you allow access. The project space works as before.'**
-  String get folderBrowserPhoneRefusedBody;
 
   /// Root of the phone-storage breadcrumb
   ///
@@ -41935,18 +41923,6 @@ abstract class AppLocalizations {
   /// **'{names}, {count} more'**
   String folderBrowserHintMore(String names, int count);
 
-  /// Secondary button of the phone-storage browser
-  ///
-  /// In en, this message translates to:
-  /// **'New folder here'**
-  String get folderBrowserNewFolderHere;
-
-  /// Title of the dialog that names a new folder in phone storage
-  ///
-  /// In en, this message translates to:
-  /// **'New folder'**
-  String get folderBrowserNewFolderTitle;
-
   /// Empty-state body of an empty phone-storage folder
   ///
   /// In en, this message translates to:
@@ -41964,6 +41940,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Projects on this server'**
   String get remoteFolderProjects;
+
+  /// Secondary button of the folder browser: names a new project in the folder shown
+  ///
+  /// In en, this message translates to:
+  /// **'New project here'**
+  String get folderBrowserNewProjectHere;
+
+  /// Section label over the folder list of the folder browser and remote folder sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Folders'**
+  String get folderBrowserFoldersLabel;
+
+  /// One line in the folder browser after All files access was not allowed
+  ///
+  /// In en, this message translates to:
+  /// **'Phone storage is off. Allow access to look here.'**
+  String get folderBrowserPhoneRefused;
 }
 
 class _AppLocalizationsDelegate
