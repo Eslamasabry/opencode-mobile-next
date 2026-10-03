@@ -1,25 +1,33 @@
 # ACP through private Paseo: frontend contract
 
-Date: 2026-10-02. Backend/domain: Codex. Kit UI/localization: Claude.
-Owner decisions: existing private Paseo; only verified resumable agents; provider
-sign-in on the computer. No new server type or provider credential form.
+Date: 2026-10-03 (owner policy supersedes 2026-10-02). Backend/domain: Codex. Kit UI/localization: Claude.
+Owner decisions: existing private Paseo; **don't hide unverified-restoration
+agents**; provider sign-in stays host-managed. No new server type or provider
+credential form. Missing install/sign-in still blocks sending.
 
-## Implemented status and hard limit
+## Implemented status and restoration limit
 
-Discovery and safe permission handling are callable. **No new pilot agent is
-selectable at Paseo 0.9.2.** Its provider snapshot does not carry negotiated ACP
-`loadSession`, list/load support or structured authentication state. `ready`
-means catalog discovery, not verified sign-in/restoration. Agent snapshot
-`supportsSessionPersistence` and `supportsSessionListing` are hardcoded in the
-ACP adapter. Do not turn any of these into a Ready badge. Extra undeclared
-snapshot fields are ignored. See [source evidence](../verification/acp-paseo-pilot-2026-10-02.md).
+Host-ready/enabled providers are shown and selectable for NEW chats, including
+ACP and future configured providers. Keep `resumeSupport=unknown` where the host
+does not prove restoration, and show **"Can't reopen old chats"**. On reopening,
+show **"Starts a new chat"** before the explicit new-chat action. No silent
+fallback, original-row ID reuse, last-prompt replay or automatic replacement.
 
-Gemini, omp, `omp-acp` and fx are recognized candidate IDs when the host reports
-them. The catalog does not invent installation rows for missing providers.
-Built-in omp is RPC, not ACP. It needs a separately reviewed native-route
-exception or a distinct ACP registration; `omp` is a reserved built-in ID.
-Existing supported Paseo routes continue through their existing picker. Discovery
-contains those rows too; `notPilot` refers only to this new preview.
+Paseo 0.9.2 snapshots do not expose negotiated ACP `loadSession`, list/load or
+structured auth state. `ready` permits a new-chat attempt; it does not establish
+`loginState=ready` or restoration. Generic session persistence/listing flags and
+extra undeclared fields are not proof. Known auth-required errors disable the
+agent; error, disabled, absent and loading providers cannot send through either
+picker or direct calls. See [source evidence](../verification/acp-paseo-pilot-2026-10-02.md)
+for the protocol limits; its old resume-only product policy is superseded here.
+
+Gemini, omp/omp-acp, fx and other safe IDs reported by the host use that same rule.
+Built-in omp is RPC, not ACP; omp-acp is a separate registration. Commands remain
+host-owned data, never shell fragments constructed by UI. Distinct custom ACP
+IDs are supported; custom registrations cannot override the existing native
+provider identities. Discovery does not
+invent installation rows for absent remote providers. The phone catalog has its
+own pinned setup/sign-in/readiness gates: [phone contract](agents-frontend-contract.md).
 
 ## Domain API and gates
 
@@ -50,19 +58,18 @@ not executable commands. Do not replace these fields with host labels/errors.
 
 | State/reason | Required row presentation |
 |---|---|
-| `ready` and `selectable=true` | “Ready”; selectable. Currently no pilot row can reach this. |
-| `checking` | “Checking your computer.”; disabled. |
-| `needsHostSignIn` | “Sign in on your computer first.”; disabled. Requires verified restoration support; currently not emitted by the pin. |
-| `hidden/resumeUnverified` | “Conversation restoration has not been checked.”; absent from picker, visible in unavailable-agent explanations. |
-| `hidden/resumeUnsupported` | “This agent cannot restore a conversation.”; absent from picker. |
-| `hidden/unavailable` | “This agent is not available on your computer.”; absent from picker. |
-| `hidden/disabled` | “This agent is turned off on your computer.”; absent from picker. |
-| `hidden/notPilot` | “This agent is not available in this preview.”; refers to the ACP preview, not the existing native picker. |
+| `ready` and `selectable=true` | Selectable for a new chat; show `resumeLabel` if restoration is unverified. Do not display "Signed in" for unknown login state. |
+| `checking` | "Checking your computer."; disabled. |
+| `needsHostSignIn` | "Sign in on your computer first."; disabled even when restoration is unknown. |
+| `hidden/unavailable` | "This agent is not available on your computer."; cannot send. |
+| `hidden/disabled` | "This agent is turned off on your computer."; cannot send. |
 
-An auth-required catalog error is reduced to
-`loginState=needsHostSignIn`. Because resume proof is still missing, the row
-remains hidden/resumeUnverified. Show both the restoration reason and the
-host-sign-in instruction. Other raw errors produce `unknown`, never “Signed in”.
+`resumeVerified` stays false for unknown/unsupported restoration;
+`resumeLabel="Can't reopen old chats"` and `resumeNote="Starts a new chat"` are
+plain app-authored data. Neither fact hides or disables an otherwise-ready agent.
+An auth-required error becomes `loginState=needsHostSignIn` and
+`availability=needsHostSignIn`. Raw errors never become UI text. Unknown login
+state remains unknown; a host-ready snapshot is not a fabricated signed-in fact.
 For Gemini show **“Sign in on your computer: run gemini there, then check again.”**
 Use `signInMessage`; place fixed `hostSignInCommand` under Details:
 Gemini `gemini`; omp/omp-acp `omp` followed by `/login` there; fx `fx login`.
@@ -104,28 +111,36 @@ standing grant. Existing non-ACP suggestions remain on their established path.
 
 ## Restart, reconnect and continuation wording
 
-For a reopened session call `HostAgentProviderGateway.loadHostAgentContinuation(sessionId)`.
-It returns `HostAgentContinuation` with `sessionId`, opaque `providerId`, `state`,
-`blocked` and fixed `reason`; do not parse a session title/model or inspect host
-handles. `existingRoute` means keep the existing gateway flow, not newly
-verified ACP restoration. `resumeUnverified` and `missingHandle` block sending.
-`missingHandle` already returns “This agent cannot reopen this conversation.
-Check it on your computer.” Project changes retire the lookup.
+For a reopened session call
+`HostAgentProviderGateway.loadHostAgentContinuation(sessionId)`.
+It returns scoped `sessionId`, `providerId`, `state`, `requiresNewChat`,
+`resumeNote` and fixed `reason`. `existingRoute` retains the established native
+flow; `liveSession` identifies a chat created on this connection, which can send
+without a restoration step. `resumeUnverified`/`missingHandle` mean an explicit
+new-chat action is needed to avoid the pinned host's possible fresh fallback.
+The legacy `blocked` getter refers only to silently continuing that old row;
+it does not block this agent's picker or new-chat admission.
 
-For the current pilot show **“Conversation restoration has not been checked.”**
-and disable starting/sending with that agent. Existing ACP conversations can
-be listed/read through Paseo but cannot send merely because their snapshot has
-generic persistence flags. If showing an existing candidate conversation,
-explain **“This conversation cannot continue until restoration is checked on
-your computer.”** Do not offer a replacement new conversation as continuation.
+Show **"Can't reopen old chats"** and **"Starts a new chat"** first. After the
+person explicitly chooses Start new chat, call
+`startNewHostAgentChat(oldId, newChatAcknowledged: true)`. It rechecks provider
+availability/sign-in failures and returns a DIFFERENT draft ID in the same
+project with the same agent. Open that draft before accepting/sending the new
+prompt. Refresh the scoped feed and retain both old/new route identities.
+Passing false throws `newChatRequired` without mutation. Dismissal does
+nothing; the old chat remains readable. Never auto-call this on failure/Resume,
+resend an old prompt, relabel an old conversation as new, or queue the action.
 
-After a future verified host extension, the required behavior is load the same
-native session handle before sending; list+load is also acceptable. Missing
-handles or load failure must keep sending unavailable, with **“This agent
-cannot reopen this conversation. Check it on your computer.”** This future
-behavior is not enabled by this slice. The pinned daemon's send path normally
-loads persisted agents internally, but can create a fresh session if no handle
-exists; the pilot dispatch gate currently prevents reaching either branch.
+New ACP chats can send and continue while live on the current connection. A
+reopened ACP row cannot take the daemon's send path merely because generic
+persistence flags/handle exist: that path can silently start fresh when load is
+unsupported. A missing native handle also requires that explicit action. Direct sending then returns `PaseoFailureKind.newChatRequired`
+with fixed copy; it does not create a replacement. The controller translates
+this failure back to the domain continuation warning; kit UI never imports
+Paseo transport/failure types. Disconnect, scope change,
+retirement and error/closed snapshots retire live admission. A future verified
+load path must retain the original handle; failed/missing load requires the
+same explicit new-chat acknowledgement before replacement.
 
 On disconnect use “Connection lost”. On uncertain mutation delivery use the
 existing gateway message: “Delivery is uncertain. Refresh the conversation
@@ -141,7 +156,7 @@ or deletion hooks. Any later preference uses `oc.<what>.<profileId>` and registe
 its deletion. Links originating outside the app still use `openExternalLink`.
 
 Claude acceptance: kit-only rows/cards, capability-gated unavailable reasons,
-English/Arabic copy, accessibility/RTL, no credentials/logs in Details, and no
-selectable pilot until host evidence exists. Backend fake transcripts verify
+English/Arabic copy, accessibility/RTL, no credentials/logs in Details, and selectable host-ready agents with restoration labels and explicit
+new-chat acknowledgement on resume. Backend fake transcripts verify
 admission and permission safety; they do not prove a live resumable Gemini/omp/fx
 journey. The coordinator owns the integration/full-suite gate.

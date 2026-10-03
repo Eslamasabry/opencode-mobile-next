@@ -2,6 +2,7 @@ import 'agent_catalog.dart';
 import 'agent_sign_in.dart';
 import 'server_gateway/capabilities.dart';
 
+/// Legacy hide callers also show labelled agents under the owner's new rule.
 enum UnverifiedResumePolicy { hide, label }
 
 enum PhoneAgentStatus {
@@ -83,6 +84,7 @@ final class AgentRow {
     this.fixAction,
     this.hiddenReason,
     this.resumeLabel,
+    this.resumeNote,
     this.resetAt,
   });
 
@@ -101,6 +103,7 @@ final class AgentRow {
   /// Explains why the agent is absent from chat selection, not setup inventory.
   final PhoneAgentHiddenReason? hiddenReason;
   final String? resumeLabel;
+  final String? resumeNote;
   final DateTime? resetAt;
 }
 
@@ -126,7 +129,7 @@ AgentRow buildAgentRow({
   required AgentArchitecture architecture,
   required ServerCapabilities serverCapabilities,
   PhoneAgentRuntime? runtime,
-  UnverifiedResumePolicy unverifiedResumePolicy = UnverifiedResumePolicy.hide,
+  UnverifiedResumePolicy unverifiedResumePolicy = UnverifiedResumePolicy.label,
 }) {
   final fact = runtime?.agentId == descriptor.id ? runtime : null;
   final installable = descriptor.installableOn(architecture);
@@ -151,6 +154,12 @@ AgentRow buildAgentRow({
     installable: installable,
     capabilities: noProof,
     hiddenReason: reason,
+    resumeLabel: fact?.capabilities.resumeVerified == true
+        ? null
+        : agentResumeUnverifiedLabel,
+    resumeNote: fact?.capabilities.resumeVerified == true
+        ? null
+        : agentStartsNewChatNote,
     resetAt: status == PhoneAgentStatus.limitReached ? fact?.resetAt : null,
   );
 
@@ -245,25 +254,20 @@ AgentRow buildAgentRow({
     serverCapabilities: serverCapabilities,
   );
   final unverifiedResume = !capabilities.resumeVerified;
-  final visible =
-      !unverifiedResume ||
-      unverifiedResumePolicy == UnverifiedResumePolicy.label;
   return AgentRow._(
     id: descriptor.id,
     name: descriptor.name,
     iconKey: descriptor.iconKey,
     status: PhoneAgentStatus.ready,
     statusMessage: unverifiedResume
-        ? visible
-              ? 'New chats are available. Old chats cannot be reopened yet.'
-              : 'Continuing saved chats has not been checked yet.'
+        ? agentResumeUnverifiedLabel
         : 'Ready to use.',
     setupVisible: true,
-    chatVisible: visible,
-    chatSelectable: visible,
+    chatVisible: true,
+    chatSelectable: true,
     installable: installable,
     capabilities: capabilities,
-    hiddenReason: visible ? null : PhoneAgentHiddenReason.resumeUnverified,
-    resumeLabel: unverifiedResume ? 'Can’t reopen old chats' : null,
+    resumeLabel: unverifiedResume ? agentResumeUnverifiedLabel : null,
+    resumeNote: unverifiedResume ? agentStartsNewChatNote : null,
   );
 }

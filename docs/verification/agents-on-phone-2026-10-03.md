@@ -1,5 +1,10 @@
 # Agents on phone — C5 backend verification
 
+> Policy update 2026-10-03: resume-only admission is superseded. Unverified agents
+> are shown and selectable for new chats after install/sign-in gates; reopening
+> requires the explicit "Starts a new chat" acknowledgement. Historical checks
+> below describe their original candidate. See the current frontend contracts.
+
 Branch `codex/agents-on-phone`, base `ff04beb6`; 2026-10-03.
 Finish line: callable pinned phone-agent setup, private Claude subscription login,
 safe runtime rows and one merged chat-feed contract ready for Claude's controller/UI.
@@ -61,3 +66,16 @@ draft provider identity, merge scoped feed sources and keep route identity.
 Before deletion/reset: close auth, cancel owned setup, stop/dispose host and
 close feeds; then ProfileStore drains native home and sweeps profile keys.
 Detailed UI/copy/qualification contract: [agents frontend contract](../design/agents-frontend-contract.md).
+
+## Owner policy amendment — 2026-10-03
+
+Unverified restoration no longer hides or blocks new chats. Catalog/phone/host
+rows keep false resume proof, "Can't reopen old chats" and "Starts a new chat".
+Install/sign-in/readiness and native-provider identity guards remain. Reopened
+ACP or missing-handle rows require explicit acknowledgement and a different
+new draft ID; current live chats continue, and disconnect retires that admission.
+Both frontend contracts specify the controller/UI action; no UI or connection
+files were edited. Nine focused files/130 tests pass on this amendment candidate,
+including size/architecture gates; pinned whole-repository analysis is clean.
+Local transcript: `build/traycer/c5-policy-focused.log`. This is fake verification,
+not new physical-device, account, session-load, deployment or release proof.

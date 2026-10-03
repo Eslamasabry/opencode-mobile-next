@@ -12,6 +12,9 @@ enum AgentSignInMethod { browserOAuthHost, apiKeyHost, none }
 
 enum AgentAvailability { available, limited, hidden }
 
+const agentResumeUnverifiedLabel = "Can't reopen old chats";
+const agentStartsNewChatNote = 'Starts a new chat';
+
 enum AgentUnavailableReason {
   recipeUnverified,
   dependencyClosureUnverified,
@@ -174,6 +177,11 @@ final class AgentDescriptor {
   final String? limitation;
   final String? resumeReason;
 
+  String? get resumeLabel =>
+      capabilities.resumeVerified ? null : agentResumeUnverifiedLabel;
+  String? get resumeNote =>
+      capabilities.resumeVerified ? null : agentStartsNewChatNote;
+
   AgentArtifact? artifactFor(AgentArchitecture architecture) =>
       recipe?.artifacts[architecture];
 
@@ -242,7 +250,7 @@ AgentCatalog _builtInCatalog() {
     signInMethod: signIn,
     recipe: recipe,
     limitation: limitation ?? 'Needs a check on your phone before use.',
-    resumeReason: 'Continuing saved conversations still needs a host check.',
+    resumeReason: agentResumeUnverifiedLabel,
   );
 
   const github = 'https://github.com';

@@ -1,5 +1,10 @@
 # ACP Paseo pilot evidence — 2026-10-02
 
+> Policy update 2026-10-03: resume-only admission is superseded. Unverified agents
+> are shown and selectable for new chats after install/sign-in gates; reopening
+> requires the explicit "Starts a new chat" acknowledgement. Historical checks
+> below describe their original candidate. See the current frontend contracts.
+
 Branch base: `codex/acp-paseo-pilot`, `071a76f1`. Install pin is 0.9.2 in
 `lib/termux/scripts/local_agents_script.dart`; historical gateway comments refer
 to 0.8.0. No daemon config/login/install or public relay was used for this slice.

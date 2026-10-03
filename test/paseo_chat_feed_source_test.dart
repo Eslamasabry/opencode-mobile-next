@@ -221,7 +221,7 @@ void main() {
         },
       );
       await expectLater(
-        source.startAgentChatIn(_directory, agentId: 'gemini'),
+        source.startAgentChatIn(_directory, agentId: 'not-reported'),
         throwsA(isA<ProductException>()),
       );
       await expectLater(

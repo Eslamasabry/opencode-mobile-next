@@ -43,6 +43,8 @@ void main() {
     expect(entry.installableOn(AgentArchitecture.arm64), isTrue);
     expect(entry.installableOn(AgentArchitecture.x64), isFalse);
     expect(entry.capabilities.resumeVerified, isFalse);
+    expect(entry.resumeLabel, "Can't reopen old chats");
+    expect(entry.resumeNote, 'Starts a new chat');
     expect(entry.capabilities.modelList, isFalse);
     expect(entry.capabilities.permissions, isFalse);
     expect(entry.capabilities.images, isFalse);

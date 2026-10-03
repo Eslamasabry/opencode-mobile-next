@@ -39,6 +39,7 @@ class PaseoGateway
   final _statuses = <String, String>{};
   final _drafts = <String>{};
   final _draftProviders = <String, String>{};
+  final _liveAgentSessions = <String>{};
   final _uncertain = <String>{};
 
   /// Sessions whose prompt was accepted but whose turn has not started. The
@@ -90,6 +91,7 @@ class PaseoGateway
        _directory = directory {
     _daemonEvents = transport.events.listen(_onEvent);
     _daemonDisconnects = transport.disconnects.listen((_) {
+      _liveAgentSessions.clear();
       _providerEntries = null;
       _providerRevision++;
       for (final id in _permissions.keys.toList()) {
@@ -144,6 +146,7 @@ class PaseoGateway
     _statuses.clear();
     _drafts.clear();
     _draftProviders.clear();
+    _liveAgentSessions.clear();
     _uncertain.clear();
     _awaitingTurn.clear();
     _turnActive.clear();
@@ -271,7 +274,7 @@ class PaseoGateway
   /// Keeps the agent chip selection through an empty draft's first prompt.
   /// Availability is rechecked against the daemon when that prompt is sent.
   void seedDraftProviderForSession(String sessionID, String providerId) {
-    if (!_drafts.contains(sessionID) || !isExistingPaseoProvider(providerId)) {
+    if (!_drafts.contains(sessionID) || !isPaseoProviderId(providerId)) {
       throw PaseoFailure(PaseoFailureKind.unavailable);
     }
     _draftProviders[sessionID] = providerId;
@@ -409,15 +412,20 @@ class PaseoGateway
       } else {
         if (!_agents.containsKey(sessionID)) await _fetchAgent(sessionID);
         final runtime = _agents[sessionID]?['provider'];
-        // v0.9.2 does not expose negotiated ACP loadSession proof. Never let
-        // a restored snapshot or a supplied model bypass resume-only admission.
-        if (!isExistingPaseoProvider(runtime)) {
+        if (runtime is! String) {
           throw PaseoFailure(PaseoFailureKind.unavailable);
         }
-        if (model != null && !isExistingPaseoProvider(model.providerID)) {
+        await _requireProviderAvailable(runtime);
+        _checkLocation(scope, epoch);
+        if (model != null && model.providerID != runtime) {
           throw PaseoFailure(PaseoFailureKind.unavailable);
         }
-        await _checkExistingProvider(runtime as String);
+        // A newly created/live session can continue without restoration proof.
+        // Reopened ACP rows need explicit new-chat acknowledgement: the pinned
+        // host may otherwise fall back to a fresh native session behind this ID.
+        if ((await loadHostAgentContinuation(sessionID)).requiresNewChat) {
+          throw PaseoFailure(PaseoFailureKind.newChatRequired);
+        }
         _checkLocation(scope, epoch);
         await _applySelection(sessionID, model: model, mode: agent);
         await transport.request(
@@ -641,12 +649,33 @@ class PaseoGateway
     return HostAgentContinuation(
       sessionId: sessionId,
       providerId: provider,
-      state: isExistingPaseoProvider(provider)
+      state: _liveAgentSessions.contains(sessionId)
+          ? HostAgentContinuationState.liveSession
+          : !intact
+          ? HostAgentContinuationState.missingHandle
+          : isExistingPaseoProvider(provider)
           ? HostAgentContinuationState.existingRoute
-          : intact
-          ? HostAgentContinuationState.resumeUnverified
-          : HostAgentContinuationState.missingHandle,
+          : HostAgentContinuationState.resumeUnverified,
     );
+  }
+
+  @override
+  Future<String> startNewHostAgentChat(
+    String sessionId, {
+    required bool newChatAcknowledged,
+  }) async {
+    if (!newChatAcknowledged) {
+      throw PaseoFailure(PaseoFailureKind.newChatRequired);
+    }
+    final scope = _scope;
+    final epoch = _locationEpoch;
+    final continuation = await loadHostAgentContinuation(sessionId);
+    await _requireProviderAvailable(continuation.providerId);
+    _checkLocation(scope, epoch);
+    final draft = await createSession();
+    _checkLocation(scope, epoch);
+    seedDraftProviderForSession(draft.id, continuation.providerId);
+    return draft.id;
   }
 
   @override
@@ -656,12 +685,7 @@ class PaseoGateway
     String? defaultModel;
     for (final entry in await _providers()) {
       final id = entry['provider'];
-      if (id is! String ||
-          !isExistingPaseoProvider(id) ||
-          entry['source'] == 'custom') {
-        continue;
-      }
-      if (entry['enabled'] == false || entry['status'] != 'ready') continue;
+      if (id is! String || !paseoProviderCanStart(entry)) continue;
       final modelIDs = <String>[];
       final modelData = <String, Map<String, dynamic>>{};
       String? providerDefault;
@@ -693,7 +717,7 @@ class PaseoGateway
       providers.add(
         ProviderInfo(
           id: id,
-          name: paseoProviderName(id),
+          name: paseoHostAgentName(id),
           modelIDs: modelIDs,
           modelData: modelData,
         ),
@@ -838,6 +862,7 @@ class PaseoGateway
     _statuses.clear();
     _drafts.clear();
     _draftProviders.clear();
+    _liveAgentSessions.clear();
     _uncertain.clear();
     _awaitingTurn.clear();
     _turnActive.clear();

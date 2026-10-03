@@ -27,10 +27,18 @@ Use `setupVisible` for the sheet inventory, including uninstalled candidates.
 Use `fixAction` to enter setup/check/sign-in/resume. `chatSelectable` governs
 committing a runtime for chat. `chatVisible` governs qualified chat choices,
 not the inventory: hiding uninstalled Claude would remove its Install journey.
-`hiddenReason` remains available for an explanation. The default resume policy
-is `hide`; `label` explicitly permits new chats with “Can’t reopen old chats”.
-The owner has not changed the earlier hide policy. Installation/self-test is
-available without silently granting chat admission.
+`hiddenReason` remains available for installation, host, qualification or sign-in
+failures. Owner decision 2026-10-03 replaces the earlier resume-only admission
+rule: every otherwise-ready agent is SHOWN and selectable even when
+`resumeVerified == false`. The default is `UnverifiedResumePolicy.label`; the
+legacy `hide` argument cannot hide an agent on restoration alone. Installation,
+phone qualification and sign-in still gate sending. Missing proof stays false.
+
+Show `resumeLabel`: **"Can't reopen old chats"** on unverified rows and
+`resumeNote`: **"Starts a new chat"** on the resume action. These are separate
+from setup/sign-in status. Before replacing an old conversation, the UI must
+show the note and wait for the person's explicit Start new chat action. Never
+silently create a replacement, reuse the old row's ID or replay its last prompt.
 
 Suggested localization keys (copy is app-authored; do not display host errors):
 
@@ -47,7 +55,9 @@ Suggested localization keys (copy is app-authored; do not display host errors):
 | `agentResumeAction` | Resume |
 | `agentPhoneCheckNeeded` | Run the phone check before using this agent |
 | `agentPhoneCheckAction` | Run phone check |
-| `agentResumeUnverified` | Can’t reopen old chats |
+| `agentResumeUnverified` | Can't reopen old chats |
+| `agentResumeStartsNew` | Starts a new chat |
+| `agentStartNewChatAction` | Start new chat |
 | `agentUnavailable` | This agent isn’t available here yet |
 | `agentPlanLimitReset` | `{agent} plan limit reached · resets {time}` |
 | `agentPlanLimitUnknown` | `{agent} plan limit reached · try again later` |
@@ -112,7 +122,7 @@ The app never requests or reads provider tokens, keys, email or account IDs.
 | `signedOut`, inspected | Sign in |
 | `urlReady` | Open the sign-in page; button passes `authorizationUrl.uri` to `openExternalLink` |
 | `awaitingCode` | Keep the same page; paste the browser's one-time code and Continue when `acceptsCode` |
-| `signedIn` | Signed in; return to the agent/chat journey after admission gates |
+| `signedIn` | Signed in; return to the agent/chat journey after install/sign-in gates |
 | `limitReached` | Use the limit copy above; no guessed reset |
 | `failed` | Plain retry/reason from `AgentSignInFailure`, never exception text |
 
@@ -161,12 +171,27 @@ default; no standing grant is synthesized. No choice means deny/cancel or keep
 blocked, never auto-approve. An unanswered request must not disappear just because
 cancel was acknowledged. See [ACP card contract](acp-frontend-contract.md).
 
-After Android stops the host, show “Stopped in the background · Resume”. Resume
-starts the same loopback daemon, rechecks sign-in, loads the existing session and
-refreshes scoped feed/status/permissions. It never resends the last prompt or
-creates a replacement chat. If restoration is unavailable, keep the original row
-with “This agent can’t reopen this chat yet”. Android's existing foreground-service
-timeout/stop policy still owns lifetime; no assumption of unlimited background work.
+After Android stops the host, show "Stopped in the background · Resume". Resume
+starts the same loopback daemon, rechecks sign-in and refreshes feed/status and
+permissions. Restoration proof controls reopening, not whether the agent can
+start a new chat. A verified route loads the existing session before sending. If the phone row
+still has `resumeVerified=false`, show the note even for `existingRoute`: that
+state is established protocol support, not fresh phone restoration proof.
+For an unverified/missing continuation, retain the old row and show
+**"Can't reopen old chats"** plus **"Starts a new chat"** before any mutation.
+Only after explicit Start new chat call
+`HostAgentProviderGateway.startNewHostAgentChat(oldId, newChatAcknowledged: true)`.
+It returns a new draft ID with the same provider/project; open that draft, then
+send only the person's newly submitted prompt. Refresh the scoped feed so the
+new row keeps its own source/agent/project routing and the old row stays intact. `false` refuses without creating
+or sending. Dismissal does nothing. Do not auto-call this API from Resume or a
+failed prompt, overwrite old routing, resend the last prompt, or queue the action.
+
+A live ACP chat created on the current connection can continue without resume
+proof. Disconnect, scope change, retirement or an error/closed snapshot removes
+that live admission. `newChatRequired` is safe data for the warning above, not an
+instruction to automatically retry on a new session. Android's existing service
+timeout/stop policy owns lifetime; background work is never unlimited.
 
 ## Controller hook and current qualification boundary
 
@@ -186,17 +211,22 @@ the existing preference sweep removes install/gate metadata. Shared binaries and
 projects survive. The clear-all-saved-sign-ins path also drains/erases phone
 agent homes; deleted native owners stay blocked until an app process restart.
 The controller must close clients and offer restarting the app after that reset,
-rather than retrying a deleted owner. Controller-supplied capability evidence must come from verified
-host operations, not catalog constants. A phone hello cannot authorize resume.
+rather than retrying a deleted owner. Controller-supplied capability evidence
+must come from verified host operations, not catalog constants. A phone hello cannot authorize resume.
+Keep all candidates visible; allow selection once install/sign-in and phone
+readiness gates pass, with the restoration label where proof is missing.
 
-Pinned Paseo 0.9.2 does not expose negotiated ACP `loadSession`/auth proof; the
-prior pilot intentionally blocks generic ACP dispatch. This branch registers
-candidate host commands and adds installation/login/feed groundwork; it does
-not widen that admission rule. Existing Claude/Codex native routes remain usable
-through their established adapter once the controller supplies their verified
-resume evidence. A future catalog entry supplies installation/config/discovery;
-a new browser vendor also needs an audited login handler, and an ACP provider
-still needs host resume evidence before selection.
+Pinned Paseo 0.9.2 does not expose negotiated ACP `loadSession`/auth proof.
+The new owner decision permits its host-ready providers to start new chats,
+including ACP and future configured providers; no restoration claim is made.
+The remote provider snapshot's `ready` status permits an attempt but does not
+become `loginState=signedIn`; known auth-required errors still disable sending.
+The phone row additionally requires the actual private sign-in state. Other
+vendors' phone sign-in handlers remain unavailable until qualified; this change
+only removes restoration as an admission prerequisite. A new browser vendor
+still needs an audited login handler. The controller must use the explicit
+resume/new-chat workflow above for old chats; it must never substitute a fresh
+session when load fails or proof is missing.
 
 ## Why the projects stay shared
 

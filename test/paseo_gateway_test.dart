@@ -91,6 +91,7 @@ Map<String, dynamic> agentJson(
 }) => {
   'id': id,
   'provider': 'claude',
+  'persistence': {'provider': 'claude', 'sessionId': 'native-$id'},
   'cwd': cwd,
   'model': 'claude-haiku-4-5',
   'title': 'Agent $id',

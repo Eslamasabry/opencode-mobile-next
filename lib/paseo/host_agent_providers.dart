@@ -3,14 +3,43 @@
 /// availability, generic persistence flags or undeclared wire fields.
 library;
 
+import '../domain/agent_catalog.dart';
 import '../domain/host_agent_providers.dart';
 import 'transport.dart';
 
 bool isExistingPaseoProvider(Object? id) =>
     const {'claude', 'codex', 'pi', 'opencode', 'copilot'}.contains(id);
 
-bool _safeId(Object? id) =>
+bool isPaseoProviderId(Object? id) =>
     id is String && RegExp(r'^[a-z][a-z0-9_-]{0,63}$').hasMatch(id);
+
+bool paseoProviderNeedsSignIn(Map<String, dynamic> entry) =>
+    entry['error'] is String &&
+    RegExp(
+      r'AuthRequired|Authentication required',
+      caseSensitive: false,
+    ).hasMatch(entry['error'] as String);
+
+bool paseoProviderCanStart(Map<String, dynamic> entry) =>
+    isPaseoProviderId(entry['provider']) &&
+    entry['enabled'] != false &&
+    entry['status'] == 'ready' &&
+    (entry['error'] == null || entry['error'] == '') &&
+    !(entry['source'] == 'custom' &&
+        isExistingPaseoProvider(entry['provider'])) &&
+    !paseoProviderNeedsSignIn(entry);
+
+String paseoHostAgentName(String id) {
+  for (final agent in AgentCatalog.builtIn.agents) {
+    if (agent.providerId == id) return agent.name;
+  }
+  return switch (id) {
+    'omp' => 'omp',
+    'copilot' => 'GitHub Copilot',
+    'pi' => 'Pi',
+    _ => 'Other host agent',
+  };
+}
 
 HostAgentProviderCatalog paseoHostAgentCatalog(
   List<Map<String, dynamic>> entries,
@@ -19,44 +48,29 @@ HostAgentProviderCatalog paseoHostAgentCatalog(
   final rows = <HostAgentProvider>[];
   for (final entry in entries) {
     final id = entry['provider'];
-    if (!_safeId(id) || !seen.add(id as String)) continue;
-    final pilot = const {'gemini', 'omp', 'omp-acp', 'fx'}.contains(id);
-    final loginRequired =
-        pilot &&
-        entry['error'] is String &&
-        RegExp(
-          r'AuthRequired|Authentication required',
-          caseSensitive: false,
-        ).hasMatch(entry['error'] as String);
+    if (!isPaseoProviderId(id) || !seen.add(id as String)) continue;
+    final loginRequired = paseoProviderNeedsSignIn(entry);
     final checking = entry['enabled'] != false && entry['status'] == 'loading';
     rows.add(
       HostAgentProvider(
         id: id,
-        displayName: switch (id) {
-          'gemini' => 'Gemini CLI',
-          'omp' || 'omp-acp' => 'omp',
-          'fx' => 'fx',
-          'claude' => 'Claude Code',
-          'codex' => 'Codex',
-          'copilot' => 'Copilot',
-          'pi' => 'Pi',
-          'opencode' => 'OpenCode',
-          _ => 'Other host agent',
-        },
+        displayName: paseoHostAgentName(id),
         availability: checking
             ? HostAgentProviderAvailability.checking
+            : entry['enabled'] == false
+            ? HostAgentProviderAvailability.hidden
+            : loginRequired
+            ? HostAgentProviderAvailability.needsHostSignIn
+            : paseoProviderCanStart(entry)
+            ? HostAgentProviderAvailability.ready
             : HostAgentProviderAvailability.hidden,
         hiddenReason: checking
             ? null
             : entry['enabled'] == false
             ? HostAgentProviderHiddenReason.disabled
-            : !pilot
-            ? HostAgentProviderHiddenReason.notPilot
-            : loginRequired
-            ? HostAgentProviderHiddenReason.resumeUnverified
-            : entry['status'] != 'ready'
-            ? HostAgentProviderHiddenReason.unavailable
-            : HostAgentProviderHiddenReason.resumeUnverified,
+            : loginRequired || paseoProviderCanStart(entry)
+            ? null
+            : HostAgentProviderHiddenReason.unavailable,
         loginState: loginRequired
             ? HostAgentLoginState.needsHostSignIn
             : HostAgentLoginState.unknown,

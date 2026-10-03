@@ -37,7 +37,7 @@ void main() {
 
   AgentRow row({
     PhoneAgentRuntime? fact,
-    UnverifiedResumePolicy policy = UnverifiedResumePolicy.hide,
+    UnverifiedResumePolicy policy = UnverifiedResumePolicy.label,
     ServerCapabilities serverCapabilities = server,
     AgentDescriptor? descriptor,
   }) => buildAgentRow(
@@ -89,29 +89,25 @@ void main() {
     expect(result.capabilities.resumeVerified, isFalse);
   });
 
-  test(
-    'resume hide policy affects chat selection rather than setup inventory',
-    () {
-      final result = row(
-        fact: runtime(capabilities: const AgentCapabilities()),
-      );
-      expect(result.setupVisible, isTrue);
-      expect(result.status, PhoneAgentStatus.ready);
-      expect(result.chatVisible, isFalse);
-      expect(result.chatSelectable, isFalse);
-      expect(result.hiddenReason, PhoneAgentHiddenReason.resumeUnverified);
-      expect(result.resumeLabel, 'Can’t reopen old chats');
-    },
-  );
+  test('unverified restoration is shown and selectable by default', () {
+    final result = row(fact: runtime(capabilities: const AgentCapabilities()));
+    expect(result.setupVisible, isTrue);
+    expect(result.status, PhoneAgentStatus.ready);
+    expect(result.chatVisible, isTrue);
+    expect(result.chatSelectable, isTrue);
+    expect(result.hiddenReason, isNull);
+    expect(result.resumeNote, 'Starts a new chat');
+    expect(result.resumeLabel, "Can't reopen old chats");
+  });
 
-  test('label policy permits new chats while keeping resume disabled', () {
+  test('legacy hide argument cannot reintroduce the replaced owner rule', () {
     final result = row(
       fact: runtime(capabilities: const AgentCapabilities()),
-      policy: UnverifiedResumePolicy.label,
+      policy: UnverifiedResumePolicy.hide,
     );
     expect(result.chatVisible, isTrue);
     expect(result.chatSelectable, isTrue);
-    expect(result.resumeLabel, 'Can’t reopen old chats');
+    expect(result.resumeLabel, "Can't reopen old chats");
     expect(result.capabilities.resumeVerified, isFalse);
     expect(result.capabilities.images, isFalse);
   });

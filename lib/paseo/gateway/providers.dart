@@ -1,11 +1,15 @@
 part of '../gateway.dart';
 
 extension _PaseoProviders on PaseoGateway {
-  Future<void> _checkExistingProvider(String id) async {
-    for (final entry in await _providers()) {
-      if (entry['provider'] == id && entry['source'] == 'custom') {
-        throw PaseoFailure(PaseoFailureKind.unavailable);
-      }
+  Future<void> _requireProviderAvailable(String id) async {
+    if (!isPaseoProviderId(id)) {
+      throw PaseoFailure(PaseoFailureKind.unavailable);
+    }
+    final matches = (await _providers()).where(
+      (entry) => entry['provider'] == id,
+    );
+    if (matches.length != 1 || !paseoProviderCanStart(matches.single)) {
+      throw PaseoFailure(PaseoFailureKind.unavailable);
     }
   }
 

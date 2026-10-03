@@ -17,6 +17,7 @@ extension _PaseoSessions on PaseoGateway {
     _sessions[session.id] = session;
     final status = agent['status'];
     if (status == 'error' || status == 'closed') {
+      _liveAgentSessions.remove(session.id);
       _awaitingTurn.remove(session.id);
       _turnActive.remove(session.id);
     }
@@ -39,6 +40,7 @@ extension _PaseoSessions on PaseoGateway {
     _statuses.remove(id);
     _drafts.remove(id);
     _draftProviders.remove(id);
+    _liveAgentSessions.remove(id);
     _uncertain.remove(id);
     _awaitingTurn.remove(id);
     _turnActive.remove(id);

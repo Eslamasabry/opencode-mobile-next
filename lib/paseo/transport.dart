@@ -28,6 +28,7 @@ enum PaseoFailureKind {
   disconnected,
   invalidResponse,
   unavailable,
+  newChatRequired,
   overloaded,
   deliveryUnknown,
   staleRequest,
@@ -51,6 +52,8 @@ class PaseoFailure extends ApiException {
           PaseoFailureKind.disconnected => 'The Paseo daemon disconnected.',
           PaseoFailureKind.invalidResponse =>
             'The Paseo daemon returned an unsupported response.',
+          PaseoFailureKind.newChatRequired =>
+            "Can't reopen old chats. Starts a new chat.",
           PaseoFailureKind.unavailable =>
             'The Paseo daemon could not complete this action.',
           PaseoFailureKind.overloaded =>
