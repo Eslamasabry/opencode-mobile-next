@@ -30,8 +30,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _excluded = <String, String>{
   // Not reachable by choice: the app shows them on its own.
   'home-shell': 'the frame around the three tabs; each tab is found on its own',
-  'activity':
-      'the former Inbox: now part of Chats (Needs you, Running); nothing opens it',
+  'chats-new-chat': 'opened from the New conversation button on Conversations',
   'root-connecting': 'shown automatically while a saved server connects',
   'bootstrap-gate': 'startup failure screen; nothing is connected yet',
   'servers-welcome': 'first run only, before any server exists',
@@ -47,7 +46,6 @@ const _excluded = <String, String>{
   'active-context': 'needs an open conversation',
   'active-context-message': 'needs an open conversation and a message',
   'prompt-editor': 'needs an open conversation (composer)',
-  'run-result': 'needs an open conversation',
   'session-context': 'needs an open conversation',
   'session-export': 'needs an open conversation',
   'session-note': 'needs an open conversation',

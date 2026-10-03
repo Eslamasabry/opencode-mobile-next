@@ -31,11 +31,9 @@ import 'package:opencode_mobile/state/automation_policy.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/provider_quota_monitor.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/project_hub_screen.dart';
 import 'package:opencode_mobile/ui/screens/provider_quota_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
-import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/search/search_index.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -174,47 +172,6 @@ void main() {
           .target;
       expect(target?.pageId, 'notifications-settings');
       expect(target?.sectionId, 'servers');
-    });
-
-    testWidgets('the Inbox "Not checking" row opens Notifications at the '
-        'saved servers\' checks', (tester) async {
-      _mockSecure();
-      _phone(tester, height: 1800);
-      final store = await monitorStore(count: 2);
-      await store.setActiveId('profile-1');
-      final controller = ConnectionController(
-        store,
-        monitorGatewayFactory: (_) => (
-          gateway: MonitorTestGateway(),
-          operations: MonitorTestOperations(),
-        ),
-      );
-      await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(disableAnimations: true),
-            child: child!,
-          ),
-          home: Scaffold(
-            body: ActivityScreen(controller: controller, embedded: true),
-          ),
-        ),
-      );
-      for (var i = 0; i < 6; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
-      await tester.tap(_key('attention-checks-off'));
-      await tester.pumpAndSettle();
-      final screen = tester.widget<NotificationsSettingsScreen>(
-        find.byType(NotificationsSettingsScreen),
-      );
-      expect(screen.initialSection, 'servers');
-      expect(_key('monitor-enabled-profile-2'), findsOneWidget);
-      await tester.pumpWidget(const SizedBox.shrink());
-      controller.dispose();
-      await tester.pump();
     });
   });
 

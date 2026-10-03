@@ -2,15 +2,6 @@
   "generatedFrom": "ledger.json",
   "rows": [
     {
-      "page": "activity",
-      "element": "activity-pull-refresh",
-      "gesture": "pull to refresh",
-      "action": "reload from the server",
-      "visibleEquivalent": "visible 'Refresh' icon button (tooltip), lib/ui/screens/activity/activity_question_form.dart:380; also automatic load on open; 'Try again' on failure (lib/ui/screens/activity_screen.dart:455)",
-      "evidence": "lib/ui/screens/activity_screen.dart:519",
-      "changed": false
-    },
-    {
       "page": "active-context",
       "element": "active-context-pull-refresh",
       "gesture": "pull to refresh",
@@ -26,15 +17,6 @@
       "action": "reload server commands",
       "visibleEquivalent": "the command sheet's visible 'Try again' on its error notice (lib/ui/widgets/command_sheet.dart:410) runs the same callback; also loaded automatically when the conversation opens",
       "evidence": "lib/ui/screens/chat/chat_command_actions.dart:82",
-      "changed": false
-    },
-    {
-      "page": "run-result",
-      "element": "run-result-pull-refresh",
-      "gesture": "pull to refresh",
-      "action": "reload from the server",
-      "visibleEquivalent": "automatic load on open; 'Try again' on failure (lib/ui/screens/run_result_screen.dart:223)",
-      "evidence": "lib/ui/screens/run_result_screen.dart:74",
       "changed": false
     },
     {

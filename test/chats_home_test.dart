@@ -223,7 +223,8 @@ void main() {
     await tester.tap(find.text('Needs you'));
     await tester.pump();
     expect(find.text('No matching conversations'), findsOneWidget);
-    expect(find.text('New conversation'), findsOneWidget);
+    // Clear filters is the one primary action here (the shell allows one).
+    expect(find.text('New conversation'), findsNothing);
     await tester.tap(find.text('Clear filters'));
     await tester.pump();
     expect(find.text(KitBidi.auto('Explain the build')), findsOneWidget);

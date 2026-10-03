@@ -49,13 +49,6 @@
     {
      "page": "?",
      "element": null,
-     "widget": "_RunResultScreenState._openConversation",
-     "file": "lib/ui/screens/run_result_screen.dart",
-     "line": 142
-    },
-    {
-     "page": "?",
-     "element": null,
      "widget": "openMonitoredRequest",
      "file": "lib/ui/screens/profile_monitor_screen.dart",
      "line": 76
@@ -87,13 +80,6 @@
      "widget": "_CommandsScreenState._run",
      "file": "lib/ui/screens/library/commands_screen.dart",
      "line": 158
-    },
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_ActivityScreenState._openChat",
-     "file": "lib/ui/screens/activity_screen.dart",
-     "line": 444
     },
     {
      "page": "?",

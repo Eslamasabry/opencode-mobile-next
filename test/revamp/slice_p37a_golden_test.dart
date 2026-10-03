@@ -16,18 +16,16 @@ import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
-import 'package:opencode_mobile/domain/run_result.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/kit/kit_top_bar.dart';
 import 'package:opencode_mobile/ui/screens/files_screen.dart';
 import 'package:opencode_mobile/ui/screens/review_workspace.dart';
-import 'package:opencode_mobile/ui/widgets/run_result_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../tool/capture/fixtures.dart'
-    show blocPatch, captureTheme, editPatch, loadCaptureFonts, sampleDiffs;
+    show captureTheme, loadCaptureFonts, sampleDiffs;
 
 const _phone = Size(412, 915);
 const _wide = Size(1280, 800);
@@ -86,60 +84,6 @@ class _Repository implements ProductRepository {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
-
-Part _tool(String id, String name, Map<String, dynamic> input, [Map? meta]) =>
-    Part(
-      id: id,
-      callID: id,
-      type: 'tool',
-      toolName: name,
-      toolState: ToolState(
-        status: 'completed',
-        input: input,
-        output: '',
-        metadata: meta == null ? null : Map<String, dynamic>.from(meta),
-      ),
-    );
-
-RunResult _run() => RunResult.fromMessages('ses_1', [
-  MessageWithParts(
-    info: MessageInfo(
-      id: 'u1',
-      sessionID: 'ses_1',
-      role: 'user',
-      time: MsgTime(created: 1),
-    ),
-    parts: const [],
-  ),
-  MessageWithParts(
-    info: MessageInfo(
-      id: 'a1',
-      sessionID: 'ses_1',
-      role: 'assistant',
-      agent: 'build',
-      modelID: 'gpt-5',
-      finish: 'stop',
-      time: MsgTime(created: 2, completed: 3),
-    ),
-    parts: [
-      _tool(
-        'e1',
-        'edit',
-        {'filePath': 'test/checkout_test.dart'},
-        {
-          'filediff': {'patch': editPatch},
-        },
-      ),
-      _tool(
-        'e2',
-        'edit',
-        {'filePath': 'lib/checkout/checkout_bloc.dart'},
-        {'diff': blocPatch},
-      ),
-      _tool('b1', 'bash', {'command': 'flutter test'}, {'exit': 0}),
-    ],
-  ),
-], historyComplete: true)!;
 
 Future<void> _shot(
   WidgetTester tester,
@@ -210,12 +154,6 @@ Widget _files(ConnectionController controller) => FilesScreen(
   ),
 );
 
-Widget _runResult(ConnectionController _) => RunResultView(
-  result: _run(),
-  observedLive: true,
-  onOpenConversation: () {},
-);
-
 Widget _diffPage(ConnectionController _) => DiffPage(diffs: sampleDiffs());
 
 void main() {
@@ -238,18 +176,6 @@ void main() {
           home: _files,
           then: () =>
               tester.tap(find.byKey(const ValueKey('files-changes-card'))),
-        );
-      });
-      testWidgets('run results changed file opens the diff · $at · $mode', (
-        tester,
-      ) async {
-        await _shot(
-          tester,
-          'run_file',
-          light: light,
-          size: size,
-          home: _runResult,
-          then: () => tester.tap(find.text('checkout_bloc.dart')),
         );
       });
       testWidgets('diff page · $at · $mode', (tester) async {

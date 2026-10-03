@@ -2739,10 +2739,6 @@
   "@e7LocaleUiNewSessionHint": {
     "description": "Locale selection or app shell: NewSessionHint"
   },
-  "e7LocaleUiWorkspace": "Chats",
-  "@e7LocaleUiWorkspace": {
-    "description": "Locale selection or app shell: Workspace"
-  },
   "e7LocaleUiWorkspaceHint": "Every conversation, across projects",
   "@e7LocaleUiWorkspaceHint": {
     "description": "Locale selection or app shell: WorkspaceHint"
@@ -31890,7 +31886,7 @@
   "@chatsNewFailed": {
     "description": "New chat: starting failed and the draft is kept"
   },
-  "shellTabChats": "Chats",
+  "shellTabChats": "Conversations",
   "@shellTabChats": {
     "description": "Bottom navigation label and title of the first tab: every conversation across projects, with what needs the person and what is running as filters."
   },

@@ -163,7 +163,7 @@ extension _OcAppAlertsAndShortcuts on _OcAppState {
         onInvoke: () => unawaited(_startNewSession()),
       ),
       DesktopCommand(
-        label: l10n.e7LocaleUiWorkspace,
+        label: l10n.shellTabChats,
         icon: Icons.workspaces_outline,
         hint: l10n.e7LocaleUiWorkspaceHint,
         keys: '$mod + 1',

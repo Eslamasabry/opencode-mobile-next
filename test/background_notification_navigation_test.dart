@@ -11,7 +11,6 @@ import 'package:opencode_mobile/main.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/update/shorebird_update_notice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -286,12 +285,6 @@ void main() {
     expect(
       tester.state<NavigatorState>(find.byType(Navigator).first).canPop(),
       isFalse,
-    );
-    expect(
-      tester
-          .widgetList<ActivityScreen>(find.byType(ActivityScreen))
-          .where((screen) => !screen.embedded),
-      isEmpty,
     );
     expect(find.text('Send answers'), findsNothing);
     expect(controller.pendingCodingAlertOpen, isNull);

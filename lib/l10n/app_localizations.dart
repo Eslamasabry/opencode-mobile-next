@@ -6913,12 +6913,6 @@ abstract class AppLocalizations {
   /// **'Start a conversation in the active project'**
   String get e7LocaleUiNewSessionHint;
 
-  /// Locale selection or app shell: Workspace
-  ///
-  /// In en, this message translates to:
-  /// **'Chats'**
-  String get e7LocaleUiWorkspace;
-
   /// Locale selection or app shell: WorkspaceHint
   ///
   /// In en, this message translates to:
@@ -42484,7 +42478,7 @@ abstract class AppLocalizations {
   /// Bottom navigation label and title of the first tab: every conversation across projects, with what needs the person and what is running as filters.
   ///
   /// In en, this message translates to:
-  /// **'Chats'**
+  /// **'Conversations'**
   String get shellTabChats;
 
   /// Bottom navigation label and title of the second tab: the files, changes, terminal and other tools of one project, named by the chip under the title.

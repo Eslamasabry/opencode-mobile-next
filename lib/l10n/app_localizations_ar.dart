@@ -4136,9 +4136,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get e7LocaleUiNewSessionHint => 'ابدأ محادثة في المشروع الحالي';
 
   @override
-  String get e7LocaleUiWorkspace => 'المحادثات';
-
-  @override
   String get e7LocaleUiWorkspaceHint => 'كل المحادثات عبر المشاريع';
 
   @override

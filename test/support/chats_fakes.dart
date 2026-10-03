@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_host.dart';
 
@@ -94,17 +93,6 @@ class FakeChatsHost implements ChatsHost {
 
   @override
   Listenable? get listenable => null;
-
-  @override
-  ({String name, String status, AppStatusTone tone}) serverPill(
-    AppLocalizations l10n,
-  ) => (name: 'Studio', status: 'Connected', tone: AppStatusTone.ok);
-
-  @override
-  Future<void> openServerSwitcher(BuildContext context) async {}
-
-  @override
-  VoidCallback? search(BuildContext context) => null;
 
   @override
   Future<String?> openChat(BuildContext context, ChatFeedItem item) async {

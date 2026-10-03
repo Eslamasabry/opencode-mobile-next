@@ -14,7 +14,6 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/kit/kit_nav.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
@@ -22,7 +21,7 @@ import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/ui/desktop/shortcuts.dart';
 import 'package:opencode_mobile/ui/navigation/last_project.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_home_screen.dart';
-import 'package:opencode_mobile/ui/screens/projects_screen.dart';
+import 'package:opencode_mobile/ui/widgets/remote_folder_picker.dart';
 import 'package:opencode_mobile/ui/kit/glass/kit_glass.dart';
 import 'package:opencode_mobile/ui/kit/kit_bottom_inset.dart';
 import 'package:opencode_mobile/ui/widgets/app_connection_status.dart';
@@ -243,7 +242,12 @@ void main() {
       );
       await tester.pumpAndSettle();
       final dock = tester.getRect(_dockGlass());
-      final icon = tester.getRect(find.byIcon(AppIconography.chat));
+      final icon = tester.getRect(
+        find.descendant(
+          of: find.byType(KitNavBar),
+          matching: find.byIcon(AppIconography.chat),
+        ),
+      );
       expect(icon.top, greaterThanOrEqualTo(dock.top + 4));
       final copy = lookupAppLocalizations(locale);
       final labels = [
@@ -252,7 +256,7 @@ void main() {
         copy.librarySettingsTitle,
       ];
       if (locale.languageCode == 'en') {
-        expect(labels, ['Chats', 'Files', 'Settings']);
+        expect(labels, ['Conversations', 'Files', 'Settings']);
       } else {
         expect(labels, ['المحادثات', 'الملفات', 'الإعدادات']);
         expect(
@@ -364,7 +368,7 @@ void main() {
       await tester.binding.handlePopRoute();
       await tester.pump();
       expect(find.text('Press back again to exit'), findsNothing);
-      expect(_selectedDestination(tester), 'Chats');
+      expect(_selectedDestination(tester), 'Conversations');
       await tester.binding.handlePopRoute();
       await tester.pump();
       expect(find.text('Press back again to exit'), findsOneWidget);
@@ -393,7 +397,7 @@ void main() {
     await tester.binding.handlePopRoute();
     await tester.pump();
     expect(find.text('Press back again to exit'), findsNothing);
-    expect(_selectedDestination(tester), 'Chats');
+    expect(_selectedDestination(tester), 'Conversations');
     expect(api.paths.length, loads);
   });
 
@@ -435,7 +439,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(_selectedDestination(tester), 'Chats');
+    expect(_selectedDestination(tester), 'Conversations');
     expect(find.text('Press back again to exit'), findsNothing);
   });
 
@@ -588,7 +592,7 @@ void main() {
       Theme.of(tester.element(find.byType(KitNavBar))),
     );
     for (final (label, glyph, color) in [
-      ('Chats', AppIconography.chat, roles.text1),
+      ('Conversations', AppIconography.chat, roles.text1),
       ('Files', AppIconography.files, roles.text2),
       ('Settings', AppIconography.settings, roles.text2),
     ]) {
@@ -597,12 +601,30 @@ void main() {
         matching: find.text(label),
       );
       expect(tester.widget<Text>(labelFinder).style!.color, color);
-      expect(tester.widget<Icon>(find.byIcon(glyph)).color, color);
+      expect(
+        tester
+            .widget<Icon>(
+              find.descendant(
+                of: find.byType(KitNavBar),
+                matching: find.byIcon(glyph),
+              ),
+            )
+            .color,
+        color,
+      );
     }
-    final icon = tester.getRect(find.byIcon(AppIconography.chat));
+    final icon = tester.getRect(
+      find.descendant(
+        of: find.byType(KitNavBar),
+        matching: find.byIcon(AppIconography.chat),
+      ),
+    );
     expect(icon.top - dock.top, greaterThanOrEqualTo(8));
     final label = tester.getRect(
-      find.descendant(of: find.byType(KitNavBar), matching: find.text('Chats')),
+      find.descendant(
+        of: find.byType(KitNavBar),
+        matching: find.text('Conversations'),
+      ),
     );
     expect(dock.bottom - label.bottom, greaterThanOrEqualTo(4));
 
@@ -611,8 +633,8 @@ void main() {
     final navigationLabels = navigation.destinations
         .map((destination) => destination.label)
         .toList();
-    expect(navigationLabels, ['Chats', 'Files', 'Settings']);
-    expect(find.text('Chats'), findsWidgets);
+    expect(navigationLabels, ['Conversations', 'Files', 'Settings']);
+    expect(find.text('Conversations'), findsWidgets);
     expect(find.text('Files'), findsWidgets);
     expect(find.text('Work'), findsNothing);
     expect(find.text('Inbox'), findsNothing);
@@ -667,7 +689,7 @@ void main() {
       find.descendant(of: badge, matching: find.text('1')),
       findsOneWidget,
     );
-    expect(tester.getSemantics(badge).label, 'Chats, 1 need you');
+    expect(tester.getSemantics(badge).label, 'Conversations, 1 need you');
 
     // The badge counts everything waiting on the person, not just "some".
     controller.permissions = {
@@ -755,7 +777,7 @@ void main() {
       final controller = await _controller(profileName: 'Test server');
       addTearDown(controller.dispose);
       await pump(tester, controller);
-      expect(title(tester), 'Chats');
+      expect(title(tester), 'Conversations');
       expect(
         find.descendant(of: _chatsDestination(), matching: find.text('1')),
         findsNothing,
@@ -769,7 +791,7 @@ void main() {
       addTearDown(controller.dispose);
       controller.permissions = {'perm-1': permission('perm-1')};
       await pump(tester, controller);
-      expect(title(tester), 'Chats');
+      expect(title(tester), 'Conversations');
       expect(
         find.descendant(of: _chatsDestination(), matching: find.text('1')),
         findsOneWidget,
@@ -815,7 +837,7 @@ void main() {
         controller,
         initialChatFilter: const ChatFeedFilter(needsYou: true),
       );
-      expect(title(tester), 'Chats');
+      expect(title(tester), 'Conversations');
       expect(chatsFilter(tester), const ChatFeedFilter(needsYou: true));
     });
   });
@@ -863,7 +885,7 @@ void main() {
 
       expect(signals.dispatch(const OpenChatsIntent(needsYou: true)), isTrue);
       await tester.pumpAndSettle();
-      expect(_selectedDestination(tester), 'Chats');
+      expect(_selectedDestination(tester), 'Conversations');
       expect(chatsFilter(tester), const ChatFeedFilter(needsYou: true));
     });
 
@@ -900,7 +922,7 @@ void main() {
       expect(_selectedDestination(tester), 'Settings');
       expect(signals.dispatch(const SelectDestinationIntent(0)), isTrue);
       await tester.pumpAndSettle();
-      expect(_selectedDestination(tester), 'Chats');
+      expect(_selectedDestination(tester), 'Conversations');
       expect(signals.dispatch(const SelectDestinationIntent(3)), isFalse);
       expect(
         appShortcutBindings.values.whereType<SelectDestinationIntent>().map(
@@ -945,7 +967,7 @@ void main() {
       await openFiles(tester, controller);
       await tester.tap(find.byKey(const ValueKey('project-hub-context')));
       await tester.pumpAndSettle();
-      expect(find.byType(ProjectsScreen), findsOneWidget);
+      expect(find.byType(RemoteFolderSheet), findsOneWidget);
     });
 
     testWidgets('the project is the one last used for a chat', (tester) async {
@@ -992,66 +1014,6 @@ void main() {
       expect(isTemporaryProjectDirectory('/var/folders/ab/cd'), isTrue);
       expect(isTemporaryProjectDirectory('/root/projects/app'), isFalse);
     });
-  });
-
-  testWidgets('Inbox order: waiting on you, then running, then finished', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(390, 1400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final controller = await _controller();
-    addTearDown(controller.dispose);
-    controller.sessionsById = {
-      'running': Session(id: 'running', title: 'Running conversation'),
-      'finished': Session(
-        id: 'finished',
-        title: 'Finished conversation',
-        time: SessionTime(created: 1, updated: 2, idle: 3),
-      ),
-    };
-    controller.busySessions.add('running');
-    controller.permissions = {
-      for (final id in ['perm-old', 'perm-new'])
-        id: PermissionRequest(
-          id: id,
-          sessionID: 'running',
-          permission: 'edit',
-          patterns: const ['lib/main.dart'],
-        ),
-    };
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: ActivityScreen(controller: controller, embedded: true),
-        ),
-      ),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-
-    double top(Finder finder) => tester.getTopLeft(finder).dy;
-    // One list, no section headers (owner rule R1): the rows' marks and
-    // words carry the state.
-    final order = [
-      find.byKey(const ValueKey('activity-permission-perm-old')),
-      find.byKey(const ValueKey('activity-permission-perm-new')),
-      find.byKey(const ValueKey('activity-running-running')),
-      find.byKey(const ValueKey('activity-digest-finished')),
-    ];
-    for (final item in order) {
-      expect(item, findsOneWidget);
-    }
-    for (var i = 1; i < order.length; i++) {
-      expect(top(order[i - 1]), lessThan(top(order[i])), reason: 'item $i');
-    }
-    for (final header in ['Needs attention', 'Running', 'Completion digests']) {
-      expect(find.text(header), findsNothing, reason: header);
-    }
-    expect(find.text('Finished conversation'), findsOneWidget);
   });
 
   testWidgets('failed reconnect keeps the product shell and location visible', (
@@ -1230,7 +1192,7 @@ void main() {
         tester.getSemantics(profile).label,
         contains('Connected, Switch server'),
       );
-      expect(_selectedDestination(tester), 'Chats');
+      expect(_selectedDestination(tester), 'Conversations');
       expect(find.byKey(const ValueKey('current-tab-title')), findsNothing);
       expect(tester.takeException(), isNull);
     },
@@ -1261,7 +1223,7 @@ void main() {
       );
       final tab = find.byKey(const ValueKey('home-shell-tab-chats'));
       expect(tester.getRect(profile).bottom, lessThan(tester.getRect(tab).top));
-      expect(_selectedDestination(tester), 'Chats');
+      expect(_selectedDestination(tester), 'Conversations');
       expect(find.byKey(const ValueKey('current-tab-title')), findsNothing);
       expect(tester.takeException(), isNull);
     },

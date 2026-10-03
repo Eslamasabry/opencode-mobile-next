@@ -29,7 +29,7 @@ import 'development_services_screen.dart';
 import 'files_screen.dart';
 import 'managed_workspaces_screen.dart';
 import 'project_health_screen.dart';
-import 'projects_screen.dart';
+import 'project_folder_actions.dart';
 import 'terminal_screen.dart';
 import 'worktrees_screen.dart';
 
@@ -406,18 +406,19 @@ class _ProjectHubState extends State<ProjectHub> {
     if (mounted) unawaited(_readStatus());
   });
 
-  /// Chooses a project: the Projects list (select one, create or open a
-  /// folder), where the hub used to only say that none was open (map
-  /// project-hub, `whenMissing.project.open`: explains → offers the chooser).
-  Future<void> _chooseProject() => _guard(
-    () => pushKitPage<bool>(
+  /// Chooses a project in the same "Open a project" sheet the New
+  /// conversation chip uses (New project, Search this phone, Opened before).
+  /// Opening a folder moves the location to it; it also becomes the last
+  /// used project, so Files and the next chat start there.
+  Future<void> _chooseProject() => _guard(() async {
+    final directory = await ProjectFolderActions.openFolder(
       context,
-      (_) => ProjectsScreen(
-        controller: widget.controller,
-        selectedProjectID: null,
-      ),
-    ),
-  );
+      widget.controller,
+    );
+    if (directory != null) {
+      rememberLastUsedProject(widget.controller, directory);
+    }
+  });
 
   @override
   Widget build(BuildContext context) {

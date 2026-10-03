@@ -130,7 +130,7 @@ void main() {
       // back to Chats rather than shifting Settings left.
       expect(tester.widget<KitNav>(find.byType(KitNav)).selected, 0);
       expect(find.text('Files'), findsNothing);
-      expect(find.text('Chats'), findsWidgets);
+      expect(find.text('Conversations'), findsWidgets);
       expect(find.text('Inbox'), findsNothing);
       expect(find.text('Settings'), findsOneWidget);
 

@@ -342,7 +342,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(_destination(tester), 'Chats');
+      expect(_destination(tester), 'Conversations');
 
       await _press(tester, LogicalKeyboardKey.digit2);
       expect(_destination(tester), 'Files');
@@ -351,7 +351,7 @@ void main() {
       expect(_destination(tester), 'Settings');
 
       await _press(tester, LogicalKeyboardKey.digit1);
-      expect(_destination(tester), 'Chats');
+      expect(_destination(tester), 'Conversations');
     });
 
     desktopTest(

@@ -6,7 +6,6 @@ import 'package:opencode_mobile/background/live_background.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -60,54 +59,6 @@ Future<_Controller> _controller({required bool enabled}) async {
 }
 
 void main() {
-  testWidgets('an empty inbox holds no settings row, even with updates off', (
-    tester,
-  ) async {
-    final controller = await _controller(enabled: false);
-    addTearDown(controller.dispose);
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: ActivityScreen(controller: controller, embedded: true),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const ValueKey('activity-all-clear')), findsOneWidget);
-    // Background updates live in Settings › Notifications (owner rule R4):
-    // the Inbox lists requests and work only.
-    expect(
-      find.byKey(const ValueKey('activity-background-hint')),
-      findsNothing,
-    );
-    expect(
-      find.byKey(const ValueKey('activity-background-settings')),
-      findsNothing,
-    );
-  });
-
-  testWidgets('the hint disappears once background updates are on', (
-    tester,
-  ) async {
-    final controller = await _controller(enabled: true);
-    addTearDown(controller.dispose);
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: ActivityScreen(controller: controller, embedded: true),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const ValueKey('activity-all-clear')), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('activity-background-hint')),
-      findsNothing,
-    );
-  });
-
   testWidgets('the settings hub summarises the background state', (
     tester,
   ) async {

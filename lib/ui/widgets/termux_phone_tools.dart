@@ -13,15 +13,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../termux/bridge.dart';
 import '../../termux/processes.dart';
 import '../../termux/storage.dart';
 import '../app_theme.dart';
 import '../kit/kit.dart';
 import '../screens/termux_processes_screen.dart';
 import '../screens/termux_storage_screen.dart';
-import 'work_status_line.dart'
-    show RunawayStopOutcome, WorkRunawayNotice, stopRunawayHelper;
 
 AppLocalizations _copy(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
@@ -120,136 +117,5 @@ class PhoneProcessesRow extends StatelessWidget {
       trailing: const KitChevron(),
       onTap: onTap,
     );
-  }
-}
-
-/// The project a leftover process belongs to, by its working folder: the
-/// first folder under a `projects` folder (`/root/projects/FinanceHub/src`
-/// is FinanceHub). Null for the projects folder itself, a home folder or
-/// anything else, which the line calls "OpenCode" rather than show a path.
-String? runawayProjectName(String cwd) {
-  final parts = cwd.split('/').where((part) => part.isNotEmpty).toList();
-  final index = parts.lastIndexOf('projects');
-  if (index < 0 || index + 1 >= parts.length) return null;
-  final name = parts[index + 1];
-  return name.startsWith('.') ? null : name;
-}
-
-/// Watches the managed phone server for a helper that has burned more than
-/// [threshold] of CPU with nothing waiting on it, and hands the worst one to
-/// [builder] as a [WorkRunawayNotice] (null when there is none, or when the
-/// person dismissed this very process). Polls every [interval] while
-/// mounted; a phone without the tools simply never reports one.
-class TermuxRunawayWatcher extends StatefulWidget {
-  const TermuxRunawayWatcher({
-    super.key,
-    required this.builder,
-    this.interval = const Duration(seconds: 60),
-    this.threshold = const Duration(minutes: 10),
-    this.scan,
-    this.stop,
-  });
-
-  final Widget Function(BuildContext context, WorkRunawayNotice? notice)
-  builder;
-  final Duration interval;
-  final Duration threshold;
-
-  /// Test seam; defaults to [TermuxProcesses.scan] behind the bridge check.
-  final Future<TermuxProcessReport> Function()? scan;
-
-  /// Test seam; defaults to [TermuxProcesses.stopPid].
-  final Future<TermuxProcessStopResult> Function(int pid)? stop;
-
-  /// Dismissed processes, by pid and name, for the life of the app: the line
-  /// comes back only for a different process.
-  static final _dismissed = <(int, String)>{};
-
-  @visibleForTesting
-  static void resetDismissedForTesting() => _dismissed.clear();
-
-  @override
-  State<TermuxRunawayWatcher> createState() => _TermuxRunawayWatcherState();
-}
-
-class _TermuxRunawayWatcherState extends State<TermuxRunawayWatcher> {
-  TermuxProcess? _worst;
-  Timer? _timer;
-
-  /// The process whose last stop did not end it.
-  (int, String)? _stopFailed;
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(_check());
-    _timer = Timer.periodic(widget.interval, (_) => unawaited(_check()));
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _check() async {
-    final scan = widget.scan;
-    if (scan == null && !TermuxBridge.supported) return;
-    try {
-      final report = await (scan ?? TermuxProcesses.scan)();
-      final orphans = report.orphansOver(widget.threshold)
-        ..sort((a, b) => b.cpuSeconds.compareTo(a.cpuSeconds));
-      if (mounted) {
-        setState(() => _worst = orphans.isEmpty ? null : orphans.first);
-      }
-    } catch (_) {
-      // No tools, no Termux, or a bridge hiccup: the line simply stays away.
-      if (mounted && _worst != null) setState(() => _worst = null);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final worst = _worst;
-    final identity = worst == null ? null : (worst.pid, worst.name);
-    if (worst == null || TermuxRunawayWatcher._dismissed.contains(identity)) {
-      return widget.builder(context, null);
-    }
-    final l10n = _copy(context);
-    return widget.builder(
-      context,
-      WorkRunawayNotice(
-        identity: identity!,
-        helper: worst.name,
-        project: runawayProjectName(worst.cwd),
-        busyFor: formatTermuxDuration(l10n, worst.cpuSeconds),
-        stopFailed: _stopFailed == identity,
-        onDismiss: () =>
-            setState(() => TermuxRunawayWatcher._dismissed.add(identity)),
-        onStop: () => unawaited(_stop(worst, identity)),
-      ),
-    );
-  }
-
-  /// Asks, stops exactly this process, and hides the line at once when it
-  /// ended (the next scan confirms); a stop that failed keeps the line in
-  /// its failure words.
-  Future<void> _stop(TermuxProcess process, (int, String) identity) async {
-    final outcome = await stopRunawayHelper(
-      context,
-      pid: process.pid,
-      helper: process.name,
-      stop: widget.stop,
-    );
-    if (!mounted || outcome == RunawayStopOutcome.kept) return;
-    setState(() {
-      if (outcome == RunawayStopOutcome.stopped) {
-        TermuxRunawayWatcher._dismissed.add(identity);
-        _stopFailed = null;
-      } else {
-        _stopFailed = identity;
-      }
-    });
-    unawaited(_check());
   }
 }

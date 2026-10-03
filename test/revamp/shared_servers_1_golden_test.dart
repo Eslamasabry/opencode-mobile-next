@@ -19,7 +19,6 @@ import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/termux/local_agent_runtime.dart';
 import 'package:opencode_mobile/ui/kit/kit_row.dart';
 import 'package:opencode_mobile/ui/widgets/local_agent_server_entry.dart';
-import 'package:opencode_mobile/ui/widgets/other_servers_panel.dart';
 import 'package:opencode_mobile/ui/widgets/server_switcher_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -166,20 +165,6 @@ void main() {
                 ),
             ],
           ),
-        );
-      });
-
-      testWidgets('other servers on the Work tab ($theme, $size)', (
-        tester,
-      ) async {
-        final controller = await _controller();
-        addTearDown(controller.dispose);
-        await _shot(
-          tester,
-          'other_servers_panel',
-          light: light,
-          size: size,
-          body: ListView(children: [OtherServersPanel(controller: controller)]),
         );
       });
     }

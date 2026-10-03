@@ -24,7 +24,6 @@ import 'package:opencode_mobile/state/orchestration.dart';
 import 'package:opencode_mobile/state/orchestration_store.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -400,22 +399,6 @@ void main() {
   }
 
   group('plugin off: tree assertions', () {
-    testWidgets('Activity has no AI Team rows', (tester) async {
-      final (controller, _) = await connectAndRender(tester, profile());
-      await tester.pumpWidget(
-        app(
-          Scaffold(
-            body: ActivityScreen(controller: controller, embedded: true),
-          ),
-        ),
-      );
-      await settle(tester);
-      expect(controller.orchestration, isNull);
-      await expectNoPluginWidgets(tester);
-      expect(tester.takeException(), isNull);
-      await teardown(tester, controller);
-    });
-
     testWidgets('Settings hub keeps the Plugins entry and nothing else', (
       tester,
     ) async {
@@ -485,20 +468,9 @@ void main() {
         );
         addTearDown(team.dispose);
 
-        Future<void> renderActivity(ConnectionController controller) async {
-          await tester.pumpWidget(
-            app(
-              Scaffold(
-                body: ActivityScreen(controller: controller, embedded: true),
-              ),
-            ),
-          );
-          await settle(tester);
-        }
-
         // Baseline: the same connection and renders with the plugin off.
         final (off, offGateway) = await connectAndRender(tester, profile());
-        await renderActivity(off);
+        await settle(tester);
         final offCalls = List.of(offGateway.calls)..sort();
         await teardown(tester, off);
         SharedPreferences.setMockInitialValues({});
@@ -517,9 +489,6 @@ void main() {
         expect(on, same(plugged));
         await team.start();
         await settle(tester);
-        // Activity too: it reads the plugin's gates and agents for its
-        // AI Team rows (none in the fixture's normal run, so no rows).
-        await renderActivity(on);
         expect(on.orchestration, same(team));
 
         // Every scope was read from the orchestration gateway…

@@ -12,7 +12,6 @@ import 'package:opencode_mobile/domain/session_command_handoff.dart';
 import 'package:opencode_mobile/domain/session_handoff.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/ui/screens/active_context_screen.dart';
-import 'package:opencode_mobile/ui/screens/run_result_screen.dart';
 import 'package:opencode_mobile/ui/screens/session_context_screen.dart';
 import 'package:opencode_mobile/ui/screens/session_export_screen.dart';
 import 'package:opencode_mobile/ui/screens/session_import_screen.dart';
@@ -493,40 +492,6 @@ final kSessionMiscArea = CensusArea(
       await kit.navigator.maybePop();
       await kit.settle();
       kit.expectText('Discard your note changes?');
-    }),
-
-    // -- run-result --------------------------------------------------------------------
-    CensusShot('run-result', (kit) async {
-      await _pushed(
-        kit,
-        (controller) => RunResultScreen(
-          controller: controller,
-          sessionID: checkoutSessionID,
-        ),
-        api: _HistoryApi(messages: sampleTranscript()),
-        backdropTitle: 'Activity',
-      );
-      kit.expectText('Run results');
-      kit.expectVisible(
-        find.byKey(const ValueKey('run-result-open-conversation')),
-      );
-    }),
-
-    // -- run-result-output-sheet --------------------------------------------------------
-    CensusShot('run-result-output-sheet', (kit) async {
-      await _pushed(
-        kit,
-        (controller) => RunResultScreen(
-          controller: controller,
-          sessionID: checkoutSessionID,
-        ),
-        api: _HistoryApi(messages: sampleTranscript()),
-        backdropTitle: 'Activity',
-      );
-      await kit.tapKey(
-        'run-result-file-$projectDirectory/test/checkout_test.dart',
-      );
-      kit.expectText('Recorded tool output');
     }),
 
     // -- continue-on-computer-sheet -------------------------------------------------

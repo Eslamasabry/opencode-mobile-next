@@ -222,11 +222,11 @@ void main() {
             .map((destination) => destination.label)
             .toList();
         if (tools.isEmpty) {
-          expect(labels, ['Chats', 'Settings']);
+          expect(labels, ['Conversations', 'Settings']);
           expect(find.byType(ProjectHub), findsNothing);
           return;
         }
-        expect(labels, ['Chats', 'Files', 'Settings']);
+        expect(labels, ['Conversations', 'Files', 'Settings']);
         await _openProjectTab(tester);
         final navigation = tester.widget<KitNav>(find.byType(KitNav));
         expect(navigation.destinations[navigation.selected].label, 'Files');

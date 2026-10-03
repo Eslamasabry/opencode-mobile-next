@@ -21,13 +21,6 @@
           "line": 1125
         },
         {
-          "page": "?",
-          "element": null,
-          "widget": "ActivityGateTile",
-          "file": "lib/ui/screens/activity_screen.dart",
-          "line": 860
-        },
-        {
           "page": "system",
           "element": null,
           "trigger": "ActivityScreen opened with an initial gate id: post-frame showGateSheet once the team snapshot settled (lib/ui/screens/activity_screen.dart:320); upstream trigger (notification tap) not traced"

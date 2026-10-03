@@ -4113,9 +4113,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start a conversation in the active project';
 
   @override
-  String get e7LocaleUiWorkspace => 'Chats';
-
-  @override
   String get e7LocaleUiWorkspaceHint => 'Every conversation, across projects';
 
   @override
@@ -26904,7 +26901,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The conversation didn\'t start. Your message is still here.';
 
   @override
-  String get shellTabChats => 'Chats';
+  String get shellTabChats => 'Conversations';
 
   @override
   String get shellTabFiles => 'Files';

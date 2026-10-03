@@ -1,5 +1,5 @@
 // Golden renders of the shell (chats-first: Chats, Files, Settings): the
-// other servers panel, the shell's connection line on the other tabs, the
+// shell's connection line on the other tabs, the
 // PC sidebar at 1280x800 on Files, the explanation when Files goes away on a
 // server without project tools, the command launcher and the keyboard
 // shortcuts sheet at 412x915 and 1280x800. Dark and light, with the app's
@@ -14,13 +14,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart'
     show ServerCapabilities;
-import 'package:opencode_mobile/state/profile_monitor.dart';
-import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_iconography.dart';
 import 'package:opencode_mobile/ui/desktop/shortcuts.dart';
 import 'package:opencode_mobile/ui/kit/kit_motion.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
-import 'package:opencode_mobile/ui/widgets/other_servers_panel.dart';
 import 'package:opencode_mobile/ui/widgets/app_connection_status.dart';
 
 import '../../tool/capture/fixtures.dart'
@@ -107,53 +104,6 @@ Future<void> _golden(
   }
 }
 
-/// The other servers' watcher, answering with fixed snapshots: Claude Code
-/// on this phone waits on an approval, the laptop has two runs going.
-class _Monitor extends ProfileMonitor {
-  _Monitor(ProfileStore store)
-    : super(
-        store: store,
-        createGateway: (_) => throw UnimplementedError(),
-        isReadable: (_) => true,
-        networkWifi: () async => null,
-        alert: (_, _, _, _) async => false,
-        dismiss: (_) async => false,
-      );
-
-  @override
-  ProfileAttentionSnapshot snapshotFor(String id) => switch (id) {
-    // A real check has a time: the Inbox badge counts only requests a
-    // check actually saw (P4.2b attention feed).
-    'claude' => ProfileAttentionSnapshot(
-      profileID: id,
-      status: ProfileMonitorStatus.current,
-      checkedAt: DateTime.now(),
-      complete: true,
-      attentionComplete: true,
-      runningCount: 1,
-      requests: const [
-        MonitoredRequest(
-          id: 'perm-1',
-          sessionID: 's-1',
-          kind: MonitoredRequestKind.permission,
-        ),
-      ],
-    ),
-    'laptop' => ProfileAttentionSnapshot(
-      profileID: id,
-      status: ProfileMonitorStatus.current,
-      checkedAt: DateTime.now(),
-      complete: true,
-      attentionComplete: true,
-      runningCount: 2,
-    ),
-    _ => ProfileAttentionSnapshot(
-      profileID: id,
-      status: ProfileMonitorStatus.disabled,
-    ),
-  };
-}
-
 /// A server without project tools (Codex, Paseo today).
 class _NoProjectApi extends CaptureApi {
   @override
@@ -177,7 +127,7 @@ List<DesktopCommand> _commands() => [
     onInvoke: () {},
   ),
   DesktopCommand(
-    label: 'Chats',
+    label: 'Conversations',
     icon: AppIconography.chat,
     hint: 'Every conversation, across projects',
     keys: 'Ctrl + 1',
@@ -214,40 +164,6 @@ void main() {
 
   for (final light in [false, true]) {
     final mode = light ? 'light' : 'dark';
-
-    testWidgets('work · other servers · $mode', (tester) async {
-      final controller = await workController(
-        sessions: workLoadedSessions(),
-        otherServers: [
-          ServerProfile(
-            id: 'claude',
-            name: 'Claude Code (this phone)',
-            baseUrl: 'http://127.0.0.1:6767',
-          ),
-          ServerProfile(
-            id: 'laptop',
-            name: 'Laptop',
-            baseUrl: 'http://100.64.0.7:4096',
-          ),
-        ],
-      );
-      final monitor = _Monitor(controller.store);
-      controller.monitor = monitor;
-      await _golden(
-        tester,
-        'work_other_servers',
-        light: light,
-        controller: controller,
-        home: Scaffold(
-          body: SafeArea(
-            child: ListView(
-              children: [OtherServersPanel(controller: controller)],
-            ),
-          ),
-        ),
-        dispose: monitor.dispose,
-      );
-    });
 
     testWidgets('shell · connection lost on Settings · $mode', (tester) async {
       final controller = await workController(status: StreamStatus.disconnected)

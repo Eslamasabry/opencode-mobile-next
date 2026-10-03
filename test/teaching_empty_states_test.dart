@@ -16,7 +16,6 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/library_screen.dart';
 import 'package:opencode_mobile/ui/screens/review_workspace.dart';
 import 'package:opencode_mobile/ui/screens/saved_permissions_screen.dart';
@@ -24,9 +23,6 @@ import 'package:opencode_mobile/ui/screens/tools_screen.dart';
 import 'package:opencode_mobile/ui/screens/worktrees_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const _inboxTeaching =
-    'Nothing needs you. Approvals and questions from running work appear '
-    'here.';
 const _changesTeaching = 'Edits the agent makes show up here to review.';
 const _worktreesTeaching =
     'A worktree is a separate copy of this project on its own branch, so '
@@ -203,14 +199,6 @@ Widget _app(
   home: home,
 );
 
-/// Work has rows that animate forever once a conversation is busy, and the
-/// screens under test load asynchronously; a few frames settle both.
-Future<void> _frames(WidgetTester tester) async {
-  for (var i = 0; i < 8; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
-}
-
 void _phone(WidgetTester tester, [Size size = const Size(400, 800)]) {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -227,36 +215,6 @@ void main() {
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(storage, null);
-  });
-
-  group('Inbox', () {
-    testWidgets('empty: says what will appear here', (tester) async {
-      _phone(tester);
-      final controller = await _controller();
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
-      await _frames(tester);
-
-      expect(find.byKey(const ValueKey('activity-all-clear')), findsOneWidget);
-      expect(find.text(_inboxTeaching), findsOneWidget);
-      expect(find.text('Try again'), findsNothing);
-    });
-
-    testWidgets('failed: Try again, and no claim that nothing needs you', (
-      tester,
-    ) async {
-      _phone(tester);
-      final controller = await _controller()
-        ..permissionsError = 'The server did not answer.';
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
-      await _frames(tester);
-
-      expect(find.text('The server did not answer.'), findsOneWidget);
-      expect(find.text('Try again'), findsOneWidget);
-      expect(find.text(_inboxTeaching), findsNothing);
-      expect(find.byKey(const ValueKey('activity-all-clear')), findsNothing);
-    });
   });
 
   group('Changes', () {
@@ -514,23 +472,6 @@ void main() {
     for (final locale in const [Locale('en'), Locale('ar')]) {
       final code = locale.languageCode;
       final copy = lookupAppLocalizations(locale);
-
-      testWidgets('Inbox empty state, $code', (tester) async {
-        _phone(tester, phone);
-        final controller = await _controller();
-        addTearDown(controller.dispose);
-        await tester.pumpWidget(
-          _app(
-            ActivityScreen(controller: controller),
-            locale: locale,
-            textScale: AppTheme.maxTextScale,
-          ),
-        );
-        await _frames(tester);
-
-        expect(find.text(copy.emptyTeachInboxMessage), findsOneWidget);
-        expect(tester.takeException(), isNull);
-      });
 
       testWidgets('Changes empty state, $code', (tester) async {
         _phone(tester, phone);

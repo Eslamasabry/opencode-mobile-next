@@ -1,4 +1,4 @@
-part of '../activity_screen.dart';
+part of '../chat_screen.dart';
 
 /// Every prompt of one question: its choices (one or several), its own
 /// answer where it takes one, and the actions. Send says why it cannot send
@@ -331,60 +331,67 @@ String _sessionTitle(
   );
 }
 
-/// A scoped result, rather than an unqualified claim about every project.
-/// Offline it says only what that means here; the fix is the connection
-/// line's Reconnect, so [onRefresh] is null there and no second button
-/// repeats it (R3).
-class _ActivityStatus extends StatelessWidget {
-  const _ActivityStatus({
-    required this.known,
-    required this.offline,
-    required this.onRefresh,
-  });
-  final bool known;
-  final bool offline;
-  final VoidCallback? onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = _l10n(context);
-    final retry = onRefresh;
-    return KitStateView(
-      key: ValueKey(known ? 'activity-all-clear' : 'activity-status-unknown'),
-      size: KitStateSize.inline,
-      icon: known ? AppIconography.inbox : AppIconography.networkOff,
-      // All caught up: the last sheet settles into the tray. Not known yet:
-      // the unplugged drawing every load failure uses.
-      illustration: known
-          ? const StatesTrayScene()
-          : const StatesUnpluggedScene(),
-      title: known
-          ? l10n.activityClearHere
-          : offline
-          ? l10n.activityOfflineRequests
-          : l10n.activityStatusIncomplete,
-      // The all-clear says what would fill this list, so an empty Inbox
-      // reads as "watching" rather than "nothing here" (UX plan 5.8, item
-      // 3). The unknown state keeps its own copy: teaching there would
-      // claim a calm the app has not verified.
-      body: known
-          ? l10n.emptyTeachInboxMessage
-          : offline
-          ? null
-          : l10n.activityUnknownStatusDetail,
-      tertiary: [
-        if (!known && retry != null)
-          KitAction(
-            key: const ValueKey('activity-check-again'),
-            label: l10n.activityCheckAgain,
-            icon: AppIconography.retry,
-            onPressed: retry,
-          ),
-      ],
-    );
-  }
-}
-
 AppLocalizations _l10n(BuildContext context) =>
     Localizations.of<AppLocalizations>(context, AppLocalizations) ??
     lookupAppLocalizations(Localizations.localeOf(context));
+
+/// The exact answer surface, shared by the conversation and
+/// notification taps: the kit sheet with each prompt's choices, an own
+/// answer where the prompt takes one, Send with its reason while it cannot
+/// send, and Dismiss (confirmed first: nobody can restore a dismissed
+/// question, DATA-11). [onOpenConversation], when given, adds "Open
+/// conversation" for context before answering.
+Future<void> showQuestionSheet(
+  BuildContext context,
+  ConnectionController controller,
+  PendingQuestion question, {
+  VoidCallback? onOpenConversation,
+}) async {
+  final request = controller.questionIdentity(question);
+  if (!controller.isRequestPending(request)) return;
+  final routes = RequestRoutes(
+    changes: controller,
+    isPending: () => controller.isRequestPending(request),
+  );
+  final l10n = _l10n(context);
+  // Send is pinned to the sheet's foot, above the keyboard, and enables as
+  // the person answers: the form publishes it here (slice-P3.11a).
+  final send = ValueNotifier<KitAction?>(
+    _QuestionFormState.sendAction(
+      l10n,
+      reason: _canAnswer(controller)
+          ? (question.prompts.isEmpty ? null : l10n.activityAnswerEveryQuestion)
+          : l10n.activitySendOffline,
+      working: false,
+      onSend: null,
+    ),
+  );
+  try {
+    await showKitSheet<void>(
+      context,
+      title: l10n.e7WorkspaceNeedsInput,
+      subtitle: _sessionTitle(context, controller, question.sessionID),
+      icon: AppIconography.question,
+      routes: routes,
+      sheetKey: const ValueKey('question-sheet'),
+      primaryListenable: send,
+      body: (sheetContext) => _QuestionForm(
+        question: question,
+        controller: controller,
+        request: request,
+        routes: routes,
+        pinnedSend: send,
+        onOpenConversation: onOpenConversation == null
+            ? null
+            : () {
+                Navigator.of(sheetContext).pop();
+                onOpenConversation();
+              },
+      ),
+    );
+  } finally {
+    routes.close();
+    // Not disposed: the form may still publish while the sheet animates
+    // out, and a notifier with no listeners holds nothing.
+  }
+}

@@ -20,17 +20,12 @@ import 'new_chat_screen.dart';
 ///
 /// [initialFilter] lets old entry points (notifications, widgets, deep
 /// links) land with Needs you or Running already on; a new value arriving
-/// later replaces the filter. [showHeader] draws the server pill and search
-/// as the screen's own bar; the shell passes false while it keeps its own.
+/// later replaces the filter. The server pill and search belong to the shell's
+/// own bar; this screen draws none.
 class ChatsHomeScreen extends ConsumerStatefulWidget {
-  const ChatsHomeScreen({
-    super.key,
-    this.initialFilter,
-    this.showHeader = true,
-  });
+  const ChatsHomeScreen({super.key, this.initialFilter});
 
   final ChatFeedFilter? initialFilter;
-  final bool showHeader;
 
   @override
   ConsumerState<ChatsHomeScreen> createState() => _ChatsHomeScreenState();
@@ -193,20 +188,14 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
 
     final list = _list(context, host, snapshot, projectName);
     final screen = KitScreen(
-      topBar: widget.showHeader
-          ? KitTopBar.shell(controls: _controls(context, host, l10n))
-          : null,
       header: header,
       loading: snapshot.loading && snapshot.items.isEmpty,
       loadingLabel: l10n.chatsHomeTitle,
       body: KitRefresh(onRefresh: source.refreshChatFeed, child: list),
     );
-    // The empty state already offers Start a conversation: no second button.
-    final plainEmpty =
-        snapshot.items.isEmpty &&
-        !snapshot.loading &&
-        !_statusFiltered &&
-        projectName == null;
+    // Every empty state already offers its one primary action (Start a
+    // conversation, Clear filters, Start in this project): no second one.
+    final plainEmpty = snapshot.items.isEmpty && !snapshot.loading;
     if (plainEmpty) return screen;
     return KitFloatingAction(
       buttonKey: const ValueKey('chats-new-chat'),
@@ -219,23 +208,6 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
         ),
       ),
       child: screen,
-    );
-  }
-
-  KitShellControls _controls(
-    BuildContext context,
-    ChatsHost host,
-    AppLocalizations l10n,
-  ) {
-    final pill = host.serverPill(l10n);
-    return KitShellControls(
-      server: pill.name,
-      serverStatus: pill.status,
-      serverTone: pill.tone,
-      onServer: () => unawaited(host.openServerSwitcher(context)),
-      onSearch: host.search(context),
-      serverKey: const ValueKey('server-switcher-button'),
-      searchKey: const ValueKey('home-shell-search'),
     );
   }
 

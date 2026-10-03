@@ -8,7 +8,6 @@ import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/widgets/app_connection_status.dart';
 import 'package:opencode_mobile/ui/widgets/connection_status_banner.dart';
-import 'package:opencode_mobile/ui/widgets/work_status_line.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Controller extends ConnectionController {
@@ -102,19 +101,18 @@ void main() {
             ),
           ),
           home: KitScreen(
-            body: WorkStatusLine(
-              controller: c,
-              serverOnThisPhone: false,
-              others: [
-                WorkStatus(
-                  id: 'runaway',
-                  message: 'Node is busy',
-                  action: KitAction(
-                    label: 'Stop node',
-                    onPressed: () => localAction++,
-                  ),
+            body: KitStatusContribution(
+              status: KitStatus(
+                kind: KitStatusKind.work,
+                id: 'work:runaway',
+                icon: AppIconography.info,
+                message: 'Node is busy',
+                action: KitAction(
+                  label: 'Stop node',
+                  onPressed: () => localAction++,
                 ),
-              ],
+              ),
+              child: const SizedBox.shrink(),
             ),
           ),
         ),

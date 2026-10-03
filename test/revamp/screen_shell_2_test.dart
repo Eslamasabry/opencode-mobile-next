@@ -115,7 +115,7 @@ void main() {
 
       expect(find.byType(KitNavBar), findsOneWidget);
       expect(find.byType(KitNavRail), findsNothing);
-      for (final label in ['Chats', 'Files', 'Settings']) {
+      for (final label in ['Conversations', 'Files', 'Settings']) {
         expect(
           find.descendant(
             of: find.byType(KitNavBar),
@@ -322,7 +322,7 @@ void main() {
       await tester.tap(
         find.descendant(
           of: find.byType(KitNavBar),
-          matching: find.text('Chats'),
+          matching: find.text('Conversations'),
         ),
       );
       await _settle(tester);

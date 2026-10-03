@@ -15,7 +15,6 @@ import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/kit/scenes/states_scenes.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/files_screen.dart';
 import 'package:opencode_mobile/ui/screens/global_sessions_screen.dart';
@@ -144,22 +143,6 @@ Scaffold _page(Widget body) => Scaffold(body: SafeArea(child: body));
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   tearDown(() => KitMotion.loops = false);
-
-  testWidgets('Inbox: all caught up is the tray', (tester) async {
-    final controller = await _connected();
-    controller
-      ..busySessions = {}
-      ..permissions = {}
-      ..questions = {};
-    await _mount(
-      tester,
-      controller,
-      _page(ActivityScreen(controller: controller, embedded: true)),
-    );
-    expect(find.byKey(const ValueKey('activity-all-clear')), findsOneWidget);
-    expect(_drawn(tester), [isA<StatesTrayScene>()]);
-    await _unmount(tester);
-  });
 
   group('All conversations', () {
     testWidgets('none yet is the fresh sheet', (tester) async {

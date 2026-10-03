@@ -2288,12 +2288,7 @@
       ],
       "line": 39,
       "purpose": "Create a fresh worktree for the project, wait for it to be prepared and open a new session in it (non-dismissible sheet with phase-dependent actions).",
-      "reachedFrom": [
-        {
-          "page": "new-conversation-sheet",
-          "element": "new-conversation-copy"
-        }
-      ],
+      "reachedFrom": [],
       "gates": [
         "capabilities.projectManagement && capabilities.worktreeCreate",
         "_selectedWorkspaceID == null and a project is selected"
@@ -2811,95 +2806,6 @@
           "target": null,
           "targetWidget": null,
           "effect": "toggle(): setState(_unfinishedOnly = !_unfinishedOnly) (local view filter; button variants at 154/160).",
-          "gates": [],
-          "destructive": false
-        }
-      ]
-    },
-    {
-      "id": "new-conversation-sheet",
-      "title": "New conversation",
-      "kind": "sheet",
-      "file": "lib/ui/screens/new_conversation_sheet.dart",
-      "widget": "NewConversationChoices",
-      "presentedBy": [
-        "showNewConversationSheet"
-      ],
-      "line": null,
-      "purpose": "Ask how a new conversation starts (Solo, Team, In a separate copy, On a cloud machine) where the server supports more than one way; the last way is marked and remembered per server (slice-P4.5).",
-      "reachedFrom": [],
-      "gates": [
-        "more than one way supported (NewConversationOptions.onlySolo is false)"
-      ],
-      "elements": [
-        {
-          "id": "new-conversation-solo",
-          "type": "row",
-          "label": "Solo",
-          "key": "new-conversation-solo",
-          "line": null,
-          "action": "navigate",
-          "target": "chat",
-          "targetWidget": "ChatScreen",
-          "effect": "controller.createSession() in the current project, then pushNamed('/chat/<id>').",
-          "gates": [],
-          "destructive": false
-        },
-        {
-          "id": "new-conversation-team",
-          "type": "row",
-          "label": "Team",
-          "key": "new-conversation-team",
-          "line": null,
-          "action": "navigate",
-          "target": "team-conversation",
-          "targetWidget": "TeamConversation.start",
-          "effect": "Team on: TeamConversation.start. Team off: openTeamPage (the team page's off state, team-intro).",
-          "gates": [
-            "teamPossibleOn(profile) or a team controller exists"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "new-conversation-copy",
-          "type": "row",
-          "label": "In a separate copy of <project>",
-          "key": "new-conversation-copy",
-          "line": null,
-          "action": "open-sheet",
-          "target": "isolated-task-sheet",
-          "targetWidget": "showIsolatedTaskSheet",
-          "effect": "showIsolatedTaskSheet(project); the returned session opens as a conversation.",
-          "gates": [
-            "capabilities.projectManagement && capabilities.worktreeCreate, a project selected, no workspace selected"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "new-conversation-cloud",
-          "type": "row",
-          "label": "On <cloud machine>",
-          "key": "new-conversation-cloud-<id>",
-          "line": null,
-          "action": "navigate",
-          "target": "chat",
-          "targetWidget": "ChatScreen",
-          "effect": "selectLocation(workspace) then createSession() there and open it.",
-          "gates": [
-            "the project's managed workspaces other than the one in use"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "new-conversation-sheet-close",
-          "type": "icon-button",
-          "label": "Close",
-          "key": null,
-          "line": null,
-          "action": "dismiss",
-          "target": null,
-          "targetWidget": null,
-          "effect": "Closes without starting anything.",
           "gates": [],
           "destructive": false
         }

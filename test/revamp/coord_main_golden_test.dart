@@ -272,7 +272,7 @@ void main() {
               builder: (context) {
                 final l10n = AppLocalizations.of(context);
                 return KitScreen(
-                  topBar: KitTopBar(title: l10n.e7LocaleUiWorkspace),
+                  topBar: KitTopBar(title: l10n.shellTabChats),
                   status: KitStatus(
                     kind: KitStatusKind.work,
                     id: 'app:share-failed',

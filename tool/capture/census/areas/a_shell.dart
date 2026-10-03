@@ -26,7 +26,6 @@ import 'package:opencode_mobile/ui/desktop/context_menu.dart';
 import 'package:opencode_mobile/ui/desktop/shortcuts.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart'
     show KitAction, KitConfirmKind, KitStateView, showKitConfirm;
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/capabilities_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/demo_screen.dart';
@@ -347,41 +346,11 @@ final aShellArea = CensusArea(
       kit.expectText('Manage servers');
     }),
 
-    // -- Inbox ---------------------------------------------------------------
-    CensusShot('activity', state: 'empty', (kit) async {
-      final api = CaptureApi()..busy = {};
-      final controller = await kit.connected(api: api);
-      await kit.pumpApp(
-        ActivityScreen(controller: controller),
-        controller: controller,
-      );
-    }),
-    CensusShot('activity', state: 'waiting', (kit) async {
-      final controller = await kit.connected();
-      controller
-        ..permissions = {samplePermission().id: samplePermission()}
-        ..questions = {sampleQuestion().id: sampleQuestion()};
-      await kit.pumpApp(
-        ActivityScreen(controller: controller),
-        controller: controller,
-      );
-      kit.expectText('Theme source');
-    }),
-    CensusShot('activity', state: 'tab', (kit) async {
-      final controller = await kit.connected();
-      controller.questions = {sampleQuestion().id: sampleQuestion()};
-      await kit.pumpApp(
-        const HomeScreen(initialTab: 1),
-        controller: controller,
-      );
-    }, note: 'Inbox as the second tab of the shell'),
+    // -- question sheet (opened from the conversation) ----------------------
     CensusShot('question-sheet', (kit) async {
       final controller = await kit.connected();
       controller.questions = {sampleQuestion().id: sampleQuestion()};
-      await kit.pumpApp(
-        ActivityScreen(controller: controller),
-        controller: controller,
-      );
+      await kit.pumpApp(const HomeScreen(), controller: controller);
       await kit.present(
         (context) => showQuestionSheet(context, controller, sampleQuestion()),
       );
@@ -390,10 +359,7 @@ final aShellArea = CensusArea(
     CensusShot('question-sheet-dismiss-dialog', (kit) async {
       final controller = await kit.connected();
       controller.questions = {sampleQuestion().id: sampleQuestion()};
-      await kit.pumpApp(
-        ActivityScreen(controller: controller),
-        controller: controller,
-      );
+      await kit.pumpApp(const HomeScreen(), controller: controller);
       await kit.present(
         (context) => showQuestionSheet(context, controller, sampleQuestion()),
       );

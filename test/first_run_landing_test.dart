@@ -215,7 +215,7 @@ void main() {
 
     expect(controller.created, 0);
     expect(_opened, isEmpty);
-    expect(_tab(tester), 'Chats');
+    expect(_tab(tester), 'Conversations');
     expect(FirstRun(controller.store.prefs).landingPending, isFalse);
     expect(FirstRun(controller.store.prefs).notifyAskPending, isTrue);
   });
@@ -232,7 +232,7 @@ void main() {
 
       expect(controller.created, 0);
       expect(_opened, isEmpty);
-      expect(_tab(tester), 'Chats');
+      expect(_tab(tester), 'Conversations');
       // Someone who never saw the welcome is recorded as returning, so
       // removing their servers later does not restart first run.
       expect(controller.store.prefs.getString(FirstRun.stateKey), 'done');
@@ -258,7 +258,7 @@ void main() {
     await _settle(tester);
 
     // The waiting request is the badge on Chats; nothing moves the person.
-    expect(_tab(tester), 'Chats');
+    expect(_tab(tester), 'Conversations');
     expect(controller.created, 0);
   });
 }

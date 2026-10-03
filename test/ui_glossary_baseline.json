@@ -1,11 +1,11 @@
 {
   "G11 confirm": {
-    "lib/ui/screens/activity/activity_question_form.dart": {
-      "label workspaceDismissNotice: fewer than two words": 1
-    },
     "lib/ui/screens/chat/chat_drafts.dart": {
       "title draftAttachmentRecoveryTitle: Arabic does not end with \"؟\"": 1,
       "title draftAttachmentRecoveryTitle: English does not end with \"?\"": 1
+    },
+    "lib/ui/screens/chat/question_sheet.dart": {
+      "label workspaceDismissNotice: fewer than two words": 1
     },
     "lib/ui/screens/local_terminal_screen.dart": {
       "label localTerminalStop: fewer than two words": 1

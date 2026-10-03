@@ -2230,19 +2230,6 @@
             "controller.finishedRunNotificationsReady (platform, background connection on, notification permission granted, finished-run rule on, not quiet hours)"
           ],
           "destructive": false
-        },
-        {
-          "id": "embedded-chat-nudge-slot-dismiss",
-          "type": "icon-button",
-          "label": "Hide tip",
-          "key": "nudge-<id>-dismiss",
-          "file": "lib/ui/widgets/nudge_card.dart",
-          "line": 99,
-          "action": "dismiss",
-          "target": null,
-          "effect": "onDismiss -> NudgeRegistry.dismiss(id): records the nudge as dismissed so it never shows again (until Settings → Help → Show tips again).",
-          "gates": [],
-          "destructive": false
         }
       ]
     }

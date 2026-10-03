@@ -1,6 +1,5 @@
 // Behaviour of screen-shell-1's pages rebuilt from kit parts (wave 2b): the
-// Inbox (two panes from expanded, Allow once in place, last-seen running
-// work, digest Undo), the question sheet (Send says why it cannot send,
+// question sheet (Send says why it cannot send,
 // Open conversation), the Claude Code gate in search, the desktop drop
 // failure alert, the kit context region and the kit scrollbar.
 import 'dart:async';
@@ -19,8 +18,7 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/desktop/file_drop.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
-import 'package:opencode_mobile/ui/navigation/chat_route.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
+import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/search/search_index.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -127,12 +125,6 @@ Future<void> _size(WidgetTester tester, Size size) async {
   addTearDown(tester.view.reset);
 }
 
-/// Bounded pumps: the Running row's live mark never settles.
-Future<void> _settle(WidgetTester tester) async {
-  await tester.pump();
-  await tester.pump(const Duration(milliseconds: 600));
-}
-
 void desktopTest(
   String description,
   Future<void> Function(WidgetTester tester) body,
@@ -148,163 +140,6 @@ void desktopTest(
 }
 
 void main() {
-  group('Inbox', () {
-    // P4.2a: on a phone the row lands on the question's card in its
-    // conversation, never on a sheet over the list.
-    testWidgets('on a phone a question row lands on its card in the chat', (
-      tester,
-    ) async {
-      await _size(tester, const Size(412, 915));
-      final controller = await _controller();
-      addTearDown(controller.dispose);
-      controller.sessionsById['ses_q'] = Session(
-        id: 'ses_q',
-        directory: '/work/oc_app',
-      );
-      String? landed;
-      Object? arguments;
-      await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: ActivityScreen(controller: controller),
-          onGenerateRoute: (settings) => MaterialPageRoute<void>(
-            settings: settings,
-            builder: (_) {
-              landed = settings.name;
-              arguments = settings.arguments;
-              return const SizedBox.shrink();
-            },
-          ),
-        ),
-      );
-      await _settle(tester);
-
-      await tester.tap(find.text('Target'));
-      await _settle(tester);
-      expect(find.byKey(const ValueKey('question-sheet')), findsNothing);
-      expect(find.byKey(const ValueKey('activity-detail-pane')), findsNothing);
-      expect(landed, startsWith('/chat/'));
-      expect((arguments as ChatRouteArguments).landOnRequestID, 'q-1');
-    });
-
-    testWidgets('from expanded the pick is answered in the detail pane', (
-      tester,
-    ) async {
-      await _size(tester, const Size(1280, 800));
-      final controller = await _controller();
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
-      await _settle(tester);
-
-      expect(find.byKey(const ValueKey('activity-list-pane')), findsOneWidget);
-      expect(find.text('Pick a request'), findsOneWidget);
-
-      await tester.tap(find.text('Target'));
-      await _settle(tester);
-      // No sheet: the question fills the detail pane.
-      expect(find.byKey(const ValueKey('question-sheet')), findsNothing);
-      expect(
-        find.byKey(const ValueKey('activity-detail-question-q-1')),
-        findsOneWidget,
-      );
-      await tester.tap(find.text('Staging'));
-      await tester.pump();
-      await tester.ensureVisible(find.byKey(const ValueKey('question-send')));
-      await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('question-send')));
-      await _settle(tester);
-      expect(controller.answers, [
-        ['Staging'],
-      ]);
-
-      // A permission picked there is the answer card, answered in place.
-      await tester.tap(find.text('Edit a file'));
-      await _settle(tester);
-      expect(
-        find.byKey(const ValueKey('activity-detail-permission-perm-1')),
-        findsOneWidget,
-      );
-      await tester.tap(find.byKey(const ValueKey('activity-detail-allow')));
-      await _settle(tester);
-      expect(controller.answeredPermission, 'perm-1');
-      expect(controller.reply, 'once');
-    });
-
-    testWidgets('a permission row allows once without a sheet', (tester) async {
-      await _size(tester, const Size(412, 915));
-      final controller = await _controller();
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
-      await _settle(tester);
-
-      await tester.tap(
-        find.byKey(const ValueKey('activity-permission-allow-perm-1')),
-      );
-      await _settle(tester);
-      expect(controller.answeredPermission, 'perm-1');
-      expect(controller.reply, 'once');
-      expect(find.byKey(const Key('permission-sheet')), findsNothing);
-    });
-
-    testWidgets('while disconnected running work reads as last seen', (
-      tester,
-    ) async {
-      await _size(tester, const Size(412, 915));
-      final controller = await _controller(requests: false)
-        ..connected = false;
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
-      await tester.pumpAndSettle();
-
-      expect(
-        find.textContaining('Last seen running', findRichText: true),
-        findsOneWidget,
-      );
-      // A still mark, so the page settles: nothing turns as if live.
-      expect(tester.binding.hasScheduledFrame, isFalse);
-    });
-
-    testWidgets('a hidden digest comes back with Undo', (tester) async {
-      await _size(tester, const Size(412, 915));
-      final controller = await _controller(requests: false);
-      controller.busySessions = {};
-      controller.sessionsById = {
-        'ses_done': Session(
-          id: 'ses_done',
-          title: 'Review the migration',
-          time: SessionTime(created: 1, updated: 2, idle: 3),
-        ),
-      };
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(
-        _app(
-          Scaffold(
-            body: ActivityScreen(controller: controller, embedded: true),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // The finished conversation is a row of the one list (R1).
-      await tester.tap(find.text('Review the migration'));
-      await tester.pumpAndSettle();
-      final dismiss = find.descendant(
-        of: find.byKey(const Key('completion-digest-card')),
-        matching: find.text('Dismiss'),
-      );
-      await tester.ensureVisible(dismiss);
-      await tester.pumpAndSettle();
-      await tester.tap(dismiss);
-      await tester.pumpAndSettle();
-      expect(find.text('Review the migration'), findsNothing);
-
-      await tester.tap(find.byKey(const ValueKey('activity-digest-undo')));
-      await tester.pumpAndSettle();
-      expect(find.text('Review the migration'), findsOneWidget);
-    });
-  });
-
   group('question sheet', () {
     testWidgets('Send says why it cannot send until every prompt is answered', (
       tester,

@@ -12,7 +12,6 @@ import 'package:opencode_mobile/platform/launch_shortcut.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_home_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
@@ -406,7 +405,6 @@ void main() {
     await tester.pumpAndSettle();
 
     // The Inbox is part of Chats: the tile lands there on "Needs you".
-    expect(find.byType(ActivityScreen), findsNothing);
     expect(find.byType(ChatScreen), findsNothing);
     expect(
       tester
@@ -423,7 +421,6 @@ void main() {
     shortcut.pending.value = LaunchAction.activity;
     await tester.pumpAndSettle();
     expect(find.byType(ChatsHomeScreen), findsOneWidget);
-    expect(find.byType(ActivityScreen), findsNothing);
   });
 
   testWidgets('the tile without a saved server stays on server selection', (
@@ -440,7 +437,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(ServersScreen), findsWidgets);
-    expect(find.byType(ActivityScreen), findsNothing);
     expect(_noticeShown(), isTrue);
     expect(shortcut.pending.value, isNull);
     await _drainNotices(tester);

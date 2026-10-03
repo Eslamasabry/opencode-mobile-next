@@ -31,7 +31,6 @@ import 'package:opencode_mobile/ui/screens/app_diagnostics_screen.dart';
 import 'package:opencode_mobile/ui/screens/capabilities_screen.dart';
 import 'package:opencode_mobile/ui/screens/project_health_screen.dart';
 import 'package:opencode_mobile/ui/screens/project_hub_screen.dart';
-import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/search/search_index.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/tools_screen.dart';
@@ -584,16 +583,11 @@ void main() {
   });
 
   group('hidden: v2-only features on a v1 server (§7 rule 5)', () {
-    testWidgets('a v2 connection lists a pending form', (tester) async {
+    testWidgets('a v2 connection keeps a pending form', (tester) async {
       final controller = await _controller(v2: true);
       addTearDown(controller.dispose);
       controller.handleEventForTesting(_formCreated());
-
-      await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Connect to Sentry'), findsOneWidget);
-      expect(find.text('Nothing needs attention'), findsNothing);
+      expect(controller.forms, isNotEmpty);
     });
 
     testWidgets('the same form stays hidden on a v1 connection', (
@@ -604,14 +598,6 @@ void main() {
       controller.handleEventForTesting(_formCreated());
       expect(controller.forms, isEmpty);
       expect(controller.unifiedAttentionCount, 0);
-
-      await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Connect to Sentry'), findsNothing);
-      // Silently hidden: no explainer for a feature the user has never seen.
-      expect(find.textContaining('OpenCode 2'), findsNothing);
-      expect(find.text('All clear here'), findsOneWidget);
     });
   });
 }

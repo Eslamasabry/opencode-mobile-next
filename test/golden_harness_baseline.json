@@ -115,12 +115,8 @@
       "test/goldens/team_agents_light.png",
       "test/goldens/team_merge_dark.png",
       "test/goldens/team_merge_light.png",
-      "test/goldens/work_nudge_dark.png",
-      "test/goldens/work_nudge_light.png",
       "test/goldens/work_runaway_dark.png",
       "test/goldens/work_runaway_light.png",
-      "test/goldens/work_team_dark.png",
-      "test/goldens/work_team_light.png",
       "test/revamp/goldens/aisetup_oc1_all_settings_412x2300_dark.png",
       "test/revamp/goldens/aisetup_oc1_all_settings_412x2300_light.png"
     ],
