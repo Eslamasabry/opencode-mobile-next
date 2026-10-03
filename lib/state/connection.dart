@@ -94,6 +94,11 @@ import '../domain/workspace_paths.dart';
 import '../domain/session_title_text.dart';
 import '../domain/team_directories.dart';
 import '../domain/chat_feed.dart';
+import '../domain/merged_chat_feed.dart';
+import '../domain/phone_agent_host.dart';
+import '../domain/phone_agents.dart';
+import '../domain/phone_agents_source.dart';
+import '../domain/agent_sign_in.dart';
 
 part 'connection/monitors.dart';
 part 'connection/attention.dart';
@@ -129,6 +134,7 @@ part 'connection/integration_commands.dart';
 part 'connection/prompt_shelf.dart';
 part 'connection/worktrees.dart';
 part 'connection/chat_feed.dart';
+part 'connection/phone_agents.dart';
 
 /// App-wide singletons that need async init before the UI can render.
 class AppBootstrap {
@@ -224,7 +230,8 @@ class ConnectionController extends ChangeNotifier
         _ConnectionControllerIntegrationCommands,
         _ConnectionControllerPromptShelf,
         _ConnectionControllerWorktrees,
-        _ConnectionControllerChatFeed {
+        _ConnectionControllerChatFeed,
+        _ConnectionControllerPhoneAgents {
   final ProfileStore store;
   final BackgroundLiveController backgroundLive;
 
