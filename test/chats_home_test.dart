@@ -303,6 +303,24 @@ void main() {
     expect(find.text(KitBidi.auto('Fix the login bug')), findsNothing);
   });
 
+  clocked('names the agent only when the feed mixes agents', (tester) async {
+    await _pump(tester, FakeChatsHost(_source()));
+    expect(find.text(KitBidi.auto('Claude Code')), findsNothing);
+    final mixed = _source()
+      ..items = [
+        ..._source().items,
+        chat(
+          'cc',
+          'Review the diff',
+          at: _now.subtract(const Duration(minutes: 5)),
+          agentId: 'claude',
+          agentLabel: 'Claude Code',
+        ),
+      ];
+    await _pump(tester, FakeChatsHost(mixed));
+    expect(find.text(KitBidi.auto('Claude Code')), findsOneWidget);
+  });
+
   clocked('large text does not overflow', (tester) async {
     await tester.pumpWidget(
       chatsApp(FakeChatsHost(_source()), const ChatsHomeScreen(), textScale: 2),

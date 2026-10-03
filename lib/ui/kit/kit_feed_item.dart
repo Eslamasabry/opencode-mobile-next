@@ -25,6 +25,7 @@ class KitFeedItem extends StatelessWidget {
     required this.title,
     required this.onTap,
     this.gitLabel,
+    this.agent,
     this.preview = '',
     this.tag,
     this.time,
@@ -40,6 +41,10 @@ class KitFeedItem extends StatelessWidget {
   final String? gitLabel;
 
   final String title;
+
+  /// The agent's name ('Claude Code'), shown after the project only when the
+  /// feed holds more than one agent; null otherwise.
+  final String? agent;
 
   /// The last line; empty shows nothing.
   final String preview;
@@ -64,6 +69,7 @@ class KitFeedItem extends StatelessWidget {
     final time = this.time;
     final preview = this.preview.trim();
     final git = gitLabel;
+    final agent = this.agent;
     // From 1.3x text the title takes two lines and the state goes under it,
     // so neither is cut to a few letters.
     final large = MediaQuery.textScalerOf(context).scale(1) > 1.3;
@@ -81,6 +87,7 @@ class KitFeedItem extends StatelessWidget {
         semanticsLabel ??
         [
           project,
+          ?agent,
           ?git,
           title,
           ?(tag?.label ?? time),
@@ -113,6 +120,16 @@ class KitFeedItem extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  if (agent != null)
+                    Flexible(
+                      child: KitText(
+                        KitBidi.auto(agent),
+                        role: KitTextRole.caption,
+                        tone: KitTextTone.tertiary,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   if (git != null)
                     _GitMark(
                       label: git,

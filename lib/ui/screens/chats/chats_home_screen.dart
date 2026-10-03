@@ -307,6 +307,9 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       return at.year == n.year && at.month == n.month && at.day == n.day;
     }
 
+    // The agent's name shows only when the feed mixes agents.
+    final showAgent = items.map((item) => item.agentId).toSet().length > 1;
+
     final needs = [
       for (final item in items)
         if (item.status == ChatStatus.needsYou) item,
@@ -332,7 +335,7 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
         final item = group[index];
         return KeyedSubtree(
           key: ValueKey('chats-row-${item.sessionID}'),
-          child: _row(context, host, item, now),
+          child: _row(context, host, item, now, showAgent: showAgent),
         );
       },
     );
@@ -352,8 +355,9 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
     BuildContext context,
     ChatsHost host,
     ChatFeedItem item,
-    DateTime now,
-  ) {
+    DateTime now, {
+    required bool showAgent,
+  }) {
     final l10n = AppLocalizations.of(context);
     final tag = switch (item.status) {
       ChatStatus.needsYou => KitStatusTag(
@@ -369,6 +373,7 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
     return KitFeedItem(
       project: item.projectName,
       gitLabel: item.isGit ? l10n.phoneScanGit : null,
+      agent: showAgent ? item.agentLabel : null,
       title: item.title,
       preview: item.preview,
       tag: tag,

@@ -8,10 +8,6 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 
-extension on String {
-  String get isolated => KitBidi.auto(this);
-}
-
 Widget _host(Widget child, {double textScale = 1, bool scroll = true}) =>
     MaterialApp(
       theme: AppTheme.dark(),

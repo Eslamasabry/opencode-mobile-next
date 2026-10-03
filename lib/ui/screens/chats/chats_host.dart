@@ -77,8 +77,7 @@ class ConnectionChatsHost implements ChatsHost {
   final Ref _ref;
 
   @override
-  // The single cast: ConnectionController implements ChatFeedSource.
-  ChatFeedSource get source => _conn as ChatFeedSource;
+  ChatFeedSource get source => chatFeedSourceOf(_conn);
 
   @override
   Listenable? get listenable => _conn;

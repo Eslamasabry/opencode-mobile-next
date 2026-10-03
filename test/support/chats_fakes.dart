@@ -171,6 +171,8 @@ ChatFeedItem chat(
   required DateTime at,
   String preview = '',
   String? parent,
+  String agentId = defaultChatAgentId,
+  String? agentLabel,
 }) => ChatFeedItem(
   sessionID: id,
   title: title,
@@ -181,6 +183,8 @@ ChatFeedItem chat(
   lastActivity: at,
   preview: preview,
   parentID: parent,
+  agentId: agentId,
+  agentLabel: agentLabel,
 );
 
 ProjectSummary project(
