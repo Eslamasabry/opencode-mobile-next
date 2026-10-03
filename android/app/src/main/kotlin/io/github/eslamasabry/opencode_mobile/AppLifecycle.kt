@@ -41,16 +41,18 @@ object AppLifecycle {
     private var lastExit: Map<String, Any?>? = null
     private var lastExitRead = false
 
-    fun register(activity: Activity, messenger: BinaryMessenger, requestBatteryExemption: () -> Unit) {
+    fun register(activity: Activity, messenger: BinaryMessenger, replies: NativeChannelReplies, requestBatteryExemption: () -> Unit) {
         // How hot the phone is (oc/thermal), for the AI Team's thermal guard.
         ThermalMonitor.register(activity, messenger)
-        MethodChannel(messenger, CHANNEL).setMethodCallHandler { call, result ->
-            try {
+        MethodChannel(messenger, CHANNEL).setMethodCallHandler { call, rawResult ->
+            val result = replies.wrap(rawResult)
+            result.guarded("lifecycle") {
                 when (call.method) {
                     "launchReport" -> result.success(
                         mapOf(
                             "exit" to lastExit(activity),
                             "previousServices" to previousServices(activity),
+                            "lastCrash" to NativeCrashStore(activity.filesDir).read(),
                         ),
                     )
                     "keepAliveInfo" -> result.success(keepAliveInfo(activity))
@@ -59,9 +61,6 @@ object AppLifecycle {
                     )
                     else -> result.notImplemented()
                 }
-            } catch (error: Exception) {
-                Log.w(TAG, "lifecycle call ${call.method} failed", error)
-                result.error("lifecycle", error.message ?: error.javaClass.simpleName, null)
             }
         }
     }
@@ -122,9 +121,9 @@ object AppLifecycle {
             "status" to newest.status,
             "importance" to newest.importance,
             "timestamp" to newest.timestamp,
-            "description" to (newest.description ?: ""),
+            "description" to "", // OS crash descriptions can contain the raw exception message.
         )
-        Log.i(TAG, "previous process ended: $text")
+        Log.i(TAG, "previous process ended: reason=${newest.reason} status=${newest.status}")
         return lastExit
     }
 

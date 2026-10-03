@@ -89,6 +89,47 @@ fun main(args: Array<String>) {
                 check(status.getString("errorCode") == "setup_persistence")
                 check(status.isNull("error"))
             }
+            "service-start-denied" -> {
+                SetupService.denyStart = true
+                val failure = runCatching {
+                    runner.start("denied", emptyList(), null,
+                        SetupRunner.Texts("channel", "title", "{percent}", "done", "stopped"))
+                }.exceptionOrNull()
+                check(failure is IllegalStateException)
+                check(!runner.running)
+                check(JSONObject(runner.status()!!).getString("state") == "failed")
+            }
+            "service-finish-denied", "service-update-denied", "agent-output-private" -> {
+                val uncaught = AtomicReference<Throwable?>()
+                Thread.setDefaultUncaughtExceptionHandler { _, error -> uncaught.set(error) }
+                SetupService.denyFinish = args.single() == "service-finish-denied"
+                SetupService.denyUpdate = args.single() == "service-update-denied"
+                val privateOutput = args.single() == "agent-output-private"
+                val script = if (privateOutput) "printf 'private-agent-output\\n::oc stage private-agent-output\\n::oc version private-agent-output\\n'; exit 1"
+                    else if (SetupService.denyUpdate) "sleep 0.4; printf '::oc stage installing\\n'; exit 0"
+                    else "printf '::oc stage installing\\n'; exit 0"
+                runner.start("notifications", listOf(SetupRunner.Spec(
+                    "agent-node", script, false, false, 1.0, false,
+                    null, null, emptyMap(), emptyMap(), agentUser = privateOutput,
+                )), null, SetupRunner.Texts("channel", "title", "{percent}", "done", "stopped"))
+                if (SetupService.denyUpdate) {
+                    // Force the progress interval due without waiting a second.
+                    field(runner, "lastNotified").setLong(runner, 0)
+                    field(runner, "lastNotifiedText").set(runner, "different")
+                    write(runner)
+                    check(SetupService.updateAttempts > 0) { "notification update was not exercised" }
+                }
+                (field(runner, "worker").get(runner) as Thread).join(5000)
+                check(!runner.running)
+                check(uncaught.get() == null) { "worker notification failure was uncaught" }
+                if (SetupService.denyFinish) check(SetupService.finishAttempts > 0)
+                val status = runner.status()!!
+                check(JSONObject(status).getString("state") == if (privateOutput) "failed" else "done")
+                if (privateOutput) {
+                    check(!status.contains("private-agent-output"))
+                    check(!runner.logFile.readText().contains("private-agent-output"))
+                }
+            }
             else -> error("unknown scenario")
         }
         println("PASS ${args.single()}")

@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import 'native_crash.dart';
+
 /// Why the app's previous process ended, in the words the app speaks about
 /// it (`oc/lifecycle`, both halves: this file and AppLifecycle.kt).
 enum AppExitKind {
@@ -156,7 +158,11 @@ AppExitKind classifyAppExit(AppExitRecord record) {
 /// What the app learns at start about the process before this one.
 @immutable
 class AppLaunchReport {
-  const AppLaunchReport({this.exit, this.previousServices = const []});
+  const AppLaunchReport({
+    this.exit,
+    this.previousServices = const [],
+    this.lastCrash,
+  });
 
   static const empty = AppLaunchReport();
 
@@ -165,6 +171,7 @@ class AppLaunchReport {
     final services = raw['previousServices'];
     return AppLaunchReport(
       exit: AppExitRecord.fromMap(raw['exit']),
+      lastCrash: NativeCrashRecord.fromMap(raw['lastCrash']),
       previousServices: [
         if (services is List)
           for (final name in services)
@@ -176,6 +183,10 @@ class AppLaunchReport {
   /// The newest exit not reported before; null on the first start after
   /// install, before Android 11, or when there was none.
   final AppExitRecord? exit;
+
+  /// Last captured JVM exception, also available when Android's historical
+  /// exit record is missing. Contains only bounded, safe native metadata.
+  final NativeCrashRecord? lastCrash;
 
   /// The built-in Ubuntu's services that ran when that process ended
   /// (`server`, `aiteam`). A stop the person asked for clears them, so

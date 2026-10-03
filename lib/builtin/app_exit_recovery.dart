@@ -108,6 +108,18 @@ class AppExitRecovery extends ChangeNotifier {
     _ran = true;
     final report = await bridge.launchReport();
     _report = report;
+    final crash = report.lastCrash;
+    if (crash != null) {
+      PerfTrace.mark('crash.last', attrs: crash.traceAttrs);
+      // Existing ReportProblemCapture imports early buffered diagnostics and
+      // persists this full bounded stack once storage attaches at startup.
+      (diagnostics ?? ReportProblemStartup.diagnostics)?.record(
+        crash.diagnosticMessage,
+        StackTrace.fromString(crash.diagnosticStack),
+        source: 'crash.last',
+        at: crash.timestamp,
+      );
+    }
     final stoppedOnPurpose = [
       for (final profile in store.profiles)
         if (looksLikeInAppServer(profile) &&

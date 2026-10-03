@@ -24,6 +24,10 @@ void main() {
     'ordered-terminal',
     'typed-write-failure',
     'failed-start-status',
+    'service-start-denied',
+    'service-finish-denied',
+    'service-update-denied',
+    'agent-output-private',
   ];
   // The scenarios share nothing: the JVMs run side by side.
   final runs = <String, Future<ProcessResult>>{};

@@ -46,7 +46,7 @@
     </queries>
     <application
         android:label="${appLabel}"
-        android:name="${applicationName}"
+        android:name=".OcApplication"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"

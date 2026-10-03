@@ -107,25 +107,25 @@ class PhoneAgentSignIn(private val linux: BuiltinLinux) {
     private fun capture(run: Run, args: List<String>): Pair<Int, String> {
         val process = launch(run, args, false)
         val output = CompletableFuture<String>()
-        Thread({
-            try {
-                val buffer = StringBuilder()
-                process.inputStream.bufferedReader(Charsets.UTF_8).use { reader ->
-                    val chunk = CharArray(2048)
-                    while (true) {
-                        val count = reader.read(chunk)
-                        if (count < 0) break
-                        if (buffer.length + count > 16384) throw AuthFailure("invalidResponse")
-                        buffer.append(chunk, 0, count)
-                    }
-                }
-                output.complete(buffer.toString())
-                buffer.setLength(0)
-            } catch (_: Exception) {
-                output.completeExceptionally(AuthFailure("invalidResponse"))
-            }
-        }, "phone-agent-auth-status").apply { isDaemon = true; start() }
         try {
+            Thread({
+                try {
+                    val buffer = StringBuilder()
+                    process.inputStream.bufferedReader(Charsets.UTF_8).use { reader ->
+                        val chunk = CharArray(2048)
+                        while (true) {
+                            val count = reader.read(chunk)
+                            if (count < 0) break
+                            if (buffer.length + count > 16384) throw AuthFailure("invalidResponse")
+                            buffer.append(chunk, 0, count)
+                        }
+                    }
+                    output.complete(buffer.toString())
+                    buffer.setLength(0)
+                } catch (_: Throwable) {
+                    output.completeExceptionally(AuthFailure("invalidResponse"))
+                }
+            }, "phone-agent-auth-status").apply { isDaemon = true; start() }
             if (!process.waitFor(15, TimeUnit.SECONDS)) throw AuthFailure("hostUnavailable")
             return Pair(process.exitValue(), output.get(2, TimeUnit.SECONDS))
         } finally {
@@ -173,7 +173,7 @@ class PhoneAgentSignIn(private val linux: BuiltinLinux) {
             snapshot(run)
         } catch (error: AuthFailure) {
             failure(runId, error.kind)
-        } catch (_: Exception) {
+        } catch (_: Throwable) {
             failure(runId, "hostUnavailable")
         }
     }
@@ -200,7 +200,7 @@ class PhoneAgentSignIn(private val linux: BuiltinLinux) {
             snapshot(run)
         } catch (error: AuthFailure) {
             failure(runId, error.kind)
-        } catch (_: Exception) {
+        } catch (_: Throwable) {
             failure(runId, "hostUnavailable")
         }
     }
@@ -211,79 +211,87 @@ class PhoneAgentSignIn(private val linux: BuiltinLinux) {
             uri.scheme == "https" && uri.host == "claude.com" && uri.port == -1 &&
             uri.rawUserInfo == null && uri.rawFragment == null &&
             uri.rawPath == "/cai/oauth/authorize") value else null
-    } catch (_: Exception) { null }
+    } catch (_: Throwable) { null }
 
     private fun readLogin(run: Run, process: Process) {
-        Thread({
-            // Only a transient, bounded parser window. No stored transcript.
-            val window = StringBuilder()
-            try {
-                process.inputStream.bufferedReader(Charsets.UTF_8).use { reader ->
-                    val chunk = CharArray(2048)
-                    while (true) {
-                        val count = reader.read(chunk)
-                        if (count < 0) break
-                        if (synchronized(lock) { run.cancelled }) break
-                        window.append(chunk, 0, count)
-                        if (window.length > 32768) throw AuthFailure("invalidResponse")
-                        val plain = window.toString()
-                            .replace(Regex("\\u001b\\][^\\u0007\\u001b]*(?:\\u0007|\\u001b\\\\)"), "")
-                            .replace(Regex("\\u001b\\[[0-?]*[ -/]*[@-~]"), "")
-                        // Parse a complete printed URL line, never a partial read.
-                        for (line in plain.split('\n').dropLast(1)) {
-                            val marker = "If the browser didn't open, visit: "
-                            if (line.startsWith(marker)) {
-                                val url = validatedUrl(line.removePrefix(marker).trim())
-                                    ?: throw AuthFailure("invalidChallenge")
-                                synchronized(lock) {
-                                    if (!run.cancelled && run.phase != "signedIn") {
-                                        run.url = url; run.phase = "urlReady"; run.failure = null
-                                        run.challengeReady.countDown()
+        try {
+            Thread({
+                // Only a transient, bounded parser window. No stored transcript.
+                val window = StringBuilder()
+                try {
+                    process.inputStream.bufferedReader(Charsets.UTF_8).use { reader ->
+                        val chunk = CharArray(2048)
+                        while (true) {
+                            val count = reader.read(chunk)
+                            if (count < 0) break
+                            if (synchronized(lock) { run.cancelled }) break
+                            window.append(chunk, 0, count)
+                            if (window.length > 32768) throw AuthFailure("invalidResponse")
+                            val plain = window.toString()
+                                .replace(Regex("\\u001b\\][^\\u0007\\u001b]*(?:\\u0007|\\u001b\\\\)"), "")
+                                .replace(Regex("\\u001b\\[[0-?]*[ -/]*[@-~]"), "")
+                            // Parse a complete printed URL line, never a partial read.
+                            for (line in plain.split('\n').dropLast(1)) {
+                                val marker = "If the browser didn't open, visit: "
+                                if (line.startsWith(marker)) {
+                                    val url = validatedUrl(line.removePrefix(marker).trim())
+                                        ?: throw AuthFailure("invalidChallenge")
+                                    synchronized(lock) {
+                                        if (!run.cancelled && run.phase != "signedIn") {
+                                            run.url = url; run.phase = "urlReady"; run.failure = null
+                                            run.challengeReady.countDown()
+                                        }
                                     }
                                 }
-                            }
-                            if (line.startsWith("Invalid code. Please make sure the full code was copied.")) {
-                                throw AuthFailure("invalidCode")
-                            }
-                            if (line.startsWith("Login failed:")) {
-                                val kind = when {
-                                    Regex("\\b429\\b|rate.?limit", RegexOption.IGNORE_CASE)
-                                        .containsMatchIn(line) -> "limitReached"
-                                    Regex("\\b40[13]\\b|invalid_grant", RegexOption.IGNORE_CASE)
-                                        .containsMatchIn(line) -> "authenticationRejected"
-                                    else -> "hostUnavailable"
+                                if (line.startsWith("Invalid code. Please make sure the full code was copied.")) {
+                                    throw AuthFailure("invalidCode")
                                 }
-                                throw AuthFailure(kind)
+                                if (line.startsWith("Login failed:")) {
+                                    val kind = when {
+                                        Regex("\\b429\\b|rate.?limit", RegexOption.IGNORE_CASE)
+                                            .containsMatchIn(line) -> "limitReached"
+                                        Regex("\\b40[13]\\b|invalid_grant", RegexOption.IGNORE_CASE)
+                                            .containsMatchIn(line) -> "authenticationRejected"
+                                        else -> "hostUnavailable"
+                                    }
+                                    throw AuthFailure(kind)
+                                }
                             }
+                            if (plain.contains("Paste code here if prompted > ")) synchronized(lock) {
+                                if (!run.cancelled && run.url != null) run.acceptsCode = true
+                            }
+                            // Retain only the incomplete line. The sanitized URL is separate.
+                            val newline = window.lastIndexOf("\n")
+                            if (newline >= 0) window.delete(0, newline + 1)
                         }
-                        if (plain.contains("Paste code here if prompted > ")) synchronized(lock) {
-                            if (!run.cancelled && run.url != null) run.acceptsCode = true
-                        }
-                        // Retain only the incomplete line. The sanitized URL is separate.
-                        val newline = window.lastIndexOf("\n")
-                        if (newline >= 0) window.delete(0, newline + 1)
                     }
-                }
-                if (!synchronized(lock) { run.cancelled }) {
-                    if (process.waitFor(2, TimeUnit.SECONDS) && process.exitValue() == 0 && inspect(run)) {
-                        synchronized(lock) {
-                            if (!run.cancelled) {
-                                run.phase = "signedIn"; run.failure = null; run.url = null; run.acceptsCode = false
+                    if (!synchronized(lock) { run.cancelled }) {
+                        if (process.waitFor(2, TimeUnit.SECONDS) && process.exitValue() == 0 && inspect(run)) {
+                            synchronized(lock) {
+                                if (!run.cancelled) {
+                                    run.phase = "signedIn"; run.failure = null; run.url = null; run.acceptsCode = false
+                                }
                             }
-                        }
-                        run.challengeReady.countDown()
-                    } else fail(run, "authenticationRejected")
+                            run.challengeReady.countDown()
+                        } else fail(run, "authenticationRejected")
+                    }
+                } catch (error: AuthFailure) {
+                    fail(run, error.kind)
+                } catch (_: Throwable) {
+                    fail(run, "hostUnavailable")
+                } finally {
+                    window.setLength(0)
+                    try { stop(run, process) } catch (_: Throwable) { fail(run, "cancellationUnconfirmed") }
+                    run.readerDone.countDown()
                 }
-            } catch (error: AuthFailure) {
-                fail(run, error.kind)
-            } catch (_: Exception) {
-                fail(run, "hostUnavailable")
-            } finally {
-                window.setLength(0)
-                try { stop(run, process) } catch (_: Exception) { fail(run, "cancellationUnconfirmed") }
-                run.readerDone.countDown()
-            }
-        }, "phone-agent-auth-login").apply { isDaemon = true; start() }
+            }, "phone-agent-auth-login").apply { isDaemon = true; start() }
+        } catch (_: Throwable) {
+            synchronized(lock) { run.readerStarted = false }
+            run.readerDone.countDown()
+            fail(run, "hostUnavailable")
+            try { stop(run, process) } catch (_: Throwable) { fail(run, "cancellationUnconfirmed") }
+            throw AuthFailure("hostUnavailable")
+        }
     }
 
     fun challenge(profileId: String, agentId: String, runId: String, method: String): Map<String, Any?> {
@@ -294,6 +302,7 @@ class PhoneAgentSignIn(private val linux: BuiltinLinux) {
             }
             snapshot(run)
         } catch (error: AuthFailure) { failure(runId, error.kind) }
+        catch (_: Throwable) { failure(runId, "hostUnavailable") }
     }
 
     fun submit(
@@ -320,7 +329,7 @@ class PhoneAgentSignIn(private val linux: BuiltinLinux) {
             }
             snapshot(run)
         } catch (error: AuthFailure) { failure(runId, error.kind) }
-        catch (_: Exception) { failure(runId, "hostUnavailable") }
+        catch (_: Throwable) { failure(runId, "hostUnavailable") }
     }
 
     fun cancel(profileId: String, agentId: String, runId: String, method: String): Map<String, Any?> {
@@ -347,7 +356,7 @@ class PhoneAgentSignIn(private val linux: BuiltinLinux) {
         }
         var drained = true
         for (process in targets) {
-            try { linux.stopAgentProcess(process) } catch (_: Exception) { drained = false }
+            try { linux.stopAgentProcess(process) } catch (_: Throwable) { drained = false }
         }
         try {
             if (reader?.await(5, TimeUnit.SECONDS) == false) drained = false

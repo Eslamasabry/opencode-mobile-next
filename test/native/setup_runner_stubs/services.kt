@@ -12,7 +12,7 @@ class BuiltinLinux private constructor(context: Context) {
         val cancelled: Boolean
     }
     fun install(progress: InstallProgress) {}
-    fun start(script: String, directory: String?): Process = ProcessBuilder("sh", "-c", script).start()
+    fun start(script: String, directory: String?, agentUser: Boolean = false): Process = ProcessBuilder("sh", "-c", script).start()
     companion object {
         const val TAG = "test"
         const val VERSION = "test"
@@ -21,8 +21,21 @@ class BuiltinLinux private constructor(context: Context) {
     }
 }
 object SetupService {
-    fun start(context: Context, channel: String, title: String, text: String) {}
+    var denyStart = false
+    var denyFinish = false
+    var denyUpdate = false
+    var updateAttempts = 0
+    var finishAttempts = 0
+    fun start(context: Context, channel: String, title: String, text: String) {
+        if (denyStart) throw SecurityException("notification denied")
+    }
     fun stop(context: Context) {}
-    fun finish(context: Context, channel: String, title: String, done: Boolean) {}
-    fun update(context: Context, channel: String, title: String, text: String) {}
+    fun finish(context: Context, channel: String, title: String, done: Boolean) {
+        finishAttempts++
+        if (denyFinish) throw SecurityException("notification denied")
+    }
+    fun update(context: Context, channel: String, title: String, text: String) {
+        updateAttempts++
+        if (denyUpdate) throw SecurityException("notification denied")
+    }
 }
