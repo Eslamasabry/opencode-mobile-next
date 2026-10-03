@@ -1,5 +1,5 @@
 {
- "generatedFrom": "c5e289ac6a8eeb06e24a52cf4deac870bab6608a",
+ "generatedFrom": "ee2c539408d8d6f897c84a83ca8a4e99a206aaea",
  "pages": [
   {
    "id": "system",
@@ -11092,6 +11092,38 @@
    ]
   },
   {
+   "id": "agents-screen",
+   "title": "Agents",
+   "kind": "screen",
+   "area": "workspace",
+   "file": "lib/ui/screens/agents/agents_screen.dart",
+   "widget": "AgentsScreen",
+   "presentedBy": [],
+   "line": 17,
+   "purpose": "Settings > Agents: the agents this phone can run (AgentsSection). Where they cannot run it says so in one line and offers Switch to the built-in server when this phone has one.",
+   "reachedFrom": [],
+   "gates": [],
+   "elements": [
+    {
+     "id": "agents-screen-switch",
+     "type": "button",
+     "label": "Switch to the built-in server",
+     "key": "agents-switch-builtin",
+     "file": "lib/ui/screens/agents/agents_screen.dart",
+     "line": 48,
+     "action": "navigate",
+     "target": "servers",
+     "targetWidget": null,
+     "effect": "Opens the Servers screen's connect flow for the saved built-in server.",
+     "gates": [
+      "agents cannot run here",
+      "a built-in profile is saved"
+     ],
+     "destructive": false
+    }
+   ]
+  },
+  {
    "id": "agents-section",
    "title": "Agents",
    "kind": "overlay",
@@ -11100,10 +11132,10 @@
    "widget": "AgentsSection",
    "presentedBy": [],
    "line": 21,
-   "purpose": "Settings > This phone > Agents: every agent this phone can run with its state, the one act it needs, and Check this phone with each step as passed or failed.",
+   "purpose": "Settings > Agents: every agent this phone can run with its state, the one act it needs, and Check this phone with each step as passed or failed.",
    "reachedFrom": [
     {
-     "page": "termux-setup-installed",
+     "page": "agents-screen",
      "element": null,
      "via": "embedded"
     }
@@ -11112,10 +11144,10 @@
     "PhoneAgentsSource.phoneAgentsAvailable"
    ],
    "embeddedIn": [
-    "ThisPhoneScreen"
+    "AgentsScreen"
    ],
    "hostPages": [
-    "termux-setup-installed"
+    "agents-screen"
    ],
    "elements": [
     {
@@ -18769,6 +18801,10 @@
     {
      "page": "settings-disconnect-sheet",
      "element": "settings-disconnect-sheet-confirm"
+    },
+    {
+     "page": "agents-screen",
+     "element": "agents-screen-switch"
     }
    ],
    "gates": [
@@ -37641,6 +37677,11 @@
     "to": "agents-sheet"
    },
    {
+    "from": "agents-screen",
+    "element": "agents-screen-switch",
+    "to": "servers"
+   },
+   {
     "from": "chat-stash-attachments-unavailable-sheet",
     "element": "chat-stash-attachments-unavailable-sheet-confirm",
     "to": "chat-stash-restore-confirm-sheet",
@@ -38569,7 +38610,7 @@
     "to": "continue-on-phone-sheet"
    },
    {
-    "from": "termux-setup-installed",
+    "from": "agents-screen",
     "element": null,
     "to": "agents-section",
     "via": "embedded"

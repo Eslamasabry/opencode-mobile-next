@@ -350,6 +350,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         row('settings-saved-servers'),
         row('settings-this-phone'),
+        // Agents on this phone: always findable on a phone; where they
+        // cannot run (a remote server, Termux) the row says so.
+        row(
+          'settings-agents',
+          subtitle: controller.phoneAgentsAvailable
+              ? null
+              : copy.agentsRunOnBuiltIn,
+        ),
       ],
       SettingsGroup.agent: [
         // The model the app uses without having asked (P6.6): its name,

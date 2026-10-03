@@ -14,6 +14,7 @@ import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/domain/phone_agent_host.dart';
 import 'package:opencode_mobile/domain/phone_agents_source.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
+import 'package:opencode_mobile/ui/screens/agents/agents_screen.dart';
 import 'package:opencode_mobile/ui/screens/agents/agents_section.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_home_screen.dart';
 import 'package:opencode_mobile/ui/screens/chats/new_chat_screen.dart';
@@ -31,7 +32,8 @@ enum _Scene {
   homeStatus('agents_home_status'),
   homeResume('agents_home_resume'),
   settingsAgents('agents_settings_agents'),
-  settingsCheck('agents_settings_check');
+  settingsCheck('agents_settings_check'),
+  settingsBuiltIn('agents_settings_builtin');
 
   const _Scene(this.name);
   final String name;
@@ -48,6 +50,7 @@ Future<void> _mount(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final agents = FakePhoneAgentsSource(
+    available: scene != _Scene.settingsBuiltIn,
     rows: [
       agentRowFor('claude', switch (scene) {
         _Scene.sheetList || _Scene.sheetInstall => FakeAgentStage.notInstalled,
@@ -111,18 +114,22 @@ Future<void> _mount(
       failure: AgentHostFailure.daemon,
     );
   }
-  final host = FakeChatsHost(
-    FakeChatFeedSource(
-      items: items,
-      projects: [project('alpha', kind: 'dart')],
-      lastUsed: '/root/projects/alpha',
-    ),
-  )..phoneAgents = agents;
+  final host =
+      FakeChatsHost(
+          FakeChatFeedSource(
+            items: items,
+            projects: [project('alpha', kind: 'dart')],
+            lastUsed: '/root/projects/alpha',
+          ),
+        )
+        ..phoneAgents = agents
+        ..builtInProfile = scene == _Scene.settingsBuiltIn;
   final Widget home = switch (scene) {
     _Scene.sheetList ||
     _Scene.sheetInstall ||
     _Scene.sheetSignIn => const NewChatScreen(),
     _Scene.homeStatus || _Scene.homeResume => const ChatsHomeScreen(),
+    _Scene.settingsBuiltIn => const AgentsScreen(),
     _ => ListView(
       children: [
         Padding(
@@ -156,7 +163,7 @@ Future<void> _mount(
       await tester.tap(find.text(KitBidi.auto('Review the diff')));
     case _Scene.settingsCheck:
       await tester.tap(find.byKey(const ValueKey('agents-check-phone')));
-    case _Scene.homeStatus || _Scene.settingsAgents:
+    case _Scene.homeStatus || _Scene.settingsAgents || _Scene.settingsBuiltIn:
       break;
   }
   await tester.pumpAndSettle();

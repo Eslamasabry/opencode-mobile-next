@@ -131,13 +131,13 @@
       "widget": "AgentsSection",
       "presentedBy": [],
       "line": 21,
-      "purpose": "Settings > This phone > Agents: every agent this phone can run with its state, the one act it needs, and Check this phone with each step as passed or failed.",
+      "purpose": "Settings > Agents: every agent this phone can run with its state, the one act it needs, and Check this phone with each step as passed or failed.",
       "reachedFrom": [],
       "gates": [
         "PhoneAgentsSource.phoneAgentsAvailable"
       ],
       "embeddedIn": [
-        "ThisPhoneScreen"
+        "AgentsScreen"
       ],
       "elements": [
         {
@@ -227,6 +227,37 @@
           "effect": "Closes the app so it can be reopened after clearing sign-ins.",
           "gates": [
             "phoneAgentsNeedRestart"
+          ],
+          "destructive": false
+        }
+      ]
+    },
+    {
+      "id": "agents-screen",
+      "title": "Agents",
+      "kind": "screen",
+      "file": "lib/ui/screens/agents/agents_screen.dart",
+      "widget": "AgentsScreen",
+      "presentedBy": [],
+      "line": 17,
+      "purpose": "Settings > Agents: the agents this phone can run (AgentsSection). Where they cannot run it says so in one line and offers Switch to the built-in server when this phone has one.",
+      "reachedFrom": [],
+      "gates": [],
+      "elements": [
+        {
+          "id": "agents-screen-switch",
+          "type": "button",
+          "label": "Switch to the built-in server",
+          "key": "agents-switch-builtin",
+          "file": "lib/ui/screens/agents/agents_screen.dart",
+          "line": 48,
+          "action": "navigate",
+          "target": "servers",
+          "targetWidget": null,
+          "effect": "Opens the Servers screen's connect flow for the saved built-in server.",
+          "gates": [
+            "agents cannot run here",
+            "a built-in profile is saved"
           ],
           "destructive": false
         }

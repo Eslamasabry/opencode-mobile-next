@@ -845,7 +845,8 @@ void main() {
       // row but the setup assistant (P2.2, not built yet) and This phone,
       // which joins the hub once the phone is set up (before that, setting
       // it up is one of Add server's ways, R3).
-      expect(total, 18);
+      // Agents is on every phone (where it cannot run it says why).
+      expect(total, 19);
       expect(titles.toSet().length, titles.length);
       // The pairs that used to sit side by side are one row each now.
       for (final gone in [

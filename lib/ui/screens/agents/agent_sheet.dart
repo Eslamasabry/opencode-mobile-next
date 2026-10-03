@@ -65,6 +65,7 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     // Entering a step directly (a status line's Sign in) starts its work.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      unawaited(_agents.refreshAgentRows());
       _enter(_step);
     });
   }

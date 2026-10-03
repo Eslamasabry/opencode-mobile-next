@@ -27207,4 +27207,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get agentsSelectFailed =>
       'That agent can\'t be chosen right now. Open it to finish setup.';
+
+  @override
+  String get agentsRunOnBuiltIn => 'Agents run on the built-in server';
+
+  @override
+  String get agentsSwitchToBuiltIn => 'Switch to the built-in server';
+
+  @override
+  String get agentsChecking => 'Looking for agents on this phone…';
 }

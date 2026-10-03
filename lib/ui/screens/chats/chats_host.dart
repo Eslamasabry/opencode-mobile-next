@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemNavigator;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../builtin/builtin_linux.dart' show BuiltinLinux;
 import '../../../domain/chat_feed.dart';
 import '../../../domain/phone_agents_source.dart';
 import '../../../domain/server_gateway.dart' show WorkspaceProject;
@@ -16,12 +17,14 @@ import '../project_hub_screen.dart' show projectForDirectory;
 import '../termux_processes_screen.dart' show TermuxProcessesScreen;
 import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart';
+import '../../../state/profiles.dart' show ServerProfile;
 import '../../kit/kit.dart';
 import '../../widgets/external_link.dart' show openExternalLink;
 import '../../widgets/pickers.dart' show showModelPicker;
 import '../../widgets/product_states.dart' show productErrorText;
 import '../project_folder_actions.dart';
 import '../library_screen.dart' show defaultModelLabel;
+import '../servers_screen.dart' show ServersRouteRequest;
 
 /// What the Chats screens need from the app besides the feed itself. One
 /// seam: the screens never touch the connection controller, and a test hands
@@ -89,6 +92,13 @@ abstract interface class ChatsHost {
 
   /// Closes the app so the person can reopen it (the restart offer).
   void closeApp();
+
+  /// True when this phone has a saved built-in server to switch to.
+  bool get hasBuiltInProfile;
+
+  /// Connects to the built-in server through the Servers screen's own
+  /// connect flow.
+  Future<void> switchToBuiltIn(BuildContext context);
 }
 
 /// The one place the app's connection becomes a [ChatFeedSource]. Until the
@@ -176,6 +186,22 @@ class ConnectionChatsHost implements ChatsHost {
 
   @override
   void closeApp() => unawaited(SystemNavigator.pop());
+
+  ServerProfile? get _builtInProfile => _conn.store.profiles
+      .where((profile) => BuiltinLinux.managesServerUrl(profile.baseUrl))
+      .firstOrNull;
+
+  @override
+  bool get hasBuiltInProfile => _builtInProfile != null;
+
+  @override
+  Future<void> switchToBuiltIn(BuildContext context) async {
+    final profile = _builtInProfile;
+    if (profile == null) return;
+    await Navigator.of(
+      context,
+    ).pushNamed('/servers', arguments: ServersRouteRequest.connect(profile.id));
+  }
 
   @override
   Future<String?> showStartedChat(
