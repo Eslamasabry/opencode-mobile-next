@@ -26702,6 +26702,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get folderBrowserNewProjectHere => 'مشروع جديد هنا';
 
   @override
+  String folderBrowserNewProjectCreates(String path) {
+    return 'ينشئ $path';
+  }
+
+  @override
+  String get folderBrowserCreateAndOpen => 'أنشئ وافتح';
+
+  @override
   String get folderBrowserFoldersLabel => 'المجلدات';
 
   @override

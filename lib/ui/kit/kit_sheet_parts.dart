@@ -153,3 +153,52 @@ class _PullDownRecognizer extends VerticalDragGestureRecognizer {
   bool isPointerAllowed(PointerEvent event) =>
       allowed() && super.isPointerAllowed(event);
 }
+
+/// The text a [KitSheet] asks for in place (see [KitSheet.entry]): a
+/// [KitField] with its one line of help or the reason it cannot be used.
+@immutable
+class KitSheetEntry {
+  const KitSheetEntry({
+    required this.label,
+    required this.controller,
+    this.hint,
+    this.helper,
+    this.error,
+    this.onChanged,
+    this.onSubmitted,
+    this.fieldKey,
+  });
+
+  /// The field's visible label.
+  final String label;
+  final TextEditingController controller;
+  final String? hint;
+
+  /// What will happen, one line ("Creates /storage/…/name").
+  final String? helper;
+
+  /// The reason the text cannot be used; shown under the field in place
+  /// of [helper].
+  final String? error;
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
+  final Key? fieldKey;
+}
+
+Widget _entryField(KitSheetEntry entry) => Builder(
+  builder: (context) => Padding(
+    padding: EdgeInsetsDirectional.only(bottom: KitTokens.of(context).space3),
+    child: KitField(
+      label: entry.label,
+      controller: entry.controller,
+      hint: entry.hint,
+      helper: entry.helper,
+      error: entry.error,
+      autofocus: true,
+      onChanged: entry.onChanged,
+      onSubmitted: entry.onSubmitted,
+      textInputAction: TextInputAction.done,
+      fieldKey: entry.fieldKey,
+    ),
+  ),
+);

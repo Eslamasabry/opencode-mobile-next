@@ -26584,6 +26584,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get folderBrowserNewProjectHere => 'New project here';
 
   @override
+  String folderBrowserNewProjectCreates(String path) {
+    return 'Creates $path';
+  }
+
+  @override
+  String get folderBrowserCreateAndOpen => 'Create and open';
+
+  @override
   String get folderBrowserFoldersLabel => 'Folders';
 
   @override

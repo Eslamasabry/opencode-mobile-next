@@ -31439,6 +31439,19 @@
   "@folderBrowserNewProjectHere": {
     "description": "Secondary button of the folder browser: names a new project in the folder shown"
   },
+  "folderBrowserNewProjectCreates": "Creates {path}",
+  "@folderBrowserNewProjectCreates": {
+    "description": "One line under the inline new-project name field: the full path the folder will be created at",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "folderBrowserCreateAndOpen": "Create and open",
+  "@folderBrowserCreateAndOpen": {
+    "description": "Primary button of the inline new-project name field in the folder browser"
+  },
   "folderBrowserFoldersLabel": "Folders",
   "@folderBrowserFoldersLabel": {
     "description": "Section label over the folder list of the folder browser and remote folder sheet"

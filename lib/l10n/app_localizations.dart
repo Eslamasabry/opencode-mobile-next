@@ -41947,6 +41947,18 @@ abstract class AppLocalizations {
   /// **'New project here'**
   String get folderBrowserNewProjectHere;
 
+  /// One line under the inline new-project name field: the full path the folder will be created at
+  ///
+  /// In en, this message translates to:
+  /// **'Creates {path}'**
+  String folderBrowserNewProjectCreates(String path);
+
+  /// Primary button of the inline new-project name field in the folder browser
+  ///
+  /// In en, this message translates to:
+  /// **'Create and open'**
+  String get folderBrowserCreateAndOpen;
+
   /// Section label over the folder list of the folder browser and remote folder sheet
   ///
   /// In en, this message translates to:

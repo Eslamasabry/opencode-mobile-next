@@ -6,10 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/builtin/builtin_folders.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
+import 'package:opencode_mobile/domain/workspace_paths.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/ui/kit/kit_sheet.dart';
 import 'package:opencode_mobile/ui/kit/kit_text.dart';
 import 'package:opencode_mobile/ui/screens/project_folder_actions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -257,27 +259,99 @@ void main() {
     expect(controller.opened, ['/root/projects/work']);
   });
 
-  testWidgets('a new project is named in a dialog and made in the folder '
+  testWidgets('a new project is named in place and made in the folder '
       'shown', (tester) async {
     await openSheet(tester);
     await tapKey(tester, 'folder-browse-work');
     await tapKey(tester, 'phone-new-folder');
+    // No second sheet or dialog: the one sheet's actions became the field.
+    expect(find.byKey(const ValueKey('in-app-projects')), findsOneWidget);
+    expect(find.byType(KitSheet), findsOneWidget);
+    expect(find.byKey(const ValueKey('phone-new-folder')), findsNothing);
+    expect(find.byKey(const ValueKey('folder-browser-open')), findsNothing);
+    expect(find.text('Create and open'), findsOneWidget);
     expect(
-      // The path is isolated left to right inside the sentence.
-      find.text(
-        'The app makes the folder in \u2066/root/projects/work\u2069 and '
-        'opens it.',
-      ),
+      find.text('Creates \u2066/root/projects/work/\u2026\u2069'),
       findsOneWidget,
     );
     await tester.enterText(
       find.byKey(const ValueKey('phone-new-folder-name')),
       'cli',
     );
+    await tester.pump();
+    expect(
+      find.text('Creates \u2066/root/projects/work/cli\u2069'),
+      findsOneWidget,
+    );
     await tapKey(tester, 'phone-new-folder-create');
     expect(linux.created, ['/root/projects/work/cli']);
     expect(result, '/root/projects/work/cli');
     expect(controller.opened, ['/root/projects/work/cli']);
+  });
+
+  testWidgets('Cancel returns to Open and New project here', (tester) async {
+    await openSheet(tester);
+    await tapKey(tester, 'folder-browse-work');
+    await tapKey(tester, 'phone-new-folder');
+    await tester.enterText(
+      find.byKey(const ValueKey('phone-new-folder-name')),
+      'x',
+    );
+    await tapKey(tester, 'phone-new-folder-cancel');
+    expect(find.byKey(const ValueKey('phone-new-folder-name')), findsNothing);
+    expect(find.byKey(const ValueKey('phone-new-folder')), findsOneWidget);
+    expect(find.byKey(const ValueKey('folder-browser-open')), findsOneWidget);
+    expect(linux.created, isEmpty);
+    expect(result, isNull);
+  });
+
+  testWidgets('a bad name is explained under the field and clears when '
+      'fixed', (tester) async {
+    await openSheet(tester);
+    await tapKey(tester, 'folder-browse-work');
+    await tapKey(tester, 'phone-new-folder');
+    await tester.enterText(
+      find.byKey(const ValueKey('phone-new-folder-name')),
+      'a/b',
+    );
+    await tapKey(tester, 'phone-new-folder-create');
+    expect(linux.created, isEmpty);
+    expect(find.byKey(const ValueKey('phone-new-folder-name')), findsOneWidget);
+    final problem = projectFolderNameProblem('a/b')!;
+    expect(find.text(problem), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const ValueKey('phone-new-folder-name')),
+      'ab',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(problem), findsNothing);
+  });
+
+  testWidgets('the name field stays above the keyboard', (tester) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await openSheet(tester);
+    await tapKey(tester, 'folder-browse-work');
+    await tapKey(tester, 'phone-new-folder');
+    tester.view.viewInsets = FakeViewPadding(
+      bottom: 300 * tester.view.devicePixelRatio,
+    );
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpAndSettle();
+    final field = tester.getRect(
+      find.byKey(const ValueKey('phone-new-folder-name')),
+    );
+    final cancel = tester.getRect(
+      find.byKey(const ValueKey('phone-new-folder-cancel')),
+    );
+    final create = tester.getRect(
+      find.byKey(const ValueKey('phone-new-folder-create')),
+    );
+    final top = tester.view.physicalSize.height / tester.view.devicePixelRatio;
+    expect(cancel.bottom, lessThanOrEqualTo(top - 300));
+    expect(create.bottom, lessThanOrEqualTo(cancel.top));
+    expect(field.bottom, lessThanOrEqualTo(create.top));
   });
 
   testWidgets('the sheet has two blocks: Place and Folders', (tester) async {
