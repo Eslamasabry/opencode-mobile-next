@@ -26941,4 +26941,107 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get approvalsSheetHistory => 'تمت الموافقة تلقائيًا';
+
+  @override
+  String get chatsHomeTitle => 'المحادثات';
+
+  @override
+  String get chatsHomeAllProjects => 'كل المشاريع';
+
+  @override
+  String get chatsHomeNeedsYou => 'بانتظارك';
+
+  @override
+  String chatsHomeNeedsYouCount(int count) {
+    return 'بانتظارك · $count';
+  }
+
+  @override
+  String get chatsHomeRunning => 'قيد العمل';
+
+  @override
+  String get chatsHomeToday => 'اليوم';
+
+  @override
+  String get chatsHomeEarlier => 'سابقًا';
+
+  @override
+  String chatsHomeOnlyProject(String project) {
+    return 'تُعرض المحادثات في $project فقط. لا يستطيع هذا الخادم سرد كل المشاريع.';
+  }
+
+  @override
+  String get chatsHomeIncomplete => 'تعذر تحميل بعض المحادثات';
+
+  @override
+  String get chatsHomeEmptyTitle => 'لا توجد محادثات بعد';
+
+  @override
+  String get chatsHomeEmptyBody => 'ابدأ محادثة وستظهر هنا.';
+
+  @override
+  String get chatsHomeStartChat => 'ابدأ محادثة';
+
+  @override
+  String get chatsHomeNoMatchTitle => 'لا توجد محادثات مطابقة';
+
+  @override
+  String get chatsHomeNoMatchBody => 'لا شيء يطابق المرشحات التي اخترتها.';
+
+  @override
+  String get chatsHomeClearFilters => 'مسح المرشحات';
+
+  @override
+  String chatsHomeProjectEmptyTitle(String project) {
+    return 'لا توجد محادثات في $project';
+  }
+
+  @override
+  String chatsHomeStartChatIn(String project) {
+    return 'ابدأ محادثة في $project';
+  }
+
+  @override
+  String get chatsHomeNewChat => 'محادثة جديدة';
+
+  @override
+  String get chatsHomeOpenFailed =>
+      'تعذر فتح هذه المحادثة. اسحب للأسفل لتحديث القائمة.';
+
+  @override
+  String get chatsFilterSheetTitle => 'عرض محادثات من';
+
+  @override
+  String chatsFilterChatCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count محادثات',
+      one: 'محادثة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chatsFilterRunningCount(int running) {
+    return '$running قيد العمل';
+  }
+
+  @override
+  String get chatsFilterNeedsYouWord => 'بانتظارك';
+
+  @override
+  String get chatsFilterOpenProject => 'فتح مشروع…';
+
+  @override
+  String get chatsNewPrompt => 'على ماذا نعمل؟';
+
+  @override
+  String get chatsNewChooseProject => 'اختر مشروعًا';
+
+  @override
+  String get chatsNewNeedProject => 'اختر مشروعًا لبدء محادثة.';
+
+  @override
+  String get chatsNewFailed => 'لم تبدأ المحادثة. رسالتك ما زالت هنا.';
 }

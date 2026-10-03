@@ -1,0 +1,251 @@
+{
+  "area": "l-chats",
+  "pages": [
+    {
+      "id": "chats-home",
+      "title": "Conversations",
+      "kind": "tab",
+      "file": "lib/ui/screens/chats/chats_home_screen.dart",
+      "widget": "ChatsHomeScreen",
+      "presentedBy": [],
+      "line": 25,
+      "purpose": "Chats first: every conversation on the connected server in one list (Needs you, Today, Earlier), the project a small label on each row and a filter chip. Reads ChatFeedSource only.",
+      "reachedFrom": [],
+      "gates": [],
+      "elements": [
+        {
+          "id": "chats-home-filter-project",
+          "type": "chip",
+          "label": "All projects | <project name>",
+          "key": "chats-filter-project",
+          "file": "lib/ui/screens/chats/chats_home_screen.dart",
+          "line": 153,
+          "action": "open-sheet",
+          "target": "chats-project-sheet",
+          "targetWidget": null,
+          "effect": "Opens the project filter sheet.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "chats-home-filter-needs-you",
+          "type": "chip",
+          "label": "Needs you · {count}",
+          "key": "chats-filter-needs-you",
+          "file": "lib/ui/screens/chats/chats_home_screen.dart",
+          "line": 164,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Toggles the Needs you filter; with Running also on, either matches.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "chats-home-filter-running",
+          "type": "chip",
+          "label": "Running",
+          "key": "chats-filter-running",
+          "file": "lib/ui/screens/chats/chats_home_screen.dart",
+          "line": 173,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Toggles the Running filter.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "chats-home-row",
+          "type": "list-tile",
+          "label": "<project> · <title> · <state or time> · <last line>",
+          "key": "chats-row-<sessionID>",
+          "file": "lib/ui/screens/chats/chats_home_screen.dart",
+          "line": 334,
+          "action": "navigate",
+          "target": "chat",
+          "targetWidget": null,
+          "effect": "Rescopes the connection to the conversation's project and opens it.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "chats-home-new",
+          "type": "fab",
+          "label": "New conversation",
+          "key": "chats-new-chat",
+          "file": "lib/ui/screens/chats/chats_home_screen.dart",
+          "line": 205,
+          "action": "navigate",
+          "target": "chats-new-chat",
+          "targetWidget": null,
+          "effect": "Opens the start screen on the filtered or last used project.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "chats-home-clear-filters",
+          "type": "button",
+          "label": "Clear filters",
+          "key": "chats-clear-filters",
+          "file": "lib/ui/screens/chats/chats_home_screen.dart",
+          "line": 261,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Removes the project and status filters.",
+          "gates": [
+            "no match for the filters"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "chats-home-start-in-project",
+          "type": "button",
+          "label": "Start a conversation in <project>",
+          "key": "chats-start-in-project",
+          "file": "lib/ui/screens/chats/chats_home_screen.dart",
+          "line": 272,
+          "action": "navigate",
+          "target": "chats-new-chat",
+          "targetWidget": null,
+          "effect": "Opens the start screen on the filtered project.",
+          "gates": [
+            "the chosen project has no conversations"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "chats-home-start",
+          "type": "button",
+          "label": "Start a conversation",
+          "key": "chats-start-chat",
+          "file": "lib/ui/screens/chats/chats_home_screen.dart",
+          "line": 286,
+          "action": "navigate",
+          "target": "chats-new-chat",
+          "targetWidget": null,
+          "effect": "Opens the start screen on the last used project.",
+          "gates": [
+            "no conversations at all"
+          ],
+          "destructive": false
+        }
+      ]
+    },
+    {
+      "id": "chats-project-sheet",
+      "title": "Show conversations from",
+      "kind": "sheet",
+      "file": "lib/ui/screens/chats/chats_project_sheet.dart",
+      "widget": "showChatsProjectSheet",
+      "presentedBy": [
+        "showChatsProjectSheet"
+      ],
+      "line": 40,
+      "purpose": "The project filter: All projects with the total, each project with its counts and Git badge, and Open a project. One sheet; Open a project closes it before the folder browser opens.",
+      "reachedFrom": [],
+      "gates": [],
+      "elements": [
+        {
+          "id": "chats-project-sheet-all",
+          "type": "list-tile",
+          "label": "All projects",
+          "key": "chats-project-all",
+          "file": "lib/ui/screens/chats/chats_project_sheet.dart",
+          "line": 64,
+          "action": "dismiss",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Clears the project filter.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "chats-project-sheet-project",
+          "type": "list-tile",
+          "label": "<project> · n conversations · m running · needs you",
+          "key": "chats-project-<directory>",
+          "file": "lib/ui/screens/chats/chats_project_sheet.dart",
+          "line": 78,
+          "action": "dismiss",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Filters to that project.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "chats-project-sheet-open",
+          "type": "list-tile",
+          "label": "Open a project…",
+          "key": "chats-project-open",
+          "file": "lib/ui/screens/chats/chats_project_sheet.dart",
+          "line": 111,
+          "action": "dismiss",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Closes this sheet, opens the Open a project sheet; the chosen folder becomes the filter.",
+          "gates": [],
+          "destructive": false
+        }
+      ]
+    },
+    {
+      "id": "chats-new-chat",
+      "title": "New conversation",
+      "kind": "screen",
+      "file": "lib/ui/screens/chats/new_chat_screen.dart",
+      "widget": "NewChatScreen",
+      "presentedBy": [
+        "showNewChat"
+      ],
+      "line": 22,
+      "purpose": "What should we work on? A project chip and the composer. Send starts the conversation in the chosen project and replaces this screen with it.",
+      "reachedFrom": [],
+      "gates": [],
+      "elements": [
+        {
+          "id": "chats-new-project",
+          "type": "chip",
+          "label": "<project> | Choose a project",
+          "key": "chats-new-project",
+          "file": "lib/ui/screens/chats/new_chat_screen.dart",
+          "line": 129,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Opens the Open a project sheet; its choice updates the chip.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "chats-new-send",
+          "type": "button",
+          "label": "Send",
+          "key": "chats-new-send",
+          "file": "lib/ui/screens/chats/new_chat_screen.dart",
+          "line": 173,
+          "action": "submit",
+          "target": "chat",
+          "targetWidget": null,
+          "effect": "startChatIn(directory, firstPrompt); on failure says why in plain words and keeps the draft.",
+          "gates": [
+            "a project is chosen",
+            "the field is not empty"
+          ],
+          "destructive": false
+        }
+      ]
+    }
+  ],
+  "notPages": [
+    {
+      "file": "lib/ui/screens/chats/chats_host.dart",
+      "reason": "No surface: the one seam between the Chats screens and the connection (feed source, server pill, opening a conversation, model chip)."
+    }
+  ],
+  "notes": [
+    "Chats home speaks 'conversation' because the glossary (test/ui_glossary_test.dart) bans 'chat' in copy; the approved mockup says Chats."
+  ]
+}

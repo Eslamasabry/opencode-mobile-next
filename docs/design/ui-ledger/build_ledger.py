@@ -50,6 +50,7 @@ AREA_OF_PART = {
     "j1-settings-more": "settings",
     "j2-library": "settings",
     "k-session-misc": "chat",
+    "l-chats": "workspace",
 }
 AREA_TITLES = collections.OrderedDict([
     ("shell", "Shell and navigation"),

@@ -198,5 +198,11 @@
     "lib/ui/widgets/agent_color.dart",
     "lib/ui/widgets/provider_logo.dart",
     "lib/ui/widgets/relative_time.dart"
+  ],
+  "l-chats": [
+    "lib/ui/screens/chats/chats_home_screen.dart",
+    "lib/ui/screens/chats/chats_project_sheet.dart",
+    "lib/ui/screens/chats/new_chat_screen.dart",
+    "lib/ui/screens/chats/chats_host.dart"
   ]
 }

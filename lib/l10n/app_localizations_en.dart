@@ -26819,4 +26819,108 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get approvalsSheetHistory => 'Approved automatically';
+
+  @override
+  String get chatsHomeTitle => 'Conversations';
+
+  @override
+  String get chatsHomeAllProjects => 'All projects';
+
+  @override
+  String get chatsHomeNeedsYou => 'Needs you';
+
+  @override
+  String chatsHomeNeedsYouCount(int count) {
+    return 'Needs you · $count';
+  }
+
+  @override
+  String get chatsHomeRunning => 'Running';
+
+  @override
+  String get chatsHomeToday => 'Today';
+
+  @override
+  String get chatsHomeEarlier => 'Earlier';
+
+  @override
+  String chatsHomeOnlyProject(String project) {
+    return 'Showing conversations in $project only. This server can\'t list all projects.';
+  }
+
+  @override
+  String get chatsHomeIncomplete => 'Some conversations couldn\'t load';
+
+  @override
+  String get chatsHomeEmptyTitle => 'No conversations yet';
+
+  @override
+  String get chatsHomeEmptyBody => 'Start a conversation and it shows up here.';
+
+  @override
+  String get chatsHomeStartChat => 'Start a conversation';
+
+  @override
+  String get chatsHomeNoMatchTitle => 'No matching conversations';
+
+  @override
+  String get chatsHomeNoMatchBody => 'Nothing fits the filters you chose.';
+
+  @override
+  String get chatsHomeClearFilters => 'Clear filters';
+
+  @override
+  String chatsHomeProjectEmptyTitle(String project) {
+    return 'No conversations in $project';
+  }
+
+  @override
+  String chatsHomeStartChatIn(String project) {
+    return 'Start a conversation in $project';
+  }
+
+  @override
+  String get chatsHomeNewChat => 'New conversation';
+
+  @override
+  String get chatsHomeOpenFailed =>
+      'This conversation couldn\'t be opened. Pull down to refresh the list.';
+
+  @override
+  String get chatsFilterSheetTitle => 'Show conversations from';
+
+  @override
+  String chatsFilterChatCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count conversations',
+      one: '1 conversation',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chatsFilterRunningCount(int running) {
+    return '$running running';
+  }
+
+  @override
+  String get chatsFilterNeedsYouWord => 'needs you';
+
+  @override
+  String get chatsFilterOpenProject => 'Open a project…';
+
+  @override
+  String get chatsNewPrompt => 'What should we work on?';
+
+  @override
+  String get chatsNewChooseProject => 'Choose a project';
+
+  @override
+  String get chatsNewNeedProject => 'Choose a project to start a conversation.';
+
+  @override
+  String get chatsNewFailed =>
+      'The conversation didn\'t start. Your message is still here.';
 }

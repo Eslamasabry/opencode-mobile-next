@@ -42348,6 +42348,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Approved automatically'**
   String get approvalsSheetHistory;
+
+  /// Chats home: the screen's title
+  ///
+  /// In en, this message translates to:
+  /// **'Conversations'**
+  String get chatsHomeTitle;
+
+  /// Chats home: the project filter chip when no project is chosen, and the first row of the project sheet
+  ///
+  /// In en, this message translates to:
+  /// **'All projects'**
+  String get chatsHomeAllProjects;
+
+  /// Chats home: filter chip, section name and row tag for conversations waiting on the person
+  ///
+  /// In en, this message translates to:
+  /// **'Needs you'**
+  String get chatsHomeNeedsYou;
+
+  /// Chats home: the needs-you filter chip with how many wait
+  ///
+  /// In en, this message translates to:
+  /// **'Needs you · {count}'**
+  String chatsHomeNeedsYouCount(int count);
+
+  /// Chats home: filter chip and row tag for conversations the agent is working in
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get chatsHomeRunning;
+
+  /// Chats home: section name
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get chatsHomeToday;
+
+  /// Chats home: section name
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get chatsHomeEarlier;
+
+  /// Chats home: quiet line when the server cannot list across projects
+  ///
+  /// In en, this message translates to:
+  /// **'Showing conversations in {project} only. This server can\'t list all projects.'**
+  String chatsHomeOnlyProject(String project);
+
+  /// Chats home: quiet line when the list is partial
+  ///
+  /// In en, this message translates to:
+  /// **'Some conversations couldn\'t load'**
+  String get chatsHomeIncomplete;
+
+  /// Chats home: empty state title
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations yet'**
+  String get chatsHomeEmptyTitle;
+
+  /// Chats home: empty state body
+  ///
+  /// In en, this message translates to:
+  /// **'Start a conversation and it shows up here.'**
+  String get chatsHomeEmptyBody;
+
+  /// Chats home: empty state action
+  ///
+  /// In en, this message translates to:
+  /// **'Start a conversation'**
+  String get chatsHomeStartChat;
+
+  /// Chats home: nothing matches the filters
+  ///
+  /// In en, this message translates to:
+  /// **'No matching conversations'**
+  String get chatsHomeNoMatchTitle;
+
+  /// Chats home: nothing matches the filters, body
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing fits the filters you chose.'**
+  String get chatsHomeNoMatchBody;
+
+  /// Chats home: removes every filter
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get chatsHomeClearFilters;
+
+  /// Chats home: the chosen project has no chats
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations in {project}'**
+  String chatsHomeProjectEmptyTitle(String project);
+
+  /// Chats home: action in a project with no chats
+  ///
+  /// In en, this message translates to:
+  /// **'Start a conversation in {project}'**
+  String chatsHomeStartChatIn(String project);
+
+  /// Chats home: the floating button and the start screen's title
+  ///
+  /// In en, this message translates to:
+  /// **'New conversation'**
+  String get chatsHomeNewChat;
+
+  /// Chats home: a chat could not be opened
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation couldn\'t be opened. Pull down to refresh the list.'**
+  String get chatsHomeOpenFailed;
+
+  /// Project filter sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Show conversations from'**
+  String get chatsFilterSheetTitle;
+
+  /// Project sheet: how many chats
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 conversation} other{{count} conversations}}'**
+  String chatsFilterChatCount(int count);
+
+  /// Project sheet: how many chats are running
+  ///
+  /// In en, this message translates to:
+  /// **'{running} running'**
+  String chatsFilterRunningCount(int running);
+
+  /// Project sheet: some chat in the project needs the person
+  ///
+  /// In en, this message translates to:
+  /// **'needs you'**
+  String get chatsFilterNeedsYouWord;
+
+  /// Project sheet: opens the Open a project sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Open a project…'**
+  String get chatsFilterOpenProject;
+
+  /// New chat: the centered question
+  ///
+  /// In en, this message translates to:
+  /// **'What should we work on?'**
+  String get chatsNewPrompt;
+
+  /// New chat: project chip with no project
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a project'**
+  String get chatsNewChooseProject;
+
+  /// New chat: why sending is off
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a project to start a conversation.'**
+  String get chatsNewNeedProject;
+
+  /// New chat: starting failed and the draft is kept
+  ///
+  /// In en, this message translates to:
+  /// **'The conversation didn\'t start. Your message is still here.'**
+  String get chatsNewFailed;
 }
 
 class _AppLocalizationsDelegate
