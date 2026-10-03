@@ -219,10 +219,14 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
     void add(Session session, String? directory, String? projectName) {
       if (session.archived) return;
       if (session.parentID != null && !includeSubagents) return;
-      final where = directory == null
-          ? null
-          : ConnectionController.normalizeDirectoryPath(directory);
-      if (where == null || !_feedEligible(where)) return;
+      // A conversation is never hidden for its folder. Temporary, home and
+      // root folders are only kept out of the project list; AI Team chats
+      // belong to the AI Team screen.
+      final where = ConnectionController.normalizeDirectoryPath(
+        directory ?? here ?? '/',
+      );
+      if (isAiTeamDirectory(where)) return;
+      final otherFolder = isOtherFolderDirectory(where);
       final id = session.id;
       final status = waiting.contains(id)
           ? ChatStatus.needsYou
@@ -237,8 +241,10 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
         sessionID: id,
         title: title == null || title.isEmpty ? 'New chat' : title,
         directory: where,
-        projectName: _feedProjectName(where, projectName),
-        isGit: _feedProjectFor(where) != null,
+        projectName: otherFolder
+            ? otherFolderLabel(where)
+            : _feedProjectName(where, projectName),
+        isGit: !otherFolder && _feedProjectFor(where) != null,
         status: status,
         lastActivity: DateTime.fromMillisecondsSinceEpoch(stamp),
         preview: _feedPreview(id),
@@ -282,6 +288,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
         if (filter.agentId != null && item.agentId != filter.agentId) {
           return false;
         }
+        if (filter.otherFolders && !item.inOtherFolder) return false;
         if (filter.needsYou || filter.running) {
           return (filter.needsYou && item.status == ChatStatus.needsYou) ||
               (filter.running && item.status == ChatStatus.running);
@@ -312,6 +319,9 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
     _feedWanted = true;
     final byDirectory = <String, ProjectSummary>{};
     for (final item in _feedAllItems(includeSubagents: false)) {
+      // Chats in temporary, home and root folders are listed, but their
+      // folders are never projects (reach them through otherFolders).
+      if (item.inOtherFolder) continue;
       final before = byDirectory[item.directory];
       final last = before?.lastActivity;
       byDirectory[item.directory] = ProjectSummary(

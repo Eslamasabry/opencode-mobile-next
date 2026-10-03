@@ -361,28 +361,36 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('feed leaves out temporary folders and archived chats', (
-    tester,
-  ) async {
-    final script = _Script()
-      ..global = [
-        _global('keep', '/work/app', updated: 3),
-        _global('tmp1', '/tmp/scratch', updated: 9),
-        _global('root', '/', updated: 8),
-        GlobalSessionResult(
-          session: _session('arch', '/work/app', archived: 5),
-          projectDirectory: '/work/app',
-        ),
-      ]
-      ..projects = [_project('g', '/'), _project('t', '/tmp')];
-    final controller = await _connect(tester, await _store(), script);
-    await controller.refreshChatFeed();
+  testWidgets(
+    'feed keeps chats from temporary folders, leaves out archived ones',
+    (tester) async {
+      final script = _Script()
+        ..global = [
+          _global('keep', '/work/app', updated: 3),
+          _global('tmp1', '/tmp/scratch', updated: 9),
+          _global('root', '/', updated: 8),
+          GlobalSessionResult(
+            session: _session('arch', '/work/app', archived: 5),
+            projectDirectory: '/work/app',
+          ),
+        ]
+        ..projects = [_project('g', '/'), _project('t', '/tmp')];
+      final controller = await _connect(tester, await _store(), script);
+      await controller.refreshChatFeed();
 
-    expect(controller.chatFeed().items.map((i) => i.sessionID), ['keep']);
-    expect(controller.projectSummaries.map((p) => p.directory), ['/work/app']);
-    expect(controller.isTemporaryProject('/tmp/x'), isTrue);
-    controller.dispose();
-  });
+      // Conversations are never hidden for their folder; archived ones are.
+      expect(controller.chatFeed().items.map((i) => i.sessionID), [
+        'tmp1',
+        'root',
+        'keep',
+      ]);
+      expect(controller.projectSummaries.map((p) => p.directory), [
+        '/work/app',
+      ]);
+      expect(controller.isTemporaryProject('/tmp/x'), isTrue);
+      controller.dispose();
+    },
+  );
 
   testWidgets('without cross-project listing the feed is the current project', (
     tester,
@@ -469,4 +477,69 @@ void main() {
     expect(controller.chatFeed().items.map((i) => i.sessionID), ['b', 'a']);
     controller.dispose();
   });
+
+  testWidgets(
+    'conversations in temp, home and root folders are listed, never projects, '
+    'and reachable through Other folders',
+    (tester) async {
+      final script = _Script()
+        ..global = [
+          _global('fish', '/tmp', updated: 9, name: 'tmp'),
+          _global('rel', 'tmp', updated: 8),
+          _global('home', '/root', updated: 7),
+          _global('rootchat', '/', updated: 6),
+          _global('real', '/work/app', updated: 5),
+        ]
+        ..projects = [_project('p', '/work/app', name: 'App')];
+      final controller = await _connect(tester, await _store(), script);
+      await controller.refreshChatFeed();
+
+      final all = controller.chatFeed().items;
+      expect(all.map((i) => i.sessionID), [
+        'fish',
+        'rel',
+        'home',
+        'rootchat',
+        'real',
+      ]);
+      String label(String id) =>
+          all.firstWhere((i) => i.sessionID == id).projectName;
+      expect(label('fish'), 'tmp');
+      expect(label('rel'), 'tmp');
+      expect(label('home'), 'Home');
+      expect(label('rootchat'), '/');
+      expect(label('real'), 'App');
+
+      expect(controller.projectSummaries.map((p) => p.directory), [
+        '/work/app',
+      ]);
+      expect(controller.lastUsedProjectDirectory, isNull);
+      await controller.rememberLastUsedProject('/tmp');
+      expect(controller.lastUsedProjectDirectory, isNull);
+
+      final other = controller.chatFeed(
+        const ChatFeedFilter(otherFolders: true),
+      );
+      expect(other.items.map((i) => i.sessionID), [
+        'fish',
+        'rel',
+        'home',
+        'rootchat',
+      ]);
+      expect(
+        controller
+            .chatFeed(const ChatFeedFilter(projectDirectory: '/work/app'))
+            .items
+            .map((i) => i.sessionID),
+        ['real'],
+      );
+      expect(
+        const ChatFeedFilter(otherFolders: true) == ChatFeedFilter.all,
+        isFalse,
+      );
+      expect(otherFolderLabel('/home/eslam'), 'Home');
+      await tester.pump();
+      controller.dispose();
+    },
+  );
 }
