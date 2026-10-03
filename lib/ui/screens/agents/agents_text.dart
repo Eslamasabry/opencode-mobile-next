@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../../../domain/agent_catalog.dart';
 import '../../../domain/agent_sign_in.dart';
 import '../../../domain/phone_agent_host.dart';
+import '../../../domain/product_failure.dart';
 import '../../../domain/phone_agents.dart';
 import '../../../domain/phone_agents_source.dart';
 import '../../../l10n/app_localizations.dart';
@@ -34,12 +35,13 @@ String? agentPayloadSize(String agentId) {
       : '${(bytes / 1000000).round()} MB';
 }
 
-/// One line saying where a row stands.
+/// Where a row stands, in words: one line, and a second quiet line where it
+/// applies ("Can't reopen old conversations").
 String agentRowLine(AppLocalizations l10n, AgentRow row) {
   switch (row.status) {
     case PhoneAgentStatus.ready:
       return row.resumeLabel != null
-          ? l10n.agentsStateReadyCantReopen
+          ? '${l10n.agentsStateReady}\n${l10n.agentsStateCantReopen}'
           : l10n.agentsStateReady;
     case PhoneAgentStatus.needsInstall:
       final size = agentPayloadSize(row.id);
@@ -55,13 +57,44 @@ String agentRowLine(AppLocalizations l10n, AgentRow row) {
     case PhoneAgentStatus.limitReached:
       return l10n.agentsStateLimit;
     case PhoneAgentStatus.unavailable:
-      return row.fixAction == PhoneAgentFixAction.signIn
-          ? l10n.agentsStateSignInNeeded
-          : row.hiddenReason == PhoneAgentHiddenReason.runtimeUnknown &&
-                row.fixAction == null
-          ? l10n.agentsStateChecking
-          : l10n.agentsStateUnavailable;
+      return switch (row.hiddenReason) {
+        PhoneAgentHiddenReason.unsupportedArchitecture =>
+          l10n.agentsStateNeedsArm,
+        PhoneAgentHiddenReason.unverifiedDownload => l10n.agentsStateNoDownload,
+        _ =>
+          row.fixAction == PhoneAgentFixAction.signIn
+              ? l10n.agentsStateSignInNeeded
+              : row.hiddenReason == PhoneAgentHiddenReason.runtimeUnknown
+              ? l10n.agentsStateChecking
+              : l10n.agentsStateUnavailable,
+      };
   }
+}
+
+/// A step that failed: plain words with the way forward, and the technical
+/// text for the Details control (never shown as copy).
+class AgentFailure {
+  const AgentFailure(this.words, [this.technical]);
+  final String words;
+  final String? technical;
+}
+
+/// Words and Details for [error]: typed failures say what they mean; anything
+/// else gets the one plain sentence, with its text under Details.
+AgentFailure agentFailure(AppLocalizations l10n, Object error) {
+  final technical =
+      ProductFailure.from(error).technicalDetails ?? error.toString();
+  return switch (error) {
+    AgentHostException(:final reason) => AgentFailure(
+      agentHostFailureText(l10n, reason),
+      technical,
+    ),
+    AgentSignInException(:final failure) => AgentFailure(
+      agentSignInFailureText(l10n, failure, 'This agent'),
+      technical,
+    ),
+    _ => AgentFailure(l10n.agentsActionFailed, technical),
+  };
 }
 
 /// The label of a row's one fix action, naming its target.

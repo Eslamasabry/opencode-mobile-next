@@ -272,6 +272,10 @@
     {
       "file": "lib/ui/screens/agents/phone_check_view.dart",
       "reason": "No surface of its own: the four phone-check steps drawn inside the agent sheet and Settings."
+    },
+    {
+      "file": "lib/ui/screens/agents/agent_error_notice.dart",
+      "reason": "No surface of its own: a failed agent step in plain words with a Details fold, drawn inside the agent sheet, Settings and Conversations."
     }
   ],
   "notes": []

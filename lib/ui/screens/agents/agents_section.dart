@@ -8,6 +8,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
 import '../../kit/kit.dart';
 import '../chats/chats_host.dart';
+import 'agent_error_notice.dart';
 import 'agent_sheet.dart';
 import 'agents_text.dart';
 import 'phone_check_view.dart';
@@ -28,6 +29,7 @@ class AgentsSection extends ConsumerStatefulWidget {
 class _AgentsSectionState extends ConsumerState<AgentsSection> {
   bool _checking = false;
   String? _running;
+  AgentFailure? _failure;
 
   /// Agents that were checked in this view, in order, with the name to show.
   final _checked = <String, String>{};
@@ -62,9 +64,13 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
       });
       try {
         await agents.runAgentPhoneCheck(row.id);
-      } catch (_) {
-        // The check never throws for a failed step; anything else leaves the
-        // last result in place.
+      } catch (error) {
+        // A step's failure is in the result; anything else is said here.
+        if (mounted) {
+          setState(
+            () => _failure = agentFailure(AppLocalizations.of(context), error),
+          );
+        }
       }
       if (!mounted) return;
     }
@@ -81,7 +87,13 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
     if (action == PhoneAgentFixAction.resume) {
       try {
         await host.agents?.resumeAgentHost();
-      } catch (_) {}
+      } catch (error) {
+        if (mounted) {
+          setState(
+            () => _failure = agentFailure(AppLocalizations.of(context), error),
+          );
+        }
+      }
       return;
     }
     await showAgentSheet(
@@ -159,6 +171,15 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
                   ),
               ],
             ),
+            if (_failure != null)
+              Padding(
+                padding: EdgeInsetsDirectional.only(
+                  start: tokens.gutter,
+                  top: tokens.space3,
+                  end: tokens.gutter,
+                ),
+                child: AgentErrorNotice(failure: _failure!),
+              ),
             for (final entry in _checked.entries)
               Padding(
                 padding: EdgeInsetsDirectional.only(

@@ -328,6 +328,53 @@ void main() {
     expect(find.text(KitBidi.auto('Claude Code')), findsOneWidget);
   });
 
+  clocked('Other folders is hidden when no conversation lives there', (
+    tester,
+  ) async {
+    await _pump(tester, FakeChatsHost(_source()));
+    await tester.tap(find.byKey(const ValueKey('chats-filter-project')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('chats-project-other')), findsNothing);
+  });
+
+  clocked('Other folders lists temp, home and root conversations', (
+    tester,
+  ) async {
+    final source = _source()
+      ..items = [
+        ..._source().items,
+        chat(
+          't1',
+          'Scratch idea',
+          dir: '/tmp/scratch',
+          project: 'tmp',
+          git: false,
+          at: _now.subtract(const Duration(minutes: 30)),
+        ),
+        chat(
+          't2',
+          'Home notes',
+          dir: '/root',
+          project: 'Home',
+          git: false,
+          at: _now.subtract(const Duration(minutes: 31)),
+        ),
+      ];
+    await _pump(tester, FakeChatsHost(source));
+    await tester.tap(find.byKey(const ValueKey('chats-filter-project')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('chats-project-other')), findsOneWidget);
+    expect(find.text('Other folders'), findsOneWidget);
+    expect(find.text('2 conversations'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('chats-project-other')));
+    await tester.pumpAndSettle();
+    // The chip reads Other folders and only those conversations show.
+    expect(find.text('Other folders'), findsOneWidget);
+    expect(find.text(KitBidi.auto('Scratch idea')), findsOneWidget);
+    expect(find.text(KitBidi.auto('Home notes')), findsOneWidget);
+    expect(find.text(KitBidi.auto('Fix the login bug')), findsNothing);
+  });
+
   clocked('large text does not overflow', (tester) async {
     await tester.pumpWidget(
       chatsApp(FakeChatsHost(_source()), const ChatsHomeScreen(), textScale: 2),

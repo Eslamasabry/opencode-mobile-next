@@ -68,6 +68,12 @@ class FakePhoneAgentsSource extends ChangeNotifier
   List<PhoneAgentStatusLine> lines = [];
   final noticeFor = <String, AgentResumeNotice>{};
 
+  /// Runs after each phone check (a test moves the rows on).
+  void Function()? afterCheck;
+
+  /// When set, installing throws this.
+  Object? installError;
+
   /// What the next phone check returns.
   AgentPhoneCheckResult? nextCheck;
 
@@ -139,6 +145,8 @@ class FakePhoneAgentsSource extends ChangeNotifier
   @override
   Future<void> installAgent(String agentId) async {
     calls.add('install:$agentId');
+    final error = installError;
+    if (error != null) throw error;
     progress = AgentSetupProgress(
       agentId: agentId,
       phase: AgentSetupPhase.installing,
@@ -169,6 +177,7 @@ class FakePhoneAgentsSource extends ChangeNotifier
           completed: AgentPhoneCheckStep.values,
         );
     checks[agentId] = result;
+    afterCheck?.call();
     notifyListeners();
     return result;
   }

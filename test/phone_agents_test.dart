@@ -67,7 +67,10 @@ void main() {
     () {
       for (final fact in [null, runtime(id: 'codex')]) {
         final result = row(fact: fact);
-        expect(result.status, PhoneAgentStatus.unavailable);
+        // Unknown host facts lead to Install: the install and phone check
+        // are the verification. They still grant no proof.
+        expect(result.status, PhoneAgentStatus.needsInstall);
+        expect(result.fixAction, PhoneAgentFixAction.install);
         expect(result.hiddenReason, PhoneAgentHiddenReason.runtimeUnknown);
         expect(result.setupVisible, isTrue);
         expect(result.chatSelectable, isFalse);
@@ -200,4 +203,51 @@ void main() {
       expect(result.hiddenReason, PhoneAgentHiddenReason.catalogUnavailable);
     },
   );
+
+  test('server types are not phone agents and are never listed', () {
+    for (final id in ['opencode', 'opencode2']) {
+      final descriptor = AgentCatalog.builtIn.byId(id);
+      if (descriptor == null) continue;
+      final result = row(descriptor: descriptor, fact: null);
+      expect(result.setupVisible, isFalse, reason: id);
+    }
+    final visible = [
+      for (final descriptor in AgentCatalog.builtIn.agents)
+        if (row(descriptor: descriptor, fact: null).setupVisible)
+          descriptor.route,
+    ];
+    expect(
+      visible.toSet(),
+      everyElement(anyOf(AgentRoute.paseoNative, AgentRoute.acpPaseo)),
+    );
+  });
+
+  test('a processor with no download says so, not "not available yet"', () {
+    final claude = AgentCatalog.builtIn.byId('claude')!;
+    final arm64Only = AgentDescriptor(
+      id: 'arm-only',
+      name: 'Arm only',
+      iconKey: 'arm-only',
+      route: AgentRoute.paseoNative,
+      providerId: 'arm-only',
+      signInMethod: AgentSignInMethod.none,
+      recipe: AgentInstallRecipe(
+        version: claude.recipe!.version,
+        executable: claude.recipe!.executable,
+        artifacts: {
+          AgentArchitecture.arm64: claude.recipe!.artifacts.values.first,
+        },
+      ),
+      limitation: 'Needs a check.',
+      resumeReason: 'Needs a check.',
+    );
+    final result = buildAgentRow(
+      descriptor: arm64Only,
+      architecture: AgentArchitecture.x64,
+      serverCapabilities: server,
+    );
+    expect(result.status, PhoneAgentStatus.unavailable);
+    expect(result.hiddenReason, PhoneAgentHiddenReason.unsupportedArchitecture);
+    expect(result.fixAction, isNull);
+  });
 }

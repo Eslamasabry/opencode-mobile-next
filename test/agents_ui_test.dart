@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/domain/phone_agent_host.dart';
+import 'package:opencode_mobile/domain/phone_agents.dart';
+import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/domain/phone_agents_source.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/agents/agents_section.dart';
@@ -100,8 +102,9 @@ void main() {
       await _openSheet(tester);
       expect(find.text('Choose an agent'), findsOneWidget);
       expect(find.text('Ready'), findsOneWidget);
+      // A second, quiet line says what reopening does.
       expect(
-        find.text("Ready · Can't reopen old conversations"),
+        find.text("Ready\nCan't reopen old conversations"),
         findsOneWidget,
       );
       expect(find.byType(BottomSheet), findsOneWidget);
@@ -231,6 +234,141 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const ValueKey('agents-check-again')), findsOneWidget);
+    });
+  });
+
+  group('the agent sheet as a shortcut to install', () {
+    testWidgets('a not-installed row shows its size and an Install hint', (
+      tester,
+    ) async {
+      await _newChat(tester, _host(agents: FakePhoneAgentsSource()));
+      await _openSheet(tester);
+      expect(find.textContaining('Not installed · '), findsOneWidget);
+      expect(find.text('Install'), findsOneWidget);
+    });
+
+    testWidgets('tapping it runs install, phone check and sign-in in place', (
+      tester,
+    ) async {
+      final agents = FakePhoneAgentsSource();
+      await _newChat(tester, _host(agents: agents));
+      await _openSheet(tester);
+      await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('agents-install')));
+      await tester.pumpAndSettle();
+      // The install finished and the phone is not checked yet: the check
+      // runs by itself, in the same sheet.
+      agents.afterCheck = () =>
+          agents.rows = [agentRowFor('claude', FakeAgentStage.signedOut)];
+      agents.change(() {
+        agents.progress = const AgentSetupProgress(
+          agentId: 'claude',
+          phase: AgentSetupPhase.done,
+        );
+        agents.rows = [agentRowFor('claude', FakeAgentStage.needsCheck)];
+      });
+      await tester.pumpAndSettle();
+      expect(agents.calls, contains('check:claude'));
+      expect(find.byType(BottomSheet), findsOneWidget);
+      // Then sign-in, still the one sheet.
+      expect(
+        find.text('Sign in with ${KitBidi.auto('Claude Code')}'),
+        findsOneWidget,
+      );
+      expect(find.byType(BottomSheet), findsOneWidget);
+    });
+
+    testWidgets('a real blocker says exactly why, not "not available yet"', (
+      tester,
+    ) async {
+      final claude = AgentCatalog.builtIn.byId('claude')!;
+      final armOnly = AgentDescriptor(
+        id: 'arm-only',
+        name: 'Arm Only',
+        iconKey: 'arm-only',
+        route: AgentRoute.paseoNative,
+        providerId: 'arm-only',
+        signInMethod: AgentSignInMethod.none,
+        recipe: AgentInstallRecipe(
+          version: claude.recipe!.version,
+          executable: claude.recipe!.executable,
+          artifacts: {
+            AgentArchitecture.arm64: claude.recipe!.artifacts.values.first,
+          },
+        ),
+        limitation: 'Needs a check.',
+        resumeReason: 'Needs a check.',
+      );
+      final agents = FakePhoneAgentsSource(
+        rows: [
+          buildAgentRow(
+            descriptor: armOnly,
+            architecture: AgentArchitecture.x64,
+            serverCapabilities: ServerCapabilities.allV1,
+          ),
+        ],
+      );
+      await _newChat(tester, _host(agents: agents));
+      await _openSheet(tester);
+      expect(find.text('Needs a 64-bit phone'), findsOneWidget);
+      expect(find.text('Not available on this phone yet'), findsNothing);
+      // Tapping says it again and starts nothing.
+      await tester.tap(find.byKey(const ValueKey('agents-choice-arm-only')));
+      await tester.pumpAndSettle();
+      expect(agents.calls.where((c) => c.startsWith('install')), isEmpty);
+      expect(find.text('Needs a 64-bit phone'), findsWidgets);
+    });
+
+    testWidgets('server types are not listed as agents', (tester) async {
+      final agents = FakePhoneAgentsSource(
+        rows: [
+          for (final descriptor in AgentCatalog.builtIn.agents)
+            buildAgentRow(
+              descriptor: descriptor,
+              architecture: AgentArchitecture.arm64,
+              serverCapabilities: ServerCapabilities.allV1,
+            ),
+        ],
+      );
+      await _newChat(tester, _host(agents: agents));
+      await _openSheet(tester);
+      expect(
+        find.byKey(const ValueKey('agents-choice-opencode2')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('agents-choice-opencode1')),
+        findsNothing,
+      );
+      expect(find.text(KitBidi.auto('OpenCode 2')), findsNothing);
+      expect(find.text(KitBidi.auto('Claude Code')), findsOneWidget);
+    });
+
+    testWidgets('a failed step says it in words and Details show the text', (
+      tester,
+    ) async {
+      final agents = FakePhoneAgentsSource()
+        ..installError = const AgentHostException(AgentHostFailure.unavailable);
+      await _newChat(tester, _host(agents: agents));
+      await _openSheet(tester);
+      await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('agents-install')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('agents-error')), findsOneWidget);
+      expect(find.text("This phone can't run this agent yet."), findsOneWidget);
+      // The technical text is only under Details.
+      expect(find.textContaining('AgentHostException'), findsNothing);
+      final details = find.byKey(const ValueKey('agents-error-details'));
+      expect(details, findsOneWidget);
+      await tester.ensureVisible(details);
+      await tester.tap(find.text('Details'));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('AgentHostException(unavailable)'),
+        findsOneWidget,
+      );
     });
   });
 

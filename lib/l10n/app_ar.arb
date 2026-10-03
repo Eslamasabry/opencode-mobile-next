@@ -5081,7 +5081,6 @@
   "agentsChooseTitle": "اختر وكيلًا",
   "agentsChipSemantics": "الوكيل {agent}. تغيير الوكيل",
   "agentsStateReady": "جاهز",
-  "agentsStateReadyCantReopen": "جاهز · لا يمكنه إعادة فتح المحادثات القديمة",
   "agentsStateCantReopen": "لا يمكنه إعادة فتح المحادثات القديمة",
   "agentsStateNotInstalled": "غير مثبّت · {size}",
   "agentsStateNotInstalledNoSize": "غير مثبّت",
@@ -5150,8 +5149,12 @@
   "agentsRestartLine": "أغلق التطبيق وافتحه مرة أخرى لإنهاء مسح عمليات تسجيل الدخول.",
   "agentsRestartAction": "إغلاق التطبيق",
   "agentsSectionTitle": "الوكلاء",
-  "agentsSelectFailed": "لا يمكن اختيار هذا الوكيل الآن. افتحه لإنهاء الإعداد.",
   "agentsRunOnBuiltIn": "يعمل الوكلاء على الخادم المدمج",
   "agentsSwitchToBuiltIn": "التبديل إلى الخادم المدمج",
-  "agentsChecking": "جارٍ البحث عن الوكلاء على هذا الهاتف…"
+  "agentsChecking": "جارٍ البحث عن الوكلاء على هذا الهاتف…",
+  "agentsStateNeedsArm": "يلزم هاتف 64 بت",
+  "agentsStateNoDownload": "لا يوجد تنزيل موثّق بعد",
+  "agentsInstallHint": "تثبيت",
+  "agentsActionFailed": "لم ينجح ذلك على هذا الهاتف. افتح التفاصيل لمعرفة السبب.",
+  "chatsHomeOtherFolders": "مجلدات أخرى"
 }

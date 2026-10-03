@@ -93,6 +93,27 @@ FakeChatFeedSource _source(_Scene scene) {
       at: _now.subtract(const Duration(days: 9)),
     ),
   ];
+  if (scene == _Scene.homeFilterSheet) {
+    // Conversations in temp and home folders add the Other folders row.
+    items.addAll([
+      chat(
+        'g',
+        'Scratch idea',
+        dir: '/tmp/scratch',
+        project: 'tmp',
+        git: false,
+        at: _now.subtract(const Duration(days: 2)),
+      ),
+      chat(
+        'h',
+        'Home notes',
+        dir: '/root',
+        project: 'Home',
+        git: false,
+        at: _now.subtract(const Duration(days: 4)),
+      ),
+    ]);
+  }
   return FakeChatFeedSource(
     items: scene == _Scene.homeEmpty ? const [] : items,
     projects: [

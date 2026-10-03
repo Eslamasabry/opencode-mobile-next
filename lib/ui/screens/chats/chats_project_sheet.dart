@@ -17,6 +17,11 @@ class ChatsAllProjects extends ChatsProjectChoice {
   const ChatsAllProjects();
 }
 
+/// Conversations in the temp, home or root folders.
+class ChatsOtherFolders extends ChatsProjectChoice {
+  const ChatsOtherFolders();
+}
+
 /// One project, by its folder.
 class ChatsOneProject extends ChatsProjectChoice {
   const ChatsOneProject(this.directory);
@@ -42,6 +47,8 @@ Future<ChatsProjectChoice?> showChatsProjectSheet(
   required List<ProjectSummary> projects,
   required int allCount,
   required String? selectedDirectory,
+  int otherFoldersCount = 0,
+  bool otherFoldersSelected = false,
 }) {
   final l10n = AppLocalizations.of(context);
   return showKitSheet<ChatsProjectChoice>(
@@ -65,11 +72,13 @@ Future<ChatsProjectChoice?> showChatsProjectSheet(
                 title: l10n.chatsHomeAllProjects,
                 leading: KitRowIcon(
                   AppIconography.folderOpen,
-                  current: selectedDirectory == null,
+                  current: selectedDirectory == null && !otherFoldersSelected,
                 ),
                 supporting: TextSpan(text: l10n.chatsFilterChatCount(allCount)),
-                trailing: chosen(selectedDirectory == null),
-                selected: selectedDirectory == null,
+                trailing: chosen(
+                  selectedDirectory == null && !otherFoldersSelected,
+                ),
+                selected: selectedDirectory == null && !otherFoldersSelected,
                 onTap: () =>
                     KitSheet.close(sheetContext, const ChatsAllProjects()),
               ),
@@ -100,6 +109,24 @@ Future<ChatsProjectChoice?> showChatsProjectSheet(
                     sheetContext,
                     ChatsOneProject(project.directory),
                   ),
+                ),
+              // Temp, home and root folders are not projects; their
+              // conversations are still the person's.
+              if (otherFoldersCount > 0)
+                KitRow(
+                  key: const ValueKey('chats-project-other'),
+                  title: l10n.chatsHomeOtherFolders,
+                  leading: KitRowIcon(
+                    AppIconography.folderOpen,
+                    current: otherFoldersSelected,
+                  ),
+                  supporting: TextSpan(
+                    text: l10n.chatsFilterChatCount(otherFoldersCount),
+                  ),
+                  trailing: chosen(otherFoldersSelected),
+                  selected: otherFoldersSelected,
+                  onTap: () =>
+                      KitSheet.close(sheetContext, const ChatsOtherFolders()),
                 ),
             ],
           ),

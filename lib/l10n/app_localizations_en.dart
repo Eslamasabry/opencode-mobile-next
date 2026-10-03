@@ -26933,10 +26933,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get agentsStateReady => 'Ready';
 
   @override
-  String get agentsStateReadyCantReopen =>
-      'Ready · Can\'t reopen old conversations';
-
-  @override
   String get agentsStateCantReopen => 'Can\'t reopen old conversations';
 
   @override
@@ -27205,10 +27201,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get agentsSectionTitle => 'Agents';
 
   @override
-  String get agentsSelectFailed =>
-      'That agent can\'t be chosen right now. Open it to finish setup.';
-
-  @override
   String get agentsRunOnBuiltIn => 'Agents run on the built-in server';
 
   @override
@@ -27216,4 +27208,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agentsChecking => 'Looking for agents on this phone…';
+
+  @override
+  String get agentsStateNeedsArm => 'Needs a 64-bit phone';
+
+  @override
+  String get agentsStateNoDownload => 'No verified download yet';
+
+  @override
+  String get agentsInstallHint => 'Install';
+
+  @override
+  String get agentsActionFailed =>
+      'That didn\'t work on this phone. Open Details to see why.';
+
+  @override
+  String get chatsHomeOtherFolders => 'Other folders';
 }
