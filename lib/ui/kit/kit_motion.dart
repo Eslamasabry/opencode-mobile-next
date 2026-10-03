@@ -115,10 +115,9 @@ abstract final class KitMotion {
   static const double classicGlowLapsPerSecond = 1 / 3.6;
   static const double glowMaxLapsPerSecond = 1 / 1.8;
 
-  /// The ring around Stop while a reply runs: one lap in two seconds, half
-  /// that in Calm. Never faster, whatever the work does.
+  /// The ring around Stop while a reply runs and nothing else moves: one lap
+  /// in two seconds. Never faster, whatever the work does.
   static const double stopRingLapsPerSecond = 1 / 2;
-  static const double stopRingCalmLapsPerSecond = 1 / 4;
 
   /// The glowing border's strength easing in and out.
   static const Duration edgeLightHueFade = Duration(milliseconds: 450);
