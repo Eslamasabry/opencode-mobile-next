@@ -1,0 +1,491 @@
+import 'package:clock/clock.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/domain/agent_catalog.dart';
+import 'package:opencode_mobile/domain/chat_feed.dart';
+import 'package:opencode_mobile/domain/phone_agent_host.dart';
+import 'package:opencode_mobile/domain/phone_agents_source.dart';
+import 'package:opencode_mobile/ui/kit/kit.dart';
+import 'package:opencode_mobile/ui/screens/agents/agents_section.dart';
+import 'package:opencode_mobile/ui/screens/chats/chats_home_screen.dart';
+import 'package:opencode_mobile/ui/screens/chats/new_chat_screen.dart';
+
+import '../tool/capture/fixtures.dart' show loadCaptureFonts;
+import 'support/agents_fakes.dart';
+import 'support/chats_fakes.dart';
+
+final _now = DateTime(2026, 10, 3, 12);
+
+FakeChatsHost _host({
+  FakePhoneAgentsSource? agents,
+  List<ChatFeedItem> items = const [],
+}) => FakeChatsHost(
+  FakeChatFeedSource(
+    items: items,
+    projects: [project('alpha')],
+    lastUsed: '/root/projects/alpha',
+  ),
+)..phoneAgents = agents;
+
+Future<void> _newChat(WidgetTester tester, FakeChatsHost host) async {
+  tester.view.physicalSize = const Size(412, 915);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(chatsApp(host, const NewChatScreen()));
+  await tester.pumpAndSettle();
+}
+
+Future<void> _openSheet(WidgetTester tester) async {
+  await tester.tap(find.byKey(const ValueKey('chats-new-agent')));
+  await tester.pumpAndSettle();
+}
+
+Finder _name(String text) => find.text(KitBidi.auto(text));
+
+void main() {
+  setUpAll(loadCaptureFonts);
+
+  group('the agent chip', () {
+    testWidgets('is hidden without phone agents', (tester) async {
+      await _newChat(tester, _host());
+      expect(find.byKey(const ValueKey('chats-new-agent')), findsNothing);
+    });
+
+    testWidgets('is hidden while phoneAgentsAvailable is false', (
+      tester,
+    ) async {
+      await _newChat(
+        tester,
+        _host(agents: FakePhoneAgentsSource(available: false)),
+      );
+      expect(find.byKey(const ValueKey('chats-new-agent')), findsNothing);
+    });
+
+    testWidgets('shows OpenCode beside the project when available', (
+      tester,
+    ) async {
+      await _newChat(tester, _host(agents: FakePhoneAgentsSource()));
+      expect(_name('OpenCode'), findsOneWidget);
+      expect(_name('alpha'), findsOneWidget);
+    });
+
+    testWidgets('send starts the conversation with the chosen agent', (
+      tester,
+    ) async {
+      final agents = FakePhoneAgentsSource(
+        rows: [agentRowFor('claude', FakeAgentStage.ready)],
+        selected: 'claude',
+      );
+      final host = _host(agents: agents);
+      await _newChat(tester, host);
+      expect(_name('Claude Code'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const ValueKey('chats-new-field')),
+        'Review this',
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('chats-new-send')));
+      await tester.pumpAndSettle();
+      expect(host.startedAgents, ['claude']);
+      expect(host.fake.started.single.prompt, 'Review this');
+    });
+  });
+
+  group('the agent sheet', () {
+    testWidgets('lists agents with one line of state each', (tester) async {
+      final agents = FakePhoneAgentsSource(
+        rows: [agentRowFor('claude', FakeAgentStage.ready)],
+      );
+      await _newChat(tester, _host(agents: agents));
+      await _openSheet(tester);
+      expect(find.text('Choose an agent'), findsOneWidget);
+      expect(find.text('Ready'), findsOneWidget);
+      expect(
+        find.text("Ready · Can't reopen old conversations"),
+        findsOneWidget,
+      );
+      expect(find.byType(BottomSheet), findsOneWidget);
+    });
+
+    testWidgets('choosing a ready agent selects it and closes', (tester) async {
+      final agents = FakePhoneAgentsSource(
+        rows: [agentRowFor('claude', FakeAgentStage.ready)],
+      );
+      await _newChat(tester, _host(agents: agents));
+      await _openSheet(tester);
+      await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
+      await tester.pumpAndSettle();
+      expect(agents.calls, contains('select:claude'));
+      expect(find.text('Choose an agent'), findsNothing);
+      expect(_name('Claude Code'), findsOneWidget);
+    });
+
+    testWidgets('an agent that is not installed shows its state', (
+      tester,
+    ) async {
+      await _newChat(tester, _host(agents: FakePhoneAgentsSource()));
+      await _openSheet(tester);
+      expect(find.textContaining('Not installed'), findsOneWidget);
+    });
+
+    testWidgets('install, cancel, then sign in happen in the same sheet', (
+      tester,
+    ) async {
+      final agents = FakePhoneAgentsSource();
+      final host = _host(agents: agents);
+      await _newChat(tester, host);
+      await _openSheet(tester);
+      await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
+      await tester.pumpAndSettle();
+      // The setup step replaced the list; there is still one sheet.
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(find.textContaining('Set up'), findsOneWidget);
+      expect(find.text('Choose an agent'), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('agents-install')));
+      await tester.pumpAndSettle();
+      expect(agents.calls, contains('install:claude'));
+      expect(find.byKey(const ValueKey('agents-progress')), findsOneWidget);
+      expect(
+        find.text('Installing ${KitBidi.auto('Claude Code')}…'),
+        findsOneWidget,
+      );
+      // Cancel stops only this job and offers Install again.
+      await tester.tap(find.byKey(const ValueKey('agents-cancel-setup')));
+      await tester.pumpAndSettle();
+      expect(agents.calls, contains('cancel-install'));
+      expect(find.byKey(const ValueKey('agents-install')), findsOneWidget);
+      // Install again, and let it finish: the next step is sign-in.
+      await tester.tap(find.byKey(const ValueKey('agents-install')));
+      await tester.pumpAndSettle();
+      agents.change(() {
+        agents.progress = const AgentSetupProgress(
+          agentId: 'claude',
+          phase: AgentSetupPhase.done,
+        );
+        agents.rows = [agentRowFor('claude', FakeAgentStage.signedOut)];
+      });
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(
+        find.text('Sign in with ${KitBidi.auto('Claude Code')}'),
+        findsOneWidget,
+      );
+      expect(agents.calls, contains('sign-in:claude'));
+      // The page opens through the safe opener.
+      await tester.tap(find.byKey(const ValueKey('agents-open-page-again')));
+      await tester.pump();
+      expect(host.links.single.host, 'claude.com');
+      // A code that cannot be one is refused in words, nothing is sent.
+      await tester.enterText(
+        find.byKey(const ValueKey('agents-code-field')),
+        'sk-not-a-code',
+      );
+      await tester.tap(find.byKey(const ValueKey('agents-code-submit')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining("doesn't look right"), findsOneWidget);
+      expect(agents.submitted, isEmpty);
+      // The real code is submitted once and leaves the field.
+      await tester.enterText(
+        find.byKey(const ValueKey('agents-code-field')),
+        'abc123#state456',
+      );
+      await tester.tap(find.byKey(const ValueKey('agents-code-submit')));
+      await tester.pumpAndSettle();
+      expect(agents.submitted, ['abc123#state456']);
+      expect(find.text('Signed in'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('agents-sign-in-done')));
+      await tester.pumpAndSettle();
+      expect(agents.calls, contains('select:claude'));
+      expect(find.text('Signed in'), findsNothing);
+      expect(_name('Claude Code'), findsOneWidget);
+    });
+
+    testWidgets('a failed phone check says which step and what to do', (
+      tester,
+    ) async {
+      final agents =
+          FakePhoneAgentsSource(
+              rows: [agentRowFor('claude', FakeAgentStage.needsCheck)],
+            )
+            ..nextCheck = AgentPhoneCheckResult(
+              agentId: 'claude',
+              architecture: AgentArchitecture.arm64,
+              passed: false,
+              completed: const [
+                AgentPhoneCheckStep.install,
+                AgentPhoneCheckStep.version,
+              ],
+              failure: AgentHostFailure.daemon,
+            );
+      await _newChat(tester, _host(agents: agents));
+      await _openSheet(tester);
+      await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
+      await tester.pumpAndSettle();
+      expect(agents.calls, contains('check:claude'));
+      expect(
+        find.text("The agent connection didn't start.".trim()),
+        findsNothing,
+      );
+      expect(
+        find.textContaining("The agent connection didn't start."),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('agents-check-again')), findsOneWidget);
+    });
+  });
+
+  group('Conversations', () {
+    Future<FakePhoneAgentsSource> pumpHome(
+      WidgetTester tester, {
+      required void Function(FakePhoneAgentsSource) script,
+      List<ChatFeedItem> items = const [],
+    }) async {
+      tester.view.physicalSize = const Size(412, 915);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final agents = FakePhoneAgentsSource(
+        rows: [agentRowFor('claude', FakeAgentStage.ready)],
+      );
+      script(agents);
+      final host = _host(agents: agents, items: items);
+      _lastHost = host;
+      await withClock(Clock.fixed(_now), () async {
+        await tester.pumpWidget(chatsApp(host, const ChatsHomeScreen()));
+        await tester.pumpAndSettle();
+      });
+      return agents;
+    }
+
+    testWidgets('a plan limit is one quiet line with its reset time', (
+      tester,
+    ) async {
+      await pumpHome(
+        tester,
+        script: (a) => a.lines = [
+          PhoneAgentStatusLine(
+            agentId: 'claude',
+            agentName: 'Claude Code',
+            kind: PhoneAgentStatusLineKind.limitReached,
+            resetAt: DateTime(2026, 10, 3, 15),
+          ),
+        ],
+      );
+      expect(
+        find.text('Claude Code plan limit reached · resets 3:00 PM'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a limit without a time says try again later', (tester) async {
+      await pumpHome(
+        tester,
+        script: (a) => a.lines = const [
+          PhoneAgentStatusLine(
+            agentId: 'claude',
+            agentName: 'Claude Code',
+            kind: PhoneAgentStatusLineKind.limitReached,
+          ),
+        ],
+      );
+      expect(
+        find.text('Claude Code plan limit reached · try again later'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Signed out opens the setup sheet at sign-in', (tester) async {
+      final agents = await pumpHome(
+        tester,
+        script: (a) {
+          a.rows = [agentRowFor('claude', FakeAgentStage.signedOut)];
+          a.lines = const [
+            PhoneAgentStatusLine(
+              agentId: 'claude',
+              agentName: 'Claude Code',
+              kind: PhoneAgentStatusLineKind.signedOut,
+            ),
+          ];
+        },
+      );
+      expect(find.text('Claude Code signed out'), findsOneWidget);
+      await tester.tap(
+        find.byKey(const ValueKey('agents-status-sign-in-claude')),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Sign in with ${KitBidi.auto('Claude Code')}'),
+        findsOneWidget,
+      );
+      expect(agents.calls, contains('sign-in:claude'));
+    });
+
+    testWidgets('Stopped in the background resumes the host', (tester) async {
+      final agents = await pumpHome(
+        tester,
+        script: (a) => a.lines = const [
+          PhoneAgentStatusLine(
+            agentId: 'claude',
+            agentName: 'Claude Code',
+            kind: PhoneAgentStatusLineKind.stopped,
+          ),
+        ],
+      );
+      expect(
+        find.text('Claude Code stopped in the background'),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('agents-status-resume-claude')),
+      );
+      await tester.pumpAndSettle();
+      expect(agents.calls, contains('resume'));
+      expect(find.text('Claude Code stopped in the background'), findsNothing);
+    });
+
+    testWidgets('one restart offer closes the app', (tester) async {
+      await pumpHome(tester, script: (a) => a.needRestart = true);
+      expect(
+        find.text('Close and reopen the app to finish clearing sign-ins.'),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('agents-restart-action')));
+      expect(_lastHost!.closed, 1);
+    });
+
+    testWidgets('a row that cannot reopen asks before starting a new one', (
+      tester,
+    ) async {
+      final item = chat(
+        'old',
+        'Review the diff',
+        at: _now.subtract(const Duration(hours: 2)),
+        agentId: 'claude',
+        agentLabel: 'Claude Code',
+      );
+      final agents = await pumpHome(
+        tester,
+        items: [item],
+        script: (a) => a.noticeFor['old'] = const AgentResumeNotice(
+          canReopen: false,
+          label: "Can't reopen old chats",
+          note: 'Starts a new chat',
+          requiresAcknowledgement: true,
+        ),
+      );
+      expect(find.text("Can't reopen old conversations"), findsOneWidget);
+      await tester.tap(_name('Review the diff'));
+      await tester.pumpAndSettle();
+      expect(find.text('Start a new conversation?'), findsOneWidget);
+      expect(find.textContaining('Starts a new conversation.'), findsOneWidget);
+      // Cancel changes nothing.
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(agents.calls.where((c) => c.startsWith('replace')), isEmpty);
+      expect(_lastHost!.opened, isEmpty);
+      // Start creates the replacement, acknowledged, and opens it.
+      await tester.tap(_name('Review the diff'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('agents-start-new')));
+      await tester.pumpAndSettle();
+      expect(agents.calls, contains('replace:old:true'));
+      expect(_lastHost!.replaced, ['ses_replacement']);
+      expect(_lastHost!.opened, isEmpty);
+    });
+
+    testWidgets('a row that can reopen opens straight away', (tester) async {
+      final item = chat(
+        'ok',
+        'Explain the build',
+        at: _now.subtract(const Duration(hours: 2)),
+      );
+      await pumpHome(tester, items: [item], script: (_) {});
+      await tester.tap(_name('Explain the build'));
+      await tester.pumpAndSettle();
+      expect(_lastHost!.opened, ['ok']);
+    });
+  });
+
+  group('Settings › This phone › Agents', () {
+    Future<FakePhoneAgentsSource> pumpSection(
+      WidgetTester tester,
+      FakePhoneAgentsSource agents,
+    ) async {
+      tester.view.physicalSize = const Size(412, 915);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final host = _host(agents: agents);
+      _lastHost = host;
+      await tester.pumpWidget(
+        chatsApp(host, ListView(children: const [AgentsSection()])),
+      );
+      await tester.pumpAndSettle();
+      return agents;
+    }
+
+    testWidgets('draws nothing without phone agents', (tester) async {
+      await pumpSection(tester, FakePhoneAgentsSource(available: false));
+      expect(find.byKey(const ValueKey('agents-section')), findsNothing);
+    });
+
+    testWidgets('lists each agent with the act it needs', (tester) async {
+      await pumpSection(tester, FakePhoneAgentsSource());
+      expect(find.text('Agents'), findsOneWidget);
+      expect(find.textContaining('Not installed'), findsOneWidget);
+      expect(
+        find.text('Install ${KitBidi.auto('Claude Code')}'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Check this phone shows each step in plain words', (
+      tester,
+    ) async {
+      final agents =
+          FakePhoneAgentsSource(
+              rows: [agentRowFor('claude', FakeAgentStage.ready)],
+            )
+            ..nextCheck = AgentPhoneCheckResult(
+              agentId: 'claude',
+              architecture: AgentArchitecture.arm64,
+              passed: false,
+              completed: const [AgentPhoneCheckStep.install],
+              failure: AgentHostFailure.version,
+            );
+      await pumpSection(tester, agents);
+      await tester.tap(find.byKey(const ValueKey('agents-check-phone')));
+      await tester.pumpAndSettle();
+      expect(agents.calls, contains('check:claude'));
+      for (final step in ['Installed', 'Version', 'Connection', 'Ready']) {
+        expect(find.text(step), findsOneWidget);
+      }
+      expect(
+        find.textContaining(
+          "The installed agent didn't pass its version check.",
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a passed check says the agent is ready', (tester) async {
+      final agents = FakePhoneAgentsSource(
+        rows: [agentRowFor('claude', FakeAgentStage.ready)],
+      );
+      await pumpSection(tester, agents);
+      await tester.tap(find.byKey(const ValueKey('agents-check-phone')));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('${KitBidi.auto('Claude Code')} is ready on this phone.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a fix action opens the sheet at its step', (tester) async {
+      await pumpSection(tester, FakePhoneAgentsSource());
+      await tester.tap(find.byKey(const ValueKey('agents-fix-claude')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Set up'), findsOneWidget);
+    });
+  });
+}
+
+FakeChatsHost? _lastHost;

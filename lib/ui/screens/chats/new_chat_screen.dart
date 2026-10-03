@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/chat_feed.dart';
+import '../../../domain/phone_agents_source.dart';
 import '../../../domain/server_gateway.dart' show WorkspaceProject;
 import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
 import '../../kit/kit.dart';
 import '../../widgets/product_states.dart' show productErrorText;
+import '../agents/agent_sheet.dart';
+import '../agents/agents_text.dart';
 import 'chats_host.dart';
 import 'chats_project_sheet.dart' show chatsProjectIcon;
 
@@ -28,6 +31,8 @@ class NewChatScreen extends ConsumerStatefulWidget {
   @override
   ConsumerState<NewChatScreen> createState() => _NewChatScreenState();
 }
+
+final _noChanges = ValueNotifier<int>(0);
 
 class _NewChatScreenState extends ConsumerState<NewChatScreen> {
   final _text = TextEditingController();
@@ -108,7 +113,11 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
       _failure = null;
     });
     try {
-      final id = await host.source.startChatIn(directory, firstPrompt: text);
+      final id = await host.startChat(
+        directory,
+        agentId: host.agents?.selectedChatAgentId ?? openCodeChatAgentId,
+        prompt: text,
+      );
       if (!mounted) return;
       final problem = await host.showStartedChat(context, sessionID: id);
       if (!mounted) return;
@@ -132,6 +141,13 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
   @override
   Widget build(BuildContext context) {
     final host = ref.watch(chatsHostProvider);
+    return ListenableBuilder(
+      listenable: host.listenable ?? _noChanges,
+      builder: (context, _) => _screen(context, host),
+    );
+  }
+
+  Widget _screen(BuildContext context, ChatsHost host) {
     final source = host.source;
     if (!_resolved) {
       _resolved = true;
@@ -150,24 +166,39 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
         ? null
         : summary?.name ?? _basename(directory);
 
-    final chip = Row(
-      mainAxisSize: MainAxisSize.min,
+    // The agent chip shows only where this phone can run other agents.
+    final agents = host.agents;
+    final showAgent = agents != null && agents.phoneAgentsAvailable;
+    final agentChoice = !showAgent
+        ? null
+        : agents.chatAgentChoices
+              .where((choice) => choice.agentId == agents.selectedChatAgentId)
+              .firstOrNull;
+    final agentName = agentChoice?.name ?? 'OpenCode';
+
+    final chip = Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
       spacing: tokens.space2,
       children: [
-        Flexible(
-          child: KitChip.action(
-            key: const ValueKey('chats-new-project'),
-            label: name == null
-                ? l10n.chatsNewChooseProject
-                : KitBidi.auto(name),
-            icon: name == null
-                ? AppIconography.folderOpen
-                : chatsProjectIcon(summary?.kind),
-            onPressed: () => unawaited(_changeProject(host)),
-          ),
+        KitChip.action(
+          key: const ValueKey('chats-new-project'),
+          label: name == null ? l10n.chatsNewChooseProject : KitBidi.auto(name),
+          icon: name == null
+              ? AppIconography.folderOpen
+              : chatsProjectIcon(summary?.kind),
+          onPressed: () => unawaited(_changeProject(host)),
         ),
         if (summary?.isGit ?? false)
           KitChip(label: l10n.phoneScanGit, icon: AppIconography.branch),
+        if (showAgent)
+          KitChip.summary(
+            key: const ValueKey('chats-new-agent'),
+            label: KitBidi.auto(agentName),
+            icon: agentIcon(agentChoice?.iconKey ?? 'opencode'),
+            expanded: false,
+            onPressed: () => unawaited(showAgentSheet(context)),
+          ),
       ],
     );
 

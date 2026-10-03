@@ -9,6 +9,7 @@ import '../../../domain/relative_age.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
 import '../../kit/kit.dart';
+import '../agents/agent_notices.dart';
 import 'chats_host.dart';
 import 'chats_project_sheet.dart';
 import 'new_chat_screen.dart';
@@ -84,7 +85,28 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       _openingID = item.sessionID;
       _notice = null;
     });
-    final problem = await host.openChat(context, item);
+    String? problem;
+    final notice = host.agents?.agentResumeNotice(item);
+    if (notice != null && notice.requiresAcknowledgement) {
+      // The old conversation cannot reopen: say what happens first, and
+      // change nothing until the person agrees.
+      final l10n = AppLocalizations.of(context);
+      final agree = await showKitConfirm(
+        context,
+        title: l10n.agentsResumeNoticeTitle,
+        body: l10n.agentsResumeNoticeBody(
+          KitBidi.auto(item.agentLabel ?? item.agentId),
+        ),
+        confirmLabel: l10n.agentsStartNew,
+        cancelLabel: l10n.agentsCancel,
+        confirmKey: const ValueKey('agents-start-new'),
+      );
+      if (!mounted) return;
+      problem = agree ? await host.openNewChatReplacing(context, item) : null;
+      if (agree) unawaited(host.source.refreshChatFeed());
+    } else {
+      problem = await host.openChat(context, item);
+    }
     if (!mounted) return;
     setState(() {
       _openingID = null;
@@ -187,6 +209,8 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       // The leftover-process notice: a quiet status with its Stop, drawn
       // only while the phone's watcher reports a helper.
       host.leftoverNotice(context),
+      // Quiet lines about the agents on this phone, each with its action.
+      ...agentNoticeWidgets(context, host),
     ];
 
     final list = _list(context, host, snapshot, projectName);
@@ -356,6 +380,10 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       project: item.projectName,
       gitLabel: item.isGit ? l10n.phoneScanGit : null,
       agent: showAgent ? item.agentLabel : null,
+      notice:
+          host.agents?.agentResumeNotice(item).requiresAcknowledgement ?? false
+          ? l10n.agentsStateCantReopen
+          : null,
       title: item.title,
       preview: item.preview,
       tag: tag,

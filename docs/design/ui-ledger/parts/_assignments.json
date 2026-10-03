@@ -190,5 +190,12 @@
     "lib/ui/screens/chats/chats_project_sheet.dart",
     "lib/ui/screens/chats/new_chat_screen.dart",
     "lib/ui/screens/chats/chats_host.dart"
+  ],
+  "m-agents": [
+    "lib/ui/screens/agents/agent_sheet.dart",
+    "lib/ui/screens/agents/agent_notices.dart",
+    "lib/ui/screens/agents/agents_section.dart",
+    "lib/ui/screens/agents/agents_text.dart",
+    "lib/ui/screens/agents/phone_check_view.dart"
   ]
 }

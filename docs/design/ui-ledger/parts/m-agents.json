@@ -1,0 +1,247 @@
+{
+  "area": "m-agents",
+  "pages": [
+    {
+      "id": "agents-sheet",
+      "title": "Choose an agent",
+      "kind": "sheet",
+      "file": "lib/ui/screens/agents/agent_sheet.dart",
+      "widget": "AgentSheet",
+      "presentedBy": [
+        "showAgentSheet"
+      ],
+      "line": 37,
+      "purpose": "The agent chip's one sheet: the choice of agent, and in place the steps that make one ready (install with progress and Cancel, the phone check, sign-in with the browser page and code). Never a second sheet.",
+      "reachedFrom": [],
+      "gates": [
+        "PhoneAgentsSource.phoneAgentsAvailable"
+      ],
+      "elements": [
+        {
+          "id": "agents-sheet-choice",
+          "type": "list-tile",
+          "label": "<agent> · <state>",
+          "key": "agents-choice-<id>",
+          "file": "lib/ui/screens/agents/agent_sheet.dart",
+          "line": 331,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "A ready agent is selected (selectChatAgent) and the sheet closes; any other turns the sheet into its next setup step.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "agents-sheet-install",
+          "type": "button",
+          "label": "Install <agent>",
+          "key": "agents-install",
+          "file": "lib/ui/screens/agents/agent_sheet.dart",
+          "line": 412,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "installAgent: starts the durable setup job; progress shows in place.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "agents-sheet-cancel-setup",
+          "type": "button",
+          "label": "Cancel setup",
+          "key": "agents-cancel-setup",
+          "file": "lib/ui/screens/agents/agent_sheet.dart",
+          "line": 419,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "cancelAgentInstall: stops only the setup job this profile owns.",
+          "gates": [
+            "setup is running"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "agents-sheet-check-again",
+          "type": "button",
+          "label": "Check <agent>",
+          "key": "agents-check-again",
+          "file": "lib/ui/screens/agents/agent_sheet.dart",
+          "line": 482,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "runAgentPhoneCheck again after a failed check.",
+          "gates": [
+            "the check failed"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "agents-sheet-open-page",
+          "type": "button",
+          "label": "Open the <agent> sign-in page",
+          "key": "agents-open-page",
+          "file": "lib/ui/screens/agents/agent_sheet.dart",
+          "line": 519,
+          "action": "external-link",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Hands the sign-in page to openExternalLink.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "agents-sheet-submit-code",
+          "type": "button",
+          "label": "Submit code",
+          "key": "agents-code-submit",
+          "file": "lib/ui/screens/agents/agent_sheet.dart",
+          "line": 589,
+          "action": "submit",
+          "target": null,
+          "targetWidget": null,
+          "effect": "submitAgentSignInCode once; the field is cleared as it is sent.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "agents-sheet-done",
+          "type": "button",
+          "label": "Use <agent>",
+          "key": "agents-sign-in-done",
+          "file": "lib/ui/screens/agents/agent_sheet.dart",
+          "line": 513,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Selects the signed-in agent and closes the sheet.",
+          "gates": [
+            "signed in"
+          ],
+          "destructive": false
+        }
+      ]
+    },
+    {
+      "id": "agents-section",
+      "title": "Agents",
+      "kind": "overlay",
+      "file": "lib/ui/screens/agents/agents_section.dart",
+      "widget": "AgentsSection",
+      "presentedBy": [],
+      "line": 21,
+      "purpose": "Settings > This phone > Agents: every agent this phone can run with its state, the one act it needs, and Check this phone with each step as passed or failed.",
+      "reachedFrom": [],
+      "gates": [
+        "PhoneAgentsSource.phoneAgentsAvailable"
+      ],
+      "embeddedIn": [
+        "ThisPhoneScreen"
+      ],
+      "elements": [
+        {
+          "id": "agents-section-fix",
+          "type": "button",
+          "label": "Install <agent> | Sign in to <agent> | Check <agent> | Resume <agent>",
+          "key": "agents-fix-<id>",
+          "file": "lib/ui/screens/agents/agents_section.dart",
+          "line": 121,
+          "action": "open-sheet",
+          "target": "agents-sheet",
+          "targetWidget": null,
+          "effect": "Opens the agent sheet at that step (Resume resumes the host in place).",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "agents-section-check",
+          "type": "list-tile",
+          "label": "Check this phone",
+          "key": "agents-check-phone",
+          "file": "lib/ui/screens/agents/agents_section.dart",
+          "line": 132,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "runAgentPhoneCheck for each installed agent; the steps show under the group.",
+          "gates": [],
+          "destructive": false
+        }
+      ]
+    },
+    {
+      "id": "chats-home",
+      "title": "Conversations",
+      "kind": "tab",
+      "file": "lib/ui/screens/chats/chats_home_screen.dart",
+      "widget": "ChatsHomeScreen",
+      "presentedBy": [],
+      "line": 25,
+      "purpose": "Conversations.",
+      "reachedFrom": [],
+      "gates": [],
+      "elements": [
+        {
+          "id": "agents-notice-sign-in",
+          "type": "button",
+          "label": "Sign in to <agent>",
+          "key": "agents-status-sign-in-<id>",
+          "file": "lib/ui/screens/agents/agent_notices.dart",
+          "line": 52,
+          "action": "open-sheet",
+          "target": "agents-sheet",
+          "targetWidget": null,
+          "effect": "Opens the agent sheet at the sign-in step.",
+          "gates": [
+            "agent signed out"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "agents-notice-resume",
+          "type": "button",
+          "label": "Resume <agent>",
+          "key": "agents-status-resume-<id>",
+          "file": "lib/ui/screens/agents/agent_notices.dart",
+          "line": 65,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "resumeAgentHost.",
+          "gates": [
+            "host stopped in the background"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "agents-notice-restart",
+          "type": "button",
+          "label": "Close the app",
+          "key": "agents-restart-action",
+          "file": "lib/ui/screens/agents/agent_notices.dart",
+          "line": 38,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Closes the app so it can be reopened after clearing sign-ins.",
+          "gates": [
+            "phoneAgentsNeedRestart"
+          ],
+          "destructive": false
+        }
+      ]
+    }
+  ],
+  "notPages": [
+    {
+      "file": "lib/ui/screens/agents/agents_text.dart",
+      "reason": "No surface: the words and glyphs of the agent surfaces."
+    },
+    {
+      "file": "lib/ui/screens/agents/phone_check_view.dart",
+      "reason": "No surface of its own: the four phone-check steps drawn inside the agent sheet and Settings."
+    }
+  ],
+  "notes": []
+}

@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemNavigator;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/chat_feed.dart';
+import '../../../domain/phone_agents_source.dart';
 import '../../../domain/server_gateway.dart' show WorkspaceProject;
 import '../../../platform/platform_capabilities.dart';
 import '../../../termux/bridge.dart' show TermuxBridge;
@@ -15,6 +17,7 @@ import '../termux_processes_screen.dart' show TermuxProcessesScreen;
 import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart';
 import '../../kit/kit.dart';
+import '../../widgets/external_link.dart' show openExternalLink;
 import '../../widgets/pickers.dart' show showModelPicker;
 import '../../widgets/product_states.dart' show productErrorText;
 import '../project_folder_actions.dart';
@@ -65,6 +68,27 @@ abstract interface class ChatsHost {
     BuildContext context,
     WorkspaceProject project,
   );
+
+  /// The agents on this phone, or null when this connection has none (the
+  /// agent chip and every agent surface stay hidden).
+  PhoneAgentsSource? get agents;
+
+  /// Starts a conversation with [agentId] in [directory] and returns its id.
+  Future<String> startChat(
+    String directory, {
+    required String agentId,
+    String? prompt,
+  });
+
+  /// After the person agreed to Start new conversation: makes the
+  /// replacement draft and opens it. Null when it opened, else plain words.
+  Future<String?> openNewChatReplacing(BuildContext context, ChatFeedItem old);
+
+  /// Hands [uri] (a page the app did not author) to the safe link opener.
+  Future<void> openLink(BuildContext context, Uri uri);
+
+  /// Closes the app so the person can reopen it (the restart offer).
+  void closeApp();
 }
 
 /// The one place the app's connection becomes a [ChatFeedSource]. Until the
@@ -95,15 +119,63 @@ class ConnectionChatsHost implements ChatsHost {
     final navigator = Navigator.of(context);
     try {
       // Opening switches the connection to the conversation's project first.
-      await _conn.selectLocationForExistingSession(directory: item.directory);
+      // The gateway that owns the row is found by its identity.
+      final route = await _conn.openChatFeedItem(item);
       if (!navigator.mounted) return null;
-      unawaited(_conn.prefetchSessionTail(item.sessionID));
-      await navigator.pushNamed('/chat/${item.sessionID}');
+      unawaited(_conn.prefetchSessionTail(route.sessionID));
+      await navigator.pushNamed('/chat/${route.sessionID}');
       return null;
     } catch (error) {
       return productErrorText(error, l10n: l10n);
     }
   }
+
+  @override
+  PhoneAgentsSource? get agents => _conn;
+
+  @override
+  Future<String> startChat(
+    String directory, {
+    required String agentId,
+    String? prompt,
+  }) {
+    final feed = source;
+    return feed is AgentChatFeedSource
+        ? feed.startAgentChatIn(
+            directory,
+            agentId: agentId,
+            firstPrompt: prompt,
+          )
+        : feed.startChatIn(directory, firstPrompt: prompt);
+  }
+
+  @override
+  Future<String?> openNewChatReplacing(
+    BuildContext context,
+    ChatFeedItem old,
+  ) async {
+    final l10n = _l10n(context);
+    final navigator = Navigator.of(context);
+    try {
+      final id = await _conn.startNewChatReplacing(
+        old,
+        newChatAcknowledged: true,
+      );
+      if (!_safeID.hasMatch(id)) return l10n.chatsHomeOpenFailed;
+      await navigator.pushNamed('/chat/$id');
+      return null;
+    } catch (error) {
+      return productErrorText(error, l10n: l10n);
+    }
+  }
+
+  @override
+  Future<void> openLink(BuildContext context, Uri uri) async {
+    await openExternalLink(context, uri.toString());
+  }
+
+  @override
+  void closeApp() => unawaited(SystemNavigator.pop());
 
   @override
   Future<String?> showStartedChat(

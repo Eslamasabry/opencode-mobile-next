@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
+import 'package:opencode_mobile/domain/phone_agents_source.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart'
     show WorkspaceProject;
 import 'package:opencode_mobile/l10n/app_localizations.dart';
@@ -8,6 +9,7 @@ import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_host.dart';
 
 import '../../tool/capture/fixtures.dart' show captureTheme;
+import 'agents_fakes.dart';
 
 /// A [ChatFeedSource] over a fixed list, filtered as the contract says.
 class FakeChatFeedSource implements ChatFeedSource {
@@ -101,11 +103,50 @@ class FakeChatsHost implements ChatsHost {
   /// What the separate-copy step resolves with (null: closed).
   String? copyResult;
 
+  /// The agents on this phone; null hides every agent surface.
+  FakePhoneAgentsSource? phoneAgents;
+  final startedAgents = <String>[];
+  final replaced = <String>[];
+  final links = <Uri>[];
+  int closed = 0;
+
   @override
   ChatFeedSource get source => fake;
 
   @override
-  Listenable? get listenable => null;
+  Listenable? get listenable => phoneAgents;
+
+  @override
+  PhoneAgentsSource? get agents => phoneAgents;
+
+  @override
+  Future<String> startChat(
+    String directory, {
+    required String agentId,
+    String? prompt,
+  }) {
+    startedAgents.add(agentId);
+    return fake.startChatIn(directory, firstPrompt: prompt);
+  }
+
+  @override
+  Future<String?> openNewChatReplacing(
+    BuildContext context,
+    ChatFeedItem old,
+  ) async {
+    final id = await phoneAgents!.startNewChatReplacing(
+      old,
+      newChatAcknowledged: true,
+    );
+    replaced.add(id);
+    return null;
+  }
+
+  @override
+  Future<void> openLink(BuildContext context, Uri uri) async => links.add(uri);
+
+  @override
+  void closeApp() => closed++;
 
   @override
   Widget leftoverNotice(BuildContext context) => leftover;

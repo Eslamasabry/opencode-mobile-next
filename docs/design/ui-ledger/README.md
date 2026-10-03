@@ -156,6 +156,8 @@ Files with no surface of their own and no interactive element (also in
 - `lib/ui/screens/usage_refresh_slot.dart`: a nonvisual ChangeNotifier holding Usage refresh callbacks.
 - `lib/ui/screens/library/pending_auth_recovery.dart`: `_authSourceFor` is a nonvisual equality identity for authentication actions; the sign-in confirmation lives in `integrations_screen.dart`.
 - `lib/ui/screens/chats/chats_host.dart`: no surface; the one seam between the Chats screens and the connection (feed source, server pill, opening a conversation, model chip).
+- `lib/ui/screens/agents/agents_text.dart`: no surface; the words and glyphs of the agent surfaces.
+- `lib/ui/screens/agents/phone_check_view.dart`: no surface of its own; the four phone-check steps drawn inside the agent sheet and Settings.
 - `lib/ui/screens/library_screen.dart`: no surface since UX phase 2 (the More tab merged into the Settings hub); it only hosts the library part files and `defaultModelLabel()`.
 - `lib/ui/screens/automation_settings_screen.dart`: `AutomationSettingsSection` is the last section of the Notifications and background page (`notifications-settings`); its elements are recorded there.
 - `lib/ui/screens/settings/plugins_screen.dart`: AI Team row helpers (`teamPhoneProfile`, `teamRowSubtitle`, `teamErrorReason`) that outlived the retired Plugins page; no surface.

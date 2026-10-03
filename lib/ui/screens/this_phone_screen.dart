@@ -36,6 +36,7 @@ import '../widgets/team_phone_onboarding.dart' show teamPhoneRuntime;
 import '../widgets/termux_migration_entry.dart';
 import '../widgets/termux_phone_tools.dart';
 import '../widgets/termux_problem_fix.dart';
+import 'agents/agents_section.dart';
 import 'keep_running_screen.dart';
 import 'library_screen.dart' show IntegrationsScreen, IntegrationsMode;
 import 'local_agent_screen.dart';
@@ -757,6 +758,8 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
               if (_host.installed) ...[
                 SizedBox(height: tokens.sectionGap),
                 _list(context, l10n),
+                // Other agents on this phone (draws nothing without them).
+                const AgentsSection(),
                 SizedBox(height: tokens.sectionGap),
                 _logFold(context, l10n),
               ],

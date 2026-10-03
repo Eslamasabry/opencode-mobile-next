@@ -31911,5 +31911,438 @@
   "chatProjectMenuLabel": "Project tools",
   "@chatProjectMenuLabel": {
     "description": "Name of the menu the conversation's project chip opens (Files, Terminal, Changes)."
+  },
+  "agentsChooseTitle": "Choose an agent",
+  "@agentsChooseTitle": {
+    "description": "Agent sheet: title"
+  },
+  "agentsChipSemantics": "Agent {agent}. Change agent",
+  "@agentsChipSemantics": {
+    "description": "New conversation: spoken name of the agent chip",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsStateReady": "Ready",
+  "@agentsStateReady": {
+    "description": "Agent sheet: an agent that can start conversations"
+  },
+  "agentsStateReadyCantReopen": "Ready · Can't reopen old conversations",
+  "@agentsStateReadyCantReopen": {
+    "description": "Agent sheet: ready, but old conversations start new ones"
+  },
+  "agentsStateCantReopen": "Can't reopen old conversations",
+  "@agentsStateCantReopen": {
+    "description": "Feed row note and agent state: the agent cannot reopen an old conversation"
+  },
+  "agentsStateNotInstalled": "Not installed · {size}",
+  "@agentsStateNotInstalled": {
+    "description": "Agent sheet: an agent that is not installed yet, with its download size",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsStateNotInstalledNoSize": "Not installed",
+  "@agentsStateNotInstalledNoSize": {
+    "description": "Agent sheet: an agent that is not installed yet"
+  },
+  "agentsStateSignInNeeded": "Sign in needed",
+  "@agentsStateSignInNeeded": {
+    "description": "Agent sheet: installed but signed out"
+  },
+  "agentsStateChecking": "Checking sign-in…",
+  "@agentsStateChecking": {
+    "description": "Agent sheet: sign-in state not known yet"
+  },
+  "agentsStatePhoneCheck": "Phone check needed",
+  "@agentsStatePhoneCheck": {
+    "description": "Agent sheet: the phone check has not passed"
+  },
+  "agentsStateStopped": "Stopped in the background",
+  "@agentsStateStopped": {
+    "description": "Agent sheet: the agent host stopped while the app was away"
+  },
+  "agentsStateLimit": "Plan limit reached",
+  "@agentsStateLimit": {
+    "description": "Agent sheet: the plan limit was reached"
+  },
+  "agentsStateUnavailable": "Not available on this phone yet",
+  "@agentsStateUnavailable": {
+    "description": "Agent sheet: cannot run here"
+  },
+  "agentsSetupTitle": "Set up {agent} · {size}",
+  "@agentsSetupTitle": {
+    "description": "Setup step title with the agent's own download size",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSetupTitleNoSize": "Set up {agent}",
+  "@agentsSetupTitleNoSize": {
+    "description": "Setup step title when the size is not known",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSetupBody": "{agent} runs on this phone. Installing downloads the agent and anything it needs.",
+  "@agentsSetupBody": {
+    "description": "Setup step body",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSetupSizeNote": "{size} is the agent itself. Shared parts may add more.",
+  "@agentsSetupSizeNote": {
+    "description": "Setup step: what the shown size covers",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsInstallAction": "Install {agent}",
+  "@agentsInstallAction": {
+    "description": "Setup step: the one install button",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsCancelSetup": "Cancel setup",
+  "@agentsCancelSetup": {
+    "description": "Setup step: stops the setup job this phone started"
+  },
+  "agentsInstalling": "Installing {agent}…",
+  "@agentsInstalling": {
+    "description": "Setup step: progress caption",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsPreparing": "Preparing the agent connection…",
+  "@agentsPreparing": {
+    "description": "Setup step: after install, before ready"
+  },
+  "agentsSetupInterrupted": "Setup stopped before it finished. Install again to continue.",
+  "@agentsSetupInterrupted": {
+    "description": "Setup step: interrupted"
+  },
+  "agentsSetupFailed": "Setup didn't finish. Install again to try once more.",
+  "@agentsSetupFailed": {
+    "description": "Setup step: failed"
+  },
+  "agentsCheckTitle": "Check this phone",
+  "@agentsCheckTitle": {
+    "description": "Phone check: title and action"
+  },
+  "agentsCheckRunning": "Checking {agent}…",
+  "@agentsCheckRunning": {
+    "description": "Phone check: running",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsCheckPassed": "{agent} is ready on this phone.",
+  "@agentsCheckPassed": {
+    "description": "Phone check: passed",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsCheckFailed": "{agent} didn't pass the check.",
+  "@agentsCheckFailed": {
+    "description": "Phone check: failed",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsCheckAction": "Check {agent}",
+  "@agentsCheckAction": {
+    "description": "Phone check: run it for one agent",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsStepInstall": "Installed",
+  "@agentsStepInstall": {
+    "description": "Phone check step"
+  },
+  "agentsStepVersion": "Version",
+  "@agentsStepVersion": {
+    "description": "Phone check step"
+  },
+  "agentsStepConnection": "Connection",
+  "@agentsStepConnection": {
+    "description": "Phone check step"
+  },
+  "agentsStepReady": "Ready",
+  "@agentsStepReady": {
+    "description": "Phone check step"
+  },
+  "agentsFailUnavailable": "This phone can't run this agent yet.",
+  "@agentsFailUnavailable": {
+    "description": "Phone check failure"
+  },
+  "agentsFailStorage": "Couldn't save this setup. Free some space and run it again.",
+  "@agentsFailStorage": {
+    "description": "Phone check failure"
+  },
+  "agentsFailInstall": "The agent didn't install. Install it again.",
+  "@agentsFailInstall": {
+    "description": "Phone check failure"
+  },
+  "agentsFailInterrupted": "Setup stopped before it finished. Install it again.",
+  "@agentsFailInterrupted": {
+    "description": "Phone check failure"
+  },
+  "agentsFailVersion": "The installed agent didn't pass its version check.",
+  "@agentsFailVersion": {
+    "description": "Phone check failure"
+  },
+  "agentsFailDaemon": "The agent connection didn't start.",
+  "@agentsFailDaemon": {
+    "description": "Phone check failure"
+  },
+  "agentsFailHello": "The agent started but didn't answer.",
+  "@agentsFailHello": {
+    "description": "Phone check failure"
+  },
+  "agentsFailArchitecture": "This agent doesn't match this phone's processor.",
+  "@agentsFailArchitecture": {
+    "description": "Phone check failure"
+  },
+  "agentsFailStale": "This check is out of date. Run it again.",
+  "@agentsFailStale": {
+    "description": "Phone check failure"
+  },
+  "agentsFailBusy": "Another setup is running. Wait for it to finish.",
+  "@agentsFailBusy": {
+    "description": "Phone check failure"
+  },
+  "agentsSignInTitle": "Sign in with {agent}",
+  "@agentsSignInTitle": {
+    "description": "Sign-in step title",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSignInIntro": "Use your {agent} subscription. The page opens in your browser, then you paste its code here.",
+  "@agentsSignInIntro": {
+    "description": "Sign-in step body",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSignInChecking": "Checking sign-in…",
+  "@agentsSignInChecking": {
+    "description": "Sign-in step: first read"
+  },
+  "agentsSignInStart": "Sign in with {agent}",
+  "@agentsSignInStart": {
+    "description": "Sign-in step: starts the browser sign-in",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSignInOpenPage": "Open the {agent} sign-in page",
+  "@agentsSignInOpenPage": {
+    "description": "Sign-in step: opens the browser page",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSignInCodeLabel": "Code from the browser",
+  "@agentsSignInCodeLabel": {
+    "description": "Sign-in step: field label"
+  },
+  "agentsSignInSubmit": "Submit code",
+  "@agentsSignInSubmit": {
+    "description": "Sign-in step: sends the pasted code"
+  },
+  "agentsSignInSubmitting": "Checking the code…",
+  "@agentsSignInSubmitting": {
+    "description": "Sign-in step: the code was sent"
+  },
+  "agentsSignedIn": "Signed in",
+  "@agentsSignedIn": {
+    "description": "Sign-in step: done"
+  },
+  "agentsSignedInBody": "{agent} is ready for new conversations.",
+  "@agentsSignedInBody": {
+    "description": "Sign-in step: done body",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSignInDone": "Use {agent}",
+  "@agentsSignInDone": {
+    "description": "Sign-in step: closes with the agent chosen",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSignInBadCode": "That code doesn't look right. Copy the whole code from the browser and paste it again.",
+  "@agentsSignInBadCode": {
+    "description": "Sign-in step: the code was refused before sending"
+  },
+  "agentsSignInFailed": "Sign-in didn't finish. Start it again.",
+  "@agentsSignInFailed": {
+    "description": "Sign-in step: failed"
+  },
+  "agentsSignInRejected": "{agent} didn't accept that sign-in. Start it again.",
+  "@agentsSignInRejected": {
+    "description": "Sign-in step: rejected",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSignInHostDown": "The agent isn't running. Resume it, then sign in.",
+  "@agentsSignInHostDown": {
+    "description": "Sign-in step: host down"
+  },
+  "agentsSignInUnavailable": "Sign-in isn't ready on this phone yet",
+  "@agentsSignInUnavailable": {
+    "description": "Sign-in step: no handler for this agent"
+  },
+  "agentsSignInLimit": "{agent} plan limit reached · try again later",
+  "@agentsSignInLimit": {
+    "description": "Sign-in step: limit",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsLimitReset": "{agent} plan limit reached · resets {time}",
+  "@agentsLimitReset": {
+    "description": "Status line: limit with the reset time",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsLimitUnknown": "{agent} plan limit reached · try again later",
+  "@agentsLimitUnknown": {
+    "description": "Status line: limit without a reset time",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSignedOutLine": "{agent} signed out",
+  "@agentsSignedOutLine": {
+    "description": "Status line: signed out",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSignInAction": "Sign in to {agent}",
+  "@agentsSignInAction": {
+    "description": "Status line action",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsStoppedLine": "{agent} stopped in the background",
+  "@agentsStoppedLine": {
+    "description": "Status line: stopped",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsResumeAction": "Resume {agent}",
+  "@agentsResumeAction": {
+    "description": "Status line action",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsResumeNoticeTitle": "Start a new conversation?",
+  "@agentsResumeNoticeTitle": {
+    "description": "Resume notice: title"
+  },
+  "agentsResumeNoticeBody": "Starts a new conversation. {agent} can't reopen this one, and it stays as it is.",
+  "@agentsResumeNoticeBody": {
+    "description": "Resume notice: body",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsStartNew": "Start new conversation",
+  "@agentsStartNew": {
+    "description": "Resume notice: confirms"
+  },
+  "agentsCancel": "Cancel",
+  "@agentsCancel": {
+    "description": "Resume notice and setup: dismiss"
+  },
+  "agentsRestartLine": "Close and reopen the app to finish clearing sign-ins.",
+  "@agentsRestartLine": {
+    "description": "Restart offer line"
+  },
+  "agentsRestartAction": "Close the app",
+  "@agentsRestartAction": {
+    "description": "Restart offer action"
+  },
+  "agentsSectionTitle": "Agents",
+  "@agentsSectionTitle": {
+    "description": "This phone: section name"
+  },
+  "agentsSelectFailed": "That agent can't be chosen right now. Open it to finish setup.",
+  "@agentsSelectFailed": {
+    "description": "Agent sheet: choosing refused"
   }
 }
