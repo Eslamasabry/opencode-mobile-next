@@ -268,6 +268,8 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
       preserveConnectionAttempt: preserveConnectionAttempt,
     );
     _retireTransport();
+    // A new connection asks the server which dialect it speaks again.
+    _v2Reset();
     // The folder edited in a Codex connection is authoritative on connect.
     // Restoring an older OpenCode-style selection would undo that user edit.
     final initialDirectory = isCodex ? profile.codexDirectory : null;
