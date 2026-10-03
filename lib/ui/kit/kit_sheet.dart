@@ -22,9 +22,9 @@ import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
 import '../widgets/request_routes.dart';
 import 'kit_buttons.dart';
-import 'kit_field.dart';
 import 'kit_icon_button.dart';
 import 'kit_layout.dart';
+import 'kit_menu.dart';
 import 'kit_motion.dart';
 import 'kit_notice.dart';
 import 'kit_progress.dart';
@@ -331,7 +331,12 @@ class KitSheet extends StatelessWidget {
     this.secondary,
     this.tertiary = const [],
     this.footer,
-    this.entry,
+    this.leading,
+    this.menu = const [],
+    this.menuLabel,
+    this.headerLine,
+    this.bar = false,
+    this.step,
     this.onClose,
     this.loading = false,
     this.handle = true,
@@ -356,7 +361,12 @@ class KitSheet extends StatelessWidget {
     this.secondary,
     this.tertiary = const [],
     this.footer,
-    this.entry,
+    this.leading,
+    this.menu = const [],
+    this.menuLabel,
+    this.headerLine,
+    this.bar = false,
+    this.step,
     this.onClose,
     this.loading = false,
     this.handle = true,
@@ -389,12 +399,34 @@ class KitSheet extends StatelessWidget {
   /// primary (see [showKitSheet]).
   final Widget? footer;
 
-  /// A name or short text asked for in place, in the pinned block: the
-  /// field (autofocused, so the keyboard rises and the sheet stays above
-  /// it) with the one line saying what will happen. The caller swaps the
-  /// actions for the confirm and Cancel while it shows, so a second sheet
-  /// or dialog is never stacked on this one. Replaces [footer].
-  final KitSheetEntry? entry;
+  /// The header's first control, in place of the close button: a back
+  /// chevron that goes up one folder or back one step, or Close (X) at the
+  /// first step. Its label is read aloud and shown as the tooltip. Null
+  /// keeps the close button at the end.
+  final KitAction? leading;
+
+  /// The header's overflow (a "more" button at the end, replacing the close
+  /// button): a [KitMenuItem] per setting or route, so a rare choice never
+  /// takes a row of the body.
+  final List<KitMenuItem> menu;
+
+  /// The overflow button's name; defaults to "More actions".
+  final String? menuLabel;
+
+  /// One quiet line under the title, such as a place menu ("This phone
+  /// \u2304") that switches what the sheet shows. Replaces [subtitle].
+  final Widget? headerLine;
+
+  /// Pins [secondary] (a text button, start) and [primary] (the main
+  /// button, end, ellipsized) as one bottom bar, the Move-to-a-folder
+  /// layout, instead of the stacked action block. [tertiary] is not shown.
+  final bool bar;
+
+  /// Names the step the frame shows. When it changes the whole frame (the
+  /// header, the body and the pinned block) cross-fades in place, so a
+  /// second step replaces the first inside the one sheet and never opens
+  /// another sheet or dialog. Reduced motion swaps at once.
+  final Object? step;
 
   /// Null hides the close button (while an irreversible step runs).
   final VoidCallback? onClose;
@@ -427,14 +459,45 @@ class KitSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final frame = _buildFrame(context);
+    if (step == null) return frame;
+    return AnimatedSwitcher(
+      duration: KitMotion.reduced(context) ? Duration.zero : KitMotion.quick,
+      layoutBuilder: (current, previous) => Stack(
+        alignment: AlignmentDirectional.topStart,
+        children: [...previous, ?current],
+      ),
+      child: KeyedSubtree(key: ValueKey(step), child: frame),
+    );
+  }
+
+  /// The quiet line under the title: [headerLine], else [subtitle].
+  Widget? _line(KitTokens tokens, String? subtitle) {
+    final line =
+        headerLine ??
+        (subtitle == null
+            ? null
+            : KitText(subtitle, role: KitTextRole.secondary));
+    if (line == null) return null;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: tokens.space1 / 2),
+        line,
+      ],
+    );
+  }
+
+  Widget _buildFrame(BuildContext context) {
     final tokens = KitTokens.of(context);
     final l10n = _l10n(context);
     final subtitle = this.subtitle;
-    final footer = entry == null ? this.footer : _entryField(entry!);
+    final footer = this.footer;
     final hasActions =
         primary != null ||
         secondary != null ||
-        tertiary.isNotEmpty ||
+        (!bar && tertiary.isNotEmpty) ||
         footer != null;
     Widget top = Column(
       mainAxisSize: MainAxisSize.min,
@@ -444,7 +507,7 @@ class KitSheet extends StatelessWidget {
         Padding(
           // The handle's own height is the air above the header.
           padding: EdgeInsetsDirectional.only(
-            start: tokens.rail,
+            start: leading != null ? tokens.space1 : tokens.rail,
             top: handle ? EdgeInsets.zero.top : tokens.space3,
             end: tokens.space2,
             bottom: tokens.space1,
@@ -460,38 +523,84 @@ class KitSheet extends StatelessWidget {
                 ),
                 SizedBox(height: tokens.space3),
               ],
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsetsDirectional.only(
-                        top: tokens.space3,
-                        end: tokens.space2,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Semantics(
-                            header: true,
-                            namesRoute: true,
-                            child: KitText(title, role: KitTextRole.title),
+                  Row(
+                    crossAxisAlignment: leading != null
+                        ? CrossAxisAlignment.center
+                        : CrossAxisAlignment.start,
+                    children: [
+                      if (leading case final lead?)
+                        KitIconButton(
+                          key: lead.key ?? const ValueKey('kit-sheet-leading'),
+                          icon: lead.icon ?? AppIconography.back,
+                          label: lead.label,
+                          onPressed: lead.onPressed,
+                        ),
+                      Expanded(
+                        child: Padding(
+                          padding: leading != null
+                              ? EdgeInsetsDirectional.only(
+                                  start: tokens.space1,
+                                  end: tokens.space2,
+                                )
+                              : EdgeInsetsDirectional.only(
+                                  top: tokens.space3,
+                                  end: tokens.space2,
+                                ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Semantics(
+                                header: true,
+                                namesRoute: true,
+                                child: KitText(title, role: KitTextRole.title),
+                              ),
+                              if (leading == null) ?_line(tokens, subtitle),
+                            ],
                           ),
-                          if (subtitle != null) ...[
-                            SizedBox(height: tokens.space1 / 2),
-                            KitText(subtitle, role: KitTextRole.secondary),
-                          ],
-                        ],
+                        ),
                       ),
-                    ),
+                      if (menu.isNotEmpty)
+                        Builder(
+                          builder: (anchor) => KitIconButton(
+                            key: const ValueKey('kit-sheet-menu'),
+                            icon: AppIconography.more,
+                            tooltip: menuLabel ?? l10n.kitTopBarMore,
+                            onPressed: () => showKitMenu(
+                              anchor,
+                              items: menu,
+                              semanticsLabel: menuLabel ?? l10n.kitTopBarMore,
+                            ),
+                          ),
+                        )
+                      else if (onClose case final close?
+                          when showClose && leading == null)
+                        KitIconButton(
+                          key: const ValueKey('kit-sheet-close'),
+                          icon: AppIconography.close,
+                          label: l10n.kitSheetClose,
+                          onPressed: close,
+                        ),
+                    ],
                   ),
-                  if (onClose case final close? when showClose)
-                    KitIconButton(
-                      key: const ValueKey('kit-sheet-close'),
-                      icon: AppIconography.close,
-                      label: l10n.kitSheetClose,
-                      onPressed: close,
+                  // The leading control and the menu centre on the title row
+                  // alone; the line sits under the title, past the control.
+                  if (leading != null &&
+                      (headerLine != null || subtitle != null))
+                    Padding(
+                      padding: EdgeInsetsDirectional.only(
+                        start: tokens.minTarget + tokens.space1,
+                        end: tokens.space2,
+                        bottom: tokens.space1,
+                      ),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: _line(tokens, subtitle),
+                      ),
                     ),
                 ],
               ),
@@ -560,7 +669,9 @@ class KitSheet extends StatelessWidget {
               tokens.rail,
               tokens.space4,
             ),
-            child: footer == null
+            child: bar
+                ? _KitSheetBar(primary: primary, secondary: secondary)
+                : footer == null
                 ? KitActionBlock(
                     primary: primary,
                     secondary: secondary,

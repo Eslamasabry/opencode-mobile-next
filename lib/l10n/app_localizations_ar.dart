@@ -26699,7 +26699,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get remoteFolderProjects => 'مشاريع هذا الخادم';
 
   @override
-  String get folderBrowserNewProjectHere => 'مشروع جديد هنا';
+  String folderBrowserNewProjectIn(String name) {
+    return 'في $name';
+  }
 
   @override
   String folderBrowserNewProjectCreates(String path) {

@@ -41941,11 +41941,11 @@ abstract class AppLocalizations {
   /// **'Projects on this server'**
   String get remoteFolderProjects;
 
-  /// Secondary button of the folder browser: names a new project in the folder shown
+  /// Quiet line under the New project step's title: the folder the project will be made in
   ///
   /// In en, this message translates to:
-  /// **'New project here'**
-  String get folderBrowserNewProjectHere;
+  /// **'In {name}'**
+  String folderBrowserNewProjectIn(String name);
 
   /// One line under the inline new-project name field: the full path the folder will be created at
   ///

@@ -65,7 +65,7 @@ or `TermuxBridgeException` that is one plain sentence) still pass through.
 | `screens/servers_screen.dart:519` | `ProductException(conn.lastError)` passed raw connect text as words | words, raw kept as `cause` |
 | `screens/workspace_screen.dart`, `worktrees_screen.dart` | `error is String ? error : …` let raw strings through | all through `productErrorText` |
 | `screens/running_work_sheet.dart`, `session_context_screen.dart`, `session_destination_sheet.dart` | `details: productErrorText(error)` (words in the fold, raw lost) | `details: productErrorDetails(error)` |
-| `widgets/folder_browser.dart:508` | `details: error.toString()` | `productErrorDetails` |
+| `widgets/folder_browser.dart:768` | `details: error.toString()` | `productErrorDetails` |
 | `widgets/tool_card.dart:586,1567` | `chatUiFileLoadFailed(error)`, `snapshot.error.toString()` as notice text | `productErrorText` |
 | `widgets/local_agent_onboarding.dart` (4 sites), `local_agent_server_entry.dart:279` | `LocalAgentFailure.message` / `lastError` (script output) as words | `productErrorText` (sentences stay, output said in words) |
 | `widgets/phone_server_card.dart:326,473,512` | `BuiltinLinuxException.message` (Java/native text) | `productErrorText` |

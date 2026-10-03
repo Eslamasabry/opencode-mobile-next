@@ -2279,9 +2279,9 @@ Reached from: `worktrees`
 
 ### project-folder-browser
 
-**Open a project** · sheet · `FolderBrowserSheet` · `lib/ui/widgets/folder_browser.dart:50`
+**Open a project** · sheet · `FolderBrowserSheet` · `lib/ui/widgets/folder_browser.dart:111`
 
-A server on this phone: OpenCode inside the app (folders read from the built-in Ubuntu's files, so it works with the server stopped) or the OpenCode server this app runs in Termux (a short read-only script run inside Termux's Ubuntu through TermuxBridge.run, the path passed base64-encoded, bounded to 15 s in Termux and 25 s in the app). Browses from /root/projects up to /. A project (git repository, a project OpenCode knows, or any folder straight in /root/projects) opens with a tap; other folders are gone into. One primary opens the folder shown (never the home folder, / or the projects folder itself); New project makes a folder inside the folder shown (the app's Ubuntu: mkdir + git init; Termux: mkdir -p); Enter a path opens the path dialog. Remote servers, and Termux when it cannot run the app's commands, skip this sheet and go straight to the path dialog.
+A server on this phone: OpenCode inside the app (folders read from the built-in Ubuntu's files, so it works with the server stopped) or the OpenCode server this app runs in Termux (a short read-only script run inside Termux's Ubuntu through TermuxBridge.run, the path passed base64-encoded, bounded to 15 s in Termux and 25 s in the app). Browses from /root/projects up to /. A project (git repository, a project OpenCode knows, or any folder straight in /root/projects) opens with a tap; other folders are gone into. One primary opens the folder shown (never the home folder, / or the projects folder itself); New project makes a folder inside the folder shown (the app's Ubuntu: mkdir + git init; Termux: mkdir -p); Enter a path opens the path dialog. Remote servers, and Termux when it cannot run the app's commands, skip this sheet and go straight to the path dialog. Layout (2026-10-03, after Canva Move to a folder and the iOS Files picker): one header row (back chevron or Close, the folder name, a more menu with Show hidden folders and Enter a path), the place menu (This phone / Project space) as one quiet line under the title when both exist, one panel of folder rows, and a pinned bar with the text button New project and the primary Open <folder>. New project swaps the sheet content for a name step in place; back returns to the same folder.
 
 Gates: `isInAppServer(controller.profile, linux)`; `or isManagedPhoneProfile(profile) and TermuxBridge.capabilities(): installed, service available, protocol supported, permission granted`
 
@@ -2289,14 +2289,14 @@ Reached from: `projects`, `workspace-folder-chooser`
 
 | Label | Type | Action -> target | Effect | Gates | Line |
 |---|---|---|---|---|---|
-| Up one folder / <parent path> | list-tile | other | Lists the folder above (stops at /). |  | 286 |
-| <folder name> / Git repository \| OpenCode project | list-tile | mutate | A project row pops FolderBrowserOpen(path): openFolder() then controller.selectLocation(directory: path). Any other folder (and the home folder even when it has .git) is listed instead. |  | 308 |
-| [Show the folders in <name>] | icon-button | other | A project row's chevron: lists the folders inside it. |  | 321 |
-| Try again | button | other | After "This folder can’t be shown": lists the folder again. |  | 356 |
-| Project name | text-field | submit | onSubmitted -> _create(). |  | 376 |
-| Create | button | mutate | _create(): projectFolderNameProblem and workspaceDirectoryProblem, then pops FolderBrowserCreate(<folder shown>/<name>) (or FolderBrowserOpen when it is already there); openFolder() makes it (the app's Ubuntu: git init; Termux: TermuxFolders.create, mkdir -p) and selects it. |  | 395 |
-| Open <folder> | button | mutate | Pops FolderBrowserOpen(folder shown); openFolder() selects it. | not the home folder, / or /root/projects; the folder listed | 409 |
-| Enter a path | button | open-dialog -> `project-folder-open-dialog` | Pops FolderBrowserEnterPath(folder shown); openFolder() opens the path dialog starting at that folder. |  | 451 |
+| Back chevron (Up one folder); Close at the place's first folder | icon-button | other | Header leading control: lists the folder above; at the place's first folder it is Close (X) and pops with no choice. The old "Up one folder" row, breadcrumb row and Place block are gone. |  | 425 |
+| <folder name> / Git repository \| OpenCode project | list-tile | mutate | A project row pops FolderBrowserOpen(path): openFolder() then controller.selectLocation(directory: path). Any other folder (and the home folder even when it has .git) is listed instead. |  | 666 |
+| [Show the folders in <name>] | icon-button | other | A project row's chevron: lists the folders inside it. |  | 679 |
+| Try again | button | other | After "This folder can’t be shown": lists the folder again. |  | 763 |
+| Project name | text-field | submit | New project step (replaces the sheet content in place, no second sheet or dialog): autofocused name field; helper "Creates <path>/<name>"; onSubmitted -> _submitName(). |  | 386 |
+| Create and open | button | mutate | _create(): projectFolderNameProblem and workspaceDirectoryProblem, then pops FolderBrowserCreate(<folder shown>/<name>) (or FolderBrowserOpen when it is already there); openFolder() makes it (the app's Ubuntu: git init; Termux: TermuxFolders.create, mkdir -p) and selects it. |  | 380 |
+| Open <folder> | button | mutate | Pops FolderBrowserOpen(folder shown); openFolder() selects it. | not the home folder, / or /root/projects; the folder listed | 458 |
+| Enter a path (header more menu) | menu-item | open-dialog -> `project-folder-open-dialog` | Pops FolderBrowserEnterPath(folder shown); openFolder() opens the path dialog starting at that folder. |  | 438 |
 
 ### embedded-mobile-task-list
 

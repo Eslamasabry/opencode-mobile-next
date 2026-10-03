@@ -154,51 +154,48 @@ class _PullDownRecognizer extends VerticalDragGestureRecognizer {
       allowed() && super.isPointerAllowed(event);
 }
 
-/// The text a [KitSheet] asks for in place (see [KitSheet.entry]): a
-/// [KitField] with its one line of help or the reason it cannot be used.
-@immutable
-class KitSheetEntry {
-  const KitSheetEntry({
-    required this.label,
-    required this.controller,
-    this.hint,
-    this.helper,
-    this.error,
-    this.onChanged,
-    this.onSubmitted,
-    this.fieldKey,
-  });
+/// The pinned bottom bar of a [KitSheet] with `bar: true`: a text button at
+/// the start and the primary at the end (Canva "Move to a folder"). The
+/// primary names its target and is ellipsized, so a long folder name never
+/// pushes the text button out.
+class _KitSheetBar extends StatelessWidget {
+  const _KitSheetBar({this.primary, this.secondary});
 
-  /// The field's visible label.
-  final String label;
-  final TextEditingController controller;
-  final String? hint;
+  final KitAction? primary;
+  final KitAction? secondary;
 
-  /// What will happen, one line ("Creates /storage/…/name").
-  final String? helper;
-
-  /// The reason the text cannot be used; shown under the field in place
-  /// of [helper].
-  final String? error;
-  final ValueChanged<String>? onChanged;
-  final ValueChanged<String>? onSubmitted;
-  final Key? fieldKey;
+  @override
+  Widget build(BuildContext context) {
+    final tokens = KitTokens.of(context);
+    return LayoutBuilder(
+      builder: (context, box) => Row(
+        key: const ValueKey('kit-sheet-bar'),
+        children: [
+          if (secondary case final secondary?)
+            // The text button takes its own width, at most two fifths.
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: box.maxWidth * 2 / 5),
+              child: KitButton.fromAction(
+                secondary,
+                role: KitButtonRole.tertiary,
+                expand: false,
+              ),
+            ),
+          if (secondary != null && primary != null)
+            SizedBox(width: tokens.space2),
+          if (primary case final primary?)
+            Expanded(
+              child: Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: KitButton.fromAction(
+                  primary,
+                  role: KitButtonRole.primary,
+                  expand: false,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
-
-Widget _entryField(KitSheetEntry entry) => Builder(
-  builder: (context) => Padding(
-    padding: EdgeInsetsDirectional.only(bottom: KitTokens.of(context).space3),
-    child: KitField(
-      label: entry.label,
-      controller: entry.controller,
-      hint: entry.hint,
-      helper: entry.helper,
-      error: entry.error,
-      autofocus: true,
-      onChanged: entry.onChanged,
-      onSubmitted: entry.onSubmitted,
-      textInputAction: TextInputAction.done,
-      fieldKey: entry.fieldKey,
-    ),
-  ),
-);
