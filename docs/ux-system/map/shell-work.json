@@ -5914,7 +5914,7 @@
   "evidence": [
    "lib/ui/widgets/folder_browser.dart:130",
    "lib/ui/widgets/folder_browser.dart:521",
-   "lib/ui/widgets/folder_browser.dart:871",
+   "lib/ui/widgets/folder_browser.dart:869",
    "docs/qa/screen-census/e-workspace/project-folder-browser--projects.png"
   ]
  },
