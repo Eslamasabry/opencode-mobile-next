@@ -20,6 +20,7 @@ import 'package:opencode_mobile/ui/kit/kit_nav.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/ui/desktop/shortcuts.dart';
+import 'package:opencode_mobile/ui/navigation/last_project.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_home_screen.dart';
 import 'package:opencode_mobile/ui/screens/projects_screen.dart';
 import 'package:opencode_mobile/ui/kit/glass/kit_glass.dart';
@@ -103,8 +104,9 @@ class _ShellProfileStore extends ProfileStore {
 Future<ConnectionController> _controller({
   String? profileName,
   String? directory,
+  Map<String, Object> seed = const {},
 }) async {
-  SharedPreferences.setMockInitialValues({});
+  SharedPreferences.setMockInitialValues({...seed});
   final prefs = await SharedPreferences.getInstance();
   final store = _ShellProfileStore(
     prefs: prefs,
@@ -944,6 +946,31 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('project-hub-context')));
       await tester.pumpAndSettle();
       expect(find.byType(ProjectsScreen), findsOneWidget);
+    });
+
+    testWidgets('the project is the one last used for a chat', (tester) async {
+      final controller = await _controller(
+        profileName: 'Test server',
+        directory: '/srv/app',
+        seed: {'oc.lastProject.local': '/srv/app'},
+      );
+      addTearDown(controller.dispose);
+      expect(lastUsedProjectOf(controller), '/srv/app');
+      await openFiles(tester, controller);
+      expect(find.bySemanticsLabel(RegExp('app')), findsWidgets);
+      expect(controller.directory, '/srv/app');
+    });
+
+    testWidgets('a last-used temporary folder is not a project', (
+      tester,
+    ) async {
+      final controller = await _controller(
+        profileName: 'Test server',
+        directory: '/srv/app',
+        seed: {'oc.lastProject.local': '/tmp/scratch'},
+      );
+      addTearDown(controller.dispose);
+      expect(lastUsedProjectOf(controller), isNull);
     });
 
     testWidgets('a temporary folder is never shown as the project', (

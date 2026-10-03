@@ -10,6 +10,7 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
+import 'package:opencode_mobile/ui/navigation/last_project.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -154,6 +155,16 @@ void main() {
     await _pumpChat(tester, conn);
     // Nothing to open from the project: no chip at all.
     expect(_chip, findsNothing);
+  });
+
+  testWidgets('opening a conversation makes its project the last used', (
+    tester,
+  ) async {
+    final conn = await _controller(_Api(directory: '/root/projects/IPTV_King'));
+    addTearDown(conn.dispose);
+    expect(lastUsedProjectOf(conn), isNull);
+    await _pumpChat(tester, conn);
+    expect(lastUsedProjectOf(conn), '/root/projects/IPTV_King');
   });
 
   testWidgets('a temporary folder is never shown as a project', (tester) async {

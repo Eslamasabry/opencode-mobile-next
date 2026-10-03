@@ -16,10 +16,7 @@
 // (quota monitoring in place), test/project_hub_test.dart (Manage project's
 // tools on the Project tab) and test/session_context_screen_test.dart.
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:opencode_mobile/api/models.dart';
-import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
@@ -27,28 +24,9 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/activity_screen.dart';
-import 'package:opencode_mobile/ui/screens/home_screen.dart';
-import 'package:opencode_mobile/ui/screens/session_context_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final _en = lookupAppLocalizations(const Locale('en'));
-
-class _Api extends OpenCodeApi {
-  _Api() : super(baseUrl: 'http://localhost');
-
-  @override
-  ServerCapabilities get capabilities => const ServerCapabilities(
-    fileBrowsing: false,
-    terminal: false,
-    projectManagement: false,
-    globalSessionSearch: false,
-    sessionImportExport: false,
-    serverCatalog: false,
-  );
-
-  @override
-  Future<List<Session>> sessions() async => [];
-}
 
 class _Repository implements ProductRepository {
   int listProjectsCalls = 0;
@@ -75,50 +53,6 @@ class _Repository implements ProductRepository {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
-
-class _Store extends ProfileStore {
-  _Store({required super.prefs});
-
-  final profile = ServerProfile(
-    id: 'folder-server',
-    name: 'Studio',
-    baseUrl: 'http://localhost',
-  );
-
-  @override
-  List<ServerProfile> get profiles => [profile];
-
-  @override
-  String? get activeId => profile.id;
-}
-
-/// A server that works in one configured folder and cannot manage
-/// projects, with one conversation in that folder.
-Future<ConnectionController> _folderServer(_Repository repository) async {
-  SharedPreferences.setMockInitialValues({});
-  final prefs = await SharedPreferences.getInstance();
-  final controller = ConnectionController(_Store(prefs: prefs))
-    ..api = _Api()
-    ..repository = repository
-    ..status = StreamStatus.connected
-    ..directory = '/workspace/shopfront';
-  controller.sessionsById['ses-1'] = Session(
-    id: 'ses-1',
-    title: 'Fix the checkout test',
-    directory: '/workspace/shopfront',
-    time: SessionTime(created: 1, updated: 1),
-  );
-  return controller;
-}
-
-Widget _home(ConnectionController controller) => ProviderScope(
-  overrides: [connProvider.overrideWithValue(controller)],
-  child: const MaterialApp(
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    supportedLocales: AppLocalizations.supportedLocales,
-    home: HomeScreen(),
-  ),
-);
 
 void _phone(WidgetTester tester) {
   tester.view.physicalSize = const Size(412, 915);
@@ -163,68 +97,6 @@ const _question = PendingQuestion(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-
-  testWidgets('the Work folder row opens the project sheet with the folder '
-      'under an open Details, not a folder dialog', (tester) async {
-    _phone(tester);
-    final repository = _Repository();
-    final controller = await _folderServer(repository);
-    addTearDown(controller.dispose);
-    await tester.pumpWidget(_home(controller));
-    await tester.pumpAndSettle();
-
-    await tester.tap(
-      find.byKey(const ValueKey('restricted-directory-context')),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const ValueKey('workspace-context-sheet')), findsOne);
-    expect(
-      find.byKey(const ValueKey('workspace-directory-details')),
-      findsNothing,
-    );
-    // A server that cannot manage projects is offered no project rows.
-    expect(find.byKey(const ValueKey('context-switch-project')), findsNothing);
-    expect(find.byKey(const ValueKey('manage-project-entry')), findsNothing);
-    // Details is open on the folder, copyable.
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('workspace-context-sheet')),
-        matching: find.textContaining('/workspace/shopfront'),
-      ),
-      findsWidgets,
-    );
-    expect(find.text(_en.workspaceContextFolder), findsOneWidget);
-    expect(repository.listProjectsCalls, 0);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('a Work row\'s menu opens Conversation context, where its '
-      'folder and link now live', (tester) async {
-    _phone(tester);
-    final controller = await _folderServer(_Repository());
-    addTearDown(controller.dispose);
-    await tester.pumpWidget(_home(controller));
-    await tester.pumpAndSettle();
-
-    await tester.longPress(find.text('Fix the checkout test'));
-    await tester.pumpAndSettle();
-    // One entry leads there: since the conversation menu became "Go to" /
-    // "Do" (P10.2, 34353c2f) it is Go to › Details, never a second
-    // details entry beside a Conversation context one.
-    expect(find.byKey(const ValueKey('session-menu-details')), findsOneWidget);
-    expect(find.text(_en.sessionMenuDetails), findsOneWidget);
-    expect(find.text(_en.e7SharedSessionContext), findsNothing);
-    await tester.tap(find.byKey(const ValueKey('session-menu-details')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 600));
-
-    expect(find.byType(SessionContextScreen), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('workspace-session-details')),
-      findsNothing,
-    );
-  });
 
   group('question sheet', () {
     Future<_Answers> open(WidgetTester tester) async {

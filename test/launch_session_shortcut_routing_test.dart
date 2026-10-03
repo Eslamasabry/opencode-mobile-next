@@ -409,7 +409,9 @@ void main() {
     expect(find.byType(ActivityScreen), findsNothing);
     expect(find.byType(ChatScreen), findsNothing);
     expect(
-      tester.widget<ChatsHomeScreen>(find.byType(ChatsHomeScreen)).initialFilter,
+      tester
+          .widget<ChatsHomeScreen>(find.byType(ChatsHomeScreen))
+          .initialFilter,
       const ChatFeedFilter(needsYou: true),
     );
     expect(shortcut.pending.value, isNull);

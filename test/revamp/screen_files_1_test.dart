@@ -106,11 +106,11 @@ void main() {
     expect(find.byType(ProjectsScreen), findsOneWidget);
   });
 
-  testWidgets('the project is the title; Changes first; no Search row', (
-    tester,
-  ) async {
+  testWidgets('Files is the title, the project is a chip; Changes first; no '
+      'Search row', (tester) async {
     await _pump(tester, directory: '/srv/shopfront');
-    expect(find.text('shopfront'), findsOneWidget);
+    expect(find.text('Files'), findsWidgets);
+    expect(find.bySemanticsLabel(RegExp('shopfront')), findsWidgets);
     // The path is no longer repeated in the header.
     expect(find.text('/srv/shopfront'), findsNothing);
     expect(find.byKey(const ValueKey('project-hub-search')), findsNothing);

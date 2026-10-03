@@ -115,7 +115,7 @@ void main() {
 
       expect(find.byType(KitNavBar), findsOneWidget);
       expect(find.byType(KitNavRail), findsNothing);
-      for (final label in ['Work', 'Inbox', 'Project', 'Settings']) {
+      for (final label in ['Chats', 'Files', 'Settings']) {
         expect(
           find.descendant(
             of: find.byType(KitNavBar),
@@ -158,7 +158,7 @@ void main() {
       expect(find.byType(KitNavBar), findsNothing);
       final rail = tester.widget<KitNavRail>(find.byType(KitNavRail));
       expect(rail.extended, isTrue);
-      expect(rail.destinations[rail.selected].label, 'Inbox');
+      expect(rail.destinations[rail.selected].label, 'Files');
       // slice-R14: the pane has no bar repeating the highlighted
       // destination; it starts with the destination's own content.
       expect(find.byType(KitTopBar), findsNothing);
@@ -170,30 +170,6 @@ void main() {
           matching: find.byKey(const ValueKey('server-switcher-button')),
         ),
         findsOneWidget,
-      );
-    });
-
-    testWidgets('a PC window: the Work pane starts with the project header '
-        '(slice-R14)', (tester) async {
-      _mockSecureStorage(tester);
-      _size(tester, const Size(1280, 800));
-      final controller = await workController(sessions: workLoadedSessions());
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_Shell().app(controller));
-      await _settle(tester);
-
-      final rail = tester.widget<KitNavRail>(find.byType(KitNavRail));
-      expect(rail.destinations[rail.selected].label, 'Work');
-      expect(find.byType(KitTopBar), findsNothing);
-      // "Work" is said once, by the sidebar.
-      expect(find.text('Work'), findsOneWidget);
-      final header = find.byKey(const ValueKey('current-project-entry'));
-      expect(header, findsOneWidget);
-      // Nothing above it in the pane: it is the first thing there.
-      expect(tester.getRect(header).top, lessThan(40));
-      expect(
-        tester.getRect(header).left,
-        greaterThanOrEqualTo(tester.getRect(find.byType(KitNavRail)).right),
       );
     });
 
@@ -215,7 +191,7 @@ void main() {
       );
     });
 
-    testWidgets('the first back on Work says a second one exits', (
+    testWidgets('the first back on Chats says a second one exits', (
       tester,
     ) async {
       _mockSecureStorage(tester);
@@ -236,7 +212,7 @@ void main() {
     });
   });
 
-  group('Project on a server without project tools', () {
+  group('Files on a server without project tools', () {
     testWidgets('a search result for Files explains and offers the switch', (
       tester,
     ) async {
@@ -249,7 +225,7 @@ void main() {
       await tester.pumpWidget(shell.app(controller));
       await _settle(tester);
 
-      expect(find.text('Project'), findsNothing);
+      expect(find.text('Files'), findsNothing);
       expect(
         shell.signals.dispatch(const OpenProjectToolIntent(ProjectTool.files)),
         isTrue,
@@ -259,7 +235,7 @@ void main() {
         find.byKey(const ValueKey('home-shell-project-unavailable-sheet')),
         findsOneWidget,
       );
-      expect(find.text("Project isn't available"), findsOneWidget);
+      expect(find.text("Files isn't available"), findsOneWidget);
       expect(
         find.textContaining("doesn't offer files, changes or code search"),
         findsOneWidget,
@@ -296,7 +272,7 @@ void main() {
       }
     });
 
-    testWidgets('Ctrl+3 explains instead of silently landing on Work', (
+    testWidgets('Ctrl+2 explains instead of silently landing on Chats', (
       tester,
     ) async {
       _mockSecureStorage(tester);
@@ -308,9 +284,9 @@ void main() {
       await tester.pumpWidget(shell.app(controller, initialTab: 1));
       await _settle(tester);
 
-      shell.signals.dispatch(const SelectDestinationIntent(2));
+      shell.signals.dispatch(const SelectDestinationIntent(1));
       await _settle(tester);
-      expect(find.text("Project isn't available"), findsOneWidget);
+      expect(find.text("Files isn't available"), findsOneWidget);
     });
 
     testWidgets('the tab going away after a server switch is explained', (
@@ -320,7 +296,7 @@ void main() {
       _size(tester, const Size(412, 915));
       final controller = await workController(sessions: workLoadedSessions());
       addTearDown(controller.dispose);
-      await tester.pumpWidget(_Shell().app(controller, initialTab: 2));
+      await tester.pumpWidget(_Shell().app(controller, initialTab: 1));
       await _settle(tester);
       expect(
         find.byKey(const ValueKey('home-shell-project-unavailable')),
@@ -346,7 +322,7 @@ void main() {
       await tester.tap(
         find.descendant(
           of: find.byType(KitNavBar),
-          matching: find.text('Inbox'),
+          matching: find.text('Chats'),
         ),
       );
       await _settle(tester);

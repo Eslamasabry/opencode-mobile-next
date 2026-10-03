@@ -1,7 +1,7 @@
 // Finding the AI Team while it is off (docs/qa/team-discover-2026-09-25),
-// at 412x915, dark and light, with the app's real fonts: the Work tab on
-// the owner's Termux phone with the entry, the same tab once it is folded, and the intro for OpenCode
-// inside the app (this phone) and for a computer, and Settings' AI Team row.
+// at 412x915, dark and light, with the app's real fonts: the intro for
+// OpenCode inside the app (this phone) and for a computer, and Settings' AI
+// Team row.
 //
 // Regenerate deliberately:
 //   flutter test --update-goldens test/goldens/team_discover_golden_test.dart
@@ -10,9 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
-import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/ui/kit/kit_motion.dart';
-import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/team/team_intro_screen.dart';
 import 'package:opencode_mobile/termux/team_runtime.dart';
@@ -56,7 +54,7 @@ Future<void> _golden(
   String name, {
   required bool light,
   required WorkController controller,
-  Widget home = const HomeScreen(initialTab: 0),
+  required Widget home,
 }) async {
   _mockSecureStorage(tester);
   tester.view.physicalSize = const Size(412, 915);
@@ -88,20 +86,6 @@ Future<void> _golden(
   }
 }
 
-Map<String, Session> _sessions() => {
-  'busy': workSession('busy', 'Add CSV export to reports', ago: workMinute),
-  'waiting': workSession(
-    'waiting',
-    'Upgrade the charting library',
-    ago: 40 * workMinute,
-  ),
-  'older': workSession(
-    'older',
-    'Explain the budget rules engine',
-    ago: 5 * 60 * workMinute,
-  ),
-};
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(loadCaptureFonts);
@@ -115,19 +99,6 @@ void main() {
 
   for (final light in [false, true]) {
     final mode = light ? 'light' : 'dark';
-
-    testWidgets('work · AI Team off · $mode', (tester) async {
-      final controller = await workController(
-        sessions: _sessions(),
-        busy: {'busy'},
-      );
-      await _golden(
-        tester,
-        'team_discover_work',
-        light: light,
-        controller: controller,
-      );
-    });
 
     testWidgets('settings · the AI Team row · $mode', (tester) async {
       final controller = await workController(

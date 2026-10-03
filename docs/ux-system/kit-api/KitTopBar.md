@@ -144,6 +144,7 @@ Structural rules (debug asserts, G37):
 - `brand: true` only with `exit: none` or `auto` at a root route.
 - The overflow button appears only when something is in it.
 - A screen inside a tab never builds a second bar: `KitScreen(topBar:)` inside the shell's KitScreen asserts (KIT-36, K2 §1.18 rule).
+- `scope` (a `KitTopBarScope`: chip label, semantics label, at least one menu item) puts one small `KitChip.action` under the title and subtitle. It names what the page belongs to (a conversation's project) and opens a compact `KitMenu` of what can be done there. The chip is its own semantics node, outside the title's header label. Chats-first shell, 2026-10-03.
 - `KitTopBar` is not a `PreferredSizeWidget` (a deliberate change from K2 §1.18): it has no fixed height and is hosted only by `KitScreen(topBar:)`, which lets it grow at 200 % text. G16 removes `Scaffold`/`AppBar` outside the kit, so nothing else can host it.
 
 ## States
