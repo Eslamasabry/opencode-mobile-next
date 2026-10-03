@@ -7,8 +7,6 @@
 // Regenerate deliberately:
 //   flutter test --update-goldens test/goldens/chat_approval_chip_golden_test.dart
 // and look at every changed image before committing it.
-//
-// ignore_for_file: invalid_use_of_protected_member
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';

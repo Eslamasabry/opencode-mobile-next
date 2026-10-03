@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/ui/kit/kit_text.dart' show KitText;
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
@@ -200,7 +201,14 @@ void main() {
 
     expect(find.byKey(const ValueKey('chat-start-name')), findsOneWidget);
     // The folder name is isolated for bidi (COPY-30), so match inside it.
-    expect(find.textContaining('my-app'), findsOneWidget);
+    // The header's project chip names it too (intended), so ask the start
+    // header's own name.
+    expect(
+      tester
+          .widget<KitText>(find.byKey(const ValueKey('chat-start-name')))
+          .text,
+      contains('my-app'),
+    );
     expect(find.text('Empty folder · Git'), findsOneWidget);
     expect(find.byKey(const ValueKey('chat-start-tip')), findsOneWidget);
     for (final label in [
@@ -378,14 +386,16 @@ void main() {
     expect(row, findsOneWidget);
     final rowRect = tester.getRect(row);
     final composerRect = tester.getRect(_composerField);
-    // Directly above where you type, and above the keyboard. The approval
-    // chip's strip is the only thing between them.
+    // Directly above where you type, and above the keyboard. In a window
+    // this short the Ask first chip steps aside, so nothing but a thin strip
+    // may sit between them; when the chip shows it sits in that strip.
     expect(rowRect.bottom, lessThanOrEqualTo(composerRect.top));
-    final chipRect = tester.getRect(
-      find.byKey(const Key('auto-approval-indicator')),
-    );
-    expect(chipRect.top, greaterThanOrEqualTo(rowRect.bottom));
-    expect(chipRect.bottom, lessThanOrEqualTo(composerRect.top));
+    final chip = find.byKey(const Key('auto-approval-indicator'));
+    if (chip.evaluate().isNotEmpty) {
+      final chipRect = tester.getRect(chip);
+      expect(chipRect.top, greaterThanOrEqualTo(rowRect.bottom));
+      expect(chipRect.bottom, lessThanOrEqualTo(composerRect.top));
+    }
     expect(composerRect.top - rowRect.bottom, lessThan(72));
     expect(rowRect.bottom, lessThanOrEqualTo(800 - 320));
     // The header compacts to one line and the tip is not drawn at all.
