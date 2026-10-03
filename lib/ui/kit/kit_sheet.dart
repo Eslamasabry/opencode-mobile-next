@@ -471,6 +471,24 @@ class KitSheet extends StatelessWidget {
     );
   }
 
+  /// The quiet line under the title: [headerLine], else [subtitle].
+  Widget? _line(KitTokens tokens, String? subtitle) {
+    final line =
+        headerLine ??
+        (subtitle == null
+            ? null
+            : KitText(subtitle, role: KitTextRole.secondary));
+    if (line == null) return null;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: tokens.space1 / 2),
+        line,
+      ],
+    );
+  }
+
   Widget _buildFrame(BuildContext context) {
     final tokens = KitTokens.of(context);
     final l10n = _l10n(context);
@@ -505,69 +523,84 @@ class KitSheet extends StatelessWidget {
                 ),
                 SizedBox(height: tokens.space3),
               ],
-              Row(
-                crossAxisAlignment: leading != null
-                    ? CrossAxisAlignment.center
-                    : CrossAxisAlignment.start,
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (leading case final lead?)
-                    KitIconButton(
-                      key: lead.key ?? const ValueKey('kit-sheet-leading'),
-                      icon: lead.icon ?? AppIconography.back,
-                      label: lead.label,
-                      onPressed: lead.onPressed,
-                    ),
-                  Expanded(
-                    child: Padding(
-                      padding: leading != null
-                          ? EdgeInsetsDirectional.only(
-                              start: tokens.space1,
-                              end: tokens.space2,
-                            )
-                          : EdgeInsetsDirectional.only(
-                              top: tokens.space3,
-                              end: tokens.space2,
-                            ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Semantics(
-                            header: true,
-                            namesRoute: true,
-                            child: KitText(title, role: KitTextRole.title),
+                  Row(
+                    crossAxisAlignment: leading != null
+                        ? CrossAxisAlignment.center
+                        : CrossAxisAlignment.start,
+                    children: [
+                      if (leading case final lead?)
+                        KitIconButton(
+                          key: lead.key ?? const ValueKey('kit-sheet-leading'),
+                          icon: lead.icon ?? AppIconography.back,
+                          label: lead.label,
+                          onPressed: lead.onPressed,
+                        ),
+                      Expanded(
+                        child: Padding(
+                          padding: leading != null
+                              ? EdgeInsetsDirectional.only(
+                                  start: tokens.space1,
+                                  end: tokens.space2,
+                                )
+                              : EdgeInsetsDirectional.only(
+                                  top: tokens.space3,
+                                  end: tokens.space2,
+                                ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Semantics(
+                                header: true,
+                                namesRoute: true,
+                                child: KitText(title, role: KitTextRole.title),
+                              ),
+                              if (leading == null) ?_line(tokens, subtitle),
+                            ],
                           ),
-                          if (headerLine != null) ...[
-                            SizedBox(height: tokens.space1 / 2),
-                            headerLine!,
-                          ] else if (subtitle != null) ...[
-                            SizedBox(height: tokens.space1 / 2),
-                            KitText(subtitle, role: KitTextRole.secondary),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (menu.isNotEmpty)
-                    Builder(
-                      builder: (anchor) => KitIconButton(
-                        key: const ValueKey('kit-sheet-menu'),
-                        icon: AppIconography.more,
-                        tooltip: menuLabel ?? l10n.kitTopBarMore,
-                        onPressed: () => showKitMenu(
-                          anchor,
-                          items: menu,
-                          semanticsLabel: menuLabel ?? l10n.kitTopBarMore,
                         ),
                       ),
-                    )
-                  else if (onClose case final close?
-                      when showClose && leading == null)
-                    KitIconButton(
-                      key: const ValueKey('kit-sheet-close'),
-                      icon: AppIconography.close,
-                      label: l10n.kitSheetClose,
-                      onPressed: close,
+                      if (menu.isNotEmpty)
+                        Builder(
+                          builder: (anchor) => KitIconButton(
+                            key: const ValueKey('kit-sheet-menu'),
+                            icon: AppIconography.more,
+                            tooltip: menuLabel ?? l10n.kitTopBarMore,
+                            onPressed: () => showKitMenu(
+                              anchor,
+                              items: menu,
+                              semanticsLabel: menuLabel ?? l10n.kitTopBarMore,
+                            ),
+                          ),
+                        )
+                      else if (onClose case final close?
+                          when showClose && leading == null)
+                        KitIconButton(
+                          key: const ValueKey('kit-sheet-close'),
+                          icon: AppIconography.close,
+                          label: l10n.kitSheetClose,
+                          onPressed: close,
+                        ),
+                    ],
+                  ),
+                  // The leading control and the menu centre on the title row
+                  // alone; the line sits under the title, past the control.
+                  if (leading != null &&
+                      (headerLine != null || subtitle != null))
+                    Padding(
+                      padding: EdgeInsetsDirectional.only(
+                        start: tokens.minTarget + tokens.space1,
+                        end: tokens.space2,
+                        bottom: tokens.space1,
+                      ),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: _line(tokens, subtitle),
+                      ),
                     ),
                 ],
               ),

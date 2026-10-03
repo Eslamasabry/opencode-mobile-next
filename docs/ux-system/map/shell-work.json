@@ -5912,9 +5912,9 @@
    "consistency-kit": "mostly kit"
   },
   "evidence": [
-   "lib/ui/widgets/folder_browser.dart:50",
-   "lib/ui/widgets/folder_browser.dart:253",
-   "lib/ui/widgets/folder_browser.dart:341",
+   "lib/ui/widgets/folder_browser.dart:111",
+   "lib/ui/widgets/folder_browser.dart:298",
+   "lib/ui/widgets/folder_browser.dart:349",
    "docs/qa/screen-census/e-workspace/project-folder-browser--projects.png"
   ]
  },
