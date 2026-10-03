@@ -14,6 +14,30 @@ enum KitMotionLevel {
   off,
 }
 
+/// How the glowing border while a reply runs is drawn (Settings >
+/// Appearance > Effects).
+enum KitGlowStyle {
+  /// The original: a bright highlight travels the box's own border while a
+  /// glow breathes beneath it.
+  classic,
+
+  /// The soft ring sweep: a wide soft wash and a thin line, no head.
+  softRing,
+}
+
+/// How many hues the glowing border uses.
+enum KitGlowColours {
+  /// The theme's main colour, with a lighter shade of it as the highlight.
+  one,
+
+  /// The theme's main colour and its partner colour.
+  two,
+}
+
+/// How fast the glowing border travels. Normal is the app's own pace; the
+/// ring never turns faster than the design kit allows.
+enum KitGlowSpeed { slow, normal, fast }
+
 /// The person's choices for the app's effects, from Settings › Appearance:
 /// how much things move, celebrations and vibration. Read with
 /// [KitEffects.of]; provided above the app by [KitEffectsScope].
@@ -23,7 +47,10 @@ class KitEffects {
     this.motion = KitMotionLevel.full,
     this.celebrations = true,
     this.haptics = true,
-    this.activityGlow = false,
+    this.activityGlow = true,
+    this.glowStyle = KitGlowStyle.classic,
+    this.glowColours = KitGlowColours.one,
+    this.glowSpeed = KitGlowSpeed.normal,
   });
 
   /// Everything on: the default until the person changes it.
@@ -38,9 +65,14 @@ class KitEffects {
   /// The light tick on send and the confirmation on a finish.
   final bool haptics;
 
-  /// A soft glowing ring around the message box while a reply runs
-  /// (Settings › Appearance › Effects). Off by default.
+  /// A glowing border around the message box while a reply runs
+  /// (Settings › Appearance › Effects). On by default.
   final bool activityGlow;
+
+  /// How that border is drawn, in how many colours, and how fast it moves.
+  final KitGlowStyle glowStyle;
+  final KitGlowColours glowColours;
+  final KitGlowSpeed glowSpeed;
 
   /// The choices in force here, or [defaults] above any scope (tests).
   static KitEffects of(BuildContext context) =>
@@ -57,11 +89,17 @@ class KitEffects {
     bool? celebrations,
     bool? haptics,
     bool? activityGlow,
+    KitGlowStyle? glowStyle,
+    KitGlowColours? glowColours,
+    KitGlowSpeed? glowSpeed,
   }) => KitEffects(
     motion: motion ?? this.motion,
     celebrations: celebrations ?? this.celebrations,
     haptics: haptics ?? this.haptics,
     activityGlow: activityGlow ?? this.activityGlow,
+    glowStyle: glowStyle ?? this.glowStyle,
+    glowColours: glowColours ?? this.glowColours,
+    glowSpeed: glowSpeed ?? this.glowSpeed,
   );
 
   @override
@@ -70,10 +108,21 @@ class KitEffects {
       other.motion == motion &&
       other.celebrations == celebrations &&
       other.haptics == haptics &&
-      other.activityGlow == activityGlow;
+      other.activityGlow == activityGlow &&
+      other.glowStyle == glowStyle &&
+      other.glowColours == glowColours &&
+      other.glowSpeed == glowSpeed;
 
   @override
-  int get hashCode => Object.hash(motion, celebrations, haptics, activityGlow);
+  int get hashCode => Object.hash(
+    motion,
+    celebrations,
+    haptics,
+    activityGlow,
+    glowStyle,
+    glowColours,
+    glowSpeed,
+  );
 }
 
 /// Provides the person's [KitEffects] to everything below it (placed once,

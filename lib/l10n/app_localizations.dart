@@ -21741,7 +21741,7 @@ abstract class AppLocalizations {
   /// Settings › Appearance › Effects: one line under the glowing border switch.
   ///
   /// In en, this message translates to:
-  /// **'A soft glow circles the message box while a reply is written'**
+  /// **'A glowing border circles the message box while a reply is written'**
   String get effectsActivityGlowHint;
 
   /// Effects: a choice could not be saved; it was put back.
@@ -42264,6 +42264,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'In {folder}'**
   String openProjectIn(String folder);
+
+  /// Settings › Appearance › Effects: title of the glowing border style choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Style'**
+  String get effectsGlowStyle;
+
+  /// Glowing border style: the original bright highlight travelling the border.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic'**
+  String get effectsGlowStyleClassic;
+
+  /// Glowing border style: a soft ring sweep.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft ring'**
+  String get effectsGlowStyleSoft;
+
+  /// Settings › Appearance › Effects: title of the glowing border colour choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Colours'**
+  String get effectsGlowColours;
+
+  /// Glowing border colours: the theme colour with a lighter highlight.
+  ///
+  /// In en, this message translates to:
+  /// **'One colour'**
+  String get effectsGlowColoursOne;
+
+  /// Glowing border colours: the theme colour and its partner colour.
+  ///
+  /// In en, this message translates to:
+  /// **'Two colours'**
+  String get effectsGlowColoursTwo;
+
+  /// Settings › Appearance › Effects: title of the glowing border speed choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed'**
+  String get effectsGlowSpeed;
+
+  /// Glowing border speed: slow.
+  ///
+  /// In en, this message translates to:
+  /// **'Slow'**
+  String get effectsGlowSpeedSlow;
+
+  /// Glowing border speed: the app's own pace.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get effectsGlowSpeedNormal;
+
+  /// Glowing border speed: fast.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast'**
+  String get effectsGlowSpeedFast;
 }
 
 class _AppLocalizationsDelegate

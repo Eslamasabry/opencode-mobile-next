@@ -19,7 +19,8 @@ import '../orchestration/adapters/gascity/gascity_probe.dart'
     show isTailnetHost;
 import '../platform/platform_capabilities.dart';
 // A plain value type (no widgets): the person's effect choices.
-import 'effects.dart' show KitEffects, KitMotionLevel;
+import 'effects.dart'
+    show KitEffects, KitGlowColours, KitGlowSpeed, KitGlowStyle, KitMotionLevel;
 import 'model_library.dart';
 import 'interaction_defaults.dart';
 import 'setup_audit_store.dart';
@@ -76,6 +77,9 @@ class ProfileStore {
   static const _effectsMotionKey = 'oc.effectsMotion';
   static const _effectsCelebrationsKey = 'oc.effectsCelebrations';
   static const _effectsActivityGlowKey = 'oc.effectsActivityGlow';
+  static const _effectsGlowStyleKey = 'oc.effectsGlowStyle';
+  static const _effectsGlowColoursKey = 'oc.effectsGlowColours';
+  static const _effectsGlowSpeedKey = 'oc.effectsGlowSpeed';
   static const _providerRuntimeRefreshVersion = 'v1';
 
   final SharedPreferences prefs;
@@ -968,16 +972,45 @@ class ProfileStore {
     if (level == KitMotionLevel.full && celebrations == false) {
       level = KitMotionLevel.calm;
     }
+    // The glowing border is on unless the person switched it off: no stored
+    // choice (never touched, or from before it was on by default) reads as on.
     bool glow;
     try {
-      glow = prefs.getBool(_effectsActivityGlowKey) ?? false;
+      glow = prefs.getBool(_effectsActivityGlowKey) ?? true;
     } catch (_) {
-      glow = false;
+      glow = true;
     }
+    T pick<T extends Enum>(String key, List<T> values, T fallback) {
+      try {
+        final stored = prefs.getString(key);
+        return values.firstWhere(
+          (v) => v.name == stored,
+          orElse: () => fallback,
+        );
+      } catch (_) {
+        return fallback;
+      }
+    }
+
     return KitEffects(
       motion: level,
       celebrations: level == KitMotionLevel.full,
       activityGlow: glow,
+      glowStyle: pick(
+        _effectsGlowStyleKey,
+        KitGlowStyle.values,
+        KitGlowStyle.classic,
+      ),
+      glowColours: pick(
+        _effectsGlowColoursKey,
+        KitGlowColours.values,
+        KitGlowColours.one,
+      ),
+      glowSpeed: pick(
+        _effectsGlowSpeedKey,
+        KitGlowSpeed.values,
+        KitGlowSpeed.normal,
+      ),
     );
   }
 
@@ -1005,6 +1038,27 @@ class ProfileStore {
         } catch (_) {}
         rethrow;
       }
+    }
+    if (effects.glowStyle != before.glowStyle) {
+      await _saveDisplayPreference(
+        _effectsGlowStyleKey,
+        effects.glowStyle.name,
+        error,
+      );
+    }
+    if (effects.glowColours != before.glowColours) {
+      await _saveDisplayPreference(
+        _effectsGlowColoursKey,
+        effects.glowColours.name,
+        error,
+      );
+    }
+    if (effects.glowSpeed != before.glowSpeed) {
+      await _saveDisplayPreference(
+        _effectsGlowSpeedKey,
+        effects.glowSpeed.name,
+        error,
+      );
     }
     // The old separate celebrations key would otherwise turn a saved Full
     // into Calm on the next start.

@@ -4566,7 +4566,7 @@
   "effectsMotionOffHint": "يظهر كل شيء فورًا",
   "effectsMotionSystemOff": "خيار «إزالة الرسوم المتحركة» مفعّل في هاتفك، لذا لا يتحرك شيء أيًّا كان اختيارك هنا",
   "effectsActivityGlow": "حدّ متوهّج أثناء الرد",
-  "effectsActivityGlowHint": "وهج ناعم يدور حول مربع الرسالة أثناء كتابة الرد",
+  "effectsActivityGlowHint": "حدّ متوهّج يدور حول مربع الرسالة أثناء كتابة الرد",
   "effectsSaveFailed": "تعذّر حفظ هذا الاختيار على هذا الجهاز. حاول مرة أخرى.",
   "teamDiscoverEntryTitle": "كلّف فريقًا بمهمة أكبر",
   "teamDiscoverEntryBody": "يخطّط الوكلاء لها وينجزونها ويراجعونها ويدمجونها. تتدخّل حين يسألونك.",
@@ -5036,5 +5036,15 @@
   "phoneScanDoneIn": "وُجد {count} خلال {time}",
   "phoneScanStop": "إيقاف",
   "openProjectChange": "غيّر",
-  "openProjectIn": "في {folder}"
+  "openProjectIn": "في {folder}",
+  "effectsGlowStyle": "النمط",
+  "effectsGlowStyleClassic": "كلاسيكي",
+  "effectsGlowStyleSoft": "حلقة ناعمة",
+  "effectsGlowColours": "الألوان",
+  "effectsGlowColoursOne": "لون واحد",
+  "effectsGlowColoursTwo": "لونان",
+  "effectsGlowSpeed": "السرعة",
+  "effectsGlowSpeedSlow": "بطيئة",
+  "effectsGlowSpeedNormal": "عادية",
+  "effectsGlowSpeedFast": "سريعة"
 }

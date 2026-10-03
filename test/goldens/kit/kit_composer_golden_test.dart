@@ -13,6 +13,7 @@
 // and look at every changed image before committing it.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/state/effects.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_composer.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_composer_chips.dart';
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
@@ -240,10 +241,14 @@ final _states = <String, Widget Function()>{
       ),
     ),
   ),
-  // The chosen "Glowing border while replying": one frame of the ring sweep
-  // around the box (the box itself is idle but for Stop).
-  'running_glow': () =>
-      _Backdrop(composer: _composer(busy: true, activityGlow: true)),
+  // "Glowing border while replying", one frame of each: the restored classic
+  // ring in one and two colours, and the soft ring (the box itself is idle
+  // but for Stop).
+  'glow_classic_one': () => _glowing(const KitEffects()),
+  'glow_classic_two': () =>
+      _glowing(const KitEffects(glowColours: KitGlowColours.two)),
+  'glow_soft_ring': () =>
+      _glowing(const KitEffects(glowStyle: KitGlowStyle.softRing)),
   // A failed send is neutral words, Retry and Details in the pill's top row.
   'failed_send': () => _Backdrop(
     composer: _composer(
@@ -274,6 +279,11 @@ final _states = <String, Widget Function()>{
   ),
 };
 
+Widget _glowing(KitEffects effects) => KitEffectsScope(
+  effects: effects,
+  child: _Backdrop(composer: _composer(busy: true)),
+);
+
 Widget _default() => _Backdrop(composer: _composer(text: _draft));
 
 void main() {
@@ -301,7 +311,7 @@ void main() {
           light: light,
           // The glow is drawn only where the system allows motion; its one
           // frame is the shot.
-          removeAnimations: state != 'running_glow',
+          removeAnimations: !state.startsWith('glow_'),
           child: build(),
         );
       });

@@ -13,8 +13,8 @@ enum _GlowMode {
   frame,
 }
 
-/// A part of KitComposer. The owner-chosen "Glowing border while replying" (Settings › Appearance ›
-/// Effects), drawn only when the person has turned it on: a soft ring sweep around
+/// A part of KitComposer: the "Soft ring" style of "Glowing border while
+/// replying" (Settings › Appearance › Effects): a soft ring sweep around
 /// the whole message box in the theme pack's primary and tertiary hues.
 /// Hues fade into each other and into nothing; there is no head, no seam and
 /// no sharp line. One painter on one repaint boundary, no backdrop filter.
@@ -28,6 +28,7 @@ class _ActivityGlow extends StatefulWidget {
     required this.radius,
     required this.primary,
     required this.partner,
+    required this.lapsPerSecond,
   });
 
   final bool active;
@@ -35,6 +36,9 @@ class _ActivityGlow extends StatefulWidget {
   final double radius;
   final Color primary;
   final Color partner;
+
+  /// The sweep's pace (clamped to the kit's cap on use).
+  final double lapsPerSecond;
 
   /// The line's width, the wash's width and blur, and their strongest alpha
   /// (from the appearance spike's ring sweep).
@@ -105,7 +109,7 @@ class _ActivityGlowState extends State<_ActivityGlow>
       _phase =
           (_phase +
               math.min(
-                    KitMotion.activityGlowLapsPerSecond,
+                    widget.lapsPerSecond,
                     KitMotion.edgeLightMaxLapsPerSecond,
                   ) *
                   dt) %
@@ -130,20 +134,18 @@ class _ActivityGlowState extends State<_ActivityGlow>
   @override
   Widget build(BuildContext context) {
     if (_strength < 0.005 && !widget.active) return const SizedBox.shrink();
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: ExcludeSemantics(
-          child: RepaintBoundary(
-            child: CustomPaint(
-              key: ValueKey('kit-activity-glow-${widget.mode.name}'),
-              painter: _GlowPainter(
-                strength: () => _strength,
-                phase: () => _phase,
-                radius: widget.radius,
-                primary: widget.primary,
-                partner: widget.partner,
-                repaint: _repaint,
-              ),
+    return IgnorePointer(
+      child: ExcludeSemantics(
+        child: RepaintBoundary(
+          child: CustomPaint(
+            key: ValueKey('kit-activity-glow-${widget.mode.name}'),
+            painter: _GlowPainter(
+              strength: () => _strength,
+              phase: () => _phase,
+              radius: widget.radius,
+              primary: widget.primary,
+              partner: widget.partner,
+              repaint: _repaint,
             ),
           ),
         ),
@@ -216,4 +218,14 @@ class _GlowPainter extends CustomPainter {
   @override
   bool shouldRepaint(_GlowPainter old) =>
       old.radius != radius || old.primary != primary || old.partner != partner;
+}
+
+extension on KitGlowSpeed {
+  /// The soft ring's laps per second: one lap in 12 s, 8 s or 6 s (the kit's
+  /// cap for a ring with no bright head).
+  double get softLaps => switch (this) {
+    KitGlowSpeed.slow => 1 / 12,
+    KitGlowSpeed.normal => KitMotion.activityGlowLapsPerSecond,
+    KitGlowSpeed.fast => KitMotion.edgeLightMaxLapsPerSecond,
+  };
 }

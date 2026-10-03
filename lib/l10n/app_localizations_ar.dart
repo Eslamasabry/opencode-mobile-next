@@ -13334,7 +13334,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get effectsActivityGlowHint =>
-      'وهج ناعم يدور حول مربع الرسالة أثناء كتابة الرد';
+      'حدّ متوهّج يدور حول مربع الرسالة أثناء كتابة الرد';
 
   @override
   String get effectsSaveFailed =>
@@ -26895,4 +26895,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String openProjectIn(String folder) {
     return 'في $folder';
   }
+
+  @override
+  String get effectsGlowStyle => 'النمط';
+
+  @override
+  String get effectsGlowStyleClassic => 'كلاسيكي';
+
+  @override
+  String get effectsGlowStyleSoft => 'حلقة ناعمة';
+
+  @override
+  String get effectsGlowColours => 'الألوان';
+
+  @override
+  String get effectsGlowColoursOne => 'لون واحد';
+
+  @override
+  String get effectsGlowColoursTwo => 'لونان';
+
+  @override
+  String get effectsGlowSpeed => 'السرعة';
+
+  @override
+  String get effectsGlowSpeedSlow => 'بطيئة';
+
+  @override
+  String get effectsGlowSpeedNormal => 'عادية';
+
+  @override
+  String get effectsGlowSpeedFast => 'سريعة';
 }

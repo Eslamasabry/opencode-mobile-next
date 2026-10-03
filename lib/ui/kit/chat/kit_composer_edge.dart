@@ -1,13 +1,17 @@
 part of 'kit_composer.dart';
 
-/// The box's frame: the solid surface and, only when the person has turned
-/// "Glowing border while replying" on, the soft ring sweep around it while a
-/// reply runs. Nothing else lives on the composer's edge: what the reply is
-/// doing is written in the turn ([KitTurnLive]), and the box stays idle.
+/// The box's frame: the solid surface and, unless the person turned
+/// "Glowing border while replying" off, the glowing border around it while a
+/// reply runs: the classic ring (the original, a bright highlight travelling
+/// the border over a breathing halo) or the soft ring sweep, in one or two
+/// colours at the chosen speed. Nothing else lives on the composer's edge:
+/// what the reply is doing is written in the turn ([KitTurnLive]), and the
+/// box stays idle.
 ///
-/// The ring is Full motion's sweep, Calm's still glow, or nothing under Off
-/// and reduced motion.
-class _ComposerFrame extends StatelessWidget {
+/// Full motion travels, Calm holds a still glow, and Off and the system's
+/// remove-animations draw none. The lap's ticker runs only while a reply
+/// does, and stops with the route (TickerMode).
+class _ComposerFrame extends StatefulWidget {
   const _ComposerFrame({
     required this.surface,
     required this.radius,
@@ -24,34 +28,100 @@ class _ComposerFrame extends StatelessWidget {
   final bool active;
 
   @override
+  State<_ComposerFrame> createState() => _ComposerFrameState();
+}
+
+class _ComposerFrameState extends State<_ComposerFrame>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _lap = AnimationController(
+    vsync: this,
+    duration: _Classic.cycle,
+  );
+  bool _running = false;
+  Duration _duration = _Classic.cycle;
+
+  /// Re-reads the choices; starts or stops the lap to match.
+  void _sync(bool travel, KitGlowSpeed speed) {
+    final lap = Duration(microseconds: (1e6 / _Classic.laps(speed)).round());
+    if (lap != _duration) {
+      _duration = lap;
+      _lap.duration = lap;
+      if (_running) unawaited(_lap.repeat());
+    }
+    if (travel == _running) return;
+    _running = travel;
+    if (travel) {
+      unawaited(_lap.repeat());
+    } else {
+      _lap.stop();
+      _lap.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _lap.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final on = activityGlow ?? KitEffects.of(context).activityGlow;
-    final level = KitEffects.of(context).motion;
+    final effects = KitEffects.of(context);
+    final on = widget.activityGlow ?? effects.activityGlow;
+    final level = effects.motion;
     final allowed =
         on && level != KitMotionLevel.off && !KitMotion.reduced(context);
-    final roles = KitTokens.of(context).roles;
-    // One tree whether or not the ring is on, so the field keeps its state
-    // when the setting changes.
+    final classic = effects.glowStyle == KitGlowStyle.classic;
+    final mode = level == KitMotionLevel.calm
+        ? _GlowMode.calm
+        : KitMotion.loops
+        ? _GlowMode.live
+        : _GlowMode.frame;
+    _sync(
+      allowed && classic && widget.active && mode == _GlowMode.live,
+      effects.glowSpeed,
+    );
+    final (primary, partner) = _glowHues(context, effects.glowColours);
+    final show = allowed && (classic ? widget.active : true);
+    // Three fixed slots (halo, surface, ring), each the same kind of widget
+    // whatever is chosen: Stack matches unkeyed children by type, and a
+    // mismatch would rebuild the surface and lose the field's state when a
+    // reply starts or a choice changes.
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        surface,
-        if (!allowed)
-          const SizedBox.shrink()
-        else
-          _ActivityGlow(
-            active: active,
-            mode: level == KitMotionLevel.calm
-                ? _GlowMode.calm
-                : KitMotion.loops
-                ? _GlowMode.live
-                : _GlowMode.frame,
-            radius: radius,
-            primary: roles.accent,
-            // Never attention: amber means "needs you". The pack's keyword
-            // hue is its own second colour and carries no meaning.
-            partner: roles.codeKeyword,
-          ),
+        Positioned.fill(
+          child: show && classic
+              ? _ClassicHalo(
+                  lap: _lap,
+                  breathing: mode == _GlowMode.live,
+                  radius: widget.radius,
+                  color: primary,
+                )
+              : const SizedBox.shrink(),
+        ),
+        widget.surface,
+        Positioned.fill(
+          child: !show
+              ? const SizedBox.shrink()
+              : classic
+              ? _ClassicRing(
+                  lap: _lap,
+                  travels: mode == _GlowMode.live,
+                  radius: widget.radius,
+                  primary: primary,
+                  partner: partner,
+                  mode: mode,
+                )
+              : _ActivityGlow(
+                  active: widget.active,
+                  mode: mode,
+                  radius: widget.radius,
+                  primary: primary,
+                  partner: partner,
+                  lapsPerSecond: effects.glowSpeed.softLaps,
+                ),
+        ),
       ],
     );
   }

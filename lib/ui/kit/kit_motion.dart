@@ -105,6 +105,16 @@ abstract final class KitMotion {
   /// The composer's chosen glowing border: one lap in 8 s (never below 6 s).
   static const double activityGlowLapsPerSecond = 1 / 8;
 
+  /// The classic glowing border (the original composer ring): one lap in
+  /// 3.6 s at Normal, the pace it always had. It is faster than
+  /// [edgeLightMaxLapsPerSecond] on purpose: that cap belongs to the soft
+  /// ring and the living edge, which have no bright head. The classic ring's
+  /// Slow is half this and Fast twice it, and nothing may turn faster than
+  /// [glowMaxLapsPerSecond] (one lap in 1.8 s; its breath stays under
+  /// 1.2 Hz, well clear of flicker rates).
+  static const double classicGlowLapsPerSecond = 1 / 3.6;
+  static const double glowMaxLapsPerSecond = 1 / 1.8;
+
   /// The ring around Stop while a reply runs: one lap in two seconds, half
   /// that in Calm. Never faster, whatever the work does.
   static const double stopRingLapsPerSecond = 1 / 2;

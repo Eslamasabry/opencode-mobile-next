@@ -297,6 +297,42 @@ class _EffectsSectionState extends State<_EffectsSection> {
     }
   }
 
+  /// One glowing-border choice: a row with its options as a segmented bar.
+  Widget _glowChoice<T extends Enum>(
+    KitTokens tokens, {
+    required String id,
+    required IconData icon,
+    required String title,
+    required T selected,
+    required List<(T, String)> options,
+    required ValueChanged<T> onChanged,
+  }) {
+    return KitRow(
+      key: ValueKey('effects-glow-$id'),
+      leading: KitRow.icon(context, icon),
+      title: title,
+      below: Padding(
+        padding: EdgeInsetsDirectional.only(
+          top: tokens.space2,
+          bottom: tokens.space1,
+        ),
+        child: KitSegmented<T>(
+          semanticsLabel: title,
+          selected: selected,
+          segments: [
+            for (final (value, label) in options)
+              KitSegment(
+                key: ValueKey('effects-glow-$id-${value.name}'),
+                value: value,
+                label: label,
+              ),
+          ],
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final copy = _settingsCopy(context);
@@ -423,6 +459,53 @@ class _EffectsSectionState extends State<_EffectsSection> {
                               _choose(effects.copyWith(activityGlow: on)),
                         ),
                       ),
+                      // The three options show only while
+                      // the border is on.
+                      if (effects.activityGlow) ...[
+                        _glowChoice<KitGlowStyle>(
+                          tokens,
+                          id: 'style',
+                          icon: AppIconography.sparkle,
+                          title: copy.effectsGlowStyle,
+                          selected: effects.glowStyle,
+                          options: [
+                            (
+                              KitGlowStyle.classic,
+                              copy.effectsGlowStyleClassic,
+                            ),
+                            (KitGlowStyle.softRing, copy.effectsGlowStyleSoft),
+                          ],
+                          onChanged: (v) =>
+                              _choose(effects.copyWith(glowStyle: v)),
+                        ),
+                        _glowChoice<KitGlowColours>(
+                          tokens,
+                          id: 'colours',
+                          icon: AppIconography.contrast,
+                          title: copy.effectsGlowColours,
+                          selected: effects.glowColours,
+                          options: [
+                            (KitGlowColours.one, copy.effectsGlowColoursOne),
+                            (KitGlowColours.two, copy.effectsGlowColoursTwo),
+                          ],
+                          onChanged: (v) =>
+                              _choose(effects.copyWith(glowColours: v)),
+                        ),
+                        _glowChoice<KitGlowSpeed>(
+                          tokens,
+                          id: 'speed',
+                          icon: AppIconography.speed,
+                          title: copy.effectsGlowSpeed,
+                          selected: effects.glowSpeed,
+                          options: [
+                            (KitGlowSpeed.slow, copy.effectsGlowSpeedSlow),
+                            (KitGlowSpeed.normal, copy.effectsGlowSpeedNormal),
+                            (KitGlowSpeed.fast, copy.effectsGlowSpeedFast),
+                          ],
+                          onChanged: (v) =>
+                              _choose(effects.copyWith(glowSpeed: v)),
+                        ),
+                      ],
                     ],
                   ),
                 ],

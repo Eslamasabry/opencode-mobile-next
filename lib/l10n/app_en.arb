@@ -14564,7 +14564,7 @@
   "@effectsActivityGlow": {
     "description": "Settings › Appearance › Effects: switch for the soft glowing ring around the message box while a reply runs."
   },
-  "effectsActivityGlowHint": "A soft glow circles the message box while a reply is written",
+  "effectsActivityGlowHint": "A glowing border circles the message box while a reply is written",
   "@effectsActivityGlowHint": {
     "description": "Settings › Appearance › Effects: one line under the glowing border switch."
   },
@@ -31704,5 +31704,45 @@
         "type": "String"
       }
     }
+  },
+  "effectsGlowStyle": "Style",
+  "@effectsGlowStyle": {
+    "description": "Settings › Appearance › Effects: title of the glowing border style choice."
+  },
+  "effectsGlowStyleClassic": "Classic",
+  "@effectsGlowStyleClassic": {
+    "description": "Glowing border style: the original bright highlight travelling the border."
+  },
+  "effectsGlowStyleSoft": "Soft ring",
+  "@effectsGlowStyleSoft": {
+    "description": "Glowing border style: a soft ring sweep."
+  },
+  "effectsGlowColours": "Colours",
+  "@effectsGlowColours": {
+    "description": "Settings › Appearance › Effects: title of the glowing border colour choice."
+  },
+  "effectsGlowColoursOne": "One colour",
+  "@effectsGlowColoursOne": {
+    "description": "Glowing border colours: the theme colour with a lighter highlight."
+  },
+  "effectsGlowColoursTwo": "Two colours",
+  "@effectsGlowColoursTwo": {
+    "description": "Glowing border colours: the theme colour and its partner colour."
+  },
+  "effectsGlowSpeed": "Speed",
+  "@effectsGlowSpeed": {
+    "description": "Settings › Appearance › Effects: title of the glowing border speed choice."
+  },
+  "effectsGlowSpeedSlow": "Slow",
+  "@effectsGlowSpeedSlow": {
+    "description": "Glowing border speed: slow."
+  },
+  "effectsGlowSpeedNormal": "Normal",
+  "@effectsGlowSpeedNormal": {
+    "description": "Glowing border speed: the app's own pace."
+  },
+  "effectsGlowSpeedFast": "Fast",
+  "@effectsGlowSpeedFast": {
+    "description": "Glowing border speed: fast."
   }
 }

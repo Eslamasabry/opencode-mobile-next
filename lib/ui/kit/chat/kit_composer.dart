@@ -34,6 +34,7 @@ import 'kit_turn.dart';
 part 'kit_composer_types.dart';
 part 'kit_composer_edge.dart';
 part 'kit_composer_glow.dart';
+part 'kit_composer_classic.dart';
 part 'kit_composer_caption.dart';
 part 'kit_composer_layer.dart';
 
