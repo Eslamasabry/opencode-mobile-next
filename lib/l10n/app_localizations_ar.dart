@@ -27324,4 +27324,13 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get agentsSelectFailed =>
       'لا يمكن اختيار هذا الوكيل الآن. افتحه لإنهاء الإعداد.';
+
+  @override
+  String get agentsRunOnBuiltIn => 'يعمل الوكلاء على الخادم المدمج';
+
+  @override
+  String get agentsSwitchToBuiltIn => 'التبديل إلى الخادم المدمج';
+
+  @override
+  String get agentsChecking => 'جارٍ البحث عن الوكلاء على هذا الهاتف…';
 }

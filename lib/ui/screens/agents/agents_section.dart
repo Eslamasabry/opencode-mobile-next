@@ -32,6 +32,17 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
   /// Agents that were checked in this view, in order, with the name to show.
   final _checked = <String, String>{};
 
+  @override
+  void initState() {
+    super.initState();
+    // The inventory is empty until the first read: ask for it now.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        unawaited(ref.read(chatsHostProvider).agents?.refreshAgentRows());
+      }
+    });
+  }
+
   bool _installed(AgentRow row) =>
       row.status != PhoneAgentStatus.needsInstall &&
       row.hiddenReason != PhoneAgentHiddenReason.catalogUnavailable &&
@@ -100,7 +111,16 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
           for (final row in agents.agentRows)
             if (row.setupVisible) row,
         ];
-        if (rows.isEmpty) return const SizedBox.shrink();
+        if (rows.isEmpty) {
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: tokens.gutter),
+            child: KitText(
+              l10n.agentsChecking,
+              key: const ValueKey('agents-checking'),
+              tone: KitTextTone.secondary,
+            ),
+          );
+        }
         return Column(
           key: const ValueKey('agents-section'),
           crossAxisAlignment: CrossAxisAlignment.stretch,

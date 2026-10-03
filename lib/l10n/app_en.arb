@@ -32344,5 +32344,17 @@
   "agentsSelectFailed": "That agent can't be chosen right now. Open it to finish setup.",
   "@agentsSelectFailed": {
     "description": "Agent sheet: choosing refused"
+  },
+  "agentsRunOnBuiltIn": "Agents run on the built-in server",
+  "@agentsRunOnBuiltIn": {
+    "description": "Settings: why Agents is empty on another server"
+  },
+  "agentsSwitchToBuiltIn": "Switch to the built-in server",
+  "@agentsSwitchToBuiltIn": {
+    "description": "Settings > Agents: connects to this phone's built-in server"
+  },
+  "agentsChecking": "Looking for agents on this phone…",
+  "@agentsChecking": {
+    "description": "Settings > Agents: before the first read"
   }
 }

@@ -110,6 +110,16 @@ class FakeChatsHost implements ChatsHost {
   final links = <Uri>[];
   int closed = 0;
 
+  /// Whether this phone has a saved built-in server to switch to.
+  bool builtInProfile = false;
+  int switched = 0;
+
+  @override
+  bool get hasBuiltInProfile => builtInProfile;
+
+  @override
+  Future<void> switchToBuiltIn(BuildContext context) async => switched++;
+
   @override
   ChatFeedSource get source => fake;
 

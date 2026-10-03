@@ -5150,5 +5150,8 @@
   "agentsRestartLine": "أغلق التطبيق وافتحه مرة أخرى لإنهاء مسح عمليات تسجيل الدخول.",
   "agentsRestartAction": "إغلاق التطبيق",
   "agentsSectionTitle": "الوكلاء",
-  "agentsSelectFailed": "لا يمكن اختيار هذا الوكيل الآن. افتحه لإنهاء الإعداد."
+  "agentsSelectFailed": "لا يمكن اختيار هذا الوكيل الآن. افتحه لإنهاء الإعداد.",
+  "agentsRunOnBuiltIn": "يعمل الوكلاء على الخادم المدمج",
+  "agentsSwitchToBuiltIn": "التبديل إلى الخادم المدمج",
+  "agentsChecking": "جارٍ البحث عن الوكلاء على هذا الهاتف…"
 }

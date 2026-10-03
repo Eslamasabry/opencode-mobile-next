@@ -42948,6 +42948,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That agent can\'t be chosen right now. Open it to finish setup.'**
   String get agentsSelectFailed;
+
+  /// Settings: why Agents is empty on another server
+  ///
+  /// In en, this message translates to:
+  /// **'Agents run on the built-in server'**
+  String get agentsRunOnBuiltIn;
+
+  /// Settings > Agents: connects to this phone's built-in server
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to the built-in server'**
+  String get agentsSwitchToBuiltIn;
+
+  /// Settings > Agents: before the first read
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for agents on this phone…'**
+  String get agentsChecking;
 }
 
 class _AppLocalizationsDelegate

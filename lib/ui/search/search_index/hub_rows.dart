@@ -47,6 +47,22 @@ extension _IndexHubRows on _IndexBuild {
         gate: (scope) => scope.platform.supportsTermux && _phoneSetUp(scope),
         open: (context, _) => openThisPhone(context),
       ),
+      // The agents this phone can run (Claude Code and friends). Visible
+      // whenever they can run here, and on any phone, so it is always
+      // findable: where they cannot run, the page says why in one line.
+      SearchEntry(
+        id: 'settings-agents',
+        kind: SearchEntryKind.hubRow,
+        group: SettingsGroup.server,
+        icon: AppIconography.terminal,
+        title: l10n.agentsSectionTitle,
+        keywords:
+            'agents claude code gemini ${l10n.settingsHubSearchPhoneAliases} $onThisPhone',
+        pages: const ['agents-screen'],
+        gate: (scope) =>
+            scope.controller.phoneAgentsAvailable || scope.platform.isAndroid,
+        open: (context, _) => _push(context, const AgentsScreen()),
+      ),
       // Before that, setting it up is one of Add server's ways (R3): the hub
       // holds no second door to it, and search finds it here.
       SearchEntry(
