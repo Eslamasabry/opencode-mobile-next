@@ -207,6 +207,7 @@ void main() {
     await _pump(tester, FakeChatsHost(FakeChatFeedSource()));
     expect(find.text('No conversations yet'), findsOneWidget);
     expect(find.text('Start a conversation'), findsOneWidget);
+    expect(find.text('New conversation'), findsNothing);
   });
 
   clocked('no matches offers Clear filters, which clears them', (tester) async {
@@ -222,6 +223,7 @@ void main() {
     await tester.tap(find.text('Needs you'));
     await tester.pump();
     expect(find.text('No matching conversations'), findsOneWidget);
+    expect(find.text('New conversation'), findsOneWidget);
     await tester.tap(find.text('Clear filters'));
     await tester.pump();
     expect(find.text(KitBidi.auto('Explain the build')), findsOneWidget);

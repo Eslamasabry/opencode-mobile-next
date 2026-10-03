@@ -201,6 +201,13 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       loadingLabel: l10n.chatsHomeTitle,
       body: KitRefresh(onRefresh: source.refreshChatFeed, child: list),
     );
+    // The empty state already offers Start a conversation: no second button.
+    final plainEmpty =
+        snapshot.items.isEmpty &&
+        !snapshot.loading &&
+        !_statusFiltered &&
+        projectName == null;
+    if (plainEmpty) return screen;
     return KitFloatingAction(
       buttonKey: const ValueKey('chats-new-chat'),
       label: l10n.chatsHomeNewChat,
