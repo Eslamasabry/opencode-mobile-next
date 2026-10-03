@@ -57,10 +57,18 @@ void main() {
                           name: 'demo',
                           path: '/root/projects/demo',
                           isGit: true,
+                          inside: ['package.json', 'src'],
                         ),
                         const FolderEntry(
                           name: 'notes',
                           path: '/root/projects/notes',
+                          inside: ['a.txt'],
+                        ),
+                        const FolderEntry(
+                          name: 'dots',
+                          path: '/root/projects/dots',
+                          isGit: true,
+                          inside: ['README.md'],
                         ),
                       ],
                       recent: recent.isEmpty ? null : () async => recent,
@@ -160,6 +168,62 @@ void main() {
       ),
       findsNothing,
     );
+  });
+
+  String subtitleOf(WidgetTester tester, String key) => tester
+      .widgetList<RichText>(
+        find.descendant(
+          of: find.byKey(ValueKey(key)),
+          matching: find.byType(RichText),
+        ),
+      )
+      .map((text) => text.text.toPlainText())
+      .join(' | ');
+
+  testWidgets('Opened before rows say the kind, like search results', (
+    tester,
+  ) async {
+    await open(
+      tester,
+      recent: [
+        '/root/projects/demo',
+        '/root/projects/notes',
+        '/root/projects/dots',
+      ],
+    );
+    expect(subtitleOf(tester, 'open-project-recent-0'), contains('Node ·'));
+    // Unknown kinds, and folders that are only a repository, read Folder.
+    expect(subtitleOf(tester, 'open-project-recent-1'), contains('Folder ·'));
+    expect(subtitleOf(tester, 'open-project-recent-2'), contains('Folder ·'));
+    // Git-only folders still get the badge.
+    for (final (key, badge) in [
+      ('open-project-recent-0', true),
+      ('open-project-recent-1', false),
+      ('open-project-recent-2', true),
+    ]) {
+      expect(
+        find.descendant(
+          of: find.byKey(ValueKey(key)),
+          matching: find.text('Git'),
+        ),
+        badge ? findsOneWidget : findsNothing,
+        reason: key,
+      );
+    }
+  });
+
+  testWidgets('New project and Search are siblings of one block', (
+    tester,
+  ) async {
+    await open(tester);
+    final newRow = tester.getSize(
+      find.byKey(const ValueKey('open-project-new')),
+    );
+    final searchRow = tester.getSize(
+      find.byKey(const ValueKey('open-project-search')),
+    );
+    expect(newRow, searchRow);
+    expect(find.byType(FilledButton), findsNothing);
   });
 
   testWidgets('a tap on a recent folder opens it', (tester) async {

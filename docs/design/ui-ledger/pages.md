@@ -2289,25 +2289,25 @@ Reached from: `projects`, `workspace-folder-chooser`
 
 | Label | Type | Action -> target | Effect | Gates | Line |
 |---|---|---|---|---|---|
-| Create and open | button | mutate | Checks the name, then pops FolderBrowserCreate(<default folder>/<name>) (FolderBrowserOpen when it is already there); openFolder() makes it and selects it. |  | 525 |
-| Project name | text-field | submit | New project step: autofocused name field; helper "Creates <folder>/<name>"; onSubmitted creates and opens. |  | 535 |
-| Change folder | button | other | New project step: swaps in the folder browser to pick the parent folder; Use <folder> returns to the name step. |  | 557 |
-| New project | button | other | Start page: swaps in the name step in place; the project is made in the default folder. |  | 582 |
-| Search this phone | list-tile | other | Start page: runs the All files access consent when missing, then swaps in the search step and starts the scan (10 s cap). | PhoneStoragePlace.scan set (phone-hosted server) | 593 |
-| Choose a folder | button | other | Start page: swaps in the folder browser. |  | 623 |
-| <folder name> / <path> / Git | list-tile | mutate | Opened before row: pops FolderBrowserOpen(path), then openFolder() selects it. Git badge from a .git check (phone: dart:io; project space: the folder above it listed), cached for the sheet. | at least one recent folder | 637 |
-| Back (search step) | icon-button | other | Cancels a running search and returns to the start page. |  | 703 |
-| Stop | button | other | While searching: stops the scan and keeps what was found ("<m> found in <time>"). | a search is running | 710 |
-| Look deeper | button | other | After "Stopped after 10 seconds": searches again from nothing with a 30 s cap. | the 10 s cap ended the search | 717 |
-| <project name> / <kind> · <folder> / Git | list-tile | mutate | Pops FolderBrowserOpen(path): openFolder() then controller.selectLocation(directory: path), the same as Open <folder>. |  | 795 |
-| Back (browser, first folder) | icon-button | other | Header leading control at the place’s first folder: back to the start page (or the name step when picking a parent). |  | 837 |
-| Back chevron (Up one folder); Close at the place's first folder | icon-button | other | Header leading control: lists the folder above; at the place's first folder it is Close (X) and pops with no choice. The old "Up one folder" row, breadcrumb row and Place block are gone. |  | 842 |
-| Enter a path (header more menu) | menu-item | open-dialog -> `project-folder-open-dialog` | Pops FolderBrowserEnterPath(folder shown); openFolder() opens the path dialog starting at that folder. |  | 855 |
-| Use <folder> | button | other | Browser while picking a parent: sets the new project’s folder and returns to the name step. | browser opened from Change folder | 872 |
-| Open <folder> | button | mutate | Pops FolderBrowserOpen(folder shown); openFolder() selects it. | not the home folder, / or /root/projects; the folder listed | 880 |
-| <folder name> / Git repository \| OpenCode project | list-tile | mutate | A project row pops FolderBrowserOpen(path): openFolder() then controller.selectLocation(directory: path). Any other folder (and the home folder even when it has .git) is listed instead. |  | 1051 |
-| [Show the folders in <name>] | icon-button | other | A project row's chevron: lists the folders inside it. |  | 1064 |
-| Try again | button | other | After "This folder can’t be shown": lists the folder again. |  | 1148 |
+| Create and open | button | mutate | Checks the name, then pops FolderBrowserCreate(<default folder>/<name>) (FolderBrowserOpen when it is already there); openFolder() makes it and selects it. |  | 533 |
+| Project name | text-field | submit | New project step: autofocused name field; helper "Creates <folder>/<name>"; onSubmitted creates and opens. |  | 544 |
+| Change (inline link after "In <folder> ·") | link | other | New project step: swaps in the folder browser to pick the parent folder; Use <folder> returns to the name step. |  | 578 |
+| New project (accent badge row) | list-tile | other | Start page: swaps in the name step in place; the project is made in the default folder. |  | 610 |
+| Search this phone | list-tile | other | Start page: runs the All files access consent when missing, then swaps in the search step and starts the scan (10 s cap). | PhoneStoragePlace.scan set (phone-hosted server) | 623 |
+| Choose a folder (quiet row) | list-tile | other | Start page: swaps in the folder browser. |  | 655 |
+| <folder name> / <path> / Git | list-tile | mutate | Opened before row: pops FolderBrowserOpen(path), then openFolder() selects it. Git badge from a .git check (phone: dart:io; project space: the folder above it listed), cached for the sheet. | at least one recent folder | 674 |
+| Back (search step) | icon-button | other | Cancels a running search and returns to the start page. |  | 762 |
+| Stop | button | other | While searching: stops the scan and keeps what was found ("<m> found in <time>"). | a search is running | 769 |
+| Look deeper | button | other | After "Stopped after 10 seconds": searches again from nothing with a 30 s cap. | the 10 s cap ended the search | 776 |
+| <project name> / <kind> · <folder> / Git | list-tile | mutate | Pops FolderBrowserOpen(path): openFolder() then controller.selectLocation(directory: path), the same as Open <folder>. |  | 855 |
+| Back (browser, first folder) | icon-button | other | Header leading control at the place’s first folder: back to the start page (or the name step when picking a parent). |  | 883 |
+| Back chevron (Up one folder); Close at the place's first folder | icon-button | other | Header leading control: lists the folder above; at the place's first folder it is Close (X) and pops with no choice. The old "Up one folder" row, breadcrumb row and Place block are gone. |  | 888 |
+| Enter a path (header more menu) | menu-item | open-dialog -> `project-folder-open-dialog` | Pops FolderBrowserEnterPath(folder shown); openFolder() opens the path dialog starting at that folder. |  | 901 |
+| Use <folder> | button | other | Browser while picking a parent: sets the new project’s folder and returns to the name step. | browser opened from Change folder | 918 |
+| Open <folder> | button | mutate | Pops FolderBrowserOpen(folder shown); openFolder() selects it. | not the home folder, / or /root/projects; the folder listed | 926 |
+| <folder name> / Git repository \| OpenCode project | list-tile | mutate | A project row pops FolderBrowserOpen(path): openFolder() then controller.selectLocation(directory: path). Any other folder (and the home folder even when it has .git) is listed instead. |  | 1097 |
+| [Show the folders in <name>] | icon-button | other | A project row's chevron: lists the folders inside it. |  | 1110 |
+| Try again | button | other | After "This folder can’t be shown": lists the folder again. |  | 1194 |
 
 ### embedded-mobile-task-list
 

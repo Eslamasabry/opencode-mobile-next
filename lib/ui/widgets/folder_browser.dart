@@ -202,7 +202,7 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
   /// "Opened before" and which of them hold a repository (checked after,
   /// kept for the life of this sheet).
   List<String> _recent = const [];
-  final Map<String, bool> _git = {};
+  final Map<String, ({PhoneProjectKind? kind, bool git})> _info = {};
 
   /// "Search this phone": its results, kept for the life of this sheet only.
   PhoneProjectScanState? _scanState;
@@ -233,32 +233,40 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
       if (!mounted) return;
       setState(() => _recent = paths);
       for (final path in paths) {
-        unawaited(_probeGit(path));
+        unawaited(_probe(path));
       }
     } catch (_) {
       // Only the "Opened before" rows depend on it.
     }
   }
 
-  /// Whether [path] is a repository: the phone's folders are read here, the
-  /// project space's from the listing of the folder above it. A failure
-  /// leaves the badge out.
-  Future<void> _probeGit(String path) async {
-    bool git = false;
+  /// What [path] is (its kind from the scanner's markers) and whether it
+  /// holds a repository: the phone's folders are read here, the project
+  /// space's from the listing of the folder above it. A failure leaves the
+  /// folder plain, with no badge. Cached for the life of this sheet.
+  Future<void> _probe(String path) async {
+    ({PhoneProjectKind? kind, bool git}) info = (kind: null, git: false);
     try {
       if (PhoneStorageFolders.normalize(path) != null) {
-        git = await PhoneStorageFolders.hasGit(path);
+        info = await PhoneProjectScanner.inspect(path);
       } else {
         final parent = BuiltinRootfsFolders.parentOf(path);
         if (parent != null) {
           final entries = await widget.list(parent);
-          git = entries.any((entry) => entry.path == path && entry.isGit);
+          for (final entry in entries) {
+            if (entry.path != path) continue;
+            final found = PhoneProjectScanner.classify([
+              ...?entry.inside,
+              if (entry.isGit) '.git',
+            ]);
+            info = (kind: found?.kind, git: entry.isGit);
+          }
         }
       }
     } catch (_) {
-      git = false;
+      info = (kind: null, git: false);
     }
-    if (mounted && git) setState(() => _git[path] = true);
+    if (mounted) setState(() => _info[path] = info);
   }
 
   Future<void> _loadKnown() async {
@@ -523,6 +531,7 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
     onClose: () => KitSheet.close<FolderBrowserChoice>(context),
     primary: KitAction(
       key: const ValueKey('phone-new-folder-create'),
+      calm: true,
       label: l10n.folderBrowserCreateAndOpen,
       icon: AppIconography.folderAdd,
       onPressed: () => _submitName(l10n),
@@ -538,9 +547,11 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
           hint: l10n.projectFolderNameHint,
           helper: l10n.folderBrowserNewProjectCreates(
             KitBidi.ltr(
-              _join(
-                _createIn,
-                _name.text.trim().isEmpty ? '…' : _name.text.trim(),
+              _cutStart(
+                _join(
+                  _createIn,
+                  _name.text.trim().isEmpty ? '…' : _name.text.trim(),
+                ),
               ),
             ),
           ),
@@ -552,11 +563,24 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
           }),
           onSubmitted: (_) => _submitName(l10n),
         ),
-        SizedBox(height: KitTokens.of(context).space2),
-        KitButton.tertiary(
-          key: const ValueKey('phone-new-folder-change'),
-          label: l10n.openProjectChangeFolder,
-          onPressed: _changeFolder,
+        // "In /root/projects · Change": the folder, with a quiet inline link.
+        Row(
+          children: [
+            Flexible(
+              child: KitText(
+                l10n.openProjectIn(KitBidi.ltr(_cutStart(_createIn, 30))),
+                role: KitTextRole.secondary,
+                maxLines: 1,
+              ),
+            ),
+            KitText(' · ', role: KitTextRole.secondary),
+            KitTappable(
+              key: const ValueKey('phone-new-folder-change'),
+              label: l10n.openProjectChangeFolder,
+              onTap: _changeFolder,
+              child: KitText.link(l10n.openProjectChange),
+            ),
+          ],
         ),
       ],
     ),
@@ -578,26 +602,32 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          KitButton.primary(
-            key: const ValueKey('open-project-new'),
-            label: l10n.projectFolderNewProject,
-            icon: AppIconography.add,
-            onPressed: _newProject,
-          ),
-          SizedBox(height: tokens.space3),
-          if (canSearch)
-            KitRowGroup(
-              margin: EdgeInsetsDirectional.zero,
-              children: [
+          // New project and Search are siblings: two rows of one block.
+          KitRowGroup(
+            margin: EdgeInsetsDirectional.zero,
+            children: [
+              KitRow(
+                key: const ValueKey('open-project-new'),
+                leading: KitRow.badge(
+                  context,
+                  AppIconography.add,
+                  accent: true,
+                ),
+                title: l10n.projectFolderNewProject,
+                titleAccent: true,
+                trailing: const KitChevron(),
+                onTap: _newProject,
+              ),
+              if (canSearch)
                 KitRow(
                   key: const ValueKey('open-project-search'),
-                  leading: KitRow.icon(context, AppIconography.search),
+                  leading: KitRow.badge(context, AppIconography.search),
                   title: l10n.openProjectSearchPhone,
                   trailing: const KitChevron(),
                   onTap: _startSearch,
                 ),
-              ],
-            ),
+            ],
+          ),
           if (_accessRefused)
             Padding(
               padding: EdgeInsetsDirectional.only(top: tokens.space2),
@@ -617,50 +647,79 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
               ],
             ),
           ],
-          SizedBox(height: tokens.space3),
-          Align(
-            child: KitButton.tertiary(
-              key: const ValueKey('open-project-browse'),
-              label: l10n.openProjectChooseFolder,
-              onPressed: () => setState(() {
-                _picking = false;
-                _step = _Step.browse;
-              }),
-            ),
+          SizedBox(height: tokens.space4),
+          KitRowGroup(
+            margin: EdgeInsetsDirectional.zero,
+            children: [
+              KitRow(
+                key: const ValueKey('open-project-browse'),
+                leading: KitRow.icon(context, AppIconography.folders),
+                title: l10n.openProjectChooseFolder,
+                trailing: const KitChevron(),
+                onTap: () => setState(() {
+                  _picking = false;
+                  _step = _Step.browse;
+                }),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _recentRow(AppLocalizations l10n, int index, String path) => KitRow(
-    key: ValueKey('open-project-recent-$index'),
-    leading: KitRow.icon(context, AppIconography.history),
-    title: _nameOf(path),
-    supporting: TextSpan(
-      text: KitBidi.ltr(_cutStart(path)),
-      style: KitText.styleFor(KitTextRole.mono),
-    ),
-    trailing: _gitAndChevron(l10n, _git[path] ?? false),
-    onTap: () =>
-        KitSheet.close<FolderBrowserChoice>(context, FolderBrowserOpen(path)),
-  );
+  Widget _recentRow(AppLocalizations l10n, int index, String path) {
+    final info = _info[path];
+    return KitRow(
+      key: ValueKey('open-project-recent-$index'),
+      leading: KitRow.icon(context, _kindIcon(info?.kind)),
+      title: _nameOf(path),
+      supporting: TextSpan(
+        text:
+            '${_kindLabel(l10n, info?.kind)} · ${KitBidi.ltr(_cutStart(path))}',
+      ),
+      trailing: _badgeAndChevron(l10n, info?.git ?? false),
+      onTap: () =>
+          KitSheet.close<FolderBrowserChoice>(context, FolderBrowserOpen(path)),
+    );
+  }
 
-  Widget _gitAndChevron(AppLocalizations l10n, bool git) => Row(
+  /// "Git" with a branch glyph, on every git folder, in the neutral chip.
+  Widget _badgeAndChevron(AppLocalizations l10n, bool git) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
       if (git) ...[
-        KitChip(label: l10n.phoneScanGit),
+        KitChip(label: l10n.phoneScanGit, icon: AppIconography.branch),
         SizedBox(width: KitTokens.of(context).space2),
       ],
       const KitChevron(),
     ],
   );
 
+  /// The kind's glyph; a plain folder when the kind is not known (or only
+  /// a repository).
+  static IconData _kindIcon(PhoneProjectKind? kind) => switch (kind) {
+    PhoneProjectKind.dart => AppIconography.layers,
+    PhoneProjectKind.node => AppIconography.package,
+    PhoneProjectKind.python => AppIconography.dataObject,
+    PhoneProjectKind.rust => AppIconography.processor,
+    PhoneProjectKind.go => AppIconography.terminal,
+    PhoneProjectKind.java => AppIconography.code,
+    PhoneProjectKind.ruby => AppIconography.database,
+    PhoneProjectKind.php => AppIconography.globe,
+    PhoneProjectKind.dotnet => AppIconography.category,
+    PhoneProjectKind.cpp => AppIconography.function,
+    PhoneProjectKind.git || null => AppIconography.folderOpen,
+  };
+
   /// A path cut at its start when long, so the folders nearest the project
   /// stay readable.
-  static String _cutStart(String path, [int max = 36]) =>
-      path.length <= max ? path : '…${path.substring(path.length - (max - 1))}';
+  static String _cutStart(String path, [int max = 36]) {
+    if (path.length <= max) return path;
+    final tail = path.substring(path.length - (max - 1));
+    final slash = tail.indexOf('/');
+    return '…${slash > 0 ? tail.substring(slash) : tail}';
+  }
 
   /// m:ss, as the search's timer reads.
   static String _clock(Duration time) {
@@ -705,14 +764,14 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
             onPressed: _stopFinding,
           ),
           bar: running || deeper,
-          secondary: running
+          primary: running
               ? KitAction(
                   key: const ValueKey('phone-scan-stop'),
                   label: l10n.phoneScanStop,
+                  neutral: true,
                   onPressed: state.cancel,
                 )
-              : null,
-          primary: deeper
+              : deeper
               ? KitAction(
                   key: const ValueKey('phone-scan-deeper'),
                   label: l10n.phoneScanLookDeeper,
@@ -725,10 +784,10 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (running) ...[
+                // Moving, not filling: the search has no known end. Still under
+                // reduced motion.
                 KitProgressView(
-                  progress: KitProgress.known(
-                    (state.elapsed.inMilliseconds / state.limit.inMilliseconds)
-                        .clamp(0.0, 1.0),
+                  progress: KitProgress.waiting(
                     key: const ValueKey('phone-scan-progress'),
                     caption: l10n.phoneScanChecked(state.checked, found.length),
                     semanticsLabel: l10n.phoneScanSearching,
@@ -760,8 +819,9 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
     );
   }
 
-  static String _kindLabel(AppLocalizations l10n, PhoneProjectKind kind) =>
+  static String _kindLabel(AppLocalizations l10n, PhoneProjectKind? kind) =>
       switch (kind) {
+        null => l10n.phoneScanKindGit,
         PhoneProjectKind.dart => l10n.phoneScanKindDart,
         PhoneProjectKind.node => l10n.phoneScanKindNode,
         PhoneProjectKind.python => l10n.phoneScanKindPython,
@@ -793,27 +853,13 @@ class _FolderBrowserSheetState extends State<FolderBrowserSheet> {
     PhoneProject project,
   ) => KitRow(
     key: ValueKey('phone-scan-${project.path}'),
-    leading: KitRow.icon(
-      context,
-      project.kind == PhoneProjectKind.git
-          ? AppIconography.branch
-          : AppIconography.projects,
-    ),
+    leading: KitRow.icon(context, _kindIcon(project.kind)),
     title: project.name,
     supporting: TextSpan(
       text:
           '${_kindLabel(l10n, project.kind)} · ${KitBidi.ltr(_where(project.path))}',
     ),
-    trailing: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (project.hasGit && project.kind != PhoneProjectKind.git) ...[
-          KitChip(label: l10n.phoneScanGit),
-          SizedBox(width: KitTokens.of(context).space2),
-        ],
-        const KitChevron(),
-      ],
-    ),
+    trailing: _badgeAndChevron(l10n, project.hasGit),
     onTap: () => KitSheet.close<FolderBrowserChoice>(
       context,
       FolderBrowserOpen(project.path),

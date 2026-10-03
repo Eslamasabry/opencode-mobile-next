@@ -34,6 +34,8 @@ KitText draws every word in the app in one of the visual-language type roles. Th
 
 Existing API, unchanged (R11/KIT-43): `KitTextRole`, `KitTextTone`, `KitText(...)`, `KitText.rich(...)`, `KitText.styleFor`, `KitText.defaultTone`, `KitText.toneColor`, `KitText.styleOf`, `KitText.textTheme`. `styleFor(KitTextRole.button)` stays **16/20 w600** (LOOK-12, G19): the VL branch already has it (`kit_text.dart`, checked at `cca62454`), so there is no value change.
 
+Added by the open-project polish (additive): `KitText.link(String)`, a quiet inline link (secondary role, accent tone) for "In /root/projects · Change"; wrap it in a `KitTappable` for the tap.
+
 Added by slice-P9.10 (additive): `KitText.appScaler(TextScaler scaler, {required double max})`, the app-wide text scale with only the extreme top end capped (A11Y-8: only kit parts clamp text scale; `main.dart` calls it with `AppTheme.maxTextScale`), and `KitText.sentenceCase(String)`, the first letter capitalised and nothing else (LOOK-15), for names the app derives from ids.
 
 ```dart

@@ -26672,7 +26672,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phoneScanKindCpp => 'C/C++';
 
   @override
-  String get phoneScanKindGit => 'Git';
+  String get phoneScanKindGit => 'Folder';
 
   @override
   String get openProjectTitle => 'Open a project';
@@ -26712,4 +26712,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get phoneScanStop => 'Stop';
+
+  @override
+  String get openProjectChange => 'Change';
+
+  @override
+  String openProjectIn(String folder) {
+    return 'In $folder';
+  }
 }

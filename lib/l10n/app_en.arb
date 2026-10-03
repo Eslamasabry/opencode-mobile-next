@@ -31563,7 +31563,7 @@
   "@phoneScanKindCpp": {
     "description": "Kind word of a found project in the find-projects step"
   },
-  "phoneScanKindGit": "Git",
+  "phoneScanKindGit": "Folder",
   "@phoneScanKindGit": {
     "description": "Kind word of a found project in the find-projects step"
   },
@@ -31623,5 +31623,18 @@
   "phoneScanStop": "Stop",
   "@phoneScanStop": {
     "description": "Action that stops a running search"
+  },
+  "openProjectChange": "Change",
+  "@openProjectChange": {
+    "description": "Quiet inline link after the folder line in the New project step"
+  },
+  "openProjectIn": "In {folder}",
+  "@openProjectIn": {
+    "description": "Folder line of the New project step, before the Change link",
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
   }
 }

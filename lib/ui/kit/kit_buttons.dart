@@ -33,6 +33,8 @@ class KitAction {
     this.working = false,
     this.disabledReason,
     this.shortcut,
+    this.calm = false,
+    this.neutral = false,
   }) : copyText = null,
        redact = true;
 
@@ -52,7 +54,9 @@ class KitAction {
        onPressed = null,
        destructive = false,
        working = false,
-       disabledReason = null;
+       disabledReason = null,
+       calm = false,
+       neutral = false;
 
   /// A verb naming what happens (COPY-8): "Delete conversation".
   final String label;
@@ -82,6 +86,15 @@ class KitAction {
   /// from [KitWindow.expanded] up (visual language §5 "keyboard hints on
   /// buttons"). Display only; the shortcut layer binds it.
   final String? shortcut;
+
+  /// A quieter primary fill in dark mode: the accent eased toward the
+  /// sheet's ground, so a sheet's one main action does not glare at night.
+  /// Light mode is unchanged. Only meaningful on a primary action.
+  final bool calm;
+
+  /// A control that is not the sheet's main act (Stop): drawn as a neutral
+  /// secondary button even in the primary slot, never filled with the accent.
+  final bool neutral;
 
   /// Set only by [KitAction.copy].
   final String Function()? copyText;
@@ -131,6 +144,7 @@ class KitButton extends StatelessWidget {
     this.maxLines = 2,
     this.shortcut,
   }) : copyText = null,
+       calm = false,
        disabledReason = null,
        copied = false,
        redact = true;
@@ -146,6 +160,7 @@ class KitButton extends StatelessWidget {
     this.destructive = false,
     this.shortcut,
   }) : role = KitButtonRole.primary,
+       calm = false,
        copyText = null,
        disabledReason = null,
        copied = false,
@@ -162,6 +177,7 @@ class KitButton extends StatelessWidget {
     this.maxLines = 2,
     this.shortcut,
   }) : role = KitButtonRole.secondary,
+       calm = false,
        copyText = null,
        disabledReason = null,
        copied = false,
@@ -176,6 +192,7 @@ class KitButton extends StatelessWidget {
     this.maxLines = 2,
     this.shortcut,
   }) : role = KitButtonRole.tertiary,
+       calm = false,
        working = false,
        expand = false,
        copyText = null,
@@ -202,6 +219,7 @@ class KitButton extends StatelessWidget {
     this.disabledReason,
     this.copied = false,
     this.redact = true,
+    this.calm = false,
   });
 
   factory KitButton.fromAction(
@@ -210,7 +228,10 @@ class KitButton extends StatelessWidget {
     bool expand = true,
   }) => KitButton._derived(
     key: action.key,
-    role: role,
+    role: role == KitButtonRole.primary && action.neutral
+        ? KitButtonRole.secondary
+        : role,
+    calm: action.calm,
     label: action.label,
     onPressed: action.onPressed,
     icon: action.icon,
@@ -240,6 +261,9 @@ class KitButton extends StatelessWidget {
 
   /// Set only through [fromAction] from [KitAction.copyText].
   final String Function()? copyText;
+
+  /// Set only through [fromAction] from [KitAction.calm].
+  final bool calm;
 
   /// Set only through [fromAction] from [KitAction.disabledReason].
   final String? disabledReason;
@@ -422,7 +446,12 @@ class KitButton extends StatelessWidget {
             minimumSize: minimum,
             shape: shape,
             elevation: 0,
-            backgroundColor: destructive ? roles.dangerFill : roles.accent,
+            backgroundColor: destructive
+                ? roles.dangerFill
+                : calm && Theme.of(context).brightness == Brightness.dark
+                // Calm (dark mode): the accent eased toward the ground.
+                ? Color.lerp(roles.accent, roles.surface1, .32)
+                : roles.accent,
             foregroundColor: destructive ? roles.onDangerFill : roles.onAccent,
             disabledBackgroundColor: roles.surface3,
             disabledForegroundColor: roles.text3,
