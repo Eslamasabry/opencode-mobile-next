@@ -183,8 +183,10 @@ class _Circle extends StatelessWidget {
 
 /// The ring around Stop (owner decision 2 Oct, 11B): an arc that turns
 /// slowly and never stops at a value, because nobody knows how much work is
-/// left. Full motion turns at [KitMotion.stopRingLapsPerSecond], Calm at
-/// half that; Off, reduced motion and tests hold the arc still.
+/// left. It turns at [KitMotion.stopRingLapsPerSecond] only when it is the
+/// one moving part ([_movingPart]): while the glowing border is drawn and
+/// travels it shows its track only, and under Calm, Off or reduced motion
+/// (and in tests) the arc holds still.
 class _StopRing extends StatefulWidget {
   const _StopRing({
     required this.color,
@@ -207,19 +209,14 @@ class _StopRingState extends State<_StopRing>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final level = KitEffects.of(context).motion;
-    final turns =
-        KitMotion.loops &&
-        !KitMotion.reduced(context) &&
-        level != KitMotionLevel.off;
-    if (!turns) {
+    if (_MovingPartScope.of(context) != _MovingPart.stopRing ||
+        !KitMotion.loops) {
       _turn.stop();
       return;
     }
-    final laps = level == KitMotionLevel.calm
-        ? KitMotion.stopRingCalmLapsPerSecond
-        : KitMotion.stopRingLapsPerSecond;
-    _turn.duration = Duration(milliseconds: (1000 / laps).round());
+    _turn.duration = Duration(
+      milliseconds: (1000 / KitMotion.stopRingLapsPerSecond).round(),
+    );
     if (!_turn.isAnimating) unawaited(_turn.repeat());
   }
 
@@ -234,6 +231,7 @@ class _StopRingState extends State<_StopRing>
     child: CustomPaint(
       key: const ValueKey('kit-composer-stop-ring'),
       foregroundPainter: _RingPainter(
+        arc: _MovingPartScope.of(context) != _MovingPart.glow,
         turn: _turn,
         color: widget.color,
         track: widget.track,
@@ -248,8 +246,15 @@ class _StopRingState extends State<_StopRing>
 }
 
 class _RingPainter extends CustomPainter {
-  _RingPainter({required this.turn, required this.color, required this.track})
-    : super(repaint: turn);
+  _RingPainter({
+    required this.turn,
+    required this.color,
+    required this.track,
+    required this.arc,
+  }) : super(repaint: turn);
+
+  /// False while the glow is the moving part: the track alone, calm.
+  final bool arc;
 
   final Animation<double> turn;
   final Color color;
@@ -259,31 +264,31 @@ class _RingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     const width = 2.0;
     final rect = (Offset.zero & size).deflate(width / 2);
-    canvas
-      ..drawArc(
-        rect,
-        0,
-        2 * math.pi,
-        false,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = width
-          ..color = track,
-      )
-      ..drawArc(
-        rect,
-        2 * math.pi * turn.value - math.pi / 2,
-        2 * math.pi * 0.28,
-        false,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = width
-          ..strokeCap = StrokeCap.round
-          ..color = color,
-      );
+    canvas.drawArc(
+      rect,
+      0,
+      2 * math.pi,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = width
+        ..color = track,
+    );
+    if (!arc) return;
+    canvas.drawArc(
+      rect,
+      2 * math.pi * turn.value - math.pi / 2,
+      2 * math.pi * 0.28,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = width
+        ..strokeCap = StrokeCap.round
+        ..color = color,
+    );
   }
 
   @override
   bool shouldRepaint(_RingPainter old) =>
-      old.color != color || old.track != track;
+      old.color != color || old.track != track || old.arc != arc;
 }

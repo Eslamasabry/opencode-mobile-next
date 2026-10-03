@@ -11,6 +11,47 @@ part of 'kit_composer.dart';
 /// Full motion travels, Calm holds a still glow, and Off and the system's
 /// remove-animations draw none. The lap's ticker runs only while a reply
 /// does, and stops with the route (TickerMode).
+/// What moves while a reply runs. The owner's rule: only one thing.
+enum _MovingPart {
+  /// The glowing border travels; Stop's ring holds still (the track only).
+  glow,
+
+  /// The border is off (or not drawn): Stop's ring turns.
+  stopRing,
+
+  /// Calm, Off or the system's remove-animations: nothing moves.
+  none,
+}
+
+/// The one place that decides [_MovingPart], so the glow and the Stop ring
+/// can never both move. Full motion hands the movement to the glow when the
+/// person's switch is on, else to Stop's ring; Calm and Off (and reduced
+/// motion) hold both still (Calm still draws its still glow).
+_MovingPart _movingPart(BuildContext context, {bool? activityGlow}) {
+  final effects = KitEffects.of(context);
+  if (effects.motion != KitMotionLevel.full || KitMotion.reduced(context)) {
+    return _MovingPart.none;
+  }
+  return (activityGlow ?? effects.activityGlow)
+      ? _MovingPart.glow
+      : _MovingPart.stopRing;
+}
+
+/// Hands the decision to Stop's ring, which sits inside the surface.
+class _MovingPartScope extends InheritedWidget {
+  const _MovingPartScope({required this.part, required super.child});
+
+  final _MovingPart part;
+
+  /// Outside a frame (a lone button), the same rule without an override.
+  static _MovingPart of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_MovingPartScope>()?.part ??
+      _movingPart(context);
+
+  @override
+  bool updateShouldNotify(_MovingPartScope old) => old.part != part;
+}
+
 class _ComposerFrame extends StatefulWidget {
   const _ComposerFrame({
     required this.surface,
@@ -77,8 +118,13 @@ class _ComposerFrameState extends State<_ComposerFrame>
         : KitMotion.loops
         ? _GlowMode.live
         : _GlowMode.frame;
+    final moving = _movingPart(context, activityGlow: widget.activityGlow);
     _sync(
-      allowed && classic && widget.active && mode == _GlowMode.live,
+      allowed &&
+          classic &&
+          widget.active &&
+          mode == _GlowMode.live &&
+          moving == _MovingPart.glow,
       effects.glowSpeed,
     );
     final (primary, partner) = _glowHues(context, effects.glowColours);
@@ -87,42 +133,45 @@ class _ComposerFrameState extends State<_ComposerFrame>
     // whatever is chosen: Stack matches unkeyed children by type, and a
     // mismatch would rebuild the surface and lose the field's state when a
     // reply starts or a choice changes.
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Positioned.fill(
-          child: show && classic
-              ? _ClassicHalo(
-                  lap: _lap,
-                  breathing: mode == _GlowMode.live,
-                  radius: widget.radius,
-                  color: primary,
-                )
-              : const SizedBox.shrink(),
-        ),
-        widget.surface,
-        Positioned.fill(
-          child: !show
-              ? const SizedBox.shrink()
-              : classic
-              ? _ClassicRing(
-                  lap: _lap,
-                  travels: mode == _GlowMode.live,
-                  radius: widget.radius,
-                  primary: primary,
-                  partner: partner,
-                  mode: mode,
-                )
-              : _ActivityGlow(
-                  active: widget.active,
-                  mode: mode,
-                  radius: widget.radius,
-                  primary: primary,
-                  partner: partner,
-                  lapsPerSecond: effects.glowSpeed.softLaps,
-                ),
-        ),
-      ],
+    return _MovingPartScope(
+      part: moving,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: show && classic
+                ? _ClassicHalo(
+                    lap: _lap,
+                    breathing: mode == _GlowMode.live,
+                    radius: widget.radius,
+                    color: primary,
+                  )
+                : const SizedBox.shrink(),
+          ),
+          widget.surface,
+          Positioned.fill(
+            child: !show
+                ? const SizedBox.shrink()
+                : classic
+                ? _ClassicRing(
+                    lap: _lap,
+                    travels: mode == _GlowMode.live,
+                    radius: widget.radius,
+                    primary: primary,
+                    partner: partner,
+                    mode: mode,
+                  )
+                : _ActivityGlow(
+                    active: widget.active,
+                    mode: mode,
+                    radius: widget.radius,
+                    primary: primary,
+                    partner: partner,
+                    lapsPerSecond: effects.glowSpeed.softLaps,
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
