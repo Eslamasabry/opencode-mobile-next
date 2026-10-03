@@ -11,7 +11,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
-import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/domain/phone_agent_host.dart';
 import 'package:opencode_mobile/domain/phone_agents_source.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
