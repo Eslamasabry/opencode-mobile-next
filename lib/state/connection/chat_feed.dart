@@ -270,6 +270,9 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier
         if (wantDirectory != null && item.directory != wantDirectory) {
           return false;
         }
+        if (filter.agentId != null && item.agentId != filter.agentId) {
+          return false;
+        }
         if (filter.needsYou || filter.running) {
           return (filter.needsYou && item.status == ChatStatus.needsYou) ||
               (filter.running && item.status == ChatStatus.running);

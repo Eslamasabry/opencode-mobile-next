@@ -332,6 +332,25 @@ void main() {
       contains('child'),
     );
 
+    expect(feed.items.every((i) => i.agentId == 'opencode'), isTrue);
+    expect(feed.items.first.agentLabel, isNull);
+    expect(
+      controller.chatFeed(const ChatFeedFilter(agentId: 'claude')).items,
+      isEmpty,
+    );
+    expect(
+      controller
+          .chatFeed(const ChatFeedFilter(agentId: 'opencode'))
+          .items
+          .length,
+      4,
+    );
+    expect(
+      const ChatFeedFilter(agentId: 'x') == const ChatFeedFilter(agentId: 'x'),
+      isTrue,
+    );
+    expect(const ChatFeedFilter(agentId: 'x') == ChatFeedFilter.all, isFalse);
+
     final summaries = controller.projectSummaries;
     final api = summaries.firstWhere((p) => p.directory == '/work/api');
     expect(api.chatCount, 2);

@@ -32,6 +32,11 @@ class _ControlledApi extends OpenCodeApi {
   Object? healthFailure;
   bool closed = false;
 
+  // The folder check must answer without a real network call.
+  @override
+  Future<List<FileNode>> listFiles(String path) =>
+      Future.error(ApiException('Connection failed'));
+
   @override
   Future<Health> health() {
     healthCalls += 1;
