@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile
 
+import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -39,6 +40,14 @@ class BuiltinServerService : Service() {
             } else {
                 startForeground(NOTIFICATION_ID, notification)
             }
+            foregroundShown = true
+            // A stop that arrived before Android ran this waited for the
+            // notification (stopping a promised service first crashes the app).
+            if (stopPending) {
+                stopPending = false
+                try { stopForeground(STOP_FOREGROUND_REMOVE) } catch (_: Throwable) { }
+                try { stopSelf(startId) } catch (_: Throwable) { }
+            }
         } catch (_: Throwable) {
             // Android invokes this after startForegroundService returned. A
             // policy rejection cannot throw through its caller's channel guard.
@@ -64,6 +73,14 @@ class BuiltinServerService : Service() {
         } catch (_: Throwable) {
             try { stopSelf(startId) } catch (_: Throwable) { }
         }
+    }
+
+    override fun onDestroy() {
+        // A destroyed service owes Android nothing; the next start decides.
+        foregroundShown = false
+        stopPending = false
+        promised = false
+        super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -123,15 +140,46 @@ class BuiltinServerService : Service() {
         fun start(context: Context, title: String? = null) {
             val intent = Intent(context, BuiltinServerService::class.java)
                 .putExtra(EXTRA_TITLE, title)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            stopPending = false
+            // On screen, a plain start makes no promise to Android;
+            // onStartCommand still moves the service to the foreground. Only a
+            // background start promises a notification within seconds.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !appInForeground()) {
+                promised = true
                 context.startForegroundService(intent)
             } else {
-                context.startService(intent)
+                try {
+                    context.startService(intent)
+                } catch (_: IllegalStateException) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        promised = true
+                        context.startForegroundService(intent)
+                    }
+                }
             }
         }
 
         fun stop(context: Context) {
+            if (promised && !foregroundShown) {
+                stopPending = true
+                return
+            }
+            foregroundShown = false
+            promised = false
             context.stopService(Intent(context, BuiltinServerService::class.java))
+        }
+
+        // Written on the main thread (onStartCommand) and callers' threads.
+        @Volatile private var foregroundShown = false
+        @Volatile private var stopPending = false
+        @Volatile private var promised = false
+
+        private fun appInForeground(): Boolean = try {
+            val info = ActivityManager.RunningAppProcessInfo()
+            ActivityManager.getMyMemoryState(info)
+            info.importance <= ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+        } catch (_: Throwable) {
+            false
         }
     }
 }

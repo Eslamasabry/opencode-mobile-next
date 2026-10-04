@@ -142,7 +142,12 @@ class AppDiagnosticsController extends ChangeNotifier {
       ),
       (match) => '${match.group(1)}[REDACTED]',
     );
-    safe = safe.replaceAll(RegExp(r'\b[A-Za-z0-9_+./=-]{32,}\b'), '[REDACTED]');
+    // Long tokens carry digits; long letters-only words are code names
+    // (ForegroundServiceDidNotStartInTimeException) a crash report needs.
+    safe = safe.replaceAll(
+      RegExp(r'\b(?=[A-Za-z0-9_+./=-]*[0-9])[A-Za-z0-9_+./=-]{32,}\b'),
+      '[REDACTED]',
+    );
     if (safe.length <= limit) return safe;
     return '${safe.substring(0, limit)}\n… [truncated]';
   }

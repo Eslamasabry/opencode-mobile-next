@@ -7,6 +7,7 @@ open class Service : Context() {
     open fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = 0
     open fun onTimeout(startId: Int, fgsType: Int) {}
     open fun onBind(intent: Intent?): IBinder? = null
+    open fun onDestroy() {}
     fun startForeground(id: Int, notification: Notification, type: Int = 0) {
         if (denyForeground) throw SecurityException("policy")
     }
@@ -54,5 +55,15 @@ class PendingIntent {
         const val FLAG_IMMUTABLE = 2
         fun getActivity(context: Context, code: Int, intent: Intent, flags: Int) = PendingIntent()
         fun getService(context: Context, code: Int, intent: Intent, flags: Int) = PendingIntent()
+    }
+}
+
+class ActivityManager {
+    class RunningAppProcessInfo {
+        var importance = IMPORTANCE_FOREGROUND
+        companion object { const val IMPORTANCE_FOREGROUND = 100 }
+    }
+    companion object {
+        fun getMyMemoryState(info: RunningAppProcessInfo) {}
     }
 }

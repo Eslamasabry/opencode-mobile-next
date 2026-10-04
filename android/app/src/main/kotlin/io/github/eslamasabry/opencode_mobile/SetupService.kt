@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile
 
+import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -43,6 +44,15 @@ class SetupService : Service() {
             } else {
                 startForeground(NOTIFICATION_ID, notification)
             }
+            foregroundShown = true
+            // The job may have ended before Android ran this method. Its stop
+            // waited for the notification (a promised foreground service that
+            // stops first crashes the app); stop now that the promise is kept.
+            if (stopPending) {
+                stopPending = false
+                try { stopForeground(STOP_FOREGROUND_REMOVE) } catch (_: Throwable) { }
+                try { stopSelf() } catch (_: Throwable) { }
+            }
         } catch (_: Throwable) {
             // Foreground-service/notification policy failures happen here on
             // Android's main thread, after the channel's worker has replied.
@@ -58,6 +68,14 @@ class SetupService : Service() {
         // Not sticky: a restarted service without the process's job thread
         // would only show a stale percent.
         return START_NOT_STICKY
+    }
+
+    override fun onDestroy() {
+        // A destroyed service owes Android nothing; the next start decides.
+        foregroundShown = false
+        stopPending = false
+        promised = false
+        super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -83,11 +101,39 @@ class SetupService : Service() {
                 .putExtra(EXTRA_CHANNEL, channel)
                 .putExtra(EXTRA_TITLE, title)
                 .putExtra(EXTRA_TEXT, text)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            foregroundShown = false
+            stopPending = false
+            promised = false
+            // While the app is on screen a plain start is allowed and makes no
+            // promise; onStartCommand still moves the service to the
+            // foreground. Only a start from the background promises Android a
+            // notification within seconds, which [stop] must then respect.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !appInForeground()) {
+                promised = true
                 context.startForegroundService(intent)
             } else {
-                context.startService(intent)
+                try {
+                    context.startService(intent)
+                } catch (_: IllegalStateException) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        promised = true
+                        context.startForegroundService(intent)
+                    }
+                }
             }
+        }
+
+        // Written on the main thread (onStartCommand) and the job thread.
+        @Volatile private var foregroundShown = false
+        @Volatile private var stopPending = false
+        @Volatile private var promised = false
+
+        private fun appInForeground(): Boolean = try {
+            val info = ActivityManager.RunningAppProcessInfo()
+            ActivityManager.getMyMemoryState(info)
+            info.importance <= ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+        } catch (_: Throwable) {
+            false
         }
 
         /** Replaces the ongoing notification's text; the service keeps running. */
@@ -100,6 +146,13 @@ class SetupService : Service() {
         }
 
         fun stop(context: Context) {
+            // A promised start that hasn't shown its notification yet must not
+            // be stopped: Android crashes the app for that. onStartCommand
+            // stops it right after the notification appears.
+            if (promised && !foregroundShown) {
+                stopPending = true
+                return
+            }
             try { context.stopService(Intent(context, SetupService::class.java)) }
             catch (_: Throwable) { }
         }
