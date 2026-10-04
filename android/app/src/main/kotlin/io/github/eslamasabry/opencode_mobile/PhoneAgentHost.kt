@@ -38,7 +38,15 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
             export PASEO_LOG_FILE_PATH=/dev/null
             export PASEO_SERVICE_PROXY_ENABLED=false
             export PASEO_LOG_FORMAT=json
-            exec /home/oc/.local/bin/paseo start --foreground --home "${'$'}HOME/paseo" --listen 127.0.0.1:$port --no-relay --no-web-ui --no-inject-mcp </dev/null
+            export PASEO_LISTEN=127.0.0.1:$port
+            export PASEO_RELAY_ENABLED=false
+            export PASEO_WEB_UI_ENABLED=false
+            export PASEO_DICTATION_ENABLED=false
+            export PASEO_VOICE_MODE_ENABLED=false
+            # Paseo 0.9.2 refuses the old launch flags (--foreground, --listen,
+            # --no-relay, --no-web-ui, --no-inject-mcp) and exits at once; the
+            # foreground deployment command reads config.json plus these overrides.
+            exec /home/oc/.local/bin/paseo daemon run --home "${'$'}HOME/paseo" </dev/null
         """.trimIndent()
         val child = linux.startAgentProcess(profile, listOf("/bin/sh", "-c", script))
         // No reader retains even one line: CLI startup can mention host secrets.

@@ -203,6 +203,31 @@ void main() {
       expect(_name('Claude Code'), findsOneWidget);
     });
 
+    testWidgets('a finished install that cannot move on reads rows once', (
+      tester,
+    ) async {
+      final agents = FakePhoneAgentsSource();
+      await _newChat(tester, _host(agents: agents));
+      await _openSheet(tester);
+      await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('agents-install')));
+      await tester.pumpAndSettle();
+      agents.calls.clear();
+      agents.change(() {
+        agents.progress = const AgentSetupProgress(
+          agentId: 'claude',
+          phase: AgentSetupPhase.done,
+        );
+      });
+      await tester.pumpAndSettle();
+      for (var i = 0; i < 5; i++) {
+        agents.change(() {});
+        await tester.pumpAndSettle();
+      }
+      expect(agents.calls.where((call) => call == 'refresh'), hasLength(1));
+    });
+
     testWidgets('a failed phone check says which step and what to do', (
       tester,
     ) async {
