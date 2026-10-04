@@ -49,6 +49,9 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
   WorkspaceProject? _copyProject;
   String? _copyFor;
 
+  /// The phone agent whose model list was already asked for.
+  String? _warmedAgent;
+
   @override
   void initState() {
     super.initState();
@@ -193,6 +196,18 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
               .where((choice) => choice.agentId == agents.selectedChatAgentId)
               .firstOrNull;
     final agentName = agentChoice?.name ?? 'OpenCode';
+    // A phone agent's helper lists its runtimes slowly the first time (about
+    // 10 s): ask while the person types, so Send doesn't wait for it.
+    final chosenAgent = agentChoice?.agentId;
+    if (agents != null &&
+        chosenAgent != null &&
+        chosenAgent != openCodeChatAgentId &&
+        chosenAgent != _warmedAgent) {
+      _warmedAgent = chosenAgent;
+      unawaited(
+        agents.agentModels(chosenAgent).then((_) {}, onError: (Object _) {}),
+      );
+    }
 
     final chip = Wrap(
       alignment: WrapAlignment.center,

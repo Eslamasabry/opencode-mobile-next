@@ -284,10 +284,13 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     final descriptor = _paCatalog.byId(agentId);
     if (descriptor == null) throw _notReady;
     // The host's runtimes and models are global; any project opens it.
+    // The folder a new chat most likely starts in, so its gateway already
+    // holds the list when the chat starts.
+    final last = lastUsedProjectDirectory;
     final directory =
+        (last != null && last.startsWith('/root/projects/') ? last : null) ??
         _paSources.keys.firstOrNull ??
         _paDesiredDirectories().firstOrNull ??
-        lastUsedProjectDirectory ??
         _self.directory;
     if (directory == null || directory.isEmpty) {
       throw const ProductException('Choose a project first.');
@@ -814,7 +817,10 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     }
     final PaseoChatFeedSource source;
     try {
-      source = await _paReachSource(directory);
+      source = await PerfTrace.span(
+        'agent.start.reach',
+        () => _paReachSource(directory),
+      );
     } on ProductException {
       rethrow;
     } catch (_) {
@@ -823,19 +829,43 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       );
     }
     _paRebuildMergedIfNeeded();
-    final id = await source.startAgentChatIn(
-      directory,
-      agentId: descriptor.providerId,
-      firstPrompt: firstPrompt,
-      modelId: selectedAgentModel(agentId),
-    );
-    _paLive.add(jsonEncode([_paseoSourceId(directory), id, directory]));
+    // Remembered first: the route's row refresh keeps only remembered
+    // folders' connections, and this one is creating the agent.
     await _self._ocRemember(directory);
-    await _paActivateRoute(
-      directory,
-      agentName: descriptor.name,
-      agentId: descriptor.id,
+    // The connection moves to the agent while it starts: neither waits for
+    // the other (the agent is created on the folder's own gateway).
+    final route = PerfTrace.span(
+      'agent.start.route',
+      () => _paActivateRoute(
+        directory,
+        agentName: descriptor.name,
+        agentId: descriptor.id,
+      ),
     );
+    final String id;
+    try {
+      id = await PerfTrace.span(
+        'agent.start.create',
+        () => source.startAgentChatIn(
+          directory,
+          agentId: descriptor.providerId,
+          firstPrompt: firstPrompt,
+          modelId: selectedAgentModel(agentId),
+        ),
+      );
+    } finally {
+      await route.catchError((Object _) {});
+    }
+    _paLive.add(jsonEncode([_paseoSourceId(directory), id, directory]));
+    // The route may have failed while the agent started: try it once more.
+    if (_phoneAgentRoute?.directory != directory ||
+        _self.api is! PaseoGateway) {
+      await _paActivateRoute(
+        directory,
+        agentName: descriptor.name,
+        agentId: descriptor.id,
+      );
+    }
     return id;
   }
 

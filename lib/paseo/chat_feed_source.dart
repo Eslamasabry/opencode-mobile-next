@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../api/models.dart';
+import '../diagnostics/perf_trace.dart';
 import '../domain/agent_catalog.dart';
 import '../domain/chat_feed.dart';
 import '../domain/server_gateway.dart' show ProductException;
@@ -282,7 +283,10 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
   }) async {
     _checkDirectory(directory);
     try {
-      final providers = await gateway.providers();
+      final providers = await PerfTrace.span(
+        'agent.start.providers',
+        gateway.providers,
+      );
       _checkDirectory(directory);
       final provider = agentId ?? providers.defaultProviderID;
       if (provider == null ||
@@ -291,23 +295,29 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
           'Choose an available agent for this project.',
         );
       }
-      final session = await gateway.createSession();
+      final session = await PerfTrace.span(
+        'agent.start.session',
+        gateway.createSession,
+      );
       _checkDirectory(directory);
       gateway.seedDraftProviderForSession(session.id, provider);
       _draftProviders[session.id] = provider;
       if (firstPrompt != null && firstPrompt.trim().isNotEmpty) {
-        await gateway.promptAsync(
-          session.id,
-          text: firstPrompt,
-          model: ModelRef(
-            providerID: provider,
-            modelID: modelId ?? paseoDefaultModel,
+        await PerfTrace.span(
+          'agent.start.prompt',
+          () => gateway.promptAsync(
+            session.id,
+            text: firstPrompt,
+            model: ModelRef(
+              providerID: provider,
+              modelID: modelId ?? paseoDefaultModel,
+            ),
           ),
         );
         _checkDirectory(directory);
       }
       await rememberLastUsedProject(directory);
-      await refreshChatFeed();
+      await PerfTrace.span('agent.start.feed', refreshChatFeed);
       _checkDirectory(directory);
       // The chat opens on a fresh gateway, which knows the agent only by the
       // daemon's id; a draft's app id is local to this gateway.
