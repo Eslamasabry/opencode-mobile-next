@@ -255,9 +255,17 @@ class _FakeHost implements PhoneAgentHostPort {
     );
   }
 
+  /// How many next connects fail like a helper Android stopped.
+  int failOpens = 0;
+
   @override
-  Future<PaseoGateway> openGateway(String directory) async =>
-      newGatewaySync(directory);
+  Future<PaseoGateway> openGateway(String directory) async {
+    if (failOpens > 0) {
+      failOpens--;
+      throw const AgentHostException(AgentHostFailure.hello);
+    }
+    return newGatewaySync(directory);
+  }
 
   @override
   PaseoGateway newGatewaySync(String directory) {
@@ -785,6 +793,39 @@ void main() {
     await tester.runAsync(() => c.cancelAgentSignIn('claude'));
     expect(w.events.log, contains('auth.cancelAndDrain'));
     expect(c.agentSignInState('claude'), isNull);
+    c.dispose();
+  });
+
+  testWidgets('a stopped helper is started again when a chat needs it', (
+    tester,
+  ) async {
+    final w = await ready(tester);
+    final c = w.controller;
+    const other = '/root/projects/other';
+    w.host.failOpens = 1;
+    final before = w.events.log.where((e) => e == 'host.start').length;
+    final id = await c.startAgentChatIn(other, agentId: 'claude');
+    expect(id, isNotEmpty);
+    expect(c.api, isA<PaseoGateway>());
+    expect(w.events.log.where((e) => e == 'host.start').length, before + 1);
+    final models = await c.agentModels('claude');
+    expect(
+      models.firstWhere((m) => m.name == 'claude model').isDefault,
+      isTrue,
+    );
+    await c.selectAgentModel('claude', 'claude-model');
+    expect(c.selectedAgentModel('claude'), 'claude-model');
+    await expectLater(
+      c.startAgentChatIn('/storage/emulated/0/x', agentId: 'claude'),
+      throwsA(
+        isA<ProductException>().having(
+          (e) => e.message,
+          'message',
+          contains('/root/projects'),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(seconds: 3));
     c.dispose();
   });
 

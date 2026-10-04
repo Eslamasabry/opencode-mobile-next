@@ -265,6 +265,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     // The host's runtimes and models are global; any project opens it.
     final directory =
         _paSources.keys.firstOrNull ??
+        _paDesiredDirectories().firstOrNull ??
         lastUsedProjectDirectory ??
         _self.directory;
     if (directory == null || directory.isEmpty) {
@@ -273,8 +274,10 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     final PaseoChatFeedSource source;
     final ProvidersResponse providers;
     try {
-      source = await _paAddSource(_paEnsureHost(), directory);
+      source = await _paReachSource(directory);
       providers = await source.providers();
+    } on ProductException {
+      rethrow;
     } catch (_) {
       throw const ProductException(
         'Could not reach the agent on this phone. Resume it and try again.',
@@ -578,6 +581,41 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (changed) _paRebuildMerged();
   }
 
+  /// Reaches the agent host for [directory] the way a person's action needs
+  /// it: a folder outside the agents' project space is said plainly, and a
+  /// helper Android stopped is started again and given up to 30 s to listen
+  /// before the action fails.
+  Future<PaseoChatFeedSource> _paReachSource(String directory) async {
+    if (!directory.startsWith('/root/projects/')) {
+      throw const ProductException(
+        'Agents on this phone work in projects under /root/projects. Choose one of those.',
+      );
+    }
+    final host = _paEnsureHost();
+    try {
+      return await _paAddSource(host, directory);
+    } catch (_) {}
+    try {
+      await host.start();
+    } on AgentHostException catch (error) {
+      // Another start is already running: wait for it below.
+      if (error.reason != AgentHostFailure.busy) rethrow;
+    }
+    final deadline = DateTime.now().add(const Duration(seconds: 30));
+    while (true) {
+      try {
+        final source = await _paAddSource(host, directory);
+        // No row refresh here: its source sync would close this new folder's
+        // connection before the caller uses it.
+        _paHostRunning = true;
+        return source;
+      } catch (_) {
+        if (DateTime.now().isAfter(deadline)) rethrow;
+        await Future<void>.delayed(const Duration(seconds: 1));
+      }
+    }
+  }
+
   Future<PaseoChatFeedSource> _paAddSource(
     PhoneAgentHostPort host,
     String directory,
@@ -736,10 +774,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (row == null || descriptor == null || !row.chatSelectable) {
       throw const ProductException('This agent is not ready yet.');
     }
-    final host = _paEnsureHost();
     final PaseoChatFeedSource source;
     try {
-      source = await _paAddSource(host, directory);
+      source = await _paReachSource(directory);
+    } on ProductException {
+      rethrow;
     } catch (_) {
       throw const ProductException(
         'Could not reach the agent on this phone. Resume it and try again.',
