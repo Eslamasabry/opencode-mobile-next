@@ -42823,6 +42823,24 @@ abstract class AppLocalizations {
   /// **'Use {agent}'**
   String agentsSignInDone(String agent);
 
+  /// Agent model sheet title on New conversation (Claude Code and other phone agents).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a model'**
+  String get agentsModelTitle;
+
+  /// Agent model chip and first row: use the agent's own default model.
+  ///
+  /// In en, this message translates to:
+  /// **'Default model'**
+  String get agentsModelDefault;
+
+  /// Agent model sheet while the phone's agent host lists its models.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading the models…'**
+  String get agentsModelLoading;
+
   /// Sign-in step: the code was refused before sending
   ///
   /// In en, this message translates to:

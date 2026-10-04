@@ -125,6 +125,35 @@ class FakePhoneAgentsSource extends ChangeNotifier
   @override
   String get selectedChatAgentId => selected;
 
+  /// What [agentModels] returns per agent.
+  final models = <String, List<AgentModelChoice>>{
+    'claude': const [
+      AgentModelChoice(id: 'default', name: 'Default (Opus)', isDefault: true),
+      AgentModelChoice(id: 'sonnet', name: 'Sonnet'),
+    ],
+  };
+  final chosenModel = <String, String>{};
+
+  @override
+  Future<List<AgentModelChoice>> agentModels(String agentId) async {
+    calls.add('models:$agentId');
+    return models[agentId] ?? const [];
+  }
+
+  @override
+  String? selectedAgentModel(String agentId) => chosenModel[agentId];
+
+  @override
+  Future<void> selectAgentModel(String agentId, String? modelId) async {
+    calls.add('model:$agentId:$modelId');
+    if (modelId == null) {
+      chosenModel.remove(agentId);
+    } else {
+      chosenModel[agentId] = modelId;
+    }
+    notifyListeners();
+  }
+
   @override
   Future<void> selectChatAgent(String agentId) async {
     calls.add('select:$agentId');

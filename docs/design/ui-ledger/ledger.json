@@ -1,5 +1,5 @@
 {
- "generatedFrom": "36ef352439116a40fbfcbd7256fe82fff84db1a4",
+ "generatedFrom": "8d128a58a58b6bd17eddeae2046e73cc4ffa768d",
  "pages": [
   {
    "id": "system",
@@ -10956,6 +10956,40 @@
      "effect": "Navigator.pop(context, true) -> manager.deletePack(pack).",
      "gates": [],
      "destructive": true
+    }
+   ]
+  },
+  {
+   "id": "agents-model-sheet",
+   "title": "Choose a model",
+   "kind": "sheet",
+   "area": "workspace",
+   "file": "lib/ui/screens/agents/agent_model_sheet.dart",
+   "widget": "showAgentModelSheet",
+   "presentedBy": [
+    "AgentModelChip"
+   ],
+   "line": 56,
+   "purpose": "The model chip on New conversation while a phone agent (Claude Code, …) is chosen: the agent's own default, then each model its host reports, with a check on the current one. One sheet.",
+   "reachedFrom": [],
+   "gates": [
+    "PhoneAgentsSource.phoneAgentsAvailable",
+    "an agent other than OpenCode is chosen"
+   ],
+   "elements": [
+    {
+     "id": "agents-model-choice",
+     "type": "list-tile",
+     "label": "<model>",
+     "key": "agents-model-<id>",
+     "file": "lib/ui/screens/agents/agent_model_sheet.dart",
+     "line": 98,
+     "action": "mutate",
+     "target": null,
+     "targetWidget": null,
+     "effect": "selectAgentModel: new conversations with this agent start on that model; the sheet closes.",
+     "gates": [],
+     "destructive": false
     }
    ]
   },

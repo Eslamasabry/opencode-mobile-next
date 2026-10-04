@@ -216,6 +216,84 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (!_self._disposed) _self._notifyListeners();
   }
 
+  // ---- models ---------------------------------------------------------------
+
+  String _paModelKey(String profileID) => 'oc.agentModel.$profileID';
+
+  Map<String, String> _paSavedModels() {
+    final id = _paProfile?.id;
+    if (id == null) return const {};
+    try {
+      final raw = _self.store.prefs.getString(_paModelKey(id));
+      if (raw == null) return const {};
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return const {};
+      return {
+        for (final entry in decoded.entries)
+          if (entry.key is String && entry.value is String)
+            entry.key as String: entry.value as String,
+      };
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  @override
+  String? selectedAgentModel(String agentId) => _paSavedModels()[agentId];
+
+  @override
+  Future<void> selectAgentModel(String agentId, String? modelId) async {
+    final id = _paProfile?.id;
+    if (id == null) throw _notReady;
+    final models = Map<String, String>.of(_paSavedModels());
+    if (modelId == null || modelId.isEmpty) {
+      models.remove(agentId);
+    } else {
+      models[agentId] = modelId;
+    }
+    try {
+      await _self.store.prefs.setString(_paModelKey(id), jsonEncode(models));
+    } catch (_) {}
+    if (!_self._disposed) _self._notifyListeners();
+  }
+
+  @override
+  Future<List<AgentModelChoice>> agentModels(String agentId) async {
+    if (!phoneAgentsAvailable) throw _notReady;
+    final descriptor = _paCatalog.byId(agentId);
+    if (descriptor == null) throw _notReady;
+    // The host's runtimes and models are global; any project opens it.
+    final directory =
+        _paSources.keys.firstOrNull ??
+        lastUsedProjectDirectory ??
+        _self.directory;
+    if (directory == null || directory.isEmpty) {
+      throw const ProductException('Choose a project first.');
+    }
+    final PaseoChatFeedSource source;
+    final ProvidersResponse providers;
+    try {
+      source = await _paAddSource(_paEnsureHost(), directory);
+      providers = await source.providers();
+    } catch (_) {
+      throw const ProductException(
+        'Could not reach the agent on this phone. Resume it and try again.',
+      );
+    }
+    final provider = providers.providers
+        .where((entry) => entry.id == descriptor.providerId)
+        .firstOrNull;
+    if (provider == null) return const [];
+    return [
+      for (final modelID in provider.modelIDs)
+        AgentModelChoice(
+          id: modelID,
+          name: provider.modelData[modelID]?['name'] as String? ?? modelID,
+          isDefault: provider.modelData[modelID]?['isDefault'] == true,
+        ),
+    ];
+  }
+
   @override
   Future<void> refreshAgentRows() =>
       _paRefreshingRows ??= _paRefreshRows().whenComplete(() {
@@ -672,6 +750,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       directory,
       agentId: descriptor.providerId,
       firstPrompt: firstPrompt,
+      modelId: selectedAgentModel(agentId),
     );
     _paLive.add(jsonEncode([_paseoSourceId(directory), id, directory]));
     await _self._ocRemember(directory);

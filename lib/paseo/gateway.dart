@@ -705,7 +705,10 @@ class PaseoGateway
           'id': modelID,
           'name': label is String && label.isNotEmpty ? label : modelID,
         };
-        if (raw['isDefault'] == true) providerDefault ??= modelID;
+        if (raw['isDefault'] == true) {
+          providerDefault ??= modelID;
+          modelData[modelID]!['isDefault'] = true;
+        }
       }
       if (modelIDs.isEmpty) {
         modelIDs.add(paseoDefaultModel);

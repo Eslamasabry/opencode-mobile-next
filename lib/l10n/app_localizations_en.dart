@@ -27122,6 +27122,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get agentsModelTitle => 'Choose a model';
+
+  @override
+  String get agentsModelDefault => 'Default model';
+
+  @override
+  String get agentsModelLoading => 'Reading the models…';
+
+  @override
   String get agentsSignInBadCode =>
       'That code is incomplete. Copy the whole code from the browser (it has a # in the middle) and paste it again.';
 

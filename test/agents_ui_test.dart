@@ -95,6 +95,36 @@ void main() {
     });
   });
 
+  group('the agent model chip', () {
+    testWidgets('lists the chosen agent\'s own models, not OpenCode\'s', (
+      tester,
+    ) async {
+      final agents = FakePhoneAgentsSource(
+        rows: [agentRowFor('claude', FakeAgentStage.ready)],
+        selected: 'claude',
+      );
+      await _newChat(tester, _host(agents: agents));
+      expect(find.text('Server default'), findsNothing);
+      expect(find.text('Default model'), findsOneWidget);
+      expect(find.textContaining('Ask Claude Code'), findsWidgets);
+      await tester.tap(find.byKey(const ValueKey('chats-new-agent-model')));
+      await tester.pumpAndSettle();
+      expect(find.text('Choose a model'), findsOneWidget);
+      expect(agents.calls, contains('models:claude'));
+      await tester.tap(find.byKey(const ValueKey('agents-model-sonnet')));
+      await tester.pumpAndSettle();
+      expect(agents.chosenModel['claude'], 'sonnet');
+      expect(find.text('Choose a model'), findsNothing);
+      expect(find.text('Sonnet'), findsOneWidget);
+    });
+
+    testWidgets('OpenCode keeps the server model chip', (tester) async {
+      await _newChat(tester, _host(agents: FakePhoneAgentsSource()));
+      expect(find.text('Server default'), findsOneWidget);
+      expect(find.byKey(const ValueKey('chats-new-agent-model')), findsNothing);
+    });
+  });
+
   group('the agent sheet', () {
     testWidgets('lists agents with one line of state each', (tester) async {
       final agents = FakePhoneAgentsSource(

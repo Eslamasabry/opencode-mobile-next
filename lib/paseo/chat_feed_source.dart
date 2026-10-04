@@ -263,12 +263,22 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
     String directory, {
     required String agentId,
     String? firstPrompt,
-  }) => _start(directory, agentId: agentId, firstPrompt: firstPrompt);
+    String? modelId,
+  }) => _start(
+    directory,
+    agentId: agentId,
+    firstPrompt: firstPrompt,
+    modelId: modelId,
+  );
+
+  /// The runtimes and models the host offers (global, not per folder).
+  Future<ProvidersResponse> providers() => gateway.providers();
 
   Future<String> _start(
     String directory, {
     String? agentId,
     String? firstPrompt,
+    String? modelId,
   }) async {
     _checkDirectory(directory);
     try {
@@ -289,7 +299,10 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
         await gateway.promptAsync(
           session.id,
           text: firstPrompt,
-          model: ModelRef(providerID: provider, modelID: paseoDefaultModel),
+          model: ModelRef(
+            providerID: provider,
+            modelID: modelId ?? paseoDefaultModel,
+          ),
         );
         _checkDirectory(directory);
       }

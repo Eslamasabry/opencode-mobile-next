@@ -82,6 +82,21 @@ final class AgentResumeNotice {
   final bool requiresAcknowledgement;
 }
 
+/// One model an agent on this phone offers, as its host reports it.
+final class AgentModelChoice {
+  const AgentModelChoice({
+    required this.id,
+    required this.name,
+    this.isDefault = false,
+  });
+
+  final String id;
+  final String name;
+
+  /// The agent's own default when the person picks nothing.
+  final bool isDefault;
+}
+
 abstract interface class PhoneAgentsSource {
   /// True when the current profile is this phone's built-in server on a
   /// platform that can run the agent host. False hides every agent surface.
@@ -110,6 +125,18 @@ abstract interface class PhoneAgentsSource {
   /// `chatSelectable`. Changes no connection and no gateway: routing happens
   /// when a chat starts or opens.
   Future<void> selectChatAgent(String agentId);
+
+  /// The models [agentId] offers, read from the phone's agent host. Throws a
+  /// `ProductException` in plain words when the host can't be reached.
+  Future<List<AgentModelChoice>> agentModels(String agentId);
+
+  /// The model a new chat with [agentId] starts with, or null for the agent's
+  /// own default. Persisted per profile under `oc.agentModel.<profileId>`.
+  String? selectedAgentModel(String agentId);
+
+  /// Remembers [modelId] (null: the agent's default) for new chats with
+  /// [agentId].
+  Future<void> selectAgentModel(String agentId, String? modelId);
 
   /// Re-reads installation, host, phone-check and sign-in truth for every
   /// catalog agent. Quiet on failure; rows keep their last facts.

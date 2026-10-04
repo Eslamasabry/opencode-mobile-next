@@ -193,6 +193,7 @@
   ],
   "m-agents": [
     "lib/ui/screens/agents/agent_sheet.dart",
+    "lib/ui/screens/agents/agent_model_sheet.dart",
     "lib/ui/screens/agents/agent_notices.dart",
     "lib/ui/screens/agents/agents_section.dart",
     "lib/ui/screens/agents/agents_text.dart",

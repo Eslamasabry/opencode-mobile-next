@@ -32213,6 +32213,18 @@
       }
     }
   },
+  "agentsModelTitle": "Choose a model",
+  "@agentsModelTitle": {
+    "description": "Agent model sheet title on New conversation (Claude Code and other phone agents)."
+  },
+  "agentsModelDefault": "Default model",
+  "@agentsModelDefault": {
+    "description": "Agent model chip and first row: use the agent's own default model."
+  },
+  "agentsModelLoading": "Reading the models…",
+  "@agentsModelLoading": {
+    "description": "Agent model sheet while the phone's agent host lists its models."
+  },
   "agentsSignInBadCode": "That code is incomplete. Copy the whole code from the browser (it has a # in the middle) and paste it again.",
   "@agentsSignInBadCode": {
     "description": "Sign-in step: the code was refused before sending"

@@ -27240,6 +27240,15 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get agentsModelTitle => 'اختر نموذجًا';
+
+  @override
+  String get agentsModelDefault => 'النموذج الافتراضي';
+
+  @override
+  String get agentsModelLoading => 'جارٍ قراءة النماذج…';
+
+  @override
   String get agentsSignInBadCode =>
       'هذا الرمز غير مكتمل. انسخ الرمز كاملًا من المتصفح (في وسطه علامة #) والصقه مرة أخرى.';
 

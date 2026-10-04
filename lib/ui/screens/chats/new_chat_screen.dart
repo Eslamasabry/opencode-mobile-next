@@ -10,6 +10,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
 import '../../kit/kit.dart';
 import '../../widgets/product_states.dart' show productErrorText;
+import '../agents/agent_model_sheet.dart';
 import '../agents/agent_sheet.dart';
 import '../agents/agents_text.dart';
 import 'chats_host.dart';
@@ -238,7 +239,13 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
         children: [
           KitComposerStatusStrip(
             chips: const [],
-            model: host.modelChip(context),
+            // An agent on this phone has its own models; OpenCode's picker
+            // would list the server's instead.
+            model:
+                agentChoice != null &&
+                    agentChoice.agentId != openCodeChatAgentId
+                ? AgentModelChip(agents: agents!, agentId: agentChoice.agentId)
+                : host.modelChip(context),
           ),
           KitComposer(
             composerKey: const ValueKey('chats-new-composer'),
@@ -246,8 +253,8 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
             sendKey: const ValueKey('chats-new-send'),
             controller: _text,
             focusNode: _focus,
-            hint: l10n.chatUiAskOpenCode,
-            fieldLabel: l10n.chatUiAskOpenCode,
+            hint: l10n.chatUiAskAgent(agentName),
+            fieldLabel: l10n.chatUiAskAgent(agentName),
             readOnlyReason: directory == null ? l10n.chatsNewNeedProject : null,
             sending: _sending,
             onSend: () => unawaited(_send(host)),

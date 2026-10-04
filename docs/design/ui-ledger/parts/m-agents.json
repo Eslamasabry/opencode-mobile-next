@@ -294,6 +294,39 @@
           "destructive": false
         }
       ]
+    },
+    {
+      "id": "agents-model-sheet",
+      "title": "Choose a model",
+      "kind": "sheet",
+      "file": "lib/ui/screens/agents/agent_model_sheet.dart",
+      "widget": "showAgentModelSheet",
+      "presentedBy": [
+        "AgentModelChip"
+      ],
+      "line": 56,
+      "purpose": "The model chip on New conversation while a phone agent (Claude Code, …) is chosen: the agent's own default, then each model its host reports, with a check on the current one. One sheet.",
+      "reachedFrom": [],
+      "gates": [
+        "PhoneAgentsSource.phoneAgentsAvailable",
+        "an agent other than OpenCode is chosen"
+      ],
+      "elements": [
+        {
+          "id": "agents-model-choice",
+          "type": "list-tile",
+          "label": "<model>",
+          "key": "agents-model-<id>",
+          "file": "lib/ui/screens/agents/agent_model_sheet.dart",
+          "line": 98,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "selectAgentModel: new conversations with this agent start on that model; the sheet closes.",
+          "gates": [],
+          "destructive": false
+        }
+      ]
     }
   ],
   "notPages": [
