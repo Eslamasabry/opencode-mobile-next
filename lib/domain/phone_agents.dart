@@ -215,6 +215,16 @@ AgentRow buildAgentRow({
       PhoneAgentFixAction.install,
     );
   }
+  // A fresh install has no running host yet: the phone check is what starts
+  // it, so an unqualified agent goes to the check, never to Resume.
+  if (!fact.architectureQualified) {
+    return blocked(
+      PhoneAgentStatus.needsQualification,
+      'Run the phone check before using this agent.',
+      PhoneAgentHiddenReason.needsQualification,
+      PhoneAgentFixAction.runPhoneCheck,
+    );
+  }
   if (fact.stoppedInBackground) {
     return blocked(
       PhoneAgentStatus.stoppedInBackground,
@@ -229,14 +239,6 @@ AgentRow buildAgentRow({
       'The host is not available. Resume it and check again.',
       PhoneAgentHiddenReason.hostUnavailable,
       PhoneAgentFixAction.resume,
-    );
-  }
-  if (!fact.architectureQualified) {
-    return blocked(
-      PhoneAgentStatus.needsQualification,
-      'Run the phone check before using this agent.',
-      PhoneAgentHiddenReason.needsQualification,
-      PhoneAgentFixAction.runPhoneCheck,
     );
   }
   if (descriptor.signInMethod != AgentSignInMethod.none &&

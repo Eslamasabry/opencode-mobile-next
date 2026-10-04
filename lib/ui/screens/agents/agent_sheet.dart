@@ -51,6 +51,9 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
   AgentPhoneCheckResult? _check;
   bool _checking = false;
   bool _advancing = false;
+  // One advance per finished install: a row that cannot move on yet must not
+  // re-read the phone on every rebuild.
+  bool _doneHandled = false;
   bool _submitting = false;
   String? _codeError;
   bool _signInKicked = false;
@@ -155,7 +158,10 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
   }
 
   Future<void> _install(String id) async {
-    setState(() => _notice = null);
+    setState(() {
+      _notice = null;
+      _doneHandled = false;
+    });
     try {
       await _agents.installAgent(id);
     } catch (error) {
@@ -413,7 +419,12 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     final installing = mine && progress.phase == AgentSetupPhase.installing;
     final interrupted = mine && progress.phase == AgentSetupPhase.interrupted;
     final failed = mine && progress.phase == AgentSetupPhase.failed;
-    if (mine && progress.phase == AgentSetupPhase.done && !_advancing) {
+    if (mine && progress.phase != AgentSetupPhase.done) _doneHandled = false;
+    if (mine &&
+        progress.phase == AgentSetupPhase.done &&
+        !_advancing &&
+        !_doneHandled) {
+      _doneHandled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) unawaited(_advance());
       });

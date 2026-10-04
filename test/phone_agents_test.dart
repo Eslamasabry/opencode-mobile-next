@@ -92,6 +92,22 @@ void main() {
     expect(result.capabilities.resumeVerified, isFalse);
   });
 
+  test('a fresh install with no host yet goes to the phone check', () {
+    // Emulator 2026-10-04: right after install the host is not running and
+    // the agent is unqualified. The check starts the host, so Resume here
+    // left the sheet stuck on Install.
+    final result = row(
+      fact: runtime(
+        available: false,
+        qualified: false,
+        phase: AgentSignInPhase.signedOut,
+      ),
+    );
+    expect(result.status, PhoneAgentStatus.needsQualification);
+    expect(result.fixAction, PhoneAgentFixAction.runPhoneCheck);
+    expect(result.chatSelectable, isFalse);
+  });
+
   test('unverified restoration is shown and selectable by default', () {
     final result = row(fact: runtime(capabilities: const AgentCapabilities()));
     expect(result.setupVisible, isTrue);
