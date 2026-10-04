@@ -79,3 +79,30 @@ files were edited. Nine focused files/130 tests pass on this amendment candidate
 including size/architecture gates; pinned whole-repository analysis is clean.
 Local transcript: `build/traycer/c5-policy-focused.log`. This is fake verification,
 not new physical-device, account, session-load, deployment or release proof.
+
+## Emulator end-to-end — 2026-10-04
+
+Branch `fix/agent-install-e2e` from `532b34a5`; OC_API35 x86_64 emulator with the
+built-in Linux already set up; APKs 2107 (repro), 2108, 2109 (local release key).
+From a wiped `/home/oc` tree, New conversation → agent chip → Claude Code:
+install (Node 4.8 s, Paseo 24.5 s, Claude 18.2 s), the phone check passed all four
+steps, and the sheet reached "Sign in with Claude Code" with the sign-in page
+button; `claude auth login --claudeai` was running. No sign-in (owner account).
+
+Failures found from device logs and fixed:
+1. `17e4b9f5` — an installed, unqualified agent with no host yet was routed to
+   Resume ("Not available on this phone yet"); the sheet stayed on Install and
+   re-read rows on every rebuild (one PRoot spawn per second). Qualification now
+   precedes the host gate; the sheet advances once per finished install.
+2. `8ba2b11a` — Paseo 0.9.2 refuses `paseo start --foreground --listen …
+   --no-relay --no-web-ui --no-inject-mcp` ("--listen was removed") and exits
+   at once, so Ready failed ("started but didn't answer") — the owner's arm64
+   result on 2107 too. Now `paseo daemon run --home` plus PASEO_* overrides;
+   config.json disables MCP injection, web UI, dictation and voice mode (they
+   otherwise start downloading local speech models). Hello retries up to 30 s.
+3. `506865f5` — `daemon run`'s supervisor always opens a rotating file log and
+   dies on `/dev/null`; the log is now a 1 MB private `daemon.log` in the
+   profile's daemon home (fatal level plus lifecycle lines), removed with it.
+
+Not changed: `lib/termux/scripts/local_agents_script.dart` still launches
+Paseo 0.9.2 with the removed flags (Termux route, same failure class).
