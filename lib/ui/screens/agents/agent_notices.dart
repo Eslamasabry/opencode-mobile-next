@@ -100,7 +100,9 @@ class _AgentStatusNoticesState extends State<AgentStatusNotices> {
             PhoneAgentStatusLineKind.signedOut => [
               KitAction(
                 key: ValueKey('agents-status-sign-in-${status.agentId}'),
-                label: l10n.agentsSignInAction(KitBidi.auto(status.agentName)),
+                label: agentLoginPending(agents, status.agentId)
+                    ? l10n.agentsEnterCode
+                    : l10n.agentsSignInAction(KitBidi.auto(status.agentName)),
                 onPressed: () => unawaited(
                   showAgentSheet(
                     context,

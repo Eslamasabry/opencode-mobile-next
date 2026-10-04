@@ -5120,7 +5120,7 @@
   "agentsFailStale": "هذا الفحص قديم. شغّله مرة أخرى.",
   "agentsFailBusy": "إعداد آخر قيد التشغيل. انتظر حتى ينتهي.",
   "agentsSignInTitle": "تسجيل الدخول إلى {agent}",
-  "agentsSignInIntro": "استخدم اشتراكك في {agent}. تُفتح الصفحة في المتصفح ثم تلصق رمزها هنا.",
+  "agentsSignInIntro": "استخدم اشتراكك في {agent}: افتح الصفحة وسجّل الدخول وانسخ الرمز الذي تعرضه والصقه هنا.",
   "agentsSignInChecking": "جارٍ التحقق من تسجيل الدخول…",
   "agentsSignInStart": "تسجيل الدخول إلى {agent}",
   "agentsSignInOpenPage": "فتح صفحة تسجيل الدخول إلى {agent}",
@@ -5156,5 +5156,9 @@
   "agentsStateNoDownload": "لا يوجد تنزيل موثّق بعد",
   "agentsInstallHint": "تثبيت",
   "agentsActionFailed": "لم ينجح ذلك على هذا الهاتف. افتح التفاصيل لمعرفة السبب.",
-  "chatsHomeOtherFolders": "مجلدات أخرى"
+  "chatsHomeOtherFolders": "مجلدات أخرى",
+  "agentsSignInPaste": "لصق",
+  "agentsSignInNewCode": "الحصول على رمز جديد",
+  "agentsSignInCodeFirst": "الصق الرمز أولًا",
+  "agentsEnterCode": "إدخال رمز تسجيل الدخول"
 }

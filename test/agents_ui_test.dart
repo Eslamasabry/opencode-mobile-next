@@ -1,5 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:opencode_mobile/domain/agent_sign_in.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
@@ -175,7 +177,7 @@ void main() {
       );
       expect(agents.calls, contains('sign-in:claude'));
       // The page opens through the safe opener.
-      await tester.tap(find.byKey(const ValueKey('agents-open-page-again')));
+      await tester.tap(find.byKey(const ValueKey('agents-open-page')));
       await tester.pump();
       expect(host.links.single.host, 'claude.com');
       // A code that cannot be one is refused in words, nothing is sent.
@@ -195,8 +197,9 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('agents-code-submit')));
       await tester.pumpAndSettle();
       expect(agents.submitted, ['abc123#state456']);
+      // The login finished: the sheet says so, then closes by itself.
       expect(find.text('Signed in'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('agents-sign-in-done')));
+      await tester.pump(const Duration(seconds: 2));
       await tester.pumpAndSettle();
       expect(agents.calls, contains('select:claude'));
       expect(find.text('Signed in'), findsNothing);
@@ -394,6 +397,180 @@ void main() {
         find.textContaining('AgentHostException(unavailable)'),
         findsOneWidget,
       );
+    });
+  });
+
+  group('the sign-in code field', () {
+    FakePhoneAgentsSource signedOutClaude() => FakePhoneAgentsSource(
+      rows: [agentRowFor('claude', FakeAgentStage.signedOut)],
+    );
+
+    Future<void> openSignIn(WidgetTester tester, FakeChatsHost host) async {
+      await _newChat(tester, host);
+      await _openSheet(tester);
+      await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('is there with the page button, at 2x text, keyboard up', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(412, 915);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final agents = signedOutClaude();
+      final host = _host(agents: agents);
+      await tester.pumpWidget(
+        chatsApp(host, const NewChatScreen(), textScale: 2),
+      );
+      await tester.pumpAndSettle();
+      await _openSheet(tester);
+      await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
+      await tester.pumpAndSettle();
+      // The login is waiting for its code (the host has not asked yet).
+      expect(
+        agents.agentSignInState('claude')?.phase,
+        AgentSignInPhase.urlReady,
+      );
+      final field = find.byKey(const ValueKey('agents-code-field'));
+      expect(field, findsOneWidget);
+      expect(find.byKey(const ValueKey('agents-open-page')), findsOneWidget);
+      expect(find.byKey(const ValueKey('agents-code-submit')), findsOneWidget);
+      // The keyboard comes up: the field is still on screen above it.
+      tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+      addTearDown(tester.view.resetViewInsets);
+      await tester.tap(field);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final box = tester.getRect(field);
+      expect(box.top, greaterThanOrEqualTo(0));
+      expect(box.bottom, lessThanOrEqualTo(915 - 320));
+      expect(
+        tester.getRect(find.byKey(const ValueKey('agents-code-submit'))).bottom,
+        lessThanOrEqualTo(915 - 320),
+      );
+    });
+
+    testWidgets('Paste brings the clipboard into the field', (tester) async {
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async => call.method == 'Clipboard.getData'
+            ? <String, Object?>{'text': ' abc123#state456 '}
+            : null,
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      final agents = signedOutClaude();
+      await openSignIn(tester, _host(agents: agents));
+      // Submit is off until there is a code.
+      expect(find.text('Paste the code first'), findsWidgets);
+      await tester.tap(find.byKey(const ValueKey('agents-code-paste')));
+      await tester.pumpAndSettle();
+      expect(find.text('abc123#state456'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('agents-code-submit')));
+      await tester.pumpAndSettle();
+      expect(agents.submitted, ['abc123#state456']);
+    });
+
+    testWidgets('coming back from the browser lands on the same code field', (
+      tester,
+    ) async {
+      final agents = signedOutClaude();
+      await openSignIn(tester, _host(agents: agents));
+      await tester.enterText(
+        find.byKey(const ValueKey('agents-code-field')),
+        'abc#half',
+      );
+      for (final state in [
+        AppLifecycleState.inactive,
+        AppLifecycleState.hidden,
+        AppLifecycleState.paused,
+        AppLifecycleState.hidden,
+        AppLifecycleState.inactive,
+        AppLifecycleState.resumed,
+      ]) {
+        tester.binding.handleAppLifecycleStateChanged(state);
+        await tester.pump();
+      }
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('agents-code-field')), findsOneWidget);
+      expect(find.text('abc#half'), findsOneWidget);
+      // The login was never restarted or cancelled by leaving.
+      expect(agents.calls.where((c) => c.startsWith('sign-in')).length, 1);
+      expect(agents.calls.any((c) => c.startsWith('cancel-sign-in')), isFalse);
+    });
+
+    testWidgets('a closed sheet leaves the login pending and the row says so', (
+      tester,
+    ) async {
+      final agents = signedOutClaude();
+      final host = _host(agents: agents);
+      await openSignIn(tester, host);
+      // The person dismisses the sheet to look at something.
+      await tester.tapAt(const Offset(200, 40));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('agents-code-field')), findsNothing);
+      expect(agents.calls.any((c) => c.startsWith('cancel-sign-in')), isFalse);
+      // The same chip sheet now says a code is wanted, and opens on it.
+      await _openSheet(tester);
+      expect(find.text('Enter sign-in code'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('agents-code-field')), findsOneWidget);
+      expect(agents.calls.where((c) => c.startsWith('sign-in')).length, 1);
+    });
+
+    testWidgets('Settings › Agents offers Enter sign-in code while pending', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(412, 915);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final agents = signedOutClaude()
+        ..signIn['claude'] = const AgentSignInState(
+          phase: AgentSignInPhase.urlReady,
+          method: AgentSignInMethod.browserOAuthHost,
+          inspected: true,
+        )
+        ..url = Uri.parse('https://claude.com/cai/oauth/authorize?code=true');
+      final host = _host(agents: agents);
+      await tester.pumpWidget(
+        chatsApp(host, ListView(children: const [AgentsSection()])),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Enter sign-in code'), findsWidgets);
+      await tester.tap(find.byKey(const ValueKey('agents-fix-claude')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('agents-code-field')), findsOneWidget);
+      expect(agents.calls.where((c) => c.startsWith('sign-in')), isEmpty);
+    });
+
+    testWidgets('a wrong code says so, with Get a new code and Details', (
+      tester,
+    ) async {
+      final agents = signedOutClaude()..rejectCode = true;
+      await openSignIn(tester, _host(agents: agents));
+      await tester.enterText(
+        find.byKey(const ValueKey('agents-code-field')),
+        'abc#wrong',
+      );
+      await tester.tap(find.byKey(const ValueKey('agents-code-submit')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining("doesn't look right"), findsWidgets);
+      expect(find.text('Details'), findsOneWidget);
+      final again = find.byKey(const ValueKey('agents-sign-in-again'));
+      expect(again, findsOneWidget);
+      expect(find.text('Get a new code'), findsOneWidget);
+      agents.rejectCode = false;
+      await tester.tap(again);
+      await tester.pumpAndSettle();
+      expect(agents.calls, contains('cancel-sign-in:claude'));
+      expect(agents.calls.where((c) => c.startsWith('sign-in')).length, 2);
+      expect(find.byKey(const ValueKey('agents-code-field')), findsOneWidget);
     });
   });
 

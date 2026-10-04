@@ -42766,7 +42766,7 @@ abstract class AppLocalizations {
   /// Sign-in step body
   ///
   /// In en, this message translates to:
-  /// **'Use your {agent} subscription. The page opens in your browser, then you paste its code here.'**
+  /// **'Use your {agent} subscription: open the page, sign in, copy the code it shows, and paste it here.'**
   String agentsSignInIntro(String agent);
 
   /// Sign-in step: first read
@@ -42984,6 +42984,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other folders'**
   String get chatsHomeOtherFolders;
+
+  /// Sign-in step: reads the clipboard into the code field
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get agentsSignInPaste;
+
+  /// Sign-in step: starts the sign-in again for a fresh code
+  ///
+  /// In en, this message translates to:
+  /// **'Get a new code'**
+  String get agentsSignInNewCode;
+
+  /// Sign-in step: why Submit code is off
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the code first'**
+  String get agentsSignInCodeFirst;
+
+  /// A sign-in is waiting for its code: row and status line action
+  ///
+  /// In en, this message translates to:
+  /// **'Enter sign-in code'**
+  String get agentsEnterCode;
 }
 
 class _AppLocalizationsDelegate

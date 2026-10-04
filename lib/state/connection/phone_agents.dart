@@ -383,14 +383,21 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     } on AgentSignInException catch (error) {
       if (error.failure != AgentSignInFailure.staleRun) rethrow;
     }
+    // The host prints the page first (urlReady) and only then asks for the
+    // code, so the code prompt is read here and again when the code is sent.
     final after = session.state.phase;
     if (after == AgentSignInPhase.awaitingCode ||
+        after == AgentSignInPhase.urlReady ||
         after == AgentSignInPhase.signedOut) {
-      try {
-        await session.readChallenge();
-      } on AgentSignInException {
-        // The state already carries the failure.
-      }
+      await _paReadChallenge(session);
+    }
+  }
+
+  Future<void> _paReadChallenge(AgentSignInSession session) async {
+    try {
+      await session.readChallenge();
+    } on AgentSignInException {
+      // The state already carries the failure.
     }
   }
 
@@ -403,6 +410,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (session == null) {
       code.clear();
       throw _notReady;
+    }
+    // The person may have come back from the browser before the host's code
+    // prompt was read: ask for it now so the code is accepted.
+    if (session.state.phase == AgentSignInPhase.urlReady) {
+      await _paReadChallenge(session);
     }
     await session.submitCode(code);
   }
