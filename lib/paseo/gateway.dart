@@ -162,6 +162,14 @@ class PaseoGateway
 
   String _real(String appID) => _realIDs[appID] ?? appID;
 
+  /// True while the daemon holds [appID]'s agent in memory (starting,
+  /// running or idle): opening it shows the live conversation. A closed
+  /// agent only survives as a record, and reopening it is unverified.
+  bool isAgentLoaded(String appID) => switch (_agents[appID]?['status']) {
+    'initializing' || 'running' || 'idle' => true,
+    _ => false,
+  };
+
   /// The daemon's own id for [appID] once its agent exists (a draft keeps
   /// its app id until the first prompt creates it). Another gateway on the
   /// same daemon opens the conversation by this id.

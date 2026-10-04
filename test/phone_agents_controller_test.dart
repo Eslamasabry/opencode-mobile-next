@@ -340,13 +340,14 @@ Map<String, dynamic> _agent(
   String cwd, {
   String provider = 'claude',
   int minute = 30,
+  String status = 'idle',
 }) => {
   'id': id,
   'provider': provider,
   'cwd': cwd,
   'model': '$provider-model',
   'title': 'Claude $id',
-  'status': 'idle',
+  'status': status,
   'createdAt': _stamp,
   'updatedAt': '2026-10-03T09:$minute:00Z',
   'lastUserMessageAt': _stamp,
@@ -542,7 +543,8 @@ void main() {
       secure: secure,
     );
     w.state.runtimes = {'claude': _ready('claude')};
-    w.state.agents = [_agent('c1', dir)];
+    // Left over from an earlier host run: listed, but not loaded.
+    w.state.agents = [_agent('c1', dir, status: 'closed')];
     w.oc.global = [_ocRow('c1', dir)];
     await w.controller.rememberLastUsedProject(dir);
     await w.controller.refreshAgentRows();
@@ -695,6 +697,34 @@ void main() {
       agentId: 'claude',
     );
     expect(c.agentResumeNotice(fresh).canReopen, isTrue);
+    await tester.pump(const Duration(seconds: 3));
+    c.dispose();
+  });
+
+  testWidgets('a chat the host still runs reopens after an app restart', (
+    tester,
+  ) async {
+    final w = await _world(tester);
+    w.state.runtimes = {'claude': _ready('claude')};
+    w.state.agents = [
+      _agent('live', dir),
+      _agent('busy', dir, status: 'running'),
+      _agent('old', dir, status: 'closed'),
+    ];
+    final c = w.controller;
+    await c.rememberLastUsedProject(dir);
+    await c.refreshAgentRows();
+    await c.refreshChatFeed();
+    bool reopens(String id) => c
+        .agentResumeNotice(
+          c.chatFeed().items.firstWhere(
+            (i) => i.sessionID == id && i.sourceId == 'paseo:$dir',
+          ),
+        )
+        .canReopen;
+    expect(reopens('live'), isTrue);
+    expect(reopens('busy'), isTrue);
+    expect(reopens('old'), isFalse);
     await tester.pump(const Duration(seconds: 3));
     c.dispose();
   });

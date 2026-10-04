@@ -1086,6 +1086,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (_paLive.contains(item.identity) && _phoneAgentRoute != null) {
       return const AgentResumeNotice(canReopen: true);
     }
+    // Still loaded in the helper (running or idle since it last started):
+    // opening it shows the live conversation, whoever started it.
+    for (final entry in _paSources.entries) {
+      if (_paseoSourceId(entry.key) == item.sourceId &&
+          entry.value.gateway.isAgentLoaded(item.sessionID)) {
+        return const AgentResumeNotice(canReopen: true);
+      }
+    }
     final row = _paRowFor(item.agentId);
     if (row != null && row.capabilities.resumeVerified) {
       return const AgentResumeNotice(canReopen: true);
