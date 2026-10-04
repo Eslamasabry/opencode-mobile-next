@@ -119,6 +119,10 @@ KitStatus? connectionKitStatus(
     ConnectionStatusPhase.reconnecting => l10n.e7BannerReconnectingServer(
       server,
     ),
+    // A conversation with a phone agent (Claude Code) is connected to that
+    // agent's helper, not to OpenCode: name it.
+    _ when controller.phoneAgentRouteName != null =>
+      l10n.agentNotAnsweringPhone(controller.phoneAgentRouteName!),
     _ =>
       serverOnThisPhone
           ? l10n.workServerNotAnsweringPhone
@@ -137,9 +141,21 @@ KitStatus? connectionKitStatus(
           ),
           onPressed: () => unawaited(controller.retryConnection()),
         );
-  final restart = serverOnThisPhone ? onRestartServer : null;
+  final agentRoute = controller.phoneAgentRouteName != null;
+  final restart = agentRoute
+      // Restarting OpenCode doesn't help a phone agent: start its helper.
+      ? controller.recoverPhoneAgentRoute
+      : serverOnThisPhone
+      ? onRestartServer
+      : null;
   final restartAction = restart == null || snapshot.retrying || snapshot.waiting
       ? null
+      : agentRoute
+      ? KitAction(
+          key: const ValueKey('connection-banner-restart'),
+          label: l10n.workServerRestart,
+          onPressed: () => unawaited(restart()),
+        )
       : KitAction(
           key: const ValueKey('connection-banner-restart'),
           label: l10n.workServerRestart,

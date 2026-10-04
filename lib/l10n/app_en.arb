@@ -13879,6 +13879,11 @@
   "@workLoadingLabel": {
     "description": "Accessibility label of the Work tab's single loading bar"
   },
+  "agentNotAnsweringPhone": "{agent} on this phone isn't answering",
+  "@agentNotAnsweringPhone": {
+    "description": "Connection banner while a conversation with a phone agent (Claude Code) can't reach its helper.",
+    "placeholders": {"agent": {"type": "String", "example": "Claude Code"}}
+  },
   "workServerNotAnsweringPhone": "OpenCode on this phone isn't answering",
   "@workServerNotAnsweringPhone": {
     "description": "Status line / connecting card title when the phone's own server does not answer"

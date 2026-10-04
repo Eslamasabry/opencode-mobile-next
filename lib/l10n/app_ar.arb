@@ -4409,6 +4409,7 @@
   "workOpenLiveConversation": "فتح «{title}»",
   "workRunningCount": "{count, plural, =1{قيد التشغيل} other{قيد التشغيل · {count}}}",
   "workLoadingLabel": "جارٍ التحميل",
+  "agentNotAnsweringPhone": "{agent} على هذا الهاتف لا يستجيب",
   "workServerNotAnsweringPhone": "OpenCode على هذا الهاتف لا يستجيب",
   "workServerNotAnswering": "{server} لا يستجيب",
   "workServerKeepsTrying": "يواصل التطبيق المحاولة في الخلفية.",

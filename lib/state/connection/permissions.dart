@@ -341,7 +341,12 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
     if (!autoApprovalFor(permission.sessionID).automatic) return;
     if (_resolvedPermissionIDs.contains(permission.id)) return;
     if (!_autoApprovingPermissionIDs.add(permission.id)) return;
-    unawaited(_autoApprove(currentApi, permission));
+    // Answer after the event that announced the request has been delivered:
+    // a gateway whose events are synchronous (Paseo) announces the answer on
+    // the same stream, which can't fire while it is still firing.
+    unawaited(
+      Future<void>.microtask(() => _autoApprove(currentApi, permission)),
+    );
   }
 
   /// Applies the effective mode to every request already waiting: the

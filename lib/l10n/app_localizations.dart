@@ -20964,6 +20964,12 @@ abstract class AppLocalizations {
   /// **'Loading'**
   String get workLoadingLabel;
 
+  /// Connection banner while a conversation with a phone agent (Claude Code) can't reach its helper.
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} on this phone isn\'t answering'**
+  String agentNotAnsweringPhone(String agent);
+
   /// Status line / connecting card title when the phone's own server does not answer
   ///
   /// In en, this message translates to:

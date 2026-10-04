@@ -12862,6 +12862,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get workLoadingLabel => 'جارٍ التحميل';
 
   @override
+  String agentNotAnsweringPhone(String agent) {
+    return '$agent على هذا الهاتف لا يستجيب';
+  }
+
+  @override
   String get workServerNotAnsweringPhone => 'OpenCode على هذا الهاتف لا يستجيب';
 
   @override

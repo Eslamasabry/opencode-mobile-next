@@ -12768,6 +12768,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get workLoadingLabel => 'Loading';
 
   @override
+  String agentNotAnsweringPhone(String agent) {
+    return '$agent on this phone isn\'t answering';
+  }
+
+  @override
   String get workServerNotAnsweringPhone =>
       'OpenCode on this phone isn\'t answering';
 

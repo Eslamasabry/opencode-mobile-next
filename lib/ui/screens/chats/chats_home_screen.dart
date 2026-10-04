@@ -40,6 +40,20 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
   String? _notice;
 
   @override
+  void initState() {
+    super.initState();
+    // Phone agents' conversations (Claude Code, …) come from their helper:
+    // reading the rows starts it if Android stopped it, so they show here.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final agents = ref.read(chatsHostProvider).agents;
+      if (agents != null && agents.phoneAgentsAvailable) {
+        unawaited(agents.refreshAgentRows());
+      }
+    });
+  }
+
+  @override
   void didUpdateWidget(ChatsHomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     final next = widget.initialFilter;

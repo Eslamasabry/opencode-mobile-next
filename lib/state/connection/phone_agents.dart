@@ -76,6 +76,17 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       _phoneAgentRoute == null ? null : _paRouteAgentName;
   String? _paRouteAgentName;
 
+  /// Catalog id of the routed conversation's agent: the one whose host
+  /// status the recovery reads.
+  String? _paRouteAgentId;
+
+  String? get _paHostProbeAgent =>
+      _paRouteAgentId ??
+      _paCatalog.agents
+          .where((descriptor) => descriptor.id == 'claude')
+          .firstOrNull
+          ?.id;
+
   AgentCatalog get _paCatalog => AgentCatalog.builtIn;
 
   ServerProfile? get _paProfile => _self._connectedProfile ?? _self.profile;
@@ -579,6 +590,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         changed = true;
       }
     }
+    var missed = false;
     for (final directory in wanted) {
       if (_paSources.containsKey(directory)) continue;
       try {
@@ -586,10 +598,25 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         changed = true;
       } catch (_) {
         // One unreachable project never hides the others.
+        missed = true;
       }
     }
     if (changed) _paRebuildMerged();
+    // A helper that was just started takes a few seconds to listen: try the
+    // missing projects again, a few times, so their conversations appear.
+    if (missed && _paSyncRetries < 10) {
+      _paSyncRetries++;
+      unawaited(
+        Future<void>.delayed(const Duration(seconds: 3), () async {
+          if (!_self._disposed) await _paSyncSources();
+        }),
+      );
+    } else if (!missed) {
+      _paSyncRetries = 0;
+    }
   }
+
+  int _paSyncRetries = 0;
 
   /// Reaches the agent host for [directory] the way a person's action needs
   /// it: a folder outside the agents' project space is said plainly, and a
@@ -804,7 +831,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     );
     _paLive.add(jsonEncode([_paseoSourceId(directory), id, directory]));
     await _self._ocRemember(directory);
-    await _paActivateRoute(directory, agentName: descriptor.name);
+    await _paActivateRoute(
+      directory,
+      agentName: descriptor.name,
+      agentId: descriptor.id,
+    );
     return id;
   }
 
@@ -831,6 +862,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (route == null || host == null || route.profileId != profile.id) {
       return null;
     }
+    _paKeepHostUp();
     try {
       final gateway = host.newGatewaySync(route.directory);
       return (gateway: gateway, operations: gateway);
@@ -839,8 +871,106 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     }
   }
 
-  Future<void> _paActivateRoute(String directory, {String? agentName}) async {
+  Timer? _paRouteWatch;
+  bool _paRecovering = false;
+  int _paOfflineTicks = 0;
+
+  /// Brings a routed conversation back after Android stopped the agent's
+  /// helper: starts it, waits until it answers (it takes a few seconds to
+  /// listen), then reconnects. The banner's Restart and the watchdog use it.
+  Future<void> recoverPhoneAgentRoute() async {
+    final route = _phoneAgentRoute;
+    final host = _paHost;
+    if (route == null || host == null || _paRecovering) return;
+    _paRecovering = true;
+    try {
+      // Only a stopped helper is started: starting replaces a running one.
+      final agent = _paHostProbeAgent;
+      final running =
+          agent != null && (await host.inspect(agent)).hostAvailable;
+      if (!running) {
+        try {
+          await host.start();
+        } on AgentHostException catch (error) {
+          if (error.reason != AgentHostFailure.busy) rethrow;
+        }
+      }
+      final deadline = DateTime.now().add(const Duration(seconds: 30));
+      while (DateTime.now().isBefore(deadline)) {
+        try {
+          final probe = await host.openGateway(route.directory);
+          probe.close();
+          break;
+        } catch (_) {
+          await Future<void>.delayed(const Duration(seconds: 1));
+        }
+      }
+      if (_phoneAgentRoute == route && !_self._disposed) {
+        await _self.retryConnection();
+      }
+    } catch (_) {
+      // The banner stays; its Restart tries again.
+    } finally {
+      _paRecovering = false;
+    }
+  }
+
+  /// While a phone agent's conversation is open, a lost connection is
+  /// recovered without a tap: checked every 10 s, recovered when offline twice.
+  void _paWatchRoute() {
+    _paRouteWatch?.cancel();
+    _paOfflineTicks = 0;
+    _paRouteWatch = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (_self._disposed || _phoneAgentRoute == null) {
+        _paRouteWatch?.cancel();
+        _paRouteWatch = null;
+        return;
+      }
+      // Offline at two checks in a row (reconnect attempts alone don't
+      // restart a stopped helper).
+      if (_self.isConnected) {
+        _paOfflineTicks = 0;
+      } else if (++_paOfflineTicks >= 2) {
+        _paOfflineTicks = 0;
+        unawaited(recoverPhoneAgentRoute());
+      }
+    });
+  }
+
+  DateTime? _paKeptUpAt;
+
+  /// Every (re)connect of a routed conversation: Android stops the helper in
+  /// the background, and a reconnect alone can't bring it back. Checks it at
+  /// most every 20 s and starts it when it isn't running; the next connect
+  /// attempt then reaches it.
+  void _paKeepHostUp() {
+    final host = _paHost;
+    if (host == null) return;
+    final now = DateTime.now();
+    final last = _paKeptUpAt;
+    if (last != null && now.difference(last) < const Duration(seconds: 20)) {
+      return;
+    }
+    _paKeptUpAt = now;
+    final agent = _paHostProbeAgent;
+    if (agent == null) return;
+    unawaited(() async {
+      try {
+        final runtime = await host.inspect(agent);
+        if (!runtime.hostAvailable && runtime.installed) await host.start();
+      } catch (_) {
+        // The next reconnect checks again.
+      }
+    }());
+  }
+
+  Future<void> _paActivateRoute(
+    String directory, {
+    String? agentName,
+    String? agentId,
+  }) async {
     if (agentName != null) _paRouteAgentName = agentName;
+    if (agentId != null) _paRouteAgentId = agentId;
     final profile = _paProfile;
     if (profile == null) throw _notReady;
     final current = _phoneAgentRoute;
@@ -854,6 +984,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     final probe = await host.openGateway(directory);
     probe.close();
     _phoneAgentRoute = (profileId: profile.id, directory: directory);
+    _paWatchRoute();
     await _self.connect(profile);
     await _self.selectLocationForExistingSession(directory: directory);
   }
@@ -862,6 +993,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (_phoneAgentRoute == null) return;
     final profile = _paProfile;
     _phoneAgentRoute = null;
+    _paRouteWatch?.cancel();
+    _paRouteWatch = null;
     _paLive.clear(); // Live admission ends when the gateway is retired.
     if (profile != null) await _self.connect(profile);
   }
@@ -891,8 +1024,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     final route = merged.routeFor(current.single);
     if (route.sourceId.startsWith('paseo:')) {
       final row = current.single;
+      final descriptor =
+          _paCatalog.byId(row.agentId) ??
+          _paCatalog.agents
+              .where((agent) => agent.providerId == row.agentId)
+              .firstOrNull;
       await _paActivateRoute(
         route.directory,
+        agentId: descriptor?.id,
         agentName:
             row.agentLabel ??
             _paCatalog.byId(row.agentId)?.name ??
@@ -962,6 +1101,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// Closes everything this profile's phone agents own, in the order the
   /// deletion contract requires: auth, owned setup, host, then feeds.
   Future<void> _paCloseAll({required bool stopHost}) async {
+    _paRouteWatch?.cancel();
+    _paRouteWatch = null;
     for (final entry in _paSignIns.entries.toList()) {
       await _paSignInSubs.remove(entry.key)?.cancel();
       try {
@@ -1024,6 +1165,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// Controller disposal: stop listening; the host keeps running for the
   /// Android service owner.
   void _paShutdown() {
+    _paRouteWatch?.cancel();
+    _paRouteWatch = null;
     unawaited(_paSetupSub?.cancel());
     unawaited(_paMergedSub?.cancel());
     for (final sub in _paSignInSubs.values) {
