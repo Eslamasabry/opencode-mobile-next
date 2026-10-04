@@ -19,7 +19,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart';
 import '../../../state/profiles.dart' show ServerProfile;
 import '../../kit/kit.dart';
-import '../../widgets/external_link.dart' show openExternalLink;
+import '../../widgets/external_link.dart' show openAgentSignInPage;
 import '../../widgets/pickers.dart' show showModelPicker;
 import '../../widgets/product_states.dart' show productErrorText;
 import '../project_folder_actions.dart';
@@ -181,7 +181,8 @@ class ConnectionChatsHost implements ChatsHost {
 
   @override
   Future<void> openLink(BuildContext context, Uri uri) async {
-    await openExternalLink(context, uri.toString());
+    // Only the agent sign-in step opens links here.
+    await openAgentSignInPage(context, uri.toString());
   }
 
   @override

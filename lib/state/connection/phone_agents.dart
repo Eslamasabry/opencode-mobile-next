@@ -286,7 +286,20 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       await _paSyncSources();
     } catch (_) {}
     if (!_self._disposed) _self._notifyListeners();
+    // Rows are read when the person opens an agent screen or sheet: an
+    // installed agent whose helper Android stopped is started again here
+    // instead of asking them to tap Resume after every app start. One try a
+    // minute, so a helper that keeps failing shows its Resume row.
+    final now = DateTime.now();
+    if (rows.any((row) => row.status == PhoneAgentStatus.stoppedInBackground) &&
+        (_paAutoResumedAt == null ||
+            now.difference(_paAutoResumedAt!) > const Duration(minutes: 1))) {
+      _paAutoResumedAt = now;
+      unawaited(resumeAgentHost().catchError((Object _) {}));
+    }
   }
+
+  DateTime? _paAutoResumedAt;
 
   @override
   List<PhoneAgentStatusLine> get agentStatusLines => List.unmodifiable([

@@ -549,7 +549,7 @@ void main() {
       expect(agents.calls.where((c) => c.startsWith('sign-in')), isEmpty);
     });
 
-    testWidgets('a wrong code says so, with Get a new code and Details', (
+    testWidgets('a wrong code says so once, with Get a new code', (
       tester,
     ) async {
       final agents = signedOutClaude()..rejectCode = true;
@@ -561,7 +561,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('agents-code-submit')));
       await tester.pumpAndSettle();
       expect(find.textContaining('incomplete'), findsWidgets);
-      expect(find.text('Details'), findsOneWidget);
+      expect(find.byKey(const ValueKey('agents-error')), findsNothing);
       final again = find.byKey(const ValueKey('agents-sign-in-again'));
       expect(again, findsOneWidget);
       expect(find.text('Get a new code'), findsOneWidget);

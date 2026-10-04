@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../domain/agent_sign_in.dart' show AgentAuthorizationUrl;
 import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import '../kit/kit_buttons.dart';
@@ -127,7 +128,39 @@ Future<ExternalLinkOutcome> openExternalLink(
   );
   if (!confirmed) return ExternalLinkOutcome.cancelled;
   if (!context.mounted) return ExternalLinkOutcome.cancelled;
+  return _launchChecked(context, uri, safeAddress, launcher);
+}
 
+/// An agent's sign-in page, which the person asked for with "Open the …
+/// sign-in page". It passes the same link policy, and must also be the exact
+/// page the app already verified (`https://claude.com/cai/oauth/authorize`,
+/// no port, user info or fragment: [AgentAuthorizationUrl.validate]). The
+/// destination is then fixed and known, so no "Open external link?" sheet is
+/// stacked on the sign-in sheet. Anything else takes the confirmed path.
+Future<ExternalLinkOutcome> openAgentSignInPage(
+  BuildContext context,
+  String value, {
+  Future<bool> Function(Uri uri)? launcher,
+}) async {
+  final uri = safeExternalLinkUri(value);
+  bool verified;
+  try {
+    AgentAuthorizationUrl.validate('claude', value);
+    verified = uri != null && uri.scheme == 'https';
+  } catch (_) {
+    verified = false;
+  }
+  if (!verified) return openExternalLink(context, value, launcher: launcher);
+  return _launchChecked(context, uri!, _safeLinkAddress(uri), launcher);
+}
+
+Future<ExternalLinkOutcome> _launchChecked(
+  BuildContext context,
+  Uri uri,
+  String safeAddress,
+  Future<bool> Function(Uri uri)? launcher,
+) async {
+  final copy = _sharedCopy(context);
   try {
     final opened = await (launcher?.call(uri) ?? launchExternalUri(uri));
     if (opened) return ExternalLinkOutcome.opened;

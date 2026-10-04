@@ -817,8 +817,13 @@ void main() {
     };
     await c.refreshAgentRows();
     expect(c.agentStatusLines.single.kind, PhoneAgentStatusLineKind.stopped);
-    await c.resumeAgentHost();
-    expect(w.events.log, contains('host.start'));
+    // Opening an agent screen reads the rows; a stopped helper is started
+    // again without a Resume tap, at most once a minute.
+    await tester.pump();
+    expect(w.events.log.where((e) => e == 'host.start'), hasLength(1));
+    await c.refreshAgentRows();
+    await tester.pump();
+    expect(w.events.log.where((e) => e == 'host.start'), hasLength(1));
     c.dispose();
   });
 

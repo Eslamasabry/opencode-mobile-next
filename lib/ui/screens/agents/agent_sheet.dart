@@ -639,11 +639,15 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: tokens.space3,
         children: [
-          KitText(
-            body,
-            key: const ValueKey('agents-sign-in-words'),
-            tone: KitTextTone.secondary,
-          ),
+          // A failure says itself once: a refused code is the person's to fix
+          // (plain words, then Get a new code); anything else is an error
+          // notice with Details, without the same sentence above it.
+          if (!failed || badCode)
+            KitText(
+              body,
+              key: const ValueKey('agents-sign-in-words'),
+              tone: KitTextTone.secondary,
+            ),
           if (pending) ...[
             KitButton.secondary(
               key: const ValueKey('agents-open-page'),
@@ -668,7 +672,7 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
               onPressed: () => unawaited(_paste()),
             ),
           ],
-          if (failed)
+          if (failed && !badCode)
             AgentErrorNotice(
               failure: AgentFailure(
                 body,

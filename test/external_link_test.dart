@@ -81,6 +81,48 @@ void main() {
     });
   });
 
+  group('openAgentSignInPage', () {
+    Future<Uri?> open(WidgetTester tester, String value) async {
+      Uri? launched;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => openAgentSignInPage(
+                  context,
+                  value,
+                  launcher: (uri) async {
+                    launched = uri;
+                    return true;
+                  },
+                ),
+                child: const Text('Open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      return launched;
+    }
+
+    testWidgets(
+      'the verified Claude sign-in page opens without a second sheet',
+      (tester) async {
+        const page = 'https://claude.com/cai/oauth/authorize?state=s&code=true';
+        expect(await open(tester, page), Uri.parse(page));
+        expect(find.text('Open external link?'), findsNothing);
+      },
+    );
+
+    testWidgets('any other address still asks first', (tester) async {
+      expect(await open(tester, 'https://claude.com.evil.example/cai'), isNull);
+      expect(find.text('Open external link?'), findsOneWidget);
+    });
+  });
+
   group('openExternalLink', () {
     Future<ExternalLinkOutcome?> tap(
       WidgetTester tester,
