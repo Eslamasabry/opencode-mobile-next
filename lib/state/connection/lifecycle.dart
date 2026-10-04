@@ -289,8 +289,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     _retireTransport();
     _connectedProfile = profile;
     _syncOrchestration(profile);
-    final pair =
-        _phoneAgentConnectPair(profile) ?? _buildTransportPair(profile);
+    final pair = _buildTransportPair(profile);
     final currentApi = pair.gateway
       ..setLocation(directory: directory, workspace: workspace);
     final currentRepository = pair.operations
@@ -535,6 +534,8 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   }
 
   Future<void> _writeActiveProfile(int generation, String? id) {
+    // The app's active server is the main connection's to choose.
+    if (!_ownsProfileServices) return Future.value();
     final previous = _activeProfileWrite;
     final write = () async {
       try {

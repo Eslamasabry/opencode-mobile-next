@@ -27,9 +27,10 @@ mixin _ConnectionControllerAlerts on ChangeNotifier {
       _self._questionForSession(sessionID);
 
   bool get keepLiveInBackground =>
-      !_self.isIsolated && _self.backgroundLive.enabled;
+      _self._ownsProfileServices && _self.backgroundLive.enabled;
 
-  Future<bool> setKeepLiveInBackground(bool enabled) => _self.isIsolated
+  Future<bool> setKeepLiveInBackground(bool enabled) =>
+      !_self._ownsProfileServices
       ? Future.value(false)
       : _self.backgroundLive.setEnabled(enabled);
 
@@ -42,7 +43,7 @@ mixin _ConnectionControllerAlerts on ChangeNotifier {
   }
 
   Future<void> restoreBackgroundLiveMode() async {
-    if (_self.isIsolated) return;
+    if (!_self._ownsProfileServices) return;
     await _self.backgroundLive.restore();
     await consumeCodingAlertOpen();
   }
@@ -152,7 +153,7 @@ extension _ConnectionControllerAlertsImpl on ConnectionController {
 
   /// The body of [consumeCodingAlertOpen].
   Future<void> _consumeCodingAlertOpen() async {
-    if (isIsolated) return;
+    if (!_ownsProfileServices) return;
     final value = await backgroundLive.consumeCodingAlertOpen();
     if (_disposed || value == null) return;
     // Home-screen widget rows outlive profile switches: a tap stamped with

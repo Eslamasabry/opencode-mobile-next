@@ -81,7 +81,7 @@ extension _ConnectionControllerActivityImpl on ConnectionController {
     final history = AutomaticActivityController.forProfile(
       store.prefs,
       profileId,
-      isProfilePresent: () => store.profiles.any((p) => p.id == profileId),
+      isProfilePresent: () => _isKnownProfile(profileId),
     );
     if (history != null && _watchedActivity.add(history)) {
       history.addListener(_automaticActivityChanged);

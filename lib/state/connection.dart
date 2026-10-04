@@ -168,6 +168,10 @@ final bootstrapProvider = Provider<AppBootstrap>(
 );
 
 /// The live connection controller; overridden with a real instance in main().
+/// An agent backend's profile id is its phone profile's id plus this, so the
+/// profile deletion sweep (`oc.<what>.<id>.…`) also removes its keys.
+const agentBackendProfileSuffix = '.agents';
+
 final connProvider = Provider<ConnectionController>(
   (ref) => throw UnimplementedError('overridden in bootstrap'),
 );
@@ -308,6 +312,36 @@ class ConnectionController extends ChangeNotifier
   /// Its caller supplies a separate in-memory store and gateway pair.
   final bool isIsolated;
 
+  /// A conversation backend beside the app's main connection (Claude Code on
+  /// this phone): it connects and runs its own conversations, models and
+  /// approvals, but owns no profile-wide service — no monitors, background
+  /// mode, widgets or active-profile writes. Built by
+  /// [ConnectionController.agentBackend].
+  final bool isAgentBackend;
+
+  /// Only the main connection runs the services shared by every profile.
+  bool get _ownsProfileServices => !isIsolated && !isAgentBackend;
+
+  /// The saved profile an agent backend belongs to (the phone's), whose
+  /// saved prompts it shares; null on the main connection.
+  String? get _agentOwnerProfileId {
+    final id = _connectedProfile?.id;
+    if (!isAgentBackend || id == null) return null;
+    return id.endsWith(agentBackendProfileSuffix)
+        ? id.substring(0, id.length - agentBackendProfileSuffix.length)
+        : null;
+  }
+
+  /// Starts an agent backend's helper again and reconnects (the banner's
+  /// Restart); set by the main connection that owns the helper.
+  Future<void> Function()? _agentBackendRecover;
+  Future<void> Function()? get recoverAgentBackend => _agentBackendRecover;
+
+  /// A saved profile, or this agent backend's own (never saved) one.
+  bool _isKnownProfile(String id) =>
+      (isAgentBackend && id == _connectedProfile?.id) ||
+      store.profiles.any((profile) => profile.id == id);
+
   static const workspaceChoiceNotice =
       'OpenCode Mobile no longer works in the server\'s home folder. '
       'Create a new folder or open a project folder to continue.';
@@ -359,9 +393,34 @@ class ConnectionController extends ChangeNotifier
     return controller;
   }
 
+  /// A conversation backend for one agent host (see [isAgentBackend]). Its
+  /// transport comes only from [paseoGatewayFactory]; [diagnostics] is the
+  /// main connection's and is not disposed here.
+  factory ConnectionController.agentBackend(
+    ProfileStore store, {
+    required V2GatewayPairFactory paseoGatewayFactory,
+    AppDiagnosticsController? diagnostics,
+    DraftAttachmentVault? draftAttachmentVault,
+    PromptPhotoStore? promptPhotoStore,
+  }) => ConnectionController(
+    store,
+    isAgentBackend: true,
+    paseoGatewayFactory: paseoGatewayFactory,
+    diagnostics: diagnostics,
+    draftAttachmentVault: draftAttachmentVault,
+    promptPhotoStore: promptPhotoStore,
+    // Background mode belongs to the main connection: an inert copy here
+    // never reaches the Android service.
+    backgroundLive: BackgroundLiveController(
+      preferences: store.prefs,
+      invoke: (method, [arguments]) async => const {},
+    ),
+  );
+
   ConnectionController(
     this.store, {
     this.isIsolated = false,
+    this.isAgentBackend = false,
     OpenCodeApiFactory? apiFactory,
     MonitorGatewayFactory? monitorGatewayFactory,
     ProductRepositoryFactory? repositoryFactory,
@@ -419,7 +478,7 @@ class ConnectionController extends ChangeNotifier
     this.backgroundLive.addListener(_backgroundLiveChanged);
     _profilesShown = _profilesSignature();
     store.changes.addListener(_profilesSaved);
-    if (!isIsolated) {
+    if (_ownsProfileServices) {
       this.backgroundLive.bindActionHandler(_handleCodingAlertAction);
       _syncProfileServices();
       profileMonitor.start();
@@ -568,7 +627,7 @@ class ConnectionController extends ChangeNotifier
     // truth; the writer itself skips unchanged payloads. Profile deletion
     // suspends this: the sessions it would republish belong to the profile
     // being erased.
-    if (!_disposed && !_widgetSnapshotSuspended && !isIsolated) {
+    if (!_disposed && !_widgetSnapshotSuspended && _ownsProfileServices) {
       // Retained so a caller that must observe the settled snapshot — profile
       // deletion — can wait for this write instead of racing it.
       final sessions = sortedSessions();
@@ -673,7 +732,9 @@ class ConnectionController extends ChangeNotifier
     _profileMonitor?.dispose();
     _quotaMonitor?.removeListener(_quotaMonitorChanged);
     _quotaMonitor?.dispose();
-    if (!isIsolated) ManagedServerRecovery.disposeForPreferences(store.prefs);
+    if (_ownsProfileServices) {
+      ManagedServerRecovery.disposeForPreferences(store.prefs);
+    }
     backgroundLive.removeListener(_backgroundLiveChanged);
     backgroundLive.dispose();
     if (_ownsDiagnostics) diagnostics.dispose();

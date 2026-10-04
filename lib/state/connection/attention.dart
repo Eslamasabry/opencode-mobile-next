@@ -75,7 +75,7 @@ mixin _ConnectionControllerAttention on ChangeNotifier {
 extension _ConnectionControllerAttentionImpl on ConnectionController {
   /// The body of [prepareMonitoredRequest].
   Future<bool> _prepareMonitoredRequest(MonitoredRoute target) async {
-    if (isIsolated ||
+    if (!_ownsProfileServices ||
         _disposed ||
         !isProfileReadable(target.profileID) ||
         !profileMonitor.rulesFor(target.profileID).enabled ||
@@ -235,7 +235,7 @@ extension _ConnectionControllerAttentionImpl on ConnectionController {
             name: saved.name,
             snapshot:
                 saved.id == profile?.id &&
-                    !isIsolated &&
+                    _ownsProfileServices &&
                     _attentionUsesSavedSource(saved)
                 ? _activeAttentionSnapshot(saved.id, now)
                 : profileMonitor.snapshotFor(saved.id),

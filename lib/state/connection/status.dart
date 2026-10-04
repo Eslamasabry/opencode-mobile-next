@@ -168,6 +168,8 @@ extension _ConnectionControllerStatusImpl on ConnectionController {
 
   /// The body of [profile].
   ServerProfile? get _profile {
+    // A conversation backend's profile is its own, never saved or active.
+    if (isAgentBackend) return _connectedProfile;
     final id = store.activeId;
     if (id == null) return null;
     for (final p in store.profiles) {

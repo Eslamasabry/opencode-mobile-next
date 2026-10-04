@@ -29,18 +29,8 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
   Future<void>? _feedRefreshing;
   Timer? _feedDebounce;
 
-  bool _feedAcrossKnown = false;
-
-  /// While a phone-agent route owns the connection the live gateway is not
-  /// OpenCode's: the last known OpenCode answer stands, and the OpenCode
-  /// source neither reads nor lists the connection's live sessions.
-  bool get _feedRouted => _self._phoneAgentRoute != null;
-
-  bool get _ocAcross {
-    if (_feedRouted) return _feedAcrossKnown;
-    return _feedAcrossKnown =
-        _self.api != null && _self.capabilities.globalSessionSearch;
-  }
+  bool get _ocAcross =>
+      _self.api != null && _self.capabilities.globalSessionSearch;
 
   bool _feedEligible(String? directory) =>
       !isTemporaryProjectDirectory(directory) &&
@@ -73,7 +63,6 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
   void _feedDispose() => _feedDebounce?.cancel();
 
   Future<void> _refreshFeed() async {
-    if (_feedRouted) return;
     final currentRepository = _self.repository;
     final currentApi = _self.api;
     final owner = _feedOwnerID;
@@ -184,20 +173,13 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
 
   List<ChatFeedItem> _feedAllItems({required bool includeSubagents}) {
     final here = _self.directory;
-    final live = !_feedRouted;
     final waiting = <String>{
-      if (live) ...[
-        for (final permission in _self.awaitingPermissions)
-          permission.sessionID,
-        for (final question in _self.questions.values) question.sessionID,
-        for (final form in _self.forms.values) form.sessionID,
-      ],
+      for (final permission in _self.awaitingPermissions) permission.sessionID,
+      for (final question in _self.questions.values) question.sessionID,
+      for (final form in _self.forms.values) form.sessionID,
     };
-    final running = <String>{if (live) ..._self.busySessions};
-    final failed = <String>{
-      if (live)
-        for (final entry in _self._failedAttentionSessions.keys) entry,
-    };
+    final running = <String>{..._self.busySessions};
+    final failed = <String>{..._self._failedAttentionSessions.keys};
     // The server-wide tally already covers other projects; the selected one
     // answers from its own live state above.
     for (final activity in _self.elsewhereAttention.activity(except: here)) {
@@ -262,8 +244,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
       }
     }
     // The selected project's own list is fresher than any cached page.
-    for (final session
-        in live ? _self.sessionsById.values : const <Session>[]) {
+    for (final session in _self.sessionsById.values) {
       if (!includeSubagents && session.parentID != null) continue;
       if (_self._sessionInventoryInitialized &&
           !_self._sessionInventoryIDs.contains(session.id)) {

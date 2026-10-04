@@ -616,16 +616,31 @@ void main() {
     );
     expect(c.chatFeedAcrossProjects, isTrue);
 
+    final openCodeApi = c.api;
+    final revision = c.connectionRevision;
     final route = await c.openChatFeedItem(paseo);
     expect(route.sourceId, 'paseo:$dir');
-    expect(c.api, isA<PaseoGateway>());
-    expect(c.directory, dir);
-    // While the connection is Paseo's, the OpenCode row is still OpenCode's.
+    // The Claude conversation opens on its own backend: this connection
+    // stays OpenCode's and is not reconnected.
+    final claude = c.backendForConversation(paseo.sessionID)!;
+    expect(claude.isAgentBackend, isTrue);
+    expect(claude.api, isA<PaseoGateway>());
+    expect(claude.directory, dir);
+    expect(claude.profile?.name, 'Claude Code');
+    expect(identical(c.api, openCodeApi), isTrue);
+    expect(c.connectionRevision, revision);
+    // Never saved, never the active server.
+    expect(
+      c.store.profiles.map((p) => p.id),
+      isNot(contains(claude.profile?.id)),
+    );
+    expect(c.store.activeId, c.profile?.id);
     final routed = c.chatFeed().items;
     expect(routed.where((i) => i.sourceId == 'opencode'), hasLength(1));
 
     final back = await c.openChatFeedItem(oc);
     expect(back.sourceId, 'opencode');
+    expect(c.backendForConversation(oc.sessionID), isNull);
     expect(c.api, isNot(isA<PaseoGateway>()));
     expect(c.directory, dir);
 
@@ -677,7 +692,8 @@ void main() {
     // creates the agent only when the first prompt is sent.
     expect(id, isNotEmpty);
     expect(id, isNot('c1'));
-    expect(c.api, isA<PaseoGateway>());
+    expect(c.backendForConversation(id)?.api, isA<PaseoGateway>());
+    expect(c.api, isNot(isA<PaseoGateway>()));
     await c.refreshChatFeed();
     expect(
       c.chatFeed().items.where((i) => i.sessionID == 'c1').length,
@@ -697,6 +713,43 @@ void main() {
       agentId: 'claude',
     );
     expect(c.agentResumeNotice(fresh).canReopen, isTrue);
+    await tester.pump(const Duration(seconds: 3));
+    c.dispose();
+  });
+
+  testWidgets('the list paints once when agents had conversations before', (
+    tester,
+  ) async {
+    final w = await _world(
+      tester,
+      prefsExtra: {'oc.phoneAgentsUsed.local': true},
+    );
+    w.state.runtimes = {'claude': _ready('claude')};
+    w.state.agents = [_agent('c1', dir)];
+    w.oc.global = [_ocRow('o1', dir)];
+    final c = w.controller;
+    await c.rememberLastUsedProject(dir);
+    await c.refreshChatFeed();
+    // OpenCode has answered, but the agents haven't: no first wave.
+    expect(c.chatFeed().items, isEmpty);
+    expect(c.chatFeed().loading, isTrue);
+    await c.refreshAgentRows();
+    await tester.pump(const Duration(milliseconds: 100));
+    final rows = c.chatFeed().items.map((i) => i.sourceId).toSet();
+    expect(rows, {'opencode', 'paseo:$dir'});
+    await tester.pump(const Duration(seconds: 5));
+    c.dispose();
+  });
+
+  testWidgets('without earlier agent conversations the list never waits', (
+    tester,
+  ) async {
+    final w = await _world(tester);
+    w.oc.global = [_ocRow('o1', dir)];
+    final c = w.controller;
+    await c.rememberLastUsedProject(dir);
+    await c.refreshChatFeed();
+    expect(c.chatFeed().items.map((i) => i.sessionID), ['o1']);
     await tester.pump(const Duration(seconds: 3));
     c.dispose();
   });
@@ -742,7 +795,8 @@ void main() {
     final id = await c.startChatIn(dir);
     expect(id, isNotEmpty);
     expect(id, isNot('c1'));
-    expect(c.api, isA<PaseoGateway>());
+    expect(c.backendForConversation(id)?.api, isA<PaseoGateway>());
+    expect(c.api, isNot(isA<PaseoGateway>()));
     expect(c.lastUsedProjectDirectory, dir);
 
     await expectLater(
@@ -836,7 +890,7 @@ void main() {
     final before = w.events.log.where((e) => e == 'host.start').length;
     final id = await c.startAgentChatIn(other, agentId: 'claude');
     expect(id, isNotEmpty);
-    expect(c.api, isA<PaseoGateway>());
+    expect(c.backendForConversation(id)?.api, isA<PaseoGateway>());
     expect(w.events.log.where((e) => e == 'host.start').length, before + 1);
     final models = await c.agentModels('claude');
     expect(

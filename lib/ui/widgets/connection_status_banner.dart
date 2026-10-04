@@ -114,15 +114,15 @@ KitStatus? connectionKitStatus(
       ),
     );
   }
+  // A conversation with an agent on this phone (Claude Code) runs on that
+  // agent's own connection, not OpenCode's: name it.
+  final agentName = controller.isAgentBackend ? controller.profile?.name : null;
   final message = switch (snapshot.phase) {
     ConnectionStatusPhase.connecting => l10n.e7SetupConnectingProfile(server),
     ConnectionStatusPhase.reconnecting => l10n.e7BannerReconnectingServer(
       server,
     ),
-    // A conversation with a phone agent (Claude Code) is connected to that
-    // agent's helper, not to OpenCode: name it.
-    _ when controller.phoneAgentRouteName != null =>
-      l10n.agentNotAnsweringPhone(controller.phoneAgentRouteName!),
+    _ when agentName != null => l10n.agentNotAnsweringPhone(agentName),
     _ =>
       serverOnThisPhone
           ? l10n.workServerNotAnsweringPhone
@@ -141,10 +141,11 @@ KitStatus? connectionKitStatus(
           ),
           onPressed: () => unawaited(controller.retryConnection()),
         );
-  final agentRoute = controller.phoneAgentRouteName != null;
+  final agentRecover = controller.recoverAgentBackend;
+  final agentRoute = agentRecover != null;
   final restart = agentRoute
       // Restarting OpenCode doesn't help a phone agent: start its helper.
-      ? controller.recoverPhoneAgentRoute
+      ? agentRecover
       : serverOnThisPhone
       ? onRestartServer
       : null;

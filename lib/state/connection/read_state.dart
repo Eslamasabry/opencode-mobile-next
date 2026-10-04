@@ -85,7 +85,7 @@ extension _ConnectionControllerReadStateImpl on ConnectionController {
 
   bool _readProfileAvailable(String id) =>
       !_deletingReadProfiles.contains(id) &&
-      (id.isEmpty || store.profiles.any((profile) => profile.id == id));
+      (id.isEmpty || _isKnownProfile(id));
 
   /// The body of [setShareSessionViews].
   Future<void> _setShareSessionViews(bool value) async {

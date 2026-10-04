@@ -40,7 +40,7 @@ extension _ConnectionControllerMonitorsImpl on ConnectionController {
         store: store,
         createGateway: (profile, provider) =>
             HttpProviderQuotaGateway(profile, provider: provider),
-        isReadable: (id) => !isIsolated && isProfileReadable(id),
+        isReadable: (id) => _ownsProfileServices && isProfileReadable(id),
         networkWifi: backgroundLive.monitorWifiAvailable,
         dismiss: backgroundLive.dismissCodingAlert,
         alert: ({required profileID, required key, required token}) =>
@@ -113,7 +113,7 @@ extension _ConnectionControllerMonitorsImpl on ConnectionController {
     store: store,
     createGateway: _monitorGatewayFactory ?? _buildTransportPair,
     readAttention: _readMonitorAttention,
-    isReadable: (id) => !isIsolated && isProfileReadable(id),
+    isReadable: (id) => _ownsProfileServices && isProfileReadable(id),
     networkWifi: backgroundLive.monitorWifiAvailable,
     dismiss: backgroundLive.dismissCodingAlert,
     alertsAllowed: (id) => id != profile?.id,
@@ -160,7 +160,7 @@ extension _ConnectionControllerMonitorsImpl on ConnectionController {
   }
 
   void _syncProfileServices() {
-    if (isIsolated || _disposed) return;
+    if (!_ownsProfileServices || _disposed) return;
     ManagedServerRecovery.syncProfiles(
       store.prefs,
       store.profiles

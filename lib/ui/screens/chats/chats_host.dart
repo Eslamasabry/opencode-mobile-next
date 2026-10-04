@@ -132,7 +132,8 @@ class ConnectionChatsHost implements ChatsHost {
       // The gateway that owns the row is found by its identity.
       final route = await _conn.openChatFeedItem(item);
       if (!navigator.mounted) return null;
-      unawaited(_conn.prefetchSessionTail(route.sessionID));
+      final backend = _conn.backendForConversation(route.sessionID) ?? _conn;
+      unawaited(backend.prefetchSessionTail(route.sessionID));
       await navigator.pushNamed('/chat/${route.sessionID}');
       return null;
     } catch (error) {

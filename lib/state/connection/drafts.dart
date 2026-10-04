@@ -178,7 +178,7 @@ extension _ConnectionControllerDraftsImpl on ConnectionController {
         throw const SessionDraftWriteException(SessionDraftFailure.storage);
       }
       if (_deletingReadProfiles.contains(owner) ||
-          (owner.isNotEmpty && !store.profiles.any((p) => p.id == owner))) {
+          (owner.isNotEmpty && !_isKnownProfile(owner))) {
         if (text.trim().isEmpty && (snapshot?.isEmpty ?? true)) return;
         throw const SessionDraftWriteException(
           SessionDraftFailure.profileRemoved,

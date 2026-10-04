@@ -218,7 +218,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
       // A server saved since the monitor last looked (a second agent on
       // this phone) is watched from now, and the one just left is read
       // fresh instead of on the next tick.
-      if (!isIsolated && !_disposed) profileMonitor.start();
+      if (_ownsProfileServices && !_disposed) profileMonitor.start();
     });
   }
 
@@ -273,8 +273,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     // The folder edited in a Codex connection is authoritative on connect.
     // Restoring an older OpenCode-style selection would undo that user edit.
     final initialDirectory = isCodex ? profile.codexDirectory : null;
-    final pair =
-        _phoneAgentConnectPair(profile) ?? _buildTransportPair(profile);
+    final pair = _buildTransportPair(profile);
     final currentApi = pair.gateway
       ..setLocation(directory: initialDirectory, workspace: null);
     final currentRepository = pair.operations

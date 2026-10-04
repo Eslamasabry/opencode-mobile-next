@@ -66,26 +66,34 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   MergedChatFeed? _paMerged;
   StreamSubscription<void>? _paMergedSub;
 
-  /// The Paseo gateway that currently owns the connection, or null while the
-  /// connection is OpenCode's. Set only by [_paActivateRoute].
-  ({String profileId, String directory})? _phoneAgentRoute;
+  /// The conversation backend for agents on this phone: its own
+  /// [ConnectionController], so a Claude conversation never moves this
+  /// connection off OpenCode. Created by [_paBackendFor] on first use.
+  ConnectionController? _paBackend;
+  PhoneAgentHostPort? _paBackendHost;
 
-  /// The agent the routed conversation talks to ("Claude Code"), for the
-  /// composer's "Ask …"; null while OpenCode owns the connection.
-  String? get phoneAgentRouteName =>
-      _phoneAgentRoute == null ? null : _paRouteAgentName;
-  String? _paRouteAgentName;
+  /// Which backend each opened or started agent conversation lives on, for
+  /// [backendForConversation].
+  final _paOwners = <String, ConnectionController>{};
 
-  /// Catalog id of the routed conversation's agent: the one whose host
-  /// status the recovery reads.
-  String? _paRouteAgentId;
+  /// Catalog id of the agent last opened: the one whose host status the
+  /// recovery reads.
+  String? _paBackendAgentId;
 
   String? get _paHostProbeAgent =>
-      _paRouteAgentId ??
+      _paBackendAgentId ??
       _paCatalog.agents
           .where((descriptor) => descriptor.id == 'claude')
           .firstOrNull
           ?.id;
+
+  /// The controller a conversation's screen talks to when it is not this
+  /// one: an agent on this phone's conversation lives on its own backend.
+  /// Null for this connection's own (OpenCode) conversations.
+  ConnectionController? backendForConversation(String sessionID) {
+    final backend = _paOwners[sessionID];
+    return backend == null || backend._disposed ? null : backend;
+  }
 
   AgentCatalog get _paCatalog => AgentCatalog.builtIn;
 
@@ -342,6 +350,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       return;
     }
     final owner = _paHostProfile;
+    // Conversations with these agents were listed before: their folders are
+    // read now, beside the inspection below, so the list paints once.
+    if (_paSources.isEmpty && _paUsedBefore) {
+      unawaited(_paSyncSources(assumeRunning: true).catchError((Object _) {}));
+    }
     AgentArchitecture? arch;
     try {
       arch = await host.architecture();
@@ -568,8 +581,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         directory.startsWith('/root/projects/') &&
         _self._feedEligible(directory) &&
         seen.add(directory);
-    final route = _phoneAgentRoute?.directory;
-    if (ok(route)) yield route!;
+    final open = _paBackend?.directory;
+    if (ok(open)) yield open!;
     final last = _self._ocLastUsed;
     if (ok(last)) yield last!;
     if (profile != null) {
@@ -579,11 +592,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     }
   }
 
-  Future<void> _paSyncSources() async {
+  Future<void> _paSyncSources({bool assumeRunning = false}) async {
     final host = _paHost;
     final profile = _paProfile;
     if (host == null || profile == null) return;
-    final wanted = _paHostRunning
+    final wanted = _paHostRunning || assumeRunning
         ? _paDesiredDirectories().take(_maxPaseoSources).toList()
         : const <String>[];
     var changed = false;
@@ -711,7 +724,66 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     _paMergedSub = merged.changes.listen((_) {
       if (!_self._disposed) _self._notifyListeners();
     });
-    unawaited(merged.refreshChatFeed());
+    unawaited(
+      merged.refreshChatFeed().whenComplete(() {
+        if (_self._disposed || _paMerged != merged) return;
+        final agents = merged.chatFeed().items.any(
+          (item) => item.sourceId != _openCodeSourceId,
+        );
+        unawaited(_paRememberUsed(agents));
+        _paFeedSettled = true;
+        _self._notifyListeners();
+      }),
+    );
+  }
+
+  // ---- one paint ------------------------------------------------------------
+
+  /// How long the conversations list waits for agents on this phone before
+  /// it shows OpenCode's conversations alone.
+  static const _paFeedHold = Duration(seconds: 4);
+  bool _paFeedSettled = false;
+  DateTime? _paHoldUntil;
+  Timer? _paHoldTimer;
+
+  String _paUsedKey(String profileID) => 'oc.phoneAgentsUsed.$profileID';
+
+  bool get _paUsedBefore {
+    final id = _paProfile?.id;
+    if (id == null) return false;
+    try {
+      return _self.store.prefs.getBool(_paUsedKey(id)) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _paRememberUsed(bool used) async {
+    final id = _paProfile?.id;
+    if (id == null || used == _paUsedBefore) return;
+    try {
+      await _self.store.prefs.setBool(_paUsedKey(id), used);
+    } catch (_) {}
+  }
+
+  /// The list holds its first paint while this phone's agents, which had
+  /// conversations last time, are still being read: one paint with every
+  /// conversation instead of OpenCode's first and the agents' a moment later.
+  bool get _paHoldFeed {
+    if (_paFeedSettled || !phoneAgentsAvailable || !_paUsedBefore) {
+      return false;
+    }
+    final now = DateTime.now();
+    final until = _paHoldUntil ??= now.add(_paFeedHold);
+    if (!now.isBefore(until)) {
+      _paFeedSettled = true;
+      return false;
+    }
+    _paHoldTimer ??= Timer(until.difference(now), () {
+      _paHoldTimer = null;
+      if (!_self._disposed) _self._notifyListeners();
+    });
+    return true;
   }
 
   @override
@@ -719,6 +791,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   @override
   ChatFeedSnapshot chatFeed([ChatFeedFilter filter = ChatFeedFilter.all]) {
+    if (_paHoldFeed) {
+      return ChatFeedSnapshot(
+        items: const [],
+        acrossProjects: _self._ocAcross,
+        loading: true,
+        complete: false,
+      );
+    }
     final merged = _paMerged;
     if (merged == null) return _self._ocChatFeed(filter);
     final snapshot = merged.chatFeed(filter);
@@ -805,7 +885,6 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     String? firstPrompt,
   }) async {
     if (agentId == openCodeChatAgentId) {
-      await _paClearRoute();
       return _self._ocStartChatIn(directory, firstPrompt: firstPrompt);
     }
     if (!phoneAgentsAvailable) throw _notReady;
@@ -829,14 +908,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       );
     }
     _paRebuildMergedIfNeeded();
-    // Remembered first: the route's row refresh keeps only remembered
-    // folders' connections, and this one is creating the agent.
+    // Remembered first: a row refresh keeps only remembered folders'
+    // connections, and this one is creating the agent.
     await _self._ocRemember(directory);
-    // The connection moves to the agent while it starts: neither waits for
-    // the other (the agent is created on the folder's own gateway).
-    final route = PerfTrace.span(
-      'agent.start.route',
-      () => _paActivateRoute(
+    // The agent's own backend connects while the agent starts: neither waits
+    // for the other (the agent is created on the folder's own gateway).
+    final backend = PerfTrace.span(
+      'agent.start.backend',
+      () => _paBackendFor(
         directory,
         agentName: descriptor.name,
         agentId: descriptor.id,
@@ -853,19 +932,12 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
           modelId: selectedAgentModel(agentId),
         ),
       );
-    } finally {
-      await route.catchError((Object _) {});
+    } catch (_) {
+      unawaited(backend.then((_) {}, onError: (Object _) {}));
+      rethrow;
     }
     _paLive.add(jsonEncode([_paseoSourceId(directory), id, directory]));
-    // The route may have failed while the agent started: try it once more.
-    if (_phoneAgentRoute?.directory != directory ||
-        _self.api is! PaseoGateway) {
-      await _paActivateRoute(
-        directory,
-        agentName: descriptor.name,
-        agentId: descriptor.id,
-      );
-    }
+    _paOwners[id] = await backend;
     return id;
   }
 
@@ -882,36 +954,78 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     }
   }
 
-  /// The pair a live connect or rescope should use while a phone-agent route
-  /// owns the connection; null when the connection is OpenCode's. Built
-  /// synchronously from the host, so every rebuild (location change, wake)
-  /// stays on the phone host.
-  PhoneAgentRoutePair? _phoneAgentConnectPair(ServerProfile profile) {
-    final route = _phoneAgentRoute;
-    final host = _paHost;
-    if (route == null || host == null || route.profileId != profile.id) {
-      return null;
+  /// Connects this phone's agent backend at [directory] and returns it. The
+  /// helper is started first when Android stopped it. The backend's
+  /// transport is built from the host on every (re)connect, which also keeps
+  /// the helper running.
+  Future<ConnectionController> _paBackendFor(
+    String directory, {
+    String? agentName,
+    String? agentId,
+  }) async {
+    if (agentId != null) _paBackendAgentId = agentId;
+    final profile = _paProfile;
+    if (profile == null) throw _notReady;
+    final host = _paEnsureHost();
+    // Proves the helper answers (starting it when stopped) and caches its
+    // credential for the synchronous transport builds below.
+    await _paReachSource(directory);
+    var backend = _paBackend;
+    if (backend == null || backend._disposed || _paBackendHost != host) {
+      backend?.dispose();
+      backend = ConnectionController.agentBackend(
+        _self.store,
+        paseoGatewayFactory: (target) {
+          _paKeepHostUp();
+          final gateway = host.newGatewaySync(target.codexDirectory);
+          return (gateway: gateway, operations: gateway);
+        },
+        diagnostics: _self.diagnostics,
+        draftAttachmentVault: _self._draftAttachmentVault,
+        promptPhotoStore: _self._promptPhotoStore,
+      ).._agentBackendRecover = recoverPhoneAgentBackend;
+      _paBackend = backend;
+      _paBackendHost = host;
+      _paWatchBackend();
     }
-    _paKeepHostUp();
-    try {
-      final gateway = host.newGatewaySync(route.directory);
-      return (gateway: gateway, operations: gateway);
-    } catch (_) {
-      return null;
+    final id = '${profile.id}$agentBackendProfileSuffix';
+    final name = agentName ?? backend._connectedProfile?.name ?? 'Claude Code';
+    final current = backend._connectedProfile;
+    if (current == null || current.id != id) {
+      await backend.connect(
+        ServerProfile(
+          id: id,
+          name: name,
+          baseUrl: 'ws://127.0.0.1:4099',
+          backend: ServerBackend.paseo,
+          codexDirectory: directory,
+          transientTransport: true,
+        ),
+      );
+    } else {
+      current.name = name;
+      if (backend.directory != directory) {
+        await backend.selectLocationForExistingSession(directory: directory);
+      } else if (!backend.isConnected) {
+        await backend.retryConnection();
+      }
     }
+    return backend;
   }
 
-  Timer? _paRouteWatch;
+  Timer? _paBackendWatch;
   bool _paRecovering = false;
   int _paOfflineTicks = 0;
 
-  /// Brings a routed conversation back after Android stopped the agent's
-  /// helper: starts it, waits until it answers (it takes a few seconds to
-  /// listen), then reconnects. The banner's Restart and the watchdog use it.
-  Future<void> recoverPhoneAgentRoute() async {
-    final route = _phoneAgentRoute;
+  /// Brings the agent backend back after Android stopped the agent's helper:
+  /// starts it, waits until it answers (it takes a few seconds to listen),
+  /// then reconnects. The banner's Restart and the watchdog use it.
+  Future<void> recoverPhoneAgentBackend() async {
+    final backend = _paBackend;
     final host = _paHost;
-    if (route == null || host == null || _paRecovering) return;
+    final directory = backend?.directory;
+    if (backend == null || host == null || directory == null) return;
+    if (_paRecovering) return;
     _paRecovering = true;
     try {
       // Only a stopped helper is started: starting replaces a running one.
@@ -928,15 +1042,15 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       final deadline = DateTime.now().add(const Duration(seconds: 30));
       while (DateTime.now().isBefore(deadline)) {
         try {
-          final probe = await host.openGateway(route.directory);
+          final probe = await host.openGateway(directory);
           probe.close();
           break;
         } catch (_) {
           await Future<void>.delayed(const Duration(seconds: 1));
         }
       }
-      if (_phoneAgentRoute == route && !_self._disposed) {
-        await _self.retryConnection();
+      if (_paBackend == backend && !backend._disposed) {
+        await backend.retryConnection();
       }
     } catch (_) {
       // The banner stays; its Restart tries again.
@@ -945,32 +1059,33 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     }
   }
 
-  /// While a phone agent's conversation is open, a lost connection is
-  /// recovered without a tap: checked every 10 s, recovered when offline twice.
-  void _paWatchRoute() {
-    _paRouteWatch?.cancel();
+  /// While the agent backend exists, a lost connection is recovered without
+  /// a tap: checked every 10 s, recovered when offline twice.
+  void _paWatchBackend() {
+    _paBackendWatch?.cancel();
     _paOfflineTicks = 0;
-    _paRouteWatch = Timer.periodic(const Duration(seconds: 10), (_) {
-      if (_self._disposed || _phoneAgentRoute == null) {
-        _paRouteWatch?.cancel();
-        _paRouteWatch = null;
+    _paBackendWatch = Timer.periodic(const Duration(seconds: 10), (_) {
+      final backend = _paBackend;
+      if (_self._disposed || backend == null || backend._disposed) {
+        _paBackendWatch?.cancel();
+        _paBackendWatch = null;
         return;
       }
       // Offline at two checks in a row (reconnect attempts alone don't
       // restart a stopped helper).
-      if (_self.isConnected) {
+      if (backend.isConnected) {
         _paOfflineTicks = 0;
       } else if (++_paOfflineTicks >= 2) {
         _paOfflineTicks = 0;
-        unawaited(recoverPhoneAgentRoute());
+        unawaited(recoverPhoneAgentBackend());
       }
     });
   }
 
   DateTime? _paKeptUpAt;
 
-  /// Every (re)connect of a routed conversation: Android stops the helper in
-  /// the background, and a reconnect alone can't bring it back. Checks it at
+  /// Every (re)connect of the agent backend: Android stops the helper in the
+  /// background, and a reconnect alone can't bring it back. Checks it at
   /// most every 20 s and starts it when it isn't running; the next connect
   /// attempt then reaches it.
   void _paKeepHostUp() {
@@ -994,39 +1109,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     }());
   }
 
-  Future<void> _paActivateRoute(
-    String directory, {
-    String? agentName,
-    String? agentId,
-  }) async {
-    if (agentName != null) _paRouteAgentName = agentName;
-    if (agentId != null) _paRouteAgentId = agentId;
-    final profile = _paProfile;
-    if (profile == null) throw _notReady;
-    final current = _phoneAgentRoute;
-    if (current != null &&
-        current.directory == directory &&
-        _self.api is PaseoGateway) {
-      return;
-    }
-    final host = _paEnsureHost();
-    // Proves the daemon answers and caches its credential for rebuilds.
-    final probe = await host.openGateway(directory);
-    probe.close();
-    _phoneAgentRoute = (profileId: profile.id, directory: directory);
-    _paWatchRoute();
-    await _self.connect(profile);
-    await _self.selectLocationForExistingSession(directory: directory);
-  }
-
-  Future<void> _paClearRoute() async {
-    if (_phoneAgentRoute == null) return;
-    final profile = _paProfile;
-    _phoneAgentRoute = null;
-    _paRouteWatch?.cancel();
-    _paRouteWatch = null;
-    _paLive.clear(); // Live admission ends when the gateway is retired.
-    if (profile != null) await _self.connect(profile);
+  void _paDisposeBackend() {
+    _paBackendWatch?.cancel();
+    _paBackendWatch = null;
+    final backend = _paBackend;
+    _paBackend = null;
+    _paBackendHost = null;
+    _paOwners.clear();
+    if (backend != null && !backend._disposed) backend.dispose();
   }
 
   @override
@@ -1036,7 +1126,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       if (item.sourceId != null && item.sourceId != _openCodeSourceId) {
         throw _gone;
       }
-      await _paClearRoute();
+      _paOwners.remove(item.sessionID);
       await _self.selectLocationForExistingSession(directory: item.directory);
       return ChatFeedRoute(
         sourceId: _openCodeSourceId,
@@ -1059,19 +1149,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
           _paCatalog.agents
               .where((agent) => agent.providerId == row.agentId)
               .firstOrNull;
-      await _paActivateRoute(
+      _paOwners[route.sessionID] = await _paBackendFor(
         route.directory,
         agentId: descriptor?.id,
-        agentName:
-            row.agentLabel ??
-            _paCatalog.byId(row.agentId)?.name ??
-            _paCatalog.agents
-                .where((agent) => agent.providerId == row.agentId)
-                .firstOrNull
-                ?.name,
+        agentName: row.agentLabel ?? descriptor?.name,
       );
     } else {
-      await _paClearRoute();
+      // The page is found by id alone: this one is OpenCode's again.
+      _paOwners.remove(route.sessionID);
       await _self.selectLocationForExistingSession(directory: route.directory);
     }
     return route;
@@ -1083,7 +1168,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         (item.sourceId ?? _openCodeSourceId) == _openCodeSourceId) {
       return const AgentResumeNotice(canReopen: true);
     }
-    if (_paLive.contains(item.identity) && _phoneAgentRoute != null) {
+    if (_paLive.contains(item.identity)) {
       return const AgentResumeNotice(canReopen: true);
     }
     // Still loaded in the helper (running or idle since it last started):
@@ -1130,7 +1215,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     );
     _paLive.add(jsonEncode([old.sourceId, id, old.directory]));
     await source.refreshChatFeed();
-    await _paActivateRoute(old.directory);
+    _paOwners[id] = await _paBackendFor(old.directory);
     return id;
   }
 
@@ -1139,8 +1224,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// Closes everything this profile's phone agents own, in the order the
   /// deletion contract requires: auth, owned setup, host, then feeds.
   Future<void> _paCloseAll({required bool stopHost}) async {
-    _paRouteWatch?.cancel();
-    _paRouteWatch = null;
+    _paDisposeBackend();
     for (final entry in _paSignIns.entries.toList()) {
       await _paSignInSubs.remove(entry.key)?.cancel();
       try {
@@ -1176,7 +1260,6 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     for (final directory in _paSources.keys.toList()) {
       await _paDropSource(directory);
     }
-    _phoneAgentRoute = null;
     _paLive.clear();
     _paRows = const [];
     _paHostRunning = false;
@@ -1203,8 +1286,9 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// Controller disposal: stop listening; the host keeps running for the
   /// Android service owner.
   void _paShutdown() {
-    _paRouteWatch?.cancel();
-    _paRouteWatch = null;
+    _paDisposeBackend();
+    _paHoldTimer?.cancel();
+    _paHoldTimer = null;
     unawaited(_paSetupSub?.cancel());
     unawaited(_paMergedSub?.cancel());
     for (final sub in _paSignInSubs.values) {
@@ -1222,9 +1306,3 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     _paSignIns.clear();
   }
 }
-
-/// A gateway pair as the connect path takes it.
-typedef PhoneAgentRoutePair = ({
-  ServerGateway gateway,
-  ServerOperationsGateway operations,
-});

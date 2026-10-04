@@ -14,7 +14,9 @@ mixin _ConnectionControllerPromptShelf on ChangeNotifier {
 
   final _promptShelfDeletionRevisions = <String, int>{};
   String get promptShelfProfileID =>
-      (_self._connectedProfile ?? _self.profile)?.id ?? '';
+      _self._agentOwnerProfileId ??
+      (_self._connectedProfile ?? _self.profile)?.id ??
+      '';
   bool get canUsePromptShelf => _self.isProfileReadable(promptShelfProfileID);
   List<StashedPrompt> get promptStash => _self._promptStash;
 
