@@ -89,6 +89,11 @@ void main() {
           final config = jsonDecode(args['config'] as String) as Map;
           expect(config['daemon']['listen'], '127.0.0.1:4099');
           expect(config['daemon']['relay']['enabled'], false);
+          expect(config['daemon']['mcp']['injectIntoAgents'], false);
+          // Voice/dictation would download local speech models at start.
+          expect(config['features']['dictation']['enabled'], false);
+          expect(config['features']['voiceMode']['enabled'], false);
+          expect(config['features']['webUi']['enabled'], false);
           running = true;
           return {'running': true, 'abi': abi};
         case 'agentHostWorkspace':
@@ -181,6 +186,34 @@ void main() {
       );
     },
   );
+  test('the native host launches Paseo 0.9.2 without removed launch flags', () {
+    // Emulator 2026-10-04: `paseo start --foreground --listen ...` exits at
+    // once with "--listen was removed", so the check's hello never connected.
+    final source = File(
+      'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentHost.kt',
+    ).readAsStringSync();
+    final launch = RegExp(
+      r'exec /home/oc/\.local/bin/paseo [^\n]*',
+    ).firstMatch(source)![0]!;
+    expect(launch, contains(r'''paseo daemon run --home "${'$'}HOME/paseo"'''));
+    for (final removed in [
+      '--foreground',
+      '--listen',
+      '--port',
+      '--relay',
+      '--no-relay',
+      '--no-web-ui',
+      '--web-ui',
+      '--no-mcp',
+      '--no-inject-mcp',
+      '--hostnames',
+    ]) {
+      expect(launch.split(' '), isNot(contains(removed)), reason: removed);
+    }
+    expect(source, contains(r'export PASEO_LISTEN=127.0.0.1:$port'));
+    expect(PaseoPhoneScripts.version, '0.9.2');
+  });
+
   test(
     'ARM64 gate requires install version daemon and exact Paseo hello',
     () async {

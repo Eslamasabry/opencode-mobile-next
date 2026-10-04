@@ -296,6 +296,14 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
       'listen': '127.0.0.1:4099',
       'relay': {'enabled': false},
       'serviceProxy': {'enabled': false},
+      'mcp': {'injectIntoAgents': false},
+    },
+    // Off by default: on a phone, voice and dictation start a background
+    // download of local speech models (hundreds of MB) at daemon start.
+    'features': {
+      'webUi': {'enabled': false},
+      'dictation': {'enabled': false},
+      'voiceMode': {'enabled': false},
     },
     'log': {
       'level': 'fatal',
@@ -411,8 +419,10 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
       final transport = _transport(await _password());
       try {
         // Startup is bounded; connection retries send only hello, no agent prompt.
+        // A cold PRoot start takes about 5 s on an emulator before the
+        // daemon listens; allow a slower phone up to 30 s.
         var connected = false;
-        for (var attempt = 0; attempt < 10 && !connected; attempt++) {
+        for (var attempt = 0; attempt < 60 && !connected; attempt++) {
           if (generation != _generation || _disposed) {
             throw const AgentHostException(AgentHostFailure.stale);
           }
@@ -420,7 +430,7 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
             await transport.connect();
             connected = true;
           } catch (_) {
-            if (attempt < 9) {
+            if (attempt < 59) {
               await Future<void>.delayed(const Duration(milliseconds: 500));
             }
           }
