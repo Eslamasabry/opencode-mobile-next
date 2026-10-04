@@ -94,6 +94,9 @@ void main() {
           expect(config['features']['dictation']['enabled'], false);
           expect(config['features']['voiceMode']['enabled'], false);
           expect(config['features']['webUi']['enabled'], false);
+          // Paseo's rotating supervisor log refuses /dev/null and exits.
+          expect(config['log']['file']['path'], 'daemon.log');
+          expect(config['log']['file']['level'], 'fatal');
           running = true;
           return {'running': true, 'abi': abi};
         case 'agentHostWorkspace':

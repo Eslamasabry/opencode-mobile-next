@@ -305,9 +305,17 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
       'dictation': {'enabled': false},
       'voiceMode': {'enabled': false},
     },
+    // Paseo's supervisor always keeps a rotating file log (worker output plus
+    // lifecycle lines) and exits at start when the path is not a regular file,
+    // so /dev/null is refused. Keep one small file in the profile's private
+    // daemon home; deleting the profile removes it.
     'log': {
       'level': 'fatal',
-      'file': {'level': 'fatal', 'path': '/dev/null'},
+      'file': {
+        'level': 'fatal',
+        'path': 'daemon.log',
+        'rotate': {'maxSize': '1M', 'maxFiles': 1},
+      },
     },
     'agents': {
       'providers': {
