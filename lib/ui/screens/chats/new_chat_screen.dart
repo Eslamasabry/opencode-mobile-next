@@ -9,7 +9,8 @@ import '../../../domain/server_gateway.dart' show WorkspaceProject;
 import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
 import '../../kit/kit.dart';
-import '../../widgets/product_states.dart' show productErrorText;
+import '../../widgets/product_states.dart'
+    show productErrorDetails, productErrorText;
 import '../agents/agent_model_sheet.dart';
 import '../agents/agent_sheet.dart';
 import '../agents/agents_text.dart';
@@ -47,6 +48,20 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
   /// null hides the option.
   WorkspaceProject? _copyProject;
   String? _copyFor;
+
+  @override
+  void initState() {
+    super.initState();
+    // The agent chip shows the saved agent; read the rows so it is checked
+    // against what this phone can run now (and a stopped helper restarts).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final agents = ref.read(chatsHostProvider).agents;
+      if (agents != null && agents.phoneAgentsAvailable) {
+        unawaited(agents.refreshAgentRows());
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -130,7 +145,9 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
       }
     } catch (error) {
       if (!mounted) return;
-      // Plain words; the draft stays in the field.
+      // Plain words; the draft stays in the field. The redacted technical
+      // text goes to the device log for a report.
+      debugPrint('oc.chat-start failed: ${productErrorDetails(error)}');
       final words = productErrorText(error, l10n: l10n);
       setState(() {
         _sending = false;

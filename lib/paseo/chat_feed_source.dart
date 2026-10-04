@@ -309,12 +309,16 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
       await rememberLastUsedProject(directory);
       await refreshChatFeed();
       _checkDirectory(directory);
-      return session.id;
+      // The chat opens on a fresh gateway, which knows the agent only by the
+      // daemon's id; a draft's app id is local to this gateway.
+      return gateway.daemonSessionId(session.id);
     } on ProductException {
       rethrow;
-    } catch (_) {
-      throw const ProductException(
+    } catch (error) {
+      // The cause rides along for Details and the problem report.
+      throw ProductException(
         'Could not start this chat. Refresh before trying again.',
+        cause: error,
       );
     }
   }

@@ -18,10 +18,17 @@ extension _PaseoPrompts on PaseoGateway {
     _checkLocation(scope, locationEpoch);
     final modes = _modesFor(provider);
     mode ??= defaultProviderModes[provider];
+    // A provider whose snapshot lists modes must list the required one. Paseo
+    // 0.9.2 can list none for Claude on a phone; the required mode is then
+    // still sent by name, and the daemon refuses it if it doesn't know it.
     if (defaultProviderModes.containsKey(provider) &&
-        (mode == null || !modes.contains(mode))) {
+        (mode == null || (modes.isNotEmpty && !modes.contains(mode)))) {
       throw PaseoFailure(PaseoFailureKind.unavailable);
     }
+    final sendMode =
+        mode != null &&
+        (modes.contains(mode) ||
+            (modes.isEmpty && defaultProviderModes[provider] == mode));
     final draft = _sessions[id];
     final title = draft?.title;
     final Map<String, dynamic> result;
@@ -37,7 +44,7 @@ extension _PaseoPrompts on PaseoGateway {
                 model.modelID.isNotEmpty &&
                 model.modelID != paseoDefaultModel)
               'model': model.modelID,
-            if (mode != null && modes.contains(mode)) 'modeId': mode,
+            if (sendMode) 'modeId': mode,
             if (variant != null && variant.isNotEmpty)
               'thinkingOptionId': variant,
             if (title != null && title != 'New conversation') 'title': title,

@@ -308,9 +308,16 @@ void main() {
     },
   );
 
-  for (final supportsAsk in [true, false]) {
+  // Paseo 0.9.2 on a phone can list no Claude modes at all: the asking mode
+  // is then still requested by name. Only a list that offers other modes but
+  // not the asking one is refused.
+  for (final modes in const [
+    ['default'],
+    <String>[],
+    ['bypassPermissions'],
+  ]) {
     test(
-      'phone Claude defaults to asking and refuses missing ask mode: $supportsAsk',
+      'phone Claude always asks for the asking mode: listed $modes',
       () async {
         socket.handlers['get_providers_snapshot_request'] = (request) => (
           'get_providers_snapshot_response',
@@ -323,11 +330,9 @@ void main() {
                 'enabled': true,
                 'source': 'builtin',
                 'models': [],
-                'modes': supportsAsk
-                    ? [
-                        {'id': 'default', 'label': 'Always ask'},
-                      ]
-                    : [],
+                'modes': [
+                  for (final id in modes) {'id': id, 'label': id},
+                ],
               },
             ],
             'generatedAt': '2026-10-03T08:00:00Z',
@@ -344,8 +349,9 @@ void main() {
           agentId: 'claude',
           firstPrompt: 'hello',
         );
-        if (supportsAsk) {
-          await starting;
+        if (modes.isEmpty || modes.contains('default')) {
+          // The chat opens by the daemon's own id.
+          expect(await starting, 'phone-chat');
           expect(socket.of('create_agent_request'), hasLength(1));
         } else {
           await expectLater(starting, throwsA(isA<ProductException>()));

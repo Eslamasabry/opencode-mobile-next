@@ -70,6 +70,12 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// connection is OpenCode's. Set only by [_paActivateRoute].
   ({String profileId, String directory})? _phoneAgentRoute;
 
+  /// The agent the routed conversation talks to ("Claude Code"), for the
+  /// composer's "Ask …"; null while OpenCode owns the connection.
+  String? get phoneAgentRouteName =>
+      _phoneAgentRoute == null ? null : _paRouteAgentName;
+  String? _paRouteAgentName;
+
   AgentCatalog get _paCatalog => AgentCatalog.builtIn;
 
   ServerProfile? get _paProfile => _self._connectedProfile ?? _self.profile;
@@ -198,7 +204,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (saved == null || saved == openCodeChatAgentId) {
       return openCodeChatAgentId;
     }
-    final row = phoneAgentsAvailable ? _paRowFor(saved) : null;
+    if (!phoneAgentsAvailable) return openCodeChatAgentId;
+    // Before the first row read (app start) the saved choice stands; it
+    // falls back only once the rows say the agent can't be chosen.
+    if (_paRows.isEmpty) return saved;
+    final row = _paRowFor(saved);
     return row != null && row.chatSelectable ? saved : openCodeChatAgentId;
   }
 
@@ -769,6 +779,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       return _self._ocStartChatIn(directory, firstPrompt: firstPrompt);
     }
     if (!phoneAgentsAvailable) throw _notReady;
+    if (_paRows.isEmpty) await refreshAgentRows();
     final row = _paRowFor(agentId);
     final descriptor = row == null ? null : _paCatalog.byId(row.id);
     if (row == null || descriptor == null || !row.chatSelectable) {
@@ -793,7 +804,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     );
     _paLive.add(jsonEncode([_paseoSourceId(directory), id, directory]));
     await _self._ocRemember(directory);
-    await _paActivateRoute(directory);
+    await _paActivateRoute(directory, agentName: descriptor.name);
     return id;
   }
 
@@ -828,7 +839,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     }
   }
 
-  Future<void> _paActivateRoute(String directory) async {
+  Future<void> _paActivateRoute(String directory, {String? agentName}) async {
+    if (agentName != null) _paRouteAgentName = agentName;
     final profile = _paProfile;
     if (profile == null) throw _notReady;
     final current = _phoneAgentRoute;
@@ -878,7 +890,17 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (current.length != 1) throw _gone;
     final route = merged.routeFor(current.single);
     if (route.sourceId.startsWith('paseo:')) {
-      await _paActivateRoute(route.directory);
+      final row = current.single;
+      await _paActivateRoute(
+        route.directory,
+        agentName:
+            row.agentLabel ??
+            _paCatalog.byId(row.agentId)?.name ??
+            _paCatalog.agents
+                .where((agent) => agent.providerId == row.agentId)
+                .firstOrNull
+                ?.name,
+      );
     } else {
       await _paClearRoute();
       await _self.selectLocationForExistingSession(directory: route.directory);

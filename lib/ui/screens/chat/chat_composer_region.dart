@@ -346,11 +346,13 @@ extension _ChatComposerRegion on _ChatScreenState {
   }) => _composerDropTarget(
     child: _ChatComposer(
       // The prompt goes to the agent this server runs, and says so.
-      agentName: switch (_conn.profile?.backend) {
-        ServerBackend.paseo => 'Claude Code',
-        ServerBackend.codex => 'Codex',
-        _ => null,
-      },
+      agentName:
+          _conn.phoneAgentRouteName ??
+          switch (_conn.profile?.backend) {
+            ServerBackend.paseo => 'Claude Code',
+            ServerBackend.codex => 'Codex',
+            _ => null,
+          },
       isolated: _conn.isIsolated,
       compact: compactComposer,
       // The multiline field scrolls within its budget at large text scales,

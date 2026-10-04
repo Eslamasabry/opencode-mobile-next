@@ -326,6 +326,19 @@ class PhoneAgentSignIn(private val linux: BuiltinLinux) {
                 code.startsWith("sk-") || Regex("[\\x00-\\x20\\x7f]").containsMatchIn(code)) {
                 throw AuthFailure("invalidCode")
             }
+            // Already signed in (an earlier paste went through): say so instead of
+            // calling a finished login stale.
+            if (synchronized(lock) { run.phase == "signedIn" }) return snapshot(run)
+            // A code is already with Claude: wait for its verdict, don't send twice.
+            if (synchronized(lock) { run.codeSubmitted && !run.acceptsCode && !run.cancelled }) {
+                val pending = System.nanoTime() + TimeUnit.SECONDS.toNanos(45)
+                while (synchronized(lock) {
+                        !run.cancelled && run.phase == "awaitingCode" && !run.acceptsCode && run.failure == null
+                    } && System.nanoTime() < pending) {
+                    Thread.sleep(150)
+                }
+                return snapshot(run)
+            }
             // The person can come back from the browser before Claude printed its
             // prompt: wait for it briefly instead of refusing the code.
             val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)

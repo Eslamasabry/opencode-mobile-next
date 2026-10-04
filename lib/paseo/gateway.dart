@@ -51,6 +51,7 @@ class PaseoGateway
   /// stream (an `idle` snapshot can land after `turn_started`), so while a
   /// turn is open the stream owns the busy state.
   final _turnActive = <String>{};
+  final _watching = <String>{};
   final _permissions = <String, _PaseoPermission>{};
 
   /// Requests answered from here. A snapshot taken before the daemon applied
@@ -160,6 +161,11 @@ class PaseoGateway
   }
 
   String _real(String appID) => _realIDs[appID] ?? appID;
+
+  /// The daemon's own id for [appID] once its agent exists (a draft keeps
+  /// its app id until the first prompt creates it). Another gateway on the
+  /// same daemon opens the conversation by this id.
+  String daemonSessionId(String appID) => _real(appID);
   String _app(String realID) => _appIDs[realID] ?? realID;
 
   void _checkLocation(String scope, int epoch) {
@@ -323,6 +329,37 @@ class PaseoGateway
     }, mutation: true);
   }
 
+  /// A reply loaded while still running can finish before this gateway hears
+  /// its stream (another gateway started it). Without stream events, ask the
+  /// daemon every 2 s for up to 3 min; two idle answers in a row end the turn
+  /// here too, so the reply isn't later shown as cut off.
+  Future<void> _watchUntilIdle(String id) async {
+    if (!_watching.add(id)) return;
+    try {
+      var idle = 0;
+      for (var i = 0; i < 90 && !_closed; i++) {
+        await Future<void>.delayed(const Duration(seconds: 2));
+        if (_closed || _turnActive.contains(id)) return;
+        final Map<String, dynamic> agent;
+        try {
+          agent = await _fetchAgent(id);
+        } catch (_) {
+          continue;
+        }
+        if (paseoSessionStatus(agent) == 'busy') {
+          idle = 0;
+          continue;
+        }
+        if (++idle < 2) continue;
+        _emitStatus(id, 'idle');
+        _emit('session.idle', {'sessionID': id});
+        return;
+      }
+    } finally {
+      _watching.remove(id);
+    }
+  }
+
   @override
   Future<Map<String, String>> sessionStatuses() async => Map.of(_statuses);
 
@@ -343,6 +380,7 @@ class PaseoGateway
     _checkLocation(scope, epoch);
     final busy = paseoSessionStatus(agent) == 'busy';
     final messages = paseoTimelineMessages(id, result, busy: busy);
+    if (busy) unawaited(_watchUntilIdle(id));
     // Hydrated items are known to the chat from here on, so later stream
     // events for them are deltas and snapshots, never first announcements.
     final live = _live.putIfAbsent(id, _PaseoLive.new);

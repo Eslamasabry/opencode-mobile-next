@@ -202,7 +202,10 @@ fun main() {
         check(host.callSnapshot().none { call -> call.argv.any { it.contains(CODE) } })
         check(host.callSnapshot().filter { it.foreground }.all { it.argv == listOf("claude", "auth", "login", "--claudeai") })
         check(host.login!!.codeDeliveries == 1)
-        phase(auth.submit(PROFILE, "claude", run, METHOD, CODE), "failed")
+        // A second paste after the login went through reports signed in and
+        // sends nothing.
+        phase(auth.submit(PROFILE, "claude", run, METHOD, CODE), "signedIn")
+        check(host.login!!.codeDeliveries == 1)
         check(cancel(auth, run)["drained"] == true)
         host.assertNoLiveChildren()
     }
