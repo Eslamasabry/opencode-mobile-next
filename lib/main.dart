@@ -44,6 +44,7 @@ import 'state/automation_policy.dart';
 import 'state/local_server_controls.dart';
 import 'termux/bridge.dart';
 import 'state/profiles.dart';
+import 'state/session_inventory_cache.dart' show SessionInventoryPreview;
 import 'update/desktop_release_check.dart';
 import 'update/shorebird_update_notice.dart';
 import 'ui/app_theme.dart';

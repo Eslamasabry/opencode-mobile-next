@@ -306,9 +306,17 @@ class _RootState extends ConsumerState<_Root> {
     // live session map or enables a live action.
     final status = conn.connectionStatus;
     final cached = conn.cachedSessionInventory;
-    final lastKnown = cached != null && cached.sessions.isNotEmpty
-        ? cached
-        : null;
+    // Conversations with agents on this phone were saved separately: the
+    // opening list shows them too, so the list never grows a second wave.
+    final agents = conn.savedAgentSessionPreviews;
+    final sessions = [...?cached?.sessions, ...agents]
+      ..sort((a, b) => b.updated.compareTo(a.updated));
+    final lastKnown = sessions.isEmpty
+        ? null
+        : SessionInventoryPreview(
+            cached?.fetchedAt ?? DateTime.now(),
+            sessions,
+          );
     final opening = lastKnown != null;
     // While the launch start is pending, an early refused connect or a
     // first failed try is not the answer yet: the page keeps connecting.

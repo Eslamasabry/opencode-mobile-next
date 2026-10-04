@@ -66,6 +66,13 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   MergedChatFeed? _paMerged;
   StreamSubscription<void>? _paMergedSub;
 
+  /// Folders whose live agent conversations have been read since start: the
+  /// saved rows of every other folder still show (see [_AgentFeedCache]).
+  final _paLoadedDirs = <String>{};
+  late final _AgentFeedCache _paCache = _AgentFeedCache(_self.store.prefs);
+  List<({ChatFeedItem item, bool canReopen})>? _paCacheRows;
+  String? _paCacheOwner;
+
   /// The conversation backend for agents on this phone: its own
   /// [ConnectionController], so a Claude conversation never moves this
   /// connection off OpenCode. Created by [_paBackendFor] on first use.
@@ -617,7 +624,13 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         missed = true;
       }
     }
-    if (changed) _paRebuildMerged();
+    // A folder reached by an action (opening, starting) has a connection the
+    // list doesn't show yet.
+    if (changed) {
+      _paRebuildMerged();
+    } else {
+      _paRebuildMergedIfNeeded();
+    }
     // A helper that was just started takes a few seconds to listen: try the
     // missing projects again, a few times, so their conversations appear.
     if (missed && _paSyncRetries < 10) {
@@ -732,9 +745,76 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         );
         unawaited(_paRememberUsed(agents));
         _paFeedSettled = true;
+        _paSaveRows(merged);
         _self._notifyListeners();
       }),
     );
+  }
+
+  // ---- saved rows -----------------------------------------------------------
+
+  List<({ChatFeedItem item, bool canReopen})> get _paSavedRows {
+    final id = _paProfile?.id;
+    if (id == null || !phoneAgentsAvailable) return const [];
+    if (_paCacheOwner != id) {
+      _paCacheOwner = id;
+      _paCacheRows = _paCache.read(id);
+    }
+    return _paCacheRows ?? const [];
+  }
+
+  /// The agents' saved conversations as titles, for the opening screen's
+  /// last-known list (beside OpenCode's), newest first.
+  List<SessionPreview> get savedAgentSessionPreviews => List.unmodifiable([
+    for (final row in _paSavedRows)
+      if (!row.item.isSubagent)
+        SessionPreview(
+          row.item.sessionID,
+          row.item.title,
+          row.item.lastActivity.millisecondsSinceEpoch,
+        ),
+  ]);
+
+  /// The saved row for [item] while its folder has not been read live yet.
+  ({ChatFeedItem item, bool canReopen})? _paSavedRowFor(ChatFeedItem item) {
+    if (_paLoadedDirs.contains(item.directory)) return null;
+    for (final row in _paSavedRows) {
+      if (row.item.identity == item.identity) return row;
+    }
+    return null;
+  }
+
+  /// Folders read live replace their saved rows; the rest are kept.
+  void _paSaveRows(MergedChatFeed merged) {
+    final id = _paProfile?.id;
+    if (id == null) return;
+    final checks = merged.sourceChecks;
+    for (final entry in _paSources.keys) {
+      final check = checks[_paseoSourceId(entry)];
+      if (check != null && (check.complete || check.items.isNotEmpty)) {
+        _paLoadedDirs.add(entry);
+      }
+    }
+    final live = merged
+        .chatFeed(const ChatFeedFilter(includeSubagents: true))
+        .items
+        .where(
+          (item) =>
+              item.sourceId != _openCodeSourceId &&
+              _paLoadedDirs.contains(item.directory),
+        )
+        .map(
+          (item) => (item: item, canReopen: agentResumeNotice(item).canReopen),
+        )
+        .toList();
+    final rows = [
+      ...live,
+      for (final row in _paSavedRows)
+        if (!_paLoadedDirs.contains(row.item.directory)) row,
+    ]..sort((a, b) => compareChatFeedItems(a.item, b.item));
+    _paCacheRows = List.unmodifiable(rows);
+    _paCacheOwner = id;
+    unawaited(_paCache.write(id, rows));
   }
 
   // ---- one paint ------------------------------------------------------------
@@ -770,7 +850,10 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// conversations last time, are still being read: one paint with every
   /// conversation instead of OpenCode's first and the agents' a moment later.
   bool get _paHoldFeed {
-    if (_paFeedSettled || !phoneAgentsAvailable || !_paUsedBefore) {
+    if (_paFeedSettled ||
+        !phoneAgentsAvailable ||
+        !_paUsedBefore ||
+        _paSavedRows.isNotEmpty) {
       return false;
     }
     final now = DateTime.now();
@@ -800,14 +883,28 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       );
     }
     final merged = _paMerged;
-    if (merged == null) return _self._ocChatFeed(filter);
-    final snapshot = merged.chatFeed(filter);
+    final snapshot = merged?.chatFeed(filter) ?? _self._ocChatFeed(filter);
+    final shown = {for (final item in snapshot.items) item.identity};
+    final saved = [
+      for (final row in _paSavedRows)
+        if (!_paLoadedDirs.contains(row.item.directory) &&
+            !shown.contains(row.item.identity) &&
+            chatFeedMatches(row.item, filter))
+          row.item,
+    ];
+    final items = saved.isEmpty
+        ? snapshot.items
+        : List<ChatFeedItem>.unmodifiable(
+            <ChatFeedItem>[...snapshot.items, ...saved]
+              ..sort(compareChatFeedItems),
+          );
     return ChatFeedSnapshot(
-      items: snapshot.items,
+      items: items,
       // OpenCode answers for every project; a scoped phone source never makes
       // the whole list look single-project.
       acrossProjects: _self._ocAcross,
-      loading: snapshot.loading,
+      loading: snapshot.loading && items.isEmpty,
+      // Saved rows stand in while their folder loads; they are no failure.
       complete: snapshot.complete,
     );
   }
@@ -989,6 +1086,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       _paWatchBackend();
     }
     final id = '${profile.id}$agentBackendProfileSuffix';
+    await _paCarryApprovalChoices(from: profile.id, to: id);
     final name = agentName ?? backend._connectedProfile?.name ?? 'Claude Code';
     final current = backend._connectedProfile;
     if (current == null || current.id != id) {
@@ -1011,6 +1109,27 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       }
     }
     return backend;
+  }
+
+  /// Claude conversations used to run on the phone profile itself, so their
+  /// approval choices were saved under it: carried over once, without the
+  /// phone server's "approve everything" (that one is OpenCode's).
+  Future<void> _paCarryApprovalChoices({
+    required String from,
+    required String to,
+  }) async {
+    final prefs = _self.store.prefs;
+    final target = SessionAutoApprovalStore.keyFor(to);
+    try {
+      if (prefs.containsKey(target)) return;
+      final raw = prefs.getString(SessionAutoApprovalStore.keyFor(from));
+      final decoded = raw == null ? null : jsonDecode(raw);
+      if (decoded is! Map) return;
+      decoded.remove(SessionAutoApprovalStore.serverWideKey);
+      await prefs.setString(target, jsonEncode(decoded));
+    } catch (_) {
+      // Conversations ask again; nothing else depends on the copy.
+    }
   }
 
   Timer? _paBackendWatch;
@@ -1121,6 +1240,28 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   @override
   Future<ChatFeedRoute> openChatFeedItem(ChatFeedItem item) async {
+    // A saved row whose folder has not been read yet opens on the agent's
+    // backend directly; it starts the helper when needed.
+    final saved = _paSavedRowFor(item);
+    if (saved != null) {
+      final row = saved.item;
+      final descriptor =
+          _paCatalog.byId(row.agentId) ??
+          _paCatalog.agents
+              .where((agent) => agent.providerId == row.agentId)
+              .firstOrNull;
+      _paOwners[row.sessionID] = await _paBackendFor(
+        row.directory,
+        agentId: descriptor?.id,
+        agentName: row.agentLabel ?? descriptor?.name,
+      );
+      return ChatFeedRoute(
+        sourceId: row.sourceId!,
+        sessionID: row.sessionID,
+        directory: row.directory,
+        agentId: row.agentId,
+      );
+    }
     final merged = _paMerged;
     if (merged == null) {
       if (item.sourceId != null && item.sourceId != _openCodeSourceId) {
@@ -1169,6 +1310,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       return const AgentResumeNotice(canReopen: true);
     }
     if (_paLive.contains(item.identity)) {
+      return const AgentResumeNotice(canReopen: true);
+    }
+    // Not read live yet: what it was when saved, so the label doesn't flash.
+    final saved = _paSavedRowFor(item);
+    if (saved != null && saved.canReopen) {
       return const AgentResumeNotice(canReopen: true);
     }
     // Still loaded in the helper (running or idle since it last started):

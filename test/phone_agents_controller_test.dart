@@ -741,6 +741,82 @@ void main() {
     c.dispose();
   });
 
+  testWidgets('saved agent rows paint at once and give way to live ones', (
+    tester,
+  ) async {
+    final w = await _world(
+      tester,
+      prefsExtra: {
+        'oc.phoneAgentsUsed.local': true,
+        'oc.agentFeed.local': jsonEncode([
+          {
+            'sourceId': 'paseo:$dir',
+            'sessionID': 'saved1',
+            'title': 'Saved chat',
+            'directory': dir,
+            'projectName': 'app',
+            'isGit': false,
+            'at': DateTime(2026, 10, 3).millisecondsSinceEpoch,
+            'agentId': 'claude',
+            'agentLabel': 'Claude Code',
+            'canReopen': true,
+          },
+        ]),
+      },
+    );
+    w.state.runtimes = {'claude': _ready('claude')};
+    w.state.agents = [_agent('c1', dir)];
+    w.oc.global = [_ocRow('o1', dir)];
+    final c = w.controller;
+    await c.rememberLastUsedProject(dir);
+    await c.refreshChatFeed();
+    // Before the helper is read: OpenCode's rows and the saved ones, at once.
+    final first = c.chatFeed();
+    expect(first.loading, isFalse);
+    expect(first.items.map((i) => i.sessionID).toSet(), {'o1', 'saved1'});
+    final saved = first.items.firstWhere((i) => i.sessionID == 'saved1');
+    expect(saved.status, ChatStatus.idle);
+    expect(c.agentResumeNotice(saved).canReopen, isTrue);
+    // It opens on the agent's own backend.
+    await c.openChatFeedItem(saved);
+    expect(c.backendForConversation('saved1')?.isAgentBackend, isTrue);
+
+    await c.refreshAgentRows();
+    await tester.pump(const Duration(milliseconds: 100));
+    // The folder has been read live: the host's rows replace the saved ones.
+    final ids = c.chatFeed().items.map((i) => i.sessionID).toSet();
+    expect(ids, {'o1', 'c1'});
+    expect(
+      c.store.prefs.getString('oc.agentFeed.local'),
+      allOf(contains('"c1"'), isNot(contains('saved1'))),
+    );
+    await tester.pump(const Duration(seconds: 5));
+    c.dispose();
+  });
+
+  testWidgets('approval choices made before carry over to the agent backend', (
+    tester,
+  ) async {
+    const auto = {'mode': 'autoOnce', 'inheritToChildren': false};
+    final w = await ready(
+      tester,
+      prefs: {
+        'oc.autoApprove.local': jsonEncode({'c1': auto, '*': auto}),
+      },
+    );
+    final c = w.controller;
+    final paseo = c.chatFeed().items.firstWhere(
+      (i) => i.sourceId == 'paseo:$dir',
+    );
+    await c.openChatFeedItem(paseo);
+    final claude = c.backendForConversation('c1')!;
+    expect(claude.autoApprovalFor('c1').automatic, isTrue);
+    // "Approve everything" was the phone's OpenCode server's choice.
+    expect(claude.autoApprovalFor('other').automatic, isFalse);
+    await tester.pump(const Duration(seconds: 3));
+    c.dispose();
+  });
+
   testWidgets('without earlier agent conversations the list never waits', (
     tester,
   ) async {
