@@ -27201,7 +27201,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String agentsSignInIntro(String agent) {
-    return 'استخدم اشتراكك في $agent. تُفتح الصفحة في المتصفح ثم تلصق رمزها هنا.';
+    return 'استخدم اشتراكك في $agent: افتح الصفحة وسجّل الدخول وانسخ الرمز الذي تعرضه والصقه هنا.';
   }
 
   @override
@@ -27341,4 +27341,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatsHomeOtherFolders => 'مجلدات أخرى';
+
+  @override
+  String get agentsSignInPaste => 'لصق';
+
+  @override
+  String get agentsSignInNewCode => 'الحصول على رمز جديد';
+
+  @override
+  String get agentsSignInCodeFirst => 'الصق الرمز أولًا';
+
+  @override
+  String get agentsEnterCode => 'إدخال رمز تسجيل الدخول';
 }

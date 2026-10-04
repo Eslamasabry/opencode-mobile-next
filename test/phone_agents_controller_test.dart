@@ -375,6 +375,11 @@ class _FakeSignInHost implements AgentSignInHost {
   AgentSignInPhase phase = AgentSignInPhase.signedOut;
   final submitted = <String>[];
 
+  /// Like the real host: the page is printed first (urlReady) and the code
+  /// prompt is only readable once [promptPrinted].
+  bool urlFirst = false;
+  bool promptPrinted = true;
+
   AgentSignInHostUpdate _update(AgentSignInRun run, {bool url = false}) =>
       AgentSignInHostUpdate(
         runId: run.runId,
@@ -392,13 +397,20 @@ class _FakeSignInHost implements AgentSignInHost {
       _update(run, url: phase == AgentSignInPhase.awaitingCode);
   @override
   Future<AgentSignInHostUpdate> start(AgentSignInRun run) async {
-    phase = AgentSignInPhase.awaitingCode;
+    phase = urlFirst
+        ? AgentSignInPhase.urlReady
+        : AgentSignInPhase.awaitingCode;
     return _update(run, url: true);
   }
 
   @override
-  Future<AgentSignInHostUpdate> readChallenge(AgentSignInRun run) async =>
-      _update(run, url: true);
+  Future<AgentSignInHostUpdate> readChallenge(AgentSignInRun run) async {
+    if (phase == AgentSignInPhase.urlReady && promptPrinted) {
+      phase = AgentSignInPhase.awaitingCode;
+    }
+    return _update(run, url: true);
+  }
+
   @override
   Future<AgentSignInHostUpdate> submitCode(
     AgentSignInRun run,
@@ -699,6 +711,37 @@ void main() {
       c.startAgentChatIn(dir, agentId: 'gemini'),
       throwsA(isA<ProductException>()),
     );
+    await tester.pump(const Duration(seconds: 3));
+    c.dispose();
+  });
+
+  testWidgets('a sign-in that prints its page first still reaches the code', (
+    tester,
+  ) async {
+    final w = await _world(tester);
+    final c = w.controller;
+    w.signIn
+      ..urlFirst = true
+      ..promptPrinted = false;
+    w.state.runtimes = {
+      'claude': PhoneAgentRuntime(
+        agentId: 'claude',
+        installed: true,
+        hostAvailable: true,
+        architectureQualified: true,
+      ),
+    };
+    await c.refreshAgentRows();
+    await c.startAgentSignIn('claude');
+    // The page is ready; the code prompt is not printed yet.
+    expect(c.agentSignInState('claude')?.phase, AgentSignInPhase.urlReady);
+    expect(c.agentSignInUrl('claude')?.host, 'claude.com');
+    // The person logs in and comes back: sending the code reads the prompt
+    // first, so the code is accepted.
+    w.signIn.promptPrinted = true;
+    final code = AgentSignInCode('abc#def');
+    await c.submitAgentSignInCode('claude', code);
+    expect(w.signIn.submitted, ['abc#def']);
     await tester.pump(const Duration(seconds: 3));
     c.dispose();
   });

@@ -83,7 +83,7 @@
           "label": "Open the <agent> sign-in page",
           "key": "agents-open-page",
           "file": "lib/ui/screens/agents/agent_sheet.dart",
-          "line": 519,
+          "line": 645,
           "action": "external-link",
           "target": null,
           "targetWidget": null,
@@ -97,11 +97,11 @@
           "label": "Submit code",
           "key": "agents-code-submit",
           "file": "lib/ui/screens/agents/agent_sheet.dart",
-          "line": 589,
+          "line": 586,
           "action": "submit",
           "target": null,
           "targetWidget": null,
-          "effect": "submitAgentSignInCode once; the field is cleared as it is sent.",
+          "effect": "submitAgentSignInCode once; the field is cleared as it is sent. Off until a code is in the field.",
           "gates": [],
           "destructive": false
         },
@@ -111,13 +111,45 @@
           "label": "Use <agent>",
           "key": "agents-sign-in-done",
           "file": "lib/ui/screens/agents/agent_sheet.dart",
-          "line": 513,
+          "line": 580,
           "action": "mutate",
           "target": null,
           "targetWidget": null,
           "effect": "Selects the signed-in agent and closes the sheet.",
           "gates": [
             "signed in"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "agents-sheet-paste",
+          "type": "button",
+          "label": "Paste",
+          "key": "agents-code-paste",
+          "file": "lib/ui/screens/agents/agent_sheet.dart",
+          "line": 661,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Reads the clipboard into the code field.",
+          "gates": [
+            "a sign-in is waiting for its code"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "agents-sheet-new-code",
+          "type": "button",
+          "label": "Get a new code",
+          "key": "agents-sign-in-again",
+          "file": "lib/ui/screens/agents/agent_sheet.dart",
+          "line": 596,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Ends the failed sign-in and starts it again for a fresh page and code.",
+          "gates": [
+            "the code was wrong or expired"
           ],
           "destructive": false
         }

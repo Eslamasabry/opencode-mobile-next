@@ -27083,7 +27083,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String agentsSignInIntro(String agent) {
-    return 'Use your $agent subscription. The page opens in your browser, then you paste its code here.';
+    return 'Use your $agent subscription: open the page, sign in, copy the code it shows, and paste it here.';
   }
 
   @override
@@ -27224,4 +27224,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatsHomeOtherFolders => 'Other folders';
+
+  @override
+  String get agentsSignInPaste => 'Paste';
+
+  @override
+  String get agentsSignInNewCode => 'Get a new code';
+
+  @override
+  String get agentsSignInCodeFirst => 'Paste the code first';
+
+  @override
+  String get agentsEnterCode => 'Enter sign-in code';
 }

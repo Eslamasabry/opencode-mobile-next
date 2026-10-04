@@ -35,6 +35,18 @@ String? agentPayloadSize(String agentId) {
       : '${(bytes / 1000000).round()} MB';
 }
 
+/// True while a browser sign-in for [agentId] waits for its code (the page
+/// is ready and no code was sent yet): the person is in the browser, or left
+/// the sheet, and comes back to the same code.
+bool agentLoginPending(PhoneAgentsSource agents, String agentId) {
+  final state = agents.agentSignInState(agentId);
+  return state != null &&
+      !state.codeSubmitted &&
+      (state.phase == AgentSignInPhase.urlReady ||
+          state.phase == AgentSignInPhase.awaitingCode) &&
+      agents.agentSignInUrl(agentId) != null;
+}
+
 /// Where a row stands, in words: one line, and a second quiet line where it
 /// applies ("Can't reopen old conversations").
 String agentRowLine(AppLocalizations l10n, AgentRow row) {

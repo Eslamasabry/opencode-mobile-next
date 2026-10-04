@@ -32148,7 +32148,7 @@
       }
     }
   },
-  "agentsSignInIntro": "Use your {agent} subscription. The page opens in your browser, then you paste its code here.",
+  "agentsSignInIntro": "Use your {agent} subscription: open the page, sign in, copy the code it shows, and paste it here.",
   "@agentsSignInIntro": {
     "description": "Sign-in step body",
     "placeholders": {
@@ -32368,5 +32368,21 @@
   "chatsHomeOtherFolders": "Other folders",
   "@chatsHomeOtherFolders": {
     "description": "Conversations: the filter for conversations in temp, home or root folders"
+  },
+  "agentsSignInPaste": "Paste",
+  "@agentsSignInPaste": {
+    "description": "Sign-in step: reads the clipboard into the code field"
+  },
+  "agentsSignInNewCode": "Get a new code",
+  "@agentsSignInNewCode": {
+    "description": "Sign-in step: starts the sign-in again for a fresh code"
+  },
+  "agentsSignInCodeFirst": "Paste the code first",
+  "@agentsSignInCodeFirst": {
+    "description": "Sign-in step: why Submit code is off"
+  },
+  "agentsEnterCode": "Enter sign-in code",
+  "@agentsEnterCode": {
+    "description": "A sign-in is waiting for its code: row and status line action"
   }
 }
