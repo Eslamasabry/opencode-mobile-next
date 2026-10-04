@@ -232,15 +232,17 @@ void main() {
   });
 
   test(
-    'policy off leaves session auto-approved requests for a person',
+    'High AI Team supervision still answers a conversation set to automatic',
     () async {
+      // The person chose automatic for this conversation: that is the
+      // consent; the team's supervision level does not apply here.
       final (controller, api) = await _boot(allow: false);
       await controller.setSessionAutoApproval('parent', _auto);
       controller.handleEventForTesting(_v1Ask('blocked', 'parent'));
       await _settle();
-      expect(api.legacyReplies, isEmpty);
-      expect(controller.permissionsForSession('parent'), hasLength(1));
-      expect(controller.automaticActsHere, isEmpty);
+      await _settle();
+      expect(api.legacyReplies, hasLength(1));
+      expect(controller.permissionsForSession('parent'), isEmpty);
     },
   );
 
@@ -538,13 +540,14 @@ void main() {
       expect(controller.permissionsForSession('parent'), isEmpty);
     });
 
-    test('without the policy, switching on answers nothing', () async {
+    test('with High AI Team supervision, switching on still answers', () async {
       final (controller, api) = await _boot(allow: false);
       controller.handleEventForTesting(_v1Ask('wait-1', 'parent'));
       await controller.setSessionAutoApproval('parent', _auto);
       await _settle();
-      expect(api.legacyReplies, isEmpty);
-      expect(controller.permissionsForSession('parent'), hasLength(1));
+      await _settle();
+      expect(api.legacyReplies, hasLength(1));
+      expect(controller.permissionsForSession('parent'), isEmpty);
     });
   });
 }

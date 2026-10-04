@@ -337,7 +337,9 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
     final currentApi = api;
     if (_disposed || currentApi == null || !isConnected) return;
     if (_autoApprovalProfile.isEmpty) return;
-    if (!automationPolicy.allowsAutoApproval) return;
+    // The person's own choice for this conversation (or "Approve
+    // everything", confirmed when set) is the consent; the AI Team's
+    // supervision level governs the team, not conversations.
     if (!autoApprovalFor(permission.sessionID).automatic) return;
     if (_resolvedPermissionIDs.contains(permission.id)) return;
     if (!_autoApprovingPermissionIDs.add(permission.id)) return;

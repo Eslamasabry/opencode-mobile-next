@@ -157,17 +157,18 @@ void main() {
     );
   });
 
-  testWidgets('a policy that forbids automatic answers offers only asking', (
+  testWidgets('every mode is offered whatever the AI Team supervision', (
     tester,
   ) async {
+    // The team's supervision level governs the team, not conversations.
     final (controller, _) = await _boot(
       supervision: AutomationSupervision.high,
     );
     await _pump(tester, controller);
     await _openMenu(tester);
     expect(find.byKey(const Key('approval-mode-ask')), findsOneWidget);
-    expect(find.byKey(const Key('approval-mode-auto')), findsNothing);
-    expect(find.byKey(const Key('approval-mode-everything')), findsNothing);
+    expect(find.byKey(const Key('approval-mode-auto')), findsOneWidget);
+    expect(find.byKey(const Key('approval-mode-everything')), findsOneWidget);
     expect(find.byKey(const Key('approval-mode-settings')), findsOneWidget);
   });
 

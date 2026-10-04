@@ -13,21 +13,14 @@ _ApprovalChoice _choiceOf(EffectiveAutoApproval effective) =>
     ? _ApprovalChoice.auto
     : _ApprovalChoice.ask;
 
-/// The modes offered. Asking always is. The two automatic modes are offered
-/// only while the person's automation policy lets this phone answer
-/// requests (supervision below High); there is no server-side preset to
-/// offer, so none is listed. The current mode is always listed, so the
-/// check never goes missing.
+/// The modes offered: all three, always. The AI Team's supervision level
+/// governs the team, not conversations; here the person's choice is the
+/// consent ("Approve everything" is confirmed when chosen). There is no
+/// server-side preset to offer, so none is listed.
 List<_ApprovalChoice> _offeredApprovalChoices(
   ConnectionController conn,
   _ApprovalChoice current,
-) => [
-  for (final choice in _ApprovalChoice.values)
-    if (choice == _ApprovalChoice.ask ||
-        choice == current ||
-        conn.automationPolicy.allowsAutoApproval)
-      choice,
-];
+) => _ApprovalChoice.values;
 
 /// Writes [choice] for [sessionID] through the controller. The one write
 /// path: the chip menu and the approvals sheet both call it, so they save
