@@ -32213,7 +32213,7 @@
       }
     }
   },
-  "agentsSignInBadCode": "That code doesn't look right. Copy the whole code from the browser and paste it again.",
+  "agentsSignInBadCode": "That code is incomplete. Copy the whole code from the browser (it has a # in the middle) and paste it again.",
   "@agentsSignInBadCode": {
     "description": "Sign-in step: the code was refused before sending"
   },
@@ -32221,7 +32221,7 @@
   "@agentsSignInFailed": {
     "description": "Sign-in step: failed"
   },
-  "agentsSignInRejected": "{agent} didn't accept that sign-in. Start it again.",
+  "agentsSignInRejected": "{agent} didn't accept that code. It may have expired or been used already. Tap Get a new code.",
   "@agentsSignInRejected": {
     "description": "Sign-in step: rejected",
     "placeholders": {

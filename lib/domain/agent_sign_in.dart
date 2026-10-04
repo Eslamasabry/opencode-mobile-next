@@ -184,8 +184,13 @@ final class AgentSignInState {
   final bool inspected;
   final bool codeSubmitted;
   bool get hostOnlyApiKey => method == AgentSignInMethod.apiKeyHost;
+
+  /// The host waits for Claude's prompt itself, so a code can be sent as soon
+  /// as the page is ready.
   bool get acceptsCode =>
-      phase == AgentSignInPhase.awaitingCode && !codeSubmitted;
+      (phase == AgentSignInPhase.awaitingCode ||
+          phase == AgentSignInPhase.urlReady) &&
+      !codeSubmitted;
   @override
   String toString() => 'AgentSignInState(${phase.name})';
 }
@@ -311,6 +316,21 @@ final class AgentSignInSession {
       });
     } finally {
       code.clear();
+      // The host answered with Claude's verdict: a refused code can be pasted
+      // again into the same sign-in, so "sent" ends with the answer.
+      _codeSubmitted = false;
+      if (!_closed) {
+        _publish(
+          AgentSignInState(
+            phase: state.phase,
+            method: method,
+            authorizationUrl: state.authorizationUrl,
+            failure: state.failure,
+            resetAt: state.resetAt,
+            inspected: state.inspected,
+          ),
+        );
+      }
     }
   }
 

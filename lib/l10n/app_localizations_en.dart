@@ -27123,14 +27123,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agentsSignInBadCode =>
-      'That code doesn\'t look right. Copy the whole code from the browser and paste it again.';
+      'That code is incomplete. Copy the whole code from the browser (it has a # in the middle) and paste it again.';
 
   @override
   String get agentsSignInFailed => 'Sign-in didn\'t finish. Start it again.';
 
   @override
   String agentsSignInRejected(String agent) {
-    return '$agent didn\'t accept that sign-in. Start it again.';
+    return '$agent didn\'t accept that code. It may have expired or been used already. Tap Get a new code.';
   }
 
   @override

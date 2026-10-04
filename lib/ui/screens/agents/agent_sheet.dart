@@ -612,6 +612,10 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
       body = l10n.agentsSignedInBody(name);
     } else if (failed) {
       body = agentSignInFailureText(l10n, state?.failure, name);
+    } else if (pending && state?.failure == AgentSignInFailure.invalidCode) {
+      // Claude refused the paste but keeps the sign-in open: say why, and the
+      // field below takes the next try.
+      body = agentSignInFailureText(l10n, state?.failure, name);
     } else if (limit) {
       body = l10n.agentsSignInLimit(name);
     } else if (hostKey) {

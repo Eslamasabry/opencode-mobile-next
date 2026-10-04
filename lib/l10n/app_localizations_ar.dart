@@ -27241,14 +27241,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get agentsSignInBadCode =>
-      'هذا الرمز غير صحيح. انسخ الرمز كاملًا من المتصفح والصقه مرة أخرى.';
+      'هذا الرمز غير مكتمل. انسخ الرمز كاملًا من المتصفح (في وسطه علامة #) والصقه مرة أخرى.';
 
   @override
   String get agentsSignInFailed => 'لم يكتمل تسجيل الدخول. ابدأه مرة أخرى.';
 
   @override
   String agentsSignInRejected(String agent) {
-    return 'لم يقبل $agent تسجيل الدخول هذا. ابدأه مرة أخرى.';
+    return 'لم يقبل $agent هذا الرمز. ربما انتهت صلاحيته أو استُخدم من قبل. اضغط «الحصول على رمز جديد».';
   }
 
   @override

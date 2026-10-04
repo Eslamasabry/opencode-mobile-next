@@ -90,27 +90,21 @@ void main() {
       expect(session.state.authorizationUrl!.uri.toString(), _url);
       expect(session.state.toString(), isNot(contains('synthetic')));
       expect(session.state.authorizationUrl.toString(), isNot(contains(_url)));
-      final premature = AgentSignInCode(_code);
-      await expectLater(
-        session.submitCode(premature),
-        throwsA(isA<AgentSignInException>()),
-      );
-      expect(premature.consumed, isTrue);
-      await session.readChallenge();
+      // The host waits for Claude's prompt itself: a code sent while the page
+      // is still open (urlReady) reaches the host instead of being refused.
+      expect(session.state.acceptsCode, isTrue);
       final code = AgentSignInCode(_code);
       expect(code.toString(), isNot(contains(_code)));
       await session.submitCode(code);
       expect(code.consumed, isTrue);
-      expect(session.state.phase, AgentSignInPhase.awaitingCode);
       expect(host.submissions, 1);
-      expect(session.state.acceptsCode, isFalse);
+      // The host answered; Claude keeps a refused login open, so the next
+      // paste goes to the same sign-in.
+      expect(session.state.acceptsCode, isTrue);
       final retry = AgentSignInCode('another-code#same-state');
-      await expectLater(
-        session.submitCode(retry),
-        throwsA(isA<AgentSignInException>()),
-      );
+      await session.submitCode(retry);
       expect(retry.consumed, isTrue);
-      expect(host.submissions, 1);
+      expect(host.submissions, 2);
       await session.refreshStatus();
       expect(session.state.phase, AgentSignInPhase.signedIn);
       expect(session.state.authorizationUrl, isNull);

@@ -67,6 +67,8 @@ class FakeProcess(
     initial: String = "",
     exit: Int? = null,
     private val onCode: (() -> Unit)? = null,
+    // Scripted answers, one per pasted line; null keeps the default success.
+    private val answers: MutableList<String>? = null,
 ) : Process() {
     val pipe = FakeInput()
     val exited = CountDownLatch(1)
@@ -90,9 +92,16 @@ class FakeProcess(
                 written.write(values, start, length)
                 if (values.copyOfRange(start, start + length).contains(10.toByte())) {
                     codeDeliveries++
-                    onCode?.invoke()
-                    pipe.feed("Login successful.\n")
-                    finish(0)
+                    val answer = answers?.removeFirstOrNull()
+                    when {
+                        answer == null || answer.startsWith("Login successful") -> {
+                            onCode?.invoke()
+                            pipe.feed("Login successful.\n")
+                            finish(0)
+                        }
+                        answer.startsWith("Login failed") -> { pipe.feed(answer); finish(1) }
+                        else -> pipe.feed(answer)
+                    }
                 }
             }
         }
@@ -296,6 +305,45 @@ fun main() {
         check("url" !in limited)
         check(cancel(auth, "limited")["drained"] == true)
         host.assertNoLiveChildren()
+    }
+    scenario("a refused paste keeps the login open for the next paste") {
+        val host = BuiltinLinux()
+        host.loginFactory = {
+            FakeProcess(host.loginText, onCode = { host.signedIn = true },
+                answers = mutableListOf("Invalid code. Please make sure the full code was copied.\n", "Login successful.\n"))
+        }
+        val auth = PhoneAgentSignIn(host); val run = "retry"
+        phase(start(auth, run), "urlReady")
+        val refused = auth.submit(PROFILE, "claude", run, METHOD, CODE)
+        phase(refused, "awaitingCode")
+        check(refused["failure"] == "invalidCode") { "Refusal not reported" }
+        val second = auth.submit(PROFILE, "claude", run, METHOD, CODE)
+        phase(second, "signedIn")
+        check(host.login!!.codeDeliveries == 2)
+        check(cancel(auth, run)["drained"] == true)
+        host.assertNoLiveChildren()
+    }
+    scenario("a code sent before the prompt waits for it") {
+        val host = BuiltinLinux()
+        host.loginText = "If the browser didn't open, visit: $URL\n"
+        val auth = PhoneAgentSignIn(host); val run = "early"
+        phase(start(auth, run), "urlReady")
+        Thread { Thread.sleep(300); host.login!!.pipe.feed(PROMPT) }.start()
+        phase(auth.submit(PROFILE, "claude", run, METHOD, CODE), "signedIn")
+        check(host.login!!.codeDeliveries == 1)
+        check(cancel(auth, run)["drained"] == true)
+    }
+    scenario("an expired code is rejected, not a host failure") {
+        val host = BuiltinLinux()
+        host.loginFactory = {
+            FakeProcess(host.loginText, answers = mutableListOf("Login failed: Request failed with status code 400\n"))
+        }
+        val auth = PhoneAgentSignIn(host); val run = "expired"
+        phase(start(auth, run), "urlReady")
+        val result = auth.submit(PROFILE, "claude", run, METHOD, CODE)
+        phase(result, "failed")
+        check(result["failure"] == "authenticationRejected") { "400 not mapped to a rejected code" }
+        check(cancel(auth, run)["drained"] == true)
     }
     println("Phone agent sign-in: $passed fake-process scenarios passed; no Android/authentication claim")
 }

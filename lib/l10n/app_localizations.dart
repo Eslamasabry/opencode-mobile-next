@@ -42826,7 +42826,7 @@ abstract class AppLocalizations {
   /// Sign-in step: the code was refused before sending
   ///
   /// In en, this message translates to:
-  /// **'That code doesn\'t look right. Copy the whole code from the browser and paste it again.'**
+  /// **'That code is incomplete. Copy the whole code from the browser (it has a # in the middle) and paste it again.'**
   String get agentsSignInBadCode;
 
   /// Sign-in step: failed
@@ -42838,7 +42838,7 @@ abstract class AppLocalizations {
   /// Sign-in step: rejected
   ///
   /// In en, this message translates to:
-  /// **'{agent} didn\'t accept that sign-in. Start it again.'**
+  /// **'{agent} didn\'t accept that code. It may have expired or been used already. Tap Get a new code.'**
   String agentsSignInRejected(String agent);
 
   /// Sign-in step: host down

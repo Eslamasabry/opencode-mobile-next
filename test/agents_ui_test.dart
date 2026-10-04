@@ -187,7 +187,7 @@ void main() {
       );
       await tester.tap(find.byKey(const ValueKey('agents-code-submit')));
       await tester.pumpAndSettle();
-      expect(find.textContaining("doesn't look right"), findsOneWidget);
+      expect(find.textContaining('incomplete'), findsOneWidget);
       expect(agents.submitted, isEmpty);
       // The real code is submitted once and leaves the field.
       await tester.enterText(
@@ -560,7 +560,7 @@ void main() {
       );
       await tester.tap(find.byKey(const ValueKey('agents-code-submit')));
       await tester.pumpAndSettle();
-      expect(find.textContaining("doesn't look right"), findsWidgets);
+      expect(find.textContaining('incomplete'), findsWidgets);
       expect(find.text('Details'), findsOneWidget);
       final again = find.byKey(const ValueKey('agents-sign-in-again'));
       expect(again, findsOneWidget);

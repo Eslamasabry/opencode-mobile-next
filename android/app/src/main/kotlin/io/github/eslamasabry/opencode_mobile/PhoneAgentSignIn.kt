@@ -243,14 +243,25 @@ class PhoneAgentSignIn(private val linux: BuiltinLinux) {
                                         }
                                     }
                                 }
-                                if (line.startsWith("Invalid code. Please make sure the full code was copied.")) {
-                                    throw AuthFailure("invalidCode")
+                                // Claude answers on the prompt's own line ("… > Invalid code…").
+                                if (line.contains("Invalid code. Please make sure the full code was copied.")) {
+                                    // Claude keeps the login open and reads the next line: let
+                                    // the person paste again into the same sign-in.
+                                    synchronized(lock) {
+                                        if (!run.cancelled && run.phase != "signedIn") {
+                                            run.failure = "invalidCode"
+                                            run.codeSubmitted = false
+                                            run.acceptsCode = true
+                                            run.phase = "awaitingCode"
+                                        }
+                                    }
                                 }
-                                if (line.startsWith("Login failed:")) {
+                                if (line.contains("Login failed:")) {
                                     val kind = when {
                                         Regex("\\b429\\b|rate.?limit", RegexOption.IGNORE_CASE)
                                             .containsMatchIn(line) -> "limitReached"
-                                        Regex("\\b40[13]\\b|invalid_grant", RegexOption.IGNORE_CASE)
+                                        // 400 is Claude refusing an expired or used code.
+                                        Regex("\\b40[013]\\b|invalid_grant", RegexOption.IGNORE_CASE)
                                             .containsMatchIn(line) -> "authenticationRejected"
                                         else -> "hostUnavailable"
                                     }
@@ -315,10 +326,20 @@ class PhoneAgentSignIn(private val linux: BuiltinLinux) {
                 code.startsWith("sk-") || Regex("[\\x00-\\x20\\x7f]").containsMatchIn(code)) {
                 throw AuthFailure("invalidCode")
             }
+            // The person can come back from the browser before Claude printed its
+            // prompt: wait for it briefly instead of refusing the code.
+            val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)
+            while (synchronized(lock) { !run.acceptsCode && !run.cancelled && run.phase == "urlReady" } &&
+                System.nanoTime() < deadline) {
+                Thread.sleep(100)
+            }
             synchronized(lock) {
-                if (run.phase != "awaitingCode" || !run.acceptsCode || run.codeSubmitted || run.cancelled) {
+                if ((run.phase != "awaitingCode" && run.phase != "urlReady") ||
+                    !run.acceptsCode || run.codeSubmitted || run.cancelled) {
                     throw AuthFailure("staleRun")
                 }
+                run.phase = "awaitingCode"
+                run.failure = null
                 val process = run.loginProcess?.takeIf { it.isAlive }
                     ?: throw AuthFailure("hostUnavailable")
                 run.codeSubmitted = true
@@ -326,6 +347,14 @@ class PhoneAgentSignIn(private val linux: BuiltinLinux) {
                 process.outputStream.write((code + "\n").toByteArray(Charsets.UTF_8))
                 process.outputStream.flush()
                 run.acceptsCode = false
+            }
+            // Answer with the outcome, not "sent": Claude either signs in and exits,
+            // refuses the code (and asks again), or the login fails.
+            val outcome = System.nanoTime() + TimeUnit.SECONDS.toNanos(45)
+            while (synchronized(lock) {
+                    !run.cancelled && run.phase == "awaitingCode" && !run.acceptsCode && run.failure == null
+                } && System.nanoTime() < outcome) {
+                Thread.sleep(150)
             }
             snapshot(run)
         } catch (error: AuthFailure) { failure(runId, error.kind) }
