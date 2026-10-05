@@ -1021,79 +1021,6 @@ void main() {
     c.dispose();
   });
 
-  testWidgets('a sign-in that prints its page first still reaches the code', (
-    tester,
-  ) async {
-    final w = await _world(tester);
-    final c = w.controller;
-    w.signIn
-      ..urlFirst = true
-      ..promptPrinted = false;
-    w.state.runtimes = {
-      'claude': PhoneAgentRuntime(
-        agentId: 'claude',
-        installed: true,
-        hostAvailable: true,
-        architectureQualified: true,
-      ),
-    };
-    await c.refreshAgentRows();
-    await c.startAgentSignIn('claude');
-    // The page is ready; the code prompt is not printed yet.
-    expect(c.agentSignInState('claude')?.phase, AgentSignInPhase.urlReady);
-    expect(c.agentSignInUrl('claude')?.host, 'claude.com');
-    // The person logs in and comes back: sending the code reads the prompt
-    // first, so the code is accepted.
-    w.signIn.promptPrinted = true;
-    final code = AgentSignInCode('abc#def');
-    await c.submitAgentSignInCode('claude', code);
-    expect(w.signIn.submitted, ['abc#def']);
-    await tester.pump(const Duration(seconds: 3));
-    c.dispose();
-  });
-
-  testWidgets('sign-in state, URL as data, one-shot code, cancel drain', (
-    tester,
-  ) async {
-    final w = await _world(tester);
-    final c = w.controller;
-    w.state.runtimes = {
-      'claude': PhoneAgentRuntime(
-        agentId: 'claude',
-        installed: true,
-        hostAvailable: true,
-        architectureQualified: true,
-      ),
-    };
-    await c.refreshAgentRows();
-    expect(c.agentSignInState('claude')?.phase, AgentSignInPhase.signedOut);
-    expect(c.agentSignInState('claude')?.inspected, isTrue);
-    expect(c.agentStatusLines.single.kind, PhoneAgentStatusLineKind.signedOut);
-    expect(c.agentSignInUrl('claude'), isNull);
-
-    await c.startAgentSignIn('claude');
-    expect(c.agentSignInState('claude')?.phase, AgentSignInPhase.awaitingCode);
-    expect(c.agentSignInUrl('claude')?.host, 'claude.com');
-
-    final code = AgentSignInCode('abc#def');
-    await c.submitAgentSignInCode('claude', code);
-    expect(code.consumed, isTrue);
-    expect(w.signIn.submitted, ['abc#def']);
-    await tester.pump();
-    w.state.runtimes = {'claude': _ready('claude')};
-    await c.refreshAgentRows();
-    expect(
-      c.agentRows.firstWhere((r) => r.id == 'claude').chatSelectable,
-      isTrue,
-    );
-    expect(c.agentSignInUrl('claude'), isNull);
-
-    await tester.runAsync(() => c.cancelAgentSignIn('claude'));
-    expect(w.events.log, contains('auth.cancelAndDrain'));
-    expect(c.agentSignInState('claude'), isNull);
-    c.dispose();
-  });
-
   testWidgets('a stopped helper is started again when a chat needs it', (
     tester,
   ) async {
@@ -1175,7 +1102,7 @@ void main() {
       );
       final c = w.controller;
       w.signIn.phase = AgentSignInPhase.signedIn;
-      await c.startAgentSignIn('claude');
+      await c.recheckAgentSignIn('claude');
       expect(c.agentSignInState('claude'), isNotNull);
       expect(w.host.gateways, isNotEmpty);
       w.events.log.clear();

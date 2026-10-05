@@ -167,17 +167,6 @@ abstract interface class PhoneAgentsSource {
   /// with `inspected == false` means "Checking sign-in", not signed out.
   AgentSignInState? agentSignInState(String agentId);
 
-  /// The authorization page to hand to `openExternalLink`, only while the
-  /// state is urlReady or awaitingCode. Ephemeral; never store or log it.
-  Uri? agentSignInUrl(String agentId);
-
-  /// Starts the host's browser sign-in (or finds an existing signed-in
-  /// subscription). Inspects first when not yet inspected.
-  Future<void> startAgentSignIn(String agentId);
-
-  /// Submits the one-time browser code once; the code is consumed.
-  Future<void> submitAgentSignInCode(String agentId, AgentSignInCode code);
-
   /// The profile whose agent account a terminal sign-in signs in to: the
   /// person runs Claude's own `claude auth login` there and the app never
   /// sees the code. Null while agents are unavailable on this connection.

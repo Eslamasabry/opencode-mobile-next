@@ -563,67 +563,6 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       _paSignIns[agentId]?.state;
 
   @override
-  Uri? agentSignInUrl(String agentId) {
-    final state = _paSignIns[agentId]?.state;
-    if (state == null ||
-        (state.phase != AgentSignInPhase.urlReady &&
-            state.phase != AgentSignInPhase.awaitingCode)) {
-      return null;
-    }
-    return state.authorizationUrl?.uri;
-  }
-
-  @override
-  Future<void> startAgentSignIn(String agentId) async {
-    final session = _paSession(agentId);
-    if (!session.state.inspected) await session.inspectStatus();
-    final phase = session.state.phase;
-    if (phase == AgentSignInPhase.signedIn ||
-        phase == AgentSignInPhase.limitReached) {
-      return;
-    }
-    try {
-      await session.start();
-    } on AgentSignInException catch (error) {
-      if (error.failure != AgentSignInFailure.staleRun) rethrow;
-    }
-    // The host prints the page first (urlReady) and only then asks for the
-    // code, so the code prompt is read here and again when the code is sent.
-    final after = session.state.phase;
-    if (after == AgentSignInPhase.awaitingCode ||
-        after == AgentSignInPhase.urlReady ||
-        after == AgentSignInPhase.signedOut) {
-      await _paReadChallenge(session);
-    }
-  }
-
-  Future<void> _paReadChallenge(AgentSignInSession session) async {
-    try {
-      await session.readChallenge();
-    } on AgentSignInException {
-      // The state already carries the failure.
-    }
-  }
-
-  @override
-  Future<void> submitAgentSignInCode(
-    String agentId,
-    AgentSignInCode code,
-  ) async {
-    final session = _paSignIns[agentId];
-    if (session == null) {
-      code.clear();
-      throw _notReady;
-    }
-    // The person may have come back from the browser before the host's code
-    // prompt was read: ask for it now so the code is accepted.
-    if (session.state.phase == AgentSignInPhase.urlReady) {
-      await _paReadChallenge(session);
-    }
-    await session.submitCode(code);
-  }
-
-  @override
   String? get agentSignInProfileId =>
       phoneAgentsAvailable ? (_paHostProfile ?? _paProfile?.id) : null;
 

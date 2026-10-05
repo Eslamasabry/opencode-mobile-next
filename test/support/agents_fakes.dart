@@ -228,55 +228,6 @@ class FakePhoneAgentsSource extends ChangeNotifier
   AgentSignInState? agentSignInState(String agentId) => signIn[agentId];
 
   @override
-  Uri? agentSignInUrl(String agentId) => url;
-
-  @override
-  Future<void> startAgentSignIn(String agentId) async {
-    calls.add('sign-in:$agentId');
-    url = Uri.parse('https://claude.com/cai/oauth/authorize?code=true');
-    // The real host prints the page first (urlReady); the code prompt comes
-    // later, so the field must not wait for it.
-    signIn[agentId] = const AgentSignInState(
-      phase: AgentSignInPhase.urlReady,
-      method: AgentSignInMethod.browserOAuthHost,
-      inspected: true,
-    );
-    notifyListeners();
-  }
-
-  @override
-  Future<void> submitAgentSignInCode(
-    String agentId,
-    AgentSignInCode code,
-  ) async {
-    calls.add('code:$agentId');
-    if (rejectCode) {
-      code.consume();
-      signIn[agentId] = const AgentSignInState(
-        phase: AgentSignInPhase.failed,
-        method: AgentSignInMethod.browserOAuthHost,
-        failure: AgentSignInFailure.invalidCode,
-        inspected: true,
-      );
-      url = null;
-      notifyListeners();
-      throw const AgentSignInException(AgentSignInFailure.invalidCode);
-    }
-    submitted.add(code.consume());
-    signIn[agentId] = const AgentSignInState(
-      phase: AgentSignInPhase.signedIn,
-      method: AgentSignInMethod.browserOAuthHost,
-      inspected: true,
-    );
-    url = null;
-    _rows = [
-      for (final row in _rows)
-        row.id == agentId ? agentRowFor(agentId, FakeAgentStage.ready) : row,
-    ];
-    notifyListeners();
-  }
-
-  @override
   String? agentSignInProfileId = 'local';
 
   /// What [recheckAgentSignIn] finds: signed in once a test says the
