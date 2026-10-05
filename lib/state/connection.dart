@@ -141,6 +141,7 @@ part 'connection/worktrees.dart';
 part 'connection/chat_feed.dart';
 part 'connection/phone_agents.dart';
 part 'connection/phone_agents_cache.dart';
+part 'connection/phone_agents_backend.dart';
 
 /// App-wide singletons that need async init before the UI can render.
 class AppBootstrap {

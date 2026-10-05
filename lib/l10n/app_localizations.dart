@@ -42829,6 +42829,18 @@ abstract class AppLocalizations {
   /// **'{agent} opens its sign-in page. Sign in there with your Claude account, then come back. If {agent} asks for a code, copy it on the page and choose Paste.'**
   String agentsSignInTerminalIntro(String agent);
 
+  /// Sign-in step body for an agent other than Claude Code
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} signs in with its own prompts, on your own account with its provider. The app never sees your sign-in.'**
+  String agentsSignInIntroOther(String agent);
+
+  /// Sign-in terminal: what to do while another agent's own sign-in runs
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} signs in here with its own prompts. If it opens a page, sign in there and come back. If it asks for a code or key, choose Paste.'**
+  String agentsSignInTerminalIntroOther(String agent);
+
   /// Sign-in terminal: the sign-in ended without signing in
   ///
   /// In en, this message translates to:

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xterm/xterm.dart' as xterm;
 
 import '../../../builtin/local_terminal.dart';
+import '../../../domain/agent_catalog.dart';
 import '../../../domain/agent_sign_in.dart';
 import '../../../domain/phone_agents_source.dart';
 import '../../../l10n/app_localizations.dart';
@@ -68,7 +69,7 @@ class _AgentSignInTerminalScreenState
   void _start() {
     final profile = widget.agents.agentSignInProfileId;
     if (profile == null) return;
-    final shell = _sessions.startSignIn(profile)
+    final shell = _sessions.startSignIn(profile, _program)
       ..onOpenUrl = _openPage
       ..inputFilter = _keys.apply
       ..addListener(_shellChanged);
@@ -76,6 +77,14 @@ class _AgentSignInTerminalScreenState
       _shell = shell;
       _notYet = false;
     });
+  }
+
+  /// The agent's own login command, from the catalog: its program and
+  /// sign-in arguments, or the program alone where it signs in on start.
+  List<String> get _program {
+    final recipe = AgentCatalog.builtIn.byId(widget.agentId)?.recipe;
+    if (recipe == null) return const ['claude', 'auth', 'login', '--claudeai'];
+    return [recipe.executable, ...recipe.signInArgs];
   }
 
   void _openPage(String url) {
@@ -101,9 +110,13 @@ class _AgentSignInTerminalScreenState
     setState(() => _checking = true);
     await widget.agents.recheckAgentSignIn(widget.agentId);
     if (!mounted) return;
+    final row = widget.agents.agentRows
+        .where((row) => row.id == widget.agentId)
+        .firstOrNull;
     final signedIn =
         widget.agents.agentSignInState(widget.agentId)?.phase ==
-        AgentSignInPhase.signedIn;
+            AgentSignInPhase.signedIn ||
+        (row?.chatSelectable ?? false);
     if (signedIn) {
       Navigator.of(context).pop(true);
       return;
@@ -174,7 +187,9 @@ class _AgentSignInTerminalScreenState
             tokens.space2,
           ),
           child: KitText(
-            l10n.agentsSignInTerminalIntro(name),
+            widget.agentId == 'claude'
+                ? l10n.agentsSignInTerminalIntro(name)
+                : l10n.agentsSignInTerminalIntroOther(name),
             key: const ValueKey('agents-sign-in-terminal-intro'),
             tone: KitTextTone.secondary,
           ),

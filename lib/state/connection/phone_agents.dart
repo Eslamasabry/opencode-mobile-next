@@ -403,8 +403,28 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
             signIn: _paSignIns[descriptor.id]?.state,
           );
           // Sign-in is only inspected for an installed, qualified agent: it
-          // starts a native status process.
-          if (descriptor.signInMethod == AgentSignInMethod.browserOAuthHost &&
+          // starts a native status process. Claude's is read natively; the
+          // other agents' from what the helper reports about them.
+          if (descriptor.id != 'claude' &&
+              descriptor.signInMethod != AgentSignInMethod.none &&
+              runtime.installed &&
+              runtime.architectureQualified &&
+              runtime.hostAvailable) {
+            final phase = await _paProviderSignIn(descriptor.providerId);
+            if (phase != null) {
+              runtime = PhoneAgentRuntime(
+                agentId: runtime.agentId,
+                installed: runtime.installed,
+                hostAvailable: runtime.hostAvailable,
+                architectureQualified: runtime.architectureQualified,
+                capabilities: runtime.capabilities,
+                signInPhase: phase,
+                stoppedInBackground: runtime.stoppedInBackground,
+                resetAt: runtime.resetAt,
+              );
+            }
+          } else if (descriptor.signInMethod ==
+                  AgentSignInMethod.browserOAuthHost &&
               runtime.installed &&
               runtime.architectureQualified &&
               runtime.signInPhase == null) {
@@ -449,6 +469,28 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   }
 
   DateTime? _paAutoResumedAt;
+
+  /// An agent other than Claude, as the helper reports it: ready to start is
+  /// signed in, "authentication required" is signed out; null while unknown
+  /// (no folder connected yet, or the helper still checking).
+  Future<AgentSignInPhase?> _paProviderSignIn(String providerId) async {
+    final gateway = _paSources.values.firstOrNull?.gateway;
+    if (gateway == null) return null;
+    try {
+      final catalog = await gateway.loadHostAgentProviders();
+      final provider = catalog.providers
+          .where((entry) => entry.id == providerId)
+          .firstOrNull;
+      return switch (provider?.availability) {
+        HostAgentProviderAvailability.ready => AgentSignInPhase.signedIn,
+        HostAgentProviderAvailability.needsHostSignIn =>
+          AgentSignInPhase.signedOut,
+        _ => null,
+      };
+    } catch (_) {
+      return null;
+    }
+  }
 
   @override
   List<PhoneAgentStatusLine> get agentStatusLines => List.unmodifiable([
@@ -587,6 +629,17 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   @override
   Future<void> recheckAgentSignIn(String agentId) async {
+    if (agentId != 'claude') {
+      // The helper re-reads its agents, then the row says where it stands.
+      try {
+        await _paSources.values.firstOrNull?.gateway.loadHostAgentProviders(
+          refresh: true,
+        );
+      } catch (_) {}
+      await refreshAgentRows();
+      if (!_self._disposed) _self._notifyListeners();
+      return;
+    }
     // A fresh reading: the old session may still hold an earlier answer.
     await _paSignInSubs.remove(agentId)?.cancel();
     final previous = _paSignIns.remove(agentId);
@@ -1083,173 +1136,10 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     }
   }
 
-  /// Connects this phone's agent backend at [directory] and returns it. The
-  /// helper is started first when Android stopped it. The backend's
-  /// transport is built from the host on every (re)connect, which also keeps
-  /// the helper running.
-  Future<ConnectionController> _paBackendFor(
-    String directory, {
-    String? agentName,
-    String? agentId,
-  }) async {
-    if (agentId != null) _paBackendAgentId = agentId;
-    final profile = _paProfile;
-    if (profile == null) throw _notReady;
-    final host = _paEnsureHost();
-    // Proves the helper answers (starting it when stopped) and caches its
-    // credential for the synchronous transport builds below.
-    await _paReachSource(directory);
-    var backend = _paBackend;
-    if (backend == null || backend._disposed || _paBackendHost != host) {
-      backend?.dispose();
-      backend = ConnectionController.agentBackend(
-        _self.store,
-        paseoGatewayFactory: (target) {
-          _paKeepHostUp();
-          final gateway = host.newGatewaySync(target.codexDirectory);
-          return (gateway: gateway, operations: gateway);
-        },
-        backgroundLive: _self.backgroundLive,
-        diagnostics: _self.diagnostics,
-        draftAttachmentVault: _self._draftAttachmentVault,
-        promptPhotoStore: _self._promptPhotoStore,
-      ).._agentBackendRecover = recoverPhoneAgentBackend;
-      _paBackend = backend;
-      _paBackendHost = host;
-      _paWatchBackend();
-    }
-    final id = '${profile.id}$agentBackendProfileSuffix';
-    await _carryApprovalChoices(_self.store.prefs, from: profile.id, to: id);
-    final name = agentName ?? backend._connectedProfile?.name ?? 'Claude Code';
-    final current = backend._connectedProfile;
-    if (current == null || current.id != id) {
-      await backend.connect(
-        ServerProfile(
-          id: id,
-          name: name,
-          baseUrl: 'ws://127.0.0.1:4099',
-          backend: ServerBackend.paseo,
-          codexDirectory: directory,
-          transientTransport: true,
-        ),
-      );
-    } else {
-      current.name = name;
-      if (backend.directory != directory) {
-        await backend.selectLocationForExistingSession(directory: directory);
-      } else if (!backend.isConnected) {
-        await backend.retryConnection();
-      }
-    }
-    return backend;
-  }
-
   Timer? _paBackendWatch;
   bool _paRecovering = false;
   int _paOfflineTicks = 0;
-
-  /// Brings the agent backend back after Android stopped the agent's helper:
-  /// starts it, waits until it answers (it takes a few seconds to listen),
-  /// then reconnects. The banner's Restart and the watchdog use it.
-  Future<void> recoverPhoneAgentBackend() async {
-    final backend = _paBackend;
-    final host = _paHost;
-    final directory = backend?.directory;
-    if (backend == null || host == null || directory == null) return;
-    if (_paRecovering) return;
-    _paRecovering = true;
-    try {
-      // Only a stopped helper is started: starting replaces a running one.
-      final agent = _paHostProbeAgent;
-      final running =
-          agent != null && (await host.inspect(agent)).hostAvailable;
-      if (!running) {
-        try {
-          await host.start();
-        } on AgentHostException catch (error) {
-          if (error.reason != AgentHostFailure.busy) rethrow;
-        }
-      }
-      final deadline = DateTime.now().add(const Duration(seconds: 30));
-      while (DateTime.now().isBefore(deadline)) {
-        try {
-          final probe = await host.openGateway(directory);
-          probe.close();
-          break;
-        } catch (_) {
-          await Future<void>.delayed(const Duration(seconds: 1));
-        }
-      }
-      if (_paBackend == backend && !backend._disposed) {
-        await backend.retryConnection();
-      }
-    } catch (_) {
-      // The banner stays; its Restart tries again.
-    } finally {
-      _paRecovering = false;
-    }
-  }
-
-  /// While the agent backend exists, a lost connection is recovered without
-  /// a tap: checked every 10 s, recovered when offline twice.
-  void _paWatchBackend() {
-    _paBackendWatch?.cancel();
-    _paOfflineTicks = 0;
-    _paBackendWatch = Timer.periodic(const Duration(seconds: 10), (_) {
-      final backend = _paBackend;
-      if (_self._disposed || backend == null || backend._disposed) {
-        _paBackendWatch?.cancel();
-        _paBackendWatch = null;
-        return;
-      }
-      // Offline at two checks in a row (reconnect attempts alone don't
-      // restart a stopped helper).
-      if (backend.isConnected) {
-        _paOfflineTicks = 0;
-      } else if (++_paOfflineTicks >= 2) {
-        _paOfflineTicks = 0;
-        unawaited(recoverPhoneAgentBackend());
-      }
-    });
-  }
-
   DateTime? _paKeptUpAt;
-
-  /// Every (re)connect of the agent backend: Android stops the helper in the
-  /// background, and a reconnect alone can't bring it back. Checks it at
-  /// most every 20 s and starts it when it isn't running; the next connect
-  /// attempt then reaches it.
-  void _paKeepHostUp() {
-    final host = _paHost;
-    if (host == null) return;
-    final now = DateTime.now();
-    final last = _paKeptUpAt;
-    if (last != null && now.difference(last) < const Duration(seconds: 20)) {
-      return;
-    }
-    _paKeptUpAt = now;
-    final agent = _paHostProbeAgent;
-    if (agent == null) return;
-    unawaited(() async {
-      try {
-        final runtime = await host.inspect(agent);
-        if (!runtime.hostAvailable && runtime.installed) await host.start();
-      } catch (_) {
-        // The next reconnect checks again.
-      }
-    }());
-  }
-
-  void _paDisposeBackend() {
-    _paBackendWatch?.cancel();
-    _paBackendWatch = null;
-    final backend = _paBackend;
-    _paBackend = null;
-    _paBackendHost = null;
-    _paOwners.clear();
-    _paOpenCodeOpened.clear();
-    if (backend != null && !backend._disposed) backend.dispose();
-  }
 
   @override
   Future<ChatFeedRoute> openChatFeedItem(ChatFeedItem item) async {

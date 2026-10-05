@@ -5132,6 +5132,8 @@
   "agentsSignInIntro": "يسجّل {agent} الدخول عبر خطواته الخاصة، بحسابك أنت في Claude وفق شروط Anthropic. لا يرى التطبيق بيانات تسجيل دخولك.",
   "agentsSignInTerminalIntro": "يفتح {agent} صفحة تسجيل الدخول. سجّل الدخول هناك بحسابك في Claude ثم عُد. إذا طلب {agent} رمزًا، فانسخه من الصفحة واختر لصق.",
   "agentsSignInTerminalNotYet": "لم يُسجَّل الدخول إلى {agent} بعد. ابدأ تسجيل الدخول مرة أخرى عندما تكون مستعدًا.",
+  "agentsSignInIntroOther": "يسجّل {agent} الدخول عبر خطواته الخاصة، بحسابك أنت لدى مزوّده. لا يرى التطبيق بيانات تسجيل دخولك.",
+  "agentsSignInTerminalIntroOther": "يسجّل {agent} الدخول هنا عبر خطواته الخاصة. إذا فتح صفحة، فسجّل الدخول هناك ثم عُد. إذا طلب رمزًا أو مفتاحًا، فاختر لصق.",
   "agentsSignInChecking": "جارٍ التحقق من تسجيل الدخول…",
   "agentsSignInStart": "تسجيل الدخول إلى {agent}",
   "agentsSignedIn": "تم تسجيل الدخول",

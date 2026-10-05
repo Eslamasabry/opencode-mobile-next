@@ -10,6 +10,9 @@ class FakeLocalTerminalBackend implements LocalTerminalBackend {
   final _events = StreamController<LocalTerminalEvent>.broadcast();
   final calls = <String>[];
 
+  /// Each sign-in's program and arguments.
+  final programs = <List<String>>[];
+
   /// Bytes written per shell id.
   final written = <int, List<int>>{};
 
@@ -51,12 +54,14 @@ class FakeLocalTerminalBackend implements LocalTerminalBackend {
     required int rows,
     required int cols,
     String? signInProfile,
+    List<String>? signInProgram,
   }) async {
     calls.add(
       signInProfile == null
           ? 'start $rows x $cols'
           : 'sign-in $signInProfile $rows x $cols',
     );
+    if (signInProgram != null) programs.add(signInProgram);
     await startGate?.future;
     final failure = startFailure;
     if (failure != null) throw StateError(failure);

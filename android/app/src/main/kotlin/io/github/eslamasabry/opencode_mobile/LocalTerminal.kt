@@ -220,13 +220,15 @@ class LocalTerminal private constructor(private val context: Context) {
      * Starts `bash -l` in Ubuntu on a new PTY of [rows] x [cols], or, for
      * [signInProfile], Claude's own sign-in for that profile's agent account.
      */
-    fun start(rows: Int, cols: Int, signInProfile: String? = null): Session {
+    fun start(rows: Int, cols: Int, signInProfile: String? = null, signInProgram: List<String>? = null): Session {
         val linux = BuiltinLinux.get(context)
         return synchronized(linux) {
             synchronized(this) {
                 check(linux.installed) { "Ubuntu is not installed in the app yet" }
                 linux.nameAndroidGroups()
-                val signIn = signInProfile?.let { linux.agentSignInCommand(it) }
+                val signIn = signInProfile?.let {
+                    linux.agentSignInCommand(it, signInProgram ?: listOf("claude", "auth", "login", "--claudeai"))
+                }
                 val argv = signIn?.first ?: linux.prootCommand(listOf("/bin/bash", "-l"))
                 val env = (System.getenv() + linux.prootEnvironment())
                     .map { (key, value) -> "$key=$value" }
@@ -310,7 +312,8 @@ class LocalTerminal private constructor(private val context: Context) {
                 val rows = call.argument<Int>("rows") ?: 24
                 val cols = call.argument<Int>("cols") ?: 80
                 val signIn = call.argument<String>("signInProfile")
-                inBackground { start(rows, cols, signIn).toMap() }
+                val program = call.argument<List<String>>("signInProgram")
+                inBackground { start(rows, cols, signIn, program).toMap() }
             }
             "list" -> result.success(
                 mapOf(

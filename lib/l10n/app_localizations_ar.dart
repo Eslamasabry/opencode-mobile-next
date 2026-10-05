@@ -27255,6 +27255,16 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String agentsSignInIntroOther(String agent) {
+    return 'يسجّل $agent الدخول عبر خطواته الخاصة، بحسابك أنت لدى مزوّده. لا يرى التطبيق بيانات تسجيل دخولك.';
+  }
+
+  @override
+  String agentsSignInTerminalIntroOther(String agent) {
+    return 'يسجّل $agent الدخول هنا عبر خطواته الخاصة. إذا فتح صفحة، فسجّل الدخول هناك ثم عُد. إذا طلب رمزًا أو مفتاحًا، فاختر لصق.';
+  }
+
+  @override
   String agentsSignInTerminalNotYet(String agent) {
     return 'لم يُسجَّل الدخول إلى $agent بعد. ابدأ تسجيل الدخول مرة أخرى عندما تكون مستعدًا.';
   }

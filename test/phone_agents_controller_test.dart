@@ -194,6 +194,9 @@ class _HostState {
   var newAgentSeq = 0;
   AgentPhoneCheckResult? check;
 
+  /// What the helper's runtime snapshot lists.
+  List<Map<String, dynamic>> providers = [_provider('claude')];
+
   /// When set, the helper refuses to resume old conversations.
   bool resumeFails = false;
   final resumed = <String>[];
@@ -280,8 +283,12 @@ class _FakeHost implements PhoneAgentHostPort {
       {
         'cwd': request['cwd'],
         'generatedAt': _stamp,
-        'entries': [_provider('claude')],
+        'entries': state.providers,
       },
+    );
+    socket.handlers['refresh_providers_snapshot_request'] = (request) => (
+      'refresh_providers_snapshot_response',
+      {'cwd': request['cwd'], 'acknowledged': true},
     );
     socket.handlers['fetch_agents_request'] = (_) => (
       'fetch_agents_response',
@@ -908,6 +915,42 @@ void main() {
     final notice = c.agentResumeNotice(row);
     expect(notice.canReopen, isFalse);
     expect(notice.requiresAcknowledgement, isTrue);
+    await tester.pump(const Duration(seconds: 3));
+    c.dispose();
+  });
+
+  testWidgets('another agent\'s sign-in is what the helper reports', (
+    tester,
+  ) async {
+    final w = await _world(tester);
+    w.state.runtimes = {
+      'claude': _ready('claude'),
+      'codex': const PhoneAgentRuntime(
+        agentId: 'codex',
+        installed: true,
+        hostAvailable: true,
+        architectureQualified: true,
+      ),
+    };
+    w.state.providers = [
+      _provider('claude'),
+      {
+        ..._provider('codex'),
+        'status': 'error',
+        'error': 'AuthRequired: run codex login',
+      },
+    ];
+    final c = w.controller;
+    await c.rememberLastUsedProject(dir);
+    await c.refreshAgentRows();
+    await c.refreshAgentRows();
+    AgentRow codex() => c.agentRows.firstWhere((row) => row.id == 'codex');
+    expect(codex().status, PhoneAgentStatus.signedOut);
+    expect(codex().fixAction, PhoneAgentFixAction.signIn);
+    // Signed in on its terminal: the helper says it can start now.
+    w.state.providers = [_provider('claude'), _provider('codex')];
+    await c.recheckAgentSignIn('codex');
+    expect(codex().chatSelectable, isTrue);
     await tester.pump(const Duration(seconds: 3));
     c.dispose();
   });

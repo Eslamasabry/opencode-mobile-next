@@ -323,16 +323,20 @@ class BuiltinLinux(private val context: Context) {
     private val agentProcessProfiles = mutableMapOf<Process, String>()
 
     /**
-     * Claude's own sign-in (`claude auth login`) for [profileId]'s agent
-     * account, to run on a terminal: the person signs in through Claude's
-     * prompts and Anthropic's page, and the app never reads the code. The
-     * page Claude asks the system to open is written to the returned file
-     * by a stand-in `xdg-open`, and the terminal opens it in the browser.
+     * An agent's own sign-in (`claude auth login`, `codex login`, …) for
+     * [profileId]'s agent account, to run on a terminal: the person signs in
+     * through the agent's prompts and its provider's page, and the app never
+     * reads a code or key. The page the agent asks the system to open is
+     * written to the returned file by a stand-in `xdg-open`, and the
+     * terminal opens it in the browser. Only the catalog's agent programs
+     * and plain arguments run.
      */
     @Synchronized
-    fun agentSignInCommand(profileId: String): Pair<List<String>, File> {
+    fun agentSignInCommand(profileId: String, program: List<String>): Pair<List<String>, File> {
         check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId)) { "The agent host is unavailable." }
         check(installed && profileId !in blockedAgentProfiles) { "The agent host is unavailable." }
+        check(program.isNotEmpty() && program.size <= 5 && program.first() in SIGN_IN_PROGRAMS &&
+            program.drop(1).all { Regex("^[A-Za-z0-9-]{1,32}$").matches(it) }) { "That sign-in can't run here." }
         val profileHome = PhoneAgentPaths.prepare(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId")
         Os.chmod(profileHome.absolutePath, 448)
         val guestHome = "/home/oc/.oc-profiles/$profileId"
@@ -351,9 +355,9 @@ class BuiltinLinux(private val context: Context) {
         val command = listOf("/usr/bin/env", "HOME=$guestHome", "CLAUDE_CONFIG_DIR=$guestHome/claude",
             "BROWSER=$guestHome/.oc-bin/open-url",
             "PATH=$guestHome/.oc-bin:/home/oc/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+            "CODEX_HOME=$guestHome/codex",
             "TERM=xterm-256color", "LANG=C.UTF-8",
-            "DISABLE_AUTOUPDATER=1", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
-            "claude", "auth", "login", "--claudeai")
+            "DISABLE_AUTOUPDATER=1", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1") + program
         return prootCommand(command, agentUser = true) to request
     }
 
@@ -2039,6 +2043,9 @@ class BuiltinLinux(private val context: Context) {
         )
 
         const val TAG = "OcLinux"
+
+        /** The agent programs a sign-in terminal may run (the agent catalog's). */
+        val SIGN_IN_PROGRAMS = setOf("claude", "codex", "gemini", "qwen", "goose", "omp", "fx")
 
         /** The longest one wake-lock hold for a reply lasts before renewal. */
         const val MAX_WORK_HOLD_MS = 15 * 60 * 1000L

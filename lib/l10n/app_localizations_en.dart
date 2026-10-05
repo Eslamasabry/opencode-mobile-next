@@ -27137,6 +27137,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String agentsSignInIntroOther(String agent) {
+    return '$agent signs in with its own prompts, on your own account with its provider. The app never sees your sign-in.';
+  }
+
+  @override
+  String agentsSignInTerminalIntroOther(String agent) {
+    return '$agent signs in here with its own prompts. If it opens a page, sign in there and come back. If it asks for a code or key, choose Paste.';
+  }
+
+  @override
   String agentsSignInTerminalNotYet(String agent) {
     return '$agent isn\'t signed in yet. Start the sign-in again when you\'re ready.';
   }

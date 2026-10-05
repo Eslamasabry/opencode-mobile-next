@@ -32251,6 +32251,24 @@
       }
     }
   },
+  "agentsSignInIntroOther": "{agent} signs in with its own prompts, on your own account with its provider. The app never sees your sign-in.",
+  "@agentsSignInIntroOther": {
+    "description": "Sign-in step body for an agent other than Claude Code",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSignInTerminalIntroOther": "{agent} signs in here with its own prompts. If it opens a page, sign in there and come back. If it asks for a code or key, choose Paste.",
+  "@agentsSignInTerminalIntroOther": {
+    "description": "Sign-in terminal: what to do while another agent's own sign-in runs",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
   "agentsSignInTerminalNotYet": "{agent} isn't signed in yet. Start the sign-in again when you're ready.",
   "@agentsSignInTerminalNotYet": {
     "description": "Sign-in terminal: the sign-in ended without signing in",

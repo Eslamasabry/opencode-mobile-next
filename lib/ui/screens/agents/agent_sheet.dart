@@ -540,7 +540,9 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     } else if (checking) {
       body = l10n.agentsSignInChecking;
     } else {
-      body = l10n.agentsSignInIntro(name);
+      body = id == 'claude'
+          ? l10n.agentsSignInIntro(name)
+          : l10n.agentsSignInIntroOther(name);
     }
 
     return KitSheet(

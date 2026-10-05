@@ -85,12 +85,14 @@ class LocalTerminalOpenUrl extends LocalTerminalEvent {
 abstract class LocalTerminalBackend {
   Stream<LocalTerminalEvent> get events;
 
-  /// Starts `bash -l`, or with [signInProfile] Claude's own sign-in for that
-  /// profile's agent account.
+  /// Starts `bash -l`, or with [signInProfile] an agent's own sign-in
+  /// ([signInProgram]: the program and its arguments) for that profile's
+  /// agent account.
   Future<LocalShellInfo> start({
     required int rows,
     required int cols,
     String? signInProfile,
+    List<String>? signInProgram,
   });
 
   Future<LocalTerminalListing> list();
@@ -156,11 +158,13 @@ class ChannelLocalTerminalBackend implements LocalTerminalBackend {
     required int rows,
     required int cols,
     String? signInProfile,
+    List<String>? signInProgram,
   }) async {
     final raw = await _methods.invokeMethod<Map<Object?, Object?>>('start', {
       'rows': rows,
       'cols': cols,
       'signInProfile': ?signInProfile,
+      'signInProgram': ?signInProgram,
     });
     return LocalShellInfo.fromMap(raw ?? const {});
   }
@@ -507,14 +511,20 @@ class LocalTerminalSessions extends ChangeNotifier {
     return shell;
   }
 
-  /// Starts Claude's own sign-in for [profileId]'s agent account on a
-  /// terminal of its own (not listed in [shells]). [endSignIn] removes it.
-  LocalShell startSignIn(String profileId, {int rows = 24, int cols = 80}) {
+  /// Starts an agent's own sign-in ([program]: its login command) for
+  /// [profileId]'s agent account on a terminal of its own (not listed in
+  /// [shells]). [endSignIn] removes it.
+  LocalShell startSignIn(
+    String profileId,
+    List<String> program, {
+    int rows = 24,
+    int cols = 80,
+  }) {
     _listen();
     final shell = LocalShell._(_backend, 0);
     shell.terminal.resize(cols, rows);
     _signIns.add(shell);
-    unawaited(_launch(shell, signInProfile: profileId));
+    unawaited(_launch(shell, signInProfile: profileId, signInProgram: program));
     return shell;
   }
 
@@ -531,13 +541,18 @@ class LocalTerminalSessions extends ChangeNotifier {
     shell.dispose();
   }
 
-  Future<void> _launch(LocalShell shell, {String? signInProfile}) async {
+  Future<void> _launch(
+    LocalShell shell, {
+    String? signInProfile,
+    List<String>? signInProgram,
+  }) async {
     final size = (shell.terminal.viewHeight, shell.terminal.viewWidth);
     try {
       final info = await _backend.start(
         rows: size.$1,
         cols: size.$2,
         signInProfile: signInProfile,
+        signInProgram: signInProgram,
       );
       shell._started(info, size);
       unawaited(refreshProcesses());

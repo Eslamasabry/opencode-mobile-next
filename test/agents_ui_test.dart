@@ -476,6 +476,41 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
     });
 
+    testWidgets('each agent signs in with its own login command', (
+      tester,
+    ) async {
+      final claude = await openTerminal(
+        tester,
+        _host(agents: signedOutClaude()),
+      );
+      expect(claude.programs.single, ['claude', 'auth', 'login', '--claudeai']);
+      await tester.pump(const Duration(milliseconds: 200));
+    });
+
+    testWidgets(
+      'Codex runs its device sign-in, in words that are not Claude\'s',
+      (tester) async {
+        final agents = FakePhoneAgentsSource(
+          rows: [agentRowFor('codex', FakeAgentStage.signedOut)],
+        );
+        final terminal = FakeLocalTerminalBackend();
+        await _newChat(
+          tester,
+          _host(agents: agents),
+          terminal: LocalTerminalSessions(backend: terminal),
+        );
+        await _openSheet(tester);
+        await tester.tap(find.byKey(const ValueKey('agents-choice-codex')));
+        await tester.pumpAndSettle();
+        expect(find.textContaining('Claude account'), findsNothing);
+        await tester.tap(find.byKey(const ValueKey('agents-sign-in-start')));
+        await tester.pumpAndSettle();
+        expect(terminal.programs.single, ['codex', 'login', '--device-auth']);
+        expect(find.textContaining('Claude account'), findsNothing);
+        await tester.pump(const Duration(milliseconds: 200));
+      },
+    );
+
     testWidgets('ending without signing in says so and starts again', (
       tester,
     ) async {
