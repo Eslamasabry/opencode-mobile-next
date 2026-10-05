@@ -4064,6 +4064,8 @@
   "approvalModeAutoDetail": "يُسمح مرة واحدة فور وصولها.",
   "approvalModeEverythingTitle": "وافق على كل شيء",
   "approvalModeEverythingDetail": "كل المحادثات على هذا الخادم.",
+  "approvalModeEverythingAgentDetail": "كل محادثات {agent} على هذا الهاتف.",
+  "composerToolsAgentTextOnly": "يقبل {agent} النص فقط هنا",
   "approvalModeSettings": "إعدادات الموافقة…",
   "approvalModeConfirmEverythingTitle": "الموافقة على كل شيء؟",
   "approvalModeConfirmEverythingAction": "وافق على كل شيء",

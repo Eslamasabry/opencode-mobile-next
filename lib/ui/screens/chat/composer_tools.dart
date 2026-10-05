@@ -41,7 +41,12 @@ class _PromptToolsList extends StatelessWidget {
     required this.canStash,
     required this.canOpenStash,
     required this.onPick,
+    this.agentName,
   });
+
+  /// The agent a text-only conversation talks to (Claude Code), named in
+  /// place of "this server".
+  final String? agentName;
 
   final bool attachBlocked;
   final bool attachmentsSupported;
@@ -101,7 +106,9 @@ class _PromptToolsList extends StatelessWidget {
                 key: const Key('composer-tool-attach'),
                 leading: const KitRowIcon(AppIconography.attach),
                 title: l10n.chatUiAttachFile,
-                reason: l10n.composerToolsTextOnly,
+                reason: agentName == null
+                    ? l10n.composerToolsTextOnly
+                    : l10n.composerToolsAgentTextOnly(KitBidi.auto(agentName!)),
               ),
             if (attachmentsSupported && photos) ...[
               tool(

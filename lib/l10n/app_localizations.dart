@@ -19224,6 +19224,12 @@ abstract class AppLocalizations {
   /// **'Every conversation on this server.'**
   String get approvalModeEverythingDetail;
 
+  /// Approval menu: approve everything, for an agent on this phone (Claude Code)
+  ///
+  /// In en, this message translates to:
+  /// **'Every {agent} conversation on this phone.'**
+  String approvalModeEverythingAgentDetail(String agent);
+
   /// Menu item that opens the full approvals sheet
   ///
   /// In en, this message translates to:
@@ -30705,6 +30711,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This server takes text only'**
   String get composerToolsTextOnly;
+
+  /// Prompt tools: attaching is off because the conversation's agent on this phone takes text only
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} takes text only here'**
+  String composerToolsAgentTextOnly(String agent);
 
   /// Composer + sheet: the door to the command and agent list.
   ///

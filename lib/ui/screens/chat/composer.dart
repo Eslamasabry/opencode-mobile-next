@@ -484,6 +484,7 @@ class _ChatComposer extends StatelessWidget {
         canClearText: canClearText,
         canStash: canStash,
         canOpenStash: onOpenStash != null,
+        agentName: agentName,
         onPick: (tool) => KitSheet.close(sheetContext, tool),
       ),
     );

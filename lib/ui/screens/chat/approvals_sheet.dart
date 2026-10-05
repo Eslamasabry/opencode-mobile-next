@@ -118,7 +118,11 @@ class _SessionApprovalsSheetState extends State<SessionApprovalsSheet> {
                     value,
                     'approvals-mode-everything',
                     strings.approvalModeEverythingTitle,
-                    strings.approvalModeEverythingDetail,
+                    _controller.isAgentBackend
+                        ? strings.approvalModeEverythingAgentDetail(
+                            KitBidi.auto(_controller.profile?.name ?? ''),
+                          )
+                        : strings.approvalModeEverythingDetail,
                   ),
                 },
             ],

@@ -249,8 +249,11 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
             ),
             SizedBox(height: tokens.space3),
             Center(child: chip),
-            // Quiet, and only where the server can make a separate copy.
-            if (_copyProject != null) ...[
+            // Quiet, and only where the server can make a separate copy:
+            // the copy is OpenCode's, so not while another agent is chosen.
+            if (_copyProject != null &&
+                (agentChoice == null ||
+                    agentChoice.agentId == openCodeChatAgentId)) ...[
               SizedBox(height: tokens.space1),
               Center(
                 child: KitChip.action(

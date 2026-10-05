@@ -148,7 +148,8 @@ extension _ChatSessionMenu on _ChatScreenState {
       SessionMenuOffer.of(
         _conn.capabilities,
         shared: shared,
-        savedServer: _conn.profile != null,
+        // An agent on this phone is reachable from this phone only.
+        savedServer: _conn.profile != null && !_conn.isAgentBackend,
         compact: _supportsSessionCompact,
         timeline: _messages.isNotEmpty,
         hasPrompt: hasPrompt,

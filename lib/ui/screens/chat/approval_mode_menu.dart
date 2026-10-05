@@ -127,7 +127,11 @@ extension _ChatApprovalModeMenu on _ChatScreenState {
               choice,
               'approval-mode-everything',
               strings.approvalModeEverythingTitle,
-              strings.approvalModeEverythingDetail,
+              _conn.isAgentBackend
+                  ? strings.approvalModeEverythingAgentDetail(
+                      KitBidi.auto(_conn.profile?.name ?? ''),
+                    )
+                  : strings.approvalModeEverythingDetail,
             ),
           },
         KitMenuItem(

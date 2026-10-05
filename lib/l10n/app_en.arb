@@ -12315,6 +12315,15 @@
     "description": "Menu choice: every conversation on this server is approved automatically"
   },
   "approvalModeEverythingDetail": "Every conversation on this server.",
+  "approvalModeEverythingAgentDetail": "Every {agent} conversation on this phone.",
+  "@approvalModeEverythingAgentDetail": {
+    "description": "Approval menu: approve everything, for an agent on this phone (Claude Code)",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
   "@approvalModeEverythingDetail": {
     "description": "One-line explanation of the Approve everything menu choice"
   },
@@ -22695,6 +22704,15 @@
     "description": "Composer: the field waits while a saved prompt or photo is being put in the draft."
   },
   "composerToolsTextOnly": "This server takes text only",
+  "composerToolsAgentTextOnly": "{agent} takes text only here",
+  "@composerToolsAgentTextOnly": {
+    "description": "Prompt tools: attaching is off because the conversation's agent on this phone takes text only",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
   "@composerToolsTextOnly": {
     "description": "Composer + sheet: why the attach row is unavailable on a text-only server."
   },

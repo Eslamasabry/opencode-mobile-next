@@ -283,23 +283,28 @@ extension _ChatCommands on _ChatScreenState {
         group: _chatL10n(context).chatUiModelAndAgent,
         action: _ChatCommandAction.model,
       ),
-      CommandSheetEntry.app(
-        slash: 'agents',
-        aliases: const ['agent'],
-        title: _chatL10n(context).chatUiAgent,
-        description: _chatL10n(context).chatUiChooseTheActiveOpenCodeAgent,
-        group: _chatL10n(context).chatUiModelAndAgent,
-        action: _ChatCommandAction.model,
-      ),
-      CommandSheetEntry.app(
-        slash: 'variants',
-        title: _chatL10n(context).modelThinkingMode,
-        description: _chatL10n(
-          context,
-        ).chatUiChooseTheCurrentModelVariantOrReasoning,
-        group: _chatL10n(context).chatUiModelAndAgent,
-        action: _ChatCommandAction.model,
-      ),
+      // OpenCode's agents (build, plan, …): a runtime without them has no
+      // agent to choose.
+      if (_conn.agents.isNotEmpty)
+        CommandSheetEntry.app(
+          slash: 'agents',
+          aliases: const ['agent'],
+          title: _chatL10n(context).chatUiAgent,
+          description: _chatL10n(context).chatUiChooseTheActiveOpenCodeAgent,
+          group: _chatL10n(context).chatUiModelAndAgent,
+          action: _ChatCommandAction.model,
+        ),
+      // Variants come with the server's model catalog.
+      if (_conn.capabilities.serverCatalog)
+        CommandSheetEntry.app(
+          slash: 'variants',
+          title: _chatL10n(context).modelThinkingMode,
+          description: _chatL10n(
+            context,
+          ).chatUiChooseTheCurrentModelVariantOrReasoning,
+          group: _chatL10n(context).chatUiModelAndAgent,
+          action: _ChatCommandAction.model,
+        ),
       CommandSheetEntry.app(
         slash: 'mcps',
         aliases: const ['mcp'],

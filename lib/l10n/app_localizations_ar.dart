@@ -11716,6 +11716,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get approvalModeEverythingDetail => 'كل المحادثات على هذا الخادم.';
 
   @override
+  String approvalModeEverythingAgentDetail(String agent) {
+    return 'كل محادثات $agent على هذا الهاتف.';
+  }
+
+  @override
   String get approvalModeSettings => 'إعدادات الموافقة…';
 
   @override
@@ -19416,6 +19421,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get composerToolsTextOnly => 'This server takes text only';
+
+  @override
+  String composerToolsAgentTextOnly(String agent) {
+    return 'يقبل $agent النص فقط هنا';
+  }
 
   @override
   String get composerToolCommandsTitle => 'Commands and agents';

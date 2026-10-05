@@ -11630,6 +11630,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Every conversation on this server.';
 
   @override
+  String approvalModeEverythingAgentDetail(String agent) {
+    return 'Every $agent conversation on this phone.';
+  }
+
+  @override
   String get approvalModeSettings => 'Approval settings…';
 
   @override
@@ -19298,6 +19303,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get composerToolsTextOnly => 'This server takes text only';
+
+  @override
+  String composerToolsAgentTextOnly(String agent) {
+    return '$agent takes text only here';
+  }
 
   @override
   String get composerToolCommandsTitle => 'Commands and agents';

@@ -6,6 +6,7 @@ import 'package:opencode_mobile/ui/kit/kit_bidi.dart';
 import 'package:opencode_mobile/ui/screens/chats/new_chat_screen.dart';
 
 import '../tool/capture/fixtures.dart' show loadCaptureFonts;
+import 'support/agents_fakes.dart';
 import 'support/chats_fakes.dart';
 
 FakeChatFeedSource _source({String? lastUsed}) => FakeChatFeedSource(
@@ -175,6 +176,22 @@ void main() {
         tester,
         FakeChatsHost(_source(lastUsed: '/root/projects/alpha')),
       );
+      expect(
+        find.byKey(const ValueKey('chats-new-separate-copy')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('is OpenCode\'s: not offered while another agent is chosen', (
+      tester,
+    ) async {
+      final host = FakeChatsHost(_source(lastUsed: '/root/projects/alpha'))
+        ..copyProject = copy
+        ..phoneAgents = FakePhoneAgentsSource(
+          rows: [agentRowFor('claude', FakeAgentStage.ready)],
+          selected: 'claude',
+        );
+      await _open(tester, host);
       expect(
         find.byKey(const ValueKey('chats-new-separate-copy')),
         findsNothing,
