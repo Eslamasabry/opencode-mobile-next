@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opencode_mobile/builtin/local_terminal.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/domain/phone_agents_source.dart';
@@ -212,8 +213,12 @@ Widget chatsApp(
   bool light = false,
   double textScale = 1,
   Locale locale = const Locale('en'),
+  LocalTerminalSessions? terminal,
 }) => ProviderScope(
-  overrides: [chatsHostProvider.overrideWithValue(host)],
+  overrides: [
+    chatsHostProvider.overrideWithValue(host),
+    if (terminal != null) localTerminalProvider.overrideWithValue(terminal),
+  ],
   child: MaterialApp(
     debugShowCheckedModeBanner: false,
     theme: captureTheme(light: light),

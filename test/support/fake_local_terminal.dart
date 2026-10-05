@@ -40,12 +40,23 @@ class FakeLocalTerminalBackend implements LocalTerminalBackend {
 
   void exit(int id, int code) => _events.add(LocalTerminalExit(id, code));
 
+  void openUrl(int id, String url) =>
+      _events.add(LocalTerminalOpenUrl(id, url));
+
   String writtenText(int id) =>
       utf8.decode(written[id] ?? const [], allowMalformed: true);
 
   @override
-  Future<LocalShellInfo> start({required int rows, required int cols}) async {
-    calls.add('start $rows x $cols');
+  Future<LocalShellInfo> start({
+    required int rows,
+    required int cols,
+    String? signInProfile,
+  }) async {
+    calls.add(
+      signInProfile == null
+          ? 'start $rows x $cols'
+          : 'sign-in $signInProfile $rows x $cols',
+    );
     await startGate?.future;
     final failure = startFailure;
     if (failure != null) throw StateError(failure);

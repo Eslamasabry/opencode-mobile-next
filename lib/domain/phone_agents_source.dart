@@ -178,6 +178,14 @@ abstract interface class PhoneAgentsSource {
   /// Submits the one-time browser code once; the code is consumed.
   Future<void> submitAgentSignInCode(String agentId, AgentSignInCode code);
 
+  /// The profile whose agent account a terminal sign-in signs in to: the
+  /// person runs Claude's own `claude auth login` there and the app never
+  /// sees the code. Null while agents are unavailable on this connection.
+  String? get agentSignInProfileId;
+
+  /// Reads [agentId]'s sign-in again, after a terminal sign-in ended.
+  Future<void> recheckAgentSignIn(String agentId);
+
   /// Cancels the sign-in flow and awaits the native drain. Closing the sheet
   /// calls this. Throws [AgentSignInException] if the drain is unconfirmed.
   Future<void> cancelAgentSignIn(String agentId);

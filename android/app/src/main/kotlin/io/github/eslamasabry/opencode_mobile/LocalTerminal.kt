@@ -47,6 +47,8 @@ class LocalTerminal private constructor(private val context: Context) {
         val confined: Boolean,
         private val fd: Int,
         private val pty: ParcelFileDescriptor,
+        /** Set for an agent sign-in: where Claude's page request lands. */
+        private val openRequest: java.io.File? = null,
     ) {
         private val lock = Object()
         private val pending = ByteArrayOutputStream()
@@ -65,6 +67,7 @@ class LocalTerminal private constructor(private val context: Context) {
 
         fun startThreads() {
             val reader = Thread({ readLoop() }, "local-terminal-$id-read").apply { start() }
+            if (openRequest != null) Thread({ watchOpenRequests(openRequest) }, "local-terminal-$id-open").start()
             Thread({
                 val code = PtyAccess.waitFor(pid)
                 // The last output is still in the PTY when the shell ends.
@@ -99,6 +102,23 @@ class LocalTerminal private constructor(private val context: Context) {
                     recent.append(buffer, read)
                 }
                 scheduleFlush()
+            }
+        }
+
+        /**
+         * Claude asked the system to open its sign-in page: hand the address
+         * to the screen, which checks it and opens the browser.
+         */
+        private fun watchOpenRequests(file: java.io.File) {
+            while (running) {
+                if (file.isFile) {
+                    val url = try { file.readText().trim() } catch (_: IOException) { "" }
+                    file.delete()
+                    if (url.isNotEmpty() && url.length <= 8192) {
+                        main.post { sink?.success(mapOf("type" to "openUrl", "id" to id, "url" to url)) }
+                    }
+                }
+                try { Thread.sleep(300) } catch (_: InterruptedException) { return }
             }
         }
 
@@ -192,17 +212,22 @@ class LocalTerminal private constructor(private val context: Context) {
             "pid" to pid,
             "running" to running,
             "exitCode" to exitCode,
+            "signIn" to (openRequest != null),
         )
     }
 
-    /** Starts `bash -l` in Ubuntu on a new PTY of [rows] x [cols]. */
-    fun start(rows: Int, cols: Int): Session {
+    /**
+     * Starts `bash -l` in Ubuntu on a new PTY of [rows] x [cols], or, for
+     * [signInProfile], Claude's own sign-in for that profile's agent account.
+     */
+    fun start(rows: Int, cols: Int, signInProfile: String? = null): Session {
         val linux = BuiltinLinux.get(context)
         return synchronized(linux) {
             synchronized(this) {
                 check(linux.installed) { "Ubuntu is not installed in the app yet" }
                 linux.nameAndroidGroups()
-                val argv = linux.prootCommand(listOf("/bin/bash", "-l"))
+                val signIn = signInProfile?.let { linux.agentSignInCommand(it) }
+                val argv = signIn?.first ?: linux.prootCommand(listOf("/bin/bash", "-l"))
                 val env = (System.getenv() + linux.prootEnvironment())
                     .map { (key, value) -> "$key=$value" }
                 val pid = IntArray(1)
@@ -217,7 +242,9 @@ class LocalTerminal private constructor(private val context: Context) {
                     0,
                     0,
                 )
-                val session = Session(nextId++, pid[0], linux.prootIsConfined, fd, ParcelFileDescriptor.adoptFd(fd))
+                val session = Session(
+                    nextId++, pid[0], linux.prootIsConfined, fd, ParcelFileDescriptor.adoptFd(fd), signIn?.second,
+                )
                 sessions[session.id] = session
                 session.startThreads()
                 Log.i(TAG, "shell ${session.id} started as pid ${session.pid}")
@@ -282,7 +309,8 @@ class LocalTerminal private constructor(private val context: Context) {
             "start" -> {
                 val rows = call.argument<Int>("rows") ?: 24
                 val cols = call.argument<Int>("cols") ?: 80
-                inBackground { start(rows, cols).toMap() }
+                val signIn = call.argument<String>("signInProfile")
+                inBackground { start(rows, cols, signIn).toMap() }
             }
             "list" -> result.success(
                 mapOf(

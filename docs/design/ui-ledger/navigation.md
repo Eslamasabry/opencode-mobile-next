@@ -1407,6 +1407,7 @@ graph LR
 |---|---|---|---|---|
 | `agents-model-sheet` | sheet | unreachable | _none_ | _none_ |
 | `agents-sheet` | sheet | 1 / 3 | `chats-home` / agents-notice-sign-in<br>`agents-section` / agents-section-fix | _none_ |
+| `agents-sign-in-terminal` | screen | unreachable | _none_ | _none_ |
 | `agents-screen` | screen | unreachable | _none_ | agents-screen-switch -> `servers`<br>(embedded) -> `agents-section` |
 | `agents-section` | overlay | unreachable | `agents-screen` / (embedded) | agents-section-fix -> `agents-sheet` |
 | `chats-home` | tab | 0 / 2 | `home-shell` / home-shell-tab-chats | chats-home-filter-project -> `chats-project-sheet`<br>chats-home-row -> `chat`<br>chats-home-new -> `chats-new-chat`<br>chats-home-start-in-project -> `chats-new-chat`<br>chats-home-start -> `chats-new-chat`<br>agents-notice-sign-in -> `agents-sheet` |

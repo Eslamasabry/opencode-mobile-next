@@ -42772,8 +42772,20 @@ abstract class AppLocalizations {
   /// Sign-in step body
   ///
   /// In en, this message translates to:
-  /// **'Use your {agent} subscription: open the page, sign in, copy the code it shows, and paste it here.'**
+  /// **'{agent} signs in with its own prompts, on your own Claude account under Anthropic\'s terms. The app never sees your sign-in.'**
   String agentsSignInIntro(String agent);
+
+  /// Sign-in terminal: what to do while Claude's own sign-in runs
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} opens its sign-in page. Sign in there with your Claude account, then come back. If {agent} asks for a code, copy it on the page and choose Paste.'**
+  String agentsSignInTerminalIntro(String agent);
+
+  /// Sign-in terminal: the sign-in ended without signing in
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} isn\'t signed in yet. Start the sign-in again when you\'re ready.'**
+  String agentsSignInTerminalNotYet(String agent);
 
   /// Sign-in step: first read
   ///
@@ -42786,30 +42798,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign in with {agent}'**
   String agentsSignInStart(String agent);
-
-  /// Sign-in step: opens the browser page
-  ///
-  /// In en, this message translates to:
-  /// **'Open the {agent} sign-in page'**
-  String agentsSignInOpenPage(String agent);
-
-  /// Sign-in step: field label
-  ///
-  /// In en, this message translates to:
-  /// **'Code from the browser'**
-  String get agentsSignInCodeLabel;
-
-  /// Sign-in step: sends the pasted code
-  ///
-  /// In en, this message translates to:
-  /// **'Submit code'**
-  String get agentsSignInSubmit;
-
-  /// Sign-in step: the code was sent
-  ///
-  /// In en, this message translates to:
-  /// **'Checking the code…'**
-  String get agentsSignInSubmitting;
 
   /// Sign-in step: done
   ///
@@ -43014,24 +43002,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paste'**
   String get agentsSignInPaste;
-
-  /// Sign-in step: starts the sign-in again for a fresh code
-  ///
-  /// In en, this message translates to:
-  /// **'Get a new code'**
-  String get agentsSignInNewCode;
-
-  /// Sign-in step: why Submit code is off
-  ///
-  /// In en, this message translates to:
-  /// **'Paste the code first'**
-  String get agentsSignInCodeFirst;
-
-  /// A sign-in is waiting for its code: row and status line action
-  ///
-  /// In en, this message translates to:
-  /// **'Enter sign-in code'**
-  String get agentsEnterCode;
 }
 
 class _AppLocalizationsDelegate

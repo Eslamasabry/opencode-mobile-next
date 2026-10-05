@@ -277,6 +277,37 @@ class FakePhoneAgentsSource extends ChangeNotifier
   }
 
   @override
+  String? agentSignInProfileId = 'local';
+
+  /// What [recheckAgentSignIn] finds: signed in once a test says the
+  /// terminal sign-in succeeded, signed out before.
+  bool signedInAfterTerminal = false;
+
+  @override
+  Future<void> recheckAgentSignIn(String agentId) async {
+    calls.add('recheck:$agentId');
+    if (!signedInAfterTerminal) {
+      signIn[agentId] = const AgentSignInState(
+        phase: AgentSignInPhase.signedOut,
+        method: AgentSignInMethod.browserOAuthHost,
+        inspected: true,
+      );
+      notifyListeners();
+      return;
+    }
+    signIn[agentId] = const AgentSignInState(
+      phase: AgentSignInPhase.signedIn,
+      method: AgentSignInMethod.browserOAuthHost,
+      inspected: true,
+    );
+    _rows = [
+      for (final row in _rows)
+        row.id == agentId ? agentRowFor(agentId, FakeAgentStage.ready) : row,
+    ];
+    notifyListeners();
+  }
+
+  @override
   Future<void> cancelAgentSignIn(String agentId) async {
     calls.add('cancel-sign-in:$agentId');
     signIn.remove(agentId);

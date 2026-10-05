@@ -558,6 +558,29 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   }
 
   @override
+  String? get agentSignInProfileId =>
+      phoneAgentsAvailable ? (_paHostProfile ?? _paProfile?.id) : null;
+
+  @override
+  Future<void> recheckAgentSignIn(String agentId) async {
+    // A fresh reading: the old session may still hold an earlier answer.
+    await _paSignInSubs.remove(agentId)?.cancel();
+    final previous = _paSignIns.remove(agentId);
+    if (previous != null) {
+      try {
+        await previous.close();
+      } catch (_) {}
+    }
+    try {
+      await _paSession(agentId).inspectStatus();
+    } catch (_) {
+      // The rows below still say what is known.
+    }
+    await refreshAgentRows();
+    if (!_self._disposed) _self._notifyListeners();
+  }
+
+  @override
   Future<void> cancelAgentSignIn(String agentId) async {
     final session = _paSignIns[agentId];
     if (session == null) return;

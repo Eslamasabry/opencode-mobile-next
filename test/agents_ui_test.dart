@@ -1,7 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:opencode_mobile/domain/agent_sign_in.dart';
+import 'package:opencode_mobile/builtin/local_terminal.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
@@ -16,6 +16,7 @@ import 'package:opencode_mobile/ui/screens/chats/new_chat_screen.dart';
 
 import '../tool/capture/fixtures.dart' show loadCaptureFonts;
 import 'support/agents_fakes.dart';
+import 'support/fake_local_terminal.dart';
 import 'support/chats_fakes.dart';
 
 final _now = DateTime(2026, 10, 3, 12);
@@ -31,11 +32,17 @@ FakeChatsHost _host({
   ),
 )..phoneAgents = agents;
 
-Future<void> _newChat(WidgetTester tester, FakeChatsHost host) async {
+Future<void> _newChat(
+  WidgetTester tester,
+  FakeChatsHost host, {
+  LocalTerminalSessions? terminal,
+}) async {
   tester.view.physicalSize = const Size(412, 915);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  await tester.pumpWidget(chatsApp(host, const NewChatScreen()));
+  await tester.pumpWidget(
+    chatsApp(host, const NewChatScreen(), terminal: terminal),
+  );
   await tester.pumpAndSettle();
 }
 
@@ -168,7 +175,12 @@ void main() {
     ) async {
       final agents = FakePhoneAgentsSource();
       final host = _host(agents: agents);
-      await _newChat(tester, host);
+      final terminal = FakeLocalTerminalBackend();
+      await _newChat(
+        tester,
+        host,
+        terminal: LocalTerminalSessions(backend: terminal),
+      );
       await _openSheet(tester);
       await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
       await tester.pumpAndSettle();
@@ -203,37 +215,25 @@ void main() {
       expect(find.byType(BottomSheet), findsOneWidget);
       expect(
         find.text('Sign in with ${KitBidi.auto('Claude Code')}'),
-        findsOneWidget,
+        findsWidgets,
       );
-      expect(agents.calls, contains('sign-in:claude'));
-      // The page opens through the safe opener.
-      await tester.tap(find.byKey(const ValueKey('agents-open-page')));
-      await tester.pump();
-      expect(host.links.single.host, 'claude.com');
-      // A code that cannot be one is refused in words, nothing is sent.
-      await tester.enterText(
-        find.byKey(const ValueKey('agents-code-field')),
-        'sk-not-a-code',
-      );
-      await tester.tap(find.byKey(const ValueKey('agents-code-submit')));
+      // Signing in is Claude's own, on its terminal: nothing starts yet.
+      expect(agents.calls, isNot(contains('sign-in:claude')));
+      await tester.tap(find.byKey(const ValueKey('agents-sign-in-start')));
       await tester.pumpAndSettle();
-      expect(find.textContaining('incomplete'), findsOneWidget);
-      expect(agents.submitted, isEmpty);
-      // The real code is submitted once and leaves the field.
-      await tester.enterText(
-        find.byKey(const ValueKey('agents-code-field')),
-        'abc123#state456',
-      );
-      await tester.tap(find.byKey(const ValueKey('agents-code-submit')));
+      expect(terminal.calls, contains('sign-in local 24 x 80'));
+      // Claude signs in and its sign-in ends: the sheet says so, then closes.
+      agents.signedInAfterTerminal = true;
+      terminal.exit(1, 0);
       await tester.pumpAndSettle();
-      expect(agents.submitted, ['abc123#state456']);
-      // The login finished: the sheet says so, then closes by itself.
       expect(find.text('Signed in'), findsOneWidget);
       await tester.pump(const Duration(seconds: 2));
       await tester.pumpAndSettle();
       expect(agents.calls, contains('select:claude'));
       expect(find.text('Signed in'), findsNothing);
       expect(_name('Claude Code'), findsOneWidget);
+      // No code ever went through the app.
+      expect(agents.submitted, isEmpty);
     });
 
     testWidgets('a finished install that cannot move on reads rows once', (
@@ -332,7 +332,7 @@ void main() {
       // Then sign-in, still the one sheet.
       expect(
         find.text('Sign in with ${KitBidi.auto('Claude Code')}'),
-        findsOneWidget,
+        findsWidgets,
       );
       expect(find.byType(BottomSheet), findsOneWidget);
     });
@@ -430,177 +430,87 @@ void main() {
     });
   });
 
-  group('the sign-in code field', () {
+  group('the sign-in terminal', () {
     FakePhoneAgentsSource signedOutClaude() => FakePhoneAgentsSource(
       rows: [agentRowFor('claude', FakeAgentStage.signedOut)],
     );
 
-    Future<void> openSignIn(WidgetTester tester, FakeChatsHost host) async {
-      await _newChat(tester, host);
+    Future<FakeLocalTerminalBackend> openTerminal(
+      WidgetTester tester,
+      FakeChatsHost host,
+    ) async {
+      final terminal = FakeLocalTerminalBackend();
+      await _newChat(
+        tester,
+        host,
+        terminal: LocalTerminalSessions(backend: terminal),
+      );
       await _openSheet(tester);
       await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('agents-sign-in-start')));
+      await tester.pumpAndSettle();
+      return terminal;
     }
 
-    testWidgets('is there with the page button, at 2x text, keyboard up', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(412, 915);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
+    testWidgets('runs Claude\'s own sign-in; its page opens through the '
+        'safe opener and no code passes through the app', (tester) async {
       final agents = signedOutClaude();
       final host = _host(agents: agents);
-      await tester.pumpWidget(
-        chatsApp(host, const NewChatScreen(), textScale: 2),
-      );
-      await tester.pumpAndSettle();
-      await _openSheet(tester);
-      await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
-      await tester.pumpAndSettle();
-      // The login is waiting for its code (the host has not asked yet).
+      final terminal = await openTerminal(tester, host);
+      expect(terminal.calls, contains('sign-in local 24 x 80'));
       expect(
-        agents.agentSignInState('claude')?.phase,
-        AgentSignInPhase.urlReady,
+        find.byKey(const ValueKey('agents-sign-in-terminal-view')),
+        findsOneWidget,
       );
-      final field = find.byKey(const ValueKey('agents-code-field'));
-      expect(field, findsOneWidget);
-      expect(find.byKey(const ValueKey('agents-open-page')), findsOneWidget);
-      expect(find.byKey(const ValueKey('agents-code-submit')), findsOneWidget);
-      // The keyboard comes up: the field is still on screen above it.
-      tester.view.viewInsets = const FakeViewPadding(bottom: 320);
-      addTearDown(tester.view.resetViewInsets);
-      await tester.tap(field);
+      expect(find.textContaining('Sign in there'), findsOneWidget);
+      terminal.openUrl(
+        1,
+        'https://claude.com/cai/oauth/authorize?code=true&client_id=x',
+      );
+      await tester.pump();
+      expect(host.links.single.host, 'claude.com');
+      // Whatever is typed goes to Claude itself, not to the agent source.
+      terminal.output(1, 'Paste code here if prompted > ');
+      await tester.pump();
+      expect(agents.calls.where((c) => c.startsWith('code:')), isEmpty);
+      await tester.pump(const Duration(milliseconds: 200));
+    });
+
+    testWidgets('ending without signing in says so and starts again', (
+      tester,
+    ) async {
+      final agents = signedOutClaude();
+      final terminal = await openTerminal(tester, _host(agents: agents));
+      terminal.exit(1, 1);
       await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      final box = tester.getRect(field);
-      expect(box.top, greaterThanOrEqualTo(0));
-      expect(box.bottom, lessThanOrEqualTo(915 - 320));
+      expect(agents.calls, contains('recheck:claude'));
       expect(
-        tester.getRect(find.byKey(const ValueKey('agents-code-submit'))).bottom,
-        lessThanOrEqualTo(915 - 320),
+        find.byKey(const ValueKey('agents-sign-in-terminal-not-yet')),
+        findsOneWidget,
       );
+      await tester.tap(
+        find.byKey(const ValueKey('agents-sign-in-terminal-again')),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        terminal.calls.where((c) => c.startsWith('sign-in local')),
+        hasLength(2),
+      );
+      expect(terminal.calls, contains('remove 1'));
     });
 
-    testWidgets('Paste brings the clipboard into the field', (tester) async {
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        SystemChannels.platform,
-        (call) async => call.method == 'Clipboard.getData'
-            ? <String, Object?>{'text': ' abc123#state456 '}
-            : null,
-      );
-      addTearDown(
-        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-          SystemChannels.platform,
-          null,
-        ),
-      );
+    testWidgets('leaving the terminal ends Claude\'s sign-in', (tester) async {
       final agents = signedOutClaude();
-      await openSignIn(tester, _host(agents: agents));
-      // Submit is off until there is a code.
-      expect(find.text('Paste the code first'), findsWidgets);
-      await tester.tap(find.byKey(const ValueKey('agents-code-paste')));
+      final terminal = await openTerminal(tester, _host(agents: agents));
+      await tester.pageBack();
       await tester.pumpAndSettle();
-      expect(find.text('abc123#state456'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('agents-code-submit')));
-      await tester.pumpAndSettle();
-      expect(agents.submitted, ['abc123#state456']);
-    });
-
-    testWidgets('coming back from the browser lands on the same code field', (
-      tester,
-    ) async {
-      final agents = signedOutClaude();
-      await openSignIn(tester, _host(agents: agents));
-      await tester.enterText(
-        find.byKey(const ValueKey('agents-code-field')),
-        'abc#half',
+      expect(terminal.calls, contains('remove 1'));
+      // Back on the sheet, still offering to sign in.
+      expect(
+        find.byKey(const ValueKey('agents-sign-in-start')),
+        findsOneWidget,
       );
-      for (final state in [
-        AppLifecycleState.inactive,
-        AppLifecycleState.hidden,
-        AppLifecycleState.paused,
-        AppLifecycleState.hidden,
-        AppLifecycleState.inactive,
-        AppLifecycleState.resumed,
-      ]) {
-        tester.binding.handleAppLifecycleStateChanged(state);
-        await tester.pump();
-      }
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('agents-code-field')), findsOneWidget);
-      expect(find.text('abc#half'), findsOneWidget);
-      // The login was never restarted or cancelled by leaving.
-      expect(agents.calls.where((c) => c.startsWith('sign-in')).length, 1);
-      expect(agents.calls.any((c) => c.startsWith('cancel-sign-in')), isFalse);
-    });
-
-    testWidgets('a closed sheet leaves the login pending and the row says so', (
-      tester,
-    ) async {
-      final agents = signedOutClaude();
-      final host = _host(agents: agents);
-      await openSignIn(tester, host);
-      // The person dismisses the sheet to look at something.
-      await tester.tapAt(const Offset(200, 40));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('agents-code-field')), findsNothing);
-      expect(agents.calls.any((c) => c.startsWith('cancel-sign-in')), isFalse);
-      // The same chip sheet now says a code is wanted, and opens on it.
-      await _openSheet(tester);
-      expect(find.text('Enter sign-in code'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('agents-code-field')), findsOneWidget);
-      expect(agents.calls.where((c) => c.startsWith('sign-in')).length, 1);
-    });
-
-    testWidgets('Settings › Agents offers Enter sign-in code while pending', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(412, 915);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      final agents = signedOutClaude()
-        ..signIn['claude'] = const AgentSignInState(
-          phase: AgentSignInPhase.urlReady,
-          method: AgentSignInMethod.browserOAuthHost,
-          inspected: true,
-        )
-        ..url = Uri.parse('https://claude.com/cai/oauth/authorize?code=true');
-      final host = _host(agents: agents);
-      await tester.pumpWidget(
-        chatsApp(host, ListView(children: const [AgentsSection()])),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Enter sign-in code'), findsWidgets);
-      await tester.tap(find.byKey(const ValueKey('agents-fix-claude')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('agents-code-field')), findsOneWidget);
-      expect(agents.calls.where((c) => c.startsWith('sign-in')), isEmpty);
-    });
-
-    testWidgets('a wrong code says so once, with Get a new code', (
-      tester,
-    ) async {
-      final agents = signedOutClaude()..rejectCode = true;
-      await openSignIn(tester, _host(agents: agents));
-      await tester.enterText(
-        find.byKey(const ValueKey('agents-code-field')),
-        'abc#wrong',
-      );
-      await tester.tap(find.byKey(const ValueKey('agents-code-submit')));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('incomplete'), findsWidgets);
-      expect(find.byKey(const ValueKey('agents-error')), findsNothing);
-      final again = find.byKey(const ValueKey('agents-sign-in-again'));
-      expect(again, findsOneWidget);
-      expect(find.text('Get a new code'), findsOneWidget);
-      agents.rejectCode = false;
-      await tester.tap(again);
-      await tester.pumpAndSettle();
-      expect(agents.calls, contains('cancel-sign-in:claude'));
-      expect(agents.calls.where((c) => c.startsWith('sign-in')).length, 2);
-      expect(find.byKey(const ValueKey('agents-code-field')), findsOneWidget);
     });
   });
 
@@ -684,9 +594,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         find.text('Sign in with ${KitBidi.auto('Claude Code')}'),
-        findsOneWidget,
+        findsWidgets,
       );
-      expect(agents.calls, contains('sign-in:claude'));
+      expect(agents.calls, contains('recheck:claude'));
     });
 
     testWidgets('Stopped in the background resumes the host', (tester) async {

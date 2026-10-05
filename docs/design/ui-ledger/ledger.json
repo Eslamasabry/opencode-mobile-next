@@ -1,5 +1,5 @@
 {
- "generatedFrom": "8d128a58a58b6bd17eddeae2046e73cc4ffa768d",
+ "generatedFrom": "1435910961dd9fc79c031a04d4f0aa9b2b7e5336",
  "pages": [
   {
    "id": "system",
@@ -11152,6 +11152,57 @@
      "effect": "Reads the clipboard into the code field.",
      "gates": [
       "a sign-in is waiting for its code"
+     ],
+     "destructive": false
+    }
+   ]
+  },
+  {
+   "id": "agents-sign-in-terminal",
+   "title": "Sign in with <agent>",
+   "kind": "screen",
+   "area": "workspace",
+   "file": "lib/ui/screens/agents/agent_sign_in_terminal.dart",
+   "widget": "AgentSignInTerminalScreen",
+   "presentedBy": [
+    "AgentSheet"
+   ],
+   "line": 23,
+   "purpose": "Claude's own sign-in (`claude auth login`) on a terminal for the agents' account on this phone. Claude asks for its page and the app opens it through the checked opener; any code is pasted into Claude itself, never into the app (Anthropic's terms). Pops signed-in once Claude reports it.",
+   "reachedFrom": [],
+   "gates": [
+    "PhoneAgentsSource.agentSignInProfileId"
+   ],
+   "elements": [
+    {
+     "id": "agents-sign-in-terminal-paste",
+     "type": "menu-item",
+     "label": "Paste",
+     "key": "agents-sign-in-terminal-paste",
+     "file": "lib/ui/screens/agents/agent_sign_in_terminal.dart",
+     "line": 160,
+     "action": "mutate",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Types the clipboard into Claude's prompt (the code Claude's page shows).",
+     "gates": [
+      "the sign-in runs"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "agents-sign-in-terminal-again",
+     "type": "button",
+     "label": "Sign in with <agent>",
+     "key": "agents-sign-in-terminal-again",
+     "file": "lib/ui/screens/agents/agent_sign_in_terminal.dart",
+     "line": 193,
+     "action": "mutate",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Ends this sign-in and starts Claude's sign-in again.",
+     "gates": [
+      "the sign-in ended without signing in, or could not start"
      ],
      "destructive": false
     }

@@ -27206,7 +27206,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String agentsSignInIntro(String agent) {
-    return 'استخدم اشتراكك في $agent: افتح الصفحة وسجّل الدخول وانسخ الرمز الذي تعرضه والصقه هنا.';
+    return 'يسجّل $agent الدخول عبر خطواته الخاصة، بحسابك أنت في Claude وفق شروط Anthropic. لا يرى التطبيق بيانات تسجيل دخولك.';
+  }
+
+  @override
+  String agentsSignInTerminalIntro(String agent) {
+    return 'يفتح $agent صفحة تسجيل الدخول. سجّل الدخول هناك بحسابك في Claude ثم عُد. إذا طلب $agent رمزًا، فانسخه من الصفحة واختر لصق.';
+  }
+
+  @override
+  String agentsSignInTerminalNotYet(String agent) {
+    return 'لم يُسجَّل الدخول إلى $agent بعد. ابدأ تسجيل الدخول مرة أخرى عندما تكون مستعدًا.';
   }
 
   @override
@@ -27216,20 +27226,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String agentsSignInStart(String agent) {
     return 'تسجيل الدخول إلى $agent';
   }
-
-  @override
-  String agentsSignInOpenPage(String agent) {
-    return 'فتح صفحة تسجيل الدخول إلى $agent';
-  }
-
-  @override
-  String get agentsSignInCodeLabel => 'الرمز من المتصفح';
-
-  @override
-  String get agentsSignInSubmit => 'إرسال الرمز';
-
-  @override
-  String get agentsSignInSubmitting => 'جارٍ التحقق من الرمز…';
 
   @override
   String get agentsSignedIn => 'تم تسجيل الدخول';
@@ -27358,13 +27354,4 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get agentsSignInPaste => 'لصق';
-
-  @override
-  String get agentsSignInNewCode => 'الحصول على رمز جديد';
-
-  @override
-  String get agentsSignInCodeFirst => 'الصق الرمز أولًا';
-
-  @override
-  String get agentsEnterCode => 'إدخال رمز تسجيل الدخول';
 }

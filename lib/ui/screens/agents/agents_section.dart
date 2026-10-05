@@ -81,16 +81,6 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
   }
 
   Future<void> _fix(AgentRow row) async {
-    final agents = ref.read(chatsHostProvider).agents;
-    // A login waiting for its code goes straight to the code field.
-    if (agents != null && agentLoginPending(agents, row.id)) {
-      await showAgentSheet(
-        context,
-        agentId: row.id,
-        step: AgentSheetStep.signIn,
-      );
-      return;
-    }
     final action = row.fixAction;
     if (action == null) return;
     final host = ref.read(chatsHostProvider);
@@ -155,25 +145,17 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
                     key: ValueKey('agents-row-${row.id}'),
                     title: KitBidi.auto(row.name),
                     leading: KitRow.icon(context, agentIcon(row.iconKey)),
-                    supporting: TextSpan(
-                      text: agentLoginPending(agents, row.id)
-                          ? l10n.agentsEnterCode
-                          : agentRowLine(l10n, row),
-                    ),
+                    supporting: TextSpan(text: agentRowLine(l10n, row)),
                     supportingMaxLines: 2,
-                    action:
-                        row.fixAction == null &&
-                            !agentLoginPending(agents, row.id)
+                    action: row.fixAction == null
                         ? null
                         : KitAction(
                             key: ValueKey('agents-fix-${row.id}'),
-                            label: agentLoginPending(agents, row.id)
-                                ? l10n.agentsEnterCode
-                                : agentFixLabel(
-                                    l10n,
-                                    row.fixAction!,
-                                    KitBidi.auto(row.name),
-                                  ),
+                            label: agentFixLabel(
+                              l10n,
+                              row.fixAction!,
+                              KitBidi.auto(row.name),
+                            ),
                             onPressed: () => unawaited(_fix(row)),
                           ),
                   ),

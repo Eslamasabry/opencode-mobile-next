@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show Clipboard, TextInputAction;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/agent_sign_in.dart';
@@ -13,6 +12,7 @@ import '../../app_iconography.dart';
 import '../../kit/kit.dart';
 import '../chats/chats_host.dart';
 import 'agent_error_notice.dart';
+import 'agent_sign_in_terminal.dart';
 import 'agents_text.dart';
 import 'phone_check_view.dart';
 
@@ -55,10 +55,8 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
   // One advance per finished install: a row that cannot move on yet must not
   // re-read the phone on every rebuild.
   bool _doneHandled = false;
-  bool _submitting = false;
   bool _signInKicked = false;
   Timer? _closeSoon;
-  final _code = TextEditingController();
 
   PhoneAgentsSource get _agents => ref.read(chatsHostProvider).agents!;
 
@@ -66,10 +64,6 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
   void initState() {
     super.initState();
     _agentId = widget.agentId;
-    // Submit follows what is in the field.
-    _code.addListener(() {
-      if (mounted) setState(() {});
-    });
     // Entering a step directly (a status line's Sign in) starts its work.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -81,7 +75,6 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
   @override
   void dispose() {
     _closeSoon?.cancel();
-    _code.dispose();
     super.dispose();
   }
 
@@ -127,11 +120,6 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
       return;
     }
     _agentId = id;
-    // A login waiting for its code goes straight to the code field.
-    if (agentLoginPending(agents, id)) {
-      _enter(AgentSheetStep.signIn);
-      return;
-    }
     switch (row.fixAction) {
       case PhoneAgentFixAction.resume:
         try {
@@ -229,80 +217,51 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     if (result.passed) unawaited(_advance());
   }
 
+  /// Entering the step reads whether the agent is signed in already; the
+  /// sign-in itself runs on its own terminal ([_openSignIn]).
   Future<void> _beginSignIn() async {
     final id = _agentId;
     if (id == null || _signInKicked) return;
     _signInKicked = true;
     final state = _agents.agentSignInState(id);
-    if (state != null &&
-        state.inspected &&
-        state.phase != AgentSignInPhase.signedOut) {
-      return;
-    }
+    if (state != null && state.inspected) return;
     try {
-      await _agents.startAgentSignIn(id);
-    } on AgentSignInException {
-      // The state carries the failure; the step says it in words.
+      await _agents.recheckAgentSignIn(id);
     } catch (error) {
       _fail(error);
     }
   }
 
-  Future<void> _restartSignIn() async {
+  /// Claude's own sign-in on a terminal: the person signs in on Anthropic's
+  /// page and gives any code to Claude itself, never to this app.
+  Future<void> _openSignIn() async {
     final id = _agentId;
     if (id == null) return;
-    try {
-      await _agents.cancelAgentSignIn(id);
-    } catch (_) {}
-    _signInKicked = false;
-    await _beginSignIn();
-  }
-
-  /// Reads the clipboard into the code field (Claude's page has a copy
-  /// button; this is the one tap that brings the code back).
-  Future<void> _paste() async {
-    final data = await Clipboard.getData(Clipboard.kTextPlain);
-    final text = data?.text?.trim() ?? '';
-    if (!mounted || text.isEmpty) return;
-    _code.text = text;
-    _code.selection = TextSelection.collapsed(offset: text.length);
-  }
-
-  Future<void> _submitCode() async {
-    final id = _agentId;
-    if (id == null || _submitting) return;
-    final l10n = AppLocalizations.of(context);
-    final AgentSignInCode code;
-    try {
-      code = AgentSignInCode(_code.text.trim());
-    } on AgentSignInException catch (error) {
-      setState(() => _notice = agentFailure(l10n, error));
-      return;
-    }
-    // The pasted code leaves the field the moment it is sent.
-    _code.clear();
-    setState(() {
-      _submitting = true;
-      _notice = null;
-    });
-    try {
-      await _agents.submitAgentSignInCode(id, code);
-      if (mounted &&
-          _agents.agentSignInState(id)?.phase == AgentSignInPhase.signedIn) {
-        // "Signed in" shows for a moment, then back to New conversation with
-        // this agent chosen.
-        _closeSoon?.cancel();
-        _closeSoon = Timer(
-          const Duration(milliseconds: 900),
-          () => unawaited(_chooseAfterSignIn(id)),
-        );
-      }
-    } catch (error) {
-      _fail(error);
-    } finally {
-      code.clear();
-      if (mounted) setState(() => _submitting = false);
-    }
+    final agents = _agents;
+    final signedIn = await Navigator.of(context).push<bool>(
+      KitPageRoute<bool>(
+        builder: (_) => AgentSignInTerminalScreen(
+          agents: agents,
+          agentId: id,
+          agentName: _name(id),
+          // Through the app's one link seam: the checked sign-in opener.
+          openPage: (context, url) {
+            final uri = Uri.tryParse(url);
+            return uri == null
+                ? Future.value()
+                : ref.read(chatsHostProvider).openLink(context, uri);
+          },
+        ),
+      ),
+    );
+    if (!mounted || signedIn != true) return;
+    // "Signed in" shows for a moment, then back to New conversation with
+    // this agent chosen.
+    _closeSoon?.cancel();
+    _closeSoon = Timer(
+      const Duration(milliseconds: 900),
+      () => unawaited(_chooseAfterSignIn(id)),
+    );
   }
 
   Future<void> _chooseAfterSignIn(String id) async {
@@ -407,8 +366,6 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
                   choice.iconKey,
                   choice.row == null
                       ? l10n.agentsStateReady
-                      : agentLoginPending(agents, choice.agentId)
-                      ? l10n.agentsEnterCode
                       : agentRowLine(l10n, choice.row!),
                   choice.selected,
                   choice.row,
@@ -418,9 +375,7 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
                   row.id,
                   row.name,
                   row.iconKey,
-                  agentLoginPending(agents, row.id)
-                      ? l10n.agentsEnterCode
-                      : agentRowLine(l10n, row),
+                  agentRowLine(l10n, row),
                   false,
                   row,
                 ),
@@ -557,22 +512,8 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     final phase = state?.phase;
     final checking = state == null || !state.inspected;
     final signedIn = phase == AgentSignInPhase.signedIn;
-    final failed = phase == AgentSignInPhase.failed;
     final hostKey = state?.hostOnlyApiKey ?? false;
     final limit = phase == AgentSignInPhase.limitReached;
-    final url = _agents.agentSignInUrl(id);
-    // A login is waiting for its code: the field is always there, right
-    // under the page button, whether or not the host has asked for the code
-    // yet (sending it asks the host first).
-    final pending =
-        (phase == AgentSignInPhase.urlReady ||
-            phase == AgentSignInPhase.awaitingCode) &&
-        url != null;
-    final badCode =
-        failed &&
-        (state?.failure == AgentSignInFailure.invalidCode ||
-            state?.failure == AgentSignInFailure.authenticationRejected);
-    final codeText = _code.text.trim();
 
     KitAction? primary;
     if (signedIn) {
@@ -581,41 +522,17 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
         label: l10n.agentsSignInDone(name),
         onPressed: () => unawaited(_choose(id)),
       );
-    } else if (pending) {
-      primary = KitAction(
-        key: const ValueKey('agents-code-submit'),
-        label: _submitting
-            ? l10n.agentsSignInSubmitting
-            : l10n.agentsSignInSubmit,
-        working: _submitting,
-        disabledReason: codeText.isEmpty ? l10n.agentsSignInCodeFirst : null,
-        onPressed: () => unawaited(_submitCode()),
-      );
-    } else if (failed) {
-      primary = KitAction(
-        key: const ValueKey('agents-sign-in-again'),
-        label: badCode
-            ? l10n.agentsSignInNewCode
-            : l10n.agentsSignInStart(name),
-        onPressed: () => unawaited(_restartSignIn()),
-      );
-    } else if (phase == AgentSignInPhase.signedOut && !checking && !hostKey) {
+    } else if (!checking && !hostKey && !limit) {
       primary = KitAction(
         key: const ValueKey('agents-sign-in-start'),
         label: l10n.agentsSignInStart(name),
-        onPressed: () => unawaited(_restartSignIn()),
+        onPressed: () => unawaited(_openSignIn()),
       );
     }
 
     final String body;
     if (signedIn) {
       body = l10n.agentsSignedInBody(name);
-    } else if (failed) {
-      body = agentSignInFailureText(l10n, state?.failure, name);
-    } else if (pending && state?.failure == AgentSignInFailure.invalidCode) {
-      // Claude refused the paste but keeps the sign-in open: say why, and the
-      // field below takes the next try.
-      body = agentSignInFailureText(l10n, state?.failure, name);
     } else if (limit) {
       body = l10n.agentsSignInLimit(name);
     } else if (hostKey) {
@@ -632,54 +549,19 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
       title: signedIn ? l10n.agentsSignedIn : l10n.agentsSignInTitle(name),
       leading: _backToList,
       onClose: () => unawaited(_close()),
-      loading: checking && !failed,
+      loading: checking,
       primary: primary,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: tokens.space3,
         children: [
-          // A failure says itself once: a refused code is the person's to fix
-          // (plain words, then Get a new code); anything else is an error
-          // notice with Details, without the same sentence above it.
-          if (!failed || badCode)
-            KitText(
-              body,
-              key: const ValueKey('agents-sign-in-words'),
-              tone: KitTextTone.secondary,
-            ),
-          if (pending) ...[
-            KitButton.secondary(
-              key: const ValueKey('agents-open-page'),
-              label: l10n.agentsSignInOpenPage(name),
-              icon: AppIconography.link,
-              onPressed: () =>
-                  unawaited(ref.read(chatsHostProvider).openLink(context, url)),
-            ),
-            KitField(
-              fieldKey: const ValueKey('agents-code-field'),
-              label: l10n.agentsSignInCodeLabel,
-              controller: _code,
-              enabled: !_submitting,
-              disabledReason: l10n.agentsSignInSubmitting,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => unawaited(_submitCode()),
-            ),
-            KitButton.tertiary(
-              key: const ValueKey('agents-code-paste'),
-              label: l10n.agentsSignInPaste,
-              icon: AppIconography.paste,
-              onPressed: () => unawaited(_paste()),
-            ),
-          ],
-          if (failed && !badCode)
-            AgentErrorNotice(
-              failure: AgentFailure(
-                body,
-                'AgentSignInFailure.${state?.failure?.name ?? 'unknown'}',
-              ),
-            ),
-          if (!failed) _noticeLine(context),
+          KitText(
+            body,
+            key: const ValueKey('agents-sign-in-words'),
+            tone: KitTextTone.secondary,
+          ),
+          _noticeLine(context),
         ],
       ),
     );

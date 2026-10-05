@@ -27088,7 +27088,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String agentsSignInIntro(String agent) {
-    return 'Use your $agent subscription: open the page, sign in, copy the code it shows, and paste it here.';
+    return '$agent signs in with its own prompts, on your own Claude account under Anthropic\'s terms. The app never sees your sign-in.';
+  }
+
+  @override
+  String agentsSignInTerminalIntro(String agent) {
+    return '$agent opens its sign-in page. Sign in there with your Claude account, then come back. If $agent asks for a code, copy it on the page and choose Paste.';
+  }
+
+  @override
+  String agentsSignInTerminalNotYet(String agent) {
+    return '$agent isn\'t signed in yet. Start the sign-in again when you\'re ready.';
   }
 
   @override
@@ -27098,20 +27108,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String agentsSignInStart(String agent) {
     return 'Sign in with $agent';
   }
-
-  @override
-  String agentsSignInOpenPage(String agent) {
-    return 'Open the $agent sign-in page';
-  }
-
-  @override
-  String get agentsSignInCodeLabel => 'Code from the browser';
-
-  @override
-  String get agentsSignInSubmit => 'Submit code';
-
-  @override
-  String get agentsSignInSubmitting => 'Checking the code…';
 
   @override
   String get agentsSignedIn => 'Signed in';
@@ -27241,13 +27237,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agentsSignInPaste => 'Paste';
-
-  @override
-  String get agentsSignInNewCode => 'Get a new code';
-
-  @override
-  String get agentsSignInCodeFirst => 'Paste the code first';
-
-  @override
-  String get agentsEnterCode => 'Enter sign-in code';
 }

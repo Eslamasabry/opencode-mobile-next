@@ -23,6 +23,7 @@ class LocalShellInfo {
     required this.pid,
     this.running = true,
     this.exitCode,
+    this.signIn = false,
   });
 
   factory LocalShellInfo.fromMap(Map<Object?, Object?> map) {
@@ -32,6 +33,7 @@ class LocalShellInfo {
       pid: asInt(map['pid']) ?? 0,
       running: map['running'] != false,
       exitCode: asInt(map['exitCode']),
+      signIn: map['signIn'] == true,
     );
   }
 
@@ -39,6 +41,9 @@ class LocalShellInfo {
   final int pid;
   final bool running;
   final int? exitCode;
+
+  /// An agent's sign-in ([LocalTerminalSessions.startSignIn]), not a shell.
+  final bool signIn;
 }
 
 /// One reading of `list`: the shells that exist, and how many processes run
@@ -69,11 +74,24 @@ class LocalTerminalExit extends LocalTerminalEvent {
   final int code;
 }
 
+/// A sign-in asked the system to open a page (its stand-in `xdg-open`).
+class LocalTerminalOpenUrl extends LocalTerminalEvent {
+  const LocalTerminalOpenUrl(super.id, this.url);
+
+  final String url;
+}
+
 /// The calls into LocalTerminal.kt. Tests pass a fake.
 abstract class LocalTerminalBackend {
   Stream<LocalTerminalEvent> get events;
 
-  Future<LocalShellInfo> start({required int rows, required int cols});
+  /// Starts `bash -l`, or with [signInProfile] Claude's own sign-in for that
+  /// profile's agent account.
+  Future<LocalShellInfo> start({
+    required int rows,
+    required int cols,
+    String? signInProfile,
+  });
 
   Future<LocalTerminalListing> list();
 
@@ -125,15 +143,24 @@ class ChannelLocalTerminalBackend implements LocalTerminalBackend {
         raw['data'] as Uint8List,
       ),
       'exit' => LocalTerminalExit(id, (raw['code'] as num?)?.toInt() ?? -1),
+      'openUrl' when raw['url'] is String => LocalTerminalOpenUrl(
+        id,
+        raw['url'] as String,
+      ),
       _ => null,
     };
   }
 
   @override
-  Future<LocalShellInfo> start({required int rows, required int cols}) async {
+  Future<LocalShellInfo> start({
+    required int rows,
+    required int cols,
+    String? signInProfile,
+  }) async {
     final raw = await _methods.invokeMethod<Map<Object?, Object?>>('start', {
       'rows': rows,
       'cols': cols,
+      'signInProfile': ?signInProfile,
     });
     return LocalShellInfo.fromMap(raw ?? const {});
   }
@@ -230,6 +257,10 @@ class LocalShell extends ChangeNotifier {
       : LocalShellState.running;
 
   bool get running => state == LocalShellState.running;
+
+  /// For an agent sign-in: the page Claude asked the system to open. The
+  /// screen showing the sign-in checks the address before opening it.
+  void Function(String url)? onOpenUrl;
 
   /// Applied to everything typed before it is sent: the key bar's sticky
   /// Ctrl and Alt. Null sends text as typed.
@@ -375,6 +406,9 @@ class LocalTerminalSessions extends ChangeNotifier {
 
   final LocalTerminalBackend _backend;
   final List<LocalShell> _shells = [];
+
+  /// Agent sign-ins: on a terminal, but not listed with the shells.
+  final List<LocalShell> _signIns = [];
   StreamSubscription<LocalTerminalEvent>? _subscription;
   Future<void>? _loading;
   bool _loaded = false;
@@ -408,11 +442,13 @@ class LocalTerminalSessions extends ChangeNotifier {
       case LocalTerminalExit(:final code):
         shell?._exited(code);
         if (shell != null) notifyListeners();
+      case LocalTerminalOpenUrl(:final url):
+        shell?.onOpenUrl?.call(url);
     }
   }
 
   LocalShell? _shellWithId(int id) {
-    for (final shell in _shells) {
+    for (final shell in [..._shells, ..._signIns]) {
       if (shell.id == id) return shell;
     }
     return null;
@@ -428,6 +464,11 @@ class LocalTerminalSessions extends ChangeNotifier {
       final listing = await _backend.list();
       _processes = listing.processes;
       for (final info in listing.shells) {
+        // A sign-in left from an earlier run belongs to no screen now.
+        if (info.signIn) {
+          unawaited(_backend.remove(info.id).catchError((Object _) {}));
+          continue;
+        }
         if (_shellWithId(info.id) != null) continue;
         final shell = LocalShell._(
           _backend,
@@ -466,10 +507,38 @@ class LocalTerminalSessions extends ChangeNotifier {
     return shell;
   }
 
-  Future<void> _launch(LocalShell shell) async {
+  /// Starts Claude's own sign-in for [profileId]'s agent account on a
+  /// terminal of its own (not listed in [shells]). [endSignIn] removes it.
+  LocalShell startSignIn(String profileId, {int rows = 24, int cols = 80}) {
+    _listen();
+    final shell = LocalShell._(_backend, 0);
+    shell.terminal.resize(cols, rows);
+    _signIns.add(shell);
+    unawaited(_launch(shell, signInProfile: profileId));
+    return shell;
+  }
+
+  /// Stops and forgets a sign-in started by [startSignIn].
+  Future<void> endSignIn(LocalShell shell) async {
+    _signIns.remove(shell);
+    shell.onOpenUrl = null;
+    final id = shell.id;
+    if (id != null) {
+      try {
+        await _backend.remove(id);
+      } catch (_) {}
+    }
+    shell.dispose();
+  }
+
+  Future<void> _launch(LocalShell shell, {String? signInProfile}) async {
     final size = (shell.terminal.viewHeight, shell.terminal.viewWidth);
     try {
-      final info = await _backend.start(rows: size.$1, cols: size.$2);
+      final info = await _backend.start(
+        rows: size.$1,
+        cols: size.$2,
+        signInProfile: signInProfile,
+      );
       shell._started(info, size);
       unawaited(refreshProcesses());
     } catch (error) {
@@ -514,7 +583,7 @@ class LocalTerminalSessions extends ChangeNotifier {
   @override
   void dispose() {
     unawaited(_subscription?.cancel());
-    for (final shell in _shells) {
+    for (final shell in [..._shells, ..._signIns]) {
       shell.dispose();
     }
     super.dispose();

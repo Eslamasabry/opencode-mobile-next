@@ -322,6 +322,41 @@ class BuiltinLinux(private val context: Context) {
     private val blockedAgentProfiles = mutableSetOf<String>()
     private val agentProcessProfiles = mutableMapOf<Process, String>()
 
+    /**
+     * Claude's own sign-in (`claude auth login`) for [profileId]'s agent
+     * account, to run on a terminal: the person signs in through Claude's
+     * prompts and Anthropic's page, and the app never reads the code. The
+     * page Claude asks the system to open is written to the returned file
+     * by a stand-in `xdg-open`, and the terminal opens it in the browser.
+     */
+    @Synchronized
+    fun agentSignInCommand(profileId: String): Pair<List<String>, File> {
+        check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId)) { "The agent host is unavailable." }
+        check(installed && profileId !in blockedAgentProfiles) { "The agent host is unavailable." }
+        val profileHome = PhoneAgentPaths.prepare(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId")
+        Os.chmod(profileHome.absolutePath, 448)
+        val guestHome = "/home/oc/.oc-profiles/$profileId"
+        val bin = File(profileHome, ".oc-bin").apply { mkdirs() }
+        val opener = "#!/bin/sh\n" +
+            "printf '%s\\n' \"${'$'}1\" > \"${'$'}HOME/.oc-open-url.tmp\" && " +
+            "mv \"${'$'}HOME/.oc-open-url.tmp\" \"${'$'}HOME/.oc-open-url\"\n"
+        for (name in listOf("xdg-open", "open-url")) {
+            File(bin, name).apply {
+                writeText(opener)
+                setReadable(true, false)
+                setExecutable(true, false)
+            }
+        }
+        val request = File(profileHome, ".oc-open-url").apply { delete() }
+        val command = listOf("/usr/bin/env", "HOME=$guestHome", "CLAUDE_CONFIG_DIR=$guestHome/claude",
+            "BROWSER=$guestHome/.oc-bin/open-url",
+            "PATH=$guestHome/.oc-bin:/home/oc/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+            "TERM=xterm-256color", "LANG=C.UTF-8",
+            "DISABLE_AUTOUPDATER=1", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+            "claude", "auth", "login", "--claudeai")
+        return prootCommand(command, agentUser = true) to request
+    }
+
     /** Private agent process: fixed uid, private host home, no transcript/log. */
     @Synchronized
     fun startAgentProcess(profileId: String, argv: List<String>, foreground: Boolean = false): Process {
