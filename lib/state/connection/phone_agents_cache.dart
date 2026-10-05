@@ -89,3 +89,25 @@ final class _AgentFeedCache {
     );
   }
 }
+
+/// Claude conversations used to run on the phone profile itself, so their
+/// approval choices were saved under it: carried over to the agents' own
+/// profile once, without the phone server's "approve everything" (that one
+/// is OpenCode's).
+Future<void> _carryApprovalChoices(
+  SharedPreferences prefs, {
+  required String from,
+  required String to,
+}) async {
+  final target = SessionAutoApprovalStore.keyFor(to);
+  try {
+    if (prefs.containsKey(target)) return;
+    final raw = prefs.getString(SessionAutoApprovalStore.keyFor(from));
+    final decoded = raw == null ? null : jsonDecode(raw);
+    if (decoded is! Map) return;
+    decoded.remove(SessionAutoApprovalStore.serverWideKey);
+    await prefs.setString(target, jsonEncode(decoded));
+  } catch (_) {
+    // Conversations ask again; nothing else depends on the copy.
+  }
+}

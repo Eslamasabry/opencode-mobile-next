@@ -97,11 +97,7 @@ extension _OcAppAlertsAndShortcuts on _OcAppState {
         );
         return;
       }
-      navigator.push(
-        KitPageRoute<void>(
-          builder: (_) => ChatScreen(sessionID: target.sessionID),
-        ),
-      );
+      navigator.push(chatLandingRoute(sessionID: target.sessionID));
     });
   }
 

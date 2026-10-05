@@ -27,7 +27,7 @@ mixin _ConnectionControllerAlerts on ChangeNotifier {
       _self._questionForSession(sessionID);
 
   bool get keepLiveInBackground =>
-      _self._ownsProfileServices && _self.backgroundLive.enabled;
+      !_self.isIsolated && _self.backgroundLive.enabled;
 
   Future<bool> setKeepLiveInBackground(bool enabled) =>
       !_self._ownsProfileServices
@@ -179,13 +179,13 @@ extension _ConnectionControllerAlertsImpl on ConnectionController {
       keepLiveInBackground &&
       _lifecycleWasBackgrounded &&
       backgroundLive.notificationGranted &&
-      profileMonitor.rulesFor(profile?.id ?? '').notifications &&
-      !profileMonitor.rulesFor(profile?.id ?? '').quietAt(DateTime.now());
+      profileMonitor.rulesFor(_alertProfileId).notifications &&
+      !profileMonitor.rulesFor(_alertProfileId).quietAt(DateTime.now());
 
   /// The body of [finishedRunNotificationsReady].
   bool get _finishedRunNotificationsReady {
     if (!platformCapabilities.supportsNotifications) return false;
-    final rules = profileMonitor.rulesFor(profile?.id ?? '');
+    final rules = profileMonitor.rulesFor(_alertProfileId);
     return keepLiveInBackground &&
         backgroundLive.notificationGranted &&
         rules.notifications &&
@@ -207,7 +207,7 @@ extension _ConnectionControllerAlertsImpl on ConnectionController {
       return;
     }
     if (kind == CodingAlertKind.complete &&
-        profileMonitor.rulesFor(profile?.id ?? '').enabled) {
+        profileMonitor.rulesFor(_alertProfileId).enabled) {
       return;
     }
     if (!_canShowCodingAlert ||
@@ -220,7 +220,7 @@ extension _ConnectionControllerAlertsImpl on ConnectionController {
       backgroundLive
           .showCodingAlert(
             kind: kind,
-            profileID: profile?.id ?? '',
+            profileID: _alertProfileId,
             sessionID: sessionID,
             key: _statusAlertKey(sessionID),
           )
@@ -262,7 +262,7 @@ extension _ConnectionControllerAlertsImpl on ConnectionController {
       backgroundLive
           .showCodingAlert(
             kind: kind,
-            profileID: profile?.id ?? '',
+            profileID: _alertProfileId,
             sessionID: sessionID,
             key: _inputAlertKey(sessionID),
             quickReply: quickReplyQuestion != null || permissionReply,

@@ -338,6 +338,10 @@ class ConnectionController extends ChangeNotifier
   Future<void> Function()? _agentBackendRecover;
   Future<void> Function()? get recoverAgentBackend => _agentBackendRecover;
 
+  /// Whose notification rules and alerts these are: an agent backend's
+  /// belong to the phone profile it runs under.
+  String get _alertProfileId => _agentOwnerProfileId ?? profile?.id ?? '';
+
   /// A saved profile, or this agent backend's own (never saved) one.
   bool _isKnownProfile(String id) =>
       (isAgentBackend && id == _connectedProfile?.id) ||
@@ -397,9 +401,12 @@ class ConnectionController extends ChangeNotifier
   /// A conversation backend for one agent host (see [isAgentBackend]). Its
   /// transport comes only from [paseoGatewayFactory]; [diagnostics] is the
   /// main connection's and is not disposed here.
+  /// [backgroundLive] is the main connection's, shared: background mode and
+  /// its notifications stay one, and this backend never disposes it.
   factory ConnectionController.agentBackend(
     ProfileStore store, {
     required V2GatewayPairFactory paseoGatewayFactory,
+    required BackgroundLiveController backgroundLive,
     AppDiagnosticsController? diagnostics,
     DraftAttachmentVault? draftAttachmentVault,
     PromptPhotoStore? promptPhotoStore,
@@ -410,12 +417,7 @@ class ConnectionController extends ChangeNotifier
     diagnostics: diagnostics,
     draftAttachmentVault: draftAttachmentVault,
     promptPhotoStore: promptPhotoStore,
-    // Background mode belongs to the main connection: an inert copy here
-    // never reaches the Android service.
-    backgroundLive: BackgroundLiveController(
-      preferences: store.prefs,
-      invoke: (method, [arguments]) async => const {},
-    ),
+    backgroundLive: backgroundLive,
   );
 
   ConnectionController(
@@ -737,7 +739,8 @@ class ConnectionController extends ChangeNotifier
       ManagedServerRecovery.disposeForPreferences(store.prefs);
     }
     backgroundLive.removeListener(_backgroundLiveChanged);
-    backgroundLive.dispose();
+    // An agent backend borrows the main connection's.
+    if (!isAgentBackend) backgroundLive.dispose();
     if (_ownsDiagnostics) diagnostics.dispose();
     appLocale.dispose();
     appearance.dispose();

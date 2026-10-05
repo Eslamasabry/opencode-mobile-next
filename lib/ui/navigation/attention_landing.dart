@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../state/connection.dart' show connProvider;
 import '../kit/kit.dart';
 import '../screens/chat_screen.dart' show ChatScreen;
 import '../widgets/session_menu.dart' show SessionMenuAction;
@@ -30,12 +32,41 @@ Widget chatLandingPage({
     landOnFailure: landOnFailure,
     menuAction: menuAction,
   );
-  return landOnRequestID == null
-      ? chat
-      : KitArrivalScope(
-          rowId: chatRequestArrivalId(landOnRequestID),
-          child: chat,
-        );
+  return ConversationBackendScope(
+    sessionID: sessionID,
+    child: landOnRequestID == null
+        ? chat
+        : KitArrivalScope(
+            rowId: chatRequestArrivalId(landOnRequestID),
+            child: chat,
+          ),
+  );
+}
+
+/// The conversation's own backend under [child]: a conversation with an
+/// agent on this phone (Claude Code) talks to that agent's connection, so
+/// its models, approvals and banner are never the OpenCode server's. Every
+/// door into a conversation goes through [chatLandingPage], so each gets it.
+class ConversationBackendScope extends ConsumerWidget {
+  const ConversationBackendScope({
+    super.key,
+    required this.sessionID,
+    required this.child,
+  });
+
+  final String sessionID;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final backend = ref.read(connProvider).backendForConversation(sessionID);
+    return backend == null
+        ? child
+        : ProviderScope(
+            overrides: [connProvider.overrideWithValue(backend)],
+            child: child,
+          );
+  }
 }
 
 /// [chatLandingPage] as a route, for doors that push rather than name it.

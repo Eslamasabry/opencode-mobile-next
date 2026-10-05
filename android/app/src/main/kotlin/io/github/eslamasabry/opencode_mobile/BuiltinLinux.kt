@@ -357,6 +357,23 @@ class BuiltinLinux(private val context: Context) {
         return prootCommand(command, agentUser = true) to request
     }
 
+    /**
+     * Removes Claude's OAuth refresh lock (`<config dir>/.oauth_refresh.lock`,
+     * an empty folder) for [profileId] when none of that profile's agent
+     * processes runs: one Android stopped mid-refresh never releases it.
+     */
+    @Synchronized
+    fun clearStaleAgentLoginLock(profileId: String) {
+        check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId)) { "The agent host is unavailable." }
+        val busy = agentProcessProfiles.any { (process, owner) -> owner == profileId && process.isAlive }
+        if (busy) return
+        val lock = File(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId/claude/.oauth_refresh.lock")
+        if (lock.isDirectory && lock.canonicalFile.parentFile?.name == "claude") {
+            lock.listFiles()?.forEach { it.delete() }
+            if (lock.delete()) Log.i(TAG, "cleared a stale agent login lock")
+        }
+    }
+
     /** Private agent process: fixed uid, private host home, no transcript/log. */
     @Synchronized
     fun startAgentProcess(profileId: String, argv: List<String>, foreground: Boolean = false): Process {

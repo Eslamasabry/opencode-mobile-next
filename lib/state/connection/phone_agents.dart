@@ -83,6 +83,10 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// [backendForConversation].
   final _paOwners = <String, ConnectionController>{};
 
+  /// Conversations last opened as OpenCode's: the page is found by id
+  /// alone, and these never fall back to the agents' connection.
+  final _paOpenCodeOpened = <String>{};
+
   /// Catalog id of the agent last opened: the one whose host status the
   /// recovery reads.
   String? _paBackendAgentId;
@@ -94,12 +98,28 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
           .firstOrNull
           ?.id;
 
+  /// The agents' connection while it exists (app lifecycle follows it).
+  ConnectionController? get _paBackendLive {
+    final backend = _paBackend;
+    return backend == null || backend._disposed ? null : backend;
+  }
+
   /// The controller a conversation's screen talks to when it is not this
   /// one: an agent on this phone's conversation lives on its own backend.
   /// Null for this connection's own (OpenCode) conversations.
   ConnectionController? backendForConversation(String sessionID) {
-    final backend = _paOwners[sessionID];
-    return backend == null || backend._disposed ? null : backend;
+    final owner = _paOwners[sessionID];
+    if (owner != null && !owner._disposed) return owner;
+    // A conversation the agents' connection lists (a notification about one
+    // that was never opened here); this connection's own come first.
+    if (_self.sessionsById.containsKey(sessionID) ||
+        _paOpenCodeOpened.contains(sessionID)) {
+      return null;
+    }
+    final live = _paBackendLive;
+    return live != null && live.sessionsById.containsKey(sessionID)
+        ? live
+        : null;
   }
 
   AgentCatalog get _paCatalog => AgentCatalog.builtIn;
@@ -1100,6 +1120,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
           final gateway = host.newGatewaySync(target.codexDirectory);
           return (gateway: gateway, operations: gateway);
         },
+        backgroundLive: _self.backgroundLive,
         diagnostics: _self.diagnostics,
         draftAttachmentVault: _self._draftAttachmentVault,
         promptPhotoStore: _self._promptPhotoStore,
@@ -1109,7 +1130,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       _paWatchBackend();
     }
     final id = '${profile.id}$agentBackendProfileSuffix';
-    await _paCarryApprovalChoices(from: profile.id, to: id);
+    await _carryApprovalChoices(_self.store.prefs, from: profile.id, to: id);
     final name = agentName ?? backend._connectedProfile?.name ?? 'Claude Code';
     final current = backend._connectedProfile;
     if (current == null || current.id != id) {
@@ -1132,27 +1153,6 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       }
     }
     return backend;
-  }
-
-  /// Claude conversations used to run on the phone profile itself, so their
-  /// approval choices were saved under it: carried over once, without the
-  /// phone server's "approve everything" (that one is OpenCode's).
-  Future<void> _paCarryApprovalChoices({
-    required String from,
-    required String to,
-  }) async {
-    final prefs = _self.store.prefs;
-    final target = SessionAutoApprovalStore.keyFor(to);
-    try {
-      if (prefs.containsKey(target)) return;
-      final raw = prefs.getString(SessionAutoApprovalStore.keyFor(from));
-      final decoded = raw == null ? null : jsonDecode(raw);
-      if (decoded is! Map) return;
-      decoded.remove(SessionAutoApprovalStore.serverWideKey);
-      await prefs.setString(target, jsonEncode(decoded));
-    } catch (_) {
-      // Conversations ask again; nothing else depends on the copy.
-    }
   }
 
   Timer? _paBackendWatch;
@@ -1258,6 +1258,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     _paBackend = null;
     _paBackendHost = null;
     _paOwners.clear();
+    _paOpenCodeOpened.clear();
     if (backend != null && !backend._disposed) backend.dispose();
   }
 
@@ -1291,6 +1292,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         throw _gone;
       }
       _paOwners.remove(item.sessionID);
+      _paOpenCodeOpened.add(item.sessionID);
       await _self.selectLocationForExistingSession(directory: item.directory);
       return ChatFeedRoute(
         sourceId: _openCodeSourceId,
@@ -1321,6 +1323,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     } else {
       // The page is found by id alone: this one is OpenCode's again.
       _paOwners.remove(route.sessionID);
+      _paOpenCodeOpened.add(route.sessionID);
       await _self.selectLocationForExistingSession(directory: route.directory);
     }
     return route;

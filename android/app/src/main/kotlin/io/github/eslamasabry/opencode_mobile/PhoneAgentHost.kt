@@ -28,6 +28,11 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
             (generations[profile] ?: 0L).also { generations[profile] = it }
         }
         linux.writeAgentConfig(profile, config)
+        // A Claude process Android stopped mid-refresh leaves Claude's login
+        // lock behind, and the first message then fails with "another Claude
+        // Code process is refreshing it". No Claude process of this profile
+        // runs now (the helper starts them all), so a lock left is stale.
+        linux.clearStaleAgentLoginLock(profile)
         val script = """
             set -eu
             umask 077

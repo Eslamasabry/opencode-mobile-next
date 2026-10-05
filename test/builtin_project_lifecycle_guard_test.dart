@@ -131,11 +131,14 @@ void main() {
   test('notification stop waits for runtime storage off the UI thread', () {
     final start = service.indexOf('if (intent?.action == ACTION_STOP)');
     final end = service.indexOf('return START_NOT_STICKY', start);
-    final stop = service.substring(start, end);
-    expect(stop, contains('Thread {'));
-    expect(stop, contains('}.start()'));
+    // The stop action hands over to stopRuntime, which does the work.
+    expect(service.substring(start, end), contains('stopRuntime(startId)'));
+    final body = service.indexOf('private fun stopRuntime(');
+    final stop = service.substring(body, service.indexOf('override fun', body));
+    expect(stop, contains('Thread({'));
+    expect(stop, contains('.start()'));
     expect(
-      stop.indexOf('Thread {'),
+      stop.indexOf('Thread({'),
       lessThan(stop.indexOf('.stopAllServices()')),
     );
   });

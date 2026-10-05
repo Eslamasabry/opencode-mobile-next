@@ -817,6 +817,31 @@ void main() {
     c.dispose();
   });
 
+  testWidgets(
+    'the agent backend follows the app into the background and back',
+    (tester) async {
+      final w = await ready(tester);
+      final c = w.controller;
+      final paseo = c.chatFeed().items.firstWhere(
+        (i) => i.sourceId == 'paseo:$dir',
+      );
+      await c.openChatFeedItem(paseo);
+      final claude = c.backendForConversation('c1')!;
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(claude.isConnected, isTrue);
+      // One background mode and one notification owner for both.
+      expect(identical(claude.backgroundLive, c.backgroundLive), isTrue);
+      expect(claude.keepLiveInBackground, c.keepLiveInBackground);
+      c.suspendForLifecycle();
+      expect(claude.isConnected, isFalse);
+      await c.resumeFromLifecycle();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(claude.isConnected, isTrue);
+      await tester.pump(const Duration(seconds: 3));
+      c.dispose();
+    },
+  );
+
   testWidgets('without earlier agent conversations the list never waits', (
     tester,
   ) async {

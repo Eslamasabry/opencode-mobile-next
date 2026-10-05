@@ -42,11 +42,21 @@ mixin _ConnectionControllerLifecycle on ChangeNotifier {
 
   /// Stops all network work while the application is backgrounded without
   /// clearing the selected profile, location, or already-rendered data.
-  void suspendForLifecycle() => _self._suspendForLifecycle();
+  void suspendForLifecycle() {
+    _self._suspendForLifecycle();
+    // The agents' own connection follows the app the same way.
+    _self._paBackendLive?.suspendForLifecycle();
+  }
 
   /// Recreates one transport for the profile/location retained by
   /// [suspendForLifecycle]. Concurrent resume signals share the same future.
-  Future<void> resumeFromLifecycle() => _self._resumeFromLifecycle();
+  Future<void> resumeFromLifecycle() {
+    final resume = _self._resumeFromLifecycle();
+    final backend = _self._paBackendLive;
+    if (backend == null) return resume;
+    unawaited(backend.resumeFromLifecycle());
+    return resume;
+  }
 
   /// Reconnects the active profile without discarding the selected location
   /// or already-rendered product data. Repeated taps share one operation.

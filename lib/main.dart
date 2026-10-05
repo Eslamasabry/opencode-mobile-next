@@ -471,18 +471,7 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
                   landOnFailure: chat.landOnFailure,
                   menuAction: chat.menuAction,
                 );
-                // An agent on this phone's conversation talks to that agent's
-                // own connection: everything on the page (models, approvals,
-                // banner) is that backend's, never OpenCode's.
-                final backend = _controller.backendForConversation(id);
-                return KitPageRoute<void>(
-                  builder: (_) => backend == null
-                      ? page
-                      : ProviderScope(
-                          overrides: [connProvider.overrideWithValue(backend)],
-                          child: page,
-                        ),
-                );
+                return KitPageRoute<void>(builder: (_) => page);
               }
               return null;
             },
