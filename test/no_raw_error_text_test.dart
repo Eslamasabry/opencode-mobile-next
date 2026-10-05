@@ -47,6 +47,11 @@ const _rawMessageTypes = <String>{
 /// file (relative to lib/ui) → substrings of lines that may stay, and why.
 const _allowed = <String, Map<String, String>>{
   // Details only: the raw text goes to a fold or a technical value.
+  'screens/agents/agents_text.dart': {
+    'ProductFailure.from(error).technicalDetails ?? error.toString();':
+        'AgentFailure.technical: shown only in the Details fold '
+        '(AgentErrorNotice); the words are agentHostFailureText & co.',
+  },
   'widgets/team_host_form.dart': {
     'var text = error.toString();':
         'builds the verdict Details fold text (KitDetailsFold)',

@@ -31,6 +31,8 @@ const _excluded = <String, String>{
   // Not reachable by choice: the app shows them on its own.
   'home-shell': 'the frame around the three tabs; each tab is found on its own',
   'chats-new-chat': 'opened from the New conversation button on Conversations',
+  'agents-sign-in-terminal':
+      "an agent's own sign-in, opened from the agent sheet's Sign in step",
   'root-connecting': 'shown automatically while a saved server connects',
   'bootstrap-gate': 'startup failure screen; nothing is connected yet',
   'servers-welcome': 'first run only, before any server exists',
