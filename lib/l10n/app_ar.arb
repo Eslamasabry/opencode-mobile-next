@@ -1933,6 +1933,7 @@
   "chatUiChooseAnotherModelInThePickerTo": "اختر نموذجًا آخر من القائمة لإضافته إلى نماذجك الأخيرة.",
   "chatUiChooseModel": "اختيار نموذج",
   "chatUiChooseTheActiveOpenCodeAgent": "اختيار وكيل OpenCode النشط",
+  "chatUiChooseAgentMode": "اختر طريقة عمل {agent}: أوضاعه",
   "chatUiChooseTheCurrentModelVariantOrReasoning": "اختيار متغيّر النموذج الحالي أو مستوى الاستدلال",
   "chatUiCloseComposerTools": "إغلاق أدوات محرّر الرسالة",
   "chatUiClosePromptEditor": "إغلاق محرّر الطلب",

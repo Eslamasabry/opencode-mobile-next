@@ -432,7 +432,9 @@ class _ChatScreenState extends State<ChatScreen>
     }
     _load();
     // Watching reads the transcript only: nothing to send, run or offer.
-    if (_conn.capabilities.serverCatalog && !_watching) {
+    if ((_conn.capabilities.serverCatalog ||
+            _conn.capabilities.slashCommands) &&
+        !_watching) {
       unawaited(_loadServerCommands());
     }
     if (!_watching) {

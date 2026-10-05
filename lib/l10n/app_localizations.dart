@@ -8966,6 +8966,12 @@ abstract class AppLocalizations {
   /// **'Choose the active OpenCode agent'**
   String get chatUiChooseTheActiveOpenCodeAgent;
 
+  /// Command list: the Agent entry in a conversation with an agent on this phone, whose choices are its modes
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how {agent} works: its modes'**
+  String chatUiChooseAgentMode(String agent);
+
   /// Chat journey: Choose the current model variant or reasoning effort
   ///
   /// In en, this message translates to:

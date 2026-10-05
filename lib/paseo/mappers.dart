@@ -257,6 +257,27 @@ MessageWithParts? paseoItemMessage(
           ].join('\n'),
         ),
       );
+    case 'compaction':
+      // The same notice OpenCode 2's compaction draws: a line in the
+      // transcript, not an assistant reply.
+      final done = item['status'] == 'completed';
+      return MessageWithParts(
+        info: MessageInfo(
+          id: id,
+          sessionID: agentID,
+          role: 'user',
+          time: MsgTime(created: created, completed: completed),
+        ),
+        parts: [
+          Part(
+            id: '$id:0',
+            messageID: id,
+            type: 'v2:compaction',
+            toolName: done ? 'completed' : 'running',
+            text: done ? 'Conversation compacted.' : 'Compacting conversation…',
+          ),
+        ],
+      );
     case 'error':
       parts.add(
         Part(

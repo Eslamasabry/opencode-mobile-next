@@ -26,29 +26,33 @@ Legend: ✅ works · 🚫 hidden (cannot work) · ℹ️ explained in place · �
 |---|---|---|
 | Conversations list rows, agent label, running / needs-you | ✅ | One paint, with saved rows while the helper starts |
 | Open a live conversation | ✅ | Its own backend; OpenCode is not reconnected |
-| Old conversation | ℹ️ | "Can't reopen old conversations" plus Start new; see S4 |
+| Old conversation | ✅ | Resumed on the helper through Claude's own session handle (S4 done); a refused resume falls back to Start new |
 | Composer "Ask Claude Code…" | ✅ | |
 | Model chip / picker | ✅ | The agent's own models only |
-| Thinking mode / Agent commands | 🚫 | Gated on `serverCatalog` / agents list (fixed today) |
+| Thinking mode / Agent commands | 🚫 | Gated on `serverCatalog` / more than one agent or mode (fixed today) |
 | Approval chip: ask / auto / approve everything | ✅ | Wording names the agent (fixed today); choices carried over |
 | Request cards and auto-approve | ✅ | Proven on the emulator |
 | Banner and Restart | ✅ | Names the agent; Restart starts the helper |
-| Attach file / photos | ℹ️ | "Claude Code takes text only here" (fixed today); see S5 |
-| Slash commands | ℹ️ | "Claude Code commands unavailable" note in the launcher; see S6 |
+| Attach file / photos | ✅ | Photo library and Take photo send pictures (S5 done); other files are refused in words |
+| Slash commands | ✅ | "Commands from Claude Code" listed by the helper and run as `/name args` (S6 done); a quiet command is not "no reply" |
 | Files, terminal, diff, revert, fork, compact, share, notes, skills, MCP | 🚫 | Capability-gated |
 | Open on another phone | 🚫 | Fixed today: an agent on this phone is reachable only here |
 | Open on computer | 🚫 | `cliSessionResume` false |
 | Rename | ✅ | |
-| Delete / archive a conversation | ⚠️ | The gateway archives (`archive_agent_request`), but no visible door for agent rows; see S2 |
-| Timeline / Find / Details | ⚠️ | Opens, but Details shows server-oriented facts; see S3 |
-| Search conversations (launcher › Conversations) | ⚠️ | Searches OpenCode's server only; see S1 |
-| New conversation › project chip | ⚠️ | Any folder can be picked; agents need `/root/projects/…`, and that is only said after Send; see S1 |
+| Delete / archive a conversation | ℹ️ | No backend offers Delete in the UI today (only untouched drafts are removed): a product decision, not an agent gap |
+| Timeline / Find / Details | ✅ | Details is the usage view; reconnect wording names the agent |
+| Search conversations | ✅ | The search lists matching conversations of every agent (S1 done) |
+| New conversation › project chip | ✅ | A folder outside the agents' projects disables Send and says why (S1 done) |
 | New conversation › "In a separate copy" | 🚫 | Hidden while another agent is chosen (fixed today) |
 | Sign in | ✅ | Claude's own `claude auth login` on a terminal; the app never sees a code |
 | Finished / needs-you notifications | ✅* | Implemented (shared background mode); *not yet seen on a device |
 | App to background and back | ✅ | Follows the main connection |
 | Usage / plan limit | ℹ️ | Status line "plan limit reached · try again later" |
 | Other agents' sign-in (Gemini, Qwen, Goose, …) | ⚠️ | The terminal sign-in is Claude-specific; see S7 |
+
+## Status (2026-10-05 evening)
+
+Done: S1, S3, S4, S5, S6. S2 is a product decision (no backend has Delete in the UI). Remaining: S7, S8, S9.
 
 ## Next work, in order
 

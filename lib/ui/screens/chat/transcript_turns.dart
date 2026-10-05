@@ -76,6 +76,8 @@ bool _endsTurn(List<MessageWithParts> messages, int index) {
   var stepped = false;
   for (var index = prompt + 1; index < messages.length; index += 1) {
     final message = messages[index];
+    // A command that answers with the conversation compacted did answer.
+    if (v2VariantPart(message)?.type == 'v2:compaction') return null;
     if (message.info.role != 'assistant') continue;
     last = index;
     final said = message.parts.any(
@@ -85,9 +87,13 @@ bool _endsTurn(List<MessageWithParts> messages, int index) {
     stepped = stepped || message.parts.any((part) => part.type == 'tool');
   }
   final stopped = messages[prompt].info.id == stoppedPromptID;
+  // A command (`/compact`) may do its work without a word back.
+  final command = messages[prompt].parts.any(
+    (part) => part.type == 'text' && part.text.trimLeft().startsWith('/'),
+  );
   if (last == null) {
     if (refused) return (prompt, null, false);
-    return stopped ? null : (prompt, null, true);
+    return stopped || command ? null : (prompt, null, true);
   }
   final info = messages[last].info;
   final raw = info.errorText;

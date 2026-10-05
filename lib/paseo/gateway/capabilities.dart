@@ -23,7 +23,8 @@ const paseoServerCapabilities = ServerCapabilities(
   sessionImportExport: false,
   sessionNotes: false,
   serverCatalog: false,
-  slashCommands: false,
+  // The runtime's own commands, listed by the helper, run as `/name args`.
+  slashCommands: true,
   profileAttentionPolling: false,
   managedWorkspaces: false,
   workspaceWarp: false,

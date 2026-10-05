@@ -5411,6 +5411,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatUiChooseTheActiveOpenCodeAgent => 'اختيار وكيل OpenCode النشط';
 
   @override
+  String chatUiChooseAgentMode(String agent) {
+    return 'اختر طريقة عمل $agent: أوضاعه';
+  }
+
+  @override
   String get chatUiChooseTheCurrentModelVariantOrReasoning =>
       'اختيار متغيّر النموذج الحالي أو مستوى الاستدلال';
 

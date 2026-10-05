@@ -5366,6 +5366,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose the active OpenCode agent';
 
   @override
+  String chatUiChooseAgentMode(String agent) {
+    return 'Choose how $agent works: its modes';
+  }
+
+  @override
   String get chatUiChooseTheCurrentModelVariantOrReasoning =>
       'Choose the current model variant or reasoning effort';
 

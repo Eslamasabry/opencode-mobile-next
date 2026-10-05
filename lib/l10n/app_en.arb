@@ -4414,6 +4414,15 @@
     "description": "Chat journey: Choose model"
   },
   "chatUiChooseTheActiveOpenCodeAgent": "Choose the active OpenCode agent",
+  "chatUiChooseAgentMode": "Choose how {agent} works: its modes",
+  "@chatUiChooseAgentMode": {
+    "description": "Command list: the Agent entry in a conversation with an agent on this phone, whose choices are its modes",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
   "@chatUiChooseTheActiveOpenCodeAgent": {
     "description": "Chat journey: Choose the active OpenCode agent"
   },

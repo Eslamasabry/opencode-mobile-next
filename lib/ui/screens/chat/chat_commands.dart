@@ -11,6 +11,11 @@ mixin _ChatCommandFields {
 }
 
 extension _ChatCommands on _ChatScreenState {
+  /// The heading of the server's own actions: the agent's name in a
+  /// conversation with an agent on this phone.
+  String get _commandServerGroup =>
+      _conn.isAgentBackend ? (_conn.profile?.name ?? 'OpenCode') : 'OpenCode';
+
   /// "Reconnecting" naming this conversation's own backend: an agent on
   /// this phone (Claude Code) is not OpenCode.
   String _reconnectingWords(BuildContext context) => _conn.isAgentBackend
@@ -297,14 +302,18 @@ extension _ChatCommands on _ChatScreenState {
         group: _chatL10n(context).chatUiModelAndAgent,
         action: _ChatCommandAction.model,
       ),
-      // OpenCode's agents (build, plan, …): a runtime without them has no
-      // agent to choose.
-      if (_conn.agents.isNotEmpty)
+      // OpenCode's agents (build, plan, …), or an agent's modes: offered only
+      // where there is more than one to choose.
+      if (_conn.agents.length > 1)
         CommandSheetEntry.app(
           slash: 'agents',
           aliases: const ['agent'],
           title: _chatL10n(context).chatUiAgent,
-          description: _chatL10n(context).chatUiChooseTheActiveOpenCodeAgent,
+          description: _conn.isAgentBackend
+              ? _chatL10n(
+                  context,
+                ).chatUiChooseAgentMode(KitBidi.auto(_conn.profile?.name ?? ''))
+              : _chatL10n(context).chatUiChooseTheActiveOpenCodeAgent,
           group: _chatL10n(context).chatUiModelAndAgent,
           action: _ChatCommandAction.model,
         ),
@@ -326,7 +335,7 @@ extension _ChatCommands on _ChatScreenState {
         description: _chatL10n(
           context,
         ).chatUiInspectMCPStatusAuthenticationAndResources,
-        group: 'OpenCode',
+        group: _commandServerGroup,
         action: _ChatCommandAction.mcpServers,
       ),
       CommandSheetEntry.app(
@@ -335,7 +344,7 @@ extension _ChatCommands on _ChatScreenState {
         description: _chatL10n(
           context,
         ).chatUiManageProviderAndIntegrationAuthentication,
-        group: 'OpenCode',
+        group: _commandServerGroup,
         action: _ChatCommandAction.integrations,
       ),
       // §7 row 8.
@@ -347,14 +356,14 @@ extension _ChatCommands on _ChatScreenState {
           description: _chatL10n(
             context,
           ).chatUiChangeTheActiveOpenCodeConsoleOrganization,
-          group: 'OpenCode',
+          group: _commandServerGroup,
           action: _ChatCommandAction.organization,
         ),
       CommandSheetEntry.app(
         slash: 'skills',
         title: _chatL10n(context).chatUiSkills,
         description: _chatL10n(context).chatUiBrowseProjectAndGlobalSkills,
-        group: 'OpenCode',
+        group: _commandServerGroup,
         action: _ChatCommandAction.skills,
       ),
       // §7 row 20: no tool inventory endpoint, so the destination goes too.
@@ -365,7 +374,7 @@ extension _ChatCommands on _ChatScreenState {
           description: _chatL10n(
             context,
           ).chatUiInspectToolsCallableByTheActiveProvider,
-          group: 'OpenCode',
+          group: _commandServerGroup,
           action: _ChatCommandAction.tools,
         ),
       CommandSheetEntry.app(
@@ -375,7 +384,7 @@ extension _ChatCommands on _ChatScreenState {
         description: _chatL10n(
           context,
         ).chatUiAddAnOpenCodeProjectReferenceToThis,
-        group: 'OpenCode',
+        group: _commandServerGroup,
         action: _ChatCommandAction.references,
       ),
       CommandSheetEntry.app(
@@ -384,14 +393,14 @@ extension _ChatCommands on _ChatScreenState {
         description: _chatL10n(
           context,
         ).chatUiConnectionHealthServerVersionAndLiveMode,
-        group: 'OpenCode',
+        group: _commandServerGroup,
         action: _ChatCommandAction.status,
       ),
       CommandSheetEntry.app(
         slash: 'debug',
         title: _chatL10n(context).chatUiAppDiagnostics,
         description: _chatL10n(context).chatUiReviewHandledAppErrorsAndSendA,
-        group: 'OpenCode',
+        group: _commandServerGroup,
         action: _ChatCommandAction.diagnostics,
       ),
       CommandSheetEntry.app(
@@ -624,7 +633,7 @@ extension _ChatCommands on _ChatScreenState {
         description: _chatL10n(
           context,
         ).chatUiSearchMobileActionsAndServerProvidedCommands,
-        group: 'OpenCode',
+        group: _commandServerGroup,
         action: _ChatCommandAction.help,
         // The conversation menu is its one home (P10.2); typing it
         // still works.
