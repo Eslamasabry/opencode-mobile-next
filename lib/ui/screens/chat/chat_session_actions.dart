@@ -28,8 +28,7 @@ extension _ChatSessionActions on _ChatScreenState {
     if (actionApi == null) {
       _setChatState(() => _aborting = false);
       _showActionError(
-        _conn.connectionError ??
-            _chatL10n(context).chatUiOpenCodeIsReconnectingTryAgainShortly,
+        _conn.connectionError ?? _reconnectingShortlyWords(context),
       );
       return;
     }
@@ -144,13 +143,10 @@ extension _ChatSessionActions on _ChatScreenState {
   );
 
   Future<ServerOperationsGateway> _requireActionRepository() async {
-    final strings = _chatL10n(context);
+    final reconnecting = _reconnectingShortlyWords(context);
     final repository = await _conn.prepareActionRepository();
     if (repository != null) return repository;
-    throw ProductException(
-      _conn.connectionError ??
-          strings.chatUiOpenCodeIsReconnectingTryAgainShortly,
-    );
+    throw ProductException(_conn.connectionError ?? reconnecting);
   }
 
   Future<void> _openTimeline() async {
@@ -325,10 +321,11 @@ extension _ChatSessionActions on _ChatScreenState {
         ),
       );
     }
+    final reconnecting = _reconnectingWords(context);
     try {
       final api = await _conn.prepareActionTransport();
       if (api == null) {
-        throw ProductException(strings.chatUiOpenCodeIsReconnecting);
+        throw ProductException(reconnecting);
       }
       await _conn.waitForSessionSelection(widget.sessionID, expectedApi: api);
       await api.promptAsync(

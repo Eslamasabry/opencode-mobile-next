@@ -290,7 +290,14 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
             focusNode: _focus,
             hint: l10n.chatUiAskAgent(agentName),
             fieldLabel: l10n.chatUiAskAgent(agentName),
-            readOnlyReason: directory == null ? l10n.chatsNewNeedProject : null,
+            readOnlyReason: directory == null
+                ? l10n.chatsNewNeedProject
+                // Agents on this phone work in the shared project space only.
+                : chosenAgent != null &&
+                      chosenAgent != openCodeChatAgentId &&
+                      !directory.startsWith('/root/projects/')
+                ? l10n.chatsNewAgentNeedsProjectsFolder(agentName)
+                : null,
             sending: _sending,
             onSend: () => unawaited(_send(host)),
             failure: _failure == null

@@ -182,6 +182,30 @@ void main() {
       );
     });
 
+    testWidgets('an agent on this phone outside /root/projects says why', (
+      tester,
+    ) async {
+      final host = FakeChatsHost(_source(lastUsed: '/root/projects/alpha'))
+        ..phoneAgents = FakePhoneAgentsSource(
+          rows: [agentRowFor('claude', FakeAgentStage.ready)],
+          selected: 'claude',
+        );
+      await _open(tester, host, directory: '/storage/emulated/0/notes');
+      expect(
+        find.textContaining('works only in the projects on this phone'),
+        findsWidgets,
+      );
+    });
+
+    testWidgets('OpenCode works in any folder', (tester) async {
+      final open = FakeChatsHost(_source(lastUsed: '/root/projects/alpha'));
+      await _open(tester, open, directory: '/storage/emulated/0/notes');
+      expect(
+        find.textContaining('works only in the projects on this phone'),
+        findsNothing,
+      );
+    });
+
     testWidgets('is OpenCode\'s: not offered while another agent is chosen', (
       tester,
     ) async {

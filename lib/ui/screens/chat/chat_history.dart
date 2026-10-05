@@ -125,9 +125,7 @@ extension _ChatHistory on _ChatScreenState {
       final api = scope.api;
       if (api == null) {
         // Reached synchronously from initState on an offline open.
-        throw ProductException(
-          earlyAppLocalizations(context).chatUiOpenCodeIsReconnecting,
-        );
+        throw ProductException(_reconnectingWords(context));
       }
       // The controller's newest-page read is shared with a prefetch fired
       // on the tap that opened this chat (one HTTP call for both) and saves
@@ -225,7 +223,7 @@ extension _ChatHistory on _ChatScreenState {
     try {
       final api = scope.api;
       if (api == null) {
-        throw ProductException(_chatL10n(context).chatUiOpenCodeIsReconnecting);
+        throw ProductException(_reconnectingWords(context));
       }
       final page = await api.messagePage(scope.session, cursor: cursor);
       if (!_currentHistory(generation, scope)) return;

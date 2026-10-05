@@ -5715,6 +5715,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatUiOpenCodeIsReconnecting => 'جارٍ إعادة اتصال OpenCode.';
 
   @override
+  String chatUiAgentIsReconnecting(String agent) {
+    return 'يعيد $agent الاتصال.';
+  }
+
+  @override
+  String chatUiAgentIsReconnectingTryAgainShortly(String agent) {
+    return 'يعيد $agent الاتصال. حاول مرة أخرى بعد قليل.';
+  }
+
+  @override
   String get chatUiOpenCodeIsReconnectingTryAgainShortly =>
       'جارٍ إعادة اتصال OpenCode. حاول مجددًا بعد قليل.';
 
@@ -19425,6 +19435,16 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String composerToolsAgentTextOnly(String agent) {
     return 'يقبل $agent النص فقط هنا';
+  }
+
+  @override
+  String launcherConversationHint(String project, String agent) {
+    return 'محادثة في $project · $agent';
+  }
+
+  @override
+  String chatsNewAgentNeedsProjectsFolder(String agent) {
+    return 'يعمل $agent في مشاريع هذا الهاتف فقط. اختر واحدًا منها.';
   }
 
   @override

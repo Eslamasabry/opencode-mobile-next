@@ -367,7 +367,7 @@ extension _ChatSessionMenu on _ChatScreenState {
   }
 
   Future<void> _showDiff() async {
-    final strings = _chatL10n(context);
+    final reconnecting = _reconnectingWords(context);
     if (!_conn.capabilities.sessionDiff) return;
     if (_conn.isIsolated) {
       final api = await _conn.prepareActionTransport();
@@ -397,23 +397,21 @@ extension _ChatSessionMenu on _ChatScreenState {
               : () async {
                   final api = await _conn.prepareActionTransport();
                   if (api == null) {
-                    throw ProductException(
-                      strings.chatUiOpenCodeIsReconnecting,
-                    );
+                    throw ProductException(reconnecting);
                   }
                   return api.diff(widget.sessionID);
                 },
           loadWorkingTreeDiffs: () async {
             final repository = await _conn.prepareActionRepository();
             if (repository == null) {
-              throw ProductException(strings.chatUiOpenCodeIsReconnecting);
+              throw ProductException(reconnecting);
             }
             return repository.listVcsDiffs(VcsDiffMode.workingTree);
           },
           loadBranchDiffs: () async {
             final repository = await _conn.prepareActionRepository();
             if (repository == null) {
-              throw ProductException(strings.chatUiOpenCodeIsReconnecting);
+              throw ProductException(reconnecting);
             }
             return repository.listVcsDiffs(VcsDiffMode.branch);
           },

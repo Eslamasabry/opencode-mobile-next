@@ -337,7 +337,9 @@ extension _ChatSend on _ChatScreenState {
       final detail = _conn.connectionError;
       _showActionError(
         detail == null || detail.isEmpty
-            ? strings.chatUiOpenCodeIsReconnectingTryAgainWhenThe
+            ? (_conn.isAgentBackend
+                  ? _reconnectingShortlyWords(context)
+                  : strings.chatUiOpenCodeIsReconnectingTryAgainWhenThe)
             : detail,
       );
       return;
@@ -602,8 +604,7 @@ extension _ChatSend on _ChatScreenState {
     if (actionApi == null) {
       _setChatState(() => _sending = false);
       _showActionError(
-        _conn.connectionError ??
-            _chatL10n(context).chatUiOpenCodeIsReconnectingTryAgainShortly,
+        _conn.connectionError ?? _reconnectingShortlyWords(context),
       );
       return;
     }

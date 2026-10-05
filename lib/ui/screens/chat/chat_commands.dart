@@ -11,6 +11,20 @@ mixin _ChatCommandFields {
 }
 
 extension _ChatCommands on _ChatScreenState {
+  /// "Reconnecting" naming this conversation's own backend: an agent on
+  /// this phone (Claude Code) is not OpenCode.
+  String _reconnectingWords(BuildContext context) => _conn.isAgentBackend
+      ? _chatL10n(
+          context,
+        ).chatUiAgentIsReconnecting(KitBidi.auto(_conn.profile?.name ?? ''))
+      : _chatL10n(context).chatUiOpenCodeIsReconnecting;
+
+  String _reconnectingShortlyWords(BuildContext context) => _conn.isAgentBackend
+      ? _chatL10n(context).chatUiAgentIsReconnectingTryAgainShortly(
+          KitBidi.auto(_conn.profile?.name ?? ''),
+        )
+      : _chatL10n(context).chatUiOpenCodeIsReconnectingTryAgainShortly;
+
   List<CatalogAgent> get _subagents {
     final agents = (_conn.catalog?.agents ?? const <CatalogAgent>[])
         .where((agent) => !agent.hidden && agent.mode == 'subagent')
@@ -84,7 +98,7 @@ extension _ChatCommands on _ChatScreenState {
   }
 
   Future<void> _runShellCommand(String command) async {
-    final reconnecting = _chatL10n(context).chatUiOpenCodeIsReconnecting;
+    final reconnecting = _reconnectingWords(context);
     final api = await _conn.prepareActionTransport();
     if (api == null) throw ProductException(reconnecting);
     await _conn.waitForSessionSelection(widget.sessionID, expectedApi: api);

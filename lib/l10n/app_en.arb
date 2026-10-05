@@ -4782,6 +4782,24 @@
     "description": "Chat journey: OpenCode could not complete this prompt."
   },
   "chatUiOpenCodeIsReconnecting": "OpenCode is reconnecting.",
+  "chatUiAgentIsReconnecting": "{agent} is reconnecting.",
+  "@chatUiAgentIsReconnecting": {
+    "description": "A conversation with an agent on this phone: its connection is coming back",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "chatUiAgentIsReconnectingTryAgainShortly": "{agent} is reconnecting. Try again shortly.",
+  "@chatUiAgentIsReconnectingTryAgainShortly": {
+    "description": "A conversation with an agent on this phone: its connection is coming back; try the act again",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
   "@chatUiOpenCodeIsReconnecting": {
     "description": "Chat journey: OpenCode is reconnecting."
   },
@@ -22705,6 +22723,27 @@
   },
   "composerToolsTextOnly": "This server takes text only",
   "composerToolsAgentTextOnly": "{agent} takes text only here",
+  "launcherConversationHint": "Conversation in {project} · {agent}",
+  "chatsNewAgentNeedsProjectsFolder": "{agent} works only in the projects on this phone. Choose one of them.",
+  "@chatsNewAgentNeedsProjectsFolder": {
+    "description": "New conversation: an agent on this phone is chosen but the project is outside its project space",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "@launcherConversationHint": {
+    "description": "Command launcher: a conversation found by the search, with its project and agent",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      },
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
   "@composerToolsAgentTextOnly": {
     "description": "Prompt tools: attaching is off because the conversation's agent on this phone takes text only",
     "placeholders": {

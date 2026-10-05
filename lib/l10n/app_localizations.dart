@@ -9518,6 +9518,18 @@ abstract class AppLocalizations {
   /// **'OpenCode is reconnecting.'**
   String get chatUiOpenCodeIsReconnecting;
 
+  /// A conversation with an agent on this phone: its connection is coming back
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} is reconnecting.'**
+  String chatUiAgentIsReconnecting(String agent);
+
+  /// A conversation with an agent on this phone: its connection is coming back; try the act again
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} is reconnecting. Try again shortly.'**
+  String chatUiAgentIsReconnectingTryAgainShortly(String agent);
+
   /// Chat journey: OpenCode is reconnecting. Try again shortly.
   ///
   /// In en, this message translates to:
@@ -30717,6 +30729,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{agent} takes text only here'**
   String composerToolsAgentTextOnly(String agent);
+
+  /// Command launcher: a conversation found by the search, with its project and agent
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation in {project} · {agent}'**
+  String launcherConversationHint(String project, String agent);
+
+  /// New conversation: an agent on this phone is chosen but the project is outside its project space
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} works only in the projects on this phone. Choose one of them.'**
+  String chatsNewAgentNeedsProjectsFolder(String agent);
 
   /// Composer + sheet: the door to the command and agent list.
   ///

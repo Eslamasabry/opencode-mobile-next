@@ -220,6 +220,32 @@ extension _OcAppAlertsAndShortcuts on _OcAppState {
               if (target != null) unawaited(entry.open(target, scope));
             },
           ),
+      // Conversations, every agent's (Claude Code's on this phone too), found
+      // by title, project or agent once something is typed. Each opens on
+      // its own backend, the way the Conversations list opens it.
+      for (final item in _controller.chatFeed().items.take(400))
+        if (!item.isSubagent)
+          DesktopCommand(
+            label: item.title,
+            icon: AppIconography.chat,
+            hint: l10n.launcherConversationHint(
+              item.projectName,
+              item.agentLabel ?? 'OpenCode',
+            ),
+            keywords: '${item.projectName} ${item.agentLabel ?? 'OpenCode'}',
+            onlyWhenSearched: true,
+            onInvoke: () {
+              final target = _navigatorKey.currentState?.overlay?.context;
+              if (target == null) return;
+              unawaited(
+                ConnectionChatsHost(_controller).openChat(target, item).then((
+                  problem,
+                ) {
+                  if (problem != null && mounted) _say(problem, failed: true);
+                }),
+              );
+            },
+          ),
     ];
   }
 }

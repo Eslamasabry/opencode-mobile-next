@@ -5670,6 +5670,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatUiOpenCodeIsReconnecting => 'OpenCode is reconnecting.';
 
   @override
+  String chatUiAgentIsReconnecting(String agent) {
+    return '$agent is reconnecting.';
+  }
+
+  @override
+  String chatUiAgentIsReconnectingTryAgainShortly(String agent) {
+    return '$agent is reconnecting. Try again shortly.';
+  }
+
+  @override
   String get chatUiOpenCodeIsReconnectingTryAgainShortly =>
       'OpenCode is reconnecting. Try again shortly.';
 
@@ -19307,6 +19317,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String composerToolsAgentTextOnly(String agent) {
     return '$agent takes text only here';
+  }
+
+  @override
+  String launcherConversationHint(String project, String agent) {
+    return 'Conversation in $project · $agent';
+  }
+
+  @override
+  String chatsNewAgentNeedsProjectsFolder(String agent) {
+    return '$agent works only in the projects on this phone. Choose one of them.';
   }
 
   @override

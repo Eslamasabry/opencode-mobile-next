@@ -360,6 +360,29 @@ void main() {
       expect(matchCommands(commands, 'diagnotics').single.label, 'Diagnostics');
     });
 
+    test('conversations are search results only, matched by project and '
+        'agent too', () {
+      final commands = [
+        DesktopCommand(label: 'Settings', icon: Icons.tune, onInvoke: () {}),
+        DesktopCommand(
+          label: 'Fix the login page',
+          icon: Icons.chat,
+          keywords: 'my-app Claude Code',
+          onlyWhenSearched: true,
+          onInvoke: () {},
+        ),
+      ];
+      expect(matchCommands(commands, '').map((c) => c.label), ['Settings']);
+      expect(
+        matchCommands(commands, 'login').single.label,
+        'Fix the login page',
+      );
+      expect(
+        matchCommands(commands, 'claude').single.label,
+        'Fix the login page',
+      );
+    });
+
     Future<List<String>> openPalette(WidgetTester tester) async {
       final ran = <String>[];
       await tester.pumpWidget(

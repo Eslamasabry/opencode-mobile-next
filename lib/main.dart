@@ -48,6 +48,7 @@ import 'state/session_inventory_cache.dart' show SessionInventoryPreview;
 import 'update/desktop_release_check.dart';
 import 'update/shorebird_update_notice.dart';
 import 'ui/app_theme.dart';
+import 'ui/screens/chats/chats_host.dart' show ConnectionChatsHost;
 import 'ui/capability_flows.dart';
 import 'ui/desktop/desktop_interaction.dart';
 import 'ui/desktop/shortcuts.dart';

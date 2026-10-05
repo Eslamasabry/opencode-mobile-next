@@ -147,7 +147,6 @@ import 'settings_screen.dart';
 import 'capabilities_screen.dart';
 import 'terminal_screen.dart';
 import 'web_sources_screen.dart';
-import '../early_l10n.dart';
 
 // The chat screen is one library. This file holds the widget and its
 // State's core: shared fields, lifecycle, the build entry and dispose. Each

@@ -466,6 +466,7 @@ class DesktopCommand {
     this.hint,
     this.keys,
     this.keywords,
+    this.onlyWhenSearched = false,
   });
 
   final String label;
@@ -480,6 +481,10 @@ class DesktopCommand {
 
   /// Words that find the command without being shown (search-index aliases).
   final String? keywords;
+
+  /// Listed only as a match for a typed query (a conversation), never in
+  /// the full list an empty query shows.
+  final bool onlyWhenSearched;
 }
 
 /// Opens the searchable command launcher: the kit sheet (a centred panel on
@@ -509,7 +514,12 @@ List<DesktopCommand> matchCommands(
   List<DesktopCommand> commands,
   String query,
 ) {
-  if (query.trim().isEmpty) return commands;
+  if (query.trim().isEmpty) {
+    return [
+      for (final command in commands)
+        if (!command.onlyWhenSearched) command,
+    ];
+  }
   final index = SettingsSearchIndex([
     for (final (i, command) in commands.indexed)
       SettingsSearchDocument(
