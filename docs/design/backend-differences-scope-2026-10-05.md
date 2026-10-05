@@ -45,14 +45,26 @@ Legend: ✅ works · 🚫 hidden (cannot work) · ℹ️ explained in place · �
 | New conversation › project chip | ✅ | A folder outside the agents' projects disables Send and says why (S1 done) |
 | New conversation › "In a separate copy" | 🚫 | Hidden while another agent is chosen (fixed today) |
 | Sign in | ✅ | Claude's own `claude auth login` on a terminal; the app never sees a code |
-| Finished / needs-you notifications | ✅* | Implemented (shared background mode); *not yet seen on a device |
+| Finished / needs-you notifications | ✅ | "Claude Code finished" seen on the emulator; opens on Claude's connection |
 | App to background and back | ✅ | Follows the main connection |
 | Usage / plan limit | ℹ️ | Status line "plan limit reached · try again later" |
-| Other agents' sign-in (Gemini, Qwen, Goose, …) | ⚠️ | The terminal sign-in is Claude-specific; see S7 |
+| Other agents' sign-in (Gemini, Qwen, Goose, …) | ✅* | Their own login on the terminal; status from the helper (*not yet installed on a device) |
 
 ## Status (2026-10-05 evening)
 
-Done: S1, S3, S4, S5, S6. S2 is a product decision (no backend has Delete in the UI). Remaining: S7, S8, S9.
+Done: S1, S3, S4, S5, S6, S7, S8; S9 in part.
+
+- S7: each agent's own login on the sign-in terminal (allowlisted programs);
+  agents other than Claude read their sign-in from the helper's snapshot.
+  Proven for Claude on the emulator; Codex and the others are covered by
+  tests only.
+- S8: "Claude Code finished" alert proven on the emulator with background
+  mode on; tapping it opens the conversation on Claude's own connection.
+- S9: the code-paste sign-in is gone from the app interface. Still open:
+  New conversation's model chip reads the agents' models through the old
+  `agentModels` path (works; unifying it on the agent backend's catalog is
+  cleanup only).
+- S2 is a product decision (no backend has Delete in the UI).
 
 ## Next work, in order
 
