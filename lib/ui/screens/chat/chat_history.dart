@@ -436,6 +436,8 @@ extension _ChatHistory on _ChatScreenState {
     if (text != pending.text.trim()) return false;
 
     final files = parts.where((part) => part.type == 'file').toList();
+    // A server whose copy keeps the text only can't show the pictures sent.
+    if (files.isEmpty && _conn.capabilities.promptEchoTextOnly) return true;
     if (files.length != pending.attachments.length) return false;
     for (var i = 0; i < files.length; i++) {
       final part = files[i];

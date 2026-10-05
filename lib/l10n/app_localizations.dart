@@ -30736,6 +30736,12 @@ abstract class AppLocalizations {
   /// **'Conversation in {project} · {agent}'**
   String launcherConversationHint(String project, String agent);
 
+  /// Prompt tools: Attach file is off because the agent on this phone takes pictures but not other files
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} takes pictures only: use Photo library or Take photo'**
+  String composerToolsAgentPicturesOnly(String agent);
+
   /// New conversation: an agent on this phone is chosen but the project is outside its project space
   ///
   /// In en, this message translates to:

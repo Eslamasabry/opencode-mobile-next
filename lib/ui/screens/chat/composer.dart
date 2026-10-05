@@ -47,6 +47,7 @@ class _ChatComposer extends StatelessWidget {
     this.shelfLoading = true,
     required this.attachments,
     required this.promptAttachmentsSupported,
+    this.promptImagesOnly = false,
     required this.webSourcesSupported,
     required this.busy,
     this.model,
@@ -104,6 +105,9 @@ class _ChatComposer extends StatelessWidget {
   final bool shelfLoading;
   final List<PromptAttachment> attachments;
   final bool promptAttachmentsSupported;
+
+  /// Pictures only (an agent on this phone): photos and camera, no files.
+  final bool promptImagesOnly;
   final bool webSourcesSupported;
   final bool busy;
 
@@ -476,6 +480,7 @@ class _ChatComposer extends StatelessWidget {
       body: (sheetContext) => _PromptToolsList(
         attachBlocked: attachBlocked,
         attachmentsSupported: promptAttachmentsSupported,
+        imagesOnly: promptImagesOnly,
         webSourcesSupported: webSourcesSupported,
         voiceBlocked: voiceBlocked,
         conversationBlocked: conversationBlocked,

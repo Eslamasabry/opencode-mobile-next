@@ -7,7 +7,36 @@
 library;
 
 import '../api/models.dart';
+import '../domain/server_gateway.dart' show ProductException;
 import 'transport.dart';
+
+/// The prompt's pictures as Paseo's `images` (base64 data and its type).
+/// Other files can't go to an agent through its helper: refused in words.
+List<Map<String, String>> paseoImages(List<PromptAttachment> attachments) {
+  if (attachments.length > 8) {
+    throw const ProductException('Attach up to 8 pictures at a time.');
+  }
+  final images = <Map<String, String>>[];
+  for (final attachment in attachments) {
+    final match = RegExp(
+      r'^data:(image/[a-zA-Z0-9.+-]+);base64,(.+)$',
+      dotAll: true,
+    ).firstMatch(attachment.url);
+    if (!attachment.mime.startsWith('image/') || match == null) {
+      throw const ProductException(
+        'This agent takes pictures only. Remove the other files and send again.',
+      );
+    }
+    final data = match.group(2)!;
+    if (data.length > 14 * 1024 * 1024) {
+      throw const ProductException(
+        'That picture is too large to send. Choose a smaller one.',
+      );
+    }
+    images.add({'data': data, 'mimeType': match.group(1)!});
+  }
+  return images;
+}
 
 Map<String, dynamic> paseoObject(Object? value) {
   if (value is! Map<String, dynamic>) {

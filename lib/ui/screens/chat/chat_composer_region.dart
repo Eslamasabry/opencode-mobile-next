@@ -392,6 +392,7 @@ extension _ChatComposerRegion on _ChatScreenState {
           _photoBusy || _promptShelfOperationBusy || _restoringDraftAttachments,
       attachments: _attachments,
       promptAttachmentsSupported: _supportsPromptAttachments,
+      promptImagesOnly: _conn.capabilities.promptImagesOnly,
       webSourcesSupported: _conn.capabilities.webSearch,
       busy: busy || _live != null,
       // Send becomes Stop; nothing to stop while the prompt is on its way.

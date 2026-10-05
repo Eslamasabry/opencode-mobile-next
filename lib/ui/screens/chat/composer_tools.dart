@@ -32,6 +32,7 @@ class _PromptToolsList extends StatelessWidget {
   const _PromptToolsList({
     required this.attachBlocked,
     required this.attachmentsSupported,
+    this.imagesOnly = false,
     required this.webSourcesSupported,
     required this.voiceBlocked,
     required this.conversationBlocked,
@@ -50,6 +51,7 @@ class _PromptToolsList extends StatelessWidget {
 
   final bool attachBlocked;
   final bool attachmentsSupported;
+  final bool imagesOnly;
   final bool webSourcesSupported;
   final bool voiceBlocked;
   final bool conversationBlocked;
@@ -90,7 +92,7 @@ class _PromptToolsList extends StatelessWidget {
       children: [
         KitRowGroup(
           children: [
-            if (attachmentsSupported)
+            if (attachmentsSupported && !imagesOnly)
               tool(
                 _PromptTool.attach,
                 key: 'attach',
@@ -106,7 +108,11 @@ class _PromptToolsList extends StatelessWidget {
                 key: const Key('composer-tool-attach'),
                 leading: const KitRowIcon(AppIconography.attach),
                 title: l10n.chatUiAttachFile,
-                reason: agentName == null
+                reason: imagesOnly
+                    ? l10n.composerToolsAgentPicturesOnly(
+                        KitBidi.auto(agentName ?? ''),
+                      )
+                    : agentName == null
                     ? l10n.composerToolsTextOnly
                     : l10n.composerToolsAgentTextOnly(KitBidi.auto(agentName!)),
               ),

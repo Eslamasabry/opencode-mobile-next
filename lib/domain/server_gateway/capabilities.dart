@@ -28,6 +28,15 @@ class ServerCapabilities {
   final bool hostAgentPermissionActions;
   // Core operations differ across supported server backends.
   final bool promptAttachments;
+
+  /// With [promptAttachments]: pictures only (an agent on this phone takes
+  /// images through its helper, not other files).
+  final bool promptImagesOnly;
+
+  /// The server's copy of a sent prompt keeps its text only (Paseo's
+  /// timeline drops the pictures), so the app's own copy is matched to it by
+  /// text alone.
+  final bool promptEchoTextOnly;
   final bool promptAgentMentions;
   final bool offlinePromptQueue;
   final bool fileBrowsing;
@@ -138,6 +147,8 @@ class ServerCapabilities {
     this.hostAgentProviders = false,
     this.hostAgentPermissionActions = false,
     this.promptAttachments = true,
+    this.promptImagesOnly = false,
+    this.promptEchoTextOnly = false,
     this.promptAgentMentions = true,
     this.offlinePromptQueue = true,
     this.fileBrowsing = true,

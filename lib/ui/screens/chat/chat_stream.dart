@@ -376,13 +376,29 @@ extension _ChatStream on _ChatScreenState {
     final canonicalIndex = _messages.indexWhere(
       (message) => message.info.id == info.id,
     );
-    final parts =
+    var parts =
         canonicalParts ??
         (canonicalIndex >= 0 && _messages[canonicalIndex].parts.isNotEmpty
             ? _messages[canonicalIndex].parts
             : localIndex >= 0
             ? _messages[localIndex].parts
             : <Part>[]);
+    // A server whose copy keeps the text only: the pictures sent stay on
+    // the bubble.
+    if (_conn.capabilities.promptEchoTextOnly &&
+        pending.attachments.isNotEmpty &&
+        !parts.any((part) => part.type == 'file')) {
+      parts = [
+        ...parts,
+        for (final attachment in pending.attachments)
+          Part(
+            type: 'file',
+            mime: attachment.mime,
+            filename: attachment.filename,
+            url: attachment.url,
+          ),
+      ];
+    }
     final replacement = MessageWithParts(info: info, parts: parts);
     if (localIndex >= 0) {
       _messages[localIndex] = replacement;

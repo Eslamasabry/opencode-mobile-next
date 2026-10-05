@@ -22724,6 +22724,15 @@
   "composerToolsTextOnly": "This server takes text only",
   "composerToolsAgentTextOnly": "{agent} takes text only here",
   "launcherConversationHint": "Conversation in {project} · {agent}",
+  "composerToolsAgentPicturesOnly": "{agent} takes pictures only: use Photo library or Take photo",
+  "@composerToolsAgentPicturesOnly": {
+    "description": "Prompt tools: Attach file is off because the agent on this phone takes pictures but not other files",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
   "chatsNewAgentNeedsProjectsFolder": "{agent} works only in the projects on this phone. Choose one of them.",
   "@chatsNewAgentNeedsProjectsFolder": {
     "description": "New conversation: an agent on this phone is chosen but the project is outside its project space",

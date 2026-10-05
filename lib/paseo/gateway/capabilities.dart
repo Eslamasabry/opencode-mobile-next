@@ -3,7 +3,10 @@ part of '../gateway.dart';
 const paseoServerCapabilities = ServerCapabilities(
   hostAgentProviders: true,
   hostAgentPermissionActions: true,
-  promptAttachments: false,
+  // Pictures go to the agent with the message (`images`); other files do not.
+  promptAttachments: true,
+  promptImagesOnly: true,
+  promptEchoTextOnly: true,
   promptAgentMentions: false,
   offlinePromptQueue: false,
   fileBrowsing: false,

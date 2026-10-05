@@ -19325,6 +19325,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String composerToolsAgentPicturesOnly(String agent) {
+    return '$agent takes pictures only: use Photo library or Take photo';
+  }
+
+  @override
   String chatsNewAgentNeedsProjectsFolder(String agent) {
     return '$agent works only in the projects on this phone. Choose one of them.';
   }

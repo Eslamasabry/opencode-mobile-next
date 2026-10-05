@@ -444,11 +444,10 @@ class PaseoGateway
     PromptDelivery? delivery,
   }) async {
     PromptTrace.sent(sessionID);
-    if (attachments.isNotEmpty ||
-        agentMentions.isNotEmpty ||
-        delivery != null) {
+    if (agentMentions.isNotEmpty || delivery != null) {
       throw PaseoFailure(PaseoFailureKind.unavailable);
     }
+    final images = paseoImages(attachments);
     if (_uncertain.contains(sessionID)) {
       throw PaseoFailure(PaseoFailureKind.deliveryUnknown);
     }
@@ -466,6 +465,7 @@ class PaseoGateway
           model: model,
           mode: agent,
           variant: variant,
+          images: images,
         );
       } else {
         if (!_agents.containsKey(sessionID)) await _fetchAgent(sessionID);
@@ -488,7 +488,12 @@ class PaseoGateway
         await _applySelection(sessionID, model: model, mode: agent);
         await transport.request(
           'send_agent_message_request',
-          {'agentId': _real(sessionID), 'text': prompt, 'messageId': messageID},
+          {
+            'agentId': _real(sessionID),
+            'text': prompt,
+            'messageId': messageID,
+            if (images.isNotEmpty) 'images': images,
+          },
           mutation: true,
           timeout: const Duration(seconds: 60),
         );

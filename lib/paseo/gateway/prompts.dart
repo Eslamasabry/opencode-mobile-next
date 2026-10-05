@@ -8,6 +8,7 @@ extension _PaseoPrompts on PaseoGateway {
     ModelRef? model,
     String? mode,
     String? variant,
+    List<Map<String, String>> images = const [],
   }) async {
     final scope = _scope;
     final locationEpoch = _locationEpoch;
@@ -50,6 +51,7 @@ extension _PaseoPrompts on PaseoGateway {
             if (title != null && title != 'New conversation') 'title': title,
           },
           'initialPrompt': prompt,
+          if (images.isNotEmpty) 'images': images,
           'clientMessageId': messageID,
           'labels': <String, String>{},
         },

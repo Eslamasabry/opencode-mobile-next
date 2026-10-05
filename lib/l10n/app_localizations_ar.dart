@@ -19443,6 +19443,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String composerToolsAgentPicturesOnly(String agent) {
+    return 'يقبل $agent الصور فقط: استخدم مكتبة الصور أو التقاط صورة';
+  }
+
+  @override
   String chatsNewAgentNeedsProjectsFolder(String agent) {
     return 'يعمل $agent في مشاريع هذا الهاتف فقط. اختر واحدًا منها.';
   }
