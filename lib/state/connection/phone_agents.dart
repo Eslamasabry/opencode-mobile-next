@@ -83,6 +83,10 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// [backendForConversation].
   final _paOwners = <String, ConnectionController>{};
 
+  /// Conversations whose resume the helper refused: the next tap offers a
+  /// new conversation instead.
+  final _paResumeFailed = <String>{};
+
   /// Conversations last opened as OpenCode's: the page is found by id
   /// alone, and these never fall back to the agents' connection.
   final _paOpenCodeOpened = <String>{};
@@ -869,25 +873,10 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   DateTime? _paHoldUntil;
   Timer? _paHoldTimer;
 
-  String _paUsedKey(String profileID) => 'oc.phoneAgentsUsed.$profileID';
+  bool get _paUsedBefore => _paCache.usedBefore(_paProfile?.id);
 
-  bool get _paUsedBefore {
-    final id = _paProfile?.id;
-    if (id == null) return false;
-    try {
-      return _self.store.prefs.getBool(_paUsedKey(id)) ?? false;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<void> _paRememberUsed(bool used) async {
-    final id = _paProfile?.id;
-    if (id == null || used == _paUsedBefore) return;
-    try {
-      await _self.store.prefs.setBool(_paUsedKey(id), used);
-    } catch (_) {}
-  }
+  Future<void> _paRememberUsed(bool used) =>
+      _paCache.rememberUsed(_paProfile?.id, used);
 
   /// The list holds its first paint while this phone's agents, which had
   /// conversations last time, are still being read: one paint with every
@@ -1307,9 +1296,31 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         .where((row) => row.identity == item.identity)
         .toList();
     if (current.length != 1) throw _gone;
-    final route = merged.routeFor(current.single);
+    var route = merged.routeFor(current.single);
     if (route.sourceId.startsWith('paseo:')) {
       final row = current.single;
+      final source = merged.sourceFor(route);
+      if (source is PaseoChatFeedSource &&
+          !source.gateway.isAgentLoaded(row.sessionID) &&
+          source.gateway.canResumeAgent(row.sessionID)) {
+        try {
+          final id = await source.gateway.resumeHostAgentChat(row.sessionID);
+          _paLive.add(row.identity);
+          route = ChatFeedRoute(
+            sourceId: route.sourceId,
+            sessionID: id,
+            directory: route.directory,
+            agentId: route.agentId,
+          );
+        } catch (_) {
+          _paResumeFailed.add(row.identity);
+          if (!_self._disposed) _self._notifyListeners();
+          throw ProductException(
+            '${row.agentLabel ?? 'The agent'} could not reopen this conversation. '
+            'Tap it again to start a new one from it.',
+          );
+        }
+      }
       final descriptor =
           _paCatalog.byId(row.agentId) ??
           _paCatalog.agents
@@ -1344,10 +1355,15 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       return const AgentResumeNotice(canReopen: true);
     }
     // Still loaded in the helper (running or idle since it last started):
-    // opening it shows the live conversation, whoever started it.
+    // opening it shows the live conversation, whoever started it. One the
+    // helper no longer holds reopens through the runtime's own resume,
+    // unless that already failed here.
     for (final entry in _paSources.entries) {
-      if (_paseoSourceId(entry.key) == item.sourceId &&
-          entry.value.gateway.isAgentLoaded(item.sessionID)) {
+      if (_paseoSourceId(entry.key) != item.sourceId) continue;
+      final gateway = entry.value.gateway;
+      if (gateway.isAgentLoaded(item.sessionID) ||
+          (gateway.canResumeAgent(item.sessionID) &&
+              !_paResumeFailed.contains(item.identity))) {
         return const AgentResumeNotice(canReopen: true);
       }
     }

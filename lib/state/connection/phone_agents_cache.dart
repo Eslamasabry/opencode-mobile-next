@@ -12,6 +12,26 @@ final class _AgentFeedCache {
 
   static String _key(String profileID) => 'oc.agentFeed.$profileID';
 
+  static String _usedKey(String profileID) => 'oc.phoneAgentsUsed.$profileID';
+
+  /// Whether this profile's agents had conversations the last time the list
+  /// read them (the list then waits for them before its first paint).
+  bool usedBefore(String? profileID) {
+    if (profileID == null) return false;
+    try {
+      return _prefs.getBool(_usedKey(profileID)) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> rememberUsed(String? profileID, bool used) async {
+    if (profileID == null || used == usedBefore(profileID)) return;
+    try {
+      await _prefs.setBool(_usedKey(profileID), used);
+    } catch (_) {}
+  }
+
   /// Rows by identity, with whether each could be reopened when saved.
   List<({ChatFeedItem item, bool canReopen})> read(String profileID) {
     try {

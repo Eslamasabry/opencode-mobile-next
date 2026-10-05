@@ -170,6 +170,18 @@ class PaseoGateway
     _ => false,
   };
 
+  /// True when [appID]'s record carries its runtime's own session handle,
+  /// so [resumeHostAgentChat] can try to reopen it.
+  bool canResumeAgent(String appID) {
+    final agent = _agents[appID];
+    final handle = agent?['persistence'];
+    return agent != null &&
+        handle is Map &&
+        handle['sessionId'] is String &&
+        (handle['sessionId'] as String).isNotEmpty &&
+        handle['provider'] == agent['provider'];
+  }
+
   /// The daemon's own id for [appID] once its agent exists (a draft keeps
   /// its app id until the first prompt creates it). Another gateway on the
   /// same daemon opens the conversation by this id.
@@ -703,6 +715,46 @@ class PaseoGateway
           ? HostAgentContinuationState.existingRoute
           : HostAgentContinuationState.resumeUnverified,
     );
+  }
+
+  /// Reopens a conversation the helper no longer holds (it ran before the
+  /// helper last started) through the runtime's own session resume:
+  /// `resume_agent_request` with the agent's persistence handle. Returns the
+  /// id the conversation opens by. Throws when the daemon or the runtime
+  /// refuses, so the caller can offer a new conversation instead.
+  Future<String> resumeHostAgentChat(String sessionId) async {
+    final scope = _scope;
+    final epoch = _locationEpoch;
+    if (!_agents.containsKey(sessionId)) await _fetchAgent(sessionId);
+    _checkLocation(scope, epoch);
+    final agent = _agents[sessionId];
+    final handle = agent?['persistence'];
+    if (agent == null ||
+        handle is! Map ||
+        handle['sessionId'] is! String ||
+        handle['provider'] != agent['provider']) {
+      throw PaseoFailure(PaseoFailureKind.unavailable);
+    }
+    final result = await transport.request(
+      'resume_agent_request',
+      {'handle': handle},
+      mutation: true,
+      timeout: const Duration(seconds: 90),
+    );
+    _checkLocation(scope, epoch);
+    final resumed = paseoObject(result['agent']);
+    final realID = paseoString(resumed['id'], max: 256);
+    // The resumed agent may be a new record: the row the person tapped
+    // opens it.
+    if (realID != _real(sessionId)) {
+      _realIDs[sessionId] = realID;
+      _appIDs[realID] = sessionId;
+    }
+    if (_remember(resumed) == null) {
+      throw PaseoFailure(PaseoFailureKind.scopeMismatch);
+    }
+    _liveAgentSessions.add(sessionId);
+    return realID;
   }
 
   @override

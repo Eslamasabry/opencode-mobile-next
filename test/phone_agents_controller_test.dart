@@ -193,6 +193,10 @@ class _HostState {
   List<Map<String, dynamic>> agents = [];
   var newAgentSeq = 0;
   AgentPhoneCheckResult? check;
+
+  /// When set, the helper refuses to resume old conversations.
+  bool resumeFails = false;
+  final resumed = <String>[];
 }
 
 class _FakeHost implements PhoneAgentHostPort {
@@ -294,6 +298,22 @@ class _FakeHost implements PhoneAgentHostPort {
       final agent = agents.firstWhere((a) => a['id'] == id);
       return ('fetch_agent_response', {'agent': agent});
     };
+    socket.handlers['resume_agent_request'] = (request) {
+      final handle = request['handle'] as Map;
+      state.resumed.add(handle['sessionId'] as String);
+      if (state.resumeFails) {
+        return (
+          'rpc_error',
+          {'error': 'resume refused', 'requestType': 'resume_agent_request'},
+        );
+      }
+      final old = agents.firstWhere(
+        (a) => (a['persistence'] as Map?)?['sessionId'] == handle['sessionId'],
+      );
+      final agent = {...old, 'status': 'idle'};
+      agents = [for (final a in agents) a['id'] == old['id'] ? agent : a];
+      return ('status', {'status': 'agent_resumed', 'agent': agent});
+    };
     socket.handlers['create_agent_request'] = (request) {
       final agent = _agent('claude-new-${++state.newAgentSeq}', directory);
       agents = [...agents, agent];
@@ -341,6 +361,7 @@ Map<String, dynamic> _agent(
   String provider = 'claude',
   int minute = 30,
   String status = 'idle',
+  bool persistence = true,
 }) => {
   'id': id,
   'provider': provider,
@@ -365,7 +386,9 @@ Map<String, dynamic> _agent(
     {'id': 'default', 'label': 'Default'},
   ],
   'pendingPermissions': <Object>[],
-  'persistence': {'provider': provider, 'sessionId': 'native-$id'},
+  'persistence': persistence
+      ? {'provider': provider, 'sessionId': 'native-$id'}
+      : null,
   'labels': <String, String>{},
   'archivedAt': null,
 };
@@ -543,8 +566,9 @@ void main() {
       secure: secure,
     );
     w.state.runtimes = {'claude': _ready('claude')};
-    // Left over from an earlier host run: listed, but not loaded.
-    w.state.agents = [_agent('c1', dir, status: 'closed')];
+    // Left over from an earlier host run: listed, not loaded, and without
+    // its runtime's session handle (nothing to resume it by).
+    w.state.agents = [_agent('c1', dir, status: 'closed', persistence: false)];
     w.oc.global = [_ocRow('c1', dir)];
     await w.controller.rememberLastUsedProject(dir);
     await w.controller.refreshAgentRows();
@@ -842,6 +866,52 @@ void main() {
     },
   );
 
+  testWidgets('an old conversation with its session handle reopens by '
+      'resuming it on the helper', (tester) async {
+    final w = await _world(tester);
+    w.state.runtimes = {'claude': _ready('claude')};
+    w.state.agents = [_agent('old', dir, status: 'closed')];
+    final c = w.controller;
+    await c.rememberLastUsedProject(dir);
+    await c.refreshAgentRows();
+    await c.refreshChatFeed();
+    final row = c.chatFeed().items.firstWhere((i) => i.sessionID == 'old');
+    expect(c.agentResumeNotice(row).canReopen, isTrue);
+    final route = await c.openChatFeedItem(row);
+    expect(w.state.resumed, ['native-old']);
+    expect(c.backendForConversation(route.sessionID)?.isAgentBackend, isTrue);
+    await tester.pump(const Duration(seconds: 3));
+    c.dispose();
+  });
+
+  testWidgets('a refused resume says so, and the next tap offers a new '
+      'conversation', (tester) async {
+    final w = await _world(tester);
+    w.state.runtimes = {'claude': _ready('claude')};
+    w.state.agents = [_agent('old', dir, status: 'closed')];
+    w.state.resumeFails = true;
+    final c = w.controller;
+    await c.rememberLastUsedProject(dir);
+    await c.refreshAgentRows();
+    await c.refreshChatFeed();
+    final row = c.chatFeed().items.firstWhere((i) => i.sessionID == 'old');
+    await expectLater(
+      c.openChatFeedItem(row),
+      throwsA(
+        isA<ProductException>().having(
+          (e) => e.message,
+          'message',
+          contains('could not reopen this conversation'),
+        ),
+      ),
+    );
+    final notice = c.agentResumeNotice(row);
+    expect(notice.canReopen, isFalse);
+    expect(notice.requiresAcknowledgement, isTrue);
+    await tester.pump(const Duration(seconds: 3));
+    c.dispose();
+  });
+
   testWidgets('without earlier agent conversations the list never waits', (
     tester,
   ) async {
@@ -863,7 +933,7 @@ void main() {
     w.state.agents = [
       _agent('live', dir),
       _agent('busy', dir, status: 'running'),
-      _agent('old', dir, status: 'closed'),
+      _agent('old', dir, status: 'closed', persistence: false),
     ];
     final c = w.controller;
     await c.rememberLastUsedProject(dir);
