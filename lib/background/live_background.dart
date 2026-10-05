@@ -350,12 +350,14 @@ class BackgroundLiveController extends ChangeNotifier {
     String subtext = '',
     String title = '',
     String text = '',
+    String agentName = '',
   }) async {
     if (!platformCapabilities.supportsNotifications) return false;
     if (!enabled || !notificationGranted) return false;
     try {
       final result = await _invoke('showCodingAlert', {
         'kind': kind.wireValue,
+        if (agentName.isNotEmpty) 'agentName': agentName,
         'sessionID': sessionID,
         'key': key,
         'quickReply': quickReply,

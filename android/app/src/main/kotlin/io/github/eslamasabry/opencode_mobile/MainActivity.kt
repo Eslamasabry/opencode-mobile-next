@@ -294,7 +294,8 @@ class MainActivity : FlutterActivity() {
                                     monitorToken = call.argument<String>("monitorToken").orEmpty(),
                                     subtext = call.argument<String>("subtext").orEmpty(),
                                     title = call.argument<String>("title").orEmpty(),
-                                    text = call.argument<String>("text").orEmpty()
+                                    text = call.argument<String>("text").orEmpty(),
+                                    agentName = call.argument<String>("agentName").orEmpty()
                                 )
                             )
                         )

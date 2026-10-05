@@ -264,7 +264,8 @@ class BackgroundConnectionService : Service() {
             monitorToken: String = "",
             subtext: String = "",
             title: String = "",
-            text: String = ""
+            text: String = "",
+            agentName: String = ""
         ): Boolean {
             if (sessionID.isBlank() || key.isBlank()) return false
             if (kind == "quota" && (sessionID != "quota" || profileID.isBlank() ||
@@ -400,7 +401,13 @@ class BackgroundConnectionService : Service() {
             }
             builder
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle(content.title)
+                // A conversation with an agent on this phone names that agent
+                // ("Claude Code finished"); only a plain, short name is taken.
+                .setContentTitle(
+                    if (agentName.matches(Regex("^[A-Za-z0-9 .-]{1,32}$")) && content.title.startsWith("OpenCode"))
+                        agentName + content.title.removePrefix("OpenCode")
+                    else content.title
+                )
                 .setContentText(content.text)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(kind != "team_progress")

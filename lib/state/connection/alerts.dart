@@ -221,6 +221,7 @@ extension _ConnectionControllerAlertsImpl on ConnectionController {
           .showCodingAlert(
             kind: kind,
             profileID: _alertProfileId,
+            agentName: isAgentBackend ? profile?.name ?? '' : '',
             sessionID: sessionID,
             key: _statusAlertKey(sessionID),
           )
@@ -263,6 +264,7 @@ extension _ConnectionControllerAlertsImpl on ConnectionController {
           .showCodingAlert(
             kind: kind,
             profileID: _alertProfileId,
+            agentName: isAgentBackend ? profile?.name ?? '' : '',
             sessionID: sessionID,
             key: _inputAlertKey(sessionID),
             quickReply: quickReplyQuestion != null || permissionReply,
