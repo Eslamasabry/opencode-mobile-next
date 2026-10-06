@@ -1061,15 +1061,18 @@ void main() {
     final rows = c.chatFeed().items.where((i) => i.sourceId == 'paseo:$dir');
     expect(rows.map((i) => i.sessionID), ['new']);
     expect(rows.single.title, 'Fix the login page');
-    // The helper gets the title back, so the conversation's header agrees.
-    await tester.pump(const Duration(milliseconds: 50));
+    // Opened, the conversation's own header says what its row says.
+    await c.openChatFeedItem(rows.single);
+    final backend = c.backendForConversation('new')!;
+    await backend.ensureSession('new');
+    expect(backend.sessionsById['new']?.title, 'Fix the login page');
+    // Nothing is written to the helper (that would move the row to the top).
     final renames = [
       for (final socket in w.host.sockets)
         for (final request in socket.sent)
           if (request['type'] == 'update_agent_request') request,
     ];
-    expect(renames, isNotEmpty);
-    expect(renames.first['name'], 'Fix the login page');
+    expect(renames, isEmpty);
     await tester.pump(const Duration(seconds: 3));
     c.dispose();
   });

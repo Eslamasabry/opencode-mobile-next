@@ -69,6 +69,10 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// Folders whose live agent conversations have been read since start: the
   /// saved rows of every other folder still show (see [_AgentFeedCache]).
   final _paLoadedDirs = <String>{};
+
+  /// Titles of agent conversations as their rows show them, for a record a
+  /// resume left without one.
+  final _paTitleHints = <String, String>{};
   late final _AgentFeedCache _paCache = _AgentFeedCache(_self.store.prefs);
   List<({ChatFeedItem item, bool canReopen})>? _paCacheRows;
   String? _paCacheOwner;
@@ -1227,11 +1231,16 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
           _paCatalog.agents
               .where((agent) => agent.providerId == row.agentId)
               .firstOrNull;
-      _paOwners[route.sessionID] = await _paBackendFor(
+      // The conversation's own header says what its row says.
+      _paTitleHints[route.sessionID] = row.title;
+      final backend = await _paBackendFor(
         route.directory,
         agentId: descriptor?.id,
         agentName: row.agentLabel ?? descriptor?.name,
       );
+      _paOwners[route.sessionID] = backend;
+      final api = backend.api;
+      if (api is PaseoGateway) api.keepTitle(route.sessionID, row.title);
     } else {
       // The page is found by id alone: this one is OpenCode's again.
       _paOwners.remove(route.sessionID);

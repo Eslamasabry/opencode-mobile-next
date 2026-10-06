@@ -416,32 +416,21 @@ class PaseoGateway
     _forget(id);
   }
 
-  /// Gives a record the title it lost (a resume made a new one): best
-  /// effort, at most once per record.
-  Future<void> _retitle(String realID, String title) async {
-    if (!_retitled.add(realID)) return;
-    try {
-      await transport.request('update_agent_request', {
-        'agentId': realID,
-        'name': paseoString(title.trim(), max: 200),
-      }, mutation: true);
-    } catch (_) {
-      // The list still shows the title it knows.
-    }
-  }
-
-  /// Restores the title [appID]'s record lost to a resume, as [title] (the
-  /// older record of the same conversation).
+  /// The title [appID]'s record lost to a resume (the older record of the
+  /// same conversation had it): shown here while the record has none of its
+  /// own. Nothing is written to the helper (an update there moves the
+  /// conversation to the top as if it had just been used).
   void keepTitle(String appID, String title) {
-    if (hasOwnTitle(appID) || title.trim().isEmpty) return;
+    if (title.trim().isEmpty) return;
+    _titleHints[appID] = title;
+    if (hasOwnTitle(appID)) return;
     final agent = _agents[appID];
     if (agent != null) _agents[appID] = {...agent, 'title': title};
     final session = _sessions[appID];
     if (session != null) _sessions[appID] = session.copyWith(title: title);
-    unawaited(_retitle(_real(appID), title));
   }
 
-  final _retitled = <String>{};
+  final _titleHints = <String, String>{};
 
   @override
   Future<void> renameSession(String id, String title) async {
@@ -862,15 +851,12 @@ class PaseoGateway
     );
     _checkLocation(scope, epoch);
     final resumed = {...paseoObject(result['agent'])};
-    // A resumed record may come back without the title it had: it is kept
-    // here and written back to the helper, so every view shows it.
+    // A resumed record may come back without the title it had.
     final title = resumed['title'];
-    final had = agent['title'];
-    final retitle =
-        (title is! String || title.trim().isEmpty) &&
-        had is String &&
-        had.trim().isNotEmpty;
-    if (retitle) resumed['title'] = had;
+    if ((title is! String || title.trim().isEmpty) &&
+        agent['title'] is String) {
+      resumed['title'] = agent['title'];
+    }
     final realID = paseoString(resumed['id'], max: 256);
     // The resumed agent may be a new record: the row the person tapped
     // opens it.
@@ -882,7 +868,6 @@ class PaseoGateway
       throw PaseoFailure(PaseoFailureKind.scopeMismatch);
     }
     _liveAgentSessions.add(sessionId);
-    if (retitle) unawaited(_retitle(realID, had));
     return realID;
   }
 

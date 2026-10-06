@@ -11,7 +11,7 @@ extension _PaseoSessions on PaseoGateway {
     // A record the daemon reloaded (after its helper restarted) can come
     // back without its title: the one already known stays.
     final title = agent['title'];
-    final known = _agents[agent['id']]?['title'];
+    final known = _agents[agent['id']]?['title'] ?? _titleHints[agent['id']];
     if ((title is! String || title.trim().isEmpty) &&
         known is String &&
         known.trim().isNotEmpty) {
