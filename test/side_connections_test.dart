@@ -367,6 +367,28 @@ void main() {
     c.dispose();
   });
 
+  testWidgets('a model\'s name is remembered across restarts, per server', (
+    tester,
+  ) async {
+    final first = await _world(tester);
+    first.controller.rememberModelName('claude', 'claude-sonnet-5', 'Sonnet 5');
+    await tester.pump();
+    final saved = first.controller.store.prefs.getString(
+      'oc.modelNames.ubuntu',
+    )!;
+    expect(
+      first.controller.store.profileScopedPreferenceKeys('ubuntu'),
+      contains('oc.modelNames.ubuntu'),
+    );
+    first.controller.dispose();
+    final w = await _world(tester, prefsExtra: {'oc.modelNames.ubuntu': saved});
+    expect(
+      w.controller.knownModelName('claude', 'claude-sonnet-5'),
+      'Sonnet 5',
+    );
+    w.controller.dispose();
+  });
+
   testWidgets('a source the person hid stays hidden after a restart', (
     tester,
   ) async {

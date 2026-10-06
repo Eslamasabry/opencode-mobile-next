@@ -9,6 +9,61 @@ String _providerSetKey(Set<String> providers) =>
 mixin _ConnectionControllerModels on ChangeNotifier {
   ConnectionController get _self;
 
+  /// Model names seen on this server ("provider/model" → "Sonnet 5"), kept
+  /// across restarts so a chip names its model before the catalog arrives.
+  /// Profile-scoped (`oc.modelNames.<profileId>`), at most 40 entries.
+  String? knownModelName(String providerID, String modelID) {
+    final names = _modelNames;
+    return names['$providerID/$modelID'];
+  }
+
+  void rememberModelName(String providerID, String modelID, String name) {
+    final key = '$providerID/$modelID';
+    final names = _modelNames;
+    if (name.trim().isEmpty || names[key] == name) return;
+    names.remove(key);
+    names[key] = name;
+    while (names.length > 40) {
+      names.remove(names.keys.first);
+    }
+    final id = (_self._connectedProfile ?? _self.profile)?.id;
+    if (id == null) return;
+    try {
+      unawaited(
+        _self.store.prefs.setString(_modelNamesKey(id), jsonEncode(names)),
+      );
+    } catch (_) {
+      // Remembered for this run only.
+    }
+  }
+
+  static String _modelNamesKey(String profileId) => 'oc.modelNames.$profileId';
+  Map<String, String>? _modelNamesCache;
+  String? _modelNamesOwner;
+
+  Map<String, String> get _modelNames {
+    final id = (_self._connectedProfile ?? _self.profile)?.id;
+    if (_modelNamesCache != null && _modelNamesOwner == id) {
+      return _modelNamesCache!;
+    }
+    _modelNamesOwner = id;
+    var names = <String, String>{};
+    if (id != null) {
+      try {
+        final raw = _self.store.prefs.getString(_modelNamesKey(id));
+        final decoded = raw == null ? null : jsonDecode(raw);
+        if (decoded is Map) {
+          names = {
+            for (final entry in decoded.entries)
+              if (entry.key is String && entry.value is String)
+                entry.key as String: entry.value as String,
+          };
+        }
+      } catch (_) {}
+    }
+    return _modelNamesCache = names;
+  }
+
   final Map<String, String> sessionSelectionErrors = {};
 
   /// Default model for pickers opened outside a chat and for new sessions.
