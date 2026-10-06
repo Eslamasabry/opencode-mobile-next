@@ -808,6 +808,8 @@ void main() {
     final saved = first.items.firstWhere((i) => i.sessionID == 'saved1');
     expect(saved.status, ChatStatus.idle);
     expect(c.agentResumeNotice(saved).canReopen, isTrue);
+    // The list says Claude Code's conversations are still on the way.
+    expect(first.stillLoading, ['Claude Code']);
     // It opens on the agent's own backend.
     await c.openChatFeedItem(saved);
     expect(c.backendForConversation('saved1')?.isAgentBackend, isTrue);
@@ -817,6 +819,7 @@ void main() {
     // The folder has been read live: the host's rows replace the saved ones.
     final ids = c.chatFeed().items.map((i) => i.sessionID).toSet();
     expect(ids, {'o1', 'c1'});
+    expect(c.chatFeed().stillLoading, isEmpty);
     expect(
       c.store.prefs.getString('oc.agentFeed.local'),
       allOf(contains('"c1"'), isNot(contains('saved1'))),

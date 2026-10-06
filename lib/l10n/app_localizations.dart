@@ -42415,6 +42415,12 @@ abstract class AppLocalizations {
   /// **'Some conversations couldn\'t load'**
   String get chatsHomeIncomplete;
 
+  /// Conversations list: an agent's conversations are still being read while other rows already show
+  ///
+  /// In en, this message translates to:
+  /// **'Loading {agents} conversations…'**
+  String chatsHomeStillLoading(String agents);
+
   /// Chats home: empty state title
   ///
   /// In en, this message translates to:

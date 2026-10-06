@@ -10,6 +10,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
 import '../../kit/kit.dart';
 import '../agents/agent_notices.dart';
+import '../agents/agents_text.dart' show agentIcon;
 import 'chats_host.dart';
 import 'chats_project_sheet.dart';
 import 'new_chat_screen.dart';
@@ -252,6 +253,15 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
           key: const ValueKey('chats-incomplete'),
           text: l10n.chatsHomeIncomplete,
         ),
+      // Rows show while an agent's own conversations are still being read:
+      // more are on the way, said before they arrive.
+      if (snapshot.stillLoading.isNotEmpty)
+        _QuietLine(
+          key: const ValueKey('chats-still-loading'),
+          text: l10n.chatsHomeStillLoading(
+            KitBidi.auto(snapshot.stillLoading.join(', ')),
+          ),
+        ),
       if (_notice != null)
         _QuietLine(key: const ValueKey('chats-notice'), text: _notice!),
       // The leftover-process notice: a quiet status with its Stop, drawn
@@ -264,7 +274,10 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
     final list = _list(context, host, snapshot, projectName);
     final screen = KitScreen(
       header: header,
-      loading: snapshot.loading && snapshot.items.isEmpty,
+      // The bar keeps moving while more conversations are on the way.
+      loading:
+          (snapshot.loading && snapshot.items.isEmpty) ||
+          snapshot.stillLoading.isNotEmpty,
       loadingLabel: l10n.chatsHomeTitle,
       body: KitRefresh(onRefresh: source.refreshChatFeed, child: list),
     );
@@ -427,7 +440,12 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
     return KitFeedItem(
       project: item.projectName,
       gitLabel: item.isGit ? l10n.phoneScanGit : null,
-      agent: showAgent ? item.agentLabel : null,
+      // Every row names its agent when the list holds more than one, the
+      // OpenCode ones too, so the two kinds read apart at a glance.
+      agent: showAgent ? item.agentLabel ?? 'OpenCode' : null,
+      agentIcon: showAgent
+          ? agentIcon(item.agentLabel == null ? 'opencode' : item.agentId)
+          : null,
       notice:
           host.agents?.agentResumeNotice(item).requiresAcknowledgement ?? false
           ? l10n.agentsStateCantReopen

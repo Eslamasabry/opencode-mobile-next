@@ -187,7 +187,13 @@ class ChatFeedSnapshot {
     this.acrossProjects = true,
     this.loading = false,
     this.complete = true,
+    this.stillLoading = const [],
   });
+
+  /// Agents whose conversations are still being read while rows already
+  /// show (Claude Code while its helper starts): said in one quiet line, so
+  /// rows arriving later are expected. Display names.
+  final List<String> stillLoading;
 
   /// Needs-you rows first, then running, then the rest, each group newest
   /// first. Failed rows sort with the rest by time. Stable and unmodifiable.

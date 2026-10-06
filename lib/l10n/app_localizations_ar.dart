@@ -26996,6 +26996,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatsHomeIncomplete => 'تعذر تحميل بعض المحادثات';
 
   @override
+  String chatsHomeStillLoading(String agents) {
+    return 'جارٍ تحميل محادثات $agents…';
+  }
+
+  @override
   String get chatsHomeEmptyTitle => 'لا توجد محادثات بعد';
 
   @override

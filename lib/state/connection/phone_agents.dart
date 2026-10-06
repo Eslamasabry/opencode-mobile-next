@@ -935,8 +935,26 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
             <ChatFeedItem>[...snapshot.items, ...saved]
               ..sort(compareChatFeedItems),
           );
+    // Sources still being read while other rows already show, said in one
+    // quiet line: the agents on their first read this run (their saved rows
+    // stand in), and OpenCode while only agent rows show.
+    final reading = <String>{
+      if (snapshot.loading && items.isNotEmpty) 'OpenCode',
+      if (!_paFeedSettled && phoneAgentsAvailable && _paUsedBefore) ...{
+        for (final row in _paSavedRows)
+          if (!_paLoadedDirs.contains(row.item.directory))
+            row.item.agentLabel ?? 'Claude Code',
+      },
+    };
+    if (!_paFeedSettled &&
+        phoneAgentsAvailable &&
+        _paUsedBefore &&
+        !reading.any((name) => name != 'OpenCode')) {
+      reading.add('Claude Code');
+    }
     return ChatFeedSnapshot(
       items: items,
+      stillLoading: List.unmodifiable(reading),
       // OpenCode answers for every project; a scoped phone source never makes
       // the whole list look single-project.
       acrossProjects: _self._ocAcross,

@@ -326,6 +326,20 @@ void main() {
       ];
     await _pump(tester, FakeChatsHost(mixed));
     expect(find.text(KitBidi.auto('Claude Code')), findsOneWidget);
+    // Each OpenCode row says so too, so no row leaves its agent to guess.
+    expect(find.text(KitBidi.auto('OpenCode')), findsWidgets);
+  });
+
+  clocked('says which conversations are still loading while rows show', (
+    tester,
+  ) async {
+    final source = _source()..stillLoading = ['Claude Code'];
+    await _pump(tester, FakeChatsHost(source));
+    expect(find.byKey(const ValueKey('chats-still-loading')), findsOneWidget);
+    expect(find.byKey(const ValueKey('kit-loading-bar')), findsOneWidget);
+    expect(find.textContaining('Loading'), findsOneWidget);
+    await _pump(tester, FakeChatsHost(_source()));
+    expect(find.byKey(const ValueKey('chats-still-loading')), findsNothing);
   });
 
   clocked('Other folders is hidden when no conversation lives there', (

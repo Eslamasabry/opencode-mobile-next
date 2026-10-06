@@ -26,6 +26,7 @@ class FakeChatFeedSource implements ChatFeedSource {
   List<ProjectSummary> projects;
   bool acrossProjects;
   bool complete;
+  List<String> stillLoading = const [];
   String? lastUsed;
 
   int refreshes = 0;
@@ -53,6 +54,7 @@ class FakeChatFeedSource implements ChatFeedSource {
       items: kept,
       acrossProjects: acrossProjects,
       complete: complete,
+      stillLoading: stillLoading,
     );
   }
 

@@ -26,6 +26,7 @@ class KitFeedItem extends StatelessWidget {
     required this.onTap,
     this.gitLabel,
     this.agent,
+    this.agentIcon,
     this.notice,
     this.preview = '',
     this.tag,
@@ -46,6 +47,10 @@ class KitFeedItem extends StatelessWidget {
   /// The agent's name ('Claude Code'), shown after the project only when the
   /// feed holds more than one agent; null otherwise.
   final String? agent;
+
+  /// The agent's glyph, drawn before its name so a glance tells an
+  /// OpenCode conversation from a Claude Code one.
+  final IconData? agentIcon;
 
   /// One quiet line under the last line: why opening is different
   /// ("Can't reopen old conversations").
@@ -117,6 +122,31 @@ class KitFeedItem extends StatelessWidget {
               Row(
                 spacing: tokens.space2,
                 children: [
+                  // Which agent first: the conversation's most telling fact
+                  // once the list holds more than one.
+                  if (agent != null) ...[
+                    if (agentIcon != null)
+                      Icon(
+                        agentIcon,
+                        size: tokens.smallIconSize,
+                        color: roles.text2,
+                      ),
+                    Flexible(
+                      flex: 0,
+                      child: KitText(
+                        KitBidi.auto(agent),
+                        role: KitTextRole.caption,
+                        tone: KitTextTone.secondary,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    KitText(
+                      '·',
+                      role: KitTextRole.caption,
+                      tone: KitTextTone.tertiary,
+                    ),
+                  ],
                   Flexible(
                     child: KitText(
                       KitBidi.auto(project),
@@ -126,16 +156,6 @@ class KitFeedItem extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  if (agent != null)
-                    Flexible(
-                      child: KitText(
-                        KitBidi.auto(agent),
-                        role: KitTextRole.caption,
-                        tone: KitTextTone.tertiary,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
                   if (git != null)
                     _GitMark(
                       label: git,

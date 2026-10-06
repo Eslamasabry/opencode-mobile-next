@@ -26873,6 +26873,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatsHomeIncomplete => 'Some conversations couldn\'t load';
 
   @override
+  String chatsHomeStillLoading(String agents) {
+    return 'Loading $agents conversations…';
+  }
+
+  @override
   String get chatsHomeEmptyTitle => 'No conversations yet';
 
   @override

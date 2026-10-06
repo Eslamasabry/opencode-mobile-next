@@ -5062,6 +5062,7 @@
   "chatsHomeEarlier": "سابقًا",
   "chatsHomeOnlyProject": "تُعرض المحادثات في {project} فقط. لا يستطيع هذا الخادم سرد كل المشاريع.",
   "chatsHomeIncomplete": "تعذر تحميل بعض المحادثات",
+  "chatsHomeStillLoading": "جارٍ تحميل محادثات {agents}…",
   "chatsHomeEmptyTitle": "لا توجد محادثات بعد",
   "chatsHomeEmptyBody": "ابدأ محادثة وستظهر هنا.",
   "chatsHomeStartChat": "ابدأ محادثة",

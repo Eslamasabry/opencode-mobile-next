@@ -31872,6 +31872,15 @@
     }
   },
   "chatsHomeIncomplete": "Some conversations couldn't load",
+  "chatsHomeStillLoading": "Loading {agents} conversations…",
+  "@chatsHomeStillLoading": {
+    "description": "Conversations list: an agent's conversations are still being read while other rows already show",
+    "placeholders": {
+      "agents": {
+        "type": "String"
+      }
+    }
+  },
   "@chatsHomeIncomplete": {
     "description": "Chats home: quiet line when the list is partial"
   },
