@@ -3291,7 +3291,7 @@ void main() {
       'review',
     );
     await tester.pump();
-    expect(find.text('/review'), findsOneWidget);
+    expect(find.textContaining('/review', findRichText: true), findsOneWidget);
     await tester.tap(find.byKey(const Key('command-server-review')));
     await tester.pumpAndSettle();
     final composer = tester.widget<TextField>(

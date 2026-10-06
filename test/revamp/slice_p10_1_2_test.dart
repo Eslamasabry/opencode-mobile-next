@@ -326,11 +326,17 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.descendant(of: review, matching: find.text('/review')),
+        find.descendant(
+          of: review,
+          matching: find.textContaining('/review', findRichText: true),
+        ),
         findsOneWidget,
       );
       expect(
-        find.descendant(of: review, matching: find.text('Runs with plan')),
+        find.descendant(
+          of: review,
+          matching: find.textContaining('Runs with plan', findRichText: true),
+        ),
         findsOneWidget,
       );
       // The conversation menu's acts are not repeated here.

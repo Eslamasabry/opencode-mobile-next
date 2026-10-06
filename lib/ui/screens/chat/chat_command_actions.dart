@@ -1,5 +1,9 @@
 part of '../chat_screen.dart';
 
+/// Model names seen in a catalog this run, by "provider/model": the chip
+/// says the name while a reopened conversation's models are read again.
+final _modelNamesSeen = <String, String>{};
+
 // Running a command: the launcher, cycling the model, the mobile command
 // actions, and the model labels they show.
 
@@ -439,12 +443,18 @@ extension _ChatCommandActions on _ChatScreenState {
   String? get _presentedModelLabel {
     final model = _conn.modelForSession(widget.sessionID);
     if (model == null) return null;
+    final key = '${model.providerID}/${model.modelID}';
     for (final candidate in _conn.catalog?.models ?? const <CatalogModel>[]) {
       if (candidate.id == model.modelID &&
           candidate.providerID == model.providerID &&
           candidate.name.trim().isNotEmpty) {
-        return candidate.name.trim();
+        return _modelNamesSeen[key] = candidate.name.trim();
       }
+    }
+    // While the models are still being read, the name seen before (or the
+    // model alone) stands in: never "provider/model" for a moment.
+    if (_conn.catalog == null || _conn.catalogLoading) {
+      return _modelNamesSeen[key] ?? model.modelID;
     }
     return presentedModelLabel(model.providerID, model.modelID);
   }

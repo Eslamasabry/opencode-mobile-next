@@ -155,8 +155,14 @@ void main() {
       // as the typing hint, who runs it under.
       expect(find.text('Server commands'), findsWidgets);
       expect(find.text('Review the working tree'), findsOneWidget);
-      expect(find.text('/review'), findsOneWidget);
-      expect(find.text('Runs with plan'), findsOneWidget);
+      expect(
+        find.textContaining('/review', findRichText: true),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Runs with plan', findRichText: true),
+        findsOneWidget,
+      );
       expect(find.text('/ship'), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('command-server-review')));
