@@ -60,7 +60,23 @@ turns them on. Several remote servers live at once is a later slice.
 | C | Row server name + Showing chip with hide | widget tests, goldens, emulator screenshots |
 | D | Background: alerts and running state for chats of the other profiles go through the pool | emulator: Termux chat finishes in the background and opens from the alert |
 
-## Open decisions
+## Status (2026-10-06)
+
+The owner decided: remote servers join only when turned on, and the picker
+stays, labelled "All connections" while more than one server shows.
+
+- A, C and D (alert taps) are built: `side_connections.dart`, the
+  connections chip and sheet, and server names as the switcher gives them.
+  Tested in `test/side_connections_test.dart` and `test/chats_home_test.dart`.
+- Proven on the emulator with a stand-in Termux server (OpenCode 1.18 on
+  the PC, reached through `adb reverse tcp:4096`), in both directions: the
+  app on Termux, and the app on the in-app Ubuntu.
+- B is not done: there are no saved rows per server yet, so a Termux restart
+  paints after it connects, with the loading line meanwhile.
+- The full suite has not run on this change. The run was stopped for low
+  memory.
+
+## Open decisions (answered)
 
 - Should remote servers join automatically when they answer, or only when
   turned on? Proposed: only when turned on.
