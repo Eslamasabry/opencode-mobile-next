@@ -188,7 +188,13 @@ class ChatFeedSnapshot {
     this.loading = false,
     this.complete = true,
     this.stillLoading = const [],
+    this.stillLoadingServers = const [],
   });
+
+  /// Saved servers (profile ids) whose conversations are still being read
+  /// while other rows already show: named as the server switcher names
+  /// them, beside [stillLoading].
+  final List<String> stillLoadingServers;
 
   /// Agents whose conversations are still being read while rows already
   /// show (Claude Code while its helper starts): said in one quiet line, so

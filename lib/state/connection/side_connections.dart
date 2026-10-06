@@ -186,7 +186,7 @@ mixin _ConnectionControllerSideConnections on ChangeNotifier
     return side == null || side._disposed ? null : side;
   }
 
-  /// The names of the shown servers still connecting, for the list's
+  /// The shown servers still connecting (profile ids), for the list's
   /// "Loading … conversations" line.
   /// Only a first connect counts: a later reconnect keeps the rows it had.
   Iterable<String> get _sidesLoading sync* {
@@ -197,7 +197,7 @@ mixin _ConnectionControllerSideConnections on ChangeNotifier
       if (_sidesReached.contains(entry.key)
           ? side._ocChatFeed().loading
           : side.status == StreamStatus.connecting) {
-        yield side.profile?.name ?? 'OpenCode';
+        yield entry.key;
       }
     }
   }

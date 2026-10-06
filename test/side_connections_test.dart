@@ -280,14 +280,14 @@ void main() {
     final c = w.controller;
     final first = c.chatFeed();
     expect(first.items.map((item) => item.sessionID), contains('u1'));
-    expect(first.stillLoading, ['Termux']);
+    expect(first.stillLoadingServers, ['termux']);
     gate.complete(Health(healthy: true, version: '1'));
     await tester.pump(const Duration(milliseconds: 50));
     await c.refreshChatFeed();
     await tester.pump(const Duration(milliseconds: 50));
     final next = c.chatFeed();
     expect(next.items.map((item) => item.sessionID), ['u1', 't1']);
-    expect(next.stillLoading, isEmpty);
+    expect(next.stillLoadingServers, isEmpty);
     c.dispose();
   });
 

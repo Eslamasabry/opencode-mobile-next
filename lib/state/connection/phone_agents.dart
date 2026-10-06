@@ -478,6 +478,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       );
     }
     if (_self._disposed || _paHost != host || _paHostProfile != owner) return;
+    final now = DateTime.now();
+    final autoResume =
+        rows.any((row) => row.status == PhoneAgentStatus.stoppedInBackground) &&
+        (_paAutoResumedAt == null ||
+            now.difference(_paAutoResumedAt!) > const Duration(minutes: 1));
+    // The helper is started again right away: "stopped" isn't said for the
+    // second that takes (at every app start after Android closed it).
+    if (autoResume) _paAutoResuming = true;
     _paRows = List.unmodifiable(rows);
     _paHostRunning = running;
     try {
@@ -488,16 +496,21 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     // installed agent whose helper Android stopped is started again here
     // instead of asking them to tap Resume after every app start. One try a
     // minute, so a helper that keeps failing shows its Resume row.
-    final now = DateTime.now();
-    if (rows.any((row) => row.status == PhoneAgentStatus.stoppedInBackground) &&
-        (_paAutoResumedAt == null ||
-            now.difference(_paAutoResumedAt!) > const Duration(minutes: 1))) {
+    if (autoResume) {
       _paAutoResumedAt = now;
-      unawaited(resumeAgentHost().catchError((Object _) {}));
+      unawaited(
+        resumeAgentHost().catchError((Object _) {}).whenComplete(() {
+          _paAutoResuming = false;
+          if (!_self._disposed) _self._notifyListeners();
+        }),
+      );
     }
   }
 
   DateTime? _paAutoResumedAt;
+
+  /// The helper is being started again by the app itself.
+  bool _paAutoResuming = false;
 
   /// What this phone's helper is known to do for [descriptor]: a runtime
   /// fact, not a catalog claim. Claude's sessions resume through the helper
@@ -534,7 +547,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     for (final row in agentRows)
       if (row.status == PhoneAgentStatus.limitReached ||
           row.status == PhoneAgentStatus.signedOut ||
-          row.status == PhoneAgentStatus.stoppedInBackground)
+          (row.status == PhoneAgentStatus.stoppedInBackground &&
+              !_paAutoResuming))
         PhoneAgentStatusLine(
           agentId: row.id,
           agentName: row.name,
@@ -1023,16 +1037,20 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       agents.add('Claude Code');
     }
     if (agents.isNotEmpty && !_paStillReading()) agents.clear();
-    final sides = _self._sides.isNotEmpty;
-    final reading = <String>{
-      if (snapshot.loading && items.isNotEmpty)
-        sides ? (_self.profile?.name ?? 'OpenCode') : 'OpenCode',
+    final mainLoading = snapshot.loading && items.isNotEmpty;
+    final mainId = _self.profile?.id;
+    final servers = <String>{
+      if (mainLoading && _self._sides.isNotEmpty && mainId != null) mainId,
       ..._self._sidesLoading,
+    };
+    final reading = <String>{
+      if (mainLoading && (_self._sides.isEmpty || mainId == null)) 'OpenCode',
       ...agents,
     };
     return ChatFeedSnapshot(
       items: items,
       stillLoading: List.unmodifiable(reading),
+      stillLoadingServers: List.unmodifiable(servers),
       // OpenCode answers for every project; a scoped phone source never makes
       // the whole list look single-project.
       acrossProjects: _self._ocAcross,

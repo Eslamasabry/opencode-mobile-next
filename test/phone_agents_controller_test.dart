@@ -1204,11 +1204,15 @@ void main() {
       ),
     };
     await c.refreshAgentRows();
-    expect(c.agentStatusLines.single.kind, PhoneAgentStatusLineKind.stopped);
     // Opening an agent screen reads the rows; a stopped helper is started
-    // again without a Resume tap, at most once a minute.
+    // again without a Resume tap, at most once a minute. "Stopped" isn't
+    // said while that runs.
+    expect(c.agentStatusLines, isEmpty);
     await tester.pump();
     expect(w.events.log.where((e) => e == 'host.start'), hasLength(1));
+    // Still stopped afterwards: now it is said, with its Resume.
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(c.agentStatusLines.single.kind, PhoneAgentStatusLineKind.stopped);
     await c.refreshAgentRows();
     await tester.pump();
     expect(w.events.log.where((e) => e == 'host.start'), hasLength(1));

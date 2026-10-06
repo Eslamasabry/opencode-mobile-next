@@ -286,11 +286,18 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
         ),
       // Rows show while an agent's own conversations are still being read:
       // more are on the way, said before they arrive.
-      if (snapshot.stillLoading.isNotEmpty)
+      if (snapshot.stillLoading.isNotEmpty ||
+          snapshot.stillLoadingServers.isNotEmpty)
         _QuietLine(
           key: const ValueKey('chats-still-loading'),
           text: l10n.chatsHomeStillLoading(
-            KitBidi.auto(snapshot.stillLoading.join(', ')),
+            KitBidi.auto(
+              [
+                for (final id in snapshot.stillLoadingServers)
+                  host.connectionName(context, id, 'OpenCode'),
+                ...snapshot.stillLoading,
+              ].join(', '),
+            ),
           ),
         ),
       if (_notice != null)
@@ -308,7 +315,8 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       // The bar keeps moving while more conversations are on the way.
       loading:
           (snapshot.loading && snapshot.items.isEmpty) ||
-          snapshot.stillLoading.isNotEmpty,
+          snapshot.stillLoading.isNotEmpty ||
+          snapshot.stillLoadingServers.isNotEmpty,
       loadingLabel: l10n.chatsHomeTitle,
       body: KitRefresh(onRefresh: source.refreshChatFeed, child: list),
     );
