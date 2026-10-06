@@ -443,9 +443,17 @@ void main() {
     );
     await tester.pump();
     await tester.pump();
-    expect(apis, hasLength(1));
-    expect(apis.single.baseUrl, 'https://desk.example.test:4096');
-    apis.single.healthResult.complete(Health(healthy: true, version: '1'));
+    // The server left behind stays in the list beside it (it runs on this
+    // phone): only Desk's connection is the switch.
+    final desk = apis
+        .where((api) => api.baseUrl == 'https://desk.example.test:4096')
+        .single;
+    desk.healthResult.complete(Health(healthy: true, version: '1'));
+    for (final api in apis) {
+      if (!api.healthResult.isCompleted) {
+        api.healthResult.complete(Health(healthy: true, version: '1'));
+      }
+    }
     await tester.pumpAndSettle();
 
     expect(controller.profile?.id, 'server-2');
@@ -454,8 +462,8 @@ void main() {
     expect(chat.initialText, isEmpty);
     expect(original.created, 0);
     expect(original.prompted, 0);
-    expect(apis.single.created, 0);
-    expect(apis.single.prompted, 0);
+    expect(desk.created, 0);
+    expect(desk.prompted, 0);
     expect(intent.pending.value, isNull);
     expect(_appNotice, findsNothing);
     expect(find.byType(ServersScreen), findsNothing);

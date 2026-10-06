@@ -30,9 +30,9 @@ void main() {
     testWidgets('the phone server appears once, as one row', (tester) async {
       final done = await mount(tester, PhoneServerScene.servers);
       expect(tester.takeException(), isNull);
-      // One row named "This phone · Termux" (where it runs) with what it
+      // One row named "Termux" (where it runs) with what it
       // runs and where it stands.
-      expect(find.text('This phone · Termux'), findsOneWidget);
+      expect(find.text('Termux'), findsOneWidget);
       expect(find.text('OpenCode 2 · Running'), findsOneWidget);
       expect(
         find.byKey(const ValueKey('termux-running-server')),
@@ -107,7 +107,7 @@ void main() {
       expect(tester.takeException(), isNull);
       final sheet = find.byKey(const ValueKey('server-switcher-sheet'));
       expect(
-        find.descendant(of: sheet, matching: find.text('This phone · Termux')),
+        find.descendant(of: sheet, matching: find.text('Termux')),
         findsOneWidget,
       );
       expect(
@@ -142,7 +142,7 @@ void main() {
       final done = await mount(tester, PhoneServerScene.phoneRunning);
       // P1.5 replaced the old Termux screen with This phone: runtime is
       // the title, the version/host are its detail, and state has one word.
-      expect(find.text('This phone'), findsOneWidget);
+      expect(find.text('In-app Ubuntu'), findsOneWidget);
       expect(find.text('OpenCode 2'), findsOneWidget);
       expect(find.text('Running'), findsOneWidget);
       expect(

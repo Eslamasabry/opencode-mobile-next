@@ -1,4 +1,4 @@
-// slice-P0.7-port hand-off: the "This phone" card says how many prompts wait
+// slice-P0.7-port hand-off: the "In-app Ubuntu" card says how many prompts wait
 // for its server and offers to move them to the connected server, exactly
 // like a Servers row does (slice-queue-move): "3 prompts waiting to send" in
 // its line, "Move 3 waiting prompts to Laptop" in its menu, which opens the

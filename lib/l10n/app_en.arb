@@ -12934,7 +12934,7 @@
       }
     }
   },
-  "phoneServerCardTitle": "This phone",
+  "phoneServerCardTitle": "In-app Ubuntu",
   "@phoneServerCardTitle": {
     "description": "Name of the OpenCode server that runs inside the app, wherever servers are listed"
   },
@@ -14438,7 +14438,7 @@
   "@localTerminalSemantics": {
     "description": "Accessibility label of the local terminal's screen"
   },
-  "phoneServerTermuxTitle": "This phone · Termux",
+  "phoneServerTermuxTitle": "Termux",
   "@phoneServerTermuxTitle": {
     "description": "Name of the OpenCode server this app runs in Termux (Servers row, switcher, Work tab header); the app's built-in server is plain \"This phone\""
   },
@@ -23584,7 +23584,7 @@
   "@teamUiPhoneProjectLabel": {
     "description": "Technical details label for the team's full project path"
   },
-  "phoneServerNameInSentence": "this phone",
+  "phoneServerNameInSentence": "the in-app Ubuntu",
   "@phoneServerNameInSentence": {
     "description": "The default name of the in-app server inside a sentence ('Disconnect from this phone')"
   },
@@ -31872,6 +31872,18 @@
     }
   },
   "chatsHomeIncomplete": "Some conversations couldn't load",
+  "shellServerPlusOthers": "{name} +{count}",
+  "@shellServerPlusOthers": {
+    "description": "Server switcher at the top: the server new conversations start on, and how many other connections the Conversations list also shows",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "chatsSourcesAll": "All connections",
   "@chatsSourcesAll": {
     "description": "Conversations list: filter chip when every connection's conversations show"

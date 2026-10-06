@@ -27,7 +27,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'support/fake_local_terminal.dart';
 import 'support/fake_setup_engine.dart';
 
-// Screen D (docs/design/phone-setup-v2-2026-09-24.md): "This phone", the one
+// Screen D (docs/design/phone-setup-v2-2026-09-24.md): "In-app Ubuntu", the one
 // place OpenCode inside the app is managed, in the switcher and in Servers.
 
 class _Store extends ProfileStore {
@@ -141,7 +141,7 @@ class _Linux extends BuiltinLinux {
 }
 
 /// Words and addresses a person must never see for this server.
-const _forbidden = ['0 B', '127.0.0.1', '4097', 'built-in', 'Ubuntu'];
+const _forbidden = ['0 B', '127.0.0.1', '4097', 'built-in'];
 
 void expectNoForbiddenText() {
   for (final text in _forbidden) {
@@ -346,7 +346,7 @@ void main() {
     testWidgets('running: This phone and its version; Stop and Show log in '
         'its menu, no buttons under the row', (tester) async {
       await mountCard(tester, connected: true);
-      expect(find.text('This phone'), findsOneWidget);
+      expect(find.text('In-app Ubuntu'), findsOneWidget);
       expect(status(tester), 'Running');
       // The size is not on the line (it is said where it matters: Remove).
       expect(detail(tester), 'Connected · OpenCode 1.18.29');
@@ -695,7 +695,7 @@ void main() {
 
       expect(connection.disconnects, 1);
       expect(linux.calls, ['uninstall']);
-      // Every saved "This phone" entry goes; other servers stay.
+      // Every saved "In-app Ubuntu" entry goes; other servers stay.
       expect(connection.deleted.toSet(), {'phone', 'phone2'});
       expect(store.saved.map((profile) => profile.id), ['work']);
       expect(removed, 1);
@@ -789,16 +789,16 @@ void main() {
           expect(size.width, greaterThanOrEqualTo(48), reason: key);
         }
         if (locale.languageCode == 'ar') {
-          expect(find.text('هذا الهاتف'), findsOneWidget);
+          expect(find.text('أوبونتو داخل التطبيق'), findsOneWidget);
           expect(find.text('يعمل'), findsOneWidget);
           expect(
-            Directionality.of(tester.element(find.text('هذا الهاتف'))),
+            Directionality.of(tester.element(find.text('أوبونتو داخل التطبيق'))),
             TextDirection.rtl,
           );
           // At 2.5x the status moves under the name and starts where the
           // name starts: on the right in Arabic.
           final status = tester.getRect(find.text('يعمل'));
-          final title = tester.getRect(find.text('هذا الهاتف'));
+          final title = tester.getRect(find.text('أوبونتو داخل التطبيق'));
           expect(status.top, greaterThanOrEqualTo(title.bottom));
           expect((status.right - title.right).abs(), lessThan(1));
         }
@@ -808,15 +808,15 @@ void main() {
   });
 
   test('the in-app server is named This phone everywhere', () {
-    expect(serverDisplayName(phone(), AppLocalizationsEn()), 'This phone');
-    expect(serverDisplayName(phone(), AppLocalizationsAr()), 'هذا الهاتف');
+    expect(serverDisplayName(phone(), AppLocalizationsEn()), 'In-app Ubuntu');
+    expect(serverDisplayName(phone(), AppLocalizationsAr()), 'أوبونتو داخل التطبيق');
     expect(serverDisplayName(work, AppLocalizationsEn()), 'Work server');
     expect(formatPhoneStorage(1181116006), '1.1 GB');
     expect(formatPhoneStorage(734003200), '700.0 MB');
   });
 
   // Open point 4 of phone setup v2: setup saves one in-app profile per
-  // OpenCode generation and names both "This phone".
+  // OpenCode generation and names both "In-app Ubuntu".
   group('OpenCode 1 and 2 both on this phone', () {
     test('are told apart only when both exist; stored names are kept', () {
       final one = phone(id: 'one');
@@ -825,12 +825,12 @@ void main() {
       final all = [one, two, work];
       final en = AppLocalizationsEn(), ar = AppLocalizationsAr();
 
-      expect(serverDisplayName(one, en, among: all), 'This phone · OpenCode 1');
-      expect(serverDisplayName(two, en, among: all), 'This phone · OpenCode 2');
-      expect(serverDisplayName(two, ar, among: all), 'هذا الهاتف · OpenCode 2');
+      expect(serverDisplayName(one, en, among: all), 'In-app Ubuntu · OpenCode 1');
+      expect(serverDisplayName(two, en, among: all), 'In-app Ubuntu · OpenCode 2');
+      expect(serverDisplayName(two, ar, among: all), 'أوبونتو داخل التطبيق · OpenCode 2');
       // One generation alone keeps the plain name.
-      expect(serverDisplayName(two, en, among: [two, work]), 'This phone');
-      expect(serverDisplayName(one, en, among: [one]), 'This phone');
+      expect(serverDisplayName(two, en, among: [two, work]), 'In-app Ubuntu');
+      expect(serverDisplayName(one, en, among: [one]), 'In-app Ubuntu');
       // Other servers never change.
       expect(serverDisplayName(work, en, among: all), 'Work server');
       // Nothing was renamed to get there.
@@ -849,7 +849,7 @@ void main() {
         tester
             .widget<Text>(find.byKey(const ValueKey('phone-server-title')))
             .data,
-        'This phone · OpenCode 2',
+        'In-app Ubuntu · OpenCode 2',
       );
     });
 
@@ -859,7 +859,7 @@ void main() {
         tester
             .widget<Text>(find.byKey(const ValueKey('phone-server-title')))
             .data,
-        'This phone',
+        'In-app Ubuntu',
       );
     });
   });

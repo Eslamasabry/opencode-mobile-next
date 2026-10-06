@@ -19905,7 +19905,7 @@ abstract class AppLocalizations {
   /// Name of the OpenCode server that runs inside the app, wherever servers are listed
   ///
   /// In en, this message translates to:
-  /// **'This phone'**
+  /// **'In-app Ubuntu'**
   String get phoneServerCardTitle;
 
   /// Status of the server on this phone
@@ -21519,7 +21519,7 @@ abstract class AppLocalizations {
   /// Name of the OpenCode server this app runs in Termux (Servers row, switcher, Work tab header); the app's built-in server is plain "This phone"
   ///
   /// In en, this message translates to:
-  /// **'This phone · Termux'**
+  /// **'Termux'**
   String get phoneServerTermuxTitle;
 
   /// Work tab: where the conversation list would be, once the server has not answered for 8 seconds and nothing is listed yet
@@ -31651,7 +31651,7 @@ abstract class AppLocalizations {
   /// The default name of the in-app server inside a sentence ('Disconnect from this phone')
   ///
   /// In en, this message translates to:
-  /// **'this phone'**
+  /// **'the in-app Ubuntu'**
   String get phoneServerNameInSentence;
 
   /// Agent page subtitle end: its task has nothing holding it up
@@ -42414,6 +42414,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Some conversations couldn\'t load'**
   String get chatsHomeIncomplete;
+
+  /// Server switcher at the top: the server new conversations start on, and how many other connections the Conversations list also shows
+  ///
+  /// In en, this message translates to:
+  /// **'{name} +{count}'**
+  String shellServerPlusOthers(String name, int count);
 
   /// Conversations list: filter chip when every connection's conversations show
   ///

@@ -12177,7 +12177,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get phoneServerCardTitle => 'هذا الهاتف';
+  String get phoneServerCardTitle => 'أوبونتو داخل التطبيق';
 
   @override
   String get phoneServerCardRunning => 'يعمل';
@@ -13222,7 +13222,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'الطرفية على هذا الهاتف. اضغط للكتابة، واضغط مطولًا لتحديد النص.';
 
   @override
-  String get phoneServerTermuxTitle => 'هذا الهاتف · Termux';
+  String get phoneServerTermuxTitle => 'Termux';
 
   @override
   String get workNotAnsweringListTitle => 'ستعود محادثاتك';
@@ -20053,7 +20053,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get teamUiPhoneProjectLabel => 'Project folder';
 
   @override
-  String get phoneServerNameInSentence => 'this phone';
+  String get phoneServerNameInSentence => 'the in-app Ubuntu';
 
   @override
   String get teamAgentWorkUnblockedShort => 'nothing blocking it';
@@ -26994,6 +26994,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatsHomeIncomplete => 'تعذر تحميل بعض المحادثات';
+
+  @override
+  String shellServerPlusOthers(String name, int count) {
+    return '$name +$count';
+  }
 
   @override
   String get chatsSourcesAll => 'كل الاتصالات';

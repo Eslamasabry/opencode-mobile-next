@@ -707,7 +707,7 @@ void main() {
           stop: () async {},
         ),
       );
-      expect(find.text('This phone · Termux'), findsOneWidget);
+      expect(find.text('Termux'), findsOneWidget);
       expect(find.text('OpenCode 1 · Stopped'), findsOneWidget);
       expect(key('connect'), findsNothing);
       // Nothing to restart or stop: no menu offers them.

@@ -12086,7 +12086,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get phoneServerCardTitle => 'This phone';
+  String get phoneServerCardTitle => 'In-app Ubuntu';
 
   @override
   String get phoneServerCardRunning => 'Running';
@@ -13123,7 +13123,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Terminal on this phone. Tap to type; touch and hold to select text.';
 
   @override
-  String get phoneServerTermuxTitle => 'This phone · Termux';
+  String get phoneServerTermuxTitle => 'Termux';
 
   @override
   String get workNotAnsweringListTitle => 'Your conversations will be back';
@@ -19935,7 +19935,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get teamUiPhoneProjectLabel => 'Project folder';
 
   @override
-  String get phoneServerNameInSentence => 'this phone';
+  String get phoneServerNameInSentence => 'the in-app Ubuntu';
 
   @override
   String get teamAgentWorkUnblockedShort => 'nothing blocking it';
@@ -26871,6 +26871,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatsHomeIncomplete => 'Some conversations couldn\'t load';
+
+  @override
+  String shellServerPlusOthers(String name, int count) {
+    return '$name +$count';
+  }
 
   @override
   String get chatsSourcesAll => 'All connections';

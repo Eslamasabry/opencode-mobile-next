@@ -228,11 +228,11 @@ void main() {
       ]);
       await tester.pumpWidget(_app(store, conn));
       await tester.pumpAndSettle();
-      // The phone's own server is the one "This phone · Termux" row; a remote one
+      // The phone's own server is the one "Termux" row; a remote one
       // keeps its saved name.
       await tester.tap(
         find.text(
-          mode == 'mixed-remote' ? 'OpenCode one' : 'This phone · Termux',
+          mode == 'mixed-remote' ? 'OpenCode one' : 'Termux',
         ),
       );
       await tester.pumpAndSettle();
