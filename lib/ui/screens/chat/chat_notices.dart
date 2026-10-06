@@ -116,6 +116,22 @@ extension _ChatNotices on _ChatScreenState {
   /// card; the same destination the `/integrations` command opens.
   Future<void> _openProviders() async {
     if (_conn.isIsolated) return;
+    // An agent on this phone signs in on its own (the agent sheet's
+    // terminal sign-in), not through OpenCode's providers.
+    if (_conn.isAgentBackend) {
+      final agentId =
+          AgentCatalog.builtIn.agents
+              .where((agent) => agent.name == _conn.profile?.name)
+              .firstOrNull
+              ?.id ??
+          'claude';
+      await showAgentSheet(
+        context,
+        agentId: agentId,
+        step: AgentSheetStep.signIn,
+      );
+      return;
+    }
     await Navigator.of(context).push(
       KitPageRoute<void>(builder: (_) => IntegrationsScreen(controller: _conn)),
     );

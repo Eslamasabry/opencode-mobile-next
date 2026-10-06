@@ -27147,6 +27147,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get agentsSignInAgain => 'Sign in again';
+
+  @override
   String agentsSignInTerminalNotYet(String agent) {
     return '$agent isn\'t signed in yet. Start the sign-in again when you\'re ready.';
   }

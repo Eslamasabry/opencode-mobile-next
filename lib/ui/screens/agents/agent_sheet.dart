@@ -553,6 +553,15 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
       onClose: () => unawaited(_close()),
       loading: checking,
       primary: primary,
+      // The agent's own status can say signed in while its login no longer
+      // works (an expired session): signing in again is always offered.
+      secondary: signedIn
+          ? KitAction(
+              key: const ValueKey('agents-sign-in-again'),
+              label: l10n.agentsSignInAgain,
+              onPressed: () => unawaited(_openSignIn()),
+            )
+          : null,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

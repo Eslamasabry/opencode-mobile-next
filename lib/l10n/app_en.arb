@@ -32269,6 +32269,10 @@
       }
     }
   },
+  "agentsSignInAgain": "Sign in again",
+  "@agentsSignInAgain": {
+    "description": "Agent sign-in step, already signed in: start the agent's own sign-in again (an expired login)"
+  },
   "agentsSignInTerminalNotYet": "{agent} isn't signed in yet. Start the sign-in again when you're ready.",
   "@agentsSignInTerminalNotYet": {
     "description": "Sign-in terminal: the sign-in ended without signing in",

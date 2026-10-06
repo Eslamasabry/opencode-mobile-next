@@ -379,6 +379,11 @@ extension _ChatTranscript on _ChatScreenState {
       onDownloadFile: _downloadToolOutputFile,
       onCompact: offline || !_supportsSessionCompact ? null : _compact,
       onOpenProviders: offline ? null : _openProviders,
+      providersLabel: _conn.isAgentBackend
+          ? _chatL10n(
+              context,
+            ).agentsSignInStart(KitBidi.auto(_conn.profile?.name ?? ''))
+          : null,
       onContinue: offline ? null : _continueTruncated,
       onChooseModel: offline
           ? null

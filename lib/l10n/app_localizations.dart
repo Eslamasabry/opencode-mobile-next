@@ -42841,6 +42841,12 @@ abstract class AppLocalizations {
   /// **'{agent} signs in here with its own prompts. If it opens a page, sign in there and come back. If it asks for a code or key, choose Paste.'**
   String agentsSignInTerminalIntroOther(String agent);
 
+  /// Agent sign-in step, already signed in: start the agent's own sign-in again (an expired login)
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again'**
+  String get agentsSignInAgain;
+
   /// Sign-in terminal: the sign-in ended without signing in
   ///
   /// In en, this message translates to:

@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:opencode_mobile/builtin/local_terminal.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/ui/screens/agents/agent_sheet.dart';
+import 'package:opencode_mobile/domain/agent_sign_in.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/domain/phone_agent_host.dart';
@@ -473,6 +476,38 @@ void main() {
       terminal.output(1, 'Paste code here if prompted > ');
       await tester.pump();
       expect(agents.calls.where((c) => c.startsWith('code:')), isEmpty);
+      await tester.pump(const Duration(milliseconds: 200));
+    });
+
+    testWidgets('signed in, it still offers to sign in again', (tester) async {
+      final agents = FakePhoneAgentsSource(
+        rows: [agentRowFor('claude', FakeAgentStage.ready)],
+      );
+      agents.signIn['claude'] = const AgentSignInState(
+        phase: AgentSignInPhase.signedIn,
+        method: AgentSignInMethod.browserOAuthHost,
+        inspected: true,
+      );
+      final terminal = FakeLocalTerminalBackend();
+      await _newChat(
+        tester,
+        _host(agents: agents),
+        terminal: LocalTerminalSessions(backend: terminal),
+      );
+      final context = tester.element(find.byType(NewChatScreen));
+      unawaited(
+        showAgentSheet(context, agentId: 'claude', step: AgentSheetStep.signIn),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Signed in'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('agents-sign-in-again')));
+      await tester.pumpAndSettle();
+      expect(terminal.programs.single, [
+        'claude',
+        'auth',
+        'login',
+        '--claudeai',
+      ]);
       await tester.pump(const Duration(milliseconds: 200));
     });
 

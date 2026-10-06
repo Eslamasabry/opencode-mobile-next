@@ -171,6 +171,15 @@ String _toolOutput(Map<String, dynamic> item, Map<String, dynamic> detail) {
   return '';
 }
 
+/// An agent's own words for a sign-in it can no longer use. Not the
+/// transient "another process is refreshing" (that one passes on retry).
+final paseoSignInFailure = RegExp(
+  r'failed to authenticate|oauth (session|token) (has )?expired|'
+  r'could not be refreshed|please run /login|invalid api key|'
+  r'authentication_error|not logged in',
+  caseSensitive: false,
+);
+
 /// A stable message id for a timeline item, or null when it has none of its
 /// own and the caller must derive one from its position ([fallbackSeq]).
 String paseoItemID(Map<String, dynamic> item, {required int? fallbackSeq}) {
@@ -204,6 +213,24 @@ MessageWithParts? paseoItemMessage(
   final type = item['type'];
   if (type is! String) return null;
   final parts = <Part>[];
+  // An agent that can't sign in answers with its own error text ("Failed to
+  // authenticate: OAuth session expired…"): a sign-in failure, said in the
+  // app's words with the way to sign in again; the text goes to Details.
+  if (type == 'assistant_message' &&
+      paseoSignInFailure.hasMatch(paseoText(item['text']))) {
+    return MessageWithParts(
+      info: MessageInfo(
+        id: id,
+        sessionID: agentID,
+        role: 'assistant',
+        providerID: provider,
+        time: MsgTime(created: created, completed: completed ?? created),
+        errorText: paseoText(item['text'], max: 2000),
+        errorKind: MessageErrorKind.providerAuth,
+      ),
+      parts: const [],
+    );
+  }
   switch (type) {
     case 'user_message':
     case 'assistant_message':

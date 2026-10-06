@@ -401,6 +401,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
           runtime = await host.inspect(
             descriptor.id,
             signIn: _paSignIns[descriptor.id]?.state,
+            capabilities: _paHostCapabilities(descriptor),
           );
           // Sign-in is only inspected for an installed, qualified agent: it
           // starts a native status process. Claude's is read natively; the
@@ -432,7 +433,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
             try {
               await session.inspectStatus();
             } catch (_) {}
-            runtime = await host.inspect(descriptor.id, signIn: session.state);
+            runtime = await host.inspect(
+              descriptor.id,
+              signIn: session.state,
+              capabilities: _paHostCapabilities(descriptor),
+            );
           }
           running = running || runtime.hostAvailable;
         } catch (_) {
@@ -469,6 +474,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   }
 
   DateTime? _paAutoResumedAt;
+
+  /// What this phone's helper is known to do for [descriptor]: a runtime
+  /// fact, not a catalog claim. Claude's sessions resume through the helper
+  /// (resume_agent_request, proven on Paseo 0.9.2); the others are unproven.
+  AgentCapabilities _paHostCapabilities(AgentDescriptor descriptor) =>
+      descriptor.id == 'claude' && descriptor.route == AgentRoute.paseoNative
+      ? const AgentCapabilities(resumeVerified: true)
+      : descriptor.capabilities;
 
   /// An agent other than Claude, as the helper reports it: ready to start is
   /// signed in, "authentication required" is signed out; null while unknown
@@ -1196,10 +1209,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         return const AgentResumeNotice(canReopen: true);
       }
     }
-    final row = _paRowFor(item.agentId);
-    if (row != null && row.capabilities.resumeVerified) {
-      return const AgentResumeNotice(canReopen: true);
-    }
+    // The agent can resume in general, but this conversation has nothing to
+    // resume by (no session handle, or the helper refused): a new one.
     return const AgentResumeNotice(
       canReopen: false,
       label: agentResumeUnverifiedLabel,

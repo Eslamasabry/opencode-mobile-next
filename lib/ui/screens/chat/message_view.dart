@@ -32,6 +32,10 @@ class _MessageView extends StatelessWidget {
   /// send "Continue" after an output-length cut. Null hides the button.
   final VoidCallback? onCompact;
   final VoidCallback? onOpenProviders;
+
+  /// The sign-in action's words where it is not "Open providers" (an agent
+  /// on this phone signs in on its own: "Sign in with Claude Code").
+  final String? providersLabel;
   final VoidCallback? onContinue;
   final VoidCallback? onChooseModel;
 
@@ -78,6 +82,7 @@ class _MessageView extends StatelessWidget {
     required this.onDownloadFile,
     this.onCompact,
     this.onOpenProviders,
+    this.providersLabel,
     this.onContinue,
     this.onChooseModel,
     this.onResendPrompt,
@@ -423,6 +428,7 @@ class _MessageView extends StatelessWidget {
           recovered: errorRecovered,
           onCompact: onCompact,
           onOpenProviders: onOpenProviders,
+          providersLabel: providersLabel,
           onContinue: onContinue,
           onChooseModel: onChooseModel,
           onResend: onResendPrompt,
@@ -622,6 +628,7 @@ class _AssistantErrorRow extends StatelessWidget {
     this.recovered = false,
     this.onCompact,
     this.onOpenProviders,
+    this.providersLabel,
     this.onContinue,
     this.onChooseModel,
     this.onResend,
@@ -636,6 +643,10 @@ class _AssistantErrorRow extends StatelessWidget {
   final bool recovered;
   final VoidCallback? onCompact;
   final VoidCallback? onOpenProviders;
+
+  /// The sign-in action's words where it is not "Open providers" (an agent
+  /// on this phone signs in on its own: "Sign in with Claude Code").
+  final String? providersLabel;
   final VoidCallback? onContinue;
   final VoidCallback? onChooseModel;
 
@@ -696,7 +707,7 @@ class _AssistantErrorRow extends StatelessWidget {
             ? null
             : KitAction(
                 key: const Key('error-action-providers'),
-                label: strings.chatUiOpenProviders,
+                label: providersLabel ?? strings.chatUiOpenProviders,
                 onPressed: onOpenProviders,
               ),
       ),

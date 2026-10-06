@@ -27265,6 +27265,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get agentsSignInAgain => 'تسجيل الدخول مرة أخرى';
+
+  @override
   String agentsSignInTerminalNotYet(String agent) {
     return 'لم يُسجَّل الدخول إلى $agent بعد. ابدأ تسجيل الدخول مرة أخرى عندما تكون مستعدًا.';
   }
