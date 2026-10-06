@@ -32,6 +32,9 @@ class _RealHttpOverrides extends HttpOverrides {}
 class _Server {
   List<GlobalSessionResult> global = [];
   Completer<Health>? gate;
+
+  /// Not answering (Termux stopped).
+  bool down = false;
 }
 
 class _Api extends OpenCodeApi {
@@ -39,8 +42,10 @@ class _Api extends OpenCodeApi {
   final _Server server;
 
   @override
-  Future<Health> health() =>
-      server.gate?.future ?? Future.value(Health(healthy: true, version: '1'));
+  Future<Health> health() => server.down
+      ? Future.error(ApiException('Connection refused'))
+      : server.gate?.future ??
+            Future.value(Health(healthy: true, version: '1'));
   @override
   Future<List<Session>> sessions() async => const [];
   @override
@@ -306,6 +311,29 @@ void main() {
     );
     expect(agents.single.id, 'ubuntu.agents');
     expect(agents.single.shown, isTrue);
+    c.dispose();
+  });
+
+  testWidgets('a Termux that isn\'t answering is named, and Try again '
+      'reaches it once it is back', (tester) async {
+    final w = await _world(
+      tester,
+      before: (servers) => servers[_termux]!.down = true,
+    );
+    final c = w.controller;
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(c.chatFeed().unreachableServers, ['termux']);
+    expect(
+      c.chatListSources.firstWhere((s) => s.id == 'termux').unreachable,
+      isTrue,
+    );
+    w.servers[_termux]!.down = false;
+    await c.retryChatListSource('termux');
+    await tester.pump(const Duration(milliseconds: 50));
+    await c.refreshChatFeed();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(c.chatFeed().unreachableServers, isEmpty);
+    expect(c.chatFeed().items.map((item) => item.sessionID), contains('t1'));
     c.dispose();
   });
 

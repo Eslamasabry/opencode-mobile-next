@@ -279,7 +279,21 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
           key: const ValueKey('chats-only-project'),
           text: l10n.chatsHomeOnlyProject(KitBidi.auto(onlyName)),
         ),
-      if (!snapshot.complete)
+      // A server the list shows but can't reach is named; the connections
+      // chip has its Try again.
+      if (snapshot.unreachableServers.isNotEmpty)
+        _QuietLine(
+          key: const ValueKey('chats-unreachable'),
+          text: l10n.chatsHomeUnreachable(
+            KitBidi.auto(
+              [
+                for (final id in snapshot.unreachableServers)
+                  host.connectionName(context, id, 'OpenCode'),
+              ].join(', '),
+            ),
+          ),
+        )
+      else if (!snapshot.complete)
         _QuietLine(
           key: const ValueKey('chats-incomplete'),
           text: l10n.chatsHomeIncomplete,

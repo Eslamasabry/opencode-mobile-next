@@ -88,6 +88,7 @@ mixin _ConnectionControllerSideConnections on ChangeNotifier
             shown: profile.id == mainId || _shownInList(profile),
             onThisPhone: _onThisPhone(profile),
             main: profile.id == mainId,
+            unreachable: _sideUnreachable(profile.id),
           ),
       if (_self.phoneAgentsAvailable && _agentsSourceId != null)
         ChatListSource(
@@ -223,13 +224,37 @@ mixin _ConnectionControllerSideConnections on ChangeNotifier
   final _sidesReached = <String>{};
 
   /// A shown server that could not be reached (its rows are missing).
-  bool get _sidesFailed => _sides.values.any(
-    (side) =>
+  bool get _sidesFailed => _sidesUnreachable.isNotEmpty;
+
+  bool _sideUnreachable(String id) {
+    final side = _sides[id];
+    return side != null &&
         !side._disposed &&
         !side.isConnected &&
         side.status != StreamStatus.connecting &&
-        side.lastError != null,
-  );
+        side.lastError != null;
+  }
+
+  /// The shown servers that can't be reached now (profile ids).
+  List<String> get _sidesUnreachable => [
+    for (final id in _sides.keys)
+      if (_sideUnreachable(id)) id,
+  ];
+
+  @override
+  Future<void> retryChatListSource(String id) async {
+    final side = _sides[id];
+    if (side == null || side._disposed) return;
+    ServerProfile? profile;
+    for (final candidate in _self.store.profiles) {
+      if (candidate.id == id) profile = candidate;
+    }
+    if (profile == null) return;
+    // The in-app Ubuntu's server may need starting again.
+    _sideStarts.remove(id);
+    await _connectSide(side, profile);
+    if (!_self._disposed) _self._notifyListeners();
+  }
 
   void _sideShutdown() {
     _sideNotify?.cancel();

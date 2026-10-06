@@ -440,6 +440,36 @@ void main() {
     expect(find.byKey(const ValueKey('chats-row-opening')), findsNothing);
   });
 
+  clocked('a server that isn\'t answering is named, with Try again in the '
+      'connections sheet', (tester) async {
+    final source = _source()..unreachableServers = ['termux'];
+    final sources = FakeListSources(const [
+      ChatListSource(
+        id: 'ubuntu',
+        name: 'In-app Ubuntu',
+        kind: ChatListSourceKind.openCode,
+        shown: true,
+        main: true,
+      ),
+      ChatListSource(
+        id: 'termux',
+        name: 'Termux',
+        kind: ChatListSourceKind.openCode,
+        shown: true,
+        unreachable: true,
+      ),
+    ]);
+    await _pump(tester, FakeChatsHost(source)..listSources = sources);
+    expect(find.byKey(const ValueKey('chats-unreachable')), findsOneWidget);
+    expect(find.byKey(const ValueKey('chats-incomplete')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('chats-filter-sources')));
+    await tester.pumpAndSettle();
+    expect(find.text("Isn't answering"), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('chats-source-retry-termux')));
+    await tester.pumpAndSettle();
+    expect(sources.retried, ['termux']);
+  });
+
   clocked('with one connection there is no connections chip', (tester) async {
     await _pump(tester, FakeChatsHost(_source()));
     expect(find.byKey(const ValueKey('chats-filter-sources')), findsNothing);

@@ -1051,6 +1051,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       items: items,
       stillLoading: List.unmodifiable(reading),
       stillLoadingServers: List.unmodifiable(servers),
+      unreachableServers: List.unmodifiable(_self._sidesUnreachable),
       // OpenCode answers for every project; a scoped phone source never makes
       // the whole list look single-project.
       acrossProjects: _self._ocAcross,

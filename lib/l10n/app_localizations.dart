@@ -42433,6 +42433,18 @@ abstract class AppLocalizations {
   /// **'Opening…'**
   String get chatsHomeOpening;
 
+  /// Conversations list: a server the list shows can't be reached; its rows are missing
+  ///
+  /// In en, this message translates to:
+  /// **'{servers} isn\'t answering. Its conversations aren\'t shown.'**
+  String chatsHomeUnreachable(String servers);
+
+  /// Connections sheet: under a shown server that can't be reached now
+  ///
+  /// In en, this message translates to:
+  /// **'Isn\'t answering'**
+  String get chatsSourcesUnreachable;
+
   /// Conversations list: filter chip when every connection's conversations show
   ///
   /// In en, this message translates to:

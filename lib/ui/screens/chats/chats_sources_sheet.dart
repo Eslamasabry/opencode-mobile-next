@@ -27,6 +27,8 @@ Future<void> showChatsSourcesSheet(
             ? l10n.chatsSourcesMain
             : source.kind == ChatListSourceKind.agents
             ? l10n.chatsSourcesAgents
+            : source.unreachable
+            ? l10n.chatsSourcesUnreachable
             : source.onThisPhone
             ? l10n.chatsSourcesOnPhone
             : l10n.chatsSourcesElsewhere;
@@ -46,6 +48,23 @@ Future<void> showChatsSourcesSheet(
                       : AppIconography.server,
                 ),
                 value: source.shown,
+                // A shown server that isn't answering: try it again here.
+                below: source.unreachable && source.shown
+                    ? Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: KitButton.tertiary(
+                          key: ValueKey('chats-source-retry-${source.id}'),
+                          label: l10n.refreshRetry,
+                          onPressed: () => unawaited(
+                            sources.retryChatListSource(source.id).whenComplete(
+                              () {
+                                if (context.mounted) setState(() {});
+                              },
+                            ),
+                          ),
+                        ),
+                      )
+                    : null,
                 locked: source.main ? l10n.chatsSourcesAlways : null,
                 onChanged: source.main
                     ? null

@@ -189,7 +189,12 @@ class ChatFeedSnapshot {
     this.complete = true,
     this.stillLoading = const [],
     this.stillLoadingServers = const [],
+    this.unreachableServers = const [],
   });
+
+  /// Saved servers (profile ids) the list shows but can't reach now: their
+  /// conversations are missing, said by name.
+  final List<String> unreachableServers;
 
   /// Saved servers (profile ids) whose conversations are still being read
   /// while other rows already show: named as the server switcher names
@@ -279,6 +284,7 @@ class ChatListSource {
     required this.shown,
     this.onThisPhone = true,
     this.main = false,
+    this.unreachable = false,
   });
 
   /// A saved profile's id, or the agents' own id.
@@ -296,12 +302,19 @@ class ChatListSource {
   /// The connection the app is on (New conversation starts there): always
   /// shown.
   final bool main;
+
+  /// Shown, but not answering now (its conversations are missing).
+  final bool unreachable;
 }
 
 /// The list's sources and the person's choice of which to show.
 abstract interface class ChatListSources {
   List<ChatListSource> get chatListSources;
   Future<void> setChatListSourceShown(String id, bool shown);
+
+  /// Tries a server that isn't answering again (starting the in-app
+  /// Ubuntu's server when it is that one).
+  Future<void> retryChatListSource(String id);
 }
 
 /// Optional updates; owning controllers may listen and notify their UI.

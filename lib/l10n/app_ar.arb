@@ -5066,6 +5066,8 @@
   "shellServerPlusOthers": "{name} +{count}",
   "chatSubagentReadOnly": "هذا الوكيل الفرعي يجيب محادثته الرئيسية فقط. اكتب هناك.",
   "chatsHomeOpening": "جارٍ الفتح…",
+  "chatsHomeUnreachable": "{servers} لا يستجيب. محادثاته غير معروضة.",
+  "chatsSourcesUnreachable": "لا يستجيب",
   "chatsSourcesAll": "كل الاتصالات",
   "chatsSourcesSome": "{shown} من {total} اتصالات",
   "chatsSourcesSheetTitle": "الاتصالات في هذه القائمة",

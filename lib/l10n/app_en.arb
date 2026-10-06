@@ -31892,6 +31892,19 @@
   "@chatsHomeOpening": {
     "description": "Conversations list: the tag on a row while it opens (an old agent conversation takes a few seconds)"
   },
+  "chatsHomeUnreachable": "{servers} isn't answering. Its conversations aren't shown.",
+  "@chatsHomeUnreachable": {
+    "description": "Conversations list: a server the list shows can't be reached; its rows are missing",
+    "placeholders": {
+      "servers": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsSourcesUnreachable": "Isn't answering",
+  "@chatsSourcesUnreachable": {
+    "description": "Connections sheet: under a shown server that can't be reached now"
+  },
   "chatsSourcesAll": "All connections",
   "@chatsSourcesAll": {
     "description": "Conversations list: filter chip when every connection's conversations show"

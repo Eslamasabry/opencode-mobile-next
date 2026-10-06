@@ -28,6 +28,7 @@ class FakeChatFeedSource implements ChatFeedSource {
   bool acrossProjects;
   bool complete;
   List<String> stillLoading = const [];
+  List<String> unreachableServers = const [];
   String? lastUsed;
 
   int refreshes = 0;
@@ -56,6 +57,7 @@ class FakeChatFeedSource implements ChatFeedSource {
       acrossProjects: acrossProjects,
       complete: complete,
       stillLoading: stillLoading,
+      unreachableServers: unreachableServers,
     );
   }
 
@@ -312,6 +314,11 @@ class FakeListSources implements ChatListSources {
   @override
   List<ChatListSource> get chatListSources => sources;
 
+  final retried = <String>[];
+
+  @override
+  Future<void> retryChatListSource(String id) async => retried.add(id);
+
   @override
   Future<void> setChatListSourceShown(String id, bool shown) async {
     changes.add((id, shown));
@@ -325,6 +332,7 @@ class FakeListSources implements ChatListSources {
                 shown: shown,
                 onThisPhone: source.onThisPhone,
                 main: source.main,
+                unreachable: source.unreachable,
               )
             : source,
     ];

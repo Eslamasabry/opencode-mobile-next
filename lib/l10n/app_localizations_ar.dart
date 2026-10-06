@@ -27008,6 +27008,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatsHomeOpening => 'جارٍ الفتح…';
 
   @override
+  String chatsHomeUnreachable(String servers) {
+    return '$servers لا يستجيب. محادثاته غير معروضة.';
+  }
+
+  @override
+  String get chatsSourcesUnreachable => 'لا يستجيب';
+
+  @override
   String get chatsSourcesAll => 'كل الاتصالات';
 
   @override

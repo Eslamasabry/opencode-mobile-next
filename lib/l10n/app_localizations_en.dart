@@ -26885,6 +26885,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatsHomeOpening => 'Opening…';
 
   @override
+  String chatsHomeUnreachable(String servers) {
+    return '$servers isn\'t answering. Its conversations aren\'t shown.';
+  }
+
+  @override
+  String get chatsSourcesUnreachable => 'Isn\'t answering';
+
+  @override
   String get chatsSourcesAll => 'All connections';
 
   @override
