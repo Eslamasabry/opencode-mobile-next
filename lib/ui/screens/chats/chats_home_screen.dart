@@ -315,6 +315,7 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       // The bar keeps moving while more conversations are on the way.
       loading:
           (snapshot.loading && snapshot.items.isEmpty) ||
+          _openingID != null ||
           snapshot.stillLoading.isNotEmpty ||
           snapshot.stillLoadingServers.isNotEmpty,
       loadingLabel: l10n.chatsHomeTitle,
@@ -488,17 +489,26 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
     bool servers = false,
   }) {
     final l10n = AppLocalizations.of(context);
-    final tag = switch (item.status) {
-      ChatStatus.needsYou => KitStatusTag(
-        label: l10n.chatsHomeNeedsYou,
-        tone: KitStatusTagTone.needsYou,
-      ),
-      ChatStatus.running => KitStatusTag(
-        label: l10n.chatsHomeRunning,
-        tone: KitStatusTagTone.running,
-      ),
-      _ => null,
-    };
+    // The row being opened says so (an old Claude conversation takes a
+    // few seconds to reopen on its helper).
+    final opening = _openingID == item.sessionID;
+    final tag = opening
+        ? KitStatusTag(
+            key: const ValueKey('chats-row-opening'),
+            label: l10n.chatsHomeOpening,
+            tone: KitStatusTagTone.running,
+          )
+        : switch (item.status) {
+            ChatStatus.needsYou => KitStatusTag(
+              label: l10n.chatsHomeNeedsYou,
+              tone: KitStatusTagTone.needsYou,
+            ),
+            ChatStatus.running => KitStatusTag(
+              label: l10n.chatsHomeRunning,
+              tone: KitStatusTagTone.running,
+            ),
+            _ => null,
+          };
     return KitFeedItem(
       project: item.projectName,
       gitLabel: item.isGit ? l10n.phoneScanGit : null,

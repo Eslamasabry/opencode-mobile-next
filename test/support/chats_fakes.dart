@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:opencode_mobile/builtin/local_terminal.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -189,8 +190,11 @@ class FakeChatsHost implements ChatsHost {
   @override
   Future<String?> openChat(BuildContext context, ChatFeedItem item) async {
     opened.add(item.sessionID);
-    return null;
+    return openGate?.future;
   }
+
+  /// When set, opening waits for it (a conversation slow to reopen).
+  Completer<String?>? openGate;
 
   @override
   Future<String?> showStartedChat(

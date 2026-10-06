@@ -42427,6 +42427,12 @@ abstract class AppLocalizations {
   /// **'This sub-agent answers only its main conversation. Write there.'**
   String get chatSubagentReadOnly;
 
+  /// Conversations list: the tag on a row while it opens (an old agent conversation takes a few seconds)
+  ///
+  /// In en, this message translates to:
+  /// **'Opening…'**
+  String get chatsHomeOpening;
+
   /// Conversations list: filter chip when every connection's conversations show
   ///
   /// In en, this message translates to:

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -425,6 +427,18 @@ void main() {
       expect(find.byType(KitEntrance), findsOneWidget);
     },
   );
+
+  clocked('a row slow to open says Opening… until it opens', (tester) async {
+    final host = FakeChatsHost(_source())..openGate = Completer<String?>();
+    await _pump(tester, host);
+    await tester.tap(find.text(KitBidi.auto('Explain the build')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('chats-row-opening')), findsOneWidget);
+    expect(find.text('Opening…'), findsOneWidget);
+    host.openGate!.complete(null);
+    await tester.pump();
+    expect(find.byKey(const ValueKey('chats-row-opening')), findsNothing);
+  });
 
   clocked('with one connection there is no connections chip', (tester) async {
     await _pump(tester, FakeChatsHost(_source()));

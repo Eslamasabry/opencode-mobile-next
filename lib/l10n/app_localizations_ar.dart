@@ -27005,6 +27005,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'هذا الوكيل الفرعي يجيب محادثته الرئيسية فقط. اكتب هناك.';
 
   @override
+  String get chatsHomeOpening => 'جارٍ الفتح…';
+
+  @override
   String get chatsSourcesAll => 'كل الاتصالات';
 
   @override

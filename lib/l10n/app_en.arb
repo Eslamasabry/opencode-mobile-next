@@ -31888,6 +31888,10 @@
   "@chatSubagentReadOnly": {
     "description": "Composer on a Claude Code sub-agent's page, which takes no messages; the status line above offers the main conversation"
   },
+  "chatsHomeOpening": "Opening…",
+  "@chatsHomeOpening": {
+    "description": "Conversations list: the tag on a row while it opens (an old agent conversation takes a few seconds)"
+  },
   "chatsSourcesAll": "All connections",
   "@chatsSourcesAll": {
     "description": "Conversations list: filter chip when every connection's conversations show"
