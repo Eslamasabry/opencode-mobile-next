@@ -274,8 +274,13 @@ extension _ChatSessionMenu on _ChatScreenState {
     );
   }
 
+  /// Sub-agents open as conversations of their own here.
+  bool get _subagentNavigation =>
+      _conn.capabilities.projectManagement ||
+      _conn.capabilities.subagentSessions;
+
   Future<void> _showSubagents() async {
-    if (!_conn.capabilities.projectManagement) return;
+    if (!_subagentNavigation) return;
     final target = await Navigator.of(context).push<Session>(
       KitPageRoute<Session>(
         builder: (_) => SessionRelationsScreen(
@@ -295,8 +300,7 @@ extension _ChatSessionMenu on _ChatScreenState {
     String sessionID, {
     bool requireChild = false,
   }) async {
-    if (!_conn.capabilities.projectManagement ||
-        sessionID == widget.sessionID) {
+    if (!_subagentNavigation || sessionID == widget.sessionID) {
       return;
     }
     final origin = widget.sessionID;
@@ -324,13 +328,13 @@ extension _ChatSessionMenu on _ChatScreenState {
   }
 
   Future<void> _openParentSession() async {
-    if (!_conn.capabilities.projectManagement) return;
+    if (!_subagentNavigation) return;
     final parentID = _conn.sessionsById[widget.sessionID]?.parentID;
     if (parentID != null) await _openSubagentSession(parentID);
   }
 
   Future<void> _openRelatedSession(Session target) async {
-    if (_conn.isIsolated || !_conn.capabilities.projectManagement) return;
+    if (_conn.isIsolated || !_subagentNavigation) return;
     final location = _conn.locationRevision;
     final origin = widget.sessionID;
     final identity = (_conn.profile?.id, _conn.profile?.baseUrl);

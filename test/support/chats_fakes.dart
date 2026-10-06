@@ -118,6 +118,7 @@ class FakeChatsHost implements ChatsHost {
   bool builtInProfile = false;
 
   /// The connections the list can show; null: only the one.
+  @override
   FakeListSources? listSources;
 
   @override

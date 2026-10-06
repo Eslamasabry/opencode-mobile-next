@@ -84,16 +84,16 @@ class KitFeedItem extends StatelessWidget {
     // From 1.3x text the title takes two lines and the state goes under it,
     // so neither is cut to a few letters.
     final large = MediaQuery.textScalerOf(context).scale(1) > 1.3;
-    final Widget? state = tag != null
-        ? tag
-        : time != null
-        ? KitText(
-            time,
-            role: KitTextRole.caption,
-            tone: KitTextTone.tertiary,
-            maxLines: 1,
-          )
-        : null;
+    final Widget? state =
+        tag ??
+        (time != null
+            ? KitText(
+                time,
+                role: KitTextRole.caption,
+                tone: KitTextTone.tertiary,
+                maxLines: 1,
+              )
+            : null);
     // A state that changes ("Running" to "Just now") crossfades instead of
     // jumping; the time ticking on is not a change.
     final Widget? end = state == null

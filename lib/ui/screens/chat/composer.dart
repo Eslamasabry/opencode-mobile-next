@@ -248,13 +248,13 @@ class _ChatComposer extends StatelessWidget {
                   )
                 : null,
             offline: offline,
-            readOnlyReason: blockedReason != null
-                ? blockedReason
-                : !shelfBusy
-                ? null
-                : shelfLoading
-                ? l10n.composerBusyReason
-                : l10n.composerDraftBlockedReason,
+            readOnlyReason:
+                blockedReason ??
+                (!shelfBusy
+                    ? null
+                    : shelfLoading
+                    ? l10n.composerBusyReason
+                    : l10n.composerDraftBlockedReason),
             note: _note(context),
             hasAttachments: _hasAttachments,
             attachments: _attachmentChips(context),

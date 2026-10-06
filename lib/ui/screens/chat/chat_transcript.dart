@@ -284,7 +284,7 @@ extension _ChatTranscript on _ChatScreenState {
         : null,
     onOpenChild: _watching
         ? _openWatchedChild
-        : _conn.capabilities.projectManagement
+        : _subagentNavigation
         ? (id) => _openSubagentSession(id, requireChild: true)
         : null,
   );
@@ -394,7 +394,7 @@ extension _ChatTranscript on _ChatScreenState {
             ),
       onOpenSession: _watching
           ? _openWatchedChild
-          : _conn.isIsolated || !_conn.capabilities.projectManagement
+          : _conn.isIsolated || !_subagentNavigation
           ? null
           : _openSubagentSession,
     );

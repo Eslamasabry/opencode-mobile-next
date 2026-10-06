@@ -42,6 +42,11 @@ class ServerCapabilities {
   /// sessions do; Claude Code's sub-agents answer only their main
   /// conversation, so their page is read-only).
   final bool subagentReplies;
+
+  /// Sub-agents are conversations of their own the chat opens (Claude
+  /// Code's through its helper). OpenCode's open through
+  /// [projectManagement], as before.
+  final bool subagentSessions;
   final bool promptAgentMentions;
   final bool offlinePromptQueue;
   final bool fileBrowsing;
@@ -155,6 +160,7 @@ class ServerCapabilities {
     this.promptImagesOnly = false,
     this.promptEchoTextOnly = false,
     this.subagentReplies = true,
+    this.subagentSessions = false,
     this.promptAgentMentions = true,
     this.offlinePromptQueue = true,
     this.fileBrowsing = true,
