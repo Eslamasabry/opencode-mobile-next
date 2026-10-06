@@ -120,12 +120,34 @@ Session paseoSession(Map<String, dynamic> agent) {
   );
 }
 
-Map<String, dynamic> paseoSessionJson(Session session) => {
-  'id': session.id,
-  'title': session.title,
-  'directory': session.directory,
-  'time': {'created': session.time?.created, 'updated': session.time?.updated},
-};
+Map<String, dynamic> paseoSessionJson(Session session) {
+  final selection = session.selection;
+  final model = selection?.model;
+  return {
+    'id': session.id,
+    'title': session.title,
+    'directory': session.directory,
+    'time': {
+      'created': session.time?.created,
+      'updated': session.time?.updated,
+    },
+    // The agent's model and mode travel with every update: without them a
+    // conversation's chip falls back to "Loading" after each turn.
+    if (selection != null) ...{
+      'serverSelection': true,
+      if (selection.modelKnown)
+        'model': model == null
+            ? null
+            : {
+                'providerID': model.providerID,
+                'id': model.modelID,
+                if (selection.variant.isNotEmpty) 'variant': selection.variant,
+              },
+      if (selection.agentKnown) 'agent': selection.agent,
+    },
+    if (session.cost != null) 'cost': session.cost,
+  };
+}
 
 /// `busy` while the agent is starting or running a turn, otherwise `idle`.
 String paseoSessionStatus(Map<String, dynamic> agent) =>

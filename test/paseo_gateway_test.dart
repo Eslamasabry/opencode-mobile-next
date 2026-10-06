@@ -309,6 +309,23 @@ void main() {
     expect(commands.map((c) => c.name), ['compact', 'review']);
   });
 
+  test('an update keeps the conversation\'s model and mode', () async {
+    await gateway.sessions();
+    events.clear();
+    daemon.push('agent_update', {
+      'kind': 'upsert',
+      'agent': agentJson('a1', status: 'running'),
+    });
+    await pumpEventQueue();
+    final update = events.firstWhere((e) => e.type == 'session.updated');
+    final session = Session.fromJson(
+      update.properties['info'] as Map<String, dynamic>,
+    );
+    expect(session.selection?.model?.modelID, 'claude-haiku-4-5');
+    expect(session.selection?.agent, 'default');
+    expect(session.selection?.modelKnown, isTrue);
+  });
+
   test('sessions are this folder\'s unarchived agents', () async {
     final sessions = await gateway.sessions();
     expect(sessions.map((s) => s.id), ['a1']);
