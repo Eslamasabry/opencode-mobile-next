@@ -15,6 +15,7 @@ import 'package:opencode_mobile/ui/kit/chat/kit_message.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_turn.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_work_line.dart';
 import 'package:opencode_mobile/ui/kit/kit_menu.dart';
+import 'package:opencode_mobile/ui/kit/kit_motion.dart';
 import 'package:opencode_mobile/ui/kit/kit_redact.dart';
 import 'package:opencode_mobile/ui/kit/kit_text.dart';
 
@@ -339,7 +340,7 @@ void main() {
 
   group('6b · the live line of a running turn', () {
     testWidgets('says what it does, adds the time after 5 s, turns slow '
-        'after 20 s, with one pulsing dot and no Stop', (tester) async {
+        'after 20 s, with no dot and no Stop', (tester) async {
       await _pump(
         tester,
         KitTurn(
@@ -362,7 +363,29 @@ void main() {
         findsOne,
       );
       expect(find.text('Stop reply'), findsNothing);
-      expect(find.byKey(const ValueKey('kit-turn-live-dot')), findsOneWidget);
+      expect(find.byKey(const ValueKey('kit-turn-live-dot')), findsNothing);
+    });
+
+    testWidgets('a light sweeps over the words; reduced motion holds them '
+        'still', (tester) async {
+      KitMotion.loops = true;
+      addTearDown(() => KitMotion.loops = false);
+      final turn = KitTurn(
+        blocks: const [],
+        phase: KitTurnPhase.running,
+        live: KitTurnLive(
+          activity: KitTurnActivity.waitingForModel,
+          since: clock.now(),
+        ),
+      );
+      await _pump(tester, turn);
+      expect(find.byKey(const ValueKey('kit-turn-live-sweep')), findsOneWidget);
+      expect(find.text('Thinking…'), findsOneWidget);
+      await _pump(tester, turn, reduced: true);
+      expect(find.byKey(const ValueKey('kit-turn-live-sweep')), findsNothing);
+      expect(find.text('Thinking…'), findsOneWidget);
+      // Unmount before the looping sweep outlives the test.
+      await tester.pumpWidget(const SizedBox());
     });
 
     testWidgets('on the prompt row too', (tester) async {

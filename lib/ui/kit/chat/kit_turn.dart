@@ -640,7 +640,9 @@ class _BandPainter extends CustomPainter {
       old.color != color || old.outset != outset || old.radius != radius;
 }
 
-/// The running turn's one live line: a pulsing dot and "Thinking · 12 s".
+/// The running turn's one live line: "Thinking · 12 s", with a soft light
+/// sweeping over the words (owner decision 6 Oct, option C, replacing the
+/// pulsing dot of 2 Oct 12A).
 /// The words are a live region that announces the phase, not the seconds.
 class _KitTurnLiveLine extends StatelessWidget {
   const _KitTurnLiveLine({required this.live});
@@ -650,7 +652,6 @@ class _KitTurnLiveLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
-    final tokens = KitTokens.of(context);
     final activity = live.activity == KitTurnActivity.sending
         ? KitTurnActivity.thinking
         : live.activity;
@@ -684,8 +685,6 @@ class _KitTurnLiveLine extends StatelessWidget {
           key: const ValueKey('kit-turn-live-line'),
           mainAxisSize: MainAxisSize.min,
           children: [
-            const _LiveDot(),
-            SizedBox(width: tokens.space2),
             Flexible(
               // A live region, read as the phase; the seconds are not
               // announced every time they change.
@@ -693,11 +692,13 @@ class _KitTurnLiveLine extends StatelessWidget {
                 liveRegion: true,
                 label: note == null || note.isEmpty ? words : '$words. $note',
                 child: ExcludeSemantics(
-                  child: KitText(
-                    line,
-                    role: KitTextRole.secondary,
-                    tone: KitTextTone.secondary,
-                    tabular: true,
+                  child: _LiveSweep(
+                    child: KitText(
+                      line,
+                      role: KitTextRole.secondary,
+                      tone: KitTextTone.secondary,
+                      tabular: true,
+                    ),
                   ),
                 ),
               ),
@@ -709,70 +710,74 @@ class _KitTurnLiveLine extends StatelessWidget {
   }
 }
 
-/// The one thing that moves in a chat (owner decision 2 Oct, 12A): a small
-/// dot that pulses while the agent works. Calm pulses at half the pace; Off,
-/// reduced motion and tests keep it still.
-class _LiveDot extends StatefulWidget {
-  const _LiveDot();
+/// The one thing that moves in a chat: a soft light sweeping over the live
+/// line's words, in the reading direction, while the agent works. Calm
+/// sweeps at half the pace; Off, reduced motion and tests show the words
+/// still.
+class _LiveSweep extends StatefulWidget {
+  const _LiveSweep({required this.child});
+
+  final Widget child;
 
   @override
-  State<_LiveDot> createState() => _LiveDotState();
+  State<_LiveSweep> createState() => _LiveSweepState();
 }
 
-class _LiveDotState extends State<_LiveDot>
+class _LiveSweepState extends State<_LiveSweep>
     with SingleTickerProviderStateMixin {
-  static const _size = 8.0;
-  late final AnimationController _pulse = AnimationController(vsync: this);
+  late final AnimationController _sweep = AnimationController(vsync: this);
+  bool _moving = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final level = KitEffects.of(context).motion;
-    if (!KitMotion.loops ||
-        KitMotion.reduced(context) ||
-        level == KitMotionLevel.off) {
-      _pulse.stop();
+    _moving =
+        KitMotion.loops &&
+        !KitMotion.reduced(context) &&
+        level != KitMotionLevel.off;
+    if (!_moving) {
+      _sweep.stop();
       return;
     }
-    _pulse.duration = level == KitMotionLevel.calm
-        ? const Duration(milliseconds: 2800)
-        : const Duration(milliseconds: 1400);
-    if (!_pulse.isAnimating) _pulse.repeat(reverse: true);
+    _sweep.duration = level == KitMotionLevel.calm
+        ? const Duration(milliseconds: 4400)
+        : const Duration(milliseconds: 2200);
+    if (!_sweep.isAnimating) _sweep.repeat();
   }
 
   @override
   void dispose() {
-    _pulse.dispose();
+    _sweep.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final color = KitTokens.of(context).roles.accent;
-    return ExcludeSemantics(
-      child: AnimatedBuilder(
-        animation: _pulse,
-        builder: (context, _) {
-          final t = KitMotion.pulse.transform(_pulse.value);
-          return SizedBox.square(
-            dimension: _size * 1.6,
-            child: Center(
-              child: Opacity(
-                opacity: 1 - 0.55 * t,
-                child: Container(
-                  key: const ValueKey('kit-turn-live-dot'),
-                  width: _size * (1 - 0.25 * t),
-                  height: _size * (1 - 0.25 * t),
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
+    if (!_moving) return widget.child;
+    final roles = KitTokens.of(context).roles;
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    return AnimatedBuilder(
+      animation: _sweep,
+      child: widget.child,
+      builder: (context, child) {
+        // The light's centre travels from before the words to past them.
+        final t = KitMotion.steady.transform(_sweep.value);
+        final centre = -0.3 + 1.6 * (rtl ? 1 - t : t);
+        return ShaderMask(
+          key: const ValueKey('kit-turn-live-sweep'),
+          blendMode: BlendMode.srcIn,
+          shaderCallback: (bounds) => LinearGradient(
+            colors: [roles.text3, roles.text1, roles.text3],
+            stops: [
+              (centre - 0.18).clamp(0.0, 1.0),
+              centre.clamp(0.0, 1.0),
+              (centre + 0.18).clamp(0.0, 1.0),
+            ],
+          ).createShader(bounds),
+          child: child,
+        );
+      },
     );
   }
 }
