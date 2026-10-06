@@ -178,6 +178,11 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
         final titled = gateway.hasOwnTitle(newer.id)
             ? newer
             : newer.copyWith(title: older.title);
+        // The helper gets the title back too, so the conversation's own
+        // header says the same as this row.
+        if (!gateway.hasOwnTitle(newer.id) && gateway.hasOwnTitle(older.id)) {
+          gateway.keepTitle(newer.id, older.title ?? '');
+        }
         sessions[newer.id] = titled;
         bySession[key] = titled;
       }
