@@ -71,8 +71,10 @@ stays, labelled "All connections" while more than one server shows.
 - Proven on the emulator with a stand-in Termux server (OpenCode 1.18 on
   the PC, reached through `adb reverse tcp:4096`), in both directions: the
   app on Termux, and the app on the in-app Ubuntu.
-- B is not done: there are no saved rows per server yet, so a Termux restart
-  paints after it connects, with the loading line meanwhile.
+- B is done (2026-10-06 night): each server's rows are saved as
+  `oc.sideFeed.<id>` and painted at once after a restart; a server that
+  can't be reached is named ("Termux isn't answering") and the connections
+  sheet offers Try again.
 - The full suite has not run on this change. The run was stopped for low
   memory.
 

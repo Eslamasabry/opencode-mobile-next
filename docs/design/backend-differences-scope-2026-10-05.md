@@ -41,6 +41,7 @@ Legend: ✅ works · 🚫 hidden (cannot work) · ℹ️ explained in place · �
 | Rename | ✅ | |
 | Delete / archive a conversation | ℹ️ | No backend offers Delete in the UI today (only untouched drafts are removed): a product decision, not an agent gap |
 | Timeline / Find / Details | ✅ | Details is the usage view; reconnect wording names the agent |
+| Sub-agents (Claude's Agent tool) | ✅ | Each is a read-only child conversation with its own live timeline (Paseo `agent.provider_subagents.*`); the card opens it (2026-10-06) |
 | Search conversations | ✅ | The search lists matching conversations of every agent (S1 done) |
 | New conversation › project chip | ✅ | A folder outside the agents' projects disables Send and says why (S1 done) |
 | New conversation › "In a separate copy" | 🚫 | Hidden while another agent is chosen (fixed today) |
