@@ -127,6 +127,7 @@ Map<String, dynamic> paseoSessionJson(Session session) {
     'id': session.id,
     'title': session.title,
     'directory': session.directory,
+    if (session.parentID != null) 'parentID': session.parentID,
     'time': {
       'created': session.time?.created,
       'updated': session.time?.updated,

@@ -24,6 +24,7 @@ part 'gateway/permissions.dart';
 part 'gateway/providers.dart';
 part 'gateway/events.dart';
 part 'gateway/lifecycle.dart';
+part 'gateway/subagents.dart';
 
 class PaseoGateway
     implements
@@ -57,6 +58,18 @@ class PaseoGateway
   final _turnActive = <String>{};
   final _watching = <String>{};
   final _permissions = <String, _PaseoPermission>{};
+
+  /// Claude Code's sub-agents, each a read-only child session (see
+  /// gateway/subagents.dart), by session id.
+  final _subagents = <String, _PaseoSubagent>{};
+
+  /// The sub-agent session each tool call started, by call id.
+  final _subagentByCall = <String, String>{};
+
+  /// Tool parts shown so far, by call id (with their session id), so a
+  /// sub-agent reported after its card still links to it.
+  final _toolParts = <String, Map<String, dynamic>>{};
+  final _subagentsLoaded = <String>{};
 
   /// Requests answered from here. A snapshot taken before the daemon applied
   /// the answer still lists the request; it must not come back as a new card.
@@ -395,7 +408,7 @@ class PaseoGateway
 
   @override
   Future<Session> session(String id) async {
-    if (_drafts.contains(id)) return _sessions[id]!;
+    if (_drafts.contains(id) || _isSubagent(id)) return _sessions[id]!;
     await _fetchAgent(id);
     return _sessions[id]!;
   }
@@ -407,6 +420,7 @@ class PaseoGateway
   /// session, so the conversation can be restored from the computer.
   @override
   Future<void> deleteSession(String id) async {
+    if (_isSubagent(id)) throw _PaseoSubagents._readOnly;
     if (!_drafts.contains(id)) {
       if (!_sessions.containsKey(id)) await _fetchAgent(id);
       await transport.request('archive_agent_request', {
@@ -434,6 +448,7 @@ class PaseoGateway
 
   @override
   Future<void> renameSession(String id, String title) async {
+    if (_isSubagent(id)) throw _PaseoSubagents._readOnly;
     final name = paseoString(title.trim(), max: 200);
     if (_drafts.contains(id)) {
       final draft = _sessions[id]!;
@@ -491,6 +506,7 @@ class PaseoGateway
   @override
   Future<List<MessageWithParts>> messages(String id) async {
     if (_drafts.contains(id) && !_uncertain.contains(id)) return const [];
+    if (_isSubagent(id)) return _subagentMessages(id);
     final scope = _scope;
     final epoch = _locationEpoch;
     final agent = await _fetchAgent(id);
@@ -520,7 +536,11 @@ class PaseoGateway
     final end = result['endCursor'];
     if (end is Map && end['seq'] is int) live.lastSeq = end['seq'] as int;
     _uncertain.remove(id);
-    return messages;
+    final linked = _linkMessages(id, messages);
+    // Its sub-agents (an old conversation's too), read beside the history:
+    // their cards link to them when the list arrives.
+    if (_subagentsLoaded.add(id)) unawaited(_loadSubagents(id));
+    return linked;
   }
 
   @override
@@ -547,6 +567,7 @@ class PaseoGateway
     PromptDelivery? delivery,
   }) async {
     PromptTrace.sent(sessionID);
+    if (_isSubagent(sessionID)) throw _PaseoSubagents._readOnly;
     if (agentMentions.isNotEmpty || delivery != null) {
       throw PaseoFailure(PaseoFailureKind.unavailable);
     }
@@ -614,7 +635,7 @@ class PaseoGateway
 
   @override
   Future<void> abort(String sessionID) async {
-    if (_drafts.contains(sessionID)) return;
+    if (_drafts.contains(sessionID) || _isSubagent(sessionID)) return;
     await transport.request('cancel_agent_request', {
       'agentId': _real(paseoString(sessionID, max: 256)),
     }, mutation: true);

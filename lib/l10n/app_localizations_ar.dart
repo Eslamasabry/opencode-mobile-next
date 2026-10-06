@@ -27001,6 +27001,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get chatSubagentReadOnly =>
+      'هذا الوكيل الفرعي يجيب محادثته الرئيسية فقط. اكتب هناك.';
+
+  @override
   String get chatsSourcesAll => 'كل الاتصالات';
 
   @override

@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart' show StreamStatus;
+import 'package:opencode_mobile/domain/server_gateway.dart'
+    show ProductException;
 import 'package:opencode_mobile/paseo/gateway.dart';
 import 'package:opencode_mobile/paseo/mappers.dart';
 import 'package:opencode_mobile/paseo/transport.dart';
@@ -287,7 +289,11 @@ void main() {
   test('hello claims only what the client implements', () async {
     await gateway.health();
     expect(daemon.hello!['protocolVersion'], 1);
-    expect(daemon.hello!['capabilities'], {'all_providers': true});
+    expect(daemon.hello!['capabilities'], {
+      'all_providers': true,
+      'provider_subagents': true,
+      'projected_subagent_timeline': true,
+    });
     // Below 0.1.45 the daemon hides Pi and every other newer runtime.
     expect(daemon.hello!['appVersion'], PaseoTransport.clientAppVersion);
     expect((await gateway.health()).version, contains('0.8.0'));
@@ -1002,6 +1008,177 @@ void main() {
       ]),
     );
     expect(replacement.of('fetch_agents_request'), isNotEmpty);
+  });
+
+  group('sub-agents', () {
+    Map<String, dynamic> agentCall(String status) => timeline({
+      'type': 'tool_call',
+      'callId': 'toolu_sub',
+      'name': 'Agent',
+      'status': status,
+      'error': null,
+      'detail': {
+        'type': 'unknown',
+        'input': {'description': 'List the files', 'subagent_type': 'Explore'},
+      },
+    });
+    Map<String, dynamic> descriptor({String status = 'running'}) => {
+      'id': 's1',
+      'parentAgentId': 'a1',
+      'parentSubagentId': null,
+      'provider': 'claude',
+      'title': 'List the files',
+      'description': 'List the files',
+      'status': status,
+      'createdAt': '2026-10-06T10:00:00.000Z',
+      'updatedAt': '2026-10-06T10:00:01.000Z',
+      'toolCallId': 'toolu_sub',
+      'cwd': _dir,
+      'subtitle': null,
+    };
+
+    setUp(() async {
+      await gateway.sessions();
+      events.clear();
+    });
+
+    test(
+      'a sub-agent is its conversation\'s child, and its card opens it',
+      () async {
+        daemon.push('agent_stream', stream('a1', agentCall('running'), seq: 1));
+        daemon.push('agent.provider_subagents.update', {
+          'kind': 'upsert',
+          'subagent': descriptor(),
+        });
+        await pumpEventQueue();
+        final created = events.firstWhere((e) => e.type == 'session.created');
+        final info = Session.fromJson(
+          created.properties['info'] as Map<String, dynamic>,
+        );
+        expect(info.id, paseoSubagentSessionId('s1'));
+        expect(info.parentID, 'a1');
+        expect(info.title, 'List the files');
+        expect((await gateway.sessionStatuses())[info.id], 'busy');
+        // The card shown before the sub-agent was reported now links to it.
+        final card = events
+            .where((e) => e.type == 'message.part.updated')
+            .map((e) => e.properties['part'] as Map)
+            .last;
+        expect(card['tool'], 'task');
+        expect((card['state'] as Map)['metadata'], {'sessionId': info.id});
+      },
+    );
+
+    test('its steps stream into its own conversation', () async {
+      daemon.push('agent.provider_subagents.update', {
+        'kind': 'upsert',
+        'subagent': descriptor(),
+      });
+      events.clear();
+      daemon.push('agent.provider_subagents.update', {
+        'kind': 'timeline',
+        'parentAgentId': 'a1',
+        'subagentId': 's1',
+        'provider': 'claude',
+        'item': {
+          'type': 'assistant_message',
+          'text': 'Found 7 files',
+          'messageId': 'm_sub',
+        },
+        'timestamp': '2026-10-06T10:00:02.000Z',
+        'seq': 3,
+        'epoch': 'e1',
+      });
+      await pumpEventQueue();
+      final message = events.firstWhere((e) => e.type == 'message.updated');
+      expect(
+        (message.properties['info'] as Map)['sessionID'],
+        paseoSubagentSessionId('s1'),
+      );
+    });
+
+    test('its history is read from the helper; it takes no replies', () async {
+      daemon.push('agent.provider_subagents.update', {
+        'kind': 'upsert',
+        'subagent': descriptor(status: 'completed'),
+      });
+      daemon.handlers['agent.provider_subagents.timeline.get.request'] = (m) {
+        expect(m['parentAgentId'], 'a1');
+        expect(m['subagentId'], 's1');
+        return (
+          'agent.provider_subagents.timeline.get.response',
+          {
+            'parentAgentId': 'a1',
+            'subagentId': 's1',
+            'provider': 'claude',
+            'epoch': 'e1',
+            'endCursor': {'epoch': 'e1', 'seq': 4},
+            'rows': [
+              {
+                'seq': 4,
+                'seqStart': 4,
+                'timestamp': '2026-10-06T10:00:03.000Z',
+                'item': {
+                  'type': 'assistant_message',
+                  'text': '7 files',
+                  'messageId': 'm_done',
+                },
+              },
+            ],
+            'error': null,
+          },
+        );
+      };
+      await pumpEventQueue();
+      final id = paseoSubagentSessionId('s1');
+      final history = await gateway.messages(id);
+      expect(history.single.parts.single.text, '7 files');
+      expect((await gateway.session(id)).parentID, 'a1');
+      await expectLater(
+        gateway.promptAsync(id, text: 'more'),
+        throwsA(isA<ProductException>()),
+      );
+    });
+
+    test('an old conversation\'s cards link to the sub-agents the helper '
+        'still knows', () async {
+      daemon.handlers['agent.provider_subagents.list.request'] = (m) => (
+        'agent.provider_subagents.list.response',
+        {
+          'parentAgentId': 'a1',
+          'subagents': [descriptor(status: 'completed')],
+          'error': null,
+        },
+      );
+      daemon.handlers['fetch_agent_request'] = (_) =>
+          ('fetch_agent_response', {'agent': agentJson('a1')});
+      daemon.handlers['fetch_agent_timeline_request'] = (_) => (
+        'fetch_agent_timeline_response',
+        {
+          'agentId': 'a1',
+          'epoch': 'epoch-1',
+          'entries': [
+            {
+              'provider': 'claude',
+              'seqStart': 1,
+              'timestamp': '2026-10-06T10:00:00.000Z',
+              'item': agentCall('completed')['item'],
+            },
+          ],
+        },
+      );
+      final history = await gateway.messages('a1');
+      expect(history.single.parts.single.toolName, 'task');
+      // The list arrives beside the history; the card then links.
+      await pumpEventQueue();
+      final card = events
+          .where((e) => e.type == 'message.part.updated')
+          .map((e) => e.properties['part'] as Map)
+          .last;
+      expect((card['state'] as Map)['metadata'], {
+        'sessionId': paseoSubagentSessionId('s1'),
+      });
+    });
   });
 
   group('probe', () {

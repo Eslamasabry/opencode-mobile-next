@@ -5064,6 +5064,7 @@
   "chatsHomeIncomplete": "تعذر تحميل بعض المحادثات",
   "chatsHomeStillLoading": "جارٍ تحميل محادثات {agents}…",
   "shellServerPlusOthers": "{name} +{count}",
+  "chatSubagentReadOnly": "هذا الوكيل الفرعي يجيب محادثته الرئيسية فقط. اكتب هناك.",
   "chatsSourcesAll": "كل الاتصالات",
   "chatsSourcesSome": "{shown} من {total} اتصالات",
   "chatsSourcesSheetTitle": "الاتصالات في هذه القائمة",

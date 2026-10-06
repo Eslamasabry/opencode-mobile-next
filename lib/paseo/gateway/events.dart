@@ -98,6 +98,8 @@ extension _PaseoEvents on PaseoGateway {
           if (requestID is String) _resolvePermission(requestID);
         case 'agent_deleted' || 'agent_archived':
           _removed(agentID);
+        case 'agent.provider_subagents.update':
+          _onSubagentUpdate(p);
         case 'providers_snapshot_update':
           _providerRevision++;
           _providerEntries = null;
@@ -265,9 +267,11 @@ extension _PaseoEvents on PaseoGateway {
       }
     }
     for (final part in message.parts) {
+      final json = paseoPartJson(part);
+      _rememberToolPart(id, json);
       _emit('message.part.updated', {
         'sessionID': id,
-        'part': {...paseoPartJson(part), 'sessionID': id},
+        'part': {..._linkedToolPart(json), 'sessionID': id},
       });
     }
   }

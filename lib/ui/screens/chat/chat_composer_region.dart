@@ -353,6 +353,12 @@ extension _ChatComposerRegion on _ChatScreenState {
               ServerBackend.codex => 'Codex',
               _ => null,
             },
+      // A sub-agent that answers only its main conversation (Claude's).
+      blockedReason:
+          !_conn.capabilities.subagentReplies &&
+              _conn.sessionsById[widget.sessionID]?.parentID != null
+          ? _chatL10n(context).chatSubagentReadOnly
+          : null,
       isolated: _conn.isIsolated,
       compact: compactComposer,
       // The multiline field scrolls within its budget at large text scales,

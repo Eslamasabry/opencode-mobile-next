@@ -7,6 +7,7 @@ const paseoServerCapabilities = ServerCapabilities(
   promptAttachments: true,
   promptImagesOnly: true,
   promptEchoTextOnly: true,
+  subagentReplies: false,
   promptAgentMentions: false,
   offlinePromptQueue: false,
   fileBrowsing: false,

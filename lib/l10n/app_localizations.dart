@@ -42421,6 +42421,12 @@ abstract class AppLocalizations {
   /// **'{name} +{count}'**
   String shellServerPlusOthers(String name, int count);
 
+  /// Composer on a Claude Code sub-agent's page, which takes no messages; the status line above offers the main conversation
+  ///
+  /// In en, this message translates to:
+  /// **'This sub-agent answers only its main conversation. Write there.'**
+  String get chatSubagentReadOnly;
+
   /// Conversations list: filter chip when every connection's conversations show
   ///
   /// In en, this message translates to:

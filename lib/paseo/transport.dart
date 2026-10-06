@@ -320,8 +320,14 @@ class PaseoTransport {
         // Only what this client implements. Unclaimed capabilities keep the
         // daemon on its plain message shapes and on implicit delivery of
         // permission and timeline events, so no subscription bookkeeping is
-        // needed here.
-        'capabilities': {'all_providers': true},
+        // needed here. Claude's sub-agents arrive the same implicit way
+        // (`agent.provider_subagents.update`) with their projected
+        // timelines.
+        'capabilities': {
+          'all_providers': true,
+          'provider_subagents': true,
+          'projected_subagent_timeline': true,
+        },
       }, expectedEpoch: epoch);
       await ready.future.timeout(const Duration(seconds: 8));
       if (_closed || epoch != _epoch) {

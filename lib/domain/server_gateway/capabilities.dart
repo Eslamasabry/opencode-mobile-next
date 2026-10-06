@@ -37,6 +37,11 @@ class ServerCapabilities {
   /// timeline drops the pictures), so the app's own copy is matched to it by
   /// text alone.
   final bool promptEchoTextOnly;
+
+  /// A sub-agent's conversation takes the person's replies (OpenCode's task
+  /// sessions do; Claude Code's sub-agents answer only their main
+  /// conversation, so their page is read-only).
+  final bool subagentReplies;
   final bool promptAgentMentions;
   final bool offlinePromptQueue;
   final bool fileBrowsing;
@@ -149,6 +154,7 @@ class ServerCapabilities {
     this.promptAttachments = true,
     this.promptImagesOnly = false,
     this.promptEchoTextOnly = false,
+    this.subagentReplies = true,
     this.promptAgentMentions = true,
     this.offlinePromptQueue = true,
     this.fileBrowsing = true,

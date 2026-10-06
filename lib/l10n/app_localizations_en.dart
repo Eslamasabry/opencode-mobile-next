@@ -26878,6 +26878,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get chatSubagentReadOnly =>
+      'This sub-agent answers only its main conversation. Write there.';
+
+  @override
   String get chatsSourcesAll => 'All connections';
 
   @override

@@ -31884,6 +31884,10 @@
       }
     }
   },
+  "chatSubagentReadOnly": "This sub-agent answers only its main conversation. Write there.",
+  "@chatSubagentReadOnly": {
+    "description": "Composer on a Claude Code sub-agent's page, which takes no messages; the status line above offers the main conversation"
+  },
   "chatsSourcesAll": "All connections",
   "@chatsSourcesAll": {
     "description": "Conversations list: filter chip when every connection's conversations show"
