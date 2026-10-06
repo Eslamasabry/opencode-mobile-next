@@ -43,6 +43,10 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
   /// another connection a moment after) arrives instead of popping in.
   final _seenRows = <String>{};
   String? _openingID;
+
+  /// The row whose conversation is opening now (not while a question
+  /// about it is asked): it says Opening… and the bar runs.
+  String? _openingShown;
   String? _notice;
 
   @override
@@ -149,14 +153,17 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
         confirmKey: const ValueKey('agents-start-new'),
       );
       if (!mounted) return;
+      if (agree) setState(() => _openingShown = item.sessionID);
       problem = agree ? await host.openNewChatReplacing(context, item) : null;
       if (agree) unawaited(host.source.refreshChatFeed());
     } else {
+      setState(() => _openingShown = item.sessionID);
       problem = await host.openChat(context, item);
     }
     if (!mounted) return;
     setState(() {
       _openingID = null;
+      _openingShown = null;
       _notice = problem;
     });
   }
@@ -329,7 +336,7 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       // The bar keeps moving while more conversations are on the way.
       loading:
           (snapshot.loading && snapshot.items.isEmpty) ||
-          _openingID != null ||
+          _openingShown != null ||
           snapshot.stillLoading.isNotEmpty ||
           snapshot.stillLoadingServers.isNotEmpty,
       loadingLabel: l10n.chatsHomeTitle,
@@ -505,7 +512,7 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
     final l10n = AppLocalizations.of(context);
     // The row being opened says so (an old Claude conversation takes a
     // few seconds to reopen on its helper).
-    final opening = _openingID == item.sessionID;
+    final opening = _openingShown == item.sessionID;
     final tag = opening
         ? KitStatusTag(
             key: const ValueKey('chats-row-opening'),

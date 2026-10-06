@@ -524,6 +524,7 @@ class ConnectionController extends ChangeNotifier
       _syncProfileServices();
       profileMonitor.start();
       quotaMonitor.start();
+      _paWarmUp();
     }
   }
   void _quotaMonitorChanged() {

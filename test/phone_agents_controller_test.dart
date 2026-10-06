@@ -1077,6 +1077,28 @@ void main() {
     c.dispose();
   });
 
+  testWidgets('at app start the helper is checked beside the server, only '
+      'where agents had conversations', (tester) async {
+    // The app restarts on the phone profile it was on.
+    final fresh = await _world(
+      tester,
+      prefsExtra: {'oc.activeProfile': 'local'},
+    );
+    expect(fresh.controller.agentRows, isEmpty);
+    fresh.controller.dispose();
+    final used = await _world(
+      tester,
+      prefsExtra: {
+        'oc.activeProfile': 'local',
+        'oc.phoneAgentsUsed.local': true,
+      },
+    );
+    // Read without anyone opening an agent screen.
+    expect(used.controller.agentRows, isNotEmpty);
+    await tester.pump(const Duration(seconds: 5));
+    used.controller.dispose();
+  });
+
   testWidgets('without earlier agent conversations the list never waits', (
     tester,
   ) async {

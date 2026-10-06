@@ -171,6 +171,18 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
     });
   }
 
+  /// At app start on a phone whose agents had conversations: their helper
+  /// is checked (and started when Android stopped it) beside the in-app
+  /// server's own start, not after the app has connected to it. The helper
+  /// takes about 20 s to boot.
+  void _paWarmUp() {
+    if (!phoneAgentsAvailable || !_paUsedBefore) return;
+    scheduleMicrotask(() {
+      if (_self._disposed) return;
+      unawaited(refreshAgentRows().catchError((Object _) {}));
+    });
+  }
+
   void _paDisposeBackend() {
     _paBackendWatch?.cancel();
     _paBackendWatch = null;
