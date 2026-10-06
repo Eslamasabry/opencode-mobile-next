@@ -3984,6 +3984,14 @@ void main() {
 
     expect(find.byKey(const Key('inline-command-suggestions')), findsOneWidget);
     expect(find.byKey(const Key('inline-command-review')), findsOneWidget);
+    // A server command says what it does under its slash word too.
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('inline-command-review')),
+        matching: find.text('Review current changes'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('/models'), findsNothing);
 
     await tester.enterText(

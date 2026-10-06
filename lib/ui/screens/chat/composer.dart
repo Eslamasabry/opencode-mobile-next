@@ -400,7 +400,13 @@ class _ChatComposer extends StatelessWidget {
               id: command,
               label: '/${command.slash}',
               kind: KitSuggestionKind.command,
-              description: command.description,
+              // A server command's words are its title; the app's are its
+              // description.
+              description: command.description.isNotEmpty
+                  ? command.description
+                  : command.title != '/${command.slash}'
+                  ? command.title
+                  : null,
               key: Key('inline-command-${command.slash}'),
             ),
         ],
