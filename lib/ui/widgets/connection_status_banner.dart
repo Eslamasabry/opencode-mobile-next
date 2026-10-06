@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../domain/connection_status.dart';
 import '../../state/connection.dart';
+import '../../state/profiles.dart' show ServerProfile;
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
 import '../kit/kit.dart';
@@ -35,7 +36,16 @@ KitStatus? connectionKitStatus(
     }
   }
 
-  final server = snapshot.serverName.isEmpty ? 'OpenCode' : snapshot.serverName;
+  // Named as the server switcher names it ("In-app Ubuntu", "Termux").
+  ServerProfile? owner;
+  for (final profile in controller.store.profiles) {
+    if (profile.id == snapshot.profileId) owner = profile;
+  }
+  final server = owner != null
+      ? serverDisplayName(owner, l10n, among: controller.store.profiles)
+      : snapshot.serverName.isEmpty
+      ? 'OpenCode'
+      : snapshot.serverName;
   if (snapshot.phase == ConnectionStatusPhase.credentialsUnreadable) {
     // The saved secret could not be read back on this phone: nothing was
     // tried and Reconnect cannot help. The way forward names its target;
