@@ -463,8 +463,10 @@ extension _ChatCommandActions on _ChatScreenState {
   /// so the composer chip only names an agent when it is a real choice.
   String get _defaultAgentName {
     // One way of working (or none listed, as with an agent on this phone)
-    // is no choice: the chip names no agent.
-    if (_conn.agents.where((agent) => agent.mode != 'subagent').length <= 1) {
+    // is no choice: the chip names no agent. An agent on this phone's modes
+    // are how much it may do without asking, which the approval chip says.
+    if (_conn.isAgentBackend ||
+        _conn.agents.where((agent) => agent.mode != 'subagent').length <= 1) {
       return _conn.agentForSession(widget.sessionID);
     }
     for (final agent in _conn.agents) {

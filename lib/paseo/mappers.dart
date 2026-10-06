@@ -165,6 +165,9 @@ String paseoToolName(String name, Map<String, dynamic> detail) =>
       'write' => 'write',
       'search' => 'grep',
       'fetch' => 'webfetch',
+      // Claude Code's sub-agent (its Agent tool, Task before): the app's
+      // sub-agent card, which says what the sub-agent was asked to do.
+      _ when const {'agent', 'task'}.contains(name.toLowerCase()) => 'task',
       _ => name.isEmpty ? 'tool' : name.toLowerCase(),
     };
 
