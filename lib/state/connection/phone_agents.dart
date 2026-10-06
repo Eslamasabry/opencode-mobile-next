@@ -880,6 +880,36 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   bool get _paUsedBefore => _paCache.usedBefore(_paProfile?.id);
 
+  /// How long the list says the agents are loading before it stops saying
+  /// so; their saved rows stay.
+  static const _paReadingFor = Duration(seconds: 30);
+  DateTime? _paReadingSince;
+  Timer? _paReadingTimer;
+
+  /// While the agents' first read is outstanding: their folders are read
+  /// again every 5 s (the helper may still be starting), and after
+  /// [_paReadingFor] the list stops saying it is loading.
+  bool _paStillReading() {
+    final now = clock.now();
+    final since = _paReadingSince ??= now;
+    if (now.difference(since) >= _paReadingFor) {
+      _paFeedSettled = true;
+      _paReadingTimer?.cancel();
+      _paReadingTimer = null;
+      return false;
+    }
+    _paReadingTimer ??= Timer(const Duration(seconds: 5), () {
+      _paReadingTimer = null;
+      if (_self._disposed || _paFeedSettled) return;
+      unawaited(
+        refreshAgentRows().catchError((Object _) {}).whenComplete(() {
+          if (!_self._disposed) _self._notifyListeners();
+        }),
+      );
+    });
+    return true;
+  }
+
   Future<void> _paRememberUsed(bool used) =>
       _paCache.rememberUsed(_paProfile?.id, used);
 
@@ -952,6 +982,9 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         !reading.any((name) => name != 'OpenCode')) {
       reading.add('Claude Code');
     }
+    if (reading.any((name) => name != 'OpenCode') && !_paStillReading()) {
+      reading.removeWhere((name) => name != 'OpenCode');
+    }
     return ChatFeedSnapshot(
       items: items,
       stillLoading: List.unmodifiable(reading),
@@ -1004,6 +1037,13 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   @override
   Future<void> refreshChatFeed() async {
+    // The list says the agents are still loading (the helper was starting):
+    // a pull to refresh reads their folders too.
+    if (phoneAgentsAvailable && !_paFeedSettled && _paReadingSince != null) {
+      try {
+        await refreshAgentRows();
+      } catch (_) {}
+    }
     final merged = _paMerged;
     if (merged == null) return _self._ocRefresh();
     await merged.refreshChatFeed();
@@ -1336,6 +1376,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     _paDisposeBackend();
     _paHoldTimer?.cancel();
     _paHoldTimer = null;
+    _paReadingTimer?.cancel();
+    _paReadingTimer = null;
     unawaited(_paSetupSub?.cancel());
     unawaited(_paMergedSub?.cancel());
     for (final sub in _paSignInSubs.values) {

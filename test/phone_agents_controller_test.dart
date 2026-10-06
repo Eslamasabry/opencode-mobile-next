@@ -200,6 +200,9 @@ class _HostState {
   /// When set, the helper refuses to resume old conversations.
   bool resumeFails = false;
   final resumed = <String>[];
+
+  /// How many next connects fail like a helper Android stopped.
+  int failOpens = 0;
 }
 
 class _FakeHost implements PhoneAgentHostPort {
@@ -262,8 +265,8 @@ class _FakeHost implements PhoneAgentHostPort {
     );
   }
 
-  /// How many next connects fail like a helper Android stopped.
-  int failOpens = 0;
+  int get failOpens => state.failOpens;
+  set failOpens(int value) => state.failOpens = value;
 
   @override
   Future<PaseoGateway> openGateway(String directory) async {
@@ -825,6 +828,82 @@ void main() {
       allOf(contains('"c1"'), isNot(contains('saved1'))),
     );
     await tester.pump(const Duration(seconds: 5));
+    c.dispose();
+  });
+
+  Map<String, Object> savedFeed() => {
+    'oc.phoneAgentsUsed.local': true,
+    'oc.agentFeed.local': jsonEncode([
+      {
+        'sourceId': 'paseo:$dir',
+        'sessionID': 'saved1',
+        'title': 'Saved chat',
+        'directory': dir,
+        'projectName': 'app',
+        'isGit': false,
+        'at': DateTime(2026, 10, 3).millisecondsSinceEpoch,
+        'agentId': 'claude',
+        'agentLabel': 'Claude Code',
+        'canReopen': true,
+      },
+    ]),
+  };
+
+  testWidgets('a helper still starting is read again once it answers', (
+    tester,
+  ) async {
+    final w = await _world(tester, prefsExtra: savedFeed());
+    // The helper isn't listening yet when the app starts.
+    w.state.runtimes = {
+      'claude': const PhoneAgentRuntime(
+        agentId: 'claude',
+        installed: true,
+        architectureQualified: true,
+      ),
+    };
+    w.state.agents = [_agent('c1', dir)];
+    w.state.failOpens = 1000;
+    final c = w.controller;
+    await c.rememberLastUsedProject(dir);
+    await c.refreshChatFeed();
+    await c.refreshAgentRows();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(c.chatFeed().items.map((i) => i.sessionID), contains('saved1'));
+    expect(c.chatFeed().stillLoading, ['Claude Code']);
+    // It answers a moment later: no tap needed for its rows to arrive.
+    w.state.runtimes = {'claude': _ready('claude')};
+    w.state.failOpens = 0;
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(c.chatFeed().items.map((i) => i.sessionID), contains('c1'));
+    expect(c.chatFeed().stillLoading, isEmpty);
+    await tester.pump(const Duration(seconds: 5));
+    c.dispose();
+  });
+
+  testWidgets('a helper that never answers stops being called loading', (
+    tester,
+  ) async {
+    final w = await _world(tester, prefsExtra: savedFeed());
+    w.state.runtimes = {
+      'claude': const PhoneAgentRuntime(
+        agentId: 'claude',
+        installed: true,
+        architectureQualified: true,
+      ),
+    };
+    w.state.failOpens = 1000;
+    final c = w.controller;
+    await c.rememberLastUsedProject(dir);
+    await c.refreshChatFeed();
+    expect(c.chatFeed().stillLoading, ['Claude Code']);
+    for (var i = 0; i < 7; i++) {
+      await tester.pump(const Duration(seconds: 5));
+    }
+    final feed = c.chatFeed();
+    expect(feed.stillLoading, isEmpty);
+    // The saved rows stay.
+    expect(feed.items.map((i) => i.sessionID), contains('saved1'));
     c.dispose();
   });
 
