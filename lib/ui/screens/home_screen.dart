@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/sse.dart';
 import '../../builtin/builtin_server.dart' show builtinLinuxProvider;
-import '../../domain/chat_feed.dart' show ChatFeedFilter;
+import '../../domain/chat_feed.dart' show ChatFeedFilter, ChatListSourceKind;
 import '../../domain/server_gateway.dart' show ServerCapabilities;
 import '../../domain/connection_status.dart';
 import '../../state/connection.dart';
@@ -237,11 +237,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.dispose();
   }
 
-  String _serverName(ConnectionController conn) => serverDisplayName(
-    conn.profile,
-    _l10n(context),
-    among: conn.store.profiles,
-  );
+  /// The connection the app is on, or "All connections" while the list
+  /// shows more than one (the switcher still picks where new conversations
+  /// start).
+  String _serverName(ConnectionController conn) {
+    final shown = conn.chatListSources.where(
+      (source) => source.shown && source.kind == ChatListSourceKind.openCode,
+    );
+    if (shown.length > 1) return _l10n(context).chatsSourcesAll;
+    return serverDisplayName(
+      conn.profile,
+      _l10n(context),
+      among: conn.store.profiles,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

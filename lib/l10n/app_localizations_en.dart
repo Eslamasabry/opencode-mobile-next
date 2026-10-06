@@ -26873,6 +26873,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatsHomeIncomplete => 'Some conversations couldn\'t load';
 
   @override
+  String get chatsSourcesAll => 'All connections';
+
+  @override
+  String chatsSourcesSome(int shown, int total) {
+    return '$shown of $total connections';
+  }
+
+  @override
+  String get chatsSourcesSheetTitle => 'Show conversations from';
+
+  @override
+  String get chatsSourcesMain =>
+      'The app is on this one. New conversations start here.';
+
+  @override
+  String get chatsSourcesOnPhone => 'On this phone';
+
+  @override
+  String get chatsSourcesElsewhere => 'On another computer';
+
+  @override
+  String get chatsSourcesAgents => 'Agents on this phone';
+
+  @override
+  String get chatsSourcesAlways => 'Always shown';
+
+  @override
   String chatsHomeStillLoading(String agents) {
     return 'Loading $agents conversations…';
   }

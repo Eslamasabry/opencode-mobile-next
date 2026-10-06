@@ -132,7 +132,22 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   AgentCatalog get _paCatalog => AgentCatalog.builtIn;
 
-  ServerProfile? get _paProfile => _self._connectedProfile ?? _self.profile;
+  /// The phone profile the agents run under: the main connection's when it
+  /// is the in-app Ubuntu, else a shown in-app Ubuntu beside it (the app on
+  /// Termux still lists Claude's conversations).
+  ServerProfile? get _paProfile {
+    final main = _self._connectedProfile ?? _self.profile;
+    if (main == null || BuiltinLinux.managesServerUrl(main.baseUrl)) {
+      return main;
+    }
+    for (final side in _self._sides.values) {
+      final profile = side._connectedProfile;
+      if (profile != null && BuiltinLinux.managesServerUrl(profile.baseUrl)) {
+        return profile;
+      }
+    }
+    return main;
+  }
 
   @override
   bool get phoneAgentsAvailable {
@@ -769,7 +784,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     _paMergedSub = null;
     _paMerged = null;
     if (old != null) unawaited(old.dispose());
-    if (_paSources.isEmpty) {
+    final sides = _self._sideFeedSources;
+    if (_paSources.isEmpty && sides.isEmpty) {
       if (!_self._disposed) _self._notifyListeners();
       return;
     }
@@ -778,9 +794,13 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       sources: [
         NamedChatFeedSource(
           id: _openCodeSourceId,
-          label: 'OpenCode',
+          // Beside other servers, its rows name this one.
+          label: sides.isEmpty
+              ? 'OpenCode'
+              : (_self.profile?.name ?? 'OpenCode'),
           source: _OpenCodeFeed(_self),
         ),
+        ...sides,
         for (final entry in _paSources.entries)
           NamedChatFeedSource(
             id: _paseoSourceId(entry.key),
@@ -797,7 +817,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       merged.refreshChatFeed().whenComplete(() {
         if (_self._disposed || _paMerged != merged) return;
         final agents = merged.chatFeed().items.any(
-          (item) => item.sourceId != _openCodeSourceId,
+          (item) => item.sourceId?.startsWith('paseo:') ?? false,
         );
         unawaited(_paRememberUsed(agents));
         _paFeedSettled = true;
@@ -955,40 +975,56 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     }
     final merged = _paMerged;
     final snapshot = merged?.chatFeed(filter) ?? _self._ocChatFeed(filter);
+    final agentsShown = _self._agentsShown;
     final shown = {for (final item in snapshot.items) item.identity};
     final saved = [
-      for (final row in _paSavedRows)
-        if (!_paLoadedDirs.contains(row.item.directory) &&
-            !shown.contains(row.item.identity) &&
-            chatFeedMatches(row.item, filter))
-          row.item,
+      if (agentsShown)
+        for (final row in _paSavedRows)
+          if (!_paLoadedDirs.contains(row.item.directory) &&
+              !shown.contains(row.item.identity) &&
+              chatFeedMatches(row.item, filter))
+            row.item,
     ];
-    final items = saved.isEmpty
+    final live = agentsShown
+        ? snapshot.items
+        : [
+            for (final item in snapshot.items)
+              if (!(item.sourceId?.startsWith('paseo:') ?? false)) item,
+          ];
+    final items = saved.isEmpty && identical(live, snapshot.items)
         ? snapshot.items
         : List<ChatFeedItem>.unmodifiable(
-            <ChatFeedItem>[...snapshot.items, ...saved]
-              ..sort(compareChatFeedItems),
+            <ChatFeedItem>[...live, ...saved]..sort(compareChatFeedItems),
           );
     // Sources still being read while other rows already show, said in one
     // quiet line: the agents on their first read this run (their saved rows
-    // stand in), and OpenCode while only agent rows show.
-    final reading = <String>{
-      if (snapshot.loading && items.isNotEmpty) 'OpenCode',
-      if (!_paFeedSettled && phoneAgentsAvailable && _paUsedBefore) ...{
+    // stand in), the other servers while they connect, and this one while
+    // only others' rows show.
+    final agents = <String>{
+      if (agentsShown &&
+          !_paFeedSettled &&
+          phoneAgentsAvailable &&
+          _paUsedBefore) ...{
         for (final row in _paSavedRows)
           if (!_paLoadedDirs.contains(row.item.directory))
             row.item.agentLabel ?? 'Claude Code',
       },
     };
-    if (!_paFeedSettled &&
+    if (agentsShown &&
+        !_paFeedSettled &&
         phoneAgentsAvailable &&
         _paUsedBefore &&
-        !reading.any((name) => name != 'OpenCode')) {
-      reading.add('Claude Code');
+        agents.isEmpty) {
+      agents.add('Claude Code');
     }
-    if (reading.any((name) => name != 'OpenCode') && !_paStillReading()) {
-      reading.removeWhere((name) => name != 'OpenCode');
-    }
+    if (agents.isNotEmpty && !_paStillReading()) agents.clear();
+    final sides = _self._sides.isNotEmpty;
+    final reading = <String>{
+      if (snapshot.loading && items.isNotEmpty)
+        sides ? (_self.profile?.name ?? 'OpenCode') : 'OpenCode',
+      ..._self._sidesLoading,
+      ...agents,
+    };
     return ChatFeedSnapshot(
       items: items,
       stillLoading: List.unmodifiable(reading),
@@ -997,7 +1033,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       acrossProjects: _self._ocAcross,
       loading: snapshot.loading && items.isEmpty,
       // Saved rows stand in while their folder loads; they are no failure.
-      complete: snapshot.complete,
+      // A shown server that can't be reached is.
+      complete: snapshot.complete && !_self._sidesFailed,
     );
   }
 
@@ -1139,7 +1176,10 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   void _paRebuildMergedIfNeeded() {
     final merged = _paMerged;
-    final ids = {for (final d in _paSources.keys) _paseoSourceId(d)};
+    final ids = {
+      for (final d in _paSources.keys) _paseoSourceId(d),
+      for (final side in _self._sideFeedSources) side.id,
+    };
     final have = {
       if (merged != null)
         for (final s in merged.sources)
@@ -1241,6 +1281,12 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       _paOwners[route.sessionID] = backend;
       final api = backend.api;
       if (api is PaseoGateway) api.keepTitle(route.sessionID, row.title);
+    } else if (_self._sideForSource(route.sourceId) case final side?) {
+      // Another server's conversation opens on that server's own
+      // connection; this one stays where it is.
+      _paOwners[route.sessionID] = side;
+      _paOpenCodeOpened.remove(route.sessionID);
+      await side.selectLocationForExistingSession(directory: route.directory);
     } else {
       // The page is found by id alone: this one is OpenCode's again.
       _paOwners.remove(route.sessionID);

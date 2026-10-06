@@ -57,6 +57,7 @@ import '../termux/bridge.dart';
 // A plain value type (no widgets): the person's effect choices.
 import 'effects.dart' show KitEffects;
 import '../builtin/builtin_linux.dart';
+import '../builtin/builtin_server.dart' show startBuiltinServer;
 import '../builtin/builtin_server_recovery.dart';
 import 'isolated_task_launch.dart';
 import 'model_library.dart';
@@ -142,6 +143,7 @@ part 'connection/chat_feed.dart';
 part 'connection/phone_agents.dart';
 part 'connection/phone_agents_cache.dart';
 part 'connection/phone_agents_backend.dart';
+part 'connection/side_connections.dart';
 
 /// App-wide singletons that need async init before the UI can render.
 class AppBootstrap {
@@ -242,7 +244,8 @@ class ConnectionController extends ChangeNotifier
         _ConnectionControllerPromptShelf,
         _ConnectionControllerWorktrees,
         _ConnectionControllerChatFeed,
-        _ConnectionControllerPhoneAgents {
+        _ConnectionControllerPhoneAgents,
+        _ConnectionControllerSideConnections {
   final ProfileStore store;
   final BackgroundLiveController backgroundLive;
 
@@ -321,12 +324,21 @@ class ConnectionController extends ChangeNotifier
   /// [ConnectionController.agentBackend].
   final bool isAgentBackend;
 
+  /// Another saved server's conversations beside the app's main connection
+  /// (Termux while the app is on the in-app Ubuntu): like an agent backend
+  /// it owns no profile-wide service and never becomes the active profile.
+  /// Built by [ConnectionController.sideBackend].
+  final bool isSideBackend;
+
+  /// A conversation backend beside the main connection.
+  bool get _isSecondary => isAgentBackend || isSideBackend;
+
   /// Conversations whose missing record was asked for, per generation
   /// (see _fetchMissingSelection).
   final _selectionFetches = <String>{};
 
   /// Only the main connection runs the services shared by every profile.
-  bool get _ownsProfileServices => !isIsolated && !isAgentBackend;
+  bool get _ownsProfileServices => !isIsolated && !_isSecondary;
 
   /// The saved profile an agent backend belongs to (the phone's), whose
   /// saved prompts it shares; null on the main connection.
@@ -425,10 +437,31 @@ class ConnectionController extends ChangeNotifier
     backgroundLive: backgroundLive,
   );
 
+  /// A connection to another saved server for the one Conversations list,
+  /// built from [main]'s own transports.
+  factory ConnectionController.sideBackend(ConnectionController main) =>
+      ConnectionController(
+        main.store,
+        isSideBackend: true,
+        apiFactory: main._apiFactory,
+        repositoryFactory: main._repositoryFactory,
+        v2GatewayFactory: main._v2GatewayFactory,
+        codexGatewayFactory: main._codexGatewayFactory,
+        paseoGatewayFactory: main._paseoGatewayFactory,
+        eventStreamFactory: main._eventStreamFactory,
+        globalEventStreamFactory: main._globalEventStreamFactory,
+        backgroundLive: main.backgroundLive,
+        diagnostics: main.diagnostics,
+        localWakeLockEnsurer: main._localWakeLockEnsurer,
+        draftAttachmentVault: main._draftAttachmentVault,
+        promptPhotoStore: main._promptPhotoStore,
+      );
+
   ConnectionController(
     this.store, {
     this.isIsolated = false,
     this.isAgentBackend = false,
+    this.isSideBackend = false,
     OpenCodeApiFactory? apiFactory,
     MonitorGatewayFactory? monitorGatewayFactory,
     ProductRepositoryFactory? repositoryFactory,
@@ -533,6 +566,7 @@ class ConnectionController extends ChangeNotifier
   void _profilesSaved() {
     if (_disposed) return;
     _syncProfileServices();
+    _syncSideConnections();
     final next = _profilesSignature();
     if (next == _profilesShown) return;
     _profilesShown = next;
@@ -717,6 +751,7 @@ class ConnectionController extends ChangeNotifier
     _resetConnectionStatusClock();
     _feedDispose();
     _paShutdown();
+    _sideShutdown();
     _savedPrompts?.dispose();
     _savedPrompts = null;
     store.changes.removeListener(_profilesSaved);
@@ -744,8 +779,8 @@ class ConnectionController extends ChangeNotifier
       ManagedServerRecovery.disposeForPreferences(store.prefs);
     }
     backgroundLive.removeListener(_backgroundLiveChanged);
-    // An agent backend borrows the main connection's.
-    if (!isAgentBackend) backgroundLive.dispose();
+    // A secondary backend borrows the main connection's.
+    if (!_isSecondary) backgroundLive.dispose();
     if (_ownsDiagnostics) diagnostics.dispose();
     appLocale.dispose();
     appearance.dispose();

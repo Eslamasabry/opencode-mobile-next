@@ -42415,6 +42415,54 @@ abstract class AppLocalizations {
   /// **'Some conversations couldn\'t load'**
   String get chatsHomeIncomplete;
 
+  /// Conversations list: filter chip when every connection's conversations show
+  ///
+  /// In en, this message translates to:
+  /// **'All connections'**
+  String get chatsSourcesAll;
+
+  /// Conversations list: filter chip when some connections are hidden
+  ///
+  /// In en, this message translates to:
+  /// **'{shown} of {total} connections'**
+  String chatsSourcesSome(int shown, int total);
+
+  /// Title of the sheet that chooses which connections the Conversations list shows
+  ///
+  /// In en, this message translates to:
+  /// **'Show conversations from'**
+  String get chatsSourcesSheetTitle;
+
+  /// Connections sheet: under the connection the app is on
+  ///
+  /// In en, this message translates to:
+  /// **'The app is on this one. New conversations start here.'**
+  String get chatsSourcesMain;
+
+  /// Connections sheet: under a server that runs on this phone (Termux, in-app Ubuntu)
+  ///
+  /// In en, this message translates to:
+  /// **'On this phone'**
+  String get chatsSourcesOnPhone;
+
+  /// Connections sheet: under a saved server that runs elsewhere; off until turned on
+  ///
+  /// In en, this message translates to:
+  /// **'On another computer'**
+  String get chatsSourcesElsewhere;
+
+  /// Connections sheet: under the agents (Claude Code) row
+  ///
+  /// In en, this message translates to:
+  /// **'Agents on this phone'**
+  String get chatsSourcesAgents;
+
+  /// Connections sheet: the word at the end of the connection the app is on, which can't be hidden
+  ///
+  /// In en, this message translates to:
+  /// **'Always shown'**
+  String get chatsSourcesAlways;
+
   /// Conversations list: an agent's conversations are still being read while other rows already show
   ///
   /// In en, this message translates to:

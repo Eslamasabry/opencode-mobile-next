@@ -26996,6 +26996,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatsHomeIncomplete => 'تعذر تحميل بعض المحادثات';
 
   @override
+  String get chatsSourcesAll => 'كل الاتصالات';
+
+  @override
+  String chatsSourcesSome(int shown, int total) {
+    return '$shown من $total اتصالات';
+  }
+
+  @override
+  String get chatsSourcesSheetTitle => 'عرض المحادثات من';
+
+  @override
+  String get chatsSourcesMain =>
+      'التطبيق متصل بهذا. المحادثات الجديدة تبدأ هنا.';
+
+  @override
+  String get chatsSourcesOnPhone => 'على هذا الهاتف';
+
+  @override
+  String get chatsSourcesElsewhere => 'على جهاز كمبيوتر آخر';
+
+  @override
+  String get chatsSourcesAgents => 'الوكلاء على هذا الهاتف';
+
+  @override
+  String get chatsSourcesAlways => 'معروض دائمًا';
+
+  @override
   String chatsHomeStillLoading(String agents) {
     return 'جارٍ تحميل محادثات $agents…';
   }

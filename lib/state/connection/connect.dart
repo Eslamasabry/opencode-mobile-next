@@ -219,6 +219,8 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
       // this phone) is watched from now, and the one just left is read
       // fresh instead of on the next tick.
       if (_ownsProfileServices && !_disposed) profileMonitor.start();
+      // The other connections on this phone join the list beside this one.
+      _syncSideConnections();
     });
   }
 

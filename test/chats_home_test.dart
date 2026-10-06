@@ -330,6 +330,75 @@ void main() {
     expect(find.text(KitBidi.auto('OpenCode')), findsWidgets);
   });
 
+  clocked('rows of two OpenCode servers name their server', (tester) async {
+    final both = _source()
+      ..items = [
+        chat(
+          'u',
+          'Fix the build',
+          at: _now.subtract(const Duration(minutes: 2)),
+          sourceId: 'opencode',
+          sourceLabel: 'This phone',
+        ),
+        chat(
+          't',
+          'Write the docs',
+          at: _now.subtract(const Duration(minutes: 9)),
+          sourceId: 'profile:termux',
+          sourceLabel: 'Termux',
+        ),
+      ];
+    await _pump(tester, FakeChatsHost(both));
+    expect(find.text(KitBidi.auto('OpenCode · Termux')), findsOneWidget);
+    expect(find.text(KitBidi.auto('OpenCode · This phone')), findsOneWidget);
+  });
+
+  clocked('the connections chip lists each source and hides one', (
+    tester,
+  ) async {
+    final sources = FakeListSources(const [
+      ChatListSource(
+        id: 'ubuntu',
+        name: 'This phone',
+        kind: ChatListSourceKind.openCode,
+        shown: true,
+        main: true,
+      ),
+      ChatListSource(
+        id: 'termux',
+        name: 'Termux',
+        kind: ChatListSourceKind.openCode,
+        shown: true,
+      ),
+      ChatListSource(
+        id: 'vps',
+        name: 'VPS',
+        kind: ChatListSourceKind.openCode,
+        shown: false,
+        onThisPhone: false,
+      ),
+    ]);
+    await _pump(tester, FakeChatsHost(_source())..listSources = sources);
+    expect(find.text('2 of 3 connections'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('chats-filter-sources')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('chats-sources-sheet')), findsOneWidget);
+    expect(find.text('Always shown'), findsOneWidget);
+    expect(find.text('On another computer'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('chats-source-termux')));
+    await tester.pumpAndSettle();
+    expect(sources.changes, [('termux', false)]);
+    // The connection the app is on can't be hidden.
+    await tester.tap(find.byKey(const ValueKey('chats-source-ubuntu')));
+    await tester.pumpAndSettle();
+    expect(sources.changes, [('termux', false)]);
+  });
+
+  clocked('with one connection there is no connections chip', (tester) async {
+    await _pump(tester, FakeChatsHost(_source()));
+    expect(find.byKey(const ValueKey('chats-filter-sources')), findsNothing);
+  });
+
   clocked('says which conversations are still loading while rows show', (
     tester,
   ) async {

@@ -116,6 +116,9 @@ class FakeChatsHost implements ChatsHost {
 
   /// Whether this phone has a saved built-in server to switch to.
   bool builtInProfile = false;
+
+  /// The connections the list can show; null: only the one.
+  FakeListSources? listSources;
   int switched = 0;
 
   @override
@@ -256,6 +259,8 @@ ChatFeedItem chat(
   String? parent,
   String agentId = defaultChatAgentId,
   String? agentLabel,
+  String? sourceId,
+  String? sourceLabel,
 }) => ChatFeedItem(
   sessionID: id,
   title: title,
@@ -268,6 +273,8 @@ ChatFeedItem chat(
   parentID: parent,
   agentId: agentId,
   agentLabel: agentLabel,
+  sourceId: sourceId,
+  sourceLabel: sourceLabel,
 );
 
 ProjectSummary project(
@@ -286,3 +293,31 @@ ProjectSummary project(
   needsYouCount: needs,
   kind: kind,
 );
+
+/// A [ChatListSources] the test sets and reads back.
+class FakeListSources implements ChatListSources {
+  FakeListSources(this.sources);
+  List<ChatListSource> sources;
+  final changes = <(String, bool)>[];
+
+  @override
+  List<ChatListSource> get chatListSources => sources;
+
+  @override
+  Future<void> setChatListSourceShown(String id, bool shown) async {
+    changes.add((id, shown));
+    sources = [
+      for (final source in sources)
+        source.id == id
+            ? ChatListSource(
+                id: source.id,
+                name: source.name,
+                kind: source.kind,
+                shown: shown,
+                onThisPhone: source.onThisPhone,
+                main: source.main,
+              )
+            : source,
+    ];
+  }
+}

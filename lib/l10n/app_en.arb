@@ -31872,6 +31872,46 @@
     }
   },
   "chatsHomeIncomplete": "Some conversations couldn't load",
+  "chatsSourcesAll": "All connections",
+  "@chatsSourcesAll": {
+    "description": "Conversations list: filter chip when every connection's conversations show"
+  },
+  "chatsSourcesSome": "{shown} of {total} connections",
+  "@chatsSourcesSome": {
+    "description": "Conversations list: filter chip when some connections are hidden",
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsSourcesSheetTitle": "Show conversations from",
+  "@chatsSourcesSheetTitle": {
+    "description": "Title of the sheet that chooses which connections the Conversations list shows"
+  },
+  "chatsSourcesMain": "The app is on this one. New conversations start here.",
+  "@chatsSourcesMain": {
+    "description": "Connections sheet: under the connection the app is on"
+  },
+  "chatsSourcesOnPhone": "On this phone",
+  "@chatsSourcesOnPhone": {
+    "description": "Connections sheet: under a server that runs on this phone (Termux, in-app Ubuntu)"
+  },
+  "chatsSourcesElsewhere": "On another computer",
+  "@chatsSourcesElsewhere": {
+    "description": "Connections sheet: under a saved server that runs elsewhere; off until turned on"
+  },
+  "chatsSourcesAgents": "Agents on this phone",
+  "@chatsSourcesAgents": {
+    "description": "Connections sheet: under the agents (Claude Code) row"
+  },
+  "chatsSourcesAlways": "Always shown",
+  "@chatsSourcesAlways": {
+    "description": "Connections sheet: the word at the end of the connection the app is on, which can't be hidden"
+  },
   "chatsHomeStillLoading": "Loading {agents} conversations…",
   "@chatsHomeStillLoading": {
     "description": "Conversations list: an agent's conversations are still being read while other rows already show",

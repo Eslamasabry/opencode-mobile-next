@@ -96,6 +96,10 @@ abstract interface class ChatsHost {
   /// True when this phone has a saved built-in server to switch to.
   bool get hasBuiltInProfile;
 
+  /// The connections whose conversations the list shows, and the person's
+  /// choice of which; null when there is only the one.
+  ChatListSources? get listSources;
+
   /// Connects to the built-in server through the Servers screen's own
   /// connect flow.
   Future<void> switchToBuiltIn(BuildContext context);
@@ -116,6 +120,9 @@ class ConnectionChatsHost implements ChatsHost {
 
   @override
   ChatFeedSource get source => chatFeedSourceOf(_conn);
+
+  @override
+  ChatListSources? get listSources => _conn;
 
   @override
   Listenable? get listenable => _conn;

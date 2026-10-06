@@ -260,6 +260,44 @@ abstract interface class AgentChatFeedSource implements ChatFeedSource {
   });
 }
 
+/// What a [ChatListSource] holds.
+enum ChatListSourceKind { openCode, agents }
+
+/// One connection whose conversations the Conversations list can show: a
+/// saved OpenCode server, or the agents on this phone.
+class ChatListSource {
+  const ChatListSource({
+    required this.id,
+    required this.name,
+    required this.kind,
+    required this.shown,
+    this.onThisPhone = true,
+    this.main = false,
+  });
+
+  /// A saved profile's id, or the agents' own id.
+  final String id;
+
+  /// "Termux", "This phone", "Claude Code".
+  final String name;
+  final ChatListSourceKind kind;
+  final bool shown;
+
+  /// Runs on this phone (in-app Ubuntu, Termux, the agents); servers
+  /// elsewhere show only when turned on.
+  final bool onThisPhone;
+
+  /// The connection the app is on (New conversation starts there): always
+  /// shown.
+  final bool main;
+}
+
+/// The list's sources and the person's choice of which to show.
+abstract interface class ChatListSources {
+  List<ChatListSource> get chatListSources;
+  Future<void> setChatListSourceShown(String id, bool shown);
+}
+
 /// Optional updates; owning controllers may listen and notify their UI.
 abstract interface class ChatFeedChangeSource {
   Stream<void> get changes;

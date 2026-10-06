@@ -13,6 +13,7 @@ import '../agents/agent_notices.dart';
 import '../agents/agents_text.dart' show agentIcon;
 import 'chats_host.dart';
 import 'chats_project_sheet.dart';
+import 'chats_sources_sheet.dart' show showChatsSourcesSheet;
 import 'new_chat_screen.dart';
 
 /// Chats home ("chats first, project as a setting"): every conversation on
@@ -176,6 +177,11 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
         ? null
         : _nameOf(projectDirectory, projects);
     // The Needs you count follows the project filter, not the status chips.
+    final listSources = host.listSources;
+    final connections = listSources?.chatListSources ?? const [];
+    final shownConnections = connections
+        .where((connection) => connection.shown)
+        .length;
     final needsCount = source
         .chatFeed(
           ChatFeedFilter(
@@ -226,6 +232,22 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
                 : KitChipTone.active,
             onPressed: () => unawaited(_pickProject(host)),
           ),
+          // Which connections' conversations show, once there is more than
+          // one (Termux beside the in-app Ubuntu, the agents).
+          if (listSources != null && connections.length > 1)
+            KitChip.summary(
+              key: const ValueKey('chats-filter-sources'),
+              label: shownConnections == connections.length
+                  ? l10n.chatsSourcesAll
+                  : l10n.chatsSourcesSome(shownConnections, connections.length),
+              expanded: false,
+              tone: shownConnections == connections.length
+                  ? KitChipTone.neutral
+                  : KitChipTone.active,
+              onPressed: () => unawaited(
+                showChatsSourcesSheet(context, sources: listSources),
+              ),
+            ),
           KitFilterChip(
             key: const ValueKey('chats-filter-needs-you'),
             label: needsCount > 0
@@ -374,8 +396,13 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       return at.year == n.year && at.month == n.month && at.day == n.day;
     }
 
-    // The agent's name shows only when the feed mixes agents.
-    final showAgent = items.map((item) => item.agentId).toSet().length > 1;
+    // The agent's name shows only when the feed mixes agents or servers;
+    // beside another server, OpenCode's rows name theirs.
+    final servers = items.any(
+      (item) => item.sourceId?.startsWith('profile:') ?? false,
+    );
+    final showAgent =
+        servers || items.map((item) => item.agentId).toSet().length > 1;
 
     final needs = [
       for (final item in items)
@@ -402,7 +429,14 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
         final item = group[index];
         return KeyedSubtree(
           key: ValueKey('chats-row-${item.sessionID}'),
-          child: _row(context, host, item, now, showAgent: showAgent),
+          child: _row(
+            context,
+            host,
+            item,
+            now,
+            showAgent: showAgent,
+            servers: servers,
+          ),
         );
       },
     );
@@ -424,6 +458,7 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
     ChatFeedItem item,
     DateTime now, {
     required bool showAgent,
+    bool servers = false,
   }) {
     final l10n = AppLocalizations.of(context);
     final tag = switch (item.status) {
@@ -442,7 +477,12 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       gitLabel: item.isGit ? l10n.phoneScanGit : null,
       // Every row names its agent when the list holds more than one, the
       // OpenCode ones too, so the two kinds read apart at a glance.
-      agent: showAgent ? item.agentLabel ?? 'OpenCode' : null,
+      agent: !showAgent
+          ? null
+          : item.agentLabel ??
+                (servers && item.sourceLabel != null
+                    ? 'OpenCode · ${item.sourceLabel}'
+                    : 'OpenCode'),
       agentIcon: showAgent
           ? agentIcon(item.agentLabel == null ? 'opencode' : item.agentId)
           : null,

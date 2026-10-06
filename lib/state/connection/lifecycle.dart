@@ -46,12 +46,18 @@ mixin _ConnectionControllerLifecycle on ChangeNotifier {
     _self._suspendForLifecycle();
     // The agents' own connection follows the app the same way.
     _self._paBackendLive?.suspendForLifecycle();
+    for (final side in _self._sides.values) {
+      side.suspendForLifecycle();
+    }
   }
 
   /// Recreates one transport for the profile/location retained by
   /// [suspendForLifecycle]. Concurrent resume signals share the same future.
   Future<void> resumeFromLifecycle() {
     final resume = _self._resumeFromLifecycle();
+    for (final side in _self._sides.values) {
+      unawaited(side.resumeFromLifecycle());
+    }
     final backend = _self._paBackendLive;
     if (backend == null) return resume;
     unawaited(backend.resumeFromLifecycle());
