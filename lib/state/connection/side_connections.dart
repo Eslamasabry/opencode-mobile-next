@@ -173,8 +173,66 @@ mixin _ConnectionControllerSideConnections on ChangeNotifier
   void _sideChanged() {
     if (_sideNotify?.isActive ?? false) return;
     _sideNotify = Timer(const Duration(milliseconds: 250), () {
-      if (!_self._disposed) _self._notifyListeners();
+      if (_self._disposed) return;
+      _saveSideRows();
+      _self._notifyListeners();
     });
+  }
+
+  /// Each loaded server's rows, kept for the next start (see
+  /// [_AgentFeedCache.readSide]).
+  void _saveSideRows() {
+    for (final entry in _sides.entries) {
+      final side = entry.value;
+      if (side._disposed || !side.isConnected) continue;
+      final feed = side._ocChatFeed(
+        const ChatFeedFilter(includeSubagents: true),
+      );
+      if (feed.loading || !feed.complete) continue;
+      _sideSaved.remove(entry.key);
+      unawaited(
+        _self._paCache.writeSide(entry.key, [
+          for (final item in feed.items) _asSideRow(entry.key, item),
+        ]),
+      );
+    }
+  }
+
+  ChatFeedItem _asSideRow(String profileId, ChatFeedItem item) => ChatFeedItem(
+    sessionID: item.sessionID,
+    title: item.title,
+    directory: item.directory,
+    projectName: item.projectName,
+    isGit: item.isGit,
+    status: item.status,
+    lastActivity: item.lastActivity,
+    preview: item.preview,
+    parentID: item.parentID,
+    agentId: item.agentId,
+    agentLabel: item.agentLabel,
+    sourceId: _sideSourceId(profileId),
+    sourceLabel: _sides[profileId]?.profile?.name,
+  );
+
+  /// Saved rows read this run, by profile id, until the server answers.
+  final _sideSaved = <String, List<ChatFeedItem>>{};
+
+  /// The saved rows of shown servers that haven't loaded since start.
+  List<ChatFeedItem> get _sideSavedRows => [
+    for (final id in _sides.keys)
+      if (!_sidesReached.contains(id))
+        ...(_sideSaved[id] ??= _self._paCache.readSide(id)),
+  ];
+
+  /// Whether [item] is a saved row of a server still connecting.
+  bool _isSideSavedRow(ChatFeedItem item) {
+    final source = item.sourceId ?? '';
+    if (!source.startsWith('profile:')) return false;
+    final id = source.substring('profile:'.length);
+    return !_sidesReached.contains(id) &&
+        (_sideSaved[id] ?? const []).any(
+          (row) => row.identity == item.identity,
+        );
   }
 
   void _dropSide(String id) {

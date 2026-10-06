@@ -337,6 +337,36 @@ void main() {
     c.dispose();
   });
 
+  testWidgets('after a restart, Termux\'s rows from last time show at once '
+      'and open on Termux while it connects', (tester) async {
+    final first = await _world(tester);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(
+      first.controller.store.prefs.getString('oc.sideFeed.termux'),
+      contains('"t1"'),
+    );
+    final saved = first.controller.store.prefs.getString('oc.sideFeed.termux')!;
+    first.controller.dispose();
+
+    final gate = Completer<Health>();
+    final w = await _world(
+      tester,
+      prefsExtra: {'oc.sideFeed.termux': saved},
+      // Termux hasn't answered yet: nothing of its own is listed live.
+      before: (servers) => servers[_termux]!
+        ..gate = gate
+        ..global = [],
+    );
+    final c = w.controller;
+    final row = c.chatFeed().items.firstWhere((item) => item.sessionID == 't1');
+    expect(row.sourceId, 'profile:termux');
+    await c.openChatFeedItem(row);
+    expect(c.backendForConversation('t1')?.profile?.id, 'termux');
+    gate.complete(Health(healthy: true, version: '1'));
+    await tester.pump(const Duration(milliseconds: 100));
+    c.dispose();
+  });
+
   testWidgets('a source the person hid stays hidden after a restart', (
     tester,
   ) async {

@@ -1003,6 +1003,10 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
               !shown.contains(row.item.identity) &&
               chatFeedMatches(row.item, filter))
             row.item,
+      // Other servers' rows from last time, while they connect.
+      for (final item in _self._sideSavedRows)
+        if (!shown.contains(item.identity) && chatFeedMatches(item, filter))
+          item,
     ];
     final live = agentsShown
         ? snapshot.items
@@ -1242,6 +1246,19 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         sessionID: row.sessionID,
         directory: row.directory,
         agentId: row.agentId,
+      );
+    }
+    // A saved row of a server still connecting opens on that server.
+    if (_self._isSideSavedRow(item)) {
+      final side = _self._sideForSource(item.sourceId)!;
+      _paOwners[item.sessionID] = side;
+      _paOpenCodeOpened.remove(item.sessionID);
+      await side.selectLocationForExistingSession(directory: item.directory);
+      return ChatFeedRoute(
+        sourceId: item.sourceId!,
+        sessionID: item.sessionID,
+        directory: item.directory,
+        agentId: item.agentId,
       );
     }
     final merged = _paMerged;

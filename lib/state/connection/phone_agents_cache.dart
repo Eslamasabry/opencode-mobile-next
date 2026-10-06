@@ -48,6 +48,11 @@ final class _AgentFeedCache {
   Future<void> write(
     String profileID,
     Iterable<({ChatFeedItem item, bool canReopen})> rows,
+  ) => _writeTo(_key(profileID), rows);
+
+  Future<void> _writeTo(
+    String key,
+    Iterable<({ChatFeedItem item, bool canReopen})> rows,
   ) async {
     final encoded = jsonEncode([
       for (final row in rows.take(_max))
@@ -67,21 +72,47 @@ final class _AgentFeedCache {
         },
     ]);
     try {
-      if (_prefs.getString(_key(profileID)) == encoded) return;
-      await _prefs.setString(_key(profileID), encoded);
+      if (_prefs.getString(key) == encoded) return;
+      await _prefs.setString(key, encoded);
     } catch (_) {
       // The next read saves again.
     }
   }
 
-  static ({ChatFeedItem item, bool canReopen})? _decode(Object? entry) {
+  static String _sideKey(String profileID) => 'oc.sideFeed.$profileID';
+
+  /// Another server's rows from the last time the list read them, shown at
+  /// once while it connects (see side_connections.dart).
+  List<ChatFeedItem> readSide(String profileID) {
+    try {
+      final raw = _prefs.getString(_sideKey(profileID));
+      if (raw == null) return const [];
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      return List.unmodifiable([
+        for (final entry in decoded) ?_decode(entry, prefix: 'profile:')?.item,
+      ]);
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> writeSide(String profileID, Iterable<ChatFeedItem> items) =>
+      _writeTo(_sideKey(profileID), [
+        for (final item in items) (item: item, canReopen: true),
+      ]);
+
+  static ({ChatFeedItem item, bool canReopen})? _decode(
+    Object? entry, {
+    String prefix = 'paseo:',
+  }) {
     if (entry is! Map) return null;
     final sourceId = entry['sourceId'];
     final sessionID = entry['sessionID'];
     final directory = entry['directory'];
     final at = entry['at'];
     if (sourceId is! String ||
-        !sourceId.startsWith('paseo:') ||
+        !sourceId.startsWith(prefix) ||
         sessionID is! String ||
         directory is! String ||
         at is! int) {
