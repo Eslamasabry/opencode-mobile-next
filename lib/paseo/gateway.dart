@@ -1021,7 +1021,9 @@ class PaseoGateway
         if (command is Map &&
             command['name'] is String &&
             (command['name'] as String).isNotEmpty &&
-            (command['name'] as String).length <= 128)
+            (command['name'] as String).length <= 128 &&
+            // `__name` commands are the agent's own plumbing, not for people.
+            !(command['name'] as String).replaceFirst('/', '').startsWith('__'))
           CommandInfo(
             name: (command['name'] as String).replaceFirst(RegExp('^/'), ''),
             description: command['description'] is String

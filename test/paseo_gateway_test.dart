@@ -293,6 +293,22 @@ void main() {
     expect((await gateway.health()).version, contains('0.8.0'));
   });
 
+  test('the agent\'s own commands are listed without its plumbing', () async {
+    daemon.handlers['list_commands_request'] = (_) => (
+      'list_commands_response',
+      {
+        'commands': [
+          {'name': 'compact', 'description': 'Compact the conversation'},
+          {'name': '__remote-workflow'},
+          {'name': '/__internal'},
+          {'name': '/review'},
+        ],
+      },
+    );
+    final commands = await gateway.listCommands();
+    expect(commands.map((c) => c.name), ['compact', 'review']);
+  });
+
   test('sessions are this folder\'s unarchived agents', () async {
     final sessions = await gateway.sessions();
     expect(sessions.map((s) => s.id), ['a1']);

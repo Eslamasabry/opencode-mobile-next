@@ -559,6 +559,21 @@ void main() {
       expect(showAll, 1);
     });
 
+    testWidgets('a phone\'s three rows still lead to "Show all"', (
+      tester,
+    ) async {
+      // The host gives fewer rows than it holds; Show all is its way on.
+      await _pump(
+        tester,
+        KitComposerChips.suggestions(
+          suggestions: _suggestions(3),
+          onSelected: (_) {},
+          onShowAll: () {},
+        ),
+      );
+      expect(find.text('Show all'), findsOneWidget);
+    });
+
     testWidgets('no "Show all" without onShowAll; empty renders nothing', (
       tester,
     ) async {

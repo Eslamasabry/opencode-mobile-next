@@ -1136,8 +1136,9 @@ class _SuggestionPanel extends StatelessWidget {
     final tokens = KitTokens.of(context);
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final visible = suggestions.take(KitComposerChips.visibleCount).toList();
-    final showAll =
-        onShowAll != null && suggestions.length > KitComposerChips.visibleCount;
+    // The host passes [onShowAll] only when it holds more than it gave
+    // (a phone shows fewer rows than [KitComposerChips.visibleCount]).
+    final showAll = onShowAll != null;
     final shape = tokens.shapeOf(KitShape.panel);
     return Semantics(
       container: true,
