@@ -38,6 +38,10 @@ final _noChanges = ValueNotifier<int>(0);
 
 class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
   late ChatFeedFilter _filter = widget.initialFilter ?? ChatFeedFilter.all;
+
+  /// Conversations already on screen: one that shows up later (read from
+  /// another connection a moment after) arrives instead of popping in.
+  final _seenRows = <String>{};
   String? _openingID;
   String? _notice;
 
@@ -401,6 +405,15 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       return at.year == n.year && at.month == n.month && at.day == n.day;
     }
 
+    // The first rows painted are simply there; only later ones arrive.
+    if (_seenRows.isEmpty && items.isNotEmpty) {
+      _seenRows.addAll(
+        host.source
+            .chatFeed(const ChatFeedFilter(includeSubagents: true))
+            .items
+            .map((item) => item.identity),
+      );
+    }
     // The agent's name shows only when the feed mixes agents or servers;
     // beside another server, OpenCode's rows name theirs.
     final servers = items.any(
@@ -432,16 +445,17 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
       itemCount: group.length,
       itemBuilder: (context, index) {
         final item = group[index];
+        final row = _row(
+          context,
+          host,
+          item,
+          now,
+          showAgent: showAgent,
+          servers: servers,
+        );
         return KeyedSubtree(
           key: ValueKey('chats-row-${item.sessionID}'),
-          child: _row(
-            context,
-            host,
-            item,
-            now,
-            showAgent: showAgent,
-            servers: servers,
-          ),
+          child: _seenRows.add(item.identity) ? KitAppear(child: row) : row,
         );
       },
     );

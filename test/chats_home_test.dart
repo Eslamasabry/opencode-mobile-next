@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/ui/kit/kit_bidi.dart';
+import 'package:opencode_mobile/ui/kit/motion/kit_appear.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_host.dart'
     show leftoverNoticeLine;
 import 'package:opencode_mobile/ui/widgets/work_status_line.dart'
@@ -393,6 +394,37 @@ void main() {
     await tester.pumpAndSettle();
     expect(sources.changes, [('termux', false)]);
   });
+
+  clocked(
+    'a conversation read later arrives; the first ones are simply there',
+    (tester) async {
+      final source = _source();
+      final host = FakeChatsHost(source);
+      await _pump(tester, host);
+      expect(find.byType(KitAppear), findsNothing);
+      source.items = [
+        ...source.items,
+        chat(
+          'late',
+          'Read from Termux',
+          at: _now.subtract(const Duration(minutes: 1)),
+        ),
+      ];
+      // The list builds again (here by a filter turned on and off).
+      for (var i = 0; i < 2; i++) {
+        await tester.tap(find.byKey(const ValueKey('chats-filter-running')));
+        await tester.pump();
+      }
+      expect(
+        find.ancestor(
+          of: find.text(KitBidi.auto('Read from Termux')),
+          matching: find.byType(KitAppear),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(KitAppear), findsOneWidget);
+    },
+  );
 
   clocked('with one connection there is no connections chip', (tester) async {
     await _pump(tester, FakeChatsHost(_source()));

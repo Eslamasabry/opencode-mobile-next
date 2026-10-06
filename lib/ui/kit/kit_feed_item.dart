@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_iconography.dart';
 import 'kit_bidi.dart';
+import 'kit_motion.dart';
 import 'kit_status_tag.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
@@ -83,8 +84,8 @@ class KitFeedItem extends StatelessWidget {
     // From 1.3x text the title takes two lines and the state goes under it,
     // so neither is cut to a few letters.
     final large = MediaQuery.textScalerOf(context).scale(1) > 1.3;
-    final Widget? end = tag != null
-        ? Flexible(flex: 0, child: tag)
+    final Widget? state = tag != null
+        ? tag
         : time != null
         ? KitText(
             time,
@@ -93,6 +94,24 @@ class KitFeedItem extends StatelessWidget {
             maxLines: 1,
           )
         : null;
+    // A state that changes ("Running" to "Just now") crossfades instead of
+    // jumping; the time ticking on is not a change.
+    final Widget? end = state == null
+        ? null
+        : Flexible(
+            flex: 0,
+            child: AnimatedSwitcher(
+              duration: KitMotion.reduced(context)
+                  ? Duration.zero
+                  : KitMotion.quick,
+              switchInCurve: KitMotion.enter,
+              switchOutCurve: KitMotion.exit,
+              child: KeyedSubtree(
+                key: ValueKey(tag?.label ?? 'time'),
+                child: state,
+              ),
+            ),
+          );
     final words =
         semanticsLabel ??
         [

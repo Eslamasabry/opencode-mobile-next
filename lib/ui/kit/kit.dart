@@ -177,6 +177,7 @@ export 'kit_undo.dart';
 export 'kit_group_note.dart';
 export 'scenes/portal_scene.dart';
 export 'motion/kit_animated_rows.dart';
+export 'motion/kit_appear.dart';
 export 'motion/kit_haptics.dart';
 export 'motion/kit_motion_parts.dart';
 export 'motion/kit_page_transitions.dart';
