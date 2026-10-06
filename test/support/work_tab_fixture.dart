@@ -3,6 +3,8 @@
 // Work tab goldens and status-line tests.
 import 'dart:async';
 
+import 'package:clock/clock.dart';
+
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/state/connection.dart';
@@ -19,7 +21,9 @@ const workCurrent = '$workRoot/FinanceHub3';
 const workOther = '$workRoot/FinanceHub';
 const workThird = '$workRoot/Tradebook';
 
-final workNow = DateTime.now().millisecondsSinceEpoch;
+/// The fixture's "now": the test's clock when first read (a golden test
+/// pins it, so day groups and ages never depend on the hour it runs).
+final workNow = clock.now().millisecondsSinceEpoch;
 const workMinute = 60 * 1000;
 
 Session workSession(

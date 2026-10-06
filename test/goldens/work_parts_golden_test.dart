@@ -8,6 +8,7 @@
 // Regenerate deliberately:
 //   flutter test --update-goldens test/goldens/work_parts_golden_test.dart
 // and look at every changed image before committing it.
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -158,6 +159,15 @@ List<DesktopCommand> _commands() => [
 BuildContext _shellContext(WidgetTester tester) =>
     tester.element(find.byType(HomeScreen));
 
+/// Every scene at one fixed moment (midday), so "Today" and "Earlier" and
+/// every age read the same whatever hour the suite runs.
+final _pinnedNow = DateTime(2026, 6, 15, 12);
+
+void _pinnedTestWidgets(String name, WidgetTesterCallback body) => testWidgets(
+  name,
+  (tester) => withClock(Clock.fixed(_pinnedNow), () => body(tester)),
+);
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(loadCaptureFonts);
@@ -165,7 +175,9 @@ void main() {
   for (final light in [false, true]) {
     final mode = light ? 'light' : 'dark';
 
-    testWidgets('shell · connection lost on Settings · $mode', (tester) async {
+    _pinnedTestWidgets('shell · connection lost on Settings · $mode', (
+      tester,
+    ) async {
       final controller = await workController(status: StreamStatus.disconnected)
         ..lastError = 'Cannot reach http://127.0.0.1:4096: timed out';
       await _golden(
@@ -181,7 +193,7 @@ void main() {
 
     const wide = Size(1280, 800);
 
-    testWidgets('shell · PC sidebar · $mode', (tester) async {
+    _pinnedTestWidgets('shell · PC sidebar · $mode', (tester) async {
       final controller = await workController(sessions: workLoadedSessions());
       await _golden(
         tester,
@@ -193,7 +205,7 @@ void main() {
       );
     });
 
-    testWidgets('shell · Files went away · $mode', (tester) async {
+    _pinnedTestWidgets('shell · Files went away · $mode', (tester) async {
       final controller = await workController(sessions: workLoadedSessions());
       await _golden(
         tester,
@@ -212,7 +224,9 @@ void main() {
       ('', const Size(412, 915)),
       ('_1280x800', wide),
     ]) {
-      testWidgets('shell · command launcher$suffix · $mode', (tester) async {
+      _pinnedTestWidgets('shell · command launcher$suffix · $mode', (
+        tester,
+      ) async {
         final controller = await workController(sessions: workLoadedSessions());
         await _golden(
           tester,
@@ -227,7 +241,9 @@ void main() {
         );
       });
 
-      testWidgets('shell · keyboard shortcuts$suffix · $mode', (tester) async {
+      _pinnedTestWidgets('shell · keyboard shortcuts$suffix · $mode', (
+        tester,
+      ) async {
         final controller = await workController(sessions: workLoadedSessions());
         await _golden(
           tester,
