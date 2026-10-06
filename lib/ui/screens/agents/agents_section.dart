@@ -158,6 +158,20 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
                             ),
                             onPressed: () => unawaited(_fix(row)),
                           ),
+                    // A ready agent opens its sign-in step: who it is
+                    // signed in as, and Sign in again when that has expired.
+                    trailing: row.fixAction == null && row.chatSelectable
+                        ? const KitChevron()
+                        : null,
+                    onTap: row.fixAction == null && row.chatSelectable
+                        ? () => unawaited(
+                            showAgentSheet(
+                              context,
+                              agentId: row.id,
+                              step: AgentSheetStep.signIn,
+                            ),
+                          )
+                        : null,
                   ),
                 if (rows.any(_installed))
                   KitRow(

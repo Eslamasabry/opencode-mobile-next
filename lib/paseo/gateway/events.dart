@@ -12,9 +12,30 @@ class _PaseoLive {
   String? runType;
   int lastSeq = 0;
   String? epoch;
+
+  /// The replies of the turn in progress, announced without a finish time:
+  /// marked finished when the daemon says the turn ended.
+  final open = <String, MessageInfo>{};
 }
 
 extension _PaseoEvents on PaseoGateway {
+  /// The turn ended: its replies are finished, whether or not the timeline
+  /// is read again before the next turn starts (a reply left without a
+  /// finish time reads as cut off).
+  void _finishOpen(_PaseoLive live) {
+    if (live.open.isEmpty) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final info in live.open.values) {
+      _emit('message.updated', {
+        'info': {
+          ...paseoMessageJson(info),
+          'time': {'created': info.time?.created ?? now, 'completed': now},
+        },
+      });
+    }
+    live.open.clear();
+  }
+
   // ---- live events -------------------------------------------------------
 
   void _emit(String type, Map<String, dynamic> properties) {
@@ -140,6 +161,7 @@ extension _PaseoEvents on PaseoGateway {
         live.runID = null;
         _awaitingTurn.remove(id);
         _turnActive.remove(id);
+        _finishOpen(live);
         _emitStatus(id, 'idle');
         // A completion prompts authoritative hydration; idle itself is not
         // reported as a successful run.
@@ -148,6 +170,7 @@ extension _PaseoEvents on PaseoGateway {
         live.runID = null;
         _awaitingTurn.remove(id);
         _turnActive.remove(id);
+        _finishOpen(live);
         _emitStatus(id, 'idle');
         _emit('session.error', {
           'sessionID': id,
@@ -236,6 +259,10 @@ extension _PaseoEvents on PaseoGateway {
         live.announced.remove(live.announced.keys.first);
       }
       _emit('message.updated', {'info': paseoMessageJson(message.info)});
+      if (message.info.role == 'assistant' &&
+          message.info.time?.completed == null) {
+        live.open[messageID] = message.info;
+      }
     }
     for (final part in message.parts) {
       _emit('message.part.updated', {

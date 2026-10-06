@@ -107,6 +107,16 @@ Session paseoSession(Map<String, dynamic> agent) {
         : null,
     model: model is String && model.isNotEmpty ? '$provider/$model' : null,
     cost: cost is num ? cost.toDouble() : null,
+    // The agent's model and mode are its own state (the daemon applies a
+    // change to the running agent): the conversation shows and keeps them.
+    selection: SessionSelection(
+      model: model is String && model.isNotEmpty
+          ? ModelRef(providerID: provider, modelID: model)
+          : null,
+      agent: agent['currentModeId'] is String
+          ? agent['currentModeId'] as String
+          : null,
+    ),
   );
 }
 

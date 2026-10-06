@@ -505,6 +505,38 @@ void main() {
       events.clear();
     });
 
+    test('a finished turn finishes its replies', () async {
+      daemon.push(
+        'agent_stream',
+        stream(
+          'a1',
+          timeline({
+            'type': 'assistant_message',
+            'text': 'Created flow1.txt',
+            'messageId': 'msg_9',
+          }),
+          seq: 30,
+        ),
+      );
+      await pumpEventQueue();
+      final announced = events.lastWhere((e) => e.type == 'message.updated');
+      expect(
+        (announced.properties['info'] as Map)['time']['completed'],
+        isNull,
+      );
+      daemon.push(
+        'agent_stream',
+        stream('a1', {'type': 'turn_completed', 'provider': 'claude'}, seq: 31),
+      );
+      await pumpEventQueue();
+      final finished = events
+          .where((e) => e.type == 'message.updated')
+          .map((e) => e.properties['info'] as Map)
+          .where((info) => info['id'] == 'msg_9')
+          .last;
+      expect(finished['time']['completed'], isNotNull);
+    });
+
     test('assistant text is announced once, then streamed as deltas', () async {
       for (final (i, text) in ['Done', '. The file', ' exists.'].indexed) {
         daemon.push(

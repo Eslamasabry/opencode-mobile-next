@@ -78,6 +78,7 @@ extension _PaseoPrompts on PaseoGateway {
     }
     _drafts.remove(id);
     _draftProviders.remove(id);
+    _draftModels.remove(id);
     if (_creating == 0) {
       final held = _heldEvents.toList();
       _heldEvents.clear();

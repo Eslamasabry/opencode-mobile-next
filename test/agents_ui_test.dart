@@ -771,6 +771,27 @@ void main() {
       return agents;
     }
 
+    testWidgets('a ready agent opens its sign-in step, with Sign in again', (
+      tester,
+    ) async {
+      final agents = FakePhoneAgentsSource(
+        rows: [agentRowFor('claude', FakeAgentStage.ready)],
+      );
+      agents.signIn['claude'] = const AgentSignInState(
+        phase: AgentSignInPhase.signedIn,
+        method: AgentSignInMethod.browserOAuthHost,
+        inspected: true,
+      );
+      await pumpSection(tester, agents);
+      await tester.tap(find.byKey(const ValueKey('agents-row-claude')));
+      await tester.pumpAndSettle();
+      expect(find.text('Signed in'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('agents-sign-in-again')),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('draws nothing without phone agents', (tester) async {
       await pumpSection(tester, FakePhoneAgentsSource(available: false));
       expect(find.byKey(const ValueKey('agents-section')), findsNothing);

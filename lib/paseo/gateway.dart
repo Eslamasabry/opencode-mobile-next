@@ -30,7 +30,8 @@ class PaseoGateway
         ServerGateway,
         ServerOperationsGateway,
         HostAgentProviderGateway,
-        HostAgentPermissionGateway {
+        HostAgentPermissionGateway,
+        SessionSelectionGateway {
   final PaseoTransport transport;
   String? _directory;
   bool _closed = false;
@@ -39,6 +40,9 @@ class PaseoGateway
   final _statuses = <String, String>{};
   final _drafts = <String>{};
   final _draftProviders = <String, String>{};
+
+  /// The model a draft starts on (its first prompt creates the agent).
+  final _draftModels = <String, ModelRef>{};
   final _liveAgentSessions = <String>{};
   final _uncertain = <String>{};
 
@@ -147,6 +151,7 @@ class PaseoGateway
     _statuses.clear();
     _drafts.clear();
     _draftProviders.clear();
+    _draftModels.clear();
     _liveAgentSessions.clear();
     _uncertain.clear();
     _awaitingTurn.clear();
@@ -289,6 +294,70 @@ class PaseoGateway
     _statuses[session.id] = 'idle';
     _drafts.add(session.id);
     return session;
+  }
+
+  @override
+  Future<Session> createSelectedSession(SessionSelection defaults) async {
+    final draft = await createSession();
+    final model = defaults.model;
+    if (model != null && isPaseoProviderId(model.providerID)) {
+      _draftModels[draft.id] = model;
+      _draftProviders[draft.id] = model.providerID;
+    }
+    final session = draft.copyWith(
+      selection: SessionSelection(model: model, agent: defaults.agent),
+    );
+    _sessions[session.id] = session;
+    return session;
+  }
+
+  /// Changes the model of a running agent (`set_agent_model_request`), or
+  /// of a draft before its first prompt.
+  @override
+  Future<void> setSessionModel(
+    String sessionID,
+    ModelRef model,
+    String variant,
+  ) async {
+    if (_drafts.contains(sessionID)) {
+      _draftModels[sessionID] = model;
+      final draft = _sessions[sessionID];
+      if (draft != null) {
+        _sessions[sessionID] = draft.copyWith(
+          selection: SessionSelection(
+            model: model,
+            agent: draft.selection?.agent,
+          ),
+        );
+      }
+      return;
+    }
+    if (!_agents.containsKey(sessionID)) await _fetchAgent(sessionID);
+    final agent = _agents[sessionID];
+    if (agent == null || model.providerID != agent['provider']) {
+      throw PaseoFailure(PaseoFailureKind.unavailable);
+    }
+    await transport.request('set_agent_model_request', {
+      'agentId': _real(sessionID),
+      'modelId': model.modelID,
+    }, mutation: true);
+    agent['model'] = model.modelID;
+    _remember(agent);
+  }
+
+  /// Changes how a running agent works (its mode: `set_agent_mode_request`).
+  @override
+  Future<void> setSessionAgent(String sessionID, String agentName) async {
+    if (_drafts.contains(sessionID)) return;
+    if (!_agents.containsKey(sessionID)) await _fetchAgent(sessionID);
+    final agent = _agents[sessionID];
+    if (agent == null) throw PaseoFailure(PaseoFailureKind.unavailable);
+    await transport.request('set_agent_mode_request', {
+      'agentId': _real(sessionID),
+      'modeId': agentName,
+    }, mutation: true);
+    agent['currentModeId'] = agentName;
+    _remember(agent);
   }
 
   /// Runtime identity of a scoped snapshot, including a local empty draft.
@@ -462,7 +531,7 @@ class PaseoGateway
           sessionID,
           prompt: prompt,
           messageID: messageID,
-          model: model,
+          model: model ?? _draftModels[sessionID],
           mode: agent,
           variant: variant,
           images: images,
@@ -1027,6 +1096,7 @@ class PaseoGateway
     _statuses.clear();
     _drafts.clear();
     _draftProviders.clear();
+    _draftModels.clear();
     _liveAgentSessions.clear();
     _uncertain.clear();
     _awaitingTurn.clear();

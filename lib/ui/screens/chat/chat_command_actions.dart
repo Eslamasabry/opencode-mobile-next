@@ -452,6 +452,11 @@ extension _ChatCommandActions on _ChatScreenState {
   /// The agent the server would use unprompted — the first primary agent —
   /// so the composer chip only names an agent when it is a real choice.
   String get _defaultAgentName {
+    // One way of working (or none listed, as with an agent on this phone)
+    // is no choice: the chip names no agent.
+    if (_conn.agents.where((agent) => agent.mode != 'subagent').length <= 1) {
+      return _conn.agentForSession(widget.sessionID);
+    }
     for (final agent in _conn.agents) {
       if (agent.mode != 'subagent') return agent.name;
     }
