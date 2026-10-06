@@ -16,7 +16,7 @@
   - team-agent: the read-only "Needs you" panel became the pointing KitNeedsYou row that opens the Gate sheet, where it can be answered.
   - gate-sheet: the Gas City term row (`Decision · interaction req-…`) and the raw error text moved under Details ("ids under Details"); the kind and age became the sheet header's one kicker line.
   - gate-sheet: work chips became rows that open the Work sheet; "Restart or reassign" became "Open fox" (the agent page no longer reassigns).
-  - team-intro: "Set it up" / "Turn on" renamed to name what they act on ("Set up AI Team on this phone", "Set up AI Team on pop-os", "Turn on AI Team on pop-os").
+  - team-intro: "Set it up" / "Turn on" renamed to name what they act on ("Set up AI Team on this phone", "Set up AI Team on dev-pc", "Turn on AI Team on dev-pc").
 - Map items (EVID-11):
   - team-agent: actionsMissing "undo pause/stop as a snackbar" → Pause: done (`test/revamp/screen_team_1_test.dart` "Pause fox is undone in place"); Stop stays confirmed (DATA-11: confirm or undo, not both). statesMissing "crashed/restarting automatically" → crashed: done (notice "fox stopped unexpectedly" + "Start fox again", golden not captured); "restarting automatically" → no owner (the host reports no auto-restart state). "context recycling in progress (only 'Recycling soon')" → "Recycling soon" now explains what happens; an in-progress state → no owner (not reported). infoMissing "model in plain words above Details" → done (`team_agent_*` goldens, "gpt-x from openai"); "this agent's own cost" → no owner (the host reports team-wide usage only).
   - team-agent-details-sheet: merge-into:team-agent → done (sheet deleted; `screen_team_1_test.dart` "Reassign work is gone" also asserts the menu item is gone).

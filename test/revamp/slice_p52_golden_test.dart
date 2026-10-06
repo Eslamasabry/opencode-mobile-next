@@ -56,7 +56,7 @@ class _Gateway extends FixtureOrchestrationGateway {
          hostMode: phone
              ? OrchestrationHostMode.phone
              : OrchestrationHostMode.computer,
-         url: phone ? 'http://127.0.0.1:8472' : 'http://pop-os:7000',
+         url: phone ? 'http://127.0.0.1:8472' : 'http://dev-pc:7000',
        );
 
   final List<OrchestrationAgent> agentList;
@@ -132,7 +132,7 @@ Future<OrchestrationController> _team(
     provider: builtin
         ? OrchestrationProvider.gascity
         : OrchestrationProvider.fixture,
-    url: builtin ? 'http://127.0.0.1:8472' : 'http://pop-os:7000',
+    url: builtin ? 'http://127.0.0.1:8472' : 'http://dev-pc:7000',
     city: 'bright-lights',
     hostMode: builtin
         ? OrchestrationHostMode.phone

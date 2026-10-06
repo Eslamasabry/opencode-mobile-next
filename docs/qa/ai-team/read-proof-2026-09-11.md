@@ -8,7 +8,7 @@ loopback on the PC and the tailnet address the phone uses.
 
 ```
 dart run tool/qa/gascity_read_proof.dart --url http://127.0.0.1:8372
-dart run tool/qa/gascity_read_proof.dart --url http://100.126.15.6:8372
+dart run tool/qa/gascity_read_proof.dart --url http://100.101.102.103:8372
 ```
 
 Host: Gas City 1.4.1 (build 58ef17e3bd68), city `bright-lights`, rig `ocproof`
@@ -34,7 +34,7 @@ what keeps the event log moving while no run is active.
 
 ## 2. Results
 
-| | `http://127.0.0.1:8372` | `http://100.126.15.6:8372` |
+| | `http://127.0.0.1:8372` | `http://100.101.102.103:8372` |
 |---|---|---|
 | Result | **PASS** | **PASS** |
 | Started (UTC) | 2026-09-11T02:16:16Z | 2026-09-11T02:16:43Z |
@@ -240,7 +240,7 @@ Tailnet:
 
 ```json
 {
- "url": "http://100.126.15.6:8372",
+ "url": "http://100.101.102.103:8372",
  "city": "bright-lights",
  "startedAt": "2026-09-11T02:16:43.722855Z",
  "probe": "Gas City 1.4.1 city bright-lights (read-only)",

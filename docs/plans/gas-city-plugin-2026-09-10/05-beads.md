@@ -313,7 +313,7 @@ upkeep runs (`mol-*-patrol`, orders, nudges), name a batch by its work
 item's title instead of `sling-<id>`, give a batch an honest state
 ("Waiting for an agent" rather than "Planning"), count and draw only live
 agents (empty pool slots and suspended helpers are not agents), and name the
-host (pop-os / 100.126.15.6) in the chip instead of the OpenCode server.
+host (dev-pc / 100.101.102.103) in the chip instead of the OpenCode server.
 
 ### TEAM-116: Dispatch cycle — show the steps moving
 Owner request 2026-09-11: "logically intercept the steps and render them in

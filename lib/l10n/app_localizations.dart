@@ -21096,7 +21096,7 @@ abstract class AppLocalizations {
   /// **'On this phone'**
   String get teamUiHostPhrasePhone;
 
-  /// AI Team host phrase when the team runs on a computer with a name, e.g. "On pop-os"
+  /// AI Team host phrase when the team runs on a computer with a name, e.g. "On dev-pc"
   ///
   /// In en, this message translates to:
   /// **'On {name}'**
@@ -22086,7 +22086,7 @@ abstract class AppLocalizations {
   /// **'Team task'**
   String get teamChatUntitled;
 
-  /// Team conversation, under the title: where the team runs (On this phone, On pop-os)
+  /// Team conversation, under the title: where the team runs (On this phone, On dev-pc)
   ///
   /// In en, this message translates to:
   /// **'AI Team · {host}'**
@@ -32716,7 +32716,7 @@ abstract class AppLocalizations {
   /// **'The app keeps trying. Check that your computer is on and online.'**
   String get teamUiStateNotAnsweringComputer;
 
-  /// AI Team screens: under 'The team isn’t answering'. {computer} is the computer's name, e.g. pop-os.
+  /// AI Team screens: under 'The team isn’t answering'. {computer} is the computer's name, e.g. dev-pc.
   ///
   /// In en, this message translates to:
   /// **'The app keeps trying. Check that {computer} is on and online.'**

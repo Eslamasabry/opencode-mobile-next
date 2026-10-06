@@ -2,7 +2,7 @@
 // through the same classes the app uses (`GasCityProbe` → `GasCityGateway`
 // with `front: true` → `GasCityControl`) and nothing else on the write path.
 //
-//   dart run tool/qa/gascity_write_proof.dart --url http://100.126.15.6:8373
+//   dart run tool/qa/gascity_write_proof.dart --url http://100.101.102.103:8373
 //       [--city bright-lights] [--supervisor http://127.0.0.1:8372]
 //       [--rig ocproof] [--pool ocproof/gastown.polecat] [--wait 360]
 //       [--json report.json]
@@ -51,7 +51,7 @@ import 'package:opencode_mobile/orchestration/adapters/gascity/gascity_probe.dar
 import 'package:opencode_mobile/orchestration/client/http.dart';
 
 Future<void> main(List<String> args) async {
-  var url = 'http://100.126.15.6:8373';
+  var url = 'http://100.101.102.103:8373';
   var supervisor = 'http://127.0.0.1:8372';
   var city = 'bright-lights';
   var rig = 'ocproof';

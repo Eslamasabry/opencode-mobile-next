@@ -288,7 +288,7 @@ Future<OrchestrationController> teamSceneController(
         )
       : OrchestrationConfig(
           provider: OrchestrationProvider.fixture,
-          url: 'http://pop-os:7000',
+          url: 'http://dev-pc:7000',
           city: 'bright-lights',
           enabledAt: DateTime.utc(2026, 9, 10),
         );
@@ -312,7 +312,7 @@ Future<OrchestrationController> teamSceneController(
     ),
     probe: switch (scene) {
       TeamScene.failed => (_) async => const ProbeUnreachable(
-        error: 'Connection refused (http://pop-os:7000)',
+        error: 'Connection refused (http://dev-pc:7000)',
       ),
       TeamScene.connecting => (_) => Completer<ProbeVerdict>().future,
       TeamScene.starting => (_) async => const ProbeCityNotRunning(

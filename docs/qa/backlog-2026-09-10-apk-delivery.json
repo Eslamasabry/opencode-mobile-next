@@ -1,7 +1,7 @@
 {
   "created_at": "2026-09-10T01:40:30.083066+00:00",
   "revision_before_docs": "4fc6cba18b14976abfdfad08f3c83a29e242b7a2",
-  "download_url": "http://100.126.15.6:8876/opencode-local-checkpoint-4fc6cba-1.0.40.apk",
+  "download_url": "http://100.101.102.103:8876/opencode-local-checkpoint-4fc6cba-1.0.40.apk",
   "filename": "opencode-local-checkpoint-4fc6cba-1.0.40.apk",
   "sha256": "de26e1798db6c4853565db3c957029b703544abb0b9b42cfe2f66563ac9c3954",
   "bytes": 71863843,

@@ -1,6 +1,6 @@
 # TEAM-002 — Gas City inside the phone's proot rootfs (spike, in progress)
 
-Date: 2026-09-10. Phone `nx721j` (arm64, 15 GB RAM, Android, Termux +
+Date: 2026-09-10. Phone `the owner's phone` (arm64, 15 GB RAM, Android, Termux +
 proot-distro `opencode-ubuntu` = Ubuntu 24.04 arm64), reached over Tailscale
 SSH. Runs the app-managed OpenCode 1.18.29 server in the same rootfs.
 

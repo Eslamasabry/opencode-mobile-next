@@ -899,9 +899,9 @@ void main() {
       tester,
     ) async {
       // The fixture switches every capability on, controls included.
-      final (controller, _) = await boot(url: 'https://pop-os:7000');
+      final (controller, _) = await boot(url: 'https://dev-pc:7000');
       await pumpHome(tester, controller);
-      expect(hostPhrase(tester), 'On pop-os');
+      expect(hostPhrase(tester), 'On dev-pc');
       await openDetails(tester);
       expect(find.text('Decisions and controls'), findsOneWidget);
       expect(
@@ -913,10 +913,10 @@ void main() {
     testWidgets('an address is not a name: "On your computer" (TEAM-115)', (
       tester,
     ) async {
-      final (controller, _) = await boot(url: 'http://100.126.15.6:7000');
+      final (controller, _) = await boot(url: 'http://100.101.102.103:7000');
       await pumpHome(tester, controller);
       expect(hostPhrase(tester), 'On your computer');
-      expect(find.textContaining('100.126.15.6'), findsNothing);
+      expect(find.textContaining('100.101.102.103'), findsNothing);
       expect(find.textContaining('Workstation'), findsNothing);
     });
 

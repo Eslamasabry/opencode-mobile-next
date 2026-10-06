@@ -14053,11 +14053,11 @@
   },
   "teamUiHostPhraseComputerNamed": "On {name}",
   "@teamUiHostPhraseComputerNamed": {
-    "description": "AI Team host phrase when the team runs on a computer with a name, e.g. \"On pop-os\"",
+    "description": "AI Team host phrase when the team runs on a computer with a name, e.g. \"On dev-pc\"",
     "placeholders": {
       "name": {
         "type": "String",
-        "example": "pop-os"
+        "example": "dev-pc"
       }
     }
   },
@@ -14907,7 +14907,7 @@
   },
   "teamChatSubtitle": "AI Team · {host}",
   "@teamChatSubtitle": {
-    "description": "Team conversation, under the title: where the team runs (On this phone, On pop-os)",
+    "description": "Team conversation, under the title: where the team runs (On this phone, On dev-pc)",
     "placeholders": {
       "host": {
         "type": "String"
@@ -24597,7 +24597,7 @@
   },
   "teamUiStateNotAnsweringComputerNamed": "The app keeps trying. Check that {computer} is on and online.",
   "@teamUiStateNotAnsweringComputerNamed": {
-    "description": "AI Team screens: under 'The team isn’t answering'. {computer} is the computer's name, e.g. pop-os.",
+    "description": "AI Team screens: under 'The team isn’t answering'. {computer} is the computer's name, e.g. dev-pc.",
     "placeholders": {
       "computer": {
         "type": "String"

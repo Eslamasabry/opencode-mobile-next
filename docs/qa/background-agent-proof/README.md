@@ -13,7 +13,7 @@ right parent exactly once.
 | Project | `/home/eslam/Storage/Code/oc-bg-proof` (scratch git repo, one `calc.py`) |
 | Model | `zai-coding-plan/glm-5.3-flash` — the only configured provider whose credentials this server accepted (see findings) |
 | Device | Android 14 / API 34 x86_64 emulator `OCMN_UI_Refinement`, app 1.0.39 (40) x86_64 release, `adb reverse tcp:4097` so the app used `http://127.0.0.1:4097` |
-| Not covered | physical ARM64 phone (wireless ADB is off on `nx721j`), Arabic locale on device |
+| Not covered | physical ARM64 phone (wireless ADB is off on `the owner's phone`), Arabic locale on device |
 
 ## Journey and evidence
 

@@ -537,7 +537,7 @@ void main() {
         const ChatFeedFilter(otherFolders: true) == ChatFeedFilter.all,
         isFalse,
       );
-      expect(otherFolderLabel('/home/eslam'), 'Home');
+      expect(otherFolderLabel('/home/user'), 'Home');
       await tester.pump();
       controller.dispose();
     },

@@ -10,7 +10,7 @@ one, or a test you can rerun without one.
 
 | Report | What it proves |
 |---|---|
-| [`spike-pc-2026-09.md`](spike-pc-2026-09.md) | TEAM-001: Gas City 1.4.1 on the dev PC (`pop-os`, Tailscale 100.126.15.6) ran one bead sling → polecat → refinery → merged with OpenCode as the harness. PASS with conditions; the supervisor API shapes, SSE resume and the findings that shaped the plan. |
+| [`spike-pc-2026-09.md`](spike-pc-2026-09.md) | TEAM-001: Gas City 1.4.1 on the dev PC (`dev-pc`, Tailscale 100.101.102.103) ran one bead sling → polecat → refinery → merged with OpenCode as the harness. PASS with conditions; the supervisor API shapes, SSE resume and the findings that shaped the plan. |
 | [`spike-phone-2026-09.md`](spike-phone-2026-09.md) | TEAM-002: Gas City inside the phone's proot rootfs. FAIL with 1.4.1 as shipped (Go runtime segfault under proot, degraded Dolt, no ACP handshake); Sprint C stays copy-only. Crash excerpt in [`phone/supervisor-crash-excerpt.txt`](phone/supervisor-crash-excerpt.txt). |
 
 ## 2. Fixture recordings (what the tests run against)
@@ -63,7 +63,7 @@ fallback. Rerun with:
 
 ```
 dart run tool/qa/gascity_read_proof.dart --url http://127.0.0.1:8372
-dart run tool/qa/gascity_read_proof.dart --url http://100.126.15.6:8372
+dart run tool/qa/gascity_read_proof.dart --url http://100.101.102.103:8372
 ```
 
 ## 4a. Real write proof (TEAM-207)
@@ -86,7 +86,7 @@ controller fixes came out of it (`bead.closed` on the session / convoy bead
 confirms stop / close; a session bead change refreshes agents). Rerun with:
 
 ```
-dart run tool/qa/gascity_write_proof.dart --url http://100.126.15.6:8373 --city bright-lights
+dart run tool/qa/gascity_write_proof.dart --url http://100.101.102.103:8373 --city bright-lights
 ```
 
 ## 4b. Supervision policy (TEAM-207)

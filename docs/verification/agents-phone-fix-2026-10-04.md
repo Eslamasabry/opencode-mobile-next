@@ -50,7 +50,7 @@ pinned `flutter analyze --no-pub` is clean on the final candidate.
 `:app:compileReleaseKotlin` passed using pinned Flutter/Gradle 9.5.0, ARM64 target,
 one Gradle worker and in-process Kotlin compilation; existing compiler/Gradle
 warnings remain. Logs are local under `build/traycer/c6-*`, not committed.
-No fresh native build has been installed on nx721j. The coordinator must rebuild
+No fresh native build has been installed on the owner's phone. The coordinator must rebuild
 with the existing signing certificate; native fixes cannot use a Dart-only patch.
 Retry Claude install → phone check → subscription sign-in without clearing data.
 If Android crashes again, reopen and export Performance/diagnostics (`crash.last`).

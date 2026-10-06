@@ -100,7 +100,7 @@ weeks, like Traycer's epic.
 | **Stuck or looping agent** | After N minutes with no progress, or when the task's token cap is reached: "Frontend seems stuck on 'X' · Nudge / Restart task / Reassign" |
 | **Conflicting edits** | The merge queue stops that item: "Conflicts with 'Theme store' in 2 files · Resolve with an agent / I'll resolve it" |
 | **Person's own commits** | The engine sees commits on the target branch that the team did not make. It rebases task branches onto them, or flags a conflict. It never rewrites the person's commits and never force-pushes |
-| **Server goes offline mid-work** | The server's tasks read "On pop-os · not reachable since 10:02". Tasks not yet started can be **moved** to another server. Running ones can move only if their branch is on a remote both servers reach; otherwise "Wait for pop-os / Start over elsewhere" |
+| **Server goes offline mid-work** | The server's tasks read "On dev-pc · not reachable since 10:02". Tasks not yet started can be **moved** to another server. Running ones can move only if their branch is on a remote both servers reach; otherwise "Wait for dev-pc / Start over elsewhere" |
 | **Phone reboot / app killed** | Tasks on a host go on. Tasks on the phone read "Interrupted · Continue", or resume by themselves if the person allowed it. Nothing claims "Working" when nothing runs |
 | **Android pauses the team** (background time limit, battery saver, heat) | "Paused by Android at 02:10 · resumes when {charging / you open the app}". It resumes where it stopped, and the digest records the gap |
 | **Long waits** | Each wait names what it is waiting for and since when ("Waiting for review · 2 h"). Wait escalations are listed in the digest |
@@ -266,12 +266,12 @@ The kit-only rule applies. Screens only arrange `lib/ui/kit/` parts.
 | **Board / graph** | The existing board (Backlog · Ready · Working · Review · Done), with filters for milestone, repo and server. The toggle shows the dependency graph | the board as in team-board-2026-09-26 | `KitBoardLane`, `KitTaskCard`, `KitWorkGraph` |
 | **Timeline** | Days (newest first), each a `KitTimelineDay` of events with actor and time. Filters: Decisions · Merges · Problems · Everything | empty day hidden; long day folded after 10 | `KitTimelineDay`, `KitSegmented` |
 | **Servers** (cross-server) | One lane per server: reachable or since when, cap and use ("2 of 3 agents"), its tasks. Per task: Move to…; per server: Pause | offline: last-known with its age, "Move tasks not started" | `KitServerLane`, `KitRowMenu` |
-| **Task conversation** (drill-down) | Top bar: task title, "Frontend · on pop-os · team/dark/settings". Transcript: the task (from the plan), folded steps, request cards, the findings card, then the merge-queue entry ("3rd in queue" → receipt). Composer: "Message Frontend…". Its living edge is the one live status | running; waiting (rate limit or dependency, with the time); needs-you; stuck; interrupted (Continue); moved; done | `KitTurn`, `KitWorkLine`, `KitToolRow.agent`, `KitFindingsCard`, `KitComposer.rail` |
+| **Task conversation** (drill-down) | Top bar: task title, "Frontend · on dev-pc · team/dark/settings". Transcript: the task (from the plan), folded steps, request cards, the findings card, then the merge-queue entry ("3rd in queue" → receipt). Composer: "Message Frontend…". Its living edge is the one live status | running; waiting (rate limit or dependency, with the time); needs-you; stuck; interrupted (Continue); moved; done | `KitTurn`, `KitWorkLine`, `KitToolRow.agent`, `KitFindingsCard`, `KitComposer.rail` |
 | **New project sheet** | Goal (multi-line, a kept draft) plus files. Repos (add: repo + server). **Execution mode** (`KitSegmented`: Single lane · Parallel agents), then **Max lanes** (a stepper, when Parallel) with the measured cost line for the chosen host (memory, battery/h, heat, chat slowdown) and "Only while charging". Review level (`KitSegmented`: Milestones and risky points · Every step). **Budget**: per day and total, empty until answered, with a "No limit" choice shown as such. **Start planning** | cost above the threshold: a warning line in attention tone, never a disabled button; no budget answer yet: Start says "Set a budget or choose No limit" | `showKitSheet`, `KitField`, `KitPickerRow`, `KitSegmented` |
 | **Quick task sheet** | A task with no project: Who (role), Where (server), Plan first · Just do it. It becomes a one-task project in the list | as above | same |
-| **Roles / Agents** | Roles by urgency (working first, "Working on 'X' · on pop-os · 4 min"). A role page: instructions, model, fallback model, live tasks, recent tasks | remote host: "The computer's model" (read-only) | `KitRow`, `KitField`, `KitPickerRow` |
+| **Roles / Agents** | Roles by urgency (working first, "Working on 'X' · on dev-pc · 4 min"). A role page: instructions, model, fallback model, live tasks, recent tasks | remote host: "The computer's model" (read-only) | `KitRow`, `KitField`, `KitPickerRow` |
 | **Team settings** | Servers with an optional lane cap each; defaults for new projects (execution mode, max lanes, review level, auto mode severities and rounds); background (only while charging, keep working with the screen off); chat first (always on for shared servers); roles; Details (engine, versions, addresses); Turn off | a capability the engine lacks: the row is absent or explained | `KitRow`, `KitSwitchRow`, `KitDetailsFold` |
-| **Notifications** | "oc_app redesign: {question}" · "Milestone 2 ready to review" · "pop-os not reachable · 3 tasks waiting" · "Budget reached · paused". Silent ongoing: "AI Team: 3 agents working". The lock screen gets a public version without text | one ongoing notification per app; problems collapse per cause | existing channels |
+| **Notifications** | "oc_app redesign: {question}" · "Milestone 2 ready to review" · "dev-pc not reachable · 3 tasks waiting" · "Budget reached · paused". Silent ongoing: "AI Team: 3 agents working". The lock screen gets a public version without text | one ongoing notification per app; problems collapse per cause | existing channels |
 
 **Adaptive layout (kit-v2 §8).**
 
@@ -301,7 +301,7 @@ Keyboard and motion:
  ◐ 2 Team screens     5 of 8 tasks ▰▰▰▱ ›
  ○ 3 Phone proof          waits on 2    ›
  Lanes · Parallel · 3 of 3 busy   Change›
- pop-os   Frontend · Settings list · 12m ›
+ dev-pc   Frontend · Settings list · 12m ›
  phone    Tester · Board checks · 3m    ›
  phone    Docs · Arabic copy · 1m       ›
  phone: ~310 MB · chats ~1.4× slower
@@ -315,12 +315,12 @@ Keyboard and motion:
 │ Plan for milestone 2 · waiting for you │
 │ 3 phases · 8 tasks · 2 repos           │
 │ ── Phase 1 · Data ──────────────────── │
-│ 1 Team store      Backend · pop-os   › │
+│ 1 Team store      Backend · dev-pc   › │
 │   app repo · 3 criteria                │
-│ 2 Sync endpoint   Backend · pop-os   › │
+│ 2 Sync endpoint   Backend · dev-pc   › │
 │   api repo · after 1                   │
 │ ── Phase 2 · Screens ───────────────── │
-│ 3 Overview page   Frontend · pop-os  › │
+│ 3 Overview page   Frontend · dev-pc  › │
 │ 4 Arabic copy     Docs · phone       › │
 │   … 4 more                             │
 │ [        Approve and start        ]    │
@@ -359,7 +359,7 @@ Keyboard and motion:
 │ Since Tue 22:10 · 11 h                 │
 │ ✓ 4 tasks merged · milestone 1 accepted│
 │ ↻ Auto-fixed 3 findings (2 rounds)     │
-│ ⚠ pop-os was offline 02:14–03:40       │
+│ ⚠ dev-pc was offline 02:14–03:40       │
 │ ✎ Backend decided: drafts in SQLite  › │
 │ $3.20 spent · 1 needs you              │
 │   Open timeline              Got it    │

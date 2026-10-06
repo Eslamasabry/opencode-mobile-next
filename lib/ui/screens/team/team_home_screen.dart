@@ -6,7 +6,7 @@
 /// Top to bottom, in one scroll view:
 ///
 /// 1. The top bar ([KitTopBar]): "AI Team" with where the team runs as its
-///    subtitle ("On this phone", "On pop-os", plus "· Paused" when the
+///    subtitle ("On this phone", "On dev-pc", plus "· Paused" when the
 ///    person paused it, "· Cooling down" when the heat guard paused it,
 ///    "· Stopped" when Android stopped it, "· Not answering"). The board is
 ///    its action; Search joins it only when there are more than eight

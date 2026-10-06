@@ -4,7 +4,7 @@ Candidate: `1dfc7482` on `codex/command-receipts`; clean tree when the full gate
 
 ## Checks
 
-Pinned Flutter: `/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`.
+Pinned Flutter: `~/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`.
 
 - `flutter pub get` explicitly run once successfully. All final verification uses `--no-pub`.
 - Changed Dart files formatted with pinned Dart `format --language-version=3.10`.
@@ -30,7 +30,7 @@ Compatibility fixtures explicitly disable command receipts unless they implement
 | 5 | 169 | 1806 | 5 | 0 | 376 |
 | 6 | 170 | 2504 | 3 | 0 | 593 |
 
-Each command was `<flutter> test --no-pub --concurrency=1 --reporter=json <chunk files>`, under one `machine_lock.sh test` slot. Manifest, chunks, candidate revision, completed-file ledger, per-chunk JSON logs and statistics are archived at `/home/eslam/Storage/tmp/claude-tmp/claude-1000/-home-eslam-Storage-Code-oc-app/87a8d964-900c-48f3-a841-cd593d87ac4c/scratchpad/codex/a-evidence/full-serial/`. Exact skipped tests are recorded in `/home/eslam/Storage/tmp/claude-tmp/claude-1000/-home-eslam-Storage-Code-oc-app/87a8d964-900c-48f3-a841-cd593d87ac4c/scratchpad/codex/a-evidence/skipped-tests.json`; no skip was added by this branch. The final focused and analyzer logs are archived alongside them. Local originals remain under `build/command-receipts-full/`.
+Each command was `<flutter> test --no-pub --concurrency=1 --reporter=json <chunk files>`, under one `machine_lock.sh test` slot. Manifest, chunks, candidate revision, completed-file ledger, per-chunk JSON logs and statistics are archived at a local scratch folder (not in the repository). Exact skipped tests are recorded in a local scratch folder (not in the repository); no skip was added by this branch. The final focused and analyzer logs are archived alongside them. Local originals remain under `build/command-receipts-full/`.
 
 ## Product and safety boundary
 

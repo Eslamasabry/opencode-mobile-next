@@ -52,7 +52,7 @@ The AI Team home is now much better than the screen the owner called "very ugly"
 
 - Title the stop confirm with the agent's display name, and say "task" instead of "batch" or "run" in the cancel sheets.
 - Rewrite waiting rows as "Waiting 34 min for a worker", on one line.
-- Replace "Unconfirmed" and "Not accepted" with "Not confirmed yet" and "pop-os refused it · Answer again". Move the receipt from a trailing chip into the supporting line.
+- Replace "Unconfirmed" and "Not accepted" with "Not confirmed yet" and "dev-pc refused it · Answer again". Move the receipt from a trailing chip into the supporting line.
 - Remove the Planner row ("Mayor gastown.mayor") from the start sheet.
 - Hide Merge and Approve once a task is merged. Drop the armed second tap before the merge sheet.
 - Deduplicate the technical-value rows, and drop milliseconds from timestamps.

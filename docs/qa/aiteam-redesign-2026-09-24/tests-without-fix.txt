@@ -98,7 +98,7 @@ Try `flutter pub outdated` for more information.
 The following TestFailure was thrown running a test:
 Expected: empty
   Actual: [
-            'pop-os · Desktop computer · Gas City 1.4.1 · city bright-lights · controls',
+            'dev-pc · Desktop computer · Gas City 1.4.1 · city bright-lights · controls',
             'Batch · convoy · 1 of 5 done',
             'Run · formula mol-upgrade · 2 of 4 done'
           ]

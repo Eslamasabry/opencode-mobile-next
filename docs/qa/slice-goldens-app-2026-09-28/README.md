@@ -63,7 +63,7 @@ A dark-only failure means the light PNG had already been refreshed and reviewed 
 | settings_appearance | 75.50 | 75.12 | INTENDED | grouped cards (R4), inline segmented (KIT-24), glass preview |
 | team_intro_phone | 55.38 | 55.37 | REGRESSION fixed (harness) | Harness never answered the phone pre-flight, so the page stuck on an empty skeleton card with no action; test now passes a deviceProbe. New: "Set up AI Team on this phone", grouped rows (R4), top bar subtitle |
 | team_start_run | 53.27 | 19.70 | INTENDED | Start sheet rebuilt (a7bda280): radios for project, supervision preset from the server policy (P6.1), "Send to the Mayor" |
-| team_intro_computer | 49.49 | 49.49 | INTENDED | "Set up AI Team on pop-os" (actions name their target), grouped rows, top bar subtitle |
+| team_intro_computer | 49.49 | 49.49 | INTENDED | "Set up AI Team on dev-pc" (actions name their target), grouped rows, top bar subtitle |
 | servers_add | 49.00 | 49.00 | INTENDED | Add server as a stepped flow (close-servers) |
 | shell_command_palette_open | 42.47 | — | INTENDED | dark lagged reviewed light (6ae40ca8): ambient + sheet header spacing |
 | setup_customize | 41.21 | 17.54 | INTENDED | required parts locked, Python the only choice; sheet header |

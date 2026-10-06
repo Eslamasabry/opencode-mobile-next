@@ -62,7 +62,7 @@
   "delivery": {
     "created_at": "2026-09-09T15:06:01.721644+00:00",
     "revision": "002ebef3138d7364abe36fad154e192880afe23c",
-    "download_url": "http://100.126.15.6:8876/opencode-local-checkpoint-002ebef.apk",
+    "download_url": "http://100.101.102.103:8876/opencode-local-checkpoint-002ebef.apk",
     "filename": "opencode-local-checkpoint-002ebef.apk",
     "bytes": 70941047,
     "sha256": "b6cde96ecabe3d7e4e2636b16e9fffeae6745a2477046c1dbc265da88025bc35",

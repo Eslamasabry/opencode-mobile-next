@@ -131,7 +131,7 @@ void main() {
         teamHostProbe = (url, {city}) async =>
             const ProbeUnreachable(error: 'no answer');
         final controller = await workController(
-          name: 'pop-os',
+          name: 'dev-pc',
           baseUrl: 'http://100.100.1.2:4096',
         );
         await _golden(

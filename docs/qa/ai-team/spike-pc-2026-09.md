@@ -1,6 +1,6 @@
 # TEAM-001 — Gas City on the dev PC (spike report)
 
-Date: 2026-09-10. Host: Ubuntu PC `pop-os` (Tailscale 100.126.15.6), 8 cores.
+Date: 2026-09-10. Host: Ubuntu PC `dev-pc` (Tailscale 100.101.102.103), 8 cores.
 Verdict: **PASS with conditions.** One bead went sling → polecat → refinery →
 merged on `origin/master` with the Gas Town pack and OpenCode as the harness.
 The conditions are the findings in §4; the plan docs are updated from them.

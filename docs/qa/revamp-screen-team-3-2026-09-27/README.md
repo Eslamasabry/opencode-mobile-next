@@ -23,7 +23,7 @@
 - Map items (EVID-11):
   - team-agents (fix):
     - actionsMissing "wake/start a suspended agent from the list" → done: "Wake <name>" on a paused agent's row (only when `capabilities.controlAgent`), sends `controlAgent(id, resume)` and shows the receipt — `screen_team_3_test.dart` "Wake slit asks the host to resume that agent, then shows the receipt", "no Wake when the host keeps agent controls to itself". Asleep agents (stopped, not suspended) get no Wake: they wake when there is work (automation-first).
-    - statesMissing "freshness ('checked 20 s ago')" → done: top bar subtitle "On pop-os · checked less than a minute ago" (kit age words, rebuilt by `KitSince` ticks) — `screen_team_3_test.dart` "the top bar says when the list was checked".
+    - statesMissing "freshness ('checked 20 s ago')" → done: top bar subtitle "On dev-pc · checked less than a minute ago" (kit age words, rebuilt by `KitSince` ticks) — `screen_team_3_test.dart` "the top bar says when the list was checked".
     - infoMissing "agent name when two share a role" → done: "furiosa · Worker" / "nux · Worker" — "rows name the agent and say its state in words". "which agents are pool vs fixed" → deferred to slice-P3.6 (no pool word in the glossary yet; the agent page shows the pool).
     - rationale "one mark style", "'Asleep' not 'Suspended on the host'" → done: `KitTaskMark` on every row; Asleep / Paused words — same test, goldens `team_agents_*`.
     - rationale "a row opens the worker's conversation (watching)" → deferred to slice-P3.6 (its finish line); the row still opens the agent page.

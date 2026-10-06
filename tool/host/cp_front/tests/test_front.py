@@ -286,7 +286,7 @@ class StartupTests(unittest.TestCase):
                 self.build("--bind", address, "--allow", "alice@example.com")
 
     def test_accepts_tailnet_and_loopback_binds(self) -> None:
-        self.assertTrue(front.is_local_bind("100.126.15.6"))
+        self.assertTrue(front.is_local_bind("100.101.102.103"))
         self.assertTrue(front.is_local_bind("fd7a:115c:a1e0::1"))
         self.assertTrue(front.is_local_bind("127.0.0.1"))
         self.assertFalse(front.is_local_bind("100.128.0.1"))

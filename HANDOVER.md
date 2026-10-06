@@ -12,10 +12,10 @@ all merged with tests (full suite 3590 green). Evidence in
 `docs/qa/ai-team/` (read proof, write proof, spike reports).
 
 - Live on this PC: supervisor `127.0.0.1:8372` (city `bright-lights`,
-  lean profile) and the front `http://100.126.15.6:8373` (allow
-  soma.eas@gmail.com; state in `/home/eslam/Storage/Code/gascity-spike/front-state`).
+  lean profile) and the front `http://100.101.102.103:8373` (allow
+  owner@example.com; state in `/home/eslam/Storage/Code/gascity-spike/front-state`).
   In the app: Settings › Plugins › AI Team › Add manually →
-  `http://100.126.15.6:8373`, city `bright-lights` (the front is found by
+  `http://100.101.102.103:8373`, city `bright-lights` (the front is found by
   discovery too).
 - Next: Sprint C on-device (TEAM-301..303 with the hybrid native layout
   from spike-phone §3f, plus the owner's TEAM-304 Storage and TEAM-305
@@ -42,7 +42,7 @@ tests, plus the two spikes.
 - To try it: run Gas City on the PC per the host guide (city `bright-lights`
   in `/home/eslam/Storage/Code/gascity-spike/city2`, forwarder
   `tool/host/tailnet_proxy.py`), then Settings › Plugins › AI Team › Add
-  manually with `http://100.126.15.6:8372` and city `bright-lights`.
+  manually with `http://100.101.102.103:8372` and city `bright-lights`.
 
 ## Earlier (2026-09-10, evening): backlog sprint + BRD research
 
@@ -142,7 +142,7 @@ still stand.
    is fully ticked; the two spikes TEAM-001/002 may run first.
 
 1. Physical-phone pass for everything marked unverified above (turn on
-   wireless ADB on `nx721j` or install the served APK by hand).
+   wireless ADB on `the owner's phone` or install the served APK by hand).
 2. Control plane Sprint 1 from `docs/research/control-plane-2026-09-10/
    sprint-plan.md` once the owner has answered `open-questions.md`.
 3. Model picker lists some models twice with the same provider label

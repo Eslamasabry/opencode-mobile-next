@@ -21,7 +21,7 @@ NOT proven.
 |---|---|---|
 | R1–R3 | `feat/builtin-linux-spike` @ `bb3d551d` … `324830c3` | x86_64, emulator only |
 | R4 (first video) | `feat/builtin-linux-spike` @ `196c9dc9` | arm64 `opencode-mobile-no-termux.apk`, later replaced |
-| R5 (v2 video) | `feat/phone-setup-v2` @ `89e27507` | arm64 `opencode-mobile-no-termux.apk`, SHA-256 `3f812764…2855ddf` (at `http://100.126.15.6:8765/`, Tailscale only) |
+| R5 (v2 video) | `feat/phone-setup-v2` @ `89e27507` | arm64 `opencode-mobile-no-termux.apk`, SHA-256 `3f812764…2855ddf` (at `http://100.101.102.103:8765/`, Tailscale only) |
 | Branch head at the time of writing | `feat/phone-setup-v2` @ `ed85171f` | not yet rebuilt |
 
 ## Devices

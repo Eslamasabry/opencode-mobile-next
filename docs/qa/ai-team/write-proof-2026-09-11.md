@@ -8,7 +8,7 @@ plain-Dart script (no Flutter widgets) that exits non-zero on any hard
 failure and records, rather than invents, anything it could not confirm.
 
 ```
-dart run tool/qa/gascity_write_proof.dart --url http://100.126.15.6:8373 --city bright-lights
+dart run tool/qa/gascity_write_proof.dart --url http://100.101.102.103:8373 --city bright-lights
 ```
 
 Host: Gas City 1.4.1 (build 58ef17e3bd68), city `bright-lights`, rig
@@ -16,7 +16,7 @@ Host: Gas City 1.4.1 (build 58ef17e3bd68), city `bright-lights`, rig
 `oc-bg-proof.git`, default branch `master`), lean profile (mayor, deacon,
 boot and witness suspended; polecat pool and refinery active). Front:
 `tool/host/cp_front/front.py` **from this bead** (the policy route is new)
-on `http://100.126.15.6:8373`, allowlist `soma.eas@gmail.com`, state dir
+on `http://100.101.102.103:8373`, allowlist `owner@example.com`, state dir
 `/home/eslam/Storage/Code/gascity-spike/front-state`; this PC's tailnet
 address is identified as that login. The front was restarted from the
 TEAM-207 worktree for the proof (the dev copy had no `/front/policy`) and
@@ -58,7 +58,7 @@ skipped). Started 2026-09-11T06:27:58Z, wall clock 166.5 s.
 
 | Step | Front request id | Receipt | Upstream | Effect seen on the stream | Timing |
 |---|---|---|---|---|---|
-| a probe | – | `Gas City 1.4.1 city bright-lights via front (controls)`; front true; login `soma.eas@gmail.com`, allowed true; every `control*` + `mergeReadiness` on | 200 | – | 601 ms |
+| a probe | – | `Gas City 1.4.1 city bright-lights via front (controls)`; front true; login `owner@example.com`, allowed true; every `control*` + `mergeReadiness` on | 200 | – | 601 ms |
 | a′ policy | – | `{rig: ocproof, supervision: balanced, boundaries: [require_approval "Never merge without approval", extra-1 "Keep changes inside calc.py"]}` | 200 | – | 51 ms |
 | b create bead (loopback) | – | `oc-fvp` open | 201 | `bead.created oc-fvp` seq 4732; auto-convoy `bead.created oc-kua` seq 4734 (`sling-oc-fvp`, `tracks` oc-fvp) | 37 ms |
 | b sling | `20bc97762bb2c08c` | accepted, key `mtwkr8t9-sling-1`, replayed false; body `{status: slung, target: ocproof/gastown.polecat, bead: oc-fvp, mode: direct}` | 200 | session bead `bl-kon` created seq 4740 (0.5 s), `session.woke bl-kon` agent `ocproof/gastown.furiosa` seq 4750 (4.6 s) | 75 ms |
@@ -186,7 +186,7 @@ full JSON is what the script prints on stdout.
 
 ```json
 {
- "url": "http://100.126.15.6:8373",
+ "url": "http://100.101.102.103:8373",
  "supervisor": "http://127.0.0.1:8372",
  "city": "bright-lights",
  "rig": "ocproof",
@@ -194,7 +194,7 @@ full JSON is what the script prints on stdout.
  "startedAt": "2026-09-11T06:27:58.941233Z",
  "probe": "Gas City 1.4.1 city bright-lights via front (controls)",
  "front": true,
- "identityLogin": "soma.eas@gmail.com",
+ "identityLogin": "owner@example.com",
  "identityAllowed": true,
  "capabilities": {
   "projects": true,
@@ -224,7 +224,7 @@ full JSON is what the script prints on stdout.
   "provider": "gascity",
   "version": "1.4.1",
   "city": "bright-lights",
-  "url": "http://100.126.15.6:8373"
+  "url": "http://100.101.102.103:8373"
  },
  "policy": {
   "rig": "ocproof",

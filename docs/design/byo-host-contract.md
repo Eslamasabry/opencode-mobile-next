@@ -1,7 +1,7 @@
 # Adopt an Ubuntu machine: backend and frontend contract
 
 Date: **2026-10-02**, revised for owner decisions **1A / 2B / 3A / 4A**.
-Owner: Eslam. Frontend/coordinator: Claude.
+Owner: the maintainer. Frontend/coordinator: Claude.
 Status: backend slice implemented **default OFF**; no UI, published bundle,
 physical-phone/VPS qualification, deployment or enabled product journey.
 Supersedes slice 1 of [BYO VPS contract](byo-vps-contract.md); the provider creation

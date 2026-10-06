@@ -23,7 +23,7 @@
     "severity": "high",
     "principle": "C2 · X4 honest state",
     "what": "Ended state: status \"Session ended · output no longer on the host\", then a disabled Follow switch, then \"Nothing yet\" — as if output might still arrive. There is no way forward.",
-    "fix": "KitStateView inline: \"This session has ended\" / \"Its output is no longer on pop-os.\" Action: \"Open the conversation\" (the chat keeps the history). Hide Follow when nothing can follow."
+    "fix": "KitStateView inline: \"This session has ended\" / \"Its output is no longer on dev-pc.\" Action: \"Open the conversation\" (the chat keeps the history). Hide Follow when nothing can follow."
    },
    {
     "severity": "medium",
@@ -578,7 +578,7 @@
     "severity": "medium",
     "principle": "C2 · X4",
     "what": "Missing state: body says \"Refresh to check again\" but the only button is \"Back\" and refresh is an unlabeled top-bar icon; icon is the cloud-off used for \"can’t reach\".",
-    "fix": "Body \"It may have been closed or removed on pop-os.\" Primary \"Back to the team\", tertiary \"Check again\". Use an empty/archive icon, not cloud-off."
+    "fix": "Body \"It may have been closed or removed on dev-pc.\" Primary \"Back to the team\", tertiary \"Check again\". Use an empty/archive icon, not cloud-off."
    },
    {
     "severity": "medium",
@@ -705,7 +705,7 @@
     "severity": "medium",
     "principle": "U5 · C3",
     "what": "Stop unconfirmed: \"⚠ Stop run · Unconfirmed\" outlined chip and \"Try again\" text button side by side under the conversation link, above the stage strip — a status shown as a button.",
-    "fix": "KitNotice under the status line: \"Stop sent · pop-os hasn’t confirmed it\" with \"Send again\"."
+    "fix": "KitNotice under the status line: \"Stop sent · dev-pc hasn’t confirmed it\" with \"Send again\"."
    },
    {
     "severity": "medium",
@@ -1039,13 +1039,13 @@
     "severity": "medium",
     "principle": "C2 · C6 copy",
     "what": "Error state: title \"Can’t reach the team host\", body \"The team host can’t be reached. AI Team works over your Tailscale network or on this device.\" The body restates the title, \"team host\" is an engine term, and it offers no cause or next step besides Try again.",
-    "fix": "Title: \"Can’t reach pop-os\". Body: \"Check that the computer is awake and on Tailscale.\" Actions: Try again (primary), \"Check the address\" (tertiary, opens the host sheet). Raw error stays under Details."
+    "fix": "Title: \"Can’t reach dev-pc\". Body: \"Check that the computer is awake and on Tailscale.\" Actions: Try again (primary), \"Check the address\" (tertiary, opens the host sheet). Raw error stays under Details."
    },
    {
     "severity": "medium",
     "principle": "C2 consistency",
-    "what": "Two failure states for the same fact read differently: error says \"Can’t reach the team host\" with subtitle \"On pop-os · Not answering\"; not-answering says \"The team host isn’t answering\" with a subtitle that does not mention it, and has no Details row.",
-    "fix": "One state, one set of words: \"pop-os isn’t answering\", subtitle carries \"· Not answering\" in both, both keep Details."
+    "what": "Two failure states for the same fact read differently: error says \"Can’t reach the team host\" with subtitle \"On dev-pc · Not answering\"; not-answering says \"The team host isn’t answering\" with a subtitle that does not mention it, and has no Details row.",
+    "fix": "One state, one set of words: \"dev-pc isn’t answering\", subtitle carries \"· Not answering\" in both, both keep Details."
    },
    {
     "severity": "medium",
@@ -1091,7 +1091,7 @@
    {
     "severity": "high",
     "principle": "U3 · P8 nothing clipped",
-    "what": "Filtered state: the Now line has scrolled under the title and its second line shows cut in half (\"no worker nas starteo\") directly under \"On pop-os\"; the top bar has no surface or scroll-under divider.",
+    "what": "Filtered state: the Now line has scrolled under the title and its second line shows cut in half (\"no worker nas starteo\") directly under \"On dev-pc\"; the top bar has no surface or scroll-under divider.",
     "fix": "Give the top bar a solid surface with the scrolled-under elevation tint (Material 3 scrolledUnderElevation) or pin the Now line with the header so it never half-scrolls under the title."
    },
    {
@@ -1194,7 +1194,7 @@
     "severity": "medium",
     "principle": "C3 plain words",
     "what": "\"Unconfirmed\" is the app's bookkeeping word; the person cannot tell whether their answer arrived or what to do.",
-    "fix": "\"Not confirmed yet\" in the row, and in the sheet: \"Your answer left the phone but pop-os hasn’t confirmed it. Send again\"."
+    "fix": "\"Not confirmed yet\" in the row, and in the sheet: \"Your answer left the phone but dev-pc hasn’t confirmed it. Send again\"."
    },
    {
     "severity": "low",
@@ -1312,7 +1312,7 @@
     "severity": "medium",
     "principle": "X4",
     "what": "Missing: a tiny sheet with an icon and \"This work item is no longer on the host.\" — title with a period, no body, no action.",
-    "fix": "KitStateView inline: \"This step is gone\" / \"It was closed or removed on pop-os.\" Action \"Close\"."
+    "fix": "KitStateView inline: \"This step is gone\" / \"It was closed or removed on dev-pc.\" Action \"Close\"."
    },
    {
     "severity": "medium",
@@ -1441,7 +1441,7 @@
     "severity": "medium",
     "principle": "C5",
     "what": "\"The model provider reached its usage limit\" says what but not what next.",
-    "fix": "Add the way out: \"Wait for the limit to reset or switch the model on pop-os\" with \"How\" tertiary."
+    "fix": "Add the way out: \"Wait for the limit to reset or switch the model on dev-pc\" with \"How\" tertiary."
    },
    {
     "severity": "medium",
@@ -2123,7 +2123,7 @@
     "severity": "medium",
     "principle": "C3 · C5",
     "what": "\"Unconfirmed\" and \"Not accepted\" say neither by whom nor what to do.",
-    "fix": "\"Not confirmed yet\" / \"pop-os refused your answer · Answer again\"."
+    "fix": "\"Not confirmed yet\" / \"dev-pc refused your answer · Answer again\"."
    },
    {
     "severity": "low",

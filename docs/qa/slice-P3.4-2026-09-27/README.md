@@ -61,7 +61,7 @@ Branch `revamp/slice-P3.4`, based on `feat/phone-setup-v2` at `4c81a913`.
 - **Not answering (the wording P1.7 left to this slice).** The title is now
   "The team isn't answering" and the body says what to check:
   - the phone: "The app keeps trying while the team starts on this phone.";
-  - a computer: "The app keeps trying. Check that pop-os is on and online."
+  - a computer: "The app keeps trying. Check that dev-pc is on and online."
 
   This is shared by the team screens and the board through `teamScreenState` /
   `teamNotAnsweringBody`.

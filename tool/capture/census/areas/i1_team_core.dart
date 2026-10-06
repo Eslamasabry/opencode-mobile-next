@@ -292,7 +292,7 @@ final i1TeamCoreArea = CensusArea(
       final (team, _) = await _team(
         kit,
         probe: (_) async => const ProbeUnreachable(
-          error: 'Connection refused (http://pop-os:7000)',
+          error: 'Connection refused (http://dev-pc:7000)',
         ),
       );
       await _home(kit, team);

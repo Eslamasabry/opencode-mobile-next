@@ -664,7 +664,7 @@ Future<(OrchestrationController, CensusTeamGateway)> teamController({
         )
       : OrchestrationConfig(
           provider: OrchestrationProvider.fixture,
-          url: 'http://pop-os:7000',
+          url: 'http://dev-pc:7000',
           city: 'bright-lights',
           enabledAt: DateTime.utc(2026, 9, 10),
         );

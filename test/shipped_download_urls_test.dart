@@ -1,5 +1,5 @@
 // Issue #87: the AI Team manifest shipped in a public release with the
-// owner's Tailscale address (http://100.126.15.6:8876/aiteam/) as its
+// owner's Tailscale address (http://100.101.102.103:8876/aiteam/) as its
 // download server, so the download could never work for anyone else. These
 // checks read every text file under assets/ and fail the build when a URL
 // points at an address only one machine or one private network can reach,
@@ -56,14 +56,14 @@ List<File> _assetTextFiles() =>
 
 void main() {
   test('the private-host check catches the address that shipped in #87', () {
-    expect(privateHostProblem('100.126.15.6'), 'Tailscale/CGNAT');
+    expect(privateHostProblem('100.101.102.103'), 'Tailscale/CGNAT');
     expect(privateHostProblem('127.0.0.1'), 'loopback');
     expect(privateHostProblem('[::1]'), 'loopback');
     expect(privateHostProblem('169.254.1.2'), 'link-local');
     expect(privateHostProblem('192.168.1.20'), isNotNull);
     expect(privateHostProblem('10.0.0.5'), isNotNull);
     expect(privateHostProblem('172.20.0.1'), isNotNull);
-    expect(privateHostProblem('pop-os.tail1234.ts.net'), isNotNull);
+    expect(privateHostProblem('dev-pc.tail1234.ts.net'), isNotNull);
     expect(privateHostProblem('fd7a:115c:a1e0::1'), isNotNull);
     expect(privateHostProblem('github.com'), isNull);
     expect(privateHostProblem('100.128.0.1'), isNull);

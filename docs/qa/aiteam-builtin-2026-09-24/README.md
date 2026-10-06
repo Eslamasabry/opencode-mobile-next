@@ -86,7 +86,7 @@ follow-up commit above, so this is that commit's first run in the app.
 | Build | `feat/phone-setup-v2` @ `b17c67c7` (merge of this branch, plus the setup poll fix below) |
 | APK | `app-x86_64-release.apk`, SHA-256 `e16b85bbdcaed14a0c500f94cd1e4e4e7d7366e8b9185d58e1b5d2cc4c567552` |
 | Device | emulator-5556, Android 15, x86_64; app uninstalled first; host load 11–15 (the emulator at ~790% CPU) |
-| Video (Tailscale only) | `http://100.126.15.6:8765/aiteam-fresh-install-guide.mp4` (7.5 min, captions, waits at 8× and 40×) and `aiteam-fresh-install-full.mp4` (78 min unedited, 10 fps, from host screenshots about once a second) |
+| Video (Tailscale only) | `http://100.101.102.103:8765/aiteam-fresh-install-guide.mp4` (7.5 min, captions, waits at 8× and 40×) and `aiteam-fresh-install-full.mp4` (78 min unedited, 10 fps, from host screenshots about once a second) |
 
 **The first attempt failed, and it was an app bug.** On `d16ee762` the
 progress screen stayed on "Unpacking Linux base · 29 of 30 MB" for over 20

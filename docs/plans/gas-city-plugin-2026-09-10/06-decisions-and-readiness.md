@@ -30,7 +30,7 @@ the gate needs.
 
 - [x] TEAM-001 report and recordings committed; spec pinned in `contracts/` (2026-09-10, [report](../../qa/ai-team/spike-pc-2026-09.md)); formula-run recording still missing (§F)
 - [x] TEAM-002 report — proot-only layout **FAIL**; **hybrid native layout PASS on the emulator** (Android-built gc/bd/dolt native in Termux, agent in proot: polecat committed and pushed); phone confirmation pending the next awake window. See [spike-phone-2026-09.md](../../qa/ai-team/spike-phone-2026-09.md) §3f
-- [x] Phone reaches the PC supervisor over plain HTTP on the tailnet — read proof 2026-09-11 over `100.126.15.6:8372` (supervisor `allowed_hosts` + `tool/host/tailnet_proxy.py`), counts match, resume clean
+- [x] Phone reaches the PC supervisor over plain HTTP on the tailnet — read proof 2026-09-11 over `100.101.102.103:8372` (supervisor `allowed_hosts` + `tool/host/tailnet_proxy.py`), counts match, resume clean
 - [ ] The three fixture scenarios (`normal`, `blocked`, `failed`) plus `stream-drop` recorded from the real build
 
 ## C. Design sign-off
