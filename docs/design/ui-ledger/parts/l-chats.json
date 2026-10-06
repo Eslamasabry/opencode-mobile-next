@@ -192,6 +192,36 @@
       ]
     },
     {
+      "id": "chats-sources-sheet",
+      "title": "Connections in this list",
+      "kind": "sheet",
+      "file": "lib/ui/screens/chats/chats_sources_sheet.dart",
+      "widget": "showChatsSourcesSheet",
+      "presentedBy": [
+        "showChatsSourcesSheet"
+      ],
+      "line": 14,
+      "purpose": "Which connections' conversations the list shows: one switch per saved OpenCode server and the agents on this phone. The connection the app is on is always shown; servers elsewhere stay off until turned on.",
+      "reachedFrom": [],
+      "gates": [],
+      "elements": [
+        {
+          "id": "chats-sources-sheet-source",
+          "type": "switch",
+          "label": "<server or agents> · New conversations start here | On this phone | On another computer | Agents on this phone",
+          "key": "chats-source-<id>",
+          "file": "lib/ui/screens/chats/chats_sources_sheet.dart",
+          "line": 37,
+          "action": "toggle",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Shows or hides that connection's conversations in the list; a hidden server's connection closes.",
+          "gates": [],
+          "destructive": false
+        }
+      ]
+    },
+    {
       "id": "chats-new-chat",
       "title": "New conversation",
       "kind": "screen",

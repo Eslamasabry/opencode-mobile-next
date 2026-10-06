@@ -5066,7 +5066,7 @@
   "shellServerPlusOthers": "{name} +{count}",
   "chatsSourcesAll": "كل الاتصالات",
   "chatsSourcesSome": "{shown} من {total} اتصالات",
-  "chatsSourcesSheetTitle": "عرض المحادثات من",
+  "chatsSourcesSheetTitle": "الاتصالات في هذه القائمة",
   "chatsSourcesMain": "المحادثات الجديدة تبدأ هنا",
   "chatsSourcesOnPhone": "على هذا الهاتف",
   "chatsSourcesElsewhere": "على جهاز كمبيوتر آخر",

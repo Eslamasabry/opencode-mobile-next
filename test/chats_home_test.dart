@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/ui/kit/kit_bidi.dart';
-import 'package:opencode_mobile/ui/kit/motion/kit_appear.dart';
+import 'package:opencode_mobile/ui/kit/motion/kit_reveal.dart' show KitEntrance;
 import 'package:opencode_mobile/ui/screens/chats/chats_host.dart'
     show leftoverNoticeLine;
 import 'package:opencode_mobile/ui/widgets/work_status_line.dart'
@@ -401,7 +401,7 @@ void main() {
       final source = _source();
       final host = FakeChatsHost(source);
       await _pump(tester, host);
-      expect(find.byType(KitAppear), findsNothing);
+      expect(find.byType(KitEntrance), findsNothing);
       source.items = [
         ...source.items,
         chat(
@@ -418,11 +418,11 @@ void main() {
       expect(
         find.ancestor(
           of: find.text(KitBidi.auto('Read from Termux')),
-          matching: find.byType(KitAppear),
+          matching: find.byType(KitEntrance),
         ),
         findsOneWidget,
       );
-      expect(find.byType(KitAppear), findsOneWidget);
+      expect(find.byType(KitEntrance), findsOneWidget);
     },
   );
 

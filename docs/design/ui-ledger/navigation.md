@@ -1412,6 +1412,7 @@ graph LR
 | `agents-section` | overlay | unreachable | `agents-screen` / (embedded) | agents-section-fix -> `agents-sheet` |
 | `chats-home` | tab | 0 / 2 | `home-shell` / home-shell-tab-chats | chats-home-filter-project -> `chats-project-sheet`<br>chats-home-row -> `chat`<br>chats-home-new -> `chats-new-chat`<br>chats-home-start-in-project -> `chats-new-chat`<br>chats-home-start -> `chats-new-chat`<br>agents-notice-sign-in -> `agents-sheet` |
 | `chats-project-sheet` | sheet | 1 / 3 | `chats-home` / chats-home-filter-project | _none_ |
+| `chats-sources-sheet` | sheet | unreachable | _none_ | _none_ |
 | `chats-new-chat` | screen | 1 / 3 | `chats-home` / chats-home-new<br>`chats-home` / chats-home-start-in-project<br>`chats-home` / chats-home-start | chats-new-send -> `chat` |
 | `global-sessions` | screen | 2 / 3 | `chat`<br>`command-launcher-sheet` / chat-command-sessions | global-sessions-row -> `chat`<br>global-sessions-row-menu-open -> `chat`<br>global-sessions-row-menu-related -> `session-relations`<br>global-sessions-row-menu-handoff -> `continue-on-computer-sheet`<br>global-sessions-row-menu-steal -> `global-sessions-continue-here-sheet`<br>global-sessions-row-context-open -> `chat`<br>global-sessions-row-context-steal -> `global-sessions-continue-here-sheet`<br>(embedded) -> `embedded-context-menu-region`<br>(embedded) -> `embedded-product-states` |
 | `global-sessions-continue-here-sheet` | sheet | 3 / 4 | `global-sessions` / global-sessions-row-menu-steal<br>`global-sessions` / global-sessions-row-context-steal | _none_ |

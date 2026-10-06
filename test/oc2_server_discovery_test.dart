@@ -231,9 +231,7 @@ void main() {
       // The phone's own server is the one "Termux" row; a remote one
       // keeps its saved name.
       await tester.tap(
-        find.text(
-          mode == 'mixed-remote' ? 'OpenCode one' : 'Termux',
-        ),
+        find.text(mode == 'mixed-remote' ? 'OpenCode one' : 'Termux'),
       );
       await tester.pumpAndSettle();
       expect(conn.connectCalls, mode == 'mixed-local' ? 0 : 1);

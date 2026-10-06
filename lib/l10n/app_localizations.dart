@@ -42436,7 +42436,7 @@ abstract class AppLocalizations {
   /// Title of the sheet that chooses which connections the Conversations list shows
   ///
   /// In en, this message translates to:
-  /// **'Show conversations from'**
+  /// **'Connections in this list'**
   String get chatsSourcesSheetTitle;
 
   /// Connections sheet: under the connection the app is on

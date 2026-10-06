@@ -463,7 +463,7 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
         );
         return KeyedSubtree(
           key: ValueKey('chats-row-${item.sessionID}'),
-          child: _seenRows.add(item.identity) ? KitAppear(child: row) : row,
+          child: _seenRows.add(item.identity) ? KitEntrance(child: row) : row,
         );
       },
     );

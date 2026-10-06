@@ -26886,7 +26886,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get chatsSourcesSheetTitle => 'Show conversations from';
+  String get chatsSourcesSheetTitle => 'Connections in this list';
 
   @override
   String get chatsSourcesMain => 'New conversations start here';

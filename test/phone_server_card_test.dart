@@ -792,7 +792,9 @@ void main() {
           expect(find.text('أوبونتو داخل التطبيق'), findsOneWidget);
           expect(find.text('يعمل'), findsOneWidget);
           expect(
-            Directionality.of(tester.element(find.text('أوبونتو داخل التطبيق'))),
+            Directionality.of(
+              tester.element(find.text('أوبونتو داخل التطبيق')),
+            ),
             TextDirection.rtl,
           );
           // At 2.5x the status moves under the name and starts where the
@@ -809,7 +811,10 @@ void main() {
 
   test('the in-app server is named This phone everywhere', () {
     expect(serverDisplayName(phone(), AppLocalizationsEn()), 'In-app Ubuntu');
-    expect(serverDisplayName(phone(), AppLocalizationsAr()), 'أوبونتو داخل التطبيق');
+    expect(
+      serverDisplayName(phone(), AppLocalizationsAr()),
+      'أوبونتو داخل التطبيق',
+    );
     expect(serverDisplayName(work, AppLocalizationsEn()), 'Work server');
     expect(formatPhoneStorage(1181116006), '1.1 GB');
     expect(formatPhoneStorage(734003200), '700.0 MB');
@@ -825,9 +830,18 @@ void main() {
       final all = [one, two, work];
       final en = AppLocalizationsEn(), ar = AppLocalizationsAr();
 
-      expect(serverDisplayName(one, en, among: all), 'In-app Ubuntu · OpenCode 1');
-      expect(serverDisplayName(two, en, among: all), 'In-app Ubuntu · OpenCode 2');
-      expect(serverDisplayName(two, ar, among: all), 'أوبونتو داخل التطبيق · OpenCode 2');
+      expect(
+        serverDisplayName(one, en, among: all),
+        'In-app Ubuntu · OpenCode 1',
+      );
+      expect(
+        serverDisplayName(two, en, among: all),
+        'In-app Ubuntu · OpenCode 2',
+      );
+      expect(
+        serverDisplayName(two, ar, among: all),
+        'أوبونتو داخل التطبيق · OpenCode 2',
+      );
       // One generation alone keeps the plain name.
       expect(serverDisplayName(two, en, among: [two, work]), 'In-app Ubuntu');
       expect(serverDisplayName(one, en, among: [one]), 'In-app Ubuntu');

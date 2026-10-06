@@ -36,7 +36,24 @@ mixin _ConnectionControllerSideConnections on ChangeNotifier
 
   bool _sideEligible(ServerProfile profile) =>
       profile.backend == ServerBackend.openCode &&
-      _self.isProfileReadable(profile.id);
+      _self.isProfileReadable(profile.id) &&
+      // Another profile for the same server: its conversations are the main
+      // connection's already.
+      !_sameServer(profile.baseUrl);
+
+  /// Whether [baseUrl] is the server the main connection is on.
+  bool _sameServer(String baseUrl) {
+    final main = _self._connectedProfile ?? _self.profile;
+    if (main == null) return false;
+    String key(String url) {
+      final uri = Uri.tryParse(url.trim());
+      if (uri == null) return url.trim().toLowerCase();
+      final port = uri.hasPort ? uri.port : (uri.scheme == 'https' ? 443 : 80);
+      return '${uri.scheme}://${uri.host.toLowerCase()}:$port';
+    }
+
+    return key(main.baseUrl) == key(baseUrl);
+  }
 
   bool _shownInList(ServerProfile profile) =>
       _self.store.prefs.getBool(_shownKey(profile.id)) ?? _onThisPhone(profile);

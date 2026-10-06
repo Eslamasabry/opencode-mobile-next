@@ -27009,7 +27009,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get chatsSourcesSheetTitle => 'عرض المحادثات من';
+  String get chatsSourcesSheetTitle => 'الاتصالات في هذه القائمة';
 
   @override
   String get chatsSourcesMain => 'المحادثات الجديدة تبدأ هنا';

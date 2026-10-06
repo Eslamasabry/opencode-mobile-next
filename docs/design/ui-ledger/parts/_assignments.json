@@ -188,6 +188,7 @@
   "l-chats": [
     "lib/ui/screens/chats/chats_home_screen.dart",
     "lib/ui/screens/chats/chats_project_sheet.dart",
+    "lib/ui/screens/chats/chats_sources_sheet.dart",
     "lib/ui/screens/chats/new_chat_screen.dart",
     "lib/ui/screens/chats/chats_host.dart"
   ],

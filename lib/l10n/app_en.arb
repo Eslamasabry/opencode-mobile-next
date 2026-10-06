@@ -31900,7 +31900,7 @@
       }
     }
   },
-  "chatsSourcesSheetTitle": "Show conversations from",
+  "chatsSourcesSheetTitle": "Connections in this list",
   "@chatsSourcesSheetTitle": {
     "description": "Title of the sheet that chooses which connections the Conversations list shows"
   },

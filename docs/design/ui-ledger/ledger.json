@@ -1,5 +1,5 @@
 {
- "generatedFrom": "1435910961dd9fc79c031a04d4f0aa9b2b7e5336",
+ "generatedFrom": "21336973d7851b07d45ea72018e183f14fbec11b",
  "pages": [
   {
    "id": "system",
@@ -11542,6 +11542,37 @@
      "target": null,
      "targetWidget": null,
      "effect": "Closes this sheet, opens the Open a project sheet; the chosen folder becomes the filter.",
+     "gates": [],
+     "destructive": false
+    }
+   ]
+  },
+  {
+   "id": "chats-sources-sheet",
+   "title": "Connections in this list",
+   "kind": "sheet",
+   "area": "workspace",
+   "file": "lib/ui/screens/chats/chats_sources_sheet.dart",
+   "widget": "showChatsSourcesSheet",
+   "presentedBy": [
+    "showChatsSourcesSheet"
+   ],
+   "line": 14,
+   "purpose": "Which connections' conversations the list shows: one switch per saved OpenCode server and the agents on this phone. The connection the app is on is always shown; servers elsewhere stay off until turned on.",
+   "reachedFrom": [],
+   "gates": [],
+   "elements": [
+    {
+     "id": "chats-sources-sheet-source",
+     "type": "button",
+     "label": "<server or agents> · New conversations start here | On this phone | On another computer | Agents on this phone",
+     "key": "chats-source-<id>",
+     "file": "lib/ui/screens/chats/chats_sources_sheet.dart",
+     "line": 37,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Shows or hides that connection's conversations in the list; a hidden server's connection closes.",
      "gates": [],
      "destructive": false
     }
