@@ -27007,8 +27007,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatsSourcesSheetTitle => 'عرض المحادثات من';
 
   @override
-  String get chatsSourcesMain =>
-      'التطبيق متصل بهذا. المحادثات الجديدة تبدأ هنا.';
+  String get chatsSourcesMain => 'المحادثات الجديدة تبدأ هنا';
 
   @override
   String get chatsSourcesOnPhone => 'على هذا الهاتف';

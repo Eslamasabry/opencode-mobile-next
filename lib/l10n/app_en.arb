@@ -31892,7 +31892,7 @@
   "@chatsSourcesSheetTitle": {
     "description": "Title of the sheet that chooses which connections the Conversations list shows"
   },
-  "chatsSourcesMain": "The app is on this one. New conversations start here.",
+  "chatsSourcesMain": "New conversations start here",
   "@chatsSourcesMain": {
     "description": "Connections sheet: under the connection the app is on"
   },

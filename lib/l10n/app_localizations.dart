@@ -42436,7 +42436,7 @@ abstract class AppLocalizations {
   /// Connections sheet: under the connection the app is on
   ///
   /// In en, this message translates to:
-  /// **'The app is on this one. New conversations start here.'**
+  /// **'New conversations start here'**
   String get chatsSourcesMain;
 
   /// Connections sheet: under a server that runs on this phone (Termux, in-app Ubuntu)

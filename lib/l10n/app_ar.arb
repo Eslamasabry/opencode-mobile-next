@@ -5066,7 +5066,7 @@
   "chatsSourcesAll": "كل الاتصالات",
   "chatsSourcesSome": "{shown} من {total} اتصالات",
   "chatsSourcesSheetTitle": "عرض المحادثات من",
-  "chatsSourcesMain": "التطبيق متصل بهذا. المحادثات الجديدة تبدأ هنا.",
+  "chatsSourcesMain": "المحادثات الجديدة تبدأ هنا",
   "chatsSourcesOnPhone": "على هذا الهاتف",
   "chatsSourcesElsewhere": "على جهاز كمبيوتر آخر",
   "chatsSourcesAgents": "الوكلاء على هذا الهاتف",
