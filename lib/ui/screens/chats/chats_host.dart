@@ -20,6 +20,7 @@ import '../../../state/connection.dart';
 import '../../../state/profiles.dart' show ServerProfile;
 import '../../kit/kit.dart';
 import '../../widgets/external_link.dart' show openAgentSignInPage;
+import '../../widgets/phone_server_card.dart' show serverDisplayName;
 import '../../widgets/pickers.dart' show showModelPicker;
 import '../../widgets/product_states.dart' show productErrorText;
 import '../project_folder_actions.dart';
@@ -100,6 +101,10 @@ abstract interface class ChatsHost {
   /// choice of which; null when there is only the one.
   ChatListSources? get listSources;
 
+  /// A saved server's name as the server switcher says it ("This phone ·
+  /// Termux"), or [fallback] for anything else.
+  String connectionName(BuildContext context, String id, String fallback);
+
   /// Connects to the built-in server through the Servers screen's own
   /// connect flow.
   Future<void> switchToBuiltIn(BuildContext context);
@@ -123,6 +128,20 @@ class ConnectionChatsHost implements ChatsHost {
 
   @override
   ChatListSources? get listSources => _conn;
+
+  @override
+  String connectionName(BuildContext context, String id, String fallback) {
+    for (final profile in _conn.store.profiles) {
+      if (profile.id == id) {
+        return serverDisplayName(
+          profile,
+          AppLocalizations.of(context),
+          among: _conn.store.profiles,
+        );
+      }
+    }
+    return fallback;
+  }
 
   @override
   Listenable? get listenable => _conn;

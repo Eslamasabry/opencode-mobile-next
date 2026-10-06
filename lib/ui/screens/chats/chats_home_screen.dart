@@ -245,7 +245,12 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
                   ? KitChipTone.neutral
                   : KitChipTone.active,
               onPressed: () => unawaited(
-                showChatsSourcesSheet(context, sources: listSources),
+                showChatsSourcesSheet(
+                  context,
+                  sources: listSources,
+                  nameOf: (source) =>
+                      host.connectionName(context, source.id, source.name),
+                ),
               ),
             ),
           KitFilterChip(
@@ -481,7 +486,7 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
           ? null
           : item.agentLabel ??
                 (servers && item.sourceLabel != null
-                    ? 'OpenCode · ${item.sourceLabel}'
+                    ? 'OpenCode · ${_serverOf(context, host, item)}'
                     : 'OpenCode'),
       agentIcon: showAgent
           ? agentIcon(item.agentLabel == null ? 'opencode' : item.agentId)
@@ -502,6 +507,23 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
           : null,
       onTap: () => unawaited(_open(host, item)),
     );
+  }
+
+  /// The server an OpenCode row runs on, named as the switcher names it.
+  static String _serverOf(
+    BuildContext context,
+    ChatsHost host,
+    ChatFeedItem item,
+  ) {
+    final source = item.sourceId ?? '';
+    final id = source.startsWith('profile:')
+        ? source.substring('profile:'.length)
+        : host.listSources?.chatListSources
+                  .where((connection) => connection.main)
+                  .firstOrNull
+                  ?.id ??
+              '';
+    return host.connectionName(context, id, item.sourceLabel ?? 'OpenCode');
   }
 
   static String _nameOf(String directory, List<ProjectSummary> projects) {

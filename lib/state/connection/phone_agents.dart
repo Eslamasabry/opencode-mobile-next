@@ -125,9 +125,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       return null;
     }
     final live = _paBackendLive;
-    return live != null && live.sessionsById.containsKey(sessionID)
-        ? live
-        : null;
+    if (live != null && live.sessionsById.containsKey(sessionID)) return live;
+    // Another server's conversation (its alert was tapped).
+    for (final side in _self._sides.values) {
+      if (!side._disposed && side.sessionsById.containsKey(sessionID)) {
+        return side;
+      }
+    }
+    return null;
   }
 
   AgentCatalog get _paCatalog => AgentCatalog.builtIn;

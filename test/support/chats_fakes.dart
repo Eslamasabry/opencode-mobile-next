@@ -119,6 +119,10 @@ class FakeChatsHost implements ChatsHost {
 
   /// The connections the list can show; null: only the one.
   FakeListSources? listSources;
+
+  @override
+  String connectionName(BuildContext context, String id, String fallback) =>
+      fallback;
   int switched = 0;
 
   @override

@@ -14,6 +14,7 @@ import '../agents/agents_text.dart' show agentIcon;
 Future<void> showChatsSourcesSheet(
   BuildContext context, {
   required ChatListSources sources,
+  required String Function(ChatListSource source) nameOf,
 }) {
   final l10n = AppLocalizations.of(context);
   return showKitSheet<void>(
@@ -35,7 +36,7 @@ Future<void> showChatsSourcesSheet(
             for (final source in sources.chatListSources)
               KitSwitchRow(
                 key: ValueKey('chats-source-${source.id}'),
-                title: KitBidi.auto(source.name),
+                title: KitBidi.auto(nameOf(source)),
                 supporting: where(source),
                 leading: KitRowIcon(
                   source.kind == ChatListSourceKind.agents

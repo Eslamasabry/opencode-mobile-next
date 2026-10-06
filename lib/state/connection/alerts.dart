@@ -162,7 +162,10 @@ extension _ConnectionControllerAlertsImpl on ConnectionController {
     // carry no profile ID and keep routing as before.
     if (value.monitorToken.isEmpty &&
         value.profileID.isNotEmpty &&
-        value.profileID != store.activeId) {
+        value.profileID != store.activeId &&
+        // A conversation on another server in the list opens on its own
+        // connection.
+        !_sides.containsKey(value.profileID)) {
       return;
     }
     _pendingCodingAlertOpen = value;
