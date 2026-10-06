@@ -955,6 +955,34 @@ void main() {
     c.dispose();
   });
 
+  testWidgets('a resumed session is one row, with the title it had', (
+    tester,
+  ) async {
+    final w = await _world(tester);
+    w.state.runtimes = {'claude': _ready('claude')};
+    w.state.agents = [
+      {
+        ..._agent('old', dir, status: 'closed', minute: 10),
+        'title': 'Fix the login page',
+        'persistence': {'provider': 'claude', 'sessionId': 'native-x'},
+      },
+      {
+        ..._agent('new', dir, minute: 40),
+        'title': '',
+        'persistence': {'provider': 'claude', 'sessionId': 'native-x'},
+      },
+    ];
+    final c = w.controller;
+    await c.rememberLastUsedProject(dir);
+    await c.refreshAgentRows();
+    await c.refreshChatFeed();
+    final rows = c.chatFeed().items.where((i) => i.sourceId == 'paseo:$dir');
+    expect(rows.map((i) => i.sessionID), ['new']);
+    expect(rows.single.title, 'Fix the login page');
+    await tester.pump(const Duration(seconds: 3));
+    c.dispose();
+  });
+
   testWidgets('without earlier agent conversations the list never waits', (
     tester,
   ) async {

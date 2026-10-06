@@ -321,6 +321,10 @@ class ConnectionController extends ChangeNotifier
   /// [ConnectionController.agentBackend].
   final bool isAgentBackend;
 
+  /// Conversations whose missing record was asked for, per generation
+  /// (see _fetchMissingSelection).
+  final _selectionFetches = <String>{};
+
   /// Only the main connection runs the services shared by every profile.
   bool get _ownsProfileServices => !isIsolated && !isAgentBackend;
 

@@ -8,6 +8,15 @@ extension _PaseoSessions on PaseoGateway {
     if (realID is String && _appIDs.containsKey(realID)) {
       agent = {...agent, 'id': _appIDs[realID]};
     }
+    // A record the daemon reloaded (after its helper restarted) can come
+    // back without its title: the one already known stays.
+    final title = agent['title'];
+    final known = _agents[agent['id']]?['title'];
+    if ((title is! String || title.trim().isEmpty) &&
+        known is String &&
+        known.trim().isNotEmpty) {
+      agent = {...agent, 'title': known};
+    }
     final session = paseoSession(agent);
     if (session.directory != _directory || agent['archivedAt'] is String) {
       return null;

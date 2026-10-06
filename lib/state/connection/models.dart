@@ -140,13 +140,27 @@ extension _ConnectionControllerModelsImpl on ConnectionController {
   /// The body of [selectionForSession].
   SessionSelection _selectionForSession(String sessionID) =>
       serverOwnsSessionSelection
-      ? sessionsById[sessionID]?.selection ??
-            const SessionSelection(modelKnown: false, agentKnown: false)
+      ? sessionsById[sessionID]?.selection ?? _fetchMissingSelection(sessionID)
       : SessionSelection(
           model: sessionModels[sessionID]?.model ?? selectedModel,
           variant: sessionModels[sessionID]?.variant ?? selectedVariant,
           agent: selectedAgent,
         );
+
+  /// The server keeps this conversation's model and mode, but its record
+  /// isn't here (a reconnect read the list before it): read it once, and
+  /// say "loading" until it arrives.
+  SessionSelection _fetchMissingSelection(String sessionID) {
+    if (sessionID.isNotEmpty &&
+        !_disposed &&
+        isConnected &&
+        _selectionFetches.add('$_generation:$sessionID')) {
+      scheduleMicrotask(() {
+        if (!_disposed) unawaited(_refreshOneSession(sessionID));
+      });
+    }
+    return const SessionSelection(modelKnown: false, agentKnown: false);
+  }
 
   /// The body of [waitForSessionSelection].
   Future<void> _waitForSessionSelection(

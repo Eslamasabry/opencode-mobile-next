@@ -433,6 +433,11 @@ class _ChatScreenState extends State<ChatScreen>
       });
     }
     _load();
+    // A conversation this connection hasn't listed yet (one an agent just
+    // started): its record is read, so its model and mode are known.
+    if (!_conn.isIsolated && _conn.sessionsById[widget.sessionID] == null) {
+      unawaited(_conn.ensureSession(widget.sessionID));
+    }
     // Watching reads the transcript only: nothing to send, run or offer.
     if ((_conn.capabilities.serverCatalog ||
             _conn.capabilities.slashCommands) &&

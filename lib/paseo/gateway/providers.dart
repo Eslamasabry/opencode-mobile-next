@@ -45,6 +45,16 @@ extension _PaseoProviders on PaseoGateway {
     return entries;
   }
 
+  /// The mode a runtime's agents start in, as its snapshot names it.
+  String? _defaultModeFor(String provider) {
+    for (final entry in _providerEntries ?? const <Map<String, dynamic>>[]) {
+      if (entry['provider'] != provider) continue;
+      final mode = entry['defaultModeId'];
+      return mode is String && mode.isNotEmpty ? mode : null;
+    }
+    return null;
+  }
+
   List<String> _modesFor(String provider) {
     for (final entry in _providerEntries ?? const <Map<String, dynamic>>[]) {
       if (entry['provider'] != provider) continue;

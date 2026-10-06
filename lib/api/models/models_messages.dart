@@ -91,9 +91,20 @@ enum MessageErrorKind {
   /// kind from the text when the name gave nothing better.
   static MessageErrorKind refineFromText(MessageErrorKind kind, String? text) {
     if (kind != unknown || text == null) return kind;
+    // A sign-in the agent can no longer use, in its own words ("Not logged
+    // in · Please run /login", "OAuth session expired"): the person signs in
+    // again. Not the transient "another process is refreshing it".
+    if (_signInGone.hasMatch(text)) return providerAuth;
     final head = text.trimLeft().split(RegExp(r'[:\s]')).first;
     return fromName(head) ?? unknown;
   }
+
+  static final _signInGone = RegExp(
+    r'not logged in|please run /login|failed to authenticate|'
+    r'oauth (session|token) (has )?expired|could not be refreshed|'
+    r'invalid api key|authentication_error',
+    caseSensitive: false,
+  );
 }
 
 /// Readable text for a session failure whose server message is empty,

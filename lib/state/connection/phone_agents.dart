@@ -1089,6 +1089,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   }
 
   Timer? _paBackendWatch;
+  Timer? _paListRefresh;
   bool _paRecovering = false;
   int _paOfflineTicks = 0;
   DateTime? _paKeptUpAt;

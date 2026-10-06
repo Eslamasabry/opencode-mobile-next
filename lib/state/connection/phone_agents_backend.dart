@@ -39,6 +39,7 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
       _paBackend = backend;
       _paBackendHost = host;
       _paWatchBackend();
+      backend.addListener(_paBackendChanged);
     }
     final id = '${profile.id}$agentBackendProfileSuffix';
     await _carryApprovalChoices(_self.store.prefs, from: profile.id, to: id);
@@ -156,9 +157,23 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
     }());
   }
 
+  /// Something changed in an open agent conversation (a message, a finished
+  /// turn, a reconnect): the conversations list reads the agents again, at
+  /// most every two seconds, so its rows keep up with the conversation.
+  void _paBackendChanged() {
+    if (_paListRefresh?.isActive ?? false) return;
+    _paListRefresh = Timer(const Duration(seconds: 2), () {
+      if (_self._disposed) return;
+      unawaited(_paMerged?.refreshChatFeed() ?? Future<void>.value());
+    });
+  }
+
   void _paDisposeBackend() {
     _paBackendWatch?.cancel();
     _paBackendWatch = null;
+    _paListRefresh?.cancel();
+    _paListRefresh = null;
+    _paBackend?.removeListener(_paBackendChanged);
     final backend = _paBackend;
     _paBackend = null;
     _paBackendHost = null;

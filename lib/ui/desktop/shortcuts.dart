@@ -607,7 +607,17 @@ class _CommandPaletteState extends State<_CommandPalette> {
             children: [
               for (final (index, command) in matches.indexed)
                 KitRow(
-                  key: ValueKey('command-${command.label}'),
+                  // Labels repeat (a tab and a setting both called "Files"):
+                  // a repeated label is numbered, so filtering never leaves
+                  // a stale row behind under a shared key.
+                  key: ValueKey(
+                    matches
+                                .where((other) => other.label == command.label)
+                                .length >
+                            1
+                        ? 'command-${command.label}-$index'
+                        : 'command-${command.label}',
+                  ),
                   leading: KitRow.icon(context, command.icon),
                   title: command.label,
                   supporting: command.hint == null

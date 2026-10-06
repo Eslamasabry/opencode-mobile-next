@@ -159,6 +159,28 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
           return;
         }
       }
+      // A resume leaves the old record of the same Claude session behind:
+      // one row per session, the latest record, with the title it had.
+      final bySession = <String, Session>{};
+      for (final session in sessions.values.toList()) {
+        final key = gateway.sessionKey(session.id);
+        if (key == null) continue;
+        final other = bySession[key];
+        if (other == null) {
+          bySession[key] = session;
+          continue;
+        }
+        final newer = (session.time?.updated ?? 0) >= (other.time?.updated ?? 0)
+            ? session
+            : other;
+        final older = identical(newer, session) ? other : session;
+        sessions.remove(older.id);
+        final titled = gateway.hasOwnTitle(newer.id)
+            ? newer
+            : newer.copyWith(title: older.title);
+        sessions[newer.id] = titled;
+        bySession[key] = titled;
+      }
       final statuses = await gateway.sessionStatuses();
       final permissions = await gateway.pendingPermissions();
       if (!_current(revision)) return;

@@ -175,6 +175,24 @@ class PaseoGateway
     _ => false,
   };
 
+  /// The runtime's own session behind [appID] (Claude's session id): two
+  /// records with the same one are one conversation (a resume leaves the
+  /// old record behind). Null when the record carries none.
+  String? sessionKey(String appID) {
+    final handle = _agents[appID]?['persistence'];
+    if (handle is! Map) return null;
+    final id = handle['sessionId'];
+    final provider = handle['provider'];
+    return id is String && id.isNotEmpty ? '$provider:$id' : null;
+  }
+
+  /// Whether [appID]'s record has a title of its own (not the
+  /// "Claude Code conversation" stand-in).
+  bool hasOwnTitle(String appID) {
+    final title = _agents[appID]?['title'];
+    return title is String && title.trim().isNotEmpty;
+  }
+
   /// True when [appID]'s record carries its runtime's own session handle,
   /// so [resumeHostAgentChat] can try to reopen it.
   bool canResumeAgent(String appID) {
@@ -816,7 +834,13 @@ class PaseoGateway
       timeout: const Duration(seconds: 90),
     );
     _checkLocation(scope, epoch);
-    final resumed = paseoObject(result['agent']);
+    final resumed = {...paseoObject(result['agent'])};
+    // A resumed record may come back without the title it had.
+    final title = resumed['title'];
+    if ((title is! String || title.trim().isEmpty) &&
+        agent['title'] is String) {
+      resumed['title'] = agent['title'];
+    }
     final realID = paseoString(resumed['id'], max: 256);
     // The resumed agent may be a new record: the row the person tapped
     // opens it.
@@ -921,6 +945,14 @@ class PaseoGateway
     // default runtime's, and a mode another runtime lacks is simply ignored.
     final names = _modesFor(paseoDefaultProvider).toList();
     if (names.isEmpty) names.add('default');
+    // The runtime's own default mode first: the composer names a mode only
+    // when the conversation uses another one.
+    final preferred =
+        _defaultModeFor(paseoDefaultProvider) ??
+        defaultProviderModes[paseoDefaultProvider];
+    if (preferred != null && names.remove(preferred)) {
+      names.insert(0, preferred);
+    }
     return [for (final name in names) AgentInfo(name: name, mode: 'primary')];
   }
 

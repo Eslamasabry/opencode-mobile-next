@@ -10,7 +10,7 @@ import '../../widgets/product_states.dart' show productErrorText;
 
 /// The model chip on New conversation while an agent on this phone (Claude
 /// Code, …) is chosen: its own models, not the OpenCode server's.
-class AgentModelChip extends StatelessWidget {
+class AgentModelChip extends StatefulWidget {
   const AgentModelChip({
     super.key,
     required this.agents,
@@ -21,9 +21,34 @@ class AgentModelChip extends StatelessWidget {
   final String agentId;
 
   @override
+  State<AgentModelChip> createState() => _AgentModelChipState();
+}
+
+class _AgentModelChipState extends State<AgentModelChip> {
+  String? _named;
+
+  /// A chosen model is named ("Sonnet 5"), not shown by its id: the names
+  /// are read from the agent once.
+  void _learnNames(String agentId) {
+    if (_named == agentId) return;
+    _named = agentId;
+    unawaited(
+      widget.agents.agentModels(agentId).then((models) {
+        _AgentModelNames.remember(agentId, models);
+        if (mounted) setState(() {});
+      }, onError: (Object _) {}),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final agents = widget.agents;
+    final agentId = widget.agentId;
     final l10n = AppLocalizations.of(context);
     final chosen = agents.selectedAgentModel(agentId);
+    if (chosen != null && _AgentModelNames.of(agentId, chosen) == null) {
+      _learnNames(agentId);
+    }
     return KitComposerChips.model(
       chipKey: const ValueKey('chats-new-agent-model'),
       label: chosen == null
