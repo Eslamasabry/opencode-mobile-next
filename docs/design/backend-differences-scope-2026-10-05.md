@@ -65,7 +65,11 @@ Done: S1, S3, S4, S5, S6, S7, S8; S9 in part.
   New conversation's model chip reads the agents' models through the old
   `agentModels` path (works; unifying it on the agent backend's catalog is
   cleanup only).
-- S2 is a product decision (no backend has Delete in the UI).
+- S2 is decided: no delete or archive (owner, 2026-10-06).
+- S9's first part is dropped on purpose: New conversation keeps reading
+  Claude's models through `agentModels`. It works and is proven, and
+  moving it onto Claude's own connection would only add risk before a
+  release.
 
 ## Next work, in order
 
