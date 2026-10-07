@@ -1008,17 +1008,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         if (!shown.contains(item.identity) && chatFeedMatches(item, filter))
           item,
     ];
-    final live = agentsShown
-        ? snapshot.items
-        : [
-            for (final item in snapshot.items)
-              if (!(item.sourceId?.startsWith('paseo:') ?? false)) item,
-          ];
-    final items = saved.isEmpty && identical(live, snapshot.items)
-        ? snapshot.items
-        : List<ChatFeedItem>.unmodifiable(
-            <ChatFeedItem>[...live, ...saved]..sort(compareChatFeedItems),
-          );
+    final backend = _paBackendLive;
+    final items = List<ChatFeedItem>.unmodifiable(
+      <ChatFeedItem>[
+        for (final item in snapshot.items)
+          if (agentsShown || !_isAgentRow(item)) _agentRowSeen(item, backend),
+        ...saved,
+      ]..sort(compareChatFeedItems),
+    );
     // Sources still being read while other rows already show, said in one
     // quiet line: the agents on their first read this run (their saved rows
     // stand in), the other servers while they connect, and this one while

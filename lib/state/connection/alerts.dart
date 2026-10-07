@@ -209,6 +209,9 @@ extension _ConnectionControllerAlertsImpl on ConnectionController {
     if (sessionID.isEmpty || !_attentionActiveSessions.remove(sessionID)) {
       return;
     }
+    // A run this connection watched has ended: the list says Done until the
+    // conversation is opened (any server, not only those that report it).
+    if (kind == CodingAlertKind.complete) _finishedUnseen.add(sessionID);
     if (kind == CodingAlertKind.complete &&
         profileMonitor.rulesFor(_alertProfileId).enabled) {
       return;

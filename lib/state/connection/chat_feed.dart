@@ -231,10 +231,12 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
         lastActivity: DateTime.fromMillisecondsSinceEpoch(stamp),
         preview: _feedPreview(id),
         parentID: session.parentID,
-        // Idle, and its last run finished after this device last opened it
-        // (the same watermark as the unread dot; OpenCode 2 only).
+        // Idle, and its last run finished after it was last opened: the
+        // server's watermark (OpenCode 2), or a run this connection watched
+        // end (every server).
         finishedUnseen:
-            status == ChatStatus.idle && _self.isSessionUnread(session),
+            status == ChatStatus.idle &&
+            (_self.isSessionUnread(session) || _self.finishedUnseen(id)),
       );
     }
 

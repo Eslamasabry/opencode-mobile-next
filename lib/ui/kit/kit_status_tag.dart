@@ -35,7 +35,8 @@ class KitStatusTag extends StatelessWidget {
     final base = switch (tone) {
       KitStatusTagTone.needsYou => roles.attention,
       KitStatusTagTone.running => roles.accent,
-      KitStatusTagTone.done => roles.success,
+      // Calm, not a second green beside Running: news to read, nothing to do.
+      KitStatusTagTone.done => roles.text2,
     };
     final fill = Color.alphaBlend(base.withValues(alpha: .18), roles.surface1);
     final ink = readableOn(base, [fill], 4.7, toward: roles.text1);

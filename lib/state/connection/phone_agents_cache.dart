@@ -162,3 +162,35 @@ Future<void> _carryApprovalChoices(
     // Conversations ask again; nothing else depends on the copy.
   }
 }
+
+/// [item] marked Done (its run ended unseen; see side_connections).
+ChatFeedItem _withFinishedUnseen(ChatFeedItem item) => ChatFeedItem(
+  sessionID: item.sessionID,
+  title: item.title,
+  directory: item.directory,
+  projectName: item.projectName,
+  isGit: item.isGit,
+  status: item.status,
+  lastActivity: item.lastActivity,
+  preview: item.preview,
+  parentID: item.parentID,
+  agentId: item.agentId,
+  agentLabel: item.agentLabel,
+  sourceId: item.sourceId,
+  sourceLabel: item.sourceLabel,
+  finishedUnseen: true,
+);
+
+/// A row of an agent on this phone (not OpenCode's).
+bool _isAgentRow(ChatFeedItem item) =>
+    item.sourceId?.startsWith('paseo:') ?? false;
+
+/// [item], marked Done when it is an agent's and its own connection
+/// ([backend]) watched its run end unseen.
+ChatFeedItem _agentRowSeen(ChatFeedItem item, ConnectionController? backend) =>
+    backend != null &&
+        item.status == ChatStatus.idle &&
+        _isAgentRow(item) &&
+        backend.finishedUnseen(item.sessionID)
+    ? _withFinishedUnseen(item)
+    : item;

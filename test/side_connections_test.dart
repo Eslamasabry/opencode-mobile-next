@@ -58,6 +58,10 @@ class _Api extends OpenCodeApi {
   @override
   Future<List<Session>> sessions() async => const [];
   @override
+  Future<Session> session(String id) async => server.global
+      .map((row) => row.session)
+      .firstWhere((session) => session.id == id);
+  @override
   Future<Map<String, String>> sessionStatuses() async => const {};
   @override
   Future<ProvidersResponse> providers() async =>
@@ -461,6 +465,42 @@ void main() {
     expect(w.servers[_termux]!.replies, [('p1', 'once')]);
     expect(w.servers[_ubuntu]!.replies, isEmpty);
     await tester.pumpWidget(const SizedBox());
+    c.dispose();
+  });
+
+  testWidgets('a run that ends while you are away says Done until you open '
+      'it, on any server', (tester) async {
+    final w = await _world(tester);
+    final c = w.controller;
+    bool done() => c
+        .chatFeed()
+        .items
+        .firstWhere((item) => item.sessionID == 'u1')
+        .finishedUnseen;
+    expect(done(), isFalse);
+    c.handleEventForTesting(
+      EventEnvelope(
+        type: 'session.status',
+        properties: const {
+          'sessionID': 'u1',
+          'status': {'type': 'busy'},
+        },
+      ),
+    );
+    c.handleEventForTesting(
+      EventEnvelope(
+        type: 'session.status',
+        properties: const {
+          'sessionID': 'u1',
+          'status': {'type': 'idle'},
+        },
+      ),
+    );
+    await tester.pump();
+    expect(done(), isTrue);
+    // Opening it clears Done.
+    await c.ensureSession('u1');
+    expect(done(), isFalse);
     c.dispose();
   });
 

@@ -49,7 +49,11 @@ mixin _ConnectionControllerSessions on ChangeNotifier {
   Future<void> loadMoreSessions() => _self._loadMoreSessions();
 
   /// Direct routes and active sessions are independent of inventory pages.
-  Future<void> ensureSession(String id) => _self._refreshOneSession(id);
+  Future<void> ensureSession(String id) {
+    // An opened conversation is seen: its Done tag goes.
+    if (_self._finishedUnseen.remove(id)) _self._notifyListeners();
+    return _self._refreshOneSession(id);
+  }
 
   /// Polling fallback plus terminal-state reconciliation for connected SSE.
   void enablePollingFallback() => _self._enablePollingFallback();

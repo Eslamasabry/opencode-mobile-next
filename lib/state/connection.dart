@@ -254,6 +254,13 @@ class ConnectionController extends ChangeNotifier
   /// delayed_answers.dart); shared by the chat and the Conversations list.
   late final DelayedAnswers delayedAnswers = DelayedAnswers();
 
+  /// Conversations whose run this connection watched end and that haven't
+  /// been opened since (the list's Done tag).
+  final _finishedUnseen = <String>{};
+
+  /// Whether [sessionID]'s run ended since it was last opened here.
+  bool finishedUnseen(String sessionID) => _finishedUnseen.contains(sessionID);
+
   /// The one home of quiet hours, Wi-Fi only, check-ins and the "what
   /// notifies me" choices. Both monitors and this controller's own alerts
   /// read it; only the Notifications screen writes it.
