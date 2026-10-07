@@ -203,8 +203,6 @@ void main() {
 
     await tester.tap(find.text(KitBidi.auto('SQLite')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('agent-card-send')));
-    await tester.pumpAndSettle();
     expect((gen.answers.single.answer as GenUiChoiceAnswer).ids, ['sqlite']);
     expect(tester.takeException(), isNull);
   });

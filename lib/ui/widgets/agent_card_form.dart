@@ -5,7 +5,8 @@ import 'package:flutter/widgets.dart';
 import '../../domain/genui/gen_ui.dart';
 import '../../l10n/app_localizations.dart';
 import '../kit/kit.dart';
-import 'agent_card_asks.dart' show AgentCardAnswer, agentCardSendBlock;
+import 'agent_card_asks.dart'
+    show AgentCardAnswer, AgentCardDraft, agentCardSendBlock;
 
 /// A form ask: one kit control per field, with required fields that hold
 /// Send until they are filled. Nothing is autofilled: a field starts from the
@@ -20,8 +21,10 @@ class AgentCardForm extends StatefulWidget {
     required this.blockedReason,
     required this.sending,
     required this.inList,
+    required this.draft,
   });
 
+  final AgentCardDraft draft;
   final GenUiFormAsk ask;
   final AgentCardAnswer onAnswer;
   final String? blockedReason;
@@ -34,30 +37,45 @@ class AgentCardForm extends StatefulWidget {
 
 class _AgentCardFormState extends State<AgentCardForm> {
   final Map<String, TextEditingController> _text = {};
-  final Map<String, bool> _toggles = {};
-  final Map<String, String?> _selects = {};
-  final Map<String, DateTime?> _dates = {};
+  Map<String, bool> get _toggles => widget.draft.toggles;
+  Map<String, String?> get _selects => widget.draft.selects;
+  Map<String, DateTime?> get _dates => widget.draft.dates;
 
   /// Fields the person has changed: a required one shows its reason only
   /// after that, so a fresh form is not a wall of errors.
-  final Set<String> _touched = {};
+  Set<String> get _touched => widget.draft.touched;
 
   @override
   void initState() {
     super.initState();
+    final draft = widget.draft;
+    final restored = draft.formStarted;
+    draft.formStarted = true;
     for (final field in widget.ask.fields) {
       final value = field.defaultValue;
+      if (restored) {
+        // Back from Undo: what the person had, not the agent's defaults.
+        if (_isText(field.type)) {
+          _text[field.id] = TextEditingController(
+            text: draft.text[field.id] ?? '',
+          )..addListener(() => draft.text[field.id] = _text[field.id]!.text);
+        }
+        continue;
+      }
       switch (field.type) {
         case GenUiFieldType.text:
         case GenUiFieldType.multiline:
         case GenUiFieldType.number:
-          _text[field.id] = TextEditingController(
+          final controller = TextEditingController(
             text: switch (value) {
               final String s => s,
               final num n => _numberText(n),
               _ => '',
             },
           );
+          draft.text[field.id] = controller.text;
+          controller.addListener(() => draft.text[field.id] = controller.text);
+          _text[field.id] = controller;
         case GenUiFieldType.toggle:
           _toggles[field.id] = value is bool ? value : false;
         case GenUiFieldType.select:
@@ -70,6 +88,11 @@ class _AgentCardFormState extends State<AgentCardForm> {
       }
     }
   }
+
+  static bool _isText(GenUiFieldType type) =>
+      type == GenUiFieldType.text ||
+      type == GenUiFieldType.multiline ||
+      type == GenUiFieldType.number;
 
   @override
   void dispose() {

@@ -13,6 +13,20 @@ import 'agent_card_form.dart';
 import 'agent_card_photos.dart';
 import 'product_states.dart' show productErrorText;
 
+/// What the person has entered on a card so far. The card view keeps one per
+/// card (keyed by its identity) so an answer taken back with Undo returns
+/// exactly as it was: the chosen options, the form's values, the photos.
+class AgentCardDraft {
+  final Set<String> picked = {};
+  final Map<String, String> text = {};
+  final Map<String, bool> toggles = {};
+  final Map<String, String?> selects = {};
+  final Map<String, DateTime?> dates = {};
+  final Set<String> touched = {};
+  bool formStarted = false;
+  final List<PickedPhoto> photos = [];
+}
+
 /// Sends one answer; completes when the controller accepted it.
 typedef AgentCardAnswer =
     Future<void> Function(
@@ -28,7 +42,7 @@ typedef AgentCardAnswer =
 /// working, an earlier answer is on its way): the controls stay readable and
 /// Send says why it is off. [sending] shows Send working.
 class AgentCardAsk extends StatelessWidget {
-  const AgentCardAsk({
+  AgentCardAsk({
     super.key,
     required this.ask,
     required this.onAnswer,
@@ -36,7 +50,11 @@ class AgentCardAsk extends StatelessWidget {
     this.sending = false,
     this.inList = false,
     this.photos,
-  });
+    AgentCardDraft? draft,
+  }) : draft = draft ?? _none;
+
+  static final AgentCardDraft _none = AgentCardDraft();
+  final AgentCardDraft draft;
 
   final GenUiAsk ask;
   final AgentCardAnswer onAnswer;
@@ -49,6 +67,7 @@ class AgentCardAsk extends StatelessWidget {
   Widget build(BuildContext context) => switch (ask) {
     GenUiChoiceAsk() => _ChoiceAsk(
       ask: ask as GenUiChoiceAsk,
+      draft: draft,
       onAnswer: onAnswer,
       blockedReason: blockedReason,
       sending: sending,
@@ -56,6 +75,7 @@ class AgentCardAsk extends StatelessWidget {
     ),
     GenUiFormAsk() => AgentCardForm(
       ask: ask as GenUiFormAsk,
+      draft: draft,
       onAnswer: onAnswer,
       blockedReason: blockedReason,
       sending: sending,
@@ -70,6 +90,7 @@ class AgentCardAsk extends StatelessWidget {
     ),
     GenUiPhotoAsk() => _PhotoAsk(
       ask: ask as GenUiPhotoAsk,
+      draft: draft,
       onAnswer: onAnswer,
       blockedReason: blockedReason,
       sending: sending,
@@ -101,8 +122,10 @@ class _ChoiceAsk extends StatefulWidget {
     required this.blockedReason,
     required this.sending,
     required this.inList,
+    required this.draft,
   });
 
+  final AgentCardDraft draft;
   final GenUiChoiceAsk ask;
   final AgentCardAnswer onAnswer;
   final String? blockedReason;
@@ -114,7 +137,7 @@ class _ChoiceAsk extends StatefulWidget {
 }
 
 class _ChoiceAskState extends State<_ChoiceAsk> {
-  final Set<String> _picked = {};
+  Set<String> get _picked => widget.draft.picked;
 
   @override
   Widget build(BuildContext context) {
@@ -151,13 +174,37 @@ class _ChoiceAskState extends State<_ChoiceAsk> {
         : KitChoiceList<String>.single(
             choices: choices,
             selected: _picked.isEmpty ? null : _picked.first,
-            actsOnTap: false,
-            onSelected: (value) => setState(() {
-              _picked
-                ..clear()
-                ..add(value);
-            }),
+            // One tap answers; the Undo window covers a slip.
+            actsOnTap: true,
+            onSelected: (value) {
+              if (widget.blockedReason != null || widget.sending) return;
+              setState(() {
+                _picked
+                  ..clear()
+                  ..add(value);
+              });
+              unawaited(widget.onAnswer(GenUiChoiceAnswer([value])));
+            },
           );
+    if (!ask.multi) {
+      final blocked = widget.blockedReason;
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          list,
+          if (blocked != null)
+            Padding(
+              padding: EdgeInsetsDirectional.only(top: tokens.space2),
+              child: KitText(
+                blocked,
+                role: KitTextRole.secondary,
+                tone: KitTextTone.secondary,
+              ),
+            ),
+        ],
+      );
+    }
     final send = KitAction(
       label: l10n.agentCardSend,
       key: const Key('agent-card-send'),
@@ -253,8 +300,8 @@ class _ConfirmAsk extends StatelessWidget {
 
 // ── Photo ─────────────────────────────────────────────────────────────────
 
-class _PickedPhoto {
-  _PickedPhoto(this.attachment, this.bytes);
+class PickedPhoto {
+  PickedPhoto(this.attachment, this.bytes);
   final PromptAttachment attachment;
   final Uint8List? bytes;
 }
@@ -267,8 +314,10 @@ class _PhotoAsk extends StatefulWidget {
     required this.sending,
     required this.inList,
     required this.photos,
+    required this.draft,
   });
 
+  final AgentCardDraft draft;
   final GenUiPhotoAsk ask;
   final AgentCardAnswer onAnswer;
   final String? blockedReason;
@@ -281,7 +330,7 @@ class _PhotoAsk extends StatefulWidget {
 }
 
 class _PhotoAskState extends State<_PhotoAsk> {
-  final List<_PickedPhoto> _items = [];
+  List<PickedPhoto> get _items => widget.draft.photos;
   bool _picking = false;
   String? _error;
 
@@ -313,7 +362,7 @@ class _PhotoAskState extends State<_PhotoAsk> {
       var tooLarge = false;
       final room = widget.ask.max - _items.length;
       var total = _total;
-      final added = <_PickedPhoto>[];
+      final added = <PickedPhoto>[];
       for (final attachment in picked.take(room)) {
         final size = agentCardAttachmentBytes(attachment);
         if (size > agentCardPhotoMaxBytes ||
@@ -322,7 +371,7 @@ class _PhotoAskState extends State<_PhotoAsk> {
           continue;
         }
         total += size;
-        added.add(_PickedPhoto(attachment, _preview(attachment)));
+        added.add(PickedPhoto(attachment, _preview(attachment)));
       }
       setState(() {
         _items.addAll(added);

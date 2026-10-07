@@ -3,6 +3,8 @@
 // kit's sheet, held answers undo, receipts and passed-over cards read, an
 // unreadable card says one line, the list slot answers with secondary
 // buttons, and Settings toggles the feature with a plain status.
+import 'dart:ui' show CheckedState, Tristate;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
@@ -80,25 +82,35 @@ final _send = find.byKey(const Key('agent-card-send'));
 KitButton _button(WidgetTester tester, Finder finder) =>
     tester.widget<KitButton>(finder);
 
+/// Whether a choice row reads as selected to a screen reader.
+bool _chosen(WidgetTester tester, String label) {
+  final data = tester
+      .getSemantics(
+        find
+            .ancestor(
+              of: find.text(_b(label)),
+              matching: find.byType(KitTappable),
+            )
+            .first,
+      )
+      .getSemanticsData();
+  return data.flagsCollection.isSelected == Tristate.isTrue ||
+      data.flagsCollection.isChecked == CheckedState.isTrue;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('choice', () {
-    testWidgets('single: Send waits for a pick, then answers with its id', (
-      tester,
-    ) async {
+    testWidgets('single: one tap answers with its id, no Send', (tester) async {
       final gen = FakeGenUi();
       final card = agentCard(ask: choiceAsk());
       await _pump(tester, _view(gen, card));
 
       expect(find.text(_en.agentCardAsks(_b('Claude Code'))), findsOneWidget);
       expect(find.text(_b('Pick a database')), findsOneWidget);
-      expect(find.text(_en.agentCardChoosePrompt), findsOneWidget);
-      // In a conversation Send is the card's one primary.
-      expect(_button(tester, _send).role, KitButtonRole.primary);
+      expect(_send, findsNothing);
       await tester.tap(find.text(_b('SQLite')));
-      await tester.pumpAndSettle();
-      await tester.tap(_send);
       await tester.pumpAndSettle();
 
       expect(gen.answers, hasLength(1));
@@ -117,6 +129,8 @@ void main() {
       await _pump(tester, _view(gen, card));
 
       expect(find.text(_en.agentCardChooseOneOrMore), findsOneWidget);
+      // In a conversation Send is the card's one primary.
+      expect(_button(tester, _send).role, KitButtonRole.primary);
       await tester.tap(find.text(_b('MongoDB')));
       await tester.pumpAndSettle();
       await tester.tap(find.text(_b('Postgres')));
@@ -129,7 +143,7 @@ void main() {
       );
     });
 
-    testWidgets('while the agent is working Send says why and sends nothing', (
+    testWidgets('while the agent is working a tap says why and sends nothing', (
       tester,
     ) async {
       final gen = FakeGenUi();
@@ -138,8 +152,6 @@ void main() {
       await tester.tap(find.text(_b('Postgres')));
       await tester.pumpAndSettle();
       expect(find.text(_en.agentCardBusy), findsOneWidget);
-      await tester.tap(_send, warnIfMissed: false);
-      await tester.pumpAndSettle();
       expect(gen.answers, isEmpty);
     });
 
@@ -152,8 +164,6 @@ void main() {
       await _pump(tester, _view(gen, card));
       expect(find.text(_en.agentCardFailed), findsOneWidget);
       await tester.tap(find.text(_b('Postgres')));
-      await tester.pumpAndSettle();
-      await tester.tap(_send);
       await tester.pumpAndSettle();
       expect(gen.answers, hasLength(1));
     });
@@ -168,8 +178,6 @@ void main() {
       await tester.tap(find.text(_b('Postgres')));
       await tester.pumpAndSettle();
       expect(find.text(_en.agentCardDeliveryUnknown), findsWidgets);
-      await tester.tap(_send, warnIfMissed: false);
-      await tester.pumpAndSettle();
       expect(gen.answers, isEmpty);
     });
 
@@ -180,8 +188,6 @@ void main() {
       final card = agentCard(ask: choiceAsk());
       await _pump(tester, _view(gen, card));
       await tester.tap(find.text(_b('Postgres')));
-      await tester.pumpAndSettle();
-      await tester.tap(_send);
       await tester.pumpAndSettle();
       expect(find.textContaining('secret-token-xyz'), findsNothing);
       expect(find.byKey(const Key('agent-card-error')), findsOneWidget);
@@ -280,6 +286,109 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(_en.agentCardFieldMax('5')), findsOneWidget);
       expect(find.text(_en.agentCardFormFix), findsOneWidget);
+    });
+  });
+
+  group('undo gives back what the person had', () {
+    testWidgets('a chosen option stays chosen', (tester) async {
+      final gen = FakeGenUi();
+      final card = agentCard(ask: choiceAsk());
+      await _pump(tester, _view(gen, card));
+      await tester.tap(find.text(_b('SQLite')));
+      await tester.pumpAndSettle();
+      gen.set(
+        card,
+        delivery: GenUiDeliveryState.held,
+        summary: 'You chose SQLite',
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(_b('Postgres')), findsNothing);
+      gen.set(card, delivery: GenUiDeliveryState.idle);
+      await tester.pumpAndSettle();
+      expect(find.text(_b('Postgres')), findsOneWidget);
+      expect(_chosen(tester, 'SQLite'), isTrue);
+      expect(_chosen(tester, 'Postgres'), isFalse);
+    });
+
+    testWidgets('form values come back filled in', (tester) async {
+      final gen = FakeGenUi();
+      final card = agentCard(
+        ask: GenUiFormAsk(
+          fields: [
+            GenUiField(
+              id: 'name',
+              label: 'Project name',
+              type: GenUiFieldType.text,
+              required: true,
+            ),
+            GenUiField(
+              id: 'public',
+              label: 'Public',
+              type: GenUiFieldType.toggle,
+            ),
+          ],
+        ),
+      );
+      await _pump(tester, _view(gen, card));
+      await tester.enterText(find.byType(EditableText).first, 'Atlas');
+      await tester.tap(find.byKey(const Key('agent-card-field-public')));
+      await tester.pumpAndSettle();
+      await tester.tap(_send);
+      await tester.pumpAndSettle();
+      gen.set(card, delivery: GenUiDeliveryState.held, summary: 'Sent');
+      await tester.pumpAndSettle();
+      expect(find.byType(EditableText), findsNothing);
+      gen.set(card, delivery: GenUiDeliveryState.idle);
+      await tester.pumpAndSettle();
+      expect(find.text('Atlas'), findsOneWidget);
+      await tester.tap(_send);
+      await tester.pumpAndSettle();
+      expect((gen.answers.last.answer as GenUiFormAnswer).values, {
+        'name': 'Atlas',
+        'public': true,
+      });
+    });
+
+    testWidgets('picked photos come back', (tester) async {
+      final gen = FakeGenUi();
+      final card = agentCard(
+        ask: const GenUiPhotoAsk(purpose: 'Show me', max: 2),
+      );
+      await _pump(tester, _view(gen, card, photos: FakeCardPhotos()));
+      await tester.tap(find.byKey(const Key('agent-card-photo-take')));
+      await tester.pumpAndSettle();
+      await tester.tap(_send);
+      await tester.pumpAndSettle();
+      gen.set(
+        card,
+        delivery: GenUiDeliveryState.held,
+        summary: 'Sent: 1 photo',
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(_en.agentCardPhotoName(1)), findsNothing);
+      gen.set(card, delivery: GenUiDeliveryState.idle);
+      await tester.pumpAndSettle();
+      expect(find.text(_en.agentCardPhotoName(1)), findsOneWidget);
+      await tester.tap(_send);
+      await tester.pumpAndSettle();
+      expect(gen.answers.last.attachments, 1);
+    });
+
+    testWidgets('answered drops the draft', (tester) async {
+      final gen = FakeGenUi();
+      final card = agentCard(ask: choiceAsk());
+      await _pump(tester, _view(gen, card));
+      await tester.tap(find.text(_b('SQLite')));
+      await tester.pumpAndSettle();
+      gen.set(
+        card,
+        state: GenUiCardState.answered,
+        summary: 'You chose SQLite',
+      );
+      await tester.pumpAndSettle();
+      gen.set(card, state: GenUiCardState.waiting);
+      await tester.pumpAndSettle();
+      expect(_chosen(tester, 'SQLite'), isFalse);
     });
   });
 
@@ -544,7 +653,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       final gen = FakeGenUi();
-      final card = agentCard(ask: choiceAsk());
+      final card = agentCard(ask: choiceAsk(multi: true));
       final host = FakeChatsHost(
         FakeChatFeedSource(
           items: [
@@ -721,7 +830,11 @@ void main() {
       await _pump(tester, _view(gen, everything()), locale: const Locale('ar'));
       expect(tester.takeException(), isNull);
       expect(
-        find.text(lookupAppLocalizations(const Locale('ar')).agentCardSend),
+        find.text(
+          lookupAppLocalizations(
+            const Locale('ar'),
+          ).agentCardAsks(_b('Claude Code')),
+        ),
         findsOneWidget,
       );
     });

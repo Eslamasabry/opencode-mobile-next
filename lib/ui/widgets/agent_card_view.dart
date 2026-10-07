@@ -52,6 +52,10 @@ class AgentCardView extends StatefulWidget {
 
 class _AgentCardViewState extends State<AgentCardView> {
   bool _submitting = false;
+
+  /// What the person entered, by card identity: an answer taken back with
+  /// Undo returns as it was. Dropped once the card is answered or passed over.
+  final Map<String, AgentCardDraft> _drafts = {};
   String? _error;
 
   Future<void> _answer(
@@ -120,6 +124,11 @@ class _AgentCardViewState extends State<AgentCardView> {
     final title = KitBidi.auto(card.title);
     final cardKey = ValueKey('agent-card-${card.callID}');
     final body = agentCardNodes(context, card.body);
+    final closed =
+        (state == GenUiCardState.answered ||
+            state == GenUiCardState.passedOver) &&
+        delivery != GenUiDeliveryState.held;
+    if (closed) _drafts.remove(card.identity);
 
     if (delivery == GenUiDeliveryState.held) {
       return KitAgentCard(
@@ -176,6 +185,7 @@ class _AgentCardViewState extends State<AgentCardView> {
                 ask: card.ask!,
                 inList: widget.inList,
                 photos: widget.photos,
+                draft: _drafts.putIfAbsent(card.identity, AgentCardDraft.new),
                 blockedReason: blocked,
                 sending: sending,
                 onAnswer: (answer, {attachments = const []}) =>
