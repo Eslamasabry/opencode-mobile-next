@@ -24507,63 +24507,60 @@ class AppLocalizationsAr extends AppLocalizations {
   String get teamRoleNameFrontend => 'الواجهة الأمامية';
 
   @override
-  String get teamRoleNameBackend => 'Backend';
+  String get teamRoleNameBackend => 'الواجهة الخلفية';
 
   @override
-  String get teamRoleNameTester => 'Tester';
+  String get teamRoleNameTester => 'مختبِر';
 
   @override
-  String get teamRolePurposeGeneral => 'Any task, done the plain way';
+  String get teamRolePurposeGeneral => 'أي مهمة، بأسلوب بسيط';
 
   @override
-  String get teamRolePurposeProduct =>
-      'Turns an idea into clear requirements and a plan';
+  String get teamRolePurposeProduct => 'يحوّل الفكرة إلى متطلبات واضحة وخطة';
 
   @override
-  String get teamRolePurposeFrontend =>
-      'Screens, layout and how it feels to use';
+  String get teamRolePurposeFrontend => 'الشاشات والتخطيط وسهولة الاستخدام';
 
   @override
   String get teamRolePurposeBackend =>
-      'Servers, data and the code behind the screens';
+      'الخوادم والبيانات والبرمجيات وراء الشاشات';
 
   @override
-  String get teamRolePurposeTester =>
-      'Finds what breaks and shows that it works';
+  String get teamRolePurposeTester => 'يكتشف ما يتعطل ويتحقق من أنه يعمل';
 
   @override
-  String get teamRolesTitle => 'Agents';
+  String get teamRolesTitle => 'الوكلاء';
 
   @override
-  String get teamRolesNew => 'New role';
+  String get teamRolesNew => 'دور جديد';
 
   @override
-  String get teamRolesEmpty => 'No roles yet';
+  String get teamRolesEmpty => 'لا توجد أدوار بعد';
 
   @override
   String teamRoleWorkingOn(String task, String age) {
-    return 'Working on “$task” · $age';
+    return 'يعمل على «$task» · $age';
   }
 
   @override
   String teamRoleUses(String model) {
-    return 'Uses $model';
+    return 'يستخدم $model';
   }
 
   @override
-  String get teamRoleUsesTeamModel => 'Uses the team\'s model';
+  String get teamRoleUsesTeamModel => 'يستخدم نموذج الفريق';
 
   @override
-  String get teamRoleUsesComputerModel => 'Uses the computer\'s model';
+  String get teamRoleUsesComputerModel => 'يستخدم نموذج الكمبيوتر';
 
   @override
   String teamRoleTaskCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count tasks',
-      one: '1 task',
-      zero: 'No tasks yet',
+      other: '$count من المهام',
+      one: 'مهمة واحدة',
+      zero: 'لا توجد مهام بعد',
     );
     return '$_temp0';
   }
@@ -24573,195 +24570,192 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Agents · $count roles',
-      one: 'Agents · 1 role',
+      other: 'الوكلاء · $count من الأدوار',
+      one: 'الوكلاء · دور واحد',
     );
     return '$_temp0';
   }
 
   @override
-  String get teamSettingsAgentsHint =>
-      'Who does the work, and how each one works';
+  String get teamSettingsAgentsHint => 'من ينجز العمل وكيف يعمل كل منهم';
 
   @override
-  String get teamRoleNewTitle => 'New role';
+  String get teamRoleNewTitle => 'دور جديد';
 
   @override
-  String get teamRoleFieldName => 'Name';
+  String get teamRoleFieldName => 'الاسم';
 
   @override
-  String get teamRoleFieldPurpose => 'What it\'s for';
+  String get teamRoleFieldPurpose => 'الغرض منه';
 
   @override
-  String get teamRoleFieldPurposeHint =>
-      'One line, for example: writes the guides';
+  String get teamRoleFieldPurposeHint => 'سطر واحد، مثل: يكتب الأدلة';
 
   @override
-  String get teamRoleFieldInstructions => 'Instructions';
+  String get teamRoleFieldInstructions => 'التعليمات';
 
   @override
   String get teamRoleFieldInstructionsHint =>
-      'How this role should work, in your own words';
+      'كيف ينبغي لهذا الدور أن يعمل، بكلماتك';
 
   @override
-  String get teamRoleNameRequired => 'Give the role a name';
+  String get teamRoleNameRequired => 'أعطِ الدور اسمًا';
 
   @override
-  String get teamRoleModelRow => 'Model';
+  String get teamRoleModelRow => 'النموذج';
 
   @override
-  String get teamRoleTeamModel => 'Team\'s model';
+  String get teamRoleTeamModel => 'نموذج الفريق';
 
   @override
-  String get teamRoleComputerModel => 'The computer\'s model';
+  String get teamRoleComputerModel => 'نموذج الكمبيوتر';
 
   @override
-  String get teamRoleModelSheetDefault => 'Team\'s model';
+  String get teamRoleModelSheetDefault => 'نموذج الفريق';
 
   @override
   String get teamRoleModelSheetDefaultHint =>
-      'Uses whatever model the whole team uses';
+      'يستخدم النموذج الذي يستخدمه الفريق كله';
 
   @override
   String teamRoleWorkingNow(String task) {
-    return 'Working on “$task”';
+    return 'يعمل على «$task»';
   }
 
   @override
-  String get teamRoleOpenConversation => 'Open its conversation';
+  String get teamRoleOpenConversation => 'فتح محادثته';
 
   @override
-  String get teamRoleRecentTasks => 'Recent tasks';
+  String get teamRoleRecentTasks => 'المهام الأخيرة';
 
   @override
   String teamRoleNoTasks(String role) {
-    return 'Nothing given to $role yet';
+    return 'لم تُسند أي مهمة إلى $role بعد';
   }
 
   @override
   String teamRoleGiveTask(String role) {
-    return 'Give $role a task';
+    return 'إسناد مهمة إلى $role';
   }
 
   @override
-  String get teamRoleSave => 'Save';
+  String get teamRoleSave => 'حفظ';
 
   @override
-  String get teamRoleCreate => 'Create role';
+  String get teamRoleCreate => 'إنشاء الدور';
 
   @override
   String teamRoleReset(String role) {
-    return 'Reset $role';
+    return 'إعادة ضبط $role';
   }
 
   @override
   String teamRoleResetTitle(String role) {
-    return 'Reset $role?';
+    return 'هل تريد إعادة ضبط $role؟';
   }
 
   @override
   String get teamRoleResetBody =>
-      'Its name, purpose, instructions and model go back to how they shipped.';
+      'يعود اسمه وغرضه وتعليماته ونموذجه إلى الإعدادات الأصلية.';
 
   @override
   String teamRoleDelete(String role) {
-    return 'Delete $role';
+    return 'حذف $role';
   }
 
   @override
   String teamRoleDeleteTitle(String role) {
-    return 'Delete $role?';
+    return 'هل تريد حذف $role؟';
   }
 
   @override
   String teamRoleDeleteBody(String role) {
-    return '$role is removed from this team. Tasks it already did keep its name.';
+    return 'يُزال $role من هذا الفريق. تحتفظ المهام التي أنجزها باسمه.';
   }
 
   @override
-  String get teamRoleWorkerName => 'Worker name';
+  String get teamRoleWorkerName => 'اسم العامل';
 
   @override
-  String get teamRoleExamplesLabel => 'Start from an example';
+  String get teamRoleExamplesLabel => 'البدء من مثال';
 
   @override
-  String get teamRoleExampleDocs => 'Docs writer';
+  String get teamRoleExampleDocs => 'كاتب توثيق';
 
   @override
-  String get teamRoleExampleDocsPurpose => 'Writes and updates the guides';
+  String get teamRoleExampleDocsPurpose => 'يكتب الأدلة ويحدّثها';
 
   @override
   String get teamRoleExampleDocsInstructions =>
-      'You write and update documentation. Keep it short, accurate and in plain words. Check every command and path you mention before writing it down.';
+      'أنت تكتب التوثيق وتحدّثه. اجعله موجزًا ودقيقًا وبكلمات بسيطة. تحقّق من كل أمر ومسار تذكره قبل كتابته.';
 
   @override
-  String get teamRoleExampleSecurity => 'Security reviewer';
+  String get teamRoleExampleSecurity => 'مراجع أمني';
 
   @override
   String get teamRoleExampleSecurityPurpose =>
-      'Looks for ways the code could be abused';
+      'يبحث عن طرق إساءة استخدام البرمجيات';
 
   @override
   String get teamRoleExampleSecurityInstructions =>
-      'You review code for security problems: secrets in code or logs, unchecked input, unsafe links, and missing permission checks. Report what you find with the file and line, and fix only what the task asks for.';
+      'أنت تراجع البرمجيات بحثًا عن مشكلات أمنية: أسرار في الشيفرة أو السجلات، ومدخلات لم يُتحقّق منها، وروابط غير آمنة، وفحوص أذونات مفقودة. أبلغ عمّا تجده مع الملف والسطر، وأصلح ما تطلبه المهمة فقط.';
 
   @override
-  String get teamRoleExampleDesigner => 'Designer';
+  String get teamRoleExampleDesigner => 'مصمم';
 
   @override
-  String get teamRoleExampleDesignerPurpose =>
-      'Makes it clear, consistent and pleasant';
+  String get teamRoleExampleDesignerPurpose => 'يجعله واضحًا ومتسقًا ومريحًا';
 
   @override
   String get teamRoleExampleDesignerInstructions =>
-      'You improve how the product looks and reads. Reuse the parts and words already in the app, keep one design language, and check small screens and large text.';
+      'أنت تحسّن مظهر المنتج وصياغته. أعد استخدام الأجزاء والكلمات الموجودة في التطبيق، وحافظ على أسلوب تصميم واحد، وتحقّق من الشاشات الصغيرة والنص الكبير.';
 
   @override
   String get teamRoleStarterInstructions =>
-      'You are the ___ on this team.\nFocus on: ___\nAlways: ___\nNever: ___';
+      'أنت ___ في هذا الفريق.\nركّز على: ___\nدائمًا: ___\nلا تفعل أبدًا: ___';
 
   @override
-  String get teamStartRunWho => 'Who';
+  String get teamStartRunWho => 'من';
 
   @override
-  String get teamStartRunWhoSuggested => 'Suggested from your words';
+  String get teamStartRunWhoSuggested => 'مقترح بناءً على كلماتك';
 
   @override
-  String get teamStartRunWhoChange => 'Change';
+  String get teamStartRunWhoChange => 'تغيير';
 
   @override
-  String get teamStartRunWhoTitle => 'Who should take this?';
+  String get teamStartRunWhoTitle => 'من ينبغي أن يتولى هذه المهمة؟';
 
   @override
   String teamChatLeadStartingRole(String role, String title) {
-    return '$role started on “$title”';
+    return 'بدأ $role العمل على «$title»';
   }
 
   @override
   String teamChatLeadClaimedRole(String role, String title) {
-    return '$role took “$title”';
+    return 'تولّى $role «$title»';
   }
 
   @override
   String teamChatLeadStartingItRole(String role) {
-    return '$role started';
+    return 'بدأ $role العمل';
   }
 
   @override
   String teamChatLeadClaimedItRole(String role) {
-    return '$role took the task';
+    return 'تولّى $role المهمة';
   }
 
   @override
   String get teamRolesSearchAliases =>
-      'roles personas agents team frontend backend tester product designer instructions';
+      'أدوار شخصيات وكلاء فريق واجهة أمامية واجهة خلفية مختبر منتج مصمم تعليمات';
 
   @override
-  String get teamUiStatePhoneStoppedTitle => 'AI Team stopped';
+  String get teamUiStatePhoneStoppedTitle => 'توقف AI Team';
 
   @override
   String get teamUiStatePhoneStoppedBody =>
-      'AI Team on this phone isn’t running. Start it to continue your tasks.';
+      'لا يعمل AI Team على هذا الهاتف. شغّله لمتابعة مهامك.';
 
   @override
   String get teamStartStepService => 'تشغيل خدمة الفريق';
@@ -24785,7 +24779,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get teamUiHostPhraseStarting => 'قيد البدء';
 
   @override
-  String get teamUiStartOnPhone => 'Start AI Team on this phone';
+  String get teamUiStartOnPhone => 'تشغيل AI Team على هذا الهاتف';
 
   @override
   String get chatCollapseAllSteps => 'طي كل الخطوات';
@@ -24841,209 +24835,209 @@ class AppLocalizationsAr extends AppLocalizations {
   String get teamProjectHome => 'AI Team';
 
   @override
-  String get teamProjectDemo => 'Demo';
+  String get teamProjectDemo => 'عرض تجريبي';
 
   @override
-  String get teamProjectNew => 'New project';
+  String get teamProjectNew => 'مشروع جديد';
 
   @override
-  String get teamProjectQuick => 'Give a quick task';
+  String get teamProjectQuick => 'إسناد مهمة سريعة';
 
   @override
-  String get teamProjectSettings => 'Project settings';
+  String get teamProjectSettings => 'إعدادات المشروع';
 
   @override
-  String get teamProjectRoles => 'Roles and agents';
+  String get teamProjectRoles => 'الأدوار والوكلاء';
 
   @override
-  String get teamProjectEmpty => 'Give your team a goal to start a project.';
+  String get teamProjectEmpty => 'أعطِ فريقك هدفًا لبدء مشروع.';
 
   @override
-  String get teamProjectSelect => 'Select a project';
+  String get teamProjectSelect => 'اختيار مشروع';
 
   @override
-  String get teamProjectSelectTask =>
-      'Select a task to follow its conversation.';
+  String get teamProjectSelectTask => 'اختر مهمة لمتابعة محادثتها.';
 
   @override
-  String get teamProjectLoad => 'Loading projects';
+  String get teamProjectLoad => 'جارٍ تحميل المشاريع';
 
   @override
-  String get teamProjectRetry => 'Try again';
+  String get teamProjectRetry => 'إعادة المحاولة';
 
   @override
   String get teamProjectError =>
-      'The project could not be updated. Your saved work is still available.';
+      'تعذّر تحديث المشروع. لا يزال عملك المحفوظ متاحًا.';
 
   @override
-  String get teamProjectSpec => 'Open spec';
+  String get teamProjectSpec => 'فتح المواصفات';
 
   @override
-  String get teamProjectPlan => 'Review plan';
+  String get teamProjectPlan => 'مراجعة الخطة';
 
   @override
-  String get teamProjectBoard => 'Board';
+  String get teamProjectBoard => 'اللوحة';
 
   @override
-  String get teamProjectGraph => 'Dependencies';
+  String get teamProjectGraph => 'الاعتماديات';
 
   @override
-  String get teamProjectTimeline => 'Timeline';
+  String get teamProjectTimeline => 'المخطط الزمني';
 
   @override
-  String get teamProjectServers => 'Servers';
+  String get teamProjectServers => 'الخوادم';
 
   @override
-  String get teamProjectMilestones => 'Milestones';
+  String get teamProjectMilestones => 'المراحل الرئيسية';
 
   @override
-  String get teamProjectLanes => 'Lanes';
+  String get teamProjectLanes => 'المسارات';
 
   @override
-  String get teamProjectMerge => 'Merge queue';
+  String get teamProjectMerge => 'قائمة انتظار الدمج';
 
   @override
-  String get teamProjectCost => 'Cost';
+  String get teamProjectCost => 'التكلفة';
 
   @override
-  String get teamProjectDecisions => 'Recent decisions';
+  String get teamProjectDecisions => 'القرارات الأخيرة';
 
   @override
-  String get teamProjectPause => 'Pause project';
+  String get teamProjectPause => 'إيقاف المشروع مؤقتًا';
 
   @override
-  String get teamProjectResume => 'Resume project';
+  String get teamProjectResume => 'استئناف المشروع';
 
   @override
-  String get teamProjectStopConfirmTitle => 'Stop this project?';
+  String get teamProjectStopConfirmTitle => 'هل تريد إيقاف هذا المشروع؟';
 
   @override
-  String get teamProjectStop => 'Stop project';
+  String get teamProjectStop => 'إيقاف المشروع';
 
   @override
   String get teamProjectStopBody =>
-      'Running tasks will stop. Their work and project history will be kept.';
+      'ستتوقف المهام الجارية. سيُحتفظ بعملها وسجل المشروع.';
 
   @override
-  String get teamProjectAdvance => 'Advance demo';
+  String get teamProjectAdvance => 'تقديم العرض التجريبي';
 
   @override
-  String get teamProjectDigest => 'Since you were away';
+  String get teamProjectDigest => 'منذ غيابك';
 
   @override
-  String get teamProjectDigestRead => 'Mark as read';
+  String get teamProjectDigestRead => 'وضع علامة مقروء';
 
   @override
-  String get teamProjectAnswer => 'Answer';
+  String get teamProjectAnswer => 'إجابة';
 
   @override
-  String get teamProjectAnswerLabel => 'Your answer';
+  String get teamProjectAnswerLabel => 'إجابتك';
 
   @override
-  String get teamProjectAll => 'Everything';
+  String get teamProjectAll => 'الكل';
 
   @override
-  String get teamProjectMerges => 'Merges';
+  String get teamProjectMerges => 'عمليات الدمج';
 
   @override
-  String get teamProjectProblems => 'Problems';
+  String get teamProjectProblems => 'المشكلات';
 
   @override
-  String get teamProjectMilestoneFilter => 'Milestone';
+  String get teamProjectMilestoneFilter => 'المرحلة الرئيسية';
 
   @override
-  String get teamProjectRepoFilter => 'Repo';
+  String get teamProjectRepoFilter => 'المستودع';
 
   @override
-  String get teamProjectServerFilter => 'Server';
+  String get teamProjectServerFilter => 'الخادم';
 
   @override
-  String get teamProjectBacklog => 'Backlog';
+  String get teamProjectBacklog => 'المهام المؤجلة';
 
   @override
-  String get teamProjectReady => 'Ready';
+  String get teamProjectReady => 'جاهزة';
 
   @override
-  String get teamProjectWorking => 'Working';
+  String get teamProjectWorking => 'قيد العمل';
 
   @override
-  String get teamProjectReview => 'Review';
+  String get teamProjectReview => 'المراجعة';
 
   @override
-  String get teamProjectDone => 'Done';
+  String get teamProjectDone => 'مكتملة';
 
   @override
-  String get teamProjectNoTasks => 'No tasks in this view.';
+  String get teamProjectNoTasks => 'لا توجد مهام في هذا العرض.';
 
   @override
-  String get teamProjectMove => 'Move task';
+  String get teamProjectMove => 'نقل المهمة';
 
   @override
-  String get teamProjectMoveTo => 'Move to server';
+  String get teamProjectMoveTo => 'نقل إلى خادم';
 
   @override
-  String get teamProjectHandoff => 'Hand-off note';
+  String get teamProjectHandoff => 'ملاحظة تسليم العمل';
 
   @override
-  String get teamProjectPaused => 'Paused';
+  String get teamProjectPaused => 'متوقف مؤقتًا';
 
   @override
-  String get teamProjectStopped => 'Stopped';
+  String get teamProjectStopped => 'متوقف';
 
   @override
-  String get teamProjectFailed => 'Stopped unexpectedly';
+  String get teamProjectFailed => 'توقف بشكل غير متوقع';
 
   @override
-  String get teamProjectStalled => 'No recent progress';
+  String get teamProjectStalled => 'لا يوجد تقدم حديث';
 
   @override
-  String get teamProjectPlanning => 'Shaping the spec';
+  String get teamProjectPlanning => 'صياغة المواصفات';
 
   @override
-  String get teamProjectPlanWaiting => 'Plan ready to review';
+  String get teamProjectPlanWaiting => 'الخطة جاهزة للمراجعة';
 
   @override
-  String get teamProjectNeedsYou => 'Needs your decision';
+  String get teamProjectNeedsYou => 'يحتاج إلى قرارك';
 
   @override
-  String get teamProjectWaiting => 'Waiting for dependencies';
+  String get teamProjectWaiting => 'بانتظار الاعتماديات';
 
   @override
-  String get teamProjectOnline => 'Reachable';
+  String get teamProjectOnline => 'يمكن الوصول إليه';
 
   @override
-  String get teamProjectOffline => 'Not reachable · last known tasks';
+  String get teamProjectOffline => 'يتعذّر الوصول إليه · آخر المهام المعروفة';
 
   @override
-  String get teamProjectNoLimit => 'No limit';
+  String get teamProjectNoLimit => 'بلا حد';
 
   @override
-  String get teamProjectUnknown => 'Not reported';
+  String get teamProjectUnknown => 'لم يُبلَّغ عنه';
 
   @override
-  String get teamProjectAcceptMilestoneConfirmTitle => 'Accept this milestone?';
+  String get teamProjectAcceptMilestoneConfirmTitle =>
+      'هل تريد قبول هذه المرحلة الرئيسية؟';
 
   @override
-  String get teamProjectAccept => 'Accept milestone';
+  String get teamProjectAccept => 'قبول المرحلة الرئيسية';
 
   @override
-  String get teamProjectMergeConfirmTitle => 'Merge into dev?';
+  String get teamProjectMergeConfirmTitle => 'هل تريد الدمج في dev؟';
 
   @override
-  String get teamProjectMergeNext => 'Merge checked work into dev';
+  String get teamProjectMergeNext => 'دمج العمل المتحقق منه في dev';
 
   @override
   String get teamProjectCostDemo =>
-      'Demo figures are simulated; device memory, battery, heat and conversation speed have not been measured.';
+      'أرقام العرض التجريبي محاكاة؛ لم تُقَس ذاكرة الجهاز أو البطارية أو الحرارة أو سرعة المحادثة.';
 
   @override
   String teamProjectProgress(int done, int total, int working) {
-    return '$done of $total tasks complete · $working working';
+    return 'اكتملت $done من أصل $total من المهام · $working قيد العمل';
   }
 
   @override
   String teamProjectLaneCount(int busy, int total) {
-    return '$busy of $total lanes busy';
+    return '$busy من أصل $total من المسارات مشغولة';
   }
 
   @override
@@ -25053,86 +25047,86 @@ class AppLocalizationsAr extends AppLocalizations {
     String spent,
     String total,
   ) {
-    return 'Today: $today / $daily. Total: $spent / $total.';
+    return 'اليوم: $today / $daily. الإجمالي: $spent / $total.';
   }
 
   @override
-  String get teamProjectEditorNewProject => 'New project';
+  String get teamProjectEditorNewProject => 'مشروع جديد';
 
   @override
-  String get teamProjectEditorQuickTask => 'Quick task';
+  String get teamProjectEditorQuickTask => 'مهمة سريعة';
 
   @override
-  String get teamProjectEditorSpec => 'Living spec';
+  String get teamProjectEditorSpec => 'مواصفات متجددة';
 
   @override
-  String get teamProjectEditorPlan => 'Review plan';
+  String get teamProjectEditorPlan => 'مراجعة الخطة';
 
   @override
-  String get teamProjectEditorSettings => 'Project settings';
+  String get teamProjectEditorSettings => 'إعدادات المشروع';
 
   @override
-  String get teamProjectEditorRoles => 'Roles and agents';
+  String get teamProjectEditorRoles => 'الأدوار والوكلاء';
 
   @override
-  String get teamProjectEditorStartPlanning => 'Start planning';
+  String get teamProjectEditorStartPlanning => 'بدء التخطيط';
 
   @override
-  String get teamProjectEditorStartTask => 'Start task';
+  String get teamProjectEditorStartTask => 'بدء المهمة';
 
   @override
-  String get teamProjectEditorApproveSpec => 'Approve spec';
+  String get teamProjectEditorApproveSpec => 'اعتماد المواصفات';
 
   @override
-  String get teamProjectEditorApprovePlan => 'Approve and start';
+  String get teamProjectEditorApprovePlan => 'اعتماد وبدء العمل';
 
   @override
-  String get teamProjectEditorSave => 'Save changes';
+  String get teamProjectEditorSave => 'حفظ التغييرات';
 
   @override
-  String get teamProjectEditorSaveDraft => 'Save draft';
+  String get teamProjectEditorSaveDraft => 'حفظ المسودة';
 
   @override
-  String get teamProjectEditorName => 'Project name';
+  String get teamProjectEditorName => 'اسم المشروع';
 
   @override
-  String get teamProjectEditorGoal => 'Goal';
+  String get teamProjectEditorGoal => 'الهدف';
 
   @override
-  String get teamProjectEditorRepos => 'Repos';
+  String get teamProjectEditorRepos => 'المستودعات';
 
   @override
-  String get teamProjectEditorRepoName => 'Repo name';
+  String get teamProjectEditorRepoName => 'اسم المستودع';
 
   @override
-  String get teamProjectEditorRepoPath => 'Repo folder';
+  String get teamProjectEditorRepoPath => 'مجلد المستودع';
 
   @override
-  String get teamProjectEditorServer => 'Server';
+  String get teamProjectEditorServer => 'الخادم';
 
   @override
-  String get teamProjectEditorRemove => 'Remove';
+  String get teamProjectEditorRemove => 'إزالة';
 
   @override
-  String get teamProjectEditorAddRepo => 'Add repo';
+  String get teamProjectEditorAddRepo => 'إضافة مستودع';
 
   @override
-  String get teamProjectEditorRole => 'Role';
+  String get teamProjectEditorRole => 'الدور';
 
   @override
-  String get teamProjectEditorPlanFirst => 'Plan first';
+  String get teamProjectEditorPlanFirst => 'التخطيط أولًا';
 
   @override
-  String get teamProjectEditorMode => 'Execution mode';
+  String get teamProjectEditorMode => 'وضع التنفيذ';
 
   @override
-  String get teamProjectEditorSingle => 'Single lane';
+  String get teamProjectEditorSingle => 'مسار واحد';
 
   @override
-  String get teamProjectEditorParallel => 'Parallel agents';
+  String get teamProjectEditorParallel => 'وكلاء يعملون بالتوازي';
 
   @override
-  String get teamProjectEditorMaxLanes => 'Maximum lanes';
+  String get teamProjectEditorMaxLanes => 'الحد الأقصى للمسارات';
 
   @override
   String teamProjectEditorCostMeasured(String host, String memory) {
@@ -25176,294 +25170,295 @@ class AppLocalizationsAr extends AppLocalizations {
   String get teamProjectEditorReadOnlyShort => 'للقراءة فقط';
 
   @override
-  String get teamProjectEditorCharging => 'Only while charging';
+  String get teamProjectEditorCharging => 'أثناء الشحن فقط';
 
   @override
-  String get teamProjectEditorReview => 'Review level';
+  String get teamProjectEditorReview => 'مستوى المراجعة';
 
   @override
-  String get teamProjectEditorMilestonesRisk => 'Milestones and risky points';
+  String get teamProjectEditorMilestonesRisk =>
+      'المراحل الرئيسية والنقاط الخطرة';
 
   @override
-  String get teamProjectEditorEveryStep => 'Every step';
+  String get teamProjectEditorEveryStep => 'كل خطوة';
 
   @override
-  String get teamProjectEditorBudget => 'Budget';
+  String get teamProjectEditorBudget => 'الميزانية';
 
   @override
-  String get teamProjectEditorSetLimits => 'Set limits';
+  String get teamProjectEditorSetLimits => 'تعيين الحدود';
 
   @override
-  String get teamProjectEditorNoLimit => 'No limit';
+  String get teamProjectEditorNoLimit => 'بلا حد';
 
   @override
-  String get teamProjectEditorDailyBudget => 'Per day (USD)';
+  String get teamProjectEditorDailyBudget => 'لكل يوم (USD)';
 
   @override
-  String get teamProjectEditorTotalBudget => 'Total (USD)';
+  String get teamProjectEditorTotalBudget => 'الإجمالي (USD)';
 
   @override
-  String get teamProjectEditorTaskTokens => 'Token limit per task (optional)';
+  String get teamProjectEditorTaskTokens => 'حد الرموز لكل مهمة (اختياري)';
 
   @override
-  String get teamProjectEditorAutoFix => 'Fix findings automatically';
+  String get teamProjectEditorAutoFix => 'إصلاح المشكلات المكتشفة تلقائيًا';
 
   @override
-  String get teamProjectEditorMaxRounds => 'Maximum fix rounds';
+  String get teamProjectEditorMaxRounds => 'الحد الأقصى لجولات الإصلاح';
 
   @override
-  String get teamProjectEditorConstraints => 'Constraints';
+  String get teamProjectEditorConstraints => 'القيود';
 
   @override
-  String get teamProjectEditorDecisions => 'Decisions';
+  String get teamProjectEditorDecisions => 'القرارات';
 
   @override
-  String get teamProjectEditorOutOfScope => 'Out of scope';
+  String get teamProjectEditorOutOfScope => 'خارج النطاق';
 
   @override
-  String get teamProjectEditorMilestones => 'Milestones';
+  String get teamProjectEditorMilestones => 'المراحل الرئيسية';
 
   @override
-  String get teamProjectEditorMilestoneTitle => 'Milestone title';
+  String get teamProjectEditorMilestoneTitle => 'عنوان المرحلة الرئيسية';
 
   @override
-  String get teamProjectEditorCriteria => 'Acceptance criteria (one per line)';
+  String get teamProjectEditorCriteria => 'معايير القبول (معيار في كل سطر)';
 
   @override
-  String get teamProjectEditorMoveUp => 'Move up';
+  String get teamProjectEditorMoveUp => 'نقل لأعلى';
 
   @override
-  String get teamProjectEditorMoveDown => 'Move down';
+  String get teamProjectEditorMoveDown => 'نقل لأسفل';
 
   @override
-  String get teamProjectEditorAddMilestone => 'Add milestone';
+  String get teamProjectEditorAddMilestone => 'إضافة مرحلة رئيسية';
 
   @override
-  String get teamProjectEditorHistory => 'Version history';
+  String get teamProjectEditorHistory => 'سجل الإصدارات';
 
   @override
-  String get teamProjectEditorVersion => 'Version';
+  String get teamProjectEditorVersion => 'الإصدار';
 
   @override
   String get teamProjectEditorPlanHelp =>
-      'Review the tasks and their acceptance criteria. Changes here are included when you approve the plan.';
+      'راجع المهام ومعايير قبولها. تُضمّن تغييراتك هنا عند اعتماد الخطة.';
 
   @override
   String get teamProjectEditorRisky => 'نقطة مراجعة · محفوفة بالمخاطر';
 
   @override
-  String get teamProjectEditorTaskTitle => 'Task title';
+  String get teamProjectEditorTaskTitle => 'عنوان المهمة';
 
   @override
-  String get teamProjectEditorRepo => 'Repo';
+  String get teamProjectEditorRepo => 'المستودع';
 
   @override
-  String get teamProjectEditorDependencies => 'Depends on';
+  String get teamProjectEditorDependencies => 'تعتمد على';
 
   @override
-  String get teamProjectEditorRemoveTask => 'Remove task';
+  String get teamProjectEditorRemoveTask => 'إزالة المهمة';
 
   @override
-  String get teamProjectEditorRemoteModel => 'The computer\'s model';
+  String get teamProjectEditorRemoteModel => 'نموذج الكمبيوتر';
 
   @override
-  String get teamProjectEditorAddRole => 'Add role';
+  String get teamProjectEditorAddRole => 'إضافة دور';
 
   @override
-  String get teamProjectEditorRoleName => 'Role name';
+  String get teamProjectEditorRoleName => 'اسم الدور';
 
   @override
-  String get teamProjectEditorInstructions => 'Instructions';
+  String get teamProjectEditorInstructions => 'التعليمات';
 
   @override
-  String get teamProjectEditorModel => 'Model';
+  String get teamProjectEditorModel => 'النموذج';
 
   @override
-  String get teamProjectEditorFallback => 'Fallback model';
+  String get teamProjectEditorFallback => 'النموذج البديل';
 
   @override
-  String get teamProjectEditorAllRoles => 'All roles';
+  String get teamProjectEditorAllRoles => 'كل الأدوار';
 
   @override
   String get teamProjectEditorChooseMode =>
-      'Choose Single lane or Parallel agents.';
+      'اختر «مسار واحد» أو «وكلاء يعملون بالتوازي».';
 
   @override
-  String get teamProjectEditorPositiveLanes =>
-      'Enter a lane limit from 1 to 32.';
+  String get teamProjectEditorPositiveLanes => 'أدخل حدًا للمسارات بين 1 و32.';
 
   @override
-  String get teamProjectEditorChooseBudget =>
-      'Set a budget or choose No limit.';
+  String get teamProjectEditorChooseBudget => 'عيّن ميزانية أو اختر «بلا حد».';
 
   @override
   String get teamProjectEditorPositiveBudget =>
-      'Enter a limit per day and a total limit, each above zero.';
+      'أدخل حدًا يوميًا وحدًا إجماليًا، كلاهما أكبر من صفر.';
 
   @override
   String get teamProjectEditorSaveFailed =>
-      'Changes could not be saved. Your edits are still here; try saving again.';
+      'تعذّر حفظ التغييرات. لا تزال تعديلاتك هنا؛ حاول الحفظ مجددًا.';
 
   @override
-  String get teamProjectEditorRequired => 'Add a goal and at least one repo.';
+  String get teamProjectEditorRequired =>
+      'أضف هدفًا ومستودعًا واحدًا على الأقل.';
 
   @override
   String get teamProjectEditorChooseRoleServer =>
-      'Choose a role and a server for this task.';
+      'اختر دورًا وخادمًا لهذه المهمة.';
 
   @override
   String get teamProjectEditorRepoRequired =>
-      'Choose a server and enter the repo name and folder.';
+      'اختر خادمًا وأدخل اسم المستودع ومجلده.';
 
   @override
   String get teamProjectEditorSpecRequired =>
-      'Add a goal and at least one milestone with a title and acceptance criteria.';
+      'أضف هدفًا ومرحلة رئيسية واحدة على الأقل بعنوان ومعايير قبول.';
 
   @override
   String get teamProjectEditorDraftFailed =>
-      'The draft could not be kept on this device. Keep this screen open and try saving again.';
+      'تعذّر الاحتفاظ بالمسودة على هذا الجهاز. أبقِ هذه الشاشة مفتوحة وحاول الحفظ مجددًا.';
 
   @override
   String get teamProjectEditorChangedElsewhere =>
-      'This project changed while you were editing. Close this sheet and review the latest project before approving changes.';
+      'تغيّر هذا المشروع أثناء تحريرك له. أغلق هذه اللوحة وراجع أحدث حالة للمشروع قبل اعتماد التغييرات.';
 
   @override
-  String get teamProjectConversation => 'Task conversation';
+  String get teamProjectConversation => 'محادثة المهمة';
 
   @override
-  String get teamProjectTaskMissing => 'This task is no longer available';
+  String get teamProjectTaskMissing => 'لم تعد هذه المهمة متاحة';
 
   @override
-  String get teamProjectRefreshTask => 'Refresh task';
+  String get teamProjectRefreshTask => 'تحديث المهمة';
 
   @override
   String get teamProjectTaskSaveFailed =>
-      'The change was not saved. Refresh and try again; your message is still here.';
+      'لم يُحفظ التغيير. حدّث الحالة وحاول مجددًا؛ لا تزال رسالتك هنا.';
 
   @override
-  String get teamProjectTaskMessage => 'Message the team…';
+  String get teamProjectTaskMessage => 'أرسل رسالة إلى الفريق…';
 
   @override
-  String get teamProjectTaskInstructions => 'Instructions from the team';
+  String get teamProjectTaskInstructions => 'تعليمات الفريق';
 
   @override
-  String get teamProjectTaskPlan => 'Plan';
+  String get teamProjectTaskPlan => 'الخطة';
 
   @override
-  String get teamProjectTaskApprovePlan => 'Approve and start';
+  String get teamProjectTaskApprovePlan => 'اعتماد وبدء العمل';
 
   @override
-  String get teamProjectTaskReview => 'Review required';
+  String get teamProjectTaskReview => 'المراجعة مطلوبة';
 
   @override
-  String get teamProjectTaskAccepted => 'Accepted';
+  String get teamProjectTaskAccepted => 'مقبولة';
 
   @override
-  String get teamProjectTaskAcceptPhase => 'Accept phase';
+  String get teamProjectTaskAcceptPhase => 'قبول المرحلة';
 
   @override
-  String get teamProjectTaskFindings => 'Verification findings';
+  String get teamProjectTaskFindings => 'نتائج التحقق';
 
   @override
-  String get teamProjectTaskFix => 'Fix selected';
+  String get teamProjectTaskFix => 'إصلاح المحدد';
 
   @override
-  String get teamProjectTaskRecheck => 'Re-check task';
+  String get teamProjectTaskRecheck => 'إعادة التحقق من المهمة';
 
   @override
-  String get teamProjectTaskIgnore => 'Ignore selected finding';
+  String get teamProjectTaskIgnore => 'تجاهل النتيجة المحددة';
 
   @override
   String get teamProjectTaskIgnoreReason =>
-      'Why is this finding safe to ignore?';
+      'لماذا يمكن تجاهل هذه النتيجة بأمان؟';
 
   @override
   String get teamProjectTaskReasonRequired =>
-      'Enter a reason to keep with this decision.';
+      'أدخل سببًا للاحتفاظ به مع هذا القرار.';
 
   @override
-  String get teamProjectTaskCritical => 'Critical';
+  String get teamProjectTaskCritical => 'حرجة';
 
   @override
-  String get teamProjectTaskMajor => 'Major';
+  String get teamProjectTaskMajor => 'كبيرة';
 
   @override
-  String get teamProjectTaskMinor => 'Minor';
+  String get teamProjectTaskMinor => 'طفيفة';
 
   @override
-  String get teamProjectTaskMerge => 'Merge queue to dev';
+  String get teamProjectTaskMerge => 'قائمة انتظار الدمج في dev';
 
   @override
-  String get teamProjectTaskMergeRun => 'Check and merge to dev';
+  String get teamProjectTaskMergeRun => 'التحقق والدمج في dev';
 
   @override
-  String get teamProjectTaskPromoteConfirmTitle => 'Promote dev to main?';
+  String get teamProjectTaskPromoteConfirmTitle =>
+      'هل تريد ترقية dev إلى main؟';
 
   @override
-  String get teamProjectTaskPromote => 'Promote dev to main';
+  String get teamProjectTaskPromote => 'ترقية dev إلى main';
 
   @override
   String get teamProjectTaskPromoteBody =>
-      'This updates protected main to the dev commit you reviewed. The engine will check both commits again before changing main.';
+      'يُحدّث هذا الإجراء فرع main المحمي إلى نسخة dev التي راجعتها. سيتحقق المحرّك من النسختين مجددًا قبل تغيير main.';
 
   @override
-  String get teamProjectTaskPromotion => 'Protected branch';
+  String get teamProjectTaskPromotion => 'الفرع المحمي';
 
   @override
-  String get teamProjectTaskDiff => 'View changes';
+  String get teamProjectTaskDiff => 'عرض التغييرات';
 
   @override
-  String get teamProjectTaskPause => 'Pause task';
+  String get teamProjectTaskPause => 'إيقاف المهمة مؤقتًا';
 
   @override
-  String get teamProjectTaskResume => 'Resume task';
+  String get teamProjectTaskResume => 'استئناف المهمة';
 
   @override
-  String get teamProjectTaskStopConfirmTitle => 'Stop this task?';
+  String get teamProjectTaskStopConfirmTitle => 'هل تريد إيقاف هذه المهمة؟';
 
   @override
-  String get teamProjectTaskStop => 'Stop task';
+  String get teamProjectTaskStop => 'إيقاف المهمة';
 
   @override
   String get teamProjectTaskStopBody =>
-      'Stop this task and keep its conversation and changes for review.';
+      'أوقف هذه المهمة واحتفظ بمحادثتها وتغييراتها للمراجعة.';
 
   @override
-  String get teamProjectTaskRestart => 'Start task again';
+  String get teamProjectTaskRestart => 'بدء المهمة مجددًا';
 
   @override
-  String get teamProjectTaskAnswer => 'Send answer';
+  String get teamProjectTaskAnswer => 'إرسال الإجابة';
 
   @override
-  String get teamProjectTaskAnswerLabel => 'Your answer';
+  String get teamProjectTaskAnswerLabel => 'إجابتك';
 
   @override
-  String get teamProjectTaskRunning => 'Working';
+  String get teamProjectTaskRunning => 'قيد العمل';
 
   @override
-  String get teamProjectTaskWaiting => 'Waiting';
+  String get teamProjectTaskWaiting => 'بانتظار';
 
   @override
-  String get teamProjectTaskDone => 'Done';
+  String get teamProjectTaskDone => 'مكتملة';
 
   @override
-  String get teamProjectTaskFailed => 'Task stopped before finishing';
+  String get teamProjectTaskFailed => 'توقفت المهمة قبل اكتمالها';
 
   @override
-  String get teamProjectTaskStale => 'Last known state';
+  String get teamProjectTaskStale => 'آخر حالة معروفة';
 
   @override
-  String get teamProjectTaskCollapse => 'Collapse all';
+  String get teamProjectTaskCollapse => 'طي الكل';
 
   @override
-  String get teamProjectTaskWork => 'Work completed';
+  String get teamProjectTaskWork => 'العمل المنجز';
 
   @override
   String get teamProjectTaskEmpty =>
-      'The task is queued. Its replies and checks will appear here.';
+      'المهمة في قائمة الانتظار. ستظهر ردودها وفحوصها هنا.';
 
   @override
-  String get teamProjectTaskReceipt => 'Promotion receipt';
+  String get teamProjectTaskReceipt => 'إيصال الترقية';
 
   @override
   String get teamProjectTaskVerify => 'Verify task';
