@@ -6,6 +6,10 @@ import 'gen_ui_types.dart';
 
 /// Public controller surface. Implemented by ConnectionController integration.
 abstract interface class GenUiController {
+  GenUiParse? genUiCardForPart(String sessionID, String messageID, Part part);
+  GenUiCardState genUiStateForCard(GenUiCard card);
+  String? genUiAnswerSummary(GenUiCard card);
+  void undoGenUiAnswer(GenUiCard card);
   List<GenUiCard> waitingCardsForSession(String sessionID);
   List<GenUiCard> waitingCardsForFeedItem(ChatFeedItem item);
   Future<void> answerGenUi(
