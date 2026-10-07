@@ -388,6 +388,27 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
+    testWidgets('waiting for the person: no sweep and no turn clock (the '
+        'request card says how long it waited)', (tester) async {
+      KitMotion.loops = true;
+      addTearDown(() => KitMotion.loops = false);
+      await _pump(
+        tester,
+        KitTurn(
+          blocks: const [],
+          phase: KitTurnPhase.waitingForYou,
+          live: KitTurnLive(
+            activity: KitTurnActivity.waitingForYou,
+            since: clock.now().subtract(const Duration(seconds: 77)),
+          ),
+        ),
+      );
+      expect(find.text('Waiting for you…'), findsOneWidget);
+      expect(find.textContaining('1 min'), findsNothing);
+      expect(find.byKey(const ValueKey('kit-turn-live-sweep')), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    });
+
     testWidgets('on the prompt row too', (tester) async {
       await _pump(
         tester,

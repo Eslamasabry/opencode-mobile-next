@@ -673,7 +673,10 @@ class _KitTurnLiveLine extends StatelessWidget {
             teamAlsoWorking: live.teamAlsoWorking,
           ),
         };
-        var line = status.elapsed < KitTurnLive.showElapsedAfter
+        // Waiting for the person: the request card says how long it has
+        // waited, and nothing works meanwhile, so no turn clock and no sweep.
+        final waiting = activity == KitTurnActivity.waitingForYou;
+        var line = waiting || status.elapsed < KitTurnLive.showElapsedAfter
             ? l10n.kitTurnLiveNow(words)
             : l10n.kitTurnLiveFor(
                 words,
@@ -693,6 +696,7 @@ class _KitTurnLiveLine extends StatelessWidget {
                 label: note == null || note.isEmpty ? words : '$words. $note',
                 child: ExcludeSemantics(
                   child: _LiveSweep(
+                    still: waiting,
                     child: KitText(
                       line,
                       role: KitTextRole.secondary,
@@ -715,9 +719,12 @@ class _KitTurnLiveLine extends StatelessWidget {
 /// sweeps at half the pace; Off, reduced motion and tests show the words
 /// still.
 class _LiveSweep extends StatefulWidget {
-  const _LiveSweep({required this.child});
+  const _LiveSweep({required this.child, this.still = false});
 
   final Widget child;
+
+  /// Nothing is working (the agent waits for the person): no light moves.
+  final bool still;
 
   @override
   State<_LiveSweep> createState() => _LiveSweepState();
@@ -731,8 +738,19 @@ class _LiveSweepState extends State<_LiveSweep>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(_LiveSweep oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.still != widget.still) _sync();
+  }
+
+  void _sync() {
     final level = KitEffects.of(context).motion;
     _moving =
+        !widget.still &&
         KitMotion.loops &&
         !KitMotion.reduced(context) &&
         level != KitMotionLevel.off;
