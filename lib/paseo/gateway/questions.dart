@@ -58,7 +58,10 @@ extension _PaseoQuestions on PaseoGateway {
     Map<String, dynamic> request,
   ) {
     final provider = _agents[sessionID]?['provider'];
-    if (!{'claude', 'pi', 'omp'}.contains(provider) ||
+    final agent = AgentToolAdapters.forPaseoProvider(provider);
+    final keysBy = agent?.answerKeys;
+    if (agent == null ||
+        keysBy == null ||
         (request['provider'] != null && request['provider'] != provider)) {
       return null;
     }
@@ -67,7 +70,8 @@ extension _PaseoQuestions on PaseoGateway {
     final prompts = <Map<String, dynamic>>[];
     final keys = <String>[];
     if (plan) {
-      if (provider != 'claude' || request['name'] != 'ExitPlanMode') {
+      final planTool = agent.planToolName;
+      if (planTool == null || request['name'] != planTool) {
         return null;
       }
       final actions = paseoList(request['actions'], max: 16);
@@ -104,7 +108,8 @@ extension _PaseoQuestions on PaseoGateway {
         ],
       });
     } else {
-      if (provider == 'claude' && request['name'] != 'AskUserQuestion') {
+      final questionTool = agent.questionToolName;
+      if (questionTool != null && request['name'] != questionTool) {
         return null;
       }
       final rawPrompts = paseoList(input['questions'], max: 16);
@@ -122,7 +127,7 @@ extension _PaseoQuestions on PaseoGateway {
         ]) {
           if (value[flag] != null && value[flag] is! bool) return null;
         }
-        final key = provider == 'claude' ? question : header;
+        final key = keysBy == NativeAnswerKeys.questionText ? question : header;
         if (keys.contains(key)) return null;
         keys.add(key);
         final options = <Map<String, String>>[];

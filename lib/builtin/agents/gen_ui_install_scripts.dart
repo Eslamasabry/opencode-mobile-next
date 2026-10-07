@@ -33,22 +33,34 @@ String _genUiManagedScript({
   if (!RegExp(r'^[a-zA-Z0-9_-]{1,96}$').hasMatch(profileId)) {
     throw ArgumentError('Invalid managed profile identity');
   }
-  final claude = agent == GenUiAgent.claude;
+  final format = agent.config;
+  if (format == null) {
+    throw ArgumentError('${agent.id} has no MCP registration yet');
+  }
+  // The installer's writers are keyed by config format, not by agent.
+  final claude = format == McpConfigFormat.claudeCli;
+  if (claude != (agent.runsAs == AgentRunUser.agentUser)) {
+    throw ArgumentError('${agent.id}: format and run user disagree');
+  }
   final claudeVersion = AgentCatalog.builtIn.byId('claude')!.recipe!.version;
   final home = '/home/oc/.oc-profiles/$profileId';
-  final directory = claude
-      ? '$home/.oc-genui'
-      : '/root/.oc-genui/${agent.name}';
-  final config = switch (agent) {
-    GenUiAgent.claude => '$home/claude/.claude.json',
-    GenUiAgent.openCode1 => '/root/.config/opencode/opencode.json',
-    GenUiAgent.openCode2 => '/root/.oc-opencode2/config/opencode/opencode.json',
+  final directory = claude ? '$home/.oc-genui' : '/root/.oc-genui/${agent.id}';
+  final config = switch (format) {
+    McpConfigFormat.claudeCli => '$home/claude/.claude.json',
+    McpConfigFormat.openCodeV1 => '/root/.config/opencode/opencode.json',
+    McpConfigFormat.openCodeV2 =>
+      '/root/.oc-opencode2/config/opencode/opencode.json',
+  };
+  final kind = switch (format) {
+    McpConfigFormat.claudeCli => 'claude',
+    McpConfigFormat.openCodeV1 => 'openCode1',
+    McpConfigFormat.openCodeV2 => 'openCode2',
   };
   final data = base64.encode(
     utf8.encode(
       jsonEncode({
         'profile': profileId,
-        'kind': agent.name,
+        'kind': kind,
         'enable': enabled,
         'verify': verify,
         'claudeVersion': claudeVersion,

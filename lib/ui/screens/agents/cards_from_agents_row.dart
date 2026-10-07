@@ -22,11 +22,8 @@ final genUiControllerProvider = Provider<GenUiController?>((ref) {
 String _agentNames(AppLocalizations l10n, List<GenUiAgent> agents) {
   final names = <String>[];
   for (final agent in agents) {
-    final name = switch (agent) {
-      GenUiAgent.claude => l10n.cardsAgentClaude,
-      GenUiAgent.openCode1 ||
-      GenUiAgent.openCode2 => l10n.openCodeConnectionLabel,
-    };
+    // Product names come from each agent's adapter (one per agent).
+    final name = agent.displayName;
     if (!names.contains(name)) names.add(name);
   }
   return names.join(l10n.localeName == 'ar' ? '، ' : ', ');

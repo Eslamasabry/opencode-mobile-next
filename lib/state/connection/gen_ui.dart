@@ -191,6 +191,11 @@ mixin _ConnectionControllerGenUi on ChangeNotifier implements GenUiController {
 }
 
 extension _ConnectionGenUiImpl on ConnectionController {
+  /// A phone agent (Paseo) with a cards-qualified adapter is ready.
+  bool get _genUiPaseoAgentReady => genUiStatus.agents.any(
+    (agent) => agent.paseoProvider != null && agent.cardsQualified,
+  );
+
   // A new phone conversation has a local draft ID in its feed gateway and a
   // daemon ID in its chat gateway. Card state and its durable send fence must
   // use the same identity in both views, scoped to this exact phone source.
@@ -301,7 +306,7 @@ extension _ConnectionGenUiImpl on ConnectionController {
           final installer = _genUiInstaller ??= ManagedGenUiInstaller.builtin();
           // Stage managed registrations; the installer independently gates
           // effective readiness on end-to-end runtime qualification.
-          final agents = GenUiAgent.values.toSet();
+          final agents = AgentToolAdapters.withTools.toSet();
           final result = await installer.setEnabled(
             profileId: id,
             agents: agents,
@@ -349,7 +354,7 @@ extension _ConnectionGenUiImpl on ConnectionController {
             status == StreamStatus.connected &&
             _genUiScope == scope &&
             genUiEnabled &&
-            genUiStatus.agents.contains(GenUiAgent.claude) &&
+            _genUiPaseoAgentReady &&
             _genUiState.available(scope);
       }
       return;
@@ -363,10 +368,8 @@ extension _ConnectionGenUiImpl on ConnectionController {
     _genUiLastScope = scope;
     final generation = _generation, endpoint = owner.baseUrl;
     final agent = isAgentBackend
-        ? GenUiAgent.claude
-        : owner.flavor == ServerFlavor.v2
-        ? GenUiAgent.openCode2
-        : GenUiAgent.openCode1;
+        ? AgentToolAdapter.claude
+        : AgentToolAdapters.forOpenCode(v2: owner.flavor == ServerFlavor.v2);
     _genUiState.register(
       scope,
       gateway,
@@ -565,9 +568,7 @@ extension _ConnectionGenUiImpl on ConnectionController {
           genUiEnabled &&
           !_deletingReadProfiles.contains(scope.profileID),
       ready: genUiStatus.agents.contains(
-        owner.flavor == ServerFlavor.v2
-            ? GenUiAgent.openCode2
-            : GenUiAgent.openCode1,
+        AgentToolAdapters.forOpenCode(v2: owner.flavor == ServerFlavor.v2),
       ),
     );
     return scope;
@@ -675,7 +676,7 @@ extension _ConnectionGenUiImpl on ConnectionController {
           !gateway.isClosed &&
           gateway.transport.connected &&
           gateway.transport.serverVersion == '0.9.2' &&
-          genUiStatus.agents.contains(GenUiAgent.claude) &&
+          _genUiPaseoAgentReady &&
           _paProfile?.id == scope.profileID &&
           _paProfile?.baseUrl == endpoint &&
           genUiEnabled &&
@@ -759,7 +760,7 @@ extension _ConnectionGenUiImpl on ConnectionController {
       try {
         await (_genUiInstaller ??= ManagedGenUiInstaller.builtin()).setEnabled(
           profileId: id,
-          agents: GenUiAgent.values.toSet(),
+          agents: AgentToolAdapters.withTools.toSet(),
           enabled: false,
         );
       } catch (_) {

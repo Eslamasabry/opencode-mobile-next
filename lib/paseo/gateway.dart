@@ -15,6 +15,7 @@ import 'package:crypto/crypto.dart' as crypto;
 
 import '../api/models.dart';
 import '../api/gen_ui_history_http.dart';
+import '../domain/agent_tools/agent_tool_adapter.dart';
 import '../domain/genui/gen_ui_history.dart';
 import '../domain/server_gateway.dart';
 import 'mappers.dart';

@@ -1,5 +1,10 @@
+import '../agent_tools/agent_tool_adapter.dart';
+
+export '../agent_tools/agent_tool_adapter.dart';
+
 /// Ready agents, derived from evidence rather than an agent-supplied label.
-enum GenUiAgent { claude, openCode1, openCode2 }
+/// One [AgentToolAdapter] per agent; the former enum's names still resolve.
+typedef GenUiAgent = AgentToolAdapter;
 
 /// Stable localization keys. Never holds command, config or exception text.
 enum GenUiSetupProblem {

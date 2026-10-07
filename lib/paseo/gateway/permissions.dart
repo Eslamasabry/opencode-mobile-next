@@ -89,10 +89,7 @@ extension _PaseoPermissions on PaseoGateway {
             ? jsonDecode(jsonEncode(suggestions)) as List<dynamic>
             : const [],
         hostRequest,
-        request['name'] == 'mcp__oc-ui__show' &&
-            request['kind'] == 'tool' &&
-            (!request.containsKey('provider') ||
-                request['provider'] == 'claude'),
+        _isCardShowRequest(request),
         crypto.sha256
             .convert(
               utf8.encode(jsonEncode(_canonicalPermissionValue(request))),
@@ -168,6 +165,21 @@ extension _PaseoPermissions on PaseoGateway {
     _nativePermissionChanges.add(null);
   }
 
+  /// A permission request for the display-only card tool, from an agent
+  /// whose adapter allows showing cards without asking. A request with no
+  /// provider is attributed to Claude Code, the only agent the daemon omits
+  /// it for.
+  bool _isCardShowRequest(Map<String, dynamic> request) {
+    final provider = request.containsKey('provider')
+        ? request['provider']
+        : AgentToolAdapter.claude.paseoProvider;
+    final agent = AgentToolAdapters.forPaseoProvider(provider);
+    return agent != null &&
+        agent.preAllowsCards &&
+        request['kind'] == 'tool' &&
+        request['name'] == agent.cardShowName;
+  }
+
   bool _canAllowGenUiShow(_PaseoPermission pending) {
     final agent = _agents[pending.permission.sessionID];
     if (!pending.genUiShow ||
@@ -177,7 +189,10 @@ extension _PaseoPermissions on PaseoGateway {
         !transport.connected ||
         transport.serverVersion != '0.9.2' ||
         pending.epoch != transport.epoch ||
-        agent?['provider'] != 'claude' ||
+        !(AgentToolAdapters.forPaseoProvider(
+              agent?['provider'],
+            )?.preAllowsCards ??
+            false) ||
         _directory == null ||
         agent?['cwd'] != _directory) {
       return false;

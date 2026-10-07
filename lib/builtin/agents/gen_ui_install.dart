@@ -5,8 +5,8 @@ import '../builtin_linux.dart';
 import 'gen_ui_install_scripts.dart';
 
 // A parser or persisted recipe does not qualify a live backend. Installation
-// can stage OpenCode, but only this evidence-backed set may become ready.
-const _qualifiedAgents = {GenUiAgent.claude};
+// can stage any adapter with tools, but only evidence-backed adapters
+// ([AgentToolAdapter.cardsQualified]) may become ready.
 
 /// Configuration outcome only. It never establishes live tool availability.
 enum GenUiInstallOutcome {
@@ -42,7 +42,7 @@ final class BuiltinGenUiSetupVerifier implements GenUiSetupVerifier {
     required String profileId,
     required GenUiAgent agent,
   }) async {
-    if (agent != GenUiAgent.claude) return false;
+    if (!agent.cardsQualified) return false;
     try {
       final result = await _linux.runAgentSetupCheck(
         genUiVerificationScript(profileId: profileId, agent: agent),
@@ -75,7 +75,7 @@ final class BuiltinGenUiSetupRunner implements GenUiSetupRunner {
     required String script,
   }) async {
     try {
-      final result = agent == GenUiAgent.claude
+      final result = agent.runsAs == AgentRunUser.agentUser
           ? await _linux.runAgentSetupCheck(script)
           : await _linux.run(script);
       // Exit status is the entire result protocol; never trust stdout.
@@ -165,7 +165,7 @@ final class ManagedGenUiInstaller implements GenUiInstaller {
             // Persisted config/self-check is only preparation. A permissive
             // verifier must not promote an unqualified transport. Adding an
             // OpenCode runtime here requires recorded device evidence first.
-            if (!_qualifiedAgents.contains(agent)) {
+            if (!agent.cardsQualified) {
               failure ??= GenUiSetupProblem.notQualified;
               break;
             }

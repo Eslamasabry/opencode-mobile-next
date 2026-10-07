@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
 import '../../api/models.dart';
+import '../agent_tools/agent_tool_adapter.dart';
 import '../server_gateway.dart' show ProductException;
 import 'gen_ui_answers.dart';
 import 'gen_ui_asks.dart';
@@ -23,7 +24,7 @@ GenUiParse? genUiFromPart(
 }) {
   if (part.type != 'tool' ||
       part.synthetic ||
-      !const {'oc-ui_show', 'mcp__oc-ui__show'}.contains(part.toolName) ||
+      !AgentToolAdapters.cardShowNames.contains(part.toolName) ||
       part.toolState.status != 'completed' ||
       !part.toolState.executed ||
       part.toolState.input.isEmpty ||
