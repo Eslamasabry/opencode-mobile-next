@@ -1,5 +1,5 @@
 {
- "generatedFrom": "3a4551d6bc4238a87e48a91d7e403b9953f01f90",
+ "generatedFrom": "647880b6e180140a08b085a6c19d62428512bc02",
  "pages": [
   {
    "id": "system",
@@ -2841,6 +2841,20 @@
      "destructive": false
     },
     {
+     "id": "session-menu-sheet-display-toggles",
+     "type": "toggle",
+     "label": "[TranscriptDisplayToggles: reasoning expanded / timestamps visible]",
+     "key": null,
+     "file": "lib/ui/screens/chat/attention_card.dart",
+     "line": 631,
+     "action": "toggle-setting",
+     "target": null,
+     "effect": "Embedded TranscriptDisplayToggles (lib/ui/widgets/transcript_display_toggles.dart, owned by another agent); ChatScreen handles popped values 'thinking'/'timestamps' via _runMobileCommand(_ChatCommandAction.thinking/.timestamps).",
+     "gates": [],
+     "destructive": false,
+     "widgetFile": "lib/ui/widgets/transcript_display_toggles.dart"
+    },
+    {
      "id": "session-menu-sheet-context",
      "type": "list-tile",
      "label": "Context usage",
@@ -3115,19 +3129,6 @@
      "gates": [
       "todosAvailable: _conn.capabilities.sessionTodos"
      ],
-     "destructive": false
-    },
-    {
-     "id": "session-menu-sheet-display-toggles",
-     "type": "toggle",
-     "label": "[TranscriptDisplayToggles: reasoning expanded / timestamps visible]",
-     "key": null,
-     "file": "lib/ui/widgets/transcript_display_toggles.dart",
-     "line": 631,
-     "action": "toggle-setting",
-     "target": null,
-     "effect": "Embedded TranscriptDisplayToggles (lib/ui/widgets/transcript_display_toggles.dart, owned by another agent); ChatScreen handles popped values 'thinking'/'timestamps' via _runMobileCommand(_ChatCommandAction.thinking/.timestamps).",
-     "gates": [],
      "destructive": false
     }
    ]
@@ -38838,6 +38839,11 @@
    "part": "b1-chat-screen"
   },
   {
+   "file": "lib/ui/screens/chat/assistant_error_row.dart",
+   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): the assistant error row moved out of message_view.dart for the 800-line chat budget; its elements stay under that screen's ledger entries. No separate surface.",
+   "part": "b1-chat-screen"
+  },
+  {
    "file": "lib/ui/screens/chat/chat_attachments.dart",
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
    "part": "b1-chat-screen"
@@ -38985,6 +38991,11 @@
   {
    "file": "lib/ui/screens/chat/receipt_check.dart",
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
+   "part": "b1-chat-screen"
+  },
+  {
+   "file": "lib/ui/screens/chat/sent_photos.dart",
+   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): turns a sent prompt's photos into thumbnails in the prompt bubble (FC4); the full view is the existing image viewer. No separate surface.",
    "part": "b1-chat-screen"
   },
   {
