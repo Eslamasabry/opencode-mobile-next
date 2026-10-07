@@ -43183,6 +43183,18 @@ abstract class AppLocalizations {
   /// **'Paste'**
   String get agentsSignInPaste;
 
+  /// Sign-in terminal: opens the sign-in page the agent printed (a device sign-in or Claude's page)
+  ///
+  /// In en, this message translates to:
+  /// **'Open sign-in page'**
+  String get agentsSignInOpenPage;
+
+  /// Sign-in terminal: copies the one-time code the agent printed, to enter on its sign-in page
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code {code}'**
+  String agentsSignInCopyCode(String code);
+
   /// Request card: the held answer after Allow once, shown collapsed with Undo for a few seconds before it is sent.
   ///
   /// In en, this message translates to:

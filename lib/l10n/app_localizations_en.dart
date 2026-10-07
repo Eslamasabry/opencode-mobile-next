@@ -27363,6 +27363,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get agentsSignInPaste => 'Paste';
 
   @override
+  String get agentsSignInOpenPage => 'Open sign-in page';
+
+  @override
+  String agentsSignInCopyCode(String code) {
+    return 'Copy code $code';
+  }
+
+  @override
   String get chatRequestAnswerAllowed => 'Allowed';
 
   @override

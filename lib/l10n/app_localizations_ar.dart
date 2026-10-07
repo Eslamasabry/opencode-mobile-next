@@ -27480,6 +27480,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get agentsSignInPaste => 'لصق';
 
   @override
+  String get agentsSignInOpenPage => 'افتح صفحة تسجيل الدخول';
+
+  @override
+  String agentsSignInCopyCode(String code) {
+    return 'انسخ الرمز $code';
+  }
+
+  @override
   String get chatRequestAnswerAllowed => 'تم السماح';
 
   @override
