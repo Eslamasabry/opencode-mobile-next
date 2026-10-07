@@ -1,0 +1,7 @@
+{
+  "device": "emulator-5554",
+  "target": "lib/main.dart",
+  "version_code": 2201,
+  "signer_sha256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C",
+  "result": "FAIL"
+}

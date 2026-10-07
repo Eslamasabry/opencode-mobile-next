@@ -1,6 +1,8 @@
 {
+  "device": "emulator-5554",
+  "version_code": 2201,
   "result": "FAIL",
-  "native_passes": [
+  "native_checks": [
     "auth_pipe_before_http",
     "private_failure_frames",
     "qa_password_file",
@@ -9,7 +11,9 @@
     "receipt_before_protection",
     "stop_callback_order"
   ],
-  "fixed_failure_stage": [
-    "flutter_assertion"
-  ]
+  "failure_code": "flutter_assertion",
+  "normal_app_restore": "FAIL",
+  "stage": "instrumentation",
+  "error": "flutter_result_invalid",
+  "restore_error": "normal_restore_failed"
 }
