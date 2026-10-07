@@ -95,6 +95,9 @@ jobs:
           test -n "$base" || { echo 'A full manual gate needs commit_base' >&2; exit 64; }
           tool/qa/check_commits.sh "$base" "$head"
 
+      - name: Verify release metadata
+        run: flutter test --no-pub --concurrency=1 test/release_metadata_test.dart
+
       - name: Verify Arabic localization completeness
         run: |
           python3 -m unittest discover -s tool/l10n -p 'test_check_completeness.py'
