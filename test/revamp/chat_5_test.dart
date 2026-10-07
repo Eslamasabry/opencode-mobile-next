@@ -194,6 +194,7 @@ void main() {
     expect(find.byKey(const Key('permission-sheet')), findsNothing);
 
     await tester.tap(find.byKey(const Key('permission-card-allow')));
+    await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
 
     expect(api.replies, [('request-1', 'once')]);
@@ -211,6 +212,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('permission-card-reject')));
+    await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
 
     expect(api.replies, [('request-1', 'reject')]);
@@ -245,6 +247,7 @@ void main() {
     await tester.ensureVisible(find.text('Turn on'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Turn on'));
+    await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
     expect(api.replies, [('request-1', 'always')]);
     expect(find.byKey(const Key('permission-sheet')), findsNothing);
@@ -263,6 +266,7 @@ void main() {
     expect(_card(tester).kind, KitRequestKind.question);
     expect(find.text('Pick a target'), findsOneWidget);
     await tester.tap(find.text('Staging'));
+    await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
 
     final (id, answers) = questions.answered.single;

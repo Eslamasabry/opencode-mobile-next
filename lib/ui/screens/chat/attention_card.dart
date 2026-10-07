@@ -103,10 +103,12 @@ class _PermissionAttentionCardState extends State<_PermissionAttentionCard> {
       );
     }
     final answers = PermissionAnswers.of(conn);
+    final delayed = conn.delayedAnswers;
     return ListenableBuilder(
-      listenable: answers,
+      listenable: Listenable.merge([answers, delayed]),
       builder: (context, _) {
         final answered = answers.answerFor(permission.id);
+        final held = delayed.isHeld(permission.id);
         void answer(String reply, {String? message}) => unawaited(
           answerPermissionRequest(conn, permission, reply, message: message),
         );
@@ -129,6 +131,8 @@ class _PermissionAttentionCardState extends State<_PermissionAttentionCard> {
           ),
           onAllow: () => answer('once'),
           onReject: () => answer('reject'),
+          heldLabel: held ? delayed.heldLabel(permission.id) : null,
+          onUndo: held ? () => delayed.undo(permission.id) : null,
           onRetry: answered == null
               ? null
               : () => answer(answered.reply, message: answered.message),
@@ -203,6 +207,9 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
     );
   }
 
+  /// Holds the answer for the undo window ([DelayedAnswers]); the card shows
+  /// it collapsed with Undo, then [_sendNow] sends it. A second answer while
+  /// one is held is ignored (Undo first).
   Future<void> _send(
     ConnectionController? conn,
     List<List<String>> answers,
@@ -213,11 +220,25 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
       widget.onAnswer(answers);
       return;
     }
-    setState(() {
-      _answer = words;
-      _since = requestSeenNow();
-      _refused = null;
-    });
+    final delayed = conn.delayedAnswers;
+    final id = widget.question.id;
+    if (delayed.isHeld(id)) return;
+    delayed.hold(id, label: words, send: () => _sendNow(conn, answers, words));
+  }
+
+  Future<void> _sendNow(
+    ConnectionController conn,
+    List<List<String>> answers,
+    String words,
+  ) async {
+    if (!conn.questions.containsKey(widget.question.id)) return;
+    if (mounted) {
+      setState(() {
+        _answer = words;
+        _since = requestSeenNow();
+        _refused = null;
+      });
+    }
     try {
       await conn.answerQuestion(widget.question.id, answers);
       unawaited(_draft(conn)?.clear());
@@ -242,7 +263,10 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
         ? first!.title.trim()
         : l10n.chatUiOpenCodeNeedsInput;
     final count = _prompts.length;
-    final sending = _answer != null;
+    final delayed = _requestConnection(context)?.delayedAnswers;
+    final heldLabel = delayed?.heldLabel(widget.question.id);
+    final held = delayed != null && heldLabel != null;
+    final sending = !held && _answer != null;
     return KitRequestCard.ask(
       kind: KitRequestKind.question,
       title: title,
@@ -256,9 +280,20 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
           : count > 1
           ? l10n.chatUiQuestionsSummary(first.question, count)
           : first.question,
-      phase: sending ? KitRequestPhase.sending : KitRequestPhase.waiting,
-      answer: _answer,
-      receipt: sending
+      phase: held
+          ? KitRequestPhase.answered
+          : sending
+          ? KitRequestPhase.sending
+          : KitRequestPhase.waiting,
+      answer: held ? heldLabel : _answer,
+      receipt: held
+          ? KitReceipt(
+              state: KitReceiptState.confirmed,
+              label: heldLabel,
+              onUndo: () => delayed.undo(widget.question.id),
+              undoKey: const Key('question-card-undo'),
+            )
+          : sending
           ? KitReceipt(state: KitReceiptState.sending, since: _since)
           : _refused == null
           ? null
@@ -270,7 +305,14 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
   }
 
   @override
-  Widget build(BuildContext context) => _RequestSlot(child: _content(context));
+  Widget build(BuildContext context) {
+    final conn = _requestConnection(context);
+    if (conn == null) return _RequestSlot(child: _content(context));
+    return ListenableBuilder(
+      listenable: conn.delayedAnswers,
+      builder: (context, _) => _RequestSlot(child: _content(context)),
+    );
+  }
 
   Widget _content(BuildContext context) {
     final l10n = _chatL10n(context);

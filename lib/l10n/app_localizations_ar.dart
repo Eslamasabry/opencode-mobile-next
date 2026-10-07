@@ -19976,7 +19976,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatRequestAlwaysInProject => 'في هذا المشروع';
 
   @override
-  String get chatRequestAlwaysOn => 'Always allowed';
+  String get chatRequestAlwaysOn => 'مسموح دائمًا';
 
   @override
   String get chatRequestDetailTool => 'Tool';
@@ -27458,4 +27458,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get agentsSignInPaste => 'لصق';
+
+  @override
+  String get chatRequestAnswerAllowed => 'تم السماح';
+
+  @override
+  String get chatRequestAnswerRejected => 'تم الرفض';
 }

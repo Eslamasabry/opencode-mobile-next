@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
@@ -90,11 +91,15 @@ class PermissionAnswers extends ChangeNotifier {
   }
 }
 
-/// Sends [reply] for [permission] and records it in [PermissionAnswers]:
-/// sending while in flight, cleared once the server took it (the request
-/// then leaves the pending list and its card goes), refused with the
-/// server's words otherwise. A [note] draft is cleared only once the answer
-/// is confirmed (DATA-1).
+/// Answers [permission] with [reply]. The answer is held for the undo window
+/// ([DelayedAnswers]: the card shows it collapsed with Undo) and then sent;
+/// leaving the chat sends it at once. A second answer while one is held is
+/// ignored (Undo first).
+///
+/// The send records itself in [PermissionAnswers]: sending while in flight,
+/// cleared once the server took it (the request then leaves the pending list
+/// and its card goes), refused with the server's words otherwise. A [note]
+/// draft is cleared only once the answer is confirmed (DATA-1).
 Future<void> answerPermissionRequest(
   ConnectionController controller,
   PermissionRequest permission,
@@ -103,6 +108,48 @@ Future<void> answerPermissionRequest(
   KitDraft? note,
 }) async {
   final request = controller.permissionIdentity(permission);
+  if (!controller.isRequestPending(request)) return;
+  final delayed = controller.delayedAnswers;
+  if (delayed.isHeld(permission.id)) return;
+  delayed.hold(
+    permission.id,
+    label: _heldAnswerWords(reply),
+    send: () => _sendPermissionAnswer(
+      controller,
+      permission,
+      request,
+      reply,
+      message: message,
+      note: note,
+    ),
+  );
+}
+
+/// "Allowed", "Rejected" or "Always allowed" for a held answer; this has no
+/// context, so it follows the phone's language.
+String _heldAnswerWords(String reply) {
+  final code = PlatformDispatcher.instance.locale.languageCode;
+  final l10n =
+      AppLocalizations.supportedLocales.any(
+        (supported) => supported.languageCode == code,
+      )
+      ? lookupAppLocalizations(Locale(code))
+      : lookupAppLocalizations(const Locale('en'));
+  return switch (reply) {
+    'reject' => l10n.chatRequestAnswerRejected,
+    'always' => l10n.chatRequestAlwaysOn,
+    _ => l10n.chatRequestAnswerAllowed,
+  };
+}
+
+Future<void> _sendPermissionAnswer(
+  ConnectionController controller,
+  PermissionRequest permission,
+  PendingRequestIdentity request,
+  String reply, {
+  String? message,
+  KitDraft? note,
+}) async {
   if (!controller.isRequestPending(request)) return;
   final answers = PermissionAnswers.of(controller);
   final sent = PermissionAnswerState(
@@ -175,7 +222,8 @@ KitRequestAlwaysAllowStep? permissionAlwaysStep(
 /// The one card for a permission request ([KitRequestCard.ask]): the ask in
 /// plain words, the command or file, and Allow once / Reject in place.
 /// [answered] turns it into the sending line with its receipt, or puts a
-/// refusal above the answers again.
+/// refusal above the answers again. [heldLabel] with [onUndo] shows the
+/// answer collapsed ("Allowed") with Undo while it is held, before it is sent.
 KitRequestCard permissionRequestCard(
   BuildContext context, {
   required PermissionRequest permission,
@@ -187,6 +235,8 @@ KitRequestCard permissionRequestCard(
   PermissionAnswerState? answered,
   KitRequestAlwaysAllowStep? alwaysAllow,
   VoidCallback? onRetry,
+  String? heldLabel,
+  VoidCallback? onUndo,
   String? detail,
   String? ifIgnored,
   DateTime? since,
@@ -195,7 +245,8 @@ KitRequestCard permissionRequestCard(
 }) {
   final l10n = _l10n(context);
   final title = permissionRequestTitle(permission.permission, l10n: l10n);
-  final sending = answered != null && !answered.failed;
+  final held = heldLabel != null && onUndo != null;
+  final sending = !held && answered != null && !answered.failed;
   return KitRequestCard.ask(
     key: key,
     kind: KitRequestKind.permission,
@@ -208,9 +259,24 @@ KitRequestCard permissionRequestCard(
     detail: detail ?? permission.message,
     summary: permissionSummary(permission),
     since: since,
-    phase: sending ? KitRequestPhase.sending : KitRequestPhase.waiting,
-    answer: answered == null ? null : _answerWords(l10n, answered.reply),
-    receipt: answered == null
+    phase: held
+        ? KitRequestPhase.answered
+        : sending
+        ? KitRequestPhase.sending
+        : KitRequestPhase.waiting,
+    answer: held
+        ? heldLabel
+        : answered == null
+        ? null
+        : _answerWords(l10n, answered.reply),
+    receipt: held
+        ? KitReceipt(
+            state: KitReceiptState.confirmed,
+            label: heldLabel,
+            onUndo: onUndo,
+            undoKey: const Key('permission-card-undo'),
+          )
+        : answered == null
         ? null
         : answered.failed
         ? KitReceipt(state: KitReceiptState.refused, reason: answered.error)

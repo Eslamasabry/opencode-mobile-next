@@ -115,6 +115,12 @@ EventEnvelope _permission() => EventEnvelope(
   },
 );
 
+/// An answer waits out its undo window before it is sent.
+Future<void> _afterHold(WidgetTester tester) async {
+  await tester.pump(const Duration(seconds: 3));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -161,7 +167,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Staging'));
-    await tester.pumpAndSettle();
+    await _afterHold(tester);
 
     expect(repository.answered.single.$1, 'question-1');
     expect(repository.answered.single.$2, [
@@ -173,6 +179,38 @@ void main() {
       find.byKey(const ValueKey('question-card-question-1')),
       findsNothing,
     );
+  });
+
+  testWidgets('a choice is held for 3 s with Undo; Undo sends nothing', (
+    tester,
+  ) async {
+    final repository = _QuestionRepository();
+    final controller = await _pumpChat(tester, repository);
+    controller.handleEventForTesting(_question());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Staging'));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(repository.answered, isEmpty);
+    expect(find.textContaining('Staging', findRichText: true), findsOneWidget);
+    expect(find.byKey(const Key('question-card-undo')), findsOneWidget);
+    expect(find.text('Production'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('question-card-undo')));
+    await tester.pumpAndSettle();
+    expect(find.text('Production'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    expect(repository.answered, isEmpty);
+
+    await tester.tap(find.text('Production'));
+    await tester.pump(const Duration(milliseconds: 2900));
+    expect(repository.answered, isEmpty);
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pumpAndSettle();
+    expect(repository.answered.single.$2, [
+      ['Production'],
+    ]);
   });
 
   testWidgets('a typed answer sends from Something else', (tester) async {
@@ -194,7 +232,7 @@ void main() {
     await tester.enterText(field, 'Canary');
     // A multiline answer sends from the field's own Send button.
     await tester.tap(find.byTooltip('Send answer'));
-    await tester.pumpAndSettle();
+    await _afterHold(tester);
 
     expect(repository.answered.single.$2, [
       ['Canary'],
@@ -223,7 +261,7 @@ void main() {
     expect(repository.answered, isEmpty);
 
     await tester.tap(find.text('Send').last);
-    await tester.pumpAndSettle();
+    await _afterHold(tester);
 
     expect(repository.answered.single.$2, [
       ['Staging', 'Production'],
@@ -302,7 +340,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Staging'));
-    await tester.pumpAndSettle();
+    await _afterHold(tester);
 
     expect(controller.questions, contains('question-1'));
     expect(

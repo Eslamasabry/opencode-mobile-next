@@ -27341,4 +27341,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agentsSignInPaste => 'Paste';
+
+  @override
+  String get chatRequestAnswerAllowed => 'Allowed';
+
+  @override
+  String get chatRequestAnswerRejected => 'Rejected';
 }

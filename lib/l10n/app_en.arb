@@ -32570,5 +32570,13 @@
   "agentsSignInPaste": "Paste",
   "@agentsSignInPaste": {
     "description": "Sign-in step: reads the clipboard into the code field"
+  },
+  "chatRequestAnswerAllowed": "Allowed",
+  "@chatRequestAnswerAllowed": {
+    "description": "Request card: the held answer after Allow once, shown collapsed with Undo for a few seconds before it is sent."
+  },
+  "chatRequestAnswerRejected": "Rejected",
+  "@chatRequestAnswerRejected": {
+    "description": "Request card: the held answer after Reject, shown collapsed with Undo for a few seconds before it is sent."
   }
 }

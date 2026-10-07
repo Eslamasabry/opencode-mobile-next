@@ -164,6 +164,8 @@ void main() {
     await tester.tap(find.byKey(always));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(confirm));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
 
     expect(api.replies, [(requestID: 'request-1', reply: 'always')]);

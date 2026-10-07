@@ -43152,6 +43152,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paste'**
   String get agentsSignInPaste;
+
+  /// Request card: the held answer after Allow once, shown collapsed with Undo for a few seconds before it is sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed'**
+  String get chatRequestAnswerAllowed;
+
+  /// Request card: the held answer after Reject, shown collapsed with Undo for a few seconds before it is sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get chatRequestAnswerRejected;
 }
 
 class _AppLocalizationsDelegate

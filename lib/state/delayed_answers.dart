@@ -19,19 +19,85 @@ class DelayedAnswers extends ChangeNotifier {
   /// How long an answer can be undone.
   final Duration window;
 
-  bool isHeld(String requestId) => false;
+  final Map<String, _Held> _held = {};
+  bool _disposed = false;
 
-  String? heldLabel(String requestId) => null;
+  bool isHeld(String requestId) => _held.containsKey(requestId);
+
+  String? heldLabel(String requestId) => _held[requestId]?.label;
 
   void hold(
     String requestId, {
     required String label,
     required Future<void> Function() send,
   }) {
-    unawaited(send());
+    if (_disposed) {
+      unawaited(_run(send));
+      return;
+    }
+    _held.remove(requestId)?.timer.cancel();
+    late final _Held entry;
+    final timer = Timer(window, () {
+      if (!identical(_held[requestId], entry)) return;
+      _held.remove(requestId);
+      _notify();
+      unawaited(_run(send));
+    });
+    entry = _Held(label, send, timer);
+    _held[requestId] = entry;
+    _notify();
   }
 
-  void undo(String requestId) {}
+  void undo(String requestId) {
+    final entry = _held.remove(requestId);
+    if (entry == null) return;
+    entry.timer.cancel();
+    _notify();
+  }
 
-  Future<void> flush() async {}
+  /// Sends every held answer now and clears them. Safe to call twice.
+  Future<void> flush() async {
+    if (_held.isEmpty) return;
+    final entries = _held.values.toList();
+    _held.clear();
+    for (final entry in entries) {
+      entry.timer.cancel();
+    }
+    _notify();
+    await Future.wait([for (final entry in entries) _run(entry.send)]);
+  }
+
+  /// A send that fails belongs to its own caller's error handling; it never
+  /// escapes from a timer.
+  Future<void> _run(Future<void> Function() send) async {
+    try {
+      await send();
+    } catch (_) {}
+  }
+
+  void _notify() {
+    if (!_disposed) notifyListeners();
+  }
+
+  /// Held answers are sent, not lost, when the owner goes away.
+  @override
+  void dispose() {
+    if (_disposed) return;
+    final entries = _held.values.toList();
+    _held.clear();
+    for (final entry in entries) {
+      entry.timer.cancel();
+      unawaited(_run(entry.send));
+    }
+    _disposed = true;
+    super.dispose();
+  }
+}
+
+class _Held {
+  _Held(this.label, this.send, this.timer);
+
+  final String label;
+  final Future<void> Function() send;
+  final Timer timer;
 }
