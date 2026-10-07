@@ -155,6 +155,26 @@ void main() {
     },
   );
 
+  test(
+    'OpenCode 2 fallback names the agents whose cards are unchecked',
+    () async {
+      final h = await _harness(_Installer());
+      final profile = ServerProfile(
+        id: 'phone',
+        name: 'Phone',
+        baseUrl: BuiltinLinux.serverUrl,
+        flavor: ServerFlavor.v2,
+      );
+      h.controller.adoptConnectedProfileForTesting(profile);
+      final status = h.controller.genUiStatus as GenUiSetupUnavailable;
+      expect(status.reason, GenUiSetupProblem.notQualified);
+      expect(status.affected, AgentToolAdapters.withTools.toList());
+      expect(status.affected, contains(GenUiAgent.openCode2));
+      expect(status.agents, isEmpty);
+      expect(h.controller.capabilities.genUi, isFalse);
+    },
+  );
+
   test('unmanaged profiles reject setup and never call installer', () async {
     final installer = _Installer();
     final h = await _harness(installer, managed: false);

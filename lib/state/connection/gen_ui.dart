@@ -69,8 +69,9 @@ mixin _ConnectionControllerGenUi on ChangeNotifier implements GenUiController {
     }
     return _genUiSetup[id] ??
         (genUiEnabled
-            ? const GenUiSetupUnavailable(
+            ? GenUiSetupUnavailable(
                 reason: GenUiSetupProblem.notQualified,
+                affected: AgentToolAdapters.withTools.toList(),
               )
             : const GenUiSetupOff());
   }
