@@ -1,4 +1,7 @@
 import 'dart:async';
+import '../domain/genui/gen_ui.dart';
+import '../builtin/agents/gen_ui_install.dart';
+import 'gen_ui_state.dart';
 import 'dart:convert';
 import 'dart:ui' show Locale, PlatformDispatcher;
 import 'package:clock/clock.dart';
@@ -107,6 +110,7 @@ import '../builtin/agents/phone_agents_host.dart' show BuiltinPhoneAgents;
 import '../builtin/agents/agent_sign_in.dart' show ChannelAgentSignInHost;
 import 'phone_agent_host_port.dart';
 
+part 'connection/gen_ui.dart';
 part 'connection/monitors.dart';
 part 'connection/attention.dart';
 part 'connection/surfaces.dart';
@@ -214,6 +218,7 @@ typedef EventStreamFactory =
 /// body through `_self`.
 class ConnectionController extends ChangeNotifier
     with
+        _ConnectionControllerGenUi,
         _ConnectionControllerMonitors,
         _ConnectionControllerAttention,
         _ConnectionControllerSurfaces,
@@ -455,6 +460,7 @@ class ConnectionController extends ChangeNotifier
       ConnectionController(
         main.store,
         isSideBackend: true,
+        genUiInstaller: main._genUiInstaller,
         apiFactory: main._apiFactory,
         repositoryFactory: main._repositoryFactory,
         v2GatewayFactory: main._v2GatewayFactory,
@@ -492,6 +498,7 @@ class ConnectionController extends ChangeNotifier
     PhoneEngineGatewayBuilder? phoneEngineGatewayBuilder,
     PhoneAgentHostPort Function(ServerProfile profile)? phoneAgentHostFactory,
     AgentSignInHost Function()? agentSignInHostFactory,
+    GenUiInstaller? genUiInstaller,
   }) : _phoneAgentHostFactory = phoneAgentHostFactory,
        _agentSignInHostFactory = agentSignInHostFactory,
        _phoneEngineBridge = phoneEngineBridge,
@@ -521,6 +528,7 @@ class ConnectionController extends ChangeNotifier
        _attentionTile = AttentionTileSnapshot(prefs: store.prefs),
        diagnostics = diagnostics ?? AppDiagnosticsController(),
        _ownsDiagnostics = diagnostics == null {
+    _genUiInstaller = genUiInstaller;
     _localeStore = AppLocaleStore(store.prefs);
     appLocale = ValueNotifier(_localeStore.value);
     appearance = ValueNotifier(store.appearance);
@@ -761,6 +769,7 @@ class ConnectionController extends ChangeNotifier
   void dispose() {
     if (_disposed) return;
     _disposed = true;
+    _genUiDispose();
     _resetConnectionStatusClock();
     _feedDispose();
     _paShutdown();

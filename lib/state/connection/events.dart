@@ -73,6 +73,10 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
       if (!_isCurrentStream(generation, currentApi, stream)) return;
       final previousStatus = status;
       status = s;
+      if (s != StreamStatus.connected) {
+        final scope = _genUiScope;
+        if (scope != null) _genUiState.invalidateScope(scope);
+      }
       if (s == StreamStatus.reconnecting || s == StreamStatus.disconnected) {
         recovering = recovering || wasConnected;
         _stopDisallowedReconnect();
@@ -80,6 +84,8 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
       }
       if (s == StreamStatus.connected) {
         _streamConnects += 1;
+        _genUiSync();
+        _genUiRefreshFeed();
         PerfTrace.mark('events.connected');
         PerfTrace.markOnce('app.first_connected');
         lastError = null;
@@ -178,6 +184,7 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
     void handleEvent(EventEnvelope event) {
       if (!_isCurrentGlobalStream(generation, currentApi, stream)) return;
       elsewhereAttention.handle(event);
+      _genUiGlobalEvent(event);
       if (event.type == 'session.created' ||
           event.type == 'session.deleted' ||
           event.type == 'session.updated') {
@@ -245,6 +252,7 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
   void _onEvent(EventEnvelope env) {
     if (_disposed) return;
     final props = env.properties;
+    _genUiOnEvent(env);
     final attentionKind = env.type.startsWith('permission.')
         ? AttentionKind.permission
         : env.type.startsWith('question.')

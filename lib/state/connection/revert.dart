@@ -70,6 +70,8 @@ extension _ConnectionControllerRevertImpl on ConnectionController {
           sessionsById[review.sessionID]?.stagedRevert?.fingerprint;
 
   void _resetSessionHistory(String id, {String? removedFrom}) {
+    final cardScope = _genUiScope;
+    if (cardScope != null) _genUiState.stale(cardScope, id);
     _historyRevisions[id] = sessionHistoryRevision(id) + 1;
     final owner = _connectedProfile ?? profile;
     if (owner != null) unawaited(_sessionTailCache.removeSession(owner.id, id));

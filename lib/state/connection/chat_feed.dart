@@ -130,6 +130,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
     _feedLoaded = true;
     _feedLoading = false;
     _feedComplete = complete;
+    _self._genUiRefreshFeed();
     _self._notifyListeners();
   }
 
@@ -210,7 +211,21 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
       if (isAiTeamDirectory(where)) return;
       final otherFolder = isOtherFolderDirectory(where);
       final id = session.id;
-      final status = waiting.contains(id)
+      final cardScope = _self._genUiScope;
+      final cardWaits =
+          cardScope != null &&
+          _self._genUiState
+              .waiting(
+                GenUiScope(
+                  profileID: cardScope.profileID,
+                  sourceId: cardScope.sourceId,
+                  directory: where,
+                  workspace: cardScope.workspace,
+                ),
+                id,
+              )
+              .isNotEmpty;
+      final status = (waiting.contains(id) || cardWaits)
           ? ChatStatus.needsYou
           : running.contains(id)
           ? ChatStatus.running
@@ -298,7 +313,9 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
       items: List.unmodifiable(rows),
       acrossProjects: across,
       loading: _feedLoading && rows.isEmpty,
-      complete: across ? _feedComplete : true,
+      complete:
+          (across ? _feedComplete : true) &&
+          !(_self._genUiLocal?.recoveryIncomplete ?? false),
     );
   }
 

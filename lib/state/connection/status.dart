@@ -180,12 +180,13 @@ extension _ConnectionControllerStatusImpl on ConnectionController {
 
   /// The body of [capabilities].
   ServerCapabilities get _capabilities =>
-      api?.capabilities ??
-      switch ((_connectedProfile ?? profile)?.backend) {
-        ServerBackend.codex => codexServerCapabilities,
-        ServerBackend.paseo => paseoServerCapabilities,
-        _ => ServerCapabilities.allV1,
-      };
+      (api?.capabilities ??
+              switch ((_connectedProfile ?? profile)?.backend) {
+                ServerBackend.codex => codexServerCapabilities,
+                ServerBackend.paseo => paseoServerCapabilities,
+                _ => ServerCapabilities.allV1,
+              })
+          .withGenUi(_genUiEffective);
 
   void _acceptRunningServerVersion(String? rawVersion) {
     final next = rawVersion?.trim() ?? '';

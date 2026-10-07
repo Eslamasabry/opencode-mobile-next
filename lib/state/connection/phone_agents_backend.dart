@@ -44,6 +44,20 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
       _paWatchBackend();
       backend.addListener(_paBackendChanged);
     }
+    backend._genUiParent = _self._genUiPhoneController;
+    final source = _paSources[directory];
+    if (source != null) {
+      _self._genUiPhoneController._genUiAttachPhone(
+        GenUiScope(
+          profileID: profile.id,
+          sourceId: _paseoSourceId(directory),
+          directory: directory,
+        ),
+        source.gateway,
+        sessions: () =>
+            source.source.chatFeed().items.map((row) => row.sessionID),
+      );
+    }
     final id = '${profile.id}$agentBackendProfileSuffix';
     await _carryApprovalChoices(_self.store.prefs, from: profile.id, to: id);
     final name = agentName ?? backend._connectedProfile?.name ?? 'Claude Code';

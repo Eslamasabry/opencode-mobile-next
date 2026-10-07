@@ -783,17 +783,13 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (existing != null) return existing.source;
     final gateway = await host.openGateway(directory);
     final folder = directory.split('/').where((p) => p.isNotEmpty).last;
-    final source = PaseoChatFeedSource(
-      gateway,
-      projectName: folder,
-      persistLastUsedProject: _self._ocRemember,
-      initialLastUsedProjectDirectory: _self._ocLastUsed,
-    );
+    final source = _self._genUiPhoneFeed(gateway, directory, folder);
     _paSources[directory] = (gateway: gateway, source: source);
     return source;
   }
 
   Future<void> _paDropSource(String directory) async {
+    _self._genUiDropPhone(directory);
     final entry = _paSources.remove(directory);
     if (entry == null) return;
     await entry.source.dispose();
