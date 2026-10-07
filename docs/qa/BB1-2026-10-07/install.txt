@@ -1,0 +1,6 @@
+device
+35
+x86_64
+Performing Streamed Install
+adb: failed to install build/app/outputs/flutter-apk/app-release.apk: Failure [INSTALL_FAILED_VERSION_DOWNGRADE: Downgrade detected: Update version code 52 is older than current 2187]
+

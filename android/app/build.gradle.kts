@@ -37,7 +37,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        testInstrumentationRunner = "io.github.eslamasabry.opencode_mobile.PhoneEngineAcceptance"
+        testInstrumentationRunner = if ((project.findProperty("ocBuiltinRuntimeQa") as String?) == "true")
+            "io.github.eslamasabry.opencode_mobile.BuiltinRuntimeAcceptance"
+        else "io.github.eslamasabry.opencode_mobile.PhoneEngineAcceptance"
         // A preview build installs beside the stable app instead of over it
         // (`flutter build apk --android-project-arg=ocPreview=true`): its own
         // package, name, data and built-in Ubuntu, so trying a new version
@@ -127,6 +129,7 @@ androidComponents.onVariants(androidComponents.selector().withBuildType("release
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
     // ShortcutManagerCompat for the pinned-session launcher shortcuts
     // (PinnedSessionShortcuts.kt); same major line the Flutter embedding
     // already pulls in transitively, pinned so the compile classpath is

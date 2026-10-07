@@ -412,12 +412,12 @@ class BuiltinLinux(private val context: Context) {
     fun trackPrivateAgentService(name: String, process: Process, port: Int?) {
         check(name.startsWith("agent-auth.") || name.startsWith("agent-host."))
         removeService(name)
-        services[name] = Service(process, port, "Agents are working on this phone")
+        services[name] = serviceStarted(name, process, port, "Agents are working on this phone")
         recordRunning()
         try { BuiltinServerService.start(context, currentNotice()) }
         catch (_: Throwable) {
             try { stopAgentProcess(process) } catch (_: Throwable) { }
-            services.remove(name)
+            removeStoppedService(name)
             throw IllegalStateException("The agent host could not start.")
         }
         try {
@@ -429,6 +429,7 @@ class BuiltinLinux(private val context: Context) {
                     try {
                         synchronized(this) {
                             if (services[name]?.process === process) {
+                                recordServiceExit(name, services.getValue(name))
                                 services.remove(name)
                                 serviceSetChanged()
                             }
@@ -438,7 +439,7 @@ class BuiltinLinux(private val context: Context) {
             }, "phone-agent-service").start()
         } catch (_: Throwable) {
             try { stopAgentProcess(process) } catch (_: Throwable) { }
-            services.remove(name)
+            removeStoppedService(name)
             throw IllegalStateException("The agent host could not start.")
         }
     }
@@ -488,6 +489,7 @@ class BuiltinLinux(private val context: Context) {
         check(temp.renameTo(File(dir, "config.json")))
     }
 
+    @Synchronized
     fun deleteAgentHome(profileId: String) {
         check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId))
         val base = PhoneAgentPaths.resolve(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles")
@@ -499,7 +501,18 @@ class BuiltinLinux(private val context: Context) {
             check(file.delete()) { "The agent sign-in could not be removed." }
         }
         check(target.parentFile?.canonicalFile == base)
+        val names = setOf("agent-auth.$profileId", "agent-host.$profileId")
+        check(names.none { services[it]?.process?.isAlive == true }) {
+            "Stop the agent before removing its sign-in."
+        }
         erase(target)
+        names.forEach { removeStoppedService(it) }
+        val retained = diagnosticsPreferences.getStringSet("names", emptySet()).orEmpty() - names
+        val edit = diagnosticsPreferences.edit().putStringSet("names", retained)
+        names.forEach { name ->
+            listOf("exit", "uptime", "restarts", "launched").forEach { edit.remove("$name.$it") }
+        }
+        check(edit.commit()) { "The agent sign-in could not be removed." }
     }
 
     private val sharedProjectsFile = File(context.filesDir, "oc.sharedProjects")
@@ -1009,7 +1022,7 @@ class BuiltinLinux(private val context: Context) {
         // cached flags may belong to an older package/generation.
         phoneEngine.prepareFreshStart(profile)
         prootMaskedPids.clear()
-        if (services[PHONE_ENGINE]?.process?.isAlive != true) services.remove(PHONE_ENGINE)
+        if (services[PHONE_ENGINE]?.process?.isAlive != true) removeStoppedService(PHONE_ENGINE)
         serviceSetChanged()
         // PRoot proc bindings are fixed at launch. Even a prior protected
         // generation must stop before its replacement daemon changes PID.
@@ -1078,11 +1091,11 @@ class BuiltinLinux(private val context: Context) {
             }
         }
         if (services[PHONE_ENGINE]?.process !== child) {
-            services[PHONE_ENGINE] = Service(child, port, notice)
+            services[PHONE_ENGINE] = serviceStarted(PHONE_ENGINE, child, port, notice)
             recordRunning()
             try { BuiltinServerService.start(context, currentNotice()) } catch (error: Exception) {
                 phoneEngine.stop(profile)
-                services.remove(PHONE_ENGINE)
+                removeStoppedService(PHONE_ENGINE)
                 serviceSetChanged()
                 throw PhoneEngineNative.Failure("foreground_unavailable")
             }
@@ -1090,6 +1103,7 @@ class BuiltinLinux(private val context: Context) {
                 child.waitFor()
                 synchronized(this) {
                     if (services[PHONE_ENGINE]?.process === child) {
+                        recordServiceExit(PHONE_ENGINE, services.getValue(PHONE_ENGINE))
                         services.remove(PHONE_ENGINE)
                         serviceSetChanged()
                     }
@@ -1103,7 +1117,7 @@ class BuiltinLinux(private val context: Context) {
     fun stopPhoneEngine(profile: String): Map<String, Any?> {
         phoneEngine.stop(profile)
         prootMaskedPids.clear()
-        if (services[PHONE_ENGINE]?.process?.isAlive != true) services.remove(PHONE_ENGINE)
+        if (services[PHONE_ENGINE]?.process?.isAlive != true) removeStoppedService(PHONE_ENGINE)
         serviceSetChanged()
         return phoneEngineStatus(profile)
     }
@@ -1112,7 +1126,7 @@ class BuiltinLinux(private val context: Context) {
     fun deletePhoneEngine(profile: String) {
         phoneEngine.delete(profile)
         prootMaskedPids.clear()
-        if (services[PHONE_ENGINE]?.process?.isAlive != true) services.remove(PHONE_ENGINE)
+        if (services[PHONE_ENGINE]?.process?.isAlive != true) removeStoppedService(PHONE_ENGINE)
         serviceSetChanged()
     }
 
@@ -1168,9 +1182,65 @@ class BuiltinLinux(private val context: Context) {
     private class Service(val process: Process, val port: Int?, val notice: String?, val script: String? = null) {
         /** When this run began, on the clock that keeps counting in deep sleep. */
         val startedAt: Long = SystemClock.elapsedRealtime()
+        var exitRecorded = false
     }
 
     private val services = LinkedHashMap<String, Service>()
+
+    // Device-wide service health only: never scripts, argv, output or credentials.
+    private val diagnosticsPreferences =
+        context.getSharedPreferences("builtin_service_diagnostics", Context.MODE_PRIVATE)
+
+    private fun diagnosticRecord(name: String): ServiceDiagnostics = ServiceDiagnostics(
+        lastExitCode = if (diagnosticsPreferences.contains("$name.exit"))
+            diagnosticsPreferences.getInt("$name.exit", 0) else null,
+        lastUptimeMs = if (diagnosticsPreferences.contains("$name.uptime"))
+            diagnosticsPreferences.getLong("$name.uptime", 0) else null,
+        restartCount = diagnosticsPreferences.getInt("$name.restarts", 0),
+        hasLaunched = diagnosticsPreferences.getBoolean("$name.launched", false),
+    )
+
+    private fun saveDiagnosticRecord(name: String, record: ServiceDiagnostics) {
+        val names = diagnosticsPreferences.getStringSet("names", emptySet()).orEmpty().toMutableSet()
+        names.add(name)
+        val edit = diagnosticsPreferences.edit().putStringSet("names", names)
+            .putInt("$name.restarts", record.restartCount)
+            .putBoolean("$name.launched", record.hasLaunched)
+        record.lastExitCode?.let { edit.putInt("$name.exit", it) } ?: edit.remove("$name.exit")
+        record.lastUptimeMs?.let { edit.putLong("$name.uptime", it) } ?: edit.remove("$name.uptime")
+        if (!edit.commit()) Log.w(TAG, "Service diagnostics could not be saved")
+    }
+
+    private fun serviceStarted(name: String, process: Process, port: Int?, notice: String?,
+        script: String? = null): Service {
+        saveDiagnosticRecord(name, diagnosticRecord(name).launched())
+        return Service(process, port, notice, script)
+    }
+
+    private fun recordServiceExit(name: String, service: Service) {
+        if (service.exitRecorded || service.process.isAlive) return
+        service.exitRecorded = true
+        val code = try { service.process.exitValue() } catch (_: Throwable) { null }
+        saveDiagnosticRecord(name, diagnosticRecord(name).exited(
+            code, SystemClock.elapsedRealtime() - service.startedAt,
+        ))
+    }
+
+    private fun removeStoppedService(name: String) {
+        services[name]?.let { recordServiceExit(name, it) }
+        services.remove(name)
+    }
+
+    private fun serviceDiagnostics(): Map<String, Map<String, Any?>> {
+        val names = diagnosticsPreferences.getStringSet("names", emptySet()).orEmpty() + services.keys
+        return names.associateWith { name ->
+            val service = services[name]
+            if (service != null && !service.process.isAlive) recordServiceExit(name, service)
+            val running = service?.process?.isAlive == true
+            diagnosticRecord(name).snapshot(running,
+                if (running) SystemClock.elapsedRealtime() - service!!.startedAt else null)
+        }
+    }
 
     // Device-wide private state: the runtime is shared by local profiles.
     // Never infer intent from an old crash report or a missing preference.
@@ -1374,7 +1444,7 @@ class BuiltinLinux(private val context: Context) {
             }
         }
         process.outputStream.close()
-        services[name] = Service(process, port, notice, script)
+        services[name] = serviceStarted(name, process, port, notice, script)
         recordRunning()
         try {
             BuiltinServerService.start(context, currentNotice())
@@ -1393,6 +1463,7 @@ class BuiltinLinux(private val context: Context) {
                     try {
                         synchronized(this) {
                             if (services[name]?.process === process) {
+                                recordServiceExit(name, services.getValue(name))
                                 services.remove(name)
                                 serviceSetChanged()
                             }
@@ -1426,6 +1497,7 @@ class BuiltinLinux(private val context: Context) {
                 if (name.startsWith("agent-auth.") || name.startsWith("agent-host.")) stopAgentProcess(service.process)
                 else stopTree(service.process)
                 if (service.process.isAlive) throw PhoneEngineNative.Failure("engine_stop_failed")
+                recordServiceExit(name, service)
                 services.remove(name)
             }
         } finally { serviceSetChanged() }
@@ -1581,6 +1653,7 @@ class BuiltinLinux(private val context: Context) {
             "prootFilters" to prootFilters,
             "serverFilters" to serverFilters,
             "workHeld" to workHeld,
+            "services" to serviceDiagnostics(),
         )
     }
 
