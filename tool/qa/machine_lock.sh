@@ -23,7 +23,9 @@ mkdir -p "$dir"
 
 case "$kind" in
   build)
-    exec flock /home/eslam/Storage/tmp/oc-build.lock "$@"
+    build_lock="${OC_BUILD_LOCK_FILE:-/home/eslam/Storage/tmp/oc-build.lock}"
+    mkdir -p "$(dirname "$build_lock")"
+    exec flock "$build_lock" "$@"
     ;;
   test | analyze)
     # Tests run in UTC like CI, so goldens that show clock times match there.

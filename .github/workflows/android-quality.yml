@@ -156,6 +156,13 @@ jobs:
       - name: Check the serial test runner
         run: python3 -m unittest discover -s tool/qa -p 'test_*.py'
 
+      - name: Run Kotlin static analysis
+        run: |
+          export OC_BUILD_LOCK_FILE="$RUNNER_TEMP/oc-build.lock"
+          export OC_LOCK_DIR="$RUNNER_TEMP/oc-locks"
+          tool/qa/kotlin_static_analysis.sh
+          OC_DETEKT_INTEGRATION=1 python3 -m unittest tool.qa.test_kotlin_static_analysis
+
       - name: Run Android release lint
         run: ./android/gradlew -p android :app:lintRelease --no-daemon
 
