@@ -1968,7 +1968,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quotaSetupDescription =>
-      'Once it’s installed, confirm you trust it, then read. Provider tokens stay on the server.';
+      'بعد تثبيته، أكّد أنك تثق به، ثم اقرأ بيانات الاستخدام. تبقى رموز مزوّدي الخدمة على الخادم.';
 
   @override
   String get quotaSetupNeeded =>
@@ -2019,8 +2019,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'لم يتمكن جامع البيانات من التحقق من الحساب المحدد. لا يُعرض رصيد استخدام. تحقّق من مصدر تسجيل الدخول على الخادم.';
 
   @override
-  String get quotaStale =>
-      'This is the last reading. Refresh to see the latest.';
+  String get quotaStale => 'هذه آخر قراءة. حدّث لرؤية الأحدث.';
 
   @override
   String get quotaUseBlocked =>
@@ -2236,7 +2235,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get monitorDisclosure =>
-      'Monitoring is off until you enable it for a server. Checks run about once a minute while this app is open. Background checks run no more often than every five minutes, only while Stay connected in the background is on and Android’s service is running. Android can stop that service; no remaining runtime is promised.';
+      'المراقبة متوقفة حتى تفعّلها لخادم. تُجرى الفحوص مرة كل دقيقة تقريبًا ما دام التطبيق مفتوحًا. وتُجرى فحوص الخلفية بفاصل لا يقل عن خمس دقائق، وفقط حين يكون البقاء متصلًا في الخلفية مفعّلًا وخدمة Android تعمل. قد يوقف Android هذه الخدمة؛ لا يُضمن وقت تشغيل متبقٍّ.';
 
   @override
   String get monitorOptIn => 'مراقبة هذا الخادم';
@@ -2439,18 +2438,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quotaMonitorWaiting => 'بانتظار قراءة حديثة.';
 
   @override
-  String get quotaMonitorChecking => 'Checking now…';
+  String get quotaMonitorChecking => 'جارٍ التحقّق الآن…';
 
   @override
   String get quotaMonitorPaused =>
-      'Paused. Checks start again when the app is open or Stay connected in the background is on.';
+      'متوقفة مؤقتًا. تبدأ الفحوص مجددًا عندما يكون التطبيق مفتوحًا أو البقاء متصلًا في الخلفية مفعّلًا.';
 
   @override
-  String get quotaMonitorWifiRequired => 'Waiting for Wi-Fi to check again.';
+  String get quotaMonitorWifiRequired => 'بانتظار Wi-Fi لإعادة التحقّق.';
 
   @override
   String get quotaMonitorSourceChanged =>
-      'The account on this server changed, so checks stopped. Open Remaining usage on that server and read it again.';
+      'تغيّر الحساب على هذا الخادم، لذا توقفت الفحوص. افتح الاستخدام المتبقي على ذلك الخادم واقرأه مجددًا.';
 
   @override
   String get quotaMonitorSaveFailed =>
@@ -13969,22 +13968,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String appExitServerStoppedManual(String what) {
-    return '$what. Your phone\'s OpenCode stopped with it. Start it again when you\'re ready.';
+    return '$what. توقف OpenCode على هاتفك معه. شغّله مجددًا عندما تكون جاهزًا.';
   }
 
   @override
   String appExitServerAndTeamStoppedManual(String what) {
-    return '$what. Your phone\'s OpenCode and the AI Team stopped with it. Start them again when you\'re ready.';
+    return '$what. توقف OpenCode وAI Team على هاتفك معه. شغّلهما مجددًا عندما تكون جاهزًا.';
   }
 
   @override
   String appExitServerBack(String what) {
-    return '$what. Your phone\'s OpenCode stopped with it and is running again.';
+    return '$what. توقف OpenCode على هاتفك معه ثم عاد إلى العمل.';
   }
 
   @override
   String appExitServerBackTeam(String what) {
-    return '$what. Your phone\'s OpenCode and the AI Team stopped with it; OpenCode is running again.';
+    return '$what. توقف OpenCode وAI Team على هاتفك معه؛ عاد OpenCode إلى العمل.';
   }
 
   @override
@@ -15331,10 +15330,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get quotaMonitorThreshold => 'Alert when used reaches';
+  String get quotaMonitorThreshold => 'التنبيه عندما يبلغ الاستخدام';
 
   @override
-  String get quotaMonitorSaving => 'Saving…';
+  String get quotaMonitorSaving => 'جارٍ الحفظ…';
 
   @override
   String get folderBrowserSlowTitle => 'Still reading this folder';
@@ -16313,93 +16312,92 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يزال بإمكانك فتح مجلد بإدخال مساره.';
 
   @override
-  String get managedWorkspacesRefresh => 'Refresh';
+  String get managedWorkspacesRefresh => 'تحديث البيئات';
 
   @override
-  String get managedWorkspacesDiscovered => 'Discovery finished';
+  String get managedWorkspacesDiscovered => 'اكتمل الاكتشاف';
 
   @override
-  String get managedWorkspacesDiscoverFailed =>
-      'Couldn’t discover environments';
+  String get managedWorkspacesDiscoverFailed => 'تعذّر اكتشاف البيئات';
 
   @override
-  String get managedWorkspacesCreateFailed => 'Couldn’t create the environment';
+  String get managedWorkspacesCreateFailed => 'تعذّر إنشاء البيئة';
 
   @override
   String managedWorkspacesOpenFailed(String name) {
-    return 'Couldn’t open $name';
+    return 'تعذّر فتح $name';
   }
 
   @override
   String managedWorkspacesRemoveTitle(String name) {
-    return 'Remove $name?';
+    return 'هل تريد إزالة $name؟';
   }
 
   @override
   String managedWorkspacesRemoveBody(String provider) {
-    return 'The server asks $provider to delete this environment and what is in it.';
+    return 'يطلب الخادم من $provider حذف هذه البيئة ومحتوياتها.';
   }
 
   @override
   String get managedWorkspacesRemoveLeavesFirst =>
-      'It is open now, so the app goes back to the project folder first.';
+      'البيئة مفتوحة الآن، لذا يعود التطبيق إلى مجلد المشروع أولًا.';
 
   @override
   String get managedWorkspacesRemoveHistoryStays =>
-      'Conversations stay in history but can no longer open it.';
+      'تبقى المحادثات في السجل، لكن لا يعود بإمكانها فتح البيئة.';
 
   @override
-  String get managedWorkspacesRemoveAction => 'Remove';
+  String get managedWorkspacesRemoveAction => 'إزالة البيئة';
 
   @override
   String managedWorkspacesRemoved(String name) {
-    return '$name was removed';
+    return 'أُزيلت $name';
   }
 
   @override
-  String get managedWorkspacesProvider => 'Provider';
+  String get managedWorkspacesProvider => 'مزوّد الخدمة';
 
   @override
-  String get managedWorkspacesProvidersFailed => 'Couldn’t load providers';
+  String get managedWorkspacesProvidersFailed => 'تعذّر تحميل مزوّدي الخدمة';
 
   @override
-  String get managedWorkspacesNoProviderTitle => 'No provider set up';
+  String get managedWorkspacesNoProviderTitle => 'لم يُعَدّ مزوّد خدمة';
 
   @override
   String get managedWorkspacesNoProviderBody =>
-      'This server has no cloud environment provider. Add one to OpenCode’s config on the server, then refresh.';
+      'ليس لدى هذا الخادم مزوّد بيئات سحابية. أضف مزوّدًا إلى إعدادات OpenCode على الخادم، ثم حدّث.';
 
   @override
   String managedWorkspacesEmptyBody(String project) {
-    return 'Environments for $project appear here. Create one, or discover the ones a provider already has.';
+    return 'تظهر بيئات $project هنا. أنشئ بيئة أو اكتشف البيئات الموجودة لدى مزوّد الخدمة.';
   }
 
   @override
-  String get managedWorkspacesLoadFailed => 'Couldn’t load cloud environments';
+  String get managedWorkspacesLoadFailed => 'تعذّر تحميل البيئات السحابية';
 
   @override
-  String get managedWorkspacesCreating => 'Creating a cloud environment';
+  String get managedWorkspacesCreating => 'جارٍ إنشاء بيئة سحابية';
 
   @override
   String get managedWorkspacesCreatingBody =>
-      'This usually takes a few minutes. It opens here when it’s ready.';
+      'يستغرق ذلك بضع دقائق عادةً. تُفتح هنا عندما تصبح جاهزة.';
 
   @override
   String get managedWorkspacesCreateTakes =>
-      'Creating one usually takes a few minutes. It opens here when it’s ready.';
+      'يستغرق إنشاء البيئة بضع دقائق عادةً. تُفتح هنا عندما تصبح جاهزة.';
 
   @override
-  String get managedWorkspacesBranchLabel => 'Branch';
+  String get managedWorkspacesBranchLabel => 'الفرع';
 
   @override
   String get managedWorkspacesBranchHelper =>
-      'Leave empty to use the provider’s default branch.';
+      'اتركه فارغًا لاستخدام الفرع الافتراضي لمزوّد الخدمة.';
 
   @override
-  String get managedWorkspacesInUse => 'In use';
+  String get managedWorkspacesInUse => 'قيد الاستخدام';
 
   @override
-  String get managedWorkspacesCopyId => 'Copy ID';
+  String get managedWorkspacesCopyId => 'نسخ المعرّف';
 
   @override
   String get projectHealthGitInitSupporting =>
@@ -16549,23 +16547,23 @@ class AppLocalizationsAr extends AppLocalizations {
       'Anything this kind of action touches';
 
   @override
-  String get settingsHubDetailEmpty => 'Choose a group of settings';
+  String get settingsHubDetailEmpty => 'اختر مجموعة إعدادات';
 
   @override
-  String get notifyQuietStartPicker => 'Set when quiet hours start';
+  String get notifyQuietStartPicker => 'تحديد بداية ساعات الهدوء';
 
   @override
-  String get notifyQuietEndPicker => 'Set when quiet hours end';
+  String get notifyQuietEndPicker => 'تحديد نهاية ساعات الهدوء';
 
   @override
-  String get notifyQuietSet => 'Set';
+  String get notifyQuietSet => 'تحديد الوقت';
 
   @override
   String get notifyQuietAllDay =>
-      'Start and end are the same, so notifications stay quiet all day.';
+      'البداية والنهاية متطابقتان، لذا تبقى الإشعارات صامتة طوال اليوم.';
 
   @override
-  String get notifySendingTest => 'Sending a test notification…';
+  String get notifySendingTest => 'جارٍ إرسال إشعار تجريبي…';
 
   @override
   String get notifyNoServersTitle => 'No servers to watch';
@@ -25461,203 +25459,204 @@ class AppLocalizationsAr extends AppLocalizations {
   String get teamProjectTaskReceipt => 'إيصال الترقية';
 
   @override
-  String get teamProjectTaskVerify => 'Verify task';
+  String get teamProjectTaskVerify => 'التحقّق من المهمة';
 
   @override
-  String get teamProjectTryDemo => 'Try AI Team demo';
+  String get teamProjectTryDemo => 'تجربة العرض التوضيحي لـAI Team';
 
   @override
   String get teamProjectLoadFailure =>
-      'The demo could not be opened. Your saved project data has been kept.';
+      'تعذّر فتح العرض التوضيحي. احتُفظ ببيانات مشروعك المحفوظة.';
 
   @override
-  String get teamProjectInboxOpen => 'Review project decision';
+  String get teamProjectInboxOpen => 'مراجعة قرار المشروع';
 
   @override
   String get teamProjectDemoDisclosure =>
-      'Simulated projects. No agents run and no repositories change.';
+      'مشاريع محاكاة. لا يعمل أي وكلاء ولا تتغيّر أي مستودعات.';
 
   @override
-  String get teamProjectOff => 'Leave demo';
+  String get teamProjectOff => 'مغادرة العرض التوضيحي';
 
   @override
   String get teamProjectEditorFixRoundsRange =>
-      'Enter a fix-round limit from 0 to 3.';
+      'أدخل حدًا لجولات الإصلاح من 0 إلى 3.';
 
   @override
   String get teamProjectEditorPositiveTokens =>
-      'Enter a positive token limit or leave it empty.';
+      'أدخل حدًا موجبًا للرموز أو اتركه فارغًا.';
 
   @override
-  String get teamProjectEditorReloadConfirmTitle => 'Refresh this project?';
+  String get teamProjectEditorReloadConfirmTitle =>
+      'هل تريد تحديث هذا المشروع؟';
 
   @override
-  String get teamProjectEditorReload => 'Refresh latest project';
+  String get teamProjectEditorReload => 'تحديث المشروع إلى أحدث حالة';
 
   @override
   String get teamProjectEditorDiscardDraft =>
-      'This replaces your unsaved edits with the latest project. Your saved project is kept.';
+      'يستبدل هذا تعديلاتك غير المحفوظة بأحدث حالة للمشروع. يبقى مشروعك المحفوظ كما هو.';
 
   @override
-  String get teamProjectEditorRoleRequired => 'Enter a name for this role.';
+  String get teamProjectEditorRoleRequired => 'أدخل اسمًا لهذا الدور.';
 
   @override
-  String get teamProjectEditorDefaults => 'New project defaults';
+  String get teamProjectEditorDefaults => 'الإعدادات الافتراضية للمشروع الجديد';
 
   @override
-  String get teamProjectEditorApplyPlan => 'Apply updated plan';
+  String get teamProjectEditorApplyPlan => 'تطبيق الخطة المحدّثة';
 
   @override
-  String get teamProjectEditorContextFiles => 'Files to read first';
+  String get teamProjectEditorContextFiles => 'الملفات المطلوب قراءتها أولًا';
 
   @override
   String get teamProjectEditorContextFilesHelp =>
-      'Optional. One path per line. The team reads these before it plans. The demo does not read or upload files.';
+      'اختياري. مسار واحد في كل سطر. يقرأ الفريق هذه الملفات قبل التخطيط. لا يقرأ العرض التوضيحي الملفات ولا يرفعها.';
 
   @override
-  String get teamProjectEditorScreenOff => 'Keep working with the screen off';
+  String get teamProjectEditorScreenOff => 'مواصلة العمل والشاشة مغلقة';
 
   @override
   String get teamProjectEditorScreenOffHelp =>
-      'This preference is saved for the project. Background work remains subject to the server and system limits.';
+      'يُحفظ هذا التفضيل للمشروع. يبقى العمل في الخلفية خاضعًا لحدود الخادم والنظام.';
 
   @override
   String get teamProjectEditorDraftApproval =>
-      'Draft changes need your approval before they become the project spec.';
+      'تحتاج تغييرات المسودة إلى موافقتك قبل اعتمادها كمواصفات المشروع.';
 
   @override
-  String get teamProjectEditorChangeRequest =>
-      'What should the planner change?';
+  String get teamProjectEditorChangeRequest => 'ما الذي تريد أن يغيّره المخطط؟';
 
   @override
-  String get teamProjectEditorAskChange => 'Ask to change';
+  String get teamProjectEditorAskChange => 'طلب التغيير';
 
   @override
   String get teamProjectEditorChangeRequired =>
-      'Add a goal and describe the change you want.';
+      'أضف هدفًا وصف التغيير الذي تريده.';
 
   @override
-  String get teamProjectTaskApprovedPlan => 'Approved plan';
+  String get teamProjectTaskApprovedPlan => 'الخطة المعتمدة';
 
   @override
-  String get teamProjectTaskCriteria => 'Acceptance criteria';
+  String get teamProjectTaskCriteria => 'معايير القبول';
 
   @override
-  String get teamProjectTaskOpenFindings => 'Open findings';
+  String get teamProjectTaskOpenFindings => 'الملاحظات غير المعالجة';
 
   @override
-  String get teamProjectTaskFindingsAddressed => 'Findings addressed';
+  String get teamProjectTaskFindingsAddressed => 'الملاحظات المعالجة';
 
   @override
   String get teamProjectMergeConfirmBody =>
-      'Checked task branches will merge into dev, followed by combined checks. Main stays unchanged.';
+      'ستُدمج فروع المهام التي جرى التحقّق منها في dev، ثم تُجرى الفحوص المشتركة. يبقى Main كما هو.';
 
   @override
   String get teamProjectEditorDraftClearFailed =>
-      'Changes were saved, but the local draft could not be cleared. Close this sheet and review the project before trying again.';
+      'حُفظت التغييرات، لكن تعذّر مسح المسودة المحلية. أغلق هذه اللوحة وراجع المشروع قبل المحاولة مجددًا.';
 
   @override
-  String get teamProjectRestartElsewhereConfirmTitle => 'Start over elsewhere?';
+  String get teamProjectRestartElsewhereConfirmTitle =>
+      'هل تريد البدء من جديد في مكان آخر؟';
 
   @override
-  String get teamProjectRestartElsewhere => 'Start over elsewhere';
+  String get teamProjectRestartElsewhere => 'البدء من جديد في مكان آخر';
 
   @override
   String get teamProjectRestartElsewhereBody =>
-      'Start a new attempt on this server. The previous branch stays on its original server.';
+      'ابدأ محاولة جديدة على هذا الخادم. يبقى الفرع السابق على خادمه الأصلي.';
 
   @override
-  String get teamProjectWaitForServer => 'Wait for the original server';
+  String get teamProjectWaitForServer => 'انتظار الخادم الأصلي';
 
   @override
   String get teamProjectBudgetNear =>
-      'Approaching your budget. New work pauses at your chosen limit.';
+      'تقترب من ميزانيتك. يتوقف العمل الجديد مؤقتًا عند الحد الذي اخترته.';
 
   @override
-  String get teamProjectDemoPlanFailure => 'Demo: unreadable plan';
+  String get teamProjectDemoPlanFailure => 'العرض التوضيحي: خطة غير مقروءة';
 
   @override
-  String get teamProjectTaskReviewFindings => 'Select open findings';
+  String get teamProjectTaskReviewFindings => 'اختيار الملاحظات غير المعالجة';
 
   @override
-  String get teamProjectTaskResolveAgent => 'Resolve with agent';
+  String get teamProjectTaskResolveAgent => 'المعالجة بواسطة وكيل';
 
   @override
-  String get teamProjectTaskResolveManually => 'I’ll resolve';
+  String get teamProjectTaskResolveManually => 'سأتولى المعالجة';
 
   @override
-  String get teamProjectTaskRecheckResolution => 'Re-check resolution';
+  String get teamProjectTaskRecheckResolution => 'إعادة التحقّق من المعالجة';
 
   @override
-  String get teamProjectTaskVerificationResults => 'Verification results';
+  String get teamProjectTaskVerificationResults => 'نتائج التحقّق';
 
   @override
-  String get teamProjectTaskCriterionMet => 'Met';
+  String get teamProjectTaskCriterionMet => 'مستوفى';
 
   @override
-  String get teamProjectTaskCriterionUnmet => 'Unmet';
+  String get teamProjectTaskCriterionUnmet => 'غير مستوفى';
 
   @override
-  String get teamProjectTaskCriterionNotApplicable => 'Not applicable';
+  String get teamProjectTaskCriterionNotApplicable => 'لا ينطبق';
 
   @override
-  String get teamProjectTaskDemoConflict => 'Demo: create a conflict';
+  String get teamProjectTaskDemoConflict => 'العرض التوضيحي: إنشاء تعارض';
 
   @override
-  String get teamProjectTaskDemoCommit => 'Demo: add a manual commit';
+  String get teamProjectTaskDemoCommit => 'العرض التوضيحي: إضافة تثبيت يدوي';
 
   @override
   String get teamProjectEditorNoOptions =>
-      'No options are available yet. Return to AI Team to add a server or role.';
+      'لا توجد خيارات متاحة بعد. عد إلى AI Team لإضافة خادم أو دور.';
 
   @override
-  String get teamProjectEditorUnknownDate => 'Date unavailable';
+  String get teamProjectEditorUnknownDate => 'التاريخ غير متاح';
 
   @override
-  String get teamProjectEditorYou => 'You';
+  String get teamProjectEditorYou => 'أنت';
 
   @override
-  String get teamProjectEditorApprovedBy => 'Approved by';
+  String get teamProjectEditorApprovedBy => 'وافق عليه';
 
   @override
   String get teamProjectEditorPlanFailed =>
-      'The planner did not return a usable plan. Keep the goal as one task, or ask for a new plan.';
+      'لم يُرجع المخطط خطة قابلة للاستخدام. احتفظ بالهدف كمهمة واحدة، أو اطلب خطة جديدة.';
 
   @override
-  String get teamProjectEditorUseAsTask => 'Use as one task';
+  String get teamProjectEditorUseAsTask => 'استخدام الهدف كمهمة واحدة';
 
   @override
-  String get teamProjectEditorAskAgain => 'Ask again';
+  String get teamProjectEditorAskAgain => 'الطلب مجددًا';
 
   @override
-  String get teamProjectDemoChip => 'Demo';
+  String get teamProjectDemoChip => 'عرض توضيحي';
 
   @override
   String teamProjectHeadlineMilestone(int current, int total, int working) {
-    return 'Milestone $current of $total · $working working';
+    return 'المرحلة الرئيسية $current من $total · $working قيد العمل';
   }
 
   @override
   String teamProjectHeadlineDone(int total) {
-    return 'All $total milestones done';
+    return 'اكتملت جميع المراحل الرئيسية، وعددها $total';
   }
 
   @override
   String teamProjectGoalStatus(String age, int milestones, int repos) {
-    return 'Spec approved $age · $milestones milestones · $repos repos';
+    return 'اعتُمدت المواصفات منذ $age · عدد المراحل الرئيسية: $milestones · عدد المستودعات: $repos';
   }
 
   @override
   String teamProjectGoalStatusDraft(int milestones, int repos) {
-    return 'Draft spec · $milestones milestones · $repos repos';
+    return 'مسودة المواصفات · عدد المراحل الرئيسية: $milestones · عدد المستودعات: $repos';
   }
 
   @override
-  String get teamProjectOpenSpec => 'Open spec';
+  String get teamProjectOpenSpec => 'فتح المواصفات';
 
   @override
   String teamProjectRequestWhere(String role, String server) {
-    return '$role on $server';
+    return '$role على $server';
   }
 
   @override
@@ -25665,32 +25664,32 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count tasks after it wait too',
-      one: '1 task after it waits too',
+      other: 'وتنتظر مهام عددها $count بعده أيضًا',
+      one: 'وتنتظر مهمة واحدة بعده أيضًا',
     );
-    return '$role waits; $_temp0';
+    return 'ينتظر $role؛ $_temp0';
   }
 
   @override
   String teamProjectMilestoneTasks(int done, int total) {
-    return '$done of $total tasks';
+    return 'المهام: $done من $total';
   }
 
   @override
   String teamProjectMilestoneWaits(int number) {
-    return 'Waits on $number';
+    return 'تنتظر $number';
   }
 
   @override
-  String get teamProjectMilestoneNoTasks => 'No tasks yet';
+  String get teamProjectMilestoneNoTasks => 'لا توجد مهام بعد';
 
   @override
   String teamProjectLanesTitle(int busy, int total) {
-    return 'Lanes $busy/$total busy';
+    return 'مسارات العمل: $busy/$total مشغولة';
   }
 
   @override
-  String get teamProjectLanesChange => 'Change';
+  String get teamProjectLanesChange => 'تغيير المسارات';
 
   @override
   String teamProjectLaneRunning(String server, String elapsed) {
@@ -25699,7 +25698,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String teamProjectLaneWaiting(String server) {
-    return '$server · waiting for a free lane';
+    return '$server · بانتظار مسار عمل متاح';
   }
 
   @override
@@ -25712,119 +25711,119 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count lanes',
-      one: '1 lane',
+      other: 'مسارات عددها $count',
+      one: 'مسار واحد',
     );
-    return 'Parallel · $_temp0';
+    return 'بالتوازي · $_temp0';
   }
 
   @override
-  String get teamProjectLaneNoteSingle => 'Single lane';
+  String get teamProjectLaneNoteSingle => 'مسار واحد';
 
   @override
   String teamProjectLaneNoteDemo(String note) {
-    return '$note · figures are simulated';
+    return '$note · الأرقام ناتجة عن محاكاة';
   }
 
   @override
   String teamProjectElapsedSeconds(int count) {
-    return '$count s';
+    return '$count ث';
   }
 
   @override
   String teamProjectElapsedMinutes(int count) {
-    return '$count min';
+    return '$count د';
   }
 
   @override
   String teamProjectElapsedHours(int hours, int minutes) {
-    return '$hours h $minutes min';
+    return '$hours س $minutes د';
   }
 
   @override
   String teamProjectCostToday(String amount) {
-    return '$amount today';
+    return '$amount اليوم';
   }
 
   @override
   String teamProjectCostTodayOf(String amount, String limit) {
-    return '$amount of $limit today';
+    return '$amount من $limit اليوم';
   }
 
   @override
   String teamProjectCostTotal(String amount) {
-    return '$amount total';
+    return '$amount إجمالًا';
   }
 
   @override
   String teamProjectCostTotalOf(String amount, String limit) {
-    return '$amount of $limit total';
+    return '$amount من $limit إجمالًا';
   }
 
   @override
-  String get teamProjectCostNoLimit => 'No limit set';
+  String get teamProjectCostNoLimit => 'لم يُحدّد حد';
 
   @override
-  String get teamProjectCostNotReported => 'Not reported yet';
+  String get teamProjectCostNotReported => 'لم يُبلّغ عنه بعد';
 
   @override
   String teamProjectBoardSummary(int tasks, int milestones) {
     String _temp0 = intl.Intl.pluralLogic(
       tasks,
       locale: localeName,
-      other: '$tasks tasks',
-      one: '1 task',
+      other: 'مهام عددها $tasks',
+      one: 'مهمة واحدة',
     );
     String _temp1 = intl.Intl.pluralLogic(
       milestones,
       locale: localeName,
-      other: '$milestones milestones',
-      one: '1 milestone',
+      other: 'مراحل رئيسية عددها $milestones',
+      one: 'مرحلة رئيسية واحدة',
     );
-    return '$_temp0 across $_temp1';
+    return '$_temp0 موزّعة على $_temp1';
   }
 
   @override
-  String get teamProjectBoardEmpty => 'No tasks yet';
+  String get teamProjectBoardEmpty => 'لا توجد مهام بعد';
 
   @override
   String teamProjectTimelineSummary(int count, String age) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count events',
-      one: '1 event',
+      other: 'أحداث عددها $count',
+      one: 'حدث واحد',
     );
-    return '$_temp0 · latest $age';
+    return '$_temp0 · الأحدث منذ $age';
   }
 
   @override
-  String get teamProjectTimelineEmpty => 'Nothing has happened yet';
+  String get teamProjectTimelineEmpty => 'لم يحدث شيء بعد';
 
   @override
   String teamProjectServersSummary(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count servers',
-      one: '1 server',
+      other: 'خوادم عددها $count',
+      one: 'خادم واحد',
     );
     return '$_temp0';
   }
 
   @override
   String teamProjectSettingsSummaryParallel(int count) {
-    return 'Parallel · up to $count lanes';
+    return 'بالتوازي · الحد الأقصى للمسارات: $count';
   }
 
   @override
-  String get teamProjectSettingsSummarySingle => 'Single lane';
+  String get teamProjectSettingsSummarySingle => 'مسار واحد';
 
   @override
-  String get teamProjectMenu => 'Project menu';
+  String get teamProjectMenu => 'قائمة المشروع';
 
   @override
-  String get teamProjectTaskMenu => 'Task menu';
+  String get teamProjectTaskMenu => 'قائمة المهمة';
 
   @override
   String teamProjectDecisionBy(String who, String age) {
@@ -25832,42 +25831,42 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get teamProjectYou => 'You';
+  String get teamProjectYou => 'أنت';
 
   @override
   String teamProjectPlanFor(int number) {
-    return 'Plan for milestone $number · waiting for you';
+    return 'خطة المرحلة الرئيسية $number · بانتظارك';
   }
 
   @override
-  String get teamProjectPlanForProject => 'Plan · waiting for you';
+  String get teamProjectPlanForProject => 'الخطة · بانتظارك';
 
   @override
   String teamProjectPlanSummary(int phases, int tasks, int repos) {
     String _temp0 = intl.Intl.pluralLogic(
       phases,
       locale: localeName,
-      other: '$phases phases',
-      one: '1 phase',
+      other: 'مراحل عددها $phases',
+      one: 'مرحلة واحدة',
     );
     String _temp1 = intl.Intl.pluralLogic(
       tasks,
       locale: localeName,
-      other: '$tasks tasks',
-      one: '1 task',
+      other: 'مهام عددها $tasks',
+      one: 'مهمة واحدة',
     );
     String _temp2 = intl.Intl.pluralLogic(
       repos,
       locale: localeName,
-      other: '$repos repos',
-      one: '1 repo',
+      other: 'مستودعات عددها $repos',
+      one: 'مستودع واحد',
     );
     return '$_temp0 · $_temp1 · $_temp2';
   }
 
   @override
   String teamProjectPlanPhase(int number, String title) {
-    return 'Phase $number · $title';
+    return 'المرحلة $number · $title';
   }
 
   @override
@@ -25875,12 +25874,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String teamProjectPlanRepo(String name) {
-    return '$name repo';
+    return 'مستودع $name';
   }
 
   @override
   String teamProjectPlanAfter(int number) {
-    return 'after $number';
+    return 'بعد $number';
   }
 
   @override
@@ -25888,8 +25887,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count criteria',
-      one: '1 criterion',
+      other: 'معايير عددها $count',
+      one: 'معيار واحد',
     );
     return '$_temp0';
   }
@@ -25904,17 +25903,17 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '… $count more tasks',
-      one: '… 1 more task',
+      other: '… مهام إضافية عددها $count',
+      one: '… مهمة إضافية واحدة',
     );
     return '$_temp0';
   }
 
   @override
-  String get teamProjectPlanEdit => 'Edit plan';
+  String get teamProjectPlanEdit => 'تعديل الخطة';
 
   @override
-  String get teamProjectPlanAsk => 'Ask to change';
+  String get teamProjectPlanAsk => 'طلب التغيير';
 
   @override
   String get teamProjectPlanNotYet => 'ليس الآن';
@@ -25958,21 +25957,21 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get teamProjectPromoteTitle => 'Promote dev → main';
+  String get teamProjectPromoteTitle => 'نقل dev → main';
 
   @override
   String teamProjectPromoteStatus(String repo) {
-    return '$repo repo · main is protected. Only you can promote.';
+    return 'مستودع $repo · main محمي. أنت وحدك تستطيع نقل التغييرات إليه.';
   }
 
   @override
   String teamProjectPromoteMilestone(int number, String title) {
-    return 'Milestone $number · $title';
+    return 'المرحلة الرئيسية $number · $title';
   }
 
   @override
   String teamProjectPromoteMerged(int done, int total) {
-    return '$done of $total tasks merged';
+    return 'المهام المدمجة: $done من $total';
   }
 
   @override
@@ -25980,37 +25979,36 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count days',
-      one: '1 day',
+      other: 'أيام عددها $count',
+      one: 'يوم واحد',
     );
     return '$_temp0';
   }
 
   @override
-  String get teamProjectPromoteChecks => 'Checks after merge';
+  String get teamProjectPromoteChecks => 'الفحوص بعد الدمج';
 
   @override
-  String get teamProjectPromoteChecksPassed =>
-      'Every check passed after the last merge';
+  String get teamProjectPromoteChecksPassed => 'نجحت جميع الفحوص بعد آخر دمج';
 
   @override
-  String get teamProjectPromoteReview => 'Review';
+  String get teamProjectPromoteReview => 'مراجعة العمل';
 
   @override
   String teamProjectPromoteAccepted(int number) {
-    return 'You accepted milestone $number';
+    return 'وافقت على المرحلة الرئيسية $number';
   }
 
   @override
-  String get teamProjectPromoteNoReview => 'No review was needed for this work';
+  String get teamProjectPromoteNoReview => 'لم تلزم مراجعة لهذا العمل';
 
   @override
   String teamProjectPromoteChanges(int commits) {
     String _temp0 = intl.Intl.pluralLogic(
       commits,
       locale: localeName,
-      other: '$commits commits',
-      one: '1 commit',
+      other: 'تثبيتات عددها $commits',
+      one: 'تثبيت واحد',
     );
     return '$_temp0';
   }
@@ -26020,53 +26018,53 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       files,
       locale: localeName,
-      other: '$files files',
-      one: '1 file',
+      other: 'ملفات عددها $files',
+      one: 'ملف واحد',
     );
     return '$_temp0';
   }
 
   @override
-  String get teamProjectPromoteSeeChanges => 'See changes';
+  String get teamProjectPromoteSeeChanges => 'عرض التغييرات';
 
   @override
-  String get teamProjectPromoteNotYet => 'Not yet';
+  String get teamProjectPromoteNotYet => 'ليس بعد';
 
   @override
   String teamProjectFindingsTitle(String role, String summary) {
-    return 'Checked by $role · $summary';
+    return 'تحقّق منه $role · $summary';
   }
 
   @override
-  String get teamProjectEditorGoalLabel => 'What should the team achieve?';
+  String get teamProjectEditorGoalLabel => 'ما الذي تريد أن يحققه الفريق؟';
 
   @override
-  String get teamProjectEditorWhereRuns => 'Where it runs';
+  String get teamProjectEditorWhereRuns => 'مكان التشغيل';
 
   @override
-  String get teamProjectEditorMoreOptions => 'Optional details';
+  String get teamProjectEditorMoreOptions => 'تفاصيل اختيارية';
 
   @override
   String get teamProjectEditorNameHelp =>
-      'Optional. Leave empty to use the start of the goal.';
+      'اختياري. اتركه فارغًا لاستخدام بداية الهدف.';
 
   @override
   String get teamProjectEditorBudgetHelp =>
-      'The team pauses when the day or the whole project reaches its limit.';
+      'يتوقف الفريق مؤقتًا عندما يبلغ الإنفاق اليومي أو إنفاق المشروع كله حده.';
 
   @override
   String teamProjectFindingsCritical(int count) {
-    return '$count critical';
+    return 'الملاحظات الحرجة: $count';
   }
 
   @override
   String teamProjectFindingsMajor(int count) {
-    return '$count major';
+    return 'الملاحظات الكبيرة: $count';
   }
 
   @override
   String teamProjectFindingsMinor(int count) {
-    return '$count minor';
+    return 'الملاحظات الصغيرة: $count';
   }
 
   @override
@@ -26258,253 +26256,241 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get teamRefusalUnsupportedCommand =>
-      'This version of the team can\'t do that yet.';
+      'لا يستطيع هذا الإصدار من الفريق تنفيذ ذلك بعد.';
 
   @override
   String get teamRefusalUnsupportedCommandNext =>
-      'Update the app, then try again.';
+      'حدّث التطبيق، ثم حاول مجددًا.';
 
   @override
   String get teamRefusalBoundaryUnverified =>
-      'The team can\'t work until this phone\'s protection has been checked.';
+      'لا يستطيع الفريق العمل حتى يُتحقّق من حماية هذا الهاتف.';
 
   @override
-  String get teamRefusalBoundaryUnverifiedNext =>
-      'Open AI Team and turn it on again.';
+  String get teamRefusalBoundaryUnverifiedNext => 'افتح AI Team وشغّله مجددًا.';
 
   @override
   String get teamRefusalProtocolUnverified =>
-      'The team is waiting for OpenCode to restart.';
+      'ينتظر الفريق إعادة تشغيل OpenCode.';
 
   @override
-  String get teamRefusalProtocolUnverifiedNext => 'Try again in a minute.';
+  String get teamRefusalProtocolUnverifiedNext => 'حاول مجددًا بعد دقيقة.';
 
   @override
-  String get teamRefusalEngineUnavailable =>
-      'The team isn\'t answering right now.';
+  String get teamRefusalEngineUnavailable => 'لا يستجيب الفريق حاليًا.';
 
   @override
-  String get teamRefusalEngineUnavailableNext => 'Try again in a moment.';
+  String get teamRefusalEngineUnavailableNext => 'حاول مجددًا بعد قليل.';
 
   @override
-  String get teamRefusalTransportUncertain =>
-      'The team may not have received that.';
+  String get teamRefusalTransportUncertain => 'ربما لم يتلقّ الفريق ذلك.';
 
   @override
   String get teamRefusalTransportUncertainNext =>
-      'Check the project list before you try again.';
+      'تحقّق من قائمة المشاريع قبل المحاولة مجددًا.';
 
   @override
-  String get teamRefusalBusy => 'Another change is still being saved.';
+  String get teamRefusalBusy => 'لا يزال حفظ تغيير آخر جاريًا.';
 
   @override
-  String get teamRefusalBusyNext => 'Try again in a moment.';
+  String get teamRefusalBusyNext => 'حاول مجددًا بعد قليل.';
 
   @override
-  String get teamRefusalSaveFailed =>
-      'The change couldn\'t be saved on this phone.';
+  String get teamRefusalSaveFailed => 'تعذّر حفظ التغيير على هذا الهاتف.';
 
   @override
-  String get teamRefusalSaveFailedNext =>
-      'Your edits are still here. Try again.';
+  String get teamRefusalSaveFailedNext => 'لا تزال تعديلاتك هنا. حاول مجددًا.';
 
   @override
-  String get teamRefusalReadOnly => 'The team is read-only right now.';
+  String get teamRefusalReadOnly => 'الفريق متاح للقراءة فقط حاليًا.';
 
   @override
   String get teamRefusalReadOnlyNext =>
-      'Turn on AI Team on this phone to make changes.';
+      'شغّل AI Team على هذا الهاتف لإجراء تغييرات.';
 
   @override
-  String get teamRefusalClosed => 'The team has been closed.';
+  String get teamRefusalClosed => 'أُغلق الفريق.';
 
   @override
-  String get teamRefusalClosedNext => 'Open AI Team again to continue.';
+  String get teamRefusalClosedNext => 'افتح AI Team مجددًا للمتابعة.';
 
   @override
-  String get teamRefusalCommandRefused => 'The team turned this request down.';
+  String get teamRefusalCommandRefused => 'رفض الفريق هذا الطلب.';
 
   @override
   String get teamRefusalCommandRefusedNext =>
-      'Check the goal and the repository folder, then try again.';
+      'تحقّق من الهدف ومجلد المستودع، ثم حاول مجددًا.';
 
   @override
   String get teamRefusalImportFailed =>
-      'The team couldn\'t read the repository folder.';
+      'تعذّرت قراءة مجلد المستودع على الفريق.';
 
   @override
   String get teamRefusalImportFailedNext =>
-      'Check the folder name, then try again.';
+      'تحقّق من اسم المجلد، ثم حاول مجددًا.';
 
   @override
   String get teamRefusalPayloadInvalid =>
-      'The team answered in a way this app doesn\'t understand.';
+      'أجاب الفريق بصيغة لا يفهمها هذا التطبيق.';
 
   @override
-  String get teamRefusalPayloadInvalidNext => 'Update the app, then try again.';
+  String get teamRefusalPayloadInvalidNext => 'حدّث التطبيق، ثم حاول مجددًا.';
 
   @override
   String get teamRefusalSchemaUnsupported =>
-      'The team and this app are on different versions.';
+      'يستخدم الفريق وهذا التطبيق إصدارين مختلفين.';
 
   @override
   String get teamRefusalSchemaUnsupportedNext =>
-      'Update the app, then try again.';
+      'حدّث التطبيق، ثم حاول مجددًا.';
 
   @override
-  String get teamRefusalEngineClosed => 'The team is shutting down.';
+  String get teamRefusalEngineClosed => 'جارٍ إيقاف الفريق.';
 
   @override
-  String get teamRefusalEngineClosedNext =>
-      'Turn on AI Team again to continue.';
+  String get teamRefusalEngineClosedNext => 'شغّل AI Team مجددًا للمتابعة.';
 
   @override
-  String get teamRefusalSessionFailed =>
-      'The planner stopped before it answered.';
+  String get teamRefusalSessionFailed => 'توقف المخطط قبل أن يجيب.';
 
   @override
   String get teamRefusalSessionFailedNext =>
-      'Check the model in Team settings › Model, then approve the spec again.';
+      'تحقّق من النموذج في إعدادات الفريق › النموذج، ثم وافق على المواصفات مجددًا.';
 
   @override
-  String get teamRefusalModelNotConfigured => 'The team needs a model.';
+  String get teamRefusalModelNotConfigured => 'يحتاج الفريق إلى نموذج.';
 
   @override
   String get teamRefusalModelNotConfiguredNext =>
-      'Pick one in Team settings › Model.';
+      'اختر نموذجًا في إعدادات الفريق › النموذج.';
 
   @override
-  String get teamRefusalModelUnavailable =>
-      'The chosen model isn\'t available.';
+  String get teamRefusalModelUnavailable => 'النموذج المختار غير متاح.';
 
   @override
   String get teamRefusalModelUnavailableNext =>
-      'Pick another model in Team settings › Model.';
+      'اختر نموذجًا آخر في إعدادات الفريق › النموذج.';
 
   @override
-  String get teamRefusalAuthFailed =>
-      'The model\'s provider didn\'t accept the sign-in.';
+  String get teamRefusalAuthFailed => 'لم يقبل مزوّد النموذج تسجيل الدخول.';
 
   @override
   String get teamRefusalAuthFailedNext =>
-      'Check the provider\'s key, then approve the spec again.';
+      'تحقّق من مفتاح مزوّد الخدمة، ثم وافق على المواصفات مجددًا.';
 
   @override
   String get teamRefusalCloneFailed =>
-      'The team couldn\'t copy the project to work on it.';
+      'تعذّر على الفريق نسخ المشروع للعمل عليه.';
 
   @override
   String get teamRefusalCloneFailedNext =>
-      'Check the project\'s repository, then approve the spec again.';
+      'تحقّق من مستودع المشروع، ثم وافق على المواصفات مجددًا.';
 
   @override
   String get teamRefusalSessionUncertain =>
-      'The team isn\'t sure how far its last run got.';
+      'لا يعرف الفريق إلى أين وصل تشغيله الأخير.';
 
   @override
   String get teamRefusalSessionUncertainNext =>
-      'Resume if you can, or approve the spec again.';
+      'استأنف إن أمكن، أو وافق على المواصفات مجددًا.';
 
   @override
-  String get teamRefusalPlanInvalid =>
-      'The plan that came back couldn\'t be used.';
+  String get teamRefusalPlanInvalid => 'تعذّر استخدام الخطة التي أُرجعت.';
 
   @override
   String get teamRefusalPlanInvalidNext =>
-      'Approve the spec again and the team will plan again.';
+      'وافق على المواصفات مجددًا ليعيد الفريق التخطيط.';
 
   @override
-  String get teamRefusalNeedsAnswer => 'The planner has a question for you.';
+  String get teamRefusalNeedsAnswer => 'لدى المخطط سؤال لك.';
 
   @override
-  String get teamRefusalNeedsAnswerNext => 'Open the spec and answer it.';
+  String get teamRefusalNeedsAnswerNext => 'افتح المواصفات وأجب عنه.';
 
   @override
   String get teamRefusalRecoveryReview =>
-      'The work stopped part way and needs a look.';
+      'توقف العمل قبل اكتماله ويحتاج إلى مراجعة.';
 
   @override
   String get teamRefusalRecoveryReviewNext =>
-      'Check the project, then approve the spec again.';
+      'تحقّق من المشروع، ثم وافق على المواصفات مجددًا.';
 
   @override
-  String get teamRefusalAppStopped =>
-      'The app closed before the team finished.';
+  String get teamRefusalAppStopped => 'أُغلق التطبيق قبل انتهاء الفريق.';
 
   @override
-  String get teamRefusalAppStoppedNext => 'Resume to check where it got to.';
+  String get teamRefusalAppStoppedNext => 'استأنف للتحقّق من موضع توقفه.';
 
   @override
-  String get teamRefusalChatBusy =>
-      'The team is waiting for your conversation to finish replying.';
+  String get teamRefusalChatBusy => 'ينتظر الفريق اكتمال الرد في محادثتك.';
 
   @override
-  String get teamRefusalChatBusyNext => 'It carries on by itself afterwards.';
+  String get teamRefusalChatBusyNext => 'يواصل العمل تلقائيًا بعد ذلك.';
 
   @override
-  String get teamRefusalBudgetReached =>
-      'The project reached its spending limit.';
+  String get teamRefusalBudgetReached => 'بلغ المشروع حد الإنفاق.';
 
   @override
   String get teamRefusalBudgetReachedNext =>
-      'Raise the limit in the project\'s settings to go on.';
+      'ارفع الحد في إعدادات المشروع للمتابعة.';
 
   @override
-  String get teamRefusalModelNotConfiguredAction => 'Pick a model';
+  String get teamRefusalModelNotConfiguredAction => 'اختيار نموذج';
 
   @override
-  String get teamProjectPlanFailedTitle => 'The plan wasn\'t made';
+  String get teamProjectPlanFailedTitle => 'لم تُنشأ الخطة';
 
   @override
-  String get teamProjectApproveAgain => 'Approve the spec again';
+  String get teamProjectApproveAgain => 'الموافقة على المواصفات مجددًا';
 
   @override
-  String get teamProjectApproveAgainNote => 'Approve the spec again to retry.';
+  String get teamProjectApproveAgainNote =>
+      'وافق على المواصفات مجددًا لإعادة المحاولة.';
 
   @override
-  String get teamProjectTaskWorkLive => 'Work so far';
+  String get teamProjectTaskWorkLive => 'العمل حتى الآن';
 
   @override
-  String get teamProjectTaskWorkLog => 'Work log';
+  String get teamProjectTaskWorkLog => 'سجل العمل';
 
   @override
-  String get teamRefusalDidPlan => 'start planning';
+  String get teamRefusalDidPlan => 'بدء التخطيط';
 
   @override
-  String get teamRefusalDidQuick => 'start that task';
+  String get teamRefusalDidQuick => 'بدء تلك المهمة';
 
   @override
-  String get teamRefusalDidApprove => 'start the work';
+  String get teamRefusalDidApprove => 'بدء العمل';
 
   @override
-  String get teamRefusalDidSpec => 'approve the spec';
+  String get teamRefusalDidSpec => 'اعتماد المواصفات';
 
   @override
-  String get teamRefusalDidPromote => 'promote the work';
+  String get teamRefusalDidPromote => 'نقل العمل';
 
   @override
-  String get teamRefusalDidStop => 'stop the project';
+  String get teamRefusalDidStop => 'إيقاف المشروع';
 
   @override
-  String get teamRefusalDidPause => 'pause the project';
+  String get teamRefusalDidPause => 'إيقاف المشروع مؤقتًا';
 
   @override
-  String get teamRefusalDidResume => 'resume the project';
+  String get teamRefusalDidResume => 'استئناف المشروع';
 
   @override
-  String get teamRefusalDidSave => 'save your changes';
+  String get teamRefusalDidSave => 'حفظ تغييراتك';
 
   @override
   String teamRefusalUnknown(String action) {
-    return 'The team couldn\'t $action.';
+    return 'تعذّر على الفريق $action.';
   }
 
   @override
   String get teamRefusalUnknownNext =>
-      'Try again. If it keeps happening, open Details for the code.';
+      'حاول مجددًا. إذا تكرر ذلك، افتح التفاصيل لرؤية الرمز.';
 
   @override
-  String get teamRefusalCode => 'Code';
+  String get teamRefusalCode => 'الرمز';
 
   @override
   String get phoneTeamProtectedProot =>
@@ -26515,53 +26501,51 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get teamRefusalRepositoryEmpty =>
-      'This repository has no commits yet.';
+      'لا يحتوي هذا المستودع على أي تثبيتات بعد.';
 
   @override
   String get teamRefusalRepositoryEmptyNext =>
-      'Make a first commit in it, then start planning again.';
+      'أنشئ أول تثبيت فيه، ثم ابدأ التخطيط مجددًا.';
 
   @override
   String get teamRefusalRepositoryLink =>
-      'The team couldn\'t safely copy this repository.';
+      'تعذّر على الفريق نسخ هذا المستودع بأمان.';
 
   @override
   String get teamRefusalRepositoryLinkNext =>
-      'Try again. If it keeps happening, report the problem.';
+      'حاول مجددًا. إذا تكرر ذلك، أبلغ عن المشكلة.';
 
   @override
-  String get teamRefusalRepositoryDamaged =>
-      'The repository copy didn\'t match the original.';
+  String get teamRefusalRepositoryDamaged => 'لم تطابق نسخة المستودع الأصل.';
 
   @override
   String get teamRefusalRepositoryDamagedNext =>
-      'Try again. If it keeps happening, report the problem.';
+      'حاول مجددًا. إذا تكرر ذلك، أبلغ عن المشكلة.';
 
   @override
-  String get teamRefusalPlanTaskName => 'A task in the plan has no name.';
+  String get teamRefusalPlanTaskName => 'إحدى المهام في الخطة بلا اسم.';
 
   @override
-  String get teamRefusalPlanTaskNameNext =>
-      'Give every task a name, then approve again.';
+  String get teamRefusalPlanTaskNameNext => 'سمِّ كل مهمة، ثم وافق مجددًا.';
 
   @override
-  String get teamRefusalPlanPhase => 'A phase in the plan isn\'t complete.';
+  String get teamRefusalPlanPhase => 'إحدى مراحل الخطة غير مكتملة.';
 
   @override
   String get teamRefusalPlanPhaseNext =>
-      'Check each phase has tasks and criteria, then approve again.';
+      'تحقّق من أن لكل مرحلة مهام ومعايير، ثم وافق مجددًا.';
 
   @override
   String get teamServerPhoneFailed =>
-      'AI Team on this phone isn\'t answering, so its work can\'t be reached.';
+      'لا يستجيب AI Team على هذا الهاتف، لذا يتعذّر الوصول إلى عمله.';
 
   @override
   String get teamServerPhoneNotReady =>
-      'AI Team on this phone isn\'t ready: its safety check hasn\'t passed.';
+      'AI Team على هذا الهاتف غير جاهز: لم ينجح فحص السلامة الخاص به.';
 
   @override
   String get teamServerPhoneNoAnswer =>
-      'OpenCode on this phone didn\'t answer the last check.';
+      'لم يستجب OpenCode على هذا الهاتف للفحص الأخير.';
 
   @override
   String get phoneTeamOffReview => 'راجع واختر الوقت';
