@@ -3,12 +3,10 @@ import 'package:flutter/material.dart';
 import '../app_iconography.dart';
 import 'kit_details_fold.dart';
 import 'kit_icon.dart';
-import 'kit_layout.dart';
 import 'kit_receipt.dart';
-import 'kit_tappable.dart';
+import 'kit_request_card.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
-import 'motion/kit_reveal.dart';
 
 /// Which look an [KitAgentCard] has.
 enum KitAgentCardMode {
@@ -32,9 +30,11 @@ enum KitAgentCardMode {
 /// The frame for a card an agent describes (docs/design/genui-plan-2026-10-07.md
 /// "UI (kit)"): an [eyebrow] ("Claude Code asks"), a [title], the [body]
 /// parts the agent chose (all from the kit, handed in as widgets) and, when
-/// the agent asks for something, the [ask] slot. It looks like
-/// [KitRequestCard]: the needs-you ring and surface while it waits for an
-/// answer, a plain `surface1` card with a hairline for a report.
+/// the agent asks for something, the [ask] slot. It is drawn with
+/// [KitRequestCard]'s one shape (FC2, docs/design/FC2-one-card-shape.md):
+/// the same frame (the needs-you ring and surface while it waits for an
+/// answer, a plain `surface1` card with a hairline for a report), the same
+/// heading (the agent's glyph in the tile) and the same answered row.
 ///
 /// Four modes ([KitAgentCardMode]): `full`; `receipt` (what was sent, with
 /// Undo inside its window, or tap to read it again); `passedOver` ("Not
@@ -137,34 +137,18 @@ class _KitAgentCardState extends State<KitAgentCard> {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = KitTokens.of(context);
     final content = switch (widget.mode) {
       KitAgentCardMode.full => _card(context),
       KitAgentCardMode.receipt || KitAgentCardMode.passedOver => _row(context),
       KitAgentCardMode.unreadable => _unreadable(context),
     };
-    if (widget.inList) return content;
-    return KitEntrance(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: KitLayout.readingWidth),
-          child: Padding(
-            padding: EdgeInsetsDirectional.symmetric(
-              horizontal: tokens.gutter - KitTokens.needsYouRingWidth,
-              vertical: tokens.space1,
-            ),
-            child: content,
-          ),
-        ),
-      ),
-    );
+    return kitRequestPlacement(context, inList: widget.inList, child: content);
   }
 
   // ── The frame ──────────────────────────────────────────────────────────
 
   Widget _card(BuildContext context) {
     final tokens = KitTokens.of(context);
-    final roles = tokens.roles;
     final attention = widget.asks;
     final spaced = <Widget>[];
     for (final piece in widget.body) {
@@ -172,7 +156,7 @@ class _KitAgentCardState extends State<KitAgentCard> {
         ..add(SizedBox(height: tokens.space3))
         ..add(piece);
     }
-    Widget words = Column(
+    final words = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -184,82 +168,28 @@ class _KitAgentCardState extends State<KitAgentCard> {
         ],
       ],
     );
-    words = DecoratedBox(
+    // The request card's frame (FC2): the needs-you look while it asks, a
+    // plain card for a report. Its body scrolls with the page, so no
+    // height cap of its own.
+    return kitRequestFrame(
+      context,
       key: widget.cardKey,
-      decoration: ShapeDecoration(
-        color: attention
-            ? Color.alphaBlend(roles.attentionSurface, roles.surface1)
-            : roles.surface1,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(tokens.cardRadius),
-          side: BorderSide(
-            color: attention ? roles.attentionLine : roles.hairline,
-            width: KitTokens.hairlineWidth(context),
-          ),
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsetsDirectional.all(tokens.space4),
-        child: words,
-      ),
-    );
-    if (!attention) {
-      return Padding(
-        padding: const EdgeInsetsDirectional.symmetric(
-          horizontal: KitTokens.needsYouRingWidth,
-        ),
-        child: words,
-      );
-    }
-    // LOOK-20: the one ring the needs-you look allows, outside the border.
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: roles.attention.withValues(alpha: KitTokens.needsYouRingAlpha),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(
-            tokens.cardRadius + KitTokens.needsYouRingWidth,
-          ),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsetsDirectional.all(KitTokens.needsYouRingWidth),
-        child: words,
-      ),
+      attention: attention,
+      capHeight: false,
+      child: words,
     );
   }
 
+  /// The request card's heading (FC2): the agent's glyph in the tile, who
+  /// speaks and why as the caption, the title as the headline.
   Widget _heading(BuildContext context, {required bool attention}) {
-    final tokens = KitTokens.of(context);
-    Widget heading = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          children: [
-            ExcludeSemantics(
-              child: KitIcon(
-                widget.icon ?? AppIconography.agent,
-                size: KitIconSize.small,
-                tone: attention ? KitTextTone.attention : KitTextTone.secondary,
-              ),
-            ),
-            SizedBox(width: tokens.space2),
-            Expanded(
-              child: KitText(
-                widget.eyebrow,
-                role: KitTextRole.caption,
-                tone: attention ? KitTextTone.attention : KitTextTone.secondary,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: tokens.space1),
-        KitText(
-          widget.title,
-          role: KitTextRole.headline,
-          tone: KitTextTone.primary,
-        ),
-      ],
+    Widget heading = kitRequestHeading(
+      context,
+      icon: widget.icon ?? AppIconography.agent,
+      attention: attention,
+      caption: widget.eyebrow,
+      captionTone: attention ? KitTextTone.attention : KitTextTone.secondary,
+      title: widget.title,
     );
     final said = widget.announcement;
     if (said != null) {
@@ -276,8 +206,9 @@ class _KitAgentCardState extends State<KitAgentCard> {
 
   // ── The collapsed row ──────────────────────────────────────────────────
 
+  /// The request card's answered row (FC2): the act and its receipt, or
+  /// "Not answered"; the title line opens the body read-only.
   Widget _row(BuildContext context) {
-    final tokens = KitTokens.of(context);
     final received = widget.mode == KitAgentCardMode.receipt;
     final canOpen = widget.expandLabel != null && widget.body.isNotEmpty;
     final Widget outcome = received
@@ -296,84 +227,16 @@ class _KitAgentCardState extends State<KitAgentCard> {
               tone: KitTextTone.secondary,
             ),
           );
-    final twoLines = MediaQuery.textScalerOf(context).scale(10) >= 13;
-    final head = ConstrainedBox(
-      constraints: BoxConstraints(minHeight: tokens.rowHeight),
-      child: Row(
-        children: [
-          ExcludeSemantics(
-            child: KitIcon(
-              widget.icon ?? AppIconography.agent,
-              size: KitIconSize.small,
-              tone: KitTextTone.secondary,
-            ),
-          ),
-          SizedBox(width: tokens.space3),
-          Expanded(
-            child: KitText(
-              widget.title,
-              role: KitTextRole.secondary,
-              tone: KitTextTone.secondary,
-              maxLines: twoLines ? 2 : 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          if (canOpen)
-            ExcludeSemantics(
-              child: KitIcon(
-                _open ? AppIconography.chevronUp : AppIconography.chevronDown,
-                size: KitIconSize.small,
-                tone: KitTextTone.secondary,
-              ),
-            ),
-        ],
-      ),
-    );
-    return Padding(
-      padding: EdgeInsetsDirectional.symmetric(horizontal: tokens.space4),
-      child: Column(
-        key: widget.cardKey,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (canOpen)
-            KitTappable(
-              onTap: () => setState(() => _open = !_open),
-              label: widget.expandLabel,
-              selected: _open,
-              child: head,
-            )
-          else
-            head,
-          Padding(
-            padding: EdgeInsetsDirectional.only(
-              start: tokens.space3 + tokens.smallIconSize,
-            ),
-            child: outcome,
-          ),
-          KitReveal(
-            child: canOpen && _open
-                ? Padding(
-                    padding: EdgeInsetsDirectional.only(top: tokens.space2),
-                    // The body is a record now: nothing in it takes a tap.
-                    child: IgnorePointer(
-                      child: ExcludeFocus(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            for (final piece in widget.body) ...[
-                              piece,
-                              SizedBox(height: tokens.space3),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
-                : null,
-          ),
-        ],
-      ),
+    return kitAnsweredRow(
+      context,
+      key: widget.cardKey,
+      icon: widget.icon ?? AppIconography.agent,
+      title: widget.title,
+      outcome: outcome,
+      open: _open,
+      onToggle: canOpen ? () => setState(() => _open = !_open) : null,
+      toggleLabel: widget.expandLabel,
+      body: widget.body,
     );
   }
 
