@@ -353,6 +353,9 @@ Future<void> showQuestionSheet(
   ConnectionController controller,
   PendingQuestion question, {
   VoidCallback? onOpenConversation,
+
+  /// Who asks (Claude Code, Pi, ...); null says OpenCode.
+  String? agentLabel,
 }) async {
   final request = controller.questionIdentity(question);
   if (!controller.isRequestPending(request)) return;
@@ -378,7 +381,9 @@ Future<void> showQuestionSheet(
   try {
     await showKitSheet<void>(
       context,
-      title: l10n.e7WorkspaceNeedsInput,
+      title: agentLabel == null
+          ? l10n.e7WorkspaceNeedsInput
+          : l10n.activityAgentNeedsInput(KitBidi.auto(agentLabel)),
       subtitle: _sessionTitle(context, controller, question.sessionID),
       icon: AppIconography.question,
       routes: routes,

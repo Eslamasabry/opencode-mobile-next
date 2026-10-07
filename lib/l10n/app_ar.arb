@@ -5262,5 +5262,6 @@
   "agentCardFieldRequiredHint": "مطلوب",
   "agentCardYourAnswer": "إجابتك",
   "agentCardDangerConfirm": "إرسال الإجابة",
-  "activityQuestionOptional": "اختياري. يمكنك ترك هذا السؤال فارغاً."
+  "activityQuestionOptional": "اختياري. يمكنك ترك هذا السؤال فارغاً.",
+  "activityAgentNeedsInput": "{agent} يحتاج إلى إدخال"
 }

@@ -5105,6 +5105,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get e7WorkspaceNeedsInput => 'OpenCode needs input';
 
   @override
+  String activityAgentNeedsInput(String agent) {
+    return '$agent needs input';
+  }
+
+  @override
   String get e7WorkspaceSendAnswers => 'Send answers';
 
   @override

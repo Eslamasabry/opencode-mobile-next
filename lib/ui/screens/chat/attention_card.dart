@@ -12,7 +12,17 @@ part of '../chat_screen.dart';
 // the agent waits; the work line above it says so.
 
 /// Who asks, in the card's caption: "The agent".
-String _requestWho(BuildContext context) => _chatL10n(context).chatRequestWho;
+///
+/// In a chat with an agent backend (Claude Code, Pi, ...) it names that
+/// agent, as agent cards do.
+String _requestWho(BuildContext context, {String? agentLabel}) {
+  final name =
+      agentLabel ??
+      context.findAncestorStateOfType<_ChatScreenState>()?._agentName;
+  return name == null || name.trim().isEmpty
+      ? _chatL10n(context).chatRequestWho
+      : name;
+}
 
 /// The chat screen's controller for a card inside it; null outside a chat
 /// (a gallery), where the card cannot answer and says why.
@@ -339,7 +349,7 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
     return KitRequestCard.ask(
       kind: KitRequestKind.question,
       title: title,
-      who: _requestWho(context),
+      who: _requestWho(context, agentLabel: widget.feedItem?.agentLabel),
       reason: KitNeedsYouReason.decision,
       ifIgnored: _requestIfIgnored(context, 0),
       announcement: l10n.chatUiQuestionLabel(title),
@@ -485,7 +495,14 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
       ),
       onDetails: _shownQuestion == null || conn == null
           ? widget.onMore
-          : () => unawaited(showQuestionSheet(context, conn, _shownQuestion!)),
+          : () => unawaited(
+              showQuestionSheet(
+                context,
+                conn,
+                _shownQuestion!,
+                agentLabel: widget.feedItem?.agentLabel,
+              ),
+            ),
     );
   }
 }
@@ -509,7 +526,9 @@ Widget questionRequestCard(
   feedItem: item,
   inList: inList,
   onAnswer: (_) {},
-  onMore: () => unawaited(showQuestionSheet(context, owner, question)),
+  onMore: () => unawaited(
+    showQuestionSheet(context, owner, question, agentLabel: item.agentLabel),
+  ),
 );
 
 /// "Rate limited. Retrying 2 in 0:42" — the server sends no attempt ceiling,

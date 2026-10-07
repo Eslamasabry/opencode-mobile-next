@@ -4096,6 +4096,15 @@
   "@e7WorkspaceNeedsInput": {
     "description": "Workspace and activity: OpenCode needs input"
   },
+  "activityAgentNeedsInput": "{agent} needs input",
+  "@activityAgentNeedsInput": {
+    "description": "Question sheet title: the agent that asks (Claude Code, Pi, OpenCode) needs the person's answer.",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
   "e7WorkspaceSendAnswers": "Send answers",
   "@e7WorkspaceSendAnswers": {
     "description": "Workspace and activity: Send answers"

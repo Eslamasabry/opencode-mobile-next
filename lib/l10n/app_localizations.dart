@@ -8594,6 +8594,12 @@ abstract class AppLocalizations {
   /// **'OpenCode needs input'**
   String get e7WorkspaceNeedsInput;
 
+  /// Question sheet title: the agent that asks (Claude Code, Pi, OpenCode) needs the person's answer.
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} needs input'**
+  String activityAgentNeedsInput(String agent);
+
   /// Workspace and activity: Send answers
   ///
   /// In en, this message translates to:

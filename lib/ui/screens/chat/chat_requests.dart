@@ -62,7 +62,7 @@ extension _ChatRequests on _ChatScreenState {
 
   /// More / Answer on the question card: the full sheet Activity uses.
   Future<void> _showQuestionSheet(PendingQuestion question) =>
-      showQuestionSheet(context, _conn, question);
+      showQuestionSheet(context, _conn, question, agentLabel: _agentName);
 
   /// Whether a pending permission request is for this tool call: its step
   /// then says "Waiting for you", never "Running" (AUTO-15).

@@ -313,9 +313,17 @@ void _listQuestionTests() {
     );
     await tester.pump();
     expect(find.byKey(const Key('question-card-answer')), findsOneWidget);
+    // The card names the agent that asks, not "The agent".
+    final agent = x.row.agentLabel!;
+    expect(
+      find.textContaining(RegExp('Needs your decision.*$agent')),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const Key('question-card-answer')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('question-sheet')), findsOneWidget);
+    expect(find.textContaining('needs input'), findsOneWidget);
+    expect(find.textContaining(agent), findsWidgets);
     await tester.tap(find.text('Dart'));
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('question-send')));
