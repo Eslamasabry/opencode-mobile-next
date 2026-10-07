@@ -1,0 +1,28 @@
+Run a coding agent on your Android phone, or follow the one on your computer.
+
+Ask an agent for a change, watch it work, approve what it wants to do, and review the result. OpenCode Mobile installs its own Ubuntu inside the app and runs OpenCode and Claude Code there. No computer, no Termux. If your agent already runs on a computer, the app connects to it instead.
+
+<b>On this phone</b>
+• Guided setup installs Ubuntu, Git, Python, Node.js and OpenCode inside the app, about 4 minutes and ~210 MB the first time. It checks each step, can stop, and resumes where it left off.
+• Claude Code runs beside OpenCode, with its own models, commands and sign-in. Codex, Gemini CLI, Qwen Code, Goose and Pi use the same path; they are newer and not yet checked on a physical phone.
+• Needs a 64-bit phone. Phones with about 2 GB of memory work, slowly.
+
+<b>On your computer</b>
+• Connect to OpenCode 1 or 2 by QR code or address. Tailscale lets you reach it from anywhere.
+• Claude Code, Codex and Pi through a Paseo helper on your own network.
+
+<b>Chat that keeps up</b>
+• Replies stream as they are written. One live line says what the agent is doing, with Stop right there.
+• The agent's reads, edits and commands fold into one line you can open.
+• Approve or reject each request before it acts. Diffs fit the phone's width.
+• Talk instead of type: voice is transcribed on the phone and never leaves it.
+
+<b>More</b>
+• Inbox across servers: everything that needs you, in one list, and what happened while you were away.
+• AI Team: give a goal and milestones; a planner, workers and a checker build it and merge to dev with receipts. Nothing reaches main until you confirm. New, and proven on emulators.
+• English and Arabic, light and dark, large text up to 200%.
+
+<b>Your data</b>
+The app talks only to the servers you choose. Passwords stay in Android's keystore. No ads, no analytics, no automatic crash upload: a report is sent only when you send one, with secrets removed. You bring your own model provider (an API key, or OpenCode's free model to try it).
+
+OpenCode Mobile is an independent community project. It is not affiliated with or endorsed by the OpenCode team or Anthropic. It is built with substantial AI assistance. Source code (MIT): https://github.com/Eslamasabry/opencode-mobile-next

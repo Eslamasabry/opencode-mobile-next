@@ -1,0 +1,5 @@
+• Claude Code on your phone, beside OpenCode, inside the in-app Ubuntu.
+• Every connection on the phone in one conversation list.
+• Claude's sub-agents open as their own conversations.
+• Small fixes can now arrive over the air.
+• Plain http:// to private addresses after a warning; syntax colours in diffs.

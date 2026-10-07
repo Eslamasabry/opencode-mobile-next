@@ -1,35 +1,40 @@
 # OpenCode Mobile
 
+**Run Claude Code and OpenCode on your Android phone. No computer, no Termux.**
+Or follow and steer the agents running on your computer, from your pocket.
+
+[![Download APK](https://img.shields.io/badge/Download-APK-55D187?logo=android&logoColor=white)](https://github.com/Eslamasabry/opencode-mobile-next/releases/latest)
+[![Latest release](https://img.shields.io/github/v/release/Eslamasabry/opencode-mobile-next?label=release&color=55D187)](https://github.com/Eslamasabry/opencode-mobile-next/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/Eslamasabry/opencode-mobile-next/total?color=55D187)](https://github.com/Eslamasabry/opencode-mobile-next/releases)
 [![Android quality gate](https://github.com/Eslamasabry/opencode-mobile-next/actions/workflows/android-quality.yml/badge.svg?branch=master)](https://github.com/Eslamasabry/opencode-mobile-next/actions/workflows/android-quality.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-55D187.svg)](LICENSE)
 
-**Your coding agent, in your pocket. On your computer, or on the phone itself.**
+| Pick where it runs | Set up on the phone | Watch it work | Approve first | Pick a model | AI Team |
+| --- | --- | --- | --- | --- | --- |
+| ![Welcome: choose where your agent runs](fastlane/metadata/android/en-US/images/phoneScreenshots/1_welcome.jpg) | ![Setting up OpenCode on this phone](fastlane/metadata/android/en-US/images/phoneScreenshots/2_setup_on_phone.jpg) | ![A reply streaming in, with Stop](fastlane/metadata/android/en-US/images/phoneScreenshots/3_chat.jpg) | ![An edit waiting for approval](fastlane/metadata/android/en-US/images/phoneScreenshots/4_approve.jpg) | ![Choose a model](fastlane/metadata/android/en-US/images/phoneScreenshots/5_models.jpg) | ![AI Team tasks merged with receipts](fastlane/metadata/android/en-US/images/phoneScreenshots/6_ai_team.jpg) |
 
 Ask an agent for a change, watch it work, approve what it wants to do, and
-review the result — from an Android phone. OpenCode Mobile connects to
-[OpenCode](https://opencode.ai) on your computer, or runs OpenCode on the phone
-with a built-in Linux. No Termux needed.
+review the result. The app installs its own Ubuntu and runs
+[OpenCode](https://opencode.ai) and Claude Code inside it, or connects to
+OpenCode on your computer. Codex, Gemini CLI, Qwen Code, Goose and Pi use the
+same on-phone path; they are newer and not yet checked on a physical phone.
 
 **[Download 1.2.0 for Android](https://github.com/Eslamasabry/opencode-mobile-next/releases/download/v1.2.0%2B52/opencode-mobile-1.2.0%2B52.apk)**
 · [What's new](docs/releases/v1.2.0+52.md)
 · [Get started](#get-started)
 · [Get help](SUPPORT.md)
 
-> OpenCode Mobile is an independent community project. It is not built, maintained,
-> endorsed by, or affiliated with the official OpenCode team. It is built with
-> substantial AI assistance.
-> Report problems with **Report a problem** in the app.
+Screenshots are real captures from Android emulators during QA.
 
-| Welcome | Work | This phone ready | Models |
-| --- | --- | --- | --- |
-| ![Welcome: choose where your agent runs](docs/qa/journeys-2066-2026-09-29/J1-01-welcome.png) | ![Work: conversations and other projects](docs/qa/journeys-2066-2026-09-29/J2-05-work-home.png) | ![OpenCode is ready on this phone](docs/qa/journeys-2066-2026-09-29/J6-03-done.png) | ![Choose a model](docs/qa/journeys-2066-2026-09-29/J3-03-model-picker.png) |
+> An independent community project, not affiliated with or endorsed by the
+> OpenCode team or Anthropic. Built with substantial AI assistance.
+> Report problems with **Report a problem** in the app.
 
 ## What you can do
 
 - **Run OpenCode on this phone.** Guided setup installs Ubuntu, Git, Node and
-  OpenCode inside the app, checks each step, and can stop and resume. Already
-  on Termux? **Move from Termux** copies your projects over and leaves Termux
-  untouched.
+  OpenCode inside the app, checks each step, and can stop and resume. Coming
+  from an older Termux setup? **Move from Termux** copies your projects over.
 - **Or use your computer.** Pair with a QR code, or type an address. Use
   [Tailscale](https://tailscale.com) to reach it from anywhere.
 - **Chat that keeps up.** Chats open instantly where you left off, replies stream
@@ -99,7 +104,8 @@ this phone**, and pick a model for each role.
 | Android 8+ | Supported — 1.2.0 |
 | OpenCode 1 (1.18.x) | Supported |
 | OpenCode 2 (beta and stable 2.0) | Supported |
-| Claude Code, Pi, Codex (via Paseo) | Supported |
+| Claude Code (via Paseo) | Supported |
+| Codex, Gemini CLI, Qwen Code, Goose, Pi (via Paseo) | Early; not yet checked on a physical phone |
 | AI Team | New; proven on Android 14/15 emulators, physical phones still being tried |
 | Linux and Windows desktop | Experimental CI builds |
 | Web | In development |

@@ -1,0 +1,4 @@
+• A new message box: full-width editor, larger targets, steady keyboard focus.
+• Drafts and attachments are saved per conversation, with Copy and Retry if saving fails.
+• Attach photos from the camera or the library.
+This build was later marked broken; install a newer version instead.

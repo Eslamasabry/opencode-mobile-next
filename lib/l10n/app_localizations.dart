@@ -19608,6 +19608,12 @@ abstract class AppLocalizations {
   /// **'You can leave the app. We\'ll notify you when it\'s ready.'**
   String get phoneSetupProgressLeaveHint;
 
+  /// Under the title while a first phone setup runs: where this screen sits in the journey (install, name a project, chat) and that leaving is fine
+  ///
+  /// In en, this message translates to:
+  /// **'Step 1 of 3: install. Then name a project and chat. You can leave the app. We\'ll notify you when it\'s ready.'**
+  String get phoneSetupProgressFirstSetupNote;
+
   /// Title of the confirmation before cancelling phone setup
   ///
   /// In en, this message translates to:
@@ -20298,17 +20304,29 @@ abstract class AppLocalizations {
   /// **'Run a coding agent right here'**
   String get phoneSetupStartHeadline;
 
-  /// One-line promise under the headline; time and size are computed from the components that Set up installs
+  /// One-line promise under the headline; the size is computed from the components that Set up installs. The time is on the step line below it.
   ///
   /// In en, this message translates to:
-  /// **'No computer and no other apps. {time} and ~{size} the first time.'**
-  String phoneSetupStartPromise(String time, String size);
+  /// **'No computer and no other apps. ~{size} to download the first time.'**
+  String phoneSetupStartPromise(String size);
 
   /// The promise when no download size is known
   ///
   /// In en, this message translates to:
-  /// **'No computer and no other apps. {time} the first time.'**
-  String phoneSetupStartPromiseNoSize(String time);
+  /// **'No computer and no other apps.'**
+  String get phoneSetupStartPromiseNoSize;
+
+  /// The whole first-setup journey in one line on the phone setup start screen, with the setup time computed from the components Set up installs (phoneSetupStartStepsTime)
+  ///
+  /// In en, this message translates to:
+  /// **'Install, name a project, chat · {time}'**
+  String phoneSetupStartSteps(String time);
+
+  /// Estimated setup time at the end of the step line, lower case because it follows a middle dot
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, =1{about 1 min} other{about {minutes} min}}'**
+  String phoneSetupStartStepsTime(int minutes);
 
   /// Estimated setup time, capitalised because it starts a sentence
   ///

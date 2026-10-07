@@ -470,6 +470,26 @@ void main() {
       // The bar names the place, as the start screen does, with Back.
       expect(find.text('On this phone'), findsOneWidget);
       expect(find.byTooltip('Back'), findsOneWidget);
+      // FB2: a first setup says where it sits in the whole journey.
+      expect(
+        find.text(
+          'Step 1 of 3: install. Then name a project and chat. You can leave '
+          "the app. We'll notify you when it's ready.",
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('an update or added tools keep the plain leave note', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        initial: _job(current: _nodeDownloading),
+        firstSetup: false,
+      );
+      // Nothing to name or chat after an update: no step line.
+      expect(find.textContaining('Step 1 of 3'), findsNothing);
       expect(
         find.text("You can leave the app. We'll notify you when it's ready."),
         findsOneWidget,
