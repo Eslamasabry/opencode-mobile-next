@@ -24,6 +24,7 @@ import '../../domain/agent_catalog.dart' show AgentCatalog;
 import '../../domain/chat_feed.dart'
     show ChatFeedItem, isTemporaryProjectDirectory;
 import '../../domain/command_receipts.dart';
+import '../../domain/model_display_name.dart';
 import '../../domain/prompt_attachment.dart';
 import 'agents/agent_sheet.dart' show AgentSheetStep, showAgentSheet;
 import '../../domain/background_work.dart';

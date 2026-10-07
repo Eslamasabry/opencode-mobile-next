@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../domain/model_display_name.dart';
 import '../../../domain/phone_agents_source.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
@@ -53,7 +54,7 @@ class _AgentModelChipState extends State<AgentModelChip> {
       chipKey: const ValueKey('chats-new-agent-model'),
       label: chosen == null
           ? l10n.agentsModelDefault
-          : _AgentModelNames.of(agentId, chosen) ?? chosen,
+          : _AgentModelNames.of(agentId, chosen) ?? modelNameFromId(chosen),
       state: chosen == null
           ? KitModelChipState.serverDefault
           : KitModelChipState.chosen,
