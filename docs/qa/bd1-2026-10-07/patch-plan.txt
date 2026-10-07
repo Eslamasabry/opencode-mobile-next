@@ -1,0 +1,20 @@
+==> Patch canary plan for 1.2.0+52 (instructions only; no commands executed)
+1. Keep the exact released version and immutable baseline tag; Dart-only changes.
+2. With separate owner approval, dry-run and then upload ONLY to staging:
+   shorebird patch android --release-version "1.2.0+52" --track staging --dry-run
+   shorebird patch android --release-version "1.2.0+52" --track staging
+3. On the owner phone, explicitly check/download the staging track using the
+   Shorebird updater API. The ordinary stable app does not opt into staging.
+   Restart, verify the installed patch number and exercise affected journeys,
+   restart/reconnect and local-data preservation. Record version, candidate SHA,
+   patch number, device, results and owner approval in the release evidence.
+4. Only after that receipt and fresh promotion approval, promote THAT patch
+   through the Shorebird Console. Do not create a second stable patch.
+   This script's patch --publish path is NOT a promotion command; do not use it
+   to bypass the canary. See docs/release/patch-canary.md.
+Rollback (separate owner approval): select the exact app/release and patch in
+Shorebird Console, then Rollback. CLI 1.6.120+ also supports:
+   shorebird patches rollback --release-version "1.2.0+52" --patch-number <PATCH_NUMBER>
+Devices learn rollback during a patch check; the change applies on next start.
+Rollback active newer patches too if returning past more than one patch.
+Verify the recovered journeys and local data on the owner phone.
