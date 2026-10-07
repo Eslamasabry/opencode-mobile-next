@@ -14,19 +14,41 @@ mixin OpenCodeGenUiHistory implements GenUiHistoryGateway {
   Future<bool> genUiSessionIdle(String sessionID) async {
     validateGenUiHistoryRequest(sessionID, null, 1);
     final scope = (directory, workspace);
+    final query = <String, dynamic>{
+      if (directory != null) 'directory': directory,
+      if (workspace != null) 'workspace': workspace,
+    };
+    final sessionResponse = await readGenUiHistoryJson(
+      dio,
+      '/session/${Uri.encodeComponent(sessionID)}',
+      query: query,
+    );
+    if (isClosed || scope != (directory, workspace)) throw genUiHistoryFailure;
+    final session = sessionResponse.json;
+    if (session is! Map<String, dynamic> ||
+        session['id'] != sessionID ||
+        (scope.$1 != null && session['directory'] != scope.$1)) {
+      throw genUiHistoryFailure;
+    }
     final response = await readGenUiHistoryJson(
       dio,
       '/session/status',
-      query: {
-        if (directory != null) 'directory': directory,
-        if (workspace != null) 'workspace': workspace,
-      },
+      query: query,
     );
     if (isClosed || scope != (directory, workspace)) throw genUiHistoryFailure;
     final json = response.json;
-    if (json is! Map<String, dynamic>) throw genUiHistoryFailure;
-    final status = json[sessionID];
-    return status is Map<String, dynamic> && status['type'] == 'idle';
+    if (json is! Map<String, dynamic> ||
+        json.entries.any(
+          (entry) =>
+              entry.key.isEmpty ||
+              entry.value is! Map<String, dynamic> ||
+              !const {'idle', 'busy', 'retry'}.contains(entry.value['type']),
+        )) {
+      throw genUiHistoryFailure;
+    }
+    // OC1 removes idle entries from its complete instance-scoped status map.
+    // Absence establishes idle only after proving this session exists here.
+    return !json.containsKey(sessionID) || json[sessionID]['type'] == 'idle';
   }
 
   @override

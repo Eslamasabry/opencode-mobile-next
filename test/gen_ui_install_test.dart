@@ -37,6 +37,55 @@ final class _Verifier implements GenUiSetupVerifier {
 }
 
 void main() {
+  test('review 1 enables only qualified Claude and reports it ready', () async {
+    final runner = _Runner();
+    final verifier = _Verifier({GenUiAgent.claude});
+    final status =
+        await ManagedGenUiInstaller(
+          runner: runner,
+          verifier: verifier,
+        ).setEnabled(
+          profileId: 'one',
+          agents: GenUiAgent.values.toSet(),
+          enabled: true,
+        );
+    expect(runner.calls, [GenUiAgent.claude]);
+    expect(verifier.calls, [GenUiAgent.claude]);
+    expect(status, isA<GenUiSetupOn>());
+    expect(status.agents, [GenUiAgent.claude]);
+  });
+
+  test(
+    'review 1 failed verifier reports verification failure not restart',
+    () async {
+      final status =
+          await ManagedGenUiInstaller(
+            runner: _Runner(),
+            verifier: _Verifier({}),
+          ).setEnabled(
+            profileId: 'one',
+            agents: {GenUiAgent.claude},
+            enabled: true,
+          );
+      expect(status, isA<GenUiSetupFailed>());
+      expect(
+        (status as GenUiSetupFailed).reason,
+        GenUiSetupProblem.verificationFailed,
+      );
+    },
+  );
+
+  test('review 1 missing verifier reports unqualified not restart', () async {
+    final status = await ManagedGenUiInstaller(
+      runner: _Runner(),
+    ).setEnabled(profileId: 'one', agents: {GenUiAgent.claude}, enabled: true);
+    expect(status, isA<GenUiSetupUnavailable>());
+    expect(
+      (status as GenUiSetupUnavailable).reason,
+      GenUiSetupProblem.notQualified,
+    );
+  });
+
   test('registration never claims a ready runtime', () async {
     final runner = _Runner();
     final status = await ManagedGenUiInstaller(runner: runner).setEnabled(
@@ -44,12 +93,12 @@ void main() {
       agents: {GenUiAgent.claude},
       enabled: true,
     );
-    expect(status, isA<GenUiSetupRestartRequired>());
+    expect(status, isA<GenUiSetupUnavailable>());
     expect(status.agents, isEmpty);
   });
 
   test(
-    'mixed registration surfaces partial with no unverified agents',
+    'unqualified runtime collision cannot affect Claude registration',
     () async {
       final runner = _Runner()
         ..outcomes[GenUiAgent.openCode1] = GenUiInstallOutcome.nameCollision;
@@ -58,9 +107,9 @@ void main() {
         agents: {GenUiAgent.claude, GenUiAgent.openCode1},
         enabled: true,
       );
-      expect(status, isA<GenUiSetupPartial>());
-      expect((status as GenUiSetupPartial).reason, GenUiSetupProblem.conflict);
+      expect(status, isA<GenUiSetupUnavailable>());
       expect(status.agents, isEmpty);
+      expect(runner.calls, [GenUiAgent.claude]);
     },
   );
 
@@ -89,8 +138,9 @@ void main() {
             agents: {GenUiAgent.claude, GenUiAgent.openCode1},
             enabled: true,
           );
-      expect(status, isA<GenUiSetupPartial>());
+      expect(status, isA<GenUiSetupOn>());
       expect(status.agents, [GenUiAgent.claude]);
+      expect(runner.calls, [GenUiAgent.claude]);
       expect(verifier.calls, [GenUiAgent.claude]);
     },
   );
@@ -156,6 +206,7 @@ void main() {
       bool failCheck = false,
       bool verify = false,
       bool wrongVersion = false,
+      bool requireMarker = false,
       GenUiAgent agent = GenUiAgent.openCode1,
     }) async {
       final script = verify
@@ -188,6 +239,8 @@ root_executable = lambda path: None
 def check(*args, **kwargs):
     data = json.loads(base64.b64decode(sys.argv[1]))
     argv = args[0]
+    if ${requireMarker ? 'True' : 'False'} and read(data['directory'] + '/enabled') != b'enabled\\n':
+        return subprocess.CompletedProcess(args, 1, b'')
     output = b'{"jsonrpc":"2.0","id":1,"result":{}}\\n'
     if argv == [data['cli'], '--version']:
         output = ('${wrongVersion ? '0.0.0' : '2.1.283'} (Claude Code)\\n').encode()
@@ -317,6 +370,83 @@ try: main()''');
         expect(await root.list().toList(), isEmpty);
       },
     );
+
+    test(
+      'review 5 unchanged enable keeps marker throughout verification',
+      () async {
+        expect(await apply('one', agent: GenUiAgent.claude), 0);
+        final helper = File('${root.path}/managed/server.cjs');
+        final marker = File('${root.path}/managed/enabled');
+        final oldHelper = await helper.stat();
+        final oldMarker = await marker.stat();
+        expect(
+          await apply('one', agent: GenUiAgent.claude, requireMarker: true),
+          0,
+        );
+        expect(
+          await apply(
+            'one',
+            agent: GenUiAgent.claude,
+            verify: true,
+            requireMarker: true,
+          ),
+          0,
+        );
+        expect((await helper.stat()).modified, oldHelper.modified);
+        expect((await marker.stat()).modified, oldMarker.modified);
+      },
+    );
+
+    test('review 6 repairs owned helper and marker corruption', () async {
+      expect(await apply('one', agent: GenUiAgent.claude), 0);
+      final helper = File('${root.path}/managed/server.cjs');
+      final expected = await helper.readAsString();
+      await helper.writeAsString('damaged helper');
+      await File(
+        '${root.path}/managed/enabled',
+      ).writeAsString('damaged marker');
+      expect(await apply('one', agent: GenUiAgent.claude), 0);
+      expect(await helper.readAsString(), expected);
+      expect(
+        await File('${root.path}/managed/enabled').readAsString(),
+        'enabled\n',
+      );
+      expect(await apply('one', agent: GenUiAgent.claude, verify: true), 0);
+    });
+
+    test('review 6 modified owned helper cannot block disable', () async {
+      expect(await apply('one', agent: GenUiAgent.claude), 0);
+      await File(
+        '${root.path}/managed/server.cjs',
+      ).writeAsString('damaged helper');
+      expect(await apply('one', agent: GenUiAgent.claude, enabled: false), 10);
+      expect(await File('${root.path}/managed/enabled').exists(), false);
+      expect((await config())['mcpServers'], isEmpty);
+    });
+
+    test(
+      'review 6 recovers exact helper orphan from interrupted first install',
+      () async {
+        expect(await apply('one', agent: GenUiAgent.claude), 0);
+        await File('${root.path}/managed/owners.json').delete();
+        await File('${root.path}/managed/enabled').delete();
+        await File(
+          '${root.path}/config/opencode.json',
+        ).writeAsString('{"unrelated":42}');
+        expect(await apply('one', agent: GenUiAgent.claude), 0);
+        expect((await config())['unrelated'], 42);
+        expect(await apply('one', agent: GenUiAgent.claude, verify: true), 0);
+      },
+    );
+
+    test('review 6 unknown orphan remains an unowned collision', () async {
+      await Directory('${root.path}/managed').create();
+      final helper = File('${root.path}/managed/server.cjs');
+      await helper.writeAsString('unrelated executable');
+      expect(await apply('one', agent: GenUiAgent.claude), 21);
+      expect(await helper.readAsString(), 'unrelated executable');
+      expect(await File('${root.path}/managed/owners.json').exists(), false);
+    });
 
     test('unowned entry collision preserves existing config', () async {
       await Directory('${root.path}/config').create();

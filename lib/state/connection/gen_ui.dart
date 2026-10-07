@@ -244,12 +244,11 @@ extension _ConnectionGenUiImpl on ConnectionController {
           _genUiSetup[id] = const GenUiSetupInstalling();
           _genUiChanged();
           final installer = _genUiInstaller ??= ManagedGenUiInstaller.builtin();
-          final agents = <GenUiAgent>{
-            GenUiAgent.claude,
-            (_connectedProfile ?? profile)?.flavor == ServerFlavor.v2
-                ? GenUiAgent.openCode2
-                : GenUiAgent.openCode1,
-          };
+          // Enable only runtimes with end-to-end qualification. Keep legacy
+          // registrations removable even after qualification changes.
+          final agents = on
+              ? <GenUiAgent>{GenUiAgent.claude}
+              : GenUiAgent.values.toSet();
           final result = await installer.setEnabled(
             profileId: id,
             agents: agents,
@@ -342,6 +341,13 @@ extension _ConnectionGenUiImpl on ConnectionController {
   }
 
   void _genUiOnEvent(EventEnvelope event, {GenUiScope? scope}) {
+    // Tokens do not change card identity or settlement. Durable message/tool
+    // boundaries and idle/session events perform bounded reconciliation.
+    if (event.type == 'message.part.delta' ||
+        event.type == 'message.delta' ||
+        event.type == 'tool.progress') {
+      return;
+    }
     _genUiSync();
     final currentScope = scope ?? _genUiScope;
     if (currentScope == null || !_genUiState.available(currentScope)) return;
@@ -370,13 +376,6 @@ extension _ConnectionGenUiImpl on ConnectionController {
       return;
     }
     _genUiState.stale(currentScope, sid);
-    // Streaming deltas invalidate controls, but only durable boundaries cause
-    // bounded history reads. The idle event reconciles the completed turn.
-    if (event.type == 'message.part.delta' ||
-        event.type == 'message.delta' ||
-        event.type == 'tool.progress') {
-      return;
-    }
     _genUiQueueTarget(GenUiTarget(currentScope, sid));
   }
 
@@ -605,16 +604,16 @@ extension _ConnectionGenUiImpl on ConnectionController {
     await _genUiChanges[id]?.catchError((Object _) {});
     if (_genUiAttempted.contains(id) ||
         store.prefs.containsKey('oc.genui.enabled.$id')) {
-      final result = await (_genUiInstaller ??= ManagedGenUiInstaller.builtin())
-          .setEnabled(
-            profileId: id,
-            agents: GenUiAgent.values.toSet(),
-            enabled: false,
-          );
-      if (result is GenUiSetupFailed || result is GenUiSetupPartial) {
-        throw const ProductException(
-          'Agent card registration could not be removed.',
+      try {
+        await (_genUiInstaller ??= ManagedGenUiInstaller.builtin()).setEnabled(
+          profileId: id,
+          agents: GenUiAgent.values.toSet(),
+          enabled: false,
         );
+      } catch (_) {
+        // Registration removal is best effort. A damaged/unowned config must
+        // never retain a profile's credentials or local data. Native profile
+        // cleanup still removes the private Claude home after this attempt.
       }
     }
     _genUiSetup.remove(id);

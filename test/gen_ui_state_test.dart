@@ -49,6 +49,8 @@ final class Gateway
   int sent = 0, reads = 0;
   bool idle = true, fail = false, hasMore = false;
   Completer<void>? pause;
+  Completer<void>? beforeWire;
+  Completer<void>? resumeWire;
   @override
   final capabilities = const ServerCapabilities(
     genUi: true,
@@ -87,6 +89,8 @@ final class Gateway
     PromptDelivery? delivery,
     void Function()? beforeSend,
   }) async {
+    beforeWire?.complete();
+    await resumeWire?.future;
     beforeSend?.call();
     sent++;
     if (fail) throw StateError('test uncertain transport');
@@ -151,6 +155,121 @@ void main() {
     expect(state.state(original), GenUiCardState.unknown);
     register(ready: false);
     expect(state.waiting(scope, 's'), isEmpty);
+  });
+
+  test('unknown session deltas do not notify card listeners', () async {
+    await state.journal.drained;
+    var notifications = 0;
+    state.addListener(() => notifications++);
+    state.stale(scope, 'unseen');
+    state.stale(scope, 'another-unseen');
+    expect(notifications, 0);
+  });
+
+  test('repeated stale deltas notify only on coverage transition', () async {
+    await state.journal.drained;
+    var notifications = 0;
+    state.addListener(() => notifications++);
+    state.stale(scope, 's');
+    expect(notifications, 1);
+    state.stale(scope, 's');
+    expect(notifications, 1);
+  });
+
+  test(
+    'profile close before wire clears only the unsent dispatch marker',
+    () async {
+      final current = card();
+      gateway.beforeWire = Completer<void>();
+      gateway.resumeWire = Completer<void>();
+      final answer = state.answer(current, const GenUiConfirmAnswer(true), []);
+      final checked = expectLater(answer, throwsA(isA<ProductException>()));
+      final flushing = delayed.flush();
+      await gateway.beforeWire!.future;
+      expect(state.journal.read('phone').single.dispatchID, isNotNull);
+      await state.closeProfile('phone');
+      gateway.resumeWire!.complete();
+      await flushing;
+      await checked;
+      expect(gateway.sent, 0);
+      state.reopenProfile('phone');
+      register();
+      await state.journal.drained;
+      expect(state.delivery(current), GenUiDeliveryState.idle);
+      expect(
+        state.journal.read('phone').where((entry) => entry.dispatchID != null),
+        isEmpty,
+      );
+    },
+  );
+
+  test(
+    'unsent cleanup preserves other uncertain dispatches after close',
+    () async {
+      final current = card();
+      gateway.beforeWire = Completer<void>();
+      gateway.resumeWire = Completer<void>();
+      final answer = state.answer(current, const GenUiConfirmAnswer(true), []);
+      final checked = expectLater(answer, throwsA(isA<ProductException>()));
+      final flushing = delayed.flush();
+      await gateway.beforeWire!.future;
+      await state.journal.put(
+        GenUiReference(
+          scope: scope,
+          sessionID: 'uncertain-session',
+          messageID: 'other-message',
+          callID: 'other-call',
+          revision: current.revision,
+          endpoint: 'endpoint-digest',
+          dispatchID: 'uncertain-token',
+        ),
+      );
+      await state.closeProfile('phone');
+      gateway.resumeWire!.complete();
+      await flushing;
+      await checked;
+      expect(gateway.sent, 0);
+      expect(state.journal.read('phone').single.dispatchID, 'uncertain-token');
+    },
+  );
+
+  test('unsent cleanup cannot resurrect a deleted profile journal', () async {
+    gateway.beforeWire = Completer<void>();
+    gateway.resumeWire = Completer<void>();
+    final answer = state.answer(card(), const GenUiConfirmAnswer(true), []);
+    final checked = expectLater(answer, throwsA(isA<ProductException>()));
+    final flushing = delayed.flush();
+    await gateway.beforeWire!.future;
+    await state.closeProfile('phone');
+    await prefs.remove(GenUiJournal.key('phone'));
+    gateway.resumeWire!.complete();
+    await flushing;
+    await checked;
+    expect(gateway.sent, 0);
+    expect(prefs.containsKey(GenUiJournal.key('phone')), isFalse);
+  });
+
+  test('unsent cleanup preserves a replacement dispatch token', () async {
+    final current = card();
+    gateway.beforeWire = Completer<void>();
+    gateway.resumeWire = Completer<void>();
+    final answer = state.answer(current, const GenUiConfirmAnswer(true), []);
+    final checked = expectLater(answer, throwsA(isA<ProductException>()));
+    final flushing = delayed.flush();
+    await gateway.beforeWire!.future;
+    await state.closeProfile('phone');
+    await GenUiJournal(prefs).put(
+      GenUiReference.card(
+        current,
+        'endpoint-digest',
+        dispatchID: 'replacement-token',
+      ),
+    );
+    gateway.resumeWire!.complete();
+    await flushing;
+    await checked;
+    expect(gateway.sent, 0);
+    expect(state.journal.read('phone').single.dispatchID, 'replacement-token');
   });
 
   test('Undo drops held answer from both surfaces', () async {

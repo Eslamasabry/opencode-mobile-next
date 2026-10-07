@@ -23,6 +23,7 @@ class _Installer implements GenUiInstaller {
   GenUiSetupStatus on = GenUiSetupOn(agents: [GenUiAgent.openCode1]);
   GenUiSetupStatus off = const GenUiSetupOff();
   Completer<void>? pause;
+  bool failRemoval = false;
 
   @override
   Future<GenUiSetupStatus> setEnabled({
@@ -32,6 +33,7 @@ class _Installer implements GenUiInstaller {
   }) async {
     calls.add((profile: profileId, agents: Set.of(agents), enabled: enabled));
     await pause?.future;
+    if (!enabled && failRemoval) throw StateError('synthetic removal failure');
     return enabled ? on : off;
   }
 }
@@ -179,10 +181,7 @@ void main() {
       await _settle();
       expect(installer.calls, hasLength(1));
       expect(installer.calls.single.profile, 'phone');
-      expect(installer.calls.single.agents, {
-        GenUiAgent.claude,
-        GenUiAgent.openCode1,
-      });
+      expect(installer.calls.single.agents, {GenUiAgent.claude});
       expect(h.controller.capabilities.genUi, isTrue);
       expect(h.controller.genUiStatus, isA<GenUiSetupOn>());
       expect(h.prefs.getBool('oc.genui.enabled.phone'), isTrue);
@@ -196,6 +195,75 @@ void main() {
       expect(h.controller.capabilities.genUi, isFalse);
     },
   );
+
+  test('review 1 controller requests only qualified agents', () async {
+    final installer = _Installer()
+      ..on = GenUiSetupOn(agents: [GenUiAgent.claude]);
+    final h = await _harness(installer);
+    await h.controller.setGenUiEnabled(true);
+    expect(installer.calls.single.agents, {GenUiAgent.claude});
+    expect(h.controller.genUiStatus, isA<GenUiSetupOn>());
+    // Existing unqualified registrations can still be cleaned up on disable.
+    await h.controller.setGenUiEnabled(false);
+    expect(installer.calls.last.agents, GenUiAgent.values.toSet());
+  });
+
+  test(
+    'review 3 pure deltas do not invalidate cards or notify the app',
+    () async {
+      final h = await _harness(_Installer());
+      await h.controller.setGenUiEnabled(true);
+      await h.controller.loadSessionTail('session');
+      await _settle();
+      final card = h.controller.waitingCardsForSession('session').single;
+      var notifications = 0;
+      h.controller.addListener(() => notifications++);
+      for (var i = 0; i < 5; i++) {
+        for (final type in [
+          'message.part.delta',
+          'message.delta',
+          'tool.progress',
+        ]) {
+          h.controller.handleEventForTesting(
+            EventEnvelope(
+              type: type,
+              properties: {
+                'sessionID': 'session',
+                'messageID': 'assistant',
+                'partID': 'tool',
+                'delta': 'x',
+              },
+            ),
+          );
+        }
+      }
+      expect(notifications, 0);
+      expect(h.controller.genUiStateForCard(card), GenUiCardState.waiting);
+    },
+  );
+
+  for (final throwsError in [false, true]) {
+    test(
+      'review 6 profile deletion continues after registration cleanup ${throwsError ? "throws" : "fails"}',
+      () async {
+        final installer = _Installer()
+          ..failRemoval = throwsError
+          ..off = const GenUiSetupFailed(
+            reason: GenUiSetupProblem.removalFailed,
+          );
+        final h = await _harness(installer);
+        await h.controller.setGenUiEnabled(true);
+        await h.controller.loadSessionTail('session');
+        await _settle();
+        final result = await h.controller.deleteProfileAndLocalData('phone');
+        expect(result.failures, isEmpty);
+        expect(result.removedProfile, isTrue);
+        expect(h.prefs.containsKey('oc.genui.enabled.phone'), isFalse);
+        expect(h.prefs.containsKey('oc.genui.journal.phone'), isFalse);
+        expect(installer.calls.last.enabled, isFalse);
+      },
+    );
+  }
 
   test('automatic setup is coalesced across transcript observations', () async {
     final installer = _Installer();

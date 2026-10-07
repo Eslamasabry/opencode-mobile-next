@@ -141,17 +141,111 @@ void main() {
     expect(requests.last.queryParameters, {'cursor': 'opaque', 'limit': '2'});
   });
 
+  test('OC1 sparse status admits an existing idle session', () async {
+    respond = (request) => request.response.write(
+      jsonEncode(
+        request.uri.path == '/session/ses_1'
+            ? {'id': 'ses_1', 'directory': '/work'}
+            : <String, Object>{},
+      ),
+    );
+    expect(await oc1.genUiSessionIdle('ses_1'), isTrue);
+    expect(requests.map((uri) => uri.path), [
+      '/session/ses_1',
+      '/session/status',
+    ]);
+    for (final request in requests) {
+      expect(request.queryParameters, {'directory': '/work', 'workspace': 'w'});
+    }
+  });
+
   test(
-    'OC1 idle requires explicit fresh idle, absent and malformed deny',
+    'OC1 valid sparse idle and explicit idle preserve busy/retry refusal',
     () async {
-      for (final status in [null, 'idle', 'busy', 'retry', 'unknown']) {
+      for (final status in [null, 'idle', 'busy', 'retry']) {
         respond = (request) => request.response.write(
-          jsonEncode({
-            if (status != null) 'ses_1': {'type': status},
-          }),
+          jsonEncode(
+            request.uri.path == '/session/ses_1'
+                ? {'id': 'ses_1', 'directory': '/work'}
+                : {
+                    if (status != null) 'ses_1': {'type': status},
+                  },
+          ),
         );
-        expect(await oc1.genUiSessionIdle('ses_1'), status == 'idle');
+        expect(
+          await oc1.genUiSessionIdle('ses_1'),
+          status == null || status == 'idle',
+        );
       }
+    },
+  );
+
+  test('OC1 sparse idle rejects nonexistent or foreign sessions', () async {
+    for (final session in [
+      null,
+      <String, Object>{},
+      {'id': 'ses_foreign', 'directory': '/work'},
+      {'id': 'ses_1', 'directory': '/other'},
+    ]) {
+      respond = (request) {
+        if (request.uri.path == '/session/ses_1') {
+          if (session == null) {
+            request.response.statusCode = 404;
+          }
+          request.response.write(jsonEncode(session));
+        } else {
+          request.response.write('{}');
+        }
+      };
+      await expectLater(
+        oc1.genUiSessionIdle('ses_1'),
+        throwsA(isA<ProductException>()),
+      );
+    }
+  });
+
+  test(
+    'OC1 sparse idle rejects malformed status maps including other entries',
+    () async {
+      for (final status in [
+        null,
+        <Object>[],
+        {'ses_1': null},
+        {
+          'ses_other': {'type': 'unknown'},
+        },
+        {'ses_other': 'busy'},
+      ]) {
+        respond = (request) => request.response.write(
+          jsonEncode(
+            request.uri.path == '/session/ses_1'
+                ? {'id': 'ses_1', 'directory': '/work'}
+                : status,
+          ),
+        );
+        await expectLater(
+          oc1.genUiSessionIdle('ses_1'),
+          throwsA(isA<ProductException>()),
+        );
+      }
+    },
+  );
+
+  test(
+    'OC1 sparse idle rejects a location changed during status read',
+    () async {
+      respond = (request) {
+        if (request.uri.path == '/session/ses_1') {
+          request.response.write('{"id":"ses_1","directory":"/work"}');
+        } else {
+          oc1.setLocation(directory: '/other', workspace: 'other');
+          request.response.write('{}');
+        }
+      };
+      await expectLater(
+        oc1.genUiSessionIdle('ses_1'),
+        throwsA(isA<ProductException>()),
+      );
     },
   );
 

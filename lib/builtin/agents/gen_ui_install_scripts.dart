@@ -232,21 +232,26 @@ def main():
       if claude else {'type':'local','command':[d['node'], helper],
       **({'enabled':True} if kind == 'openCode1' else {'disabled':False,'codemode':False})})
     existing = slot(current, kind).get('oc-ui')
+    helper_bytes = d['helper'].encode()
     if owned:
         if (set(manifest) != {'v','owners','entry','digest'} or manifest['v'] != 1
           or not isinstance(manifest['owners'], list)
           or any(not isinstance(x, str) for x in manifest['owners'])
           or manifest['entry'] != expected): fail(21)
         if existing is not None and existing != manifest['entry']: fail(21)
-        old_helper = read(helper)
-        if old_helper is not None and hashlib.sha256(old_helper).hexdigest() != manifest['digest']: fail(21)
-    elif existing is not None or read(helper) is not None or read(marker) is not None:
-        fail(21)
+    else:
+        # A pre-manifest interruption in an older installer can leave only
+        # our exact current helper. Recover that narrow case; never adopt an
+        # unknown executable, preexisting registration, or enabled marker.
+        orphan = read(helper)
+        if (existing is not None or read(marker) is not None
+          or (orphan is not None and orphan != helper_bytes)): fail(21)
     owners = set(manifest.get('owners', []))
     if d['verify']:
         if (not claude or not owned or owner not in owners or existing != expected
           or read(marker) != b'enabled\n'
-          or manifest['digest'] != hashlib.sha256(d['helper'].encode()).hexdigest()): fail(24)
+          or manifest['digest'] != hashlib.sha256(helper_bytes).hexdigest()
+          or read(helper) != helper_bytes): fail(24)
         verify_claude(d, helper, config_parent)
         sys.exit(0)
     if not d['enable']:
@@ -278,17 +283,25 @@ def main():
         if not safe(d['cli']) or not os.access(d['cli'], os.X_OK): fail(20)
     else:
         root_executable(d['node'])
-    helper_bytes = d['helper'].encode()
     new_manifest = {'v':1,'owners':sorted(owners | {owner}),
       'entry':expected,'digest':hashlib.sha256(helper_bytes).hexdigest()}
     old_manifest = read(manifest_path)
     old_helper = read(helper)
     old_marker = read(marker)
+    if (owned and existing == expected and old_helper == helper_bytes
+      and manifest == new_manifest and old_marker == b'enabled\n'):
+        # Already installed. The caller still runs the independent readiness
+        # verifier, without interrupting live helpers or rewriting files.
+        sys.exit(0)
+    rollback_marker = old_marker if (owned and old_helper is not None
+      and hashlib.sha256(old_helper).hexdigest() == manifest['digest']
+      and old_marker == b'enabled\n') else None
     try:
         remove(marker)
-        atomic(helper, helper_bytes)
-        # Own writes before a crash can leave the config pointing at them.
+        # Establish ownership before replacing code, so every interrupted
+        # update can be repaired even if its helper digest no longer matches.
         save_json(manifest_path, new_manifest)
+        atomic(helper, helper_bytes)
         if claude:
             env = dict(os.environ, HOME=d['home'], CLAUDE_CONFIG_DIR=config_parent)
             if existing is None and not cli([d['cli'],
@@ -320,7 +333,7 @@ def main():
                 if existing is None: entries.pop('oc-ui', None)
                 else: entries['oc-ui'] = existing
                 save_json(config_path, latest)
-            for path, previous in [(helper,old_helper),(manifest_path,old_manifest),(marker,old_marker)]:
+            for path, previous in [(helper,old_helper),(manifest_path,old_manifest),(marker,rollback_marker)]:
                 if previous is None: remove(path)
                 else: atomic(path, previous)
         except Exception:
