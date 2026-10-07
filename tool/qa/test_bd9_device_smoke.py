@@ -2,6 +2,7 @@
 import argparse
 import contextlib
 import io
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -17,6 +18,116 @@ def proof():
 
 
 class DeviceReceiptTest(unittest.TestCase):
+    def run_restoration_fixture(self, *, outcome='success', restore_failure=False):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            apk = root / 'candidate.apk'
+            apk.write_bytes(b'fixture')
+            args = argparse.Namespace(output=root / 'proof', apk=apk, test_apk=root / 'test.apk',
+                                      expected_signer='a' * 64, adb='adb')
+            lock = root / 'device.lock'
+            calls = []
+
+            def restore(adb):
+                calls.append(adb)
+                # A separately opened descriptor must be unable to acquire the
+                # flock. This detects callbacks moved after the with block.
+                with lock.open('a') as probe:
+                    with self.assertRaises(BlockingIOError):
+                        smoke.fcntl.flock(probe, smoke.fcntl.LOCK_EX | smoke.fcntl.LOCK_NB)
+                if restore_failure:
+                    raise RuntimeError('synthetic-private-restoration-error')
+
+            def execute(command, **kwargs):
+                if command[3:] == ['get-state']:
+                    if outcome == 'not_ready':
+                        return b'offline'
+                    return b'device'
+                if 'instrument' in command:
+                    if outcome == 'instrumentation_failure':
+                        return ('\n'.join('INSTRUMENTATION_STATUS: bd9NativeCheck=' + name + ':PASS'
+                                          for name in smoke.CHECKS) +
+                                '\nINSTRUMENTATION_RESULT: bd9Failure=flutter_null_failure\n'
+                                'raw synthetic-provider-value\nINSTRUMENTATION_CODE: 0').encode()
+                    return proof().encode()
+                if command[3:5] == ['exec-out', 'cat']:
+                    return b'\xff\xd8fixture-jpg\xff\xd9'
+                return b''
+
+            captured = io.StringIO()
+            with patch.dict('os.environ', {'OC_EMULATOR_LOCK': str(lock)}), \
+                 patch.object(smoke, 'verify_apk'), \
+                 patch.object(smoke, 'execute', side_effect=execute), \
+                 contextlib.redirect_stdout(captured):
+                code = smoke.run_device(args, restore=restore)
+            self.assertEqual(calls, [['adb', '-s', 'emulator-5554']])
+            report = json.loads((args.output / 'report.json').read_text())
+            self.assertNotIn('synthetic-private-restoration-error', str(report) + captured.getvalue())
+            self.assertNotIn('synthetic-provider-value', str(report) + captured.getvalue())
+            return code, report
+
+    def test_restore_success_is_once_inside_device_lock(self):
+        code, report = self.run_restoration_fixture()
+        self.assertEqual(code, 0)
+        self.assertEqual(report['normal_app_restore'], 'PASS')
+
+    def test_restore_after_instrumentation_failure_preserves_original_failure(self):
+        code, report = self.run_restoration_fixture(outcome='instrumentation_failure')
+        self.assertEqual(code, 1)
+        self.assertEqual(report['normal_app_restore'], 'PASS')
+        self.assertEqual(report['error'], 'flutter_result_invalid')
+        self.assertEqual(report['failure_code'], 'flutter_null_failure')
+        self.assertEqual(report['native_checks'], list(smoke.CHECKS))
+
+    def test_restore_after_early_device_failure(self):
+        code, report = self.run_restoration_fixture(outcome='not_ready')
+        self.assertEqual(code, 1)
+        self.assertEqual(report['error'], 'emulator_not_ready')
+        self.assertEqual(report['normal_app_restore'], 'PASS')
+
+    def test_restore_failure_turns_success_into_fixed_failure(self):
+        code, report = self.run_restoration_fixture(restore_failure=True)
+        self.assertEqual(code, 1)
+        self.assertEqual(report['error'], 'normal_restore_failed')
+        self.assertEqual(report['stage'], 'normal_app_restore')
+        self.assertEqual(report['normal_app_restore'], 'FAIL')
+
+    def test_restore_failure_keeps_original_smoke_failure(self):
+        code, report = self.run_restoration_fixture(outcome='instrumentation_failure', restore_failure=True)
+        self.assertEqual(code, 1)
+        self.assertEqual(report['error'], 'flutter_result_invalid')
+        self.assertEqual(report['restore_error'], 'normal_restore_failed')
+
+    def test_failure_diagnosis_is_allowlisted_without_changing_pass_parser(self):
+        prefix = 'INSTRUMENTATION_STATUS: bd9NativeCheck=' + smoke.CHECKS[0] + ':PASS'
+        for category in smoke.FAILURE_CODES:
+            output = prefix + '\nINSTRUMENTATION_RESULT: bd9Failure=' + category
+            self.assertEqual(smoke.failure_diagnosis(output),
+                             {'native_checks': [smoke.CHECKS[0]], 'failure_code': category})
+            with self.assertRaises(smoke.SmokeFailure):
+                smoke.parse_instrumentation(output)
+        for value in ('synthetic-secret', 'flutter_null_failure synthetic-secret',
+                      'flutter_null_failure\nINSTRUMENTATION_RESULT: bd9Failure=flutter_assertion'):
+            self.assertEqual(smoke.failure_diagnosis(prefix + '\nINSTRUMENTATION_RESULT: bd9Failure=' + value),
+                             {'native_checks': [smoke.CHECKS[0]]})
+
+    def test_failure_diagnosis_rejects_reordered_or_duplicate_native_tokens(self):
+        for names in ((smoke.CHECKS[1],), (smoke.CHECKS[0], smoke.CHECKS[0])):
+            output = '\n'.join('INSTRUMENTATION_STATUS: bd9NativeCheck=' + name + ':PASS' for name in names)
+            self.assertEqual(smoke.failure_diagnosis(output), {'native_checks': []})
+
+    def test_restore_not_called_without_acquiring_lock(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args = argparse.Namespace(output=Path(directory), apk=Path('missing'), test_apk=Path('missing'),
+                                      expected_signer='a' * 64, adb='adb')
+            with patch.object(smoke, 'verify_apk', side_effect=smoke.SmokeFailure('apk_signer_mismatch')), \
+                 patch.object(smoke, 'execute'), contextlib.redirect_stdout(io.StringIO()), \
+                 patch('builtins.print'), patch.object(smoke.fcntl, 'flock') as flock:
+                calls = []
+                self.assertEqual(smoke.run_device(args, restore=lambda adb: calls.append(adb)), 1)
+                self.assertEqual(calls, [])
+                flock.assert_not_called()
+
     def test_complete_proof(self):
         result = smoke.parse_instrumentation(proof())
         self.assertEqual(result['native_checks'], list(smoke.CHECKS))
