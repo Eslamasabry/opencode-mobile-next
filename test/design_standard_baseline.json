@@ -53,7 +53,7 @@
       "G21 disableAnimationsOf": 3,
       "G21 withOpacity(|Opacity(": 3
     },
-    "lib/ui/screens/chat/message_view.dart#_AssistantErrorRow": {},
+    "lib/ui/screens/chat/assistant_error_row.dart#_AssistantErrorRow": {},
     "lib/ui/screens/chat/permission_sheet.dart": {
       "G1 AlertDialog(": 1,
       "G1 showDialog(": 1,

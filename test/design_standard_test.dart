@@ -227,7 +227,9 @@ const _migrated = <String, List<String>>{
 const _migratedClasses = <String, Map<String, List<String>>>{
   // The transcript file: only the error a reply carries is a state; the
   // messages themselves are not part of the standard's step 5.
-  'lib/ui/screens/chat/message_view.dart': {
+  // Moved out of message_view.dart for the chat library's 800-line budget
+  // (2026-10-08); same class, same renders.
+  'lib/ui/screens/chat/assistant_error_row.dart': {
     // _ErrorActionCard folded into _AssistantErrorRow (one KitNotice,
     // revamp chat-1, 2026-09-27); its label left with the class.
     '_AssistantErrorRow': ['chat_model_error'],
@@ -305,7 +307,7 @@ const _grandfathered = <String>{
   'lib/ui/screens/chat/attention_card.dart',
   'lib/ui/screens/chat/chat_states.dart',
   'lib/ui/screens/chat/empty_chat.dart',
-  'lib/ui/screens/chat/message_view.dart#_AssistantErrorRow',
+  'lib/ui/screens/chat/assistant_error_row.dart#_AssistantErrorRow',
   'lib/ui/screens/chat/permission_sheet.dart',
   'lib/ui/screens/perf_trace_section.dart',
   'lib/ui/screens/phone_setup/phone_setup_customize_sheet.dart',
