@@ -154,6 +154,40 @@ def slot(config, kind, create=False):
         if not isinstance(result, dict): fail(21)
     return result
 
+# Only this display-only tool is permitted, never the whole MCP server.
+SHOW_PERMISSION = 'mcp__oc-ui__show'
+
+def show_permissions(settings, create=False):
+    if 'permissions' not in settings:
+        if not create: return []
+        settings['permissions'] = {}
+    permissions = settings['permissions']
+    if not isinstance(permissions, dict): fail(21)
+    if 'allow' not in permissions:
+        if not create: return []
+        permissions['allow'] = []
+    allowed = permissions['allow']
+    if not isinstance(allowed, list) or any(not isinstance(x, str) for x in allowed): fail(21)
+    return allowed
+
+def allow_show(path):
+    # Re-read immediately before writing to preserve unrelated CLI/user edits.
+    settings = read_json(path)
+    allowed = show_permissions(settings, True)
+    if SHOW_PERMISSION in allowed: return False
+    allowed.append(SHOW_PERMISSION)
+    save_json(path, settings)
+    return True
+
+def remove_show(path):
+    settings = read_json(path)
+    allowed = show_permissions(settings)
+    if SHOW_PERMISSION not in allowed: return
+    settings['permissions']['allow'] = [x for x in allowed if x != SHOW_PERMISSION]
+    if not settings['permissions']['allow']: settings['permissions'].pop('allow')
+    if not settings['permissions']: settings.pop('permissions')
+    save_json(path, settings)
+
 def root_executable(path):
     # /bin and /lib may be system symlinks; the configured runtime itself and
     # its /usr ancestors must not be redirectable or writable by agent uid.
@@ -227,6 +261,8 @@ def main():
     # Refuse it rather than modifying or silently shadowing the user's file.
     if not claude and os.path.lexists(config_path + 'c'): fail(21)
     current = read_json(config_path)
+    settings_path = config_parent + '/settings.json'
+    show_allowed = claude and d['enable'] and SHOW_PERMISSION in show_permissions(read_json(settings_path))
     owned = bool(manifest)
     expected = ({'type':'stdio','command':d['node'],'args':[helper],'env':{}}
       if claude else {'type':'local','command':[d['node'], helper],
@@ -234,7 +270,11 @@ def main():
     existing = slot(current, kind).get('oc-ui')
     helper_bytes = d['helper'].encode()
     if owned:
-        if (set(manifest) != {'v','owners','entry','digest'} or manifest['v'] != 1
+        keys = set(manifest)
+        if (keys not in ({'v','owners','entry','digest'},
+          {'v','owners','entry','digest','showPermissionAdded'} if claude else set())
+          or manifest['v'] != 1
+          or ('showPermissionAdded' in manifest and not isinstance(manifest['showPermissionAdded'], bool))
           or not isinstance(manifest['owners'], list)
           or any(not isinstance(x, str) for x in manifest['owners'])
           or manifest['entry'] != expected): fail(21)
@@ -248,7 +288,7 @@ def main():
           or (orphan is not None and orphan != helper_bytes)): fail(21)
     owners = set(manifest.get('owners', []))
     if d['verify']:
-        if (not claude or not owned or owner not in owners or existing != expected
+        if (not claude or not show_allowed or not owned or owner not in owners or existing != expected
           or read(marker) != b'enabled\n'
           or manifest['digest'] != hashlib.sha256(helper_bytes).hexdigest()
           or read(helper) != helper_bytes): fail(24)
@@ -265,6 +305,7 @@ def main():
         # processes then reject new calls even if the catalog remains loaded.
         remove(marker)
         if claude:
+            if manifest.get('showPermissionAdded', False): remove_show(settings_path)
             env = dict(os.environ, HOME=d['home'], CLAUDE_CONFIG_DIR=config_parent)
             if existing is not None and not cli([d['cli'],
               'mcp','remove','--scope','user','oc-ui'], env): fail(24)
@@ -275,6 +316,7 @@ def main():
         # Keep the inert script while already loaded clients may still refer
         # to it; profile deletion removes the private directory afterwards.
         manifest['owners'] = []
+        if claude: manifest['showPermissionAdded'] = False
         save_json(manifest_path, manifest)
         sys.exit(10)
     if claude:
@@ -285,17 +327,23 @@ def main():
         root_executable(d['node'])
     new_manifest = {'v':1,'owners':sorted(owners | {owner}),
       'entry':expected,'digest':hashlib.sha256(helper_bytes).hexdigest()}
+    if claude:
+        # Persist ownership before adding the rule so interruption is repairable.
+        # A rule already present before our first install remains user-owned.
+        new_manifest['showPermissionAdded'] = manifest.get('showPermissionAdded', False) or not show_allowed
     old_manifest = read(manifest_path)
     old_helper = read(helper)
     old_marker = read(marker)
     if (owned and existing == expected and old_helper == helper_bytes
-      and manifest == new_manifest and old_marker == b'enabled\n'):
+      and manifest == new_manifest and old_marker == b'enabled\n'
+      and (not claude or show_allowed)):
         # Already installed. The caller still runs the independent readiness
         # verifier, without interrupting live helpers or rewriting files.
         sys.exit(0)
     rollback_marker = old_marker if (owned and old_helper is not None
       and hashlib.sha256(old_helper).hexdigest() == manifest['digest']
       and old_marker == b'enabled\n') else None
+    permission_added = False
     try:
         remove(marker)
         # Establish ownership before replacing code, so every interrupted
@@ -307,6 +355,7 @@ def main():
             if existing is None and not cli([d['cli'],
               'mcp','add','--scope','user','--transport','stdio','oc-ui','--',d['node'],helper], env): fail(24)
             if slot(read_json(config_path), kind).get('oc-ui') != expected: fail(24)
+            permission_added = allow_show(settings_path)
         else:
             slot(current, kind, True)['oc-ui'] = expected
             save_json(config_path, current)
@@ -327,6 +376,7 @@ def main():
         # Restore only the entry this attempt wrote, preserving other keys
         # if the CLI or another actor updated the config during this attempt.
         try:
+            if permission_added: remove_show(settings_path)
             latest = read_json(config_path)
             entries = slot(latest, kind, True)
             if entries.get('oc-ui') == expected:

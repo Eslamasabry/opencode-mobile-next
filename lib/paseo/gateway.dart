@@ -107,6 +107,17 @@ class PaseoGateway
 
   final Map<String, String> defaultProviderModes;
 
+  /// Set only by the owning controller after local Agent cards qualification.
+  /// Evaluated for each request so disable and profile changes take effect now.
+  bool Function()? _genUiShowAllowed;
+  set genUiShowAllowed(bool Function()? allowed) {
+    _genUiShowAllowed = allowed;
+    if (allowed == null) return;
+    for (final pending in _permissions.values.toList()) {
+      _tryAllowGenUiShow(pending);
+    }
+  }
+
   PaseoGateway({
     required this.transport,
     String? directory,
@@ -729,8 +740,11 @@ class PaseoGateway
   // ---- permissions -------------------------------------------------------
 
   @override
-  Future<List<PermissionRequest>> pendingPermissions() async =>
-      _permissions.values.map((p) => p.permission).toList();
+  Future<List<PermissionRequest>> pendingPermissions() async => _permissions
+      .values
+      .where((pending) => !pending.genUiApproving)
+      .map((p) => p.permission)
+      .toList();
   @override
   Future<List<PermissionRequest>> pendingPermissionsV2() async => const [];
 

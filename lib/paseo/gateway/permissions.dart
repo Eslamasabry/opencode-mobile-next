@@ -5,11 +5,15 @@ class _PaseoPermission {
   final PermissionRequest permission;
   final List<dynamic> suggestions;
   final HostAgentPermissionRequest? hostRequest;
+  final bool genUiShow;
+  bool genUiApproving = false;
+  bool genUiAttempted = false;
   _PaseoPermission(
     this.epoch,
     this.permission,
     this.suggestions,
     this.hostRequest,
+    this.genUiShow,
   );
 }
 
@@ -39,15 +43,25 @@ extension _PaseoPermissions on PaseoGateway {
       _permissions.remove(_permissions.keys.first);
     }
     final suggestions = request['suggestions'];
-    _permissions[permission.id] = _PaseoPermission(
+    final pending = _PaseoPermission(
       transport.epoch,
       permission,
       hostRequest == null && suggestions is List ? suggestions : const [],
       hostRequest,
+      request['name'] == 'mcp__oc-ui__show' &&
+          request['kind'] == 'tool' &&
+          (!request.containsKey('provider') || request['provider'] == 'claude'),
     );
+    _permissions[permission.id] = pending;
+    if (_tryAllowGenUiShow(pending)) return;
+    _emitPermission(pending);
+  }
+
+  void _emitPermission(_PaseoPermission pending) {
+    final permission = pending.permission;
     _emit('permission.asked', {
       'id': permission.id,
-      'sessionID': agentID,
+      'sessionID': permission.sessionID,
       'permission': permission.permission,
       'patterns': permission.patterns,
       'metadata': permission.metadata,
@@ -59,6 +73,56 @@ extension _PaseoPermissions on PaseoGateway {
         },
       if (permission.message != null) 'message': permission.message,
     });
+  }
+
+  bool _canAllowGenUiShow(_PaseoPermission pending) {
+    final agent = _agents[pending.permission.sessionID];
+    if (!pending.genUiShow ||
+        pending.genUiAttempted ||
+        pending.hostRequest != null ||
+        _closed ||
+        !transport.connected ||
+        transport.serverVersion != '0.9.2' ||
+        pending.epoch != transport.epoch ||
+        agent?['provider'] != 'claude' ||
+        _directory == null ||
+        agent?['cwd'] != _directory) {
+      return false;
+    }
+    try {
+      return _genUiShowAllowed?.call() == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  bool _tryAllowGenUiShow(_PaseoPermission pending) {
+    if (pending.genUiApproving) return true;
+    if (!_canAllowGenUiShow(pending)) return false;
+    pending.genUiApproving = true;
+    // A qualification sweep may run inside an event callback. Defer the
+    // reply because the synchronous event stream cannot emit recursively.
+    unawaited(
+      Future<void>.microtask(() async {
+        if (!identical(_permissions[pending.permission.id], pending)) return;
+        try {
+          if (_canAllowGenUiShow(pending)) {
+            // A failed or uncertain send belongs back with the person. Event
+            // listeners may rebind qualification, but must never retry it.
+            pending.genUiAttempted = true;
+            await respondPermission(pending.permission.id, 'once');
+          }
+        } catch (_) {
+          // Keep a still-current request visible if its one-call send fails.
+        } finally {
+          pending.genUiApproving = false;
+          if (identical(_permissions[pending.permission.id], pending)) {
+            _emitPermission(pending);
+          }
+        }
+      }),
+    );
+    return true;
   }
 
   void _resolvePermission(String requestID) {

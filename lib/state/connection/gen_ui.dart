@@ -285,7 +285,22 @@ extension _ConnectionGenUiImpl on ConnectionController {
     // The phone feed owns one stable gateway per directory. The active chat
     // contributes authoritative transcripts but must not replace that source
     // with its synthetic profile/temporary gateway.
-    if (isAgentBackend && _genUiParent != null) return;
+    if (isAgentBackend && _genUiParent != null) {
+      final gateway = api, scope = _genUiScope;
+      final generation = _generation;
+      if (gateway is PaseoGateway && scope != null) {
+        gateway.genUiShowAllowed = () =>
+            !_disposed &&
+            _generation == generation &&
+            identical(api, gateway) &&
+            status == StreamStatus.connected &&
+            _genUiScope == scope &&
+            genUiEnabled &&
+            genUiStatus.agents.contains(GenUiAgent.claude) &&
+            _genUiState.available(scope);
+      }
+      return;
+    }
     final scope = _genUiScope,
         gateway = api,
         owner = _connectedProfile ?? profile;
@@ -539,6 +554,12 @@ extension _ConnectionGenUiImpl on ConnectionController {
           !_deletingReadProfiles.contains(scope.profileID),
       ready: true,
     );
+    // The gateway checks the raw tool name/provider and replies only once.
+    // This closure is the profile-owned authority, rechecked for every call.
+    gateway.genUiShowAllowed = () =>
+        !_disposed &&
+        identical(_genUiPhoneSources[scope]?.gateway, gateway) &&
+        _genUiState.available(scope);
     final key = genUiScopeKey(scope);
     if (_genUiPhoneChannels.containsKey(key)) return;
     final channel = gateway.openEventChannel(

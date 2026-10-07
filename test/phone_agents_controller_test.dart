@@ -10,6 +10,8 @@ import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
+import 'package:opencode_mobile/domain/genui/gen_ui.dart';
+import 'package:opencode_mobile/builtin/agents/gen_ui_install.dart';
 import 'package:opencode_mobile/domain/agent_sign_in.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/domain/phone_agent_host.dart';
@@ -470,6 +472,17 @@ class _FakeSignInHost implements AgentSignInHost {
 
 // ---- harness -----------------------------------------------------------------
 
+class _CardInstaller implements GenUiInstaller {
+  @override
+  Future<GenUiSetupStatus> setEnabled({
+    required String profileId,
+    required Set<GenUiAgent> agents,
+    required bool enabled,
+  }) async => enabled
+      ? GenUiSetupOn(agents: [GenUiAgent.claude])
+      : const GenUiSetupOff();
+}
+
 class _World {
   _World(
     this.controller,
@@ -493,6 +506,7 @@ Future<_World> _world(
   bool phone = true,
   Map<String, Object> prefsExtra = const {},
   FlutterSecureStorage? secure,
+  GenUiInstaller? genUiInstaller,
 }) async {
   final profileJson = {
     'id': 'local',
@@ -541,6 +555,7 @@ Future<_World> _world(
       return host;
     },
     agentSignInHostFactory: () => signIn,
+    genUiInstaller: genUiInstaller,
   );
   final connect = controller.connect(store.profiles.single);
   await tester?.pump();
@@ -569,11 +584,13 @@ void main() {
     WidgetTester? tester, {
     Map<String, Object>? prefs,
     FlutterSecureStorage? secure,
+    GenUiInstaller? genUiInstaller,
   }) async {
     final w = await _world(
       tester,
       prefsExtra: prefs ?? const {},
       secure: secure,
+      genUiInstaller: genUiInstaller,
     );
     w.state.runtimes = {'claude': _ready('claude')};
     // Left over from an earlier host run: listed, not loaded, and without
@@ -585,6 +602,86 @@ void main() {
     await w.controller.refreshChatFeed();
     return w;
   }
+
+  test(
+    'qualified cards skip asks in feed and active chat, disable revokes',
+    () async {
+      final w = await ready(null, genUiInstaller: _CardInstaller());
+      final c = w.controller;
+      addTearDown(c.dispose);
+      await c.setGenUiEnabled(true);
+      Future<void> settle() async {
+        for (var i = 0; i < 12; i++) {
+          await Future<void>.delayed(Duration.zero);
+        }
+      }
+
+      void ask(
+        FakePaseoSocket socket,
+        String id, {
+        String name = 'mcp__oc-ui__show',
+      }) {
+        socket.push('agent_permission_request', {
+          'agentId': 'c1',
+          'request': {
+            'id': id,
+            'name': name,
+            'kind': 'tool',
+            'provider': 'claude',
+            'input': {},
+            'suggestions': [
+              {'type': 'addRules'},
+            ],
+          },
+        });
+      }
+
+      final feed = w.host.sockets.first;
+      ask(feed, 'feed-card');
+      await settle();
+      expect(feed.of('agent_permission_response').single['response'], {
+        'behavior': 'allow',
+      });
+      expect(c.autoApprovalFor('c1').automatic, isFalse);
+
+      final row = c.chatFeed().items.firstWhere(
+        (r) => r.sourceId == 'paseo:$dir',
+      );
+      await c.openChatFeedItem(row);
+      final backend = c.backendForConversation('c1')!;
+      final chat =
+          w.host.sockets[w.host.gateways.indexOf(backend.api as PaseoGateway)];
+      await settle();
+      expect(backend.isConnected, isTrue);
+      expect(backend.genUiEnabled, isTrue);
+      expect(backend.genUiStatus.agents, contains(GenUiAgent.claude));
+      expect(backend.capabilities.genUi, isTrue);
+      expect(identical(chat, feed), isFalse);
+      ask(chat, 'chat-card');
+      await settle();
+      expect(chat.of('agent_permission_response').single['response'], {
+        'behavior': 'allow',
+      });
+      expect(backend.permissionsForSession('c1'), isEmpty);
+      expect(backend.autoApprovalFor('c1').automatic, isFalse);
+
+      ask(chat, 'other-tool', name: 'mcp__oc-ui__delete');
+      await settle();
+      expect(chat.of('agent_permission_response'), hasLength(1));
+      expect(backend.permissionsForSession('c1').single.id, 'other-tool');
+
+      await c.setGenUiEnabled(false);
+      ask(feed, 'disabled-feed');
+      ask(chat, 'disabled-chat');
+      await settle();
+      expect(feed.of('agent_permission_response'), hasLength(1));
+      expect(chat.of('agent_permission_response'), hasLength(1));
+      expect(
+        backend.permissionsForSession('c1').map((p) => p.id),
+        contains('disabled-chat'),
+      );
+    },
+  );
 
   testWidgets('off the phone profile there is no agent surface', (
     tester,
