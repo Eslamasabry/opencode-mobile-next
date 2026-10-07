@@ -5261,5 +5261,6 @@
   "cardsProblemBusy": "الهاتف مشغول بأمر آخر. حاول بعد قليل.",
   "agentCardFieldRequiredHint": "مطلوب",
   "agentCardYourAnswer": "إجابتك",
-  "agentCardDangerConfirm": "إرسال الإجابة"
+  "agentCardDangerConfirm": "إرسال الإجابة",
+  "activityQuestionOptional": "اختياري. يمكنك ترك هذا السؤال فارغاً."
 }

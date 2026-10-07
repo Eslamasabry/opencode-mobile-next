@@ -16193,6 +16193,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get activityAnswerEveryQuestion => 'Answer every question first.';
 
   @override
+  String get activityQuestionOptional =>
+      'اختياري. يمكنك ترك هذا السؤال فارغاً.';
+
+  @override
   String get activitySending => 'Sending…';
 
   @override

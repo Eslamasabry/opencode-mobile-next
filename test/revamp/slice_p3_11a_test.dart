@@ -99,14 +99,17 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('question sheet', () {
-    Future<_Answers> open(WidgetTester tester) async {
+    Future<_Answers> open(
+      WidgetTester tester, {
+      PendingQuestion question = _question,
+    }) async {
       _phone(tester);
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
       final controller = _Answers(ProfileStore(prefs: prefs))
         ..repository = _Repository()
         ..status = StreamStatus.connected;
-      controller.questions = {'q-1': _question};
+      controller.questions = {'q-1': question};
       addTearDown(controller.dispose);
       await tester.pumpWidget(
         MaterialApp(
@@ -118,7 +121,7 @@ void main() {
                 child: KitButton.primary(
                   label: 'Open',
                   onPressed: () =>
-                      showQuestionSheet(context, controller, _question),
+                      showQuestionSheet(context, controller, question),
                 ),
               ),
             ),
@@ -161,6 +164,46 @@ void main() {
       await tester.pumpAndSettle();
       expect(controller.answers, [
         ['Staging'],
+      ]);
+    });
+
+    testWidgets('an optional prompt says so and Send accepts it empty; a '
+        'required one still needs an answer', (tester) async {
+      final controller = await open(
+        tester,
+        question: const PendingQuestion(
+          id: 'q-1',
+          sessionID: 'ses-1',
+          prompts: [
+            QuestionPrompt(
+              title: 'Target',
+              question: 'Where should this deploy?',
+              multiple: false,
+              custom: false,
+              choices: [QuestionChoice(label: 'Staging', description: '')],
+            ),
+            QuestionPrompt(
+              title: 'Notes',
+              question: 'Anything else?',
+              multiple: false,
+              custom: false,
+              optional: true,
+              choices: [QuestionChoice(label: 'Hurry', description: '')],
+            ),
+          ],
+        ),
+      );
+      expect(find.text(_en.activityQuestionOptional), findsOneWidget);
+      // The required prompt still blocks Send.
+      expect(find.text(_en.activityAnswerEveryQuestion), findsOneWidget);
+      await tester.tap(find.text('Staging'));
+      await tester.pump();
+      expect(find.text(_en.activityAnswerEveryQuestion), findsNothing);
+      await tester.tap(send());
+      await tester.pumpAndSettle();
+      expect(controller.answers, [
+        ['Staging'],
+        <String>[],
       ]);
     });
   });

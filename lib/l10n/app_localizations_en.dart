@@ -16075,6 +16075,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityAnswerEveryQuestion => 'Answer every question first.';
 
   @override
+  String get activityQuestionOptional =>
+      'Optional. You can leave this one empty.';
+
+  @override
   String get activitySending => 'Sending…';
 
   @override

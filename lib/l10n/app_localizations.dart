@@ -25710,6 +25710,12 @@ abstract class AppLocalizations {
   /// **'Answer every question first.'**
   String get activityAnswerEveryQuestion;
 
+  /// Question sheet: marks a prompt the person may skip
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. You can leave this one empty.'**
+  String get activityQuestionOptional;
+
   /// Question sheet: why the choices and the own answer are locked while the answer is sent
   ///
   /// In en, this message translates to:

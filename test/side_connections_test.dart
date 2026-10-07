@@ -603,6 +603,33 @@ void main() {
     w.controller.dispose();
   });
 
+  testWidgets('a question with an optional prompt is answered in the sheet, '
+      'where it may be left empty', (tester) async {
+    final (w, _, _) = await questionRow(
+      tester,
+      const PendingQuestion(
+        id: 'q1',
+        sessionID: 't1',
+        prompts: [
+          QuestionPrompt(
+            title: 'Notes',
+            question: 'Anything else?',
+            multiple: false,
+            custom: true,
+            optional: true,
+            choices: [QuestionChoice(label: 'Hurry', description: '')],
+          ),
+        ],
+      ),
+    );
+    expect(find.text('Hurry'), findsNothing);
+    await tester.tap(find.byKey(const Key('question-card-answer')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('question-sheet')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    w.controller.dispose();
+  });
+
   testWidgets('a long question opens the question sheet over the list', (
     tester,
   ) async {

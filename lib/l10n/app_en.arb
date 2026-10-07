@@ -18270,6 +18270,10 @@
   "@activityAnswerEveryQuestion": {
     "description": "Question sheet: why Send answers cannot send yet"
   },
+  "activityQuestionOptional": "Optional. You can leave this one empty.",
+  "@activityQuestionOptional": {
+    "description": "Question sheet: marks a prompt the person may skip"
+  },
   "activitySending": "Sending…",
   "@activitySending": {
     "description": "Question sheet: why the choices and the own answer are locked while the answer is sent"

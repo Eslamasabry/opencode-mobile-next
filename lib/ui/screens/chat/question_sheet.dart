@@ -83,6 +83,7 @@ class _QuestionFormState extends State<_QuestionForm> {
 
   bool get _complete {
     for (var i = 0; i < widget.question.prompts.length; i++) {
+      if (widget.question.prompts[i].optional) continue;
       if (_answers[i].isEmpty && _custom[i].text.trim().isEmpty) return false;
     }
     return true;
@@ -214,6 +215,12 @@ class _QuestionFormState extends State<_QuestionForm> {
           KitText(prompts[index].title, role: KitTextRole.headline),
           SizedBox(height: tokens.space1),
           KitText(prompts[index].question),
+          if (prompts[index].optional)
+            KitText(
+              l10n.activityQuestionOptional,
+              role: KitTextRole.caption,
+              tone: KitTextTone.secondary,
+            ),
           if (prompts[index].choices.isNotEmpty) ...[
             SizedBox(height: tokens.space3),
             _choices(index, prompts[index]),
@@ -360,7 +367,9 @@ Future<void> showQuestionSheet(
     _QuestionFormState.sendAction(
       l10n,
       reason: _canAnswer(controller)
-          ? (question.prompts.isEmpty ? null : l10n.activityAnswerEveryQuestion)
+          ? (question.prompts.every((prompt) => prompt.optional)
+                ? null
+                : l10n.activityAnswerEveryQuestion)
           : l10n.activitySendOffline,
       working: false,
       onSend: null,
