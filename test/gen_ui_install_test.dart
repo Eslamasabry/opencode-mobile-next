@@ -337,6 +337,158 @@ try: main()''');
     );
 
     test(
+      'Claude show preallow is exact, idempotent and removed on disable',
+      () async {
+        await Directory('${root.path}/config').create();
+        final settings = File('${root.path}/config/settings.json');
+        final original = <String, dynamic>{
+          'theme': 'dark',
+          'permissions': {
+            'allow': ['Read', 'mcp__other__show'],
+            'ask': ['Bash'],
+            'deny': ['Write'],
+          },
+        };
+        await settings.writeAsString(jsonEncode(original));
+        expect(await apply('one', agent: GenUiAgent.claude), 0);
+        var value = jsonDecode(await settings.readAsString()) as Map;
+        expect(value['permissions']['allow'], [
+          'Read',
+          'mcp__other__show',
+          'mcp__oc-ui__show',
+        ]);
+        expect(value['permissions']['ask'], ['Bash']);
+        expect(value['permissions']['deny'], ['Write']);
+        expect(await apply('one', agent: GenUiAgent.claude), 0);
+        value = jsonDecode(await settings.readAsString()) as Map;
+        expect(value['permissions']['allow'], [
+          'Read',
+          'mcp__other__show',
+          'mcp__oc-ui__show',
+        ]);
+        expect(
+          await apply('one', agent: GenUiAgent.claude, enabled: false),
+          10,
+        );
+        expect(jsonDecode(await settings.readAsString()), original);
+      },
+    );
+
+    test(
+      'Claude show preallow preserves user-owned exact permission',
+      () async {
+        await Directory('${root.path}/config').create();
+        final settings = File('${root.path}/config/settings.json');
+        const original =
+            '{"permissions":{"allow":["mcp__oc-ui__show","Read"]}}';
+        await settings.writeAsString(original);
+        expect(await apply('one', agent: GenUiAgent.claude), 0);
+        expect(
+          await apply('one', agent: GenUiAgent.claude, enabled: false),
+          10,
+        );
+        expect(jsonDecode(await settings.readAsString()), jsonDecode(original));
+      },
+    );
+
+    test(
+      'Claude show preallow verifies and repairs missing permission',
+      () async {
+        expect(await apply('one', agent: GenUiAgent.claude), 0);
+        final settings = File('${root.path}/config/settings.json');
+        await settings.writeAsString('{"permissions":{"allow":["Read"]}}');
+        expect(await apply('one', agent: GenUiAgent.claude, verify: true), 24);
+        expect(await apply('one', agent: GenUiAgent.claude), 0);
+        expect(await apply('one', agent: GenUiAgent.claude, verify: true), 0);
+        expect(
+          (jsonDecode(await settings.readAsString())
+              as Map)['permissions']['allow'],
+          ['Read', 'mcp__oc-ui__show'],
+        );
+      },
+    );
+
+    test(
+      'Claude show preallow rejects malformed or symlinked settings',
+      () async {
+        await Directory('${root.path}/config').create();
+        final settings = File('${root.path}/config/settings.json');
+        await settings.writeAsString('{"permissions":{"allow":"Read"}}');
+        expect(await apply('one', agent: GenUiAgent.claude), 21);
+        expect(await File('${root.path}/managed/enabled').exists(), false);
+        await settings.delete();
+        final outside = File('${root.path}/outside.json');
+        await outside.writeAsString('{}');
+        await Link(settings.path).create(outside.path);
+        expect(await apply('one', agent: GenUiAgent.claude), 22);
+        expect(await outside.readAsString(), '{}');
+      },
+    );
+
+    test(
+      'Claude show preallow rolls back its rule on self-check failure',
+      () async {
+        await Directory('${root.path}/config').create();
+        final settings = File('${root.path}/config/settings.json');
+        const original = '{"permissions":{"allow":["Read"]},"theme":"dark"}';
+        await settings.writeAsString(original);
+        expect(
+          await apply('one', agent: GenUiAgent.claude, failCheck: true),
+          24,
+        );
+        expect(jsonDecode(await settings.readAsString()), jsonDecode(original));
+        expect(await File('${root.path}/managed/enabled').exists(), false);
+      },
+    );
+
+    test(
+      'Claude show preallow migrates an existing owned registration',
+      () async {
+        expect(await apply('one', agent: GenUiAgent.claude), 0);
+        final manifest = File('${root.path}/managed/owners.json');
+        final old =
+            jsonDecode(await manifest.readAsString()) as Map<String, dynamic>;
+        old.remove('showPermissionAdded');
+        await manifest.writeAsString(jsonEncode(old));
+        await File('${root.path}/config/settings.json').writeAsString('{}');
+        expect(await apply('one', agent: GenUiAgent.claude), 0);
+        final settings =
+            jsonDecode(
+                  await File(
+                    '${root.path}/config/settings.json',
+                  ).readAsString(),
+                )
+                as Map;
+        expect(settings['permissions']['allow'], ['mcp__oc-ui__show']);
+        expect(
+          await apply('one', agent: GenUiAgent.claude, enabled: false),
+          10,
+        );
+        expect(
+          jsonDecode(
+            await File('${root.path}/config/settings.json').readAsString(),
+          ),
+          {},
+        );
+      },
+    );
+
+    test('Claude show preallow resets ownership after disable', () async {
+      expect(await apply('one', agent: GenUiAgent.claude), 0);
+      expect(await apply('one', agent: GenUiAgent.claude, enabled: false), 10);
+      final settings = File('${root.path}/config/settings.json');
+      const userSettings =
+          '{"permissions":{"allow":["mcp__oc-ui__show","Read"]}}';
+      await settings.writeAsString(userSettings);
+      expect(await apply('one', agent: GenUiAgent.claude), 0);
+      expect(await apply('one', agent: GenUiAgent.claude, enabled: false), 10);
+      expect(
+        jsonDecode(await settings.readAsString()),
+        jsonDecode(userSettings),
+      );
+    });
+
+    test(
       'Claude readiness checks pinned CLI and discovery in owned profile',
       () async {
         expect(await apply('one', agent: GenUiAgent.claude), 0);

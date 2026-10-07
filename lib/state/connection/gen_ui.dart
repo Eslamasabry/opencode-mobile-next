@@ -18,6 +18,7 @@ mixin _ConnectionControllerGenUi on ChangeNotifier implements GenUiController {
         ({PaseoGateway gateway, Iterable<String> Function()? sessions})
       >{};
   final _genUiLocationGateways = <GenUiScope, ServerGateway>{};
+  final _genUiFeedRefreshers = <GenUiScope, _GenUiFeedRefresh>{};
   Timer? _genUiTimer;
   GenUiScope? _genUiLastScope;
 
@@ -157,9 +158,16 @@ mixin _ConnectionControllerGenUi on ChangeNotifier implements GenUiController {
     if (side != null) {
       return side.answerGenUi(card, answer, attachments: attachments);
     }
-    return _self
-        ._genUiStateForScope(card.scope)
-        .answer(card, answer, attachments);
+    final state = _self._genUiStateForScope(card.scope);
+    final owner = _genUiParent ?? _self._genUiPhoneController;
+    return state.answer(card, answer, attachments).whenComplete(() {
+      // Undo and pre-send failures do not change the conversation. A sent
+      // answer needs a fresh timestamp even if transcript confirmation lags.
+      if (state.state(card) == GenUiCardState.answered ||
+          state.delivery(card) == GenUiDeliveryState.deliveryUnknown) {
+        owner._genUiFeedRefreshers[card.scope]?.queue();
+      }
+    });
   }
 }
 
@@ -285,7 +293,22 @@ extension _ConnectionGenUiImpl on ConnectionController {
     // The phone feed owns one stable gateway per directory. The active chat
     // contributes authoritative transcripts but must not replace that source
     // with its synthetic profile/temporary gateway.
-    if (isAgentBackend && _genUiParent != null) return;
+    if (isAgentBackend && _genUiParent != null) {
+      final gateway = api, scope = _genUiScope;
+      final generation = _generation;
+      if (gateway is PaseoGateway && scope != null) {
+        gateway.genUiShowAllowed = () =>
+            !_disposed &&
+            _generation == generation &&
+            identical(api, gateway) &&
+            status == StreamStatus.connected &&
+            _genUiScope == scope &&
+            genUiEnabled &&
+            genUiStatus.agents.contains(GenUiAgent.claude) &&
+            _genUiState.available(scope);
+      }
+      return;
+    }
     final scope = _genUiScope,
         gateway = api,
         owner = _connectedProfile ?? profile;
@@ -362,6 +385,13 @@ extension _ConnectionGenUiImpl on ConnectionController {
                   (event.type.startsWith('session.') ? info['id'] : null))
             : null);
     if (sid is! String || sid.isEmpty) return;
+    if (event.type == 'session.idle' ||
+        (event.type == 'session.status' &&
+            props['status'] is Map &&
+            (props['status'] as Map)['type'] == 'idle')) {
+      final owner = _genUiParent ?? _genUiPhoneController;
+      owner._genUiFeedRefreshers[currentScope]?.queue();
+    }
     if (part is Map && part['sessionID'] != null && part['sessionID'] != sid) {
       return;
     }
@@ -507,6 +537,15 @@ extension _ConnectionGenUiImpl on ConnectionController {
         gateway,
         sessions: () => source.chatFeed().items.map((row) => row.sessionID),
       );
+      final owner = controller();
+      owner._genUiFeedRefreshers.remove(scope)?.dispose();
+      owner._genUiFeedRefreshers[scope] = _GenUiFeedRefresh(
+        refresh: source.refreshAfterActivity,
+        current: () =>
+            !owner._disposed &&
+            identical(owner._genUiPhoneSources[scope]?.gateway, gateway) &&
+            owner._genUiState.available(scope),
+      );
     }
     return source;
   }
@@ -539,6 +578,12 @@ extension _ConnectionGenUiImpl on ConnectionController {
           !_deletingReadProfiles.contains(scope.profileID),
       ready: true,
     );
+    // The gateway checks the raw tool name/provider and replies only once.
+    // This closure is the profile-owned authority, rechecked for every call.
+    gateway.genUiShowAllowed = () =>
+        !_disposed &&
+        identical(_genUiPhoneSources[scope]?.gateway, gateway) &&
+        _genUiState.available(scope);
     final key = genUiScopeKey(scope);
     if (_genUiPhoneChannels.containsKey(key)) return;
     final channel = gateway.openEventChannel(
@@ -576,6 +621,7 @@ extension _ConnectionGenUiImpl on ConnectionController {
       sourceId: _paseoSourceId(folder),
       directory: folder,
     );
+    _genUiFeedRefreshers.remove(scope)?.dispose();
     _genUiPhoneSources.remove(scope);
     unawaited(_genUiPhoneChannels.remove(genUiScopeKey(scope))?.dispose());
     _genUiState.forgetSource(scope);
@@ -642,8 +688,56 @@ extension _ConnectionGenUiImpl on ConnectionController {
       unawaited(channel.dispose());
     }
     _genUiPhoneChannels.clear();
+    for (final refresh in _genUiFeedRefreshers.values) {
+      refresh.dispose();
+    }
+    _genUiFeedRefreshers.clear();
     _genUiPhoneSources.clear();
     _genUiLocal?.dispose();
     _genUiLocal = null;
+  }
+}
+
+// Like the open-chat list refresh, coalesce changes over two seconds. A
+// completion arriving during a read gets a trailing read, never lost by the
+// feed's in-flight future coalescing. Only this source's bounded list is read.
+class _GenUiFeedRefresh {
+  _GenUiFeedRefresh({required this.refresh, required this.current});
+  final Future<void> Function() refresh;
+  final bool Function() current;
+  Timer? _timer;
+  bool _reading = false, _again = false, _disposed = false;
+
+  void queue() {
+    if (_disposed || !current()) return;
+    if (_reading) {
+      _again = true;
+      return;
+    }
+    _timer ??= Timer(const Duration(seconds: 2), _run);
+  }
+
+  Future<void> _run() async {
+    _timer = null;
+    if (_disposed || !current()) return;
+    _reading = true;
+    try {
+      await refresh();
+    } catch (_) {
+      // Feed refresh cannot turn an accepted answer into a failed delivery.
+    } finally {
+      _reading = false;
+      if (_again) {
+        _again = false;
+        queue();
+      }
+    }
+  }
+
+  void dispose() {
+    _disposed = true;
+    _timer?.cancel();
+    _timer = null;
+    _again = false;
   }
 }

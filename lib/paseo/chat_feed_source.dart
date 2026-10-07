@@ -116,6 +116,14 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
     ]);
   }
 
+  /// Re-read after a delivery or turn boundary. An older in-flight read may
+  /// have captured its timestamps before that activity and cannot satisfy it.
+  Future<void> refreshAfterActivity() async {
+    final pending = _refreshing;
+    if (pending != null) await pending;
+    await refreshChatFeed();
+  }
+
   @override
   Future<void> refreshChatFeed() {
     if (!_valid) return Future.value();
