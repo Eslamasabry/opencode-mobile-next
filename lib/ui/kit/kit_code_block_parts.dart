@@ -126,12 +126,12 @@ class _CodeScrollerState extends State<_CodeScroller> {
       _controller.hasClients &&
       _controller.position.maxScrollExtent - _controller.offset > .5;
 
-  bool get _showStartFade => _controller.hasClients && _controller.offset > .5;
-
-  /// More lines than fit: the scrollbar stays visible on touch too, so a
-  /// clipped line always shows there is more to scroll to.
+  /// More lines than fit: a strip stays free under the last line for the
+  /// thumb, which shows while the lines move.
   bool get _overflowing =>
       _controller.hasClients && _controller.position.maxScrollExtent > .5;
+
+  bool get _showStartFade => _controller.hasClients && _controller.offset > .5;
 
   Widget _edge(BuildContext context, {required bool end}) {
     final direction = Directionality.of(context);
@@ -178,7 +178,10 @@ class _CodeScrollerState extends State<_CodeScroller> {
             children: [
               Scrollbar(
                 controller: _controller,
-                thumbVisibility: finePointer || _overflowing,
+                // On touch the thumb shows only while the lines move; at rest
+                // the end fade says a line goes on. A thumb painted at rest
+                // sat on the code on a phone (owner report, 2026-10-07).
+                thumbVisibility: finePointer,
                 notificationPredicate: (n) => true,
                 child: SingleChildScrollView(
                   controller: _controller,
@@ -249,4 +252,100 @@ class _WrapToggle extends StatelessWidget {
       ),
     );
   }
+}
+
+final _heredoc = RegExp(r'''<<(-?)\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\2''');
+const _blockOpen = {'if', 'for', 'while', 'until', 'case', 'select'};
+const _blockClose = {'fi', 'done', 'esac'};
+
+/// For each line of a shell [lines] list, whether it starts a new command,
+/// so a command block draws its `$` prompt only there. A heredoc's body and
+/// terminator, a line continued by a trailing `\`, `|`, `&&` or `||`, a
+/// string or bracket left open, and the body of an `if`/`for`/`while`/`case`
+/// block all continue the command above, the way a shell would show its
+/// `>` prompt.
+List<bool> kitCommandLineStarts(List<String> lines) {
+  final starts = List<bool>.filled(lines.length, false);
+  final heredocs = <(String, bool)>[];
+  String? quote;
+  var depth = 0;
+  var continued = false;
+  for (var i = 0; i < lines.length; i++) {
+    final line = lines[i];
+    if (heredocs.isNotEmpty) {
+      final (word, stripTabs) = heredocs.first;
+      final body = stripTabs ? line.replaceFirst(RegExp(r'^\t+'), '') : line;
+      if (body.trimRight() == word) heredocs.removeAt(0);
+      continue;
+    }
+    starts[i] = quote == null && depth <= 0 && !continued;
+    final pending = <(String, bool)>[];
+    var code = StringBuffer();
+    var wordStart = true;
+    var firstWord = true;
+    var word = StringBuffer();
+    void endWord() {
+      final w = word.toString();
+      if (w.isNotEmpty && firstWord) {
+        if (_blockOpen.contains(w)) depth++;
+        if (_blockClose.contains(w)) depth--;
+      }
+      if (w.isNotEmpty) firstWord = false;
+      word = StringBuffer();
+    }
+
+    for (var c = 0; c < line.length; c++) {
+      final ch = line[c];
+      if (quote != null) {
+        if (ch == r'\' && quote == '"' && c + 1 < line.length) {
+          c++;
+        } else if (ch == quote) {
+          quote = null;
+        }
+        continue;
+      }
+      if (ch == '#' && wordStart) break;
+      if (ch == r'\' && c + 1 < line.length) {
+        c++;
+        code.write('xx');
+        wordStart = false;
+        continue;
+      }
+      code.write(ch);
+      if (ch == "'" || ch == '"') {
+        quote = ch;
+        wordStart = false;
+        continue;
+      }
+      if (ch == '<' && line.startsWith('<<', c) && !line.startsWith('<<<', c)) {
+        final match = _heredoc.matchAsPrefix(line, c);
+        if (match != null) {
+          pending.add((match[3]!, match[1] == '-'));
+          code.write(line.substring(c + 1, match.end));
+          c = match.end - 1;
+          continue;
+        }
+      }
+      if (ch == '(' || ch == '{') depth++;
+      if (ch == ')' || ch == '}') depth--;
+      final separator = ch.trim().isEmpty || ';&|()'.contains(ch);
+      if (separator) {
+        endWord();
+        if (ch != ' ' && ch != '\t') firstWord = true;
+      } else {
+        word.write(ch);
+      }
+      wordStart = separator;
+    }
+    endWord();
+    heredocs.addAll(pending);
+    final tail = code.toString().trimRight();
+    continued =
+        tail.endsWith(r'\') ||
+        tail.endsWith('|') ||
+        tail.endsWith('&&') ||
+        tail.endsWith('(');
+  }
+  if (lines.isNotEmpty) starts[0] = true;
+  return starts;
 }

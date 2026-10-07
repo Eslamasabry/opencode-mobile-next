@@ -255,6 +255,11 @@ Future<void> _settleTimers(WidgetTester tester) =>
 /// Verbatim copies of the person's own content (SEC-13): path -> count and
 /// why the copied text is theirs.
 const _verbatimOwnContent = <String, (int, String)>{
+  'lib/ui/screens/agents/agent_sign_in_terminal.dart': (
+    1,
+    'Copy code copies the one-time device code the agent printed for the '
+        'person to type on its sign-in page; masked it would not work (FA1)',
+  ),
   'lib/ui/kit/kit_viewer.dart': (
     1,
     'Copy contents copies the person\'s own file as it is (SEC-13)',

@@ -26,7 +26,8 @@ enum KitCodeKind {
   code,
 
   /// A command the person runs elsewhere. A `$` prompt is drawn before each
-  /// line, outside the copied text. By default it scrolls sideways with an
+  /// command, outside the copied text; a line that continues one (a heredoc
+  /// body, a trailing `\`, an open `if`/`for` block) gets none. By default it scrolls sideways with an
   /// edge fade while it overflows; a host that passes `wrap: true` gets a
   /// soft wrap whose continuation lines hang under the text, past the `$`
   /// (R3). Either way the copied command is the source, never the display.
@@ -894,6 +895,9 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
     final wrap = _effectiveWrap(context);
     final monoStyle = KitText.styleOf(context, KitTextRole.mono);
     final gutterWidth = _gutterWidth(context, monoStyle, total);
+    final starts = widget.kind == KitCodeKind.command
+        ? kitCommandLineStarts(lines)
+        : null;
 
     // No prompt or line-number gutter: every line joins one paragraph
     // (K2 §1.9's "one selectable text node per block"), matching
@@ -928,6 +932,7 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
               monoStyle: monoStyle,
               wrap: wrap,
               gutterWidth: gutterWidth,
+              commandStart: starts?[startIndex + i] ?? true,
             ),
         ],
       );
@@ -1044,6 +1049,9 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
     final gutterWidth = _gutterWidth(context, monoStyle, lines.length);
     final wrap = _effectiveWrap(context);
     final extent = _itemExtent;
+    final starts = widget.kind == KitCodeKind.command
+        ? kitCommandLineStarts(lines)
+        : null;
 
     final list = ListView.builder(
       controller: _fillController,
@@ -1058,6 +1066,7 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
         monoStyle: monoStyle,
         wrap: wrap,
         gutterWidth: gutterWidth,
+        commandStart: starts?[index] ?? true,
       ),
     );
 
@@ -1136,6 +1145,7 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
     required bool wrap,
     required double gutterWidth,
     int lineStart = 0,
+    bool commandStart = true,
   }) {
     final content = _lineSpan(line, lineStart, roles, monoStyle, wrap: wrap);
     final key = widget.fill ? ValueKey('kit-code-line-${index + 1}') : null;
@@ -1147,8 +1157,10 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
       overflow: wrap ? TextOverflow.clip : TextOverflow.visible,
     );
     if (!_hasGutter) return text;
+    // A line that continues the command above (a heredoc body, a trailing
+    // `\`) gets no prompt of its own.
     final gutterLabel = widget.kind == KitCodeKind.command
-        ? r'$'
+        ? (commandStart ? r'$' : '')
         : (index + 1).toString();
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
