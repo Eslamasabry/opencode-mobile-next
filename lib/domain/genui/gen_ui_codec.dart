@@ -72,7 +72,6 @@ GenUiCardState genUiStateFor(
   List<MessageWithParts> transcript, {
   required bool tailComplete,
 }) {
-  if (!tailComplete) return GenUiCardState.unknown;
   var found = false;
   var superseded = false;
   final seenMessages = <String>{};
@@ -83,9 +82,14 @@ GenUiCardState genUiStateFor(
       return GenUiCardState.unknown;
     }
     if (found && _authoritativeUser(message)) {
-      if (card.ask == null) return GenUiCardState.report;
-      return !superseded && genUiAnswerIn(message, card) != null
-          ? GenUiCardState.answered
+      // A later running turn can make the tail stale without undoing the
+      // delivered answer already present in this authoritative transcript.
+      if (!superseded && genUiAnswerIn(message, card) != null) {
+        return GenUiCardState.answered;
+      }
+      if (!tailComplete) return GenUiCardState.unknown;
+      return card.ask == null
+          ? GenUiCardState.report
           : GenUiCardState.passedOver;
     }
     if (message.info.role != 'assistant') continue;
@@ -108,7 +112,7 @@ GenUiCardState genUiStateFor(
       }
     }
   }
-  if (!found) return GenUiCardState.unknown;
+  if (!found || !tailComplete) return GenUiCardState.unknown;
   if (card.ask == null) return GenUiCardState.report;
   return superseded ? GenUiCardState.passedOver : GenUiCardState.waiting;
 }

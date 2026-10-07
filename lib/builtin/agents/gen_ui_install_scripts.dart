@@ -81,7 +81,7 @@ OC_GENUI_SETUP
 }
 
 const _installer = r'''
-import os, sys, json, stat, base64, pathlib, tempfile, hashlib, fcntl, subprocess
+import os, sys, json, re, stat, base64, pathlib, tempfile, hashlib, fcntl, subprocess
 class SetupError(Exception):
     def __init__(self, code): self.code = code
 
@@ -117,6 +117,50 @@ def read_json(path):
     except Exception: fail(21)
     if not isinstance(value, dict): fail(21)
     return value
+
+def read_jsonc(path):
+    # Parse only for collision checks. Never reserialize the user's JSONC.
+    raw = read(path)
+    if raw is None or raw == b'': return {}
+    try:
+        text = raw.decode('utf-8')
+        quoted = r'"(?:[^"\\]|\\.)*"'
+        text = re.sub(quoted + r'|//[^\r\n]*|/\*[\s\S]*?\*/',
+          lambda m: m[0] if m[0].startswith('"') else ' ' * len(m[0]), text)
+        # Mask strings so a literal ",}" or comment-like URL is unchanged.
+        masked = re.sub(quoted, lambda m: 'x' * len(m[0]), text)
+        chars = list(text)
+        for match in re.finditer(r',(?=\s*[}\]])', masked):
+            chars[match.start()] = ' '
+        def unique(pairs):
+            result = {}
+            for key, value in pairs:
+                if key in result: fail(21)
+                result[key] = value
+            return result
+        value = json.loads(''.join(chars), object_pairs_hook=unique,
+          parse_constant=lambda _: fail(21))
+    except Exception: fail(21)
+    if not isinstance(value, dict): fail(21)
+    return value
+
+def oc1_nested_collision(config):
+    # OC1 also lowers the native mcp.servers envelope into the flat namespace.
+    servers = slot(config, 'openCode1').get('servers')
+    return isinstance(servers, dict) and 'oc-ui' in servers
+
+def check_oc1_overlays(parent):
+    # v1.18.32 merges config.json -> opencode.json -> opencode.jsonc deeply.
+    # A disjoint managed entry in opencode.json survives the JSONC overlay.
+    # The older extensionless TOML file migrates/merges last; do not adopt it.
+    legacy = parent + '/config'
+    root_owned(legacy)
+    if safe(legacy): fail(21)
+    for path in [parent + '/config.json', parent + '/opencode.jsonc']:
+        root_owned(path)
+        config = read_jsonc(path)
+        if 'oc-ui' in slot(config, 'openCode1') or oc1_nested_collision(config):
+            fail(21)
 
 def atomic(path, value):
     safe(path)
@@ -289,10 +333,15 @@ def main():
     config_parent = str(pathlib.Path(config_path).parent)
     if not claude: root_owned(config_path)
     if not safe(config_parent, directory=True, create=not d['verify']): fail(20)
-    # JSONC has precedence/merge semantics we cannot preserve through JSON.
-    # Refuse it rather than modifying or silently shadowing the user's file.
-    if not claude and os.path.lexists(config_path + 'c'): fail(21)
+    if kind == 'openCode1':
+        check_oc1_overlays(config_parent)
+    elif not claude and os.path.lexists(config_path + 'c'):
+        # OC2 precedence has not been qualified by the OC1 loader contract.
+        fail(21)
     current = read_json(config_path)
+    if kind == 'openCode1' and (oc1_nested_collision(current)
+      or ('oc-ui' in slot(current, kind) and slot(current, kind)['oc-ui'] is None)):
+        fail(21)
     settings_path = config_parent + '/settings.json'
     show_allowed = claude and d['enable'] and SHOW_PERMISSION in show_permissions(read_json(settings_path))
     owned = bool(manifest)

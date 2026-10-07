@@ -24,12 +24,16 @@ The Bun fallback is unnecessary for this path and remains unqualified.
 
 OC1 retains the existing ownership-aware persistent file transaction at
 `/root/.config/opencode/opencode.json`: `mcp.oc-ui`, `type:local`, command argv,
-`enabled:true`. The existing gateway's global config PATCH may refresh/dispose
+`enabled:true`. Its pinned loader deeply merges `config.json`, `opencode.json`,
+then `opencode.jsonc`; a schema-only or disjoint JSONC therefore remains
+byte-for-byte unchanged while the JSON file receives the managed entry.
+Sibling flat or compatibility-format `oc-ui` collisions are refused. The existing gateway's global config PATCH may refresh/dispose
 live instances, so this staged transaction deliberately does not call it while
 work may be active. OC2 uses its existing isolated file
 `/root/.oc-opencode2/config/opencode/opencode.json`: `mcp.servers.oc-ui`,
-`type:local`, command argv, `disabled:false`, `codemode:false`. JSONC precedence,
-unowned collisions and edits to owned entries remain refusal cases. Neither
+`type:local`, command argv, `disabled:false`, `codemode:false`. OC2 JSONC
+precedence remains unqualified and refused. Unowned collisions and edits to
+owned entries remain refusal cases for both runtimes. Neither
 path promises live reload. Finish running work before an explicit user-approved
 server restart. A configuration write is not direct-tool qualification.
 
@@ -175,3 +179,40 @@ they never read or change real device or host MCP configuration. Formatting used
 the pinned Dart with `--language-version=3.10`; scoped `git diff --check` passed.
 Device qualification and integration analyzer results belong to the coordinator's
 combined verification note.
+
+
+## OC1 JSONC follow-up before qualification
+
+On APK 2177 the user found that the app-authored schema-only
+`/root/.config/opencode/opencode.jsonc` caused OC1 setup to return a collision.
+The candidate removes that blanket refusal. The pinned OC1
+[global loader](https://github.com/anomalyco/opencode/blob/v1.18.32/packages/opencode/src/config/config.ts#L235-L268)
+and [compatibility lowering](https://github.com/anomalyco/opencode/blob/v1.18.32/packages/opencode/src/config/v2-compat.ts#L229-L299)
+establish the merge behavior used here.
+
+With the updated candidate, rerun Cards setup (Off then On when convenient).
+Expect the JSONC file to be unchanged and `opencode.json` to contain the owned
+`mcp.oc-ui` entry. The managed OC1 directory should now contain `server.cjs`,
+`owners.json`, and `enabled` as well as its lock. With Claude already qualified,
+the English setting line should become:
+
+> On for Claude Code. This agent version hasn't been checked to work with cards.
+
+That line is expected until the OpenCode runtime is qualified. Finish running
+work, then perform the owner's planned restart and continue the procedure above.
+This patch does not restart the server or promote readiness. Inspect only the
+owned entry and file existence; do not dump provider configuration.
+
+Malformed/duplicate-key JSONC, nonobject MCP overrides, unowned flat or nested
+`oc-ui` entries, unsafe paths and an extensionless legacy TOML config remain
+refused. Later project/environment/managed configuration layers are not edited
+by this transaction; actual post-restart MCP visibility remains part of runtime
+qualification. If a user adds a conflicting entry after installation, setup
+still refuses instead of claiming that disable succeeded.
+
+Follow-up local result: all 59 installer tests passed after the JSONC fix,
+including true-collision refusal, commented/trailing-comma configs, valid
+command arrays, idempotence, disable and rollback. Reverting the fix produced
+13 failures; it was restored before the final pass. The controller file also
+passed 14 tests and the analyzer was clean. These remain local tests, not a
+runtime qualification result.

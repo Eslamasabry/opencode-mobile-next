@@ -496,6 +496,153 @@ void main() {
     await read;
     expect(state.waiting(scope, 's'), isEmpty);
   });
+
+  for (final receipt in [
+    (label: 'matching', cardID: 'card', callID: 'c', matches: true),
+    (label: 'wrong card', cardID: 'other-card', callID: 'c', matches: false),
+    (label: 'wrong call', cardID: 'card', callID: 'other-call', matches: false),
+  ]) {
+    test('photo receipt ${receipt.label} in an incomplete busy tail', () {
+      gateway.history = [
+        tool(ask: {'kind': 'photo', 'purpose': 'Show the item'}),
+      ];
+      register();
+      final current = card();
+      gateway.idle = false;
+      state.stale(scope, 's');
+      expect(state.state(current), GenUiCardState.unknown);
+      final answeredCard = GenUiCard(
+        scope: current.scope,
+        id: receipt.cardID,
+        title: current.title,
+        sessionID: current.sessionID,
+        callID: receipt.callID,
+        messageID: current.messageID,
+        revision: current.revision,
+        body: current.body,
+        ask: current.ask,
+      );
+      final response = MessageWithParts(
+        info: MessageInfo(id: 'photo-answer', sessionID: 's', role: 'user'),
+        parts: [
+          Part(
+            type: 'text',
+            text: genUiAnswerText(answeredCard, const GenUiPhotoAnswer(1)),
+          ),
+          Part(
+            type: 'file',
+            mime: 'image/png',
+            url: 'data:image/png;base64,aGVsbG8=',
+          ),
+        ],
+      );
+      final transcript = [
+        ...gateway.history,
+        response,
+        MessageWithParts(
+          info: MessageInfo(id: 'running', sessionID: 's', role: 'assistant'),
+          parts: [Part(type: 'text', text: 'Looking at the photo')],
+        ),
+      ];
+      if (receipt.matches) {
+        state.observe(scope, 's', transcript, tailComplete: true);
+        expect(state.state(current), GenUiCardState.answered);
+        state.stale(scope, 's');
+        expect(state.state(current), GenUiCardState.answered);
+        expect(
+          state.summary(current),
+          genUiAnswerIn(response, current)!.summary,
+        );
+        expect(state.waiting(scope, 's'), isEmpty);
+      }
+      state.observe(scope, 's', transcript, tailComplete: false);
+
+      final expected = receipt.matches
+          ? GenUiCardState.answered
+          : GenUiCardState.unknown;
+      expect(state.state(current), expected);
+      expect(
+        state.summary(current),
+        receipt.matches ? genUiAnswerIn(response, current)!.summary : isNull,
+      );
+      expect(state.waiting(scope, 's'), isEmpty);
+      state.stale(scope, 's');
+      expect(state.state(current), expected);
+      expect(gateway.sent, 0);
+    });
+  }
+
+  for (final mismatch in [
+    'synthetic receipt',
+    'wrong role',
+    'missing card',
+    'revised card',
+    'prior unrelated user',
+    'superseding ask',
+  ]) {
+    test('incomplete photo receipt rejects $mismatch', () {
+      gateway.history = [
+        tool(ask: {'kind': 'photo', 'purpose': 'Show the item'}),
+      ];
+      register();
+      final current = card();
+      gateway.idle = false;
+      state.observe(scope, 's', [
+        if (mismatch == 'revised card')
+          tool(ask: {'kind': 'photo', 'purpose': 'Show a different item'})
+        else if (mismatch != 'missing card')
+          ...gateway.history,
+        if (mismatch == 'superseding ask')
+          MessageWithParts(
+            info: MessageInfo(id: 'new-ask', sessionID: 's', role: 'assistant'),
+            parts: [
+              Part(
+                id: 'new-part',
+                type: 'tool',
+                messageID: 'new-ask',
+                callID: 'new-call',
+                toolName: 'oc-ui_show',
+                toolState: ToolState(
+                  status: 'completed',
+                  input: {
+                    'v': 1,
+                    'id': 'new-card',
+                    'title': 'Continue?',
+                    'body': [],
+                    'ask': {'kind': 'confirm'},
+                  },
+                ),
+              ),
+            ],
+          ),
+        if (mismatch == 'prior unrelated user')
+          MessageWithParts(
+            info: MessageInfo(id: 'earlier-user', sessionID: 's', role: 'user'),
+            parts: [Part(type: 'text', text: 'Skip the photo')],
+          ),
+        MessageWithParts(
+          info: MessageInfo(
+            id: 'photo-answer',
+            sessionID: 's',
+            role: mismatch == 'wrong role' ? 'assistant' : 'user',
+          ),
+          parts: [
+            Part(
+              type: 'text',
+              text: genUiAnswerText(current, const GenUiPhotoAnswer(1)),
+              synthetic: mismatch == 'synthetic receipt',
+            ),
+          ],
+        ),
+      ], tailComplete: false);
+
+      expect(state.state(current), GenUiCardState.unknown);
+      expect(state.summary(current), isNull);
+      expect(state.waiting(scope, 's'), isEmpty);
+      expect(gateway.sent, 0);
+    });
+  }
+
   test('photo answers validate matching attachments before dispatch', () async {
     gateway.history = [
       tool(ask: {'kind': 'photo', 'purpose': 'Show the item'}),
