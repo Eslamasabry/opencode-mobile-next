@@ -264,7 +264,21 @@ extension _PaseoEvents on PaseoGateway {
       while (live.announced.length > 4096) {
         live.announced.remove(live.announced.keys.first);
       }
-      _emit('message.updated', {'info': paseoMessageJson(message.info)});
+      final correlation = item['clientMessageId'] ?? item['messageId'];
+      _emit('message.updated', {
+        'info': paseoMessageJson(message.info),
+        // The history endpoint can lag for the entire running turn. Carry
+        // this server-origin user echo atomically to receipt reconciliation;
+        // generated fallback IDs are never proof of a dispatched answer.
+        if (type == 'user_message' &&
+            correlation is String &&
+            correlation.isNotEmpty &&
+            correlation.length <= 256)
+          'paseoUserMessage': {
+            'clientMessageID': correlation,
+            'parts': message.parts.map(paseoPartJson).toList(),
+          },
+      });
       if (message.info.role == 'assistant' &&
           message.info.time?.completed == null) {
         live.open[messageID] = message.info;

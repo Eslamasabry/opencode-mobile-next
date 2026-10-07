@@ -48,6 +48,7 @@ final class Gateway
   List<MessageWithParts> history = [tool()];
   int sent = 0, reads = 0;
   bool idle = true, fail = false, hasMore = false;
+  bool echoInHistory = true;
   Completer<void>? pause;
   Completer<void>? beforeWire;
   Completer<void>? resumeWire;
@@ -94,6 +95,7 @@ final class Gateway
     beforeSend?.call();
     sent++;
     if (fail) throw StateError('test uncertain transport');
+    if (!echoInHistory) return;
     history = [
       ...history,
       MessageWithParts(
@@ -668,5 +670,280 @@ void main() {
       prefs.getString(GenUiJournal.key('phone')),
       isNot(contains('aGVsbG8=')),
     );
+  });
+
+  group('live card receipt', () {
+    MessageWithParts echo(
+      GenUiCard current, {
+      String messageID = 'answer-1',
+      String sessionID = 's',
+      String role = 'user',
+      bool synthetic = false,
+      String? text,
+    }) => MessageWithParts(
+      info: MessageInfo(id: messageID, sessionID: sessionID, role: role),
+      parts: [
+        Part(
+          id: '$messageID:0',
+          messageID: messageID,
+          type: 'text',
+          synthetic: synthetic,
+          text:
+              text ?? genUiAnswerText(current, const GenUiConfirmAnswer(true)),
+        ),
+      ],
+    );
+
+    Future<GenUiCard> dispatch() async {
+      final current = card();
+      gateway.echoInHistory = false;
+      final answer = state.answer(current, const GenUiConfirmAnswer(true), []);
+      await delayed.flush();
+      await answer;
+      await state.journal.drained;
+      expect(gateway.sent, 1);
+      expect(state.state(current), isNot(GenUiCardState.answered));
+      expect(state.journal.read('phone').single.dispatchID, 'answer-1');
+      return current;
+    }
+
+    test('ack alone remains unconfirmed until the exact live echo', () async {
+      final current = await dispatch();
+      expect(state.delivery(current), GenUiDeliveryState.deliveryUnknown);
+      state.observeLiveAnswer(scope, echo(current), correlationID: 'answer-1');
+      expect(state.state(current), GenUiCardState.answered);
+      expect(
+        state.summary(current),
+        genUiAnswerIn(echo(current), current)!.summary,
+      );
+      expect(state.waiting(scope, 's'), isEmpty);
+    });
+
+    test(
+      'survives stale lagging history and duplicate echo without clearing journal',
+      () async {
+        final current = await dispatch();
+        final message = echo(current);
+        state.observeLiveAnswer(scope, message, correlationID: 'answer-1');
+        state.stale(scope, 's');
+        expect(state.state(current), GenUiCardState.answered);
+        gateway.idle = false;
+        await state.recoverOne(const GenUiTarget(scope, 's'));
+        expect(state.state(current), GenUiCardState.answered);
+        state.observeLiveAnswer(scope, message, correlationID: 'answer-1');
+        expect(
+          state.summary(current),
+          genUiAnswerIn(message, current)!.summary,
+        );
+        await state.journal.drained;
+        expect(state.journal.read('phone').single.dispatchID, 'answer-1');
+        final saved = prefs.getString(GenUiJournal.key('phone'))!;
+        expect(saved, isNot(contains('confirm')));
+        expect(saved, isNot(contains('[oc-ui answer')));
+        await expectLater(
+          state.answer(current, const GenUiConfirmAnswer(true), []),
+          throwsA(isA<ProductException>()),
+        );
+        expect(gateway.sent, 1);
+
+        gateway.history = [...gateway.history, message];
+        await state.recoverOne(const GenUiTarget(scope, 's'));
+        await state.journal.drained;
+        expect(state.state(current), GenUiCardState.answered);
+        expect(state.journal.read('phone'), isEmpty);
+      },
+    );
+
+    for (final change in ['revised card', 'missing card']) {
+      test('$change restored later cannot revive old live proof', () async {
+        final current = await dispatch();
+        state.observeLiveAnswer(
+          scope,
+          echo(current),
+          correlationID: 'answer-1',
+        );
+        expect(state.state(current), GenUiCardState.answered);
+        state.observe(scope, 's', [
+          if (change == 'revised card')
+            tool(ask: {'kind': 'confirm', 'confirmLabel': 'Changed question'}),
+        ], tailComplete: true);
+        expect(state.state(current), GenUiCardState.unknown);
+        state.observe(scope, 's', gateway.history, tailComplete: true);
+        expect(state.state(current), GenUiCardState.waiting);
+        expect(state.summary(current), isNull);
+        expect(state.delivery(current), GenUiDeliveryState.deliveryUnknown);
+        await expectLater(
+          state.answer(current, const GenUiConfirmAnswer(true), []),
+          throwsA(isA<ProductException>()),
+        );
+        expect(gateway.sent, 1);
+        await state.journal.drained;
+        expect(state.journal.read('phone').single.dispatchID, 'answer-1');
+      });
+    }
+
+    test('authoritative passed-over result wins over live receipt', () async {
+      final current = await dispatch();
+      final message = echo(current);
+      state.observeLiveAnswer(scope, message, correlationID: 'answer-1');
+      expect(state.state(current), GenUiCardState.answered);
+      state.observe(scope, 's', [
+        ...gateway.history,
+        MessageWithParts(
+          info: MessageInfo(
+            id: 'intervening-user',
+            sessionID: 's',
+            role: 'user',
+          ),
+          parts: [Part(type: 'text', text: 'Skip that question')],
+        ),
+        message,
+      ], tailComplete: true);
+      expect(state.state(current), GenUiCardState.passedOver);
+      expect(state.summary(current), isNull);
+      await state.journal.drained;
+      expect(state.journal.read('phone'), isEmpty);
+      expect(gateway.sent, 1);
+    });
+
+    test(
+      'restart retains dispatch protection but not volatile receipt content',
+      () async {
+        final current = await dispatch();
+        state.observeLiveAnswer(
+          scope,
+          echo(current),
+          correlationID: 'answer-1',
+        );
+        expect(state.state(current), GenUiCardState.answered);
+        await state.journal.drained;
+        state.dispose();
+        state = GenUiStateController(prefs, delayedAnswers: delayed);
+        register();
+        expect(state.state(current), isNot(GenUiCardState.answered));
+        expect(state.delivery(current), GenUiDeliveryState.deliveryUnknown);
+        await expectLater(
+          state.answer(current, const GenUiConfirmAnswer(true), []),
+          throwsA(isA<ProductException>()),
+        );
+        expect(gateway.sent, 1);
+      },
+    );
+
+    test('unreserved optimistic-looking row cannot settle a card', () async {
+      final current = card();
+      await state.journal.drained;
+      state.observeLiveAnswer(scope, echo(current), correlationID: 'answer-1');
+      expect(state.state(current), GenUiCardState.waiting);
+      expect(state.summary(current), isNull);
+    });
+
+    for (final mismatch in [
+      'correlation',
+      'scope',
+      'session',
+      'role',
+      'synthetic',
+      'card',
+      'call',
+      'value',
+      'revision',
+      'endpoint',
+    ]) {
+      test('rejects $mismatch mismatch', () async {
+        final current = await dispatch();
+        var target = scope;
+        var message = echo(current);
+        var correlation = 'answer-1';
+        if (mismatch == 'correlation') correlation = 'another-dispatch';
+        if (mismatch == 'scope') {
+          target = const GenUiScope(
+            profileID: 'other-phone',
+            sourceId: 'opencode',
+            directory: '/work',
+          );
+          register(target: target);
+        }
+        if (mismatch == 'session') {
+          message = echo(current, sessionID: 'other-session');
+        }
+        if (mismatch == 'role') message = echo(current, role: 'assistant');
+        if (mismatch == 'synthetic') message = echo(current, synthetic: true);
+        final original = genUiAnswerText(
+          current,
+          const GenUiConfirmAnswer(true),
+        );
+        if (mismatch == 'card') {
+          message = echo(
+            current,
+            text: original
+                .replaceFirst(
+                  '[oc-ui answer card]',
+                  '[oc-ui answer other-card]',
+                )
+                .replaceFirst('"cardId":"card"', '"cardId":"other-card"'),
+          );
+        }
+        if (mismatch == 'call') {
+          message = echo(
+            current,
+            text: original.replaceFirst(
+              '"callId":"c"',
+              '"callId":"other-call"',
+            ),
+          );
+        }
+        if (mismatch == 'value') {
+          message = echo(
+            current,
+            text: original.replaceFirst('"confirm":true', '"confirm":"true"'),
+          );
+        }
+        if (mismatch == 'revision') {
+          state.observe(scope, 's', [
+            tool(ask: {'kind': 'confirm', 'confirmLabel': 'Proceed'}),
+          ], tailComplete: true);
+        }
+        if (mismatch == 'endpoint') {
+          state.register(
+            scope,
+            gateway,
+            endpoint: 'replacement-endpoint',
+            current: () => true,
+            ready: true,
+          );
+          state.observe(scope, 's', gateway.history, tailComplete: true);
+        }
+        state.observeLiveAnswer(target, message, correlationID: correlation);
+        expect(state.state(current), isNot(GenUiCardState.answered));
+        expect(state.summary(current), isNull);
+        expect(gateway.sent, 1);
+        await state.journal.drained;
+        expect(state.journal.read('phone').single.dispatchID, 'answer-1');
+      });
+    }
+
+    for (final action in [
+      'invalidate scope',
+      'close profile',
+      'delete session',
+    ]) {
+      test(
+        '$action clears the live receipt and rejects its late echo',
+        () async {
+          final current = await dispatch();
+          final message = echo(current);
+          state.observeLiveAnswer(scope, message, correlationID: 'answer-1');
+          expect(state.state(current), GenUiCardState.answered);
+          if (action == 'invalidate scope') state.invalidateScope(scope);
+          if (action == 'close profile') await state.closeProfile('phone');
+          if (action == 'delete session') await state.removeSession(scope, 's');
+          state.observeLiveAnswer(scope, message, correlationID: 'answer-1');
+          expect(state.state(current), GenUiCardState.unknown);
+          expect(state.summary(current), isNull);
+          expect(gateway.sent, 1);
+        },
+      );
+    }
   });
 }

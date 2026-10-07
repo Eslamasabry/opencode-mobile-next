@@ -37,6 +37,7 @@ void main() {
     FormRendererSubmit? onSubmit,
     FormRendererCancel? onCancel,
     VoidCallback? onClose,
+    String? profileId,
   }) async {
     await tester.pumpWidget(
       _app(
@@ -46,6 +47,7 @@ void main() {
             onSubmit: onSubmit ?? (_) async {},
             onCancel: onCancel ?? () async {},
             onClose: onClose,
+            profileId: profileId,
           ),
         ),
       ),
@@ -72,6 +74,58 @@ void main() {
 
   String textOf(WidgetTester tester, String key) =>
       tester.widget<TextField>(fieldText(key).first).controller!.text;
+
+  testWidgets('same form ID keeps drafts isolated between profiles', (
+    tester,
+  ) async {
+    Api2FormInfo form() =>
+        makeForm([Api2FormField(key: 'note', type: Api2FormFieldType.string)]);
+    await pumpRenderer(tester, form(), profileId: 'main');
+    await tester.enterText(fieldText('note'), 'Main server answer');
+    await pumpRenderer(tester, form(), profileId: 'side');
+    expect(textOf(tester, 'note'), isEmpty);
+    await tester.enterText(fieldText('note'), 'Side server answer');
+    await pumpRenderer(tester, form(), profileId: 'main');
+    expect(textOf(tester, 'note'), 'Main server answer');
+  });
+
+  testWidgets('same form ID keeps drafts isolated between sessions', (
+    tester,
+  ) async {
+    Api2FormInfo form(String session) => makeForm([
+      Api2FormField(key: 'note', type: Api2FormFieldType.string),
+    ], sessionID: session);
+    await pumpRenderer(tester, form('first'), profileId: 'main');
+    await tester.enterText(fieldText('note'), 'First session answer');
+    await pumpRenderer(tester, form('second'), profileId: 'main');
+    expect(textOf(tester, 'note'), isEmpty);
+  });
+
+  for (final change in ['default', 'options', 'condition']) {
+    testWidgets('a changed $change does not reuse the old form draft', (
+      tester,
+    ) async {
+      Api2FormInfo form({required bool changed}) => makeForm([
+        Api2FormField(
+          key: 'note',
+          type: Api2FormFieldType.string,
+          defaultValue: changed && change == 'default' ? 'New default' : null,
+        ),
+        Api2FormField(
+          key: 'choice',
+          type: Api2FormFieldType.string,
+          options: options(changed && change == 'options' ? ['new'] : ['old']),
+          when: changed && change == 'condition'
+              ? [Api2FormCondition(key: 'note', op: 'eq', value: 'show')]
+              : const [],
+        ),
+      ]);
+      await pumpRenderer(tester, form(changed: false));
+      await tester.enterText(fieldText('note'), 'Old draft');
+      await pumpRenderer(tester, form(changed: true));
+      expect(textOf(tester, 'note'), change == 'default' ? 'New default' : '');
+    });
+  }
 
   testWidgets('renders the kit sheet: title, origin, fields and actions', (
     tester,

@@ -413,7 +413,11 @@ extension _ConnectionGenUiImpl on ConnectionController {
     }
   }
 
-  void _genUiOnEvent(EventEnvelope event, {GenUiScope? scope}) {
+  void _genUiOnEvent(
+    EventEnvelope event, {
+    GenUiScope? scope,
+    PaseoGateway? liveSource,
+  }) {
     // Tokens do not change card identity or settlement. Durable message/tool
     // boundaries and idle/session events perform bounded reconciliation.
     if (event.type == 'message.part.delta' ||
@@ -446,6 +450,37 @@ extension _ConnectionGenUiImpl on ConnectionController {
       return;
     }
     final id = _genUiSessionID(currentScope, sid);
+    final live = props['paseoUserMessage'];
+    final owner = _genUiParent ?? _genUiPhoneController;
+    final source =
+        liveSource ??
+        (scope == null && api is PaseoGateway ? api as PaseoGateway : null);
+    final currentSource =
+        source != null &&
+        !source.isClosed &&
+        source.transport.connected &&
+        source.transport.serverVersion == '0.9.2' &&
+        (liveSource == null ||
+            identical(owner._genUiPhoneSources[currentScope]?.gateway, source));
+    if (event.type == 'message.updated' &&
+        currentSource &&
+        info is Map<String, dynamic> &&
+        info['role'] == 'user' &&
+        live is Map &&
+        live['clientMessageID'] is String &&
+        live['parts'] is List) {
+      _genUiState.observeLiveAnswer(
+        currentScope,
+        MessageWithParts(
+          info: MessageInfo.fromJson({...info, 'sessionID': id}),
+          parts: [
+            for (final raw in live['parts'] as List)
+              Part.fromJson(Map<String, dynamic>.from(raw as Map)),
+          ],
+        ),
+        correlationID: live['clientMessageID'] as String,
+      );
+    }
     if (event.type == 'session.deleted') {
       // The feed gateway drops its alias before broadcasting deletion.
       final captured = props['daemonSessionID'];
@@ -656,7 +691,8 @@ extension _ConnectionGenUiImpl on ConnectionController {
     final key = genUiScopeKey(scope);
     if (_genUiPhoneChannels.containsKey(key)) return;
     final channel = gateway.openEventChannel(
-      onEvent: (event) => _genUiOnEvent(event, scope: scope),
+      onEvent: (event) =>
+          _genUiOnEvent(event, scope: scope, liveSource: gateway),
       onStatus: (status) {
         if (status != StreamStatus.connected) {
           _genUiState.invalidateScope(scope);

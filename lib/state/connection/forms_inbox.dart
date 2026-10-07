@@ -23,6 +23,17 @@ mixin _ConnectionControllerFormsInbox on ChangeNotifier {
   int _formRevision = 0;
   int _formRefreshGeneration = 0;
 
+  CapturedFormRequest? formRequestForFeedItem(ChatFeedItem item) =>
+      _self._formRequestForFeedItem(item);
+
+  CapturedFormRequest? formRequestForForm(Api2FormInfo form) =>
+      _self._formRequestForForm(form);
+
+  final _feedDirectoryForms = <String, Map<String, _DirectoryForm>>{};
+  final _formAttempts = <String>{};
+  final _formSettled = <String>{};
+  final _formReplies = <String, Future<void>>{};
+
   bool get supportsForms => _self.api?.capabilities.forms ?? false;
 
   /// True when the connected server exposes the v2 session inbox.
@@ -157,25 +168,11 @@ extension _ConnectionControllerFormsInboxImpl on ConnectionController {
       if (_resolvedFormIDs.contains(formID)) return;
       throw StateError('Form request $formID is no longer pending');
     }
-    final scope = returnBriefScope;
-    bool current() =>
-        returnBriefScope == scope && identical(forms[formID], form);
-    final currentApi = await _requireActionTransport();
-    if (!current()) {
-      throw StateError(
-        'The form or project changed. Reopen the current request.',
-      );
+    final request = formRequestForForm(form);
+    if (request == null) {
+      throw const ProductException('This form is no longer available.');
     }
-    try {
-      await currentApi.replyForm(form.sessionID, formID, answer);
-    } on ApiException catch (error) {
-      if (error.errorTag == 'FormAlreadySettledError' ||
-          error.errorTag == 'FormNotFoundError') {
-        if (current()) _resolveForm(formID);
-      }
-      rethrow;
-    }
-    if (current()) _resolveForm(formID);
+    await request.reply(answer);
   }
 
   /// The body of [cancelForm].
@@ -183,28 +180,13 @@ extension _ConnectionControllerFormsInboxImpl on ConnectionController {
     final form = forms[formID];
     if (form == null) {
       if (_resolvedFormIDs.contains(formID)) return;
-      throw StateError('Form request $formID is no longer pending');
+      throw const ProductException('This form is no longer available.');
     }
-    final scope = returnBriefScope;
-    bool current() =>
-        returnBriefScope == scope && identical(forms[formID], form);
-    final currentApi = await _requireActionTransport();
-    if (!current()) {
-      throw StateError(
-        'The form or project changed. Reopen the current request.',
-      );
+    final request = formRequestForForm(form);
+    if (request == null) {
+      throw const ProductException('This form is no longer available.');
     }
-    try {
-      await currentApi.cancelForm(form.sessionID, formID);
-    } on ApiException catch (error) {
-      if (error.errorTag == 'FormAlreadySettledError' ||
-          error.errorTag == 'FormNotFoundError') {
-        if (current()) _resolveForm(formID);
-        return;
-      }
-      rethrow;
-    }
-    if (current()) _resolveForm(formID);
+    await request.cancel();
   }
 
   void _handleInboxEnqueued(Map<String, dynamic> props) {

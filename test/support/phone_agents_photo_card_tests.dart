@@ -159,6 +159,7 @@ _photoCardAliasSetup({bool failAfterDispatch = false}) async {
 }
 
 void _photoCardAliasTests() {
+  _livePhotoReceiptTests();
   test(
     'photo card on a new Claude chat sends bytes through the real gateway',
     () async {
@@ -341,4 +342,272 @@ void _photoCardAliasTests() {
       );
     },
   );
+}
+
+/// Wire fixtures only: sends, timeline mapping, idle checks and event forwarding
+/// all use the real PaseoGateway. History deliberately never contains the reply.
+class _LivePhotoWire {
+  int historyReads = 0;
+  final sends = <Map<String, dynamic>>[];
+
+  void configure(FakePaseoSocket socket) {
+    socket.handlers['fetch_agent_timeline_request'] = (request) {
+      historyReads++;
+      return (
+        'fetch_agent_timeline_response',
+        {
+          'agentId': request['agentId'],
+          'epoch': 'live-photo-epoch',
+          'hasOlder': false,
+          'hasNewer': false,
+          'startCursor': {'epoch': 'live-photo-epoch', 'seq': 3},
+          'endCursor': {'epoch': 'live-photo-epoch', 'seq': 3},
+          'entries': [
+            {
+              'provider': 'claude',
+              'seqStart': 3,
+              'seqEnd': 3,
+              'timestamp': _stamp,
+              'item': {
+                'type': 'tool_call',
+                'callId': 'live-photo-call',
+                'name': 'mcp__oc-ui__show',
+                'status': 'completed',
+                'detail': {
+                  'type': 'unknown',
+                  'input': {
+                    'v': 1,
+                    'id': 'photo-evidence',
+                    'title': 'Show the result',
+                    'body': [],
+                    'ask': {
+                      'kind': 'photo',
+                      'purpose': 'Show the result',
+                      'max': 1,
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      );
+    };
+    socket.handlers['send_agent_message_request'] = (request) {
+      sends.add(Map<String, dynamic>.of(request));
+      return ('send_agent_message_response', {'accepted': true});
+    };
+    socket.handlers['agent.provider_subagents.list.request'] = (_) =>
+        ('agent.provider_subagents.list.response', {'subagents': []});
+  }
+}
+
+void _pushLivePhotoEvent(
+  _World world,
+  String daemonID,
+  int seq,
+  Map<String, dynamic> event,
+) {
+  for (final socket in world.host.sockets) {
+    socket.push('agent_stream', {
+      'agentId': daemonID,
+      'epoch': 'live-photo-epoch',
+      'seq': seq,
+      'timestamp': _stamp,
+      'event': event,
+    });
+  }
+}
+
+Future<
+  ({
+    _World world,
+    _LivePhotoWire wire,
+    ConnectionController backend,
+    GenUiCard chatCard,
+    GenUiCard listCard,
+    String daemonID,
+  })
+>
+_livePhotoSetup() async {
+  final w = await _world(null, genUiInstaller: _CardInstaller());
+  addTearDown(w.controller.dispose);
+  final wire = _LivePhotoWire();
+  w.state.freshPrivateSockets = true;
+  w.state.configureSocket = wire.configure;
+  w.state.runtimes = {'claude': _ready('claude')};
+  final c = w.controller;
+  await c.rememberLastUsedProject(_project);
+  await c.refreshAgentRows();
+  await c.refreshChatFeed();
+  final id = await c.startAgentChatIn(
+    _project,
+    agentId: 'claude',
+    firstPrompt: 'Ask for a photo.',
+  );
+  _pushLivePhotoEvent(w, id, 1, {'type': 'turn_started', 'provider': 'claude'});
+  _pushLivePhotoEvent(w, id, 2, {
+    'type': 'turn_completed',
+    'provider': 'claude',
+  });
+  await pumpEventQueue();
+  await c.setGenUiEnabled(true);
+  await c.refreshChatFeed();
+  await Future<void>.delayed(const Duration(milliseconds: 400));
+  await pumpEventQueue();
+  final backend = c.backendForConversation(id)!;
+  await backend.loadSessionTail(id);
+  await pumpEventQueue();
+  final row = c.chatFeed().items.singleWhere(
+    (r) =>
+        r.sourceId == 'paseo:$_project' &&
+        w.host.gateways.any((g) => g.daemonSessionId(r.sessionID) == id),
+  );
+  expect(row.sessionID, isNot(id));
+  expect(w.host.gateways.every((g) => g.runtimeType == PaseoGateway), isTrue);
+  return (
+    world: w,
+    wire: wire,
+    backend: backend,
+    chatCard: backend.waitingCardsForSession(id).single,
+    listCard: c.waitingCardsForFeedItem(row).single,
+    daemonID: id,
+  );
+}
+
+void _livePhotoReceiptTests() {
+  for (final correlation in ['messageId', 'clientMessageId']) {
+    test(
+      'live photo receipt settles while running using $correlation',
+      () async {
+        final x = await _livePhotoSetup();
+        final c = x.world.controller;
+        final sending = x.backend.answerGenUi(
+          x.chatCard,
+          const GenUiPhotoAnswer(1),
+          attachments: [_cardPhoto],
+        );
+        await c.delayedAnswers.flush();
+        await sending;
+        expect(x.wire.sends, hasLength(1));
+        final request = x.wire.sends.single;
+        expect(request['agentId'], x.daemonID);
+        // An accepted RPC alone cannot settle a card.
+        expect(c.genUiStateForCard(x.listCard), isNot(GenUiCardState.answered));
+        expect(c.genUiAnswerSummary(x.listCard), isNull);
+        expect(
+          c.genUiDeliveryFor(x.listCard),
+          GenUiDeliveryState.deliveryUnknown,
+        );
+
+        for (final agent in x.world.state.agents) {
+          if (agent['id'] == x.daemonID) agent['status'] = 'running';
+        }
+        _pushLivePhotoEvent(x.world, x.daemonID, 4, {
+          'type': 'turn_started',
+          'provider': 'claude',
+        });
+        _pushLivePhotoEvent(x.world, x.daemonID, 5, {
+          'type': 'timeline',
+          'provider': 'claude',
+          'item': {
+            'type': 'user_message',
+            'text': request['text'],
+            if (correlation == 'messageId') 'messageId': request['messageId'],
+            if (correlation == 'clientMessageId') ...{
+              'messageId': 'server-photo-receipt',
+              'clientMessageId': request['messageId'],
+            },
+          },
+        });
+        await pumpEventQueue();
+        expect(x.backend.busySessions, contains(x.daemonID));
+        expect(
+          x.backend.genUiStateForCard(x.chatCard),
+          GenUiCardState.answered,
+        );
+        expect(c.genUiStateForCard(x.listCard), GenUiCardState.answered);
+        expect(c.genUiAnswerSummary(x.listCard), isNotEmpty);
+
+        final before = x.wire.historyReads;
+        _pushLivePhotoEvent(x.world, x.daemonID, 6, {
+          'type': 'timeline',
+          'provider': 'claude',
+          'item': {
+            'type': 'assistant_message',
+            'messageId': 'running-response',
+            'text': 'Inspecting the photo',
+          },
+        });
+        await Future<void>.delayed(const Duration(milliseconds: 450));
+        await pumpEventQueue();
+        expect(x.wire.historyReads, greaterThan(before));
+        expect(x.backend.busySessions, contains(x.daemonID));
+        expect(
+          x.backend.genUiStateForCard(x.chatCard),
+          GenUiCardState.answered,
+        );
+        expect(c.genUiStateForCard(x.listCard), GenUiCardState.answered);
+        expect(x.wire.sends, hasLength(1));
+      },
+    );
+  }
+
+  for (final mismatch in [
+    'correlation',
+    'card',
+    'call',
+    'assistant',
+    'missing ID',
+  ]) {
+    test(
+      'live photo receipt rejects $mismatch without authoritative history',
+      () async {
+        final x = await _livePhotoSetup();
+        final c = x.world.controller;
+        final sending = x.backend.answerGenUi(
+          x.chatCard,
+          const GenUiPhotoAnswer(1),
+          attachments: [_cardPhoto],
+        );
+        await c.delayedAnswers.flush();
+        await sending;
+        final request = x.wire.sends.single;
+        var text = request['text'] as String;
+        if (mismatch == 'card') {
+          text = text.replaceAll('photo-evidence', 'another-card');
+        }
+        if (mismatch == 'call') {
+          text = text.replaceAll('live-photo-call', 'another-call');
+        }
+        _pushLivePhotoEvent(x.world, x.daemonID, 4, {
+          'type': 'turn_started',
+          'provider': 'claude',
+        });
+        _pushLivePhotoEvent(x.world, x.daemonID, 5, {
+          'type': 'timeline',
+          'provider': 'claude',
+          'item': {
+            'type': mismatch == 'assistant'
+                ? 'assistant_message'
+                : 'user_message',
+            'text': text,
+            if (mismatch != 'missing ID') 'messageId': request['messageId'],
+            if (mismatch == 'correlation')
+              'clientMessageId': 'different-dispatch',
+          },
+        });
+        await pumpEventQueue();
+        await Future<void>.delayed(const Duration(milliseconds: 450));
+        await pumpEventQueue();
+        expect(
+          x.backend.genUiStateForCard(x.chatCard),
+          isNot(GenUiCardState.answered),
+        );
+        expect(c.genUiStateForCard(x.listCard), isNot(GenUiCardState.answered));
+        expect(c.genUiAnswerSummary(x.listCard), isNull);
+        expect(x.wire.sends, hasLength(1));
+      },
+    );
+  }
 }

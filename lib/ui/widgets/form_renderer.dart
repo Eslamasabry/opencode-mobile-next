@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
@@ -17,7 +19,7 @@ import 'package:opencode_mobile/ui/kit/kit_text.dart';
 import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
 import 'package:opencode_mobile/ui/kit/motion/kit_reveal.dart';
 
-import '../../api2/models.dart';
+import '../../domain/form_request.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import 'external_link.dart';
@@ -56,7 +58,7 @@ void debugForgetFormAnswers() => _FormAnswers._kept.clear();
 /// Draft carry: what the person typed and chose is kept per form until it
 /// is sent or declined, so swipe, back, Esc and close all close silently and reopening the form brings the answers back. With
 /// [profileId], multiline answers are also saved as a [KitDraft]
-/// (`oc.draft.form.<formId>.<fieldKey>.<profileId>`) and survive a restart.
+/// scoped to the request and schema, and survive a restart.
 Future<void> presentForm(
   BuildContext context, {
   required Api2FormInfo form,
@@ -64,8 +66,13 @@ Future<void> presentForm(
   required FormRendererCancel onCancel,
   RequestRoutes? routes,
   String? profileId,
+  String? requestKey,
 }) async {
-  final answers = _FormAnswers.open(form, profileId: profileId);
+  final answers = _FormAnswers.open(
+    form,
+    profileId: profileId,
+    requestKey: requestKey,
+  );
   final l10n = _sharedCopy(context);
   var open = true;
   void close() {
@@ -127,6 +134,7 @@ class FormRenderer extends StatefulWidget {
     this.onClose,
     this.routes,
     this.profileId,
+    this.requestKey,
   });
 
   final Api2FormInfo form;
@@ -143,6 +151,9 @@ class FormRenderer extends StatefulWidget {
   /// Saves multiline answers as a [KitDraft] for this server profile.
   final String? profileId;
 
+  /// Captured route identity, shared by the list and chat presenters.
+  final String? requestKey;
+
   @override
   State<FormRenderer> createState() => _FormRendererState();
 }
@@ -151,13 +162,23 @@ class _FormRendererState extends State<FormRenderer> {
   late _FormAnswers _answers = _FormAnswers.open(
     widget.form,
     profileId: widget.profileId,
+    requestKey: widget.requestKey,
   );
 
   @override
   void didUpdateWidget(FormRenderer old) {
     super.didUpdateWidget(old);
-    if (!identical(old.form, widget.form)) {
-      _answers = _FormAnswers.open(widget.form, profileId: widget.profileId);
+    if (_answers.key !=
+        _FormAnswers.keyFor(
+          widget.form,
+          profileId: widget.profileId,
+          requestKey: widget.requestKey,
+        )) {
+      _answers = _FormAnswers.open(
+        widget.form,
+        profileId: widget.profileId,
+        requestKey: widget.requestKey,
+      );
     }
   }
 
@@ -220,16 +241,16 @@ const _kOtherChoice = '\u0000form-renderer-other';
 /// The reveal target of the send-failure notice.
 const _kBannerTarget = '\u0000form-renderer-banner';
 
-/// One form's answers, kept (in memory, per form id) from the first time it
+/// One form's answers, kept per captured route and schema from the first time it
 /// opens until it is sent or dismissed — the draft carry of P7.1.
 class _FormAnswers extends ChangeNotifier {
-  _FormAnswers(this.form, {this.profileId}) {
+  _FormAnswers(this.form, {required this.key, this.profileId}) {
     for (final field in form.fields) {
       _seedField(field);
     }
   }
 
-  /// Kept answers by form id, oldest first.
+  /// Kept answers by request identity and schema, oldest first.
   static final Map<String, _FormAnswers> _kept = {};
 
   /// More open forms than this at once is not a real situation; the oldest
@@ -238,12 +259,34 @@ class _FormAnswers extends ChangeNotifier {
 
   /// The answers kept for [form] since it was last closed, or fresh ones
   /// when there are none or the form's fields changed.
-  static _FormAnswers open(Api2FormInfo form, {String? profileId}) {
-    final kept = _kept.remove(form.id);
-    final answers = kept != null && kept._sameFields(form)
-        ? kept
-        : _FormAnswers(form, profileId: profileId);
-    _kept[form.id] = answers;
+  static String keyFor(
+    Api2FormInfo form, {
+    String? profileId,
+    String? requestKey,
+  }) => sha256
+      .convert(
+        utf8.encode(
+          jsonEncode([
+            requestKey,
+            profileId,
+            form.sessionID,
+            form.id,
+            formSchemaRevision(form),
+          ]),
+        ),
+      )
+      .toString();
+
+  static _FormAnswers open(
+    Api2FormInfo form, {
+    String? profileId,
+    String? requestKey,
+  }) {
+    final key = keyFor(form, profileId: profileId, requestKey: requestKey);
+    final answers =
+        _kept.remove(key) ??
+        _FormAnswers(snapshotForm(form), key: key, profileId: profileId);
+    _kept[key] = answers;
     while (_kept.length > _keepAtMost) {
       _kept.remove(_kept.keys.first);
     }
@@ -251,6 +294,7 @@ class _FormAnswers extends ChangeNotifier {
   }
 
   final Api2FormInfo form;
+  final String key;
   final String? profileId;
 
   /// Free string and number text.
@@ -289,16 +333,6 @@ class _FormAnswers extends ChangeNotifier {
 
   /// A slot (a field key or [_kBannerTarget]) the body scrolls into view.
   String? pendingReveal;
-
-  bool _sameFields(Api2FormInfo other) {
-    if (other.fields.length != form.fields.length) return false;
-    for (var i = 0; i < other.fields.length; i++) {
-      final a = other.fields[i];
-      final b = form.fields[i];
-      if (a.key != b.key || a.type != b.type) return false;
-    }
-    return true;
-  }
 
   void _seedField(Api2FormField field) {
     final key = field.key;
@@ -365,7 +399,7 @@ class _FormAnswers extends ChangeNotifier {
     return _drafts.putIfAbsent(
       field.key,
       () => KitDraft(
-        target: 'form.${form.id}.${field.key}',
+        target: 'form.$key.${field.key}',
         profileId: profileId,
         controller: controller,
       ),
@@ -374,7 +408,7 @@ class _FormAnswers extends ChangeNotifier {
 
   /// The answers were sent or the request dismissed: nothing is kept.
   void forget() {
-    if (identical(_kept[form.id], this)) _kept.remove(form.id);
+    if (identical(_kept[key], this)) _kept.remove(key);
     for (final draft in _drafts.values) {
       unawaited(draft.clear());
     }

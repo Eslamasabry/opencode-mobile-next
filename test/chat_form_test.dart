@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'support/complete_message_history.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
@@ -7,6 +10,7 @@ import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/api2/gateway_mappers.dart'
     show api2ServerCapabilities;
+import 'package:opencode_mobile/domain/form_request.dart' show Api2FormInfo;
 import 'package:opencode_mobile/domain/server_gateway.dart'
     show ServerCapabilities;
 import 'package:opencode_mobile/state/connection.dart';
@@ -24,7 +28,20 @@ class _FormChatApi extends OpenCodeApi with CompleteMessageHistory {
 
   final formReplies = <(String, String, Map<String, dynamic>)>[];
   final formCancels = <(String, String)>[];
+  final pendingFormInventory = <String, Api2FormInfo>{};
   Object? formError;
+
+  void publishForm(ConnectionController controller, EventEnvelope event) {
+    final form = Api2FormInfo.fromJson(
+      Map<String, dynamic>.from(event.properties['form'] as Map),
+    )!;
+    pendingFormInventory[form.id] = form;
+    controller.handleEventForTesting(event);
+  }
+
+  @override
+  Future<List<Api2FormInfo>> pendingForms() async =>
+      pendingFormInventory.values.toList();
 
   @override
   Future<List<MessageWithParts>> messages(String id) async => [];
@@ -40,19 +57,35 @@ class _FormChatApi extends OpenCodeApi with CompleteMessageHistory {
       throw error;
     }
     formReplies.add((sessionID, formID, answer));
+    pendingFormInventory.remove(formID);
   }
 
   @override
   Future<void> cancelForm(String sessionID, String formID) async {
     formCancels.add((sessionID, formID));
+    pendingFormInventory.remove(formID);
   }
 }
 
 Future<ConnectionController> _controller(_FormChatApi api) async {
-  SharedPreferences.setMockInitialValues({});
+  SharedPreferences.setMockInitialValues({
+    'oc.profiles': jsonEncode([
+      {
+        'id': 'form-profile',
+        'name': 'Form server',
+        'baseUrl': 'http://localhost',
+        'username': '',
+        'flavor': 'v2',
+      },
+    ]),
+    'oc.activeProfile': 'form-profile',
+  });
   final prefs = await SharedPreferences.getInstance();
-  return ConnectionController(ProfileStore(prefs: prefs))
+  final store = ProfileStore(prefs: prefs);
+  await store.load();
+  return ConnectionController(store)
     ..api = api
+    ..directory = '/work/app'
     ..status = StreamStatus.connected;
 }
 
@@ -100,6 +133,13 @@ Future<ConnectionController> _pumpChat(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+          (_) async => null,
+        );
+  });
 
   testWidgets('a form for the open session shows the inline card without '
       'auto-presenting the renderer', (tester) async {
@@ -107,7 +147,7 @@ void main() {
     final controller = await _pumpChat(tester, api);
     addTearDown(controller.dispose);
 
-    controller.handleEventForTesting(_formCreated());
+    api.publishForm(controller, _formCreated());
     await tester.pumpAndSettle();
 
     // No sheet steals the keyboard; the inline attention card is the entry
@@ -130,7 +170,7 @@ void main() {
     final controller = await _pumpChat(tester, api);
     addTearDown(controller.dispose);
 
-    controller.handleEventForTesting(_formCreated());
+    api.publishForm(controller, _formCreated());
     await tester.pumpAndSettle();
     // The renderer no longer auto-presents; the inline card opens it.
     await tester.tap(find.byKey(const ValueKey('form-request-answer-frm_1')));
@@ -161,7 +201,7 @@ void main() {
     final controller = await _pumpChat(tester, api);
     addTearDown(controller.dispose);
 
-    controller.handleEventForTesting(_formCreated());
+    api.publishForm(controller, _formCreated());
     await tester.pumpAndSettle();
     // The renderer no longer auto-presents; the inline card opens it.
     await tester.tap(find.byKey(const ValueKey('form-request-answer-frm_1')));
@@ -201,7 +241,7 @@ void main() {
     final controller = await _pumpChat(tester, api);
     addTearDown(controller.dispose);
 
-    controller.handleEventForTesting(_formCreated());
+    api.publishForm(controller, _formCreated());
     await tester.pumpAndSettle();
     // The renderer no longer auto-presents; the inline card opens it.
     await tester.tap(find.byKey(const ValueKey('form-request-answer-frm_1')));
@@ -223,7 +263,7 @@ void main() {
     final controller = await _pumpChat(tester, api);
     addTearDown(controller.dispose);
 
-    controller.handleEventForTesting(_formCreated());
+    api.publishForm(controller, _formCreated());
     await tester.pumpAndSettle();
     // The renderer no longer auto-presents; the inline card opens it.
     await tester.tap(find.byKey(const ValueKey('form-request-answer-frm_1')));
@@ -246,7 +286,8 @@ void main() {
     final controller = await _pumpChat(tester, api);
     addTearDown(controller.dispose);
 
-    controller.handleEventForTesting(
+    api.publishForm(
+      controller,
       _formCreated(id: 'frm_other', sessionID: 'session-2'),
     );
     await tester.pumpAndSettle();

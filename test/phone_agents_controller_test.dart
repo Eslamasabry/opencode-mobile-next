@@ -222,6 +222,8 @@ class _Events {
 
 class _HostState {
   PaseoGateway Function(PaseoTransport, String)? gatewayFactory;
+  void Function(FakePaseoSocket)? configureSocket;
+  bool freshPrivateSockets = false;
   Map<String, PhoneAgentRuntime> runtimes = {};
   List<Map<String, dynamic>> agents = [];
   var newAgentSeq = 0;
@@ -362,9 +364,18 @@ class _FakeHost implements PhoneAgentHostPort {
       agents = [...agents, agent];
       return ('create_agent_response', {'agent': agent});
     };
+    state.configureSocket?.call(socket);
+    var opened = false;
     final transport = PaseoTransport(
       endpoint: 'ws://127.0.0.1:4099',
-      socketFactory: (_, _) async => socket,
+      socketFactory: (_, _) async {
+        if (!opened || !state.freshPrivateSockets) {
+          opened = true;
+          return socket;
+        }
+        // Bounded history owns and closes a separate transport connection.
+        return FakePaseoSocket()..handlers.addAll(socket.handlers);
+      },
     );
     final gateway =
         state.gatewayFactory?.call(transport, directory) ??

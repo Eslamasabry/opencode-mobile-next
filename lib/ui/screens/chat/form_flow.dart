@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 
 import '../../../api/models.dart' show ApiException;
-import '../../../api2/models.dart' show Api2FormInfo;
+import '../../../domain/form_request.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart';
 import '../../kit/kit_dialog.dart';
+import '../../kit/kit_needs_you.dart';
+import '../../kit/kit_receipt.dart';
+import '../../kit/kit_request_card.dart';
 import '../../widgets/form_renderer.dart';
 import '../../widgets/product_states.dart' show productErrorText;
 import '../../widgets/request_routes.dart';
@@ -27,7 +32,7 @@ class FormAnswerReceipt {
   bool get failed => error != null;
 }
 
-/// The one ledger of form answers in flight, keyed by form id: the form's
+/// The one ledger of form answers in flight, keyed by captured identity: the form's
 /// sheet writes it, the form's card in the conversation reads it, so the
 /// receipt shows where the request lives (K2 §4.8).
 class FormAnswerReceipts extends ChangeNotifier {
@@ -37,17 +42,66 @@ class FormAnswerReceipts extends ChangeNotifier {
 
   final Map<String, FormAnswerReceipt> _receipts = {};
 
-  FormAnswerReceipt? receiptFor(String formId) => _receipts[formId];
+  FormAnswerReceipt? receiptFor(String requestKey) => _receipts[requestKey];
 
-  void _set(String formId, FormAnswerReceipt? receipt) {
+  void _set(String requestKey, FormAnswerReceipt? receipt) {
     if (receipt == null) {
-      if (_receipts.remove(formId) == null) return;
+      if (_receipts.remove(requestKey) == null) return;
     } else {
-      _receipts[formId] = receipt;
+      _receipts[requestKey] = receipt;
     }
     notifyListeners();
   }
 }
+
+/// One captured request uses the same card and receipt in the list and chat.
+Widget capturedFormRequestCard(
+  BuildContext context,
+  ConnectionController connection,
+  CapturedFormRequest request, {
+  Key? key,
+  Key? answerKey,
+  String? who,
+  DateTime? since,
+  bool secondary = false,
+  VoidCallback? onAnswer,
+}) => ListenableBuilder(
+  key: key,
+  listenable: FormAnswerReceipts.instance,
+  builder: (cardContext, _) {
+    final l10n = _chatL10n(cardContext);
+    final form = request.form;
+    final title = form.title ?? l10n.chatUiInputRequested;
+    final sent = FormAnswerReceipts.instance.receiptFor(request.identity.key);
+    final sending = sent != null && !sent.failed;
+    return KitRequestCard.ask(
+      kind: KitRequestKind.form,
+      title: title,
+      who: who ?? l10n.chatRequestWho,
+      reason: KitNeedsYouReason.decision,
+      ifIgnored: l10n.chatRequestIfIgnored,
+      announcement: l10n.chatUiQuestionLabel(title),
+      since: since,
+      detail: l10n.chatUiQuestionCount(form.fields.length),
+      phase: sending ? KitRequestPhase.sending : KitRequestPhase.waiting,
+      answer: sending ? l10n.kitRequestSendAnswers : null,
+      receipt: sent == null
+          ? null
+          : sent.failed
+          ? KitReceipt(state: KitReceiptState.refused, reason: sent.error)
+          : KitReceipt(state: KitReceiptState.sending, since: sent.since),
+      answers: KitRequestInSheet(
+        key:
+            answerKey ??
+            ValueKey('form-request-answer-${request.identity.key}'),
+        secondary: secondary,
+      ),
+      onDetails:
+          onAnswer ??
+          () => unawaited(presentCapturedForm(context, connection, request)),
+    );
+  },
+);
 
 /// Presents a pending form through the shared form presenter and routes its
 /// reply/cancel through the connection's form state, applying the locked
@@ -67,14 +121,22 @@ Future<void> presentConnectionForm(
   ConnectionController connection,
   Api2FormInfo form,
 ) async {
-  final scope = connection.returnBriefScope;
-  bool current() =>
-      connection.returnBriefScope == scope &&
-      identical(connection.forms[form.id], form);
+  final captured = connection.formRequestForForm(form);
+  if (captured == null) return;
+  await presentCapturedForm(context, connection, captured);
+}
+
+Future<void> presentCapturedForm(
+  BuildContext context,
+  ConnectionController connection,
+  CapturedFormRequest captured,
+) async {
+  final current = captured.isPending;
   if (!current()) return;
   final routes = RequestRoutes(changes: connection, isPending: current);
   final receipts = FormAnswerReceipts.instance;
-  final profileId = connection.profile?.id ?? connection.store.activeId;
+  final requestKey = captured.identity.key;
+  final profileId = captured.identity.profileID;
   var settledElsewhere = false;
   bool answeredElsewhere(Object error) =>
       error is ApiException &&
@@ -84,27 +146,28 @@ Future<void> presentConnectionForm(
   try {
     await presentForm(
       context,
-      form: form,
+      form: captured.form,
       routes: routes,
-      profileId: profileId == null || profileId.isEmpty ? null : profileId,
+      profileId: profileId,
+      requestKey: requestKey,
       onSubmit: (answer) async {
         if (!current()) {
           throw StateError(
             _chatL10n(context).chatUiTheFormOrProjectChangedReopenThe,
           );
         }
-        receipts._set(form.id, FormAnswerReceipt(since: clock.now()));
+        receipts._set(requestKey, FormAnswerReceipt(since: clock.now()));
         try {
-          await connection.replyForm(form.id, answer);
-          receipts._set(form.id, null);
+          await captured.reply(answer);
+          receipts._set(requestKey, null);
         } catch (error) {
           if (answeredElsewhere(error)) {
-            receipts._set(form.id, null);
+            receipts._set(requestKey, null);
             settledElsewhere = true;
             return;
           }
           receipts._set(
-            form.id,
+            requestKey,
             FormAnswerReceipt(
               since: clock.now(),
               error: productErrorText(error),
@@ -120,7 +183,7 @@ Future<void> presentConnectionForm(
           );
         }
         try {
-          await connection.cancelForm(form.id);
+          await captured.cancel();
         } catch (error) {
           if (answeredElsewhere(error)) {
             settledElsewhere = true;

@@ -219,6 +219,7 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
         elsewhereAttention.markStale();
         _feedQuestionEpoch++;
         _feedDirectoryQuestions.clear();
+        _feedDirectoryForms.clear();
       } else {
         _feedScheduleRefresh();
       }

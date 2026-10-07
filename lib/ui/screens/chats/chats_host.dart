@@ -25,6 +25,7 @@ import '../../widgets/agent_card_view.dart';
 import '../../widgets/external_link.dart' show openAgentSignInPage;
 import '../../widgets/phone_server_card.dart' show serverDisplayName;
 import '../chat_screen.dart' show questionRequestCard;
+import '../chat/form_flow.dart' show capturedFormRequestCard;
 import '../chat/permission_sheet.dart'
     show
         PermissionAnswers,
@@ -169,8 +170,12 @@ class ConnectionChatsHost implements ChatsHost {
         final permissionOwner = nativeFeed ? _conn : owner;
         final permissionAnswers = nativeFeed ? feedAnswers : answers;
         final question = _conn.questionForFeedItem(item);
+        final form = _conn.formRequestForFeedItem(item);
         final card = _conn.waitingCardsForFeedItem(item).firstOrNull;
-        if (waiting.isEmpty && question == null && card == null) {
+        if (waiting.isEmpty &&
+            question == null &&
+            form == null &&
+            card == null) {
           return const SizedBox.shrink();
         }
         Widget? request;
@@ -213,8 +218,18 @@ class ConnectionChatsHost implements ChatsHost {
                 question: question,
                 inList: true,
               );
-        // A question waits behind a permission request and a card behind
-        // both: the list answers the request first, and the buttons of the
+        final formView = form == null
+            ? null
+            : capturedFormRequestCard(
+                context,
+                _conn,
+                form,
+                key: ValueKey('chats-form-${form.identity.key}'),
+                who: item.agentLabel ?? 'OpenCode',
+                secondary: request != null || question != null,
+              );
+        // Questions and forms wait behind a permission request, and a card
+        // follows them: the list answers the request first, and the buttons of the
         // others are secondary here.
         final cardView = card == null
             ? null
@@ -240,7 +255,7 @@ class ConnectionChatsHost implements ChatsHost {
                       )
                     : null,
               );
-        final shown = [?request, ?questionView, ?cardView];
+        final shown = [?request, ?questionView, ?formView, ?cardView];
         if (shown.length == 1) return shown.single;
         final gap = SizedBox(height: KitTokens.of(context).space2);
         return Column(

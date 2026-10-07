@@ -51,6 +51,9 @@ final class GenUiStateController extends ChangeNotifier {
   final _views = <String, _View>{};
   final _revisions = <String, int>{};
   final _delivery = <String, GenUiDeliveryState>{};
+  // Live server echoes can lead bounded history while a turn is running.
+  // Keep only volatile receipt summaries; the dispatch journal stays intact.
+  final _liveAnswers = <String, ({GenUiCard card, String summary})>{};
   final _sends = <String, Future<void>>{};
   final _held = <String, Completer<void>>{};
   final _closedProfiles = <String>{};
@@ -112,6 +115,7 @@ final class GenUiStateController extends ChangeNotifier {
   }
 
   void invalidateScope(GenUiScope scope) {
+    _liveAnswers.removeWhere((_, receipt) => receipt.card.scope == scope);
     final prefix = genUiScopeKey(scope);
     for (final key in {
       ..._views.keys,
@@ -198,6 +202,22 @@ final class GenUiStateController extends ChangeNotifier {
       }
     }
     final key = _sessionKey(scope, sessionID);
+    _liveAnswers.removeWhere((_, receipt) {
+      final card = receipt.card;
+      if (card.scope != scope || card.sessionID != sessionID) return false;
+      final unchanged = parsed.values.any(
+        (p) =>
+            p is GenUiParsed &&
+            p.card.identity == card.identity &&
+            p.card.revision == card.revision,
+      );
+      // A lagging, card-only snapshot does not undo the live acknowledgement.
+      // A removed/replaced card or authoritative contrary chronology does.
+      return !unchanged ||
+          (tailComplete &&
+              genUiStateFor(card, copy, tailComplete: true) ==
+                  GenUiCardState.passedOver);
+    });
     _revisions[key] = (_revisions[key] ?? 0) + 1;
     if (!_views.containsKey(key) && _views.length >= 20) {
       final evicted = _views.keys.first;
@@ -212,6 +232,77 @@ final class GenUiStateController extends ChangeNotifier {
     _views[key] = _View(List.unmodifiable(copy), tailComplete, parsed);
     _notify();
     _scheduleRemember(scope, sessionID);
+  }
+
+  /// Accepts a complete, server-origin live user message, never a UI projection.
+  void observeLiveAnswer(
+    GenUiScope scope,
+    MessageWithParts message, {
+    required String correlationID,
+  }) {
+    if (!available(scope) ||
+        correlationID.isEmpty ||
+        correlationID.length > 256 ||
+        message.info.role != 'user' ||
+        message.info.id.isEmpty ||
+        message.parts.any(
+          (p) =>
+              p.synthetic ||
+              (p.messageID != null && p.messageID != message.info.id),
+        )) {
+      return;
+    }
+    final key = _sessionKey(scope, message.info.sessionID);
+    if (_deletedSessions.contains(key)) return;
+    final view = _views[key], source = _sources[genUiScopeKey(scope)];
+    if (view == null || source == null) return;
+    final List<GenUiReference> entries;
+    try {
+      entries = journal.read(scope.profileID);
+    } catch (_) {
+      return;
+    }
+    for (final parsed in view.parsed.values) {
+      if (parsed is! GenUiParsed) continue;
+      final card = parsed.card;
+      final reserved = entries.any(
+        (e) =>
+            e.identity == card.identity &&
+            e.scope == scope &&
+            e.revision == card.revision &&
+            e.endpoint == source.endpoint &&
+            e.dispatchID == correlationID,
+      );
+      if (!reserved) continue;
+      final answer = genUiAnswerIn(message, card);
+      if (answer == null ||
+          genUiStateFor(card, [
+                ...view.messages,
+                message,
+              ], tailComplete: false) !=
+              GenUiCardState.answered) {
+        continue;
+      }
+      _liveAnswers[card.identity] = (card: card, summary: answer.summary);
+      while (_liveAnswers.length > 100) {
+        _liveAnswers.remove(_liveAnswers.keys.first);
+      }
+      _notify();
+      return;
+    }
+  }
+
+  String? _liveSummary(GenUiCard card, _View view) {
+    final receipt = _liveAnswers[card.identity];
+    if (receipt == null || receipt.card.revision != card.revision) return null;
+    return view.parsed.values.any(
+          (p) =>
+              p is GenUiParsed &&
+              p.card.identity == card.identity &&
+              p.card.revision == card.revision,
+        )
+        ? receipt.summary
+        : null;
   }
 
   void _scheduleRemember(GenUiScope scope, String sessionID) {
@@ -258,6 +349,7 @@ final class GenUiStateController extends ChangeNotifier {
     if (!available(card.scope)) return GenUiCardState.unknown;
     final view = _views[_sessionKey(card.scope, card.sessionID)];
     if (view == null) return GenUiCardState.unknown;
+    if (_liveSummary(card, view) != null) return GenUiCardState.answered;
     return genUiStateFor(card, view.messages, tailComplete: view.complete);
   }
 
@@ -275,6 +367,11 @@ final class GenUiStateController extends ChangeNotifier {
 
   String? summary(GenUiCard card) {
     if (state(card) != GenUiCardState.answered) return null;
+    final live = _liveSummary(
+      card,
+      _views[_sessionKey(card.scope, card.sessionID)]!,
+    );
+    if (live != null) return live;
     var afterCard = false;
     for (final message
         in _views[_sessionKey(card.scope, card.sessionID)]!.messages) {
@@ -743,6 +840,10 @@ final class GenUiStateController extends ChangeNotifier {
 
   Future<void> removeSession(GenUiScope scope, String sessionID) async {
     final key = _sessionKey(scope, sessionID);
+    _liveAnswers.removeWhere(
+      (_, receipt) =>
+          receipt.card.scope == scope && receipt.card.sessionID == sessionID,
+    );
     _deletedSessions.add(key);
     _coveragePending.remove(key);
     _revisions[key] = (_revisions[key] ?? 0) + 1;
@@ -786,6 +887,7 @@ final class GenUiStateController extends ChangeNotifier {
     _recoveryFollowup?.cancel();
     _sources.clear();
     _views.clear();
+    _liveAnswers.clear();
     super.dispose();
   }
 }

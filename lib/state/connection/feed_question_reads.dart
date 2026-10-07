@@ -44,6 +44,7 @@ extension _FeedQuestionReads on ConnectionController {
   void _invalidateFeedDirectoryQuestions(EventEnvelope event) {
     if (!event.type.startsWith('question.') &&
         !event.type.startsWith('permission.') &&
+        !event.type.startsWith('form.v2.') &&
         event.type != 'session.deleted') {
       return;
     }
@@ -51,7 +52,11 @@ extension _FeedQuestionReads on ConnectionController {
     final folder = event.directory;
     if (folder == null) {
       _feedDirectoryQuestions.clear();
+      _feedDirectoryForms.clear();
     } else {
+      _feedDirectoryForms.remove(
+        ConnectionController.normalizeDirectoryPath(folder),
+      );
       _feedDirectoryQuestions.remove(
         ConnectionController.normalizeDirectoryPath(folder),
       );
@@ -89,7 +94,8 @@ extension _FeedQuestionReads on ConnectionController {
             .toSet()
             .toList()
           ..sort();
-    // Four directories per pass, two bounded reads each: at most 24 seconds.
+    // Four directories per pass: one form read or two question reads each.
+    // Each read times out after 3 seconds; at most 24 seconds in total.
     // Rotate to give later waiting directories a turn; excluded data is unknown.
     final selected = <String>[];
     for (var i = 0; i < 4 && i < folders.length; i++) {
@@ -100,12 +106,43 @@ extension _FeedQuestionReads on ConnectionController {
           (_feedQuestionCursor + selected.length) % folders.length;
     }
     _feedDirectoryQuestions.removeWhere((key, _) => !selected.contains(key));
+    _feedDirectoryForms.removeWhere((key, _) => !selected.contains(key));
     for (final folder in selected) {
       if (!current()) return;
       final pair = _buildTransportPair(fence.profile);
       try {
         pair.gateway.setLocation(directory: folder);
         pair.operations.setLocation(directory: folder);
+        if (pair.gateway.capabilities.forms) {
+          List<Api2FormInfo> pending = const [];
+          try {
+            pending = await pair.gateway.pendingForms().timeout(
+              const Duration(seconds: 3),
+            );
+          } catch (_) {}
+          if (!current()) return;
+          final previous = _feedDirectoryForms[folder];
+          final next = <String, _DirectoryForm>{};
+          for (final form in pending.take(128)) {
+            if (form.id.isEmpty ||
+                !rows.any(
+                  (r) => r.directory == folder && r.sessionID == form.sessionID,
+                )) {
+              continue;
+            }
+            final key = _formInventoryKey(form),
+                old = previous?[_formInventoryKey(form)];
+            next[key] =
+                old != null &&
+                    _directoryQuestionCurrent(old.fence) &&
+                    old.revision == formSchemaRevision(form)
+                ? old
+                : _DirectoryForm(form, fence);
+          }
+          _feedDirectoryForms[folder] = next;
+          _feedDirectoryQuestions.remove(folder);
+          continue;
+        }
         List<PendingQuestion>? legacy, modern;
         try {
           legacy = await pair.operations.listQuestions().timeout(

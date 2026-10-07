@@ -74,6 +74,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
     _feedDebounce?.cancel();
     _self._feedQuestionEpoch++;
     _self._feedDirectoryQuestions.clear();
+    _self._feedDirectoryForms.clear();
   }
 
   Future<void> _refreshFeed() async {
