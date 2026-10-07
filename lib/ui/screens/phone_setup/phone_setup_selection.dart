@@ -62,6 +62,15 @@ List<SetupComponent> expandSetupSelection(
 String setupDurationText(AppLocalizations l10n, int seconds) =>
     l10n.phoneSetupStartAboutMinutes(math.max(1, (seconds / 60).round()));
 
+/// FB2: the whole first-setup journey in one line, "Install, name a
+/// project, chat · about 4 min". The minutes are the same registry estimate
+/// as [setupDurationText] (rounded, never below one), so the line and any
+/// other promise on the screen never disagree.
+String setupStepsText(AppLocalizations l10n, int seconds) =>
+    l10n.phoneSetupStartSteps(
+      l10n.phoneSetupStartStepsTime(math.max(1, (seconds / 60).round())),
+    );
+
 /// "165 MB" or "1.2 GB", in decimal units like the store listing and the
 /// download managers people compare against.
 String setupSizeText(AppLocalizations l10n, int bytes) {

@@ -1,0 +1,23 @@
+{
+  "provenance": {
+    "kind": "deviceCapture",
+    "device": "emulator-5554",
+    "date": "2026-10-07",
+    "helperVersion": "0.9.2",
+    "profileId": "1791381364862609",
+    "cwd": "/root/projects",
+    "request": "get_providers_snapshot_request",
+    "sanitization": "Models/config/credentials omitted; Unknown error text withheld; matched fx sign-in message preserved without unknown prefix. No refresh request sent.",
+    "snapshotSha256": "ba18d5d3e823a711e0b54e167e1c2167e5607b04e668540ab4e994d519b2001f"
+  },
+  "snapshot": {
+    "entries": [
+      {
+        "provider": "claude",
+        "status": "ready",
+        "enabled": true,
+        "source": "builtin"
+      }
+    ]
+  }
+}

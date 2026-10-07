@@ -746,7 +746,7 @@ void main() {
           agents: const [GenUiAgent.openCode1, GenUiAgent.openCode2],
           reason: GenUiSetupProblem.notQualified,
         ): _en.cardsStatusPartial(
-          'OpenCode',
+          'OpenCode 1, OpenCode 2',
           _en.cardsProblemNotQualified,
         ),
         GenUiSetupRestartRequired(agents: const [GenUiAgent.claude]): _en
@@ -761,6 +761,40 @@ void main() {
         gen.notifyListeners();
         await tester.pumpAndSettle();
         expect(find.text(entry.value), findsOneWidget, reason: entry.value);
+      }
+    });
+
+    testWidgets('each status line names the agent it is about', (tester) async {
+      final gen = FakeGenUi();
+      await mount(tester, gen);
+      final cases = <GenUiSetupStatus, String>{
+        GenUiSetupPartial(
+          agents: const [GenUiAgent.claude],
+          reason: GenUiSetupProblem.notQualified,
+          affected: const [GenUiAgent.openCode1, GenUiAgent.openCode2],
+        ): 'On for Claude Code. OpenCode 1, OpenCode 2 hasn\'t been checked to work with '
+            'cards yet.',
+        const GenUiSetupUnavailable(
+          reason: GenUiSetupProblem.notQualified,
+          affected: [GenUiAgent.openCode2],
+        ): 'Not available. OpenCode 2 hasn\'t been checked to work with cards '
+            'yet.',
+        const GenUiSetupFailed(
+          reason: GenUiSetupProblem.registrationFailed,
+          affected: [GenUiAgent.claude],
+        ): "Couldn't turn this on. Claude Code couldn't be told about cards.",
+        // Nothing names an agent (the app has not asked any yet): the line
+        // says so without "This agent".
+        const GenUiSetupUnavailable(reason: GenUiSetupProblem.notQualified):
+            'Not available. Cards haven\'t been checked to work with the '
+            'agents here yet.',
+      };
+      for (final entry in cases.entries) {
+        gen.status = entry.key;
+        gen.notifyListeners();
+        await tester.pumpAndSettle();
+        expect(find.text(entry.value), findsOneWidget, reason: entry.value);
+        expect(find.textContaining('This agent'), findsNothing);
       }
     });
 

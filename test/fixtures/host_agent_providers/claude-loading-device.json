@@ -1,0 +1,23 @@
+{
+  "provenance": {
+    "kind": "deviceCapture",
+    "device": "emulator-5554",
+    "date": "2026-10-07",
+    "helperVersion": "0.9.2",
+    "profileId": "1791381364862609",
+    "cwd": "/root/projects",
+    "request": "get_providers_snapshot_request",
+    "sanitization": "Models/config/credentials omitted; unknown error text withheld. No refresh request sent.",
+    "snapshotSha256": "5092c570fa44efecb8b2d2f6f31a826fcb29c7f0d4bb3a5d468501617c137379"
+  },
+  "snapshot": {
+    "entries": [
+      {
+        "provider": "claude",
+        "status": "loading",
+        "enabled": true,
+        "source": "builtin"
+      }
+    ]
+  }
+}

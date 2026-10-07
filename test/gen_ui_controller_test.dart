@@ -155,6 +155,145 @@ void main() {
     },
   );
 
+  for (final flavor in [ServerFlavor.v1, ServerFlavor.v2]) {
+    test(
+      'fallback names only phone agents and connected ${flavor.name}',
+      () async {
+        final h = await _harness(_Installer());
+        final profile = ServerProfile(
+          id: 'phone',
+          name: 'Phone',
+          baseUrl: BuiltinLinux.serverUrl,
+          flavor: flavor,
+        );
+        h.controller.adoptConnectedProfileForTesting(profile);
+        final status = h.controller.genUiStatus as GenUiSetupUnavailable;
+        expect(status.reason, GenUiSetupProblem.notQualified);
+        expect(status.affected, [
+          GenUiAgent.claude,
+          AgentToolAdapters.forOpenCode(v2: flavor == ServerFlavor.v2),
+        ]);
+        expect(status.agents, isEmpty);
+        expect(h.controller.capabilities.genUi, isFalse);
+      },
+    );
+  }
+
+  test('shared installation status follows runtime switches without naming '
+      'the other OpenCode generation', () async {
+    final installer = _Installer()
+      ..on = GenUiSetupPartial(
+        agents: [GenUiAgent.claude, GenUiAgent.openCode1],
+        reason: GenUiSetupProblem.notQualified,
+        affected: [GenUiAgent.openCode2],
+      );
+    final h = await _harness(installer);
+    await h.controller.setGenUiEnabled(true);
+    final oc1 = h.controller.genUiStatus as GenUiSetupOn;
+    expect(oc1.agents, [GenUiAgent.claude, GenUiAgent.openCode1]);
+    expect(oc1.agents.map((agent) => agent.displayName), [
+      'Claude Code',
+      'OpenCode 1',
+    ]);
+    h.controller.adoptConnectedProfileForTesting(
+      ServerProfile(
+        id: 'phone',
+        name: 'Phone',
+        baseUrl: BuiltinLinux.serverUrl,
+        flavor: ServerFlavor.v2,
+      ),
+    );
+    final oc2 = h.controller.genUiStatus as GenUiSetupPartial;
+    expect(oc2.agents, [GenUiAgent.claude]);
+    expect(oc2.reason, GenUiSetupProblem.notQualified);
+    expect(oc2.affected, [GenUiAgent.openCode2]);
+    expect(oc2.affected.single.displayName, 'OpenCode 2');
+    expect(installer.calls, hasLength(1));
+    expect(installer.calls.single.agents, GenUiAgent.values.toSet());
+  });
+
+  test('opposite runtime readiness never qualifies this connection', () async {
+    final installer = _Installer()
+      ..on = GenUiSetupOn(agents: [GenUiAgent.openCode2]);
+    final h = await _harness(installer);
+    await h.controller.setGenUiEnabled(true);
+    final status = h.controller.genUiStatus as GenUiSetupUnavailable;
+    expect(status.reason, GenUiSetupProblem.notQualified);
+    expect(status.affected, [GenUiAgent.claude, GenUiAgent.openCode1]);
+    expect(status.agents, isEmpty);
+    expect(h.controller.capabilities.genUi, isFalse);
+  });
+
+  test('an opposite-only partial result remains unavailable without '
+      'applicable ready agents', () async {
+    final installer = _Installer()
+      ..on = GenUiSetupPartial(
+        agents: [GenUiAgent.openCode2],
+        reason: GenUiSetupProblem.verificationFailed,
+        affected: [GenUiAgent.openCode2],
+      );
+    final h = await _harness(installer);
+    await h.controller.setGenUiEnabled(true);
+    final status = h.controller.genUiStatus as GenUiSetupUnavailable;
+    expect(status.affected, [GenUiAgent.claude, GenUiAgent.openCode1]);
+    expect(status.agents, isEmpty);
+    expect(h.controller.capabilities.genUi, isFalse);
+  });
+
+  test('applicable failures keep their reason and exclude the other '
+      'runtime from affected agents', () async {
+    final installer = _Installer()
+      ..on = const GenUiSetupFailed(
+        reason: GenUiSetupProblem.registrationFailed,
+        affected: [GenUiAgent.claude, GenUiAgent.openCode2],
+      );
+    final h = await _harness(installer);
+    await h.controller.setGenUiEnabled(true);
+    final status = h.controller.genUiStatus as GenUiSetupFailed;
+    expect(status.reason, GenUiSetupProblem.registrationFailed);
+    expect(status.affected, [GenUiAgent.claude]);
+    expect(h.controller.capabilities.genUi, isFalse);
+  });
+
+  test('generic setup problems survive connection projection', () async {
+    final installer = _Installer()
+      ..on = GenUiSetupPartial(
+        agents: [GenUiAgent.claude, GenUiAgent.openCode2],
+        reason: GenUiSetupProblem.storageFailed,
+      );
+    final h = await _harness(installer);
+    await h.controller.setGenUiEnabled(true);
+    final partial = h.controller.genUiStatus as GenUiSetupPartial;
+    expect(partial.agents, [GenUiAgent.claude]);
+    expect(partial.reason, GenUiSetupProblem.storageFailed);
+    expect(partial.affected, isEmpty);
+
+    installer.on = const GenUiSetupUnavailable(reason: GenUiSetupProblem.busy);
+    await h.controller.setGenUiEnabled(true);
+    final unavailable = h.controller.genUiStatus as GenUiSetupUnavailable;
+    expect(unavailable.reason, GenUiSetupProblem.busy);
+    expect(unavailable.affected, isEmpty);
+  });
+
+  test(
+    'restart status names only agents belonging to this connection',
+    () async {
+      final installer = _Installer()
+        ..off = GenUiSetupRestartRequired(
+          agents: [
+            GenUiAgent.claude,
+            GenUiAgent.openCode1,
+            GenUiAgent.openCode2,
+          ],
+        );
+      final h = await _harness(installer);
+      await h.controller.setGenUiEnabled(false);
+      final status = h.controller.genUiStatus as GenUiSetupRestartRequired;
+      expect(status.agents, [GenUiAgent.claude, GenUiAgent.openCode1]);
+      expect(h.controller.capabilities.genUi, isFalse);
+    },
+  );
+
   test('unmanaged profiles reject setup and never call installer', () async {
     final installer = _Installer();
     final h = await _harness(installer, managed: false);

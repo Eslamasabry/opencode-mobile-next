@@ -229,6 +229,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     bool redetectOnFailure = true,
     bool preserveConnectionAttempt = false,
   }) async {
+    if (_connectedProfile?.id != profile.id) _resetTurnStalls();
     if (isIsolated) {
       throw StateError('An isolated session cannot connect to a server.');
     }
@@ -565,6 +566,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     bool keepActive = false,
     bool silent = false,
   }) async {
+    _resetTurnStalls();
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;
     _lifecycleResume = null;

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard;
@@ -8,6 +9,7 @@ import 'package:xterm/xterm.dart' as xterm;
 import '../../../builtin/local_terminal.dart';
 import '../../../domain/agent_catalog.dart';
 import '../../../domain/agent_sign_in.dart';
+import '../../../domain/agent_sign_in_output.dart';
 import '../../../domain/phone_agents_source.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../app_theme.dart';
@@ -21,6 +23,10 @@ import '../../widgets/external_link.dart';
 /// Claude asks for a code, pastes it into Claude itself. The app never reads
 /// or passes on the code (Anthropic's terms: sign-in completes in its own
 /// flow). Pops true once the agent is signed in.
+///
+/// A device sign-in (Codex, fx) prints its page and a one-time code instead;
+/// what the terminal shows is read for them ([readAgentSignInOutput]) and
+/// they become "Open sign-in page" and "Copy code" buttons above it.
 class AgentSignInTerminalScreen extends ConsumerStatefulWidget {
   const AgentSignInTerminalScreen({
     super.key,
@@ -56,6 +62,7 @@ class _AgentSignInTerminalScreenState
   LocalShell? _shell;
   bool _checking = false;
   bool _notYet = false;
+  AgentSignInOutput _found = const AgentSignInOutput();
 
   AppLocalizations get _l10n =>
       lookupAppLocalizations(Localizations.localeOf(context));
@@ -73,10 +80,49 @@ class _AgentSignInTerminalScreenState
       ..onOpenUrl = _openPage
       ..inputFilter = _keys.apply
       ..addListener(_shellChanged);
+    shell.terminal.addListener(_outputChanged);
     setState(() {
       _shell = shell;
       _notYet = false;
+      _found = const AgentSignInOutput();
     });
+  }
+
+  /// Rows read for a sign-in page and code: the end of the output, where
+  /// the agent prints them.
+  static const _rowsRead = 200;
+
+  void _outputChanged() {
+    final shell = _shell;
+    if (shell == null || !mounted) return;
+    final terminal = shell.terminal;
+    final lines = terminal.buffer.lines;
+    final rows = <AgentSignInRow>[
+      for (var i = math.max(0, lines.length - _rowsRead); i < lines.length; i++)
+        (text: _rowText(lines[i]), wrapped: lines[i].isWrapped),
+    ];
+    final next = _found.merge(
+      readAgentSignInOutput(rows, width: terminal.viewWidth),
+    );
+    if (next != _found) setState(() => _found = next);
+  }
+
+  /// A row's text with the gaps a program skipped over (cursor moves) as
+  /// spaces, so words either side stay apart.
+  static String _rowText(xterm.BufferLine line) {
+    final end = line.getTrimmedLength();
+    final text = StringBuffer();
+    for (var i = 0; i < end; i++) {
+      final char = line.getCodePoint(i);
+      if (char != 0) {
+        text.writeCharCode(char);
+        // A wide character's second cell is part of it.
+        if (line.getWidth(i) == 2) i++;
+      } else {
+        text.write(' ');
+      }
+    }
+    return text.toString();
   }
 
   /// The agent's own login command, from the catalog: its program and
@@ -131,6 +177,7 @@ class _AgentSignInTerminalScreenState
     final shell = _shell;
     if (shell != null) {
       shell.removeListener(_shellChanged);
+      shell.terminal.removeListener(_outputChanged);
       await _sessions.endSignIn(shell);
     }
     if (mounted) _start();
@@ -150,6 +197,7 @@ class _AgentSignInTerminalScreenState
     final shell = _shell;
     if (shell != null) {
       shell.removeListener(_shellChanged);
+      shell.terminal.removeListener(_outputChanged);
       unawaited(_sessions.endSignIn(shell));
     }
     _focus.dispose();
@@ -221,9 +269,41 @@ class _AgentSignInTerminalScreenState
         details: shell.failure,
       );
     }
+    final found = _found;
+    final page = found.page;
+    final code = found.code;
+    final tokens = KitTokens.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (shell.running && !found.isEmpty)
+          Padding(
+            padding: EdgeInsetsDirectional.only(
+              start: tokens.gutter,
+              end: tokens.gutter,
+              bottom: tokens.space2,
+            ),
+            child: KitActionBlock(
+              key: const ValueKey('agents-sign-in-terminal-actions'),
+              primary: page == null
+                  ? null
+                  : KitAction(
+                      key: const ValueKey('agents-sign-in-terminal-open'),
+                      label: l10n.agentsSignInOpenPage,
+                      icon: AppIconography.externalLink,
+                      onPressed: () => _openPage(page.toString()),
+                    ),
+              secondary: code == null
+                  ? null
+                  : KitAction.copy(
+                      key: const ValueKey('agents-sign-in-terminal-copy-code'),
+                      label: l10n.agentsSignInCopyCode(KitBidi.ltr(code)),
+                      // The code as the agent printed it, to type on its page.
+                      text: () => code,
+                      redact: false,
+                    ),
+            ),
+          ),
         Expanded(
           child: KitTerminalView.live(
             terminal: shell.terminal,

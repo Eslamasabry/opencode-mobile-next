@@ -1,0 +1,5 @@
+First public alpha.
+• Connect to OpenCode 1 and the OpenCode 2 beta, with QR pairing.
+• Streaming conversations, tool activity, permission requests, questions and forms.
+• Phone-sized diff review, a terminal, share to a conversation and on-phone voice typing.
+• Optional background status and guided hosting on the phone.

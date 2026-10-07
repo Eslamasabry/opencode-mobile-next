@@ -1,0 +1,13 @@
+{
+  "passed": 128,
+  "exitCode": 0,
+  "completedFiles": [
+    "test/agent_certification_test.dart",
+    "test/phone_agents_controller_test.dart",
+    "test/phone_agents_test.dart",
+    "test/phone_agents_host_test.dart",
+    "test/phone_agents_legacy_auth_test.dart",
+    "test/agents_settings_placement_test.dart"
+  ],
+  "scope": "focused affected files, not full suite"
+}

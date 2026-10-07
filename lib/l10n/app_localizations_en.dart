@@ -11910,6 +11910,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'You can leave the app. We\'ll notify you when it\'s ready.';
 
   @override
+  String get phoneSetupProgressFirstSetupNote =>
+      'Step 1 of 3: install. Then name a project and start a conversation. You can leave the app. We\'ll notify you when it\'s ready.';
+
+  @override
   String get phoneSetupProgressStopTitle => 'Stop setup?';
 
   @override
@@ -12318,13 +12322,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phoneSetupStartHeadline => 'Run a coding agent right here';
 
   @override
-  String phoneSetupStartPromise(String time, String size) {
-    return 'No computer and no other apps. $time and ~$size the first time.';
+  String phoneSetupStartPromise(String size) {
+    return 'No computer and no other apps. ~$size to download the first time.';
   }
 
   @override
-  String phoneSetupStartPromiseNoSize(String time) {
-    return 'No computer and no other apps. $time the first time.';
+  String get phoneSetupStartPromiseNoSize => 'No computer and no other apps.';
+
+  @override
+  String phoneSetupStartSteps(String time) {
+    return 'Install, name a project, start a conversation · $time';
+  }
+
+  @override
+  String phoneSetupStartStepsTime(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'about $minutes min',
+      one: 'about 1 min',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -27620,7 +27638,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cardsProblemNotQualified =>
-      'This agent version hasn\'t been checked to work with cards.';
+      'Cards haven\'t been checked to work with the agents here yet.';
 
   @override
   String get cardsProblemPermissionDenied =>
@@ -27661,4 +27679,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agentCardDangerConfirm => 'Send answer';
+
+  @override
+  String get agentsSignInOpenPage => 'Open sign-in page';
+
+  @override
+  String agentsSignInCopyCode(String code) {
+    return 'Copy code $code';
+  }
+
+  @override
+  String cardsProblemNotQualifiedFor(String agents) {
+    return '$agents hasn\'t been checked to work with cards yet.';
+  }
+
+  @override
+  String cardsProblemRegistrationFailedFor(String agents) {
+    return '$agents couldn\'t be told about cards.';
+  }
+
+  @override
+  String cardsProblemVerificationFailedFor(String agents) {
+    return 'Cards were installed for $agents but didn\'t pass the check.';
+  }
+
+  @override
+  String cardsProblemRemovalFailedFor(String agents) {
+    return 'Cards couldn\'t be fully removed from $agents. Try again after a restart.';
+  }
 }

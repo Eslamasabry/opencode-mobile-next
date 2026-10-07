@@ -19608,6 +19608,12 @@ abstract class AppLocalizations {
   /// **'You can leave the app. We\'ll notify you when it\'s ready.'**
   String get phoneSetupProgressLeaveHint;
 
+  /// Under the title while a first phone setup runs: where this screen sits in the journey (install, name a project, chat) and that leaving is fine
+  ///
+  /// In en, this message translates to:
+  /// **'Step 1 of 3: install. Then name a project and start a conversation. You can leave the app. We\'ll notify you when it\'s ready.'**
+  String get phoneSetupProgressFirstSetupNote;
+
   /// Title of the confirmation before cancelling phone setup
   ///
   /// In en, this message translates to:
@@ -20298,17 +20304,29 @@ abstract class AppLocalizations {
   /// **'Run a coding agent right here'**
   String get phoneSetupStartHeadline;
 
-  /// One-line promise under the headline; time and size are computed from the components that Set up installs
+  /// One-line promise under the headline; the size is computed from the components that Set up installs. The time is on the step line below it.
   ///
   /// In en, this message translates to:
-  /// **'No computer and no other apps. {time} and ~{size} the first time.'**
-  String phoneSetupStartPromise(String time, String size);
+  /// **'No computer and no other apps. ~{size} to download the first time.'**
+  String phoneSetupStartPromise(String size);
 
   /// The promise when no download size is known
   ///
   /// In en, this message translates to:
-  /// **'No computer and no other apps. {time} the first time.'**
-  String phoneSetupStartPromiseNoSize(String time);
+  /// **'No computer and no other apps.'**
+  String get phoneSetupStartPromiseNoSize;
+
+  /// The whole first-setup journey in one line on the phone setup start screen, with the setup time computed from the components Set up installs (phoneSetupStartStepsTime)
+  ///
+  /// In en, this message translates to:
+  /// **'Install, name a project, start a conversation · {time}'**
+  String phoneSetupStartSteps(String time);
+
+  /// Estimated setup time at the end of the step line, lower case because it follows a middle dot
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, =1{about 1 min} other{about {minutes} min}}'**
+  String phoneSetupStartStepsTime(int minutes);
 
   /// Estimated setup time, capitalised because it starts a sentence
   ///
@@ -43564,7 +43582,7 @@ abstract class AppLocalizations {
   /// Cards setting reason.
   ///
   /// In en, this message translates to:
-  /// **'This agent version hasn\'t been checked to work with cards.'**
+  /// **'Cards haven\'t been checked to work with the agents here yet.'**
   String get cardsProblemNotQualified;
 
   /// Cards setting reason.
@@ -43632,6 +43650,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send answer'**
   String get agentCardDangerConfirm;
+
+  /// Sign-in terminal: opens the sign-in page the agent printed (a device sign-in or Claude's page)
+  ///
+  /// In en, this message translates to:
+  /// **'Open sign-in page'**
+  String get agentsSignInOpenPage;
+
+  /// Sign-in terminal: copies the one-time code the agent printed, to enter on its sign-in page
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code {code}'**
+  String agentsSignInCopyCode(String code);
+
+  /// Cards setting: the named agents are not qualified for cards; {agents} is one or more product names
+  ///
+  /// In en, this message translates to:
+  /// **'{agents} hasn\'t been checked to work with cards yet.'**
+  String cardsProblemNotQualifiedFor(String agents);
+
+  /// Cards setting: registering cards with the named agents failed
+  ///
+  /// In en, this message translates to:
+  /// **'{agents} couldn\'t be told about cards.'**
+  String cardsProblemRegistrationFailedFor(String agents);
+
+  /// Cards setting: cards were installed for the named agents but did not verify
+  ///
+  /// In en, this message translates to:
+  /// **'Cards were installed for {agents} but didn\'t pass the check.'**
+  String cardsProblemVerificationFailedFor(String agents);
+
+  /// Cards setting: removing cards from the named agents did not finish
+  ///
+  /// In en, this message translates to:
+  /// **'Cards couldn\'t be fully removed from {agents}. Try again after a restart.'**
+  String cardsProblemRemovalFailedFor(String agents);
 }
 
 class _AppLocalizationsDelegate

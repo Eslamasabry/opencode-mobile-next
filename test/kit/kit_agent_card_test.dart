@@ -186,4 +186,155 @@ void main() {
       expect(tester.takeException(), isNull, reason: '$mode');
     }
   });
+
+  group('one card shape with KitRequestCard (FC2)', () {
+    KitRequestCard request({
+      KitRequestPhase phase = KitRequestPhase.waiting,
+      KitReceipt? receipt,
+      bool inList = false,
+    }) => KitRequestCard.ask(
+      kind: KitRequestKind.form,
+      title: 'Pick a branch',
+      who: 'fox',
+      reason: KitNeedsYouReason.decision,
+      ifIgnored: 'The agent waits; nothing is lost.',
+      announcement: 'Question: Pick a branch',
+      phase: phase,
+      receipt: receipt,
+      answers: const KitRequestInSheet(),
+      onDetails: () {},
+      inList: inList,
+    );
+
+    Finder tile(Finder within) => find.descendant(
+      of: within,
+      matching: find.byWidgetPredicate(
+        (widget) =>
+            widget is SizedBox &&
+            widget.width == KitTokens.requestTileSize &&
+            widget.height == KitTokens.requestTileSize,
+      ),
+    );
+
+    testWidgets('an agent card wears the request heading: glyph in the tile', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          Column(
+            children: [
+              KeyedSubtree(key: const Key('req'), child: request()),
+              KeyedSubtree(
+                key: const Key('agent'),
+                child: _card(ask: const Text('ASK')),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final reqTile = tile(find.byKey(const Key('req')));
+      final agentTile = tile(find.byKey(const Key('agent')));
+      expect(reqTile, findsOneWidget);
+      expect(agentTile, findsOneWidget);
+      // The title sits beside the tile in both, at the same inset.
+      double titleInset(String key) =>
+          tester
+              .getTopLeft(
+                find.descendant(
+                  of: find.byKey(Key(key)),
+                  matching: find.text('Pick a branch'),
+                ),
+              )
+              .dx -
+          tester.getTopLeft(tile(find.byKey(Key(key)))).dx;
+      expect(titleInset('agent'), titleInset('req'));
+    });
+
+    testWidgets('the answered row is one shape: the receipt under the title', (
+      tester,
+    ) async {
+      final receipt = KitReceipt(
+        state: KitReceiptState.confirmed,
+        label: 'Sent: main',
+        onUndo: () {},
+      );
+      await tester.pumpWidget(
+        _host(
+          Column(
+            children: [
+              KeyedSubtree(
+                key: const Key('req'),
+                child: request(
+                  phase: KitRequestPhase.answered,
+                  receipt: receipt,
+                ),
+              ),
+              KeyedSubtree(
+                key: const Key('agent'),
+                child: _card(mode: KitAgentCardMode.receipt, onUndo: () {}),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      Rect rect(String key, Finder what) => tester.getRect(
+        find.descendant(of: find.byKey(Key(key)), matching: what),
+      );
+      for (final key in ['req', 'agent']) {
+        final title = rect(key, find.text('Pick a branch'));
+        final sent = rect(key, find.byType(KitReceipt));
+        // Stacked: the receipt starts where the title starts, right under it.
+        expect(sent.left, title.left, reason: key);
+        expect(sent.top, closeTo(title.bottom, 0.5), reason: key);
+      }
+      expect(
+        rect('agent', find.text('Pick a branch')).left -
+            tester.getTopLeft(find.byKey(const Key('agent'))).dx,
+        rect('req', find.text('Pick a branch')).left -
+            tester.getTopLeft(find.byKey(const Key('req'))).dx,
+      );
+    });
+
+    testWidgets('under a list row both sit as the list places them', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          SizedBox(
+            width: 360,
+            child: Column(
+              children: [
+                KeyedSubtree(
+                  key: const Key('req'),
+                  child: request(inList: true),
+                ),
+                KeyedSubtree(
+                  key: const Key('agent'),
+                  child: _card(ask: const Text('ASK'), inList: true),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.getSize(find.byKey(const Key('req'))).width, 360);
+      final reqFrame = tester.getRect(
+        find.byKey(const ValueKey('kit-request-card')),
+      );
+      final agentFrame = tester.getRect(
+        find
+            .descendant(
+              of: find.byKey(const Key('agent')),
+              matching: find.byType(DecoratedBox),
+            )
+            // Inside the needs-you ring, as the request's keyed frame.
+            .at(1),
+      );
+      expect(reqFrame.left, agentFrame.left);
+      expect(reqFrame.width, agentFrame.width);
+    });
+  });
 }

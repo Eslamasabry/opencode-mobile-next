@@ -11,6 +11,7 @@ import '../../termux/bridge.dart' show TermuxRuntime;
 import '../../ui/kit/kit_redact.dart';
 import '../builtin_linux.dart';
 import 'components.dart';
+import 'preflight.dart';
 import 'setup_contract.dart';
 import 'setup_scripts.dart';
 import 'termux_setup_host.dart';

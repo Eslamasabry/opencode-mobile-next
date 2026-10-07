@@ -39,6 +39,11 @@ class AppConnectionStatusScope extends ConsumerWidget {
       builder: (context, guard, _) => ListenableBuilder(
         listenable: Listenable.merge([controller, recovery, ?guard]),
         builder: (context, _) {
+          final serverBack =
+              controller.isConnected &&
+              looksLikeInAppServer(controller.profile);
+          // Starts a timer only; never notifies during build.
+          if (serverBack) recovery.noteServerBack();
           final phone = phoneServerRestartFor(
             connection: controller,
             builtin: builtin,
@@ -67,9 +72,7 @@ class AppConnectionStatusScope extends ConsumerWidget {
                 context,
                 recovery,
                 actionContext: actionContext,
-                serverBack:
-                    controller.isConnected &&
-                    looksLikeInAppServer(controller.profile),
+                serverBack: serverBack,
               ),
               thermalKitStatus(context, guard),
             ],

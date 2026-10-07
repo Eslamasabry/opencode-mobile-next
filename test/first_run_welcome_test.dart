@@ -136,16 +136,30 @@ void main() {
     expect(find.text('On my computer'), findsOneWidget);
     expect(find.text('On this phone'), findsOneWidget);
     expect(find.text('Just show me'), findsOneWidget);
-    // The value sentence leads, the question follows, and the choices keep
-    // the plan's order.
+    // The value sentence leads, the question follows, then one clear
+    // default (FB3): the phone, which needs nothing else, says it is the
+    // recommended way, and the computer and the demo follow under "Other
+    // ways".
     double top(String text) => tester.getTopLeft(find.text(text)).dy;
-    expect(top('Keep your work moving.'), lessThan(top('On my computer')));
+    expect(top('Keep your work moving.'), lessThan(top('On this phone')));
     expect(
       top('Where does your coding agent run?'),
-      lessThan(top('On my computer')),
+      lessThan(top('On this phone')),
     );
-    expect(top('On my computer'), lessThan(top('On this phone')));
-    expect(top('On this phone'), lessThan(top('Just show me')));
+    expect(top('On this phone'), lessThan(top('Other ways')));
+    expect(top('Other ways'), lessThan(top('On my computer')));
+    expect(top('On my computer'), lessThan(top('Just show me')));
+    String supporting(String key) => tester
+        .widget<KitRow>(find.byKey(ValueKey('welcome-choice-$key')))
+        .supporting!
+        .toPlainText();
+    expect(
+      supporting('phone'),
+      'Recommended · Set one up here. No computer needed.',
+    );
+    // Only one choice is recommended: the word means "if unsure, this one".
+    expect(supporting('computer'), isNot(contains('Recommended')));
+    expect(supporting('demo'), isNot(contains('Recommended')));
     // No product names before the person has chosen a path.
     for (final name in ['OpenCode 2', 'Termux', 'Tailscale', 'Codex']) {
       expect(
@@ -169,6 +183,9 @@ void main() {
     expect(find.text('On my computer'), findsOneWidget);
     expect(find.text('Just show me'), findsOneWidget);
     expect(find.text('On this phone'), findsNothing);
+    // Nothing to recommend over the computer when the phone path is absent.
+    expect(find.text('Other ways'), findsNothing);
+    expect(find.textContaining('Recommended'), findsNothing);
   });
 
   testWidgets('the doors that left the welcome are gone from it', (

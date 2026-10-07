@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../ui/kit/kit_redact.dart';
 import '../domain/phone_agent_host.dart';
 import '../builtin/agents/agent_host_cleanup.dart';
+import '../builtin/builtin_linux.dart';
 
 import '../api/models.dart' show ModelRef;
 import '../api/server_probe.dart' show ServerFlavor;
@@ -36,6 +37,7 @@ export '../domain/orchestration_gateway.dart' show OrchestrationHostMode;
 part 'profiles/models.dart';
 part 'profiles/validation.dart';
 part 'profiles/preferences_types.dart';
+part 'profiles/phone_agent_owner.dart';
 
 class _ProfileStoreChanges extends ChangeNotifier {
   void changed() => notifyListeners();
@@ -261,6 +263,7 @@ class ProfileStore {
     for (var start = 0; start < _cache.length; start += batchSize) {
       await Future.wait(_cache.skip(start).take(batchSize).map(_restoreSecret));
     }
+    await _migratePhoneAgentOwners();
     return _cache;
   }
 
@@ -382,6 +385,7 @@ class ProfileStore {
     profile.requiresCodexTokenReentry = false;
     profile.teamEngineAuth = teamEngineAuth;
     _cache = next;
+    await _migratePhoneAgentOwners();
     _changes.changed();
   }
 
@@ -522,6 +526,9 @@ class ProfileStore {
   /// the home-screen widget snapshot live in shared blobs; the full cascade
   /// is [ConnectionController.deleteProfileAndLocalData].
   Future<void> remove(String id) async {
+    final agentOwner = phoneAgentOwnerId(id);
+    final retainAgents = phoneAgentOwnerRetainedAfterRemoving(id);
+    final retainedAgentKeys = retainedPhoneAgentPreferenceKeys(id);
     final previousRaw = prefs.getString(_profilesKey);
     final previousActive = prefs.getString(_activeKey);
     final next = _cache.where((profile) => profile.id != id).toList();
@@ -560,14 +567,15 @@ class ProfileStore {
           throw const ByoHostFailure(ByoHostFailureCode.storage);
         }
       }
-      final agentKey = '$phoneAgentHostSecretPrefix$id';
+      final agentKey = '$phoneAgentHostSecretPrefix$agentOwner';
       final agentSecret = await secure.read(key: agentKey);
-      if (agentSecret != null ||
-          prefs.containsKey('$phoneAgentInstallPrefix$id') ||
-          prefs.containsKey('$phoneAgentGatePrefix$id')) {
-        await agentHostCleanup?.call(id);
+      if (!retainAgents &&
+          (agentSecret != null ||
+              prefs.containsKey('$phoneAgentInstallPrefix$agentOwner') ||
+              prefs.containsKey('$phoneAgentGatePrefix$agentOwner'))) {
+        await agentHostCleanup?.call(agentOwner);
       }
-      if (agentSecret != null) {
+      if (!retainAgents && agentSecret != null) {
         await secure.delete(key: agentKey);
         if (await secure.read(key: agentKey) != null) {
           throw const AgentHostException(AgentHostFailure.storage);
@@ -590,7 +598,14 @@ class ProfileStore {
       rethrow;
     }
     _cache = next;
-    await removeScopedPreferences(id);
+    await removeScopedPreferences(id, excluding: retainedAgentKeys);
+    if (!retainAgents && agentOwner != id) {
+      for (final key in _phoneAgentPreferenceKeys(agentOwner)) {
+        if (!await prefs.remove(key)) {
+          throw const AgentHostException(AgentHostFailure.storage);
+        }
+      }
+    }
   }
 
   String? get activeId => prefs.getString(_activeKey);

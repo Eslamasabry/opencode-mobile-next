@@ -1,0 +1,18 @@
+ba9-cold-negative.log
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: browser first prompt creates cold, maps, reserves then sends once
+
+ba9-revoke-negative.log
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: abort and delete revoke before daemon mutation
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: cancel or delete while cold creation is pending never resurrects a turn
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: resume retires old generation, maps new ID and reserves before send
+
+ba9-policy-negative.log
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: shared request suppresses draft commands before local inventory loads
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: trusted folder rebinding uses new source and retains old source intent
+
+ba9-quarantine-negative.log
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: cleanup quarantine preserves intent and refuses an ordinary fallback

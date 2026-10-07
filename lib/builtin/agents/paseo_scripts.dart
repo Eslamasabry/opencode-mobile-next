@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 
+import '../setup/component_updates.dart';
+
 /// Pinned dependencies for the phone's private agent host.
 ///
 /// Install components must opt into the native setup runner's `agentUser`
@@ -20,6 +22,19 @@ abstract final class PaseoPhoneScripts {
       '82d16f9c432dcaacaf881045a7f4da83806775bdfdfe409efd4cf21377fe1fea';
   static const installDirectory =
       '/home/oc/.local/share/oc-paseo/$version-82d16f9c432d';
+  // Registry artifact https://registry.npmjs.org/@getpaseo/cli/-/cli-0.9.2.tgz,
+  // fetched 2026-10-07 and checked against the shipped lock's SHA512 SRI.
+  // package.json declares bin.paseo = bin/paseo; it imports dist/index.js.
+  static const cliRelativePath = 'node_modules/@getpaseo/cli/bin/paseo';
+  static const cliSha256 =
+      '2b761f40e5a6416e4aaa733f38a47d5a4639b42cc1f88fc060256d2c4ed8cf94';
+  static const payloadRelativePath = 'node_modules/@getpaseo/cli/dist/index.js';
+  static const payloadSha256 =
+      '8620d03c3e7e6776c3bfc4d22a8875f92209a563612fe7cda63dea7512f83c09';
+  // SHA256 of the sorted sha256sum manifest for every regular bin/dist file,
+  // with paths relative to the npm prefix. Covers all 287 implementation files.
+  static const codeTreeSha256 =
+      '06d52bf05750cbd269668993f13ed0bbed2087feacbef37844007a44a1bb8ae5';
 
   static const _packageJson =
       '''{
@@ -126,10 +141,14 @@ printf '%s\\n' '$nodeVersion'
     final packageBase64 = base64.encode(utf8.encode(_packageJson));
     return '''
 set -eu
+$componentUpdatePrelude
 $_requireAgentUser
 export PATH=/home/oc/.local/node/bin:/home/oc/.local/bin:/usr/bin:/bin
 [ "\$(node --version)" = '$nodeVersion' ]
 host_dir=$installDirectory
+host_link=/home/oc/.local/bin/paseo
+oc_update_recover "\$host_dir" || exit 1
+oc_update_recover "\$host_link" || exit 1
 host_new="\$host_dir.new"
 host_cache=/home/oc/.cache/oc-paseo-install
 mkdir -p /home/oc/.local/bin "\$(dirname "\$host_dir")"
@@ -158,6 +177,27 @@ if ! env -i HOME=/home/oc PATH="\$PATH" \\
   echo '[oc] Paseo could not be installed. Check the connection and retry.' >&2
   exit 1
 fi
+oc_stage 'Checking Paseo checksum'
+if [ "\$(readlink "\$host_new/node_modules/.bin/paseo")" != '../@getpaseo/cli/bin/paseo' ] ||
+  [ ! -f "\$host_new/$cliRelativePath" ] ||
+  [ -L "\$host_new/$cliRelativePath" ] ||
+  [ "\$(sha256sum "\$host_new/$cliRelativePath" | cut -d ' ' -f 1)" != '$cliSha256' ] ||
+  [ ! -f "\$host_new/$payloadRelativePath" ] ||
+  [ -L "\$host_new/$payloadRelativePath" ] ||
+  [ "\$(sha256sum "\$host_new/$payloadRelativePath" | cut -d ' ' -f 1)" != '$payloadSha256' ]; then
+  echo '[oc] Paseo did not pass its checksum check. Run setup again.' >&2
+  exit 1
+fi
+if [ -L "\$host_new/node_modules/@getpaseo/cli/bin" ] ||
+  [ -L "\$host_new/node_modules/@getpaseo/cli/dist" ] ||
+  [ -n "\$(find "\$host_new/node_modules/@getpaseo/cli/bin" \\
+    "\$host_new/node_modules/@getpaseo/cli/dist" -type l -print 2>/dev/null)" ] ||
+  [ "\$(cd "\$host_new" && \\
+    find node_modules/@getpaseo/cli/bin node_modules/@getpaseo/cli/dist -type f -print0 | \\
+    LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | cut -d ' ' -f 1)" != '$codeTreeSha256' ]; then
+  echo '[oc] Paseo did not pass its checksum check. Run setup again.' >&2
+  exit 1
+fi
 oc_stage 'Checking Paseo'
 if ! (cd "\$host_new" && node -e \\
   'require("node-pty"); require("sherpa-onnx-node"); require("esbuild").transformSync("let a=1")') \\
@@ -165,30 +205,86 @@ if ! (cd "\$host_new" && node -e \\
   echo '[oc] Paseo cannot run on this phone yet.' >&2
   exit 1
 fi
-if [ "\$("\$host_new/node_modules/.bin/paseo" --version 2>/dev/null)" != '$version' ]; then
-  echo '[oc] Paseo did not pass its version check.' >&2
+mkdir -p "\$host_cache/probe-home"
+oc_stage 'Checking Paseo launch command'
+if ! env -i HOME="\$host_cache/probe-home" PATH="\$PATH" \\
+  timeout 30 "\$host_new/node_modules/.bin/paseo" daemon run --help \\
+  > "\$host_cache/launch-check.log" 2>&1 ||
+  ! grep -q -- '--home' "\$host_cache/launch-check.log"; then
+  echo '[oc] Paseo did not pass its launch command check. Run setup again.' >&2
+  exit 1
+fi
+oc_stage 'Checking Paseo version'
+if ! host_version=\$(env -i HOME="\$host_cache/probe-home" PATH="\$PATH" \\
+  timeout 30 "\$host_new/node_modules/.bin/paseo" --version 2>/dev/null) ||
+  [ "\$host_version" != '$version' ]; then
+  echo '[oc] Paseo did not pass its version check. Run setup again.' >&2
   exit 1
 fi
 printf '%s' '$packageLockSha256' > "\$host_new/.oc-package-lock-sha256"
-# Do not replace an existing tree until the candidate has passed all probes.
-rm -rf "\$host_dir.old"
-if [ -d "\$host_dir" ]; then mv "\$host_dir" "\$host_dir.old"; fi
-if ! mv "\$host_new" "\$host_dir"; then
-  [ ! -d "\$host_dir.old" ] || mv "\$host_dir.old" "\$host_dir"
+# Journal only after all candidate probes pass; keep one previous good tree.
+oc_paseo_activation_failed() {
+  oc_update_recover "\$host_dir" || exit 1
+  oc_update_recover "\$host_link" || exit 1
+  echo '[oc] Paseo could not finish updating. Run setup again.' >&2
   exit 1
+}
+rm -f "\$host_link.new"
+ln -s "\$host_dir/node_modules/.bin/paseo" "\$host_link.new"
+oc_update_activate "\$host_dir" "\$host_new" || oc_paseo_activation_failed
+oc_update_activate "\$host_link" "\$host_link.new" || oc_paseo_activation_failed
+oc_stage 'Checking Paseo launch command'
+if ! env -i HOME="\$host_cache/probe-home" PATH="\$PATH" \\
+  timeout 30 "\$host_link" daemon run --help \\
+  > "\$host_cache/launch-check.log" 2>&1 ||
+  ! grep -q -- '--home' "\$host_cache/launch-check.log"; then
+  oc_paseo_activation_failed
 fi
-ln -sf "\$host_dir/node_modules/.bin/paseo" /home/oc/.local/bin/paseo
-rm -rf "\$host_dir.old"
+oc_stage 'Checking Paseo version'
+if ! host_version=\$(env -i HOME="\$host_cache/probe-home" PATH="\$PATH" \\
+  timeout 30 "\$host_link" --version 2>/dev/null) ||
+  [ "\$host_version" != '$version' ]; then
+  oc_paseo_activation_failed
+fi
+oc_update_commit "\$host_dir" || oc_paseo_activation_failed
+oc_update_commit "\$host_link" || oc_paseo_activation_failed
 oc_version '$version'
 ''';
   }
 
   static const check =
       '''set -eu
+$componentUpdatePrelude
+host_dir=$installDirectory
+oc_update_recover "\$host_dir"
+oc_update_recover /home/oc/.local/bin/paseo
 export PATH=/home/oc/.local/node/bin:/home/oc/.local/bin:/usr/bin:/bin
 [ "\$(/home/oc/.local/node/bin/node --version)" = '$nodeVersion' ]
 [ "\$(cat $installDirectory/.oc-package-lock-sha256)" = '$packageLockSha256' ]
-[ "\$(/home/oc/.local/bin/paseo --version 2>/dev/null)" = '$version' ]
+host_dir=$installDirectory
+[ "\$(readlink /home/oc/.local/bin/paseo)" = "\$host_dir/node_modules/.bin/paseo" ]
+[ "\$(readlink "\$host_dir/node_modules/.bin/paseo")" = '../@getpaseo/cli/bin/paseo' ]
+[ -f "\$host_dir/$cliRelativePath" ] && [ ! -L "\$host_dir/$cliRelativePath" ]
+[ "\$(sha256sum "\$host_dir/$cliRelativePath" | cut -d ' ' -f 1)" = '$cliSha256' ]
+[ -f "\$host_dir/$payloadRelativePath" ] && [ ! -L "\$host_dir/$payloadRelativePath" ]
+[ "\$(sha256sum "\$host_dir/$payloadRelativePath" | cut -d ' ' -f 1)" = '$payloadSha256' ]
+[ ! -L "\$host_dir/node_modules/@getpaseo/cli/bin" ]
+[ ! -L "\$host_dir/node_modules/@getpaseo/cli/dist" ]
+[ -z "\$(find "\$host_dir/node_modules/@getpaseo/cli/bin" \\
+  "\$host_dir/node_modules/@getpaseo/cli/dist" -type l -print 2>/dev/null)" ]
+[ "\$(cd "\$host_dir" && \\
+  find node_modules/@getpaseo/cli/bin node_modules/@getpaseo/cli/dist -type f -print0 | \\
+  LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | cut -d ' ' -f 1)" = '$codeTreeSha256' ]
+probe_dir=\$(mktemp -d "\${TMPDIR:-/tmp}/oc-paseo-check.XXXXXX")
+trap 'rm -rf "\$probe_dir"' EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+env -i HOME="\$probe_dir" PATH="\$PATH" timeout 30 /home/oc/.local/bin/paseo \\
+  daemon run --help > "\$probe_dir/launch-check.log" 2>&1
+grep -q -- '--home' "\$probe_dir/launch-check.log"
+[ "\$(env -i HOME="\$probe_dir" PATH="\$PATH" timeout 30 \\
+  /home/oc/.local/bin/paseo --version 2>/dev/null)" = '$version' ]
 printf '%s\\n' '$version'
 ''';
 }

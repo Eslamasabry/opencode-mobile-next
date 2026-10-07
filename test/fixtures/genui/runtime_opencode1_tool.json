@@ -1,0 +1,50 @@
+[
+ {
+  "type": "tool",
+  "tool": "oc-ui_show",
+  "callID": "call_a3630c68ad4a4c55a59217ee",
+  "state": {
+   "status": "error",
+   "input": {
+    "body": [
+     {
+      "ask": {
+       "kind": "confirm"
+      },
+      "text": "Runtime qualification",
+      "type": "text"
+     }
+    ],
+    "id": "oc-gaps-probe",
+    "title": "Agent cards probe",
+    "v": 1
+   },
+   "output": null,
+   "error": "Agent card unavailable or invalid."
+  }
+ },
+ {
+  "type": "tool",
+  "tool": "oc-ui_show",
+  "callID": "call_d0e89ef5c1a7493499f0ef96",
+  "state": {
+   "status": "completed",
+   "input": {
+    "ask": {
+     "kind": "confirm"
+    },
+    "body": [
+     {
+      "text": "Runtime qualification",
+      "type": "text"
+     }
+    ],
+    "id": "oc-gaps-probe",
+    "title": "Agent cards probe",
+    "v": 1
+   },
+   "output": "Card accepted for display in OpenCode Mobile. If it asks a question, end your turn and wait for the person's next message tagged [oc-ui answer <id>]. This call does not return their answer.",
+   "error": null
+  }
+ }
+]

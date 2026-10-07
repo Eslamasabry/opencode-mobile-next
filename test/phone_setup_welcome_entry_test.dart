@@ -120,6 +120,10 @@ void main() {
 
   testWidgets('a running setup leads with its percent and opens its '
       'progress as a first setup', (tester) async {
+    // A phone-sized page, so the whole lazy list (line, question, the
+    // recommended choice and "Other ways") is built.
+    await tester.binding.setSurfaceSize(const Size(412, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     engine.emit(_job(SetupState.running, .42));
     final (store, controller) = await _state();
     addTearDown(controller.dispose);

@@ -341,6 +341,7 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
       default:
         break;
     }
+    _turnStallOnEvent(env);
     _eventBus.add(env);
   }
 

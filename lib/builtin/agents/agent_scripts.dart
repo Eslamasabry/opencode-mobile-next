@@ -4,6 +4,120 @@ import 'paseo_scripts.dart';
 /// Installs catalog pins as Linux user oc. Does not sign in, launch agents, or
 /// qualify phone compatibility. Native setup must use agentUser=true.
 abstract final class AgentPhoneScripts {
+  /// Runs as uid 1000 in the selected profile's environment. Raw agent output
+  /// stays in this process and never enters setup logs or channel diagnostics.
+  /// An unknown status protocol is an explicit error, never a guessed sign-out.
+  static String authProbe(AgentDescriptor agent) {
+    return _authScript(agent, signOut: false);
+  }
+
+  static bool supportsSignOut(AgentDescriptor agent) =>
+      agent.id == 'claude' || agent.id == 'fx';
+
+  /// Executes the agent's logout and then its status command. A successful
+  /// process exit never proves the credentials have gone away.
+  static String signOut(AgentDescriptor agent) =>
+      _authScript(agent, signOut: true);
+
+  static String _authScript(AgentDescriptor agent, {required bool signOut}) {
+    final recipe = _recipe(agent);
+    return '''
+set -eu
+command -v python3 >/dev/null 2>&1 || {
+  printf '%s\\n' '{"state":"error","error":"hostUnavailable"}'; exit 0
+}
+python3 - ${_quote(agent.id)} ${_quote(recipe.executable)} ${signOut ? 'logout' : 'probe'} <<'OC_AUTH_PROBE'
+$_authProbe
+OC_AUTH_PROBE
+''';
+  }
+
+  static const _authProbe = r'''
+import json, os, re, selectors, signal, subprocess, sys, time
+agent, executable, action = sys.argv[1:]
+def emit(state, account=None, error=None):
+    value = {'state': state}
+    if account is not None: value['accountDisplayName'] = account
+    if error is not None: value['error'] = error
+    print(json.dumps(value, separators=(',', ':')))
+def fail(error):
+    emit('error', error=error)
+    sys.exit(0)
+def account(value):
+    # Only the CLI's dedicated account field, never tokens/config/free-form errors.
+    if value is None: return None
+    if not isinstance(value, str) or not value.strip() or len(value) > 160 or any(ord(c) < 32 or ord(c) == 127 for c in value):
+        return None
+    return value
+home = os.environ.get('HOME', '')
+if os.getuid() != 1000 or not home.startswith('/home/oc/.oc-profiles/') or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', home[len('/home/oc/.oc-profiles/'):]):
+    fail('invalidContext')
+if agent not in ('claude', 'fx'):
+    fail('probeUnsupported')
+binary = '/home/oc/.local/bin/' + executable
+if not os.access(binary, os.X_OK): fail('notInstalled')
+def run(args, parse=True):
+    # Keep even a misbehaving CLI bounded; kill only this owned process group.
+    process = subprocess.Popen([binary] + args, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, start_new_session=True)
+    output = bytearray()
+    selector = selectors.DefaultSelector()
+    selector.register(process.stdout, selectors.EVENT_READ)
+    deadline = time.monotonic() + 8
+    try:
+        while selector.get_map():
+            remaining = deadline - time.monotonic()
+            if remaining <= 0: raise TimeoutError()
+            for key, _ in selector.select(remaining):
+                block = os.read(key.fileobj.fileno(), 4096)
+                if not block:
+                    selector.unregister(key.fileobj)
+                else:
+                    output.extend(block)
+                    if len(output) > 65536: raise ValueError()
+        return process.wait(timeout=max(0.01, deadline-time.monotonic())), json.loads(output) if parse else None
+    finally:
+        selector.close()
+        try: os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError: pass
+        process.wait()
+try:
+    if action == 'logout':
+        if agent == 'claude':
+            if os.environ.get('CLAUDE_CONFIG_DIR') != home + '/claude': fail('invalidContext')
+            logout_args = ['auth', 'logout']
+        elif agent == 'fx': logout_args = ['logout']
+        else: fail('probeUnsupported')
+        code, _ = run(logout_args, parse=False)
+        if code != 0: fail('signOutFailed')
+    if agent == 'claude':
+        if os.environ.get('CLAUDE_CONFIG_DIR') != home + '/claude': fail('invalidContext')
+        code, data = run(['auth', 'status', '--json'])
+        if code not in (0, 1) or not isinstance(data, dict) or type(data.get('loggedIn')) is not bool or not isinstance(data.get('authMethod'), str) or not isinstance(data.get('apiProvider'), str):
+            fail('invalidResponse')
+        if data['loggedIn']:
+            if code != 0: fail('invalidResponse')
+            if action == 'logout': fail('signOutFailed')
+            emit('signedIn', account(data.get('email')))
+        else: emit('signedOut')
+    elif agent == 'fx':
+        code, data = run(['status', '--json'])
+        if code != 0 or not isinstance(data, dict) or data.get('kind') != 'status' or not isinstance(data.get('auth'), str):
+            fail('invalidResponse')
+        # status --json reports the selected credential source, not a provider's
+        # model-list failure. Unknown future sources require a new contract.
+        if 'auth_expired' in data and type(data['auth_expired']) is not bool:
+            fail('invalidResponse')
+        if data.get('auth_expired') is True: fail('signInExpired')
+        if data['auth'] == 'missing': emit('signedOut')
+        elif data['auth'] in ('fx login', 'AI_GATEWAY_API_KEY', 'VERCEL_OIDC_TOKEN', 'stored API key (profile file)', 'Codex subscription', 'Grok subscription'):
+            if action == 'logout': fail('signOutFailed')
+            emit('signedIn')
+        else: fail('invalidResponse')
+except (subprocess.TimeoutExpired, TimeoutError): fail('timedOut')
+except (ValueError, TypeError, KeyError): fail('invalidResponse')
+except OSError: fail('hostUnavailable')
+''';
+
   /// The only root step. Refuses unrelated UID/GID collisions and symlinked
   /// homes instead of changing existing accounts or copying project data.
   static const bootstrapUser = r'''

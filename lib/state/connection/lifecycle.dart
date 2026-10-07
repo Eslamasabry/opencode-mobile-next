@@ -81,6 +81,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   /// The body of [suspendForLifecycle].
   void _suspendForLifecycle() {
     if (_disposed || isIsolated) return;
+    _resetTurnStalls();
     _lifecycleWasBackgrounded = true;
     _quotaMonitor?.setRuntime(
       foreground: false,
@@ -352,6 +353,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   }
 
   int _beginGeneration({bool preserveConnectionAttempt = false}) {
+    _resetTurnStalls();
     _invalidatePhoneChatStatus();
     if (!preserveConnectionAttempt) connectionAttemptRevision++;
     _generation += 1;
@@ -428,6 +430,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   }
 
   void _retireTransport() {
+    _resetTurnStalls();
     _invalidatePhoneChatStatus();
     _syncPhoneChatHeartbeat();
     elsewhereAttention.markStale();

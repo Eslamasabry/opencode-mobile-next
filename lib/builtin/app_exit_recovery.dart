@@ -84,6 +84,21 @@ class AppExitRecovery extends ChangeNotifier {
     _notify();
   }
 
+  /// How long the notice stays once the phone's OpenCode is connected again.
+  static const serverBackLinger = Duration(seconds: 15);
+
+  Timer? _serverBackTimer;
+
+  /// The phone's OpenCode is connected again: the notice has said what
+  /// happened, so it folds away on its own after [serverBackLinger] instead
+  /// of sitting on top of every screen until dismissed (owner report,
+  /// 2026-10-07). Keep running stays under In-app Ubuntu. Safe to call on
+  /// every rebuild: only the first call after a notice starts the clock.
+  void noteServerBack() {
+    if (_notice == null || _serverBackTimer != null) return;
+    _serverBackTimer = Timer(serverBackLinger, dismiss);
+  }
+
   /// Runs once per app process; later calls do nothing.
   ///
   /// A notable exit is also kept, typed, in the persisted problem report
@@ -308,6 +323,7 @@ class AppExitRecovery extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _serverBackTimer?.cancel();
     super.dispose();
   }
 }

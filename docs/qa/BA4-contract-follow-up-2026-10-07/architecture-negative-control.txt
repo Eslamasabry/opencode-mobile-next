@@ -1,0 +1,15 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_certification_test.dart
+00:00 +0: omitted architecture qualifies protocol capabilities across CPUs
+00:00 +0 -1: omitted architecture qualifies protocol capabilities across CPUs [E]
+  Expected: every element(true)
+    Actual: [false, false, false, false, false]
+     Which: has value <false> which doesn't match true at index 0
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/agent_certification_test.dart 98:7             main.<fn>
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_certification_test.dart: omitted architecture qualifies protocol capabilities across CPUs

@@ -1,0 +1,14 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_auth_probe_test.dart
+00:00 +0: bounded private status scripts Claude explicit signed-out status overrides successful exit
+00:00 +0 -1: bounded private status scripts Claude explicit signed-out status overrides successful exit [E]
+  Expected: AgentAuthProbeState:<AgentAuthProbeState.signedOut>
+    Actual: AgentAuthProbeState:<AgentAuthProbeState.signedIn>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/agent_auth_probe_test.dart 96:9                main.<fn>.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_auth_probe_test.dart: bounded private status scripts Claude explicit signed-out status overrides successful exit

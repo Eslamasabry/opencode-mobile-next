@@ -1,0 +1,15 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_certification_test.dart
+00:00 +0: photos require their own passing images cell
+00:00 +0 -1: photos require their own passing images cell [E]
+  Expected: [false, false, false, true, false]
+    Actual: [false, false, false, false, false]
+     Which: at location [3] is <false> instead of <true>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/agent_certification_test.dart 135:7            main.<fn>
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_certification_test.dart: photos require their own passing images cell

@@ -163,6 +163,9 @@ jobs:
       - name: Check the serial test runner
         run: python3 -m unittest discover -s tool/qa -p 'test_*.py'
 
+      - name: Check the release notes tool
+        run: python3 -m unittest discover -s tool/release -p 'test_*.py'
+
       - name: Run Kotlin static analysis
         run: |
           export OC_BUILD_LOCK_FILE="$RUNNER_TEMP/oc-build.lock"

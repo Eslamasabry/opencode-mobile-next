@@ -183,6 +183,7 @@ extension _ConnectionControllerSessionEventsImpl on ConnectionController {
                 _markSessionAttentionActive(msg.sessionID);
               } else {
                 busySessions.remove(msg.sessionID);
+                _openTurns.remove(msg.sessionID);
               }
             }
             _notifyListeners();

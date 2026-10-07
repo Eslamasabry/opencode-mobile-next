@@ -2,12 +2,13 @@ import 'dart:convert';
 
 import '../../domain/agent_catalog.dart';
 import '../../domain/genui/gen_ui_status.dart';
+import '../builtin_linux.dart';
 import 'gen_ui_server.dart';
 import 'paseo_scripts.dart';
 
 /// App-authored script; no agent-supplied strings participate in construction.
-/// A root-owned Node is required for OpenCode. The agent-writable private
-/// Node is only ever used by the uid-1000 Claude runner.
+/// Guest root ownership is checked for OpenCode as an installer guard,
+/// not isolation: in-app Ubuntu is one owner-approved trust zone.
 String genUiInstallScript({
   required String profileId,
   required GenUiAgent agent,
@@ -65,6 +66,11 @@ String _genUiManagedScript({
         'verify': verify,
         'claudeVersion': claudeVersion,
         'nodeVersion': PaseoPhoneScripts.nodeVersion,
+        'openCodeVersion': '1.18.32',
+        'serverPort': BuiltinLinux.serverPort,
+        'serverDirectory': BuiltinLinux.projectsDir,
+        'serverUsername': BuiltinLinux.serverUsername,
+        'passwordFile': BuiltinLinux.passwordFile,
         // Transport qualification is version-specific, not inherited by a
         // future catalog update. Refresh these only with new runtime evidence.
         'qualifiedPins':
@@ -93,7 +99,7 @@ OC_GENUI_SETUP
 }
 
 const _installer = r'''
-import os, sys, json, re, stat, base64, pathlib, tempfile, hashlib, fcntl, subprocess
+import os, sys, json, re, stat, base64, pathlib, tempfile, hashlib, fcntl, subprocess, http.client
 class SetupError(Exception):
     def __init__(self, code): self.code = code
 
@@ -319,12 +325,43 @@ def verify_claude(d, helper, config_parent):
     except SetupError: raise
     except Exception: fail(24)
 
+def verify_opencode1(d, helper):
+    # All processes in the in-app Ubuntu share one Android UID/trust zone.
+    # Guest root checks below prevent accidental unsafe installs, not an
+    # adversarial agent modifying the runtime (owner decision, BA6).
+    root_executable(d['node'])
+    password = read(d['passwordFile'], maximum=4096)
+    if not password or b'\n' in password or b'\r' in password: fail(24)
+    root_owned(d['passwordFile'])
+    authorization = 'Basic ' + base64.b64encode(d['serverUsername'].encode() + b':' + password).decode()
+    def get(path):
+        connection = http.client.HTTPConnection('127.0.0.1', d['serverPort'], timeout=5)
+        try:
+            connection.request('GET', path, headers={
+              'Authorization': authorization, 'x-opencode-directory': d['serverDirectory']})
+            response = connection.getresponse()
+            body = response.read(65537)
+            if response.status != 200 or len(body) > 65536: fail(24)
+            value = json.loads(body)
+            if not isinstance(value, dict): fail(24)
+            return value
+        except SetupError: raise
+        except Exception: fail(24)
+        finally: connection.close()
+    health = get('/global/health')
+    if health.get('healthy') is not True or health.get('version') != d['openCodeVersion']: fail(24)
+    servers = get('/mcp')
+    server = servers.get('oc-ui')
+    if not isinstance(server, dict) or server.get('status') != 'connected': fail(24)
+    # No config dump, provider data, password or HTTP response reaches stdout.
+    # MCP connectivity refers to the actual running OC1, not persisted config.
+
 def main():
     d = json.loads(base64.b64decode(sys.argv[1]))
     kind, owner = d['kind'], d['profile']
     claude = kind == 'claude'
     if os.getuid() != (1000 if claude else 0): fail(22)
-    if d['verify'] and not claude: fail(24)
+    if d['verify'] and kind not in ('claude', 'openCode1'): fail(24)
     directory, config_path = d['directory'], d['config']
     if not d['enable'] and not safe(directory, directory=True): sys.exit(11)
     if not claude: root_owned(directory)
@@ -382,11 +419,12 @@ def main():
           or (orphan is not None and orphan != helper_bytes)): fail(21)
     owners = set(manifest.get('owners', []))
     if d['verify']:
-        if (not claude or not show_allowed or not owned or owner not in owners or existing != expected
+        if ((claude and not show_allowed) or not owned or owner not in owners or existing != expected
           or read(marker) != b'enabled\n'
           or manifest['digest'] != hashlib.sha256(helper_bytes).hexdigest()
           or read(helper) != helper_bytes): fail(24)
-        verify_claude(d, helper, config_parent)
+        if claude: verify_claude(d, helper, config_parent)
+        else: verify_opencode1(d, helper)
         sys.exit(0)
     if not d['enable']:
         if not owned: sys.exit(11)

@@ -25,7 +25,7 @@ adapted quickly.
   | `answerKeys` | native question answers keyed by | question text | — | header |
   | `questionToolName`, `planToolName` | its own question / plan tools | `AskUserQuestion`, `ExitPlanMode` | — | any / none |
   | `preAllowsCards` | card tool allowed in its own permission settings | yes | — | — |
-  | `cardsQualified` | device evidence that cards work end to end | yes | no (rootfs writable by agents) | — |
+  | `cardsQualified` | evidence-backed card transport under the accepted trust model | yes | OC1 yes (BA6); OC2 no | — |
 
 - **Registry** (`AgentToolAdapters`): `all`, `withTools`, `byId`,
   `forPaseoProvider` (accepts untrusted daemon values), `forOpenCode`, and
@@ -49,9 +49,11 @@ adapted quickly.
    format (Gemini/Qwen `mcpServers` in `settings.json`, Codex
    `[mcp_servers.<name>]` TOML), add one writer for that format to the
    installer with its own tests, then add the enum value.
-4. Keep `cardsQualified: false` until the device journey passes (card shown,
-   answered from chat and list, receipt, restart) and the run user cannot
-   modify the helper it executes. Record the evidence in `docs/qa/`.
+4. Keep `cardsQualified: false` until its transport and trust model have
+   recorded evidence. For the in-app Ubuntu the owner accepts one trust zone
+   ([BA6 contract](BA6-contract.md)); guest user separation is not an integrity
+   boundary. The complete item still requires the device journey (card shown,
+   answered from chat and list, receipt, restart). Record evidence in `docs/qa/`.
 5. `test/agent_tool_adapter_test.dart` enforces the contract (unique ids and
    providers, naming with config, format/run-user agreement, qualification
    only with tools).

@@ -5232,7 +5232,14 @@
   "chatUiToolFrom": "{tool} · {server}",
   "@chatUiToolFrom": {
     "description": "Chat journey: tool row title for a tool an MCP server adds: the tool's name, then the server's name",
-    "placeholders": {"tool": {"type": "String"}, "server": {"type": "String"}}
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      },
+      "server": {
+        "type": "String"
+      }
+    }
   },
   "chatUiWebSearch": "Web search",
   "@chatUiWebSearch": {
@@ -12684,6 +12691,10 @@
   "@phoneSetupProgressLeaveHint": {
     "description": "Reassurance under the setup checklist that setup continues in the background"
   },
+  "phoneSetupProgressFirstSetupNote": "Step 1 of 3: install. Then name a project and start a conversation. You can leave the app. We'll notify you when it's ready.",
+  "@phoneSetupProgressFirstSetupNote": {
+    "description": "Under the title while a first phone setup runs: where this screen sits in the journey (install, name a project, chat) and that leaving is fine"
+  },
   "phoneSetupProgressStopTitle": "Stop setup?",
   "@phoneSetupProgressStopTitle": {
     "description": "Title of the confirmation before cancelling phone setup"
@@ -13249,24 +13260,34 @@
   "@phoneSetupStartHeadline": {
     "description": "Headline of the phone setup start screen for a phone with nothing set up"
   },
-  "phoneSetupStartPromise": "No computer and no other apps. {time} and ~{size} the first time.",
+  "phoneSetupStartPromise": "No computer and no other apps. ~{size} to download the first time.",
   "@phoneSetupStartPromise": {
-    "description": "One-line promise under the headline; time and size are computed from the components that Set up installs",
+    "description": "One-line promise under the headline; the size is computed from the components that Set up installs. The time is on the step line below it.",
     "placeholders": {
-      "time": {
-        "type": "String"
-      },
       "size": {
         "type": "String"
       }
     }
   },
-  "phoneSetupStartPromiseNoSize": "No computer and no other apps. {time} the first time.",
+  "phoneSetupStartPromiseNoSize": "No computer and no other apps.",
   "@phoneSetupStartPromiseNoSize": {
-    "description": "The promise when no download size is known",
+    "description": "The promise when no download size is known"
+  },
+  "phoneSetupStartSteps": "Install, name a project, start a conversation · {time}",
+  "@phoneSetupStartSteps": {
+    "description": "The whole first-setup journey in one line on the phone setup start screen, with the setup time computed from the components Set up installs (phoneSetupStartStepsTime)",
     "placeholders": {
       "time": {
         "type": "String"
+      }
+    }
+  },
+  "phoneSetupStartStepsTime": "{minutes, plural, =1{about 1 min} other{about {minutes} min}}",
+  "@phoneSetupStartStepsTime": {
+    "description": "Estimated setup time at the end of the step line, lower case because it follows a middle dot",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
       }
     }
   },
@@ -32959,7 +32980,7 @@
   "@cardsProblemRuntimeMissing": {
     "description": "Cards setting reason."
   },
-  "cardsProblemNotQualified": "This agent version hasn't been checked to work with cards.",
+  "cardsProblemNotQualified": "Cards haven't been checked to work with the agents here yet.",
   "@cardsProblemNotQualified": {
     "description": "Cards setting reason."
   },
@@ -33006,5 +33027,59 @@
   "agentCardDangerConfirm": "Send answer",
   "@agentCardDangerConfirm": {
     "description": "Agent card: the confirm sheet's button for a destructive confirm."
+  },
+  "agentsSignInOpenPage": "Open sign-in page",
+  "@agentsSignInOpenPage": {
+    "description": "Sign-in terminal: opens the sign-in page the agent printed (a device sign-in or Claude's page)"
+  },
+  "agentsSignInCopyCode": "Copy code {code}",
+  "@agentsSignInCopyCode": {
+    "description": "Sign-in terminal: copies the one-time code the agent printed, to enter on its sign-in page",
+    "placeholders": {
+      "code": {
+        "type": "String",
+        "example": "ABCD-EFGH"
+      }
+    }
+  },
+  "cardsProblemNotQualifiedFor": "{agents} hasn't been checked to work with cards yet.",
+  "@cardsProblemNotQualifiedFor": {
+    "description": "Cards setting: the named agents are not qualified for cards; {agents} is one or more product names",
+    "placeholders": {
+      "agents": {
+        "type": "String",
+        "example": "OpenCode"
+      }
+    }
+  },
+  "cardsProblemRegistrationFailedFor": "{agents} couldn't be told about cards.",
+  "@cardsProblemRegistrationFailedFor": {
+    "description": "Cards setting: registering cards with the named agents failed",
+    "placeholders": {
+      "agents": {
+        "type": "String",
+        "example": "OpenCode"
+      }
+    }
+  },
+  "cardsProblemVerificationFailedFor": "Cards were installed for {agents} but didn't pass the check.",
+  "@cardsProblemVerificationFailedFor": {
+    "description": "Cards setting: cards were installed for the named agents but did not verify",
+    "placeholders": {
+      "agents": {
+        "type": "String",
+        "example": "OpenCode"
+      }
+    }
+  },
+  "cardsProblemRemovalFailedFor": "Cards couldn't be fully removed from {agents}. Try again after a restart.",
+  "@cardsProblemRemovalFailedFor": {
+    "description": "Cards setting: removing cards from the named agents did not finish",
+    "placeholders": {
+      "agents": {
+        "type": "String",
+        "example": "OpenCode"
+      }
+    }
   }
 }
