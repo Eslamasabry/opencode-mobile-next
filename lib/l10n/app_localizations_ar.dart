@@ -16505,16 +16505,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get isolatedTaskProjectFolder => 'مجلد المشروع';
 
   @override
-  String get isolatedTaskStageCreate => 'Making the copy';
+  String get isolatedTaskStageCreate => 'جارٍ إنشاء النسخة';
 
   @override
-  String get isolatedTaskStagePrepare => 'Running the project setup';
+  String get isolatedTaskStagePrepare => 'جارٍ إعداد المشروع';
 
   @override
-  String get isolatedTaskStageOpen => 'Opening the conversation';
+  String get isolatedTaskStageOpen => 'جارٍ فتح المحادثة';
 
   @override
-  String get isolatedTaskUsually => 'Usually 1–3 minutes';
+  String get isolatedTaskUsually => 'عادةً من 1 إلى 3 دقائق';
 
   @override
   String get savedPermissionsIntro =>
@@ -18057,10 +18057,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get localTerminalSetUpLinux => 'Set up Linux on this phone';
 
   @override
-  String get messageViewSendAgain => 'Send this message again';
+  String get messageViewSendAgain => 'إرسال هذه الرسالة مجددًا';
 
   @override
-  String get messageViewContinueReply => 'Continue this reply';
+  String get messageViewContinueReply => 'متابعة هذا الرد';
 
   @override
   String get reviewRunResultsLoadingTitle => 'Loading run results';
@@ -18539,63 +18539,62 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shellOutputReading => 'Reading output';
 
   @override
-  String get sessionDestinationWarpTitle => 'Move to the cloud';
+  String get sessionDestinationWarpTitle => 'نقل إلى السحابة';
 
   @override
-  String get sessionDestinationSeparateCopy => 'Separate copy';
+  String get sessionDestinationSeparateCopy => 'نسخة منفصلة';
 
   @override
   String sessionDestinationCloudKind(String state) {
-    return 'Cloud machine · $state';
+    return 'جهاز سحابي · $state';
   }
 
   @override
-  String get sessionDestinationConnected => 'Connected';
+  String get sessionDestinationConnected => 'متصل';
 
   @override
-  String get sessionDestinationNotConnected => 'Not connected';
+  String get sessionDestinationNotConnected => 'غير متصل';
 
   @override
   String get sessionDestinationNotConnectedWhy =>
-      'Not connected. It can be picked once it connects.';
+      'غير متصل. يمكنك اختياره بعد اتصاله.';
 
   @override
   String sessionDestinationChangesGo(String destination) {
-    return 'With changes, they go with it to $destination.';
+    return 'عند النقل مع التغييرات، تنتقل معه إلى $destination.';
   }
 
   @override
   String sessionDestinationChangesCopied(String destination) {
-    return 'With changes, a copy goes with it to $destination.';
+    return 'عند النقل مع التغييرات، تنتقل نسخة منها معه إلى $destination.';
   }
 
   @override
   String sessionDestinationChangesStay(String place) {
-    return 'Without changes, they stay in $place.';
+    return 'عند النقل دون التغييرات، تبقى في $place.';
   }
 
   @override
   String sessionDestinationMoveWithout(String destination) {
-    return 'Move to $destination without changes';
+    return 'نقل إلى $destination دون التغييرات';
   }
 
   @override
-  String get sessionDestinationMoveFailed => 'Couldn\'t move the conversation.';
+  String get sessionDestinationMoveFailed => 'تعذّر نقل المحادثة.';
 
   @override
-  String get sessionDestinationLoadFailed =>
-      'Couldn\'t load the places to move to';
+  String get sessionDestinationLoadFailed => 'تعذّر تحميل وجهات النقل';
 
   @override
-  String get sessionDestinationNoneTitle => 'Nowhere to move it';
+  String get sessionDestinationNoneTitle => 'لا توجد وجهة لنقلها';
 
   @override
   String get sessionDestinationNoneMoveBody =>
-      'This project has only this folder. A separate copy of the project shows here once it exists.';
+      'لا يحتوي هذا المشروع إلا على هذا المجلد. تظهر هنا نسخة منفصلة من المشروع بمجرد إنشائها.';
 
   @override
   String get sessionDestinationNoneWarpBody =>
-      'This project has no cloud machine yet.';
+      'لا يوجد جهاز سحابي لهذا المشروع بعد.';
 
   @override
   String get consoleOrganizationWhatChanges =>
@@ -18623,78 +18622,78 @@ class AppLocalizationsAr extends AppLocalizations {
       'This is your only organization, so there is nothing to switch to.';
 
   @override
-  String get sessionContextLoading => 'Loading context';
+  String get sessionContextLoading => 'جارٍ تحميل السياق';
 
   @override
-  String get sessionContextMovedTitle => 'This conversation moved';
+  String get sessionContextMovedTitle => 'انتقلت هذه المحادثة';
 
   @override
-  String get sessionContextLoadFailed => 'Couldn\'t load the context';
+  String get sessionContextLoadFailed => 'تعذّر تحميل السياق';
 
   @override
   String get sessionContextRefreshFailed =>
-      'Couldn\'t refresh. The numbers below are from the last read.';
+      'تعذّر التحديث. الأرقام أدناه من آخر قراءة.';
 
   @override
   String sessionContextVerdictPlenty(String percent) {
-    return '$percent% used · plenty left';
+    return 'المستخدم: $percent% · تتبقى مساحة كبيرة';
   }
 
   @override
   String sessionContextVerdictUsed(String percent) {
-    return '$percent% used';
+    return 'المستخدم: $percent%';
   }
 
   @override
   String sessionContextVerdictNear(String percent) {
-    return '$percent% used';
+    return 'المستخدم: $percent%';
   }
 
   @override
   String sessionContextVerdictFull(String percent) {
-    return '$percent% used · at the limit';
+    return 'المستخدم: $percent% · بلغ الحد';
   }
 
   @override
-  String get sessionContextNearLimitTitle => 'Near the limit';
+  String get sessionContextNearLimitTitle => 'اقترب من الحد';
 
   @override
   String get sessionContextNearLimitBody =>
-      'Older details may be dropped from what the model sees. Compact the conversation to keep going, or start a new one.';
+      'قد تُحذف التفاصيل القديمة مما يراه النموذج. لخّص المحادثة للمتابعة، أو ابدأ محادثة جديدة.';
 
   @override
-  String get sessionContextCompactAction => 'Compact this conversation';
+  String get sessionContextCompactAction => 'تلخيص هذه المحادثة';
 
   @override
-  String get sessionContextCompactTitle => 'Compact this conversation?';
+  String get sessionContextCompactTitle => 'هل تريد تلخيص هذه المحادثة؟';
 
   @override
   String get sessionContextCompactBody =>
-      'OpenCode summarizes the conversation so far and continues from the summary, so it takes less of the model\'s limit.';
+      'يلخّص OpenCode المحادثة حتى الآن ويتابع انطلاقًا من الملخّص، لتستهلك قدرًا أقل من سعة النموذج.';
 
   @override
-  String get sessionContextCompactKept => 'Every message stays in the history.';
+  String get sessionContextCompactKept => 'تبقى جميع الرسائل في السجل.';
 
   @override
-  String get sessionContextCompactConfirm => 'Compact conversation';
+  String get sessionContextCompactConfirm => 'تلخيص المحادثة';
 
   @override
   String get sessionContextCompactStarted =>
-      'Compacting started. The numbers update when it finishes.';
+      'بدأ التلخيص. تُحدَّث الأرقام بعد انتهائه.';
 
   @override
-  String get sessionContextCompactBusy => 'Wait for the reply to finish.';
+  String get sessionContextCompactBusy => 'انتظر حتى ينتهي الرد.';
 
   @override
-  String get sessionContextMakeupTitle => 'Latest request input';
+  String get sessionContextMakeupTitle => 'مدخلات الطلب الأخير';
 
   @override
   String sessionContextTokens(String count) {
-    return '$count tokens';
+    return '$count رمزًا';
   }
 
   @override
-  String get sessionContextModelId => 'Model ID';
+  String get sessionContextModelId => 'معرّف النموذج';
 
   @override
   String get demoScreenTitle => 'Try it offline';
@@ -18716,8 +18715,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count changed files are present.',
-      one: '1 changed file is present.',
+      other: 'يوجد $count من الملفات التي تغيّرت.',
+      one: 'يوجد ملف واحد تغيّر.',
     );
     return '$_temp0';
   }
@@ -18771,113 +18770,113 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get sessionNoteDeleting => 'Deleting the note…';
+  String get sessionNoteDeleting => 'جارٍ حذف الملاحظة…';
 
   @override
-  String get sessionNoteSaving => 'Saving the note…';
+  String get sessionNoteSaving => 'جارٍ حفظ الملاحظة…';
 
   @override
-  String get sessionNoteLoading => 'Reading the saved note…';
+  String get sessionNoteLoading => 'جارٍ قراءة الملاحظة المحفوظة…';
 
   @override
-  String get sessionNoteLoadFailed => 'Couldn\'t read the note';
+  String get sessionNoteLoadFailed => 'تعذّر قراءة الملاحظة';
 
   @override
-  String get sessionNoteSaveFailed => 'Couldn\'t save the note';
+  String get sessionNoteSaveFailed => 'تعذّر حفظ الملاحظة';
 
   @override
-  String get sessionNoteFieldLabel => 'Note';
+  String get sessionNoteFieldLabel => 'ملاحظة';
 
   @override
-  String get sessionNoteFieldLocked => 'Refresh the saved note before editing.';
+  String get sessionNoteFieldLocked => 'حدّث الملاحظة المحفوظة قبل تحريرها.';
 
   @override
   String sessionNoteTooLong(int over, int limit) {
-    return '$over bytes too long. A note can be up to $limit bytes.';
+    return 'تتجاوز الحد بمقدار $over بايت. الحد الأقصى للملاحظة $limit بايت.';
   }
 
   @override
-  String get sessionNoteWriteFirst => 'Write a note to save it.';
+  String get sessionNoteWriteFirst => 'اكتب ملاحظة لحفظها.';
 
   @override
   String get sessionNoteEmptyUseDelete =>
-      'To remove the note, use Delete saved note.';
+      'لإزالة الملاحظة، استخدم «حذف الملاحظة المحفوظة».';
 
   @override
-  String get sessionRelationsTitle => 'Subagents';
+  String get sessionRelationsTitle => 'الوكلاء الفرعيون';
 
   @override
   String sessionRelationsStopTitle(String title) {
-    return 'Stop $title?';
+    return 'هل تريد إيقاف $title؟';
   }
 
   @override
   String get sessionRelationsStopBody =>
-      'The subagent stops its current step. What it already did stays in its conversation.';
+      'يتوقف الوكيل الفرعي عن خطوته الحالية. يبقى ما أنجزه بالفعل في محادثته.';
 
   @override
-  String get sessionRelationsStopConfirm => 'Stop subagent';
+  String get sessionRelationsStopConfirm => 'إيقاف الوكيل الفرعي';
 
   @override
-  String get sessionRelationsFailedTitle => 'Couldn\'t load the subagents';
+  String get sessionRelationsFailedTitle => 'تعذّر تحميل الوكلاء الفرعيين';
 
   @override
-  String get sessionRelationsLoading => 'Loading subagents…';
+  String get sessionRelationsLoading => 'جارٍ تحميل الوكلاء الفرعيين…';
 
   @override
-  String get sessionRelationsStartedFrom => 'Started from';
+  String get sessionRelationsStartedFrom => 'بدأت من';
 
   @override
   String sessionRelationsSubagentCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count subagents',
-      one: '1 subagent',
+      other: '$count من الوكلاء الفرعيين',
+      one: 'وكيل فرعي واحد',
     );
     return '$_temp0';
   }
 
   @override
-  String get sessionRelationsOpenToAnswer => 'open to answer';
+  String get sessionRelationsOpenToAnswer => 'افتح للإجابة';
 
   @override
-  String get sessionRelationsIdle => 'Idle';
+  String get sessionRelationsIdle => 'خامل';
 
   @override
-  String get sessionRelationsThisConversation => 'This conversation';
+  String get sessionRelationsThisConversation => 'هذه المحادثة';
 
   @override
-  String get sessionRelationsOpening => 'Opening…';
+  String get sessionRelationsOpening => 'جارٍ الفتح…';
 
   @override
   String sessionRelationsRowMenu(String title) {
-    return 'Actions for $title';
+    return 'إجراءات $title';
   }
 
   @override
   String sessionRelationsOpen(String title) {
-    return 'Open $title';
+    return 'فتح $title';
   }
 
   @override
   String sessionRelationsCopyHandoff(String title) {
-    return 'Continue $title on computer';
+    return 'متابعة $title على الكمبيوتر';
   }
 
   @override
   String sessionRelationsPin(String title) {
-    return 'Pin $title';
+    return 'تثبيت $title';
   }
 
   @override
   String sessionRelationsUnpin(String title) {
-    return 'Unpin $title';
+    return 'إلغاء تثبيت $title';
   }
 
   @override
   String sessionRelationsStop(String title) {
-    return 'Stop $title';
+    return 'إيقاف $title';
   }
 
   @override
@@ -18965,36 +18964,36 @@ class AppLocalizationsAr extends AppLocalizations {
   String get webSourcesScopeChangedTitle => 'The server changed';
 
   @override
-  String get sessionExportFormatLabel => 'Format';
+  String get sessionExportFormatLabel => 'الصيغة';
 
   @override
   String get sessionExportJsonUnavailable =>
-      'This server can\'t send a complete copy. Save the readable transcript instead.';
+      'لا يمكن لهذا الخادم إرسال نسخة كاملة. احفظ سجلًا قابلًا للقراءة بدلًا منها.';
 
   @override
-  String get sessionExportPrivacyLabel => 'Privacy';
+  String get sessionExportPrivacyLabel => 'الخصوصية';
 
   @override
   String get sessionExportRedactKeeps =>
-      'Keeps who wrote each message; the words become placeholders. Not a backup.';
+      'يحتفظ بمن كتب كل رسالة، ويستبدل الكلمات بنصوص بديلة. ليس نسخة احتياطية.';
 
   @override
   String get sessionExportRedactBusy =>
-      'Wait until the file is saved to change this.';
+      'انتظر حتى يُحفظ الملف لتغيير هذا الخيار.';
 
   @override
   String get sessionExportRedactChanged =>
-      'Open export again from the conversation to change this.';
+      'افتح التصدير مجددًا من المحادثة لتغيير هذا الخيار.';
 
   @override
-  String get sessionExportSaveJson => 'Save complete conversation';
+  String get sessionExportSaveJson => 'حفظ المحادثة كاملة';
 
   @override
-  String get sessionExportSaveMarkdown => 'Save readable transcript';
+  String get sessionExportSaveMarkdown => 'حفظ سجل قابل للقراءة';
 
   @override
   String get sessionExportSaveFailed =>
-      'Couldn\'t write the file on this device. Nothing changed on the server. Try again, or choose another folder.';
+      'تعذّر كتابة الملف على هذا الجهاز. لم يتغيّر شيء على الخادم. حاول مجددًا، أو اختر مجلدًا آخر.';
 
   @override
   String get capabilitiesToolsMissingTitle => 'Tools aren\'t listed';
@@ -19466,10 +19465,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get composerBusyReason => 'Getting your prompt ready…';
+  String get composerBusyReason => 'جارٍ تجهيز طلبك…';
 
   @override
-  String get composerToolsTextOnly => 'This server takes text only';
+  String get composerToolsTextOnly => 'يقبل هذا الخادم النصوص فقط';
 
   @override
   String composerToolsAgentTextOnly(String agent) {
@@ -19492,60 +19491,59 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get composerToolCommandsTitle => 'Commands and agents';
+  String get composerToolCommandsTitle => 'الأوامر والوكلاء';
 
   @override
-  String get composerToolSavedSubtitle =>
-      'Put a prompt you saved back in the draft';
+  String get composerToolSavedSubtitle => 'إعادة طلب محفوظ إلى المسودة';
 
   @override
-  String get composerToolSaveForLater => 'Save prompt for later';
+  String get composerToolSaveForLater => 'حفظ الطلب لوقت لاحق';
 
   @override
-  String get composerToolNothingToSave => 'Type or attach something first';
+  String get composerToolNothingToSave => 'اكتب شيئًا أو أرفقه أولًا';
 
   @override
-  String get composerToolsMore => 'More tools';
+  String get composerToolsMore => 'المزيد من الأدوات';
 
   @override
-  String get composerReturnedToDraft => 'Returned to your draft';
+  String get composerReturnedToDraft => 'أُعيد إلى مسودتك';
 
   @override
-  String get promptHistoryIntro => 'Tap a prompt to add it to your draft.';
+  String get promptHistoryIntro => 'اضغط على طلب لإضافته إلى مسودتك.';
 
   @override
-  String get promptEditorDiscardChanges => 'Discard changes';
+  String get promptEditorDiscardChanges => 'تجاهل التغييرات';
 
   @override
-  String get promptEditorDone => 'Use in draft';
+  String get promptEditorDone => 'استخدام في المسودة';
 
   @override
-  String get promptEditorFieldLabel => 'Prompt';
+  String get promptEditorFieldLabel => 'الطلب';
 
   @override
-  String get promptStashDeleted => 'Saved prompt deleted';
+  String get promptStashDeleted => 'حُذف الطلب المحفوظ';
 
   @override
-  String get promptStashIntro => 'Newest first · kept on this device';
+  String get promptStashIntro => 'الأحدث أولًا · محفوظة على هذا الجهاز';
 
   @override
-  String get promptStashEmptyTitle => 'No saved prompts yet';
+  String get promptStashEmptyTitle => 'لا توجد طلبات محفوظة بعد';
 
   @override
   String get promptStashEmptyBody =>
-      'Choose Save prompt for later in the + menu to keep a prompt here.';
+      'اختر «حفظ الطلب لوقت لاحق» من قائمة + للاحتفاظ بطلب هنا.';
 
   @override
-  String get promptStashBusy => 'Wait for the current step to finish';
+  String get promptStashBusy => 'انتظر حتى تنتهي الخطوة الحالية';
 
   @override
-  String get promptStashRowActions => 'Saved prompt actions';
+  String get promptStashRowActions => 'إجراءات الطلب المحفوظ';
 
   @override
-  String get promptStashRestoreToDraft => 'Restore to draft';
+  String get promptStashRestoreToDraft => 'استعادة إلى المسودة';
 
   @override
-  String get promptStashDeleteAction => 'Delete saved prompt';
+  String get promptStashDeleteAction => 'حذف الطلب المحفوظ';
 
   @override
   String get modelShortcutsNextRecent => 'Next recent model';
@@ -19563,7 +19561,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get composerDraftBlockedReason =>
-      'Answer the question about this draft first';
+      'أجب عن السؤال المتعلق بهذه المسودة أولًا';
 
   @override
   String get commandLauncherSubtitle =>
@@ -19601,11 +19599,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get workspaceIsolatedTaskRowDetail =>
-      'Works on a separate copy so your main folder stays untouched.';
+      'يعمل على نسخة منفصلة ليبقى مجلدك الرئيسي دون تغيير.';
 
   @override
   String get workspaceSearchAllDetail =>
-      'Every project on this server, archived ones too';
+      'كل المشاريع على هذا الخادم، بما فيها المؤرشفة';
 
   @override
   String serverDisconnectFrom(String server) {
@@ -19725,17 +19723,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get runResultsExitNotRecorded => 'Exit not recorded';
 
   @override
-  String get projectHubHealthSubtitle =>
-      'Branch, language services and formatters';
+  String get projectHubHealthSubtitle => 'الفرع وخدمات اللغة وأدوات التنسيق';
 
   @override
   String projectHubChangedFiles(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count files changed',
-      one: '1 file changed',
-      zero: 'No changes',
+      other: 'تغيّر $count من الملفات',
+      one: 'تغيّر ملف واحد',
+      zero: 'لا توجد تغييرات',
     );
     return '$_temp0';
   }
@@ -19745,14 +19742,14 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count running',
-      one: '1 running',
+      other: '$count قيد التشغيل',
+      one: 'واحدة قيد التشغيل',
     );
     return '$_temp0';
   }
 
   @override
-  String get projectHubCopyFolderPath => 'Copy folder path';
+  String get projectHubCopyFolderPath => 'نسخ مسار المجلد';
 
   @override
   String get terminalScreenNoTerminalThisServer =>
@@ -19864,7 +19861,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String sessionContextMessagesSplit(String count, String yours, String agent) {
-    return '$count ($yours yours, $agent agent)';
+    return '$count ($yours منك، $agent من الوكيل)';
   }
 
   @override
@@ -19972,33 +19969,32 @@ class AppLocalizationsAr extends AppLocalizations {
   String get thisPhoneManage => 'Manage This phone';
 
   @override
-  String get chatRequestWho => 'The agent';
+  String get chatRequestWho => 'الوكيل';
 
   @override
-  String get chatRequestIfIgnored =>
-      'The agent waits until you answer. Nothing is lost.';
+  String get chatRequestIfIgnored => 'ينتظر الوكيل حتى تجيب. لن يضيع شيء.';
 
   @override
   String chatRequestMoreWaiting(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count more requests are waiting.',
-      one: '1 more request is waiting.',
+      other: 'يوجد $count من الطلبات الأخرى التي تنتظر.',
+      one: 'يوجد طلب آخر ينتظر.',
     );
     return '$_temp0';
   }
 
   @override
   String get chatRequestNoConnection =>
-      'Not connected to the server, so this can’t be answered here.';
+      'غير متصل بالخادم، لذا لا يمكن الإجابة هنا.';
 
   @override
-  String get chatRequestAlwaysTitle => 'Always allow these requests';
+  String get chatRequestAlwaysTitle => 'السماح دائمًا بهذه الطلبات';
 
   @override
   String chatRequestAlwaysScope(String patterns, String context) {
-    return 'From now on, $patterns runs without asking you, $context. You can take this back in Settings under Always allowed actions.';
+    return 'من الآن، يعمل $patterns دون أن يطلب إذنك، $context. يمكنك التراجع عن ذلك في الإعدادات ضمن «الإجراءات المسموح بها دائمًا».';
   }
 
   @override
@@ -20013,16 +20009,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatRequestAlwaysOn => 'مسموح دائمًا';
 
   @override
-  String get chatRequestDetailTool => 'Tool';
+  String get chatRequestDetailTool => 'الأداة';
 
   @override
-  String get chatRequestDetailPatterns => 'Requested patterns';
+  String get chatRequestDetailPatterns => 'الأنماط المطلوبة';
 
   @override
-  String get chatRequestOtherAnswer => 'Something else';
+  String get chatRequestOtherAnswer => 'إجابة أخرى';
 
   @override
-  String get chatRequestOtherField => 'Your answer';
+  String get chatRequestOtherField => 'إجابتك';
 
   @override
   String get formFlowAnsweredElsewhereBody =>
@@ -20283,7 +20279,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get newConversationCloudDetail => 'A cloud machine for this project';
 
   @override
-  String get chatDraftCopy => 'Copy draft';
+  String get chatDraftCopy => 'نسخ المسودة';
 
   @override
   String get reportProblemIntro =>
@@ -20528,14 +20524,14 @@ class AppLocalizationsAr extends AppLocalizations {
       'No log was kept for this job, so none is attached.';
 
   @override
-  String get sessionsOlderLoadFailed => 'Could not load older conversations.';
+  String get sessionsOlderLoadFailed => 'تعذّر تحميل المحادثات الأقدم.';
 
   @override
-  String get sessionsLoadFailed => 'Could not load your conversations.';
+  String get sessionsLoadFailed => 'تعذّر تحميل محادثاتك.';
 
   @override
   String get sessionsListChanged =>
-      'The conversation list changed on the server. Refresh it to see older conversations.';
+      'تغيّرت قائمة المحادثات على الخادم. حدّثها لعرض المحادثات الأقدم.';
 
   @override
   String get handoffUiComputerUnsupported =>
@@ -20577,7 +20573,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String workspaceChooserBody(String server) {
-    return 'Conversations run inside a folder on $server.';
+    return 'تعمل المحادثات داخل مجلد على $server.';
   }
 
   @override
@@ -20590,16 +20586,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String promptRestoredWithout(String names) {
-    return 'Restored without $names; attach them again before sending';
+    return 'استُعيد دون $names؛ أرفقها مجددًا قبل الإرسال';
   }
 
   @override
   String get promptStashOlderDraftsWaiting =>
-      'Some older drafts have not moved here yet. They are kept on this device.';
+      'لم تنتقل بعض المسودات القديمة إلى هنا بعد. لا تزال محفوظة على هذا الجهاز.';
 
   @override
   String get promptStashOlderDraftsFull =>
-      'Older drafts are waiting to move here. Delete saved prompts to make room.';
+      'تنتظر المسودات القديمة الانتقال إلى هنا. احذف طلبات محفوظة لإفساح المجال.';
 
   @override
   String quotaAnswerLeft(String percent) {
@@ -20897,26 +20893,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pluginsTeamOpenPage => 'See the team’s tasks';
 
   @override
-  String get chatErrorModelNotFound => 'The server doesn\'t have this model.';
+  String get chatErrorModelNotFound => 'هذا النموذج غير موجود على الخادم.';
 
   @override
   String get chatErrorContextOverflow =>
-      'This conversation is too long for the model.';
+      'هذه المحادثة أطول مما يستطيع النموذج استيعابه.';
 
   @override
   String get chatErrorProviderAuth =>
-      'The model provider needs you to sign in again.';
+      'يحتاج مزوّد النموذج إلى تسجيل دخولك مجددًا.';
 
   @override
-  String get chatErrorOutputLength =>
-      'The reply reached the model\'s length limit.';
+  String get chatErrorOutputLength => 'بلغ الرد حد الطول المسموح به للنموذج.';
 
   @override
   String get chatErrorContentFilter =>
-      'The provider\'s safety filter stopped this reply.';
+      'أوقف مرشّح الأمان لدى المزوّد هذا الرد.';
 
   @override
-  String get chatErrorUnknown => 'The agent stopped because of an error.';
+  String get chatErrorUnknown => 'توقف الوكيل بسبب خطأ.';
 
   @override
   String modelPickerThinkingChip(String level) {
@@ -21262,22 +21257,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String sessionDestinationMoveWithChanges(String destination) {
-    return 'Move to $destination with changes';
+    return 'نقل إلى $destination مع التغييرات';
   }
 
   @override
   String sessionDestinationWarpWithChanges(String destination) {
-    return 'Move to $destination with a copy of changes';
+    return 'نقل إلى $destination مع نسخة من التغييرات';
   }
 
   @override
   String sessionDestinationMoveTo(String destination) {
-    return 'Move to $destination';
+    return 'نقل إلى $destination';
   }
 
   @override
   String sessionDestinationNoChanges(String place) {
-    return 'No working changes in $place, so only the conversation moves.';
+    return 'لا توجد تغييرات عمل في $place، لذا تنتقل المحادثة وحدها.';
   }
 
   @override
@@ -22447,25 +22442,25 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get queuedMoveTitle => 'Move queued prompts';
+  String get queuedMoveTitle => 'نقل الطلبات المنتظرة';
 
   @override
   String queuedMoveSubtitle(String source) {
-    return 'From $source';
+    return 'من $source';
   }
 
   @override
-  String get queuedMovePromptsLabel => 'Prompts';
+  String get queuedMovePromptsLabel => 'الطلبات';
 
   @override
-  String get queuedMoveConversationLabel => 'Conversation';
+  String get queuedMoveConversationLabel => 'المحادثة';
 
   @override
-  String get queuedMoveNewConversation => 'New conversation';
+  String get queuedMoveNewConversation => 'محادثة جديدة';
 
   @override
   String queuedMoveQueuedAt(String time) {
-    return 'Queued $time';
+    return 'أُضيف إلى قائمة الانتظار $time';
   }
 
   @override
@@ -22473,33 +22468,33 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count files',
-      one: '1 file',
+      other: '$count من الملفات',
+      one: 'ملف واحد',
     );
     return '$_temp0';
   }
 
   @override
   String queuedMoveBlockedUncertain(String source) {
-    return 'May already have been sent. Check it on $source first.';
+    return 'ربما أُرسل بالفعل. تحقّق منه على $source أولًا.';
   }
 
   @override
   String queuedMoveBlockedFile(String source) {
-    return 'Has a file only $source can open';
+    return 'يتضمّن ملفًا لا يمكن فتحه إلا على $source';
   }
 
   @override
   String get queuedMoveBlockedMentions =>
-      'Hiding a password in it would break its agent mentions';
+      'سيؤدي إخفاء كلمة مرور فيه إلى تعطيل الإشارات إلى الوكلاء';
 
   @override
   String queuedMoveHidesSecrets(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Passwords and keys in $count prompts stay hidden',
-      one: 'Passwords and keys in 1 prompt stay hidden',
+      other: 'تبقى كلمات المرور والمفاتيح في $count من الطلبات مخفية',
+      one: 'تبقى كلمات المرور والمفاتيح في طلب واحد مخفية',
     );
     return '$_temp0';
   }
@@ -22509,8 +22504,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count prompts use the model chosen on $destination',
-      one: '1 prompt uses the model chosen on $destination',
+      other: 'يستخدم $count من الطلبات النموذج المختار على $destination',
+      one: 'يستخدم طلب واحد النموذج المختار على $destination',
     );
     return '$_temp0';
   }
@@ -22520,43 +22515,43 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Move $count prompts to $destination',
-      one: 'Move 1 prompt to $destination',
+      other: 'نقل $count من الطلبات إلى $destination',
+      one: 'نقل طلب واحد إلى $destination',
     );
     return '$_temp0';
   }
 
   @override
-  String get queuedMoveChooseOne => 'Choose at least one prompt';
+  String get queuedMoveChooseOne => 'اختر طلبًا واحدًا على الأقل';
 
   @override
   String queuedMoveNoneLeft(String source) {
-    return 'Nothing waits for $source any more';
+    return 'لم يعد هناك شيء ينتظر $source';
   }
 
   @override
   String queuedMoveFailedDisconnected(String destination) {
-    return '$destination disconnected, so nothing moved. Connect to it and try again.';
+    return 'انقطع اتصال $destination، فلم يُنقل شيء. اتصل به وحاول مجددًا.';
   }
 
   @override
   String queuedMoveFailedConversationGone(String destination) {
-    return 'That conversation is no longer on $destination, so nothing moved. Choose another one.';
+    return 'لم تعد تلك المحادثة موجودة على $destination، فلم يُنقل شيء. اختر محادثة أخرى.';
   }
 
   @override
   String queuedMoveFailedNothing(String source) {
-    return 'These prompts no longer wait for $source, so nothing moved.';
+    return 'لم تعد هذه الطلبات تنتظر $source، فلم يُنقل شيء.';
   }
 
   @override
   String queuedMoveFailedNewConversation(String destination) {
-    return 'Could not start a new conversation on $destination, so nothing moved. Try again or choose an existing conversation.';
+    return 'تعذّر بدء محادثة جديدة على $destination، فلم يُنقل شيء. حاول مجددًا أو اختر محادثة موجودة.';
   }
 
   @override
   String queuedMoveFailedNotSaved(String source) {
-    return 'Could not save the move, so nothing moved. The prompts still wait for $source.';
+    return 'تعذّر حفظ النقل، فلم يُنقل شيء. لا تزال الطلبات تنتظر $source.';
   }
 
   @override
@@ -22564,20 +22559,20 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count prompts moved to $destination',
-      one: '1 prompt moved to $destination',
+      other: 'نُقل $count من الطلبات إلى $destination',
+      one: 'نُقل طلب واحد إلى $destination',
     );
     return '$_temp0';
   }
 
   @override
   String queuedMoveDonePartial(int moved, int total, String destination) {
-    return 'Moved $moved of $total prompts to $destination. The rest no longer waited.';
+    return 'نُقل $moved من أصل $total من الطلبات إلى $destination. لم تعد الطلبات الباقية في الانتظار.';
   }
 
   @override
   String queuedMoveUndoNone(String destination) {
-    return 'The prompts already started sending on $destination, so they stay there.';
+    return 'بدأ إرسال الطلبات بالفعل على $destination، لذا تبقى هناك.';
   }
 
   @override
@@ -22586,16 +22581,16 @@ class AppLocalizationsAr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count prompts already started sending on $destination and stay there. The rest wait for $source again.',
+          'بدأ إرسال $count من الطلبات بالفعل على $destination وتبقى هناك. تنتظر الطلبات الباقية $source مجددًا.',
       one:
-          '1 prompt already started sending on $destination and stays there. The rest wait for $source again.',
+          'بدأ إرسال طلب واحد بالفعل على $destination ويبقى هناك. تنتظر الطلبات الباقية $source مجددًا.',
     );
     return '$_temp0';
   }
 
   @override
   String queuedMoveUndoFailed(String destination) {
-    return 'Could not put the prompts back. They stay on $destination.';
+    return 'تعذّر إعادة الطلبات. تبقى على $destination.';
   }
 
   @override
@@ -22645,167 +22640,168 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get sessionAddressInclude => 'Include this server’s address';
+  String get sessionAddressInclude => 'تضمين عنوان هذا الخادم';
 
   @override
   String get sessionAddressDisclosure =>
-      'The link then shows this address and the conversation ID, never a password: the other phone still needs its own access. Screenshots, messages and the clipboard can keep it.';
+      'يعرض الرابط حينها هذا العنوان ومعرّف المحادثة، دون كلمة مرور: لا يزال الهاتف الآخر يحتاج إلى صلاحية وصول خاصة به. قد تحتفظ به لقطات الشاشة والرسائل والحافظة.';
 
   @override
   String get sessionAddressIntro =>
-      'Scan with OpenCode Mobile on the other phone. The code holds this server’s address and the conversation ID.';
+      'امسح الرمز باستخدام OpenCode Mobile على الهاتف الآخر. يتضمّن الرمز عنوان هذا الخادم ومعرّف المحادثة.';
 
   @override
   String get sessionAddressUnsupportedHost =>
-      'Only a private HTTPS address ending in .ts.net can go in a link.';
+      'لا يمكن تضمين عنوان في الرابط إلا إذا كان عنوان HTTPS خاصًا ينتهي بـ .ts.net.';
 
   @override
-  String get sessionAddressOpenTitle => 'Open a shared conversation';
+  String get sessionAddressOpenTitle => 'فتح محادثة مشتركة';
 
   @override
-  String get sessionAddressConsentSaved => 'Open on this saved server?';
+  String get sessionAddressConsentSaved =>
+      'هل تريد الفتح على هذا الخادم المحفوظ؟';
 
   @override
-  String get sessionAddressConsentNew => 'Add this server?';
+  String get sessionAddressConsentNew => 'هل تريد إضافة هذا الخادم؟';
 
   @override
-  String get sessionAddressNotSaved => 'Not saved on this phone';
+  String get sessionAddressNotSaved => 'غير محفوظ على هذا الهاتف';
 
   @override
   String get sessionAddressConsentNote =>
-      'The link grants no access. Checking only asks the server which installation it is; nothing signs in and no password is sent.';
+      'لا يمنح الرابط صلاحية وصول. يسأل التحقق الخادم عن نسخته فقط؛ لا يحدث تسجيل دخول ولا تُرسل كلمة مرور.';
 
   @override
-  String get sessionAddressCheck => 'Check server';
+  String get sessionAddressCheck => 'فحص الخادم';
 
   @override
   String sessionAddressChecking(String host) {
-    return 'Checking $host…';
+    return 'جارٍ فحص $host…';
   }
 
   @override
   String get sessionAddressAddBody =>
-      'This server is not saved on this phone. Add it with your own sign-in; the link does not carry one.';
+      'هذا الخادم غير محفوظ على هذا الهاتف. أضفه ببيانات تسجيل دخولك؛ لا يتضمّن الرابط تلك البيانات.';
 
   @override
-  String get sessionAddressAddServer => 'Add server';
+  String get sessionAddressAddServer => 'إضافة خادم';
 
   @override
   String get sessionAddressChooseBody =>
-      'More than one saved server uses this address. Choose the one to open the conversation on.';
+      'يستخدم أكثر من خادم محفوظ هذا العنوان. اختر الخادم الذي تريد فتح المحادثة عليه.';
 
   @override
   String sessionAddressVerifyBody(String name) {
-    return 'Confirm that $name is the server this link came from. The phone remembers this for $name; it does not sign in or share a password.';
+    return 'أكّد أن $name هو الخادم الذي جاء منه هذا الرابط. يتذكر الهاتف ذلك لـ $name؛ ولا يسجّل الدخول أو يشارك كلمة مرور.';
   }
 
   @override
-  String get sessionAddressVerify => 'Verify server';
+  String get sessionAddressVerify => 'التحقق من الخادم';
 
   @override
   String sessionAddressReadyBody(String name) {
-    return '$name matches this link.';
+    return 'يتطابق $name مع هذا الرابط.';
   }
 
   @override
   String sessionAddressSignInBody(String name) {
-    return 'Sign in to $name with your own account first, then open the conversation.';
+    return 'سجّل الدخول إلى $name بحسابك أولًا، ثم افتح المحادثة.';
   }
 
   @override
-  String get sessionAddressSignIn => 'Sign in';
+  String get sessionAddressSignIn => 'تسجيل الدخول';
 
   @override
-  String get sessionAddressOpen => 'Open conversation';
+  String get sessionAddressOpen => 'فتح المحادثة';
 
   @override
-  String get sessionAddressOpening => 'Opening the conversation…';
+  String get sessionAddressOpening => 'جارٍ فتح المحادثة…';
 
   @override
-  String get sessionAddressReason => 'Reason';
+  String get sessionAddressReason => 'السبب';
 
   @override
   String get sessionAddressFailUnavailable =>
-      'Conversation links with a server address are not available yet.';
+      'روابط المحادثات التي تتضمّن عنوان الخادم غير متاحة بعد.';
 
   @override
   String get sessionAddressFailInvalidLink =>
-      'This conversation link is not valid. Scan or copy it again.';
+      'رابط هذه المحادثة غير صالح. امسحه أو انسخه مجددًا.';
 
   @override
   String get sessionAddressFailTooLarge =>
-      'This link is too long. Ask the sender for a new link.';
+      'هذا الرابط طويل جدًا. اطلب رابطًا جديدًا من المرسل.';
 
   @override
   String get sessionAddressFailCredentials =>
-      'This link contains private sign-in information and cannot be used.';
+      'يتضمّن هذا الرابط معلومات تسجيل دخول خاصة ولا يمكن استخدامه.';
 
   @override
   String get sessionAddressFailConsentRequired =>
-      'Choose whether to include this server’s address first.';
+      'اختر أولًا ما إذا كنت تريد تضمين عنوان هذا الخادم.';
 
   @override
   String get sessionAddressFailPrivateRouteRequired =>
-      'This server cannot be reached through the required private connection. Check your connection.';
+      'لا يمكن الوصول إلى هذا الخادم عبر الاتصال الخاص المطلوب. تحقّق من اتصالك.';
 
   @override
   String get sessionAddressFailUnreachable =>
-      'The server could not be reached. Check your connection and try again.';
+      'تعذّر الوصول إلى الخادم. تحقّق من اتصالك وحاول مجددًا.';
 
   @override
   String get sessionAddressFailTimedOut =>
-      'The server did not answer in time. Try again.';
+      'لم يرد الخادم في الوقت المحدد. حاول مجددًا.';
 
   @override
   String get sessionAddressFailTlsRejected =>
-      'The server’s secure connection could not be verified, so the link was not opened.';
+      'تعذّر التحقق من اتصال الخادم الآمن، لذا لم يُفتح الرابط.';
 
   @override
   String get sessionAddressFailRedirectsRejected =>
-      'This server tried to send the request somewhere else. The link was not opened.';
+      'حاول هذا الخادم إرسال الطلب إلى مكان آخر. لم يُفتح الرابط.';
 
   @override
   String get sessionAddressFailAccessDenied =>
-      'Your access to this server or conversation was refused.';
+      'رُفض وصولك إلى هذا الخادم أو المحادثة.';
 
   @override
   String get sessionAddressFailInvalidDescriptor =>
-      'This server did not provide the information needed to open this link.';
+      'لم يقدّم هذا الخادم المعلومات اللازمة لفتح هذا الرابط.';
 
   @override
   String get sessionAddressFailInstanceMismatch =>
-      'This link and the saved server do not identify the same installation.';
+      'لا يشير هذا الرابط والخادم المحفوظ إلى النسخة المثبّتة نفسها.';
 
   @override
   String get sessionAddressFailBindingRequired =>
-      'Verify this saved server before opening the conversation.';
+      'تحقّق من هذا الخادم المحفوظ قبل فتح المحادثة.';
 
   @override
   String get sessionAddressFailAmbiguousProfile =>
-      'Choose which saved server to use.';
+      'اختر الخادم المحفوظ الذي تريد استخدامه.';
 
   @override
   String get sessionAddressFailProfileMissing =>
-      'This saved server is no longer available.';
+      'لم يعد هذا الخادم المحفوظ متاحًا.';
 
   @override
   String get sessionAddressFailStorage =>
-      'The server verification could not be saved or read. Try again after restarting the app.';
+      'تعذّر حفظ التحقق من الخادم أو قراءته. حاول مجددًا بعد إعادة تشغيل التطبيق.';
 
   @override
   String get sessionAddressFailSignInRequired =>
-      'Sign in to this server with your own account before continuing.';
+      'سجّل الدخول إلى هذا الخادم بحسابك قبل المتابعة.';
 
   @override
   String get sessionAddressFailUnsafeLookup =>
-      'This server has not been verified for private conversation links.';
+      'لم يُتحقّق من هذا الخادم لاستخدام روابط المحادثات الخاصة.';
 
   @override
   String get sessionAddressFailSessionMissing =>
-      'This conversation is not available on this server.';
+      'هذه المحادثة غير متاحة على هذا الخادم.';
 
   @override
-  String get sessionAddressFailCancelled => 'Opening this link was cancelled.';
+  String get sessionAddressFailCancelled => 'أُلغي فتح هذا الرابط.';
 
   @override
   String get removeFromPhoneDeleteAllChoice => 'Delete everything…';
@@ -22819,43 +22815,41 @@ class AppLocalizationsAr extends AppLocalizations {
   String get phoneServerCardErrorDetail => 'خطأ';
 
   @override
-  String get sessionMenuGoTo => 'Go to';
+  String get sessionMenuGoTo => 'الانتقال إلى';
 
   @override
-  String get sessionMenuDo => 'Do';
+  String get sessionMenuDo => 'إجراءات';
 
   @override
-  String get sessionMenuFind => 'Find';
+  String get sessionMenuFind => 'بحث';
 
   @override
-  String get sessionMenuSubagents => 'Subagents';
+  String get sessionMenuSubagents => 'الوكلاء الفرعيون';
 
   @override
-  String get sessionMenuDetails => 'Details';
+  String get sessionMenuDetails => 'التفاصيل';
 
   @override
-  String get sessionMenuShareHint => 'Anyone with the link can read it';
+  String get sessionMenuShareHint => 'يمكن لأي شخص لديه الرابط قراءتها';
 
   @override
-  String get sessionMenuStopSharingHint => 'The public link stops working';
+  String get sessionMenuStopSharingHint => 'يتوقف الرابط العام عن العمل';
 
   @override
-  String get sessionMenuCompactHint =>
-      'Summarizes it so the agent has room again';
+  String get sessionMenuCompactHint => 'يلخّصها لإفساح المجال للوكيل مجددًا';
 
   @override
-  String get sessionMenuForkHint => 'Opens a copy you can take another way';
+  String get sessionMenuForkHint => 'يفتح نسخة يمكنك متابعتها في اتجاه آخر';
 
   @override
-  String get sessionMenuContinueComputerHint =>
-      'Shows the command that resumes it there';
+  String get sessionMenuContinueComputerHint => 'يعرض الأمر الذي يستأنفها هناك';
 
   @override
   String get sessionMenuContinuePhoneHint =>
-      'Shows a code the app on that phone opens';
+      'يعرض رمزًا يفتحه التطبيق على ذلك الهاتف';
 
   @override
-  String get sessionMenuNeedsPrompt => 'Available after the first prompt';
+  String get sessionMenuNeedsPrompt => 'متاح بعد الطلب الأول';
 
   @override
   String commandSheetServerGroup(String server) {
@@ -22913,7 +22907,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'Opens the agent\'s latest plan in the conversation';
 
   @override
-  String get chatUiSessionMenu => 'Conversation menu';
+  String get chatUiSessionMenu => 'قائمة المحادثة';
 
   @override
   String get commandsScreenLoadFailed => 'Couldn’t load commands';
@@ -23188,74 +23182,73 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mcpSetupTimeoutSeconds => 'Timeout in seconds';
 
   @override
-  String get isolatedTaskPromptLabel => 'What should it work on?';
+  String get isolatedTaskPromptLabel => 'ما المهمة التي تريد العمل عليها؟';
 
   @override
   String get isolatedTaskPromptHelper =>
-      'Sent once the copy is ready. Leave it empty to write it in the conversation.';
+      'يُرسل بعد تجهيز النسخة. اتركه فارغًا لكتابته في المحادثة.';
 
   @override
-  String get isolatedTaskOptions => 'Options';
+  String get isolatedTaskOptions => 'الخيارات';
 
   @override
   String get isolatedTaskPreparingHint =>
-      'If you stop waiting, the copy stays. You\'ll find it under Project › Worktrees.';
+      'إذا توقفت عن الانتظار، تبقى النسخة. ستجدها ضمن المشروع › نسخ العمل.';
 
   @override
   String get isolatedTaskFailedBody =>
-      'The copy is made, but its setup didn\'t finish. Start in it anyway, or remove it.';
+      'أُنشئت النسخة، لكن إعدادها لم يكتمل. ابدأ فيها على أي حال، أو أزلها.';
 
   @override
   String isolatedTaskSending(String name) {
-    return 'Sending your task to $name…';
+    return 'جارٍ إرسال مهمتك إلى $name…';
   }
 
   @override
-  String get isolatedTaskSendFailed => 'Couldn\'t send your task';
+  String get isolatedTaskSendFailed => 'تعذّر إرسال مهمتك';
 
   @override
   String get isolatedTaskSendFailedBody =>
-      'It\'s waiting in the conversation\'s message box, ready to send.';
+      'تنتظر في مربع الرسالة في المحادثة، وجاهزة للإرسال.';
 
   @override
   String get isolatedTaskSendFailedLost =>
-      'Copy your task below and send it in the conversation.';
+      'انسخ مهمتك أدناه وأرسلها في المحادثة.';
 
   @override
-  String get isolatedTaskOpenConversation => 'Open the conversation';
+  String get isolatedTaskOpenConversation => 'فتح المحادثة';
 
   @override
-  String get isolatedTaskStartAnyway => 'Start anyway';
+  String get isolatedTaskStartAnyway => 'البدء على أي حال';
 
   @override
-  String get isolatedTaskRemove => 'Remove the copy';
+  String get isolatedTaskRemove => 'إزالة النسخة';
 
   @override
   String isolatedTaskRemoveTitle(String name) {
-    return 'Remove $name?';
+    return 'هل تريد إزالة $name؟';
   }
 
   @override
   String get isolatedTaskRemoveBody =>
-      'Its folder and branch are deleted. Your project itself is not touched.';
+      'يُحذف مجلدها وفرعها. لن يتغيّر مشروعك نفسه.';
 
   @override
   String isolatedTaskRemoved(String name) {
-    return 'Removed $name. You can start again.';
+    return 'أُزيلت $name. يمكنك البدء مجددًا.';
   }
 
   @override
-  String get isolatedTaskSetupOutput => 'What the setup reported';
+  String get isolatedTaskSetupOutput => 'ما أبلغ عنه الإعداد';
 
   @override
-  String get isolatedTaskCopyFolder => 'Folder of the copy';
+  String get isolatedTaskCopyFolder => 'مجلد النسخة';
 
   @override
-  String get isolatedTaskBranchLabel => 'Branch';
+  String get isolatedTaskBranchLabel => 'الفرع';
 
   @override
-  String get isolatedTaskStageSend =>
-      'Opening the conversation and sending your task';
+  String get isolatedTaskStageSend => 'جارٍ فتح المحادثة وإرسال مهمتك';
 
   @override
   String get teamStartRunBlockedTitle => 'Team can\'t take tasks';
@@ -23428,57 +23421,55 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get draftLeaveMessageNoText =>
-      'Try saving again. If you leave without saving, your latest changes to this draft may be lost.';
+      'حاول الحفظ مجددًا. إذا غادرت دون الحفظ، فقد تضيع آخر تغييراتك على هذه المسودة.';
 
   @override
-  String get draftLeaveCopyAction => 'Copy draft and leave';
+  String get draftLeaveCopyAction => 'نسخ المسودة والمغادرة';
 
   @override
-  String get draftLeaveRetry => 'Try saving again';
+  String get draftLeaveRetry => 'محاولة الحفظ مجددًا';
 
   @override
-  String get draftLeaveStillFailing =>
-      'Still not saved. Copy your text before you leave.';
+  String get draftLeaveStillFailing => 'لم تُحفظ بعد. انسخ نصك قبل المغادرة.';
 
   @override
-  String get queuedRetry => 'Try again';
+  String get queuedRetry => 'إعادة المحاولة';
 
   @override
   String queuedRetryAll(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Try all $count again',
+      other: 'إعادة محاولة إرسال الطلبات الـ $count كلها',
     );
     return '$_temp0';
   }
 
   @override
   String chatUiUseModelAndResend(String model) {
-    return 'Use $model and resend';
+    return 'استخدام $model وإعادة الإرسال';
   }
 
   @override
-  String get chatUiChooseAnotherModel => 'Choose another model';
+  String get chatUiChooseAnotherModel => 'اختيار نموذج آخر';
 
   @override
-  String get chatUiSendPromptAgain => 'Send again';
+  String get chatUiSendPromptAgain => 'إرسال مجددًا';
 
   @override
-  String get chatUiPromptNotAnswered => 'Not answered';
+  String get chatUiPromptNotAnswered => 'لم يُجب عنه';
 
   @override
-  String get chatWatchEndedTitle => 'This conversation has ended';
+  String get chatWatchEndedTitle => 'انتهت هذه المحادثة';
 
   @override
-  String get chatWatchEndedBody =>
-      'It ended before the worker wrote anything here.';
+  String get chatWatchEndedBody => 'انتهت قبل أن يكتب العامل شيئًا هنا.';
 
   @override
-  String get chatWatchBackToTask => 'Back to the task';
+  String get chatWatchBackToTask => 'العودة إلى المهمة';
 
   @override
-  String get chatWatchBackToWorker => 'Back to the worker';
+  String get chatWatchBackToWorker => 'العودة إلى العامل';
 
   @override
   String get migrationTitle => 'Move from Termux';
