@@ -174,3 +174,42 @@ identities are in [build-summary.json](build-summary.json). All copied signing
 properties and intermediates were removed; exact owned single-use daemon1934944
 was stopped. This checkpoint still awaits the shared emulator lock, complete
 instrumentation results/screenshot, and a normal-main-target restore.
+
+
+## 2026-10-08 coordinator freeze checkpoint
+
+The latest exact-candidate attempt installed both release APKs with the approved
+local signer on emulator-5554 under the shared lock. **All seven bounded native
+checks pass**, emitted individually as each assertion completes. The Flutter
+result bridge returns a failed assertion; it is not a missing-result timeout.
+The conversation/screenshot end-to-end smoke remains **unqualified**. The
+[fixed-stage receipt](device-failure.json) includes only authored categories and
+check names; no raw Dart failure, throwable, provider/config payload or device
+log was printed or saved. No passing screenshot exists.
+
+The QA runner now reports fixed failure stages, separates its result timeout
+from a failed Flutter assertion, and preserves partial native check names for
+local diagnosis. These are test-APK-only changes. The next step after permission
+to resume heavy work is to classify the remaining Flutter assertion using fixed
+categories, fix the release smoke, rerun the exact host checker, and restore the
+normal lib/main.dart candidate with the same signer/build2201. Do not mark BD9
+done from the native subset alone.
+
+A local toolchain audit found earlier builds used Ubuntu OpenJDK17. They are
+superseded for vendor qualification by an isolated **Temurin17.0.20.1+1** build.
+The official Adoptium archive checksum was verified before extraction; its
+identity is recorded in build-summary.json. Gradle's daemon and Java toolchain
+were explicitly pinned to that JDK without changing machine-wide configuration.
+The QA app built in188s and its matching initial test APK in119s; the final
+fixed-stage test APK compiled in104s. All native packaging/ELF/source checks pass.
+The final native diagnostic additions have not received another detekt checkpoint;
+that awaits the coordinator's resume because no Gradle/Java-heavy work is allowed.
+
+The coordinator requested no APK/Gradle builds or emulator sessions while the
+full Flutter suite runs. The last bounded session finished before this handoff;
+no further session or build was started. Temporary android/key.properties and
+build/app/intermediates are absent, original Gradle settings restored, exact
+owned final daemon1985521 stopped. **The emulator still has the QA target; the
+normal product APK restoration is pending the coordinator's go.** No uninstall,
+downgrade, other-device access, push, CI invocation, publication or Shorebird
+release/patch was performed.

@@ -1,0 +1,15 @@
+{
+  "result": "FAIL",
+  "native_passes": [
+    "auth_pipe_before_http",
+    "private_failure_frames",
+    "qa_password_file",
+    "authenticated_health_tiers",
+    "registered_pdf_identity",
+    "receipt_before_protection",
+    "stop_callback_order"
+  ],
+  "fixed_failure_stage": [
+    "flutter_assertion"
+  ]
+}
