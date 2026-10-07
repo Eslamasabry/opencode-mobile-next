@@ -32617,7 +32617,7 @@
   "@agentCardSend": {
     "description": "Agent card: sends the answer."
   },
-  "agentCardConfirmDefault": "Confirm",
+  "agentCardConfirmDefault": "Yes, go ahead",
   "@agentCardConfirmDefault": {
     "description": "Agent card confirm ask: default confirm label when the agent gave none."
   },
@@ -32711,14 +32711,9 @@
   "@agentCardComposerHint": {
     "description": "Composer hint while an agent card waits for an answer."
   },
-  "agentCardDangerTitle": "Send \"{label}\"?",
+  "agentCardDangerTitle": "Send this answer?",
   "@agentCardDangerTitle": {
-    "description": "Agent card: confirm sheet title for a destructive confirm.",
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
+    "description": "Agent card: confirm sheet title for a destructive confirm."
   },
   "agentCardDangerBody": "Your answer goes to the agent as a message. The agent decides what to do with it.",
   "@agentCardDangerBody": {
@@ -32934,10 +32929,6 @@
   "@cardsAgentClaude": {
     "description": "Cards setting: agent name."
   },
-  "cardsAgentOpenCode": "OpenCode",
-  "@cardsAgentOpenCode": {
-    "description": "Cards setting: agent name."
-  },
   "cardsProblemUnsupportedHost": "Agents on this server can't show cards.",
   "@cardsProblemUnsupportedHost": {
     "description": "Cards setting reason."
@@ -32989,5 +32980,9 @@
   "agentCardYourAnswer": "Your answer",
   "@agentCardYourAnswer": {
     "description": "Agent card: held answer line when the words of the answer are not known to this view."
+  },
+  "agentCardDangerConfirm": "Send answer",
+  "@agentCardDangerConfirm": {
+    "description": "Agent card: the confirm sheet's button for a destructive confirm."
   }
 }

@@ -27487,7 +27487,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get agentCardSend => 'إرسال';
 
   @override
-  String get agentCardConfirmDefault => 'تأكيد';
+  String get agentCardConfirmDefault => 'نعم، تابع';
 
   @override
   String get agentCardCancelDefault => 'إلغاء';
@@ -27558,9 +27558,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get agentCardComposerHint => 'أو اكتب إجابتك';
 
   @override
-  String agentCardDangerTitle(String label) {
-    return 'إرسال \"$label\"؟';
-  }
+  String get agentCardDangerTitle => 'إرسال هذه الإجابة؟';
 
   @override
   String get agentCardDangerBody =>
@@ -27718,9 +27716,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cardsAgentClaude => 'Claude Code';
 
   @override
-  String get cardsAgentOpenCode => 'OpenCode';
-
-  @override
   String get cardsProblemUnsupportedHost =>
       'لا يمكن للوكلاء على هذا الخادم عرض البطاقات.';
 
@@ -27764,4 +27759,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get agentCardYourAnswer => 'إجابتك';
+
+  @override
+  String get agentCardDangerConfirm => 'إرسال الإجابة';
 }

@@ -5193,7 +5193,7 @@
   "agentCardReports": "{agent} يقدّم تقريرًا",
   "agentCardAsksAnnouncement": "{agent} يسأل: {title}",
   "agentCardSend": "إرسال",
-  "agentCardConfirmDefault": "تأكيد",
+  "agentCardConfirmDefault": "نعم، تابع",
   "agentCardCancelDefault": "إلغاء",
   "agentCardChoosePrompt": "اختر خيارًا لإرساله.",
   "agentCardChooseOneOrMore": "اختر خيارًا واحدًا على الأقل لإرساله.",
@@ -5214,7 +5214,7 @@
   "agentCardUnreadable": "تعذّر عرض هذه البطاقة",
   "agentCardDetails": "التفاصيل",
   "agentCardComposerHint": "أو اكتب إجابتك",
-  "agentCardDangerTitle": "إرسال \"{label}\"؟",
+  "agentCardDangerTitle": "إرسال هذه الإجابة؟",
   "agentCardDangerBody": "تصل إجابتك إلى الوكيل كرسالة. والوكيل هو من يقرر ما يفعله بها.",
   "agentCardPhotoTake": "التقاط صورة",
   "agentCardPhotoChoose": "اختيار صورة",
@@ -5248,7 +5248,6 @@
   "cardsStatusFailed": "تعذّر التفعيل. {reason}",
   "cardsSettingFailed": "تعذّر تغيير هذا الإعداد. حاول مرة أخرى.",
   "cardsAgentClaude": "Claude Code",
-  "cardsAgentOpenCode": "OpenCode",
   "cardsProblemUnsupportedHost": "لا يمكن للوكلاء على هذا الخادم عرض البطاقات.",
   "cardsProblemRuntimeMissing": "الأدوات التي تحتاجها البطاقات غير موجودة على هذا الهاتف بعد.",
   "cardsProblemNotQualified": "لم يُتحقق بعد من أن إصدار هذا الوكيل يعمل مع البطاقات.",
@@ -5261,5 +5260,6 @@
   "cardsProblemStorageFailed": "تعذّر على الهاتف حفظ الإعداد.",
   "cardsProblemBusy": "الهاتف مشغول بأمر آخر. حاول بعد قليل.",
   "agentCardFieldRequiredHint": "مطلوب",
-  "agentCardYourAnswer": "إجابتك"
+  "agentCardYourAnswer": "إجابتك",
+  "agentCardDangerConfirm": "إرسال الإجابة"
 }

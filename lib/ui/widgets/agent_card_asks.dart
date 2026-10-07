@@ -256,10 +256,9 @@ class _ConfirmAsk extends StatelessWidget {
       final l10n = AppLocalizations.of(context);
       final yes = await showKitConfirm(
         context,
-        title: l10n.agentCardDangerTitle(label),
+        title: l10n.agentCardDangerTitle,
         body: l10n.agentCardDangerBody,
-        confirmLabel: label,
-        cancelLabel: ask.cancelLabel,
+        confirmLabel: l10n.agentCardDangerConfirm,
         kind: KitConfirmKind.destructive,
         confirmKey: const Key('agent-card-danger-confirm'),
       );

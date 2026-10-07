@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:image_picker/image_picker.dart' show ImageSource;
 
-import '../../api/models.dart' show PromptAttachment;
+import '../../domain/genui/gen_ui.dart' show PromptAttachment;
 import '../../l10n/app_localizations.dart';
 import '../../state/prompt_photos.dart';
 

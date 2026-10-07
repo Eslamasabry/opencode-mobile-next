@@ -24,7 +24,8 @@ String _agentNames(AppLocalizations l10n, List<GenUiAgent> agents) {
   for (final agent in agents) {
     final name = switch (agent) {
       GenUiAgent.claude => l10n.cardsAgentClaude,
-      GenUiAgent.openCode1 || GenUiAgent.openCode2 => l10n.cardsAgentOpenCode,
+      GenUiAgent.openCode1 ||
+      GenUiAgent.openCode2 => l10n.openCodeConnectionLabel,
     };
     if (!names.contains(name)) names.add(name);
   }

@@ -43198,7 +43198,7 @@ abstract class AppLocalizations {
   /// Agent card confirm ask: default confirm label when the agent gave none.
   ///
   /// In en, this message translates to:
-  /// **'Confirm'**
+  /// **'Yes, go ahead'**
   String get agentCardConfirmDefault;
 
   /// Agent card confirm ask: default cancel label when the agent gave none.
@@ -43324,8 +43324,8 @@ abstract class AppLocalizations {
   /// Agent card: confirm sheet title for a destructive confirm.
   ///
   /// In en, this message translates to:
-  /// **'Send \"{label}\"?'**
-  String agentCardDangerTitle(String label);
+  /// **'Send this answer?'**
+  String get agentCardDangerTitle;
 
   /// Agent card: confirm sheet body.
   ///
@@ -43525,12 +43525,6 @@ abstract class AppLocalizations {
   /// **'Claude Code'**
   String get cardsAgentClaude;
 
-  /// Cards setting: agent name.
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode'**
-  String get cardsAgentOpenCode;
-
   /// Cards setting reason.
   ///
   /// In en, this message translates to:
@@ -43608,6 +43602,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your answer'**
   String get agentCardYourAnswer;
+
+  /// Agent card: the confirm sheet's button for a destructive confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Send answer'**
+  String get agentCardDangerConfirm;
 }
 
 class _AppLocalizationsDelegate

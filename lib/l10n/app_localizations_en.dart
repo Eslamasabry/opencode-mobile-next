@@ -27370,7 +27370,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get agentCardSend => 'Send';
 
   @override
-  String get agentCardConfirmDefault => 'Confirm';
+  String get agentCardConfirmDefault => 'Yes, go ahead';
 
   @override
   String get agentCardCancelDefault => 'Cancel';
@@ -27442,9 +27442,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get agentCardComposerHint => 'Or type your answer';
 
   @override
-  String agentCardDangerTitle(String label) {
-    return 'Send \"$label\"?';
-  }
+  String get agentCardDangerTitle => 'Send this answer?';
 
   @override
   String get agentCardDangerBody =>
@@ -27596,9 +27594,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cardsAgentClaude => 'Claude Code';
 
   @override
-  String get cardsAgentOpenCode => 'OpenCode';
-
-  @override
   String get cardsProblemUnsupportedHost =>
       'Agents on this server can\'t show cards.';
 
@@ -27646,4 +27641,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agentCardYourAnswer => 'Your answer';
+
+  @override
+  String get agentCardDangerConfirm => 'Send answer';
 }

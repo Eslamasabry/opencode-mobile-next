@@ -550,51 +550,6 @@ class _MessageView extends StatelessWidget {
     return stretches;
   }
 
-  /// Takes every tool call the domain reads as an agent card out of its run
-  /// and makes it a run of its own, so the card stands in the reply (never
-  /// inside a folded work line) and the calls around it keep their grouping.
-  List<_AssistantPartRun> _withCards(
-    List<_AssistantPartRun> runs,
-    _ChatScreenState? chat,
-  ) {
-    if (chat == null || chat._genUi == null) return runs;
-    final result = <_AssistantPartRun>[];
-    for (final run in runs) {
-      if (run.parts.first.type != 'tool') {
-        result.add(run);
-        continue;
-      }
-      var plain = <Part>[];
-      var first = true;
-      void flush() {
-        if (plain.isEmpty) return;
-        result.add(
-          _AssistantPartRun(
-            plain,
-            grouped: plain.length > 1,
-            heading: first ? run.heading : null,
-            note: first ? run.note : null,
-          ),
-        );
-        first = false;
-        plain = <Part>[];
-      }
-
-      for (final part in run.parts) {
-        final card = chat._cardForPart(part, part.messageID ?? m.info.id);
-        if (card == null) {
-          plain.add(part);
-          continue;
-        }
-        flush();
-        result.add(_AssistantPartRun([part], card: card));
-        first = false;
-      }
-      flush();
-    }
-    return result;
-  }
-
   /// A run inside a work line: a run of tool calls is one step per call (the
   /// agent's heading and note on the first), anything else is its own step.
   List<Widget> _stepWidgets(
