@@ -500,7 +500,11 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
                 context,
                 conn,
                 _shownQuestion!,
-                agentLabel: widget.feedItem?.agentLabel,
+                agentLabel:
+                    widget.feedItem?.agentLabel ??
+                    context
+                        .findAncestorStateOfType<_ChatScreenState>()
+                        ?._agentName,
               ),
             ),
     );

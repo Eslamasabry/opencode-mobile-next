@@ -49,10 +49,27 @@ class _QuestionRepository extends ProductRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Future<ConnectionController> _controller(_QuestionRepository repository) async {
+/// A chat with Claude Code through Paseo: the card names that agent.
+class _ClaudeConnection extends ConnectionController {
+  _ClaudeConnection(super.store);
+
+  @override
+  ServerProfile? get profile => ServerProfile(
+    id: 'p1',
+    name: 'Phone agents',
+    baseUrl: 'ws://127.0.0.1:6767',
+    backend: ServerBackend.paseo,
+  );
+}
+
+Future<ConnectionController> _controller(
+  _QuestionRepository repository, {
+  bool claude = false,
+}) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
-  return ConnectionController(ProfileStore(prefs: prefs))
+  final store = ProfileStore(prefs: prefs);
+  return (claude ? _ClaudeConnection(store) : ConnectionController(store))
     ..api = _ChatApi()
     ..repository = repository
     ..status = StreamStatus.connected;
@@ -60,9 +77,10 @@ Future<ConnectionController> _controller(_QuestionRepository repository) async {
 
 Future<ConnectionController> _pumpChat(
   WidgetTester tester,
-  _QuestionRepository repository,
-) async {
-  final controller = await _controller(repository);
+  _QuestionRepository repository, {
+  bool claude = false,
+}) async {
+  final controller = await _controller(repository, claude: claude);
   addTearDown(controller.dispose);
   await tester.pumpWidget(
     ProviderScope(
@@ -155,6 +173,37 @@ void main() {
       final row = find.byKey(ValueKey('question-card-option-$index'));
       expect(tester.getSize(row).height, greaterThanOrEqualTo(48));
     }
+  });
+
+  testWidgets('a Claude Code chat names Claude Code as the one who asks', (
+    tester,
+  ) async {
+    final repository = _QuestionRepository();
+    final controller = await _pumpChat(tester, repository, claude: true);
+
+    controller.handleEventForTesting(_question(prompts: 3));
+    await tester.pumpAndSettle();
+
+    final card = tester.widget<KitRequestCard>(find.byType(KitRequestCard));
+    expect(card.who, 'Claude Code');
+    await tester.tap(find.byKey(const Key('question-card-answer')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('question-sheet')), findsOneWidget);
+    expect(
+      find.textContaining(RegExp('Claude Code.*needs input')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('an OpenCode chat keeps "The agent"', (tester) async {
+    final repository = _QuestionRepository();
+    final controller = await _pumpChat(tester, repository);
+
+    controller.handleEventForTesting(_question());
+    await tester.pumpAndSettle();
+
+    final card = tester.widget<KitRequestCard>(find.byType(KitRequestCard));
+    expect(card.who, 'The agent');
   });
 
   testWidgets('tapping a single-select choice answers immediately', (
