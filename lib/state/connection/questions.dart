@@ -6,6 +6,29 @@ part of '../connection.dart';
 mixin _ConnectionControllerQuestions on ChangeNotifier {
   ConnectionController get _self;
 
+  final _feedQuestionSnapshots = Expando<_FeedQuestionRoute>();
+
+  /// Pure read of the row's live question inventory. Does not open a chat.
+  /// Capture an identity from this exact snapshot when presenting a decision.
+  PendingQuestion? questionForFeedItem(ChatFeedItem item) =>
+      _self._questionForFeedItem(item);
+
+  PendingRequestIdentity questionIdentityForFeedItem(
+    ChatFeedItem item,
+    PendingQuestion question,
+  ) => _self._questionIdentityForFeedItem(item, question);
+
+  Future<void> answerQuestionForFeedItem(
+    ChatFeedItem item,
+    List<List<String>> answers, {
+    required PendingRequestIdentity expectedRequest,
+  }) => _self._replyToFeedQuestion(item, answers, expectedRequest);
+
+  Future<void> rejectQuestionForFeedItem(
+    ChatFeedItem item, {
+    required PendingRequestIdentity expectedRequest,
+  }) => _self._replyToFeedQuestion(item, null, expectedRequest);
+
   bool questionsLoading = false;
   String? questionsError;
   Map<String, PendingQuestion> questions = {};
@@ -212,6 +235,9 @@ extension _ConnectionControllerQuestionsImpl on ConnectionController {
     if (expectedRequest != null &&
         (expectedRequest._permission || expectedRequest._id != requestID)) {
       throw ArgumentError('Question request identity does not match');
+    }
+    if (expectedRequest?._feed case final route?) {
+      return _replyToFeedQuestion(route.item, answers, expectedRequest!);
     }
     if (expectedRequest != null && !isRequestPending(expectedRequest)) return;
     final question = questions[requestID];

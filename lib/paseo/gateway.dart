@@ -74,6 +74,38 @@ class PaseoGateway
     (pending) => pending.question.sessionID == sessionID,
   );
 
+  /// A detached display snapshot plus an opaque revision for list replies.
+  /// Reading this never connects, resumes an agent or subscribes to a timeline.
+  ({PendingQuestion question, Object revision})? nativeQuestionSnapshot(
+    String sessionID,
+  ) {
+    if (_closed || !transport.connected) return null;
+    for (final pending in _questions.values) {
+      if (pending.question.sessionID == sessionID &&
+          pending.epoch == transport.epoch) {
+        return (
+          question: PendingQuestion.fromJson(_questionJson(pending)),
+          revision: pending,
+        );
+      }
+    }
+    return null;
+  }
+
+  bool isNativeQuestionCurrent(
+    String sessionID,
+    String requestID,
+    Object revision,
+  ) {
+    final pending = _questions[requestID];
+    return !_closed &&
+        transport.connected &&
+        pending != null &&
+        identical(pending, revision) &&
+        pending.epoch == transport.epoch &&
+        pending.question.sessionID == sessionID;
+  }
+
   /// Claude Code's sub-agents, each a read-only child session (see
   /// gateway/subagents.dart), by session id.
   final _subagents = <String, _PaseoSubagent>{};

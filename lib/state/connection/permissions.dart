@@ -18,14 +18,16 @@ class PendingRequestIdentity {
     this._location,
     this._permission,
     this._id,
-    this._contents,
-  );
+    this._contents, {
+    _FeedQuestionRoute? feed,
+  }) : _feed = feed;
 
   final ConnectionController _owner;
   final int _location;
   final bool _permission;
   final String _id;
   final String _contents;
+  final _FeedQuestionRoute? _feed;
   bool _retired = false;
 }
 
@@ -194,7 +196,7 @@ mixin _ConnectionControllerPermissions on ChangeNotifier {
 
   final _pendingReplies =
       <
-        (int, bool, String, String),
+        (int, bool, String, String, String?),
         ({PendingRequestIdentity request, Future<void> future})
       >{};
 
@@ -648,6 +650,7 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
         false,
         request.id,
         _questionContents(request),
+        feed: _feedQuestionSnapshots[request],
       );
 
   /// The body of [isRequestPending].
@@ -660,7 +663,9 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
       return false;
     }
     bool pending;
-    if (request._permission) {
+    if (request._feed case final route?) {
+      pending = _isFeedQuestionPending(route);
+    } else if (request._permission) {
       final current = permissions[request._id];
       pending =
           current != null && _permissionContents(current) == request._contents;
@@ -685,6 +690,7 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
       request._permission,
       request._id,
       request._contents,
+      request._feed?.item.identity,
     );
     final existing = _pendingReplies[key];
     if (existing != null && isRequestPending(existing.request)) {

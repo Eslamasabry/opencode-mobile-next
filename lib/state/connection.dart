@@ -111,6 +111,7 @@ import '../builtin/agents/agent_sign_in.dart' show ChannelAgentSignInHost;
 import 'phone_agent_host_port.dart';
 
 part 'connection/gen_ui.dart';
+part 'connection/feed_questions.dart';
 part 'connection/monitors.dart';
 part 'connection/attention.dart';
 part 'connection/surfaces.dart';

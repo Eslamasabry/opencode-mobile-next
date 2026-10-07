@@ -32,6 +32,7 @@ import 'paseo_acp_pilot_test.dart' show FakePaseoSocket;
 
 part 'support/phone_agents_genui_tests.dart';
 part 'support/phone_agents_native_question_tests.dart';
+part 'support/phone_agents_list_question_tests.dart';
 
 const _project = '/root/projects/app';
 const _stamp = '2026-10-03T08:00:00Z';
@@ -87,6 +88,7 @@ class _NoEngineBridge implements PhoneProjectEngineBridge {
 class _OcScript {
   List<GlobalSessionResult> global = [];
   final created = <String?>[];
+  final questionAnswers = <(String, String, List<List<String>>)>[];
 }
 
 class _OcApi extends OpenCodeApi {
@@ -133,6 +135,15 @@ class _OcApi extends OpenCodeApi {
   @override
   Future<List<Map<String, dynamic>>> pendingQuestionsV2() =>
       Future.error(ApiException('V2 unavailable', statusCode: 404));
+  @override
+  Future<void> answerQuestionV2(
+    String sessionID,
+    String requestID,
+    List<List<String>> answers,
+  ) async {
+    script.questionAnswers.add((sessionID, requestID, answers));
+  }
+
   @override
   Future<List<FileNode>> listFiles(String path) async => const [];
 }
@@ -585,6 +596,7 @@ void main() {
 
   _genUiFeedRefreshTests();
   _nativeQuestionControllerTests();
+  _listQuestionTests();
 
   const dir = _project;
 
