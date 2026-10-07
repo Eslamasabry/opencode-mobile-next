@@ -28,6 +28,7 @@ part 'gateway/capabilities.dart';
 part 'gateway/sessions.dart';
 part 'gateway/prompts.dart';
 part 'gateway/browser_launch.dart';
+part 'gateway/commands.dart';
 part 'gateway/permissions.dart';
 part 'gateway/questions.dart';
 part 'gateway/providers.dart';
@@ -1329,70 +1330,13 @@ class PaseoGateway
   /// a project's commands), read as a draft for this folder: listing them
   /// through a stored agent would load that agent's runtime first.
   @override
-  Future<List<CommandInfo>> listCommands() async {
-    // Folder-wide draft discovery has no trusted conversation/daemon mapping.
-    if (_browserHasRequestedSource) return const [];
-    final scope = _scope;
-    final epoch = _locationEpoch;
-    // The daemon lists a draft's commands only for a named model.
-    final runtimes = await providers();
-    _checkLocation(scope, epoch);
-    final runtime = runtimes.providers
-        .where((entry) => entry.id == paseoDefaultProvider)
-        .firstOrNull;
-    final model =
-        runtime?.modelIDs
-            .where((id) => runtime.modelData[id]?['isDefault'] == true)
-            .firstOrNull ??
-        runtime?.modelIDs.where((id) => id != paseoDefaultModel).firstOrNull;
-    if (model == null) return const [];
-    final result = await transport.request(
-      'list_commands_request',
-      {
-        'agentId': '',
-        'draftConfig': {
-          'provider': paseoDefaultProvider,
-          'cwd': scope,
-          'model': model,
-        },
-      },
-      timeout: const Duration(seconds: 45),
-      beforeSend: () {
-        _checkLocation(scope, epoch);
-        if (_browserHasRequestedSource) {
-          throw _browserUnavailable;
-        }
-      },
-    );
-    _checkLocation(scope, epoch);
-    return _browserCommandInfos(result);
-  }
+  Future<List<CommandInfo>> listCommands() => _listCommands();
 
   /// Discovery for a mapped conversation; the folder-wide draft path is off
   /// for browser requests because it has no daemon identity to reserve.
   Future<List<CommandInfo>> listBrowserCommandsForSession(
     String sessionID,
   ) async => _listBrowserCommands(sessionID);
-
-  List<CommandInfo> _browserCommandInfos(Map<String, dynamic> result) {
-    final raw = result['commands'];
-    return [
-      for (final command in raw is List ? raw.take(300) : const [])
-        if (command is Map &&
-            command['name'] is String &&
-            (command['name'] as String).isNotEmpty &&
-            (command['name'] as String).length <= 128 &&
-            // `__name` commands are the agent's own plumbing, not for people.
-            !(command['name'] as String).replaceFirst('/', '').startsWith('__'))
-          CommandInfo(
-            name: (command['name'] as String).replaceFirst(RegExp('^/'), ''),
-            description: command['description'] is String
-                ? command['description'] as String
-                : null,
-            subtask: false,
-          ),
-    ];
-  }
 
   /// A runtime command runs as the message `/name arguments`: the runtime
   /// reads its own commands from the prompt.

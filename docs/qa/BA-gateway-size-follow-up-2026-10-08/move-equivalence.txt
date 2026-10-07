@@ -1,0 +1,4 @@
+Command discovery implementation matches base byte-for-byte after private helper rename.
+Command response parser matches base byte-for-byte.
+Public listCommands signature and docs retained with direct delegation.
+File-size gate and baseline unchanged.
