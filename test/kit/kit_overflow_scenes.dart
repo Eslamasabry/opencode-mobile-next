@@ -26,6 +26,7 @@ import 'kit_chat_overflow_scenes.dart';
 import 'kit_core_overflow_scenes.dart';
 import 'kit_forms_overflow_scenes.dart';
 import 'kit_chats_overflow_scenes.dart';
+import 'kit_agent_cards_overflow_scenes.dart';
 
 /// Where the matrix puts a scene.
 enum KitOverflowHost {
@@ -1485,6 +1486,7 @@ final kitOverflowScenes = <KitOverflowScene>[
     ...kitCoreOverflowScenes,
     ...kitFormsOverflowScenes,
     ...kitChatsOverflowScenes,
+    ...kitAgentCardsOverflowScenes,
     // Infrastructure parts introduced by the September 27 kit migration.
     for (final segments in <String, List<String>>{
       'root': [],

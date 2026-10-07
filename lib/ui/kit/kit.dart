@@ -94,6 +94,11 @@
 /// | [KitViewer], [showKitViewer] | the one file and page viewer, as a sheet, a page or a pane |
 /// | [KitChecklist] | a job made of steps, with the steps only the person can do mixed in |
 /// | [KitCapabilityExplainer] | kit v2 §2.2 a missing capability, explained in place and offered where it can be turned on |
+/// | [KitAgentCard], [KitAgentCardMode] | the frame for a card an agent describes: eyebrow, title, parts, its ask, and its receipt, passed-over and unreadable looks |
+/// | [KitKeyValue], [KitKeyValueRow] | label and value rows for an agent's facts, tabular figures, long values wrap |
+/// | [KitMiniTable] | a header and up to 20 rows of up to 6 columns that scrolls sideways inside its own panel |
+/// | [KitChart], [KitChartKind], [KitChartSeries], [KitChartWords] | a bar or line chart in theme roles, one scale, a legend, and a text summary for a screen reader |
+/// | [KitSenseAsk], [KitSenseKind], [KitSenseItem], [KitSenseAction] | an agent's ask for a photo, file or voice note from the phone: pick, preview, remove, send |
 /// | [KitReceipt] | a write's receipt in place: sending, sent, done, not confirmed, not accepted |
 /// | [showKitRequestSheet] | §2 a request's details on a sheet, with its answers pinned |
 /// | [KitScanner] | the camera frame that finds a pairing QR |
@@ -209,6 +214,11 @@ export 'kit_nav.dart';
 export 'kit_needs_you.dart';
 export 'kit_progress_row.dart';
 export 'kit_receipt.dart';
+export 'kit_agent_card.dart';
+export 'kit_chart.dart';
+export 'kit_key_value.dart';
+export 'kit_mini_table.dart';
+export 'kit_sense_ask.dart';
 export 'kit_search_field.dart';
 export 'kit_tappable.dart';
 export 'kit_top_bar.dart';
