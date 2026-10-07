@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/domain/genui/gen_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:opencode_mobile/domain/agent_tools/agent_tool_adapter.dart';
 
 void main() {
   group('every adapter keeps the registry contract', () {
