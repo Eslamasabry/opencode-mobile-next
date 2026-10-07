@@ -9,17 +9,48 @@ import java.util.Properties
  * login codes and short tokens which pattern redaction cannot reliably find.
  */
 class NativeCrashStore(private val directory: File) {
+    private companion object {
+        const val MAX_CONSENT_BYTES = 32L
+    }
     private val fileName = "native-last-crash.properties"
-    private val symbol = Regex("^[A-Za-z_$][A-Za-z0-9_$]*(?:\\.[A-Za-z_$][A-Za-z0-9_$]*)*$")
-    private val source = Regex("^[A-Za-z0-9_$-]+\\.(?:kt|java)$")
-    private val frame = Regex("^[A-Za-z0-9_.$]+\\([A-Za-z0-9_$-]+\\.(?:kt|java):[0-9]{1,7}\\)$")
+    private val allowedClasses = setOf("java.lang.SecurityException", "java.io.IOException",
+        "java.lang.NullPointerException", "java.lang.IllegalArgumentException",
+        "java.lang.IllegalStateException", "java.lang.InterruptedException", "java.lang.Throwable")
+    private val categoryMessages = mapOf(
+        "java.lang.SecurityException" to "Permission denied",
+        "java.io.IOException" to "Input/output failure",
+        "java.lang.NullPointerException" to "Missing value",
+        "java.lang.IllegalArgumentException" to "Invalid argument",
+        "java.lang.IllegalStateException" to "Invalid state",
+        "java.lang.InterruptedException" to "Interrupted operation",
+    )
+
+    /** Shared with Dart's crash store. Absent/corrupt/future consent fails closed. */
+    fun enabledSince(): Long = try {
+        val consent = target("crash-diagnostics-consent")
+        if (!consent.isFile || consent.length() !in 1..MAX_CONSENT_BYTES) 0L
+        else (consent.readText().toLongOrNull() ?: 0L)
+            .takeIf { it > 0L && it <= System.currentTimeMillis() } ?: 0L
+    } catch (_: Throwable) { 0L }
+
+    @Synchronized
+    fun clear() {
+        for (name in listOf(fileName, "$fileName.tmp")) {
+            val file = target(name)
+            check(!file.exists() || file.delete())
+        }
+    }
 
     fun install(): Thread.UncaughtExceptionHandler {
         val previous = Thread.getDefaultUncaughtExceptionHandler()
         val handler = Thread.UncaughtExceptionHandler { thread, error ->
             try { write(error) } catch (_: Throwable) { }
             finally {
-                if (previous != null) previous.uncaughtException(thread, error)
+                // Preserve Android's fatal handling, but never hand its logger
+                // an exception message/cause/stack carrying credential values.
+                val safe = RuntimeException("Native application error")
+                safe.stackTrace = emptyArray()
+                if (previous != null) previous.uncaughtException(thread, safe)
             }
         }
         Thread.setDefaultUncaughtExceptionHandler(handler)
@@ -36,11 +67,16 @@ class NativeCrashStore(private val directory: File) {
 
     @Synchronized
     fun write(error: Throwable, timestamp: Long = System.currentTimeMillis()) {
+        val consent = enabledSince()
+        if (consent == 0L || timestamp < consent) {
+            clear()
+            return
+        }
         val summaries = mutableListOf<Map<String, Any?>>()
         val visited = java.util.Collections.newSetFromMap(java.util.IdentityHashMap<Throwable, Boolean>())
         var current: Throwable? = error
         while (current != null && summaries.size < 4 && visited.add(current)) {
-            summaries.add(summary(current, if (summaries.isEmpty()) 24 else 8))
+            summaries.add(summary(current))
             current = current.cause
         }
         val data = Properties().apply {
@@ -61,51 +97,56 @@ class NativeCrashStore(private val directory: File) {
             data.store(it, null)
             it.fd.sync()
         }
+        // Dart may have disabled capture while this native handler flushed.
+        // This is an epoch recheck, not a cross-runtime lock: a fatal crash in
+        // the final check/rename window can leave a category-only record which
+        // read() discards while disabled and startup erases.
+        if (enabledSince() != consent) {
+            check(temporary.delete())
+            return
+        }
         check(temporary.renameTo(destination))
     }
 
     private val allowedMessages = setOf("Permission denied", "Input/output failure", "Missing value",
         "Invalid argument", "Invalid state", "Interrupted operation", "[redacted]")
 
-    private fun summary(error: Throwable, frameLimit: Int): Map<String, Any?> {
-        val kind = error.javaClass.name.takeIf { it.length <= 180 && symbol.matches(it) } ?: "java.lang.Throwable"
-        val message = when (error) {
-            is SecurityException -> "Permission denied"
-            is java.io.IOException -> "Input/output failure"
-            is NullPointerException -> "Missing value"
-            is IllegalArgumentException -> "Invalid argument"
-            is IllegalStateException -> "Invalid state"
-            is InterruptedException -> "Interrupted operation"
-            else -> "[redacted]"
+    private fun summary(error: Throwable): Map<String, Any?> {
+        val kind = when (error) {
+            is SecurityException -> "java.lang.SecurityException"
+            is java.io.IOException -> "java.io.IOException"
+            is NullPointerException -> "java.lang.NullPointerException"
+            is IllegalArgumentException -> "java.lang.IllegalArgumentException"
+            is IllegalStateException -> "java.lang.IllegalStateException"
+            is InterruptedException -> "java.lang.InterruptedException"
+            else -> "java.lang.Throwable"
         }
-        val frames = error.stackTrace.take(frameLimit).mapNotNull { element ->
-            val file = element.fileName ?: return@mapNotNull null
-            if (element.className.length > 180 || element.methodName.length > 100 ||
-                !symbol.matches(element.className) || !symbol.matches(element.methodName) ||
-                !source.matches(file) || element.lineNumber !in 0..9999999) return@mapNotNull null
-            "${element.className}.${element.methodName}($file:${element.lineNumber})"
-        }
-        return mapOf("exceptionClass" to kind, "message" to message, "frames" to frames)
+        val message = categoryMessages[kind] ?: "[redacted]"
+        // Throwable.stackTrace can itself be caller-supplied. No arbitrary
+        // symbols, paths or exception values are allowed onto disk.
+        return mapOf("exceptionClass" to kind, "message" to message, "frames" to emptyList<String>())
     }
 
     @Synchronized
     fun read(): Map<String, Any?>? = try {
+        val consent = enabledSince()
         val file = target(fileName)
-        if (!file.isFile || file.length() !in 1..24576) null
+        if (consent == 0L) {
+            clear()
+            null
+        } else if (!file.isFile || file.length() !in 1..24576) null
         else {
             val data = Properties().apply { file.inputStream().use { load(it) } }
             val timestamp = data.getProperty("timestamp")?.toLongOrNull() ?: 0L
             fun summary(prefix: String): Map<String, Any?>? {
                 val kind = data.getProperty("${prefix}exceptionClass", "")
-                if (kind.length > 180 || !symbol.matches(kind)) return null
+                if (kind !in allowedClasses) return null
                 val message = data.getProperty("${prefix}message", "[redacted]")
-                val frames = data.getProperty("${prefix}frames", "").split('\n')
-                    .filter { it.length <= 360 && frame.matches(it) }.take(if (prefix.isEmpty()) 24 else 8)
                 return mapOf("exceptionClass" to kind, "message" to if (message in allowedMessages) message else "[redacted]",
-                    "frames" to frames)
+                    "frames" to emptyList<String>())
             }
             val outer = summary("")
-            if (timestamp <= 0 || outer == null) null
+            if (timestamp < consent || timestamp > System.currentTimeMillis() || outer == null) null
             else outer + mapOf("timestamp" to timestamp,
                 "causes" to (1..3).mapNotNull { summary("cause.$it.") })
         }

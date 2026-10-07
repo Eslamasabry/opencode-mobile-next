@@ -99,7 +99,8 @@ void main() {
 
     expect(find.textContaining('This part of OpenCode hit an error'), findsOne);
     expect(find.textContaining('private widget detail'), findsNothing);
-    expect(diagnostics.reportText(), contains('private widget detail'));
+    expect(diagnostics.reportText(), contains('Invalid state'));
+    expect(diagnostics.reportText(), isNot(contains('private widget detail')));
   });
 
   testWidgets('bootstrap failure is visible and can be retried', (

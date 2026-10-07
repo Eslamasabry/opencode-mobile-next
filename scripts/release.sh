@@ -19,7 +19,7 @@ SIGNING_CERTIFICATE_OUTPUT=""
 
 usage() {
   cat >&2 <<'EOF'
-Usage: ./scripts/release.sh <release|sideload|patch|github> [--publish]
+Usage: ./scripts/release.sh <release|sideload|patch|github|patch-plan> [--publish]
 
 For release/sideload/patch, the default runs gates and a Shorebird dry-run.
 Add --publish to upload to Shorebird after that dry-run succeeds.
@@ -28,6 +28,7 @@ The github mode verifies existing CI assets; its default never publishes.
 release  creates the production/store AAB and rejects the legacy certificate.
 sideload creates the GitHub APK and requires the exact public legacy certificate.
 patch    creates a Dart-only patch for the exact tagged release version.
+patch-plan prints staging, owner-phone canary and rollback instructions only.
 github   verifies a CI-built draft and publishes it stable only with --publish.
          Requires OC_RELEASE_BUILD_RUN_ID and OC_RELEASE_QUALITY_RUN_ID.
          No local signing files, Flutter build or Shorebird upload are used.
@@ -65,7 +66,7 @@ fi
 
 readonly MODE="$1"
 case "$MODE" in
-  release | sideload | patch | github) ;;
+  release | sideload | patch | github | patch-plan) ;;
   *)
     usage
     exit "$EXIT_USAGE"
@@ -84,6 +85,40 @@ readonly PUBLISH
 
 cd "$(dirname "$0")/.."
 export PATH="$HOME/.shorebird/bin:$PATH"
+
+print_patch_plan() {
+  local version
+  version="$(sed -n 's/^[[:space:]]*version:[[:space:]]*//p' pubspec.yaml)"
+  cat <<EOF
+==> Patch canary plan for $version (instructions only; no commands executed)
+1. Keep the exact released version and immutable baseline tag; Dart-only changes.
+2. With separate owner approval, dry-run and then upload ONLY to staging:
+   shorebird patch android --release-version "$version" --track staging --dry-run
+   shorebird patch android --release-version "$version" --track staging
+3. On the owner phone, explicitly check/download the staging track using the
+   Shorebird updater API. The ordinary stable app does not opt into staging.
+   Restart, verify the installed patch number and exercise affected journeys,
+   restart/reconnect and local-data preservation. Record version, candidate SHA,
+   patch number, device, results and owner approval in the release evidence.
+4. Only after that receipt and fresh promotion approval, promote THAT patch
+   through the Shorebird Console. Do not create a second stable patch.
+   This script's patch --publish path is NOT a promotion command; do not use it
+   to bypass the canary. See docs/release/patch-canary.md.
+Rollback (separate owner approval): select the exact app/release and patch in
+Shorebird Console, then Rollback. CLI 1.6.120+ also supports:
+   shorebird patches rollback --release-version "$version" --patch-number <PATCH_NUMBER>
+Devices learn rollback during a patch check; the change applies on next start.
+Rollback active newer patches too if returning past more than one patch.
+Verify the recovered journeys and local data on the owner phone.
+EOF
+}
+
+if [[ "$MODE" == patch-plan ]]; then
+  [[ "$PUBLISH" == false ]] || fail "patch-plan is instructions only; --publish is unavailable."
+  print_patch_plan
+  exit 0
+fi
+
 
 required_commands=(git flutter shorebird python3)
 if [[ "$MODE" == github ]]; then
@@ -425,6 +460,7 @@ case "$MODE" in
     fi
     ;;
   patch)
+    print_patch_plan
     patch_args=(patch android --release-version "$VERSION")
 
     echo "==> Validating OTA patch for exact release $VERSION (no upload)"

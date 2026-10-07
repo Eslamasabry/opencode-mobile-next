@@ -1,0 +1,538 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:BackgroundConnectionService.kt$BackgroundConnectionService.Companion$kind == "quota" &amp;&amp; (sessionID != "quota" || profileID.isBlank() || !monitorToken.matches(Regex("^[a-f0-9]{64}$")))</ID>
+    <ID>ComplexCondition:BuiltinLinux.kt$BuiltinLinux$code != 200 &amp;&amp; code != 206 &amp;&amp; !(code == 416 &amp;&amp; have &gt; 0)</ID>
+    <ID>ComplexCondition:BuiltinLinux.kt$BuiltinLinux$name == SERVER &amp;&amp; services[SERVER]?.let { it.process.isAlive &amp;&amp; it.port == port &amp;&amp; it.script == script } == true</ID>
+    <ID>ComplexCondition:BuiltinLinux.kt$BuiltinLinux$serverRunning || services.any { it.key != PHONE_ENGINE &amp;&amp; it.value.process.isAlive } || processes.any { it.isAlive } || LocalTerminal.get(context).hasLiveSessions()</ID>
+    <ID>ComplexCondition:LocalPdfBridge.kt$LocalPdfBridge$count &lt; 1 || width !in 1..1536 || height !in 1..1536 || width.toLong() * height &gt; 2000000</ID>
+    <ID>ComplexCondition:NativeCrashStore.kt$NativeCrashStore$element.className.length &gt; 180 || element.methodName.length &gt; 100 || !symbol.matches(element.className) || !symbol.matches(element.methodName) || !source.matches(file) || element.lineNumber !in 0..9999999</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$!data.has("loggedIn") || data.opt("loggedIn") !is Boolean || data.opt("authMethod") !is String || data.opt("apiProvider") !is String</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$(run.phase != "awaitingCode" &amp;&amp; run.phase != "urlReady") || !run.acceptsCode || run.codeSubmitted || run.cancelled</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$code.length &gt; 4096 || parts.size != 2 || parts.any { it.isEmpty() } || code.startsWith("sk-") || Regex("[\\x00-\\x20\\x7f]").containsMatchIn(code)</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$existing.profileId != profileId || existing.agentId != agentId || existing.method != method || existing.cancelled</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$run != null &amp;&amp; (run.profileId != profileId || run.agentId != agentId || run.method != method)</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$synchronized(lock) { !run.acceptsCode &amp;&amp; !run.cancelled &amp;&amp; run.phase == "urlReady" } &amp;&amp; System.nanoTime() &lt; deadline</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$synchronized(lock) { !run.cancelled &amp;&amp; run.phase == "awaitingCode" &amp;&amp; !run.acceptsCode &amp;&amp; run.failure == null } &amp;&amp; System.nanoTime() &lt; outcome</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$synchronized(lock) { !run.cancelled &amp;&amp; run.phase == "awaitingCode" &amp;&amp; !run.acceptsCode &amp;&amp; run.failure == null } &amp;&amp; System.nanoTime() &lt; pending</ID>
+    <ID>ComplexCondition:PhoneAgentSignIn.kt$PhoneAgentSignIn$value.length &lt;= 8192 &amp;&amp; !Regex("[\\x00-\\x20\\x7f\\\\]").containsMatchIn(value) &amp;&amp; uri.scheme == "https" &amp;&amp; uri.host == "claude.com" &amp;&amp; uri.port == -1 &amp;&amp; uri.rawUserInfo == null &amp;&amp; uri.rawFragment == null &amp;&amp; uri.rawPath == "/cai/oauth/authorize"</ID>
+    <ID>ComplexCondition:PhoneEngineNative.kt$PhoneEngineNative.Companion$header.size != 64 || byte(0) != 0x7f || byte(1) != 0x45 || byte(2) != 0x4c || byte(3) != 0x46 || byte(4) != 2 || byte(5) != 1 || byte(6) != 1 || byte(16) != 3 || byte(17) != 0 || byte(20) != 1 || (21..23).any { byte(it) != 0 } || byte(52) != 64 || byte(53) != 0</ID>
+    <ID>ComplexCondition:PhoneEngineNative.kt$PhoneEngineNative.Companion$ready.length() != 5 || ready.getInt("schemaVersion") != 1 || ready.getString("profileId") != profile || port !in 1024..65535 || port == 4097 || nonce.length != 36 || UUID.fromString(nonce).toString() != nonce || !TOKEN.matches(signature)</ID>
+    <ID>ComplexCondition:ReadAloudBridge.kt$ReadAloudBridge$id.isNullOrBlank() || id.length &gt; 128 || (selected != null &amp;&amp; selected !is String)</ID>
+    <ID>CyclomaticComplexMethod:AppLifecycle.kt$AppLifecycle$fun autostartComponents(manufacturer: String, brand: String): List&lt;ComponentName&gt;</ID>
+    <ID>CyclomaticComplexMethod:BackgroundConnectionService.kt$BackgroundConnectionService.Companion$@Suppress("DEPRECATION") fun showCodingAlert( context: Context, kind: String, sessionID: String, key: String, quickReply: Boolean = false, requestID: String = "", profileID: String = "", allowActions: Boolean = true, monitorToken: String = "", subtext: String = "", title: String = "", text: String = "", agentName: String = "" ): Boolean</ID>
+    <ID>CyclomaticComplexMethod:BackgroundConnectionService.kt$BackgroundConnectionService.Companion$private fun buildLiveNotification(context: Context, status: LiveStatus): Notification</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runPhoneEngineBoundaryProbe(): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runProotTierProof(canonicalRoot: File, daemonPid: Int? = null): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runProotViewBoundaryProbe(): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$fun run(script: String, timeoutSeconds: Long = 600, agentUser: Boolean = false): Result</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$private fun download(image: Image, target: File, progress: InstallProgress)</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$private fun hasUnconfinedChildren(): Boolean</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$private fun startPhoneEngineChecked(profile: String, port: Int, notice: String?): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$private fun unpack(archive: File, into: File, progress: InstallProgress)</ID>
+    <ID>CyclomaticComplexMethod:ByoHostSigner.kt$ByoHostSigner$private fun handle(call: MethodCall): Any?</ID>
+    <ID>CyclomaticComplexMethod:LocalTerminal.kt$LocalTerminal$private fun handle(call: MethodCall, result: MethodChannel.Result)</ID>
+    <ID>CyclomaticComplexMethod:MainActivity.kt$MainActivity$override fun configureFlutterEngine(flutterEngine: FlutterEngine)</ID>
+    <ID>CyclomaticComplexMethod:MainActivity.kt$MainActivity$override fun onNewIntent(intent: Intent)</ID>
+    <ID>CyclomaticComplexMethod:MainActivity.kt$MainActivity$override fun onRequestPermissionsResult( requestCode: Int, permissions: Array&lt;out String&gt;, grantResults: IntArray )</ID>
+    <ID>CyclomaticComplexMethod:MainActivity.kt$MainActivity$private fun handleBuiltinLinux(call: MethodCall, result: MethodChannel.Result)</ID>
+    <ID>CyclomaticComplexMethod:MainActivity.kt$MainActivity$private fun handleTermuxSetup(call: MethodCall, result: MethodChannel.Result)</ID>
+    <ID>CyclomaticComplexMethod:NativeCrashStore.kt$NativeCrashStore$@Synchronized fun read(): Map&lt;String, Any?&gt;?</ID>
+    <ID>CyclomaticComplexMethod:NativeCrashStore.kt$NativeCrashStore$private fun summary(error: Throwable, frameLimit: Int): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun cancel(profileId: String, agentId: String, runId: String, method: String): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun submit( profileId: String, agentId: String, runId: String, method: String, code: String, ): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$private fun identity( profileId: String, agentId: String, runId: String, method: String, create: Boolean, ): Run</ID>
+    <ID>CyclomaticComplexMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$private fun readLogin(run: Run, process: Process)</ID>
+    <ID>CyclomaticComplexMethod:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$override fun onStart()</ID>
+    <ID>CyclomaticComplexMethod:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$private fun assertOwnQaJobNotFailed(projectId: String, taskId: String, project: JSONObject)</ID>
+    <ID>CyclomaticComplexMethod:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$private fun execute()</ID>
+    <ID>CyclomaticComplexMethod:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$private fun validateStatus(value: JSONObject)</ID>
+    <ID>CyclomaticComplexMethod:PhoneEngineAttestation.kt$PhoneEngineAttestation$fun issue(profile: String, root: File, generation: String, policy: List&lt;String&gt;, controls: Map&lt;String, Any?&gt;): Receipt</ID>
+    <ID>CyclomaticComplexMethod:PhoneEngineDeviceBoundaryRegressions.kt$PhoneEngineDeviceBoundaryRegressions$fun run(context: Context, bootstrap: Boolean = true, onStage: (String) -&gt; Unit = {}): Map&lt;String, Any?&gt;</ID>
+    <ID>CyclomaticComplexMethod:PhoneEngineNative.kt$PhoneEngineNative$fun start(profile: String, port: Int, serverRunning: Boolean, reason: String, proofFactory: (File) -&gt; PhoneEngineAttestation.Receipt?): Process</ID>
+    <ID>CyclomaticComplexMethod:PhoneEngineNative.kt$PhoneEngineNative.Companion$fun verifyBundle(context: Context, vararg names: String)</ID>
+    <ID>CyclomaticComplexMethod:PhoneEngineNative.kt$PhoneEngineNative.Companion$internal fun packagedAbi(header: ByteArray): String</ID>
+    <ID>CyclomaticComplexMethod:PhoneEngineNative.kt$PhoneEngineNative.Companion$internal fun verifiedReadyPort(line: String, token: String, profile: String): Int</ID>
+    <ID>CyclomaticComplexMethod:ProjectExportBridge.kt$ProjectExportBridge$private fun runExport(uri: Uri, plan: File): Map&lt;String, Any&gt;</ID>
+    <ID>CyclomaticComplexMethod:ReadAloudBridge.kt$ReadAloudBridge$@Suppress("DEPRECATION") private fun cancel(status: String = "cancelled"): Boolean</ID>
+    <ID>CyclomaticComplexMethod:ReadAloudBridge.kt$ReadAloudBridge$private fun handle(call: MethodCall, result: MethodChannel.Result)</ID>
+    <ID>CyclomaticComplexMethod:SessionsWidgetProvider.kt$SessionsWidgetProvider.Companion$private fun buildViews(context: Context): RemoteViews</ID>
+    <ID>CyclomaticComplexMethod:SetupRunner.kt$SetupRunner$private fun runJob(specs: List&lt;Spec&gt;)</ID>
+    <ID>CyclomaticComplexMethod:SetupRunner.kt$SetupRunner$private fun runScript(spec: Spec, component: SetupComponentStatus): String?</ID>
+    <ID>CyclomaticComplexMethod:TermuxSetupRunner.kt$TermuxSetupRunner$private fun reconcile(current: JSONObject)</ID>
+    <ID>CyclomaticComplexMethod:VoiceDownloadNotifications.kt$VoiceDownloadNotifications$private fun show(call: MethodCall): Boolean</ID>
+    <ID>EmptyElseBlock:BuiltinLinux.kt$SharedStorageBinds$if (parts.isNotEmpty()) parts.removeAt(parts.size - 1)</ID>
+    <ID>EmptyElseBlock:PhoneEngineAttestation.kt$PhoneEngineAttestation.Companion$if (n &lt; 0) break</ID>
+    <ID>EmptyFunctionBlock:PhoneEngineNativeRegressions.kt$PhoneEngineNativeRegressions.PipeChild${ }</ID>
+    <ID>EmptyFunctionBlock:ReadAloudBridge.kt$ReadAloudBridge.&lt;no name provided&gt;${}</ID>
+    <ID>InstanceOfCheckForException:BuiltinLinux.kt$BuiltinLinux$e is PhoneEngineNative.Failure</ID>
+    <ID>InstanceOfCheckForException:MainActivity.kt$MainActivity$error is PhoneEngineNative.Failure</ID>
+    <ID>InstanceOfCheckForException:MainActivity.kt$MainActivity$error is SetupPersistenceException</ID>
+    <ID>LargeClass:BuiltinLinux.kt$BuiltinLinux</ID>
+    <ID>LargeClass:MainActivity.kt$MainActivity : FlutterActivity</ID>
+    <ID>LargeClass:PhoneEngineAcceptance.kt$PhoneEngineAcceptance : Instrumentation</ID>
+    <ID>LongMethod:BackgroundConnectionService.kt$BackgroundConnectionService.Companion$@Suppress("DEPRECATION") fun showCodingAlert( context: Context, kind: String, sessionID: String, key: String, quickReply: Boolean = false, requestID: String = "", profileID: String = "", allowActions: Boolean = true, monitorToken: String = "", subtext: String = "", title: String = "", text: String = "", agentName: String = "" ): Boolean</ID>
+    <ID>LongMethod:BackgroundConnectionService.kt$BackgroundConnectionService.Companion$private fun buildLiveNotification(context: Context, status: LiveStatus): Notification</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runPhoneEngineBoundaryProbe(): Map&lt;String, Any?&gt;</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runProotTierProof(canonicalRoot: File, daemonPid: Int? = null): Map&lt;String, Any?&gt;</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runProotViewBoundaryProbe(): Map&lt;String, Any?&gt;</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$private fun download(image: Image, target: File, progress: InstallProgress)</ID>
+    <ID>LongMethod:BuiltinLinux.kt$BuiltinLinux$private fun startPhoneEngineChecked(profile: String, port: Int, notice: String?): Map&lt;String, Any?&gt;</ID>
+    <ID>LongMethod:MainActivity.kt$MainActivity$override fun configureFlutterEngine(flutterEngine: FlutterEngine)</ID>
+    <ID>LongMethod:MainActivity.kt$MainActivity$override fun onRequestPermissionsResult( requestCode: Int, permissions: Array&lt;out String&gt;, grantResults: IntArray )</ID>
+    <ID>LongMethod:MainActivity.kt$MainActivity$private fun handleBuiltinLinux(call: MethodCall, result: MethodChannel.Result)</ID>
+    <ID>LongMethod:MainActivity.kt$MainActivity$private fun runInTermux(call: MethodCall, result: MethodChannel.Result)</ID>
+    <ID>LongMethod:PhoneAgentSignIn.kt$PhoneAgentSignIn$private fun readLogin(run: Run, process: Process)</ID>
+    <ID>LongMethod:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$private fun execute()</ID>
+    <ID>LongMethod:PhoneEngineDeviceBoundaryRegressions.kt$PhoneEngineDeviceBoundaryRegressions$fun run(context: Context, bootstrap: Boolean = true, onStage: (String) -&gt; Unit = {}): Map&lt;String, Any?&gt;</ID>
+    <ID>LongMethod:PhoneEngineNative.kt$PhoneEngineNative$fun start(profile: String, port: Int, serverRunning: Boolean, reason: String, proofFactory: (File) -&gt; PhoneEngineAttestation.Receipt?): Process</ID>
+    <ID>LongMethod:PhoneEngineNative.kt$PhoneEngineNative.Companion$fun verifyBundle(context: Context, vararg names: String)</ID>
+    <ID>LongMethod:ProjectExportBridge.kt$ProjectExportBridge$private fun runExport(uri: Uri, plan: File): Map&lt;String, Any&gt;</ID>
+    <ID>LongMethod:ReadAloudBridge.kt$ReadAloudBridge$private fun handle(call: MethodCall, result: MethodChannel.Result)</ID>
+    <ID>LongMethod:SessionsWidgetProvider.kt$SessionsWidgetProvider.Companion$private fun buildViews(context: Context): RemoteViews</ID>
+    <ID>LongMethod:SetupRunner.kt$SetupRunner$private fun runJob(specs: List&lt;Spec&gt;)</ID>
+    <ID>LongParameterList:BackgroundConnectionService.kt$BackgroundConnectionService.Companion$( context: Context, kind: String, sessionID: String, key: String, quickReply: Boolean = false, requestID: String = "", profileID: String = "", allowActions: Boolean = true, monitorToken: String = "", subtext: String = "", title: String = "", text: String = "", agentName: String = "" )</ID>
+    <ID>LongParameterList:BackgroundConnectionService.kt$BackgroundConnectionService.Companion$( context: Context, kind: String, sessionID: String, key: String, quickReply: Boolean, requestID: String, notificationID: Int, profileID: String )</ID>
+    <ID>LongParameterList:CodingActionReceiver.kt$CodingActionReceiver$( context: Context, kind: String, sessionID: String, key: String, decision: String, requestID: String, profileID: String )</ID>
+    <ID>LongParameterList:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$(projectId: String, repo: String, dev: String, main: String, confirmed: Boolean, request: String)</ID>
+    <ID>LongParameterList:SetupJob.kt$SetupComponentStatus$( val id: String, /** pending | running | done | failed | skipped */ var state: String = "pending", val weight: Double = 1.0, var stage: String? = null, var done: Long? = null, var total: Long? = null, var percent: Double? = null, var version: String? = null, var error: String? = null, var startedAt: Long? = null, var endedAt: Long? = null, /** Opaque values the app gave the step and reads back (job steps use it). */ val data: Map&lt;String, String&gt; = emptyMap(), )</ID>
+    <ID>LongParameterList:SetupJob.kt$SetupJobState$( val jobId: String, /** running | done | failed | cancelled | interrupted */ var state: String, val components: List&lt;SetupComponentStatus&gt;, var current: String? = null, val startedAt: Long, var updatedAt: Long = startedAt, var error: String? = null, var logTail: String = "", var errorCode: String? = null, )</ID>
+    <ID>LongParameterList:SetupRunner.kt$SetupRunner.Spec$( val id: String, val script: String?, val native: Boolean, val step: Boolean, val weight: Double, val skipped: Boolean, val version: String?, val stage: String?, val labels: Map&lt;String, String&gt;, val data: Map&lt;String, String&gt;, val agentUser: Boolean = false, )</ID>
+    <ID>LoopWithTooManyJumpStatements:BuiltinLinux.kt$BuiltinLinux$for</ID>
+    <ID>LoopWithTooManyJumpStatements:BuiltinLinux.kt$BuiltinLinux$while</ID>
+    <ID>LoopWithTooManyJumpStatements:BuiltinLinux.kt$SharedStorageBinds$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ByoHostSigner.kt$ByoHostSigner.Agent$while</ID>
+    <ID>LoopWithTooManyJumpStatements:PhoneAgentSignIn.kt$PhoneAgentSignIn$while</ID>
+    <ID>LoopWithTooManyJumpStatements:ProjectExportBridge.kt$ProjectExportBridge$for</ID>
+    <ID>LoopWithTooManyJumpStatements:SessionsWidgetProvider.kt$SessionsWidgetProvider.Companion$for</ID>
+    <ID>LoopWithTooManyJumpStatements:SetupRunner.kt$SetupRunner$for</ID>
+    <ID>MagicNumber:AppLifecycle.kt$AppLifecycle$16</ID>
+    <ID>MagicNumber:BackgroundConnectionService.kt$BackgroundConnectionService.Companion$0x0fffffff</ID>
+    <ID>MagicNumber:BackgroundConnectionService.kt$BackgroundConnectionService.Companion$3</ID>
+    <ID>MagicNumber:BackgroundConnectionService.kt$BackgroundConnectionService.Companion$36</ID>
+    <ID>MagicNumber:BackgroundConnectionService.kt$BackgroundConnectionService.Companion$4</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$0b110_000_000</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$0b111_000_000</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$0b111_111_111</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$0x200</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$0xFFF</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$10</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$1000</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$1024</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$128</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$16</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$19</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$1_000L</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$20</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$200</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$2000</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$206</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$20_000</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$250</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$3</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$30</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$300</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$3000</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$32</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$384</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$399</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$416</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$448</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$5</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$511</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$60_000</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$64</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$65535</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$65536</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$78</ID>
+    <ID>MagicNumber:ByoHostAgentProtocol.kt$ByoHostAgentProtocol$0x30</ID>
+    <ID>MagicNumber:ByoHostAgentProtocol.kt$ByoHostAgentProtocol$0x80</ID>
+    <ID>MagicNumber:ByoHostAgentProtocol.kt$ByoHostAgentProtocol$11</ID>
+    <ID>MagicNumber:ByoHostAgentProtocol.kt$ByoHostAgentProtocol$12</ID>
+    <ID>MagicNumber:ByoHostAgentProtocol.kt$ByoHostAgentProtocol$13</ID>
+    <ID>MagicNumber:ByoHostAgentProtocol.kt$ByoHostAgentProtocol$14</ID>
+    <ID>MagicNumber:ByoHostAgentProtocol.kt$ByoHostAgentProtocol$256</ID>
+    <ID>MagicNumber:ByoHostAgentProtocol.kt$ByoHostAgentProtocol$32</ID>
+    <ID>MagicNumber:ByoHostAgentProtocol.kt$ByoHostAgentProtocol$33</ID>
+    <ID>MagicNumber:ByoHostAgentProtocol.kt$ByoHostAgentProtocol$4</ID>
+    <ID>MagicNumber:ByoHostAgentProtocol.kt$ByoHostAgentProtocol$48</ID>
+    <ID>MagicNumber:ByoHostAgentProtocol.kt$ByoHostAgentProtocol$5</ID>
+    <ID>MagicNumber:ByoHostAgentProtocol.kt$ByoHostAgentProtocol$50</ID>
+    <ID>MagicNumber:ByoHostAgentProtocol.kt$ByoHostAgentProtocol$64</ID>
+    <ID>MagicNumber:ByoHostSigner.kt$ByoHostSigner$0x1c0</ID>
+    <ID>MagicNumber:ByoHostSigner.kt$ByoHostSigner$0x1ff</ID>
+    <ID>MagicNumber:ByoHostSigner.kt$ByoHostSigner$108</ID>
+    <ID>MagicNumber:ByoHostSigner.kt$ByoHostSigner$16</ID>
+    <ID>MagicNumber:ByoHostSigner.kt$ByoHostSigner$256</ID>
+    <ID>MagicNumber:ByoHostSigner.kt$ByoHostSigner.Agent$0x180</ID>
+    <ID>MagicNumber:ByoHostSigner.kt$ByoHostSigner.Agent$10000</ID>
+    <ID>MagicNumber:ByoHostSigner.kt$ByoHostSigner.Agent$4</ID>
+    <ID>MagicNumber:LocalPdfBridge.kt$LocalPdfBridge$10</ID>
+    <ID>MagicNumber:LocalPdfBridge.kt$LocalPdfBridge$100</ID>
+    <ID>MagicNumber:LocalPdfBridge.kt$LocalPdfBridge$1024</ID>
+    <ID>MagicNumber:LocalPdfBridge.kt$LocalPdfBridge$10L</ID>
+    <ID>MagicNumber:LocalPdfBridge.kt$LocalPdfBridge$12000</ID>
+    <ID>MagicNumber:LocalPdfBridge.kt$LocalPdfBridge$1536</ID>
+    <ID>MagicNumber:LocalPdfBridge.kt$LocalPdfBridge$199</ID>
+    <ID>MagicNumber:LocalPdfBridge.kt$LocalPdfBridge$2000000</ID>
+    <ID>MagicNumber:LocalPdfBridge.kt$LocalPdfBridge$29</ID>
+    <ID>MagicNumber:LocalPdfService.kt$LocalPdfService$100</ID>
+    <ID>MagicNumber:LocalPdfService.kt$LocalPdfService$10000</ID>
+    <ID>MagicNumber:LocalPdfService.kt$LocalPdfService$100000</ID>
+    <ID>MagicNumber:LocalPdfService.kt$LocalPdfService$1024</ID>
+    <ID>MagicNumber:LocalPdfService.kt$LocalPdfService$10L</ID>
+    <ID>MagicNumber:LocalPdfService.kt$LocalPdfService$1536.0</ID>
+    <ID>MagicNumber:LocalPdfService.kt$LocalPdfService$199</ID>
+    <ID>MagicNumber:LocalPdfService.kt$LocalPdfService$2000000.0</ID>
+    <ID>MagicNumber:LocalPdfService.kt$LocalPdfService.LimitedOutput$1024</ID>
+    <ID>MagicNumber:LocalPdfService.kt$LocalPdfService.LimitedOutput$10L</ID>
+    <ID>MagicNumber:LocalTerminal.kt$LocalTerminal$24</ID>
+    <ID>MagicNumber:LocalTerminal.kt$LocalTerminal$80</ID>
+    <ID>MagicNumber:LocalTerminal.kt$LocalTerminal.Session$1024</ID>
+    <ID>MagicNumber:LocalTerminal.kt$LocalTerminal.Session$16</ID>
+    <ID>MagicNumber:LocalTerminal.kt$LocalTerminal.Session$2000</ID>
+    <ID>MagicNumber:LocalTerminal.kt$LocalTerminal.Session$250</ID>
+    <ID>MagicNumber:LocalTerminal.kt$LocalTerminal.Session$300</ID>
+    <ID>MagicNumber:LocalTerminal.kt$LocalTerminal.Session$8192</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$1000</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$1024L</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$109</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$120_000</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$120_000L</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$16_384</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$1_000L</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$30_000L</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$4097</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$4098</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$4099</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$512</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$600</ID>
+    <ID>MagicNumber:NativeCrashStore.kt$NativeCrashStore$100</ID>
+    <ID>MagicNumber:NativeCrashStore.kt$NativeCrashStore$180</ID>
+    <ID>MagicNumber:NativeCrashStore.kt$NativeCrashStore$24</ID>
+    <ID>MagicNumber:NativeCrashStore.kt$NativeCrashStore$24576</ID>
+    <ID>MagicNumber:NativeCrashStore.kt$NativeCrashStore$3</ID>
+    <ID>MagicNumber:NativeCrashStore.kt$NativeCrashStore$360</ID>
+    <ID>MagicNumber:NativeCrashStore.kt$NativeCrashStore$4</ID>
+    <ID>MagicNumber:NativeCrashStore.kt$NativeCrashStore$8</ID>
+    <ID>MagicNumber:NativeCrashStore.kt$NativeCrashStore$9999999</ID>
+    <ID>MagicNumber:PhoneAgentHost.kt$PhoneAgentHost$15</ID>
+    <ID>MagicNumber:PhoneAgentHost.kt$PhoneAgentHost$2000</ID>
+    <ID>MagicNumber:PhoneAgentHost.kt$PhoneAgentHost$30</ID>
+    <ID>MagicNumber:PhoneAgentHost.kt$PhoneAgentHost$4096</ID>
+    <ID>MagicNumber:PhoneAgentHost.kt$PhoneAgentHost$4099</ID>
+    <ID>MagicNumber:PhoneAgentHost.kt$PhoneAgentHost$512</ID>
+    <ID>MagicNumber:PhoneAgentHost.kt$PhoneAgentHost$8192</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$10</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$100</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$1024</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$15</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$150</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$16</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$16384</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$2048</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$32768</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$4096</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$45</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$5</ID>
+    <ID>MagicNumber:PhoneAgentSignIn.kt$PhoneAgentSignIn$8192</ID>
+    <ID>MagicNumber:PhoneEngineAttestation.kt$0x80000</ID>
+    <ID>MagicNumber:PhoneEngineAttestation.kt$27</ID>
+    <ID>MagicNumber:PhoneEngineAttestation.kt$PhoneEngineAttestation.Companion$255</ID>
+    <ID>MagicNumber:PhoneEngineAttestation.kt$PhoneEngineAttestation.Companion$384</ID>
+    <ID>MagicNumber:PhoneEngineAttestation.kt$PhoneEngineAttestation.Companion$65536</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$10</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$100</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$10000</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$1024</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$200</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$2000</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$255</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$299</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$3</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$300</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$32</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$384</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$4096</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$4097</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$448</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$60</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$65535</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$8192</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative$8193</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$0x45</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$0x46</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$0x4c</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$0x7f</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$1024</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$16</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$17</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$18</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$183</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$19</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$20</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$21</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$23</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$255</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$26</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$3</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$36</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$4</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$4097</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$5</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$52</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$53</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$6</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$62</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$64</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$65535</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$65536</ID>
+    <ID>MagicNumber:PhoneEngineNative.kt$PhoneEngineNative.Companion$8</ID>
+    <ID>MagicNumber:ReadAloudBridge.kt$ReadAloudBridge$10000</ID>
+    <ID>MagicNumber:ReadAloudBridge.kt$ReadAloudBridge$12000</ID>
+    <ID>MagicNumber:ReadAloudBridge.kt$ReadAloudBridge$128</ID>
+    <ID>MagicNumber:ReadAloudBridge.kt$ReadAloudBridge$24</ID>
+    <ID>MagicNumber:ReadAloudBridge.kt$ReadAloudBridge$26</ID>
+    <ID>MagicNumber:ReadAloudBridge.kt$ReadAloudBridge$3000</ID>
+    <ID>MagicNumber:ReadAloudBridge.kt$ReadAloudBridge$300000</ID>
+    <ID>MagicNumber:ReadAloudBridge.kt$ReadAloudBridge$8000</ID>
+    <ID>MagicNumber:SessionLinkIngress.kt$SessionLinkIngress$0x21</ID>
+    <ID>MagicNumber:SessionLinkIngress.kt$SessionLinkIngress$0x7e</ID>
+    <ID>MagicNumber:SessionLinkIngress.kt$SessionLinkIngress$1024</ID>
+    <ID>MagicNumber:SessionsWidgetProvider.kt$SessionsWidgetProvider.Companion$100</ID>
+    <ID>MagicNumber:SessionsWidgetProvider.kt$SessionsWidgetProvider.Companion$24</ID>
+    <ID>MagicNumber:SessionsWidgetProvider.kt$SessionsWidgetProvider.Companion$60</ID>
+    <ID>MagicNumber:SessionsWidgetProvider.kt$SessionsWidgetProvider.Companion$60_000</ID>
+    <ID>MagicNumber:SessionsWidgetProvider.kt$SessionsWidgetProvider.Companion$99</ID>
+    <ID>MagicNumber:SetupJob.kt$SetupComponentStatus$0.5</ID>
+    <ID>MagicNumber:SetupJob.kt$SetupComponentStatus$0.98</ID>
+    <ID>MagicNumber:SetupJob.kt$SetupComponentStatus$100</ID>
+    <ID>MagicNumber:SetupJob.kt$SetupProtocol$100.0</ID>
+    <ID>MagicNumber:SetupJob.kt$SetupProtocol$120</ID>
+    <ID>MagicNumber:SetupJob.kt$SetupProtocol$80</ID>
+    <ID>MagicNumber:SetupRunner.kt$SetupRunner$100</ID>
+    <ID>MagicNumber:SetupRunner.kt$SetupRunner$10L</ID>
+    <ID>MagicNumber:SetupRunner.kt$SetupRunner$240L</ID>
+    <ID>MagicNumber:SetupRunner.kt$SetupRunner$300</ID>
+    <ID>MagicNumber:SetupService.kt$SetupService.Companion$3</ID>
+    <ID>MagicNumber:TermuxSetupRunner.kt$TermuxSetupRunner$100.0</ID>
+    <ID>MagicNumber:TermuxSetupRunner.kt$TermuxSetupRunner$1000</ID>
+    <ID>MagicNumber:TermuxSetupRunner.kt$TermuxSetupRunner$120000</ID>
+    <ID>MagicNumber:TermuxSetupRunner.kt$TermuxSetupRunner$15_000</ID>
+    <ID>MagicNumber:TermuxSetupRunner.kt$TermuxSetupRunner$3</ID>
+    <ID>MagicNumber:TermuxSetupRunner.kt$TermuxSetupRunner$30_000</ID>
+    <ID>MagicNumber:TermuxSetupRunner.kt$TermuxSetupRunner$4</ID>
+    <ID>MagicNumber:TermuxSetupRunner.kt$TermuxSetupRunner$5</ID>
+    <ID>MagicNumber:ThermalMonitor.kt$ThermalMonitor$3</ID>
+    <ID>MagicNumber:ThermalMonitor.kt$ThermalMonitor$30</ID>
+    <ID>MagicNumber:ThermalMonitor.kt$ThermalMonitor$4</ID>
+    <ID>MagicNumber:ThermalMonitor.kt$ThermalMonitor$5</ID>
+    <ID>MagicNumber:ThermalMonitor.kt$ThermalMonitor$6</ID>
+    <ID>MagicNumber:VoiceDownloadNotifications.kt$VoiceDownloadNotifications$100</ID>
+    <ID>MagicNumber:VoiceDownloadNotifications.kt$VoiceDownloadNotifications$1000L</ID>
+    <ID>MagicNumber:VoiceDownloadNotifications.kt$VoiceDownloadNotifications$15</ID>
+    <ID>MagicNumber:VoiceDownloadNotifications.kt$VoiceDownloadNotifications$60</ID>
+    <ID>MaxLineLength:AppLifecycle.kt$AppLifecycle$fun</ID>
+    <ID>MaxLineLength:BuiltinLinux.kt$BuiltinLinux$(if (tier == "proot") "required-proot-v1" else "required-v1").toByteArray(Charsets.US_ASCII)</ID>
+    <ID>MaxLineLength:BuiltinLinux.kt$BuiltinLinux$catch (_: Exception) { ready.cancel(true); throw PhoneEngineNative.Failure("boundary_probe_unavailable") }</ID>
+    <ID>MaxLineLength:BuiltinLinux.kt$BuiltinLinux$check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId) &amp;&amp; config.length &lt; 65536 &amp;&amp; profileId !in blockedAgentProfiles)</ID>
+    <ID>MaxLineLength:BuiltinLinux.kt$BuiltinLinux$check(temp.canonicalFile == temp.absoluteFile &amp;&amp; !File(dir, "config.json").let { it.canonicalFile != it.absoluteFile })</ID>
+    <ID>MaxLineLength:BuiltinLinux.kt$BuiltinLinux$if (!tmp.renameTo(sharedProjectsFile)) { tmp.delete(); throw IllegalStateException("shared projects not saved") }</ID>
+    <ID>MaxLineLength:BuiltinLinux.kt$BuiltinLinux$listOf("--bind=${projectStorage.projects.absolutePath}:/root/projects")</ID>
+    <ID>MaxLineLength:BuiltinLinux.kt$BuiltinLinux$subject?.let { try { it.outputStream.close() } catch (_: Exception) { }; if (!it.waitFor(3, TimeUnit.SECONDS)) stopTree(it) }</ID>
+    <ID>MaxLineLength:BuiltinLinux.kt$BuiltinLinux$val</ID>
+    <ID>MaxLineLength:ByoHostSigner.kt$ByoHostSigner$if</ID>
+    <ID>MaxLineLength:ByoHostSigner.kt$ByoHostSigner$require(root.canonicalFile == File(app.filesDir.canonicalFile, "linux/ubuntu/tmp"))</ID>
+    <ID>MaxLineLength:LocalPdfBridge.kt$LocalPdfBridge$disposed || Build.VERSION.SDK_INT &lt; 29 -&gt; result.error("unavailable", "PDF preview unavailable", null)</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$"startAgentHost"</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$"startAgentSignIn"</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$handler.post { result.error("termux_setup", "Termux setup could not be confirmed. Check Termux and retry status.", null) }</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$result.success(mapOf("wifi" to (capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true)))</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$}</ID>
+    <ID>MaxLineLength:NativeCrashStore.kt$NativeCrashStore$return</ID>
+    <ID>MaxLineLength:PhoneAgentCheckOutput.kt$PhoneAgentCheckOutput$private val receipt = Regex("^::oc-check-(?:begin agent-[a-z0-9][a-z0-9_-]{0,79}|end agent-[a-z0-9][a-z0-9_-]{0,79} [0-9]{1,3})$")</ID>
+    <ID>MaxLineLength:PhoneAgentHost.kt$PhoneAgentHost$child.outputStream.use { output -&gt; output.write((password + "\n").toByteArray(Charsets.US_ASCII)); output.flush() }</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$"checker" -&gt; "Check the exact committed file contents and git diff against all criteria. Return JSON only, findings [] when all criteria pass and one criterionResults item per criterion with the exact criterion string and status met/unmet. Do not change files."</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$"planner" -&gt; "Return JSON only. Propose exactly ONE phase id phase_qa and ONE task id task_qa. phaseId phase_qa; roleId worker; repoId $repoId; serverId phone; dependsOn []. Copy this one criterion exactly: $criterion. The phase title is Acceptance and milestoneId milestone_qa. Return spec as an object. Do not modify files."</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$action.keys().asSequence().all { it in setOf("reason", "provider", "title", "message", "label", "link") }</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$capabilities.optBoolean("boundary") &amp;&amp; capabilities.optBoolean("execution") &amp;&amp; capabilities.optBoolean("oc1Verified")</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$checkedTask.getJSONArray("criterionResults").getJSONObject(0).optString("status") == "met"</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$completedJob.getJSONObject("promptDispatch").optString("checker") == "dispatched"</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$completedJob.getJSONObject("sessionIds").optString("worker") != completedJob.getJSONObject("sessionIds").optString("checker")</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$else -&gt; "Implement only the approved criterion, then git add and git commit to your existing task branch. Use git -c user.name='Phone engine worker' -c user.email='phone-engine-worker@localhost.invalid' commit when local identity is absent. Do not modify main or dev. Do not access files outside this clone."</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$if (OsConstants.S_ISDIR(stat.st_mode) &amp;&amp; entry.name != ".git" &amp;&amp; entry.name != "node_modules") visit(entry, "$guest/${entry.name}")</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$if (job.optString("projectId") == projectId &amp;&amp; job.optString("taskId") == "task_qa") matching.add(job)</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$it.optString("kind") == "promote"</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$private</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$private val criterion = "The repository root contains PHONE_ENGINE_QA.txt with exactly phone-engine-live-acceptance followed by a newline, committed on the task branch; no other tracked file is changed."</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$readRef(canonical, "main") == seed</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$requireSafe</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$requireSafe(checked.getJSONArray("receipts").objects().any { it.optString("kind") == "merge" &amp;&amp; it.optString("after") == dev }, "merge_receipt_missing")</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$requireSafe(dev != seed &amp;&amp; readRef(canonical, "dev") == dev &amp;&amp; readRef(canonical, "main") == seed, "dev_merge_mismatch")</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$requireSafe(engine("GET", "/v1/health").body.getJSONObject("capabilities").getBoolean("boundary"), "boundary_proof_failed")</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$requireSafe(health.status == 200 &amp;&amp; health.body.optBoolean("healthy") &amp;&amp; health.body.optString("version") == "1.18.32", "server_status_unknown")</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$requireSafe(model.length &lt;= 256 &amp;&amp; Regex("^[A-Za-z0-9_.:-]+/[A-Za-z0-9_./:-]+$").matches(model), "model_invalid")</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$requireSafe(personDirectories.size &lt; 240 &amp;&amp; directory.canonicalFile.toPath().startsWith(root.canonicalFile.toPath()), "directory_scope_unknown")</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$return</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$safe &amp;&amp; cursor != null &amp;&amp; file.canonicalFile.toPath().startsWith(targetContext.filesDir.canonicalFile.toPath())</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$sendStatus(0, Bundle().apply { putString("phoneEngineCleanup", "FAIL stable_server_restore_failed") })</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$stored.optString("expectedMain") == seed</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$val</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$val diskProject = persistedWorkspace().getJSONArray("projects").objects().single { it.optString("id") == projectId }</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$val refused = engine("POST", "/v1/commands", promotion(projectId, repoId, dev, seed, false, "refuse_${UUID.randomUUID()}"))</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$value.keys().asSequence().all { it in setOf("type", "attempt", "next", "message", "action") }</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance.Companion$"person_chat_busy"</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance.Companion$"promoted_refs_mismatch"</ID>
+    <ID>MaxLineLength:PhoneEngineAcceptance.kt$PhoneEngineAcceptance.Companion$"shared_repository_objects"</ID>
+    <ID>MaxLineLength:PhoneEngineAttestation.kt$PhoneEngineAttestation$initialize</ID>
+    <ID>MaxLineLength:PhoneEngineDeviceBoundaryRegressions.kt$PhoneEngineDeviceBoundaryRegressions$"positiveWrite"</ID>
+    <ID>MaxLineLength:PhoneEngineDeviceBoundaryRegressions.kt$PhoneEngineDeviceBoundaryRegressions$PhoneEngineAttestation.write(file, receipt.put("tier", if (tier == "proot") "landlock" else "proot").toString().toByteArray())</ID>
+    <ID>MaxLineLength:PhoneEngineDeviceBoundaryRegressions.kt$PhoneEngineDeviceBoundaryRegressions$for</ID>
+    <ID>MaxLineLength:PhoneEngineNative.kt$PhoneEngineNative$executionAvailable = verifiedBoundary &amp;&amp; health.optJSONObject("capabilities")?.optBoolean("execution") == true</ID>
+    <ID>MaxLineLength:PhoneEngineNative.kt$PhoneEngineNative.Companion$if</ID>
+    <ID>MaxLineLength:PhoneEngineNative.kt$PhoneEngineNative.Companion$if (line.toByteArray(Charsets.UTF_8).size &gt; 1024 || !TOKEN.matches(token)) throw Failure("engine_ready_invalid")</ID>
+    <ID>MaxLineLength:PhoneEngineNativeRegressions.kt$PhoneEngineNativeRegressions$.</ID>
+    <ID>MaxLineLength:PhoneEngineNativeRegressions.kt$PhoneEngineNativeRegressions$catch (_: Exception) { if (!squatter.isClosed) failure.compareAndSet(null, IllegalStateException("Squatter control failed")) }</ID>
+    <ID>MaxLineLength:PhoneEngineNativeRegressions.kt$PhoneEngineNativeRegressions$socket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Length: ${body.toByteArray().size}\r\nConnection: close\r\n\r\n$body").toByteArray())</ID>
+    <ID>MaxLineLength:ReadAloudBridge.kt$ReadAloudBridge$val</ID>
+    <ID>MaxLineLength:ReadAloudBridge.kt$ReadAloudBridge.&lt;no name provided&gt;$if (utteranceId == null || utteranceId != utterance || operation == null) return@post</ID>
+    <ID>MaxLineLength:TermuxSetupRunner.kt$TermuxSetupRunner$"current" -&gt; parts.getOrNull(1)?.takeIf { id -&gt; state.components.any { it.id == id } }?.let { state.current = it }</ID>
+    <ID>MaxLineLength:TermuxSetupRunner.kt$TermuxSetupRunner$check(result.getInt("err", Activity.RESULT_CANCELED) == Activity.RESULT_OK) { "Termux rejected the setup command" }</ID>
+    <ID>MaxLineLength:TermuxSetupRunner.kt$TermuxSetupRunner$component.percent = parts.getOrNull(3)?.toDoubleOrNull()?.takeIf { it.isFinite() &amp;&amp; it in 0.0..100.0 }</ID>
+    <ID>MaxLineLength:TermuxSetupRunner.kt$TermuxSetupRunner$return result.getInt("exitCode", -1) == 0 &amp;&amp; result.getInt("err", Activity.RESULT_CANCELED) == Activity.RESULT_OK</ID>
+    <ID>MaxLineLength:TermuxSetupRunner.kt$TermuxSetupRunner$val result = command("proot-distro login opencode-ubuntu -- /bin/bash -c ${TermuxSetupShell.quote(script)}", timeoutMs, false)</ID>
+    <ID>MaxLineLength:TermuxSetupRunner.kt$TermuxSetupRunner$val updated = state.toJson().put("host", "termux").put("params", current.optJSONObject("params") ?: JSONObject())</ID>
+    <ID>MaxLineLength:TermuxSetupShell.kt$TermuxSetupShell$"for attempt in {1..50}; do [ -f \"\$d/owner\" ] || [ -f \"\$d/state\" ] || { sleep 0.1; continue; }; break; done\n"</ID>
+    <ID>MaxLineLength:TermuxSetupShell.kt$TermuxSetupShell$body.append("[ \"\$(cat \"\$d/$id.ack\")\" = ok ] || { put $id.state failed; put state failed; exit 0; }\n")</ID>
+    <ID>MaxLineLength:TermuxSetupShell.kt$TermuxSetupShell$body.append("rc=\${PIPESTATUS[0]}\n[ \"\$rc\" = 0 ] || { put $id.state failed; put state failed; exit 0; }\n")</ID>
+    <ID>MaxLineLength:VoiceDownloadNotifications.kt$VoiceDownloadNotifications$"failed" -&gt; if (arabic) "تعذّر إعداد الصوت. افتح التطبيق للمحاولة مجددًا." else "Voice setup failed. Open the app to try again."</ID>
+    <ID>MemberNameEqualsClassName:NativeChannelReplies.kt$NativeChannelReplies.Reply$private fun reply(send: () -&gt; Unit)</ID>
+    <ID>NestedBlockDepth:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun stopServer(forPhoneEngineSetup: Boolean = false)</ID>
+    <ID>NestedBlockDepth:BuiltinLinux.kt$BuiltinLinux$private fun download(image: Image, target: File, progress: InstallProgress)</ID>
+    <ID>NestedBlockDepth:BuiltinLinux.kt$BuiltinLinux$private fun hasUnconfinedChildren(): Boolean</ID>
+    <ID>NestedBlockDepth:BuiltinLinux.kt$BuiltinLinux$private fun unpack(archive: File, into: File, progress: InstallProgress)</ID>
+    <ID>NestedBlockDepth:LocalPdfService.kt$LocalPdfService$@Suppress("DEPRECATION") private fun render(data: Bundle, reply: Messenger?)</ID>
+    <ID>NestedBlockDepth:NativeCrashStore.kt$NativeCrashStore$@Synchronized fun read(): Map&lt;String, Any?&gt;?</ID>
+    <ID>NestedBlockDepth:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$override fun onStart()</ID>
+    <ID>NestedBlockDepth:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$private fun awaitExistingStableServer()</ID>
+    <ID>NestedBlockDepth:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$private fun request(base: String, auth: String, method: String, path: String, body: JSONObject? = null): Reply</ID>
+    <ID>NestedBlockDepth:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$private fun scopedBusySessions(team: Set&lt;String&gt;): Set&lt;String&gt;</ID>
+    <ID>NestedBlockDepth:PhoneEngineDeviceBoundaryRegressions.kt$PhoneEngineDeviceBoundaryRegressions$fun run(context: Context, bootstrap: Boolean = true, onStage: (String) -&gt; Unit = {}): Map&lt;String, Any?&gt;</ID>
+    <ID>NestedBlockDepth:PhoneEngineNative.kt$PhoneEngineNative$private fun awaitHealth(child: Process, port: Int, token: String, profile: String): JSONObject</ID>
+    <ID>NestedBlockDepth:PhoneEngineNative.kt$PhoneEngineNative.Companion$fun verifyBundle(context: Context, vararg names: String)</ID>
+    <ID>NestedBlockDepth:ProjectExportBridge.kt$ProjectExportBridge$private fun runExport(uri: Uri, plan: File): Map&lt;String, Any&gt;</ID>
+    <ID>NestedBlockDepth:SetupRunner.kt$SetupRunner$private fun runJob(specs: List&lt;Spec&gt;)</ID>
+    <ID>ReturnCount:AppLifecycle.kt$AppLifecycle$@Synchronized fun lastExit(context: Context): Map&lt;String, Any?&gt;?</ID>
+    <ID>ReturnCount:AppLifecycle.kt$AppLifecycle$private fun openKeepAliveSetting( activity: Activity, setting: String, requestBatteryExemption: () -&gt; Unit, ): Boolean</ID>
+    <ID>ReturnCount:BackgroundConnectionService.kt$BackgroundConnectionService.Companion$@Suppress("DEPRECATION") fun showCodingAlert( context: Context, kind: String, sessionID: String, key: String, quickReply: Boolean = false, requestID: String = "", profileID: String = "", allowActions: Boolean = true, monitorToken: String = "", subtext: String = "", title: String = "", text: String = "", agentName: String = "" ): Boolean</ID>
+    <ID>ReturnCount:BackgroundConnectionService.kt$BackgroundConnectionService.Companion$fun updateLiveStatus( context: Context, runningCount: Int, pendingCount: Int, title: String?, detail: String? ): Boolean</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$fun holdAwakeForWork(on: Boolean, forMs: Long): Boolean</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$fun nameAndroidGroups()</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$fun serviceLogTail(name: String, tailBytes: Int): String</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$private fun hasUnconfinedChildren(): Boolean</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$private fun protectionTier(): String</ID>
+    <ID>ReturnCount:BuiltinLinux.kt$BuiltinLinux$private fun sizeOf(file: File): Long</ID>
+    <ID>ReturnCount:ByoHostSigner.kt$ByoHostSigner$private fun handle(call: MethodCall): Any?</ID>
+    <ID>ReturnCount:MainActivity.kt$MainActivity$override fun onRequestPermissionsResult( requestCode: Int, permissions: Array&lt;out String&gt;, grantResults: IntArray )</ID>
+    <ID>ReturnCount:MainActivity.kt$MainActivity$private fun captureLaunchAction(intent: Intent?): Boolean</ID>
+    <ID>ReturnCount:MainActivity.kt$MainActivity$private fun captureSessionLaunch(intent: Intent?): Boolean</ID>
+    <ID>ReturnCount:MainActivity.kt$MainActivity$private fun captureSessionLink(intent: Intent?): Boolean</ID>
+    <ID>ReturnCount:MainActivity.kt$MainActivity$private fun captureSharedText(intent: Intent?): Boolean</ID>
+    <ID>ReturnCount:MainActivity.kt$MainActivity$private fun handleBuiltinLinux(call: MethodCall, result: MethodChannel.Result)</ID>
+    <ID>ReturnCount:MainActivity.kt$MainActivity$private fun openTermuxSession(call: MethodCall, result: MethodChannel.Result)</ID>
+    <ID>ReturnCount:MainActivity.kt$MainActivity$private fun requestCameraPermission(result: MethodChannel.Result)</ID>
+    <ID>ReturnCount:MainActivity.kt$MainActivity$private fun requestMicrophonePermission(result: MethodChannel.Result)</ID>
+    <ID>ReturnCount:MainActivity.kt$MainActivity$private fun requestRunCommandAccess(result: MethodChannel.Result)</ID>
+    <ID>ReturnCount:MainActivity.kt$MainActivity$private fun requestRunCommandPermission(result: MethodChannel.Result)</ID>
+    <ID>ReturnCount:MainActivity.kt$MainActivity$private fun runInTermux(call: MethodCall, result: MethodChannel.Result)</ID>
+    <ID>ReturnCount:NetworkMonitor.kt$NetworkMonitor$private fun snapshot(): Map&lt;String, Any?&gt;</ID>
+    <ID>ReturnCount:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun cancel(profileId: String, agentId: String, runId: String, method: String): Map&lt;String, Any?&gt;</ID>
+    <ID>ReturnCount:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun submit( profileId: String, agentId: String, runId: String, method: String, code: String, ): Map&lt;String, Any?&gt;</ID>
+    <ID>ReturnCount:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$private fun execute()</ID>
+    <ID>ReturnCount:PhoneEngineNative.kt$PhoneEngineNative$internal fun processId(): Int?</ID>
+    <ID>ReturnCount:PhoneEngineNative.kt$PhoneEngineNative.Companion$internal fun healthBoundaryTier(health: JSONObject, proofPresent: Boolean): String</ID>
+    <ID>ReturnCount:ProjectExportBridge.kt$ProjectExportBridge$fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean</ID>
+    <ID>ReturnCount:ProjectExportBridge.kt$ProjectExportBridge$private fun runExport(uri: Uri, plan: File): Map&lt;String, Any&gt;</ID>
+    <ID>ReturnCount:ReadAloudBridge.kt$ReadAloudBridge$private fun handle(call: MethodCall, result: MethodChannel.Result)</ID>
+    <ID>ReturnCount:SetupRunner.kt$SetupRunner$private fun notifyProgress()</ID>
+    <ID>ReturnCount:SetupRunner.kt$SetupRunner$private fun runNative(spec: Spec, component: SetupComponentStatus): String?</ID>
+    <ID>ReturnCount:SetupRunner.kt$SetupRunner$private fun runScript(spec: Spec, component: SetupComponentStatus): String?</ID>
+    <ID>ReturnCount:SetupRunner.kt$SetupRunner$private fun waitForStep(spec: Spec, component: SetupComponentStatus): String?</ID>
+    <ID>ReturnCount:StorageAccess.kt$StorageAccess$fun onPermissionResult(activity: Activity, requestCode: Int): Boolean</ID>
+    <ID>ReturnCount:StorageAccess.kt$StorageAccess$private fun open(activity: Activity, result: MethodChannel.Result)</ID>
+    <ID>ReturnCount:ThermalMonitor.kt$ThermalMonitor$private fun notify(title: String, text: String): Boolean</ID>
+    <ID>ReturnCount:VoiceDownloadNotifications.kt$VoiceDownloadNotifications$private fun available(): Boolean</ID>
+    <ID>ReturnCount:VoiceDownloadNotifications.kt$VoiceDownloadNotifications$private fun show(call: MethodCall): Boolean</ID>
+    <ID>SwallowedException:AppLifecycle.kt$AppLifecycle$error: ActivityNotFoundException</ID>
+    <ID>SwallowedException:AppLifecycle.kt$AppLifecycle$error: SecurityException</ID>
+    <ID>SwallowedException:BuiltinLinux.kt$BuiltinLinux$e: java.io.FileNotFoundException</ID>
+    <ID>SwallowedException:BuiltinLinux.kt$BuiltinLinux$error: Exception</ID>
+    <ID>SwallowedException:MainActivity.kt$MainActivity$error: ActivityNotFoundException</ID>
+    <ID>SwallowedException:MainActivity.kt$MainActivity$error: SecurityException</ID>
+    <ID>SwallowedException:PhoneEngineNative.kt$PhoneEngineNative$error: java.util.concurrent.ExecutionException</ID>
+    <ID>SwallowedException:ThermalMonitor.kt$ThermalMonitor$error: Exception</ID>
+    <ID>ThrowingExceptionFromFinally:BuiltinLinux.kt$BuiltinLinux$throw PhoneEngineNative.Failure("proof_cleanup_failed")</ID>
+    <ID>ThrowingExceptionsWithoutMessageOrCause:ByoHostSigner.kt$ByoHostSigner$IllegalStateException()</ID>
+    <ID>ThrowingExceptionsWithoutMessageOrCause:ReadAloudBridge.kt$ReadAloudBridge$IllegalStateException()</ID>
+    <ID>ThrowsCount:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runPhoneEngineBoundaryProbe(): Map&lt;String, Any?&gt;</ID>
+    <ID>ThrowsCount:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runProotTierProof(canonicalRoot: File, daemonPid: Int? = null): Map&lt;String, Any?&gt;</ID>
+    <ID>ThrowsCount:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun runProotViewBoundaryProbe(): Map&lt;String, Any?&gt;</ID>
+    <ID>ThrowsCount:BuiltinLinux.kt$BuiltinLinux$@Synchronized fun startProtectedPhoneServer(profile: String, script: String, port: Int)</ID>
+    <ID>ThrowsCount:BuiltinLinux.kt$BuiltinLinux$private fun requirePhoneBoundaryKernel()</ID>
+    <ID>ThrowsCount:BuiltinLinux.kt$BuiltinLinux$private fun startPhoneEngineChecked(profile: String, port: Int, notice: String?): Map&lt;String, Any?&gt;</ID>
+    <ID>ThrowsCount:PhoneAgentSignIn.kt$PhoneAgentSignIn$fun submit( profileId: String, agentId: String, runId: String, method: String, code: String, ): Map&lt;String, Any?&gt;</ID>
+    <ID>ThrowsCount:PhoneAgentSignIn.kt$PhoneAgentSignIn$private fun inspect(run: Run): Boolean</ID>
+    <ID>ThrowsCount:PhoneAgentSignIn.kt$PhoneAgentSignIn$private fun readLogin(run: Run, process: Process)</ID>
+    <ID>ThrowsCount:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$private fun assertOwnQaJobNotFailed(projectId: String, taskId: String, project: JSONObject)</ID>
+    <ID>ThrowsCount:PhoneEngineAcceptance.kt$PhoneEngineAcceptance$private fun execute()</ID>
+    <ID>ThrowsCount:PhoneEngineAttestation.kt$PhoneEngineAttestation$fun issue(profile: String, root: File, generation: String, policy: List&lt;String&gt;, controls: Map&lt;String, Any?&gt;): Receipt</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative$fun credentials(profile: String): Map&lt;String, String&gt;</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative$fun delete(profile: String)</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative$fun start(profile: String, port: Int, serverRunning: Boolean, reason: String, proofFactory: (File) -&gt; PhoneEngineAttestation.Receipt?): Process</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative$private fun awaitHealth(child: Process, port: Int, token: String, profile: String): JSONObject</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative$private fun awaitReady(child: Process, token: String, profile: String): Int</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative$private fun eraseNoLinks(file: File)</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative$private fun safePath(relative: String): File</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative.Companion$fun verifyBundle(context: Context, vararg names: String)</ID>
+    <ID>ThrowsCount:PhoneEngineNative.kt$PhoneEngineNative.Companion$internal fun verifiedReadyPort(line: String, token: String, profile: String): Int</ID>
+    <ID>TooGenericExceptionCaught:AppLifecycle.kt$AppLifecycle$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:BuiltinLinux.kt$BuiltinLinux$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:BuiltinLinux.kt$BuiltinLinux$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:BuiltinLinux.kt$BuiltinLinux$error: Throwable</ID>
+    <ID>TooGenericExceptionCaught:BuiltinLinux.kt$BuiltinLinux.Companion$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:ByoHostSigner.kt$ByoHostSigner$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:LocalTerminal.kt$LocalTerminal$error: Throwable</ID>
+    <ID>TooGenericExceptionCaught:MainActivity.kt$MainActivity$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:MainActivity.kt$MainActivity$error: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ProjectExportBridge.kt$ProjectExportBridge$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SetupRunner.kt$SetupRunner$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:SetupRunner.kt$SetupRunner$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:StorageAccess.kt$StorageAccess$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:ThermalMonitor.kt$ThermalMonitor$error: Exception</ID>
+    <ID>TooManyFunctions:BackgroundConnectionService.kt$BackgroundConnectionService$Companion</ID>
+    <ID>TooManyFunctions:BuiltinLinux.kt$BuiltinLinux</ID>
+    <ID>TooManyFunctions:BuiltinLinux.kt$BuiltinLinux$Companion</ID>
+    <ID>TooManyFunctions:BuiltinProjectStorage.kt$BuiltinProjectStorage</ID>
+    <ID>TooManyFunctions:LocalTerminal.kt$LocalTerminal$Session</ID>
+    <ID>TooManyFunctions:MainActivity.kt$MainActivity : FlutterActivity</ID>
+    <ID>TooManyFunctions:PhoneAgentSignIn.kt$PhoneAgentSignIn</ID>
+    <ID>TooManyFunctions:PhoneEngineNative.kt$PhoneEngineNative</ID>
+    <ID>TooManyFunctions:ProjectExportBridge.kt$ProjectExportBridge</ID>
+    <ID>TooManyFunctions:ReadAloudBridge.kt$ReadAloudBridge</ID>
+    <ID>TooManyFunctions:SetupRunner.kt$SetupRunner</ID>
+    <ID>UnusedParameter:TermuxSetupRunner.kt$TermuxSetupRunner$version: String?</ID>
+    <ID>UnusedPrivateProperty:PhoneEngineDeviceBoundaryRegressions.kt$PhoneEngineDeviceBoundaryRegressions$private val controls = listOf( "positiveWrite", "positiveRead", "positiveGit", "positiveStat", "positiveReadlink", "positiveTracerIdentity", "workerAliasDenied", "fixtureUnchanged", "directOpenDenied", "directStatDenied", "directReadlinkDenied", "procSelfRootDenied", "procParentRootDenied", "parentEnvironDenied", "parentCmdlineDenied", "fdHygiene", "tracerEscapeDenied", "complete", )</ID>
+    <ID>UseCheckOrError:BuiltinLinux.kt$BuiltinLinux$throw IllegalStateException("The agent did not stop.")</ID>
+    <ID>UseCheckOrError:BuiltinLinux.kt$BuiltinLinux$throw IllegalStateException("The agent host could not start.")</ID>
+    <ID>UseCheckOrError:BuiltinLinux.kt$BuiltinLinux$throw IllegalStateException("The phone service could not start.")</ID>
+    <ID>UseCheckOrError:BuiltinLinux.kt$BuiltinLinux$throw IllegalStateException("shared projects not saved")</ID>
+    <ID>UseCheckOrError:BuiltinProjectStorage.kt$BuiltinProjectStorage$throw IllegalStateException("Project storage could not be safely accessed.")</ID>
+    <ID>UseCheckOrError:ByoHostSigner.kt$ByoHostSigner$throw IllegalStateException()</ID>
+    <ID>UseCheckOrError:PhoneAgentHost.kt$PhoneAgentHost$throw IllegalStateException("The agent host could not start.")</ID>
+    <ID>UseCheckOrError:PhoneAgentSignIn.kt$PhoneAgentSignIn$throw IllegalStateException("auth_cancellation_unconfirmed")</ID>
+    <ID>UseCheckOrError:PhoneAgentSignIn.kt$PhoneAgentSignIn$throw IllegalStateException("auth_invalid_profile")</ID>
+    <ID>UseCheckOrError:ReadAloudBridge.kt$ReadAloudBridge$throw IllegalStateException()</ID>
+    <ID>UseCheckOrError:SetupRunner.kt$SetupRunner$throw IllegalStateException("The phone setup could not start. Try again.")</ID>
+  </CurrentIssues>
+</SmellBaseline>

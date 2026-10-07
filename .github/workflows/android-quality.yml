@@ -24,6 +24,10 @@ on:
         description: Build a signed checkpoint APK without running verification gates
         type: boolean
         default: false
+      commit_base:
+        description: Explicit base revision for a full manual gate (required unless APK-only)
+        type: string
+        default: ""
       native_pdf_proof:
         description: Build an additional synthetic local-PDF proof APK for an isolated QA device
         type: boolean
@@ -45,6 +49,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Set up Java 17
         uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
@@ -69,6 +75,38 @@ jobs:
       - name: Resolve dependencies
         run: flutter pub get
 
+      - name: Check commit messages and changed Dart formatting
+        if: ${{ !inputs.apk_only }}
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BASE: ${{ github.event.before }}
+          MANUAL_BASE: ${{ inputs.commit_base }}
+          EVENT_NAME: ${{ github.event_name }}
+          DART: dart
+        run: |
+          set -euo pipefail
+          case "$EVENT_NAME" in
+            pull_request) base="$PR_BASE"; head="$PR_HEAD" ;;
+            push) base="$PUSH_BASE"; head="$GITHUB_SHA" ;;
+            workflow_dispatch) base="$MANUAL_BASE"; head="$GITHUB_SHA" ;;
+            *) exit 64 ;;
+          esac
+          test -n "$base" || { echo 'A full manual gate needs commit_base' >&2; exit 64; }
+          tool/qa/check_commits.sh "$base" "$head"
+          echo "BASE_COMMIT=$(git rev-parse --verify "$base^{commit}")" >> "$GITHUB_ENV"
+
+      - name: Test APK size and startup budget scripts
+        run: python3 -m unittest discover -s tool/release -p 'test_*.py'
+
+      - name: Verify release metadata
+        run: flutter test --no-pub --concurrency=1 test/release_metadata_test.dart
+
+      - name: Verify Arabic localization completeness
+        run: |
+          python3 -m unittest discover -s tool/l10n -p 'test_check_completeness.py'
+          python3 tool/l10n/check_completeness.py --base-ref "$BASE_COMMIT"
+
       - name: Set up Node for the optional quota collector tests
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
@@ -76,6 +114,9 @@ jobs:
 
       - name: Test optional quota collector with synthetic inputs
         run: node --test tool/quota/collector.test.mjs
+
+      - name: Test PR APK link automation with synthetic APIs
+        run: node --test tool/qa/test_apk_comment.mjs
 
       - name: Generate ignored Gradle wrapper
         run: >-
@@ -125,6 +166,13 @@ jobs:
       - name: Check the release notes tool
         run: python3 -m unittest discover -s tool/release -p 'test_*.py'
 
+      - name: Run Kotlin static analysis
+        run: |
+          export OC_BUILD_LOCK_FILE="$RUNNER_TEMP/oc-build.lock"
+          export OC_LOCK_DIR="$RUNNER_TEMP/oc-locks"
+          tool/qa/kotlin_static_analysis.sh
+          OC_DETEKT_INTEGRATION=1 python3 -m unittest tool.qa.test_kotlin_static_analysis
+
       - name: Run Android release lint
         run: ./android/gradlew -p android :app:lintRelease --no-daemon
 
@@ -142,6 +190,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
       # Native harness tests compile Kotlin and run it on the JVM.
       - name: Set up Java 17
@@ -209,6 +259,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Set up Java 17
         uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
@@ -280,11 +332,39 @@ jobs:
             > android/key.properties
           chmod 600 android/key.properties
 
+      - name: Read previous published release APK size
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch --force --tags origin
+          baseline="$(git describe --tags --match 'v*' --abbrev=0 HEAD^)"
+          echo "APK_BASELINE_TAG=$baseline" >> "$GITHUB_ENV"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$baseline" > "$RUNNER_TEMP/apk-baseline.json"
+
       - name: Compile test-signed release APK
         run: flutter build apk --release
 
       - name: Verify release artifact exists
         run: test -s build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Gate APK size growth
+        run: |
+          python3 tool/release/check_apk_size.py \
+            --apk build/app/outputs/flutter-apk/app-release.apk \
+            --baseline-release-json "$RUNNER_TEMP/apk-baseline.json" \
+            --baseline-tag "$APK_BASELINE_TAG" --max-growth-mib 5 \
+            --output build/release-metrics/apk-size.json
+          cat build/release-metrics/apk-size.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload APK size measurements
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: apk-size-${{ github.sha }}
+          path: build/release-metrics/apk-size.json
+          if-no-files-found: ignore
+          retention-days: 90
 
       - name: Upload test-signed APK
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

@@ -1,0 +1,139 @@
+# Owner-triggered only: no PR, push or nightly minute consumption.
+# Release AOT plus the native integration_test result bridge works with the
+# Shorebird release-only engine. No VM service or provider credentials needed.
+name: Android device smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-device-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  device:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      OC_TEST_SLOTS: "1"
+      GRADLE_OPTS: >-
+        -Dorg.gradle.daemon=false
+        -Dorg.gradle.workers.max=2
+        -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m -XX:ReservedCodeCacheSize=128m'
+    steps:
+      - name: Prepare machine locks
+        run: |
+          printf '%s\n' "OC_BUILD_LOCK_FILE=$RUNNER_TEMP/oc-build.lock" \
+            "OC_LOCK_DIR=$RUNNER_TEMP/oc-locks" "OC_EMULATOR_LOCK=$RUNNER_TEMP/oc-emulator.lock" >> "$GITHUB_ENV"
+
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Java 17
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle 9.5
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          gradle-version: "9.5.0"
+          cache-read-only: true
+
+      - name: Install exact Shorebird Flutter revision
+        run: |
+          set -euo pipefail
+          sdk="$RUNNER_TEMP/bd9-flutter"
+          revision=91f8bd75076e9c740aa13cf67eb9ec1a093f68f5
+          git init "$sdk"
+          git -C "$sdk" remote add origin https://github.com/shorebirdtech/flutter.git
+          git -C "$sdk" fetch --depth 1 origin "$revision"
+          git -C "$sdk" checkout --detach FETCH_HEAD
+          test "$(git -C "$sdk" rev-parse HEAD)" = "$revision"
+          echo "$sdk/bin" >> "$GITHUB_PATH"
+          # Bootstrap first: shared.sh rebuilds tools and deletes version cache.
+          "$sdk/bin/flutter" --version
+          # Shorebird supplies this metadata for its fork; a shallow detached
+          # checkout cannot infer the published Flutter version from Git tags.
+          test "$(cat "$sdk/bin/internal/engine.version")" = 03e67977a7ff5893d96ac97f22c6a795530c0040
+          cp tool/qa/bd9_flutter_version.json "$sdk/bin/cache/flutter.version.json"
+          "$sdk/bin/flutter" --version
+          "$sdk/bin/flutter" precache --android
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Require Kotlin static analysis
+        run: tool/qa/kotlin_static_analysis.sh
+
+      - name: Test bounded fixture and result validation
+        run: |
+          python3 -m unittest tool.qa.test_bd9_device_smoke
+          tool/qa/machine_lock.sh test -- flutter test --no-pub --concurrency=1 tool/qa/bd9_device_smoke_fixture_test.dart
+
+      - name: Generate ignored Gradle wrapper
+        run: >-
+          tool/qa/machine_lock.sh build -- gradle -p android wrapper
+          --no-daemon --gradle-version 9.5.0 --distribution-type all
+          --gradle-distribution-sha256-sum a3c4ba4aca8f0075688b9c5b18939fd28e8cb4357c227da5c1d9f38343791439
+
+      - name: Install pinned Android compile platform
+        run: sdkmanager 'platforms;android-37.0'
+
+      - name: Configure existing CI test signer
+        env:
+          CI_KEYSTORE: ${{ runner.temp }}/bd9-ci-test.jks
+          CI_KEYSTORE_BASE64: ${{ secrets.CI_KEYSTORE_BASE64 }}
+          CI_KEYSTORE_PASSWORD: ${{ secrets.CI_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$CI_KEYSTORE_BASE64" && test -n "$CI_KEYSTORE_PASSWORD" || {
+            echo 'The existing CI test signing identity is required.' >&2; exit 1;
+          }
+          printf '%s' "$CI_KEYSTORE_BASE64" | base64 --decode > "$CI_KEYSTORE"
+          chmod 600 "$CI_KEYSTORE"
+          actual=$(keytool -list -v -keystore "$CI_KEYSTORE" -alias ci-release \
+            -storepass "$CI_KEYSTORE_PASSWORD" | sed -n 's/.*SHA256: //p' | tr -d ':[:space:]')
+          test "$actual" = 2D010C2103CB2F78ABAACA690EAD4D45F8003A6C0A02082CD2A2AE62FD18D0EC
+          printf '%s\n' "storeFile=$CI_KEYSTORE" "storePassword=$CI_KEYSTORE_PASSWORD" \
+            'keyAlias=ci-release' "keyPassword=$CI_KEYSTORE_PASSWORD" > android/key.properties
+          chmod 600 android/key.properties
+
+      - name: Build release AOT device smoke and androidTest
+        run: |
+          set -euo pipefail
+          tool/qa/machine_lock.sh build -- flutter build apk --release --build-number 2201 \
+            --target integration_test/bd9_device_smoke_test.dart --android-project-arg=ocBd9Smoke=true
+          tool/qa/machine_lock.sh build -- ./android/gradlew -p android :app:assembleReleaseAndroidTest \
+            --no-daemon -PocBd9Smoke=true -Ptarget="$GITHUB_WORKSPACE/integration_test/bd9_device_smoke_test.dart" \
+            -PflutterVersionCode=2201
+
+      - name: Run offline PhoneEngine and real app conversation smoke
+        uses: ReactiveCircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808 # v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: python3 tool/qa/bd9_device_smoke.py --expected-signer 2D010C2103CB2F78ABAACA690EAD4D45F8003A6C0A02082CD2A2AE62FD18D0EC
+
+      - name: Upload bounded smoke evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: android-device-smoke-${{ github.sha }}
+          path: build/bd9-device-smoke
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Remove temporary signing files and intermediates
+        if: ${{ always() }}
+        run: |
+          rm -f android/key.properties "$RUNNER_TEMP/bd9-ci-test.jks"
+          rm -rf build/app/intermediates
