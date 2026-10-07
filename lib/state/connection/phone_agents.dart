@@ -435,12 +435,12 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
               runtime.installed &&
               runtime.architectureQualified &&
               runtime.hostAvailable) {
-            final phase = await _paProviderSignIn(descriptor.providerId);
-            if (phase == null) {
-              _paProviderPhases.remove(descriptor.id);
-            } else {
-              _paProviderPhases[descriptor.id] = phase;
-            }
+            // A re-read sends the helper back to "loading" for a while: the
+            // last definite answer stands until a new one arrives.
+            final phase =
+                await _paProviderSignIn(descriptor.providerId) ??
+                _paProviderPhases[descriptor.id];
+            if (phase != null) _paProviderPhases[descriptor.id] = phase;
             if (phase != null) {
               runtime = PhoneAgentRuntime(
                 agentId: runtime.agentId,
