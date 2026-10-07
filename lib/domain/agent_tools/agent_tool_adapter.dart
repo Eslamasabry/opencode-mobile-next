@@ -161,7 +161,7 @@ final class AgentToolAdapter {
   /// requires the owned helper and a connected MCP server. See BA6 contract.
   static const openCode1 = AgentToolAdapter._(
     id: 'openCode1',
-    displayName: 'OpenCode',
+    displayName: 'OpenCode 1',
     naming: McpToolNaming.serverUnderscore,
     config: McpConfigFormat.openCodeV1,
     runsAs: AgentRunUser.root,
@@ -170,7 +170,7 @@ final class AgentToolAdapter {
 
   static const openCode2 = AgentToolAdapter._(
     id: 'openCode2',
-    displayName: 'OpenCode',
+    displayName: 'OpenCode 2',
     naming: McpToolNaming.serverUnderscore,
     config: McpConfigFormat.openCodeV2,
     runsAs: AgentRunUser.root,

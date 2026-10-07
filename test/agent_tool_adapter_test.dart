@@ -58,6 +58,11 @@ void main() {
     expect(AgentToolAdapters.cardShowNames, {'mcp__oc-ui__show', 'oc-ui_show'});
   });
 
+  test('OpenCode product names distinguish the runtime generations', () {
+    expect(AgentToolAdapter.openCode1.displayName, 'OpenCode 1');
+    expect(AgentToolAdapter.openCode2.displayName, 'OpenCode 2');
+  });
+
   test('a Paseo provider finds its agent; anything else finds none', () {
     expect(
       AgentToolAdapters.forPaseoProvider('claude'),
