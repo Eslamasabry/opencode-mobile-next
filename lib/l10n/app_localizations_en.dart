@@ -11910,6 +11910,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'You can leave the app. We\'ll notify you when it\'s ready.';
 
   @override
+  String get phoneSetupProgressFirstSetupNote =>
+      'Step 1 of 3: install. Then name a project and chat. You can leave the app. We\'ll notify you when it\'s ready.';
+
+  @override
   String get phoneSetupProgressStopTitle => 'Stop setup?';
 
   @override
@@ -12318,13 +12322,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phoneSetupStartHeadline => 'Run a coding agent right here';
 
   @override
-  String phoneSetupStartPromise(String time, String size) {
-    return 'No computer and no other apps. $time and ~$size the first time.';
+  String phoneSetupStartPromise(String size) {
+    return 'No computer and no other apps. ~$size to download the first time.';
   }
 
   @override
-  String phoneSetupStartPromiseNoSize(String time) {
-    return 'No computer and no other apps. $time the first time.';
+  String get phoneSetupStartPromiseNoSize => 'No computer and no other apps.';
+
+  @override
+  String phoneSetupStartSteps(String time) {
+    return 'Install, name a project, chat · $time';
+  }
+
+  @override
+  String phoneSetupStartStepsTime(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'about $minutes min',
+      one: 'about 1 min',
+    );
+    return '$_temp0';
   }
 
   @override

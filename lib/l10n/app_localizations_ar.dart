@@ -12000,6 +12000,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'يمكنك مغادرة التطبيق. سنُعلمك عندما يصبح جاهزًا.';
 
   @override
+  String get phoneSetupProgressFirstSetupNote =>
+      'الخطوة 1 من 3: التثبيت. بعدها سمِّ مشروعًا وتحدّث. يمكنك مغادرة التطبيق. سنُعلمك عندما يصبح جاهزًا.';
+
+  @override
   String get phoneSetupProgressStopTitle => 'إيقاف الإعداد؟';
 
   @override
@@ -12405,13 +12409,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get phoneSetupStartHeadline => 'شغّل وكيل برمجة هنا مباشرة';
 
   @override
-  String phoneSetupStartPromise(String time, String size) {
-    return 'لا حاجة إلى حاسوب أو تطبيقات أخرى. $time و~$size في المرة الأولى.';
+  String phoneSetupStartPromise(String size) {
+    return 'لا حاجة إلى حاسوب أو تطبيقات أخرى. ~$size للتنزيل في المرة الأولى.';
   }
 
   @override
-  String phoneSetupStartPromiseNoSize(String time) {
-    return 'لا حاجة إلى حاسوب أو تطبيقات أخرى. $time في المرة الأولى.';
+  String get phoneSetupStartPromiseNoSize =>
+      'لا حاجة إلى حاسوب أو تطبيقات أخرى.';
+
+  @override
+  String phoneSetupStartSteps(String time) {
+    return 'ثبّت، سمِّ مشروعًا، تحدّث · $time';
+  }
+
+  @override
+  String phoneSetupStartStepsTime(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'نحو $minutes دقيقة',
+      few: 'نحو $minutes دقائق',
+      two: 'نحو دقيقتين',
+      one: 'نحو دقيقة',
+    );
+    return '$_temp0';
   }
 
   @override

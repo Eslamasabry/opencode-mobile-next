@@ -167,7 +167,11 @@ class _PhoneSetupProgressScreenState extends State<PhoneSetupProgressScreen> {
                     for (final c in _engine.registry)
                       if (ids.contains(c.id)) c,
                   ],
-            note: l10n.phoneSetupProgressLeaveHint,
+            // FB2: a first setup says where it sits in the journey (install,
+            // name a project, chat); an update or added tools end here.
+            note: widget.firstSetup && progress.adding.isEmpty
+                ? l10n.phoneSetupProgressFirstSetupNote
+                : l10n.phoneSetupProgressLeaveHint,
             onCancel: progress.state == SetupState.running ? _cancel : null,
             onContinue: progress.canContinue ? _continue : null,
           );
