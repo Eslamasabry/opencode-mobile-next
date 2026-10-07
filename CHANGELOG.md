@@ -2,6 +2,13 @@
 
 This project is in public alpha. Only the newest preview is supported.
 
+## 1.2.0+52 — 2026-10-07
+
+Claude Code on the phone beside OpenCode, every connection on the phone in
+one conversation list, Claude's sub-agents as conversations of their own,
+and the first Shorebird (over-the-air) release since 1.0.17. Full notes:
+[docs/releases/v1.2.0+52.md](docs/releases/v1.2.0+52.md).
+
 ## Unreleased — Paseo backend (2026-09-19)
 
 Built and verified locally on `feat/paseo-backend-20260919`; not merged.
