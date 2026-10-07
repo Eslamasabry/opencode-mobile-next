@@ -1924,7 +1924,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get photoPendingOther =>
-      'A photo is still waiting for another conversation. Add or discard it there, then try again.';
+      'لا تزال صورة تنتظر محادثة أخرى. أضفها أو تجاهلها هناك، ثم حاول مجددًا.';
 
   @override
   String get photoUnavailable =>
@@ -4033,7 +4033,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String e7SharedDetail429(String destination) {
-    return 'Move conversation to $destination?';
+    return 'هل تريد نقل المحادثة إلى $destination؟';
   }
 
   @override
@@ -4349,7 +4349,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get e7SettingsUi34 =>
-      'Android stops this after 6 hours a day. The app will tell you when it does.';
+      'يوقف Android هذا بعد 6 ساعات يوميًا. سيخبرك التطبيق عند حدوث ذلك.';
 
   @override
   String get e7SettingsUi35 => 'الصدفة الافتراضية';
@@ -14304,8 +14304,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get kitQrTooLong =>
-      'This is too long for a QR code. Copy the link instead.';
+  String get kitQrTooLong => 'هذا أطول مما يسعه رمز QR. انسخ الرابط بدلًا منه.';
 
   @override
   String kitSinceStillWaiting(int seconds) {
@@ -14454,29 +14453,29 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String kitFieldShowNamed(String label) {
-    return 'Show $label';
+    return 'إظهار $label';
   }
 
   @override
   String kitFieldHideNamed(String label) {
-    return 'Hide $label';
+    return 'إخفاء $label';
   }
 
   @override
-  String get kitFieldPaste => 'Paste';
+  String get kitFieldPaste => 'لصق';
 
   @override
-  String get kitFieldSaved => 'Saved';
+  String get kitFieldSaved => 'محفوظ';
 
   @override
-  String get kitFieldReplace => 'Replace';
+  String get kitFieldReplace => 'استبدال';
 
   @override
-  String get kitFieldChecking => 'Checking…';
+  String get kitFieldChecking => 'جارٍ التحقق…';
 
   @override
   String kitFieldStillChecking(int seconds) {
-    return 'Still checking after $seconds s';
+    return 'لا يزال التحقق جاريًا بعد $seconds ث';
   }
 
   @override
@@ -14492,30 +14491,30 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString of $maxString',
-      one: '1 of $maxString',
+      other: '$countString من $maxString',
+      one: '1 من $maxString',
     );
     return '$_temp0';
   }
 
   @override
-  String get kitFieldLimitReached => 'Limit reached';
+  String get kitFieldLimitReached => 'بلغ الحد';
 
   @override
-  String get kitFieldErrorLabel => 'Error';
+  String get kitFieldErrorLabel => 'خطأ';
 
   @override
-  String get kitTappableShowActions => 'Show actions';
+  String get kitTappableShowActions => 'إظهار الإجراءات';
 
   @override
   String kitWorkRead(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count files',
-      one: '1 file',
+      other: '$count من الملفات',
+      one: 'ملفًا واحدًا',
     );
-    return 'read $_temp0';
+    return 'قرأ $_temp0';
   }
 
   @override
@@ -14523,10 +14522,10 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count times',
-      one: 'once',
+      other: '$count من المرات',
+      one: 'مرة واحدة',
     );
-    return 'searched $_temp0';
+    return 'بحث $_temp0';
   }
 
   @override
@@ -14534,10 +14533,10 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count folders',
-      one: '1 folder',
+      other: '$count من المجلدات',
+      one: 'مجلد واحد',
     );
-    return 'listed $_temp0';
+    return 'عرض محتويات $_temp0';
   }
 
   @override
@@ -14545,10 +14544,10 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count files',
-      one: '1 file',
+      other: '$count من الملفات',
+      one: 'ملفًا واحدًا',
     );
-    return 'edited $_temp0';
+    return 'عدّل $_temp0';
   }
 
   @override
@@ -14556,10 +14555,10 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count commands',
-      one: '1 command',
+      other: '$count من الأوامر',
+      one: 'أمرًا واحدًا',
     );
-    return 'ran $_temp0';
+    return 'شغّل $_temp0';
   }
 
   @override
@@ -14567,10 +14566,10 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count pages',
-      one: '1 page',
+      other: '$count من الصفحات',
+      one: 'صفحة واحدة',
     );
-    return 'fetched $_temp0';
+    return 'جلب $_temp0';
   }
 
   @override
@@ -14578,10 +14577,10 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count tasks',
-      one: '1 task',
+      other: '$count من المهام',
+      one: 'مهمة واحدة',
     );
-    return 'delegated $_temp0';
+    return 'فوّض $_temp0';
   }
 
   @override
@@ -14589,8 +14588,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count other steps',
-      one: '1 other step',
+      other: '$count من الخطوات الأخرى',
+      one: 'خطوة أخرى واحدة',
     );
     return '$_temp0';
   }
@@ -14600,8 +14599,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count not run',
-      one: '1 not run',
+      other: '$count لم تُنفّذ',
+      one: 'واحدة لم تُنفّذ',
     );
     return '$_temp0';
   }
@@ -14611,8 +14610,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count steps',
-      one: '1 step',
+      other: '$count من الخطوات',
+      one: 'خطوة واحدة',
     );
     return '$_temp0';
   }
@@ -14621,55 +14620,55 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kitWorkSeparator => ' · ';
 
   @override
-  String get kitWorkWaitingForYou => 'Waiting for you';
+  String get kitWorkWaitingForYou => 'بانتظارك';
 
   @override
-  String get kitWorkStopped => 'Stopped';
+  String get kitWorkStopped => 'متوقف';
 
   @override
-  String get kitWorkDidntFinish => 'Didn\'t finish';
+  String get kitWorkDidntFinish => 'لم يكتمل';
 
   @override
-  String get kitWorkWorking => 'Working';
+  String get kitWorkWorking => 'قيد العمل';
 
   @override
   String kitWorkEarlierSteps(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count earlier steps',
-      one: '1 earlier step',
+      other: '$count من الخطوات السابقة',
+      one: 'خطوة سابقة واحدة',
     );
-    return 'Show $_temp0';
+    return 'عرض $_temp0';
   }
 
   @override
-  String get kitReceiptSending => 'Sending…';
+  String get kitReceiptSending => 'جارٍ الإرسال…';
 
   @override
-  String get kitReceiptSent => 'Sent';
+  String get kitReceiptSent => 'أُرسل';
 
   @override
-  String get kitReceiptConfirmed => 'Done';
+  String get kitReceiptConfirmed => 'اكتمل';
 
   @override
-  String get kitReceiptNotConfirmed => 'Not confirmed yet';
+  String get kitReceiptNotConfirmed => 'لم يُؤكّد بعد';
 
   @override
-  String get kitReceiptRefused => 'Not accepted';
+  String get kitReceiptRefused => 'لم يُقبل';
 
   @override
   String kitReceiptRefusedReason(String reason) {
-    return 'Not accepted: $reason';
+    return 'لم يُقبل: $reason';
   }
 
   @override
   String kitReceiptAnsweredElsewhere(String where) {
-    return 'Answered on $where';
+    return 'أُجيب عنه على $where';
   }
 
   @override
-  String get kitReceiptAnsweredElsewhereUnknown => 'Answered on another device';
+  String get kitReceiptAnsweredElsewhereUnknown => 'أُجيب عنه على جهاز آخر';
 
   @override
   String kitReceiptActRefusedReason(String act, String reason) {
@@ -14678,18 +14677,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String kitReceiptAt(String time) {
-    return 'at $time';
+    return 'في $time';
   }
 
   @override
-  String get kitDetailsHide => 'Hide details';
+  String get kitDetailsHide => 'إخفاء التفاصيل';
 
   @override
-  String get kitCopyAll => 'Copy all';
+  String get kitCopyAll => 'نسخ الكل';
 
   @override
   String kitCopyValue(String label) {
-    return 'Copy $label';
+    return 'نسخ $label';
   }
 
   @override
@@ -14697,7 +14696,7 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Show all $count lines',
+      other: 'عرض الأسطر الـ $count كلها',
     );
     return '$_temp0';
   }
@@ -14708,7 +14707,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get kitProgressRowLoading => 'Loading';
+  String get kitProgressRowLoading => 'جارٍ التحميل';
 
   @override
   String kitProgressRowPercent(int percent) {
@@ -14716,37 +14715,37 @@ class AppLocalizationsAr extends AppLocalizations {
         intl.NumberFormat.decimalPattern(localeName);
     final String percentString = percentNumberFormat.format(percent);
 
-    return '$percentString percent';
+    return '$percentString بالمئة';
   }
 
   @override
-  String get kitProgressRowNearLimit => 'Near limit';
+  String get kitProgressRowNearLimit => 'قريب من الحد';
 
   @override
-  String get kitProgressRowAtLimit => 'Limit reached';
+  String get kitProgressRowAtLimit => 'بلغ الحد';
 
   @override
   String kitProgressRowAsOf(String time) {
-    return 'as of $time';
+    return 'حتى $time';
   }
 
   @override
-  String get kitProgressRowOther => 'Other';
+  String get kitProgressRowOther => 'أخرى';
 
   @override
-  String get kitModelServerDefault => 'Server default';
+  String get kitModelServerDefault => 'إعداد الخادم الافتراضي';
 
   @override
-  String get kitModelSignIn => 'Sign in to a model';
+  String get kitModelSignIn => 'تسجيل الدخول إلى نموذج';
 
   @override
-  String get kitModelChoose => 'Choose a model';
+  String get kitModelChoose => 'اختيار نموذج';
 
   @override
-  String get kitModelChange => 'Change model';
+  String get kitModelChange => 'تغيير النموذج';
 
   @override
-  String get kitModelActions => 'Model shortcuts';
+  String get kitModelActions => 'اختصارات النموذج';
 
   @override
   String kitModelContext(String percent) {
@@ -14754,52 +14753,52 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get kitModelContextFull => 'Context almost full';
+  String get kitModelContextFull => 'السياق ممتلئ تقريبًا';
 
   @override
   String kitModelContextLabel(String percent) {
-    return 'Context $percent % full';
+    return 'السياق ممتلئ بنسبة $percent %';
   }
 
   @override
   String kitAttachmentOpen(String label) {
-    return 'Preview $label';
+    return 'معاينة $label';
   }
 
   @override
   String kitAttachmentImage(String label) {
-    return 'Image, $label';
+    return 'صورة، $label';
   }
 
   @override
   String kitAttachmentFile(String label) {
-    return 'File, $label';
+    return 'ملف، $label';
   }
 
   @override
   String kitAttachmentFolder(String label) {
-    return 'Folder, $label';
+    return 'مجلد، $label';
   }
 
   @override
   String kitAttachmentReference(String label) {
-    return 'Reference, $label';
+    return 'مرجع، $label';
   }
 
   @override
-  String get kitSuggestionsShowAll => 'Show all';
+  String get kitSuggestionsShowAll => 'عرض الكل';
 
   @override
-  String get kitSuggestionsLabel => 'Suggestions';
+  String get kitSuggestionsLabel => 'اقتراحات';
 
   @override
-  String get kitNeedsYouReasonDecision => 'Needs your decision';
+  String get kitNeedsYouReasonDecision => 'يحتاج إلى قرارك';
 
   @override
-  String get kitNeedsYouReasonBlocked => 'Stuck: needs you';
+  String get kitNeedsYouReasonBlocked => 'عالق: يحتاج إليك';
 
   @override
-  String get kitNeedsYouReasonConsent => 'Needs your OK';
+  String get kitNeedsYouReasonConsent => 'يحتاج إلى موافقتك';
 
   @override
   String kitNeedsYouSpan(int count) {
@@ -14810,8 +14809,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString need you · ',
-      one: 'Needs you · ',
+      other: '$countString يحتاجون إليك · ',
+      one: 'يحتاج إليك · ',
     );
     return '$_temp0';
   }
@@ -14825,15 +14824,15 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: ', $countString need you',
-      one: ', 1 need you',
+      other: '، $countString يحتاجون إليك',
+      one: '، واحد يحتاج إليك',
     );
     return '$_temp0';
   }
 
   @override
   String kitNeedsYouWaiting(String age) {
-    return 'waiting $age';
+    return 'ينتظر منذ $age';
   }
 
   @override
@@ -14845,32 +14844,32 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       minutes,
       locale: localeName,
-      other: 'waiting $minutesString minutes',
-      one: 'waiting 1 minute',
-      zero: 'waiting less than a minute',
+      other: 'ينتظر منذ $minutesString من الدقائق',
+      one: 'ينتظر منذ دقيقة واحدة',
+      zero: 'ينتظر منذ أقل من دقيقة',
     );
     return '$_temp0';
   }
 
   @override
   String kitNeedsYouWhoOnServer(String who, String server) {
-    return '$who on $server';
+    return '$who على $server';
   }
 
   @override
-  String get kitWorkGraph => 'Work graph';
+  String get kitWorkGraph => 'مخطط العمل';
 
   @override
-  String get kitWorkGraphEmpty => 'No work items yet';
+  String get kitWorkGraphEmpty => 'لا توجد عناصر عمل بعد';
 
   @override
   String kitWorkGraphNode(String title, String state) {
-    return '$title, $state';
+    return '$title، $state';
   }
 
   @override
   String kitWorkGraphNeeds(String title) {
-    return 'needs $title';
+    return 'يحتاج إلى $title';
   }
 
   @override
@@ -14879,142 +14878,141 @@ class AppLocalizationsAr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count',
-      one: '1',
+      one: 'واحد',
     );
-    return 'needs $title and $_temp0 more';
+    return 'يحتاج إلى $title و$_temp0 آخر';
   }
 
   @override
-  String get kitJumpLatest => 'Jump to latest';
+  String get kitJumpLatest => 'الانتقال إلى الأحدث';
 
   @override
   String kitJumpNewLatest(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count new · Jump to latest',
-      one: '1 new · Jump to latest',
+      other: '$count جديدة · الانتقال إلى الأحدث',
+      one: 'واحد جديد · الانتقال إلى الأحدث',
     );
     return '$_temp0';
   }
 
   @override
-  String get kitChoiceCurrent => 'Current';
+  String get kitChoiceCurrent => 'الحالي';
 
   @override
   String get kitChoiceRecommended => 'موصى به';
 
   @override
-  String get kitChoiceOtherSend => 'Send answer';
+  String get kitChoiceOtherSend => 'إرسال الإجابة';
 
   @override
   String kitChoiceSelectedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count selected',
-      one: '1 selected',
-      zero: 'None selected',
+      other: 'حُدّد $count',
+      one: 'حُدّد واحد',
+      zero: 'لم يُحدَّد شيء',
     );
     return '$_temp0';
   }
 
   @override
-  String get kitComposerField => 'Message';
+  String get kitComposerField => 'الرسالة';
 
   @override
-  String get kitComposerSend => 'Send';
+  String get kitComposerSend => 'إرسال';
 
   @override
-  String get kitComposerSending => 'Sending';
+  String get kitComposerSending => 'جارٍ الإرسال';
 
   @override
-  String get kitComposerSendOffline => 'Send when back online';
+  String get kitComposerSendOffline => 'الإرسال عند عودة الاتصال';
 
   @override
-  String get kitComposerSendAfter => 'Send after this reply';
+  String get kitComposerSendAfter => 'الإرسال بعد هذا الرد';
 
   @override
-  String get kitComposerAddToTurn => 'Add to this turn';
+  String get kitComposerAddToTurn => 'إضافة إلى هذه الجولة';
 
   @override
-  String get kitComposerStop => 'Stop the reply';
+  String get kitComposerStop => 'إيقاف الرد';
 
   @override
-  String get kitComposerSendAfterShort => 'Send after';
+  String get kitComposerSendAfterShort => 'الإرسال بعده';
 
   @override
-  String get kitComposerAddToTurnShort => 'Add to this turn';
+  String get kitComposerAddToTurnShort => 'إضافة إلى هذه الجولة';
 
   @override
-  String get kitComposerDeliveryLabel => 'When to send';
+  String get kitComposerDeliveryLabel => 'موعد الإرسال';
 
   @override
-  String get kitComposerSendsAfter => 'Sends after this reply';
+  String get kitComposerSendsAfter => 'يُرسل بعد هذا الرد';
 
   @override
-  String get kitComposerCannotSendYet =>
-      'You can send when this reply finishes';
+  String get kitComposerCannotSendYet => 'يمكنك الإرسال عند انتهاء هذا الرد';
 
   @override
-  String get kitComposerOffline => 'Offline · sends when you\'re back online';
+  String get kitComposerOffline => 'غير متصل · يُرسل عند عودة الاتصال';
 
   @override
-  String get kitComposerTools => 'Attach and more';
+  String get kitComposerTools => 'الإرفاق والمزيد';
 
   @override
-  String get kitComposerVoice => 'Talk instead of typing';
+  String get kitComposerVoice => 'التحدث بدلًا من الكتابة';
 
   @override
-  String get kitComposerEditor => 'Open full-screen editor';
+  String get kitComposerEditor => 'فتح محرّر بملء الشاشة';
 
   @override
-  String get kitVoiceLeave => 'Leave voice mode';
+  String get kitVoiceLeave => 'مغادرة وضع الصوت';
 
   @override
-  String get kitVoiceStarting => 'Getting the microphone ready…';
+  String get kitVoiceStarting => 'جارٍ تجهيز الميكروفون…';
 
   @override
-  String get kitVoiceListening => 'Listening…';
+  String get kitVoiceListening => 'جارٍ الاستماع…';
 
   @override
-  String get kitVoiceTranscribing => 'Writing down what you said…';
+  String get kitVoiceTranscribing => 'جارٍ كتابة ما قلته…';
 
   @override
-  String get kitVoiceWaitingReply => 'Waiting for the reply…';
+  String get kitVoiceWaitingReply => 'بانتظار الرد…';
 
   @override
-  String get kitVoiceSpeaking => 'Reading the reply aloud';
+  String get kitVoiceSpeaking => 'جارٍ قراءة الرد بصوت عالٍ';
 
   @override
-  String get kitVoiceReplyReady => 'The reply is ready';
+  String get kitVoiceReplyReady => 'الرد جاهز';
 
   @override
-  String get kitVoicePaused => 'Paused · the agent needs you';
+  String get kitVoicePaused => 'متوقف مؤقتًا · يحتاج الوكيل إليك';
 
   @override
-  String get kitVoiceMicDenied => 'The microphone is off for this app';
+  String get kitVoiceMicDenied => 'الميكروفون معطّل لهذا التطبيق';
 
   @override
-  String get kitVoiceFailed => 'Voice stopped';
+  String get kitVoiceFailed => 'توقف الصوت';
 
   @override
-  String get kitVoiceSend => 'Send';
+  String get kitVoiceSend => 'إرسال';
 
   @override
-  String get kitVoiceDone => 'Done';
+  String get kitVoiceDone => 'تم';
 
   @override
-  String get kitVoiceStopReading => 'Stop reading';
+  String get kitVoiceStopReading => 'إيقاف القراءة';
 
   @override
-  String get kitVoiceReadReply => 'Read it aloud';
+  String get kitVoiceReadReply => 'قراءته بصوت عالٍ';
 
   @override
-  String get kitVoiceListen => 'Listen';
+  String get kitVoiceListen => 'استماع';
 
   @override
-  String get kitVoiceReadAloud => 'Read replies aloud';
+  String get kitVoiceReadAloud => 'قراءة الردود بصوت عالٍ';
 
   @override
   String kitVoiceElapsed(String minutes, String seconds) {
@@ -15022,14 +15020,14 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get kitSearchClear => 'Clear search';
+  String get kitSearchClear => 'مسح البحث';
 
   @override
-  String get kitSearchFilter => 'Filter';
+  String get kitSearchFilter => 'تصفية';
 
   @override
   String kitSearchFilterActive(String name) {
-    return 'Filter: $name';
+    return 'التصفية: $name';
   }
 
   @override
@@ -15037,79 +15035,79 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count results',
-      one: '1 result',
-      zero: 'No results',
+      other: '$count من النتائج',
+      one: 'نتيجة واحدة',
+      zero: 'لا توجد نتائج',
     );
     return '$_temp0';
   }
 
   @override
   String kitSearchPartial(int count) {
-    return '$count loaded · searching the server…';
+    return 'حُمّل $count · جارٍ البحث في الخادم…';
   }
 
   @override
   String kitSearchNoMatch(String query) {
-    return 'Nothing matches $query';
+    return 'لا شيء يطابق $query';
   }
 
   @override
   String kitSearchNoMatchIn(String what, String query) {
-    return 'Nothing in $what matches $query';
+    return 'لا شيء في $what يطابق $query';
   }
 
   @override
-  String get kitTopBarBack => 'Back';
+  String get kitTopBarBack => 'رجوع';
 
   @override
-  String get kitTopBarClose => 'Close';
+  String get kitTopBarClose => 'إغلاق';
 
   @override
-  String get kitTopBarSearch => 'Search';
+  String get kitTopBarSearch => 'بحث';
 
   @override
-  String get kitTopBarSwitchServer => 'Switch server';
+  String get kitTopBarSwitchServer => 'تغيير الخادم';
 
   @override
-  String get kitTopBarSwitchProject => 'Switch project';
+  String get kitTopBarSwitchProject => 'تغيير المشروع';
 
   @override
-  String get kitTopBarMore => 'More actions';
+  String get kitTopBarMore => 'المزيد من الإجراءات';
 
   @override
-  String get kitAgentStripLabel => 'Agents on this task';
+  String get kitAgentStripLabel => 'الوكلاء في هذه المهمة';
 
   @override
   String kitAgentOpen(String name) {
-    return 'Open $name\'s conversation';
+    return 'فتح محادثة $name';
   }
 
   @override
   String kitAgentLabel(String hasRole, String name, String role, String state) {
     String _temp0 = intl.Intl.selectLogic(hasRole, {
-      'yes': '$name, $role, $state',
-      'other': '$name, $state',
+      'yes': '$name، $role، $state',
+      'other': '$name، $state',
     });
     return '$_temp0';
   }
 
   @override
-  String get kitBreadcrumb => 'Folder path';
+  String get kitBreadcrumb => 'مسار المجلد';
 
   @override
   String kitBreadcrumbOpen(String folder) {
-    return 'Open folder $folder';
+    return 'فتح المجلد $folder';
   }
 
   @override
   String kitBreadcrumbOpenRoot(String root) {
-    return 'Open $root';
+    return 'فتح $root';
   }
 
   @override
   String kitBreadcrumbCurrent(String folder) {
-    return 'Current folder: $folder';
+    return 'المجلد الحالي: $folder';
   }
 
   @override
@@ -15117,54 +15115,53 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count more folders',
-      one: '1 more folder',
+      other: '$count من المجلدات الأخرى',
+      one: 'مجلد آخر واحد',
     );
     return '$_temp0';
   }
 
   @override
-  String get kitCodeCopyCode => 'Copy code';
+  String get kitCodeCopyCode => 'نسخ الشيفرة';
 
   @override
-  String get kitCodeCopyCommand => 'Copy command';
+  String get kitCodeCopyCommand => 'نسخ الأمر';
 
   @override
-  String get kitCodeCopyOutput => 'Copy output';
+  String get kitCodeCopyOutput => 'نسخ المخرجات';
 
   @override
-  String get kitCodeCopyFailedCode => 'Could not copy code. Try again.';
+  String get kitCodeCopyFailedCode => 'تعذّر نسخ الشيفرة. حاول مجددًا.';
 
   @override
-  String get kitCodeCopyFailedCommand =>
-      'Could not copy the command. Try again.';
+  String get kitCodeCopyFailedCommand => 'تعذّر نسخ الأمر. حاول مجددًا.';
 
   @override
-  String get kitCodeCopyFailedOutput => 'Could not copy the output. Try again.';
+  String get kitCodeCopyFailedOutput => 'تعذّر نسخ المخرجات. حاول مجددًا.';
 
   @override
   String kitCodeShowAll(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Show all $count lines',
+      other: 'عرض الأسطر الـ $count كلها',
     );
     return '$_temp0';
   }
 
   @override
-  String get kitCodeOpenFull => 'Open full output';
+  String get kitCodeOpenFull => 'فتح المخرجات كاملة';
 
   @override
-  String get kitWrapLines => 'Wrap lines';
+  String get kitWrapLines => 'التفاف الأسطر';
 
   @override
   String kitCodeChanges(int added, int removed) {
-    return '$added added, $removed removed';
+    return 'أُضيف $added، وأُزيل $removed';
   }
 
   @override
-  String get kitCodeEmpty => 'Empty';
+  String get kitCodeEmpty => 'فارغ';
 
   @override
   String kitTabLabel(String label, int count) {
@@ -15172,96 +15169,96 @@ class AppLocalizationsAr extends AppLocalizations {
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
-    return '$label, $countString';
+    return '$label، $countString';
   }
 
   @override
   String kitQueuedTitle(int count) {
-    return 'Waiting to send · $count';
+    return 'بانتظار الإرسال · $count';
   }
 
   @override
-  String get kitQueuedOffline => 'Sends when you\'re back online';
+  String get kitQueuedOffline => 'يُرسل عند عودة الاتصال';
 
   @override
-  String get kitQueuedWaiting => 'Waiting to send';
+  String get kitQueuedWaiting => 'بانتظار الإرسال';
 
   @override
-  String get kitQueuedReachedServer => 'Reached the server';
+  String get kitQueuedReachedServer => 'وصل إلى الخادم';
 
   @override
-  String get kitQueuedAfterReply => 'Sends after this reply';
+  String get kitQueuedAfterReply => 'يُرسل بعد هذا الرد';
 
   @override
-  String get kitQueuedAddToTurn => 'Adds to this turn';
+  String get kitQueuedAddToTurn => 'يُضاف إلى هذه الجولة';
 
   @override
-  String get kitQueuedUpdate => 'Update waiting';
+  String get kitQueuedUpdate => 'بانتظار التحديث';
 
   @override
   String kitQueuedAttachments(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count attachments',
-      one: '1 attachment',
+      other: '$count من المرفقات',
+      one: 'مرفق واحد',
     );
     return '$_temp0';
   }
 
   @override
   String kitQueuedItemLabel(int index, int count, String text, String state) {
-    return 'Waiting message $index of $count: $text. $state';
+    return 'الرسالة المنتظرة $index من $count: $text. $state';
   }
 
   @override
-  String get kitQueuedActions => 'Message actions';
+  String get kitQueuedActions => 'إجراءات الرسالة';
 
   @override
-  String get kitLogTitle => 'Output';
+  String get kitLogTitle => 'المخرجات';
 
   @override
-  String get kitLogShowOutput => 'Show output';
+  String get kitLogShowOutput => 'عرض المخرجات';
 
   @override
-  String get kitLogLive => 'Live';
+  String get kitLogLive => 'مباشر';
 
   @override
   String kitLogQuiet(String age) {
-    return 'Last line $age ago';
+    return 'آخر سطر منذ $age';
   }
 
   @override
   String kitLogQuietSeconds(int seconds) {
-    return 'Last line $seconds s ago';
+    return 'آخر سطر منذ $seconds ث';
   }
 
   @override
-  String get kitLogEnded => 'Ended';
+  String get kitLogEnded => 'انتهى';
 
   @override
   String kitLogEndedExit(String code) {
-    return 'Ended · exit $code';
+    return 'انتهى · رمز الخروج $code';
   }
 
   @override
-  String get kitLogFailed => 'Failed';
+  String get kitLogFailed => 'فشل';
 
   @override
   String kitLogFailedExit(String code) {
-    return 'Failed · exit $code';
+    return 'فشل · رمز الخروج $code';
   }
 
   @override
-  String get kitLogEmpty => 'No output yet';
+  String get kitLogEmpty => 'لا توجد مخرجات بعد';
 
   @override
   String kitLogNewLines(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count new lines',
-      one: '1 new line',
+      other: '$count من الأسطر الجديدة',
+      one: 'سطر جديد واحد',
     );
     return '$_temp0';
   }
@@ -15271,50 +15268,50 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count earlier lines not shown',
-      one: '1 earlier line not shown',
+      other: '$count من الأسطر السابقة غير معروضة',
+      one: 'سطر سابق واحد غير معروض',
     );
     return '$_temp0';
   }
 
   @override
-  String get kitLogReadFailed => 'Couldn\'t read the output';
+  String get kitLogReadFailed => 'تعذّر قراءة المخرجات';
 
   @override
   String kitLogWarningLine(String line) {
-    return 'Warning: $line';
+    return 'تحذير: $line';
   }
 
   @override
   String kitLogErrorLine(String line) {
-    return 'Error: $line';
+    return 'خطأ: $line';
   }
 
   @override
-  String get kitUntilOff => 'Until I turn it off';
+  String get kitUntilOff => 'حتى أوقفه';
 
   @override
-  String get kitUntilConversation => 'For this conversation';
+  String get kitUntilConversation => 'لهذه المحادثة';
 
   @override
-  String get kitUntilHour => 'For an hour';
+  String get kitUntilHour => 'لمدة ساعة';
 
   @override
-  String get kitRiskTurnOn => 'Turn on';
+  String get kitRiskTurnOn => 'تشغيل الميزة';
 
   @override
-  String get kitRiskNotNow => 'Not now';
+  String get kitRiskNotNow => 'ليس الآن';
 
   @override
-  String get kitRiskTurnOff => 'Turn off';
+  String get kitRiskTurnOff => 'إيقاف الميزة';
 
   @override
   String get safetyDisconnectBody =>
-      'Live updates stop and you return to the server list. The server keeps running and nothing on it changes.';
+      'تتوقف التحديثات المباشرة وتعود إلى قائمة الخوادم. يبقى الخادم قيد التشغيل ولا يتغيّر شيء عليه.';
 
   @override
   String get safetyDisconnectBodyPhone =>
-      'Live updates stop and you return to the server list. OpenCode keeps running on this phone, using battery, until you stop it.';
+      'تتوقف التحديثات المباشرة وتعود إلى قائمة الخوادم. يبقى OpenCode قيد التشغيل على هذا الهاتف ويستهلك البطارية حتى توقفه.';
 
   @override
   String safetyDisconnectWaiting(int count) {
@@ -15322,9 +15319,8 @@ class AppLocalizationsAr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count messages waiting to send stay on this phone until you connect again.',
-      one:
-          '1 message waiting to send stays on this phone until you connect again.',
+          'تبقى $count من الرسائل التي تنتظر الإرسال على هذا الهاتف حتى تتصل مجددًا.',
+      one: 'تبقى رسالة واحدة تنتظر الإرسال على هذا الهاتف حتى تتصل مجددًا.',
     );
     return '$_temp0';
   }
@@ -15336,51 +15332,51 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quotaMonitorSaving => 'جارٍ الحفظ…';
 
   @override
-  String get folderBrowserSlowTitle => 'Still reading this folder';
+  String get folderBrowserSlowTitle => 'لا تزال قراءة هذا المجلد جارية';
 
   @override
   String get folderBrowserSlowBody =>
-      'Folders on this phone can take up to 15 seconds to list.';
+      'قد يستغرق عرض محتويات المجلدات على هذا الهاتف حتى 15 ثانية.';
 
   @override
-  String get folderBrowserFirstProject => 'Name your first project';
+  String get folderBrowserFirstProject => 'سمِّ مشروعك الأول';
 
   @override
   String kitChecklistNext(String step) {
-    return 'next: $step';
+    return 'التالي: $step';
   }
 
   @override
   String kitChecklistNeedsYou(String action) {
-    return 'needs you, $action';
+    return 'يحتاج إليك، $action';
   }
 
   @override
-  String get kitChecklistShowSteps => 'Show steps';
+  String get kitChecklistShowSteps => 'إظهار الخطوات';
 
   @override
-  String get kitChecklistHideSteps => 'Hide steps';
+  String get kitChecklistHideSteps => 'إخفاء الخطوات';
 
   @override
-  String get kitRequestAllowOnce => 'Allow once';
+  String get kitRequestAllowOnce => 'السماح مرة واحدة';
 
   @override
-  String get kitRequestReject => 'Reject';
+  String get kitRequestReject => 'رفض الطلب';
 
   @override
-  String get kitRequestApprove => 'Approve';
+  String get kitRequestApprove => 'اعتماد الطلب';
 
   @override
-  String get kitRequestSendBack => 'Send back';
+  String get kitRequestSendBack => 'إعادة الطلب';
 
   @override
-  String get kitRequestAnswer => 'Answer';
+  String get kitRequestAnswer => 'إرسال الإجابة';
 
   @override
-  String get kitRequestSend => 'Send';
+  String get kitRequestSend => 'إرسال الرد';
 
   @override
-  String get kitRequestReplyEmptyReason => 'Type a reply first.';
+  String get kitRequestReplyEmptyReason => 'اكتب ردًا أولًا.';
 
   @override
   String kitRequestMoreAnswers(int count) {
@@ -15391,18 +15387,18 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString more answers',
-      one: '1 more answer',
+      other: '$countString من الإجابات الأخرى',
+      one: 'إجابة أخرى واحدة',
     );
     return '$_temp0';
   }
 
   @override
-  String get kitRequestExpired => 'Expired · the agent stopped waiting';
+  String get kitRequestExpired => 'انتهت الصلاحية · توقف الوكيل عن الانتظار';
 
   @override
   String kitRequestAge(String age) {
-    return 'waiting $age';
+    return 'ينتظر منذ $age';
   }
 
   @override
@@ -15410,8 +15406,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count files',
-      one: '1 file',
+      other: '$count من الملفات',
+      one: 'ملف واحد',
     );
     return '$_temp0';
   }
@@ -15425,14 +15421,14 @@ class AppLocalizationsAr extends AppLocalizations {
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
-    return 'Change $indexString of $countString';
+    return 'التغيير $indexString من $countString';
   }
 
   @override
-  String get kitDiffPreviousChange => 'Previous change';
+  String get kitDiffPreviousChange => 'التغيير السابق';
 
   @override
-  String get kitDiffNextChange => 'Next change';
+  String get kitDiffNextChange => 'التغيير التالي';
 
   @override
   String kitDiffLines(int start, int end) {
@@ -15444,7 +15440,7 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     final String endString = endNumberFormat.format(end);
 
-    return 'Lines $startString–$endString';
+    return 'الأسطر $startString–$endString';
   }
 
   @override
@@ -15452,41 +15448,41 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Show $count unchanged lines',
-      one: 'Show 1 unchanged line',
+      other: 'إظهار $count من الأسطر دون تغيير',
+      one: 'إظهار سطر واحد دون تغيير',
     );
     return '$_temp0';
   }
 
   @override
-  String get kitDiffHideUnchanged => 'Hide unchanged lines';
+  String get kitDiffHideUnchanged => 'إخفاء الأسطر دون تغيير';
 
   @override
   String kitDiffUnchangedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count unchanged lines',
+      other: '$count من الأسطر دون تغيير',
     );
     return '$_temp0';
   }
 
   @override
-  String get kitDiffNoChanges => 'No changes';
+  String get kitDiffNoChanges => 'لا توجد تغييرات';
 
   @override
-  String get kitDiffBinary => 'Binary file · not shown';
+  String get kitDiffBinary => 'ملف ثنائي · غير معروض';
 
   @override
   String kitDiffRenamed(String path) {
-    return 'Renamed from $path';
+    return 'أُعيدت تسميته من $path';
   }
 
   @override
-  String get kitDiffAddedFile => 'New file';
+  String get kitDiffAddedFile => 'ملف جديد';
 
   @override
-  String get kitDiffDeletedFile => 'Deleted';
+  String get kitDiffDeletedFile => 'محذوف';
 
   @override
   String kitDiffTooBig(int shown, int total) {
@@ -15497,56 +15493,56 @@ class AppLocalizationsAr extends AppLocalizations {
         intl.NumberFormat.decimalPattern(localeName);
     final String totalString = totalNumberFormat.format(total);
 
-    return 'Showing $shownString of $totalString lines';
+    return 'يُعرض $shownString من $totalString من الأسطر';
   }
 
   @override
-  String get kitDiffOpenAll => 'Open all';
+  String get kitDiffOpenAll => 'فتح الكل';
 
   @override
   String kitDiffLineAdded(int number) {
-    return 'Line $number added';
+    return 'أُضيف السطر $number';
   }
 
   @override
   String kitDiffLineRemoved(int number) {
-    return 'Line $number removed';
+    return 'أُزيل السطر $number';
   }
 
   @override
-  String get kitDiffComment => 'Comment';
+  String get kitDiffComment => 'تعليق';
 
   @override
-  String get kitDiffAddToPrompt => 'Add to prompt';
+  String get kitDiffAddToPrompt => 'إضافة إلى الطلب';
 
   @override
-  String get kitDiffCopyLines => 'Copy lines';
+  String get kitDiffCopyLines => 'نسخ الأسطر';
 
   @override
-  String get kitDiffClearSelection => 'Clear selection';
+  String get kitDiffClearSelection => 'مسح التحديد';
 
   @override
   String kitDiffSelected(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count lines selected',
-      one: '1 line selected',
+      other: 'حُدّد $count من الأسطر',
+      one: 'حُدّد سطر واحد',
     );
     return '$_temp0';
   }
 
   @override
   String kitDiffCounts(int added, int removed) {
-    return '$added added, $removed removed';
+    return 'أُضيف $added، وأُزيل $removed';
   }
 
   @override
-  String get kitDiffLoadFailed => 'Couldn\'t load the changes';
+  String get kitDiffLoadFailed => 'تعذّر تحميل التغييرات';
 
   @override
   String kitDiffLine(int number) {
-    return 'Line $number';
+    return 'السطر $number';
   }
 
   @override
@@ -15554,55 +15550,55 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count tasks',
-      one: '1 task',
-      zero: 'no tasks',
+      other: '$count من المهام',
+      one: 'مهمة واحدة',
+      zero: 'لا توجد مهام',
     );
-    return '$column, $_temp0';
+    return '$column، $_temp0';
   }
 
   @override
   String kitBoardLaneLoading(String column) {
-    return 'Loading $column';
+    return 'جارٍ تحميل $column';
   }
 
   @override
-  String get kitMarkdownOpenFile => 'Open file';
+  String get kitMarkdownOpenFile => 'فتح الملف';
 
   @override
   String kitMarkdownTable(int rows) {
     String _temp0 = intl.Intl.pluralLogic(
       rows,
       locale: localeName,
-      other: 'Table, $rows rows',
-      one: 'Table, 1 row',
+      other: 'جدول، $rows من الصفوف',
+      one: 'جدول، صف واحد',
     );
     return '$_temp0';
   }
 
   @override
-  String get kitToolNotRun => 'Not run';
+  String get kitToolNotRun => 'لم يُنفّذ';
 
   @override
-  String get kitToolWaiting => 'Waiting';
+  String get kitToolWaiting => 'بانتظار';
 
   @override
-  String get kitToolRunning => 'Running';
+  String get kitToolRunning => 'قيد التشغيل';
 
   @override
-  String get kitToolWaitingForYou => 'Waiting for you';
+  String get kitToolWaitingForYou => 'بانتظارك';
 
   @override
-  String get kitToolDone => 'Done';
+  String get kitToolDone => 'مكتمل';
 
   @override
-  String get kitToolFailed => 'Failed';
+  String get kitToolFailed => 'فشل';
 
   @override
-  String get kitToolStopped => 'Stopped';
+  String get kitToolStopped => 'متوقف';
 
   @override
-  String get kitToolBackground => 'Started in the background';
+  String get kitToolBackground => 'بدأ في الخلفية';
 
   @override
   String kitToolTookSeconds(int count) {
@@ -15613,8 +15609,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString seconds',
-      one: '1 second',
+      other: '$countString من الثواني',
+      one: 'ثانية واحدة',
     );
     return '$_temp0';
   }
@@ -15628,17 +15624,17 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString minutes',
-      one: '1 minute',
+      other: '$countString من الدقائق',
+      one: 'دقيقة واحدة',
     );
     return '$_temp0';
   }
 
   @override
-  String get kitToolOpenConversation => 'Open its conversation';
+  String get kitToolOpenConversation => 'فتح محادثته';
 
   @override
-  String get kitViewerFind => 'Find in file';
+  String get kitViewerFind => 'بحث في الملف';
 
   @override
   String kitViewerFindCount(int index, int count) {
@@ -15649,26 +15645,26 @@ class AppLocalizationsAr extends AppLocalizations {
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
-    return '$indexString of $countString';
+    return '$indexString من $countString';
   }
 
   @override
-  String get kitViewerFindNone => 'No matches';
+  String get kitViewerFindNone => 'لا توجد مطابقات';
 
   @override
-  String get kitViewerFindPrevious => 'Previous match';
+  String get kitViewerFindPrevious => 'المطابقة السابقة';
 
   @override
-  String get kitViewerFindNext => 'Next match';
+  String get kitViewerFindNext => 'المطابقة التالية';
 
   @override
-  String get kitViewerFindClose => 'Close find';
+  String get kitViewerFindClose => 'إغلاق البحث';
 
   @override
-  String get kitViewerCopyContents => 'Copy contents';
+  String get kitViewerCopyContents => 'نسخ المحتوى';
 
   @override
-  String get kitViewerShowSource => 'Show source';
+  String get kitViewerShowSource => 'عرض المصدر';
 
   @override
   String get kitViewerEmpty => 'This file is empty';
