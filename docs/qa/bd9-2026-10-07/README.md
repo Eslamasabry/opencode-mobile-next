@@ -213,3 +213,25 @@ owned final daemon1985521 stopped. **The emulator still has the QA target; the
 normal product APK restoration is pending the coordinator's go.** No uninstall,
 downgrade, other-device access, push, CI invocation, publication or Shorebird
 release/patch was performed.
+
+
+## Coordinator diagnosis and device handoff requirement
+
+Claude identified the original2201 process failure at22:49:20 as
+`java.lang.NoSuchMethodError: getPlugins()` in `Bd9DeviceSmoke.onStart`:
+R8 had altered the public FlutterEngine plugin registry API called from the
+separately shrunk test APK. This was a QA runner ABI failure, not an application
+bug. The narrowed QA-only keep rules in e9b87212 preserve that public API;
+subsequent exact-candidate sessions reached the Flutter assertion boundary and
+passed all seven native checks. This coordinator diagnosis supersedes the
+previous inference about the initial incomplete instrumentation receipt.
+
+Every device session must retain the shared emulator flock from installation
+through instrumentation/evidence/cleanup. Existing Python receipt sessions hold
+one lock around all these operations; supplemental diagnostic sessions used an
+outer flock around the entire command. No device operation is permitted outside
+that lock. The eventual handoff must leave the normal application installed and
+launchable. That handoff is still incomplete: the QA integration target remains
+installed and normal-main restoration is blocked by the explicit coordinator
+build/device freeze. The FYI does not explicitly lift that freeze; do not start
+another build or device session until the coordinator says go.
