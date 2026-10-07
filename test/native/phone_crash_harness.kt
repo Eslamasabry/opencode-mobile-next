@@ -54,12 +54,19 @@ fun main(args: Array<String>) {
                     StackTraceElement("private prompt", "https://evil?token=CODE", "/home/oc/private.txt", 3),
                     StackTraceElement("java.io.File", "read", "/home/oc/.claude/secret.java", 2),
                 )
+                // Crash capture is default OFF. The category-only snapshot
+                // below is meaningful only after explicit consent.
+                store.write(error, 1000L)
+                check(store.read() == null)
+                check(!File(root, "native-last-crash.properties").exists())
+                File(root, "crash-diagnostics-consent").writeText("1000")
                 store.write(error, 1000L)
                 val record = store.read()!!
                 check(record["message"] == "Input/output failure")
-                check(record["frames"] == listOf("io.github.eslamasabry.opencode_mobile.PhoneAgentHost.start(PhoneAgentHost.kt:42)"))
+                // Even apparently valid symbols are throwable-controlled.
+                check(record["frames"] == emptyList<String>())
                 val bytes = File(root, "native-last-crash.properties").readText()
-                for (secret in listOf("SHORTCODE", "https", "/home/oc", "private prompt")) check(secret !in bytes)
+                for (secret in listOf("SHORTCODE", "https", "/home/oc", "private prompt", "PhoneAgentHost")) check(secret !in bytes)
                 check(record["exceptionClass"] == "java.io.IOException")
                 val denied = SecurityException("https://host/login?code=SHORTCODE /home/oc/private")
                 denied.stackTrace = arrayOf(StackTraceElement("android.app.Service", "startForeground", "Service.java", 10))
@@ -81,11 +88,20 @@ fun main(args: Array<String>) {
             try {
                 var chained = 0
                 val error = IllegalStateException("private")
-                Thread.setDefaultUncaughtExceptionHandler { _, received -> check(received === error); chained++ }
+                Thread.setDefaultUncaughtExceptionHandler { receivedThread, received ->
+                    check(receivedThread === Thread.currentThread())
+                    check(received !== error)
+                    check(received.message == "Native application error")
+                    check(received.stackTrace.isEmpty())
+                    check(received.cause == null)
+                    check(received.suppressed.isEmpty())
+                    chained++
+                }
                 val handler = NativeCrashStore(File(root, "missing")).install()
                 handler.uncaughtException(Thread.currentThread(), error)
                 check(chained == 1)
                 Thread.setDefaultUncaughtExceptionHandler(null)
+                File(root, "crash-diagnostics-consent").writeText("1000")
                 NativeCrashStore(root).install().uncaughtException(Thread.currentThread(), error)
                 check(NativeCrashStore(root).read() != null)
             } finally { Thread.setDefaultUncaughtExceptionHandler(previous); root.deleteRecursively() }
