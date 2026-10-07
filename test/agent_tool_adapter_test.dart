@@ -1,3 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:opencode_mobile/api/models.dart';
+import 'package:opencode_mobile/domain/genui/gen_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/agent_tools/agent_tool_adapter.dart';
 
@@ -68,11 +73,49 @@ void main() {
   });
 
   test('tools are registered only for agents that support them; only '
-      'Claude Code is qualified for cards today', () {
+      'Claude Code and captured OC1 are qualified for cards', () {
     expect(AgentToolAdapters.withTools, AgentToolAdapter.values);
     expect(AgentToolAdapters.all.where((agent) => agent.cardsQualified), [
       AgentToolAdapter.claude,
+      AgentToolAdapter.openCode1,
     ]);
+  });
+
+  test('BA6 captured OC1 direct call parses only the accepted valid card', () {
+    final parts =
+        jsonDecode(
+              File(
+                'test/fixtures/genui/runtime_opencode1_tool.json',
+              ).readAsStringSync(),
+            )
+            as List;
+    const scope = GenUiScope(
+      profileID: 'fixture',
+      sourceId: 'opencode',
+      directory: '/root/projects',
+    );
+    final invalid = Part.fromJson(Map<String, dynamic>.from(parts[0] as Map));
+    expect(
+      genUiFromPart(
+        invalid,
+        scope: scope,
+        sessionID: 'session',
+        messageID: 'message',
+      ),
+      isNull,
+    );
+    final valid = Part.fromJson(Map<String, dynamic>.from(parts[1] as Map));
+    final parsed = genUiFromPart(
+      valid,
+      scope: scope,
+      sessionID: 'session',
+      messageID: 'message',
+    );
+    expect(parsed, isA<GenUiParsed>());
+    final card = (parsed! as GenUiParsed).card;
+    expect(card.id, 'oc-gaps-probe');
+    expect(card.ask, isA<GenUiConfirmAsk>());
+    expect(valid.toolName, AgentToolAdapter.openCode1.cardShowName);
   });
 
   test('ids stay the former enum names (they name helper folders)', () {

@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/agents/gen_ui_install.dart';
+import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/builtin/agents/gen_ui_install_scripts.dart';
 import 'package:opencode_mobile/domain/genui/gen_ui_status.dart';
 
@@ -36,6 +37,29 @@ final class _Verifier implements GenUiSetupVerifier {
   }
 }
 
+final class _Linux extends BuiltinLinux {
+  final users = <AgentRunUser>[];
+  int exitCode = 0;
+
+  @override
+  Future<BuiltinLinuxRunResult> run(
+    String script, {
+    Duration timeout = const Duration(minutes: 2),
+  }) async {
+    users.add(AgentRunUser.root);
+    return BuiltinLinuxRunResult(exitCode: exitCode, output: '');
+  }
+
+  @override
+  Future<BuiltinLinuxRunResult> runAgentSetupCheck(
+    String script, {
+    Duration timeout = const Duration(minutes: 2),
+  }) async {
+    users.add(AgentRunUser.agentUser);
+    return BuiltinLinuxRunResult(exitCode: exitCode, output: '');
+  }
+}
+
 Map<String, dynamic> _decodeJsonc(String source) {
   // Independent fixture decoder: quoted strings win over comment/comma tokens.
   final uncommented = source.replaceAllMapped(
@@ -50,23 +74,26 @@ Map<String, dynamic> _decodeJsonc(String source) {
 }
 
 void main() {
-  test('stages OpenCode while only qualified Claude becomes ready', () async {
-    final runner = _Runner();
-    final verifier = _Verifier({GenUiAgent.claude});
-    final status =
-        await ManagedGenUiInstaller(
-          runner: runner,
-          verifier: verifier,
-        ).setEnabled(
-          profileId: 'one',
-          agents: GenUiAgent.values.toSet(),
-          enabled: true,
-        );
-    expect(runner.calls, GenUiAgent.values);
-    expect(verifier.calls, [GenUiAgent.claude]);
-    expect(status, isA<GenUiSetupPartial>());
-    expect(status.agents, [GenUiAgent.claude]);
-  });
+  test(
+    'stages all tools and only verifies evidence-backed transports',
+    () async {
+      final runner = _Runner();
+      final verifier = _Verifier({GenUiAgent.claude});
+      final status =
+          await ManagedGenUiInstaller(
+            runner: runner,
+            verifier: verifier,
+          ).setEnabled(
+            profileId: 'one',
+            agents: GenUiAgent.values.toSet(),
+            enabled: true,
+          );
+      expect(runner.calls, GenUiAgent.values);
+      expect(verifier.calls, [GenUiAgent.claude, GenUiAgent.openCode1]);
+      expect(status, isA<GenUiSetupPartial>());
+      expect(status.agents, [GenUiAgent.claude]);
+    },
+  );
 
   test(
     'review 1 failed verifier reports verification failure not restart',
@@ -131,7 +158,7 @@ void main() {
   );
 
   test(
-    'OpenCode registration cannot become ready through a permissive verifier',
+    'OpenCode 2 registration cannot become ready through a permissive verifier',
     () async {
       final runner = _Runner();
       final verifier = _Verifier(GenUiAgent.values.toSet());
@@ -141,10 +168,10 @@ void main() {
             verifier: verifier,
           ).setEnabled(
             profileId: 'one',
-            agents: {GenUiAgent.openCode1, GenUiAgent.openCode2},
+            agents: {GenUiAgent.openCode2},
             enabled: true,
           );
-      expect(runner.calls, [GenUiAgent.openCode1, GenUiAgent.openCode2]);
+      expect(runner.calls, [GenUiAgent.openCode2]);
       expect(verifier.calls, isEmpty);
       expect(status, isA<GenUiSetupUnavailable>());
       expect(
@@ -152,6 +179,71 @@ void main() {
         GenUiSetupProblem.notQualified,
       );
       expect(status.agents, isEmpty);
+    },
+  );
+
+  test(
+    'BA6 qualified OC1 registration still needs live verification',
+    () async {
+      final verifier = _Verifier({GenUiAgent.openCode1});
+      final status =
+          await ManagedGenUiInstaller(
+            runner: _Runner(),
+            verifier: verifier,
+          ).setEnabled(
+            profileId: 'one',
+            agents: {GenUiAgent.openCode1},
+            enabled: true,
+          );
+      expect(status, isA<GenUiSetupOn>());
+      expect(verifier.calls, [GenUiAgent.openCode1]);
+      expect(status.agents, [GenUiAgent.openCode1]);
+
+      final failed =
+          await ManagedGenUiInstaller(
+            runner: _Runner(),
+            verifier: _Verifier({}),
+          ).setEnabled(
+            profileId: 'one',
+            agents: {GenUiAgent.openCode1},
+            enabled: true,
+          );
+      expect(failed, isA<GenUiSetupFailed>());
+      expect(
+        (failed as GenUiSetupFailed).reason,
+        GenUiSetupProblem.verificationFailed,
+      );
+    },
+  );
+
+  test(
+    'BA6 builtin verifier runs OC1 as root and Claude in the agent view',
+    () async {
+      final linux = _Linux();
+      final verifier = BuiltinGenUiSetupVerifier(linux: linux);
+      expect(
+        await verifier.verify(profileId: 'one', agent: GenUiAgent.openCode1),
+        true,
+      );
+      expect(
+        await verifier.verify(profileId: 'one', agent: GenUiAgent.claude),
+        true,
+      );
+      expect(linux.users, [AgentRunUser.root, AgentRunUser.agentUser]);
+      linux.exitCode = 24;
+      expect(
+        await verifier.verify(profileId: 'one', agent: GenUiAgent.openCode1),
+        false,
+      );
+      expect(
+        await verifier.verify(profileId: 'one', agent: GenUiAgent.openCode2),
+        false,
+      );
+      expect(linux.users, [
+        AgentRunUser.root,
+        AgentRunUser.agentUser,
+        AgentRunUser.root,
+      ]);
     },
   );
 
@@ -249,6 +341,11 @@ void main() {
       bool verify = false,
       bool wrongVersion = false,
       bool requireMarker = false,
+      String mcpStatus = 'connected',
+      bool wrongOpenCodeVersion = false,
+      bool missingPassword = false,
+      bool httpError = false,
+      bool oversizedResponse = false,
       Set<String> runtimes = const {'/usr/bin/node'},
       String? unsafePath,
       bool foreignOwner = false,
@@ -269,12 +366,40 @@ void main() {
               as Map<String, dynamic>;
       data['directory'] = '${root.path}/managed';
       data['config'] = '${root.path}/config/opencode.json';
+      data['passwordFile'] = '${root.path}/password';
+      if (!missingPassword) {
+        await File(
+          data['passwordFile'] as String,
+        ).writeAsString('fixture-only');
+      } else {
+        final password = File(data['passwordFile'] as String);
+        if (await password.exists()) await password.delete();
+      }
       final source = script
           .split("<<'OC_GENUI_SETUP' 2>/dev/null\n")[1]
           .split('\nOC_GENUI_SETUP')[0];
       // Real file/JSON/locking/atomic/rollback code runs against a temporary
       // tree. Replace only host identity/runtime execution, never file logic.
       final harness = source.replaceFirst('try: main()', '''
+class Response:
+    status = ${httpError ? 503 : 200}
+    def __init__(self, path): self.path = path
+    def read(self, maximum):
+        assert maximum == 65537
+        if ${oversizedResponse ? 'True' : 'False'}: return b'x' * 65537
+        value = {'healthy':True,'version':'${wrongOpenCodeVersion ? '9.0.0' : '1.18.32'}'} if self.path == '/global/health' else {'oc-ui':{'status':'$mcpStatus'}}
+        return json.dumps(value).encode()
+class Connection:
+    def __init__(self, host, port, timeout):
+        assert host == '127.0.0.1' and port == 4097 and timeout == 5
+    def request(self, method, path, headers):
+        assert method == 'GET' and path in ('/global/health', '/mcp')
+        assert headers['Authorization'] == 'Basic ' + base64.b64encode(b'opencode:fixture-only').decode()
+        assert headers['x-opencode-directory'] == '/root/projects'
+        self.path = path
+    def getresponse(self): return Response(self.path)
+    def close(self): pass
+http.client.HTTPConnection = Connection
 os.getuid = lambda: ${agent == GenUiAgent.claude ? 1000 : 0}
 runtime_paths = {'/usr/bin/node', '/opt/node/bin/node', '/opt/oc-node/bin/node'}
 available = set(${jsonEncode(runtimes.toList())})
@@ -705,6 +830,32 @@ try: main()''');
     );
 
     test(
+      'BA6 OC1 readiness requires pinned live connected server and owned helper',
+      () async {
+        expect(await apply('one'), 0);
+        expect(await apply('one', verify: true), 0);
+        for (final status in [
+          'disconnected',
+          'failed',
+          'disabled',
+          'needs_auth',
+        ]) {
+          expect(await apply('one', verify: true, mcpStatus: status), 24);
+        }
+        expect(
+          await apply('one', verify: true, wrongOpenCodeVersion: true),
+          24,
+        );
+        expect(await apply('one', verify: true, missingPassword: true), 24);
+        expect(await apply('one', verify: true, httpError: true), 24);
+        expect(await apply('one', verify: true, oversizedResponse: true), 24);
+        expect(await apply('other-owner', verify: true), 24);
+        await File('${root.path}/managed/server.cjs').writeAsString('damaged');
+        expect(await apply('one', verify: true), 24);
+      },
+    );
+
+    test(
       'two owners install idempotently and last disable removes only own entry',
       () async {
         await Directory('${root.path}/config').create();
@@ -933,6 +1084,7 @@ try: main()''');
           ),
           11,
         );
+        await File('${root.path}/password').delete();
         expect(await root.list().toList(), isEmpty);
       },
     );

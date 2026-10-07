@@ -30,7 +30,7 @@ abstract interface class GenUiSetupVerifier {
   Future<bool> verify({required String profileId, required GenUiAgent agent});
 }
 
-/// Re-checks the pinned Claude runtime and this profile's registered MCP tool.
+/// Re-checks the qualified runtime and this profile's registered MCP tool.
 /// Qualification of its transport is independent and precedes this check.
 final class BuiltinGenUiSetupVerifier implements GenUiSetupVerifier {
   BuiltinGenUiSetupVerifier({BuiltinLinux? linux})
@@ -44,9 +44,13 @@ final class BuiltinGenUiSetupVerifier implements GenUiSetupVerifier {
   }) async {
     if (!agent.cardsQualified) return false;
     try {
-      final result = await _linux.runAgentSetupCheck(
-        genUiVerificationScript(profileId: profileId, agent: agent),
+      final script = genUiVerificationScript(
+        profileId: profileId,
+        agent: agent,
       );
+      final result = agent.runsAs == AgentRunUser.agentUser
+          ? await _linux.runAgentSetupCheck(script)
+          : await _linux.run(script);
       return result.exitCode == 0;
     } catch (_) {
       return false;
