@@ -148,15 +148,11 @@ class ConnectionChatsHost implements ChatsHost {
     final owner = _conn.connectionForRow(item);
     if (owner == null) return null;
     final answers = PermissionAnswers.of(owner);
-    // The row's owner draws agent cards once it implements the surface.
-    final GenUiController? cards = owner is GenUiController
-        ? owner as GenUiController
-        : null;
     return ListenableBuilder(
       listenable: Listenable.merge([owner, answers, owner.delayedAnswers]),
       builder: (context, _) {
         final waiting = owner.permissionsForSession(item.sessionID);
-        final card = cards?.waitingCardsForFeedItem(item).firstOrNull;
+        final card = owner.waitingCardsForFeedItem(item).firstOrNull;
         if (waiting.isEmpty && card == null) return const SizedBox.shrink();
         Widget? request;
         if (waiting.isNotEmpty) {
@@ -189,7 +185,7 @@ class ConnectionChatsHost implements ChatsHost {
             ? null
             : AgentCardView(
                 key: ValueKey('chats-card-${card.callID}'),
-                controller: cards!,
+                controller: owner,
                 parse: GenUiParsed(card),
                 agentLabel: item.agentLabel ?? 'OpenCode',
                 busy: owner.busySessions.contains(item.sessionID),

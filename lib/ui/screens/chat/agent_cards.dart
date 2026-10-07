@@ -7,11 +7,8 @@ part of '../chat_screen.dart';
 // reply. Nothing here builds a prompt.
 
 extension _ChatAgentCards on _ChatScreenState {
-  /// The connection's card surface, or null until it implements one.
-  GenUiController? get _genUi {
-    final conn = _conn;
-    return conn is GenUiController ? conn as GenUiController : null;
-  }
+  /// The connection's card surface.
+  GenUiController? get _genUi => _conn;
 
   /// Who the conversation is with, as the composer and the cards say it.
   String? get _agentName => _conn.isAgentBackend

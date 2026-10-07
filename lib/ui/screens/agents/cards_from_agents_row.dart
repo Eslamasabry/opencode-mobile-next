@@ -8,12 +8,11 @@ import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart' show connProvider;
 import '../../kit/kit.dart';
 
-/// The connection's agent-card surface, or null where it has none (a build
-/// or a test without one): the Cards row then draws nothing.
+/// The connection's agent-card surface, or null where it has none (a test
+/// without a connection): the Cards row then draws nothing.
 final genUiControllerProvider = Provider<GenUiController?>((ref) {
   try {
-    final conn = ref.watch(connProvider);
-    return conn is GenUiController ? conn as GenUiController : null;
+    return ref.watch(connProvider);
   } catch (_) {
     return null;
   }
