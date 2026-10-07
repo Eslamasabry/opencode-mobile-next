@@ -119,7 +119,9 @@ case "${1:-}" in
 esac
 ''';
 
-/// apt-get and dpkg: "installs" into a list dpkg -s reads.
+/// apt-get and dpkg: "installs" into a list dpkg -s reads. A successful
+/// status query prints dpkg's installed status as well as returning zero;
+/// setup verifies both, so an unpacked package is not mistaken for installed.
 const _aptStub = r'''#!/bin/bash
 echo "apt-get $*" >> /root/apt-calls.log
 case " $* " in
@@ -134,7 +136,9 @@ exit 0
 
 const _dpkgStub = r'''#!/bin/bash
 case "${1:-}" in
-  -s) [ -f "/var/lib/fake-dpkg/$2" ] ;;
+  -s)
+    [ -f "/var/lib/fake-dpkg/$2" ] || exit 1
+    printf 'Package: %s\nStatus: install ok installed\n' "$2" ;;
   *) exit 0 ;;
 esac
 ''';
@@ -763,6 +767,27 @@ void main() {
       expect(fx.served, isEmpty);
       expect(fx.aptCalls, isEmpty);
       expect(fx.log, contains('are installed already'));
+    });
+
+    scenario('a package status query that succeeds but reports an unpacked '
+        'package stops before the programs are unpacked', (fx) async {
+      _Fixture._executable(
+        '${fx.rootfs}/usr/local/bin/dpkg',
+        _dpkgStub.replaceFirst(
+          'Status: install ok installed',
+          'Status: install ok unpacked',
+        ),
+      );
+      final result = await fx.verb(['install']);
+      expect(result.exitCode, isNot(0), reason: fx.log);
+      final status = await fx.status();
+      expect(status.rawPhase, 'failed:packages');
+      expect(status.installed, isFalse);
+      expect(fx.log, contains('Status: install ok unpacked'));
+      expect(fx.log, contains('A required package is not fully installed'));
+      expect(Directory('${fx.rootfs}/opt/aiteam').existsSync(), isFalse);
+      expect(fx.aptCalls, contains('install -y --no-install-recommends'));
+      expect(File('${fx.rootfs}/var/lib/fake-dpkg/tmux').existsSync(), isTrue);
     });
 
     scenario('a checksum mismatch stops before anything reaches Ubuntu', (
