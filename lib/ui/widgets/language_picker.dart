@@ -27,7 +27,7 @@ import '../kit/kit_tokens.dart';
 /// in the code). `test/revamp/shared_settings_1_test.dart` recomputes it
 /// from the files and fails when this drifts by more than 3 points; update
 /// the number it prints then.
-const int arabicTranslatedPercent = 93;
+const int arabicTranslatedPercent = 100;
 
 /// Opens the Language sheet.
 Future<void> showLanguageSheet(
@@ -131,7 +131,8 @@ class _LanguageSheetState extends State<_LanguageSheet> {
                     'language-choice-${code.isEmpty ? 'system' : code}',
                   ),
                   title: _localeLabel(l10n, code),
-                  supporting: code == 'ar'
+                  // A complete translation needs no note.
+                  supporting: code == 'ar' && arabicTranslatedPercent < 100
                       ? l10n.languagePickerPartlyTranslated(
                           arabicTranslatedPercent,
                         )

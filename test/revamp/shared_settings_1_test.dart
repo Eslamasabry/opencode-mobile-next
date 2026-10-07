@@ -71,39 +71,45 @@ void main() {
       );
     });
 
-    testWidgets('Arabic says it is partly translated, with the share', (
-      tester,
-    ) async {
-      SharedPreferences.setMockInitialValues({});
-      final controller = ConnectionController(
-        ProfileStore(prefs: await SharedPreferences.getInstance()),
-        isIsolated: true,
-      );
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(
-        _app(LanguageSettingsTile(controller: controller)),
-      );
-      await tester.tap(find.text(_l10n.e7LocaleUiLanguage));
-      await tester.pumpAndSettle();
-      final share = _l10n.languagePickerPartlyTranslated(
-        arabicTranslatedPercent,
-      );
-      expect(share, 'Partly translated ($arabicTranslatedPercent %)');
-      expect(
-        find.descendant(
-          of: find.byKey(const ValueKey('language-choice-ar')),
-          matching: find.text(share),
-        ),
-        findsOneWidget,
-      );
-      // Only Arabic carries the note.
-      expect(find.text(share), findsOneWidget);
-      // Choosing the language in use just closes the sheet.
-      await tester.tap(find.text(_l10n.e7LocaleUiSystem).last);
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('language-sheet')), findsNothing);
-      expect(controller.appLocale.value, isNull);
-    });
+    testWidgets(
+      'Arabic carries a partly-translated note only while it is incomplete',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final controller = ConnectionController(
+          ProfileStore(prefs: await SharedPreferences.getInstance()),
+          isIsolated: true,
+        );
+        addTearDown(controller.dispose);
+        await tester.pumpWidget(
+          _app(LanguageSettingsTile(controller: controller)),
+        );
+        await tester.tap(find.text(_l10n.e7LocaleUiLanguage));
+        await tester.pumpAndSettle();
+        final share = _l10n.languagePickerPartlyTranslated(
+          arabicTranslatedPercent,
+        );
+        expect(share, 'Partly translated ($arabicTranslatedPercent %)');
+        // Complete (100 %): no note at all; incomplete: only Arabic has it.
+        expect(
+          find.text(share),
+          arabicTranslatedPercent < 100 ? findsOneWidget : findsNothing,
+        );
+        if (arabicTranslatedPercent < 100) {
+          expect(
+            find.descendant(
+              of: find.byKey(const ValueKey('language-choice-ar')),
+              matching: find.text(share),
+            ),
+            findsOneWidget,
+          );
+        }
+        // Choosing the language in use just closes the sheet.
+        await tester.tap(find.text(_l10n.e7LocaleUiSystem).last);
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('language-sheet')), findsNothing);
+        expect(controller.appLocale.value, isNull);
+      },
+    );
   });
 
   group('theme preview sheet', () {
