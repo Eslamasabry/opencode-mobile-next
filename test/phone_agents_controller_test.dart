@@ -1254,6 +1254,10 @@ void main() {
       expect(codex.hiddenReason, isNot(PhoneAgentHiddenReason.runtimeUnknown));
       expect(codex.statusMessage, contains('could not be checked'));
       expect(codex.fixAction, PhoneAgentFixAction.signIn);
+      // The sign-in sheet says the same, instead of "Checking sign-in…".
+      final state = c.agentSignInState('codex')!;
+      expect(state.inspected, isTrue);
+      expect(state.phase, AgentSignInPhase.failed);
       await tester.pump(const Duration(seconds: 6));
       c.dispose();
     });

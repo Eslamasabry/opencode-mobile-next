@@ -436,6 +436,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
               runtime.architectureQualified &&
               runtime.hostAvailable) {
             final phase = await _paProviderSignIn(descriptor.providerId);
+            if (phase == null) {
+              _paProviderPhases.remove(descriptor.id);
+            } else {
+              _paProviderPhases[descriptor.id] = phase;
+            }
             if (phase != null) {
               runtime = PhoneAgentRuntime(
                 agentId: runtime.agentId,
@@ -528,18 +533,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// folder, the helper still loading, a failed or slow read) becomes the
   /// same, with Sign in as the way forward. Null only inside that window.
   Future<AgentSignInPhase?> _paProviderSignIn(String providerId) async {
-    var gateway = _paSources.values.firstOrNull?.gateway;
-    if (gateway == null) {
-      // No agent conversation yet: reach the helper through a project folder.
-      final directory = _paDesiredDirectories().firstOrNull ?? _self.directory;
-      if (directory != null && directory.startsWith('/root/projects/')) {
-        try {
-          gateway = (await _paReachSource(
-            directory,
-          ).timeout(_paSignInReadLimit)).gateway;
-        } catch (_) {}
-      }
-    }
+    final gateway = await _paHelperGateway();
     if (gateway == null) return _paSignInStillUnknown(providerId);
     final HostAgentProviderAvailability? availability;
     try {
@@ -563,6 +557,24 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         AgentSignInPhase.signedOut,
       _ => AgentSignInPhase.failed,
     };
+  }
+
+  /// A connection to the agents' helper: a listed folder's, or, before any
+  /// agent conversation, one reached through a project folder.
+  Future<PaseoGateway?> _paHelperGateway() async {
+    final gateway = _paSources.values.firstOrNull?.gateway;
+    if (gateway != null) return gateway;
+    final directory = _paDesiredDirectories().firstOrNull ?? _self.directory;
+    if (directory == null || !directory.startsWith('/root/projects/')) {
+      return null;
+    }
+    try {
+      return (await _paReachSource(
+        directory,
+      ).timeout(_paSignInReadLimit)).gateway;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// One read of the helper's provider list may take this long.
@@ -668,8 +680,23 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   // ---- sign-in ------------------------------------------------------------
 
   @override
-  AgentSignInState? agentSignInState(String agentId) =>
-      _paSignIns[agentId]?.state;
+  AgentSignInState? agentSignInState(String agentId) {
+    if (agentId == 'claude') return _paSignIns[agentId]?.state;
+    // Other agents are read through the helper (their sign-in runs on a
+    // terminal): the sheet says what the row says, so it never waits on a
+    // native check that only Claude has (issue #95).
+    final descriptor = _paCatalog.byId(agentId);
+    if (descriptor == null) return null;
+    final phase = _paProviderPhases[agentId];
+    return AgentSignInState(
+      phase: phase ?? AgentSignInPhase.signedOut,
+      method: descriptor.signInMethod,
+      inspected: phase != null,
+    );
+  }
+
+  /// What the helper last said about each non-Claude agent's sign-in.
+  final Map<String, AgentSignInPhase> _paProviderPhases = {};
 
   @override
   String? get agentSignInProfileId =>
@@ -680,9 +707,9 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (agentId != 'claude') {
       // The helper re-reads its agents, then the row says where it stands.
       try {
-        await _paSources.values.firstOrNull?.gateway.loadHostAgentProviders(
-          refresh: true,
-        );
+        await (await _paHelperGateway())
+            ?.loadHostAgentProviders(refresh: true)
+            .timeout(_paSignInReadLimit);
       } catch (_) {}
       await refreshAgentRows();
       if (!_self._disposed) _self._notifyListeners();
