@@ -304,6 +304,54 @@ void main() {
     },
   );
   test(
+    'legacy fx check still qualifies after owner migration and never after failed retry',
+    () async {
+      abi = 'x86_64';
+      expect((await host.selfTest('claude')).passed, true);
+      final ownerGates = prefs.getString('${phoneAgentGatePrefix}phone')!;
+      expect((await host.selfTest('fx')).passed, true);
+      final allGates =
+          jsonDecode(prefs.getString('${phoneAgentGatePrefix}phone')!) as Map;
+      await prefs.setString('${phoneAgentGatePrefix}phone', ownerGates);
+      await prefs.setString(
+        '${phoneAgentGatePrefix}old',
+        jsonEncode({'fx': allGates['fx']}),
+      );
+      await prefs.setString('oc.phoneAgentOwner.phone', 'phone');
+      await prefs.setString('oc.phoneAgentOwner.old', 'phone');
+      await prefs.setString(
+        'oc.profiles',
+        jsonEncode([
+          ServerProfile(
+            id: 'phone',
+            name: 'One',
+            baseUrl: 'http://127.0.0.1:4097',
+          ).toJson(),
+          ServerProfile(
+            id: 'old',
+            name: 'Two',
+            baseUrl: 'http://127.0.0.1:4097',
+            flavor: ServerFlavor.v2,
+          ).toJson(),
+        ]),
+      );
+      final store = ProfileStore(prefs: prefs);
+      await store.load();
+      expect((await host.inspect('claude')).architectureQualified, true);
+      expect((await host.inspect('fx')).architectureQualified, true);
+      // Qualification still depends on the current installation and ABI.
+      abi = 'arm64-v8a';
+      expect((await host.inspect('fx')).architectureQualified, false);
+      abi = 'x86_64';
+      versionValid = false;
+      expect((await host.selfTest('fx')).passed, false);
+      await store.load();
+      expect((await host.inspect('fx')).architectureQualified, false);
+      expect((await host.inspect('claude')).architectureQualified, true);
+    },
+  );
+
+  test(
     'failed retry clears prior proof and never starts daemon after wrong version',
     () async {
       expect((await host.selfTest('claude')).passed, true);

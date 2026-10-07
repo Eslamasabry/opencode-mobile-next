@@ -4,6 +4,7 @@ part of '../profiles.dart';
 // home. Reuse an existing home instead of moving or duplicating credentials.
 extension PhoneAgentOwnership on ProfileStore {
   static const _ownerPrefix = 'oc.phoneAgentOwner.';
+  static const _gateMigrationPrefix = 'oc.phoneAgentGateMigration.';
 
   bool _phoneProfile(ServerProfile profile) =>
       profile.backend == ServerBackend.openCode &&
@@ -65,11 +66,84 @@ extension PhoneAgentOwnership on ProfileStore {
       }
       owner = candidate.id;
     }
+    await _adoptLegacyPhoneAgentGates(owner, local);
     for (final profile in local) {
       final key = '$_ownerPrefix${profile.id}';
       if (prefs.getString(key) != owner && !await prefs.setString(key, owner)) {
         throw const AgentHostException(AgentHostFailure.storage);
       }
+    }
+  }
+
+  // Checks certify the shared Ubuntu installation, not account credentials.
+  // Keep the selected home, but carry over checks from the other legacy homes.
+  // A donor is consumed once: retrying a check clears proof, and a subsequent
+  // load must never resurrect that proof from the untouched legacy home.
+  Future<void> _adoptLegacyPhoneAgentGates(
+    String owner,
+    List<ServerProfile> local,
+  ) async {
+    final receiptKey = '$_gateMigrationPrefix$owner';
+    final Set<String> receipts;
+    try {
+      receipts = prefs.getStringList(receiptKey)?.toSet() ?? <String>{};
+      if (receipts.any(
+        (id) => !RegExp(r'^[A-Za-z0-9_-]{1,80}$').hasMatch(id),
+      )) {
+        throw const AgentHostException(AgentHostFailure.storage);
+      }
+    } catch (_) {
+      throw const AgentHostException(AgentHostFailure.storage);
+    }
+    Map<String, dynamic> gatesFor(String id) {
+      try {
+        final gates = jsonDecode(
+          prefs.getString('$phoneAgentGatePrefix$id') ?? '{}',
+        );
+        return gates is Map<String, dynamic> ? gates : {};
+      } catch (_) {
+        return {};
+      }
+    }
+
+    final gates = gatesFor(owner);
+    var changed = false;
+    final donors = <String>[];
+    for (final profile in local) {
+      if (profile.id == owner || receipts.contains(profile.id)) continue;
+      donors.add(profile.id);
+      for (final entry in gatesFor(profile.id).entries) {
+        final gate = entry.value;
+        if (!gates.containsKey(entry.key) &&
+            gate is Map &&
+            gate['fingerprint'] is String &&
+            (gate['fingerprint'] as String).isNotEmpty) {
+          gates[entry.key] = gate;
+          changed = true;
+        }
+      }
+    }
+    try {
+      if (changed &&
+          !await prefs.setString(
+            '$phoneAgentGatePrefix$owner',
+            jsonEncode(gates),
+          )) {
+        throw const AgentHostException(AgentHostFailure.storage);
+      }
+      if (donors.isNotEmpty &&
+          !await prefs.setStringList(receiptKey, [...receipts, ...donors])) {
+        throw const AgentHostException(AgentHostFailure.storage);
+      }
+    } catch (_) {
+      // SharedPreferences updates its cache before the platform write. Retry
+      // from persisted truth instead of mistaking a refused write for proof.
+      try {
+        await prefs.reload();
+      } catch (_) {
+        /* Preserve the typed storage failure. */
+      }
+      throw const AgentHostException(AgentHostFailure.storage);
     }
   }
 
@@ -86,6 +160,7 @@ extension PhoneAgentOwnership on ProfileStore {
   Set<String> _phoneAgentPreferenceKeys(String owner) => {
     for (final key in prefs.getKeys())
       if (key == '$phoneAgentGatePrefix$owner' ||
+          key == '$_gateMigrationPrefix$owner' ||
           key == '$phoneAgentInstallPrefix$owner' ||
           key == 'oc.agentFeed.$owner' ||
           key == 'oc.phoneAgentsUsed.$owner' ||
