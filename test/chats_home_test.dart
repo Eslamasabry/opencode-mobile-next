@@ -470,6 +470,25 @@ void main() {
     expect(sources.retried, ['termux']);
   });
 
+  clocked('a conversation waiting on you answers right in the list', (
+    tester,
+  ) async {
+    final source = _source();
+    final waiting = source.items.firstWhere(
+      (item) => item.status == ChatStatus.needsYou,
+    );
+    final running = source.items.firstWhere(
+      (item) => item.status == ChatStatus.running,
+    );
+    final host = FakeChatsHost(source)
+      ..requestCards[waiting.sessionID] = const Text('Allow once card')
+      ..requestCards[running.sessionID] = const Text('Not for running');
+    await _pump(tester, host);
+    expect(find.text('Allow once card'), findsOneWidget);
+    // Only a conversation that waits on you shows its request.
+    expect(find.text('Not for running'), findsNothing);
+  });
+
   clocked('with one connection there is no connections chip', (tester) async {
     await _pump(tester, FakeChatsHost(_source()));
     expect(find.byKey(const ValueKey('chats-filter-sources')), findsNothing);

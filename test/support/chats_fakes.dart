@@ -127,6 +127,13 @@ class FakeChatsHost implements ChatsHost {
   @override
   String connectionName(BuildContext context, String id, String fallback) =>
       fallback;
+
+  /// The request card each conversation shows in the list, by session id.
+  final requestCards = <String, Widget>{};
+
+  @override
+  Widget? listRequest(BuildContext context, ChatFeedItem item) =>
+      requestCards[item.sessionID];
   int switched = 0;
 
   @override

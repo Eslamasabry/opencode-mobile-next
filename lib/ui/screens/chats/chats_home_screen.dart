@@ -483,9 +483,35 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
           showAgent: showAgent,
           servers: servers,
         );
+        // A conversation waiting on the person answers here: its request
+        // card under the row (with Undo), no need to open it.
+        final request = item.status == ChatStatus.needsYou
+            ? host.listRequest(context, item)
+            : null;
+        final shown = request == null
+            ? row
+            : Column(
+                key: ValueKey('chats-row-request-${item.sessionID}'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  row,
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(
+                      tokens.gutter,
+                      0,
+                      tokens.gutter,
+                      tokens.space3,
+                    ),
+                    child: request,
+                  ),
+                ],
+              );
         return KeyedSubtree(
           key: ValueKey('chats-row-${item.sessionID}'),
-          child: _seenRows.add(item.identity) ? KitEntrance(child: row) : row,
+          child: _seenRows.add(item.identity)
+              ? KitEntrance(child: shown)
+              : shown,
         );
       },
     );

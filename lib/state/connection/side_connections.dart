@@ -255,6 +255,24 @@ mixin _ConnectionControllerSideConnections on ChangeNotifier
       ),
   ];
 
+  /// The connection a list row's conversation runs on: this one, another
+  /// server's, or the agents' on this phone; null when that one isn't open
+  /// (its requests are then answered in the conversation itself).
+  ConnectionController? connectionForRow(ChatFeedItem item) {
+    final source = item.sourceId ?? '';
+    if (source.isEmpty || source == _openCodeSourceId) return _self;
+    if (source.startsWith('profile:')) return _sideForSource(source);
+    if (source.startsWith('paseo:')) {
+      final owner = _self._paOwners[item.sessionID];
+      if (owner != null && !owner._disposed) return owner;
+      final backend = _self._paBackendLive;
+      if (backend != null && backend.directory == item.directory) {
+        return backend;
+      }
+    }
+    return null;
+  }
+
   /// The side a merged row's source names, if it is one.
   ConnectionController? _sideForSource(String? sourceId) {
     if (sourceId == null || !sourceId.startsWith('profile:')) return null;

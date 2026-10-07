@@ -16,6 +16,11 @@ import 'package:opencode_mobile/state/phone_agent_host_port.dart';
 import 'package:opencode_mobile/state/phone_project_engine.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/termux/bridge.dart' show TermuxBridge;
+import 'package:opencode_mobile/l10n/app_localizations.dart';
+import 'package:opencode_mobile/ui/screens/chats/chats_host.dart';
+import 'package:flutter/material.dart';
+
+import '../tool/capture/fixtures.dart' show captureTheme;
 import 'package:shared_preferences/shared_preferences.dart';
 
 // The one Conversations list over every connection on this phone (see
@@ -35,6 +40,10 @@ class _Server {
 
   /// Not answering (Termux stopped).
   bool down = false;
+
+  /// Permission requests waiting, and the replies the server received.
+  List<PermissionRequest> permissions = [];
+  final replies = <(String, String)>[];
 }
 
 class _Api extends OpenCodeApi {
@@ -59,7 +68,23 @@ class _Api extends OpenCodeApi {
   @override
   Future<List<AgentInfo>> agents() async => const [];
   @override
-  Future<List<PermissionRequest>> pendingPermissions() async => const [];
+  Future<List<PermissionRequest>> pendingPermissions() async =>
+      server.permissions;
+  @override
+  Future<void> respondPermission(
+    String requestID,
+    String reply, {
+    String? legacySessionID,
+    String? legacyPermissionID,
+    String? message,
+  }) async {
+    server.replies.add((requestID, reply));
+    server.permissions = [
+      for (final p in server.permissions)
+        if (p.id != requestID) p,
+    ];
+  }
+
   @override
   Future<List<PermissionRequest>> pendingPermissionsV2() =>
       Future.error(ApiException('V2 unavailable', statusCode: 404));
@@ -387,6 +412,56 @@ void main() {
       'Sonnet 5',
     );
     w.controller.dispose();
+  });
+
+  testWidgets('each row answers on its own connection', (tester) async {
+    final w = await _world(tester);
+    final c = w.controller;
+    final rows = {for (final item in c.chatFeed().items) item.sessionID: item};
+    expect(identical(c.connectionForRow(rows['u1']!), c), isTrue);
+    expect(c.connectionForRow(rows['t1']!)?.profile?.id, 'termux');
+    c.dispose();
+  });
+
+  testWidgets('a Termux request is answered from the list, on Termux', (
+    tester,
+  ) async {
+    final w = await _world(
+      tester,
+      before: (servers) => servers[_termux]!.permissions = [
+        PermissionRequest(id: 'p1', sessionID: 't1', permission: 'bash'),
+      ],
+    );
+    final c = w.controller;
+    final side = c.connectionForRow(
+      c.chatFeed().items.firstWhere((item) => item.sessionID == 't1'),
+    )!;
+    await side.refreshPendingPermissions();
+    await tester.pump(const Duration(milliseconds: 50));
+    final row = c.chatFeed().items.firstWhere((item) => item.sessionID == 't1');
+    final host = ConnectionChatsHost(c);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: captureTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Builder(
+            builder: (context) =>
+                host.listRequest(context, row) ?? const SizedBox(),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Run a shell command'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('permission-card-allow')));
+    // Held for its Undo window, then sent to Termux, not this server.
+    await tester.pump(const Duration(seconds: 4));
+    expect(w.servers[_termux]!.replies, [('p1', 'once')]);
+    expect(w.servers[_ubuntu]!.replies, isEmpty);
+    await tester.pumpWidget(const SizedBox());
+    c.dispose();
   });
 
   testWidgets('a source the person hid stays hidden after a restart', (

@@ -43,6 +43,8 @@ mixin _ConnectionControllerLifecycle on ChangeNotifier {
   /// Stops all network work while the application is backgrounded without
   /// clearing the selected profile, location, or already-rendered data.
   void suspendForLifecycle() {
+    // An answer still in its Undo window goes now: the app may not wake.
+    unawaited(_self.delayedAnswers.flush());
     _self._suspendForLifecycle();
     // The agents' own connection follows the app the same way.
     _self._paBackendLive?.suspendForLifecycle();

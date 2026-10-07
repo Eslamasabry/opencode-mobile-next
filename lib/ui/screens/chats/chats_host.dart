@@ -21,6 +21,12 @@ import '../../../state/profiles.dart' show ServerProfile;
 import '../../kit/kit.dart';
 import '../../widgets/external_link.dart' show openAgentSignInPage;
 import '../../widgets/phone_server_card.dart' show serverDisplayName;
+import '../chat/permission_sheet.dart'
+    show
+        PermissionAnswers,
+        answerPermissionRequest,
+        permissionAlwaysStep,
+        permissionRequestCard;
 import '../../widgets/pickers.dart' show showModelPicker;
 import '../../widgets/product_states.dart' show productErrorText;
 import '../project_folder_actions.dart';
@@ -105,6 +111,11 @@ abstract interface class ChatsHost {
   /// Termux"), or [fallback] for anything else.
   String connectionName(BuildContext context, String id, String fallback);
 
+  /// The request [item]'s conversation waits on, as the card that answers
+  /// it right here (Allow once, Always allow, Reject, with Undo); null when
+  /// there is none or it can only be answered in the conversation.
+  Widget? listRequest(BuildContext context, ChatFeedItem item);
+
   /// Connects to the built-in server through the Servers screen's own
   /// connect flow.
   Future<void> switchToBuiltIn(BuildContext context);
@@ -128,6 +139,38 @@ class ConnectionChatsHost implements ChatsHost {
 
   @override
   ChatListSources? get listSources => _conn;
+
+  @override
+  Widget? listRequest(BuildContext context, ChatFeedItem item) {
+    final owner = _conn.connectionForRow(item);
+    if (owner == null) return null;
+    final answers = PermissionAnswers.of(owner);
+    return ListenableBuilder(
+      listenable: Listenable.merge([owner, answers, owner.delayedAnswers]),
+      builder: (context, _) {
+        final waiting = owner.permissionsForSession(item.sessionID);
+        if (waiting.isEmpty) return const SizedBox.shrink();
+        final permission = waiting.first;
+        void answer(String reply) =>
+            unawaited(answerPermissionRequest(owner, permission, reply));
+        return permissionRequestCard(
+          context,
+          key: ValueKey('chats-request-${permission.id}'),
+          permission: permission,
+          who: item.agentLabel ?? 'OpenCode',
+          answered: answers.answerFor(permission.id),
+          onAllow: () => answer('once'),
+          onReject: () => answer('reject'),
+          alwaysAllow: permissionAlwaysStep(
+            context,
+            permission: permission,
+            supported: owner.capabilities.persistentPermissionGrants,
+            onConfirmed: () => answer('always'),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   String connectionName(BuildContext context, String id, String fallback) {
