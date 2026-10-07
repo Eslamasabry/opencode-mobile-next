@@ -59,14 +59,19 @@ extension _PaseoPermissions on PaseoGateway {
         throw PaseoFailure(PaseoFailureKind.invalidResponse);
       }
       final provider = _agents[agentID]?['provider'];
-      if (request['provider'] != null && request['provider'] != provider) {
-        throw PaseoFailure(PaseoFailureKind.invalidResponse);
-      }
       final hostRequest = paseoHostPermission(
         agentID,
         request,
         provider: provider as String?,
       );
+      // The trusted session provider decides ACP admission. A contradictory
+      // request must retain its restricted card instead of hiding the wait;
+      // it cannot opt into native suggestions or implicit one-call approval.
+      if (hostRequest == null &&
+          request['provider'] != null &&
+          request['provider'] != provider) {
+        throw PaseoFailure(PaseoFailureKind.invalidResponse);
+      }
       final permission = hostRequest == null
           ? paseoPermission(agentID, request)
           : paseoPermission(agentID, {

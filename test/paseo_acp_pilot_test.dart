@@ -649,6 +649,11 @@ void main() {
         throwsA(isA<PaseoFailure>()),
       );
       expect(daemon.of('agent_permission_response'), isEmpty);
+      expect((await gateway.pendingPermissions()).single.id, 'approval');
+      expect(
+        (await permissions().pendingHostAgentPermissions()).single.choices,
+        isEmpty,
+      );
     },
   );
 
