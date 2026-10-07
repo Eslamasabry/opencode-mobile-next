@@ -145,24 +145,24 @@ class ConnectionChatsHost implements ChatsHost {
 
   @override
   Widget? listRequest(BuildContext context, ChatFeedItem item) {
+    // The row's own connection holds its permission requests; it may not
+    // exist yet (a Claude chat not opened since the app started). Cards are
+    // routed by the list's connection, which knows every row's source.
     final owner = _conn.connectionForRow(item);
-    if (owner == null) return null;
-    final answers = PermissionAnswers.of(owner);
+    final answers = owner == null ? null : PermissionAnswers.of(owner);
     return ListenableBuilder(
       listenable: Listenable.merge([
         _conn,
-        owner,
-        answers,
-        owner.delayedAnswers,
+        ?owner,
+        ?answers,
+        ?owner?.delayedAnswers,
       ]),
       builder: (context, _) {
-        final waiting = owner.permissionsForSession(item.sessionID);
-        // Cards are routed by the list's own connection: it knows which
-        // source a row came from.
+        final waiting = owner?.permissionsForSession(item.sessionID) ?? [];
         final card = _conn.waitingCardsForFeedItem(item).firstOrNull;
         if (waiting.isEmpty && card == null) return const SizedBox.shrink();
         Widget? request;
-        if (waiting.isNotEmpty) {
+        if (owner != null && answers != null && waiting.isNotEmpty) {
           final permission = waiting.first;
           void answer(String reply) =>
               unawaited(answerPermissionRequest(owner, permission, reply));
@@ -195,10 +195,13 @@ class ConnectionChatsHost implements ChatsHost {
                 controller: _conn,
                 parse: GenUiParsed(card),
                 agentLabel: item.agentLabel ?? 'OpenCode',
-                busy: owner.busySessions.contains(item.sessionID),
+                busy: owner?.busySessions.contains(item.sessionID) ?? false,
                 inList: true,
+                // Photos ride on the row's own connection; until it exists
+                // a photo card says to answer in the conversation.
                 photos:
-                    owner.capabilities.promptAttachments &&
+                    owner != null &&
+                        owner.capabilities.promptAttachments &&
                         platformCapabilities.supportsPromptPhotos
                     ? StoreAgentCardPhotos(
                         store: owner.promptPhotos,
