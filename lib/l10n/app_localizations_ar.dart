@@ -20806,80 +20806,80 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get teamPhoneReadyChooseTitle => 'Choose the team\'s project';
+  String get teamPhoneReadyChooseTitle => 'اختيار مشروع الفريق';
 
   @override
-  String get teamPhoneReadyTurningOnTitle => 'Turning on AI Team';
+  String get teamPhoneReadyTurningOnTitle => 'جارٍ تفعيل AI Team';
 
   @override
-  String get teamPhoneReadyFailedTitle => 'AI Team didn\'t start';
+  String get teamPhoneReadyFailedTitle => 'لم يبدأ AI Team';
 
   @override
   String teamPhoneReadyBody(String project) {
-    return 'Give it a first task. It plans the work, shares it between its agents and brings the result back into $project.';
+    return 'أعطه مهمة أولى. يخطط للعمل ويوزّعه على وكلائه ويعيد النتيجة إلى $project.';
   }
 
   @override
-  String get teamPhoneReadyFirstTask => 'Give the team a first task';
+  String get teamPhoneReadyFirstTask => 'إعطاء الفريق مهمة أولى';
 
   @override
   String get teamUiStateNotAnsweringPhone =>
-      'The app keeps trying while the team starts on this phone.';
+      'يواصل التطبيق المحاولة أثناء بدء الفريق على هذا الهاتف.';
 
   @override
   String get teamUiStateNotAnsweringComputer =>
-      'The app keeps trying. Check that your computer is on and online.';
+      'يواصل التطبيق المحاولة. تحقّق من أن حاسوبك يعمل ومتصل بالشبكة.';
 
   @override
   String teamUiStateNotAnsweringComputerNamed(String computer) {
-    return 'The app keeps trying. Check that $computer is on and online.';
+    return 'يواصل التطبيق المحاولة. تحقّق من أن $computer يعمل ومتصل بالشبكة.';
   }
 
   @override
-  String get teamHomeChangeAddress => 'Change address';
+  String get teamHomeChangeAddress => 'تغيير العنوان';
 
   @override
   String get teamHomeTurnOffFailed =>
-      'Couldn’t stop the team on this phone, so it is still on. Try again.';
+      'تعذّر إيقاف الفريق على هذا الهاتف، لذا لا يزال يعمل. حاول مجددًا.';
 
   @override
-  String get teamHomeHostStopped => 'Stopped';
+  String get teamHomeHostStopped => 'متوقف';
 
   @override
-  String get teamHomeHostCooling => 'Cooling down';
+  String get teamHomeHostCooling => 'جارٍ التبريد';
 
   @override
-  String get teamHomeHostStoppedForHeat => 'Stopped to cool down';
+  String get teamHomeHostStoppedForHeat => 'متوقف حتى يبرد';
 
   @override
   String teamHomeHeatPausedLine(String time) {
-    return 'The phone got hot at $time, so the team paused. It carries on by itself once the phone has cooled.';
+    return 'ارتفعت حرارة الهاتف عند $time، لذا توقف الفريق مؤقتًا. يتابع تلقائيًا عندما يبرد الهاتف.';
   }
 
   @override
   String teamHomeHeatStoppedLine(String time) {
-    return 'The phone got very hot at $time, so the team stopped. Its work is kept, and it starts again once the phone has cooled.';
+    return 'ارتفعت حرارة الهاتف كثيرًا عند $time، لذا توقف الفريق. يبقى عمله محفوظًا، ويبدأ مجددًا عندما يبرد الهاتف.';
   }
 
   @override
-  String get teamHomePhoneControls => 'Keep it running, stop it or remove it';
+  String get teamHomePhoneControls => 'إبقاؤه قيد التشغيل أو إيقافه أو إزالته';
 
   @override
   String teamHomeSpentToday(String usage) {
-    return 'Today · $usage';
+    return 'اليوم · $usage';
   }
 
   @override
   String get teamHomeSpentHint =>
-      'The whole team since midnight where it runs, estimated. The server doesn’t report what each task cost.';
+      'تقدير للفريق كاملًا منذ منتصف الليل في مكان تشغيله. لا يبلّغ الخادم عن تكلفة كل مهمة.';
 
   @override
   String get teamHomeSpentPartial =>
-      'Some of today’s use has no price yet, so it cost more than this.';
+      'بعض استخدام اليوم ليس له سعر بعد، لذا كانت التكلفة أعلى من هذا المبلغ.';
 
   @override
   String teamIntroNotFound(String server) {
-    return 'No AI Team found on $server';
+    return 'لم يُعثر على AI Team على $server';
   }
 
   @override
@@ -20908,12 +20908,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String modelPickerThinkingChip(String level) {
-    return 'Thinking: $level';
+    return 'التفكير: $level';
   }
 
   @override
   String modelPickerAgentChip(String agent) {
-    return 'Agent: $agent';
+    return 'الوكيل: $agent';
   }
 
   @override
@@ -20995,15 +20995,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsHubUnavailableWhy => 'Why';
 
   @override
-  String get toolsHubMcpSubtitle => 'Servers that give the agent more tools';
+  String get toolsHubMcpSubtitle => 'خوادم تمنح الوكيل أدوات إضافية';
 
   @override
   String get toolsHubCatalogSubtitle =>
-      'Slash commands, skills, the model\'s tools and references';
+      'أوامر الشرطة المائلة والمهارات وأدوات النموذج والمراجع';
 
   @override
   String get toolsHubExternalAgentsSubtitle =>
-      'Agents on other services you can hand work to';
+      'وكلاء على خدمات أخرى يمكنك تسليم العمل إليهم';
 
   @override
   String get privacyPolicyTitle => 'Privacy policy';
@@ -21078,22 +21078,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get whileAwayMark => 'Done by itself';
 
   @override
-  String get aiteamComponentTurnOff => 'Turn off AI Team';
+  String get aiteamComponentTurnOff => 'إيقاف AI Team';
 
   @override
-  String get aiteamComponentTurnOffTitle => 'Turn off AI Team?';
+  String get aiteamComponentTurnOffTitle => 'هل تريد إيقاف AI Team؟';
 
   @override
   String get aiteamComponentTurnOffBody =>
-      'The team stops and stays off until you turn it on again.';
+      'يتوقف الفريق ويبقى متوقفًا حتى تشغّله مجددًا.';
 
   @override
-  String get aiteamComponentTurnOffKept =>
-      'Its tasks and settings, and your projects, stay';
+  String get aiteamComponentTurnOffKept => 'تبقى مهامه وإعداداته ومشاريعك';
 
   @override
   String get aiteamComponentTurnOffFailed =>
-      'AI Team could not be turned off. Try again, or restart the app.';
+      'تعذّر إيقاف AI Team. حاول مجددًا أو أعد تشغيل التطبيق.';
 
   @override
   String thisPhoneRemoveTool(String tool) {
@@ -21300,23 +21299,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String teamControlReceiptSending(String control) {
-    return '$control · Sending…';
+    return '$control · جارٍ الإرسال…';
   }
 
   @override
-  String get teamGateCardRunFailedOpen => 'Choose what to do';
+  String get teamGateCardRunFailedOpen => 'اختيار الإجراء';
 
   @override
-  String get teamGateCardIfIgnored =>
-      'The team waits until you answer. Nothing is lost.';
+  String get teamGateCardIfIgnored => 'ينتظر الفريق حتى تجيب. لن يضيع شيء.';
 
   @override
   String get teamGateCardIfIgnoredFailed =>
-      'The task stays stopped until someone acts on it.';
+      'تبقى المهمة متوقفة حتى يتخذ أحد إجراءً بشأنها.';
 
   @override
   String get teamGateCardIfIgnoredReview =>
-      'The work waits for review. Nothing is lost.';
+      'ينتظر العمل المراجعة. لن يضيع شيء.';
 
   @override
   String termuxProcsBudget(int count, int limit) {
@@ -21624,24 +21622,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get teamHomeSpentHistoryMissing =>
-      'Part of today’s history is missing, so it cost more than this.';
+      'جزء من سجل اليوم مفقود، لذا كانت التكلفة أعلى من هذا المبلغ.';
 
   @override
   String get teamHomeSpentNotRecording =>
-      'The team isn’t counting new use right now.';
+      'لا يحسب الفريق الاستخدام الجديد حاليًا.';
 
   @override
   String get teamRunCostUnreported =>
-      'Not reported for one task. The AI Team page shows today’s estimate for the whole team.';
+      'لا يُبلّغ عنها لكل مهمة. تعرض صفحة AI Team تقدير اليوم للفريق كاملًا.';
 
   @override
-  String get teamHomeUpkeepTitle => 'Team upkeep';
+  String get teamHomeUpkeepTitle => 'صيانة الفريق';
 
   @override
-  String get teamHomeUpkeepPatrol => 'Patrol';
+  String get teamHomeUpkeepPatrol => 'متابعة دورية';
 
   @override
-  String get teamHomeUpkeepChore => 'Chore';
+  String get teamHomeUpkeepChore => 'مهمة صيانة';
 
   @override
   String teamHomeUpkeepGroup(int count, String kind, String state) {
@@ -21655,13 +21653,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get teamAgentLooksAfterTeam => 'whole team';
+  String get teamAgentLooksAfterTeam => 'الفريق كاملًا';
 
   @override
-  String get teamAgentLooksAfterWatchdog => 'watchdog';
+  String get teamAgentLooksAfterWatchdog => 'المراقب';
 
   @override
-  String get teamAgentLooksAfterWorkers => 'workers';
+  String get teamAgentLooksAfterWorkers => 'العاملون';
 
   @override
   String get servicesStopConfirm => 'Stop service';
@@ -21771,11 +21769,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get integrationsProvidersExplanation =>
-      'The model providers this server can use. Connect one to start chatting.';
+      'مزوّدو النماذج الذين يمكن لهذا الخادم استخدامهم. اتصل بأحدهم لبدء المحادثة.';
 
   @override
   String get integrationsResourcesExplanation =>
-      'Files and data that connected MCP servers give the agent.';
+      'الملفات والبيانات التي تمنحها خوادم MCP المتصلة للوكيل.';
 
   @override
   String externalAgentsStopTaskTitle(String task) {
@@ -21792,7 +21790,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String toolsDetailMenu(String tool) {
-    return '$tool actions';
+    return 'إجراءات $tool';
   }
 
   @override
@@ -21826,69 +21824,69 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get teamChatLeadRoutedIt => 'Sent it to the workers';
+  String get teamChatLeadRoutedIt => 'أرسلها إلى العاملين';
 
   @override
-  String get teamChatLeadStartingIt => 'Worker started';
+  String get teamChatLeadStartingIt => 'بدأ العامل';
 
   @override
-  String get teamChatLeadClaimedWorkerIt => 'Worker took the task';
+  String get teamChatLeadClaimedWorkerIt => 'تولّى العامل المهمة';
 
   @override
-  String get teamChatLeadPushedIt => 'Its changes are on a branch';
+  String get teamChatLeadPushedIt => 'تغييراته على فرع';
 
   @override
-  String get teamChatLeadReviewIt => 'Handed it to review';
+  String get teamChatLeadReviewIt => 'سلّمها للمراجعة';
 
   @override
-  String get teamChatLeadMergedIt => 'Merged it';
+  String get teamChatLeadMergedIt => 'دمجها';
 
   @override
-  String get teamChatLeadStepFailedIt => 'It failed';
+  String get teamChatLeadStepFailedIt => 'فشلت';
 
   @override
-  String get teamChatLeadStepCancelledIt => 'It was cancelled';
+  String get teamChatLeadStepCancelledIt => 'أُلغيت';
 
   @override
   String teamChatNowNoProgress(String elapsed) {
-    return 'No progress for $elapsed';
+    return 'لا تقدّم منذ $elapsed';
   }
 
   @override
   String teamChatNoProgressBody(String name, String time) {
-    return '$name hasn\'t moved this task since $time. Nudge it to carry on, restart it, or report the problem.';
+    return 'لم يحرّك $name هذه المهمة منذ $time. نبّهه للمتابعة أو أعد تشغيله أو أبلغ عن المشكلة.';
   }
 
   @override
   String teamChatNoProgressBodyNoControls(String name, String time) {
-    return '$name hasn\'t moved this task since $time. This server can\'t nudge or restart it from here; report the problem or check the team\'s computer.';
+    return 'لم يحرّك $name هذه المهمة منذ $time. لا يمكن لهذا الخادم تنبيهه أو إعادة تشغيله من هنا؛ أبلغ عن المشكلة أو تحقّق من حاسوب الفريق.';
   }
 
   @override
-  String get teamChatNoProgressReport => 'Report the problem';
+  String get teamChatNoProgressReport => 'الإبلاغ عن المشكلة';
 
   @override
   String teamChatNoProgressReportTitle(String elapsed) {
-    return 'No progress for $elapsed';
+    return 'لا تقدّم منذ $elapsed';
   }
 
   @override
-  String get teamTaskDetailsReported => 'What the server reported';
+  String get teamTaskDetailsReported => 'ما أبلغ عنه الخادم';
 
   @override
   String get kitToolOpenDetails => 'Open its details';
 
   @override
-  String get teamStartRunKeepInBacklog => 'Keep in backlog';
+  String get teamStartRunKeepInBacklog => 'إبقاء المهمة في قائمة الأعمال';
 
   @override
   String workRunawayStopped(String helper) {
-    return 'Stopped $helper';
+    return 'أُوقفت $helper';
   }
 
   @override
   String workRunawayStopFailed(String helper) {
-    return 'Couldn\'t stop $helper. Try again, or stop it from Termux.';
+    return 'تعذّر إيقاف $helper. حاول مجددًا أو أوقفها من Termux.';
   }
 
   @override
@@ -21924,23 +21922,23 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String teamWatchComposerHint(String name) {
-    return 'Message $name…';
+    return 'مراسلة $name…';
   }
 
   @override
-  String get teamWatchComposerHintWorker => 'Message the worker…';
+  String get teamWatchComposerHintWorker => 'مراسلة العامل…';
 
   @override
-  String get teamWatchComposerHintAgent => 'Message this agent…';
+  String get teamWatchComposerHintAgent => 'مراسلة هذا الوكيل…';
 
   @override
   String teamWatchAbout(String name) {
-    return 'About $name';
+    return 'عن $name';
   }
 
   @override
   String teamWatchAboutRole(String role) {
-    return 'About the $role';
+    return 'عن $role';
   }
 
   @override
@@ -21977,224 +21975,219 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذّرت إزالة بعض بيانات تسجيل الدخول المحفوظة. حاول مجددًا.';
 
   @override
-  String get workStalled => 'Stalled';
+  String get workStalled => 'متعثر';
 
   @override
-  String get teamNowActivityPlanning => 'Waiting for a plan';
+  String get teamNowActivityPlanning => 'بانتظار خطة';
 
   @override
-  String get teamNowActivityWaitingForWorker => 'Waiting for a worker';
+  String get teamNowActivityWaitingForWorker => 'بانتظار عامل';
 
   @override
-  String get teamNowActivityStartingWorker => 'Starting a worker';
+  String get teamNowActivityStartingWorker => 'جارٍ تشغيل عامل';
 
   @override
-  String get teamNowActivityWorking => 'Working on your task';
+  String get teamNowActivityWorking => 'جارٍ العمل على مهمتك';
 
   @override
-  String get teamNowActivityReviewing => 'Reviewing the changes';
+  String get teamNowActivityReviewing => 'جارٍ مراجعة التغييرات';
 
   @override
-  String get teamNowActivityNeedsYou => 'Waiting for your answer';
+  String get teamNowActivityNeedsYou => 'بانتظار إجابتك';
 
   @override
-  String get teamNowActivityDelayed => 'Taking longer than expected';
+  String get teamNowActivityDelayed => 'يستغرق وقتًا أطول من المتوقع';
 
   @override
-  String get teamNowActivityUnconfirmed => 'Request not confirmed';
+  String get teamNowActivityUnconfirmed => 'لم يُؤكّد الطلب';
 
   @override
-  String get teamNowActivityRefused => 'Request not accepted';
+  String get teamNowActivityRefused => 'لم يُقبل الطلب';
 
   @override
-  String get teamNowActivityUnavailable => 'The team isn\'t answering';
+  String get teamNowActivityUnavailable => 'الفريق لا يردّ';
 
   @override
-  String get teamNowActivityCompleted => 'Finished';
+  String get teamNowActivityCompleted => 'مكتملة';
 
   @override
-  String get teamNowActivityFailed => 'Could not finish';
+  String get teamNowActivityFailed => 'تعذّر الإكمال';
 
   @override
-  String get teamNowActivityCancelled => 'Stopped';
+  String get teamNowActivityCancelled => 'متوقفة';
 
   @override
   String get teamNowReasonNoPlanReported =>
-      'No plan has been reported yet. The reason is unknown.';
+      'لم يُبلّغ عن خطة بعد. السبب غير معروف.';
 
   @override
-  String get teamNowReasonNoWorkerReported =>
-      'No worker has been reported yet.';
+  String get teamNowReasonNoWorkerReported => 'لم يُبلّغ عن عامل بعد.';
 
   @override
-  String get teamNowReasonWorkerStarting =>
-      'The worker has started but hasn\'t begun the task.';
+  String get teamNowReasonWorkerStarting => 'بدأ العامل لكنه لم يبدأ المهمة.';
 
   @override
   String teamModelRowTitle(String model) {
-    return 'Workers use $model';
+    return 'يستخدم العاملون $model';
   }
 
   @override
-  String get teamModelDefault => 'Same as this phone\'s OpenCode';
+  String get teamModelDefault => 'مثل OpenCode على هذا الهاتف';
 
   @override
   String get teamModelDefaultHint =>
-      'Uses the model this phone\'s OpenCode is set to.';
+      'يستخدم النموذج المحدّد في OpenCode على هذا الهاتف.';
 
   @override
   String get teamModelChange =>
-      'Change. Takes effect the next time a worker starts.';
+      'تغيير النموذج. يسري عند بدء عامل في المرة التالية.';
 
   @override
-  String get teamModelSheetTitle => 'Model for the workers';
+  String get teamModelSheetTitle => 'نموذج العاملين';
 
   @override
   String get teamModelSheetNote =>
-      'Only models this phone\'s OpenCode can use. A worker that is already running keeps its model.';
+      'النماذج التي يمكن لـ OpenCode على هذا الهاتف استخدامها فقط. يحتفظ العامل الذي يعمل بالفعل بنموذجه.';
 
   @override
   String get teamModelNoneLoaded =>
-      'This phone\'s models have not loaded yet. Close this and try again in a moment.';
+      'لم تُحمّل نماذج هذا الهاتف بعد. أغلق هذا العرض وحاول مجددًا بعد قليل.';
 
   @override
   String get teamModelFailed =>
-      'Could not change the model. The team keeps the one it had.';
+      'تعذّر تغيير النموذج. يحتفظ الفريق بنموذجه السابق.';
 
   @override
   String get teamNowReasonWorkerPreparing =>
-      'The worker is being set up: its folder is made and its program is starting.';
+      'جارٍ إعداد العامل: يُنشأ مجلده ويبدأ برنامجه.';
 
   @override
   String get teamNowReasonWorkerRunning =>
-      'The worker\'s program is running. The team has not reported the task reaching it yet.';
+      'برنامج العامل قيد التشغيل. لم يبلّغ الفريق عن وصول المهمة إليه بعد.';
 
   @override
   String get teamNowReasonWorkerTaskDelivered =>
-      'The task has reached the worker. It is reading it before it begins.';
+      'وصلت المهمة إلى العامل. يقرأها قبل أن يبدأ.';
 
   @override
   String teamNowLastStart(String duration) {
-    return 'took $duration last time';
+    return 'استغرق $duration في المرة السابقة';
   }
 
   @override
-  String get teamUiHostPhraseBusyStartingWorker => 'Busy starting a worker';
+  String get teamUiHostPhraseBusyStartingWorker => 'مشغول بتشغيل عامل';
 
   @override
-  String get teamNowReasonWorkInProgress => 'The task is being worked on.';
+  String get teamNowReasonWorkInProgress => 'جارٍ العمل على المهمة.';
 
   @override
   String get teamNowReasonReviewPending =>
-      'Review or completion is still pending.';
+      'لا تزال المراجعة أو الإكمال قيد الانتظار.';
 
   @override
-  String get teamNowReasonAnswerNeeded =>
-      'The team is waiting for your answer.';
+  String get teamNowReasonAnswerNeeded => 'ينتظر الفريق إجابتك.';
 
   @override
   String get teamNowReasonWorkerCouldNotStart =>
-      'The worker couldn\'t stay running.';
+      'لم يتمكن العامل من مواصلة التشغيل.';
 
   @override
   String get teamNowReasonProviderLimit =>
-      'The AI service reported a usage limit.';
+      'أبلغت خدمة الذكاء الاصطناعي عن بلوغ حد الاستخدام.';
 
   @override
   String get teamNowReasonWorkTakingLonger =>
-      'The work is taking longer than expected.';
+      'يستغرق العمل وقتًا أطول من المتوقع.';
 
   @override
   String get teamNowReasonConfirmationMissing =>
-      'We can\'t confirm the request arrived. Check before sending it again.';
+      'لا يمكننا تأكيد وصول الطلب. تحقّق قبل إرساله مجددًا.';
 
   @override
-  String get teamNowReasonRequestRefused => 'The request was not accepted.';
+  String get teamNowReasonRequestRefused => 'لم يُقبل الطلب.';
 
   @override
   String get teamNowReasonConnectionUnavailable =>
-      'Progress can\'t be checked while disconnected.';
+      'لا يمكن التحقّق من التقدّم أثناء انقطاع الاتصال.';
 
   @override
   String get teamNowReasonCauseUnknown =>
-      'The reason is unknown. Check what the team is doing.';
+      'السبب غير معروف. تحقّق مما يفعله الفريق.';
 
   @override
   String get teamNowWhyPlanning =>
-      'The planner turns your task into steps. This conversation follows the task as soon as the team lists them. Stopping following it here doesn\'t cancel it on the team\'s computer.';
+      'يحوّل المخطط مهمتك إلى خطوات. تتابع هذه المحادثة المهمة بمجرد أن يسردها الفريق. إيقاف متابعتها هنا لا يلغيها على حاسوب الفريق.';
 
   @override
   String get teamNowWhyWaitingForWorker =>
-      'The team looks for new work regularly and starts a worker for it when one is free.';
+      'يبحث الفريق عن عمل جديد بانتظام ويشغّل عاملًا له عندما يتاح أحدهم.';
 
   @override
   String get teamNowWhyStartingWorker =>
-      'A new worker makes its own copy of the project and starts its program before it reads the task. That is the slow part on a phone, and the stage above is what the team reports.';
+      'ينشئ العامل الجديد نسخته الخاصة من المشروع ويشغّل برنامجه قبل قراءة المهمة. هذا هو الجزء البطيء على الهاتف، والمرحلة أعلاه هي ما يبلّغ عنه الفريق.';
 
   @override
   String get teamNowWhyWorking =>
-      'The worker makes the changes on its own copy, then hands them to review.';
+      'يُجري العامل التغييرات في نسخته الخاصة، ثم يسلّمها للمراجعة.';
 
   @override
-  String get teamNowWhyReviewing =>
-      'A reviewer checks the changes before they are merged.';
+  String get teamNowWhyReviewing => 'يفحص مراجع التغييرات قبل دمجها.';
 
   @override
   String get teamNowWhyUnconfirmed =>
-      'The app sent the task but didn\'t hear back. Sending it again could start it twice, so look at the planner first.';
+      'أرسل التطبيق المهمة لكنه لم يتلقّ ردًا. قد يؤدي إرسالها مجددًا إلى تشغيلها مرتين، لذا راجع المخطط أولًا.';
 
   @override
   String get teamNowWhyWorkerCouldNotStart =>
-      'The worker stopped while it was starting. Its conversation may say why.';
+      'توقف العامل أثناء بدء تشغيله. قد توضح محادثته السبب.';
 
   @override
   String get teamNowWhyProviderLimit =>
-      'The AI service limits how much can be used in a period. Work continues when the limit resets, or you can stop the task.';
+      'تحدّد خدمة الذكاء الاصطناعي مقدار الاستخدام خلال فترة معينة. يتابع العمل عندما يُعاد ضبط الحد، أو يمكنك إيقاف المهمة.';
 
   @override
   String get teamNowWhyWorkTakingLonger =>
-      'Large tasks can take a while. Watching the worker shows whether it is still moving.';
+      'قد تستغرق المهام الكبيرة بعض الوقت. تبيّن متابعة العامل ما إذا كان لا يزال يتقدّم.';
 
   @override
-  String get teamNowWhyCauseUnknown =>
-      'What the team reports doesn\'t say why it is waiting.';
+  String get teamNowWhyCauseUnknown => 'لا توضح إفادة الفريق سبب انتظاره.';
 
   @override
-  String get teamNowWhyHide => 'Hide';
+  String get teamNowWhyHide => 'إخفاء الشرح';
 
   @override
-  String get teamNowNextPlan => 'Next: the team lists the steps';
+  String get teamNowNextPlan => 'التالي: يسرد الفريق الخطوات';
 
   @override
-  String get teamNowNextWorker => 'Next: a worker starts';
+  String get teamNowNextWorker => 'التالي: يبدأ عامل';
 
   @override
-  String get teamNowNextWork => 'Next: the worker begins the task';
+  String get teamNowNextWork => 'التالي: يبدأ العامل المهمة';
 
   @override
-  String get teamNowNextReview => 'Next: the changes are reviewed';
+  String get teamNowNextReview => 'التالي: تُراجع التغييرات';
 
   @override
-  String get teamNowNextFinish => 'Next: the task finishes';
+  String get teamNowNextFinish => 'التالي: تكتمل المهمة';
 
   @override
-  String get teamNowWatchPlanner => 'Watch the planner';
+  String get teamNowWatchPlanner => 'متابعة المخطط';
 
   @override
-  String get teamNowDismissRequest => 'Stop following this request';
+  String get teamNowDismissRequest => 'إيقاف متابعة هذا الطلب';
 
   @override
   String teamNowUsuallyWithin(String duration) {
-    return 'usually within $duration';
+    return 'عادةً خلال $duration';
   }
 
   @override
   String teamNowWatchAgent(String name) {
-    return 'Watch $name';
+    return 'متابعة $name';
   }
 
   @override
-  String get teamNowNotStartingLine => 'The team isn\'t starting a worker';
+  String get teamNowNotStartingLine => 'لا يشغّل الفريق عاملًا';
 
   @override
   String get aiSetupTitle => 'AI setup';
@@ -22389,7 +22382,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get aiSetupAllSources => 'All sources';
 
   @override
-  String get integrationsPageLoadFailed => 'Could not load this page';
+  String get integrationsPageLoadFailed => 'تعذّر تحميل هذه الصفحة';
 
   @override
   String kitLastKnownRefreshing(String updated) {
@@ -22588,7 +22581,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String workStalledSince(String time) {
-    return 'Stalled since $time';
+    return 'متعثر منذ $time';
   }
 
   @override
@@ -22846,68 +22839,67 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String commandSheetServerGroup(String server) {
-    return 'Commands from $server';
+    return 'أوامر من $server';
   }
 
   @override
   String commandSheetAgentMissingTitle(String agent) {
-    return '$agent commands unavailable';
+    return 'أوامر $agent غير متاحة';
   }
 
   @override
   String commandSheetAgentMissingWhy(String agent) {
-    return '$agent doesn\'t share its own commands with the app yet, so the app can\'t list them, run them, or run ! shell commands. The app\'s own actions still work.';
+    return 'لا يشارك $agent أوامره الخاصة مع التطبيق بعد، لذا لا يستطيع التطبيق عرضها أو تشغيلها أو تشغيل أوامر الطرفية التي تبدأ بـ !. لا تزال إجراءات التطبيق نفسه تعمل.';
   }
 
   @override
   String commandSheetAgentCommandNotSent(String command, String agent) {
-    return '$command wasn\'t sent: $agent doesn\'t share its commands with the app yet. Remove the / to send it as a message.';
+    return 'لم يُرسل $command: لا يشارك $agent أوامره مع التطبيق بعد. أزل / لإرساله كرسالة.';
   }
 
   @override
   String commandSheetShellNotSent(String command, String agent) {
-    return '$command wasn\'t sent: shell commands can\'t run on $agent from the app. Remove the ! to send it as a message.';
+    return 'لم يُرسل $command: لا يمكن تشغيل أوامر الطرفية على $agent من التطبيق. أزل ! لإرساله كرسالة.';
   }
 
   @override
   String get commandSheetShellDescription =>
-      'Or start a message with ! to run it from the composer';
+      'أو ابدأ رسالة بـ ! لتشغيلها من محرّر الرسائل';
 
   @override
-  String get commandSheetRetryDescription => 'Sends your last prompt again';
+  String get commandSheetRetryDescription => 'يرسل طلبك الأخير مجددًا';
 
   @override
   String get commandSheetNoteDescription =>
-      'A note the agent keeps in mind for this conversation';
+      'ملاحظة يراعيها الوكيل في هذه المحادثة';
 
   @override
   String get commandSheetApprovalsDescription =>
-      'What this conversation may do without asking';
+      'ما يمكن لهذه المحادثة فعله دون سؤال';
 
   @override
   String get commandSheetReloadDescription =>
-      'Reads this conversation from the server again';
+      'يقرأ هذه المحادثة من الخادم مجددًا';
 
   @override
   String get commandSheetLibrarySubtitle =>
-      'Pick a command, then the conversation it runs in';
+      'اختر أمرًا ثم المحادثة التي يعمل فيها';
 
   @override
-  String get commandSheetAgentFallback => 'This agent';
+  String get commandSheetAgentFallback => 'هذا الوكيل';
 
   @override
-  String get commandSheetPlanDescription =>
-      'Opens the agent\'s latest plan in the conversation';
+  String get commandSheetPlanDescription => 'يفتح أحدث خطة للوكيل في المحادثة';
 
   @override
   String get chatUiSessionMenu => 'قائمة المحادثة';
 
   @override
-  String get commandsScreenLoadFailed => 'Couldn’t load commands';
+  String get commandsScreenLoadFailed => 'تعذّر تحميل الأوامر';
 
   @override
   String get commandSheetSubtitleAppOnly =>
-      'Run one of the app\'s actions in this conversation';
+      'تشغيل أحد إجراءات التطبيق في هذه المحادثة';
 
   @override
   String get voiceModeMicAsk =>
@@ -22925,57 +22917,56 @@ class AppLocalizationsAr extends AppLocalizations {
       'Nothing was heard. Tap the mic and try again.';
 
   @override
-  String get teamDispatchCreating => 'Creating your task…';
+  String get teamDispatchCreating => 'جارٍ إنشاء مهمتك…';
 
   @override
-  String get teamDispatchSending => 'Task created · sending it to the team…';
+  String get teamDispatchSending => 'أُنشئت المهمة · جارٍ إرسالها إلى الفريق…';
 
   @override
   String get teamDispatchAwaitingWorker =>
-      'Task sent to the team · waiting for a worker';
+      'أُرسلت المهمة إلى الفريق · بانتظار عامل';
 
   @override
-  String get teamDispatchWorkerStarted => 'A worker started your task';
+  String get teamDispatchWorkerStarted => 'بدأ عامل مهمتك';
 
   @override
   String get teamDispatchCreateRefused =>
-      'The task wasn’t made. Change it and send it again.';
+      'لم تُنشأ المهمة. عدّلها وأرسلها مجددًا.';
 
   @override
   String get teamDispatchAssignRefused =>
-      'Task created, but it could not be sent to the team';
+      'أُنشئت المهمة، لكن تعذّر إرسالها إلى الفريق';
 
   @override
   String get teamDispatchAssignRefusedHint =>
-      'The task stays on the board, given to no one.';
+      'تبقى المهمة على اللوحة دون إسنادها إلى أحد.';
 
   @override
-  String get teamDispatchCreateUnconfirmed =>
-      'Couldn’t confirm whether the task was created';
+  String get teamDispatchCreateUnconfirmed => 'تعذّر تأكيد إنشاء المهمة';
 
   @override
   String get teamDispatchDispatchUnconfirmed =>
-      'Task created · couldn’t confirm it reached the team';
+      'أُنشئت المهمة · تعذّر تأكيد وصولها إلى الفريق';
 
   @override
   String get teamDispatchCheckBoard =>
-      'Check the board before sending it again. Your words are kept.';
+      'تحقّق من اللوحة قبل إرسالها مجددًا. يبقى نصك محفوظًا.';
 
   @override
   String get teamDispatchUnknown =>
-      'Task sent · the team can’t be reached, so whether a worker started is unknown';
+      'أُرسلت المهمة · يتعذّر الوصول إلى الفريق، لذا لا يُعرف ما إذا كان عامل قد بدأ';
 
   @override
-  String get teamDispatchCheckAgain => 'Check the team again';
+  String get teamDispatchCheckAgain => 'التحقّق من الفريق مجددًا';
 
   @override
-  String get teamDispatchTaskId => 'Task ID';
+  String get teamDispatchTaskId => 'معرّف المهمة';
 
   @override
-  String get teamDispatchHostWords => 'The team’s reply';
+  String get teamDispatchHostWords => 'ردّ الفريق';
 
   @override
-  String get teamUiHostGuideOpen => 'Open the full guide';
+  String get teamUiHostGuideOpen => 'فتح الدليل الكامل';
 
   @override
   String hostServiceInstallChecked(String release) {
@@ -23008,171 +22999,167 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hostServiceChecksum => 'SHA-256 checksum';
 
   @override
-  String get mcpAddBrowseTitle => 'Browse the catalogue';
+  String get mcpAddBrowseTitle => 'تصفّح الدليل';
 
   @override
-  String get mcpAddBrowseDetail =>
-      'Servers from the public MCP registry, turned on with a switch';
+  String get mcpAddBrowseDetail => 'خوادم من سجل MCP العام، تُفعّل بمفتاح';
 
   @override
   String get mcpAddBrowseNone =>
-      'No catalogue for this server: it doesn\'t accept new MCP servers from the app.';
+      'لا يتوفّر دليل لهذا الخادم: لا يقبل إضافة خوادم MCP جديدة من التطبيق.';
 
   @override
-  String get mcpAddManualTitle => 'Enter manually';
+  String get mcpAddManualTitle => 'الإدخال يدويًا';
 
   @override
-  String get mcpAddManualDetail =>
-      'Type its address, or the command that starts it';
+  String get mcpAddManualDetail => 'اكتب عنوانه أو الأمر الذي يشغّله';
 
   @override
-  String get mcpCatalogTitle => 'MCP catalogue';
+  String get mcpCatalogTitle => 'دليل MCP';
 
   @override
-  String get mcpCatalogConsentTitle => 'Load the MCP registry?';
+  String get mcpCatalogConsentTitle => 'هل تريد تحميل سجل MCP؟';
 
   @override
   String get mcpCatalogConsentBody =>
-      'The app asks registry.modelcontextprotocol.io for its list of MCP servers. It sends only what you search for, nothing about you or your servers.';
+      'يطلب التطبيق قائمة خوادم MCP من registry.modelcontextprotocol.io. يرسل فقط ما تبحث عنه، دون أي معلومات عنك أو عن خوادمك.';
 
   @override
-  String get mcpCatalogConsentLoad => 'Load the list';
+  String get mcpCatalogConsentLoad => 'تحميل القائمة';
 
   @override
-  String get mcpCatalogForget => 'Stop using the registry';
+  String get mcpCatalogForget => 'إيقاف استخدام السجل';
 
   @override
   String get mcpCatalogForgetFailed =>
-      'Couldn\'t forget the saved registry list. Try again.';
+      'تعذّر مسح قائمة السجل المحفوظة. حاول مجددًا.';
 
   @override
-  String get mcpCatalogSearch => 'Search the registry';
+  String get mcpCatalogSearch => 'البحث في السجل';
 
   @override
   String get mcpCatalogInventoryFailed =>
-      'Couldn\'t read this server\'s MCP servers';
+      'تعذّرت قراءة خوادم MCP الخاصة بهذا الخادم';
 
   @override
   String get mcpCatalogInventoryFailedBody =>
-      'The switches need to know what is already on. Check the connection, then try again.';
+      'تحتاج مفاتيح التفعيل إلى معرفة ما هو مفعّل بالفعل. تحقّق من الاتصال، ثم حاول مجددًا.';
 
   @override
-  String get mcpCatalogFailed => 'Couldn\'t load the public MCP registry';
+  String get mcpCatalogFailed => 'تعذّر تحميل سجل MCP العام';
 
   @override
-  String get mcpCatalogSearchFailed =>
-      'Couldn\'t search the public MCP registry';
+  String get mcpCatalogSearchFailed => 'تعذّر البحث في سجل MCP العام';
 
   @override
   String get mcpCatalogFailedBody =>
-      'Check the phone\'s internet connection, then try again. You can still enter a server by hand.';
+      'تحقّق من اتصال الهاتف بالإنترنت، ثم حاول مجددًا. لا يزال بإمكانك إدخال خادم يدويًا.';
 
   @override
-  String get mcpCatalogEmpty => 'The registry listed no servers';
+  String get mcpCatalogEmpty => 'لم يعرض السجل أي خوادم';
 
   @override
   String mcpCatalogNoMatch(String query) {
-    return 'Nothing in the registry matches “$query”';
+    return 'لا يوجد في السجل ما يطابق «$query»';
   }
 
   @override
-  String get mcpCatalogEmptyBody =>
-      'Try other words, or enter the server by hand.';
+  String get mcpCatalogEmptyBody => 'جرّب كلمات أخرى أو أدخل الخادم يدويًا.';
 
   @override
   String get mcpCatalogStale =>
-      'Couldn\'t refresh the list from the registry. These are the listings loaded earlier.';
+      'تعذّر تحديث القائمة من السجل. هذه هي العناصر التي حُمّلت سابقًا.';
 
   @override
   String get mcpCatalogPriceNote =>
-      'The registry lists no prices. A hosted server\'s owner may charge for it or ask for an account.';
+      'لا يعرض السجل أسعارًا. قد يفرض مالك الخادم المستضاف رسومًا أو يطلب حسابًا.';
 
   @override
-  String get mcpCatalogAdding => 'Adding…';
+  String get mcpCatalogAdding => 'جارٍ الإضافة…';
 
   @override
-  String get mcpCatalogRemoving => 'Removing…';
+  String get mcpCatalogRemoving => 'جارٍ الإزالة…';
 
   @override
   String get mcpCatalogCannotRemove =>
-      'On. This server keeps it in its configuration, and the app can\'t remove it.';
+      'مفعّل. يحتفظ هذا الخادم به في إعداداته، ولا يستطيع التطبيق إزالته.';
 
   @override
   String get mcpCatalogNeedsDocker =>
-      'Runs in Docker. To add it anyway, use Enter manually.';
+      'يعمل في Docker. لإضافته رغم ذلك، استخدم «الإدخال يدويًا».';
 
   @override
   String get mcpCatalogNoEndpoint =>
-      'Lists nothing the app can start. To add it anyway, use Enter manually.';
+      'لا يعرض شيئًا يستطيع التطبيق تشغيله. لإضافته رغم ذلك، استخدم «الإدخال يدويًا».';
 
   @override
   String mcpCatalogHostedBy(String host) {
-    return 'Hosted by $host';
+    return 'يستضيفه $host';
   }
 
   @override
-  String get mcpCatalogNeedsNode => 'Needs Node on the server';
+  String get mcpCatalogNeedsNode => 'يحتاج Node على الخادم';
 
   @override
-  String get mcpCatalogNeedsNodePhone => 'Needs Node on this phone';
+  String get mcpCatalogNeedsNodePhone => 'يحتاج Node على هذا الهاتف';
 
   @override
-  String get mcpCatalogNeedsPython => 'Needs Python with uv on the server';
+  String get mcpCatalogNeedsPython => 'يحتاج Python مع uv على الخادم';
 
   @override
-  String get mcpCatalogNeedsKey => 'Needs an API key';
+  String get mcpCatalogNeedsKey => 'يحتاج مفتاح API';
 
   @override
-  String get mcpCatalogNeedsSettings => 'Needs extra settings';
+  String get mcpCatalogNeedsSettings => 'يحتاج إعدادات إضافية';
 
   @override
   String mcpCatalogNodeTitle(String title) {
-    return '$title runs with Node';
+    return 'يعمل $title باستخدام Node';
   }
 
   @override
-  String get mcpCatalogNodeAdd => 'Add Node to this phone';
+  String get mcpCatalogNodeAdd => 'إضافة Node إلى هذا الهاتف';
 
   @override
   String get mcpCatalogNodeAddDetail =>
-      'Opens This phone. Choose Add tools, then Node, and turn this on again once it\'s added.';
+      'يفتح «هذا الهاتف». اختر «إضافة أدوات» ثم Node، وفعّل هذا مجددًا بعد إضافته.';
 
   @override
-  String get mcpCatalogNodeHave => 'Node is already on this phone';
+  String get mcpCatalogNodeHave => 'Node موجود على هذا الهاتف بالفعل';
 
   @override
-  String get mcpCatalogNodeHaveDetail => 'Check the details and add it';
+  String get mcpCatalogNodeHaveDetail => 'راجع التفاصيل وأضفه';
 
   @override
   String mcpSetupFromCatalog(String listing, String server) {
-    return 'Filled in from “$listing” in the public MCP registry. Check it before you add it: $server will run or connect to what is here.';
+    return 'مُعبّأ من «$listing» في سجل MCP العام. راجعه قبل إضافته: سيشغّل $server ما هو هنا أو يتصل به.';
   }
 
   @override
-  String get mcpSetupThisServer => 'this server';
+  String get mcpSetupThisServer => 'هذا الخادم';
 
   @override
   String mcpSetupValueRequired(String name) {
-    return 'Enter a value for $name';
+    return 'أدخل قيمة لـ $name';
   }
 
   @override
-  String get mcpSetupNameFromCatalog => 'The registry listing needs this one';
+  String get mcpSetupNameFromCatalog => 'يتطلب عنصر السجل هذا الاسم';
 
   @override
-  String get mcpVariableName => 'Variable name';
+  String get mcpVariableName => 'اسم المتغيّر';
 
   @override
-  String get mcpVariableValue => 'Variable value';
+  String get mcpVariableValue => 'قيمة المتغيّر';
 
   @override
-  String get mcpAddVariable => 'Add another variable';
+  String get mcpAddVariable => 'إضافة متغيّر آخر';
 
   @override
-  String get mcpRemoveVariable => 'Remove variable';
+  String get mcpRemoveVariable => 'إزالة المتغيّر';
 
   @override
-  String get mcpSetupTimeoutSeconds => 'Timeout in seconds';
+  String get mcpSetupTimeoutSeconds => 'المهلة بالثواني';
 
   @override
   String get isolatedTaskPromptLabel => 'ما المهمة التي تريد العمل عليها؟';
@@ -23244,52 +23231,52 @@ class AppLocalizationsAr extends AppLocalizations {
   String get isolatedTaskStageSend => 'جارٍ فتح المحادثة وإرسال مهمتك';
 
   @override
-  String get teamStartRunBlockedTitle => 'Team can\'t take tasks';
+  String get teamStartRunBlockedTitle => 'لا يستطيع الفريق قبول مهام';
 
   @override
-  String get teamStartRunPlannerOff => 'The planner is switched off';
+  String get teamStartRunPlannerOff => 'المخطط متوقف';
 
   @override
   String get teamStartRunPlannerOffWakeBody =>
-      'The planner turns each task into steps for the team. Wake it to give the team your task.';
+      'يحوّل المخطط كل مهمة إلى خطوات للفريق. نشّطه لإعطاء الفريق مهمتك.';
 
   @override
   String get teamStartRunPlannerOffHostBody =>
-      'The planner turns each task into steps for the team, and this app can\'t switch it on. Switch it on where the team runs, then try again.';
+      'يحوّل المخطط كل مهمة إلى خطوات للفريق، ولا يستطيع هذا التطبيق تشغيله. شغّله في مكان تشغيل الفريق، ثم حاول مجددًا.';
 
   @override
-  String get teamStartRunNoPlanner => 'This team has no planner';
+  String get teamStartRunNoPlanner => 'ليس لهذا الفريق مخطط';
 
   @override
   String get teamStartRunNoPlannerBody =>
-      'A planner turns each task into steps for the team. Add one where the team runs, then try again.';
+      'يحوّل المخطط كل مهمة إلى خطوات للفريق. أضف واحدًا في مكان تشغيل الفريق، ثم حاول مجددًا.';
 
   @override
-  String get teamStartRunNoProject => 'This team has no project yet';
+  String get teamStartRunNoProject => 'ليس لهذا الفريق مشروع بعد';
 
   @override
   String get teamStartRunNoProjectBody =>
-      'Tasks go straight to a project\'s worker. Add a project to the team, then try again.';
+      'تُرسل المهام مباشرة إلى عامل المشروع. أضف مشروعًا إلى الفريق، ثم حاول مجددًا.';
 
   @override
-  String get teamStartRunWake => 'Wake the planner';
+  String get teamStartRunWake => 'تنشيط المخطط';
 
   @override
   String get teamStartRunWakeAsked =>
-      'Waking the planner. The task form opens as soon as it\'s awake.';
+      'جارٍ تنشيط المخطط. يُفتح نموذج المهمة بمجرد تنشيطه.';
 
   @override
-  String get teamStartRunStillOff => 'The planner is still switched off.';
+  String get teamStartRunStillOff => 'لا يزال المخطط متوقفًا.';
 
   @override
-  String get teamStartRunStillNoProject => 'The team still has no project.';
+  String get teamStartRunStillNoProject => 'لا يزال الفريق بلا مشروع.';
 
   @override
-  String get teamStartRunWakeRefused => 'Couldn\'t wake the planner';
+  String get teamStartRunWakeRefused => 'تعذّر تنشيط المخطط';
 
   @override
   String get teamStartRunWakeRefusedNext =>
-      'Try again, or switch it on where the team runs.';
+      'حاول مجددًا أو شغّله في مكان تشغيل الفريق.';
 
   @override
   String get addServerTailscaleNext => 'إدخال العنوان';
@@ -23318,7 +23305,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String workRunawayHelper(String helper, String duration) {
-    return 'A leftover $helper process has been busy for $duration with nothing to do';
+    return 'ظلت عملية $helper متبقية مشغولة منذ $duration دون عمل';
   }
 
   @override
@@ -23327,11 +23314,11 @@ class AppLocalizationsAr extends AppLocalizations {
     String project,
     String duration,
   ) {
-    return 'A leftover $helper process in $project has been busy for $duration with nothing to do';
+    return 'ظلت عملية $helper متبقية في $project مشغولة منذ $duration دون عمل';
   }
 
   @override
-  String get workRunawaySeeRunning => 'See what\'s running';
+  String get workRunawaySeeRunning => 'عرض العمليات الجارية';
 
   @override
   String thisPhoneUpToDate(String version) {
@@ -23400,17 +23387,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pluginsTeamRowTurnOn => 'Turn on';
 
   @override
-  String get teamUiHostGuideEnterAddress => 'Enter the address';
+  String get teamUiHostGuideEnterAddress => 'إدخال العنوان';
 
   @override
-  String get commandAuthStartFailed => 'Sign-in didn\'t start.';
+  String get commandAuthStartFailed => 'لم يبدأ تسجيل الدخول.';
 
   @override
   String get commandAuthCheckFailed =>
-      'Couldn\'t check the sign-in. Try again.';
+      'تعذّر التحقّق من تسجيل الدخول. حاول مجددًا.';
 
   @override
-  String get commandAuthTryAgain => 'Try again';
+  String get commandAuthTryAgain => 'حاول مجددًا';
 
   @override
   String get draftLeaveMessageNoText =>
@@ -23817,21 +23804,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get integrationsSignInUncertainNext =>
-      'Check the server before you start again';
+      'تحقّق من الخادم قبل البدء مجددًا';
 
   @override
   String teamHomeLastKnownTasks(String time) {
-    return 'Tasks as of $time';
+    return 'المهام حتى $time';
   }
 
   @override
   String teamHomeLastKnownAgents(String time) {
-    return 'Agents as of $time';
+    return 'الوكلاء حتى $time';
   }
 
   @override
   String get teamHomeStoppedStartFirst =>
-      'Start the team again to give it a task or open one.';
+      'شغّل الفريق مجددًا لإعطائه مهمة أو فتح مهمة.';
 
   @override
   String get inAppServerStartExitedBody =>
@@ -23855,22 +23842,22 @@ class AppLocalizationsAr extends AppLocalizations {
       'The phone did not let the app start OpenCode just now. Start it again; if this repeats, restart the phone.';
 
   @override
-  String get integrationsConnectWithKey => 'Add an API key';
+  String get integrationsConnectWithKey => 'إضافة مفتاح API';
 
   @override
-  String get integrationsConnectOnServer => 'Set up on the server';
+  String get integrationsConnectOnServer => 'الإعداد على الخادم';
 
   @override
   String integrationsProviderDetails(String name) {
-    return '$name details';
+    return 'تفاصيل $name';
   }
 
   @override
-  String get integrationsEnvironmentVariable => 'Server environment variable';
+  String get integrationsEnvironmentVariable => 'متغيّر بيئة الخادم';
 
   @override
   String integrationsEnvironmentNote(String name) {
-    return 'To connect $name without the app, set this where the server runs, then restart the server.';
+    return 'للاتصال بـ $name دون التطبيق، اضبط هذا في مكان تشغيل الخادم، ثم أعد تشغيل الخادم.';
   }
 
   @override
@@ -24287,32 +24274,32 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String integrationsKeyOnlyHelper(String name) {
-    return '$name does not allow browser sign-in from other apps, so use an API key. It is billed separately from any subscription. The key is stored on this server and never shown again.';
+    return 'لا يتيح $name تسجيل الدخول عبر المتصفح من التطبيقات الأخرى، لذا استخدم مفتاح API. تُحتسب تكلفته منفصلة عن أي اشتراك. يُحفظ المفتاح على هذا الخادم ولا يُعرض مجددًا.';
   }
 
   @override
   String integrationsGetKey(String name) {
-    return 'Get a key from $name';
+    return 'الحصول على مفتاح من $name';
   }
 
   @override
   String integrationsKeySavedReady(String name) {
-    return '$name key saved. Pick one of its models in the model picker.';
+    return 'حُفظ مفتاح $name. اختر أحد نماذجه من قائمة اختيار النموذج.';
   }
 
   @override
   String integrationsKeySavedWaiting(String name) {
-    return '$name key saved. It loads once the running replies finish.';
+    return 'حُفظ مفتاح $name. يُحمّل بعد انتهاء الردود الجارية.';
   }
 
   @override
   String integrationsKeySavedUnusable(String name) {
-    return '$name key saved, but this server could not load it after a refresh. Check the key, or try Reload providers in the model picker.';
+    return 'حُفظ مفتاح $name، لكن تعذّر على هذا الخادم تحميله بعد التحديث. تحقّق من المفتاح أو جرّب «إعادة تحميل المزوّدين» في قائمة اختيار النموذج.';
   }
 
   @override
   String integrationsKeySavedPending(String name) {
-    return '$name key saved. The server has not loaded it yet.';
+    return 'حُفظ مفتاح $name. لم يحمّله الخادم بعد.';
   }
 
   @override
@@ -24386,7 +24373,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get integrationsSignedInUnusable =>
-      'Signed in, but this server can\'t use it';
+      'تم تسجيل الدخول، لكن هذا الخادم لا يستطيع استخدامه';
 
   @override
   String get chatUiCompactConfirmTitle => 'هل تريد تلخيص هذه المحادثة؟';
@@ -24511,13 +24498,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get teamRoleNameGeneral => 'General';
+  String get teamRoleNameGeneral => 'عام';
 
   @override
-  String get teamRoleNameProduct => 'Product';
+  String get teamRoleNameProduct => 'المنتج';
 
   @override
-  String get teamRoleNameFrontend => 'Frontend';
+  String get teamRoleNameFrontend => 'الواجهة الأمامية';
 
   @override
   String get teamRoleNameBackend => 'Backend';
