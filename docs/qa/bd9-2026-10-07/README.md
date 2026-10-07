@@ -156,3 +156,21 @@ The release AOT APK built successfully (99,880,481 bytes), with all six packaged
 Final detekt on the corrected runner and Gradle wiring passed with zero NEW findings against unchanged532 historical findings. Host receipt checker:12 tests pass; removing signer/native-completeness/terminal-success/privacy guards makes regressions fail. Reverting support for the instrumentation APK empty versionCode makes its regression fail. [Build identities](build-summary.json) record both APK digests and native runner source. No APK copies were made. All copied signing properties and worktree intermediates were removed; exact owned single-use daemons exited.
 
 The source/build checkpoint is committed separately from device qualification: the helper is waiting for another lead's emulator lock session. Actual device proof and normal restoration remain pending. CI bootstrap was dry-read (exact revision/engine metadata from the pinned installed SDK); all workflow YAML and run blocks parse, manual dispatch is the only trigger. No CI invocation is claimed.
+
+
+## Public embedding ABI correction
+
+The first signed device attempt did not produce a complete instrumentation proof;
+its fixed-code failure receipt is [recorded here](initial-device-failure.json).
+The separately shrunk test runner calls public Flutter activity/view/engine/plugin
+APIs. The QA-only shrinker now keeps those exact APIs. An initial broad embedding
+keep rule retained unused Play Store split/deferred classes and failed R8; the
+narrowed rules compile without adding those dependencies. Normal product builds
+do not enable these QA rules.
+
+Fresh pinned release2201 build passed (252.9s), followed by matching release
+androidTest compilation (117s), including native ELF/source attestation. Artifact
+identities are in [build-summary.json](build-summary.json). All copied signing
+properties and intermediates were removed; exact owned single-use daemon1934944
+was stopped. This checkpoint still awaits the shared emulator lock, complete
+instrumentation results/screenshot, and a normal-main-target restore.

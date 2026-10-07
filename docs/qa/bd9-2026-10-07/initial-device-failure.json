@@ -1,0 +1,7 @@
+{
+  "device": "emulator-5554",
+  "version_code": 2201,
+  "result": "FAIL",
+  "stage": "instrumentation",
+  "error": "smoke_proof_incomplete"
+}

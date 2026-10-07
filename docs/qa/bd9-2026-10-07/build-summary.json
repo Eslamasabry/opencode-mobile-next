@@ -2,12 +2,14 @@
   "flutter_revision": "91f8bd75076e9c740aa13cf67eb9ec1a093f68f5",
   "build_number": 2201,
   "app_target": "integration_test/bd9_device_smoke_test.dart",
-  "device_proof": "pending_shared_emulator_lock",
-  "apk_bytes": 99880481,
-  "apk_sha256": "28a451ac194ecd360f05978b95512946d313dcf3abc19bfd4e11e647a3e6bdc6",
-  "test_apk_sha256": "15cfa5b44624fdbb978e78874345b27d1a445f3488821bc0502b4ee508521ef7",
+  "device_proof": "pending_shared_emulator_lock_after_narrow_abi_rebuild",
+  "apk_bytes": 99887997,
+  "apk_sha256": "c4ff25c61f4b905e33aaf587e43de6ed66c36e75ae8d77a5883f8b9a2b511b65",
+  "test_apk_sha256": "e85d324129bf190e17cdb5fe85dcc2fcfc763f0703d87f2cb947cc88d92053b1",
   "native_runner_sha256": "b5a9bae0dc20dcd1925b8f14995599e99ddcb47043544d329b3d1d83292c398c",
   "signer_sha256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C",
   "detekt_new_findings": 0,
-  "detekt_baseline_findings": 532
+  "detekt_baseline_findings": 532,
+  "candidate_base_commit": "26384555",
+  "qa_abi_rules_sha256": "aa7e376034005f556718ca8c16ceaf7c25188c12b3fd19b9b76e73d7f6f47f3d"
 }
