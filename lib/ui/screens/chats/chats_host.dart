@@ -160,7 +160,7 @@ class ConnectionChatsHost implements ChatsHost {
       ]),
       builder: (context, _) {
         final waiting = owner?.permissionsForSession(item.sessionID) ?? [];
-        final question = owner?.questionForSession(item.sessionID);
+        final question = _conn.questionForFeedItem(item);
         final card = _conn.waitingCardsForFeedItem(item).firstOrNull;
         if (waiting.isEmpty && question == null && card == null) {
           return const SizedBox.shrink();
@@ -190,12 +190,13 @@ class ConnectionChatsHost implements ChatsHost {
             ),
           );
         }
-        final questionView = owner == null || question == null
+        final questionView = question == null
             ? null
             : questionRequestCard(
                 context,
-                key: ValueKey('chats-question-${question.id}'),
-                owner: owner,
+                key: ValueKey('chats-question-${item.identity}|${question.id}'),
+                owner: _conn,
+                item: item,
                 question: question,
                 inList: true,
               );

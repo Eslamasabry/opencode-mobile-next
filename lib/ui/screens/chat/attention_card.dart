@@ -163,8 +163,13 @@ class _QuestionAttentionCard extends StatefulWidget {
     required this.onAnswer,
     required this.onMore,
     this.connection,
+    this.feedItem,
     this.inList = false,
   });
+
+  /// The Conversations row this card answers for; its answers go through
+  /// the main controller's feed route, whoever owns the conversation.
+  final ChatFeedItem? feedItem;
 
   final PendingQuestion question;
 
@@ -198,15 +203,25 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
   DateTime? _since;
   String? _refused;
 
-  /// The request this card was built for (list rows only).
+  /// The question object and request this card was built for (list rows
+  /// only), captured once: kept across Undo and never looked up again at
+  /// send time.
+  PendingQuestion? _shownQuestion;
   PendingRequestIdentity? _shownRequest;
+
+  /// Undo and draft identity: two sources reusing a request id never share.
+  late final String _key = widget.feedItem == null
+      ? widget.question.id
+      : '${widget.feedItem!.identity}|${widget.question.id}';
 
   @override
   void initState() {
     super.initState();
     final owner = widget.connection;
-    if (widget.inList && owner != null) {
-      _shownRequest = owner.questionIdentity(widget.question);
+    final item = widget.feedItem;
+    if (widget.inList && owner != null && item != null) {
+      _shownQuestion = widget.question;
+      _shownRequest = owner.questionIdentityForFeedItem(item, widget.question);
     }
   }
 
@@ -239,7 +254,7 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
     final profileId = conn?.profile?.id ?? conn?.store.activeId ?? '';
     if (profileId.isEmpty) return null;
     return KitDraft(
-      target: 'request.${widget.question.id}',
+      target: 'request.$_key',
       profileId: profileId,
       controller: _other,
     );
@@ -259,7 +274,7 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
       return;
     }
     final delayed = conn.delayedAnswers;
-    final id = widget.question.id;
+    final id = _key;
     if (delayed.isHeld(id)) return;
     delayed.hold(id, label: words, send: () => _sendNow(conn, answers, words));
   }
@@ -269,7 +284,12 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
     List<List<String>> answers,
     String words,
   ) async {
-    if (!conn.questions.containsKey(widget.question.id)) return;
+    final request = _shownRequest;
+    if (request != null
+        ? !conn.isRequestPending(request)
+        : !conn.questions.containsKey(widget.question.id)) {
+      return;
+    }
     if (mounted) {
       setState(() {
         _answer = words;
@@ -280,13 +300,16 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
     try {
       // Under a list row the answer names the request it was shown for, so
       // a newer question of the same id is never answered by mistake.
-      await conn.answerQuestion(
-        widget.question.id,
-        answers,
-        expectedRequest: widget.inList
-            ? _shownRequest ??= conn.questionIdentity(widget.question)
-            : null,
-      );
+      final item = widget.feedItem;
+      if (item != null && request != null) {
+        await conn.answerQuestionForFeedItem(
+          item,
+          answers,
+          expectedRequest: request,
+        );
+      } else {
+        await conn.answerQuestion(widget.question.id, answers);
+      }
       unawaited(_draft(conn)?.clear());
     } catch (error) {
       if (!mounted) return;
@@ -310,7 +333,7 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
         : l10n.chatUiOpenCodeNeedsInput;
     final count = _prompts.length;
     final delayed = _conn(context)?.delayedAnswers;
-    final heldLabel = delayed?.heldLabel(widget.question.id);
+    final heldLabel = delayed?.heldLabel(_key);
     final held = delayed != null && heldLabel != null;
     final sending = !held && _answer != null;
     return KitRequestCard.ask(
@@ -336,7 +359,7 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
           ? KitReceipt(
               state: KitReceiptState.confirmed,
               label: heldLabel,
-              onUndo: () => delayed.undo(widget.question.id),
+              onUndo: () => delayed.undo(_key),
               undoKey: const Key('question-card-undo'),
             )
           : sending
@@ -413,8 +436,9 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
                 showQuestionDetails(
                   context,
                   controller: conn,
-                  question: widget.question,
+                  question: _shownQuestion ?? widget.question,
                   card: card,
+                  request: _shownRequest,
                 ),
               ),
       );
@@ -444,8 +468,9 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
           showQuestionDetails(
             context,
             controller: conn,
-            question: widget.question,
+            question: _shownQuestion ?? widget.question,
             card: card,
+            request: _shownRequest,
           ),
         ),
       );
@@ -458,7 +483,9 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
         key: const Key('question-card-answer'),
         secondary: widget.inList,
       ),
-      onDetails: widget.onMore,
+      onDetails: _shownQuestion == null || conn == null
+          ? widget.onMore
+          : () => unawaited(showQuestionSheet(context, conn, _shownQuestion!)),
     );
   }
 }
@@ -471,6 +498,7 @@ Widget questionRequestCard(
   BuildContext context, {
   Key? key,
   required ConnectionController owner,
+  required ChatFeedItem item,
   required PendingQuestion question,
   required bool inList,
 }) => _QuestionAttentionCard(
@@ -478,8 +506,9 @@ Widget questionRequestCard(
   question: question,
   replying: false,
   connection: owner,
+  feedItem: item,
   inList: inList,
-  onAnswer: (answers) => unawaited(owner.answerQuestion(question.id, answers)),
+  onAnswer: (_) {},
   onMore: () => unawaited(showQuestionSheet(context, owner, question)),
 );
 

@@ -2,6 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/material.dart'
+    show
+        MaterialApp,
+        Scaffold,
+        Builder,
+        SingleChildScrollView,
+        Key,
+        ValueKey,
+        SizedBox;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,7 +28,9 @@ import 'package:opencode_mobile/domain/phone_agent_host.dart';
 import 'package:opencode_mobile/domain/phone_agents.dart';
 import 'package:opencode_mobile/domain/phone_agents_source.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
+import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/paseo/gateway.dart';
+import 'package:opencode_mobile/ui/screens/chats/chats_host.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/paseo/transport.dart';
 import 'package:opencode_mobile/state/connection.dart';
@@ -28,6 +39,7 @@ import 'package:opencode_mobile/state/phone_project_engine.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../tool/capture/fixtures.dart' show captureTheme;
 import 'paseo_acp_pilot_test.dart' show FakePaseoSocket;
 
 part 'support/phone_agents_genui_tests.dart';

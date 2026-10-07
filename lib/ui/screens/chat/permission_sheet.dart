@@ -483,10 +483,13 @@ Future<KitRequestSheetOutcome> showQuestionDetails(
   required ConnectionController controller,
   required PendingQuestion question,
   required KitRequestCard card,
+  PendingRequestIdentity? request,
 }) async {
   final routes = RequestRoutes(
     changes: controller,
-    isPending: () => controller.questions.containsKey(question.id),
+    isPending: () => request != null
+        ? controller.isRequestPending(request)
+        : controller.questions.containsKey(question.id),
   );
   try {
     return await showKitRequestSheet(

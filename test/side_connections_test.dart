@@ -499,6 +499,11 @@ void main() {
       before: (servers) => servers[_termux]!.questions = [question],
     );
     final c = w.controller;
+    // The list answers a side server's question once its location is
+    // prepared (the row was opened before).
+    await c.openChatFeedItem(
+      c.chatFeed().items.firstWhere((item) => item.sessionID == 't1'),
+    );
     final side = c.connectionForRow(
       c.chatFeed().items.firstWhere((item) => item.sessionID == 't1'),
     )!;

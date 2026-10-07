@@ -289,4 +289,42 @@ void _listQuestionTests() {
       await tester.pump();
     },
   );
+
+  testWidgets('a Pi question shows under its row with no chat opened and is '
+      'answered from the sheet', (tester) async {
+    final x = await setup(tester, provider: 'pi');
+    final c = x.world.controller;
+    expect(c.connectionForRow(x.row), isNull);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: captureTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: Builder(
+              builder: (context) =>
+                  ConnectionChatsHost(c).listRequest(context, x.row) ??
+                  const SizedBox(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.byKey(const Key('question-card-answer')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('question-card-answer')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('question-sheet')), findsOneWidget);
+    await tester.tap(find.text('Dart'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('question-send')));
+    await tester.pumpAndSettle();
+    final response = x.socket.of('agent_permission_response').single;
+    expect(response['agentId'], 'c1');
+    expect(c.connectionForRow(x.row), isNull);
+    expect(c.questionForFeedItem(x.row), isNull);
+    c.dispose();
+    await tester.pump();
+  });
 }
