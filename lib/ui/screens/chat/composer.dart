@@ -25,6 +25,7 @@ enum _PromptTool {
 class _ChatComposer extends StatelessWidget {
   const _ChatComposer({
     this.agentName,
+    this.cardWaiting = false,
     this.blockedReason,
     required this.compact,
     this.isolated = false,
@@ -79,6 +80,10 @@ class _ChatComposer extends StatelessWidget {
 
   /// Who the prompt goes to ("Claude Code"); null means OpenCode.
   final String? agentName;
+
+  /// An agent card of this conversation waits: the hint says the answer can
+  /// also be typed.
+  final bool cardWaiting;
 
   /// Why this conversation takes no message (a Claude sub-agent answers
   /// only its main conversation); the field says it instead.
@@ -222,7 +227,9 @@ class _ChatComposer extends StatelessWidget {
           KitComposer(
             controller: controller,
             focusNode: focusNode,
-            hint: agentName == null
+            hint: cardWaiting
+                ? l10n.agentCardComposerHint
+                : agentName == null
                 ? l10n.chatUiAskOpenCode
                 : l10n.chatUiAskAgent(KitBidi.auto(agentName!)),
             onSend: _send,

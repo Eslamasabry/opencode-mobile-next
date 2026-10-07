@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../builtin/builtin_linux.dart' show BuiltinLinux;
 import '../../../domain/chat_feed.dart';
+import '../../../domain/genui/gen_ui.dart';
 import '../../../domain/phone_agents_source.dart';
 import '../../../domain/server_gateway.dart' show WorkspaceProject;
 import '../../../platform/platform_capabilities.dart';
@@ -19,6 +20,8 @@ import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart';
 import '../../../state/profiles.dart' show ServerProfile;
 import '../../kit/kit.dart';
+import '../../widgets/agent_card_photos.dart';
+import '../../widgets/agent_card_view.dart';
 import '../../widgets/external_link.dart' show openAgentSignInPage;
 import '../../widgets/phone_server_card.dart' show serverDisplayName;
 import '../chat/permission_sheet.dart'
@@ -145,32 +148,74 @@ class ConnectionChatsHost implements ChatsHost {
     final owner = _conn.connectionForRow(item);
     if (owner == null) return null;
     final answers = PermissionAnswers.of(owner);
+    // The row's owner draws agent cards once it implements the surface.
+    final GenUiController? cards = owner is GenUiController
+        ? owner as GenUiController
+        : null;
     return ListenableBuilder(
       listenable: Listenable.merge([owner, answers, owner.delayedAnswers]),
       builder: (context, _) {
         final waiting = owner.permissionsForSession(item.sessionID);
-        if (waiting.isEmpty) return const SizedBox.shrink();
-        final permission = waiting.first;
-        void answer(String reply) =>
-            unawaited(answerPermissionRequest(owner, permission, reply));
-        return permissionRequestCard(
-          context,
-          key: ValueKey('chats-request-${permission.id}'),
-          inList: true,
-          permission: permission,
-          who: item.agentLabel ?? 'OpenCode',
-          answered: answers.answerFor(permission.id),
-          // Held for its Undo window: collapsed, with Undo, as in the chat.
-          heldLabel: owner.delayedAnswers.heldLabel(permission.id),
-          onUndo: () => owner.delayedAnswers.undo(permission.id),
-          onAllow: () => answer('once'),
-          onReject: () => answer('reject'),
-          alwaysAllow: permissionAlwaysStep(
+        final card = cards?.waitingCardsForFeedItem(item).firstOrNull;
+        if (waiting.isEmpty && card == null) return const SizedBox.shrink();
+        Widget? request;
+        if (waiting.isNotEmpty) {
+          final permission = waiting.first;
+          void answer(String reply) =>
+              unawaited(answerPermissionRequest(owner, permission, reply));
+          request = permissionRequestCard(
             context,
+            key: ValueKey('chats-request-${permission.id}'),
+            inList: true,
             permission: permission,
-            supported: owner.capabilities.persistentPermissionGrants,
-            onConfirmed: () => answer('always'),
-          ),
+            who: item.agentLabel ?? 'OpenCode',
+            answered: answers.answerFor(permission.id),
+            // Held for its Undo window: collapsed, with Undo, as in the chat.
+            heldLabel: owner.delayedAnswers.heldLabel(permission.id),
+            onUndo: () => owner.delayedAnswers.undo(permission.id),
+            onAllow: () => answer('once'),
+            onReject: () => answer('reject'),
+            alwaysAllow: permissionAlwaysStep(
+              context,
+              permission: permission,
+              supported: owner.capabilities.persistentPermissionGrants,
+              onConfirmed: () => answer('always'),
+            ),
+          );
+        }
+        // A card waits behind any permission request: the list answers the
+        // request first, and the card's buttons are secondary here.
+        final cardView = card == null
+            ? null
+            : AgentCardView(
+                key: ValueKey('chats-card-${card.callID}'),
+                controller: cards!,
+                parse: GenUiParsed(card),
+                agentLabel: item.agentLabel ?? 'OpenCode',
+                busy: owner.busySessions.contains(item.sessionID),
+                inList: true,
+                photos:
+                    owner.capabilities.promptAttachments &&
+                        platformCapabilities.supportsPromptPhotos
+                    ? StoreAgentCardPhotos(
+                        store: owner.promptPhotos,
+                        profileID: owner.profile?.id ?? '',
+                        sessionID: item.sessionID,
+                        directory: item.directory,
+                        workspace: card.scope.workspace,
+                      )
+                    : null,
+              );
+        if (request == null) return cardView!;
+        if (cardView == null) return request;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            request,
+            SizedBox(height: KitTokens.of(context).space2),
+            cardView,
+          ],
         );
       },
     );

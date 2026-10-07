@@ -200,6 +200,7 @@
     "lib/ui/screens/agents/agents_text.dart",
     "lib/ui/screens/agents/phone_check_view.dart",
     "lib/ui/screens/agents/agents_screen.dart",
-    "lib/ui/screens/agents/agent_error_notice.dart"
+    "lib/ui/screens/agents/agent_error_notice.dart",
+    "lib/ui/screens/agents/cards_from_agents_row.dart"
   ]
 }

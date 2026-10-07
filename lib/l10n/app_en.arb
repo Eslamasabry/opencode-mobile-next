@@ -32582,5 +32582,408 @@
   "chatRequestAnswerRejected": "Rejected",
   "@chatRequestAnswerRejected": {
     "description": "Request card: the held answer after Reject, shown collapsed with Undo for a few seconds before it is sent."
+  },
+  "agentCardAsks": "{agent} asks",
+  "@agentCardAsks": {
+    "description": "Agent card eyebrow when the card asks the person something.",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentCardReports": "{agent} reports",
+  "@agentCardReports": {
+    "description": "Agent card eyebrow for a card that only reports.",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentCardAsksAnnouncement": "{agent} asks: {title}",
+  "@agentCardAsksAnnouncement": {
+    "description": "Agent card: said once by a screen reader when a waiting card appears.",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "agentCardSend": "Send",
+  "@agentCardSend": {
+    "description": "Agent card: sends the answer."
+  },
+  "agentCardConfirmDefault": "Confirm",
+  "@agentCardConfirmDefault": {
+    "description": "Agent card confirm ask: default confirm label when the agent gave none."
+  },
+  "agentCardCancelDefault": "Cancel",
+  "@agentCardCancelDefault": {
+    "description": "Agent card confirm ask: default cancel label when the agent gave none."
+  },
+  "agentCardChoosePrompt": "Choose an option to send.",
+  "@agentCardChoosePrompt": {
+    "description": "Agent card: why Send is off with no option chosen."
+  },
+  "agentCardChooseOneOrMore": "Choose at least one option to send.",
+  "@agentCardChooseOneOrMore": {
+    "description": "Agent card, several-choice ask: why Send is off."
+  },
+  "agentCardFormFix": "Fill in the required fields to send.",
+  "@agentCardFormFix": {
+    "description": "Agent card form: why Send is off."
+  },
+  "agentCardFieldRequired": "This field is required.",
+  "@agentCardFieldRequired": {
+    "description": "Agent card form: a required field is empty."
+  },
+  "agentCardFieldNumber": "Enter a number.",
+  "@agentCardFieldNumber": {
+    "description": "Agent card form: a number field holds something else."
+  },
+  "agentCardFieldMin": "Enter {min} or more.",
+  "@agentCardFieldMin": {
+    "description": "Agent card form: a number is below the minimum.",
+    "placeholders": {
+      "min": {
+        "type": "String"
+      }
+    }
+  },
+  "agentCardFieldMax": "Enter {max} or less.",
+  "@agentCardFieldMax": {
+    "description": "Agent card form: a number is above the maximum.",
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "agentCardTextNote": "The agent sees this, and it is saved in the conversation.",
+  "@agentCardTextNote": {
+    "description": "Agent card form: note under a free-text field."
+  },
+  "agentCardBusy": "The agent is still working. You can answer when it stops.",
+  "@agentCardBusy": {
+    "description": "Agent card: controls wait until the session is idle."
+  },
+  "agentCardSending": "Sending your answer…",
+  "@agentCardSending": {
+    "description": "Agent card: the answer is on its way."
+  },
+  "agentCardUnknown": "We can't tell yet whether this card was answered. It updates when the conversation does.",
+  "@agentCardUnknown": {
+    "description": "Agent card: state not known yet; read-only."
+  },
+  "agentCardDeliveryUnknown": "We couldn't confirm that your answer arrived. Check the conversation before answering again.",
+  "@agentCardDeliveryUnknown": {
+    "description": "Agent card: delivery uncertain; never resent automatically."
+  },
+  "agentCardFailed": "Your answer didn't go through. Nothing was sent, and you can try again.",
+  "@agentCardFailed": {
+    "description": "Agent card: the send failed."
+  },
+  "agentCardSent": "Sent",
+  "@agentCardSent": {
+    "description": "Agent card: receipt label when the answer has no summary."
+  },
+  "agentCardShow": "Show the card",
+  "@agentCardShow": {
+    "description": "Agent card: opens a collapsed card read-only."
+  },
+  "agentCardNotAnswered": "Not answered",
+  "@agentCardNotAnswered": {
+    "description": "Agent card: the conversation moved on before an answer."
+  },
+  "agentCardUnreadable": "This card couldn't be shown",
+  "@agentCardUnreadable": {
+    "description": "Agent card: one line for a card that failed validation."
+  },
+  "agentCardDetails": "Details",
+  "@agentCardDetails": {
+    "description": "Agent card: name of the fold holding the technical reason."
+  },
+  "agentCardComposerHint": "Or type your answer",
+  "@agentCardComposerHint": {
+    "description": "Composer hint while an agent card waits for an answer."
+  },
+  "agentCardDangerTitle": "Send \"{label}\"?",
+  "@agentCardDangerTitle": {
+    "description": "Agent card: confirm sheet title for a destructive confirm.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "agentCardDangerBody": "Your answer goes to the agent as a message. The agent decides what to do with it.",
+  "@agentCardDangerBody": {
+    "description": "Agent card: confirm sheet body."
+  },
+  "agentCardPhotoTake": "Take photo",
+  "@agentCardPhotoTake": {
+    "description": "Agent card photo ask."
+  },
+  "agentCardPhotoChoose": "Choose photo",
+  "@agentCardPhotoChoose": {
+    "description": "Agent card photo ask."
+  },
+  "agentCardPhotoRemove": "Remove photo {number}",
+  "@agentCardPhotoRemove": {
+    "description": "Agent card photo ask: remove control.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "agentCardPhotoName": "Photo {number}",
+  "@agentCardPhotoName": {
+    "description": "Agent card photo ask: name of a picked photo.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "agentCardPhotoCount": "{count} of {max}",
+  "@agentCardPhotoCount": {
+    "description": "Agent card photo ask: how many photos are picked.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "agentCardPhotoMax": "That's all the photos this card takes.",
+  "@agentCardPhotoMax": {
+    "description": "Agent card photo ask: the limit is reached."
+  },
+  "agentCardPhotoNone": "Add a photo to send.",
+  "@agentCardPhotoNone": {
+    "description": "Agent card photo ask: why Send is off."
+  },
+  "agentCardPhotoUnavailable": "Photos can't be added from here. Type your answer instead.",
+  "@agentCardPhotoUnavailable": {
+    "description": "Agent card photo ask: no photo source here."
+  },
+  "agentCardPhotoTooLarge": "Photos can be up to 10 MB each and 20 MB together.",
+  "@agentCardPhotoTooLarge": {
+    "description": "Agent card photo ask: size limit."
+  },
+  "agentCardChartBar": "Bar chart",
+  "@agentCardChartBar": {
+    "description": "Agent card chart summary."
+  },
+  "agentCardChartLine": "Line chart",
+  "@agentCardChartLine": {
+    "description": "Agent card chart summary."
+  },
+  "agentCardChartSeries": "{count, plural, =1{1 series} other{{count} series}}",
+  "@agentCardChartSeries": {
+    "description": "Agent card chart summary.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "agentCardChartPoints": "{count, plural, =1{1 point} other{{count} points}}",
+  "@agentCardChartPoints": {
+    "description": "Agent card chart summary.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "agentCardChartHighest": "highest {where}: {value}",
+  "@agentCardChartHighest": {
+    "description": "Agent card chart summary.",
+    "placeholders": {
+      "where": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "agentCardChartNone": "no data",
+  "@agentCardChartNone": {
+    "description": "Agent card chart summary."
+  },
+  "agentCardTableLabel": "Table, {columns} columns, {rows} rows",
+  "@agentCardTableLabel": {
+    "description": "Agent card table: screen reader name.",
+    "placeholders": {
+      "columns": {
+        "type": "int"
+      },
+      "rows": {
+        "type": "int"
+      }
+    }
+  },
+  "agentCardDiffFile": "File",
+  "@agentCardDiffFile": {
+    "description": "Agent card changed-files table."
+  },
+  "agentCardDiffAdded": "Added",
+  "@agentCardDiffAdded": {
+    "description": "Agent card changed-files table."
+  },
+  "agentCardDiffRemoved": "Removed",
+  "@agentCardDiffRemoved": {
+    "description": "Agent card changed-files table."
+  },
+  "agentCardDiffMore": "{count, plural, =1{and 1 more file} other{and {count} more files}}",
+  "@agentCardDiffMore": {
+    "description": "Agent card changed-files table: files past the first 20.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "agentCardProgressValue": "{percent}%",
+  "@agentCardProgressValue": {
+    "description": "Agent card progress value.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "cardsFromAgentsTitle": "Cards from agents",
+  "@cardsFromAgentsTitle": {
+    "description": "Settings > Agents: switch row."
+  },
+  "cardsFromAgentsSupporting": "Agents can show you choices, forms and reports as cards, and ask for a photo.",
+  "@cardsFromAgentsSupporting": {
+    "description": "Settings > Agents: what the switch does."
+  },
+  "cardsStatusOff": "Off",
+  "@cardsStatusOff": {
+    "description": "Cards setting status."
+  },
+  "cardsStatusChecking": "Checking this phone…",
+  "@cardsStatusChecking": {
+    "description": "Cards setting status."
+  },
+  "cardsStatusOn": "On for {agents}",
+  "@cardsStatusOn": {
+    "description": "Cards setting status.",
+    "placeholders": {
+      "agents": {
+        "type": "String"
+      }
+    }
+  },
+  "cardsStatusPartial": "On for {agents}. {reason}",
+  "@cardsStatusPartial": {
+    "description": "Cards setting status: some agents are ready.",
+    "placeholders": {
+      "agents": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "cardsStatusRestart": "Restart {agents} to finish turning this on.",
+  "@cardsStatusRestart": {
+    "description": "Cards setting status.",
+    "placeholders": {
+      "agents": {
+        "type": "String"
+      }
+    }
+  },
+  "cardsStatusUnavailable": "Not available. {reason}",
+  "@cardsStatusUnavailable": {
+    "description": "Cards setting status.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "cardsStatusFailed": "Couldn't turn this on. {reason}",
+  "@cardsStatusFailed": {
+    "description": "Cards setting status.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "cardsSettingFailed": "Couldn't change this setting. Try again.",
+  "@cardsSettingFailed": {
+    "description": "Cards setting: the change threw."
+  },
+  "cardsAgentClaude": "Claude Code",
+  "@cardsAgentClaude": {
+    "description": "Cards setting: agent name."
+  },
+  "cardsAgentOpenCode": "OpenCode",
+  "@cardsAgentOpenCode": {
+    "description": "Cards setting: agent name."
+  },
+  "cardsProblemUnsupportedHost": "Agents on this server can't show cards.",
+  "@cardsProblemUnsupportedHost": {
+    "description": "Cards setting reason."
+  },
+  "cardsProblemRuntimeMissing": "The tools cards need aren't on this phone yet.",
+  "@cardsProblemRuntimeMissing": {
+    "description": "Cards setting reason."
+  },
+  "cardsProblemNotQualified": "This agent version hasn't been checked to work with cards.",
+  "@cardsProblemNotQualified": {
+    "description": "Cards setting reason."
+  },
+  "cardsProblemPermissionDenied": "This phone wouldn't allow the change.",
+  "@cardsProblemPermissionDenied": {
+    "description": "Cards setting reason."
+  },
+  "cardsProblemConflict": "Another setup already uses the same name. Nothing was changed.",
+  "@cardsProblemConflict": {
+    "description": "Cards setting reason."
+  },
+  "cardsProblemInstallationFailed": "Cards couldn't be installed.",
+  "@cardsProblemInstallationFailed": {
+    "description": "Cards setting reason."
+  },
+  "cardsProblemRegistrationFailed": "The agent couldn't be told about cards.",
+  "@cardsProblemRegistrationFailed": {
+    "description": "Cards setting reason."
+  },
+  "cardsProblemVerificationFailed": "Cards were installed but didn't pass the check.",
+  "@cardsProblemVerificationFailed": {
+    "description": "Cards setting reason."
+  },
+  "cardsProblemRemovalFailed": "Cards couldn't be fully removed. Try again after restarting the agent.",
+  "@cardsProblemRemovalFailed": {
+    "description": "Cards setting reason."
+  },
+  "cardsProblemStorageFailed": "The phone couldn't save the setting.",
+  "@cardsProblemStorageFailed": {
+    "description": "Cards setting reason."
+  },
+  "cardsProblemBusy": "The phone is busy with something else. Try again in a moment.",
+  "@cardsProblemBusy": {
+    "description": "Cards setting reason."
+  },
+  "agentCardFieldRequiredHint": "Required",
+  "@agentCardFieldRequiredHint": {
+    "description": "Agent card form: helper line under a required field."
   }
 }

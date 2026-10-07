@@ -1,5 +1,5 @@
 {
- "generatedFrom": "21336973d7851b07d45ea72018e183f14fbec11b",
+ "generatedFrom": "3a4551d6bc4238a87e48a91d7e403b9953f01f90",
  "pages": [
   {
    "id": "system",
@@ -4101,22 +4101,6 @@
      "destructive": false
     },
     {
-     "id": "embedded-composer-inline-command-show-all",
-     "type": "button",
-     "label": "Show all commands",
-     "key": null,
-     "file": "lib/ui/screens/chat/command_launcher.dart",
-     "line": 649,
-     "action": "open-sheet",
-     "target": "command-launcher-sheet",
-     "targetWidget": "_CommandLauncherSheet",
-     "effect": "Calls onOpenCommands -> ChatScreen._openCommandLauncher() which opens the composer tools sheet on the Commands tab.",
-     "gates": [
-      "!compact && matches.length > limit (5)"
-     ],
-     "destructive": false
-    },
-    {
      "id": "embedded-composer-inline-agent-row",
      "type": "list-tile",
      "label": "@<agent id>  <description|Delegate>",
@@ -4317,6 +4301,23 @@
       "_slashQuery != null (draft matches ^/(\\S*)$)",
       "command.enabled && command.matchesQuery(query)",
       "at most 1 row when compact, else 5"
+     ],
+     "destructive": false,
+     "widgetFile": "lib/ui/screens/chat/command_launcher.dart"
+    },
+    {
+     "id": "embedded-composer-inline-command-show-all",
+     "type": "button",
+     "label": "Show all commands",
+     "key": null,
+     "file": "lib/ui/screens/chat/composer.dart",
+     "line": 649,
+     "action": "open-sheet",
+     "target": "command-launcher-sheet",
+     "targetWidget": "_CommandLauncherSheet",
+     "effect": "Calls onOpenCommands -> ChatScreen._openCommandLauncher() which opens the composer tools sheet on the Commands tab.",
+     "gates": [
+      "!compact && matches.length > limit (5)"
      ],
      "destructive": false,
      "widgetFile": "lib/ui/screens/chat/command_launcher.dart"
@@ -38817,6 +38818,11 @@
    "part": "m-agents"
   },
   {
+   "file": "lib/ui/screens/agents/cards_from_agents_row.dart",
+   "reason": "No surface of its own: the Cards from agents switch row and its plain status line, drawn inside Settings > Agents.",
+   "part": "m-agents"
+  },
+  {
    "file": "lib/ui/screens/agents/phone_check_view.dart",
    "reason": "No surface of its own: the four phone-check steps drawn inside the agent sheet and Settings.",
    "part": "m-agents"
@@ -38825,6 +38831,11 @@
    "file": "lib/ui/screens/automation_settings_screen.dart",
    "reason": "Helpers and sections of merged pages; the standalone page was retired (Notifications and background; Settings > This server).",
    "part": "j1-settings-more"
+  },
+  {
+   "file": "lib/ui/screens/chat/agent_cards.dart",
+   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): hands the transcript's tool parts to the agent-card surface and draws the card in the reply; no separate surface.",
+   "part": "b1-chat-screen"
   },
   {
    "file": "lib/ui/screens/chat/chat_attachments.dart",

@@ -90,6 +90,9 @@ import '../widgets/session_read_state.dart';
 import '../widgets/session_handoff_sheets.dart';
 import '../widgets/running_agents_strip.dart';
 import '../widgets/tool_card.dart';
+import '../../domain/genui/gen_ui.dart';
+import '../widgets/agent_card_photos.dart';
+import '../widgets/agent_card_view.dart';
 import '../../api2/models.dart' show Api2Delivery, Api2FormInfo, Api2InboxItem;
 import '../../feedback/bug_report.dart' show openBugReport;
 import '../kit/kit.dart';
@@ -212,6 +215,7 @@ part 'chat/team_conversation_parts.dart';
 part 'chat/team_agent_conversation.dart';
 part 'chat/team_conversation_actions.dart';
 part 'chat/composer_tools.dart';
+part 'chat/agent_cards.dart';
 
 AppLocalizations _chatL10n(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));

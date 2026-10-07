@@ -821,6 +821,10 @@
  ],
  "notPages": [
   {
+   "file": "lib/ui/screens/chat/agent_cards.dart",
+   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): hands the transcript's tool parts to the agent-card surface and draws the card in the reply; no separate surface."
+  },
+  {
    "file": "lib/ui/screens/chat/chat_attachments.dart",
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
   },

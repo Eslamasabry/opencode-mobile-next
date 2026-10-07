@@ -346,13 +346,8 @@ extension _ChatComposerRegion on _ChatScreenState {
   }) => _composerDropTarget(
     child: _ChatComposer(
       // The prompt goes to the agent this server runs, and says so.
-      agentName: _conn.isAgentBackend
-          ? _conn.profile?.name
-          : switch (_conn.profile?.backend) {
-              ServerBackend.paseo => 'Claude Code',
-              ServerBackend.codex => 'Codex',
-              _ => null,
-            },
+      agentName: _agentName,
+      cardWaiting: _cardWaits,
       // A sub-agent that answers only its main conversation (Claude's).
       blockedReason:
           !_conn.capabilities.subagentReplies &&

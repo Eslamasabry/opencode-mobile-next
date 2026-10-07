@@ -27467,4 +27467,298 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatRequestAnswerRejected => 'تم الرفض';
+
+  @override
+  String agentCardAsks(String agent) {
+    return '$agent يسأل';
+  }
+
+  @override
+  String agentCardReports(String agent) {
+    return '$agent يقدّم تقريرًا';
+  }
+
+  @override
+  String agentCardAsksAnnouncement(String agent, String title) {
+    return '$agent يسأل: $title';
+  }
+
+  @override
+  String get agentCardSend => 'إرسال';
+
+  @override
+  String get agentCardConfirmDefault => 'تأكيد';
+
+  @override
+  String get agentCardCancelDefault => 'إلغاء';
+
+  @override
+  String get agentCardChoosePrompt => 'اختر خيارًا لإرساله.';
+
+  @override
+  String get agentCardChooseOneOrMore =>
+      'اختر خيارًا واحدًا على الأقل لإرساله.';
+
+  @override
+  String get agentCardFormFix => 'املأ الحقول المطلوبة للإرسال.';
+
+  @override
+  String get agentCardFieldRequired => 'هذا الحقل مطلوب.';
+
+  @override
+  String get agentCardFieldNumber => 'أدخل رقمًا.';
+
+  @override
+  String agentCardFieldMin(String min) {
+    return 'أدخل $min أو أكثر.';
+  }
+
+  @override
+  String agentCardFieldMax(String max) {
+    return 'أدخل $max أو أقل.';
+  }
+
+  @override
+  String get agentCardTextNote => 'يرى الوكيل هذا ويُحفظ في المحادثة.';
+
+  @override
+  String get agentCardBusy => 'الوكيل ما زال يعمل. يمكنك الإجابة عندما يتوقف.';
+
+  @override
+  String get agentCardSending => 'جارٍ إرسال إجابتك…';
+
+  @override
+  String get agentCardUnknown =>
+      'لا نعرف بعد إن كانت هذه البطاقة قد أُجيب عنها. ستتحدّث مع المحادثة.';
+
+  @override
+  String get agentCardDeliveryUnknown =>
+      'لم نتمكن من التأكد من وصول إجابتك. تحقق من المحادثة قبل الإجابة مرة أخرى.';
+
+  @override
+  String get agentCardFailed =>
+      'لم تصل إجابتك. لم يُرسل شيء ويمكنك المحاولة مرة أخرى.';
+
+  @override
+  String get agentCardSent => 'تم الإرسال';
+
+  @override
+  String get agentCardShow => 'عرض البطاقة';
+
+  @override
+  String get agentCardNotAnswered => 'لم يُجب عنها';
+
+  @override
+  String get agentCardUnreadable => 'تعذّر عرض هذه البطاقة';
+
+  @override
+  String get agentCardDetails => 'التفاصيل';
+
+  @override
+  String get agentCardComposerHint => 'أو اكتب إجابتك';
+
+  @override
+  String agentCardDangerTitle(String label) {
+    return 'إرسال \"$label\"؟';
+  }
+
+  @override
+  String get agentCardDangerBody =>
+      'تصل إجابتك إلى الوكيل كرسالة. والوكيل هو من يقرر ما يفعله بها.';
+
+  @override
+  String get agentCardPhotoTake => 'التقاط صورة';
+
+  @override
+  String get agentCardPhotoChoose => 'اختيار صورة';
+
+  @override
+  String agentCardPhotoRemove(int number) {
+    return 'إزالة الصورة $number';
+  }
+
+  @override
+  String agentCardPhotoName(int number) {
+    return 'صورة $number';
+  }
+
+  @override
+  String agentCardPhotoCount(int count, int max) {
+    return '$count من $max';
+  }
+
+  @override
+  String get agentCardPhotoMax => 'هذا أقصى عدد من الصور تقبله البطاقة.';
+
+  @override
+  String get agentCardPhotoNone => 'أضف صورة لإرسالها.';
+
+  @override
+  String get agentCardPhotoUnavailable =>
+      'لا يمكن إضافة صور من هنا. اكتب إجابتك بدلًا من ذلك.';
+
+  @override
+  String get agentCardPhotoTooLarge =>
+      'يصل حجم كل صورة إلى 10 ميغابايت وإجمالي الصور إلى 20 ميغابايت.';
+
+  @override
+  String get agentCardChartBar => 'مخطط أعمدة';
+
+  @override
+  String get agentCardChartLine => 'مخطط خطي';
+
+  @override
+  String agentCardChartSeries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count سلسلة',
+      many: '$count سلسلة',
+      few: '$count سلاسل',
+      two: 'سلسلتان',
+      one: 'سلسلة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String agentCardChartPoints(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count نقطة',
+      many: '$count نقطة',
+      few: '$count نقاط',
+      two: 'نقطتان',
+      one: 'نقطة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String agentCardChartHighest(String where, String value) {
+    return 'الأعلى $where: $value';
+  }
+
+  @override
+  String get agentCardChartNone => 'لا توجد بيانات';
+
+  @override
+  String agentCardTableLabel(int columns, int rows) {
+    return 'جدول، $columns أعمدة، $rows صفوف';
+  }
+
+  @override
+  String get agentCardDiffFile => 'الملف';
+
+  @override
+  String get agentCardDiffAdded => 'المضاف';
+
+  @override
+  String get agentCardDiffRemoved => 'المحذوف';
+
+  @override
+  String agentCardDiffMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'و$count ملفات أخرى',
+      one: 'وملف آخر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String agentCardProgressValue(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get cardsFromAgentsTitle => 'بطاقات من الوكلاء';
+
+  @override
+  String get cardsFromAgentsSupporting =>
+      'يمكن للوكلاء أن يعرضوا عليك خيارات ونماذج وتقارير كبطاقات وأن يطلبوا صورة.';
+
+  @override
+  String get cardsStatusOff => 'متوقفة';
+
+  @override
+  String get cardsStatusChecking => 'جارٍ فحص هذا الهاتف…';
+
+  @override
+  String cardsStatusOn(String agents) {
+    return 'مفعّلة لـ $agents';
+  }
+
+  @override
+  String cardsStatusPartial(String agents, String reason) {
+    return 'مفعّلة لـ $agents. $reason';
+  }
+
+  @override
+  String cardsStatusRestart(String agents) {
+    return 'أعد تشغيل $agents لإكمال التفعيل.';
+  }
+
+  @override
+  String cardsStatusUnavailable(String reason) {
+    return 'غير متاحة. $reason';
+  }
+
+  @override
+  String cardsStatusFailed(String reason) {
+    return 'تعذّر التفعيل. $reason';
+  }
+
+  @override
+  String get cardsSettingFailed => 'تعذّر تغيير هذا الإعداد. حاول مرة أخرى.';
+
+  @override
+  String get cardsAgentClaude => 'Claude Code';
+
+  @override
+  String get cardsAgentOpenCode => 'OpenCode';
+
+  @override
+  String get cardsProblemUnsupportedHost =>
+      'لا يمكن للوكلاء على هذا الخادم عرض البطاقات.';
+
+  @override
+  String get cardsProblemRuntimeMissing =>
+      'الأدوات التي تحتاجها البطاقات غير موجودة على هذا الهاتف بعد.';
+
+  @override
+  String get cardsProblemNotQualified =>
+      'لم يُتحقق بعد من أن إصدار هذا الوكيل يعمل مع البطاقات.';
+
+  @override
+  String get cardsProblemPermissionDenied => 'لم يسمح الهاتف بهذا التغيير.';
+
+  @override
+  String get cardsProblemConflict =>
+      'إعداد آخر يستخدم الاسم نفسه. لم يتغير شيء.';
+
+  @override
+  String get cardsProblemInstallationFailed => 'تعذّر تثبيت البطاقات.';
+
+  @override
+  String get cardsProblemRegistrationFailed => 'تعذّر إعلام الوكيل بالبطاقات.';
+
+  @override
+  String get cardsProblemVerificationFailed =>
+      'تم تثبيت البطاقات لكنها لم تجتز الفحص.';
+
+  @override
+  String get cardsProblemRemovalFailed =>
+      'تعذّرت إزالة البطاقات بالكامل. حاول مرة أخرى بعد إعادة تشغيل الوكيل.';
+
+  @override
+  String get cardsProblemStorageFailed => 'تعذّر على الهاتف حفظ الإعداد.';
+
+  @override
+  String get cardsProblemBusy => 'الهاتف مشغول بأمر آخر. حاول بعد قليل.';
+
+  @override
+  String get agentCardFieldRequiredHint => 'مطلوب';
 }

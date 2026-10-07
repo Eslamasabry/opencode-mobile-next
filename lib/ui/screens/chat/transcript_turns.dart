@@ -510,10 +510,16 @@ class _AssistantPartRun {
     this.grouped = false,
     this.heading,
     this.note,
+    this.card,
   });
 
   final List<Part> parts;
   final bool grouped;
+
+  /// Set when this run is one tool call the domain reads as an agent card
+  /// (docs/design/genui-plan-2026-10-07.md): it is drawn as the card, in the
+  /// reply and not folded into the work line.
+  final GenUiParse? card;
 
   /// What the agent said it was about to do, when it said so in a line
   /// ("Patching home shell") right before this run of tool calls. The run

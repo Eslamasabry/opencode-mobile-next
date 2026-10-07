@@ -27350,4 +27350,297 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatRequestAnswerRejected => 'Rejected';
+
+  @override
+  String agentCardAsks(String agent) {
+    return '$agent asks';
+  }
+
+  @override
+  String agentCardReports(String agent) {
+    return '$agent reports';
+  }
+
+  @override
+  String agentCardAsksAnnouncement(String agent, String title) {
+    return '$agent asks: $title';
+  }
+
+  @override
+  String get agentCardSend => 'Send';
+
+  @override
+  String get agentCardConfirmDefault => 'Confirm';
+
+  @override
+  String get agentCardCancelDefault => 'Cancel';
+
+  @override
+  String get agentCardChoosePrompt => 'Choose an option to send.';
+
+  @override
+  String get agentCardChooseOneOrMore => 'Choose at least one option to send.';
+
+  @override
+  String get agentCardFormFix => 'Fill in the required fields to send.';
+
+  @override
+  String get agentCardFieldRequired => 'This field is required.';
+
+  @override
+  String get agentCardFieldNumber => 'Enter a number.';
+
+  @override
+  String agentCardFieldMin(String min) {
+    return 'Enter $min or more.';
+  }
+
+  @override
+  String agentCardFieldMax(String max) {
+    return 'Enter $max or less.';
+  }
+
+  @override
+  String get agentCardTextNote =>
+      'The agent sees this, and it is saved in the conversation.';
+
+  @override
+  String get agentCardBusy =>
+      'The agent is still working. You can answer when it stops.';
+
+  @override
+  String get agentCardSending => 'Sending your answer…';
+
+  @override
+  String get agentCardUnknown =>
+      'We can\'t tell yet whether this card was answered. It updates when the conversation does.';
+
+  @override
+  String get agentCardDeliveryUnknown =>
+      'We couldn\'t confirm that your answer arrived. Check the conversation before answering again.';
+
+  @override
+  String get agentCardFailed =>
+      'Your answer didn\'t go through. Nothing was sent, and you can try again.';
+
+  @override
+  String get agentCardSent => 'Sent';
+
+  @override
+  String get agentCardShow => 'Show the card';
+
+  @override
+  String get agentCardNotAnswered => 'Not answered';
+
+  @override
+  String get agentCardUnreadable => 'This card couldn\'t be shown';
+
+  @override
+  String get agentCardDetails => 'Details';
+
+  @override
+  String get agentCardComposerHint => 'Or type your answer';
+
+  @override
+  String agentCardDangerTitle(String label) {
+    return 'Send \"$label\"?';
+  }
+
+  @override
+  String get agentCardDangerBody =>
+      'Your answer goes to the agent as a message. The agent decides what to do with it.';
+
+  @override
+  String get agentCardPhotoTake => 'Take photo';
+
+  @override
+  String get agentCardPhotoChoose => 'Choose photo';
+
+  @override
+  String agentCardPhotoRemove(int number) {
+    return 'Remove photo $number';
+  }
+
+  @override
+  String agentCardPhotoName(int number) {
+    return 'Photo $number';
+  }
+
+  @override
+  String agentCardPhotoCount(int count, int max) {
+    return '$count of $max';
+  }
+
+  @override
+  String get agentCardPhotoMax => 'That\'s all the photos this card takes.';
+
+  @override
+  String get agentCardPhotoNone => 'Add a photo to send.';
+
+  @override
+  String get agentCardPhotoUnavailable =>
+      'Photos can\'t be added from here. Type your answer instead.';
+
+  @override
+  String get agentCardPhotoTooLarge =>
+      'Photos can be up to 10 MB each and 20 MB together.';
+
+  @override
+  String get agentCardChartBar => 'Bar chart';
+
+  @override
+  String get agentCardChartLine => 'Line chart';
+
+  @override
+  String agentCardChartSeries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count series',
+      one: '1 series',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String agentCardChartPoints(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count points',
+      one: '1 point',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String agentCardChartHighest(String where, String value) {
+    return 'highest $where: $value';
+  }
+
+  @override
+  String get agentCardChartNone => 'no data';
+
+  @override
+  String agentCardTableLabel(int columns, int rows) {
+    return 'Table, $columns columns, $rows rows';
+  }
+
+  @override
+  String get agentCardDiffFile => 'File';
+
+  @override
+  String get agentCardDiffAdded => 'Added';
+
+  @override
+  String get agentCardDiffRemoved => 'Removed';
+
+  @override
+  String agentCardDiffMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'and $count more files',
+      one: 'and 1 more file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String agentCardProgressValue(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get cardsFromAgentsTitle => 'Cards from agents';
+
+  @override
+  String get cardsFromAgentsSupporting =>
+      'Agents can show you choices, forms and reports as cards, and ask for a photo.';
+
+  @override
+  String get cardsStatusOff => 'Off';
+
+  @override
+  String get cardsStatusChecking => 'Checking this phone…';
+
+  @override
+  String cardsStatusOn(String agents) {
+    return 'On for $agents';
+  }
+
+  @override
+  String cardsStatusPartial(String agents, String reason) {
+    return 'On for $agents. $reason';
+  }
+
+  @override
+  String cardsStatusRestart(String agents) {
+    return 'Restart $agents to finish turning this on.';
+  }
+
+  @override
+  String cardsStatusUnavailable(String reason) {
+    return 'Not available. $reason';
+  }
+
+  @override
+  String cardsStatusFailed(String reason) {
+    return 'Couldn\'t turn this on. $reason';
+  }
+
+  @override
+  String get cardsSettingFailed => 'Couldn\'t change this setting. Try again.';
+
+  @override
+  String get cardsAgentClaude => 'Claude Code';
+
+  @override
+  String get cardsAgentOpenCode => 'OpenCode';
+
+  @override
+  String get cardsProblemUnsupportedHost =>
+      'Agents on this server can\'t show cards.';
+
+  @override
+  String get cardsProblemRuntimeMissing =>
+      'The tools cards need aren\'t on this phone yet.';
+
+  @override
+  String get cardsProblemNotQualified =>
+      'This agent version hasn\'t been checked to work with cards.';
+
+  @override
+  String get cardsProblemPermissionDenied =>
+      'This phone wouldn\'t allow the change.';
+
+  @override
+  String get cardsProblemConflict =>
+      'Another setup already uses the same name. Nothing was changed.';
+
+  @override
+  String get cardsProblemInstallationFailed => 'Cards couldn\'t be installed.';
+
+  @override
+  String get cardsProblemRegistrationFailed =>
+      'The agent couldn\'t be told about cards.';
+
+  @override
+  String get cardsProblemVerificationFailed =>
+      'Cards were installed but didn\'t pass the check.';
+
+  @override
+  String get cardsProblemRemovalFailed =>
+      'Cards couldn\'t be fully removed. Try again after restarting the agent.';
+
+  @override
+  String get cardsProblemStorageFailed =>
+      'The phone couldn\'t save the setting.';
+
+  @override
+  String get cardsProblemBusy =>
+      'The phone is busy with something else. Try again in a moment.';
+
+  @override
+  String get agentCardFieldRequiredHint => 'Required';
 }

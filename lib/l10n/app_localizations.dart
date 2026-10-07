@@ -43170,6 +43170,438 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rejected'**
   String get chatRequestAnswerRejected;
+
+  /// Agent card eyebrow when the card asks the person something.
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} asks'**
+  String agentCardAsks(String agent);
+
+  /// Agent card eyebrow for a card that only reports.
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} reports'**
+  String agentCardReports(String agent);
+
+  /// Agent card: said once by a screen reader when a waiting card appears.
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} asks: {title}'**
+  String agentCardAsksAnnouncement(String agent, String title);
+
+  /// Agent card: sends the answer.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get agentCardSend;
+
+  /// Agent card confirm ask: default confirm label when the agent gave none.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get agentCardConfirmDefault;
+
+  /// Agent card confirm ask: default cancel label when the agent gave none.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get agentCardCancelDefault;
+
+  /// Agent card: why Send is off with no option chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an option to send.'**
+  String get agentCardChoosePrompt;
+
+  /// Agent card, several-choice ask: why Send is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose at least one option to send.'**
+  String get agentCardChooseOneOrMore;
+
+  /// Agent card form: why Send is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in the required fields to send.'**
+  String get agentCardFormFix;
+
+  /// Agent card form: a required field is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required.'**
+  String get agentCardFieldRequired;
+
+  /// Agent card form: a number field holds something else.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number.'**
+  String get agentCardFieldNumber;
+
+  /// Agent card form: a number is below the minimum.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter {min} or more.'**
+  String agentCardFieldMin(String min);
+
+  /// Agent card form: a number is above the maximum.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter {max} or less.'**
+  String agentCardFieldMax(String max);
+
+  /// Agent card form: note under a free-text field.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent sees this, and it is saved in the conversation.'**
+  String get agentCardTextNote;
+
+  /// Agent card: controls wait until the session is idle.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent is still working. You can answer when it stops.'**
+  String get agentCardBusy;
+
+  /// Agent card: the answer is on its way.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending your answer…'**
+  String get agentCardSending;
+
+  /// Agent card: state not known yet; read-only.
+  ///
+  /// In en, this message translates to:
+  /// **'We can\'t tell yet whether this card was answered. It updates when the conversation does.'**
+  String get agentCardUnknown;
+
+  /// Agent card: delivery uncertain; never resent automatically.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t confirm that your answer arrived. Check the conversation before answering again.'**
+  String get agentCardDeliveryUnknown;
+
+  /// Agent card: the send failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your answer didn\'t go through. Nothing was sent, and you can try again.'**
+  String get agentCardFailed;
+
+  /// Agent card: receipt label when the answer has no summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get agentCardSent;
+
+  /// Agent card: opens a collapsed card read-only.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the card'**
+  String get agentCardShow;
+
+  /// Agent card: the conversation moved on before an answer.
+  ///
+  /// In en, this message translates to:
+  /// **'Not answered'**
+  String get agentCardNotAnswered;
+
+  /// Agent card: one line for a card that failed validation.
+  ///
+  /// In en, this message translates to:
+  /// **'This card couldn\'t be shown'**
+  String get agentCardUnreadable;
+
+  /// Agent card: name of the fold holding the technical reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get agentCardDetails;
+
+  /// Composer hint while an agent card waits for an answer.
+  ///
+  /// In en, this message translates to:
+  /// **'Or type your answer'**
+  String get agentCardComposerHint;
+
+  /// Agent card: confirm sheet title for a destructive confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Send \"{label}\"?'**
+  String agentCardDangerTitle(String label);
+
+  /// Agent card: confirm sheet body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your answer goes to the agent as a message. The agent decides what to do with it.'**
+  String get agentCardDangerBody;
+
+  /// Agent card photo ask.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get agentCardPhotoTake;
+
+  /// Agent card photo ask.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photo'**
+  String get agentCardPhotoChoose;
+
+  /// Agent card photo ask: remove control.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo {number}'**
+  String agentCardPhotoRemove(int number);
+
+  /// Agent card photo ask: name of a picked photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo {number}'**
+  String agentCardPhotoName(int number);
+
+  /// Agent card photo ask: how many photos are picked.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {max}'**
+  String agentCardPhotoCount(int count, int max);
+
+  /// Agent card photo ask: the limit is reached.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s all the photos this card takes.'**
+  String get agentCardPhotoMax;
+
+  /// Agent card photo ask: why Send is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo to send.'**
+  String get agentCardPhotoNone;
+
+  /// Agent card photo ask: no photo source here.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos can\'t be added from here. Type your answer instead.'**
+  String get agentCardPhotoUnavailable;
+
+  /// Agent card photo ask: size limit.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos can be up to 10 MB each and 20 MB together.'**
+  String get agentCardPhotoTooLarge;
+
+  /// Agent card chart summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Bar chart'**
+  String get agentCardChartBar;
+
+  /// Agent card chart summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Line chart'**
+  String get agentCardChartLine;
+
+  /// Agent card chart summary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 series} other{{count} series}}'**
+  String agentCardChartSeries(int count);
+
+  /// Agent card chart summary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 point} other{{count} points}}'**
+  String agentCardChartPoints(int count);
+
+  /// Agent card chart summary.
+  ///
+  /// In en, this message translates to:
+  /// **'highest {where}: {value}'**
+  String agentCardChartHighest(String where, String value);
+
+  /// Agent card chart summary.
+  ///
+  /// In en, this message translates to:
+  /// **'no data'**
+  String get agentCardChartNone;
+
+  /// Agent card table: screen reader name.
+  ///
+  /// In en, this message translates to:
+  /// **'Table, {columns} columns, {rows} rows'**
+  String agentCardTableLabel(int columns, int rows);
+
+  /// Agent card changed-files table.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get agentCardDiffFile;
+
+  /// Agent card changed-files table.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get agentCardDiffAdded;
+
+  /// Agent card changed-files table.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed'**
+  String get agentCardDiffRemoved;
+
+  /// Agent card changed-files table: files past the first 20.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{and 1 more file} other{and {count} more files}}'**
+  String agentCardDiffMore(int count);
+
+  /// Agent card progress value.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String agentCardProgressValue(int percent);
+
+  /// Settings > Agents: switch row.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards from agents'**
+  String get cardsFromAgentsTitle;
+
+  /// Settings > Agents: what the switch does.
+  ///
+  /// In en, this message translates to:
+  /// **'Agents can show you choices, forms and reports as cards, and ask for a photo.'**
+  String get cardsFromAgentsSupporting;
+
+  /// Cards setting status.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get cardsStatusOff;
+
+  /// Cards setting status.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking this phone…'**
+  String get cardsStatusChecking;
+
+  /// Cards setting status.
+  ///
+  /// In en, this message translates to:
+  /// **'On for {agents}'**
+  String cardsStatusOn(String agents);
+
+  /// Cards setting status: some agents are ready.
+  ///
+  /// In en, this message translates to:
+  /// **'On for {agents}. {reason}'**
+  String cardsStatusPartial(String agents, String reason);
+
+  /// Cards setting status.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart {agents} to finish turning this on.'**
+  String cardsStatusRestart(String agents);
+
+  /// Cards setting status.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available. {reason}'**
+  String cardsStatusUnavailable(String reason);
+
+  /// Cards setting status.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t turn this on. {reason}'**
+  String cardsStatusFailed(String reason);
+
+  /// Cards setting: the change threw.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t change this setting. Try again.'**
+  String get cardsSettingFailed;
+
+  /// Cards setting: agent name.
+  ///
+  /// In en, this message translates to:
+  /// **'Claude Code'**
+  String get cardsAgentClaude;
+
+  /// Cards setting: agent name.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode'**
+  String get cardsAgentOpenCode;
+
+  /// Cards setting reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Agents on this server can\'t show cards.'**
+  String get cardsProblemUnsupportedHost;
+
+  /// Cards setting reason.
+  ///
+  /// In en, this message translates to:
+  /// **'The tools cards need aren\'t on this phone yet.'**
+  String get cardsProblemRuntimeMissing;
+
+  /// Cards setting reason.
+  ///
+  /// In en, this message translates to:
+  /// **'This agent version hasn\'t been checked to work with cards.'**
+  String get cardsProblemNotQualified;
+
+  /// Cards setting reason.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone wouldn\'t allow the change.'**
+  String get cardsProblemPermissionDenied;
+
+  /// Cards setting reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Another setup already uses the same name. Nothing was changed.'**
+  String get cardsProblemConflict;
+
+  /// Cards setting reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards couldn\'t be installed.'**
+  String get cardsProblemInstallationFailed;
+
+  /// Cards setting reason.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent couldn\'t be told about cards.'**
+  String get cardsProblemRegistrationFailed;
+
+  /// Cards setting reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards were installed but didn\'t pass the check.'**
+  String get cardsProblemVerificationFailed;
+
+  /// Cards setting reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards couldn\'t be fully removed. Try again after restarting the agent.'**
+  String get cardsProblemRemovalFailed;
+
+  /// Cards setting reason.
+  ///
+  /// In en, this message translates to:
+  /// **'The phone couldn\'t save the setting.'**
+  String get cardsProblemStorageFailed;
+
+  /// Cards setting reason.
+  ///
+  /// In en, this message translates to:
+  /// **'The phone is busy with something else. Try again in a moment.'**
+  String get cardsProblemBusy;
+
+  /// Agent card form: helper line under a required field.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get agentCardFieldRequiredHint;
 }
 
 class _AppLocalizationsDelegate

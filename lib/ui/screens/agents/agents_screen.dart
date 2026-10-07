@@ -8,6 +8,7 @@ import '../../app_iconography.dart';
 import '../../kit/kit.dart';
 import '../chats/chats_host.dart';
 import 'agents_section.dart';
+import 'cards_from_agents_row.dart';
 
 /// Settings › Agents: the agents this phone can run, where they stand and
 /// the one act each needs, and Check this phone. Where agents cannot run
@@ -36,9 +37,10 @@ class AgentsScreen extends ConsumerWidget {
               bottom: KitScreen.endPadding(context),
             ),
             children: [
-              if (available)
-                const AgentsSection()
-              else
+              if (available) ...const [
+                AgentsSection(),
+                CardsFromAgentsRow(),
+              ] else
                 KitStateView(
                   key: const ValueKey('agents-unavailable'),
                   icon: AppIconography.phone,

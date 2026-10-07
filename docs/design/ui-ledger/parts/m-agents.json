@@ -391,6 +391,10 @@
     {
       "file": "lib/ui/screens/agents/agent_error_notice.dart",
       "reason": "No surface of its own: a failed agent step in plain words with a Details fold, drawn inside the agent sheet, Settings and Conversations."
+    },
+    {
+      "file": "lib/ui/screens/agents/cards_from_agents_row.dart",
+      "reason": "No surface of its own: the Cards from agents switch row and its plain status line, drawn inside Settings > Agents."
     }
   ],
   "notes": []

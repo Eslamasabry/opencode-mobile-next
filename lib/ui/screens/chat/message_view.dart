@@ -406,7 +406,7 @@ class _MessageView extends StatelessWidget {
                 KitMotion.escalateAfter.inMilliseconds);
     final working = streaming && !interrupted;
 
-    final runs = _groupAssistantParts(visibleParts);
+    final runs = _withCards(_groupAssistantParts(visibleParts), chat);
     final blocks = <Widget>[
       for (final stretch in _stretches(runs))
         if (stretch.length > 1 || stretch.single.grouped)
@@ -532,9 +532,10 @@ class _MessageView extends StatelessWidget {
     var work = <_AssistantPartRun>[];
     for (final run in runs) {
       final type = run.parts.first.type;
-      if (type == 'tool' ||
-          type == 'reasoning' ||
-          _isFoldedIntoWork(run.parts.first)) {
+      if (run.card == null &&
+          (type == 'tool' ||
+              type == 'reasoning' ||
+              _isFoldedIntoWork(run.parts.first))) {
         work.add(run);
         continue;
       }
@@ -544,6 +545,51 @@ class _MessageView extends StatelessWidget {
     }
     if (work.isNotEmpty) stretches.add(work);
     return stretches;
+  }
+
+  /// Takes every tool call the domain reads as an agent card out of its run
+  /// and makes it a run of its own, so the card stands in the reply (never
+  /// inside a folded work line) and the calls around it keep their grouping.
+  List<_AssistantPartRun> _withCards(
+    List<_AssistantPartRun> runs,
+    _ChatScreenState? chat,
+  ) {
+    if (chat == null || chat._genUi == null) return runs;
+    final result = <_AssistantPartRun>[];
+    for (final run in runs) {
+      if (run.parts.first.type != 'tool') {
+        result.add(run);
+        continue;
+      }
+      var plain = <Part>[];
+      var first = true;
+      void flush() {
+        if (plain.isEmpty) return;
+        result.add(
+          _AssistantPartRun(
+            plain,
+            grouped: plain.length > 1,
+            heading: first ? run.heading : null,
+            note: first ? run.note : null,
+          ),
+        );
+        first = false;
+        plain = <Part>[];
+      }
+
+      for (final part in run.parts) {
+        final card = chat._cardForPart(part, part.messageID ?? m.info.id);
+        if (card == null) {
+          plain.add(part);
+          continue;
+        }
+        flush();
+        result.add(_AssistantPartRun([part], card: card));
+        first = false;
+      }
+      flush();
+    }
+    return result;
   }
 
   /// A run inside a work line: a run of tool calls is one step per call (the
@@ -581,7 +627,9 @@ class _MessageView extends StatelessWidget {
     List<_AssistantPartRun> all,
     bool streaming,
     _ChatScreenState? chat,
-  ) => run.parts.first.type == 'v2:notice'
+  ) => run.card != null && chat != null
+      ? chat._agentCardRow(run.card!)
+      : run.parts.first.type == 'v2:notice'
       ? V2TranscriptRow(
           part: run.parts.first,
           messageId: run.parts.first.messageID ?? run.parts.first.id ?? '',
