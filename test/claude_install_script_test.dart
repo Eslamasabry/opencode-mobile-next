@@ -21,6 +21,7 @@ void main() {
       final result = await Process.run('/bin/sh', [
         '-c',
         '''
+${withSetupPrelude('')}
 uname() { echo ${entry.key}; }
 getconf() { echo 'glibc 2.39'; }
 oc_stage() { :; }
@@ -47,7 +48,7 @@ ${isolatedScript()}
       final result = await Process.run('/bin/sh', [
         '-c',
         '''
-$setupPrelude
+${withSetupPrelude('')}
 uname() { echo aarch64; }
 getconf() { echo 'glibc 2.39'; }
 # Exercise real oc_download checksum handling without any network request.
@@ -77,4 +78,57 @@ ${isolatedScript()}
     expect(result.stderr, contains('requires ARM64 or x64 Ubuntu'));
     expect(Directory('${temp.path}/install').existsSync(), isFalse);
   });
+
+  for (final activeFails in [false, true]) {
+    test(
+      activeFails
+          ? 'activated Claude failure restores program and command link'
+          : 'successful Claude update retains the previous good generation',
+      () async {
+        final previous = File('${temp.path}/install/claude')
+          ..parent.createSync(recursive: true)
+          ..writeAsStringSync('previous');
+        Directory('${temp.path}/bin').createSync();
+        Link('${temp.path}/bin/claude').createSync(previous.path);
+        final result = await Process.run('/bin/sh', [
+          '-c',
+          '''
+${withSetupPrelude('')}
+uname() { echo aarch64; }
+getconf() { echo 'glibc 2.39'; }
+oc_download() {
+  cat > "\$2" <<'CLAUDE_FIXTURE'
+#!/bin/sh
+${activeFails ? '''case "\$0" in
+  *.new) ;;
+  *) exit 44 ;;
+esac''' : ''}
+echo '${ClaudeScripts.version} (Claude Code)'
+CLAUDE_FIXTURE
+}
+${isolatedScript()}
+''',
+        ]);
+        final link = Link('${temp.path}/bin/claude');
+        if (activeFails) {
+          expect(result.exitCode, isNot(0));
+          expect(
+            result.stderr,
+            contains('Claude could not finish updating. Run setup again.'),
+          );
+          expect(previous.readAsStringSync(), 'previous');
+        } else {
+          expect(result.exitCode, 0, reason: '${result.stderr}');
+          expect(
+            File('${previous.path}.oc-good').readAsStringSync(),
+            'previous',
+          );
+          expect(Link('${link.path}.oc-good').targetSync(), previous.path);
+          expect(File('${previous.path}.oc-pending').existsSync(), isFalse);
+          expect(File('${link.path}.oc-pending').existsSync(), isFalse);
+        }
+        expect(link.targetSync(), previous.path);
+      },
+    );
+  }
 }

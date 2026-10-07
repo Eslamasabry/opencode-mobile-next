@@ -28,6 +28,10 @@ void main() {
     'service-finish-denied',
     'service-update-denied',
     'agent-output-private',
+    'low-space-first',
+    'low-space-next',
+    'paseo-checksum-failed',
+    'paseo-launch-failed',
   ];
   // The scenarios share nothing: the JVMs run side by side.
   final runs = <String, Future<ProcessResult>>{};

@@ -35,6 +35,30 @@ void main() {
     });
   });
 
+  test(
+    'repeatable storage check respects fresh readings and exact threshold',
+    () {
+      expect(
+        checkSetupStoragePreflight(299999999, downloadBytes: 0).issue,
+        SetupPreflightIssue.lowSpace,
+      );
+      expect(
+        checkSetupStoragePreflight(300000000, downloadBytes: 0).supported,
+        isTrue,
+      );
+      expect(
+        checkSetupStoragePreflight(1, downloadBytes: 0).supported,
+        isFalse,
+      );
+      expect(
+        checkSetupStoragePreflight(null, downloadBytes: 0).supported,
+        isTrue,
+      );
+      expect(requiredSetupFreeBytes(-1), 300000000);
+      expect(requiredSetupFreeBytes(0x7fffffffffffffff), 0x7fffffffffffffff);
+    },
+  );
+
   group('checkSetupPreflight', () {
     test('passes a supported, roomy, well-remembered phone', () {
       final result = checkSetupPreflight(_device(), downloadBytes: _download);

@@ -47,11 +47,21 @@ s.serve_forever()
 
 /// A fake `opencode`: prints [version]; `serve` answers the health path
 /// (or, when [starts] is false, says why and exits); `models` succeeds.
-String _fakeProgram(String version, {bool starts = true, bool runs = true}) =>
+String _fakeProgram(
+  String version, {
+  bool starts = true,
+  bool runs = true,
+  bool activeFails = false,
+}) =>
     '''#!/bin/sh
 ${runs ? '' : 'echo "cannot execute binary file: Exec format error" >&2; exit 126'}
 case "\$1" in
-  --version) echo '$version' ;;
+  --version)
+    ${activeFails ? '''case "\$0" in
+      *.new/*) ;;
+      *) exit 44 ;;
+    esac''' : ''}
+    echo '$version' ;;
   models) exit 0 ;;
   serve)
     ${starts ? '''exec python3 -c '
@@ -354,6 +364,43 @@ void main() {
       );
       expect(failure.component, en.phoneSetupErrorChecksum('OpenCode'));
     }, skip: skip);
+
+    test(
+      'post-activation failure restores the previous native program and link',
+      () async {
+        final previous = File('${root.path}/opt/opencode/bin/opencode')
+          ..createSync(recursive: true)
+          ..writeAsStringSync(_fakeProgram('1.18.32'));
+        await Process.run('chmod', ['755', previous.path]);
+        Directory('${root.path}/usr/local/bin').createSync(recursive: true);
+        final link = Link('${root.path}/usr/local/bin/opencode')
+          ..createSync(previous.path);
+        final sha = archive(
+          'activation.tgz',
+          'opencode',
+          _fakeProgram('1.18.32', activeFails: true),
+        );
+        final pin = asset('activation.tgz', sha, 'opencode');
+        final result = await install(TermuxRuntime.openCode1, (
+          arm64: pin,
+          x64: pin,
+        ));
+        expect(result.exitCode, isNot(0));
+        expect(
+          lastLine(result),
+          '[oc] OpenCode could not finish updating. Run setup again.',
+        );
+        expect(previous.readAsStringSync(), _fakeProgram('1.18.32'));
+        expect(link.targetSync(), previous.path);
+        expect((await check(TermuxRuntime.openCode1)).exitCode, 0);
+        expect(
+          File('${root.path}/opt/opencode.oc-pending').existsSync(),
+          isFalse,
+        );
+        expect(File('${link.path}.oc-pending').existsSync(), isFalse);
+      },
+      skip: skip,
+    );
 
     test('an archive without the program, a program that does not run and '
         'one that does not start each end with their own reason and keep '
