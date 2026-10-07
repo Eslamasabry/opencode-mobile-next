@@ -229,6 +229,7 @@ void main() {
           await _pump(tester);
           expect(allow.hitTestable(), findsOneWidget);
           await tester.tap(allow);
+          await tester.pump(const Duration(seconds: 3));
           await _pump(tester);
           expect(
             _demoController(
@@ -305,6 +306,7 @@ void main() {
                 .widgetWithText(KitButton, allow ? 'Allow once' : 'Reject')
                 .hitTestable(),
           );
+          await tester.pump(const Duration(seconds: 3));
           await _pump(tester);
           expect(
             controller.permissionsForSession(DemoGateway.sessionID),

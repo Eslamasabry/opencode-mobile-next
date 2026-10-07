@@ -5185,5 +5185,8 @@
   "agentsInstallHint": "تثبيت",
   "agentsActionFailed": "لم ينجح ذلك على هذا الهاتف. افتح التفاصيل لمعرفة السبب.",
   "chatsHomeOtherFolders": "مجلدات أخرى",
-  "agentsSignInPaste": "لصق"
+  "agentsSignInPaste": "لصق",
+  "chatRequestAnswerAllowed": "تم السماح",
+  "chatRequestAnswerRejected": "تم الرفض",
+  "chatRequestAlwaysOn": "مسموح دائمًا"
 }

@@ -78,6 +78,12 @@ EventEnvelope _permission(
   },
 );
 
+/// An answer waits out its undo window before it is sent.
+Future<void> _afterHold(WidgetTester tester) async {
+  await tester.pump(const Duration(seconds: 3));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -116,10 +122,107 @@ void main() {
     expect(find.textContaining('1 more request is waiting'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('permission-card-allow')));
-    await tester.pumpAndSettle();
+    await _afterHold(tester);
 
     expect(api.replies, [(requestID: 'request-1', reply: 'once')]);
     expect(find.text('Edit a file'), findsOneWidget);
+  });
+
+  group('undo window', () {
+    Future<(_FakeOpenCodeApi, ConnectionController)> setUpChat(
+      WidgetTester tester,
+    ) async {
+      final api = _FakeOpenCodeApi();
+      final controller = await _controller(api);
+      controller.handleEventForTesting(_permission('request-1', 'bash', 'ls'));
+      await pumpChat(tester, controller);
+      return (api, controller);
+    }
+
+    testWidgets('Allow once is held for 3 s with Undo, then sent', (
+      tester,
+    ) async {
+      final (api, _) = await setUpChat(tester);
+
+      await tester.tap(find.byKey(const Key('permission-card-allow')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(api.replies, isEmpty);
+      expect(
+        find.textContaining('Allowed', findRichText: true),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('permission-card-undo')), findsOneWidget);
+      expect(find.byKey(const Key('permission-card-allow')), findsNothing);
+
+      await tester.pump(const Duration(milliseconds: 2400));
+      expect(api.replies, isEmpty);
+
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+      expect(api.replies, [(requestID: 'request-1', reply: 'once')]);
+    });
+
+    testWidgets('Reject says Rejected while held', (tester) async {
+      final (api, _) = await setUpChat(tester);
+
+      await tester.tap(find.byKey(const Key('permission-card-reject')));
+      await tester.pump();
+      expect(
+        find.textContaining('Rejected', findRichText: true),
+        findsOneWidget,
+      );
+      expect(api.replies, isEmpty);
+      await _afterHold(tester);
+      expect(api.replies, [(requestID: 'request-1', reply: 'reject')]);
+    });
+
+    testWidgets('Undo within the window sends nothing and brings the card '
+        'back', (tester) async {
+      final (api, controller) = await setUpChat(tester);
+
+      await tester.tap(find.byKey(const Key('permission-card-allow')));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.tap(find.byKey(const Key('permission-card-undo')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('permission-card-allow')), findsOneWidget);
+      expect(find.byKey(const Key('permission-card-undo')), findsNothing);
+      await tester.pump(const Duration(seconds: 5));
+      expect(api.replies, isEmpty);
+      expect(controller.permissions, contains('request-1'));
+    });
+
+    testWidgets('leaving the chat sends the held answer at once', (
+      tester,
+    ) async {
+      final (api, _) = await setUpChat(tester);
+
+      await tester.tap(find.byKey(const Key('permission-card-allow')));
+      await tester.pump();
+      expect(api.replies, isEmpty);
+
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      await tester.pump();
+      expect(api.replies, [(requestID: 'request-1', reply: 'once')]);
+    });
+
+    testWidgets('answered elsewhere while held drops the held answer', (
+      tester,
+    ) async {
+      final (api, controller) = await setUpChat(tester);
+
+      await tester.tap(find.byKey(const Key('permission-card-allow')));
+      await tester.pump();
+      controller.handleEventForTesting(
+        EventEnvelope(
+          type: 'permission.replied',
+          properties: const {'requestID': 'request-1', 'reply': 'once'},
+        ),
+      );
+      await _afterHold(tester);
+      expect(api.replies, isEmpty);
+    });
   });
 
   testWidgets('Always allow states its scope in the sheet before it sends', (
@@ -151,7 +254,7 @@ void main() {
     await tester.ensureVisible(find.text('Turn on'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Turn on'));
-    await tester.pumpAndSettle();
+    await _afterHold(tester);
     expect(api.replies, [(requestID: 'request-1', reply: 'always')]);
   });
 
@@ -166,7 +269,7 @@ void main() {
     await pumpChat(tester, controller);
 
     await tester.tap(find.byKey(const Key('permission-card-allow')));
-    await tester.pumpAndSettle();
+    await _afterHold(tester);
 
     expect(find.textContaining('Not accepted'), findsOneWidget);
     // The refusal in plain words; the server's prose is Details only
@@ -230,7 +333,7 @@ void main() {
       await pumpChat(tester, controller);
 
       await tester.tap(find.byKey(const Key('permission-card-allow')));
-      await tester.pumpAndSettle();
+      await _afterHold(tester);
 
       expect(controller.permissions.keys, ['request-2']);
       expect(find.text('Run a shell command'), findsNothing);
@@ -281,7 +384,7 @@ void main() {
     await tester.ensureVisible(allow);
     await tester.pumpAndSettle();
     await tester.tap(allow);
-    await tester.pumpAndSettle();
+    await _afterHold(tester);
     expect(api.replies, [(requestID: 'request-1', reply: 'once')]);
   });
 
