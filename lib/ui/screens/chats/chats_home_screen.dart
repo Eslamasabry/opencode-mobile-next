@@ -497,11 +497,10 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
                 children: [
                   row,
                   Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(
-                      tokens.gutter,
-                      0,
-                      tokens.gutter,
-                      tokens.space3,
+                    padding: EdgeInsetsDirectional.only(
+                      start: tokens.gutter,
+                      end: tokens.gutter,
+                      bottom: tokens.space3,
                     ),
                     child: request,
                   ),

@@ -59,6 +59,7 @@ final class KitRequestDecide extends KitRequestAnswers {
     this.allowKey,
     this.rejectKey,
     this.alwaysAllow,
+    this.secondary = false,
   }) : assert(
          (onAllow != null && onReject != null) || disabledReason != null,
          'KitRequestDecide: a missing callback needs its disabledReason '
@@ -67,6 +68,10 @@ final class KitRequestDecide extends KitRequestAnswers {
 
   final VoidCallback? onAllow;
   final VoidCallback? onReject;
+
+  /// Allow drawn as a secondary button: for a card among others in a list,
+  /// where the screen keeps its own one primary (LAY-12).
+  final bool secondary;
 
   /// A verb (COPY-8): "Run once". Default by kind: permission "Allow once",
   /// gate "Approve".
@@ -1055,7 +1060,8 @@ class _KitRequestCardState extends State<KitRequestCard> {
         (gate ? l10n.kitRequestSendBack : l10n.kitRequestReject);
     final onAllow = answers.onAllow;
     final onReject = answers.onReject;
-    final allow = KitButton.primary(
+    final allow = KitButton(
+      role: answers.secondary ? KitButtonRole.secondary : KitButtonRole.primary,
       key: answers.allowKey,
       label: allowLabel,
       shortcut: 'A',

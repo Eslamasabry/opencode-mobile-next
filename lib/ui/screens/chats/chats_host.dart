@@ -156,6 +156,7 @@ class ConnectionChatsHost implements ChatsHost {
         return permissionRequestCard(
           context,
           key: ValueKey('chats-request-${permission.id}'),
+          inList: true,
           permission: permission,
           who: item.agentLabel ?? 'OpenCode',
           answered: answers.answerFor(permission.id),

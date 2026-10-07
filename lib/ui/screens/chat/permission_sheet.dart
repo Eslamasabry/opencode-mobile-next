@@ -242,6 +242,7 @@ KitRequestCard permissionRequestCard(
   DateTime? since,
   Key? key,
   Key? detailsKey,
+  bool inList = false,
 }) {
   final l10n = _l10n(context);
   final title = permissionRequestTitle(permission.permission, l10n: l10n);
@@ -292,6 +293,8 @@ KitRequestCard permissionRequestCard(
       allowKey: const Key('permission-card-allow'),
       rejectKey: const Key('permission-card-reject'),
       alwaysAllow: alwaysAllow,
+      // Among other rows, the screen keeps its own one primary.
+      secondary: inList,
     ),
     onDetails: onDetails,
     detailsKey: detailsKey,
