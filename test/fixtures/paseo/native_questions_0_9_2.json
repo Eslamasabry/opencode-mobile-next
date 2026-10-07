@@ -1,0 +1,22 @@
+{
+  "claude": {
+    "id": "permission-question", "provider": "claude", "name": "AskUserQuestion", "kind": "question",
+    "input": {"questions": [
+      {"header": "Stack", "question": "Which stack should I use?", "options": [{"label": "Dart", "description": "Shared language"}, {"label": "Kotlin", "description": "Native"}], "multiSelect": false, "allowOther": true},
+      {"header": "Features", "question": "Which features do you need?", "options": [{"label": "Search"}, {"label": "History"}], "multiSelect": true, "allowOther": true}
+    ]}, "metadata": {"toolUseId": "tool-question"}
+  },
+  "pi": {
+    "id": "ui-question", "provider": "pi", "name": "Pi ask_user", "kind": "question", "title": "Which stack?",
+    "input": {"questions": [
+      {"question": "Which stack?", "header": "Response", "options": [{"label": "Dart"}, {"label": "Kotlin"}], "multiSelect": false, "allowOther": true},
+      {"question": "Optional comment", "header": "Comment", "options": [], "multiSelect": false, "placeholder": "Optional comment (press Enter to skip)...", "allowEmpty": true}
+    ]}, "metadata": {"extensionUiMethod": "select", "answerHeader": "Response", "commentHeader": "Comment", "combinedAskUser": "ask_user_select_optional_comment", "selectOptions": ["Dart", "Kotlin"], "freeformSentinel": "✏️ Type custom response..."}
+  },
+  "plan": {
+    "id": "permission-plan", "provider": "claude", "name": "ExitPlanMode", "kind": "plan",
+    "input": {"plan": "# Plan\n\n1. Inspect the parser.\n2. Add focused tests.\n3. Implement and verify."},
+    "metadata": {"planText": "# Plan\n\n1. Inspect the parser.\n2. Add focused tests.\n3. Implement and verify.", "toolUseId": "tool-plan"},
+    "actions": [{"id": "reject", "label": "Reject", "behavior": "deny"}, {"id": "implement", "label": "Implement", "behavior": "allow"}, {"id": "implement_resume", "label": "Implement without asking", "behavior": "allow"}]
+  }
+}

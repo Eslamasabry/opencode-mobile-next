@@ -24,6 +24,7 @@ part 'gateway/capabilities.dart';
 part 'gateway/sessions.dart';
 part 'gateway/prompts.dart';
 part 'gateway/permissions.dart';
+part 'gateway/questions.dart';
 part 'gateway/providers.dart';
 part 'gateway/events.dart';
 part 'gateway/lifecycle.dart';
@@ -64,6 +65,14 @@ class PaseoGateway
   final _turnActive = <String>{};
   final _watching = <String>{};
   final _permissions = <String, _PaseoPermission>{};
+  final _questions = <String, _PaseoQuestion>{};
+  final _nativeQuestionChanges = StreamController<void>.broadcast();
+
+  /// Local attention changes; subscribing never changes transport ownership.
+  Stream<void> get nativeQuestionChanges => _nativeQuestionChanges.stream;
+  bool hasNativeQuestion(String sessionID) => _questions.values.any(
+    (pending) => pending.question.sessionID == sessionID,
+  );
 
   /// Claude Code's sub-agents, each a read-only child session (see
   /// gateway/subagents.dart), by session id.
@@ -129,6 +138,9 @@ class PaseoGateway
       _liveAgentSessions.clear();
       _providerEntries = null;
       _providerRevision++;
+      for (final id in _questions.keys.toList()) {
+        _resolveQuestion(id);
+      }
       for (final id in _permissions.keys.toList()) {
         _resolvePermission(id);
       }
@@ -187,6 +199,8 @@ class PaseoGateway
     _awaitingTurn.clear();
     _turnActive.clear();
     _permissions.clear();
+    _questions.clear();
+    _nativeQuestionChanges.add(null);
     _live.clear();
     _realIDs.clear();
     _appIDs.clear();
@@ -1113,7 +1127,17 @@ class PaseoGateway
   @override
   Future<List<PendingQuestion>> listQuestions() async => const [];
   @override
-  Future<List<Map<String, dynamic>>> pendingQuestionsV2() async => const [];
+  Future<List<Map<String, dynamic>>> pendingQuestionsV2() async =>
+      _questions.values.map(_questionJson).toList();
+  @override
+  Future<void> answerQuestionV2(
+    String sessionID,
+    String requestID,
+    List<List<String>> answers,
+  ) => _answerQuestion(sessionID, requestID, answers);
+  @override
+  Future<void> rejectQuestionV2(String sessionID, String requestID) =>
+      _rejectQuestion(sessionID, requestID);
   @override
   Future<List<Todo>> todos(String id) async => const [];
   @override
@@ -1272,6 +1296,8 @@ class PaseoGateway
     _awaitingTurn.clear();
     _turnActive.clear();
     _permissions.clear();
+    _questions.clear();
+    _nativeQuestionChanges.add(null);
     _live.clear();
     _realIDs.clear();
     _appIDs.clear();
@@ -1281,5 +1307,6 @@ class PaseoGateway
     unawaited(transport.close());
     unawaited(_events.close());
     unawaited(_streamStates.close());
+    unawaited(_nativeQuestionChanges.close());
   }
 }

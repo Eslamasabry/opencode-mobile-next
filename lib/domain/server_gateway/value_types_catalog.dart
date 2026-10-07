@@ -287,6 +287,10 @@ class QuestionPrompt {
   final String question;
   final bool multiple;
   final bool custom;
+
+  /// The native agent permits an empty answer for this prompt.
+  /// Existing OpenCode questions remain required by default.
+  final bool optional;
   final List<QuestionChoice> choices;
 
   const QuestionPrompt({
@@ -294,6 +298,7 @@ class QuestionPrompt {
     required this.question,
     required this.multiple,
     required this.custom,
+    this.optional = false,
     required this.choices,
   });
 }
@@ -323,6 +328,7 @@ class PendingQuestion {
                 question: (value['question'] ?? '').toString(),
                 multiple: value['multiple'] == true,
                 custom: value['custom'] != false,
+                optional: value['optional'] == true,
                 choices: options is List
                     ? options.whereType<Map>().map((option) {
                         final choice = Map<String, dynamic>.from(option);

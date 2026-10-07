@@ -19,6 +19,10 @@ class _PaseoPermission {
 
 extension _PaseoPermissions on PaseoGateway {
   void _addPermission(String agentID, Map<String, dynamic> request) {
+    if (request['kind'] == 'question' || request['kind'] == 'plan') {
+      _addQuestion(agentID, request);
+      return;
+    }
     final hostRequest = paseoHostPermission(
       agentID,
       request,
@@ -35,7 +39,8 @@ extension _PaseoPermissions on PaseoGateway {
             'detail': request['detail'],
             'description': 'The agent needs your permission.',
           });
-    if (_permissions.containsKey(permission.id) ||
+    if (_questions.containsKey(permission.id) ||
+        _permissions.containsKey(permission.id) ||
         _answered.contains(permission.id)) {
       return;
     }
@@ -126,6 +131,7 @@ extension _PaseoPermissions on PaseoGateway {
   }
 
   void _resolvePermission(String requestID) {
+    _resolveQuestion(requestID);
     final removed = _permissions.remove(requestID);
     if (removed == null) return;
     _emit('permission.replied', {
@@ -158,6 +164,15 @@ extension _PaseoPermissions on PaseoGateway {
         .map((entry) => entry.key)
         .toList();
     resolved.forEach(_resolvePermission);
+    final resolvedQuestions = _questions.entries
+        .where(
+          (entry) =>
+              entry.value.question.sessionID == agentID &&
+              !current.contains(entry.key),
+        )
+        .map((entry) => entry.key)
+        .toList();
+    resolvedQuestions.forEach(_resolveQuestion);
   }
 
   void _checkPermissionEpoch(_PaseoPermission pending) {

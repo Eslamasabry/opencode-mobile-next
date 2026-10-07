@@ -56,6 +56,11 @@ extension _PaseoSessions on PaseoGateway {
     _turnActive.remove(id);
     _live.remove(id);
     _permissions.removeWhere((_, value) => value.permission.sessionID == id);
+    final questionIDs = _questions.values
+        .where((value) => value.question.sessionID == id)
+        .map((value) => value.question.id)
+        .toList();
+    questionIDs.forEach(_resolveQuestion);
     final realID = _realIDs.remove(id);
     if (realID != null) _appIDs.remove(realID);
   }

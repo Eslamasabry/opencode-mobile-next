@@ -58,6 +58,7 @@ String _questionContents(PendingQuestion value) => jsonEncode([
       prompt.question,
       prompt.multiple,
       prompt.custom,
+      prompt.optional,
       for (final choice in prompt.choices) [choice.label, choice.description],
     ],
 ]);
