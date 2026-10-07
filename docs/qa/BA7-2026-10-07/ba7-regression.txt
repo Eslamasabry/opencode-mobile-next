@@ -1,0 +1,84 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: BA7 silent turn diagnoses modelSlow within sixty seconds
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: TurnStallKind:<TurnStallKind.modelSlow>
+  Actual: <null>
+
+When the exception was thrown, this was the stack:
+#4      _turnStallControllerTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_stall_tests.dart:39:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_stall_tests.dart line 39
+The test description was:
+  BA7 silent turn diagnoses modelSlow within sixty seconds
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: BA7 silent turn diagnoses modelSlow within sixty seconds [E]
+  Test failed. See exception logs above.
+  The test description was: BA7 silent turn diagnoses modelSlow within sixty seconds
+
+00:00 +0 -1: BA7 silent turn diagnoses helperDown within sixty seconds
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: TurnStallKind:<TurnStallKind.helperDown>
+  Actual: <null>
+
+When the exception was thrown, this was the stack:
+#4      _turnStallControllerTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_stall_tests.dart:39:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_stall_tests.dart line 39
+The test description was:
+  BA7 silent turn diagnoses helperDown within sixty seconds
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -2: BA7 silent turn diagnoses helperDown within sixty seconds [E]
+  Test failed. See exception logs above.
+  The test description was: BA7 silent turn diagnoses helperDown within sixty seconds
+
+00:00 +0 -2: BA7 silent turn diagnoses network within sixty seconds
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: TurnStallKind:<TurnStallKind.network>
+  Actual: <null>
+
+When the exception was thrown, this was the stack:
+#4      _turnStallControllerTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_stall_tests.dart:39:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_stall_tests.dart line 39
+The test description was:
+  BA7 silent turn diagnoses network within sixty seconds
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -3: BA7 silent turn diagnoses network within sixty seconds [E]
+  Test failed. See exception logs above.
+  The test description was: BA7 silent turn diagnoses network within sixty seconds
+
+00:00 +0 -3: (tearDownAll)
+00:00 +0 -3: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 silent turn diagnoses helperDown within sixty seconds
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 silent turn diagnoses modelSlow within sixty seconds
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 silent turn diagnoses network within sixty seconds

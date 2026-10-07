@@ -20,6 +20,7 @@ import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/domain/agent_auth_probe.dart';
+import 'package:opencode_mobile/domain/turn_stall.dart';
 import 'package:opencode_mobile/domain/genui/gen_ui.dart';
 import 'package:opencode_mobile/domain/genui/gen_ui_history.dart';
 import 'package:opencode_mobile/builtin/agents/gen_ui_install.dart';
@@ -49,6 +50,7 @@ part 'support/phone_agents_list_question_tests.dart';
 part 'support/phone_agents_list_permission_tests.dart';
 part 'support/phone_agents_reopen_tests.dart';
 part 'support/phone_agents_photo_card_tests.dart';
+part 'support/phone_agents_stall_tests.dart';
 
 const _project = '/root/projects/app';
 const _stamp = '2026-10-03T08:00:00Z';
@@ -660,6 +662,7 @@ void main() {
   _listPermissionTests();
   _reopenAgentTests();
   _photoCardAliasTests();
+  _turnStallControllerTests();
 
   const dir = _project;
 
