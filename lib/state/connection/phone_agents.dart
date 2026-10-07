@@ -882,6 +882,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     final existing = _paSources[directory];
     if (existing != null) return existing.source;
     final gateway = await host.openGateway(directory);
+    _paWireBrowserGateway(gateway, directory);
     final folder = directory.split('/').where((p) => p.isNotEmpty).last;
     final source = _self._genUiPhoneFeed(gateway, directory, folder);
     _paSources[directory] = (gateway: gateway, source: source);
@@ -892,6 +893,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     _self._genUiDropPhone(directory);
     final entry = _paSources.remove(directory);
     if (entry == null) return;
+    await entry.gateway.revokeBrowserClaudeLaunches();
     await entry.source.dispose();
     entry.gateway.close();
   }
@@ -1369,11 +1371,26 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     required bool newChatAcknowledged,
   }) => _paStartNewChatReplacing(old, newChatAcknowledged: newChatAcknowledged);
 
+  void _paWireBrowserGateway(PaseoGateway gateway, String directory) {
+    final owner = _paProfile?.id;
+    if (owner == null) return;
+    gateway.configureBrowserClaudeLaunch(
+      registry: _self._browserLaunches,
+      profileId: owner,
+      sourceId: _paseoSourceId(directory),
+      sourceIdForDirectory: _paseoSourceId,
+    );
+  }
+
   // ---- closing ------------------------------------------------------------
 
   /// Closes everything this profile's phone agents own, in the order the
   /// deletion contract requires: auth, owned setup, host, then feeds.
   Future<void> _paCloseAll({required bool stopHost}) async {
+    final owner = _paHostProfile ?? _paProfile?.id;
+    if (owner != null) {
+      await _self._browserLaunches.revokeProfile(profileId: owner);
+    }
     _paDisposeBackend();
     for (final entry in _paSignIns.entries.toList()) {
       await _paSignInSubs.remove(entry.key)?.cancel();
@@ -1441,6 +1458,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// Controller disposal: stop listening; the host keeps running for the
   /// Android service owner.
   void _paShutdown() {
+    final owner = _paHostProfile ?? _paProfile?.id;
+    if (owner != null) {
+      unawaited(_self._browserLaunches.revokeProfile(profileId: owner));
+    }
+    if (_self._ownsBrowserLaunches) unawaited(_self._browserLaunches.close());
     _paDisposeBackend();
     _paHoldTimer?.cancel();
     _paHoldTimer = null;

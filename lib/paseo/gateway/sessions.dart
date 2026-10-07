@@ -26,6 +26,7 @@ extension _PaseoSessions on PaseoGateway {
     _sessions[session.id] = session;
     final status = agent['status'];
     if (status == 'error' || status == 'closed') {
+      unawaited(_revokeBrowserSession(session.id));
       _liveAgentSessions.remove(session.id);
       _awaitingTurn.remove(session.id);
       _turnActive.remove(session.id);
@@ -44,6 +45,9 @@ extension _PaseoSessions on PaseoGateway {
   }
 
   void _forget(String id) {
+    unawaited(setBrowserRequestedForSession(id, requested: false));
+    _browserRequested.remove(id);
+    _browserRequested.remove(_real(id));
     _agents.remove(id);
     _sessions.remove(id);
     _statuses.remove(id);

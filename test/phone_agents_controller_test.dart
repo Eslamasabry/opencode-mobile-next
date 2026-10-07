@@ -19,6 +19,7 @@ import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
+import 'package:opencode_mobile/domain/agent_tools/browser_claude_launch.dart';
 import 'package:opencode_mobile/domain/agent_auth_probe.dart';
 import 'package:opencode_mobile/domain/turn_stall.dart';
 import 'package:opencode_mobile/domain/genui/gen_ui.dart';
@@ -224,6 +225,39 @@ GlobalSessionResult _ocRow(String id, String directory, {int updated = 5}) =>
 
 class _Events {
   final log = <String>[];
+}
+
+class _BrowserPort implements BrowserClaudeLaunchPort {
+  List<String> log = [];
+  final targets = <BrowserEnrollmentTarget>[];
+  @override
+  Future<BrowserLaunchReservation?> beforeBrowserClaudeLaunch({
+    required String profileId,
+    required String sourceId,
+    required String sessionId,
+    required String daemonAgentId,
+  }) async {
+    log.add('browser.reserve');
+    final target = BrowserEnrollmentTarget(
+      profileId: profileId,
+      sourceId: sourceId,
+      sessionId: sessionId,
+      daemonAgentId: daemonAgentId,
+    );
+    targets.add(target);
+    return BrowserLaunchReservation(
+      id: 'grant-${targets.length}',
+      launchId: targets.length.toRadixString(16).padLeft(32, '0'),
+      target: target,
+    );
+  }
+
+  @override
+  Future<void> revokeBrowserClaudeLaunch(
+    BrowserLaunchReservation reservation,
+  ) async {
+    log.add('browser.revoke');
+  }
 }
 
 class _HostState {
@@ -583,6 +617,7 @@ Future<_World> _world(
   Map<String, Object> prefsExtra = const {},
   FlutterSecureStorage? secure,
   GenUiInstaller? genUiInstaller,
+  BrowserClaudeLaunchRegistry? browserClaudeLaunchRegistry,
 }) async {
   final profileJson = {
     'id': 'local',
@@ -636,6 +671,7 @@ Future<_World> _world(
     },
     agentSignInHostFactory: () => signIn,
     genUiInstaller: genUiInstaller,
+    browserClaudeLaunchRegistry: browserClaudeLaunchRegistry,
   );
   final connect = controller.connect(store.profiles.single);
   await tester?.pump();
@@ -690,6 +726,51 @@ void main() {
     await w.controller.refreshChatFeed();
     return w;
   }
+
+  test(
+    'BA9 uses host owner scope and revokes before native host stop',
+    () async {
+      final port = _BrowserPort();
+      final registry = BrowserClaudeLaunchRegistry(port: port);
+      final w = await _world(null, browserClaudeLaunchRegistry: registry);
+      addTearDown(w.controller.dispose);
+      addTearDown(registry.close);
+      port.log = w.events.log;
+      w.state.runtimes = {'claude': _ready('claude')};
+      w.state.agents = [_agent('browser-chat', dir)];
+      w.state.configureSocket = (socket) {
+        socket.handlers['set_agent_model_request'] = (_) =>
+            ('set_agent_model_response', {});
+      };
+      await w.controller.rememberLastUsedProject(dir);
+      await w.controller.refreshAgentRows();
+      await w.controller.refreshChatFeed();
+      final row = w.controller.chatFeed().items.singleWhere(
+        (row) =>
+            row.sourceId == 'paseo:$dir' && row.sessionID == 'browser-chat',
+      );
+      final route = await w.controller.openChatFeedItem(row);
+      final backend = w.controller.backendForConversation(route.sessionID)!;
+      await backend.setAgentBrowserRequestedForSession(
+        route.sessionID,
+        requested: true,
+      );
+      await (backend.api as PaseoGateway).setSessionModel(
+        route.sessionID,
+        ModelRef(providerID: 'claude', modelID: 'opus'),
+        '',
+      );
+      expect(port.targets.single.profileId, 'local');
+      expect(port.targets.single.sourceId, 'paseo:$dir');
+      expect(port.targets.single.sessionId, 'browser-chat');
+      await w.controller.closePhoneAgentsForSignInReset();
+      expect(w.events.log.indexOf('browser.revoke'), greaterThanOrEqualTo(0));
+      expect(
+        w.events.log.indexOf('browser.revoke'),
+        lessThan(w.events.log.indexOf('host.stop')),
+      );
+    },
+  );
 
   test('BA4 does not infer Claude resume from its provider name', () async {
     final w = await ready(null);

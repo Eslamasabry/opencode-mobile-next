@@ -16,6 +16,7 @@ import 'package:crypto/crypto.dart' as crypto;
 import '../api/models.dart';
 import '../api/gen_ui_history_http.dart';
 import '../domain/agent_tools/agent_tool_adapter.dart';
+import '../domain/agent_tools/browser_claude_launch.dart';
 import '../domain/genui/gen_ui_history.dart';
 import '../domain/server_gateway.dart';
 import 'mappers.dart';
@@ -26,6 +27,7 @@ import '../diagnostics/perf_trace.dart';
 part 'gateway/capabilities.dart';
 part 'gateway/sessions.dart';
 part 'gateway/prompts.dart';
+part 'gateway/browser_launch.dart';
 part 'gateway/permissions.dart';
 part 'gateway/questions.dart';
 part 'gateway/providers.dart';
@@ -44,6 +46,65 @@ class PaseoGateway
         GenUiHistoryGateway,
         CorrelatedPromptGateway {
   final PaseoTransport transport;
+  BrowserClaudeLaunchRegistry? _browserLaunches;
+  String? _browserProfileId, _browserSourceId;
+  String Function(String directory)? _browserSourceForDirectory;
+  final _browserRequested = <String>{};
+  final _browserRevisions = <String, int>{};
+
+  /// Installed by the trusted phone host owner; remote gateways have no scope.
+  void configureBrowserClaudeLaunch({
+    required BrowserClaudeLaunchRegistry registry,
+    required String profileId,
+    required String sourceId,
+    String Function(String directory)? sourceIdForDirectory,
+  }) {
+    if (_browserLaunches != null) {
+      throw StateError('Browser launch scope is already configured.');
+    }
+    _browserLaunches = registry;
+    _browserProfileId = profileId;
+    _browserSourceId = sourceId;
+    _browserSourceForDirectory = sourceIdForDirectory;
+  }
+
+  /// Explicit transient choice for this conversation. The default is off.
+  /// Null enrollment never silently sends a browser-requested message.
+  Future<void> setBrowserRequestedForSession(
+    String sessionID, {
+    required bool requested,
+  }) async {
+    if (_closed) throw _browserUnavailable;
+    sessionID = _app(paseoString(sessionID, max: 256));
+    if (requested) {
+      _requireBrowserScope();
+      if (!_browserLaunches!.setRequested(
+        profileId: _browserProfileId!,
+        sourceId: _browserSourceId!,
+        sessionId: _real(sessionID),
+        requested: true,
+      )) {
+        throw _browserUnavailable;
+      }
+      _browserRequested.add(sessionID);
+    } else {
+      _browserRequested.remove(sessionID);
+      _browserRequested.remove(_real(sessionID));
+      if (_browserProfileId != null && _browserSourceId != null) {
+        _browserLaunches?.setRequested(
+          profileId: _browserProfileId!,
+          sourceId: _browserSourceId!,
+          sessionId: _real(sessionID),
+          requested: false,
+        );
+      }
+      await _revokeBrowserSession(sessionID);
+    }
+  }
+
+  /// Awaited by the captured source owner before source/profile deletion.
+  Future<void> revokeBrowserClaudeLaunches() => _revokeBrowserSource();
+
   String? _directory;
   bool _closed = false;
   final _agents = <String, Map<String, dynamic>>{};
@@ -209,6 +270,7 @@ class PaseoGateway
        _directory = directory {
     _daemonEvents = transport.events.listen(_onEvent);
     _daemonDisconnects = transport.disconnects.listen((_) {
+      unawaited(_revokeBrowserSource(clearRequests: false));
       _liveAgentSessions.clear();
       _providerEntries = null;
       _providerRevision++;
@@ -259,6 +321,12 @@ class PaseoGateway
       throw PaseoFailure(PaseoFailureKind.unavailable);
     }
     if (_directory == directory) return;
+    unawaited(_revokeBrowserSource(clearRequests: false));
+    _browserRequested.clear();
+    _browserRevisions.clear();
+    if (directory != null && _browserSourceForDirectory != null) {
+      _browserSourceId = _browserSourceForDirectory!(directory);
+    }
     _directory = directory;
     _locationEpoch++;
     _providerRevision++;
@@ -474,10 +542,13 @@ class PaseoGateway
     if (agent == null || model.providerID != agent['provider']) {
       throw PaseoFailure(PaseoFailureKind.unavailable);
     }
-    await transport.request('set_agent_model_request', {
-      'agentId': _real(sessionID),
-      'modelId': model.modelID,
-    }, mutation: true);
+    final reservation = await _beforeBrowserLaunch(sessionID);
+    await transport.request(
+      'set_agent_model_request',
+      {'agentId': _real(sessionID), 'modelId': model.modelID},
+      mutation: true,
+      beforeSend: () => _checkBrowserLaunch(sessionID, reservation),
+    );
     agent['model'] = model.modelID;
     _remember(agent);
   }
@@ -489,10 +560,13 @@ class PaseoGateway
     if (!_agents.containsKey(sessionID)) await _fetchAgent(sessionID);
     final agent = _agents[sessionID];
     if (agent == null) throw PaseoFailure(PaseoFailureKind.unavailable);
-    await transport.request('set_agent_mode_request', {
-      'agentId': _real(sessionID),
-      'modeId': agentName,
-    }, mutation: true);
+    final reservation = await _beforeBrowserLaunch(sessionID);
+    await transport.request(
+      'set_agent_mode_request',
+      {'agentId': _real(sessionID), 'modeId': agentName},
+      mutation: true,
+      beforeSend: () => _checkBrowserLaunch(sessionID, reservation),
+    );
     agent['currentModeId'] = agentName;
     _remember(agent);
   }
@@ -527,6 +601,7 @@ class PaseoGateway
   @override
   Future<void> deleteSession(String id) async {
     if (_isSubagent(id)) throw _PaseoSubagents._readOnly;
+    await _revokeBrowserSession(id);
     if (!_drafts.contains(id)) {
       if (!_sessions.containsKey(id)) await _fetchAgent(id);
       await transport.request('archive_agent_request', {
@@ -769,6 +844,7 @@ class PaseoGateway
           mode: agent,
           variant: variant,
           images: images,
+          beforeSend: beforeSend,
         );
       } else {
         if (!_agents.containsKey(sessionID)) await _fetchAgent(sessionID);
@@ -788,6 +864,8 @@ class PaseoGateway
           throw PaseoFailure(PaseoFailureKind.newChatRequired);
         }
         _checkLocation(scope, epoch);
+        final reservation = await _beforeBrowserLaunch(sessionID);
+        _checkLocation(scope, epoch);
         await _applySelection(sessionID, model: model, mode: agent);
         final realID = _real(sessionID);
         await transport.request(
@@ -805,6 +883,7 @@ class PaseoGateway
             if (_real(sessionID) != realID) {
               throw PaseoFailure(PaseoFailureKind.staleRequest);
             }
+            _checkBrowserLaunch(sessionID, reservation);
             beforeSend?.call();
           },
         );
@@ -823,6 +902,7 @@ class PaseoGateway
 
   @override
   Future<void> abort(String sessionID) async {
+    await _revokeBrowserSession(sessionID);
     if (_drafts.contains(sessionID) || _isSubagent(sessionID)) return;
     await transport.request('cancel_agent_request', {
       'agentId': _real(paseoString(sessionID, max: 256)),
@@ -1055,6 +1135,10 @@ class PaseoGateway
         handle['provider'] != agent['provider']) {
       throw PaseoFailure(PaseoFailureKind.unavailable);
     }
+    final browserRequested = _browserRequestedFor(sessionId);
+    await _revokeBrowserSession(sessionId);
+    final browserRevision = _browserRevision(sessionId);
+    _checkLocation(scope, epoch);
     final result = await transport.request(
       'resume_agent_request',
       {'handle': handle},
@@ -1062,6 +1146,9 @@ class PaseoGateway
       timeout: const Duration(seconds: 90),
     );
     _checkLocation(scope, epoch);
+    if (browserRequested && _browserRevision(sessionId) != browserRevision) {
+      throw _browserUnavailable;
+    }
     final resumed = {...paseoObject(result['agent'])};
     // A resumed record may come back without the title it had.
     final title = resumed['title'];
@@ -1073,11 +1160,17 @@ class PaseoGateway
     // The resumed agent may be a new record: the row the person tapped
     // opens it.
     if (realID != _real(sessionId)) {
+      _moveBrowserRequest(_real(sessionId), realID);
       _realIDs[sessionId] = realID;
       _appIDs[realID] = sessionId;
     }
     if (_remember(resumed) == null) {
       throw PaseoFailure(PaseoFailureKind.scopeMismatch);
+    }
+    if (browserRequested) {
+      if (resumed['provider'] != 'claude') throw _browserUnavailable;
+      await _beforeBrowserLaunch(sessionId, requiredBrowser: true);
+      _checkLocation(scope, epoch);
     }
     _liveAgentSessions.add(sessionId);
     return realID;
@@ -1096,9 +1189,16 @@ class PaseoGateway
     final continuation = await loadHostAgentContinuation(sessionId);
     await _requireProviderAvailable(continuation.providerId);
     _checkLocation(scope, epoch);
+    final browserRequested = _browserRequestedFor(sessionId);
+    await _revokeBrowserSession(sessionId);
+    _checkLocation(scope, epoch);
     final draft = await createSession();
     _checkLocation(scope, epoch);
     seedDraftProviderForSession(draft.id, continuation.providerId);
+    if (browserRequested) {
+      _moveBrowserRequest(_real(sessionId), draft.id);
+      _browserRequested.add(draft.id);
+    }
     return draft.id;
   }
 
@@ -1230,6 +1330,8 @@ class PaseoGateway
   /// through a stored agent would load that agent's runtime first.
   @override
   Future<List<CommandInfo>> listCommands() async {
+    // Folder-wide draft discovery has no trusted conversation/daemon mapping.
+    if (_browserHasRequestedSource) return const [];
     final scope = _scope;
     final epoch = _locationEpoch;
     // The daemon lists a draft's commands only for a named model.
@@ -1244,15 +1346,35 @@ class PaseoGateway
             .firstOrNull ??
         runtime?.modelIDs.where((id) => id != paseoDefaultModel).firstOrNull;
     if (model == null) return const [];
-    final result = await transport.request('list_commands_request', {
-      'agentId': '',
-      'draftConfig': {
-        'provider': paseoDefaultProvider,
-        'cwd': scope,
-        'model': model,
+    final result = await transport.request(
+      'list_commands_request',
+      {
+        'agentId': '',
+        'draftConfig': {
+          'provider': paseoDefaultProvider,
+          'cwd': scope,
+          'model': model,
+        },
       },
-    }, timeout: const Duration(seconds: 45));
+      timeout: const Duration(seconds: 45),
+      beforeSend: () {
+        _checkLocation(scope, epoch);
+        if (_browserHasRequestedSource) {
+          throw _browserUnavailable;
+        }
+      },
+    );
     _checkLocation(scope, epoch);
+    return _browserCommandInfos(result);
+  }
+
+  /// Discovery for a mapped conversation; the folder-wide draft path is off
+  /// for browser requests because it has no daemon identity to reserve.
+  Future<List<CommandInfo>> listBrowserCommandsForSession(
+    String sessionID,
+  ) async => _listBrowserCommands(sessionID);
+
+  List<CommandInfo> _browserCommandInfos(Map<String, dynamic> result) {
     final raw = result['commands'];
     return [
       for (final command in raw is List ? raw.take(300) : const [])
@@ -1357,6 +1479,9 @@ class PaseoGateway
   @override
   void close() {
     if (_closed) return;
+    final browserCleanup = _revokeBrowserSource(clearRequests: false);
+    _browserRequested.clear();
+    _browserRevisions.clear();
     _closed = true;
     _listening = false;
     _locationEpoch++;
@@ -1383,7 +1508,7 @@ class PaseoGateway
     _heldEvents.clear();
     unawaited(_daemonEvents.cancel());
     unawaited(_daemonDisconnects.cancel());
-    unawaited(transport.close());
+    unawaited(browserCleanup.then((_) => transport.close()));
     unawaited(_events.close());
     unawaited(_streamStates.close());
     unawaited(_nativeQuestionChanges.close());
