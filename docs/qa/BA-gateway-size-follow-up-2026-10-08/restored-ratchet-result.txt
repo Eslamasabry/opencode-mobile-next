@@ -1,0 +1,4 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart
+00:00 +0: no lib file grows past its line budget
+00:00 +1: the baseline only lists files over the limit
+00:00 +2: All tests passed!

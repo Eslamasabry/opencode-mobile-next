@@ -1,0 +1,18 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart
+00:00 +0: no lib file grows past its line budget
+00:00 +0 -1: no lib file grows past its line budget [E]
+  Expected: empty
+    Actual: [
+              'lib/paseo/gateway.dart has 1517 lines (limit 1500). Split it into smaller files; do not add it to the baseline.'
+            ]
+  lib/paseo/gateway.dart has 1517 lines (limit 1500). Split it into smaller files; do not add it to the baseline.
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/file_size_ratchet_test.dart 94:5               main.<fn>
+  
+00:00 +0 -1: the baseline only lists files over the limit
+00:00 +1 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: no lib file grows past its line budget
