@@ -174,6 +174,7 @@ part 'chat/prompt_history.dart';
 part 'chat/prompt_stash.dart';
 part 'chat/composer.dart';
 part 'chat/message_view.dart';
+part 'chat/assistant_error_row.dart';
 part 'chat/session_sheets.dart';
 part 'chat/attention_card.dart';
 part 'chat/approvals_sheet.dart';

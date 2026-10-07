@@ -825,6 +825,10 @@
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): hands the transcript's tool parts to the agent-card surface and draws the card in the reply; no separate surface."
   },
   {
+   "file": "lib/ui/screens/chat/assistant_error_row.dart",
+   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): the assistant error row moved out of message_view.dart for the 800-line chat budget; its elements stay under that screen's ledger entries. No separate surface."
+  },
+  {
    "file": "lib/ui/screens/chat/chat_attachments.dart",
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
   },
@@ -885,10 +889,6 @@
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
   },
   {
-   "file": "lib/ui/screens/chat/receipt_check.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
    "file": "lib/ui/screens/chat/chat_send.dart",
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
   },
@@ -903,6 +903,10 @@
   {
    "file": "lib/ui/screens/chat/chat_start.dart",
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+  },
+  {
+   "file": "lib/ui/screens/chat/chat_states.dart",
+   "reason": "part of chat_screen.dart (design standard §9 step 5): the chat page's own loading/error states and its one status line, not a surface of their own; shown inline on the chat page."
   },
   {
    "file": "lib/ui/screens/chat/chat_status_line.dart",
@@ -929,8 +933,20 @@
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
   },
   {
+   "file": "lib/ui/screens/chat/empty_chat.dart",
+   "reason": "part of chat_screen.dart: ChatStartFacts plus the empty-conversation starters/body shown inline on the chat page before the first message, not a surface of their own."
+  },
+  {
    "file": "lib/ui/screens/chat/pending_sends_strip.dart",
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+  },
+  {
+   "file": "lib/ui/screens/chat/receipt_check.dart",
+   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+  },
+  {
+   "file": "lib/ui/screens/chat/sent_photos.dart",
+   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): turns a sent prompt's photos into thumbnails in the prompt bubble (FC4); the full view is the existing image viewer. No separate surface."
   },
   {
    "file": "lib/ui/screens/chat/team_agent_conversation.dart",
@@ -951,14 +967,6 @@
   {
    "file": "lib/ui/screens/chat/transcript_turns.dart",
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_states.dart",
-   "reason": "part of chat_screen.dart (design standard §9 step 5): the chat page's own loading/error states and its one status line, not a surface of their own; shown inline on the chat page."
-  },
-  {
-   "file": "lib/ui/screens/chat/empty_chat.dart",
-   "reason": "part of chat_screen.dart: ChatStartFacts plus the empty-conversation starters/body shown inline on the chat page before the first message, not a surface of their own."
   },
   {
    "file": "lib/ui/screens/chat/watching.dart",

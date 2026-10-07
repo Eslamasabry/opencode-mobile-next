@@ -12691,7 +12691,7 @@
   "@phoneSetupProgressLeaveHint": {
     "description": "Reassurance under the setup checklist that setup continues in the background"
   },
-  "phoneSetupProgressFirstSetupNote": "Step 1 of 3: install. Then name a project and chat. You can leave the app. We'll notify you when it's ready.",
+  "phoneSetupProgressFirstSetupNote": "Step 1 of 3: install. Then name a project and start a conversation. You can leave the app. We'll notify you when it's ready.",
   "@phoneSetupProgressFirstSetupNote": {
     "description": "Under the title while a first phone setup runs: where this screen sits in the journey (install, name a project, chat) and that leaving is fine"
   },
@@ -13273,7 +13273,7 @@
   "@phoneSetupStartPromiseNoSize": {
     "description": "The promise when no download size is known"
   },
-  "phoneSetupStartSteps": "Install, name a project, chat · {time}",
+  "phoneSetupStartSteps": "Install, name a project, start a conversation · {time}",
   "@phoneSetupStartSteps": {
     "description": "The whole first-setup journey in one line on the phone setup start screen, with the setup time computed from the components Set up installs (phoneSetupStartStepsTime)",
     "placeholders": {

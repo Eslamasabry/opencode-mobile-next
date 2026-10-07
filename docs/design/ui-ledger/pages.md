@@ -488,6 +488,7 @@ Reached from: `chat`
 | Changes | chip | navigate -> `review-workspace` | Navigator.pop(context, 'changes'); ChatScreen._openSessionMenu then calls _showDiff(): pushes ReviewWorkspace (or DiffView when isolated). | changesAvailable: _conn.capabilities.sessionDiff | 604 |
 | Subagent sessions | chip | navigate -> `session-relations` | Navigator.pop(context, 'subagents'); ChatScreen._openSessionMenu then calls _showSubagents(): pushes SessionRelationsScreen. | subagentsAvailable: _conn.capabilities.projectManagement | 618 |
 | Display and context | list-tile | other | ExpansionTile: expands the display toggles and Context usage row. |  | 628 |
+| [TranscriptDisplayToggles: reasoning expanded / timestamps visible] | toggle | toggle-setting | Embedded TranscriptDisplayToggles (lib/ui/widgets/transcript_display_toggles.dart, owned by another agent); ChatScreen handles popped values 'thinking'/'timestamps' via _runMobileCommand(_ChatCommandAction.thinking/.timestamps). |  | 631 |
 | Context usage | list-tile | navigate -> `session-context` | _SessionSheetRow (timeline_sheet.dart:15) pops 'context'; ChatScreen._openSessionMenu then calls _showContext(): pushes SessionContextScreen. |  | 636 |
 | Session actions | list-tile | other | ExpansionTile: expands the session action rows. |  | 643 |
 | Use a skill | list-tile | navigate -> `skills` | _SessionSheetRow (timeline_sheet.dart:15) pops 'skills'; ChatScreen._openSessionMenu then pushes SkillsScreen(controller, sessionID) (errors with skillLocationChanged if the location changed); on result true shows a composer note and reloads. | skillsAvailable: _conn.supportsSessionSkills | 647 |
@@ -506,7 +507,6 @@ Reached from: `chat`
 | Open on another phone | list-tile | open-sheet -> `continue-on-phone-sheet` | _SessionSheetRow (timeline_sheet.dart:15) pops 'continue-phone'; ChatScreen._openSessionMenu then calls _continueOnPhone(): shows ContinueOnPhoneSheet with the session QR / link. | continueOnPhoneAvailable: _conn.profile != null | 721 |
 | Reload messages | list-tile | other | _SessionSheetRow (timeline_sheet.dart:15) pops 'reload'; ChatScreen._openSessionMenu then calls _load(): re-fetches the transcript. |  | 726 |
 | Tasks | chip | other | Tasks now opens the latest plan in the transcript via _openPlan; there is no Tasks sheet (chat/session_sheets.dart). | todosAvailable: _conn.capabilities.sessionTodos | session_sheets.dart:28 |
-| [TranscriptDisplayToggles: reasoning expanded / timestamps visible] | toggle | toggle-setting | Embedded TranscriptDisplayToggles (lib/ui/widgets/transcript_display_toggles.dart, owned by another agent); ChatScreen handles popped values 'thinking'/'timestamps' via _runMobileCommand(_ChatCommandAction.thinking/.timestamps). |  | transcript_display_toggles.dart:631 |
 
 ### embedded-subagent-context-banner
 

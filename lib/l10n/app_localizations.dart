@@ -19611,7 +19611,7 @@ abstract class AppLocalizations {
   /// Under the title while a first phone setup runs: where this screen sits in the journey (install, name a project, chat) and that leaving is fine
   ///
   /// In en, this message translates to:
-  /// **'Step 1 of 3: install. Then name a project and chat. You can leave the app. We\'ll notify you when it\'s ready.'**
+  /// **'Step 1 of 3: install. Then name a project and start a conversation. You can leave the app. We\'ll notify you when it\'s ready.'**
   String get phoneSetupProgressFirstSetupNote;
 
   /// Title of the confirmation before cancelling phone setup
@@ -20319,7 +20319,7 @@ abstract class AppLocalizations {
   /// The whole first-setup journey in one line on the phone setup start screen, with the setup time computed from the components Set up installs (phoneSetupStartStepsTime)
   ///
   /// In en, this message translates to:
-  /// **'Install, name a project, chat · {time}'**
+  /// **'Install, name a project, start a conversation · {time}'**
   String phoneSetupStartSteps(String time);
 
   /// Estimated setup time at the end of the step line, lower case because it follows a middle dot
