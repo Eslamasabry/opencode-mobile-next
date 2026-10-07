@@ -24312,33 +24312,33 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String pickerAddKeyFor(String name) {
-    return 'Add an API key for $name';
+    return 'إضافة مفتاح API لـ$name';
   }
 
   @override
   String get pickerAddKeyNotConnectedHint =>
-      'Its models are not in this list yet';
+      'لا تظهر نماذجه في هذه القائمة بعد';
 
   @override
   String pickerSignInTo(String name) {
-    return 'Sign in to $name';
+    return 'تسجيل الدخول إلى $name';
   }
 
   @override
-  String get pickerSignInHint => 'Opens the sign-in choices for this server';
+  String get pickerSignInHint => 'يفتح خيارات تسجيل الدخول لهذا الخادم';
 
   @override
   String get pickerFreeOnlyNote =>
-      'Only OpenCode\'s free model is available — it\'s slower.';
+      'يتوفر نموذج OpenCode المجاني فقط، وهو أبطأ.';
 
   @override
   String pickerProviderReady(String name) {
-    return '$name is ready. Its models are in the list.';
+    return '$name جاهز. تظهر نماذجه في القائمة.';
   }
 
   @override
   String pickerProviderNotLoaded(String name) {
-    return '$name is saved, but the server has not loaded it yet.';
+    return 'حُفظ $name، لكن الخادم لم يحمّله بعد.';
   }
 
   @override

@@ -8275,5 +8275,12 @@
   "perfFirstWordsSplit": "{app} في التطبيق · {server} على الخادم",
   "perfDetailModel": "النموذج، آخر رد",
   "pickerConnectProvider": "توصيل مزوّد خدمة",
-  "pickerConnectProviderHint": "أضف مفتاح API أو سجّل الدخول لاستخدام نماذجه"
+  "pickerConnectProviderHint": "أضف مفتاح API أو سجّل الدخول لاستخدام نماذجه",
+  "pickerAddKeyFor": "إضافة مفتاح API لـ{name}",
+  "pickerAddKeyNotConnectedHint": "لا تظهر نماذجه في هذه القائمة بعد",
+  "pickerSignInTo": "تسجيل الدخول إلى {name}",
+  "pickerSignInHint": "يفتح خيارات تسجيل الدخول لهذا الخادم",
+  "pickerFreeOnlyNote": "يتوفر نموذج OpenCode المجاني فقط، وهو أبطأ.",
+  "pickerProviderReady": "{name} جاهز. تظهر نماذجه في القائمة.",
+  "pickerProviderNotLoaded": "حُفظ {name}، لكن الخادم لم يحمّله بعد."
 }
