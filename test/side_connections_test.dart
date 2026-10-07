@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/ui/kit/kit_request_card.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
@@ -877,6 +878,9 @@ void main() {
       'there, with Undo', (tester) async {
     final (w, _, _) = await questionRow(tester, question());
     expect(find.text('Where should this deploy?'), findsOneWidget);
+    // An OpenCode row's question names OpenCode, as its row does.
+    final card = tester.widget<KitRequestCard>(find.byType(KitRequestCard));
+    expect(card.who, 'OpenCode');
     await tester.tap(find.text('Staging'));
     await tester.pump(const Duration(seconds: 1));
     await tester.pump(const Duration(milliseconds: 300));

@@ -24,6 +24,12 @@ String _requestWho(BuildContext context, {String? agentLabel}) {
       : name;
 }
 
+/// Who asks for a list row's request: its agent, and OpenCode for an
+/// OpenCode row (as the row and its permission requests say); null outside
+/// the list.
+String? _feedAgent(ChatFeedItem? item) =>
+    item == null ? null : item.agentLabel ?? 'OpenCode';
+
 /// The chat screen's controller for a card inside it; null outside a chat
 /// (a gallery), where the card cannot answer and says why.
 ConnectionController? _requestConnection(BuildContext context) =>
@@ -349,7 +355,7 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
     return KitRequestCard.ask(
       kind: KitRequestKind.question,
       title: title,
-      who: _requestWho(context, agentLabel: widget.feedItem?.agentLabel),
+      who: _requestWho(context, agentLabel: _feedAgent(widget.feedItem)),
       reason: KitNeedsYouReason.decision,
       ifIgnored: _requestIfIgnored(context, 0),
       announcement: l10n.chatUiQuestionLabel(title),
@@ -501,7 +507,7 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
                 conn,
                 _shownQuestion!,
                 agentLabel:
-                    widget.feedItem?.agentLabel ??
+                    _feedAgent(widget.feedItem) ??
                     context
                         .findAncestorStateOfType<_ChatScreenState>()
                         ?._agentName,
@@ -531,7 +537,7 @@ Widget questionRequestCard(
   inList: inList,
   onAnswer: (_) {},
   onMore: () => unawaited(
-    showQuestionSheet(context, owner, question, agentLabel: item.agentLabel),
+    showQuestionSheet(context, owner, question, agentLabel: _feedAgent(item)),
   ),
 );
 

@@ -122,6 +122,27 @@ void main() {
     expect(find.text('Git'), findsNWidgets(2));
   });
 
+  clocked('a row with the server\'s dated placeholder title reads New '
+      'conversation', (tester) async {
+    await _pump(
+      tester,
+      FakeChatsHost(
+        FakeChatFeedSource(
+          items: [
+            chat(
+              'p',
+              'New session - 2026-10-07T12:14:30.123Z',
+              at: _now.subtract(const Duration(minutes: 1)),
+            ),
+          ],
+          projects: [project('alpha', chats: 1)],
+        ),
+      ),
+    );
+    expect(find.textContaining('New session - 2026'), findsNothing);
+    expect(find.text(KitBidi.auto('New conversation')), findsWidgets);
+  });
+
   clocked('Done tags an idle row that finished unseen; running wins', (
     tester,
   ) async {

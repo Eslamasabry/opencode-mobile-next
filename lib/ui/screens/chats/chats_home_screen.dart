@@ -9,6 +9,7 @@ import '../../../domain/relative_age.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
 import '../../kit/kit.dart';
+import '../../widgets/session_title.dart';
 import '../agents/agent_notices.dart';
 import '../agents/agents_text.dart' show agentIcon;
 import 'chats_host.dart';
@@ -577,7 +578,8 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
           host.agents?.agentResumeNotice(item).requiresAcknowledgement ?? false
           ? l10n.agentsStateCantReopen
           : null,
-      title: item.title,
+      // The server's dated placeholder reads "New conversation" (F3).
+      title: presentedSessionTitleText(item.title, l10n: l10n),
       preview: item.preview,
       tag: tag,
       time: tag == null
