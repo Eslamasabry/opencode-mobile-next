@@ -11,6 +11,7 @@ import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/domain/genui/gen_ui.dart';
+import 'package:opencode_mobile/domain/genui/gen_ui_history.dart';
 import 'package:opencode_mobile/builtin/agents/gen_ui_install.dart';
 import 'package:opencode_mobile/domain/agent_sign_in.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
@@ -28,6 +29,8 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'paseo_acp_pilot_test.dart' show FakePaseoSocket;
+
+part 'support/phone_agents_genui_tests.dart';
 
 const _project = '/root/projects/app';
 const _stamp = '2026-10-03T08:00:00Z';
@@ -191,6 +194,7 @@ class _Events {
 }
 
 class _HostState {
+  PaseoGateway Function(PaseoTransport, String)? gatewayFactory;
   Map<String, PhoneAgentRuntime> runtimes = {};
   List<Map<String, dynamic>> agents = [];
   var newAgentSeq = 0;
@@ -331,13 +335,13 @@ class _FakeHost implements PhoneAgentHostPort {
       agents = [...agents, agent];
       return ('create_agent_response', {'agent': agent});
     };
-    final gateway = PaseoGateway(
-      directory: directory,
-      transport: PaseoTransport(
-        endpoint: 'ws://127.0.0.1:4099',
-        socketFactory: (_, _) async => socket,
-      ),
+    final transport = PaseoTransport(
+      endpoint: 'ws://127.0.0.1:4099',
+      socketFactory: (_, _) async => socket,
     );
+    final gateway =
+        state.gatewayFactory?.call(transport, directory) ??
+        PaseoGateway(directory: directory, transport: transport);
     gateways.add(gateway);
     return gateway;
   }
@@ -577,6 +581,8 @@ void main() {
       (_) async => null,
     );
   });
+
+  _genUiFeedRefreshTests();
 
   const dir = _project;
 
