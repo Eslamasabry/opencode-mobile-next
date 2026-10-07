@@ -27638,7 +27638,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cardsProblemNotQualified =>
-      'This agent version hasn\'t been checked to work with cards.';
+      'Cards haven\'t been checked to work with the agents here yet.';
 
   @override
   String get cardsProblemPermissionDenied =>
@@ -27679,4 +27679,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agentCardDangerConfirm => 'Send answer';
+
+  @override
+  String get agentsSignInOpenPage => 'Open sign-in page';
+
+  @override
+  String agentsSignInCopyCode(String code) {
+    return 'Copy code $code';
+  }
+
+  @override
+  String cardsProblemNotQualifiedFor(String agents) {
+    return '$agents hasn\'t been checked to work with cards yet.';
+  }
+
+  @override
+  String cardsProblemRegistrationFailedFor(String agents) {
+    return '$agents couldn\'t be told about cards.';
+  }
+
+  @override
+  String cardsProblemVerificationFailedFor(String agents) {
+    return 'Cards were installed for $agents but didn\'t pass the check.';
+  }
+
+  @override
+  String cardsProblemRemovalFailedFor(String agents) {
+    return 'Cards couldn\'t be fully removed from $agents. Try again after a restart.';
+  }
 }

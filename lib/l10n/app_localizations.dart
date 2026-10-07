@@ -43582,7 +43582,7 @@ abstract class AppLocalizations {
   /// Cards setting reason.
   ///
   /// In en, this message translates to:
-  /// **'This agent version hasn\'t been checked to work with cards.'**
+  /// **'Cards haven\'t been checked to work with the agents here yet.'**
   String get cardsProblemNotQualified;
 
   /// Cards setting reason.
@@ -43650,6 +43650,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send answer'**
   String get agentCardDangerConfirm;
+
+  /// Sign-in terminal: opens the sign-in page the agent printed (a device sign-in or Claude's page)
+  ///
+  /// In en, this message translates to:
+  /// **'Open sign-in page'**
+  String get agentsSignInOpenPage;
+
+  /// Sign-in terminal: copies the one-time code the agent printed, to enter on its sign-in page
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code {code}'**
+  String agentsSignInCopyCode(String code);
+
+  /// Cards setting: the named agents are not qualified for cards; {agents} is one or more product names
+  ///
+  /// In en, this message translates to:
+  /// **'{agents} hasn\'t been checked to work with cards yet.'**
+  String cardsProblemNotQualifiedFor(String agents);
+
+  /// Cards setting: registering cards with the named agents failed
+  ///
+  /// In en, this message translates to:
+  /// **'{agents} couldn\'t be told about cards.'**
+  String cardsProblemRegistrationFailedFor(String agents);
+
+  /// Cards setting: cards were installed for the named agents but did not verify
+  ///
+  /// In en, this message translates to:
+  /// **'Cards were installed for {agents} but didn\'t pass the check.'**
+  String cardsProblemVerificationFailedFor(String agents);
+
+  /// Cards setting: removing cards from the named agents did not finish
+  ///
+  /// In en, this message translates to:
+  /// **'Cards couldn\'t be fully removed from {agents}. Try again after a restart.'**
+  String cardsProblemRemovalFailedFor(String agents);
 }
 
 class _AppLocalizationsDelegate
