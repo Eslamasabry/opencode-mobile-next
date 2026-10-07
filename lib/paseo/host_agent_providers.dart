@@ -13,12 +13,21 @@ bool isExistingPaseoProvider(Object? id) =>
 bool isPaseoProviderId(Object? id) =>
     id is String && RegExp(r'^[a-z][a-z0-9_-]{0,63}$').hasMatch(id);
 
-bool paseoProviderNeedsSignIn(Map<String, dynamic> entry) =>
-    entry['error'] is String &&
-    RegExp(
-      r'AuthRequired|Authentication required',
-      caseSensitive: false,
-    ).hasMatch(entry['error'] as String);
+/// A provider error that asks the person to sign in. Paseo's own code says
+/// "AuthRequired"; agent CLIs say it in their words, e.g. fx 0.0.12: "fx
+/// needs access to Vercel AI Gateway. Run fx login to sign in, fx setup to
+/// use an API key, …" (issue #95: such agents sat on "Checking sign-in…").
+bool paseoProviderNeedsSignIn(Map<String, dynamic> entry) {
+  final error = entry['error'];
+  return error is String && _signInNeeded.hasMatch(error);
+}
+
+final _signInNeeded = RegExp(
+  r'AuthRequired|Authentication required|\bnot (?:logged|signed) in\b|'
+  r'\b(?:run|use) \S+ (?:login|auth)\b|\b(?:log|sign) ?in\b|'
+  r'\bapi[ _-]?key\b|\bunauthori[sz]ed\b|\b401\b',
+  caseSensitive: false,
+);
 
 bool paseoProviderCanStart(Map<String, dynamic> entry) =>
     isPaseoProviderId(entry['provider']) &&

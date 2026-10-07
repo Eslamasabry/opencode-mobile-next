@@ -1234,6 +1234,31 @@ void main() {
     c.dispose();
   });
 
+  group('issue #95: a sign-in check always ends', () {
+    const codexInstalled = PhoneAgentRuntime(
+      agentId: 'codex',
+      installed: true,
+      hostAvailable: true,
+      architectureQualified: true,
+    );
+
+    testWidgets('a provider the helper does not list says it could not '
+        'check, on the first read', (tester) async {
+      final w = await _world(tester);
+      w.state.runtimes = {'claude': _ready('claude'), 'codex': codexInstalled};
+      w.state.providers = [_provider('claude')];
+      final c = w.controller;
+      await c.rememberLastUsedProject(dir);
+      await c.refreshAgentRows();
+      final codex = c.agentRows.firstWhere((row) => row.id == 'codex');
+      expect(codex.hiddenReason, isNot(PhoneAgentHiddenReason.runtimeUnknown));
+      expect(codex.statusMessage, contains('could not be checked'));
+      expect(codex.fixAction, PhoneAgentFixAction.signIn);
+      await tester.pump(const Duration(seconds: 6));
+      c.dispose();
+    });
+  });
+
   testWidgets('a resumed session is one row, with the title it had', (
     tester,
   ) async {

@@ -488,6 +488,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (autoResume) _paAutoResuming = true;
     _paRows = List.unmodifiable(rows);
     _paHostRunning = running;
+    _paScheduleSignInRecheck(rows);
     try {
       await _paSyncSources();
     } catch (_) {}
@@ -521,25 +522,82 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       : descriptor.capabilities;
 
   /// An agent other than Claude, as the helper reports it: ready to start is
-  /// signed in, "authentication required" is signed out; null while unknown
-  /// (no folder connected yet, or the helper still checking).
+  /// signed in, "authentication required" is signed out. Every check ends
+  /// (issue #95): a provider the helper hides or does not list is "could not
+  /// be checked", and one still unknown after [_paSignInGiveUp] (no reachable
+  /// folder, the helper still loading, a failed or slow read) becomes the
+  /// same, with Sign in as the way forward. Null only inside that window.
   Future<AgentSignInPhase?> _paProviderSignIn(String providerId) async {
-    final gateway = _paSources.values.firstOrNull?.gateway;
-    if (gateway == null) return null;
-    try {
-      final catalog = await gateway.loadHostAgentProviders();
-      final provider = catalog.providers
-          .where((entry) => entry.id == providerId)
-          .firstOrNull;
-      return switch (provider?.availability) {
-        HostAgentProviderAvailability.ready => AgentSignInPhase.signedIn,
-        HostAgentProviderAvailability.needsHostSignIn =>
-          AgentSignInPhase.signedOut,
-        _ => null,
-      };
-    } catch (_) {
-      return null;
+    var gateway = _paSources.values.firstOrNull?.gateway;
+    if (gateway == null) {
+      // No agent conversation yet: reach the helper through a project folder.
+      final directory = _paDesiredDirectories().firstOrNull ?? _self.directory;
+      if (directory != null && directory.startsWith('/root/projects/')) {
+        try {
+          gateway = (await _paReachSource(
+            directory,
+          ).timeout(_paSignInReadLimit)).gateway;
+        } catch (_) {}
+      }
     }
+    if (gateway == null) return _paSignInStillUnknown(providerId);
+    final HostAgentProviderAvailability? availability;
+    try {
+      final catalog = await gateway.loadHostAgentProviders().timeout(
+        _paSignInReadLimit,
+      );
+      availability = catalog.providers
+          .where((entry) => entry.id == providerId)
+          .firstOrNull
+          ?.availability;
+    } catch (_) {
+      return _paSignInStillUnknown(providerId);
+    }
+    if (availability == HostAgentProviderAvailability.checking) {
+      return _paSignInStillUnknown(providerId);
+    }
+    _paSignInUnknownSince.remove(providerId);
+    return switch (availability) {
+      HostAgentProviderAvailability.ready => AgentSignInPhase.signedIn,
+      HostAgentProviderAvailability.needsHostSignIn =>
+        AgentSignInPhase.signedOut,
+      _ => AgentSignInPhase.failed,
+    };
+  }
+
+  /// One read of the helper's provider list may take this long.
+  static const _paSignInReadLimit = Duration(seconds: 10);
+
+  /// After this long without an answer, a sign-in check says it could not
+  /// check instead of "Checking sign-in…" forever.
+  static const _paSignInGiveUp = Duration(seconds: 30);
+
+  /// When each provider's sign-in was first unknown, for [_paSignInGiveUp].
+  final Map<String, DateTime> _paSignInUnknownSince = {};
+
+  AgentSignInPhase? _paSignInStillUnknown(String providerId) {
+    final now = clock.now();
+    final since = _paSignInUnknownSince.putIfAbsent(providerId, () => now);
+    if (now.difference(since) < _paSignInGiveUp) return null;
+    _paSignInUnknownSince.remove(providerId);
+    return AgentSignInPhase.failed;
+  }
+
+  /// A row still "Checking sign-in…" is read again a few seconds later, so
+  /// it reaches a final state without the person reopening the sheet.
+  Timer? _paSignInRecheck;
+
+  void _paScheduleSignInRecheck(List<AgentRow> rows) {
+    final checking = rows.any(
+      (row) =>
+          row.status == PhoneAgentStatus.unavailable &&
+          row.hiddenReason == PhoneAgentHiddenReason.runtimeUnknown,
+    );
+    if (!checking || _paSignInRecheck != null || _self._disposed) return;
+    _paSignInRecheck = Timer(const Duration(seconds: 5), () {
+      _paSignInRecheck = null;
+      if (!_self._disposed) unawaited(refreshAgentRows().catchError((_) {}));
+    });
   }
 
   @override
@@ -1342,6 +1400,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     _paReadingTimer?.cancel();
     _paReadingTimer = null;
     _paSyncTimer?.cancel();
+    _paSignInRecheck?.cancel();
+    _paSignInRecheck = null;
     unawaited(_paSetupSub?.cancel());
     unawaited(_paMergedSub?.cancel());
     for (final sub in _paSignInSubs.values) {
