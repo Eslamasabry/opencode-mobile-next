@@ -40,11 +40,32 @@ Future<TurnStallEvidence> boundedTurnStallProbe({
   required Future<TurnStallEvidence> Function() probe,
   required bool transportConnected,
   Duration timeout = turnStallProbeBudget,
+  Future<void>? cancelled,
 }) async {
+  final result = Completer<TurnStallEvidence>();
+  final unknown = TurnStallEvidence(transportConnected: transportConnected);
+  void complete(TurnStallEvidence value) {
+    if (!result.isCompleted) result.complete(value);
+  }
+
+  final deadline = Timer(timeout, () => complete(unknown));
+  unawaited(
+    Future<TurnStallEvidence>.sync(
+      probe,
+    ).then(complete, onError: (Object _, StackTrace _) => complete(unknown)),
+  );
+  if (cancelled != null) {
+    unawaited(
+      cancelled.then(
+        (_) => complete(unknown),
+        onError: (Object _, StackTrace _) => complete(unknown),
+      ),
+    );
+  }
   try {
-    return await Future<TurnStallEvidence>.sync(probe).timeout(timeout);
-  } catch (_) {
-    return TurnStallEvidence(transportConnected: transportConnected);
+    return await result.future;
+  } finally {
+    deadline.cancel();
   }
 }
 

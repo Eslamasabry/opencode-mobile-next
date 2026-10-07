@@ -41,7 +41,8 @@ mixin _ConnectionControllerPhoneChat on ChangeNotifier {
   final _turnStallSessions = <String>{};
   Timer? _turnStallTimer;
   Future<TurnStallEvidence> Function()? _turnStallProbe;
-  bool _turnStallProbing = false;
+  Completer<void>? _turnStallProbeCancellation;
+  bool _turnStallTestClock = false;
   bool? _turnStallTransportConnected;
 
   TurnStallDiagnosis? turnStallFor(String sessionId) =>
@@ -55,6 +56,7 @@ mixin _ConnectionControllerPhoneChat on ChangeNotifier {
     _self._resetTurnStalls();
     _turnStalls = TurnStallTracker(elapsed: elapsed);
     _turnStallProbe = probe;
+    _turnStallTestClock = true;
   }
 
   /// The chat just put a prompt for [sessionId] on the wire.
