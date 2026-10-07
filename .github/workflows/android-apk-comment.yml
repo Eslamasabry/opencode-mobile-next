@@ -33,10 +33,13 @@ jobs:
             if (apks.length !== 1) { core.info('No unique current test APK artifact'); return; }
             const candidates = await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit,
               {...repo, commit_sha: run.head_sha, per_page: 100});
+            const recordedHeads = new Map((run.pull_requests ?? []).map(pr => [pr.number, pr.head.sha]));
             const marker = '<!-- oc-android-test-apk -->';
             for (const pr of candidates) {
-              if (pr.state !== 'open' || pr.head.sha !== run.head_sha || pr.base.repo.id !== run.repository.id) continue;
-              const body = `${marker}\nTest APK for candidate \`${run.head_sha}\`: ` +
+              const candidate = recordedHeads.get(pr.number) ?? run.head_sha;
+              if (recordedHeads.size > 0 && !recordedHeads.has(pr.number)) continue;
+              if (pr.state !== 'open' || pr.head.sha !== candidate || pr.base.repo.id !== run.repository.id) continue;
+              const body = `${marker}\nTest APK for candidate \`${candidate}\`: ` +
                 `[download artifact](${context.serverUrl}/${repo.owner}/${repo.repo}/actions/runs/${run.id}/artifacts/${apks[0].id}).\n\n` +
                 `Quality run: ${run.conclusion}. This APK is test-signed; compare its certificate with the installed app before updating. ` +
                 `It is available for 7 days and is not a Shorebird release.`;
