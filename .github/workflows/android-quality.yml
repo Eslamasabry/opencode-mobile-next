@@ -111,6 +111,9 @@ jobs:
       - name: Test optional quota collector with synthetic inputs
         run: node --test tool/quota/collector.test.mjs
 
+      - name: Test PR APK link automation with synthetic APIs
+        run: node --test tool/qa/test_apk_comment.mjs
+
       - name: Generate ignored Gradle wrapper
         run: >-
           gradle -p android wrapper

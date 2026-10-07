@@ -1,0 +1,48 @@
+# Runs trusted default-branch code, including for fork PRs. Never checks out or
+# downloads/executes PR artifacts. The Android quality build owns the APK upload.
+name: Android APK link
+on:
+  workflow_run:
+    workflows: [Android quality gate]
+    types: [completed]
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
+concurrency:
+  group: android-apk-link-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+jobs:
+  comment:
+    if: ${{ github.event.workflow_run.repository.id == github.repository_id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Link the exact test APK on associated PRs
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const repo = context.repo;
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts,
+              {...repo, run_id: run.id, per_page: 100});
+            const apks = artifacts.filter(a => !a.expired &&
+              /^opencode-mobile-ci-test-signed-[0-9a-f]{40}$/.test(a.name));
+            // A successful build can exist even if an independent quality check
+            // fails. Link its artifact, but do not describe the full gate as passed.
+            if (apks.length !== 1) { core.info('No unique current test APK artifact'); return; }
+            const candidates = await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit,
+              {...repo, commit_sha: run.head_sha, per_page: 100});
+            const marker = '<!-- oc-android-test-apk -->';
+            for (const pr of candidates) {
+              if (pr.state !== 'open' || pr.head.sha !== run.head_sha || pr.base.repo.id !== run.repository.id) continue;
+              const body = `${marker}\nTest APK for candidate \`${run.head_sha}\`: ` +
+                `[download artifact](${context.serverUrl}/${repo.owner}/${repo.repo}/actions/runs/${run.id}/artifacts/${apks[0].id}).\n\n` +
+                `Quality run: ${run.conclusion}. This APK is test-signed; compare its certificate with the installed app before updating. ` +
+                `It is available for 7 days and is not a Shorebird release.`;
+              const comments = await github.paginate(github.rest.issues.listComments,
+                {...repo, issue_number: pr.number, per_page: 100});
+              const prior = comments.find(c => c.user.login === 'github-actions[bot]' && c.body.startsWith(marker));
+              if (prior) await github.rest.issues.updateComment({...repo, comment_id: prior.id, body});
+              else await github.rest.issues.createComment({...repo, issue_number: pr.number, body});
+            }
