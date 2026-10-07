@@ -235,6 +235,7 @@ class _HostState {
   PaseoGateway Function(PaseoTransport, String)? gatewayFactory;
   void Function(FakePaseoSocket)? configureSocket;
   bool freshPrivateSockets = false;
+  final inspectedCapabilities = <String, AgentCapabilities>{};
   Map<String, PhoneAgentRuntime> runtimes = {};
   List<Map<String, dynamic>> agents = [];
   var newAgentSeq = 0;
@@ -317,6 +318,7 @@ class _FakeHost implements PhoneAgentHostPort, PhoneAgentAuthPort {
     AgentSignInState? signIn,
     AgentCapabilities capabilities = const AgentCapabilities(),
   }) async {
+    state.inspectedCapabilities[agentId] = capabilities;
     final base = runtimes[agentId] ?? PhoneAgentRuntime(agentId: agentId);
     return PhoneAgentRuntime(
       agentId: agentId,
@@ -688,6 +690,17 @@ void main() {
     await w.controller.refreshChatFeed();
     return w;
   }
+
+  test('BA4 does not infer Claude resume from its provider name', () async {
+    final w = await ready(null);
+    addTearDown(w.controller.dispose);
+    final proof = w.state.inspectedCapabilities['claude']!;
+    expect(proof.resumeVerified, isFalse);
+    expect(proof.modelList, isFalse);
+    expect(proof.permissions, isFalse);
+    expect(proof.images, isFalse);
+    expect(proof.cancel, isFalse);
+  });
 
   test(
     'qualified cards skip asks in feed and active chat, disable revokes',

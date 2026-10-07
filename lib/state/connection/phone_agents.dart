@@ -425,7 +425,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
           runtime = await host.inspect(
             descriptor.id,
             signIn: _paSignIns[descriptor.id]?.state,
-            capabilities: _paHostCapabilities(descriptor),
+            capabilities: _paHostCapabilities(descriptor, arch),
           );
           if (runtime.installed &&
               descriptor.signInMethod != AgentSignInMethod.none) {
@@ -499,13 +499,29 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// The helper is being started again by the app itself.
   bool _paAutoResuming = false;
 
-  /// What this phone's helper is known to do for [descriptor]: a runtime
-  /// fact, not a catalog claim. Claude's sessions resume through the helper
-  /// (resume_agent_request, proven on Paseo 0.9.2); the others are unproven.
-  AgentCapabilities _paHostCapabilities(AgentDescriptor descriptor) =>
-      descriptor.id == 'claude' && descriptor.route == AgentRoute.paseoNative
-      ? const AgentCapabilities(resumeVerified: true)
-      : descriptor.capabilities;
+  /// Exact matrix proof, checked against the observed connected helper and
+  /// processor. Unknown or stale evidence never inherits catalog capabilities.
+  AgentCapabilities _paHostCapabilities(
+    AgentDescriptor descriptor,
+    AgentArchitecture? architecture,
+  ) {
+    final observed = _paSources.values
+        .map((source) => source.gateway.transport)
+        .where((transport) => transport.connected)
+        .map((transport) => transport.serverVersion)
+        .whereType<String>()
+        .toSet();
+    final gateway = _paBackend?.api;
+    if (gateway is PaseoGateway && gateway.transport.connected) {
+      final version = gateway.transport.serverVersion;
+      if (version != null) observed.add(version);
+    }
+    return AgentCertificationMatrix.bundled.capabilitiesFor(
+      descriptor: descriptor,
+      architecture: architecture,
+      helperVersion: observed.length == 1 ? observed.single : null,
+    );
+  }
 
   static const _paSignInReadLimit = Duration(seconds: 10);
   final _paAuthResults = <String, AgentAuthProbeResult>{};

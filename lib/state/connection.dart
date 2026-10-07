@@ -106,6 +106,7 @@ import '../domain/phone_agents.dart';
 import '../domain/phone_agents_source.dart';
 import '../domain/agent_sign_in.dart';
 import '../domain/agent_catalog.dart';
+import '../domain/agent_tools/agent_certification.dart';
 import '../domain/agent_auth_probe.dart';
 import '../domain/turn_stall.dart';
 import '../paseo/chat_feed_source.dart';

@@ -1,35 +1,105 @@
-# BA4 — certification evidence data shape (dependency FQ1)
+# BA4 — evidence-backed agent capabilities
 
-The required `docs/verification/agent-certification-matrix.md` is absent from
-this candidate. BA4 is skipped until FQ1 supplies recorded evidence. Existing
-capability wiring has not been replaced with invented qualifications.
+Finish line: an exact recorded agent/runtime tuple grants only capabilities
+whose individual certification cells pass, and all other cases fail closed.
+Non-goal: creating certification evidence, signing in agents, or claiming that
+an installed binary is qualified. FQ1 owns the matrix and device qualification.
 
-Proposed frontend/coordinator input per catalog agent:
+## Backend API
+
+`lib/domain/agent_tools/agent_certification.dart` exposes:
+
+```dart
+AgentCertificationMatrix.bundled
+AgentCertificationMatrix.fromJson(Map<String, dynamic> json)
+AgentCapabilities capabilitiesFor({
+  required AgentDescriptor descriptor,
+  required AgentArchitecture? architecture,
+  required String? helperVersion,
+})
+```
+
+`bundled` uses the exact generated snapshot of
+`docs/verification/agent-certification-matrix.json`; no filesystem read or
+network request occurs in the app. To regenerate after an FQ1 evidence change:
+
+```bash
+python3 tool/agents/generate_certification.py
+python3 tool/agents/generate_certification.py --check
+```
+
+The parity test compares the bundled JSON with the reviewed file verbatim.
+Editing the matrix without regeneration fails the check/test. No pubspec asset
+registration is needed.
+
+## Accepted evidence
+
+Each `agents` row uses the FQ1 `id` and `cells` shape, with these additional
+qualification fields supplied by the certifier:
 
 ```json
 {
-  "agentId": "claude",
-  "agentVersion": "exact catalog pin",
-  "helperVersion": "0.9.2",
+  "id": "claude",
+  "agentVersion": "exact catalog recipe pin",
+  "helperVersion": "exact observed Paseo helper version",
   "architecture": "arm64",
-  "resume": {"verified": false, "evidence": null},
-  "models": {"verified": false, "evidence": null},
-  "permissions": {"verified": false, "evidence": null},
-  "images": {"verified": false, "evidence": null},
-  "cancel": {"verified": false, "evidence": null}
+  "cells": {
+    "resume": {"state": "pass", "evidence": "docs/qa/item/README.md#resume"}
+  }
 }
 ```
 
-An evidence value is a repository-relative QA README anchor with candidate
-revision, device, date and successful observed behavior. Null/unchecked/blocked
-means false. A signed-in account or installed binary establishes no capability.
-Records must match agent pin, helper version and architecture before projection
-into existing `AgentCapabilities(resumeVerified:, modelList:, permissions:,
-images:, cancel:)`. Version changes invalidate the record; unknown agents have
-all flags false. FQ1 owns qualification; BA owns projection after the matrix
-exists. No account identity, auth token or provider error belongs in this shape.
+The example fields are a shape, not evidence or real version pins. Both
+versions must be nonempty exact tokens; architecture is `arm64` or `x64`.
+Before granting any flag, all three must equal the selected descriptor's
+`recipe.version`, observed helper version, and observed host architecture.
+Unknown helper/architecture, absent recipe, version changes, unknown agents,
+duplicate IDs (even one malformed duplicate), malformed cells and unrecognized
+cell names/states return no capabilities. `opencode1` is the sole explicit ID
+alias for catalog `opencode`; alias collisions also invalidate the record.
+Input is copied into immutable records; later JSON mutation cannot grant flags.
 
-The eventual `_paHostCapabilities` will read this record by descriptor ID and
-pinned runtime instead of the current Claude-specific resume proof. Old chat
-rows continue to use existing `AgentResumeNotice`: unverified resume offers
-"Can't reopen old chats" / "Starts a new chat" with explicit acknowledgement.
+| Matrix cell | `AgentCapabilities` field |
+| --- | --- |
+| `resume` | `resumeVerified` |
+| `models` | `modelList` |
+| `permission` | `permissions` |
+| `images` | `images` |
+| `abort` | `cancel` |
+
+Only exact `state: "pass"` with a nonempty repository document citation grants
+its individual flag. A safe citation is a `docs/` path ending in `.md` and
+optionally `#anchor` (whitespace before `#` is accepted, as in FQ1's ` #2`).
+Absolute paths, URLs, traversal, control characters, queries, encoded paths,
+empty anchors and prose substitutes are rejected. FQ1's `.md (forms)`
+annotation must be normalized to a document path/anchor before it can grant a
+flag. `partial`, `untested`, `blocked`, `off`, `fail`, `n/a` and missing cells
+grant nothing; a passing install/version/smoke/cards cell grants none of these
+five capabilities. A passing subset remains a subset, not agent-wide
+certification. Evidence files remain owned and reviewed by FQ1.
+
+## Current state and frontend behavior
+
+The 2026-10-07 FQ1 matrix currently omits `agentVersion`, `helperVersion` and
+`architecture` on every row. Its bundled projection therefore grants **zero**
+capabilities, including rows with passing permission cells. Do not invent
+metadata from today's catalog or a release constant to activate old evidence.
+
+Connection uses the observed connected helper version and host architecture;
+unknown observations are null. Replace the Claude identity-based resume
+override with this projection. Claude can continue using the existing
+`AgentResumeNotice` UI when `resumeVerified` is false: "Can't reopen old chats"
+and "Starts a new chat", with explicit acknowledgement before a fresh chat.
+No raw technical error or credential appears in this contract. Missing evidence
+is an unverified state, not a user-facing exception. No stored-format migration
+or new persisted credential/data exists.
+
+## Focused verification
+
+Root runs `test/agent_certification_test.dart` under the shared test lock, plus
+affected connection tests after integration. It covers independent positive
+flags, exact pin/architecture matching, null metadata, version invalidation,
+non-pass and unsafe evidence, malformed/unknown records, duplicates and alias
+collisions, immutable inputs, bundled parity, current all-false projection and
+resume copy. A negative control that returns all-false from `capabilitiesFor`
+must fail the independent positive projection test; restoring it must pass.
