@@ -22,6 +22,13 @@ const _only = String.fromEnvironment('FC_ONLY');
 const _size = Size(412, 915);
 
 class _Api extends CaptureApi {
+  _Api({this.caps});
+
+  final ServerCapabilities? caps;
+
+  @override
+  ServerCapabilities get capabilities => caps ?? super.capabilities;
+
   @override
   Future<ServerPage<MessageWithParts>> messagePage(
     String id, {
@@ -106,5 +113,22 @@ void main() {
     );
     await _shot(tester, key, 'FC5', 'model-chip-loading');
     await _unmount(tester);
+  });
+
+  testWidgets('FC1 approval chip on runtimes that ask and that never ask', (
+    tester,
+  ) async {
+    if (!_wanted('FC1')) return;
+    for (final (name, caps) in [
+      ('asks', null),
+      ('never-asks', const ServerCapabilities(permissionRequests: false)),
+    ]) {
+      final api = _Api(caps: caps)
+        ..busy = {}
+        ..messagesHandler = (_) async => [];
+      final (_, key) = await _chat(tester, api, sessionID: darkModeSessionID);
+      await _shot(tester, key, 'FC1', 'composer-$name');
+      await _unmount(tester);
+    }
   });
 }

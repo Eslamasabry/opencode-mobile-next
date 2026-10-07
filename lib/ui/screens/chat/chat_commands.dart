@@ -604,13 +604,14 @@ extension _ChatCommands on _ChatScreenState {
         group: _chatL10n(context).chatUiCurrentSession,
         action: _ChatCommandAction.note,
       ),
-      CommandSheetEntry.app(
-        slash: 'approvals',
-        title: _chatL10n(context).approvalsUiMenu,
-        description: _chatL10n(context).commandSheetApprovalsDescription,
-        group: _chatL10n(context).chatUiCurrentSession,
-        action: _ChatCommandAction.approvals,
-      ),
+      if (_conn.capabilities.permissionRequests)
+        CommandSheetEntry.app(
+          slash: 'approvals',
+          title: _chatL10n(context).approvalsUiMenu,
+          description: _chatL10n(context).commandSheetApprovalsDescription,
+          group: _chatL10n(context).chatUiCurrentSession,
+          action: _ChatCommandAction.approvals,
+        ),
       CommandSheetEntry.app(
         slash: 'plan',
         aliases: const ['todos'],
