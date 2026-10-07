@@ -29,6 +29,9 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
     if (maxPages < 1 || maxPages > 8 || refreshTimeout <= Duration.zero) {
       throw ArgumentError('Feed read bounds are invalid.');
     }
+    _questionChanges = gateway.nativeQuestionChanges.listen((_) {
+      if (_valid) _notify();
+    });
     if (initialLastUsedProjectDirectory == _directory &&
         !isTemporaryProjectDirectory(_directory)) {
       _lastUsed = initialLastUsedProjectDirectory;
@@ -46,6 +49,7 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
   final Future<void> Function(String directory)? persistLastUsedProject;
   final String? _directory, _projectName;
   final _changes = StreamController<void>.broadcast();
+  late final StreamSubscription<void> _questionChanges;
   List<ChatFeedItem> _items = const [];
   final _draftProviders = <String, String>{};
   bool _complete = false, _disposed = false;
@@ -250,7 +254,8 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
   }
 
   ChatFeedItem _withCards(ChatFeedItem item) {
-    if (hasWaitingCard?.call(item.sessionID) != true ||
+    if ((!gateway.hasNativeQuestion(item.sessionID) &&
+            hasWaitingCard?.call(item.sessionID) != true) ||
         item.status == ChatStatus.needsYou) {
       return item;
     }
@@ -414,6 +419,9 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
     _revision++;
     _items = const [];
     _draftProviders.clear();
+    // This is a local broadcast subscription: cancellation unregisters it
+    // synchronously, with no transport cleanup to await.
+    unawaited(_questionChanges.cancel());
     await _changes.close();
   }
 }

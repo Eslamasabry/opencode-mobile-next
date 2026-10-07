@@ -31,6 +31,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'paseo_acp_pilot_test.dart' show FakePaseoSocket;
 
 part 'support/phone_agents_genui_tests.dart';
+part 'support/phone_agents_native_question_tests.dart';
 
 const _project = '/root/projects/app';
 const _stamp = '2026-10-03T08:00:00Z';
@@ -583,6 +584,7 @@ void main() {
   });
 
   _genUiFeedRefreshTests();
+  _nativeQuestionControllerTests();
 
   const dir = _project;
 
