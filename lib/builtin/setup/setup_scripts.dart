@@ -21,7 +21,8 @@ library;
 /// - `oc_apt_install PKG…`: `apt-get install` whose own status stream
 ///   (`APT::Status-Fd`) becomes `::oc stage` + `::oc percent`. The package
 ///   lists are refreshed only when our stamp is older than a day, and once
-///   more if the install fails on stale lists.
+///   more if the install fails on stale lists. Interrupted package operations
+///   are repaired first, and each requested package is verified with `dpkg -s`.
 ///
 /// The polling loop waits for a result file instead of `kill -0`: dash does
 /// not reap a finished background job until `wait`, so `kill -0` on it keeps
@@ -163,18 +164,89 @@ oc_apt_lists_fresh() {
   [ -n "$(find "$oc_apt_stamp" -mmin -1440 2>/dev/null)" ] &&
     ls "$oc_apt_lists"/*_Packages* >/dev/null 2>&1
 }
+oc_apt_failure() {
+  oc_failure_rc=$1 oc_failure_message=$2
+  echo '[oc] Details: dpkg --audit'
+  dpkg --audit 2>&1 || true
+  echo "[oc] $oc_failure_message"
+  return "$oc_failure_rc"
+}
+oc_apt_repair() {
+  # Keep healthy runs quiet. A failed configure needs apt's dependency repair,
+  # not an ignored error that poisons every later component install.
+  if ! dpkg --configure -a >/dev/null 2>&1; then
+    oc_stage 'Repairing interrupted package installation'
+    if oc_apt_lists_fresh || oc_apt_update; then
+      :
+    else
+      oc_apt_repair_rc=$?
+      oc_apt_failure "$oc_apt_repair_rc" \
+        'Package repair could not finish. Check your connection and retry setup.' || return
+    fi
+    if oc_apt_run 'Repairing interrupted package installation' \
+      -f install -y --no-install-recommends; then
+      :
+    else
+      oc_apt_repair_rc=$?
+      oc_apt_failure "$oc_apt_repair_rc" \
+        'Package repair could not finish. Retry setup to repair the interrupted installation.' || return
+    fi
+    if dpkg --configure -a; then
+      :
+    else
+      oc_apt_repair_rc=$?
+      oc_apt_failure "$oc_apt_repair_rc" \
+        'Package repair could not finish. Retry setup to repair the interrupted installation.' || return
+    fi
+  fi
+  # dpkg --audit can report unfinished packages while returning success.
+  oc_apt_audit_rc=0
+  oc_apt_audit=$(dpkg --audit 2>&1) || oc_apt_audit_rc=$?
+  if [ "$oc_apt_audit_rc" != 0 ] || [ -n "$oc_apt_audit" ]; then
+    echo '[oc] Details: dpkg --audit'
+    [ -z "$oc_apt_audit" ] || printf '%s\n' "$oc_apt_audit"
+    echo '[oc] Some packages are still unfinished. Retry setup to repair the interrupted installation.'
+    return 1
+  fi
+}
 oc_apt_install() {
   export DEBIAN_FRONTEND=noninteractive
-  # A force-stopped earlier run can leave dpkg half done; apt refuses to
-  # install anything until it is finished.
-  dpkg --configure -a >/dev/null 2>&1 || true
-  oc_apt_lists_fresh || oc_apt_update || return
+  oc_apt_repair || return
+  if oc_apt_lists_fresh || oc_apt_update; then
+    :
+  else
+    oc_apt_install_rc=$?
+    oc_apt_failure "$oc_apt_install_rc" \
+      'Package lists could not be updated. Check your connection and retry setup.' || return
+  fi
   if ! oc_apt_run '' install -y --no-install-recommends \
     -o Acquire::Retries=5 "$@"; then
-    oc_apt_update || return
-    oc_apt_run '' install -y --no-install-recommends \
-      -o Acquire::Retries=5 "$@"
+    if oc_apt_update; then
+      :
+    else
+      oc_apt_install_rc=$?
+      oc_apt_failure "$oc_apt_install_rc" \
+        'Package lists could not be updated. Check your connection and retry setup.' || return
+    fi
+    if oc_apt_run '' install -y --no-install-recommends \
+      -o Acquire::Retries=5 "$@"; then
+      :
+    else
+      oc_apt_install_rc=$?
+      oc_apt_failure "$oc_apt_install_rc" \
+        'The packages could not be installed. Check your connection and retry setup.' || return
+    fi
   fi
+  for oc_apt_package in "$@"; do
+    oc_apt_package_rc=0
+    oc_apt_package_status=$(dpkg -s "$oc_apt_package" 2>&1) || oc_apt_package_rc=$?
+    if [ "$oc_apt_package_rc" != 0 ] ||
+      ! printf '%s\n' "$oc_apt_package_status" | grep -qx 'Status: install ok installed'; then
+      printf '[oc] Details: dpkg -s %s\n%s\n' "$oc_apt_package" "$oc_apt_package_status"
+      oc_apt_failure 1 \
+        'A required package is not fully installed. Retry setup to finish installing it.' || return
+    fi
+  done
 }
 ''';
 
