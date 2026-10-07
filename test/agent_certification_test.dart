@@ -92,6 +92,58 @@ void main() {
     expectClosed(project([installed]));
   });
 
+  test('omitted architecture qualifies protocol capabilities across CPUs', () {
+    final row = record()..remove('architecture');
+    for (final architecture in [...AgentArchitecture.values, null]) {
+      expect(
+        flags(project([row], architecture: architecture)),
+        everyElement(isTrue),
+      );
+    }
+    expectClosed(project([row], helperVersion: null));
+    expectClosed(project([row], helperVersion: '0.9.3'));
+    for (final field in ['agentVersion', 'helperVersion']) {
+      expectClosed(project([Map.of(row)..remove(field)]));
+      expectClosed(project([Map.of(row)..[field] = 'different-version']));
+    }
+  });
+
+  test('present architecture scopes evidence to that CPU', () {
+    for (final certified in AgentArchitecture.values) {
+      final row = record()..['architecture'] = certified.name;
+      for (final observed in [...AgentArchitecture.values, null]) {
+        expect(
+          flags(project([row], architecture: observed)),
+          everyElement(observed == certified),
+        );
+      }
+    }
+  });
+
+  test('photos require their own passing images cell', () {
+    final row = record()..remove('architecture');
+    row['cells'] = <String, dynamic>{
+      'cards': {'state': 'pass', 'evidence': 'docs/qa/example/README.md'},
+    };
+    expectClosed(project([row]));
+    final cells = row['cells'] as Map;
+    for (final state in ['pass', 'partial', 'fail', 'off', 'untested']) {
+      cells['images'] = {
+        'state': state,
+        'evidence': 'docs/qa/example/README.md#photos',
+      };
+      expect(flags(project([row], architecture: AgentArchitecture.arm64)), [
+        false,
+        false,
+        false,
+        state == 'pass',
+        false,
+      ]);
+    }
+    cells['images'] = {'state': 'pass', 'evidence': null};
+    expectClosed(project([row]));
+  });
+
   test(
     'missing or mismatched pins and unknown architecture invalidate proof',
     () {
