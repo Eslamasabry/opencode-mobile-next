@@ -23,9 +23,14 @@ case "\$(getconf GNU_LIBC_VERSION)" in
   *) echo '[oc] Claude requires glibc Ubuntu' >&2; exit 1 ;;
 esac
 claude_dir=/opt/oc-claude
+claude_target="\$claude_dir/claude"
+claude_link=/usr/local/bin/claude
+oc_update_recover "\$claude_target" || exit 1
+oc_update_recover "\$claude_link" || exit 1
 mkdir -p "\$claude_dir"
 claude_part="\$claude_dir/claude.new"
-trap 'rm -f "\$claude_part"' EXIT
+claude_link_new="\$claude_link.new"
+trap 'rm -f "\$claude_part" "\$claude_link_new"' EXIT
 trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
@@ -36,9 +41,29 @@ oc_download "https://downloads.claude.ai/claude-code-releases/$version/linux-\$c
 chmod 755 "\$claude_part"
 export DISABLE_AUTOUPDATER=1
 [ "\$("\$claude_part" --version)" = '$version (Claude Code)' ]
-mv -f "\$claude_part" "\$claude_dir/claude"
 mkdir -p /usr/local/bin
-ln -sf "\$claude_dir/claude" /usr/local/bin/claude
+rm -f "\$claude_link_new"
+ln -s "\$claude_target" "\$claude_link_new"
+claude_update_failed() {
+  claude_restore_failed=0
+  oc_update_recover "\$claude_target" || claude_restore_failed=1
+  oc_update_recover "\$claude_link" || claude_restore_failed=1
+  if [ "\$claude_restore_failed" != 0 ]; then
+    echo '[oc] A component update could not be restored. Run setup again.' >&2
+  else
+    echo '[oc] Claude could not finish updating. Run setup again.' >&2
+  fi
+  exit 1
+}
+oc_update_activate "\$claude_target" "\$claude_part" || claude_update_failed
+oc_update_activate "\$claude_link" "\$claude_link_new" || claude_update_failed
+if ! claude_active_version=\$("\$claude_link" --version 2>/dev/null) ||
+  [ "\$claude_active_version" != '$version (Claude Code)' ]; then
+  claude_update_failed
+fi
+# Commit code before its command link; retain each previous good generation.
+oc_update_commit "\$claude_target" || claude_update_failed
+oc_update_commit "\$claude_link" || claude_update_failed
 oc_version '$version'
 ''';
 }

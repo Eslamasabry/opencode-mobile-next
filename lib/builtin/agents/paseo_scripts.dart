@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 
+import '../setup/component_updates.dart';
+
 /// Pinned dependencies for the phone's private agent host.
 ///
 /// Install components must opt into the native setup runner's `agentUser`
@@ -139,10 +141,14 @@ printf '%s\\n' '$nodeVersion'
     final packageBase64 = base64.encode(utf8.encode(_packageJson));
     return '''
 set -eu
+$componentUpdatePrelude
 $_requireAgentUser
 export PATH=/home/oc/.local/node/bin:/home/oc/.local/bin:/usr/bin:/bin
 [ "\$(node --version)" = '$nodeVersion' ]
 host_dir=$installDirectory
+host_link=/home/oc/.local/bin/paseo
+oc_update_recover "\$host_dir" || exit 1
+oc_update_recover "\$host_link" || exit 1
 host_new="\$host_dir.new"
 host_cache=/home/oc/.cache/oc-paseo-install
 mkdir -p /home/oc/.local/bin "\$(dirname "\$host_dir")"
@@ -216,21 +222,42 @@ if ! host_version=\$(env -i HOME="\$host_cache/probe-home" PATH="\$PATH" \\
   exit 1
 fi
 printf '%s' '$packageLockSha256' > "\$host_new/.oc-package-lock-sha256"
-# Do not replace an existing tree until the candidate has passed all probes.
-rm -rf "\$host_dir.old"
-if [ -d "\$host_dir" ]; then mv "\$host_dir" "\$host_dir.old"; fi
-if ! mv "\$host_new" "\$host_dir"; then
-  [ ! -d "\$host_dir.old" ] || mv "\$host_dir.old" "\$host_dir"
+# Journal only after all candidate probes pass; keep one previous good tree.
+oc_paseo_activation_failed() {
+  oc_update_recover "\$host_dir" || exit 1
+  oc_update_recover "\$host_link" || exit 1
+  echo '[oc] Paseo could not finish updating. Run setup again.' >&2
   exit 1
+}
+rm -f "\$host_link.new"
+ln -s "\$host_dir/node_modules/.bin/paseo" "\$host_link.new"
+oc_update_activate "\$host_dir" "\$host_new" || oc_paseo_activation_failed
+oc_update_activate "\$host_link" "\$host_link.new" || oc_paseo_activation_failed
+oc_stage 'Checking Paseo launch command'
+if ! env -i HOME="\$host_cache/probe-home" PATH="\$PATH" \\
+  timeout 30 "\$host_link" daemon run --help \\
+  > "\$host_cache/launch-check.log" 2>&1 ||
+  ! grep -q -- '--home' "\$host_cache/launch-check.log"; then
+  oc_paseo_activation_failed
 fi
-ln -sf "\$host_dir/node_modules/.bin/paseo" /home/oc/.local/bin/paseo
-rm -rf "\$host_dir.old"
+oc_stage 'Checking Paseo version'
+if ! host_version=\$(env -i HOME="\$host_cache/probe-home" PATH="\$PATH" \\
+  timeout 30 "\$host_link" --version 2>/dev/null) ||
+  [ "\$host_version" != '$version' ]; then
+  oc_paseo_activation_failed
+fi
+oc_update_commit "\$host_dir" || oc_paseo_activation_failed
+oc_update_commit "\$host_link" || oc_paseo_activation_failed
 oc_version '$version'
 ''';
   }
 
   static const check =
       '''set -eu
+$componentUpdatePrelude
+host_dir=$installDirectory
+oc_update_recover "\$host_dir"
+oc_update_recover /home/oc/.local/bin/paseo
 export PATH=/home/oc/.local/node/bin:/home/oc/.local/bin:/usr/bin:/bin
 [ "\$(/home/oc/.local/node/bin/node --version)" = '$nodeVersion' ]
 [ "\$(cat $installDirectory/.oc-package-lock-sha256)" = '$packageLockSha256' ]

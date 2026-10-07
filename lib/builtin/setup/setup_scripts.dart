@@ -7,6 +7,8 @@
 /// they print is log text for the details view.
 library;
 
+import 'component_updates.dart';
+
 /// Helpers for install scripts. POSIX sh on purpose: the job runs each
 /// script with Ubuntu's `/bin/sh` (dash), and the script tests run it in
 /// both dash and bash on the PC.
@@ -251,7 +253,8 @@ oc_apt_install() {
 ''';
 
 /// [script] as the job runs it: the prelude, then the script.
-String withSetupPrelude(String script) => '$setupPrelude$script';
+String withSetupPrelude(String script) =>
+    '$setupPrelude$componentUpdatePrelude$script';
 
 /// One script that runs every check in [checks] (id → check script) in its
 /// own subshell and marks where each starts and how it ended, so the engine

@@ -33,6 +33,7 @@ void main() {
     bool wrongLink = false,
     bool failLaunch = false,
     bool wrongVersion = false,
+    bool activeFails = false,
   }) async {
     final bin = Directory('${temp.path}/oc/.local/node/bin')
       ..createSync(recursive: true);
@@ -42,6 +43,10 @@ if [ "\$1" = --version ]; then echo ${PaseoPhoneScripts.nodeVersion}; fi
 ''');
     final fixtureCli =
         '''#!/bin/sh
+${activeFails ? r'''case "$0" in
+  *.new/*) ;;
+  *) exit 44 ;;
+esac''' : ''}
 printf executed >> '${temp.path}/cli-executed'
 [ -z "\${BC3_PRIVATE_TOKEN:-}" ] || exit 91
 case "\$*" in
@@ -294,6 +299,43 @@ ${fixtureScript(PaseoPhoneScripts.install(packageLock: lock))}
       isFalse,
     );
   });
+
+  for (final activeFails in [false, true]) {
+    test(
+      activeFails
+          ? 'activated Paseo failure restores the previous tree and launcher'
+          : 'successful Paseo update retains the previous good generation',
+      () async {
+        expect((await runInstall()).exitCode, 0);
+        final directory = isolated(PaseoPhoneScripts.installDirectory);
+        final cli = File('$directory/${PaseoPhoneScripts.cliRelativePath}');
+        final previousCode = cli.readAsStringSync();
+        final launcher = Link('${temp.path}/oc/.local/bin/paseo');
+        final previousLink = launcher.targetSync();
+        final result = await runInstall(activeFails: activeFails);
+        if (activeFails) {
+          expect(result.exitCode, isNot(0));
+          expect(
+            result.stderr,
+            contains('Paseo could not finish updating. Run setup again.'),
+          );
+          expect(cli.readAsStringSync(), previousCode);
+        } else {
+          expect(result.exitCode, 0, reason: '${result.stderr}');
+          expect(
+            File(
+              '$directory.oc-good/${PaseoPhoneScripts.cliRelativePath}',
+            ).readAsStringSync(),
+            previousCode,
+          );
+          expect(Link('${launcher.path}.oc-good').targetSync(), previousLink);
+        }
+        expect(launcher.targetSync(), previousLink);
+        expect(File('$directory.oc-pending').existsSync(), isFalse);
+        expect(File('${launcher.path}.oc-pending').existsSync(), isFalse);
+      },
+    );
+  }
 
   test('root is refused before installing', () async {
     final result = await Process.run(
