@@ -55,3 +55,23 @@ an Android emulator during QA, resized to JPG:
 The welcome capture predates FB3 (2026-10-07), which moved "On this phone"
 first with "Recommended". Replace `1_welcome.jpg` with a device capture of
 the new welcome after the next release.
+
+## Store listing metadata (FG3)
+
+`fastlane/metadata/android/` holds the listing text in the fastlane layout
+that F-Droid, IzzyOnDroid and Google Play read:
+
+- `en-US/` and `ar/`: `title.txt`, `short_description.txt` (under 80
+  characters), `full_description.txt` (under 4,000) and
+  `changelogs/<versionCode>.txt` (under 500 each) for every published
+  version with notes in `CHANGELOG.md` or `docs/releases/` (1.0.32+33 and
+  the dev pre-releases have none): 34 (1.0.33), 35 (1.0.34, later marked broken, said so), 49
+  (1.0.43), 50 (1.0.44), 51 (1.1.0) and 52 (1.2.0). The version code is the
+  build number after `+` (`versionCode = flutter.versionCode`). Sources:
+  `CHANGELOG.md` and `docs/releases/`.
+- `en-US/images/phoneScreenshots/`: the six real captures listed above. `ar/`
+  has no screenshots of its own, so stores fall back to `en-US`. Arabic
+  captures would be a follow-up.
+- Not included yet: a 512 px icon and a feature graphic
+  (`images/icon.png`, `images/featureGraphic.png`). A new release adds
+  `changelogs/<its versionCode>.txt` in both languages.
