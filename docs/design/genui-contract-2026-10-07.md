@@ -1,6 +1,6 @@
 # Agent cards — contract v1
 
-Date: 2026-10-07 · Status: Astra review revision, **not frozen pending coordinator acceptance**.
+Date: 2026-10-07 · Status: behavioral revision accepted by coordinator; **concrete API ready for freeze**.
 Plan: [genui-plan-2026-10-07.md](genui-plan-2026-10-07.md).
 Review and change ledger: [genui-review-astra-2026-10-07.md](genui-review-astra-2026-10-07.md).
 Backend owns this file. Frontend builds from the accepted revision; subsequent changes need both sides' OK.
@@ -165,63 +165,453 @@ Undo window using the full identity as key; catch and surface errors rather than
 On uncertain delivery, reconcile authoritative history; never auto-resend. On definite failure retain
 the answer for an explicit retry. Disposal/flush callbacks must not send after deletion or disablement.
 
-## 3. Dart API (proposed names; freeze on acceptance)
+## 3. Dart API (concrete types ready for coordinator freeze)
+
+The accepted behavior is unchanged. The declarations below now exist under
+`lib/domain/genui/`; `gen_ui.dart` is the sole public import and re-exports
+`Part`, `MessageWithParts`, `PromptAttachment`, and `ChatFeedItem` for UI callers.
+Constructors copy collections into unmodifiable collections (including table rows).
+They are app-side value constructors, not validation entry points: agent input must
+pass `genUiFromPart`. Field defaults/form answers accept only JSON scalar values at
+the validator boundary. No file/voice variants exist in S1.
+
+`GenUiCard.identity` includes the seven trusted scope/transport components; compare
+`revision` separately before dispatch. `GenUiScope` has value equality. Setup
+`agents` lists contain verified ready runtimes, including in partial/restart states.
+Setup reasons are enums for localized UI, never raw diagnostics. Delivery failures
+surface through `ProductException` and `genUiDeliveryFor`.
+
+### `gen_ui_nodes.dart`
 
 ```dart
-// lib/domain/genui/gen_ui.dart (backend). Re-export the existing normalized
-// Part, MessageWithParts and PromptAttachment types here for UI callers.
-sealed class GenUiNode {} // GenUiText, GenUiKeyValue, GenUiList, GenUiTable,
-// GenUiChart, GenUiCode, GenUiDiffStat, GenUiProgress, GenUiCallout, GenUiLink
-sealed class GenUiAsk {} // GenUiChoiceAsk, GenUiFormAsk, GenUiConfirmAsk, GenUiPhotoAsk
-class GenUiField {} // typed schema fields above; GenUiFieldType, defaultValue
-class GenUiScope {
-  final String profileID, sourceId, directory;
-  final String? workspace;
+/// Immutable presentation values; constructors do not validate agent input.
+sealed class GenUiNode {
+  const GenUiNode();
 }
-class GenUiCard {
-  final GenUiScope scope;
-  final String id, title, sessionID, callID, messageID, revision;
-  final List<GenUiNode> body;
-  final GenUiAsk? ask;
-  String get identity; // collision-safe encoding of trusted identity above
-}
-sealed class GenUiParse {} // GenUiParsed(card) | GenUiUnreadable(reason: GenUiProblem)
-enum GenUiProblem {
-  notACard, version, tooLarge, unknownKey, badValue, secretField, unsupportedAsk
-}
-enum GenUiCardState { waiting, answered, passedOver, report, unknown }
-GenUiParse? genUiFromPart(Part part, {
-  required GenUiScope scope, required String sessionID, required String messageID,
-}); // caller establishes assistant ownership; null = not an admitted card part
-GenUiCardState genUiStateFor(GenUiCard card, List<MessageWithParts> transcript,
-    {required bool tailComplete});
-({String summary, Object? value})? genUiAnswerIn(MessageWithParts message, GenUiCard card);
-sealed class GenUiAnswer {} // GenUiChoiceAnswer(ids), GenUiFormAnswer(values),
-// GenUiConfirmAnswer(bool), GenUiPhotoAnswer(count)
-String genUiAnswerText(GenUiCard card, GenUiAnswer answer);
 
-// ConnectionController (backend, entire connection library is single-owner)
-List<GenUiCard> waitingCardsForSession(String sessionID); // current controller scope only
-List<GenUiCard> waitingCardsForFeedItem(ChatFeedItem item); // exact merged source/directory
-Future<void> answerGenUi(GenUiCard card, GenUiAnswer answer,
-    {List<PromptAttachment> attachments = const []}); // throws ProductException
-bool get genUiEnabled; // desired setting for this managed owner; NOT readiness
-Future<void> setGenUiEnabled(bool on);
-GenUiSetupStatus get genUiStatus;
-GenUiDeliveryState genUiDeliveryFor(GenUiCard card);
-enum GenUiDeliveryState { idle, held, sending, deliveryUnknown, failed }
-// GenUiSetupStatus is a typed union: off, unavailable(reason), installing,
-// on(agents), partial(agents, reason), restartRequired(agents), failed(reason).
-// agents names only the verified ready runtimes; reasons are stable safe codes.
-// ServerCapabilities.genUi: effective qualified support, default false,
-// never blanket-enabled in allV1 or inferred from protocol flavor.
-// ChatFeedItem.status: needsYou for fresh waiting cards; preserve permission/
-// question/form priority. Do not expose card text as preview or notification copy.
+final class GenUiText extends GenUiNode {
+  const GenUiText({required this.text});
+  final String text;
+}
+
+final class GenUiKeyValueRow {
+  const GenUiKeyValueRow({required this.key, required this.value});
+  final String key;
+  final String value;
+}
+
+final class GenUiKeyValue extends GenUiNode {
+  GenUiKeyValue({required List<GenUiKeyValueRow> rows})
+    : rows = List.unmodifiable(rows);
+  final List<GenUiKeyValueRow> rows;
+}
+
+enum GenUiListStyle { bullet, check }
+
+final class GenUiListItem {
+  const GenUiListItem({required this.text, this.done = false});
+  final String text;
+  final bool done;
+}
+
+final class GenUiList extends GenUiNode {
+  GenUiList({required List<GenUiListItem> items, required this.style})
+    : items = List.unmodifiable(items);
+  final List<GenUiListItem> items;
+  final GenUiListStyle style;
+}
+
+final class GenUiTable extends GenUiNode {
+  GenUiTable({required List<String> columns, required List<List<String>> rows})
+    : columns = List.unmodifiable(columns),
+      rows = List.unmodifiable(
+        rows.map((row) => List<String>.unmodifiable(row)),
+      );
+  final List<String> columns;
+  final List<List<String>> rows;
+}
+
+enum GenUiChartKind { bar, line }
+
+final class GenUiChartSeries {
+  GenUiChartSeries({required this.name, required List<double> values})
+    : values = List.unmodifiable(values);
+  final String name;
+  final List<double> values;
+}
+
+final class GenUiChart extends GenUiNode {
+  GenUiChart({
+    required this.kind,
+    this.unit,
+    required List<String> labels,
+    required List<GenUiChartSeries> series,
+  }) : labels = List.unmodifiable(labels),
+       series = List.unmodifiable(series);
+  final GenUiChartKind kind;
+  final String? unit;
+  final List<String> labels;
+  final List<GenUiChartSeries> series;
+}
+
+final class GenUiCode extends GenUiNode {
+  const GenUiCode({this.language, required this.text});
+  final String? language;
+  final String text;
+}
+
+final class GenUiDiffFile {
+  const GenUiDiffFile({
+    required this.path,
+    required this.added,
+    required this.removed,
+  });
+  final String path;
+  final int added;
+  final int removed;
+}
+
+final class GenUiDiffStat extends GenUiNode {
+  GenUiDiffStat({required List<GenUiDiffFile> files})
+    : files = List.unmodifiable(files);
+  final List<GenUiDiffFile> files;
+}
+
+final class GenUiProgress extends GenUiNode {
+  const GenUiProgress({required this.label, required this.value});
+  final String label;
+  final double value;
+}
+
+enum GenUiCalloutTone { info, warning, success }
+
+final class GenUiCallout extends GenUiNode {
+  const GenUiCallout({required this.tone, required this.text});
+  final GenUiCalloutTone tone;
+  final String text;
+}
+
+final class GenUiLink extends GenUiNode {
+  const GenUiLink({required this.label, required this.url});
+  final String label;
+
+  /// Inert text. Open only through the app's external-link gate.
+  final String url;
+}
 ```
 
-These declarations specify the public shape, not executable Dart. Before parallel implementation,
-freeze constructor/property types for each node/ask/answer with the frontend against the schema.
-Frontend adds nothing to `lib/domain` or `lib/state`; missing API = ask the backend.
+### `gen_ui_asks.dart`
+
+```dart
+sealed class GenUiAsk {
+  const GenUiAsk();
+}
+
+final class GenUiOption {
+  const GenUiOption({required this.id, required this.label, this.detail});
+  final String id;
+  final String label;
+  final String? detail;
+}
+
+final class GenUiChoiceAsk extends GenUiAsk {
+  GenUiChoiceAsk({required List<GenUiOption> options, this.multi = false})
+    : options = List.unmodifiable(options);
+  final List<GenUiOption> options;
+  final bool multi;
+}
+
+enum GenUiFieldType { text, multiline, number, toggle, select, date }
+
+final class GenUiField {
+  GenUiField({
+    required this.id,
+    required this.label,
+    required this.type,
+    this.required = false,
+    this.placeholder,
+    this.defaultValue,
+    List<GenUiOption> options = const [],
+    this.min,
+    this.max,
+  }) : options = List.unmodifiable(options);
+  final String id;
+  final String label;
+  final GenUiFieldType type;
+  final bool required;
+  final String? placeholder;
+
+  /// Only String, num, bool, or null (unset); checked at the trust boundary.
+  final Object? defaultValue;
+  final List<GenUiOption> options;
+  final double? min;
+  final double? max;
+}
+
+final class GenUiFormAsk extends GenUiAsk {
+  GenUiFormAsk({required List<GenUiField> fields, this.submitLabel})
+    : fields = List.unmodifiable(fields);
+  final List<GenUiField> fields;
+  final String? submitLabel;
+}
+
+enum GenUiConfirmTone { normal, danger }
+
+final class GenUiConfirmAsk extends GenUiAsk {
+  const GenUiConfirmAsk({
+    this.confirmLabel,
+    this.cancelLabel,
+    this.tone = GenUiConfirmTone.normal,
+  });
+  final String? confirmLabel;
+  final String? cancelLabel;
+  final GenUiConfirmTone tone;
+}
+
+final class GenUiPhotoAsk extends GenUiAsk {
+  const GenUiPhotoAsk({required this.purpose, this.max = 1});
+  final String purpose;
+  final int max;
+}
+```
+
+### `gen_ui_answers.dart`
+
+```dart
+sealed class GenUiAnswer {
+  const GenUiAnswer();
+}
+
+final class GenUiChoiceAnswer extends GenUiAnswer {
+  GenUiChoiceAnswer(List<String> ids) : ids = List.unmodifiable(ids);
+  final List<String> ids;
+}
+
+final class GenUiFormAnswer extends GenUiAnswer {
+  GenUiFormAnswer(Map<String, Object> values)
+    : values = Map.unmodifiable(values);
+
+  /// String, num or bool values; absent optional fields are omitted.
+  final Map<String, Object> values;
+}
+
+final class GenUiConfirmAnswer extends GenUiAnswer {
+  const GenUiConfirmAnswer(this.value);
+  final bool value;
+}
+
+final class GenUiPhotoAnswer extends GenUiAnswer {
+  const GenUiPhotoAnswer(this.count);
+  final int count;
+}
+```
+
+### `gen_ui_types.dart`
+
+```dart
+final class GenUiScope {
+  const GenUiScope({
+    required this.profileID,
+    required this.sourceId,
+    required this.directory,
+    this.workspace,
+  });
+  final String profileID;
+  final String sourceId;
+  final String directory;
+  final String? workspace;
+
+  @override
+  bool operator ==(Object other) =>
+      other is GenUiScope &&
+      profileID == other.profileID &&
+      sourceId == other.sourceId &&
+      directory == other.directory &&
+      workspace == other.workspace;
+  @override
+  int get hashCode => Object.hash(profileID, sourceId, directory, workspace);
+}
+
+final class GenUiCard {
+  GenUiCard({
+    required this.scope,
+    required this.id,
+    required this.title,
+    required this.sessionID,
+    required this.callID,
+    required this.messageID,
+    required this.revision,
+    required List<GenUiNode> body,
+    this.ask,
+  }) : body = List.unmodifiable(body);
+  final GenUiScope scope;
+  final String id;
+  final String title;
+  final String sessionID;
+  final String callID;
+  final String messageID;
+  final String revision;
+  final List<GenUiNode> body;
+  final GenUiAsk? ask;
+
+  /// Transport identity; revisions are compared separately before dispatch.
+  String get identity => jsonEncode([
+    scope.profileID,
+    scope.sourceId,
+    scope.directory,
+    scope.workspace,
+    sessionID,
+    messageID,
+    callID,
+  ]);
+}
+
+sealed class GenUiParse {
+  const GenUiParse();
+}
+
+final class GenUiParsed extends GenUiParse {
+  const GenUiParsed(this.card);
+  final GenUiCard card;
+}
+
+final class GenUiUnreadable extends GenUiParse {
+  const GenUiUnreadable({required this.reason});
+  final GenUiProblem reason;
+}
+
+enum GenUiProblem {
+  notACard,
+  version,
+  tooLarge,
+  unknownKey,
+  badValue,
+  secretField,
+  unsupportedAsk,
+}
+
+enum GenUiCardState { waiting, answered, passedOver, report, unknown }
+
+enum GenUiDeliveryState { idle, held, sending, deliveryUnknown, failed }
+```
+
+### `gen_ui_status.dart`
+
+```dart
+/// Ready agents, derived from evidence rather than an agent-supplied label.
+enum GenUiAgent { claude, openCode1, openCode2 }
+
+/// Stable localization keys. Never holds command, config or exception text.
+enum GenUiSetupProblem {
+  unsupportedHost,
+  runtimeMissing,
+  notQualified,
+  permissionDenied,
+  conflict,
+  installationFailed,
+  registrationFailed,
+  verificationFailed,
+  removalFailed,
+  storageFailed,
+  busy,
+}
+
+sealed class GenUiSetupStatus {
+  const GenUiSetupStatus();
+  List<GenUiAgent> get agents => const [];
+}
+
+final class GenUiSetupOff extends GenUiSetupStatus {
+  const GenUiSetupOff();
+}
+
+final class GenUiSetupUnavailable extends GenUiSetupStatus {
+  const GenUiSetupUnavailable({required this.reason});
+  final GenUiSetupProblem reason;
+}
+
+final class GenUiSetupInstalling extends GenUiSetupStatus {
+  const GenUiSetupInstalling();
+}
+
+final class GenUiSetupOn extends GenUiSetupStatus {
+  GenUiSetupOn({required List<GenUiAgent> agents})
+    : agents = List.unmodifiable(agents);
+  @override
+  final List<GenUiAgent> agents;
+}
+
+final class GenUiSetupPartial extends GenUiSetupStatus {
+  GenUiSetupPartial({required List<GenUiAgent> agents, required this.reason})
+    : agents = List.unmodifiable(agents);
+  @override
+  final List<GenUiAgent> agents;
+  final GenUiSetupProblem reason;
+}
+
+final class GenUiSetupRestartRequired extends GenUiSetupStatus {
+  GenUiSetupRestartRequired({required List<GenUiAgent> agents})
+    : agents = List.unmodifiable(agents);
+  @override
+  final List<GenUiAgent> agents;
+}
+
+final class GenUiSetupFailed extends GenUiSetupStatus {
+  const GenUiSetupFailed({required this.reason});
+  final GenUiSetupProblem reason;
+}
+```
+
+### `gen_ui_codec.dart`
+
+```dart
+GenUiParse? genUiFromPart(
+  Part part, {
+  required GenUiScope scope,
+  required String sessionID,
+  required String messageID,
+}) => throw UnimplementedError();
+
+GenUiCardState genUiStateFor(
+  GenUiCard card,
+  List<MessageWithParts> transcript, {
+  required bool tailComplete,
+}) => throw UnimplementedError();
+
+({String summary, Object? value})? genUiAnswerIn(
+  MessageWithParts message,
+  GenUiCard card,
+) => throw UnimplementedError();
+
+String genUiAnswerText(GenUiCard card, GenUiAnswer answer) =>
+    throw UnimplementedError();
+```
+
+### `gen_ui_controller.dart`
+
+```dart
+/// Public controller surface. Implemented by ConnectionController integration.
+abstract interface class GenUiController {
+  List<GenUiCard> waitingCardsForSession(String sessionID);
+  List<GenUiCard> waitingCardsForFeedItem(ChatFeedItem item);
+  Future<void> answerGenUi(
+    GenUiCard card,
+    GenUiAnswer answer, {
+    List<PromptAttachment> attachments = const [],
+  });
+  bool get genUiEnabled;
+  Future<void> setGenUiEnabled(bool on);
+  GenUiSetupStatus get genUiStatus;
+  GenUiDeliveryState genUiDeliveryFor(GenUiCard card);
+}
+```
+
+The four codec function bodies are temporary type-stage stubs; implementations replace
+only their bodies after this checkpoint. `GenUiController` records the exact surface
+that `ConnectionController` will implement. Capability `ServerCapabilities.genUi`
+remains default false and is added during controller integration. Waiting cards extend
+the existing feed needs-you projection without replacing permission/question/form priority.
+No frozen constructor/property/signature is changed without coordinator agreement.
 
 ## 4. Discovery, persistence and deletion
 
