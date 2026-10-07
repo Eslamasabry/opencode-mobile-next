@@ -135,6 +135,22 @@ void main() {
     expect(_kitTextWith(tester, 'A thought').role, KitTextRole.secondary);
   });
 
+  testWidgets('1b. an ordered list split by a code block keeps counting', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      const KitMarkdown(
+        '1. Upgrade the router\n\n```\nnpm install router@6\n```\n\n'
+        '2. Or keep v5\n3. Then test\n\n- a\n- b',
+      ),
+    );
+    // CommonMark starts a list at its first number: 1, then 2 and 3.
+    expect(find.text('1.'), findsOneWidget);
+    expect(find.text('2.'), findsOneWidget);
+    expect(find.text('3.'), findsOneWidget);
+  });
+
   testWidgets('2. streaming parses once per change and reuses earlier blocks', (
     tester,
   ) async {

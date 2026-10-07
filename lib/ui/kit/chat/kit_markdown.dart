@@ -319,7 +319,7 @@ class _KitMarkdownState extends State<KitMarkdown> {
     final heading = RegExp(r'^(#{1,6})\s+(.*)$');
     final rule = RegExp(r'^\s*(-{3,}|\*{3,}|_{3,})\s*$');
     final bullet = RegExp(r'^(\s*)[-*+]\s+');
-    final ordered = RegExp(r'^(\s*)\d+[.)]\s+');
+    final ordered = RegExp(r'^(\s*)(\d{1,9})[.)]\s+');
 
     while (i < lines.length) {
       final line = lines[i];
@@ -459,9 +459,14 @@ class _KitMarkdownState extends State<KitMarkdown> {
           i++;
         }
         final isOrdered = identical(listMarker, ordered);
+        // CommonMark: an ordered list starts at its first item's number, so
+        // "2." after a code block that split a list reads 2, not 1 again.
+        final start = isOrdered
+            ? int.parse(ordered.firstMatch(lines[i - items.length])!.group(2)!)
+            : 1;
         add(
-          '${isOrdered ? 'o' : 'u'}\u0000${items.join('\n')}',
-          () => _KitMdList(items: items, ordered: isOrdered),
+          '${isOrdered ? 'o$start' : 'u'}\u0000${items.join('\n')}',
+          () => _KitMdList(items: items, ordered: isOrdered, start: start),
         );
         continue;
       }
@@ -919,9 +924,16 @@ class _KitMdQuote extends StatelessWidget {
 typedef _KitMdListItem = ({int indent, String text});
 
 class _KitMdList extends StatelessWidget {
-  const _KitMdList({required this.items, required this.ordered});
+  const _KitMdList({
+    required this.items,
+    required this.ordered,
+    this.start = 1,
+  });
   final List<_KitMdListItem> items;
   final bool ordered;
+
+  /// The first top-level item's number (CommonMark list start).
+  final int start;
 
   /// Nesting depth per item, normalised by the smallest indent step used in
   /// this list so both 2- and 4-space nesting land one level deeper.
@@ -951,7 +963,8 @@ class _KitMdList extends StatelessWidget {
         counters.removeLast();
       }
       while (counters.length < level + 1) {
-        counters.add(0);
+        // The top level counts on from the list's own start.
+        counters.add(counters.isEmpty ? start - 1 : 0);
       }
       counters[level]++;
       numbers.add(counters[level]);
