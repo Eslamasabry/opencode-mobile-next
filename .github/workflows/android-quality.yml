@@ -95,6 +95,11 @@ jobs:
           test -n "$base" || { echo 'A full manual gate needs commit_base' >&2; exit 64; }
           tool/qa/check_commits.sh "$base" "$head"
 
+      - name: Verify Arabic localization completeness
+        run: |
+          python3 -m unittest discover -s tool/l10n -p 'test_check_completeness.py'
+          python3 tool/l10n/check_completeness.py
+
       - name: Set up Node for the optional quota collector tests
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
