@@ -32,14 +32,35 @@ private class PausedFile(path: String) : File(path) {
         return super.getParentFile()
     }
 }
+private class SpaceFile(path: String, private val initiallyLow: Boolean) : File(path) {
+    override fun getUsableSpace(): Long = if (initiallyLow || File(path, "space-drained").exists()) 1L else 2_000_000_000L
+}
 fun main(args: Array<String>) {
     val dir = Files.createTempDirectory("setup-runner-").toFile()
     try {
         val runner = SetupRunner::class.java.getDeclaredConstructor(Context::class.java)
-            .apply { isAccessible = true }.newInstance(Context(dir))
+            .apply { isAccessible = true }.newInstance(Context(if (args.single().startsWith("low-space")) SpaceFile(dir.path, args.single() == "low-space-first") else dir))
         val state = SetupJobState("job", "running", emptyList(), startedAt = 1)
         field(runner, "job").set(runner, state)
         when (args.single()) {
+            "low-space-first", "low-space-next" -> {
+                val next = args.single() == "low-space-next"
+                val first = SetupRunner.Spec("first", "touch '${dir.path}/space-drained'", false, false,
+                    1.0, false, null, null, emptyMap(), emptyMap())
+                val last = SetupRunner.Spec("second", "touch '${dir.path}/should-not-start'", false, false,
+                    1.0, false, null, null, emptyMap(), emptyMap())
+                runner.start("storage", if (next) listOf(first, last) else listOf(last), null,
+                    SetupRunner.Texts("channel", "title", "{percent}", "done", "stopped"))
+                (field(runner, "worker").get(runner) as Thread).join(5000)
+                check(!runner.running)
+                val status = JSONObject(runner.status()!!)
+                check(status.getString("state") == "failed") { "low space allowed setup" }
+                val error = status.getString("error")
+                check(error.contains("free space") && error.contains("try again")) { "low space lacks plain guidance" }
+                check(!error.contains("ENOSPC"))
+                check(!File(dir, "should-not-start").exists()) { "work started with low space" }
+                if (next) check(File(dir, "space-drained").exists()) { "first component never ran" }
+            }
             "ordered-terminal" -> {
                 val file = PausedFile(File(dir, "setup.json").path)
                 field(runner, "file").set(runner, file)

@@ -28,6 +28,8 @@ void main() {
     'service-finish-denied',
     'service-update-denied',
     'agent-output-private',
+    'low-space-first',
+    'low-space-next',
   ];
   // The scenarios share nothing: the JVMs run side by side.
   final runs = <String, Future<ProcessResult>>{};

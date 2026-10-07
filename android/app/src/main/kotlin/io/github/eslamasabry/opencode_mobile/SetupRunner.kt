@@ -8,6 +8,28 @@ import java.io.FileWriter
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
+/** Fresh storage admission for setup and the private agent host. */
+object SetupDiskSpace {
+    const val MIN_INSTALL_BYTES = 300_000_000L
+    const val MIN_LAUNCH_BYTES = 128_000_000L
+    private const val LOW_SPACE =
+        "There is not enough free space on this phone. Free some storage and try again."
+
+    fun requiredInstallBytes(downloadBytes: Long): Long {
+        val nonnegative = downloadBytes.coerceAtLeast(0L)
+        val doubled = if (nonnegative > Long.MAX_VALUE / 2L) Long.MAX_VALUE else nonnegative * 2L
+        return maxOf(doubled, MIN_INSTALL_BYTES)
+    }
+
+    fun error(directory: File, requiredBytes: Long): String? {
+        var existing = directory
+        while (!existing.exists()) {
+            existing = existing.parentFile ?: return LOW_SPACE
+        }
+        return if (existing.usableSpace >= requiredBytes) null else LOW_SPACE
+    }
+}
+
 /**
  * Runs a phone setup job (docs/design/phone-setup-v2-2026-09-24.md, "Running a
  * setup job"): the components the app asked for, in order, on one background
@@ -128,11 +150,9 @@ class SetupRunner private constructor(private val context: Context) {
                 stepResult = null
                 tail.clear()
                 try { log?.close() } catch (_: Exception) { }
-                log = try {
-                    FileWriter(logFile, false)
-                } catch (_: Exception) {
-                    null
-                }
+                // Open the optional details log only once storage admission
+                // succeeds. The durable state writer creates the home first.
+                log = null
                 try {
                     writeNow()
                 } catch (error: SetupPersistenceException) {
@@ -185,11 +205,34 @@ class SetupRunner private constructor(private val context: Context) {
     private fun runJob(specs: List<Spec>) {
         val writer = Thread({ flushLoop() }, "oc-setup-writer").apply { isDaemon = true }
         var failure: String? = null
+        var logOpened = false
         try {
             writer.start()
             for (spec in specs) {
                 if (spec.skipped) continue
                 if (cancelled) break
+                val requiredBytes = spec.data["requiredFreeBytes"]?.toLongOrNull()
+                    ?.takeIf { it >= SetupDiskSpace.MIN_INSTALL_BYTES }
+                    ?: SetupDiskSpace.MIN_INSTALL_BYTES
+                val storageError = SetupDiskSpace.error(linux.home, requiredBytes)
+                if (storageError != null) {
+                    synchronized(lock) {
+                        job!!.current = spec.id
+                        job!!.component(spec.id).apply {
+                            state = "failed"
+                            error = storageError
+                            endedAt = System.currentTimeMillis()
+                        }
+                    }
+                    failure = storageError
+                    break
+                }
+                if (!logOpened) {
+                    synchronized(lock) {
+                        log = try { FileWriter(logFile, false) } catch (_: Exception) { null }
+                    }
+                    logOpened = true
+                }
                 val component = synchronized(lock) {
                     job!!.current = spec.id
                     job!!.component(spec.id).apply {

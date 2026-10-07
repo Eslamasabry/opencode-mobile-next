@@ -27,6 +27,9 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
             check(children.values.none { it.isAlive }) { "The agent host is unavailable." }
             (generations[profile] ?: 0L).also { generations[profile] = it }
         }
+        SetupDiskSpace.error(linux.home, SetupDiskSpace.MIN_LAUNCH_BYTES)?.let {
+            throw IllegalStateException(it)
+        }
         linux.writeAgentConfig(profile, config)
         // A Claude process Android stopped mid-refresh leaves Claude's login
         // lock behind, and the first message then fails with "another Claude
