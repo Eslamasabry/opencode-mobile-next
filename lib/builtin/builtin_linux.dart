@@ -124,6 +124,62 @@ enum BuiltinProotMode {
   };
 }
 
+/// Classification of an exit, without inferring a confirmed memory shortage.
+enum BuiltinServiceExitReason {
+  /// Exit 137 may be a memory or Android phantom-process kill. The exit code
+  /// alone cannot distinguish those from another SIGKILL.
+  memoryOrPhantomKill,
+  exited,
+  unknown;
+
+  static BuiltinServiceExitReason parse(Object? value) => switch (value) {
+    'memory_or_phantom_kill' => memoryOrPhantomKill,
+    'exited' => exited,
+    _ => unknown,
+  };
+}
+
+/// One app-owned service's lifetime diagnostics, without command or log text.
+class BuiltinServiceDiagnostics {
+  const BuiltinServiceDiagnostics({
+    this.running = false,
+    this.lastExitCode,
+    this.lastUptimeMs,
+    this.uptimeMs,
+    this.restartCount = 0,
+    this.exitReason = BuiltinServiceExitReason.unknown,
+  });
+
+  factory BuiltinServiceDiagnostics.fromMap(Map<Object?, Object?> map) {
+    // Native counters are integers. Do not truncate fractional or non-finite
+    // values into apparently valid diagnostics.
+    int? asInt(Object? value) => value is int ? value : null;
+    int? nonNegativeInt(Object? value) => switch (asInt(value)) {
+      final int number when number >= 0 => number,
+      _ => null,
+    };
+    return BuiltinServiceDiagnostics(
+      running: map['running'] == true,
+      lastExitCode: asInt(map['lastExitCode']),
+      lastUptimeMs: nonNegativeInt(map['lastUptimeMs']),
+      uptimeMs: nonNegativeInt(map['uptimeMs']),
+      restartCount: nonNegativeInt(map['restartCount']) ?? 0,
+      exitReason: BuiltinServiceExitReason.parse(map['exitReason']),
+    );
+  }
+
+  final bool running;
+  final int? lastExitCode;
+
+  /// Completed run duration. Null means no valid observation is available.
+  final int? lastUptimeMs;
+
+  /// Current run duration. Null means no run or no valid observation.
+  final int? uptimeMs;
+  final int restartCount;
+  final BuiltinServiceExitReason exitReason;
+}
+
 /// One reading of `performance`: what the Performance details show.
 class BuiltinPerformance {
   const BuiltinPerformance({
@@ -132,16 +188,24 @@ class BuiltinPerformance {
     this.prootFilters,
     this.serverFilters,
     this.workHeld = false,
+    this.services = const {},
   });
 
   factory BuiltinPerformance.fromMap(Map<Object?, Object?> map) {
-    int? asInt(Object? value) => value is num ? value.toInt() : null;
+    int? asInt(Object? value) => value is int ? value : null;
     return BuiltinPerformance(
       serverRunning: map['serverRunning'] == true,
       prootMode: BuiltinProotMode.parse(map['prootMode']),
       prootFilters: asInt(map['prootFilters']),
       serverFilters: asInt(map['serverFilters']),
       workHeld: map['workHeld'] == true,
+      services: Map.unmodifiable({
+        if (map['services'] case final Map services)
+          for (final entry in services.entries)
+            if (entry.key case final String name when name.isNotEmpty)
+              if (entry.value case final Map<Object?, Object?> diagnostics)
+                name: BuiltinServiceDiagnostics.fromMap(diagnostics),
+      }),
     );
   }
 
@@ -155,6 +219,10 @@ class BuiltinPerformance {
 
   /// Whether the phone is kept awake for a running reply now.
   final bool workHeld;
+
+  /// Current and previously launched services keyed by native service name.
+  /// Empty on older APKs. These snapshots contain no credentials or log text.
+  final Map<String, BuiltinServiceDiagnostics> services;
 }
 
 /// The answer of one `run`.
