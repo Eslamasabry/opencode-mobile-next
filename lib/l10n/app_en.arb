@@ -8869,7 +8869,7 @@
   },
   "teamUiAddAddressHint": "http://100.x.x.x:8373",
   "@teamUiAddAddressHint": {
-    "description": "Hint inside the host address field of the manual add form"
+    "description": "Field example: Hint inside the host address field of the manual add form"
   },
   "teamUiAddAddressLabel": "Address",
   "@teamUiAddAddressLabel": {
