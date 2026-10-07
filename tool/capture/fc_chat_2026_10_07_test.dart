@@ -8,6 +8,9 @@
 // Output: docs/qa/<item>-2026-10-07/<before|after>-<state>.png
 //
 // ignore_for_file: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
@@ -130,5 +133,63 @@ void main() {
       await _shot(tester, key, 'FC1', 'composer-$name');
       await _unmount(tester);
     }
+  });
+
+  testWidgets('FC4 photos sent with a prompt', (tester) async {
+    if (!_wanted('FC4')) return;
+    String jpeg(String path) =>
+        'data:image/jpeg;base64,${base64Encode(File(path).readAsBytesSync())}';
+    final now = DateTime.now().millisecondsSinceEpoch;
+    Part file(String id, String name, String mime, String url) => Part(
+      id: id,
+      messageID: 'msg_user',
+      type: 'file',
+      mime: mime,
+      filename: name,
+      url: url,
+    );
+    final transcript = [
+      MessageWithParts(
+        info: messageInfo('msg_user', 'user', created: now, completed: now),
+        parts: [
+          Part(
+            id: 'part_text',
+            messageID: 'msg_user',
+            type: 'text',
+            text: 'Why does the chip look different on these two screens?',
+          ),
+          file(
+            'p1',
+            'IMG_2041.jpg',
+            'image/jpeg',
+            jpeg('docs/qa/FC4-2026-10-07/sample-photo-1.jpg'),
+          ),
+          file(
+            'p2',
+            'IMG_2042.jpg',
+            'image/jpeg',
+            jpeg('docs/qa/FC4-2026-10-07/sample-photo-2.jpg'),
+          ),
+          file(
+            'd1',
+            'notes.pdf',
+            'application/pdf',
+            'data:application/pdf;base64,JVBERi0=',
+          ),
+        ],
+      ),
+    ];
+    final api = _Api()
+      ..busy = {}
+      ..messagesHandler = (_) async => transcript;
+    final (_, key) = await _chat(tester, api);
+    for (var i = 0; i < 4; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 200)),
+      );
+      await _settle(tester, 2);
+    }
+    await _shot(tester, key, 'FC4', 'sent-photos');
+    await _unmount(tester);
   });
 }

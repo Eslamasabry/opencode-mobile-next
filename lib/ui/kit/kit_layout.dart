@@ -101,6 +101,10 @@ abstract final class KitLayout {
   /// the width (the horizontal is `KitTokens.space3`, 12).
   static const double bubblePaddingVertical = 10;
 
+  /// A sent photo's square thumbnail inside a prompt bubble (KitMessage.md):
+  /// three fit a phone's bubble side by side.
+  static const double promptPhotoSize = 96;
+
   /// The composer field's height cap as a share of the window height
   /// (KitComposer.md).
   static const double composerMaxShare = .4;
