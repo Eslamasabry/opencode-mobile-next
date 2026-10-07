@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Commit rules check (STANDARDS.md G33; rules PROC-14 and the format step of PROC-5).
 #
-# Opt-in only. The repository installs no git hook: a hook in this checkout's
+# Enforced in the Android quality checks job; also callable locally. The repository installs no git hook: a hook in this checkout's
 # .git (or core.hooksPath) would run on every agent's commits in every
 # worktree. Run the range mode by hand before asking for a merge; a person
 # who wants it on each of their own commits can call the message mode from a
@@ -71,6 +71,9 @@ check_message() {
         print label ": no blank line after the subject"; bad = 1
       }
       if (is_merge == 1) exit bad
+      if (lines[1] !~ /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([A-Za-z0-9_.\/-]+\))?!?: [^ ]/) {
+        print label ": malformed subject (use type(scope): plain sentence)"; bad = 1
+      }
       # Last paragraph = candidate trailer block.
       start = n
       while (start > 1 && lines[start - 1] !~ /^[ \t]*$/) start--
