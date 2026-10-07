@@ -1,0 +1,13 @@
+{
+  "capture": {
+    "device": "emulator-5554",
+    "date": "2026-10-07",
+    "agent": "fx",
+    "elapsedMs": 174,
+    "source": "profile-scoped native-equivalent PRoot launch; AgentPhoneScripts.authProbe",
+    "sanitization": "Raw stdout/stderr withheld; account replaced when present"
+  },
+  "probe": {
+    "state": "signedOut"
+  }
+}

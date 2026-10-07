@@ -1,0 +1,12 @@
+{
+  "provenance": {
+    "kind": "synthetic",
+    "purpose": "Separate helper model/readiness snapshots from authoritative CLI authentication states. These are regression inputs, not device certification evidence."
+  },
+  "cases": [
+    {"name": "available", "entry": {"status": "ready", "enabled": true}},
+    {"name": "loading", "entry": {"status": "loading", "enabled": true}},
+    {"name": "error", "entry": {"status": "error", "enabled": true, "error": "Model catalogue unavailable"}},
+    {"name": "misleadingSignInError", "entry": {"status": "error", "enabled": true, "error": "Run agent login"}}
+  ]
+}

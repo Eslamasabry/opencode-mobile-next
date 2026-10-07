@@ -106,6 +106,8 @@ import '../domain/phone_agents.dart';
 import '../domain/phone_agents_source.dart';
 import '../domain/agent_sign_in.dart';
 import '../domain/agent_catalog.dart';
+import '../domain/agent_auth_probe.dart';
+import '../domain/turn_stall.dart';
 import '../paseo/chat_feed_source.dart';
 import '../builtin/agents/phone_agents_host.dart' show BuiltinPhoneAgents;
 import '../builtin/agents/agent_sign_in.dart' show ChannelAgentSignInHost;
@@ -136,6 +138,7 @@ part 'connection/pending_reads.dart';
 part 'connection/session_cache.dart';
 part 'connection/team.dart';
 part 'connection/phone_chat.dart';
+part 'connection/turn_stall.dart';
 part 'connection/forms_inbox.dart';
 part 'connection/events.dart';
 part 'connection/session_events.dart';
@@ -775,6 +778,7 @@ class ConnectionController extends ChangeNotifier
   void dispose() {
     if (_disposed) return;
     _disposed = true;
+    _resetTurnStalls();
     _genUiDispose();
     _resetConnectionStatusClock();
     _feedDispose();
@@ -825,7 +829,10 @@ class ConnectionController extends ChangeNotifier
 
   /// [notifyListeners] for this library's extension parts, which cannot call
   /// a protected member themselves.
-  void _notifyListeners() => notifyListeners();
+  void _notifyListeners() {
+    _syncTurnStalls();
+    notifyListeners();
+  }
 
   /// Announces [profileDataChanges] for the deletion sweep in its part.
   void _notifyProfileDataChanged() => _profileDataChanges.notifyListeners();

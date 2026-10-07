@@ -10,6 +10,8 @@ import '../../domain/agent_catalog.dart';
 import '../../domain/phone_agent_host.dart';
 import '../../domain/phone_agents.dart';
 import '../../domain/agent_sign_in.dart';
+import '../../domain/agent_auth_probe.dart';
+import 'agent_scripts.dart';
 import '../../paseo/gateway.dart';
 import '../../paseo/transport.dart';
 import '../../ui/kit/kit_redact.dart';
@@ -81,6 +83,78 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
       throw const AgentHostException(AgentHostFailure.unavailable);
     }
     return agent;
+  }
+
+  bool _authBridgeAvailable = false;
+  bool supportsSignOut(String agentId) =>
+      _authBridgeAvailable &&
+      AgentPhoneScripts.supportsSignOut(_agent(agentId));
+
+  Future<AgentAuthProbeResult> probeSignIn(String agentId) =>
+      _authCommand(agentId, logout: false);
+
+  Future<AgentAuthProbeResult> signOut(String agentId) =>
+      _authCommand(agentId, logout: true);
+
+  Future<bool?> helperRunning() async {
+    final value = (await _invoke('agentHostStatus'))['running'];
+    return value is bool ? value : null;
+  }
+
+  Future<AgentAuthProbeResult> _authCommand(
+    String agentId, {
+    required bool logout,
+  }) async {
+    if (_disposed) {
+      return const AgentAuthProbeResult.failed(
+        AgentAuthProbeError.hostUnavailable,
+      );
+    }
+    final generation = _generation;
+    final agent = _agent(agentId);
+    // Only authored scripts can use this path. The CLI's stdout/stderr stay
+    // inside its bounded Python child; only the narrow auth projection crosses
+    // the channel. Match startAgentProcess's native profile environment.
+    final home = '/home/oc/.oc-profiles/$profileId';
+    final command = logout
+        ? AgentPhoneScripts.signOut(agent)
+        : AgentPhoneScripts.authProbe(agent);
+    final script =
+        "export HOME='$home' CLAUDE_CONFIG_DIR='$home/claude' CODEX_HOME='$home/codex' DISABLE_AUTOUPDATER=1 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1\n$command";
+    try {
+      final raw = await _channel
+          .invokeMethod<Object?>('agentAuthProbe', {
+            'profileId': profileId,
+            'agentId': agentId,
+            'action': logout ? 'logout' : 'probe',
+            'script': script,
+            'timeoutSeconds': logout ? 20 : 10,
+          })
+          .timeout(Duration(seconds: logout ? 20 : 10));
+      if (_disposed || generation != _generation || raw is! Map) {
+        return const AgentAuthProbeResult.failed(
+          AgentAuthProbeError.hostUnavailable,
+        );
+      }
+      if (jsonEncode(raw).length > 2048) {
+        return const AgentAuthProbeResult.failed(
+          AgentAuthProbeError.invalidResponse,
+        );
+      }
+      _authBridgeAvailable = true;
+      return AgentAuthProbeResult.fromJson(Map<String, dynamic>.from(raw));
+    } on MissingPluginException {
+      _authBridgeAvailable = false;
+      return const AgentAuthProbeResult.failed(
+        AgentAuthProbeError.probeUnsupported,
+      );
+    } on TimeoutException {
+      return const AgentAuthProbeResult.failed(AgentAuthProbeError.timedOut);
+    } catch (_) {
+      return const AgentAuthProbeResult.failed(
+        AgentAuthProbeError.hostUnavailable,
+      );
+    }
   }
 
   Future<Map<Object?, Object?>> _invoke(

@@ -19,6 +19,8 @@ import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
+import 'package:opencode_mobile/domain/agent_auth_probe.dart';
+import 'package:opencode_mobile/domain/turn_stall.dart';
 import 'package:opencode_mobile/domain/genui/gen_ui.dart';
 import 'package:opencode_mobile/domain/genui/gen_ui_history.dart';
 import 'package:opencode_mobile/builtin/agents/gen_ui_install.dart';
@@ -48,6 +50,7 @@ part 'support/phone_agents_list_question_tests.dart';
 part 'support/phone_agents_list_permission_tests.dart';
 part 'support/phone_agents_reopen_tests.dart';
 part 'support/phone_agents_photo_card_tests.dart';
+part 'support/phone_agents_stall_tests.dart';
 
 const _project = '/root/projects/app';
 const _stamp = '2026-10-03T08:00:00Z';
@@ -126,6 +129,9 @@ class _OcApi extends OpenCodeApi {
       : Future.value(Health(healthy: true, version: '1'));
   @override
   Future<List<Session>> sessions() async => const [];
+  @override
+  Future<Session> session(String id) async =>
+      Session(id: id, directory: _project);
   @override
   Future<Map<String, String>> sessionStatuses() async => const {};
   @override
@@ -221,6 +227,11 @@ class _Events {
 }
 
 class _HostState {
+  Future<AgentAuthProbeResult> Function(String)? probeHandler;
+  final auth = <String, AgentAuthProbeResult>{};
+  AgentAuthProbeResult logoutResult = const AgentAuthProbeResult(
+    state: AgentAuthProbeState.signedOut,
+  );
   PaseoGateway Function(PaseoTransport, String)? gatewayFactory;
   void Function(FakePaseoSocket)? configureSocket;
   bool freshPrivateSockets = false;
@@ -240,11 +251,32 @@ class _HostState {
   int failOpens = 0;
 }
 
-class _FakeHost implements PhoneAgentHostPort {
+class _FakeHost implements PhoneAgentHostPort, PhoneAgentAuthPort {
   _FakeHost(this.events, this.profileId, this.state);
   final _Events events;
   final String profileId;
   final _HostState state;
+  @override
+  Future<AgentAuthProbeResult> probeSignIn(String id) async =>
+      await state.probeHandler?.call(id) ??
+      state.auth[id] ??
+      ({
+            AgentSignInPhase.signedIn,
+            AgentSignInPhase.limitReached,
+          }.contains(state.runtimes[id]?.signInPhase)
+          ? const AgentAuthProbeResult(state: AgentAuthProbeState.signedIn)
+          : const AgentAuthProbeResult.failed(
+              AgentAuthProbeError.invalidResponse,
+            ));
+  @override
+  bool supportsSignOut(String id) => id == 'claude' || id == 'fx';
+  @override
+  Future<AgentAuthProbeResult> signOut(String id) async {
+    events.log.add('logout.$id');
+    state.auth[id] = state.logoutResult;
+    return state.logoutResult;
+  }
+
   final sockets = <FakePaseoSocket>[];
   final gateways = <PaseoGateway>[];
   final setup = StreamController<AgentSetupProgress>.broadcast(sync: true);
@@ -581,6 +613,10 @@ Future<_World> _world(
       return api;
     },
     repositoryFactory: (api) => _OcRepo(api, script),
+    v2GatewayFactory: (_) {
+      final api = _OcApi(script);
+      return (gateway: api, operations: _OcRepo(api, script));
+    },
     eventStreamFactory:
         ({required api, required onEvent, required onStatus, onError}) =>
             _Stream(
@@ -626,6 +662,7 @@ void main() {
   _listPermissionTests();
   _reopenAgentTests();
   _photoCardAliasTests();
+  _turnStallControllerTests();
 
   const dir = _project;
 
@@ -1198,7 +1235,7 @@ void main() {
     c.dispose();
   });
 
-  testWidgets('another agent\'s sign-in is what the helper reports', (
+  testWidgets('BA1 agent sign-in comes from CLI even when helper disagrees', (
     tester,
   ) async {
     final w = await _world(tester);
@@ -1219,6 +1256,9 @@ void main() {
         'error': 'AuthRequired: run codex login',
       },
     ];
+    w.state.auth['codex'] = const AgentAuthProbeResult(
+      state: AgentAuthProbeState.signedOut,
+    );
     final c = w.controller;
     await c.rememberLastUsedProject(dir);
     await c.refreshAgentRows();
@@ -1226,13 +1266,106 @@ void main() {
     AgentRow codex() => c.agentRows.firstWhere((row) => row.id == 'codex');
     expect(codex().status, PhoneAgentStatus.signedOut);
     expect(codex().fixAction, PhoneAgentFixAction.signIn);
-    // Signed in on its terminal: the helper says it can start now.
+    // Only explicit account proof changes the row, not helper readiness.
     w.state.providers = [_provider('claude'), _provider('codex')];
+    await c.recheckAgentSignIn('codex');
+    expect(codex().status, PhoneAgentStatus.signedOut);
+    w.state.auth['codex'] = const AgentAuthProbeResult(
+      state: AgentAuthProbeState.signedIn,
+    );
     await c.recheckAgentSignIn('codex');
     expect(codex().chatSelectable, isTrue);
     await tester.pump(const Duration(seconds: 3));
     c.dispose();
   });
+
+  test(
+    'BA3 terminal completion requires signed-in probe and BA8 verifies logout',
+    () async {
+      final w = await ready(null);
+      final c = w.controller;
+      w.state.auth['claude'] = const AgentAuthProbeResult(
+        state: AgentAuthProbeState.signedOut,
+      );
+      expect(await c.confirmAgentSignIn('claude'), isFalse);
+      w.state.auth['claude'] = const AgentAuthProbeResult.failed(
+        AgentAuthProbeError.invalidResponse,
+      );
+      expect(await c.confirmAgentSignIn('claude'), isFalse);
+      w.state.auth['claude'] = const AgentAuthProbeResult(
+        state: AgentAuthProbeState.signedIn,
+        accountDisplayName: 'Example account',
+      );
+      expect(await c.confirmAgentSignIn('claude'), isTrue);
+      expect(c.agentAccount('claude')?.accountDisplayName, 'Example account');
+      w.state.logoutResult = const AgentAuthProbeResult(
+        state: AgentAuthProbeState.signedIn,
+      );
+      await expectLater(
+        c.signOutAgent('claude'),
+        throwsA(isA<ProductException>()),
+      );
+      expect(c.agentAccount('claude')?.state, AgentAuthProbeState.signedIn);
+      w.state.logoutResult = const AgentAuthProbeResult(
+        state: AgentAuthProbeState.signedOut,
+      );
+      await c.signOutAgent('claude');
+      expect(c.agentAccount('claude')?.state, AgentAuthProbeState.signedOut);
+      expect(c.agentAccount('claude')?.accountDisplayName, isNull);
+      expect(w.events.log.where((e) => e == 'logout.claude').length, 2);
+      c.dispose();
+    },
+  );
+
+  test(
+    'BA3 a late older probe cannot complete a newer signed-out attempt',
+    () async {
+      final w = await ready(null);
+      final c = w.controller;
+      final first = Completer<AgentAuthProbeResult>();
+      final last = Completer<AgentAuthProbeResult>();
+      var count = 0;
+      w.state.probeHandler = (_) => ++count == 1
+          ? first.future
+          : count >= 4
+          ? last.future
+          : Future.value(
+              const AgentAuthProbeResult(state: AgentAuthProbeState.signedOut),
+            );
+      final oldAttempt = c.recheckAgentSignIn('claude');
+      await Future<void>.delayed(Duration.zero);
+      expect(await c.confirmAgentSignIn('claude'), isFalse);
+      first.complete(
+        const AgentAuthProbeResult(state: AgentAuthProbeState.signedIn),
+      );
+      await Future<void>.delayed(Duration.zero);
+      final whileFinalReadPending = c.agentAccount('claude')?.state;
+      last.complete(
+        const AgentAuthProbeResult(state: AgentAuthProbeState.signedOut),
+      );
+      await oldAttempt;
+      expect(whileFinalReadPending, AgentAuthProbeState.signedOut);
+      expect(c.agentAccount('claude')?.state, AgentAuthProbeState.signedOut);
+      expect(c.agentSignInState('claude')?.phase, AgentSignInPhase.signedOut);
+      c.dispose();
+    },
+  );
+
+  test(
+    'BA1 missing multi-agent bridge preserves direct Claude status only',
+    () async {
+      final w = await ready(null);
+      final c = w.controller;
+      w.signIn.phase = AgentSignInPhase.signedIn;
+      w.state.probeHandler = (_) async => const AgentAuthProbeResult.failed(
+        AgentAuthProbeError.probeUnsupported,
+      );
+      await c.recheckAgentSignIn('claude');
+      expect(c.agentAccount('claude')?.state, AgentAuthProbeState.signedIn);
+      expect(c.agentAccount('claude')?.accountDisplayName, isNull);
+      c.dispose();
+    },
+  );
 
   group('issue #95: a sign-in check always ends', () {
     const codexInstalled = PhoneAgentRuntime(
@@ -1468,6 +1601,46 @@ void main() {
   });
 
   test(
+    'BA5 protocol switch keeps host account and conversation rows',
+    () async {
+      final w = await ready(null);
+      final c = w.controller;
+      w.signIn.phase = AgentSignInPhase.signedIn;
+      await c.recheckAgentSignIn('claude');
+      final original = c.store.profiles.single;
+      final two = ServerProfile(
+        id: 'two',
+        name: 'OpenCode 2',
+        baseUrl: original.baseUrl,
+        flavor: ServerFlavor.v2,
+      );
+      await c.store.upsert(two);
+      final owner = c.agentSignInProfileId;
+      final hosts = w.hosts.length;
+      await c.connect(two);
+      await c.refreshAgentRows();
+      expect(c.agentSignInProfileId, owner);
+      expect(c.agentSignInState('claude')?.phase, AgentSignInPhase.signedIn);
+      expect(w.hosts.length, hosts);
+      expect(
+        c.chatFeed().items.any(
+          (row) => row.sourceId?.startsWith('paseo:') == true,
+        ),
+        isTrue,
+      );
+      await c.connect(original);
+      await c.refreshAgentRows();
+      expect(c.agentSignInProfileId, owner);
+      expect(w.hosts.length, hosts);
+      expect(
+        c.agentRows.firstWhere((row) => row.id == 'claude').chatSelectable,
+        isTrue,
+      );
+      c.dispose();
+    },
+  );
+
+  test(
     'deletion closes auth, setup, host and feeds before ProfileStore',
     () async {
       final w = await ready(
@@ -1484,7 +1657,6 @@ void main() {
       final result = await c.deleteProfileAndLocalData('local');
       expect(result.removedProfile, isTrue);
       expect(w.events.log, [
-        'auth.cancelAndDrain',
         'host.cancelInstall',
         'host.stop',
         'host.dispose',

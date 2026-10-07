@@ -37,11 +37,31 @@ mixin _ConnectionControllerPhoneChat on ChangeNotifier {
   /// status alone can miss; a session going idle closes it and it never
   /// outlives [_openTurnGrace], so a lost event cannot hold a flow forever.
   final Map<String, DateTime> _openTurns = {};
+  TurnStallTracker _turnStalls = TurnStallTracker();
+  final _turnStallSessions = <String>{};
+  Timer? _turnStallTimer;
+  Future<TurnStallEvidence> Function()? _turnStallProbe;
+  bool _turnStallProbing = false;
+  bool? _turnStallTransportConnected;
+
+  TurnStallDiagnosis? turnStallFor(String sessionId) =>
+      _turnStalls.diagnosisFor(sessionId);
+
+  @visibleForTesting
+  void configureTurnStallForTesting({
+    required Duration Function() elapsed,
+    required Future<TurnStallEvidence> Function() probe,
+  }) {
+    _self._resetTurnStalls();
+    _turnStalls = TurnStallTracker(elapsed: elapsed);
+    _turnStallProbe = probe;
+  }
 
   /// The chat just put a prompt for [sessionId] on the wire.
   void noteLocalTurn(String sessionId) {
     if (sessionId.isEmpty) return;
     _openTurns[sessionId] = DateTime.now();
+    _self._syncTurnStalls();
   }
 }
 
