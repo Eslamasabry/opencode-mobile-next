@@ -55,22 +55,40 @@ void main() {
     expect(jsonDecode(agentCertificationBundledJson), isA<Map>());
   });
 
-  test(
-    'current evidence has no exact runtime metadata and grants no flags',
-    () {
-      for (final descriptor in AgentCatalog.builtIn.agents) {
-        for (final architecture in AgentArchitecture.values) {
-          expectClosed(
-            AgentCertificationMatrix.bundled.capabilitiesFor(
-              descriptor: descriptor,
-              architecture: architecture,
-              helperVersion: '0.9.2',
-            ),
-          );
-        }
-      }
-    },
-  );
+  test('bundled Claude evidence qualifies arm64 and x64 with exact helper', () {
+    expect(claude.recipe!.version, '2.1.283');
+    for (final architecture in AgentArchitecture.values) {
+      final proof = AgentCertificationMatrix.bundled.capabilitiesFor(
+        descriptor: claude,
+        architecture: architecture,
+        helperVersion: '0.9.2',
+      );
+      expect(proof.resumeVerified, isTrue);
+      expect(flags(proof), everyElement(isTrue));
+    }
+    for (final helperVersion in [null, '0.9.3']) {
+      expectClosed(
+        AgentCertificationMatrix.bundled.capabilitiesFor(
+          descriptor: claude,
+          architecture: AgentArchitecture.arm64,
+          helperVersion: helperVersion,
+        ),
+      );
+    }
+  });
+
+  test('bundled fx and other agents remain unverified on arm64', () {
+    for (final descriptor in AgentCatalog.builtIn.agents) {
+      if (descriptor.id == 'claude') continue;
+      expectClosed(
+        AgentCertificationMatrix.bundled.capabilitiesFor(
+          descriptor: descriptor,
+          architecture: AgentArchitecture.arm64,
+          helperVersion: '0.9.2',
+        ),
+      );
+    }
+  });
 
   test('each exact pass cell grants only its corresponding capability', () {
     final names = ['resume', 'models', 'permission', 'images', 'abort'];

@@ -112,7 +112,7 @@
     },
     "images": {
      "state": "pass",
-     "evidence": "docs/qa/agent-tools-2026-10-07/README.md #5 (photo card)"
+     "evidence": "docs/qa/agent-tools-2026-10-07/README.md#5"
     }
    },
    "agentVersion": "2.1.283",

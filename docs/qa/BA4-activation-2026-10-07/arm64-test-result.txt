@@ -1,0 +1,7 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_certification_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_certification_test.dart: bundled Claude evidence qualifies arm64 and x64 with exact helper
+00:00 +1: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:19 +1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: (setUpAll)
+00:19 +1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA4 gives arm64 Claude the connected helper certification
+00:19 +2: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: (tearDownAll)
+00:20 +2: All tests passed!

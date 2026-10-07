@@ -89,17 +89,19 @@ Passing `cards` alone does not qualify images; the two cells are independent.
 
 ## Current state and frontend behavior
 
-The currently bundled 2026-10-07 FQ1 matrix omits `agentVersion` and
-`helperVersion` on every row. Its projection therefore grants **zero**
-capabilities, including rows with passing permission cells. Do not invent
-metadata from today's catalog or a release constant to activate old evidence.
-The coordinator is supplying versioned evidence and images cells; merge and
-regenerate the snapshot when instructed. Omitted architecture does not block
-activation once the exact versions and individual pass cells are supplied.
+The coordinator's versioned 2026-10-07 matrix qualifies Claude Code `2.1.283`
+through an observed connected Paseo `0.9.2` helper for resume, models,
+permissions, images and cancel. Architecture is omitted, so these protocol
+capabilities also apply to arm64 phones. Other agents, including fx, remain
+unverified. A missing or different helper version still grants no capabilities.
+The bundled snapshot is regenerated from that reviewed matrix. The images
+citation is normalized to the same document and `#5` anchor, removing its prose
+annotation; evidence and pass state are unchanged. Do not invent metadata from
+the catalog or a release constant to activate other agents.
 
 Connection uses the observed connected helper version and host architecture;
-unknown observations are null. Replace the Claude identity-based resume
-override with this projection. Claude can continue using the existing
+unknown observations are null. The certification projection replaces the Claude
+identity-based resume override. An unqualified Claude can use the existing
 `AgentResumeNotice` UI when `resumeVerified` is false: "Can't reopen old chats"
 and "Starts a new chat", with explicit acknowledgement before a fresh chat.
 No raw technical error or credential appears in this contract. Missing evidence
@@ -113,8 +115,9 @@ affected connection tests after integration. It covers independent positive
 flags, exact agent/helper matching, optional architecture and scoped matching,
 independent photos qualification, null metadata, version invalidation,
 non-pass and unsafe evidence, malformed/unknown records, duplicates and alias
-collisions, immutable inputs, bundled parity, current all-false projection and
-resume copy. A negative control that returns all-false from `capabilitiesFor`
+collisions, immutable inputs, bundled parity, Claude's actual bundled evidence
+on arm64/x64, other agents staying unverified and unverified resume copy.
+A negative control that returns all-false from `capabilitiesFor`
 must fail the independent positive projection test; restoring it must pass.
 Reverting optional architecture must fail the cross-CPU regression; disabling
 the images projection must fail the photos regression.
