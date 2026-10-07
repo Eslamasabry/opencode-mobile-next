@@ -676,6 +676,31 @@ void main() {
       expect(shown.action?.label, 'Keep it running');
     });
 
+    testWidgets('once the server is back, the notice folds away by itself '
+        'instead of staying on every screen', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final recovery = AppExitRecovery(
+        bridge: _FakeBridge(_report(_ownerRecord, ['server'])),
+      );
+      addTearDown(recovery.dispose);
+      final starter = BuiltinServerStarter(linux: _FakeLinux());
+      addTearDown(starter.dispose);
+      await recovery.runOnce(
+        store: _Store(prefs: prefs, all: const []),
+        active: null,
+        starter: starter,
+      );
+      expect(recovery.notice, isNotNull);
+      recovery.noteServerBack();
+      await tester.pump(const Duration(seconds: 10));
+      // Repeated calls (every rebuild) do not restart the clock.
+      recovery.noteServerBack();
+      expect(recovery.notice, isNotNull);
+      await tester.pump(const Duration(seconds: 6));
+      expect(recovery.notice, isNull);
+    });
+
     testWidgets('Keep it running opens the guidance', (tester) async {
       const channel = MethodChannel(AppLifecycleBridge.channelName);
       final messenger = tester.binding.defaultBinaryMessenger;

@@ -11,6 +11,8 @@ plugins {
 val ocPreview = (project.findProperty("ocPreview") as String?) == "true"
 // Explicit test-build opt-in only; production builds retain normal R8 rules.
 val ocStableEngineQa = (project.findProperty("ocStableEngineQa") as String?) == "true"
+// Test-only release AOT smoke entry point and separate instrumentation runner.
+val ocBd9Smoke = (project.findProperty("ocBd9Smoke") as String?) == "true"
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.isFile) {
@@ -37,7 +39,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        testInstrumentationRunner = "io.github.eslamasabry.opencode_mobile.PhoneEngineAcceptance"
+        testInstrumentationRunner = "io.github.eslamasabry.opencode_mobile." +
+            (if (ocBd9Smoke) "Bd9DeviceSmoke" else "PhoneEngineAcceptance")
         // A preview build installs beside the stable app instead of over it
         // (`flutter build apk --android-project-arg=ocPreview=true`): its own
         // package, name, data and built-in Ubuntu, so trying a new version
@@ -68,7 +71,7 @@ android {
             signingConfig = signingConfigs.getByName("release")
             // Release instrumentation shares the target's Kotlin/native ABI.
             // R8 prototype rewrites otherwise break test-APK calls into it.
-            if (ocPreview || ocStableEngineQa) proguardFiles("phone-engine-instrumentation.pro")
+            if (ocPreview || ocStableEngineQa || ocBd9Smoke) proguardFiles("phone-engine-instrumentation.pro")
         }
     }
 }
@@ -127,6 +130,9 @@ androidComponents.onVariants(androidComponents.selector().withBuildType("release
 }
 
 dependencies {
+    // Flutter 3.47 excludes dev plugins from release configurations. The
+    // explicit AOT smoke needs the native result bridge in this test build.
+    if (ocBd9Smoke) add("releaseImplementation", project(":integration_test"))
     // ShortcutManagerCompat for the pinned-session launcher shortcuts
     // (PinnedSessionShortcuts.kt); same major line the Flutter embedding
     // already pulls in transitively, pinned so the compile classpath is

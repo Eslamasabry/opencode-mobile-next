@@ -26,8 +26,9 @@ same on-phone path; they are newer and not yet checked on a physical phone.
 
 Screenshots are real captures from Android emulators during QA.
 
-> An independent community project, not affiliated with or endorsed by the
-> OpenCode team or Anthropic. Built with substantial AI assistance.
+> OpenCode Mobile is an independent community project. It is not built,
+> maintained, endorsed by, or affiliated with the official OpenCode team.
+> Not affiliated with Anthropic either. Built with substantial AI assistance.
 > Report problems with **Report a problem** in the app.
 
 ## What you can do

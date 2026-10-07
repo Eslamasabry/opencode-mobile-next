@@ -186,7 +186,9 @@ void main() {
       // FB2: the whole journey in one line, with the registry's time said
       // once, under the promise.
       expect(
-        find.text('Install, name a project, chat · about 4 min'),
+        find.text(
+          'Install, name a project, start a conversation · about 4 min',
+        ),
         findsOneWidget,
       );
       expect(
@@ -502,7 +504,7 @@ void main() {
     );
     // The step line's time follows the selection, like the size.
     expect(
-      find.text('Install, name a project, chat · about 3 min'),
+      find.text('Install, name a project, start a conversation · about 3 min'),
       findsOneWidget,
     );
 

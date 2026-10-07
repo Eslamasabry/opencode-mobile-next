@@ -7,7 +7,6 @@
 //
 // Output: docs/qa/<item>-2026-10-07/<before|after>-<state>.png
 //
-// ignore_for_file: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
 import 'dart:convert';
 import 'dart:io';
 
@@ -17,6 +16,7 @@ import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 import 'fixtures.dart';
 
@@ -68,11 +68,13 @@ Future<(CaptureController, GlobalKey)> _chat(
   tester.view.physicalSize = _size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  SharedPreferences.setMockInitialValues(const {});
-  final controller = await captureController(
-    prefs: await SharedPreferences.getInstance(),
-    api: api,
-  );
+  // An empty in-memory store through the public platform interface
+  // (setMockInitialValues is test-only API and this is tool/).
+  SharedPreferencesStorePlatform.instance =
+      InMemorySharedPreferencesStore.empty();
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+  final controller = await captureController(prefs: prefs, api: api);
   before?.call(controller);
   addTearDown(controller.dispose);
   final key = GlobalKey();

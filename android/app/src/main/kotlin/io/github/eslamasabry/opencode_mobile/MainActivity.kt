@@ -49,10 +49,13 @@ class MainActivity : FlutterActivity() {
     private var networkMonitor: NetworkMonitor? = null
     private var projectExport: ProjectExportBridge? = null
     private var byoHostSigner: ByoHostSigner? = null
+    private var crashDiagnostics: CrashDiagnosticsBridge? = null
     private val voiceDownloadNotifications by lazy { VoiceDownloadNotifications(this) }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        crashDiagnostics?.dispose()
+        crashDiagnostics = CrashDiagnosticsBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         nativeReplies?.detach()
         val replies = NativeChannelReplies { action -> handler.post(action) }
         nativeReplies = replies
@@ -399,6 +402,8 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
+        crashDiagnostics?.dispose()
+        crashDiagnostics = null
         nativeReplies?.detach()
         nativeReplies = null
         byoHostSigner?.dispose()

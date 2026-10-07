@@ -473,7 +473,7 @@ void main() {
       // FB2: a first setup says where it sits in the whole journey.
       expect(
         find.text(
-          'Step 1 of 3: install. Then name a project and chat. You can leave '
+          'Step 1 of 3: install. Then name a project and start a conversation. You can leave '
           "the app. We'll notify you when it's ready.",
         ),
         findsOneWidget,

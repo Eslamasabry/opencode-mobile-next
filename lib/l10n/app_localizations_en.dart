@@ -11911,7 +11911,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get phoneSetupProgressFirstSetupNote =>
-      'Step 1 of 3: install. Then name a project and chat. You can leave the app. We\'ll notify you when it\'s ready.';
+      'Step 1 of 3: install. Then name a project and start a conversation. You can leave the app. We\'ll notify you when it\'s ready.';
 
   @override
   String get phoneSetupProgressStopTitle => 'Stop setup?';
@@ -12331,7 +12331,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String phoneSetupStartSteps(String time) {
-    return 'Install, name a project, chat · $time';
+    return 'Install, name a project, start a conversation · $time';
   }
 
   @override

@@ -1,0 +1,14 @@
+{
+  "frameworkVersion": "3.47.1",
+  "channel": "[user-branch]",
+  "repositoryUrl": "https://github.com/shorebirdtech/flutter.git",
+  "frameworkRevision": "91f8bd75076e9c740aa13cf67eb9ec1a093f68f5",
+  "frameworkCommitDate": "2026-08-21 15:05:14 -0400",
+  "engineRevision": "03e67977a7ff5893d96ac97f22c6a795530c0040",
+  "engineCommitDate": "2026-08-21 18:06:22.000Z",
+  "engineContentHash": "0d67965d6fad7710668736ed6f634df2261da12e",
+  "engineBuildDate": "2026-08-21 18:44:48.774",
+  "dartSdkVersion": "3.13.1",
+  "devToolsVersion": "2.60.0",
+  "flutterVersion": "3.47.1"
+}
