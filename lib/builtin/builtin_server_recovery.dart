@@ -46,9 +46,9 @@ typedef BuiltinRestartRecorder =
       required DateTime at,
     });
 
-/// Foreground-only recovery. The shell calls [check] on its bounded foreground
-/// health timer. Android remains the authority for crash versus explicit stop.
-/// An attempt is persisted before dispatch; recreation/resume never buys retries.
+/// Foreground health/receipt consumer of native crash recovery. The shell calls
+/// [check] on its bounded foreground health timer. Native owns migrated retry
+/// reservations; recreation/resume never buys retries.
 /// Only a confirmed explicit start through the shared starter resets the budget.
 class BuiltinServerRecovery extends ChangeNotifier {
   BuiltinServerRecovery({
@@ -106,6 +106,7 @@ class BuiltinServerRecovery extends ChangeNotifier {
   bool _disposed = false;
   bool _checking = false;
   bool _storageFailed = false;
+  bool _nativeAuthority = false;
   Completer<void>? _activeCheck;
   Future<void> _nativeCancellation = Future<void>.value();
   int _generation = 0;
@@ -125,6 +126,12 @@ class BuiltinServerRecovery extends ChangeNotifier {
     _profileBound = true;
     if (identical(profile, _profile) && _profileId == profile?.id) return;
     _policy?.removeListener(_policyChanged);
+    final previous = _profileId;
+    if (_nativeAuthority && previous != null) {
+      _nativeCancellation = _nativeCancellation.then(
+        (_) => linux.unbindServerRecovery(previous),
+      );
+    }
     _profile = profile;
     _profileId = profile?.id;
     _generation++;
@@ -141,7 +148,13 @@ class BuiltinServerRecovery extends ChangeNotifier {
     _manualResets.remove(profileId);
     await _nativeCancellation;
     await _activeCheck?.future;
+    if (_nativeAuthority) {
+      await linux.unbindServerRecovery(profileId, delete: true);
+    }
   }
+
+  /// Manual ownership transfer drains old admission before creating its process.
+  Future<void> drainNativeCancellation() => _nativeCancellation;
 
   Future<void> _cancelNative() {
     _nativeCancellation = _nativeCancellation.then((_) async {
@@ -153,6 +166,14 @@ class BuiltinServerRecovery extends ChangeNotifier {
   }
 
   void _policyChanged() {
+    final id = _profileId;
+    if (_nativeAuthority && id != null) {
+      // Native also rereads durable policy before every launch, so a delayed
+      // channel update cannot grant stale enabled permission.
+      _nativeCancellation = _nativeCancellation.then(
+        (_) => linux.unbindServerRecovery(id),
+      );
+    }
     _generation++;
     unawaited(_cancelNative());
     _schedule();
@@ -269,6 +290,14 @@ class BuiltinServerRecovery extends ChangeNotifier {
   Future<bool> _save(ServerProfile profile, _Budget budget) async {
     if (!store.profiles.any((p) => identical(p, profile))) return false;
     try {
+      if (_nativeAuthority) {
+        final updated = _Budget.readMap(
+          await linux.updateServerRecoveryReceipt(profile.id, budget.toJson()),
+        );
+        if (updated == null) throw StateError('Recovery state unavailable');
+        budget.revision = updated.revision;
+        return true;
+      }
       final saved = await store.prefs.setString(
         keyFor(profile.id),
         jsonEncode(budget.toJson()),
@@ -295,6 +324,11 @@ class BuiltinServerRecovery extends ChangeNotifier {
     if (_disposed) return;
     if (_checking) {
       await _activeCheck?.future;
+      // A confirmed manual start may arrive after the active check passed its
+      // reset branch. Drain that proof before the caller considers start done.
+      if (profile != null && _manualResets.contains(profile.id)) {
+        await check(profile);
+      }
       return;
     }
     if (!looksLikeInAppServer(profile)) {
@@ -314,7 +348,67 @@ class BuiltinServerRecovery extends ChangeNotifier {
       if (!_eligible(phone, generation) && !_manualResets.contains(phone.id)) {
         return;
       }
-      var budget = _Budget.read(store.prefs.getString(keyFor(phone.id)));
+      final initialStatus = await linux.status();
+      if (!_eligible(phone, generation) && !_manualResets.contains(phone.id)) {
+        return;
+      }
+      _Budget? budget;
+      if (initialStatus.serverRecoveryAuthority) {
+        try {
+          final raw = store.prefs.getString(keyFor(phone.id));
+          final migrated = _nativeMarker(raw);
+          final legacy = migrated ? null : _Budget.read(raw);
+          if (!migrated && legacy == null) {
+            _publish(BuiltinRecoveryPhase.storageUnavailable);
+            return;
+          }
+          // Stage while disabled. A failed marker write leaves an inactive native
+          // record that the next check can reuse without replenishing attempts.
+          if (!migrated) {
+            await linux.stageServerRecovery(phone.id, legacy!.toJson());
+          }
+          // Older APKs reject v2 rather than reusing a stale legacy budget.
+          // Persist before arming native code; failed writes remain fail-closed.
+          if (!migrated &&
+              !await store.prefs.setString(
+                keyFor(phone.id),
+                jsonEncode({'version': 2, 'nativeAuthority': true}),
+              )) {
+            _publish(BuiltinRecoveryPhase.storageUnavailable);
+            return;
+          }
+          _nativeAuthority = true;
+          budget = _Budget.readMap(
+            await linux.bindServerRecovery(
+              profileId: phone.id,
+              enabled: _eligible(phone, generation),
+              legacyBudget: null,
+            ),
+          );
+        } catch (_) {
+          _publish(BuiltinRecoveryPhase.storageUnavailable);
+          return;
+        }
+      } else {
+        budget = _Budget.read(store.prefs.getString(keyFor(phone.id)));
+      }
+      if (_nativeAuthority) {
+        for (final value in await linux.serverRecoveryReceipts(phone.id)) {
+          final receipt = _Budget.readMap(value);
+          if (receipt?.eventId == null || receipt?.confirmedAt == null) {
+            throw StateError('Recovery receipt unavailable');
+          }
+          if (!await onRestart(
+            profileId: phone.id,
+            eventId: receipt!.eventId!,
+            at: receipt.confirmedAt!,
+          )) {
+            _publish(BuiltinRecoveryPhase.storageUnavailable, budget);
+            return;
+          }
+          await linux.ackServerRecoveryReceipt(phone.id, receipt.eventId!);
+        }
+      }
       if (budget?.confirmedAt != null) {
         // A receipt is historical health evidence, independent of a process
         // that may since have stopped or changed its native generation.
@@ -325,8 +419,11 @@ class BuiltinServerRecovery extends ChangeNotifier {
         budget = budget.finished();
       }
       if (_manualResets.contains(phone.id)) {
-        budget = const _Budget();
-        if (!await _save(phone, budget)) {
+        budget = _nativeAuthority
+            ? _Budget.readMap(await linux.confirmManualServerStart(phone.id))
+            : _Budget();
+        if (budget == null ||
+            (!_nativeAuthority && !await _save(phone, budget))) {
           _publish(BuiltinRecoveryPhase.storageUnavailable);
           return;
         }
@@ -386,6 +483,10 @@ class BuiltinServerRecovery extends ChangeNotifier {
         await _confirm(phone, budget, generation);
         return;
       }
+      if (_nativeAuthority && status.serverRecoveryScheduled) {
+        _publish(BuiltinRecoveryPhase.waiting, budget);
+        return;
+      }
       // A pending dispatch with no process is a confirmed failed attempt.
       if (budget.pending) {
         budget = budget.finished();
@@ -403,15 +504,17 @@ class BuiltinServerRecovery extends ChangeNotifier {
         return;
       }
       final at = _now();
-      budget = _Budget(
-        attempts: budget.attempts + 1,
-        nextAt: at.add(retryDelay * (budget.attempts + 1)),
-        pending: true,
-        recoveryGeneration: status.serverRecoveryGeneration,
-        eventId:
-            'builtin-restart:${at.microsecondsSinceEpoch}:${budget.attempts + 1}',
-      );
-      if (!await _save(phone, budget)) {
+      if (!_nativeAuthority) {
+        budget = _Budget(
+          attempts: budget.attempts + 1,
+          nextAt: at.add(retryDelay * (budget.attempts + 1)),
+          pending: true,
+          recoveryGeneration: status.serverRecoveryGeneration,
+          eventId:
+              'builtin-restart:${at.microsecondsSinceEpoch}:${budget.attempts + 1}',
+        );
+      }
+      if (!_nativeAuthority && !await _save(phone, budget)) {
         _publish(BuiltinRecoveryPhase.storageUnavailable, budget);
         return;
       }
@@ -424,6 +527,13 @@ class BuiltinServerRecovery extends ChangeNotifier {
         stillWanted: () => _eligible(phone, generation),
       );
       if (!_eligible(phone, generation)) return;
+      if (_nativeAuthority) {
+        budget = _Budget.readMap(await linux.serverRecoveryBudget(phone.id));
+        if (budget == null) {
+          _publish(BuiltinRecoveryPhase.storageUnavailable);
+          return;
+        }
+      }
       if (failure == null) {
         final confirmed = await linux.status();
         if (!_eligible(phone, generation)) return;
@@ -452,7 +562,10 @@ class BuiltinServerRecovery extends ChangeNotifier {
       at: budget.confirmedAt!,
     );
     if (!recorded) return false;
-    return _save(phone, budget.finished());
+    final finished = budget.finished();
+    final saved = await _save(phone, finished);
+    budget.revision = finished.revision;
+    return saved;
   }
 
   Future<void> _confirm(
@@ -492,15 +605,28 @@ class BuiltinServerRecovery extends ChangeNotifier {
   }
 }
 
+bool _nativeMarker(String? raw) {
+  try {
+    final value = raw == null ? null : jsonDecode(raw);
+    return value is Map &&
+        value['version'] == 2 &&
+        value['nativeAuthority'] == true;
+  } catch (_) {
+    return false;
+  }
+}
+
 class _Budget {
-  const _Budget({
+  _Budget({
     this.attempts = 0,
     this.nextAt,
     this.pending = false,
     this.eventId,
     this.recoveryGeneration,
     this.confirmedAt,
+    this.revision = 0,
   });
+  int revision;
   final int attempts;
   final DateTime? nextAt;
   final bool pending;
@@ -514,10 +640,13 @@ class _Budget {
     eventId: eventId,
     recoveryGeneration: recoveryGeneration,
     confirmedAt: at,
+    revision: revision,
   );
-  _Budget finished() => _Budget(attempts: attempts, nextAt: nextAt);
+  _Budget finished() =>
+      _Budget(attempts: attempts, nextAt: nextAt, revision: revision);
   Map<String, Object?> toJson() => {
     'version': 1,
+    'revision': revision,
     'attempts': attempts,
     'nextAt': nextAt?.millisecondsSinceEpoch,
     'pending': pending,
@@ -526,9 +655,16 @@ class _Budget {
     'confirmedAt': confirmedAt?.millisecondsSinceEpoch,
   };
   static _Budget? read(String? raw) {
-    if (raw == null) return const _Budget();
+    if (raw == null) return _Budget();
     try {
-      final json = jsonDecode(raw);
+      return readMap(jsonDecode(raw));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static _Budget? readMap(Object? json) {
+    try {
       if (json is! Map ||
           json['version'] != 1 ||
           json['attempts'] is! int ||
@@ -545,6 +681,7 @@ class _Budget {
       }
       return _Budget(
         attempts: json['attempts'] as int,
+        revision: json['revision'] is int ? json['revision'] as int : 0,
         nextAt: json['nextAt'] == null
             ? null
             : DateTime.fromMillisecondsSinceEpoch(json['nextAt'] as int),

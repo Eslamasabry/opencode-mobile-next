@@ -31,6 +31,8 @@ class BuiltinLinuxStatus {
     this.serverRunning = false,
     this.serverRestartWanted = false,
     this.serverRecoveryGeneration,
+    this.serverRecoveryAuthority = false,
+    this.serverRecoveryScheduled = false,
     this.serverUptime,
     this.serverPort,
     this.abi = '',
@@ -47,6 +49,8 @@ class BuiltinLinuxStatus {
       serverRunning = false,
       serverRestartWanted = false,
       serverRecoveryGeneration = null,
+      serverRecoveryAuthority = false,
+      serverRecoveryScheduled = false,
       serverUptime = null,
       serverPort = null,
       abi = '',
@@ -63,6 +67,8 @@ class BuiltinLinuxStatus {
       serverRunning: map['serverRunning'] == true,
       serverRestartWanted: map['serverRestartWanted'] == true,
       serverRecoveryGeneration: asInt(map['serverRecoveryGeneration']),
+      serverRecoveryAuthority: map['serverRecoveryAuthority'] == true,
+      serverRecoveryScheduled: map['serverRecoveryScheduled'] == true,
       serverUptime: switch (asInt(map['serverUptimeMs'])) {
         final int ms when ms >= 0 => Duration(milliseconds: ms),
         _ => null,
@@ -89,6 +95,10 @@ class BuiltinLinuxStatus {
 
   /// Admission token invalidated by pause, cancellation and manual actions.
   final int? serverRecoveryGeneration;
+
+  /// Native is the sole durable budget writer once the profile is migrated.
+  final bool serverRecoveryAuthority;
+  final bool serverRecoveryScheduled;
 
   /// How long the app's own tracked OpenCode process has run; null when none
   /// runs, or from an older APK that does not say.
@@ -473,6 +483,95 @@ class BuiltinLinux {
       _invokeRecovery('confirmServerRecovery', {
         'expectedGeneration': expectedGeneration,
       });
+
+  /// Saves the legacy count in native storage without arming crash recovery.
+  Future<Map<Object?, Object?>> stageServerRecovery(
+    String profileId,
+    Map<String, Object?> legacyBudget,
+  ) => _recoveryMap('stageServerRecovery', {
+    'profileId': profileId,
+    'legacyBudget': legacyBudget,
+  });
+
+  Future<Map<Object?, Object?>> bindServerRecovery({
+    required String profileId,
+    required bool enabled,
+    Map<String, Object?>? legacyBudget,
+  }) => _recoveryMap('bindServerRecovery', {
+    'profileId': profileId,
+    'enabled': enabled,
+    'legacyBudget': ?legacyBudget,
+  });
+
+  Future<List<Map<Object?, Object?>>> serverRecoveryReceipts(
+    String profileId,
+  ) async {
+    try {
+      final value = await _invoke<List<Object?>>('serverRecoveryReceipts', {
+        'profileId': profileId,
+      });
+      if (value == null ||
+          value.any((receipt) => receipt is! Map<Object?, Object?>)) {
+        throw const BuiltinLinuxException(
+          'The phone server could not restart.',
+          code: 'recovery_unavailable',
+        );
+      }
+      return value.cast<Map<Object?, Object?>>();
+    } catch (_) {
+      throw const BuiltinLinuxException(
+        'The phone server could not restart.',
+        code: 'recovery_unavailable',
+      );
+    }
+  }
+
+  Future<void> ackServerRecoveryReceipt(String profileId, String eventId) =>
+      _invokeRecovery('ackServerRecoveryReceipt', {
+        'profileId': profileId,
+        'eventId': eventId,
+      });
+
+  Future<Map<Object?, Object?>> serverRecoveryBudget(String profileId) =>
+      _recoveryMap('serverRecoveryBudget', {'profileId': profileId});
+
+  Future<Map<Object?, Object?>> updateServerRecoveryReceipt(
+    String profileId,
+    Map<String, Object?> budget,
+  ) => _recoveryMap('updateServerRecoveryReceipt', {
+    'profileId': profileId,
+    'budget': budget,
+  });
+
+  Future<Map<Object?, Object?>> confirmManualServerStart(String profileId) =>
+      _recoveryMap('confirmManualServerStart', {'profileId': profileId});
+
+  Future<void> unbindServerRecovery(String profileId, {bool delete = false}) =>
+      _invokeRecovery(
+        delete ? 'deleteServerRecovery' : 'unbindServerRecovery',
+        {'profileId': profileId},
+      );
+
+  Future<Map<Object?, Object?>> _recoveryMap(
+    String method,
+    Map<String, Object?> arguments,
+  ) async {
+    try {
+      final value = await _invoke<Map<Object?, Object?>>(method, arguments);
+      if (value == null) {
+        throw const BuiltinLinuxException(
+          'The phone server could not restart.',
+          code: 'recovery_unavailable',
+        );
+      }
+      return value;
+    } catch (_) {
+      throw const BuiltinLinuxException(
+        'The phone server could not restart.',
+        code: 'recovery_unavailable',
+      );
+    }
+  }
 
   /// Invalidates pending automatic work without changing the person's intent.
   Future<void> cancelServerRecovery() =>

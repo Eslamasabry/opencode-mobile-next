@@ -114,6 +114,77 @@ void main() {
       );
     });
 
+    test('recovery map errors expose only safe copy and code', () async {
+      answer = (_) => throw PlatformException(
+        code: 'raw_native',
+        message: 'Raw JSON parser detail',
+        details: {'private': 'diagnostic'},
+      );
+      final linux = BuiltinLinux();
+      final operations = [
+        () => linux.stageServerRecovery('phone', {'version': 1}),
+        () => linux.bindServerRecovery(profileId: 'phone', enabled: true),
+        () => linux.serverRecoveryBudget('phone'),
+        () => linux.updateServerRecoveryReceipt('phone', {}),
+        () => linux.confirmManualServerStart('phone'),
+      ];
+      for (final operation in operations) {
+        await expectLater(
+          operation(),
+          throwsA(
+            isA<BuiltinLinuxException>()
+                .having(
+                  (error) => error.message,
+                  'safe copy',
+                  'The phone server could not restart.',
+                )
+                .having(
+                  (error) => error.code,
+                  'safe code',
+                  'recovery_unavailable',
+                ),
+          ),
+        );
+      }
+    });
+
+    test(
+      'recovery receipt list errors expose only safe copy and code',
+      () async {
+        answer = (_) => throw PlatformException(
+          code: 'raw_native',
+          message: 'Raw JSON parser detail',
+        );
+        await expectLater(
+          BuiltinLinux().serverRecoveryReceipts('phone'),
+          throwsA(
+            isA<BuiltinLinuxException>()
+                .having(
+                  (error) => error.message,
+                  'safe copy',
+                  'The phone server could not restart.',
+                )
+                .having(
+                  (error) => error.code,
+                  'safe code',
+                  'recovery_unavailable',
+                ),
+          ),
+        );
+        answer = (_) => ['malformed'];
+        await expectLater(
+          BuiltinLinux().serverRecoveryReceipts('phone'),
+          throwsA(
+            isA<BuiltinLinuxException>().having(
+              (error) => error.code,
+              'safe code',
+              'recovery_unavailable',
+            ),
+          ),
+        );
+      },
+    );
+
     test('a build without the channel says so', () async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, null);

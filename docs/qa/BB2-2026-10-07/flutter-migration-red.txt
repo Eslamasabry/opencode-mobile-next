@@ -1,0 +1,14 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart
+00:00 +0: spent legacy budget migrates once with marker before activation
+00:00 +0 -1: spent legacy budget migrates once with marker before activation [E]
+  Expected: BuiltinRecoveryPhase:<BuiltinRecoveryPhase.ready>
+    Actual: BuiltinRecoveryPhase:<BuiltinRecoveryPhase.storageUnavailable>
+
+  package:matcher                                      expect
+  package:flutter_test/src/widget_tester.dart 473:18   expect
+  test/builtin_server_recovery_native_test.dart 348:7  main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: spent legacy budget migrates once with marker before activation

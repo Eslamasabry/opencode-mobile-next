@@ -82,6 +82,7 @@ class PhoneServerHealing {
     }
     report.invalidate();
     recovery.setProfile(null);
+    await recovery.drainNativeCancellation();
     _ownerStorageFailed = true;
     await BuiltinServerOwner.forPreferences(connection.store.prefs).claim(
       profile.id,
@@ -218,7 +219,11 @@ class PhoneServerHealing {
       // stops the app's own tracked process tree first (BuiltinLinux.kt
       // launchService → removeService), never anything found by name.
       final failure = await starter.start(profile);
-      if (failure == null || !failure.retryable || tries == 0) break;
+      if (failure == null) {
+        await recovery.check(profile);
+        break;
+      }
+      if (!failure.retryable || tries == 0) break;
       await Future<void>.delayed(launchRetryDelay);
     }
   }
@@ -258,6 +263,10 @@ class PhoneServerHealing {
     if (!mayAct() || !status.installed || !status.serverRestartWanted) {
       return false;
     }
+    // The native authority owns every unattended dispatch and its budget.
+    // Opening the app cannot turn exhaustion or a pending retry into a manual
+    // start. A live server that stays unhealthy needs the person's Start.
+    if (status.serverRecoveryAuthority) return false;
     if (!status.serverRunning) return true;
     // Running is not answering: a process can hold the port and never
     // accept our password (started with another password, hung while

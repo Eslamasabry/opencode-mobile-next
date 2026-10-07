@@ -1,0 +1,24 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart
+00:00 +0: native exhausted budget survives opening and owner recreation
+00:00 +0 -1: native exhausted budget survives opening and owner recreation [E]
+  Expected: <0>
+    Actual: <1>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_server_healing_test.dart 437:7           main.<fn>
+
+00:00 +0 -1: opening cannot supersede a scheduled native retry
+00:00 +0 -2: opening cannot supersede a scheduled native retry [E]
+  Expected: <0>
+    Actual: <1>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_server_healing_test.dart 464:5           main.<fn>
+
+00:00 +0 -2: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: native exhausted budget survives opening and owner recreation
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: opening cannot supersede a scheduled native retry

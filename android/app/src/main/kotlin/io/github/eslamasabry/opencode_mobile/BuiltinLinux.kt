@@ -10,6 +10,8 @@ import android.system.Os
 import android.system.OsConstants
 import android.system.ErrnoException
 import android.util.Log
+import org.json.JSONObject
+import org.json.JSONArray
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import java.io.BufferedInputStream
@@ -429,8 +431,10 @@ class BuiltinLinux(private val context: Context) {
                     try {
                         synchronized(this) {
                             if (services[name]?.process === process) {
-                                recordServiceExit(name, services.getValue(name))
+                                val exited = services.getValue(name)
+                                recordServiceExit(name, exited)
                                 services.remove(name)
+                                if (name == SERVER) scheduleNativeRecovery(exited)
                                 serviceSetChanged()
                             }
                         }
@@ -1250,13 +1254,231 @@ class BuiltinLinux(private val context: Context) {
     private var activityResumed = false
     private var recoveryGeneration = 0L
     private var wantedRevision = 0L
-    private var restartWanted = recoveryPreferences.getBoolean("wanted", false)
+    private var userStopped = recoveryPreferences.getBoolean("userStopped",
+        !recoveryPreferences.getBoolean("wanted", false))
+    private var restartWanted = recoveryPreferences.getBoolean("wanted", false) && !userStopped
+    private val restartBackoff = RestartBackoff()
+    private var supervisionProfile: String? = recoveryPreferences.getString("owner", null)
+    private var supervisionEnabled = recoveryPreferences.getBoolean("enabled", false)
+    private var supervisionGeneration = 0L
+    private var scheduledRecovery = false
+    private var recoveryScheduleId = 0L
+    private var nativeRecoveryAttempt: RecoveryAttempt? = null
+    private var manualStartGeneration: Long? = null
+    // Pinned shared_preferences_android 2.4.27 legacy backend; READ ONLY.
+    private val flutterPreferences = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
     private data class RecoveryAttempt(val process: Process, val generation: Long)
     private var recoveryAttempt: RecoveryAttempt? = null
     private var confirmedRecoveryAttempt: RecoveryAttempt? = null
 
     val serverRestartWanted: Boolean get() = synchronized(recoveryLock) { restartWanted }
-    val serverRecoveryGeneration: Long get() = synchronized(recoveryLock) { recoveryGeneration }
+    val serverRecoveryGeneration: Long get() = synchronized(recoveryLock) {
+        nativeRecoveryAttempt?.takeIf { it.process.isAlive }?.generation ?: recoveryGeneration
+    }
+    val serverRecoveryScheduled: Boolean get() = synchronized(recoveryLock) { scheduledRecovery }
+
+    private fun jsonMap(raw: String): Map<String, Any?> {
+        fun objectMap(value: JSONObject): Map<String, Any?> = value.keys().asSequence().associateWith { key ->
+            when (val item = value.get(key)) {
+                JSONObject.NULL -> null
+                is JSONObject -> objectMap(item)
+                else -> item
+            }
+        }
+        return objectMap(JSONObject(raw))
+    }
+
+    private fun budgetKey(profile: String) = "oc.builtinRecoveryBudget.$profile"
+    private fun readBudget(profile: String): NativeRecoveryBudget = NativeRecoveryBudget.read(
+        jsonMap(recoveryPreferences.getString(budgetKey(profile), null)
+            ?: error("recovery_unavailable")))
+    private fun writeBudget(profile: String, budget: NativeRecoveryBudget) {
+        check(recoveryPreferences.edit().putString(budgetKey(profile), JSONObject(budget.map()).toString()).commit()) {
+            "recovery_unavailable"
+        }
+    }
+
+    @Synchronized
+    fun stageServerRecovery(profile: String, legacy: Map<*, *>): Map<String, Any?> {
+        require(profile.isNotEmpty() && profile.length <= 200 && !profile.contains('/'))
+        if (!recoveryPreferences.contains(budgetKey(profile))) {
+            writeBudget(profile, NativeRecoveryBudget.read(legacy))
+        }
+        return readBudget(profile).map()
+    }
+
+    @Synchronized
+    fun bindServerRecovery(profile: String, legacy: Map<*, *>?, enabled: Boolean): Map<String, Any?> {
+        require(profile.isNotEmpty() && profile.length <= 200 && !profile.contains('/'))
+        check(migrationMarkerValid(profile)) { "recovery_unavailable" }
+        // Bind cannot create a missing record; staging was disabled until marker acknowledgement.
+        val budget = readBudget(profile)
+        check(recoveryPreferences.edit().putString("owner", profile).putBoolean("enabled", enabled).commit())
+        synchronized(recoveryLock) {
+            if (supervisionProfile != profile || supervisionEnabled != enabled) {
+                supervisionGeneration++
+                scheduledRecovery = false
+            }
+            supervisionProfile = profile
+            supervisionEnabled = enabled
+        }
+        return budget.map()
+    }
+
+    @Synchronized fun serverRecoveryBudget(profile: String): Map<String, Any?> = readBudget(profile).map()
+
+    @Synchronized
+    fun updateServerRecoveryReceipt(profile: String, value: Map<*, *>): Map<String, Any?> {
+        val current = readBudget(profile)
+        val next = NativeRecoveryBudget.read(value)
+        check(current.revision == next.revision && current.attempts == next.attempts)
+        // This consumer can update receipts, never reserve or reset the count.
+        check(!next.pending || (current.pending && next.eventId == current.eventId &&
+            next.recoveryGeneration == current.recoveryGeneration))
+        check(next.pending || !current.pending || current.confirmedAt != null || !serverRunning)
+        val updated = next.copy(revision = current.revision + 1)
+        writeBudget(profile, updated)
+        return updated.map()
+    }
+
+    @Synchronized
+    fun confirmManualServerStart(profile: String): Map<String, Any?> {
+        synchronized(recoveryLock) {
+            check(NativeRecoveryBudget.manualResetAllowed(activityResumed, restartWanted, userStopped,
+                supervisionProfile, profile, manualStartGeneration, recoveryGeneration,
+                serverRunning, nativeRecoveryAttempt != null))
+        }
+        val current = readBudget(profile)
+        val archived = NativeRecoveryBudget.archiveConfirmed(receipts(profile), current)
+        val reset = NativeRecoveryBudget(revision = current.revision + 1)
+        check(recoveryPreferences.edit()
+            .putString(budgetKey(profile), JSONObject(reset.map()).toString())
+            .putString("oc.builtinRecoveryReceipts.$profile", JSONArray(archived.map { JSONObject(it.map()) }).toString()).commit())
+        synchronized(recoveryLock) {
+            if (manualStartGeneration == recoveryGeneration) manualStartGeneration = null
+        }
+        restartBackoff.reset()
+        return reset.map()
+    }
+
+    /** Main-thread revocation does not wait for persistence or process shutdown. */
+    fun unbindServerRecovery(profile: String) {
+        synchronized(recoveryLock) {
+            if (supervisionProfile == profile) {
+                supervisionEnabled = false
+                supervisionProfile = null
+                supervisionGeneration++
+                scheduledRecovery = false
+            }
+        }
+    }
+
+    @Synchronized fun persistServerRecoveryUnbind(profile: String) {
+        if (recoveryPreferences.getString("owner", null) == profile) {
+            check(recoveryPreferences.edit().remove("owner").putBoolean("enabled", false).commit())
+        }
+    }
+
+    @Synchronized fun deleteServerRecovery(profile: String) {
+        unbindServerRecovery(profile)
+        persistServerRecoveryUnbind(profile)
+        check(recoveryPreferences.edit().remove(budgetKey(profile)).remove("oc.builtinRecoveryReceipts.$profile").commit())
+    }
+
+    private fun migrationMarkerValid(profile: String): Boolean {
+        return try {
+            val raw = flutterPreferences.getString("flutter.oc.builtinRecovery.$profile", null)
+            raw != null && NativeRecoveryBudget.migrationAllows(jsonMap(raw))
+        } catch (_: Throwable) { false }
+    }
+
+    private fun receipts(profile: String): List<NativeRecoveryBudget> {
+        val raw = recoveryPreferences.getString("oc.builtinRecoveryReceipts.$profile", null) ?: return emptyList()
+        val array = JSONArray(raw)
+        check(array.length() <= 16) { "recovery_unavailable" }
+        return (0 until array.length()).map { NativeRecoveryBudget.read(jsonMap(array.getJSONObject(it).toString())) }
+    }
+
+    @Synchronized fun serverRecoveryReceipts(profile: String): List<Map<String, Any?>> =
+        receipts(profile).map { it.map() }
+
+    @Synchronized fun ackServerRecoveryReceipt(profile: String, eventId: String) {
+        val remaining = receipts(profile).filter { it.eventId != eventId }
+        check(recoveryPreferences.edit().putString("oc.builtinRecoveryReceipts.$profile",
+            JSONArray(remaining.map { JSONObject(it.map()) }).toString()).commit())
+    }
+
+    private fun policyPermits(profile: String): Boolean = try {
+        val raw = flutterPreferences.getString("flutter.oc.automation.$profile", null)
+        // Absence uses the explicitly bound default policy; malformed stored data never does.
+        raw == null || NativeRecoveryBudget.policyAllows(jsonMap(raw))
+    } catch (_: Throwable) { false }
+
+    private fun nativeAdmitted(profile: String, generation: Long): Boolean = synchronized(recoveryLock) {
+        NativeRecoveryBudget.admitted(supervisionEnabled && supervisionProfile == profile,
+            restartWanted, userStopped, supervisionGeneration, generation,
+            migrationMarkerValid(profile), policyPermits(profile))
+    }
+
+    private fun reserveNativeAttempt(profile: String, generation: Long): NativeRecoveryBudget {
+        var budget = readBudget(profile)
+        val archived = NativeRecoveryBudget.archiveConfirmed(receipts(profile), budget)
+        if (budget.pending) {
+            // Preserve health proof even if the process crashes before Dart records its act.
+            budget = NativeRecoveryBudget(attempts = budget.attempts, revision = budget.revision)
+        }
+        val reserved = budget.reserve(System.currentTimeMillis(), generation,
+            "builtin-restart:${java.util.UUID.randomUUID()}")
+        check(recoveryPreferences.edit()
+            .putString(budgetKey(profile), JSONObject(reserved.map()).toString())
+            .putString("oc.builtinRecoveryReceipts.$profile", JSONArray(archived.map { JSONObject(it.map()) }).toString())
+            .commit()) { "recovery_unavailable" }
+        return reserved
+    }
+
+    /** Exit worker owns timing and restart; no activity callback or Dart dispatch is needed. */
+    private fun scheduleNativeRecovery(service: Service) {
+        val script = service.script ?: return
+        val port = service.port ?: return
+        val profile: String
+        val generation: Long
+        val scheduleId: Long
+        synchronized(recoveryLock) {
+            profile = supervisionProfile ?: return
+            if (!supervisionEnabled || !restartWanted || userStopped) return
+            generation = supervisionGeneration
+            scheduleId = ++recoveryScheduleId
+            scheduledRecovery = true
+        }
+        restartBackoff.exited(SystemClock.elapsedRealtime() - service.startedAt, SystemClock.elapsedRealtime())
+        val worker = Thread({
+            try {
+                while (nativeAdmitted(profile, generation)) {
+                    val remaining = synchronized(this) { restartBackoff.remainingMs(SystemClock.elapsedRealtime()) }
+                    if (remaining <= 0L) break
+                    Thread.sleep(remaining.coerceAtMost(100L))
+                }
+                synchronized(this) {
+                    if (!nativeAdmitted(profile, generation) || serverRunning) return@synchronized
+                    val budget = readBudget(profile)
+                    if (budget.attempts >= 3) return@synchronized
+                    val reserved = reserveNativeAttempt(profile, recoveryGeneration)
+                    launchService(SERVER, script, port, null, nativeOwned = true,
+                        nativeSupervisionGeneration = generation,
+                        nativeAttemptGeneration = reserved.recoveryGeneration)
+                }
+            } catch (_: Throwable) { /* Fail closed: no launch without durable reservation. */ }
+            finally {
+                synchronized(recoveryLock) {
+                    if (supervisionGeneration == generation && recoveryScheduleId == scheduleId) scheduledRecovery = false
+                }
+                synchronized(this) { serviceSetChanged() }
+            }
+        }, "phone-native-recovery")
+        try { worker.start() } catch (_: Throwable) {
+            synchronized(recoveryLock) { if (recoveryScheduleId == scheduleId) scheduledRecovery = false }
+        }
+    }
 
     /** Called on the main thread: invalidation never waits for runtime I/O. */
     fun setActivityResumed(resumed: Boolean) {
@@ -1268,6 +1490,9 @@ class BuiltinLinux(private val context: Context) {
     fun requestServerStop() {
         synchronized(recoveryLock) {
             restartWanted = false
+            userStopped = true
+            supervisionGeneration++
+            scheduledRecovery = false
             wantedRevision++
         }
         cancelServerRecovery()
@@ -1302,9 +1527,9 @@ class BuiltinLinux(private val context: Context) {
         synchronized(recoveryLock) {
             // Idempotence lets the controller retry durable act recording after
             // the starter already confirmed this exact automatic process.
-            val attempt = recoveryAttempt ?: confirmedRecoveryAttempt
-            check(activityResumed && restartWanted &&
-                recoveryGeneration == expectedGeneration &&
+            val attempt = nativeRecoveryAttempt ?: recoveryAttempt ?: confirmedRecoveryAttempt
+            check(activityResumed && restartWanted && !userStopped &&
+                (nativeRecoveryAttempt != null || recoveryGeneration == expectedGeneration) &&
                 attempt != null && attempt.generation == expectedGeneration && attempt.process.isAlive) {
                 "The phone server could not restart."
             }
@@ -1320,15 +1545,18 @@ class BuiltinLinux(private val context: Context) {
             recoveryGeneration++
             recoveryAttempt = null
             confirmedRecoveryAttempt = null
+            nativeRecoveryAttempt = null
+            supervisionGeneration++
+            scheduledRecovery = false
             wantedRevision
         }
         // Persist before launch, without making main-thread invalidation wait
         // for storage. Service mutations are serialized by the runtime lock.
-        check(recoveryPreferences.edit().putBoolean("wanted", wanted).commit()) {
+        check(recoveryPreferences.edit().putBoolean("wanted", wanted).putBoolean("userStopped", !wanted).commit()) {
             "The phone server setting could not be saved."
         }
         synchronized(recoveryLock) {
-            if (wantedRevision == revision) restartWanted = wanted
+            if (wantedRevision == revision) { restartWanted = wanted; userStopped = !wanted }
         }
     }
 
@@ -1340,6 +1568,11 @@ class BuiltinLinux(private val context: Context) {
             check(admitted()) { "The phone server could not restart." }
         }
         check(!serverRunning) { "The phone server is already running." }
+        val profile = synchronized(recoveryLock) { supervisionProfile?.takeIf { supervisionEnabled } }
+        if (profile != null) {
+            check(policyPermits(profile))
+            reserveNativeAttempt(profile, expectedGeneration)
+        }
         launchService(SERVER, script, port, null, expectedGeneration)
         val accepted = synchronized(recoveryLock) { admitted() }
         if (!accepted) {
@@ -1414,7 +1647,11 @@ class BuiltinLinux(private val context: Context) {
         if (name == SERVER && services[SERVER]?.let {
                 it.process.isAlive && it.port == port && it.script == script
             } == true) return
-        if (name == SERVER) setServerWanted(true)
+        if (name == SERVER) {
+            setServerWanted(true)
+            restartBackoff.reset()
+            synchronized(recoveryLock) { manualStartGeneration = recoveryGeneration }
+        }
         launchService(name, script, port, notice)
     }
 
@@ -1424,12 +1661,22 @@ class BuiltinLinux(private val context: Context) {
         port: Int?,
         notice: String?,
         expectedGeneration: Long? = null,
+        nativeOwned: Boolean = false,
+        nativeSupervisionGeneration: Long? = null,
+        nativeAttemptGeneration: Long? = null,
     ): Process {
-        removeService(name)
+        // Exit monitor already removed an autonomous crash. Do not notify an
+        // empty set after the final reservation: that would stop the retained
+        // FGS between reserving attempt three and creating its child.
+        if (NativeRecoveryBudget.shouldRemoveBeforeLaunch(nativeOwned, services.containsKey(name))) removeService(name)
         val log = serviceLogFile(name)
         // One log per run; the previous one stays for a look after a crash.
         if (log.isFile) log.renameTo(File(home, "$name.previous.log"))
-        val process = if (expectedGeneration == null) {
+        val process = if (nativeOwned) synchronized(recoveryLock) {
+            val profile = supervisionProfile ?: error("recovery_unavailable")
+            check(nativeAdmitted(profile, nativeSupervisionGeneration ?: error("recovery_unavailable")))
+            start(script, log)
+        } else if (expectedGeneration == null) {
             start(script, log)
         } else synchronized(recoveryLock) {
             // The final admission check and process creation are one operation.
@@ -1445,9 +1692,15 @@ class BuiltinLinux(private val context: Context) {
         }
         process.outputStream.close()
         services[name] = serviceStarted(name, process, port, notice, script)
+        if (name == SERVER && nativeOwned) synchronized(recoveryLock) {
+            nativeRecoveryAttempt = RecoveryAttempt(process, nativeAttemptGeneration ?: error("recovery_unavailable"))
+            recoveryAttempt = null
+        }
         recordRunning()
         try {
-            BuiltinServerService.start(context, currentNotice())
+            // Native crash recovery retains the existing FGS during its bounded delay.
+            // Re-requesting a background FGS start would lose Android 12+ admission.
+            if (!nativeOwned) BuiltinServerService.start(context, currentNotice())
         } catch (error: Exception) {
             // A refused foreground service must not leave an unsupervised child.
             removeService(name)
@@ -1463,8 +1716,10 @@ class BuiltinLinux(private val context: Context) {
                     try {
                         synchronized(this) {
                             if (services[name]?.process === process) {
-                                recordServiceExit(name, services.getValue(name))
+                                val exited = services.getValue(name)
+                                recordServiceExit(name, exited)
                                 services.remove(name)
+                                if (name == SERVER) scheduleNativeRecovery(exited)
                                 serviceSetChanged()
                             }
                         }
@@ -1521,10 +1776,18 @@ class BuiltinLinux(private val context: Context) {
         // A reply cannot run on a server that is gone: never keep the phone
         // awake for it.
         if (!serverRunning) releaseWork()
-        if (services.values.none { it.process.isAlive }) {
-            try { BuiltinServerService.stop(context) } catch (_: Throwable) { }
+        val running = services.values.any { it.process.isAlive }
+        val holdsRecovery = try {
+            val profile = synchronized(recoveryLock) { supervisionProfile }
+            profile != null && NativeRecoveryBudget.keepsForeground(false,
+                serverRecoveryScheduled, nativeAdmitted(profile, supervisionGeneration),
+                readBudget(profile).attempts)
+        } catch (_: Throwable) { false }
+        if (!running) {
+            if (!holdsRecovery) try { BuiltinServerService.stop(context) } catch (_: Throwable) { }
             return
         }
+        if (!synchronized(recoveryLock) { activityResumed }) return
         // Only the words change here. Android refuses to (re)start a
         // foreground service from the background, and a service can end
         // while the app is away; the notification then keeps its old text.

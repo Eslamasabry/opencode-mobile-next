@@ -1,0 +1,48 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart
+00:00 +0: bridge recovery map errors expose only safe copy and code
+00:00 +0 -1: bridge recovery map errors expose only safe copy and code [E]
+  Expected: throws <Instance of 'BuiltinLinuxException'> with `safe copy`: 'The phone server could not restart.' and `safe code`: 'recovery_unavailable'
+    Actual: <Instance of 'Future<Map<Object?, Object?>>'>
+     Which: threw BuiltinLinuxException:<Raw JSON parser detail>
+            stack package:opencode_mobile/builtin/builtin_linux.dart 883:7  BuiltinLinux._invokeUntraced
+                  ===== asynchronous gap ===========================
+                  package:matcher                                           expectLater
+                  package:flutter_test/src/widget_tester.dart 507:8         expectLater
+                  test/builtin_linux_test.dart 132:15                       main.<fn>.<fn>
+
+            which has `safe copy` with value 'Raw JSON parser detail' which is different.
+                  Expected: The phone  ...
+                    Actual: Raw JSON p ...
+                            ^
+                   Differ at offset 0
+
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/builtin_linux_test.dart 132:15                main.<fn>.<fn>
+
+00:00 +0 -1: bridge recovery receipt list errors expose only safe copy and code
+00:00 +0 -2: bridge recovery receipt list errors expose only safe copy and code [E]
+  Expected: throws <Instance of 'BuiltinLinuxException'> with `safe copy`: 'The phone server could not restart.' and `safe code`: 'recovery_unavailable'
+    Actual: <Instance of 'Future<List<Map<Object?, Object?>>>'>
+     Which: threw BuiltinLinuxException:<Raw JSON parser detail>
+            stack package:opencode_mobile/builtin/builtin_linux.dart 883:7  BuiltinLinux._invokeUntraced
+                  ===== asynchronous gap ===========================
+                  package:matcher                                           expectLater
+                  package:flutter_test/src/widget_tester.dart 507:8         expectLater
+                  test/builtin_linux_test.dart 158:15                       main.<fn>.<fn>
+
+            which has `safe copy` with value 'Raw JSON parser detail' which is different.
+                  Expected: The phone  ...
+                    Actual: Raw JSON p ...
+                            ^
+                   Differ at offset 0
+
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/builtin_linux_test.dart 158:15                main.<fn>.<fn>
+
+00:00 +0 -2: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge recovery map errors expose only safe copy and code
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge recovery receipt list errors expose only safe copy and code

@@ -147,6 +147,67 @@ class _Linux extends BuiltinLinux {
   Future<void> cancelServerRecovery() async => generation++;
 }
 
+class _NativeHealingLinux extends _Linux {
+  _NativeHealingLinux({this.attempts = 3, this.scheduled = false});
+  int attempts;
+  bool scheduled;
+  int resets = 0;
+
+  Map<String, Object?> get budget => {
+    'version': 1,
+    'attempts': attempts,
+    'pending': false,
+    'revision': 0,
+    'eventId': null,
+    'recoveryGeneration': null,
+    'confirmedAt': null,
+  };
+
+  @override
+  Future<BuiltinLinuxStatus> status() async => BuiltinLinuxStatus(
+    installed: true,
+    phase: BuiltinLinuxPhase.ready,
+    serverRunning: running,
+    serverRestartWanted: wanted,
+    serverRecoveryGeneration: generation,
+    serverRecoveryAuthority: true,
+    serverRecoveryScheduled: scheduled,
+  );
+
+  @override
+  Future<Map<Object?, Object?>> stageServerRecovery(
+    String profileId,
+    Map<String, Object?> legacyBudget,
+  ) async => budget;
+  @override
+  Future<Map<Object?, Object?>> bindServerRecovery({
+    required String profileId,
+    required bool enabled,
+    Map<String, Object?>? legacyBudget,
+  }) async => budget;
+  @override
+  Future<List<Map<Object?, Object?>>> serverRecoveryReceipts(
+    String profileId,
+  ) async => [];
+  @override
+  Future<Map<Object?, Object?>> serverRecoveryBudget(String profileId) async =>
+      budget;
+  @override
+  Future<Map<Object?, Object?>> confirmManualServerStart(
+    String profileId,
+  ) async {
+    resets++;
+    attempts = 0;
+    return budget;
+  }
+
+  @override
+  Future<void> unbindServerRecovery(
+    String profileId, {
+    bool delete = false,
+  }) async {}
+}
+
 ServerProfile _phone(String id) => ServerProfile(
   id: id,
   name: 'This phone',
@@ -359,6 +420,53 @@ void main() {
       expect(connection.acts, hasLength(1));
     },
   );
+
+  test(
+    'native exhausted budget survives opening and owner recreation',
+    () async {
+      starter.dispose();
+      final native = _NativeHealingLinux();
+      linux = native;
+      starter = BuiltinServerStarter(
+        linux: linux,
+        readyTimeout: Duration.zero,
+        pollInterval: Duration.zero,
+      );
+      var owner = bind()..setForeground(true);
+      await owner.startForLaunch(phone);
+      expect(native.starts, 0);
+      expect(native.restarts, 0);
+      expect(native.attempts, 3);
+      expect(native.resets, 0);
+      expect(owner.recovery.value.phase, BuiltinRecoveryPhase.exhausted);
+      owner.dispose();
+      healing = null;
+      owner = bind()..setForeground(true);
+      await owner.startForLaunch(phone);
+      expect(native.starts, 0);
+      expect(native.restarts, 0);
+      expect(native.attempts, 3);
+      expect(native.resets, 0);
+    },
+  );
+
+  test('opening cannot supersede a scheduled native retry', () async {
+    starter.dispose();
+    final native = _NativeHealingLinux(attempts: 1, scheduled: true);
+    linux = native;
+    starter = BuiltinServerStarter(
+      linux: linux,
+      readyTimeout: Duration.zero,
+      pollInterval: Duration.zero,
+    );
+    final owner = bind()..setForeground(true);
+    await owner.startForLaunch(phone);
+    expect(native.starts, 0);
+    expect(native.restarts, 0);
+    expect(native.attempts, 1);
+    expect(native.resets, 0);
+    expect(owner.recovery.value.phase, BuiltinRecoveryPhase.waiting);
+  });
 
   group('the launch start (QA B1)', () {
     Future<void> exhaust() => prefs.setString(

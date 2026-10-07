@@ -1,0 +1,8 @@
+PASS emulator_lock_has_no_holders
+PASS owned_build_clients_and_daemons_absent
+PASS owned_harness_sessions_finished
+PASS owned_intermediates_absent
+PASS duplicate_target_absent
+PASS owned_kotlin_scratch_absent
+PASS owned_temporary_drivers_removed
+Retained only final2201 targetAPK and necessary final AndroidTest runner; no APK copies.

@@ -1,0 +1,8 @@
+activeProfileMatchesNativeOwner=True
+activeProfileClaudeCredentialFileNonempty=False
+otherProfileClaudeCredentialFileNonempty=True
+credentialContentsRead=False
+authenticationStarted=False
+nonemptyClaudeCredentialMatchesSavedProfile=True
+nonemptyClaudeCredentialMatchesSavedInAppOpenCode2Profile=False
+credentialContentsRead=False
