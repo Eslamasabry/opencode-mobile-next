@@ -15667,7 +15667,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kitViewerShowSource => 'عرض المصدر';
 
   @override
-  String get kitViewerEmpty => 'This file is empty';
+  String get kitViewerEmpty => 'هذا الملف فارغ';
 
   @override
   String kitViewerTruncated(int shown, int total) {
@@ -15678,17 +15678,17 @@ class AppLocalizationsAr extends AppLocalizations {
         intl.NumberFormat.decimalPattern(localeName);
     final String totalString = totalNumberFormat.format(total);
 
-    return 'Showing the first $shownString of $totalString lines';
+    return 'تُعرض الأسطر الأولى: $shownString من $totalString';
   }
 
   @override
-  String get kitViewerPartial => 'Showing part of this file';
+  String get kitViewerPartial => 'يُعرض جزء من هذا الملف';
 
   @override
-  String get kitViewerOpenAll => 'Open all';
+  String get kitViewerOpenAll => 'فتح الملف كاملًا';
 
   @override
-  String get kitViewerCantShow => 'Can\'t show this file';
+  String get kitViewerCantShow => 'تعذّر عرض هذا الملف';
 
   @override
   String kitViewerCantShowBody(String type, String size) {
@@ -15696,14 +15696,14 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get kitViewerUnknownType => 'Unknown type';
+  String get kitViewerUnknownType => 'نوع غير معروف';
 
   @override
-  String get kitViewerUnknownSize => 'size unknown';
+  String get kitViewerUnknownSize => 'الحجم غير معروف';
 
   @override
   String kitViewerLoadFailed(String name) {
-    return 'Couldn\'t open $name';
+    return 'تعذّر فتح $name';
   }
 
   @override
@@ -15716,7 +15716,7 @@ class AppLocalizationsAr extends AppLocalizations {
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
-    return 'Page $pageString of $countString';
+    return 'الصفحة $pageString من $countString';
   }
 
   @override
@@ -15726,387 +15726,383 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     final String pageString = pageNumberFormat.format(page);
 
-    return 'Couldn\'t show page $pageString';
+    return 'تعذّر عرض الصفحة $pageString';
   }
 
   @override
-  String get kitCapServerAnyTitle => 'Server to work on';
+  String get kitCapServerAnyTitle => 'خادم للعمل عليه';
 
   @override
   String get kitCapServerAnyWhy =>
-      'There\'s no server yet. Set one up on this phone or connect a computer.';
+      'لا يوجد خادم بعد. أعدّ خادمًا على هذا الهاتف أو اتصل بحاسوب.';
 
   @override
-  String get kitCapServerAnyEnable => 'Add a server';
+  String get kitCapServerAnyEnable => 'إضافة خادم';
 
   @override
-  String get kitCapServerAnyOffer =>
-      'Add a server to start working with an agent.';
+  String get kitCapServerAnyOffer => 'أضف خادمًا لبدء العمل مع وكيل.';
 
   @override
-  String get kitCapServerOc1Title => 'OpenCode 1 server';
+  String get kitCapServerOc1Title => 'خادم OpenCode 1';
 
   @override
   String get kitCapServerOc1Why =>
-      'Needs this phone\'s own server or a computer running OpenCode 1.';
+      'يحتاج إلى خادم هذا الهاتف أو حاسوب يشغّل OpenCode 1.';
 
   @override
-  String get kitCapServerOc2Title => 'OpenCode 2 server';
+  String get kitCapServerOc2Title => 'خادم OpenCode 2';
 
   @override
   String get kitCapServerOc2Why =>
-      'Needs a server running OpenCode 2. This phone\'s server can switch to it.';
+      'يحتاج إلى خادم يشغّل OpenCode 2. يمكن تحويل خادم هذا الهاتف إليه.';
 
   @override
-  String get kitCapServerOc2Enable => 'Switch to OpenCode 2';
+  String get kitCapServerOc2Enable => 'التبديل إلى OpenCode 2';
 
   @override
   String get kitCapServerOc2Offer =>
-      'This needs OpenCode 2. Switch this phone\'s server to it?';
+      'يحتاج هذا إلى OpenCode 2. هل تريد تحويل خادم هذا الهاتف إليه؟';
 
   @override
-  String get kitCapServerCodexTitle => 'Codex server';
+  String get kitCapServerCodexTitle => 'خادم Codex';
 
   @override
-  String get kitCapServerCodexWhy => 'Needs a computer running Codex.';
+  String get kitCapServerCodexWhy => 'يحتاج إلى حاسوب يشغّل Codex.';
 
   @override
-  String get kitCapServerCodexEnable => 'Connect Codex';
+  String get kitCapServerCodexEnable => 'توصيل Codex';
 
   @override
-  String get kitCapServerCodexOffer =>
-      'Connect a computer running Codex to use it here.';
+  String get kitCapServerCodexOffer => 'اتصل بحاسوب يشغّل Codex لاستخدامه هنا.';
 
   @override
-  String get kitCapServerPaseoTitle => 'Claude Code or Pi';
+  String get kitCapServerPaseoTitle => 'Claude Code أو Pi';
 
   @override
   String get kitCapServerPaseoWhy =>
-      'Needs Paseo, on a computer or on this phone.';
+      'يحتاج إلى Paseo على حاسوب أو على هذا الهاتف.';
 
   @override
-  String get kitCapServerPaseoEnable => 'Connect Paseo';
+  String get kitCapServerPaseoEnable => 'توصيل Paseo';
 
   @override
   String get kitCapServerPaseoOffer =>
-      'Work with Claude Code or Pi. Connect Paseo?';
+      'اعمل مع Claude Code أو Pi. هل تريد توصيل Paseo؟';
 
   @override
-  String get kitCapPhoneBuiltinTitle => 'Server on this phone';
+  String get kitCapPhoneBuiltinTitle => 'خادم على هذا الهاتف';
 
   @override
-  String get kitCapPhoneBuiltinWhy =>
-      'This phone has no server of its own yet.';
+  String get kitCapPhoneBuiltinWhy => 'لا يوجد خادم خاص بهذا الهاتف بعد.';
 
   @override
-  String get kitCapPhoneBuiltinEnable => 'Set up this phone';
+  String get kitCapPhoneBuiltinEnable => 'إعداد هذا الهاتف';
 
   @override
   String get kitCapPhoneBuiltinOffer =>
-      'Run agents right on this phone. Set it up?';
+      'شغّل الوكلاء على هذا الهاتف مباشرةً. هل تريد إعداده؟';
 
   @override
-  String get kitCapPhoneTermuxTitle => 'Server in Termux';
+  String get kitCapPhoneTermuxTitle => 'خادم في Termux';
 
   @override
-  String get kitCapPhoneTermuxWhy => 'Needs Termux on this phone.';
+  String get kitCapPhoneTermuxWhy => 'يحتاج إلى Termux على هذا الهاتف.';
 
   @override
-  String get kitCapPhoneTermuxEnable => 'Set up with Termux';
+  String get kitCapPhoneTermuxEnable => 'الإعداد باستخدام Termux';
 
   @override
   String get kitCapPhoneTermuxOffer =>
-      'Run this phone\'s server in Termux instead?';
+      'هل تريد تشغيل خادم هذا الهاتف في Termux بدلًا من ذلك؟';
 
   @override
-  String get kitCapPhoneAnyTitle => 'Server on this phone';
+  String get kitCapPhoneAnyTitle => 'خادم على هذا الهاتف';
 
   @override
-  String get kitCapPhoneAnyWhy => 'Needs a server running on this phone.';
+  String get kitCapPhoneAnyWhy => 'يحتاج إلى خادم يعمل على هذا الهاتف.';
 
   @override
-  String get kitCapModelAuthTitle => 'Model sign-in';
+  String get kitCapModelAuthTitle => 'تسجيل الدخول إلى نموذج';
 
   @override
   String get kitCapModelAuthWhy =>
-      'Sign in to a model provider so the agent can reply.';
+      'سجّل الدخول إلى مزوّد نموذج ليتمكن الوكيل من الرد.';
 
   @override
-  String get kitCapModelAuthEnable => 'Sign in to a model';
+  String get kitCapModelAuthEnable => 'تسجيل الدخول إلى نموذج';
 
   @override
   String get kitCapModelAuthOffer =>
-      'The agent needs a model to reply. Sign in to one?';
+      'يحتاج الوكيل إلى نموذج للرد. هل تريد تسجيل الدخول إلى نموذج؟';
 
   @override
   String get kitCapTeamOnTitle => 'AI Team';
 
   @override
-  String get kitCapTeamOnWhy => 'AI Team is off on this server.';
+  String get kitCapTeamOnWhy => 'AI Team متوقف على هذا الخادم.';
 
   @override
-  String get kitCapTeamOnEnable => 'Turn on AI Team';
+  String get kitCapTeamOnEnable => 'تشغيل AI Team';
 
   @override
   String get kitCapTeamOnOffer =>
-      'This server can also run an AI team. Turn it on?';
+      'يستطيع هذا الخادم أيضًا تشغيل فريق ذكاء اصطناعي. هل تريد تشغيله؟';
 
   @override
-  String get kitCapTeamPhoneTitle => 'AI Team on this phone';
+  String get kitCapTeamPhoneTitle => 'AI Team على هذا الهاتف';
 
   @override
-  String get kitCapTeamPhoneWhy => 'Runs only on this phone\'s own server.';
+  String get kitCapTeamPhoneWhy => 'يعمل فقط على خادم هذا الهاتف نفسه.';
 
   @override
-  String get kitCapTeamControlTitle => 'Team controls';
+  String get kitCapTeamControlTitle => 'أدوات التحكم بالفريق';
 
   @override
   String get kitCapTeamControlWhy =>
-      'Answer this on the computer that runs the team.';
+      'أجب عن هذا على الحاسوب الذي يشغّل الفريق.';
 
   @override
-  String get kitCapTeamControlEnable => 'See how to set it up';
+  String get kitCapTeamControlEnable => 'عرض طريقة الإعداد';
 
   @override
   String get kitCapTeamControlOffer =>
-      'Control the team from here once the computer is set up. See how?';
+      'تحكّم بالفريق من هنا بعد إعداد الحاسوب. هل تريد معرفة الطريقة؟';
 
   @override
-  String get kitCapClaudeLocalTitle => 'Claude Code on this phone';
+  String get kitCapClaudeLocalTitle => 'Claude Code على هذا الهاتف';
 
   @override
   String get kitCapClaudeLocalWhy =>
-      'Needs Termux on this phone and a Claude subscription.';
+      'يحتاج إلى Termux على هذا الهاتف واشتراك Claude.';
 
   @override
-  String get kitCapClaudeLocalEnable => 'Add Claude Code';
+  String get kitCapClaudeLocalEnable => 'إضافة Claude Code';
 
   @override
   String get kitCapClaudeLocalOffer =>
-      'Add Claude Code to this phone? It needs a Claude subscription.';
+      'هل تريد إضافة Claude Code إلى هذا الهاتف؟ يحتاج إلى اشتراك Claude.';
 
   @override
-  String get kitCapVoiceModelTitle => 'Voice typing';
+  String get kitCapVoiceModelTitle => 'الكتابة بالصوت';
 
   @override
-  String get kitCapVoiceModelWhy => 'Needs a voice model on this phone.';
+  String get kitCapVoiceModelWhy => 'يحتاج إلى نموذج صوتي على هذا الهاتف.';
 
   @override
-  String get kitCapVoiceModelEnable => 'Download voice model';
+  String get kitCapVoiceModelEnable => 'تنزيل نموذج صوتي';
 
   @override
   String get kitCapVoiceModelOffer =>
-      'Type by voice on this phone. Download a voice model?';
+      'اكتب بالصوت على هذا الهاتف. هل تريد تنزيل نموذج صوتي؟';
 
   @override
-  String get kitCapMcpAnyTitle => 'Extra tools';
+  String get kitCapMcpAnyTitle => 'أدوات إضافية';
 
   @override
   String get kitCapMcpAnyWhy =>
-      'This server can\'t add extra tools from the app.';
+      'لا يستطيع هذا الخادم إضافة أدوات أخرى من التطبيق.';
 
   @override
-  String get kitCapMcpAnyEnable => 'Add a tool';
+  String get kitCapMcpAnyEnable => 'إضافة أداة';
 
   @override
-  String get kitCapMcpAnyOffer => 'Give the agent more tools. Add one?';
+  String get kitCapMcpAnyOffer =>
+      'امنح الوكيل أدوات إضافية. هل تريد إضافة أداة؟';
 
   @override
-  String get kitCapProjectOpenTitle => 'Project';
+  String get kitCapProjectOpenTitle => 'المشروع';
 
   @override
-  String get kitCapProjectOpenWhy => 'Choose a folder to work in first.';
+  String get kitCapProjectOpenWhy => 'اختر مجلدًا للعمل فيه أولًا.';
 
   @override
-  String get kitCapProjectOpenEnable => 'Choose a project';
+  String get kitCapProjectOpenEnable => 'اختيار مشروع';
 
   @override
-  String get kitCapProjectOpenOffer =>
-      'Choose a project folder to start working.';
+  String get kitCapProjectOpenOffer => 'اختر مجلد مشروع لبدء العمل.';
 
   @override
-  String get kitCapProjectGitTitle => 'Git project';
+  String get kitCapProjectGitTitle => 'مشروع Git';
 
   @override
-  String get kitCapProjectGitWhy => 'This folder isn\'t a Git project yet.';
+  String get kitCapProjectGitWhy => 'هذا المجلد ليس مشروع Git بعد.';
 
   @override
-  String get kitCapProjectGitEnable => 'Make this a Git project';
+  String get kitCapProjectGitEnable => 'تحويل المجلد إلى مشروع Git';
 
   @override
   String get kitCapProjectGitOffer =>
-      'This needs a Git project. Make this folder one?';
+      'يحتاج هذا إلى مشروع Git. هل تريد تحويل هذا المجلد إلى مشروع Git؟';
 
   @override
-  String get kitCapPermNotificationsTitle => 'Notifications';
+  String get kitCapPermNotificationsTitle => 'الإشعارات';
 
   @override
-  String get kitCapPermNotificationsWhy =>
-      'Notifications are off for this app.';
+  String get kitCapPermNotificationsWhy => 'الإشعارات متوقفة لهذا التطبيق.';
 
   @override
-  String get kitCapPermNotificationsEnable => 'Allow notifications';
+  String get kitCapPermNotificationsEnable => 'السماح بالإشعارات';
 
   @override
   String get kitCapPermNotificationsOffer =>
-      'Hear when an agent needs you or finishes. Allow notifications?';
+      'تلقَّ تنبيهًا عندما يحتاجك وكيل أو ينتهي من العمل. هل تريد السماح بالإشعارات؟';
 
   @override
-  String get kitCapPermBatteryTitle => 'Running in the background';
+  String get kitCapPermBatteryTitle => 'العمل في الخلفية';
 
   @override
   String get kitCapPermBatteryWhy =>
-      'Android may stop the app while it\'s in the background.';
+      'قد يوقف Android التطبيق أثناء وجوده في الخلفية.';
 
   @override
-  String get kitCapPermBatteryEnable => 'Allow background running';
+  String get kitCapPermBatteryEnable => 'السماح بالعمل في الخلفية';
 
   @override
   String get kitCapPermBatteryOffer =>
-      'Keep agents running when the app is closed?';
+      'هل تريد إبقاء الوكلاء يعملون عند إغلاق التطبيق؟';
 
   @override
-  String get kitCapPermCameraTitle => 'Camera';
+  String get kitCapPermCameraTitle => 'الكاميرا';
 
   @override
-  String get kitCapPermCameraWhy => 'Camera access is off for this app.';
+  String get kitCapPermCameraWhy => 'الوصول إلى الكاميرا متوقف لهذا التطبيق.';
 
   @override
-  String get kitCapPermCameraEnable => 'Allow camera';
+  String get kitCapPermCameraEnable => 'السماح بالكاميرا';
 
   @override
   String get kitCapPermCameraOffer =>
-      'Scan pairing codes and add photos. Allow the camera?';
+      'امسح رموز الاقتران وأضف صورًا. هل تريد السماح بالكاميرا؟';
 
   @override
-  String get kitCapPermMicTitle => 'Microphone';
+  String get kitCapPermMicTitle => 'الميكروفون';
 
   @override
-  String get kitCapPermMicWhy => 'Microphone access is off for this app.';
+  String get kitCapPermMicWhy => 'الوصول إلى الميكروفون متوقف لهذا التطبيق.';
 
   @override
-  String get kitCapPermMicEnable => 'Allow microphone';
+  String get kitCapPermMicEnable => 'السماح بالميكروفون';
 
   @override
-  String get kitCapPermMicOffer => 'Speak your prompts. Allow the microphone?';
+  String get kitCapPermMicOffer =>
+      'أمْلِ طلباتك بصوتك. هل تريد السماح بالميكروفون؟';
 
   @override
-  String get kitCapNetworkTailscaleTitle => 'Reach from anywhere';
+  String get kitCapNetworkTailscaleTitle => 'الوصول من أي مكان';
 
   @override
   String get kitCapNetworkTailscaleWhy =>
-      'Your phone and computer aren\'t on the same network.';
+      'هاتفك وحاسوبك ليسا على الشبكة نفسها.';
 
   @override
-  String get kitCapNetworkTailscaleEnable => 'Set up Tailscale';
+  String get kitCapNetworkTailscaleEnable => 'إعداد Tailscale';
 
   @override
   String get kitCapNetworkTailscaleOffer =>
-      'Reach your computer from anywhere with Tailscale. Set it up?';
+      'اتصل بحاسوبك من أي مكان باستخدام Tailscale. هل تريد إعداده؟';
 
   @override
-  String get kitCapQuotaCollectorTitle => 'Remaining usage';
+  String get kitCapQuotaCollectorTitle => 'الاستخدام المتبقي';
 
   @override
   String get kitCapQuotaCollectorWhy =>
-      'This server doesn\'t report what\'s left of your plan.';
+      'لا يُبلّغ هذا الخادم عن المتبقي من خطتك.';
 
   @override
-  String get kitCapQuotaCollectorEnable => 'See how to add it';
+  String get kitCapQuotaCollectorEnable => 'عرض طريقة الإضافة';
 
   @override
   String get kitCapQuotaCollectorOffer =>
-      'See what\'s left of your plan here. Add it on the server?';
+      'اعرض المتبقي من خطتك هنا. هل تريد إضافته على الخادم؟';
 
   @override
-  String get kitCapAgentA2aTitle => 'Other agents';
+  String get kitCapAgentA2aTitle => 'وكلاء آخرون';
 
   @override
-  String get kitCapAgentA2aWhy => 'No other agents are added yet.';
+  String get kitCapAgentA2aWhy => 'لم يُضف أي وكلاء آخرين بعد.';
 
   @override
-  String get kitCapAgentA2aEnable => 'Add an agent';
+  String get kitCapAgentA2aEnable => 'إضافة وكيل';
 
   @override
   String get kitCapAgentA2aOffer =>
-      'Work with agents from other apps. Add one?';
+      'اعمل مع وكلاء من تطبيقات أخرى. هل تريد إضافة وكيل؟';
 
   @override
-  String get kitCapFlagFileBrowsingTerminalTitle => 'Files and terminal';
+  String get kitCapFlagFileBrowsingTerminalTitle => 'الملفات والطرفية';
 
   @override
   String get kitCapFlagFileBrowsingTerminalWhy =>
-      'This server doesn\'t share its files or terminal.';
+      'لا يتيح هذا الخادم الوصول إلى ملفاته أو طرفيته.';
 
   @override
-  String get kitCapFlagSessionDiffTitle => 'Review changes';
+  String get kitCapFlagSessionDiffTitle => 'مراجعة التغييرات';
 
   @override
   String get kitCapFlagSessionDiffWhy =>
-      'This server doesn\'t show the changes an agent made.';
+      'لا يعرض هذا الخادم التغييرات التي أجراها الوكيل.';
 
   @override
-  String get kitCapFlagServerCatalogTitle => 'Server settings';
+  String get kitCapFlagServerCatalogTitle => 'إعدادات الخادم';
 
   @override
   String get kitCapFlagServerCatalogWhy =>
-      'This server doesn\'t share its providers, tools or commands.';
+      'لا يتيح هذا الخادم الوصول إلى مزوّدي الخدمة أو أدواته أو أوامره.';
 
   @override
-  String get kitCapFlagUsageStatisticsTitle => 'Spending';
+  String get kitCapFlagUsageStatisticsTitle => 'الإنفاق';
 
   @override
-  String get kitCapFlagUsageStatisticsWhy =>
-      'This server doesn\'t report what was spent.';
+  String get kitCapFlagUsageStatisticsWhy => 'لا يُبلّغ هذا الخادم عن الإنفاق.';
 
   @override
   String get kitCapFlagStagedRevertSessionNotesTitle =>
-      'Notes and step-by-step undo';
+      'الملاحظات والتراجع خطوة بخطوة';
 
   @override
   String get kitCapFlagStagedRevertSessionNotesWhy =>
-      'This server can\'t take notes for the agent or undo step by step.';
+      'لا يستطيع هذا الخادم حفظ ملاحظات للوكيل أو التراجع خطوة بخطوة.';
 
   @override
   String get kitCapFlagWorktreeCreateSessionShareManagedWorkspacesTitle =>
-      'Isolated tasks and sharing';
+      'المهام المعزولة والمشاركة';
 
   @override
   String get kitCapFlagWorktreeCreateSessionShareManagedWorkspacesWhy =>
-      'This server can\'t run isolated tasks or share conversations.';
+      'لا يستطيع هذا الخادم تشغيل مهام معزولة أو مشاركة المحادثات.';
 
   @override
-  String get kitCapFlagDevelopmentServicesTitle => 'Development services';
+  String get kitCapFlagDevelopmentServicesTitle => 'خدمات التطوير';
 
   @override
   String get kitCapFlagDevelopmentServicesWhy =>
-      'This server can\'t start or stop development services.';
+      'لا يستطيع هذا الخادم تشغيل خدمات التطوير أو إيقافها.';
 
   @override
-  String get kitCapFlagRemoteUpgradeTitle => 'Updating the server';
+  String get kitCapFlagRemoteUpgradeTitle => 'تحديث الخادم';
 
   @override
   String get kitCapFlagRemoteUpgradeWhy =>
-      'This server can\'t be updated from the app.';
+      'لا يمكن تحديث هذا الخادم من التطبيق.';
 
   @override
-  String get kitCapFlagPromptAttachmentsTitle => 'Attach photos and files';
+  String get kitCapFlagPromptAttachmentsTitle => 'إرفاق الصور والملفات';
 
   @override
   String get kitCapFlagPromptAttachmentsWhy =>
-      'This server can\'t take photos or files with a prompt.';
+      'لا يستطيع هذا الخادم قبول صور أو ملفات مع الطلب.';
 
   @override
-  String get kitHostThisPhone => 'this phone';
+  String get kitHostThisPhone => 'هذا الهاتف';
 
   @override
   String get kitHostTermux => 'Termux';
 
   @override
-  String get kitHostOpenCode1 => 'computers with OpenCode 1';
+  String get kitHostOpenCode1 => 'الحواسيب التي تشغّل OpenCode 1';
 
   @override
-  String get kitHostOpenCode2 => 'computers with OpenCode 2';
+  String get kitHostOpenCode2 => 'الحواسيب التي تشغّل OpenCode 2';
 
   @override
   String get kitHostCodex => 'Codex';
@@ -16115,25 +16111,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kitHostPaseo => 'Paseo';
 
   @override
-  String get kitHostDemo => 'the offline demo';
+  String get kitHostDemo => 'العرض التوضيحي دون اتصال';
 
   @override
-  String get kitHostOpenCode => 'computers with OpenCode';
+  String get kitHostOpenCode => 'الحواسيب التي تشغّل OpenCode';
 
   @override
   String kitCapNotOnHost(int count, String feature, String host) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$feature aren\'t available on $host',
-      one: '$feature isn\'t available on $host',
+      other: '$feature غير متاحة على $host',
+      one: '$feature غير متاح على $host',
     );
     return '$_temp0';
   }
 
   @override
   String kitCapWorksOn(String hosts) {
-    return 'Works on $hosts';
+    return 'يعمل على $hosts';
   }
 
   @override
@@ -16143,7 +16139,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String kitCapAnd(String first, String last) {
-    return '$first and $last';
+    return '$first و$last';
   }
 
   @override
@@ -16157,103 +16153,103 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get kitCapNotNow => 'Not now';
+  String get kitCapNotNow => 'ليس الآن';
 
   @override
-  String get desktopDropHint => 'Drop to attach';
+  String get desktopDropHint => 'أفلت الملف لإرفاقه';
 
   @override
-  String get searchClaudeCodeGateTitle => 'Not on this device';
+  String get searchClaudeCodeGateTitle => 'غير متاح على هذا الجهاز';
 
   @override
   String get searchClaudeCodeGateDevice =>
-      'Claude Code runs on a phone only through Termux, which this device doesn\'t have. Run it on a computer with Paseo and add that computer as a server.';
+      'يعمل Claude Code على الهاتف فقط عبر Termux، وهو غير موجود على هذا الجهاز. شغّله على حاسوب باستخدام Paseo وأضف ذلك الحاسوب كخادم.';
 
   @override
   String get searchClaudeCodeGateDesktop =>
-      'Claude Code on this phone is for Android phones with Termux. On a computer, run Claude Code with Paseo and add it as a server.';
+      'Claude Code على هذا الهاتف مخصّص لهواتف Android التي تحتوي على Termux. على الحاسوب، شغّل Claude Code باستخدام Paseo وأضفه كخادم.';
 
   @override
-  String get searchClaudeCodeGateServers => 'Open servers';
+  String get searchClaudeCodeGateServers => 'فتح الخوادم';
 
   @override
-  String get activityDigestHidden => 'Digest hidden';
+  String get activityDigestHidden => 'أُخفي الملخص';
 
   @override
-  String get activityOpenFailedTitle => 'Couldn\'t open conversation';
+  String get activityOpenFailedTitle => 'تعذّر فتح المحادثة';
 
   @override
-  String get activityLoading => 'Loading the Inbox';
+  String get activityLoading => 'جارٍ تحميل الوارد';
 
   @override
-  String get activityPickRequest => 'Pick a request';
+  String get activityPickRequest => 'اختيار طلب';
 
   @override
   String get activityPickRequestDetail =>
-      'Choose one from the list to answer it here.';
+      'اختر طلبًا من القائمة للإجابة عنه هنا.';
 
   @override
   String activityAllowOnceFailed(String reason) {
-    return 'Not sent: $reason';
+    return 'لم يُرسل: $reason';
   }
 
   @override
-  String get activitySendOffline => 'Reconnect to the server to answer.';
+  String get activitySendOffline => 'أعِد الاتصال بالخادم للإجابة.';
 
   @override
-  String get activityLastSeenRunning => 'Last seen running';
+  String get activityLastSeenRunning => 'كان قيد التشغيل عند آخر تحقّق';
 
   @override
-  String get activityIfIgnored => 'The agent waits; nothing is lost.';
+  String get activityIfIgnored => 'ينتظر الوكيل؛ لا يُفقد شيء.';
 
   @override
   String activityPermissionAnnouncement(String title) {
-    return 'Permission needed: $title';
+    return 'يلزم إذن: $title';
   }
 
   @override
   String activityFormAnnouncement(String title) {
-    return 'Input requested: $title';
+    return 'مطلوب إدخال: $title';
   }
 
   @override
-  String get activityAnswerEveryQuestion => 'Answer every question first.';
+  String get activityAnswerEveryQuestion => 'أجب عن كل سؤال أولًا.';
 
   @override
   String get activityQuestionOptional =>
       'اختياري. يمكنك ترك هذا السؤال فارغاً.';
 
   @override
-  String get activitySending => 'Sending…';
+  String get activitySending => 'جارٍ الإرسال…';
 
   @override
   String activityQuestionProgress(int index, int total) {
-    return 'Question $index of $total';
+    return 'السؤال $index من $total';
   }
 
   @override
-  String get activityOwnAnswer => 'Or write your own answer';
+  String get activityOwnAnswer => 'أو اكتب إجابتك الخاصة';
 
   @override
-  String get shortcutsPaletteSearch => 'Search commands and settings';
+  String get shortcutsPaletteSearch => 'البحث في الأوامر والإعدادات';
 
   @override
-  String get shortcutsHelpAnywhere => 'Anywhere';
+  String get shortcutsHelpAnywhere => 'في أي مكان';
 
   @override
-  String get shortcutsHelpConversation => 'In a conversation';
+  String get shortcutsHelpConversation => 'في محادثة';
 
   @override
-  String get homeShellProjectUnavailable => 'Files isn\'t available';
+  String get homeShellProjectUnavailable => 'الملفات غير متاحة';
 
   @override
   String homeShellProjectUnavailableReason(String server) {
-    return '$server doesn\'t offer files, changes or code search. Connect to an OpenCode server to use them.';
+    return 'لا يتيح $server الملفات أو التغييرات أو البحث في الشيفرة. اتصل بخادم OpenCode لاستخدامها.';
   }
 
   @override
   String homeShellProjectUnavailableShort(String server) {
-    return '$server has no project tools.';
+    return 'لا تتوفر أدوات المشروع لدى $server.';
   }
 
   @override
@@ -16432,67 +16428,66 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String servicesStarted(String name) {
-    return '$name started';
+    return 'بدأ تشغيل $name';
   }
 
   @override
   String servicesRemoved(String name) {
-    return '$name removed';
+    return 'أُزيلت $name';
   }
 
   @override
   String servicesStopTitle(String name) {
-    return 'Stop $name?';
+    return 'هل تريد إيقاف $name؟';
   }
 
   @override
   String servicesRestartTitle(String name) {
-    return 'Restart $name?';
+    return 'هل تريد إعادة تشغيل $name؟';
   }
 
   @override
   String servicesForgetTitle(String name) {
-    return 'Forget $name\'s last run?';
+    return 'هل تريد مسح سجل التشغيل الأخير لـ$name؟';
   }
 
   @override
   String servicesRemoveTitle(String name) {
-    return 'Remove $name?';
+    return 'هل تريد إزالة $name؟';
   }
 
   @override
   String get servicesRemoveRunningHint =>
-      'Its command keeps running on the server, and this app can no longer stop it. Stop it first to end it.';
+      'يستمر أمرها في العمل على الخادم، ولا يعود بإمكان هذا التطبيق إيقافه. أوقفه أولًا لإنهائه.';
 
   @override
-  String get servicesEmptyTitle => 'No dev commands yet';
+  String get servicesEmptyTitle => 'لا توجد أوامر تطوير بعد';
 
   @override
   String get servicesOffline =>
-      'The server is not answering. Commands cannot be started or checked until it reconnects.';
+      'لا يستجيب الخادم. لا يمكن بدء الأوامر أو التحقّق منها حتى يُعاد الاتصال.';
 
   @override
-  String get servicesLogFailed => 'Could not read the log.';
+  String get servicesLogFailed => 'تعذّرت قراءة السجل.';
 
   @override
-  String get servicesProjectFolder => 'Project folder';
+  String get servicesProjectFolder => 'مجلد المشروع';
 
   @override
-  String get servicesWorkspace => 'Environment';
+  String get servicesWorkspace => 'البيئة';
 
   @override
-  String get servicesNameRequired => 'Enter a name.';
+  String get servicesNameRequired => 'أدخل اسمًا.';
 
   @override
-  String get servicesDuplicateName =>
-      'A service with this name already exists.';
+  String get servicesDuplicateName => 'توجد خدمة بهذا الاسم بالفعل.';
 
   @override
-  String get servicesCommandRequired => 'Enter a command, such as npm run dev.';
+  String get servicesCommandRequired => 'أدخل أمرًا، مثل npm run dev.';
 
   @override
   String get servicesUrlInvalid =>
-      'Enter an http or https address without a user name or password.';
+      'أدخل عنوان http أو https دون اسم مستخدم أو كلمة مرور.';
 
   @override
   String get isolatedTaskProjectFolder => 'مجلد المشروع';
@@ -16511,36 +16506,37 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get savedPermissionsIntro =>
-      'Actions the agent may take in this project without asking you first. Revoke one and the agent asks again.';
+      'الإجراءات التي يمكن للوكيل تنفيذها في هذا المشروع دون سؤالك أولًا. ألغِ السماح بإجراء ليطلب الوكيل إذنك مجددًا.';
 
   @override
   String get savedPermissionsLoadFailed =>
-      'Could not load the always allowed actions';
+      'تعذّر تحميل الإجراءات المسموح بها دائمًا';
 
   @override
   String get savedPermissionsRevokeBody =>
-      'The agent will ask you again the next time it wants to do this. Work that is already running keeps going.';
+      'سيطلب الوكيل إذنك مجددًا في المرة القادمة التي يريد فيها تنفيذ هذا الإجراء. يستمر العمل الجاري بالفعل.';
 
   @override
   String savedPermissionsRevokedDetail(String action) {
-    return '$action now asks you first again.';
+    return 'عاد $action إلى طلب إذنك أولًا.';
   }
 
   @override
-  String get savedPermissionsDismiss => 'Dismiss';
+  String get savedPermissionsDismiss => 'إغلاق التنبيه';
 
   @override
-  String get savedPermissionsCopyPattern => 'Copy pattern';
+  String get savedPermissionsCopyPattern => 'نسخ النمط';
 
   @override
-  String get savedPermissionsBusy => 'Wait for the current change to finish';
+  String get savedPermissionsBusy => 'انتظر حتى ينتهي التغيير الحالي';
 
   @override
-  String get savedPermissionsLoading => 'Loading always allowed actions';
+  String get savedPermissionsLoading =>
+      'جارٍ تحميل الإجراءات المسموح بها دائمًا';
 
   @override
   String get savedPermissionsAllResources =>
-      'Anything this kind of action touches';
+      'كل ما يمسّه هذا النوع من الإجراءات';
 
   @override
   String get settingsHubDetailEmpty => 'اختر مجموعة إعدادات';
@@ -16617,23 +16613,23 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get kitMessageYou => 'You said';
+  String get kitMessageYou => 'ما قلته';
 
   @override
-  String get kitMessageThinking => 'Thinking…';
+  String get kitMessageThinking => 'جارٍ التفكير…';
 
   @override
-  String get kitMessageThought => 'Thought';
+  String get kitMessageThought => 'التفكير';
 
   @override
   String kitMessageThoughtForSeconds(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count seconds',
-      one: '1 second',
+      other: '$count ث',
+      one: 'ثانية واحدة',
     );
-    return 'Thought for $_temp0';
+    return 'مدة التفكير: $_temp0';
   }
 
   @override
@@ -16641,23 +16637,23 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count minutes',
-      one: '1 minute',
+      other: '$count د',
+      one: 'دقيقة واحدة',
     );
-    return 'Thought for $_temp0';
+    return 'مدة التفكير: $_temp0';
   }
 
   @override
-  String get kitMessageActions => 'Message actions';
+  String get kitMessageActions => 'إجراءات الرسالة';
 
   @override
-  String get kitMessageNoticeFailed => 'Failed';
+  String get kitMessageNoticeFailed => 'فشل الإجراء';
 
   @override
-  String get kitRequestChooseOneReason => 'Choose at least one answer.';
+  String get kitRequestChooseOneReason => 'اختر إجابة واحدة على الأقل.';
 
   @override
-  String get kitRequestSendAnswers => 'Send answers';
+  String get kitRequestSendAnswers => 'إرسال الإجابات';
 
   @override
   String get serversRemoveBody =>
@@ -16684,35 +16680,35 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get guideStepTwoScan =>
-      'Tap Add server, then Scan code and point the camera at the QR, or Paste code.';
+      'اضغط على إضافة خادم، ثم مسح الرمز ووجّه الكاميرا نحو رمز QR، أو اختر لصق الرمز.';
 
   @override
   String get guideStepTwoPaste =>
-      'Copy the printed code, then tap Add server and Paste code.';
+      'انسخ الرمز المطبوع، ثم اضغط على إضافة خادم ولصق الرمز.';
 
   @override
-  String get guidePhonePathTitle => 'Use this phone instead';
+  String get guidePhonePathTitle => 'استخدام هذا الهاتف بدلًا من ذلك';
 
   @override
   String get guidePhonePathBody =>
-      'Install OpenCode on this phone and use it here, no computer needed';
+      'ثبّت OpenCode على هذا الهاتف واستخدمه هنا، دون الحاجة إلى حاسوب';
 
   @override
-  String get pairingScannerAllowCamera => 'Allow camera';
+  String get pairingScannerAllowCamera => 'السماح بالكاميرا';
 
   @override
-  String get pairingScannerStarting => 'Opening the camera…';
+  String get pairingScannerStarting => 'جارٍ فتح الكاميرا…';
 
   @override
   String profileMonitorSwitchBody(String current, String target) {
-    return 'A run is going on $current. Switching shows $target in this app; the run on $current keeps going.';
+    return 'هناك عمل جارٍ على $current. يعرض التبديل $target في هذا التطبيق؛ يستمر العمل على $current.';
   }
 
   @override
-  String get profileMonitorOpenFailedTitle => 'Couldn\'t open it';
+  String get profileMonitorOpenFailedTitle => 'تعذّر فتحه';
 
   @override
-  String get profileMonitorIfIgnored => 'The agent waits until you answer';
+  String get profileMonitorIfIgnored => 'ينتظر الوكيل حتى تجيب';
 
   @override
   String get serverSettingsRestartCommandLabel =>
@@ -16752,29 +16748,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get serverSettingsAddressLabel => 'العنوان';
 
   @override
-  String get tailscaleSetupAppTitle => 'Tailscale on this phone';
+  String get tailscaleSetupAppTitle => 'Tailscale على هذا الهاتف';
 
   @override
-  String get tailscaleSetupVpnTitle => 'Sign in and connect';
+  String get tailscaleSetupVpnTitle => 'تسجيل الدخول والاتصال';
 
   @override
   String get tailscaleSetupVpnSupporting =>
-      'Sign in and connect. OpenCode can’t check this.';
+      'سجّل الدخول واتصل. لا يمكن لـOpenCode التحقّق من ذلك.';
 
   @override
   String get tailscaleSetupOpenFailed =>
-      'Tailscale didn’t open. Open it from your launcher, then come back.';
+      'لم يُفتح Tailscale. افتحه من قائمة تطبيقاتك، ثم عد.';
 
   @override
   String get tailscaleSetupAddressHelper =>
-      'Paste the HTTPS address Tailscale Serve printed.';
+      'الصق عنوان HTTPS الذي طبعه Tailscale Serve.';
 
   @override
-  String get tailscaleSetupGetApp => 'Get Tailscale';
+  String get tailscaleSetupGetApp => 'الحصول على Tailscale';
 
   @override
-  String get tailscaleSetupContinueReason =>
-      'Enter your server’s address first.';
+  String get tailscaleSetupContinueReason => 'أدخل عنوان خادمك أولًا.';
 
   @override
   String languagePickerPartlyTranslated(int percent) {
@@ -16812,87 +16807,86 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get localAgentEntryStillStarting =>
-      'Still starting · this can take a minute';
+      'لا يزال يبدأ التشغيل · قد يستغرق دقيقة';
 
   @override
-  String get localAgentEntryDidNotStart => 'Didn\'t start';
+  String get localAgentEntryDidNotStart => 'لم يبدأ التشغيل';
 
   @override
-  String get localAgentEntryRemoving => 'Removing';
+  String get localAgentEntryRemoving => 'جارٍ الإزالة';
 
   @override
   String localAgentEntrySignedOut(String state) {
-    return '$state · Not signed in to Claude';
+    return '$state · لم يُسجّل الدخول إلى Claude';
   }
 
   @override
-  String get formRendererFinishLater => 'Finish later';
+  String get formRendererFinishLater => 'الإكمال لاحقًا';
 
   @override
-  String get formRendererSending => 'Sending your answers…';
+  String get formRendererSending => 'جارٍ إرسال إجاباتك…';
 
   @override
-  String get formRendererChoose => 'Choose';
+  String get formRendererChoose => 'اختيار قيمة';
 
   @override
-  String get formRendererChooseDate => 'Choose a date';
+  String get formRendererChooseDate => 'اختيار تاريخ';
 
   @override
-  String get formRendererChooseDateTime => 'Choose a date and time';
+  String get formRendererChooseDateTime => 'اختيار تاريخ ووقت';
 
   @override
   String formRendererDateAndTime(String date, String time) {
-    return '$date at $time';
+    return '$date في $time';
   }
 
   @override
-  String get formRendererUseDate => 'Use date';
+  String get formRendererUseDate => 'استخدام التاريخ';
 
   @override
-  String get formRendererUseTime => 'Use time';
+  String get formRendererUseTime => 'استخدام الوقت';
 
   @override
   String get filePreviewPdfIsolated =>
-      'PDF pages don\'t render in this isolated view. Save the file to read it in a PDF app.';
+      'لا تُعرض صفحات PDF في هذا العرض المعزول. احفظ الملف لقراءته في تطبيق PDF.';
 
   @override
-  String get filePreviewCopyOriginal => 'Copy original file';
+  String get filePreviewCopyOriginal => 'نسخ الملف الأصلي';
 
   @override
-  String get filePreviewOpenInFiles => 'Open in Files';
+  String get filePreviewOpenInFiles => 'فتح الملف في الملفات';
 
   @override
-  String get filePreviewViewMode => 'Show file as';
+  String get filePreviewViewMode => 'طريقة عرض الملف';
 
   @override
-  String get filePreviewAttachFailed => 'Couldn\'t attach file';
+  String get filePreviewAttachFailed => 'تعذّر إرفاق الملف';
 
   @override
-  String get filePreviewSaveFailed => 'Couldn\'t save file';
+  String get filePreviewSaveFailed => 'تعذّر حفظ الملف';
 
   @override
-  String get kitTurnStarting => 'Starting the model…';
+  String get kitTurnStarting => 'جارٍ بدء تشغيل النموذج…';
 
   @override
   String kitTurnStillStarting(int seconds) {
-    return 'Still waiting for the model · $seconds s';
+    return 'لا يزال الانتظار لاستجابة النموذج جاريًا · $seconds ث';
   }
 
   @override
-  String get kitTurnStopped => 'You stopped this reply.';
+  String get kitTurnStopped => 'أوقفت هذا الرد.';
 
   @override
-  String get kitTurnInterrupted =>
-      'The connection dropped before this reply finished.';
+  String get kitTurnInterrupted => 'انقطع الاتصال قبل اكتمال هذا الرد.';
 
   @override
-  String get kitTurnCopy => 'Copy reply';
+  String get kitTurnCopy => 'نسخ الرد';
 
   @override
-  String get kitTurnMore => 'More for this reply';
+  String get kitTurnMore => 'المزيد لهذا الرد';
 
   @override
-  String get kitTurnActions => 'Reply actions';
+  String get kitTurnActions => 'إجراءات الرد';
 
   @override
   String serverSettingsDisconnectTitle(String serverName) {
@@ -16905,53 +16899,53 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get kitScannerStarting => 'Opening the camera…';
+  String get kitScannerStarting => 'جارٍ فتح الكاميرا…';
 
   @override
-  String get kitScannerSlow => 'Still opening the camera';
+  String get kitScannerSlow => 'لا يزال فتح الكاميرا جاريًا';
 
   @override
-  String get kitScannerPaused => 'Camera paused';
+  String get kitScannerPaused => 'الكاميرا متوقفة مؤقتًا';
 
   @override
-  String get kitScannerPreview => 'Camera view';
+  String get kitScannerPreview => 'عرض الكاميرا';
 
   @override
-  String get kitDateSet => 'Set date';
+  String get kitDateSet => 'تحديد التاريخ';
 
   @override
-  String get kitTimeSet => 'Set time';
+  String get kitTimeSet => 'تحديد الوقت';
 
   @override
-  String get kitDateTimeSet => 'Set';
+  String get kitDateTimeSet => 'تحديد التاريخ والوقت';
 
   @override
-  String get kitDateType => 'Type a date';
+  String get kitDateType => 'كتابة تاريخ';
 
   @override
-  String get kitDateCalendar => 'Show calendar';
+  String get kitDateCalendar => 'عرض التقويم';
 
   @override
   String kitDateFormatHint(String example) {
-    return 'e.g. $example';
+    return 'مثلًا: $example';
   }
 
   @override
-  String get kitDateField => 'Date';
+  String get kitDateField => 'التاريخ';
 
   @override
-  String get kitDateInvalid => 'Not a date';
+  String get kitDateInvalid => 'ليس تاريخًا';
 
   @override
   String kitDateOutOfRange(String first, String last) {
-    return 'Pick a date between $first and $last';
+    return 'اختر تاريخًا بين $first و$last';
   }
 
   @override
-  String get kitTimeHour => 'Hour';
+  String get kitTimeHour => 'الساعة';
 
   @override
-  String get kitTimeMinute => 'Minute';
+  String get kitTimeMinute => 'الدقيقة';
 
   @override
   String get kitTimePeriod => 'Morning or afternoon';
