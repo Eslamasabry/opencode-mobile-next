@@ -13,6 +13,13 @@ _ApprovalChoice _choiceOf(EffectiveAutoApproval effective) =>
     ? _ApprovalChoice.auto
     : _ApprovalChoice.ask;
 
+/// Whether this conversation has an approval mode to show at all: a real
+/// conversation (not the walkthrough) on a runtime that asks before it acts
+/// ([ServerCapabilities.permissionRequests]). Gated on the capability, never
+/// on which kind of server or agent this is.
+bool _approvalModeOffered(ConnectionController conn) =>
+    !conn.isIsolated && conn.capabilities.permissionRequests;
+
 /// The modes offered: all three, always. The AI Team's supervision level
 /// governs the team, not conversations; here the person's choice is the
 /// consent ("Approve everything" is confirmed when chosen). There is no

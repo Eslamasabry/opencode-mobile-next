@@ -3,11 +3,13 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:clock/clock.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show compute, listEquals;
+import 'package:flutter/foundation.dart'
+    show SynchronousFuture, compute, listEquals;
 import 'package:flutter/scheduler.dart' show SchedulerPhase;
 import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter/services.dart';
@@ -24,6 +26,7 @@ import '../../domain/agent_catalog.dart' show AgentCatalog;
 import '../../domain/chat_feed.dart'
     show ChatFeedItem, isTemporaryProjectDirectory;
 import '../../domain/command_receipts.dart';
+import '../../domain/model_display_name.dart';
 import '../../domain/prompt_attachment.dart';
 import 'agents/agent_sheet.dart' show AgentSheetStep, showAgentSheet;
 import '../../domain/background_work.dart';
@@ -217,6 +220,7 @@ part 'chat/team_agent_conversation.dart';
 part 'chat/team_conversation_actions.dart';
 part 'chat/composer_tools.dart';
 part 'chat/agent_cards.dart';
+part 'chat/sent_photos.dart';
 
 AppLocalizations _chatL10n(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));

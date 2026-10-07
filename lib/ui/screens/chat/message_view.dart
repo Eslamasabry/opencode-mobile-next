@@ -294,8 +294,9 @@ class _MessageView extends StatelessWidget {
     );
   }
 
-  /// A sent file as a read-only chip under the prompt; a picture or file
-  /// opens its preview, a project reference names the folder it points at.
+  /// A sent file under the prompt: a photo as its thumbnail (FC4), any
+  /// other file as a read-only chip. A picture or file opens its preview, a
+  /// project reference names the folder it points at.
   KitAttachment _attachment(BuildContext context, Part part) {
     final strings = _chatL10n(context);
     final name = part.filename?.trim().isNotEmpty == true
@@ -305,17 +306,47 @@ class _MessageView extends StatelessWidget {
         part.mime == PromptAttachment.directoryReferenceMime &&
         Uri.tryParse(part.url ?? '')?.scheme == 'file';
     final image = part.mime?.startsWith('image/') ?? false;
+    final photoBytes = reference ? null : _sentPhotoDataBytes(part);
+    final serverPath = reference || photoBytes != null
+        ? null
+        : _sentPhotoServerPath(part);
+    Future<FilePreviewData> loadServerFile(String path) => filePreviewLoader(
+      ToolOutputFile(path: path, mimeType: part.mime, filename: name),
+    );
+    final KitImageSource? thumbnail = photoBytes != null
+        ? KitImageSource.memory(photoBytes)
+        : serverPath != null && _isDrawablePicture(part.mime)
+        ? KitImageSource.provider(
+            _SentFileImage(
+              scope: _chat(context)?._conn.profile?.id ?? '',
+              path: serverPath,
+              load: () async => (await loadServerFile(serverPath)).bytes,
+            ),
+          )
+        : null;
+    final id = part.id ?? part.url ?? name;
     return KitAttachment(
-      id: part.id ?? part.url ?? name,
+      id: id,
       label: reference ? '@$name' : name,
       kind: reference
           ? KitAttachmentKind.reference
-          : image
+          : image || thumbnail != null
           ? KitAttachmentKind.image
           : KitAttachmentKind.file,
       detail: reference ? strings.chatUiProjectReference : null,
+      thumbnail: thumbnail,
+      chipKey: thumbnail == null ? null : ValueKey('sent-photo-open-$id'),
+      thumbnailKey: thumbnail == null ? null : ValueKey('sent-photo-$id'),
       onOpen: reference
           ? null
+          : serverPath != null
+          ? () => unawaited(
+              showFilePreviewSheetLoading(
+                context,
+                name: name,
+                load: () => loadServerFile(serverPath),
+              ),
+            )
           : () => unawaited(
               showFilePreviewSheet(
                 context,

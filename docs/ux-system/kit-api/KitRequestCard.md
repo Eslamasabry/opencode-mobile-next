@@ -488,3 +488,20 @@ None. The visual choices K2 left open are settled by STANDARDS and the approved 
 - the legacy look has no accent tint (LOOK-6).
 
 The flagged tokens are requests to the coordinator's pre-wave seam, not open contract questions.
+
+## One shape (FC2, 2026-10-07)
+
+`KitAgentCard` (an agent's own card) is drawn with this card's shape, so
+everything an agent asks the person looks the same in the chat and under a
+Conversations row (docs/design/FC2-one-card-shape.md). The shape is four
+shared kit helpers in `kit_request_card.dart` (functions, not widget
+classes): `kitRequestPlacement` (reading width, page gutter and entrance;
+none with `inList`), `kitRequestFrame` (needs-you surface, line and ring, or
+the plain report card; focus border; 45 % height cap at 2.0 text),
+`kitRequestHeading` (the tinted tile, the caption, the headline, the lines
+under it) and `kitAnsweredRow` (the one answered row: glyph, title, the
+outcome under it; an optional read-only body behind the title line).
+
+`KitRequestCard.ask(inList: true)` sits under a list row as the list places
+it, as `KitAgentCard(inList: true)` does; the caller passes secondary
+answers there.
