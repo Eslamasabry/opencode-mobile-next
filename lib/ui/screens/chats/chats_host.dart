@@ -149,10 +149,17 @@ class ConnectionChatsHost implements ChatsHost {
     if (owner == null) return null;
     final answers = PermissionAnswers.of(owner);
     return ListenableBuilder(
-      listenable: Listenable.merge([owner, answers, owner.delayedAnswers]),
+      listenable: Listenable.merge([
+        _conn,
+        owner,
+        answers,
+        owner.delayedAnswers,
+      ]),
       builder: (context, _) {
         final waiting = owner.permissionsForSession(item.sessionID);
-        final card = owner.waitingCardsForFeedItem(item).firstOrNull;
+        // Cards are routed by the list's own connection: it knows which
+        // source a row came from.
+        final card = _conn.waitingCardsForFeedItem(item).firstOrNull;
         if (waiting.isEmpty && card == null) return const SizedBox.shrink();
         Widget? request;
         if (waiting.isNotEmpty) {
@@ -185,7 +192,7 @@ class ConnectionChatsHost implements ChatsHost {
             ? null
             : AgentCardView(
                 key: ValueKey('chats-card-${card.callID}'),
-                controller: owner,
+                controller: _conn,
                 parse: GenUiParsed(card),
                 agentLabel: item.agentLabel ?? 'OpenCode',
                 busy: owner.busySessions.contains(item.sessionID),
