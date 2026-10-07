@@ -43,7 +43,12 @@ void main() {
   tearDownAll(() {
     if (skip == null) temporary.deleteSync(recursive: true);
   });
-  for (final scenario in ['low-space-launch', 'healthy-launch']) {
+  for (final scenario in [
+    'low-space-launch',
+    'healthy-launch',
+    'exited-at-once',
+    'concurrent-start',
+  ]) {
     test('native phone host: $scenario', skip: skip, () async {
       final result = await Process.run('java', [
         '-cp',

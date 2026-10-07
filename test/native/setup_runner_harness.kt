@@ -43,6 +43,21 @@ fun main(args: Array<String>) {
         val state = SetupJobState("job", "running", emptyList(), startedAt = 1)
         field(runner, "job").set(runner, state)
         when (args.single()) {
+            "paseo-checksum-failed", "paseo-launch-failed" -> {
+                val stage = if (args.single() == "paseo-checksum-failed") "Checking Paseo checksum" else "Checking Paseo launch command"
+                val script = "printf '::oc stage $stage\\nprivate-provider-output\\n'; exit 1"
+                runner.start("paseo-check", listOf(SetupRunner.Spec("agent-paseo", script, false, false,
+                    1.0, false, null, null, emptyMap(), emptyMap(), agentUser = true)), null,
+                    SetupRunner.Texts("channel", "title", "{percent}", "done", "stopped"))
+                (field(runner, "worker").get(runner) as Thread).join(5000)
+                val status = JSONObject(runner.status()!!)
+                check(status.getString("state") == "failed")
+                val component = status.getJSONObject("components").getJSONObject("agent-paseo")
+                check(component.getString("stage") == stage) { "named Paseo stage was lost" }
+                check(component.getString("error").contains(if (args.single() == "paseo-checksum-failed") "checksum check" else "launch command check"))
+                check(!status.toString().contains("private-provider-output"))
+                check(!runner.logFile.readText().contains("private-provider-output"))
+            }
             "low-space-first", "low-space-next" -> {
                 val next = args.single() == "low-space-next"
                 val first = SetupRunner.Spec("first", "touch '${dir.path}/space-drained'", false, false,

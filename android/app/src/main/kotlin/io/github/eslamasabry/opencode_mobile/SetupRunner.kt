@@ -379,7 +379,10 @@ class SetupRunner private constructor(private val context: Context) {
             started.inputStream.bufferedReader().forEachLine { line ->
                 val parsed = SetupProtocol.parse(line)
                 val event = if (!spec.agentUser) parsed else when (parsed) {
-                    is SetupProtocol.Event.Stage -> SetupProtocol.Event.Stage(spec.stage ?: "Installing agent")
+                    is SetupProtocol.Event.Stage -> SetupProtocol.Event.Stage(
+                        if (spec.id == "agent-paseo" && parsed.label in PASEO_CHECK_STAGES)
+                            parsed.label else spec.stage ?: "Installing agent",
+                    )
                     is SetupProtocol.Event.Version -> if (parsed.text == spec.version) parsed else null
                     else -> parsed
                 }
@@ -405,7 +408,14 @@ class SetupRunner private constructor(private val context: Context) {
             synchronized(lock) { process = null }
         }
         if (cancelled) return "cancelled"
-        return if (code == 0) null else if (spec.agentUser) "The agent setup could not finish. Try again."
+        return if (code == 0) null else if (spec.agentUser) {
+            if (spec.id == "agent-paseo") when (component.stage) {
+                "Checking Paseo checksum" -> "Paseo did not pass its checksum check. Run setup again."
+                "Checking Paseo launch command" -> "Paseo did not pass its launch command check. Run setup again."
+                "Checking Paseo version" -> "Paseo did not pass its version check. Run setup again."
+                else -> "The agent setup could not finish. Try again."
+            } else "The agent setup could not finish. Try again."
+        }
             else (last ?: "exit $code").take(300)
     }
 
@@ -548,6 +558,9 @@ class SetupRunner private constructor(private val context: Context) {
     }
 
     companion object {
+        private val PASEO_CHECK_STAGES = setOf(
+            "Checking Paseo checksum", "Checking Paseo launch command", "Checking Paseo version",
+        )
         private const val WRITE_INTERVAL_MS = 250L
         private const val NOTIFY_INTERVAL_MS = 1000L
 

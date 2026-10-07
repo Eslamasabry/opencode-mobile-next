@@ -14,21 +14,66 @@ void main() {
   String isolated(String script) =>
       script.replaceAll('/home/oc', '${temp.path}/oc');
 
-  Future<ProcessResult> runInstall({bool failNpm = false}) async {
+  const fixturePayload = 'export const pinnedFixture = true;\n';
+  late String fixtureCliSha;
+  late String fixtureCodeTreeSha;
+
+  String fixtureScript(String script) => isolated(script)
+      .replaceAll(PaseoPhoneScripts.codeTreeSha256, fixtureCodeTreeSha)
+      .replaceAll(PaseoPhoneScripts.cliSha256, fixtureCliSha)
+      .replaceAll(
+        PaseoPhoneScripts.payloadSha256,
+        sha256.convert(utf8.encode(fixturePayload)).toString(),
+      );
+
+  Future<ProcessResult> runInstall({
+    bool failNpm = false,
+    bool tamperCli = false,
+    bool tamperPayload = false,
+    bool wrongLink = false,
+    bool failLaunch = false,
+    bool wrongVersion = false,
+  }) async {
     final bin = Directory('${temp.path}/oc/.local/node/bin')
       ..createSync(recursive: true);
     final node = File('${bin.path}/node')
       ..writeAsStringSync('''#!/bin/sh
 if [ "\$1" = --version ]; then echo ${PaseoPhoneScripts.nodeVersion}; fi
 ''');
+    final fixtureCli =
+        '''#!/bin/sh
+printf executed >> '${temp.path}/cli-executed'
+[ -z "\${BC3_PRIVATE_TOKEN:-}" ] || exit 91
+case "\$*" in
+  --version) echo ${wrongVersion ? '0.0.0' : PaseoPhoneScripts.version} ;;
+  'daemon run --help')
+    ${failLaunch ? 'echo private-cli-output >&2; exit 42' : 'echo "--home Local daemon home"'} ;;
+  *) exit 92 ;;
+esac
+''';
+    fixtureCliSha = sha256.convert(utf8.encode(fixtureCli)).toString();
+    final fixtureManifest =
+        '$fixtureCliSha  ${PaseoPhoneScripts.cliRelativePath}\n'
+        '${sha256.convert(utf8.encode(fixturePayload))}  ${PaseoPhoneScripts.payloadRelativePath}\n';
+    fixtureCodeTreeSha = sha256
+        .convert(utf8.encode(fixtureManifest))
+        .toString();
+    final cliBase64 = base64.encode(
+      utf8.encode('$fixtureCli${tamperCli ? '# changed\n' : ''}'),
+    );
+    final payloadBase64 = base64.encode(
+      utf8.encode('$fixturePayload${tamperPayload ? '// changed\n' : ''}'),
+    );
     final npm = File('${bin.path}/npm')
       ..writeAsStringSync('''#!/bin/sh
 ${failNpm ? 'echo private-npm-output >&2; exit 42' : ''}
 while [ "\$1" != --prefix ]; do shift; done
 shift
-mkdir -p "\$1/node_modules/.bin"
-printf '#!/bin/sh\\necho ${PaseoPhoneScripts.version}\\n' > "\$1/node_modules/.bin/paseo"
-chmod 755 "\$1/node_modules/.bin/paseo"
+mkdir -p "\$1/node_modules/.bin" "\$1/node_modules/@getpaseo/cli/bin" "\$1/node_modules/@getpaseo/cli/dist"
+printf '%s' '$cliBase64' | base64 -d > "\$1/${PaseoPhoneScripts.cliRelativePath}"
+printf '%s' '$payloadBase64' | base64 -d > "\$1/${PaseoPhoneScripts.payloadRelativePath}"
+chmod 755 "\$1/${PaseoPhoneScripts.cliRelativePath}"
+ln -s '${wrongLink ? '../@getpaseo/cli/bin/other' : '../@getpaseo/cli/bin/paseo'}' "\$1/node_modules/.bin/paseo"
 ''');
     await Process.run('chmod', ['755', node.path, npm.path]);
     return Process.run(
@@ -38,14 +83,20 @@ chmod 755 "\$1/node_modules/.bin/paseo"
         '''
 id() { echo 1000; }
 uname() { echo aarch64; }
-oc_stage() { :; }
+oc_stage() { printf '::oc stage %s\\n' "\$1"; }
 oc_version() { printf '%s\\n' "\$1"; }
-${isolated(PaseoPhoneScripts.install(packageLock: lock))}
+${fixtureScript(PaseoPhoneScripts.install(packageLock: lock))}
 ''',
       ],
-      environment: {'HOME': '${temp.path}/oc'},
+      environment: {
+        'HOME': '${temp.path}/oc',
+        'BC3_PRIVATE_TOKEN': 'private-environment-sentinel',
+      },
     );
   }
+
+  Future<ProcessResult> runCheck() =>
+      Process.run('/bin/sh', ['-c', fixtureScript(PaseoPhoneScripts.check)]);
 
   test('shipped lock freezes every HTTPS tarball with SRI', () {
     expect(
@@ -73,6 +124,31 @@ ${isolated(PaseoPhoneScripts.install(packageLock: lock))}
         '1.12.28',
       );
     }
+  });
+
+  test('CLI pins match the independently verified registry artifact', () {
+    // @getpaseo/cli 0.9.2 tarball checked against the shipped lock's SRI on
+    // 2026-10-07. These values come from artifact inspection, not fixtures.
+    final package =
+        (jsonDecode(lock)
+            as Map<String, dynamic>)['packages']['node_modules/@getpaseo/cli'];
+    expect(package['bin']['paseo'], 'bin/paseo');
+    expect(
+      PaseoPhoneScripts.cliRelativePath,
+      'node_modules/@getpaseo/cli/bin/paseo',
+    );
+    expect(
+      PaseoPhoneScripts.cliSha256,
+      '2b761f40e5a6416e4aaa733f38a47d5a4639b42cc1f88fc060256d2c4ed8cf94',
+    );
+    expect(
+      PaseoPhoneScripts.payloadSha256,
+      '8620d03c3e7e6776c3bfc4d22a8875f92209a563612fe7cda63dea7512f83c09',
+    );
+    expect(
+      PaseoPhoneScripts.codeTreeSha256,
+      '06d52bf05750cbd269668993f13ed0bbed2087feacbef37844007a44a1bb8ae5',
+    );
   });
 
   test('modified lock is rejected before constructing executable script', () {
@@ -105,12 +181,98 @@ ${isolated(PaseoPhoneScripts.install(packageLock: lock))}
   test('fake installer completes under oc and replaces the launcher', () async {
     final result = await runInstall();
     expect(result.exitCode, 0, reason: result.stderr.toString());
-    expect(result.stdout, '${PaseoPhoneScripts.version}\n');
+    expect(result.stdout, endsWith('${PaseoPhoneScripts.version}\n'));
+    expect(result.stdout, contains('::oc stage Checking Paseo checksum'));
+    expect(result.stdout, contains('::oc stage Checking Paseo launch command'));
+    expect(result.stdout, contains('::oc stage Checking Paseo version'));
+    final checked = await runCheck();
+    expect(checked.exitCode, 0, reason: '${checked.stderr}');
     final marker = File(
       isolated('${PaseoPhoneScripts.installDirectory}/.oc-package-lock-sha256'),
     );
     expect(marker.readAsStringSync(), PaseoPhoneScripts.packageLockSha256);
     expect(Link('${temp.path}/oc/.local/bin/paseo').existsSync(), isTrue);
+  });
+
+  for (final failure in ['entrypoint', 'payload', 'launcher']) {
+    test(
+      'changed $failure fails before execution or replacing good tree',
+      () async {
+        final old =
+            File(isolated('${PaseoPhoneScripts.installDirectory}/previous'))
+              ..parent.createSync(recursive: true)
+              ..writeAsStringSync('previous');
+        final result = await runInstall(
+          tamperCli: failure == 'entrypoint',
+          tamperPayload: failure == 'payload',
+          wrongLink: failure == 'launcher',
+        );
+        expect(result.exitCode, isNot(0));
+        expect(result.stdout, contains('::oc stage Checking Paseo checksum'));
+        expect(result.stderr, contains('checksum check. Run setup again.'));
+        expect(File('${temp.path}/cli-executed').existsSync(), isFalse);
+        expect(old.readAsStringSync(), 'previous');
+      },
+    );
+  }
+
+  test(
+    'launch command failure names its step and hides private output',
+    () async {
+      final result = await runInstall(failLaunch: true);
+      expect(result.exitCode, isNot(0));
+      expect(
+        result.stdout,
+        contains('::oc stage Checking Paseo launch command'),
+      );
+      expect(result.stderr, contains('launch command check. Run setup again.'));
+      expect(
+        '${result.stdout}${result.stderr}',
+        isNot(contains('private-cli-output')),
+      );
+      expect(
+        Directory(isolated(PaseoPhoneScripts.installDirectory)).existsSync(),
+        isFalse,
+      );
+    },
+  );
+
+  test('version failure names its step before replacing the tree', () async {
+    final result = await runInstall(wrongVersion: true);
+    expect(result.exitCode, isNot(0));
+    expect(result.stdout, contains('::oc stage Checking Paseo version'));
+    expect(result.stderr, contains('version check. Run setup again.'));
+    expect(
+      Directory(isolated(PaseoPhoneScripts.installDirectory)).existsSync(),
+      isFalse,
+    );
+  });
+
+  test('installed marker cannot hide modified CLI implementation', () async {
+    expect((await runInstall()).exitCode, 0);
+    final execution = File('${temp.path}/cli-executed')..deleteSync();
+    File(
+      isolated(
+        '${PaseoPhoneScripts.installDirectory}/node_modules/@getpaseo/cli/dist/daemon.js',
+      ),
+    ).writeAsStringSync('throw new Error("changed");');
+    final result = await runCheck();
+    expect(result.exitCode, isNot(0));
+    expect(execution.existsSync(), isFalse);
+  });
+
+  test('installed marker cannot hide a changed outer launcher', () async {
+    expect((await runInstall()).exitCode, 0);
+    final execution = File('${temp.path}/cli-executed')..deleteSync();
+    final launcher = Link('${temp.path}/oc/.local/bin/paseo')..deleteSync();
+    launcher.createSync(
+      isolated(
+        '${PaseoPhoneScripts.installDirectory}/${PaseoPhoneScripts.cliRelativePath}',
+      ),
+    );
+    final result = await runCheck();
+    expect(result.exitCode, isNot(0));
+    expect(execution.existsSync(), isFalse);
   });
 
   test('failed npm retains previous install and hides npm output', () async {
