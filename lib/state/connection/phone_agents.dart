@@ -721,21 +721,24 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     } else {
       _paRebuildMergedIfNeeded();
     }
-    // A helper that was just started takes a few seconds to listen: try the
-    // missing projects again, a few times, so their conversations appear.
-    if (missed && _paSyncRetries < 10) {
+    // A helper that was just started takes a while to listen (longer on a
+    // cold phone): the missing projects are tried every 3 s for half a
+    // minute, then every 15 s for two more, so their conversations appear.
+    // One retry waits at a time, however many reads missed.
+    if (missed && _paSyncRetries < 18 && _paSyncTimer == null) {
       _paSyncRetries++;
-      unawaited(
-        Future<void>.delayed(const Duration(seconds: 3), () async {
-          if (!_self._disposed) await _paSyncSources();
-        }),
-      );
+      final wait = Duration(seconds: _paSyncRetries <= 10 ? 3 : 15);
+      _paSyncTimer = Timer(wait, () {
+        _paSyncTimer = null;
+        if (!_self._disposed) unawaited(_paSyncSources().catchError((_) {}));
+      });
     } else if (!missed) {
       _paSyncRetries = 0;
     }
   }
 
   int _paSyncRetries = 0;
+  Timer? _paSyncTimer;
 
   /// Reaches the agent host for [directory] the way a person's action needs
   /// it: a folder outside the agents' project space is said plainly, and a
@@ -1105,7 +1108,9 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   Future<void> refreshChatFeed() async {
     // The list says the agents are still loading (the helper was starting):
     // a pull to refresh reads their folders too.
-    if (phoneAgentsAvailable && !_paFeedSettled && _paReadingSince != null) {
+    // So does one after that read when a folder was never reached.
+    if (phoneAgentsAvailable &&
+        (_paFeedSettled ? _paSourcesMissing : _paReadingSince != null)) {
       try {
         await refreshAgentRows();
       } catch (_) {}
@@ -1471,6 +1476,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     _paHoldTimer = null;
     _paReadingTimer?.cancel();
     _paReadingTimer = null;
+    _paSyncTimer?.cancel();
     unawaited(_paSetupSub?.cancel());
     unawaited(_paMergedSub?.cancel());
     for (final sub in _paSignInSubs.values) {

@@ -167,9 +167,24 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
     if (_paListRefresh?.isActive ?? false) return;
     _paListRefresh = Timer(const Duration(seconds: 2), () {
       if (_self._disposed) return;
+      // The conversation's helper answers, so a folder the list never
+      // reached (the helper was still starting) is connected now.
+      if (_paSourcesMissing) {
+        unawaited(
+          _paSyncSources(assumeRunning: true).catchError((Object _) {}),
+        );
+        return;
+      }
       unawaited(_paMerged?.refreshChatFeed() ?? Future<void>.value());
     });
   }
+
+  /// A folder the list should read live has no connection yet.
+  bool get _paSourcesMissing =>
+      phoneAgentsAvailable &&
+      _paDesiredDirectories()
+          .take(_ConnectionControllerPhoneAgents._maxPaseoSources)
+          .any((directory) => !_paSources.containsKey(directory));
 
   /// At app start on a phone whose agents had conversations: their helper
   /// is checked (and started when Android stopped it) beside the in-app

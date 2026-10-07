@@ -881,6 +881,57 @@ void main() {
     c.dispose();
   });
 
+  testWidgets('a helper slower than half a minute still gets its rows read', (
+    tester,
+  ) async {
+    final w = await _world(tester, prefsExtra: savedFeed());
+    w.state.runtimes = {'claude': _ready('claude')};
+    w.state.agents = [_agent('c1', dir)];
+    w.state.failOpens = 1000;
+    final c = w.controller;
+    await c.rememberLastUsedProject(dir);
+    await c.refreshChatFeed();
+    await c.refreshAgentRows();
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(seconds: 5));
+    }
+    // It answers after a minute: the list catches up on its own.
+    w.state.failOpens = 0;
+    await tester.pump(const Duration(seconds: 16));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(c.chatFeed().items.map((i) => i.sessionID), contains('c1'));
+    expect(
+      c.chatFeed().items.map((i) => i.sessionID),
+      isNot(contains('saved1')),
+    );
+    c.dispose();
+  });
+
+  testWidgets('a pull to refresh reaches a helper the retries gave up on', (
+    tester,
+  ) async {
+    final w = await _world(tester, prefsExtra: savedFeed());
+    w.state.runtimes = {'claude': _ready('claude')};
+    w.state.agents = [_agent('c1', dir)];
+    w.state.failOpens = 1000;
+    final c = w.controller;
+    await c.rememberLastUsedProject(dir);
+    await c.refreshChatFeed();
+    await c.refreshAgentRows();
+    // The list repaints meanwhile; its first read settles after 30 s.
+    for (var i = 0; i < 40; i++) {
+      c.chatFeed();
+      await tester.pump(const Duration(seconds: 5));
+    }
+    expect(c.chatFeed().stillLoading, isEmpty);
+    expect(c.chatFeed().items.map((i) => i.sessionID), isNot(contains('c1')));
+    w.state.failOpens = 0;
+    await c.refreshChatFeed();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(c.chatFeed().items.map((i) => i.sessionID), contains('c1'));
+    c.dispose();
+  });
+
   testWidgets('a helper that never answers stops being called loading', (
     tester,
   ) async {
