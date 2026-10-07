@@ -27,7 +27,7 @@ import '../kit/kit_tokens.dart';
 /// in the code). `test/revamp/shared_settings_1_test.dart` recomputes it
 /// from the files and fails when this drifts by more than 3 points; update
 /// the number it prints then.
-const int arabicTranslatedPercent = 56;
+const int arabicTranslatedPercent = 93;
 
 /// Opens the Language sheet.
 Future<void> showLanguageSheet(
