@@ -1,15 +1,33 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/paseo/gateway.dart';
 import 'package:opencode_mobile/paseo/transport.dart';
 
-import 'paseo_gateway_test.dart' show FakeDaemon, agentJson;
+import 'paseo_gateway_test.dart' show FakeDaemon, agentJson, stream;
+
+class _CurrentDaemon extends FakeDaemon {
+  @override
+  void send(String message) {
+    final frame = jsonDecode(message) as Map<String, dynamic>;
+    if (frame['type'] == 'hello') {
+      hello = frame;
+      push('status', {'status': 'server_info', 'version': '0.9.2'});
+      return;
+    }
+    super.send(message);
+  }
+}
 
 void main() {
   late FakeDaemon daemon;
   late PaseoGateway gateway;
   setUp(() {
-    daemon = FakeDaemon();
+    daemon = _CurrentDaemon();
+    daemon.handlers['create_agent_request'] = (_) =>
+        ('create_agent_response', {'agent': agentJson('a1')});
     daemon.handlers['fetch_agent_request'] = (_) =>
         ('fetch_agent_response', {'agent': agentJson('a1')});
     daemon.handlers['get_providers_snapshot_request'] = (_) => (
@@ -27,10 +45,13 @@ void main() {
     );
     daemon.handlers['send_agent_message_request'] = (_) =>
         ('send_agent_message_response', {'agentId': 'a1', 'accepted': true});
+    var connections = 0;
     gateway = PaseoGateway(
       transport: PaseoTransport(
         endpoint: 'ws://127.0.0.1:6767',
-        socketFactory: (_, _) async => daemon,
+        socketFactory: (_, _) async => connections++ == 0
+            ? daemon
+            : (_CurrentDaemon()..handlers.addAll(daemon.handlers)),
       ),
       directory: '/work/app',
     );
@@ -97,6 +118,82 @@ void main() {
     expect(daemon.of('create_agent_request'), isEmpty);
     expect(daemon.of('send_agent_message_request'), isEmpty);
   });
+
+  test(
+    'photo answer accepts the daemon ID of a locally created chat',
+    () async {
+      final draft = await gateway.createSession();
+      await gateway.promptAsync(draft.id, text: 'Ask for a photo');
+      expect(draft.id, isNot('a1'));
+      expect(gateway.daemonSessionId(draft.id), 'a1');
+      daemon.push(
+        'agent_stream',
+        stream('a1', {'type': 'turn_completed', 'provider': 'claude'}),
+      );
+      await pumpEventQueue();
+
+      var checks = 0;
+      await gateway.promptWithMessageID(
+        'a1',
+        messageID: 'photo-answer',
+        text: 'Here is the photo',
+        attachments: const [
+          PromptAttachment(
+            mime: 'image/png',
+            filename: 'photo.png',
+            url: 'data:image/png;base64,iVBORw0KGgo=',
+          ),
+        ],
+        beforeSend: () {
+          checks++;
+          expect(daemon.of('send_agent_message_request'), isEmpty);
+        },
+      );
+
+      expect(checks, 1);
+      final sent = daemon.of('send_agent_message_request').single;
+      expect(sent['agentId'], 'a1');
+      expect(sent['messageId'], 'photo-answer');
+      expect(sent['text'], 'Here is the photo');
+      expect(sent['images'], [
+        {'data': 'iVBORw0KGgo=', 'mimeType': 'image/png'},
+      ]);
+      expect(daemon.of('create_agent_request'), hasLength(1));
+      expect(daemon.of('resume_agent_request'), isEmpty);
+    },
+  );
+
+  for (final running in [false, true]) {
+    test(
+      'daemon ID idle check preserves the ${running ? 'running' : 'pending'} turn guard',
+      () async {
+        final draft = await gateway.createSession();
+        await gateway.promptAsync(draft.id, text: 'Start');
+        if (running) {
+          daemon.push(
+            'agent_stream',
+            stream('a1', {'type': 'turn_started', 'provider': 'claude'}),
+          );
+          await pumpEventQueue();
+        }
+
+        // The daemon snapshot still says idle while local turn state is newer.
+        expect(await gateway.genUiSessionIdle(draft.id), isFalse);
+        expect(await gateway.genUiSessionIdle('a1'), isFalse);
+        daemon.push(
+          'agent_stream',
+          stream('a1', {
+            'type': 'turn_completed',
+            'provider': 'claude',
+          }, seq: 2),
+        );
+        await pumpEventQueue();
+        expect(await gateway.genUiSessionIdle('a1'), isTrue);
+        expect(daemon.of('send_agent_message_request'), isEmpty);
+        expect(daemon.of('resume_agent_request'), isEmpty);
+      },
+    );
+  }
 
   test(
     'transport fence runs after async connection and propagates refusal',

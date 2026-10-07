@@ -11,6 +11,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:crypto/crypto.dart' as crypto;
+
 import '../api/models.dart';
 import '../api/gen_ui_history_http.dart';
 import '../domain/genui/gen_ui_history.dart';
@@ -67,6 +69,45 @@ class PaseoGateway
   final _permissions = <String, _PaseoPermission>{};
   final _questions = <String, _PaseoQuestion>{};
   final _nativeQuestionChanges = StreamController<void>.broadcast();
+  final _nativePermissionChanges = StreamController<void>.broadcast();
+
+  /// Inventory changes only; no transport, resume or timeline side effects.
+  Stream<void> get nativePermissionChanges => _nativePermissionChanges.stream;
+
+  ({PermissionRequest permission, Object revision})? nativePermissionSnapshot(
+    String sessionID,
+  ) {
+    if (_closed || !transport.connected) return null;
+    for (final pending in _permissions.values) {
+      if (pending.permission.sessionID == sessionID &&
+          !pending.genUiApproving &&
+          pending.epoch == transport.epoch) {
+        return (
+          permission: PermissionRequest.fromJson(
+            jsonDecode(jsonEncode(_permissionJson(pending.permission)))
+                as Map<String, dynamic>,
+          ),
+          revision: pending,
+        );
+      }
+    }
+    return null;
+  }
+
+  bool isNativePermissionCurrent(
+    String sessionID,
+    String requestID,
+    Object revision,
+  ) {
+    final pending = _permissions[requestID];
+    return !_closed &&
+        transport.connected &&
+        pending != null &&
+        identical(pending, revision) &&
+        !pending.genUiApproving &&
+        pending.epoch == transport.epoch &&
+        pending.permission.sessionID == sessionID;
+  }
 
   /// Local attention changes; subscribing never changes transport ownership.
   Stream<void> get nativeQuestionChanges => _nativeQuestionChanges.stream;
@@ -233,6 +274,7 @@ class PaseoGateway
     _permissions.clear();
     _questions.clear();
     _nativeQuestionChanges.add(null);
+    _nativePermissionChanges.add(null);
     _live.clear();
     _realIDs.clear();
     _appIDs.clear();
@@ -692,6 +734,9 @@ class PaseoGateway
     List<PromptAgentMention> agentMentions = const [],
     PromptDelivery? delivery,
   }) async {
+    // A card observed by another gateway carries the daemon ID; local state
+    // stays keyed by the original app ID when this gateway created the chat.
+    sessionID = _app(sessionID);
     if (existingOnly && _drafts.contains(sessionID)) {
       throw PaseoFailure(PaseoFailureKind.unavailable);
     }
@@ -1330,6 +1375,7 @@ class PaseoGateway
     _permissions.clear();
     _questions.clear();
     _nativeQuestionChanges.add(null);
+    _nativePermissionChanges.add(null);
     _live.clear();
     _realIDs.clear();
     _appIDs.clear();
@@ -1340,5 +1386,6 @@ class PaseoGateway
     unawaited(_events.close());
     unawaited(_streamStates.close());
     unawaited(_nativeQuestionChanges.close());
+    unawaited(_nativePermissionChanges.close());
   }
 }

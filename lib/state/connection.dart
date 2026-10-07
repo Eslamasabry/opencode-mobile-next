@@ -112,6 +112,8 @@ import 'phone_agent_host_port.dart';
 
 part 'connection/gen_ui.dart';
 part 'connection/feed_questions.dart';
+part 'connection/feed_permissions.dart';
+part 'connection/feed_question_reads.dart';
 part 'connection/monitors.dart';
 part 'connection/attention.dart';
 part 'connection/surfaces.dart';

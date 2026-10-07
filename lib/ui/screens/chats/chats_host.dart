@@ -146,46 +146,59 @@ class ConnectionChatsHost implements ChatsHost {
 
   @override
   Widget? listRequest(BuildContext context, ChatFeedItem item) {
-    // The row's own connection holds its permission requests; it may not
-    // exist yet (a Claude chat not opened since the app started). Cards are
-    // routed by the list's connection, which knows every row's source.
+    // Native feed requests belong to the list's gateway, independently of
+    // whether this conversation has an open chat backend.
     final owner = _conn.connectionForRow(item);
     final answers = owner == null ? null : PermissionAnswers.of(owner);
+    final feedAnswers = PermissionAnswers.of(_conn);
     return ListenableBuilder(
       listenable: Listenable.merge([
         _conn,
         ?owner,
         ?answers,
+        feedAnswers,
+        _conn.delayedAnswers,
         ?owner?.delayedAnswers,
       ]),
       builder: (context, _) {
-        final waiting = owner?.permissionsForSession(item.sessionID) ?? [];
+        final feedPermission = _conn.permissionForFeedItem(item);
+        final nativeFeed = item.sourceId?.startsWith('paseo:') ?? false;
+        final waiting = nativeFeed
+            ? [?feedPermission]
+            : owner?.permissionsForSession(item.sessionID) ?? [];
+        final permissionOwner = nativeFeed ? _conn : owner;
+        final permissionAnswers = nativeFeed ? feedAnswers : answers;
         final question = _conn.questionForFeedItem(item);
         final card = _conn.waitingCardsForFeedItem(item).firstOrNull;
         if (waiting.isEmpty && question == null && card == null) {
           return const SizedBox.shrink();
         }
         Widget? request;
-        if (owner != null && answers != null && waiting.isNotEmpty) {
+        if (permissionOwner != null &&
+            permissionAnswers != null &&
+            waiting.isNotEmpty) {
           final permission = waiting.first;
-          void answer(String reply) =>
-              unawaited(answerPermissionRequest(owner, permission, reply));
+          void answer(String reply) => unawaited(
+            answerPermissionRequest(permissionOwner, permission, reply),
+          );
           request = permissionRequestCard(
             context,
             key: ValueKey('chats-request-${permission.id}'),
             inList: true,
             permission: permission,
             who: item.agentLabel ?? 'OpenCode',
-            answered: answers.answerFor(permission.id),
+            answered: permissionAnswers.answerFor(permission.id),
             // Held for its Undo window: collapsed, with Undo, as in the chat.
-            heldLabel: owner.delayedAnswers.heldLabel(permission.id),
-            onUndo: () => owner.delayedAnswers.undo(permission.id),
+            heldLabel: permissionOwner.delayedAnswers.heldLabel(permission.id),
+            onUndo: () => permissionOwner.delayedAnswers.undo(permission.id),
             onAllow: () => answer('once'),
             onReject: () => answer('reject'),
             alwaysAllow: permissionAlwaysStep(
               context,
               permission: permission,
-              supported: owner.capabilities.persistentPermissionGrants,
+              supported: nativeFeed
+                  ? permission.always.isNotEmpty
+                  : permissionOwner.capabilities.persistentPermissionGrants,
               onConfirmed: () => answer('always'),
             ),
           );

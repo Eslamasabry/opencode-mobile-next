@@ -181,7 +181,7 @@ void main() {
       await _settle();
       expect(installer.calls, hasLength(1));
       expect(installer.calls.single.profile, 'phone');
-      expect(installer.calls.single.agents, {GenUiAgent.claude});
+      expect(installer.calls.single.agents, GenUiAgent.values.toSet());
       expect(h.controller.capabilities.genUi, isTrue);
       expect(h.controller.genUiStatus, isA<GenUiSetupOn>());
       expect(h.prefs.getBool('oc.genui.enabled.phone'), isTrue);
@@ -196,17 +196,20 @@ void main() {
     },
   );
 
-  test('review 1 controller requests only qualified agents', () async {
-    final installer = _Installer()
-      ..on = GenUiSetupOn(agents: [GenUiAgent.claude]);
-    final h = await _harness(installer);
-    await h.controller.setGenUiEnabled(true);
-    expect(installer.calls.single.agents, {GenUiAgent.claude});
-    expect(h.controller.genUiStatus, isA<GenUiSetupOn>());
-    // Existing unqualified registrations can still be cleaned up on disable.
-    await h.controller.setGenUiEnabled(false);
-    expect(installer.calls.last.agents, GenUiAgent.values.toSet());
-  });
+  test(
+    'controller stages all managed agents while installer gates readiness',
+    () async {
+      final installer = _Installer()
+        ..on = GenUiSetupOn(agents: [GenUiAgent.claude]);
+      final h = await _harness(installer);
+      await h.controller.setGenUiEnabled(true);
+      expect(installer.calls.single.agents, GenUiAgent.values.toSet());
+      expect(h.controller.genUiStatus, isA<GenUiSetupOn>());
+      // Existing unqualified registrations can still be cleaned up on disable.
+      await h.controller.setGenUiEnabled(false);
+      expect(installer.calls.last.agents, GenUiAgent.values.toSet());
+    },
+  );
 
   test(
     'review 3 pure deltas do not invalidate cards or notify the app',

@@ -184,6 +184,7 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
     void handleEvent(EventEnvelope event) {
       if (!_isCurrentGlobalStream(generation, currentApi, stream)) return;
       elsewhereAttention.handle(event);
+      _invalidateFeedDirectoryQuestions(event);
       _genUiGlobalEvent(event);
       if (event.type == 'session.created' ||
           event.type == 'session.deleted' ||
@@ -214,7 +215,13 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
     void handleStatus(StreamStatus value) {
       if (!_isCurrentGlobalStream(generation, currentApi, stream)) return;
       _globalStreamStatus = value;
-      if (value != StreamStatus.connected) elsewhereAttention.markStale();
+      if (value != StreamStatus.connected) {
+        elsewhereAttention.markStale();
+        _feedQuestionEpoch++;
+        _feedDirectoryQuestions.clear();
+      } else {
+        _feedScheduleRefresh();
+      }
       if ((value == StreamStatus.reconnecting ||
               value == StreamStatus.disconnected) &&
           !automationPolicy.allows(AutomationBehavior.reconnect)) {

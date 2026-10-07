@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
+import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/widgets/app_connection_status.dart';
@@ -46,6 +47,18 @@ class _Api extends CaptureApi {
     if (sendError case final error?) throw error;
     prompts.add(text);
   }
+}
+
+class _AgentController extends CaptureController {
+  _AgentController(super.store);
+
+  @override
+  bool get isAgentBackend => true;
+
+  // Capture fixtures inject their gateway without connect(), so no private
+  // connected profile exists for the secondary-backend profile getter.
+  @override
+  ServerProfile get profile => store.profiles.single;
 }
 
 List<MessageWithParts> _turn() {
@@ -84,15 +97,34 @@ Future<CaptureController> _chat(
   WidgetTester tester,
   _Api api, {
   void Function(CaptureController controller)? setUp,
+  bool agentBackend = false,
 }) async {
   tester.view.physicalSize = const Size(412, 915);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   SharedPreferences.setMockInitialValues({});
-  final controller = await captureController(
-    prefs: await SharedPreferences.getInstance(),
-    api: api,
-  );
+  final prefs = await SharedPreferences.getInstance();
+  final controller = agentBackend
+      ? (_AgentController(
+            SeededProfileStore(
+              prefs: prefs,
+              seeded: [
+                ServerProfile(
+                  id: 'claude-backend',
+                  name: 'Claude Code',
+                  baseUrl: 'ws://127.0.0.1:4099',
+                  backend: ServerBackend.paseo,
+                ),
+              ],
+            ),
+          )
+          ..api = api
+          ..repository = CaptureRepository()
+          ..status = StreamStatus.connected
+          ..directory = projectDirectory
+          ..sessionsById = Map.of(api.sessionsById)
+          ..busySessions = Set.of(api.busy))
+      : await captureController(prefs: prefs, api: api);
   setUp?.call(controller);
   addTearDown(() async {
     await tester.pumpWidget(const SizedBox.shrink());
@@ -168,6 +200,10 @@ void main() {
     await _chat(tester, api);
 
     expect(find.text("Couldn't open this conversation"), findsOneWidget);
+    expect(
+      find.text('Nothing is lost. Try again when OpenCode answers.'),
+      findsOneWidget,
+    );
     expect(find.textContaining('192.168.1.20'), findsNothing);
     await tester.tap(find.byKey(const ValueKey('kit-state-details')));
     await _frames(tester);
@@ -176,6 +212,44 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('chat-load-retry')));
     await _frames(tester);
     expect(find.text("Couldn't open this conversation"), findsNothing);
+    expect(find.text('The checkout test is fixed.'), findsOneWidget);
+  });
+
+  testWidgets('a Claude history failure names its helper and can retry', (
+    tester,
+  ) async {
+    var attempts = 0;
+    final api = _Api()..busy = {};
+    api.messagesHandler = (_) async {
+      if (++attempts == 1) {
+        throw const ProductException('Synthetic helper history failure');
+      }
+      return _turn();
+    };
+    await _chat(tester, api, agentBackend: true);
+
+    final error = find.byKey(const ValueKey('chat-load-error'));
+    expect(error, findsOneWidget);
+    expect(
+      find.descendant(
+        of: error,
+        matching: find.textContaining("on this phone isn't answering"),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: error, matching: find.textContaining('Claude Code')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('when OpenCode answers'), findsNothing);
+    expect(
+      find.textContaining('Synthetic helper history failure'),
+      findsNothing,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('chat-load-retry')));
+    await _frames(tester);
+    expect(error, findsNothing);
     expect(find.text('The checkout test is fixed.'), findsOneWidget);
   });
 

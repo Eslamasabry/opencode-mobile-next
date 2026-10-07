@@ -300,7 +300,13 @@ void main() {
         await ask({...requests[i], 'id': 'request-$i'});
       }
       expect(daemon.replies, isEmpty);
-      expect(await gateway.pendingPermissions(), hasLength(requests.length));
+      // Malformed native questions/plans are never converted to tool grants;
+      // a foreign provider must not turn into a Claude approval either.
+      expect(
+        (await gateway.pendingPermissions()).map((request) => request.id),
+        [for (var i = 0; i < 5; i++) 'request-$i'],
+      );
+      expect(await gateway.pendingQuestionsV2(), isEmpty);
     },
   );
 

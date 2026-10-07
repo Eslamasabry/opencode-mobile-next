@@ -20,7 +20,9 @@ class PendingRequestIdentity {
     this._id,
     this._contents, {
     _FeedQuestionRoute? feed,
-  }) : _feed = feed;
+    _FeedPermissionRoute? feedPermission,
+  }) : _feed = feed,
+       _feedPermission = feedPermission;
 
   final ConnectionController _owner;
   final int _location;
@@ -28,6 +30,7 @@ class PendingRequestIdentity {
   final String _id;
   final String _contents;
   final _FeedQuestionRoute? _feed;
+  final _FeedPermissionRoute? _feedPermission;
   bool _retired = false;
 }
 
@@ -160,6 +163,32 @@ mixin _ConnectionControllerPermissions on ChangeNotifier {
     String sessionID,
     SessionAutoApproval? setting,
   ) => _self._setSessionAutoApproval(sessionID, setting);
+
+  final _feedPermissionSnapshots = Expando<_FeedPermissionRoute>();
+  final _feedPermissionKeys = Expando<String>();
+  int _feedPermissionSequence = 0;
+
+  /// Pure read from the row's native feed inventory. Its display ID is local
+  /// and scope-bound so shared Undo/receipt ledgers never mix wire IDs.
+  PermissionRequest? permissionForFeedItem(ChatFeedItem item) =>
+      _self._permissionForFeedItem(item);
+
+  PendingRequestIdentity permissionIdentityForFeedItem(
+    ChatFeedItem item,
+    PermissionRequest permission,
+  ) => _self._permissionIdentityForFeedItem(item, permission);
+
+  Future<void> answerPermissionForFeedItem(
+    ChatFeedItem item,
+    String response, {
+    required PendingRequestIdentity expectedRequest,
+    String? message,
+  }) => _self._replyToFeedPermission(
+    item,
+    response,
+    expectedRequest,
+    message: message,
+  );
 
   final _permissionReads = _PendingReadGate();
 
@@ -640,6 +669,7 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
         true,
         request.id,
         _permissionContents(request),
+        feedPermission: _feedPermissionSnapshots[request],
       );
 
   /// The body of [questionIdentity].
@@ -663,7 +693,9 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
       return false;
     }
     bool pending;
-    if (request._feed case final route?) {
+    if (request._feedPermission case final route?) {
+      pending = _isFeedPermissionPending(route);
+    } else if (request._feed case final route?) {
       pending = _isFeedQuestionPending(route);
     } else if (request._permission) {
       final current = permissions[request._id];
@@ -690,7 +722,7 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
       request._permission,
       request._id,
       request._contents,
-      request._feed?.item.identity,
+      request._feedPermission?.item.identity ?? request._feed?.item.identity,
     );
     final existing = _pendingReplies[key];
     if (existing != null && isRequestPending(existing.request)) {
@@ -738,6 +770,14 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
     if (expectedRequest != null &&
         (!expectedRequest._permission || expectedRequest._id != requestID)) {
       throw ArgumentError('Permission request identity does not match');
+    }
+    if (expectedRequest?._feedPermission case final route?) {
+      return _replyToFeedPermission(
+        route.item,
+        response,
+        expectedRequest!,
+        message: message,
+      );
     }
     if (expectedRequest != null && !isRequestPending(expectedRequest)) return;
     final permission = permissions[requestID];

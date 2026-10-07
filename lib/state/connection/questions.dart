@@ -7,6 +7,9 @@ mixin _ConnectionControllerQuestions on ChangeNotifier {
   ConnectionController get _self;
 
   final _feedQuestionSnapshots = Expando<_FeedQuestionRoute>();
+  final _feedDirectoryQuestions = <String, Map<String, _DirectoryQuestion>>{};
+  int _feedQuestionEpoch = 0;
+  int _feedQuestionCursor = 0;
 
   /// Pure read of the row's live question inventory. Does not open a chat.
   /// Capture an identity from this exact snapshot when presenting a decision.

@@ -898,7 +898,10 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
               _paLoadedDirs.contains(item.directory),
         )
         .map(
-          (item) => (item: item, canReopen: agentResumeNotice(item).canReopen),
+          (item) => (
+            item: _paPersistableRow(item),
+            canReopen: agentResumeNotice(item).canReopen,
+          ),
         )
         .toList();
     final rows = [
@@ -909,6 +912,36 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     _paCacheRows = List.unmodifiable(rows);
     _paCacheOwner = id;
     unawaited(_paCache.write(id, rows));
+  }
+
+  /// The saved list outlives the feed gateway and its private draft aliases.
+  /// Keep live row identities intact, but persist only the daemon's identity.
+  ChatFeedItem _paPersistableRow(ChatFeedItem item) {
+    final gateway = _paSources[item.directory]?.gateway;
+    if (gateway == null || item.sourceId != _paseoSourceId(item.directory)) {
+      return item;
+    }
+    final id = gateway.daemonSessionId(item.sessionID);
+    final parent = item.parentID == null
+        ? null
+        : gateway.daemonSessionId(item.parentID!);
+    if (id == item.sessionID && parent == item.parentID) return item;
+    return ChatFeedItem(
+      sessionID: id,
+      title: item.title,
+      directory: item.directory,
+      projectName: item.projectName,
+      isGit: item.isGit,
+      status: item.status,
+      lastActivity: item.lastActivity,
+      preview: item.preview,
+      parentID: parent,
+      agentId: item.agentId,
+      agentLabel: item.agentLabel,
+      sourceId: item.sourceId,
+      sourceLabel: item.sourceLabel,
+      finishedUnseen: item.finishedUnseen,
+    );
   }
 
   // ---- one paint ------------------------------------------------------------
@@ -1304,6 +1337,17 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
             'Tap it again to start a new one from it.',
           );
         }
+      }
+      if (source is PaseoChatFeedSource) {
+        // The feed retains a draft's local ID after its first prompt creates
+        // the daemon agent. The independent chat gateway only knows the
+        // daemon ID, both when attaching live and after an explicit resume.
+        route = ChatFeedRoute(
+          sourceId: route.sourceId,
+          sessionID: source.gateway.daemonSessionId(row.sessionID),
+          directory: route.directory,
+          agentId: route.agentId,
+        );
       }
       final descriptor =
           _paCatalog.byId(row.agentId) ??

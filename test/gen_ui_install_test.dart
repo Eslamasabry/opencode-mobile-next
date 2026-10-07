@@ -37,7 +37,7 @@ final class _Verifier implements GenUiSetupVerifier {
 }
 
 void main() {
-  test('review 1 enables only qualified Claude and reports it ready', () async {
+  test('stages OpenCode while only qualified Claude becomes ready', () async {
     final runner = _Runner();
     final verifier = _Verifier({GenUiAgent.claude});
     final status =
@@ -49,9 +49,9 @@ void main() {
           agents: GenUiAgent.values.toSet(),
           enabled: true,
         );
-    expect(runner.calls, [GenUiAgent.claude]);
+    expect(runner.calls, GenUiAgent.values);
     expect(verifier.calls, [GenUiAgent.claude]);
-    expect(status, isA<GenUiSetupOn>());
+    expect(status, isA<GenUiSetupPartial>());
     expect(status.agents, [GenUiAgent.claude]);
   });
 
@@ -98,18 +98,47 @@ void main() {
   });
 
   test(
-    'unqualified runtime collision cannot affect Claude registration',
+    'OpenCode collision reports partial while Claude remains ready',
     () async {
       final runner = _Runner()
         ..outcomes[GenUiAgent.openCode1] = GenUiInstallOutcome.nameCollision;
-      final status = await ManagedGenUiInstaller(runner: runner).setEnabled(
-        profileId: 'profile-1',
-        agents: {GenUiAgent.claude, GenUiAgent.openCode1},
-        enabled: true,
-      );
+      final status =
+          await ManagedGenUiInstaller(
+            runner: runner,
+            verifier: _Verifier({GenUiAgent.claude}),
+          ).setEnabled(
+            profileId: 'profile-1',
+            agents: {GenUiAgent.claude, GenUiAgent.openCode1},
+            enabled: true,
+          );
+      expect(status, isA<GenUiSetupPartial>());
+      expect(status.agents, [GenUiAgent.claude]);
+      expect(runner.calls, [GenUiAgent.claude, GenUiAgent.openCode1]);
+    },
+  );
+
+  test(
+    'OpenCode registration cannot become ready through a permissive verifier',
+    () async {
+      final runner = _Runner();
+      final verifier = _Verifier(GenUiAgent.values.toSet());
+      final status =
+          await ManagedGenUiInstaller(
+            runner: runner,
+            verifier: verifier,
+          ).setEnabled(
+            profileId: 'one',
+            agents: {GenUiAgent.openCode1, GenUiAgent.openCode2},
+            enabled: true,
+          );
+      expect(runner.calls, [GenUiAgent.openCode1, GenUiAgent.openCode2]);
+      expect(verifier.calls, isEmpty);
       expect(status, isA<GenUiSetupUnavailable>());
+      expect(
+        (status as GenUiSetupUnavailable).reason,
+        GenUiSetupProblem.notQualified,
+      );
       expect(status.agents, isEmpty);
-      expect(runner.calls, [GenUiAgent.claude]);
     },
   );
 
@@ -138,9 +167,9 @@ void main() {
             agents: {GenUiAgent.claude, GenUiAgent.openCode1},
             enabled: true,
           );
-      expect(status, isA<GenUiSetupOn>());
+      expect(status, isA<GenUiSetupPartial>());
       expect(status.agents, [GenUiAgent.claude]);
-      expect(runner.calls, [GenUiAgent.claude]);
+      expect(runner.calls, [GenUiAgent.claude, GenUiAgent.openCode1]);
       expect(verifier.calls, [GenUiAgent.claude]);
     },
   );
@@ -207,6 +236,9 @@ void main() {
       bool verify = false,
       bool wrongVersion = false,
       bool requireMarker = false,
+      Set<String> runtimes = const {'/usr/bin/node'},
+      String? unsafePath,
+      bool foreignOwner = false,
       GenUiAgent agent = GenUiAgent.openCode1,
     }) async {
       final script = verify
@@ -231,11 +263,26 @@ void main() {
       // tree. Replace only host identity/runtime execution, never file logic.
       final harness = source.replaceFirst('try: main()', '''
 os.getuid = lambda: ${agent == GenUiAgent.claude ? 1000 : 0}
+runtime_paths = {'/usr/bin/node', '/opt/node/bin/node', '/opt/oc-node/bin/node'}
+available = set(${jsonEncode(runtimes.toList())})
+unsafe_path = ${jsonEncode(unsafePath ?? '')}
 original_access = os.access
-os.access = lambda path, mode: True if (path.startswith('/home/oc/.local/share/oc-agents/claude/') or path == '/home/oc/.local/node/bin/node') else original_access(path, mode)
+os.access = lambda path, mode: (path in available) if path in runtime_paths else (True if (path.startswith('/home/oc/.local/share/oc-agents/claude/') or path == '/home/oc/.local/node/bin/node') else original_access(path, mode))
+original_stat = os.stat
+def owned_stat(path, *args, **kwargs):
+    path = str(path)
+    try: info = original_stat(path, *args, **kwargs)
+    except FileNotFoundError:
+        if path not in runtime_paths and not path.startswith('/opt/'): raise
+        info = os.stat_result([stat.S_IFREG | 0o755,0,0,1,0,0,0,0,0,0])
+    values = list(info)
+    values[4] = 1000 if path == unsafe_path and ${foreignOwner ? 'True' : 'False'} else 0
+    values[0] &= ~0o022
+    if path == unsafe_path and not ${foreignOwner ? 'True' : 'False'}: values[0] |= 0o020
+    return os.stat_result(values)
+os.stat = owned_stat
 original_safe = safe
-safe = lambda path, *args, **kwargs: True if (path.startswith('/home/oc/.local/share/oc-agents/claude/') or path == '/home/oc/.local/node/bin/node') else original_safe(path, *args, **kwargs)
-root_executable = lambda path: None
+safe = lambda path, *args, **kwargs: (path in available) if str(path) in runtime_paths else (True if (str(path).startswith('/home/oc/.local/share/oc-agents/claude/') or str(path) == '/home/oc/.local/node/bin/node') else original_safe(path, *args, **kwargs))
 def check(*args, **kwargs):
     data = json.loads(base64.b64decode(sys.argv[1]))
     argv = args[0]
@@ -289,6 +336,98 @@ try: main()''');
               await File('${root.path}/config/opencode.json').readAsString(),
             )
             as Map<String, dynamic>;
+
+    test(
+      'OpenCode uses existing root-owned pinned Node without a system alias',
+      () async {
+        expect(await apply('one', runtimes: {'/opt/node/bin/node'}), 0);
+        expect((await config())['mcp']['oc-ui']['command'], [
+          '/opt/node/bin/node',
+          '${root.path}/managed/server.cjs',
+        ]);
+        expect(await apply('one', enabled: false, runtimes: {}), 10);
+        expect((await config())['mcp'], isEmpty);
+      },
+    );
+
+    test(
+      'OpenCode retains and removes a legacy system Node registration after runtime removal',
+      () async {
+        expect(await apply('one'), 0);
+        expect(
+          await apply('two', runtimes: {'/opt/node/bin/node', '/usr/bin/node'}),
+          0,
+        );
+        expect((await config())['mcp']['oc-ui']['command'], [
+          '/usr/bin/node',
+          '${root.path}/managed/server.cjs',
+        ]);
+        expect(await apply('one', enabled: false, runtimes: {}), 10);
+        expect(await apply('two', enabled: false, runtimes: {}), 10);
+        expect((await config())['mcp'], isEmpty);
+      },
+    );
+
+    test(
+      'OpenCode unsafe preferred runtime never falls back to another candidate',
+      () async {
+        expect(
+          await apply(
+            'one',
+            runtimes: {'/opt/node/bin/node', '/usr/bin/node'},
+            unsafePath: '/opt/node/bin/node',
+          ),
+          22,
+        );
+        expect(await File('${root.path}/managed/enabled').exists(), false);
+      },
+    );
+
+    test(
+      'OpenCode refuses writable or foreign-owned helper ancestors',
+      () async {
+        await Directory('${root.path}/managed').create();
+        expect(await apply('one', unsafePath: '${root.path}/managed'), 22);
+        expect(
+          await apply(
+            'one',
+            unsafePath: '${root.path}/managed',
+            foreignOwner: true,
+          ),
+          22,
+        );
+        expect(await File('${root.path}/managed/server.cjs').exists(), false);
+      },
+    );
+
+    test(
+      'OpenCode 2 persists direct tools in isolated mcp servers config',
+      () async {
+        expect(
+          await apply(
+            'one',
+            agent: GenUiAgent.openCode2,
+            runtimes: {'/opt/node/bin/node'},
+          ),
+          0,
+        );
+        expect((await config())['mcp']['servers']['oc-ui'], {
+          'type': 'local',
+          'command': ['/opt/node/bin/node', '${root.path}/managed/server.cjs'],
+          'disabled': false,
+          'codemode': false,
+        });
+        expect(
+          await apply(
+            'one',
+            agent: GenUiAgent.openCode2,
+            verify: true,
+            runtimes: {'/opt/node/bin/node'},
+          ),
+          24,
+        );
+      },
+    );
 
     test(
       'two owners install idempotently and last disable removes only own entry',
