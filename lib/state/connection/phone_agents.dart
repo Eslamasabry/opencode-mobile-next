@@ -39,7 +39,7 @@ final class _OpenCodeFeed implements ChatFeedSource {
 
 /// [ConnectionController]'s [PhoneAgentsSource] and [AgentChatFeedSource].
 mixin _ConnectionControllerPhoneAgents on ChangeNotifier
-    implements PhoneAgentsSource, AgentChatFeedSource {
+    implements PhoneAgentsSource, AgentChatFeedSource, PhoneAgentAccountSource {
   ConnectionController get _self;
 
   static const _notReady = ProductException(
@@ -143,12 +143,12 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   ServerProfile? get _paProfile {
     final main = _self._connectedProfile ?? _self.profile;
     if (main == null || BuiltinLinux.managesServerUrl(main.baseUrl)) {
-      return main;
+      return main == null ? null : _self.store.phoneAgentOwnerProfile(main);
     }
     for (final side in _self._sides.values) {
       final profile = side._connectedProfile;
       if (profile != null && BuiltinLinux.managesServerUrl(profile.baseUrl)) {
-        return profile;
+        return _self.store.phoneAgentOwnerProfile(profile);
       }
     }
     return main;
@@ -425,47 +425,29 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
           runtime = await host.inspect(
             descriptor.id,
             signIn: _paSignIns[descriptor.id]?.state,
-            capabilities: _paHostCapabilities(descriptor),
+            capabilities: _paHostCapabilities(descriptor, arch),
           );
-          // Sign-in is only inspected for an installed, qualified agent: it
-          // starts a native status process. Claude's is read natively; the
-          // other agents' from what the helper reports about them.
-          if (descriptor.id != 'claude' &&
+          if (runtime.installed &&
               descriptor.signInMethod != AgentSignInMethod.none &&
-              runtime.installed &&
-              runtime.architectureQualified &&
-              runtime.hostAvailable) {
-            // A re-read sends the helper back to "loading" for a while: the
-            // last definite answer stands until a new one arrives.
-            final phase =
-                await _paProviderSignIn(descriptor.providerId) ??
-                _paProviderPhases[descriptor.id];
-            if (phase != null) _paProviderPhases[descriptor.id] = phase;
-            if (phase != null) {
-              runtime = PhoneAgentRuntime(
-                agentId: runtime.agentId,
-                installed: runtime.installed,
-                hostAvailable: runtime.hostAvailable,
-                architectureQualified: runtime.architectureQualified,
-                capabilities: runtime.capabilities,
-                signInPhase: phase,
-                stoppedInBackground: runtime.stoppedInBackground,
-                resetAt: runtime.resetAt,
-              );
+              (host is PhoneAgentAuthPort || runtime.signInPhase == null)) {
+            final auth = await _paProbeSignIn(host, descriptor.id);
+            if (_self._disposed || _paHost != host || _paHostProfile != owner) {
+              return;
             }
-          } else if (descriptor.signInMethod ==
-                  AgentSignInMethod.browserOAuthHost &&
-              runtime.installed &&
-              runtime.architectureQualified &&
-              runtime.signInPhase == null) {
-            final session = _paSession(descriptor.id);
-            try {
-              await session.inspectStatus();
-            } catch (_) {}
-            runtime = await host.inspect(
-              descriptor.id,
-              signIn: session.state,
-              capabilities: _paHostCapabilities(descriptor),
+            _paAuthResults[descriptor.id] = auth;
+            runtime = PhoneAgentRuntime(
+              agentId: runtime.agentId,
+              installed: runtime.installed,
+              hostAvailable: runtime.hostAvailable,
+              architectureQualified: runtime.architectureQualified,
+              capabilities: runtime.capabilities,
+              signInPhase:
+                  auth.state == AgentAuthProbeState.signedIn &&
+                      runtime.signInPhase == AgentSignInPhase.limitReached
+                  ? AgentSignInPhase.limitReached
+                  : _paAuthPhase(auth),
+              stoppedInBackground: runtime.stoppedInBackground,
+              resetAt: runtime.resetAt,
             );
           }
           running = running || runtime.hostAvailable;
@@ -518,81 +500,87 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// The helper is being started again by the app itself.
   bool _paAutoResuming = false;
 
-  /// What this phone's helper is known to do for [descriptor]: a runtime
-  /// fact, not a catalog claim. Claude's sessions resume through the helper
-  /// (resume_agent_request, proven on Paseo 0.9.2); the others are unproven.
-  AgentCapabilities _paHostCapabilities(AgentDescriptor descriptor) =>
-      descriptor.id == 'claude' && descriptor.route == AgentRoute.paseoNative
-      ? const AgentCapabilities(resumeVerified: true)
-      : descriptor.capabilities;
-
-  /// An agent other than Claude, as the helper reports it: ready to start is
-  /// signed in, "authentication required" is signed out. Every check ends
-  /// (issue #95): a provider the helper hides or does not list is "could not
-  /// be checked", and one still unknown after [_paSignInGiveUp] (no reachable
-  /// folder, the helper still loading, a failed or slow read) becomes the
-  /// same, with Sign in as the way forward. Null only inside that window.
-  Future<AgentSignInPhase?> _paProviderSignIn(String providerId) async {
-    final gateway = await _paHelperGateway();
-    if (gateway == null) return _paSignInStillUnknown(providerId);
-    final HostAgentProviderAvailability? availability;
-    try {
-      final catalog = await gateway.loadHostAgentProviders().timeout(
-        _paSignInReadLimit,
-      );
-      availability = catalog.providers
-          .where((entry) => entry.id == providerId)
-          .firstOrNull
-          ?.availability;
-    } catch (_) {
-      return _paSignInStillUnknown(providerId);
+  /// Exact matrix proof, checked against the observed connected helper and
+  /// processor. Unknown or stale evidence never inherits catalog capabilities.
+  AgentCapabilities _paHostCapabilities(
+    AgentDescriptor descriptor,
+    AgentArchitecture? architecture,
+  ) {
+    final observed = _paSources.values
+        .map((source) => source.gateway.transport)
+        .where((transport) => transport.connected)
+        .map((transport) => transport.serverVersion)
+        .whereType<String>()
+        .toSet();
+    final gateway = _paBackend?.api;
+    if (gateway is PaseoGateway && gateway.transport.connected) {
+      final version = gateway.transport.serverVersion;
+      if (version != null) observed.add(version);
     }
-    if (availability == HostAgentProviderAvailability.checking) {
-      return _paSignInStillUnknown(providerId);
-    }
-    _paSignInUnknownSince.remove(providerId);
-    return switch (availability) {
-      HostAgentProviderAvailability.ready => AgentSignInPhase.signedIn,
-      HostAgentProviderAvailability.needsHostSignIn =>
-        AgentSignInPhase.signedOut,
-      _ => AgentSignInPhase.failed,
-    };
+    return AgentCertificationMatrix.bundled.capabilitiesFor(
+      descriptor: descriptor,
+      architecture: architecture,
+      helperVersion: observed.length == 1 ? observed.single : null,
+    );
   }
 
-  /// A connection to the agents' helper: a listed folder's, or, before any
-  /// agent conversation, one reached through a project folder.
-  Future<PaseoGateway?> _paHelperGateway() async {
-    final gateway = _paSources.values.firstOrNull?.gateway;
-    if (gateway != null) return gateway;
-    final directory = _paDesiredDirectories().firstOrNull ?? _self.directory;
-    if (directory == null || !directory.startsWith('/root/projects/')) {
-      return null;
-    }
-    try {
-      return (await _paReachSource(
-        directory,
-      ).timeout(_paSignInReadLimit)).gateway;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  /// One read of the helper's provider list may take this long.
   static const _paSignInReadLimit = Duration(seconds: 10);
+  final _paAuthResults = <String, AgentAuthProbeResult>{};
+  final _paAuthRevisions = <String, int>{};
 
-  /// After this long without an answer, a sign-in check says it could not
-  /// check instead of "Checking sign-in…" forever.
-  static const _paSignInGiveUp = Duration(seconds: 30);
+  AgentSignInPhase _paAuthPhase(AgentAuthProbeResult result) =>
+      switch (result.state) {
+        AgentAuthProbeState.signedIn => AgentSignInPhase.signedIn,
+        AgentAuthProbeState.signedOut => AgentSignInPhase.signedOut,
+        AgentAuthProbeState.error => AgentSignInPhase.failed,
+      };
 
-  /// When each provider's sign-in was first unknown, for [_paSignInGiveUp].
-  final Map<String, DateTime> _paSignInUnknownSince = {};
-
-  AgentSignInPhase? _paSignInStillUnknown(String providerId) {
-    final now = clock.now();
-    final since = _paSignInUnknownSince.putIfAbsent(providerId, () => now);
-    if (now.difference(since) < _paSignInGiveUp) return null;
-    _paSignInUnknownSince.remove(providerId);
-    return AgentSignInPhase.failed;
+  Future<AgentAuthProbeResult> _paProbeSignIn(
+    PhoneAgentHostPort host,
+    String id,
+  ) async {
+    final revision = (_paAuthRevisions[id] ?? 0) + 1;
+    _paAuthRevisions[id] = revision;
+    try {
+      if (host is PhoneAgentAuthPort) {
+        final result = await (host as PhoneAgentAuthPort)
+            .probeSignIn(id)
+            .timeout(_paSignInReadLimit);
+        if (_paAuthRevisions[id] != revision) {
+          return _paAuthResults[id] ??
+              const AgentAuthProbeResult.failed(
+                AgentAuthProbeError.hostUnavailable,
+              );
+        }
+        if (id != 'claude' ||
+            result.error != AgentAuthProbeError.probeUnsupported) {
+          return result;
+        }
+      }
+      // Preserve the existing direct Claude CLI status while lane BB supplies
+      // the private multi-agent bridge. Never use generic setup receipts or
+      // provider error wording as an auth fallback.
+      if (id == 'claude') {
+        await _paSession(id).inspectStatus().timeout(_paSignInReadLimit);
+        final phase = _paSignIns[id]?.state.phase;
+        return AgentAuthProbeResult(
+          state: switch (phase) {
+            AgentSignInPhase.signedIn => AgentAuthProbeState.signedIn,
+            AgentSignInPhase.signedOut => AgentAuthProbeState.signedOut,
+            _ => AgentAuthProbeState.error,
+          },
+        );
+      }
+      return const AgentAuthProbeResult.failed(
+        AgentAuthProbeError.probeUnsupported,
+      );
+    } on TimeoutException {
+      return const AgentAuthProbeResult.failed(AgentAuthProbeError.timedOut);
+    } catch (_) {
+      return const AgentAuthProbeResult.failed(
+        AgentAuthProbeError.hostUnavailable,
+      );
+    }
   }
 
   /// A row still "Checking sign-in…" is read again a few seconds later, so
@@ -681,22 +669,24 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   @override
   AgentSignInState? agentSignInState(String agentId) {
-    if (agentId == 'claude') return _paSignIns[agentId]?.state;
-    // Other agents are read through the helper (their sign-in runs on a
-    // terminal): the sheet says what the row says, so it never waits on a
-    // native check that only Claude has (issue #95).
     final descriptor = _paCatalog.byId(agentId);
     if (descriptor == null) return null;
-    final phase = _paProviderPhases[agentId];
+    final interactive = _paSignIns[agentId]?.state;
+    if (interactive?.phase == AgentSignInPhase.urlReady ||
+        interactive?.phase == AgentSignInPhase.awaitingCode) {
+      return interactive;
+    }
+    final result = _paAuthResults[agentId];
     return AgentSignInState(
-      phase: phase ?? AgentSignInPhase.signedOut,
+      phase: result == null ? AgentSignInPhase.signedOut : _paAuthPhase(result),
       method: descriptor.signInMethod,
-      inspected: phase != null,
+      inspected: result != null,
     );
   }
 
-  /// What the helper last said about each non-Claude agent's sign-in.
-  final Map<String, AgentSignInPhase> _paProviderPhases = {};
+  /// Explicit CLI status only; account labels are transient and never logged.
+  @override
+  AgentAuthProbeResult? agentAccount(String agentId) => _paAuthResults[agentId];
 
   @override
   String? get agentSignInProfileId =>
@@ -704,32 +694,50 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   @override
   Future<void> recheckAgentSignIn(String agentId) async {
-    if (agentId != 'claude') {
-      // The helper re-reads its agents, then the row says where it stands.
-      try {
-        await (await _paHelperGateway())
-            ?.loadHostAgentProviders(refresh: true)
-            .timeout(_paSignInReadLimit);
-      } catch (_) {}
-      await refreshAgentRows();
-      if (!_self._disposed) _self._notifyListeners();
-      return;
-    }
-    // A fresh reading: the old session may still hold an earlier answer.
-    await _paSignInSubs.remove(agentId)?.cancel();
-    final previous = _paSignIns.remove(agentId);
-    if (previous != null) {
-      try {
-        await previous.close();
-      } catch (_) {}
-    }
-    try {
-      await _paSession(agentId).inspectStatus();
-    } catch (_) {
-      // The rows below still say what is known.
-    }
+    final host = _paEnsureHost();
+    final owner = _paHostProfile;
+    final result = await _paProbeSignIn(host, agentId);
+    if (_self._disposed || _paHost != host || _paHostProfile != owner) return;
+    _paAuthResults[agentId] = result;
     await refreshAgentRows();
     if (!_self._disposed) _self._notifyListeners();
+  }
+
+  /// A terminal exit, including zero, is never authentication proof.
+  @override
+  Future<bool> confirmAgentSignIn(String agentId) async {
+    await recheckAgentSignIn(agentId);
+    return _paAuthResults[agentId]?.state == AgentAuthProbeState.signedIn;
+  }
+
+  @override
+  bool canSignOutAgent(String agentId) {
+    final host = _paHost;
+    return host is PhoneAgentAuthPort &&
+        (host as PhoneAgentAuthPort).supportsSignOut(agentId);
+  }
+
+  @override
+  Future<void> signOutAgent(String agentId) async {
+    final host = _paEnsureHost();
+    if (host is! PhoneAgentAuthPort ||
+        !(host as PhoneAgentAuthPort).supportsSignOut(agentId)) {
+      throw const ProductException(
+        'Sign out is not available for this agent yet. Use its terminal to sign out.',
+      );
+    }
+    final owner = _paHostProfile;
+    _paAuthRevisions[agentId] = (_paAuthRevisions[agentId] ?? 0) + 1;
+    final result = await (host as PhoneAgentAuthPort).signOut(agentId);
+    if (_self._disposed || _paHost != host || _paHostProfile != owner) return;
+    _paAuthResults[agentId] = result;
+    if (result.state != AgentAuthProbeState.signedOut) {
+      _self._notifyListeners();
+      throw const ProductException(
+        'Sign out could not be confirmed. Check the agent in its terminal and try again.',
+      );
+    }
+    await refreshAgentRows();
   }
 
   @override
@@ -767,6 +775,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (ok(open)) yield open!;
     final last = _self._ocLastUsed;
     if (ok(last)) yield last!;
+    // Switching the OpenCode protocol changes its last-used project, but
+    // these conversations still belong to the same Ubuntu agent home.
+    for (final row in _paSavedRows) {
+      if (ok(row.item.directory)) yield row.item.directory;
+    }
+    for (final directory in _paSources.keys) {
+      if (ok(directory)) yield directory;
+    }
     if (profile != null) {
       for (final recent in _self.store.recentLocations(profile.id)) {
         if (ok(recent.directory)) yield recent.directory!;
@@ -867,6 +883,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     final existing = _paSources[directory];
     if (existing != null) return existing.source;
     final gateway = await host.openGateway(directory);
+    _paWireBrowserGateway(gateway, directory);
     final folder = directory.split('/').where((p) => p.isNotEmpty).last;
     final source = _self._genUiPhoneFeed(gateway, directory, folder);
     _paSources[directory] = (gateway: gateway, source: source);
@@ -877,6 +894,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     _self._genUiDropPhone(directory);
     final entry = _paSources.remove(directory);
     if (entry == null) return;
+    await entry.gateway.revokeBrowserClaudeLaunches();
     await entry.source.dispose();
     entry.gateway.close();
   }
@@ -1354,11 +1372,26 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     required bool newChatAcknowledged,
   }) => _paStartNewChatReplacing(old, newChatAcknowledged: newChatAcknowledged);
 
+  void _paWireBrowserGateway(PaseoGateway gateway, String directory) {
+    final owner = _paProfile?.id;
+    if (owner == null) return;
+    gateway.configureBrowserClaudeLaunch(
+      registry: _self._browserLaunches,
+      profileId: owner,
+      sourceId: _paseoSourceId(directory),
+      sourceIdForDirectory: _paseoSourceId,
+    );
+  }
+
   // ---- closing ------------------------------------------------------------
 
   /// Closes everything this profile's phone agents own, in the order the
   /// deletion contract requires: auth, owned setup, host, then feeds.
   Future<void> _paCloseAll({required bool stopHost}) async {
+    final owner = _paHostProfile ?? _paProfile?.id;
+    if (owner != null) {
+      await _self._browserLaunches.revokeProfile(profileId: owner);
+    }
     _paDisposeBackend();
     for (final entry in _paSignIns.entries.toList()) {
       await _paSignInSubs.remove(entry.key)?.cancel();
@@ -1396,12 +1429,17 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       await _paDropSource(directory);
     }
     _paLive.clear();
+    _paAuthResults.clear();
+    _paAuthRevisions.clear();
+    _paChecks.clear();
     _paRows = const [];
     _paHostRunning = false;
   }
 
   /// Deletion hook: runs before ProfileStore removes the profile.
   Future<void> _paCloseForDeletion(String profileId) async {
+    if (_self.store.phoneAgentOwnerRetainedAfterRemoving(profileId)) return;
+    profileId = _self.store.phoneAgentOwnerId(profileId);
     if (_paHostProfile != profileId &&
         _paProfile?.id != profileId &&
         _paSignIns.isEmpty) {
@@ -1421,6 +1459,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// Controller disposal: stop listening; the host keeps running for the
   /// Android service owner.
   void _paShutdown() {
+    final owner = _paHostProfile ?? _paProfile?.id;
+    if (owner != null) {
+      unawaited(_self._browserLaunches.revokeProfile(profileId: owner));
+    }
+    if (_self._ownsBrowserLaunches) unawaited(_self._browserLaunches.close());
     _paDisposeBackend();
     _paHoldTimer?.cancel();
     _paHoldTimer = null;

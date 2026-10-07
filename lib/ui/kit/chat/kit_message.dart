@@ -16,6 +16,7 @@ import '../kit_bidi.dart';
 import '../kit_buttons.dart';
 import '../kit_copy.dart';
 import '../kit_divider.dart';
+import '../kit_image.dart';
 import '../kit_layout.dart';
 import '../kit_menu.dart';
 import '../kit_motion.dart';
@@ -427,6 +428,14 @@ class _BubbleState extends State<_Bubble> {
     // Read-only chips announce themselves only when one of them opens a
     // preview; otherwise their names join the bubble's one label.
     final chipsSpeak = attachments.any((item) => item.onOpen != null);
+    final photos = [
+      for (final item in attachments)
+        if (_isPhoto(item)) item,
+    ];
+    final chips = [
+      for (final item in attachments)
+        if (!_isPhoto(item)) item,
+    ];
     final words = message.body?.data.trim() ?? '';
 
     final label = [
@@ -446,11 +455,26 @@ class _BubbleState extends State<_Bubble> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (message.body case final body?) ExcludeSemantics(child: body),
-          if (attachments.isNotEmpty) ...[
+          // Sent photos show as pictures, not file names; the rest stay
+          // read-only chips.
+          if (photos.isNotEmpty) ...[
             SizedBox(height: tokens.space2),
             ExcludeSemantics(
               excluding: !chipsSpeak,
-              child: KitComposerChips.attachments(items: attachments),
+              child: Wrap(
+                spacing: tokens.space2,
+                runSpacing: tokens.space2,
+                children: [
+                  for (final photo in photos) _PromptPhoto(attachment: photo),
+                ],
+              ),
+            ),
+          ],
+          if (chips.isNotEmpty) ...[
+            SizedBox(height: tokens.space2),
+            ExcludeSemantics(
+              excluding: !chipsSpeak,
+              child: KitComposerChips.attachments(items: chips),
             ),
           ],
         ],
@@ -1021,6 +1045,53 @@ class _Marker extends StatelessWidget {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+/// A sent picture with pixels to show: drawn as a thumbnail, not a chip.
+bool _isPhoto(KitAttachment item) =>
+    item.kind == KitAttachmentKind.image && item.thumbnail != null;
+
+/// One sent photo in a prompt bubble: a square thumbnail
+/// ([KitLayout.promptPhotoSize]) that opens the host's full view.
+class _PromptPhoto extends StatelessWidget {
+  const _PromptPhoto({required this.attachment});
+
+  final KitAttachment attachment;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final image = KitImage(
+      key: attachment.thumbnailKey,
+      source: attachment.thumbnail!,
+      semanticsLabel: null,
+      fit: KitImageFit.cover,
+      shape: KitShape.tile,
+      width: KitLayout.promptPhotoSize,
+      height: KitLayout.promptPhotoSize,
+    );
+    final onOpen = attachment.onOpen;
+    if (onOpen == null) {
+      return Semantics(
+        container: true,
+        image: true,
+        label: l10n.kitAttachmentImage(attachment.label),
+        child: ExcludeSemantics(child: image),
+      );
+    }
+    // Its own node, like an openable chip: the bubble's label stays the
+    // words, the photo is a button of its own.
+    return Semantics(
+      container: true,
+      child: KitTappable(
+        tappableKey: attachment.chipKey,
+        onTap: onOpen,
+        label: l10n.kitAttachmentOpen(attachment.label),
+        shape: KitShape.tile,
+        child: ExcludeSemantics(child: image),
       ),
     );
   }

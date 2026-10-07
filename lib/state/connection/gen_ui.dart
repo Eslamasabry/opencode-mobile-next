@@ -67,12 +67,60 @@ mixin _ConnectionControllerGenUi on ChangeNotifier implements GenUiController {
         reason: GenUiSetupProblem.unsupportedHost,
       );
     }
-    return _genUiSetup[id] ??
+    final result =
+        _genUiSetup[id] ??
         (genUiEnabled
-            ? const GenUiSetupUnavailable(
+            ? GenUiSetupUnavailable(
                 reason: GenUiSetupProblem.notQualified,
+                affected: _genUiConnectionAgents,
               )
             : const GenUiSetupOff());
+    return _genUiStatusForConnection(result);
+  }
+
+  /// Registrations cover both installed OpenCode runtimes, but this status
+  /// describes the connected runtime and the phone agents available beside it.
+  List<GenUiAgent> get _genUiConnectionAgents {
+    final owner = _self._connectedProfile ?? _self.profile;
+    final runtime = owner?.backend == ServerBackend.openCode
+        ? AgentToolAdapters.forOpenCode(v2: owner!.flavor == ServerFlavor.v2)
+        : null;
+    return [
+      for (final agent in AgentToolAdapters.withTools)
+        if (agent.paseoProvider != null || agent == runtime) agent,
+    ];
+  }
+
+  GenUiSetupStatus _genUiStatusForConnection(GenUiSetupStatus status) {
+    final applicable = _genUiConnectionAgents.toSet();
+    List<GenUiAgent> here(List<GenUiAgent> agents) =>
+        agents.where(applicable.contains).toList();
+    final ready = here(status.agents);
+    final unchecked = GenUiSetupUnavailable(
+      reason: GenUiSetupProblem.notQualified,
+      affected: applicable.toList(),
+    );
+    return switch (status) {
+      GenUiSetupOn() => ready.isEmpty ? unchecked : GenUiSetupOn(agents: ready),
+      GenUiSetupPartial(:final affected, :final reason) =>
+        affected.isNotEmpty && here(affected).isEmpty
+            ? (ready.isEmpty ? unchecked : GenUiSetupOn(agents: ready))
+            : GenUiSetupPartial(
+                agents: ready,
+                reason: reason,
+                affected: here(affected),
+              ),
+      GenUiSetupUnavailable(:final affected, :final reason) =>
+        affected.isNotEmpty && here(affected).isEmpty
+            ? unchecked
+            : GenUiSetupUnavailable(reason: reason, affected: here(affected)),
+      GenUiSetupFailed(:final affected, :final reason) => GenUiSetupFailed(
+        reason: reason,
+        affected: here(affected),
+      ),
+      GenUiSetupRestartRequired() => GenUiSetupRestartRequired(agents: ready),
+      GenUiSetupOff() || GenUiSetupInstalling() => status,
+    };
   }
 
   @override

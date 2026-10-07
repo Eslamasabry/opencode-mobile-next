@@ -8,6 +8,7 @@ import '../../voice/model_manifest.dart';
 import '../../state/download_size.dart';
 import '../builtin_linux.dart';
 import 'aiteam_scripts.dart';
+import 'component_updates.dart';
 import 'setup_contract.dart';
 import 'voice_component.dart';
 
@@ -466,8 +467,11 @@ oc_version "\$(node --version | sed 's/^v//')"
   }) {
     final selected = _version(runtime, version);
     final command = OpenCodePins.command(runtime);
-    final program = '$root${OpenCodePins.dir(runtime)}/bin/$command';
-    return 'set -e\n'
+    final directory = '$root${OpenCodePins.dir(runtime)}';
+    final program = '$directory/bin/$command';
+    return '$componentUpdatePrelude\nset -e\n'
+        'oc_update_recover \'$directory\'\n'
+        'oc_update_recover \'$root/usr/local/bin/$command\'\n'
         'oc_bin=\$(command -v $command)\n'
         '[ "\$(readlink -f "\$oc_bin")" = \'$program\' ]\n'
         'installed=\$("\$oc_bin" --version | tail -n 1)\n'
@@ -485,7 +489,8 @@ oc_version "\$(node --version | sed 's/^v//')"
   /// 2. unpacks only the program, next to the current install;
   /// 3. proves it: `--version` from the program itself, then a short
   ///    `serve` in a throwaway home until its health address answers;
-  /// 4. only then swaps it in, links `/usr/local/bin/<command>` to it and
+  /// 4. only then journals activation and links `/usr/local/bin/<command>` to
+  ///    it, keeping the previous good generation for interrupted updates, and
   ///    deletes what npm installed before (a running server keeps its file
   ///    until the start step restarts it).
   ///
@@ -535,6 +540,10 @@ case "\$(uname -m)" in
 esac
 oc_dir='$dir'
 oc_new="\$oc_dir.new"
+oc_link='$root/usr/local/bin/$command'
+oc_link_new="\$oc_link.new"
+oc_update_recover "\$oc_dir" || exit 1
+oc_update_recover "\$oc_link" || exit 1
 oc_file="$root/var/cache/oc-setup/opencode-$selected-\$oc_sha.archive"
 oc_stage 'Downloading OpenCode $selected'
 # Checked against the pinned SHA-256 before anything is unpacked; a file
@@ -614,10 +623,29 @@ if [ -z "\$oc_started" ]; then
   oc_fail "${OpenCodeInstallFailure.noStart}"
 fi
 rm -rf "\$oc_probe"
-rm -rf "\$oc_dir"
-mv "\$oc_new" "\$oc_dir"
 mkdir -p "$root/usr/local/bin"
-ln -sfn "\$oc_dir/bin/$command" "$root/usr/local/bin/$command"
+rm -f "\$oc_link_new"
+ln -s "\$oc_dir/bin/$command" "\$oc_link_new"
+oc_activation_failed() {
+  oc_restore_failed=0
+  oc_update_recover "\$oc_dir" || oc_restore_failed=1
+  oc_update_recover "\$oc_link" || oc_restore_failed=1
+  if [ "\$oc_restore_failed" != 0 ]; then
+    oc_fail '[oc] A component update could not be restored. Run setup again.'
+  fi
+  oc_fail '[oc] OpenCode could not finish updating. Run setup again.'
+}
+oc_update_activate "\$oc_dir" "\$oc_new" || oc_activation_failed
+oc_update_activate "\$oc_link" "\$oc_link_new" || oc_activation_failed
+if ! oc_active_version=\$("\$oc_link" --version 2>/dev/null); then
+  oc_activation_failed
+fi
+oc_active_version=\$(printf '%s\\n' "\$oc_active_version" | tail -n 1)
+oc_active_version=\${oc_active_version##* v}
+[ "\$oc_active_version" = '$selected' ] || oc_activation_failed
+# Commit code before its command link; never delete the retained good backup.
+oc_update_commit "\$oc_dir" || oc_activation_failed
+oc_update_commit "\$oc_link" || oc_activation_failed
 # What npm installed before, wrapper and all.
 rm -rf $leftovers
 rm -f "\$oc_file"

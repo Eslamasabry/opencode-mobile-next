@@ -48,7 +48,9 @@ extension _ChatNudges on _ChatScreenState {
       },
       // The Approvals sheet is offered on every connected server (see
       // _openSessionMenu); it has nothing to add once it is already on.
-      approvalsAvailable: !_conn.autoApprovalFor(widget.sessionID).automatic,
+      approvalsAvailable:
+          _approvalModeOffered(_conn) &&
+          !_conn.autoApprovalFor(widget.sessionID).automatic,
       runChangedFiles: runChangedFiles(_messages) || (summary?.files ?? 0) > 0,
       reviewAvailable: _conn.capabilities.sessionDiff,
       contextUsage: _contextWindowUsage(),

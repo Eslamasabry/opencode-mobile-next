@@ -159,9 +159,14 @@ extension _SetupEngineStart on ChannelSetupEngine {
     required TermuxRuntime runtime,
     required bool openCodeChanged,
   }) {
+    final data = <String, String>{
+      'requiredFreeBytes':
+          '${requiredSetupFreeBytes(component.downloadBytes ?? 0)}',
+    };
     final base = <String, Object?>{
       'id': component.id,
       'weight': component.estimatedSeconds,
+      'data': data,
     };
     if (check?.ok == true) {
       return {...base, 'skipped': true, 'version': check!.version};
@@ -172,6 +177,7 @@ extension _SetupEngineStart on ChannelSetupEngine {
         'step': true,
         'stage': l10n.phoneSetupStageStarting,
         'data': {
+          ...data,
           'runtime': runtime.wireName,
           'openCodeChanged': '$openCodeChanged',
         },
@@ -184,7 +190,7 @@ extension _SetupEngineStart on ChannelSetupEngine {
         ...base,
         'step': true,
         'stage': l10n.setupAppStageDownloading,
-        'data': {'waitMinutes': '$appStepWaitMinutes'},
+        'data': {...data, 'waitMinutes': '$appStepWaitMinutes'},
       };
     }
     if (component.native) {

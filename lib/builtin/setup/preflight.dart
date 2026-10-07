@@ -38,8 +38,14 @@ const comfortableSetupMemoryMb = 3072;
 /// disk beyond what gets downloaded. Mirrors the order of magnitude the
 /// Termux install script already asks for (`bridge.dart`'s
 /// `INSTALL_REQUIRED_MB=2048` against "about 1 GB installed").
-int requiredSetupFreeBytes(int downloadBytes) =>
-    math.max(downloadBytes * 2, 300 * 1000 * 1000);
+int requiredSetupFreeBytes(int downloadBytes) {
+  const maximumBytes = 0x7fffffffffffffff;
+  final nonnegative = math.max(downloadBytes, 0);
+  final doubled = nonnegative > maximumBytes ~/ 2
+      ? maximumBytes
+      : nonnegative * 2;
+  return math.max(doubled, 300 * 1000 * 1000);
+}
 
 enum SetupPreflightIssue { unsupportedAbi, lowMemory, lowSpace }
 
@@ -91,6 +97,20 @@ class SetupPreflightResult {
   bool get mayBeSlow => issue == null && totalMemoryMb != null;
 }
 
+/// Checks storage alone so setup can repeat the same policy between installs.
+/// An unavailable reading retains the initial preflight's allow-to-try policy.
+SetupPreflightResult checkSetupStoragePreflight(
+  int? availableBytes, {
+  required int downloadBytes,
+}) {
+  if (availableBytes == null) return const SetupPreflightResult.ok();
+  final required = requiredSetupFreeBytes(downloadBytes);
+  if (availableBytes < required) {
+    return SetupPreflightResult.lowSpace(required - availableBytes);
+  }
+  return const SetupPreflightResult.ok();
+}
+
 /// Checks [device] against what a selection needs ([downloadBytes], the sum
 /// of its components' `downloadBytes`). ABI first (nothing else matters if
 /// there is no rootfs for this CPU), then RAM, then free space. Total RAM
@@ -110,13 +130,11 @@ SetupPreflightResult checkSetupPreflight(
   if (memory != null && memory < minimumSetupMemoryMb) {
     return SetupPreflightResult.lowMemory(memory);
   }
-  final available = device.availableStorageBytes;
-  if (available != null) {
-    final required = requiredSetupFreeBytes(downloadBytes);
-    if (available < required) {
-      return SetupPreflightResult.lowSpace(required - available);
-    }
-  }
+  final storage = checkSetupStoragePreflight(
+    device.availableStorageBytes,
+    downloadBytes: downloadBytes,
+  );
+  if (!storage.supported) return storage;
   if (memory != null && memory < comfortableSetupMemoryMb) {
     return SetupPreflightResult.mayBeSlow(memory);
   }

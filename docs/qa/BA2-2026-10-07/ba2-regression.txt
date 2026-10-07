@@ -1,0 +1,14 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/host_agent_providers_test.dart
+00:00 +0: captured fx provider error reaches final signed-out phone row
+00:00 +0 -1: captured fx provider error reaches final signed-out phone row [E]
+  Expected: HostAgentProviderAvailability:<HostAgentProviderAvailability.needsHostSignIn>
+    Actual: HostAgentProviderAvailability:<HostAgentProviderAvailability.hidden>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/host_agent_providers_test.dart 50:5            main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/host_agent_providers_test.dart: captured fx provider error reaches final signed-out phone row

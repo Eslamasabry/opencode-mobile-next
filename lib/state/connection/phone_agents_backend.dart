@@ -29,6 +29,7 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
         paseoGatewayFactory: (target) {
           _paKeepHostUp();
           final gateway = host.newGatewaySync(target.codexDirectory);
+          _paWireBrowserGateway(gateway, target.codexDirectory);
           for (final hint in _paTitleHints.entries) {
             gateway.keepTitle(hint.key, hint.value);
           }
@@ -40,6 +41,37 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
         promptPhotoStore: _self._promptPhotoStore,
       ).._agentBackendRecover = recoverPhoneAgentBackend;
       _paBackend = backend;
+      final watched = backend;
+      backend._turnStallProbe = () async {
+        final agent = _paHostProbeAgent;
+        bool? running;
+        if (host is PhoneAgentLivenessPort) {
+          try {
+            running = await (host as PhoneAgentLivenessPort).helperRunning();
+          } catch (_) {}
+        } else if (agent != null) {
+          try {
+            running = (await host.inspect(agent)).hostAvailable;
+          } catch (_) {}
+        }
+        if (running == false) {
+          return TurnStallEvidence(
+            transportConnected: watched.isConnected,
+            helperRunning: false,
+          );
+        }
+        bool? reachable;
+        try {
+          reachable = (await watched.api?.health())?.healthy;
+        } catch (_) {
+          reachable = false;
+        }
+        return TurnStallEvidence(
+          transportConnected: watched.isConnected,
+          helperRunning: running,
+          endpointReachable: reachable,
+        );
+      };
       _paBackendHost = host;
       _paWatchBackend();
       backend.addListener(_paBackendChanged);

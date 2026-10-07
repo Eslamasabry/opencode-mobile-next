@@ -179,10 +179,27 @@ void main() {
       // 20+40+50+40+90 s and 30+15+30+30+60 MB from the registry.
       expect(
         find.text(
-          'No computer and no other apps. About 4 minutes and ~165 MB the '
-          'first time.',
+          'No computer and no other apps. ~165 MB to download the first time.',
         ),
         findsOneWidget,
+      );
+      // FB2: the whole journey in one line, with the registry's time said
+      // once, under the promise.
+      expect(
+        find.text(
+          'Install, name a project, start a conversation · about 4 min',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .getTopLeft(find.byKey(const ValueKey('phone-setup-start-body')))
+            .dy,
+        lessThan(
+          tester
+              .getTopLeft(find.byKey(const ValueKey('phone-setup-start-steps')))
+              .dy,
+        ),
       );
       expect(
         find.text('Includes Git and SSH, Python and Node.js.'),
@@ -217,8 +234,11 @@ void main() {
     await tester.pumpWidget(_app(controller, home: harness.screen));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('phone-setup-start-primary')));
-    await tester.pumpAndSettle();
+    // The 800x600 test surface is shorter than the page.
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('phone-setup-start-primary')),
+    );
 
     expect(harness.engine.runs, [_defaultIds]);
     expect(harness.progressOpened, 1);
@@ -478,14 +498,21 @@ void main() {
     expect(find.text('Includes Git and SSH and Node.js.'), findsOneWidget);
     expect(
       find.text(
-        'No computer and no other apps. About 3 minutes and ~135 MB the '
-        'first time.',
+        'No computer and no other apps. ~135 MB to download the first time.',
       ),
       findsOneWidget,
     );
+    // The step line's time follows the selection, like the size.
+    expect(
+      find.text('Install, name a project, start a conversation · about 3 min'),
+      findsOneWidget,
+    );
 
-    await tester.tap(find.byKey(const ValueKey('phone-setup-start-primary')));
-    await tester.pumpAndSettle();
+    // The 800x600 test surface is shorter than the page.
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('phone-setup-start-primary')),
+    );
     expect(harness.engine.runs, [
       {'linux', 'essentials', 'node', 'opencode'},
     ]);
@@ -524,6 +551,11 @@ void main() {
         ),
       );
       expect(primary.onPressed, isNull);
+      // A journey this phone cannot take is not promised (FB2).
+      expect(
+        find.byKey(const ValueKey('phone-setup-start-steps')),
+        findsNothing,
+      );
       // Nothing downloaded: Set up never ran.
       expect(harness.engine.runs, isEmpty);
     });
@@ -1086,9 +1118,13 @@ void main() {
     expect(find.text('شغّل وكيل برمجة هنا مباشرة'), findsOneWidget);
     expect(
       find.text(
-        'لا حاجة إلى حاسوب أو تطبيقات أخرى. نحو 4 دقائق و~165 ميغابايت في '
+        'لا حاجة إلى حاسوب أو تطبيقات أخرى. ~165 ميغابايت للتنزيل في '
         'المرة الأولى.',
       ),
+      findsOneWidget,
+    );
+    expect(
+      find.text('ثبّت، سمِّ مشروعًا، تحدّث · نحو 4 دقائق'),
       findsOneWidget,
     );
     expect(find.text('يشمل Git and SSH، Python وNode.js.'), findsOneWidget);

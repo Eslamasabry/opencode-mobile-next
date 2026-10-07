@@ -35,6 +35,11 @@ new_fixture() {
   cp "$CUT_SCRIPT" "$FIXTURE/scripts/cut-alpha.sh"
   mkdir -p "$FIXTURE/tool/qa" "$FIXTURE/test/nested"
   cp "$REPO_ROOT/tool/qa/run_serial_tests.py" "$FIXTURE/tool/qa/run_serial_tests.py"
+  # Release notes are checked for both layers before any build (FG4).
+  mkdir -p "$FIXTURE/tool/release" "$FIXTURE/docs/releases"
+  cp "$REPO_ROOT/tool/release/release_notes.py" "$FIXTURE/tool/release/release_notes.py"
+  printf '# OpenCode Mobile 1.0.12+13\n\nA fixture release.\n\n## What changed for you\n\n- **Chats** open faster after a restart.\n- **Photos** you send show as pictures.\n\n## Technical changes\n\n### Fixed\n- Fixture change.\n' \
+    >"$FIXTURE/docs/releases/v1.0.12+13.md"
   printf 'void main() {}\n' >"$FIXTURE/test/nested/release_gate_test.dart"
   chmod +x "$FIXTURE/scripts/release.sh" "$FIXTURE/scripts/cut-alpha.sh"
   : >"$FIXTURE/commands.log"

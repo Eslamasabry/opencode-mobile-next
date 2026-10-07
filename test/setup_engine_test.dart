@@ -225,6 +225,7 @@ void main() {
       );
       expect(spec(linux, 'start')['step'], isTrue);
       expect(spec(linux, 'start')['data'], {
+        'requiredFreeBytes': '300000000',
         'runtime': 'opencode1',
         'openCodeChanged': 'true',
       });
@@ -418,6 +419,7 @@ void main() {
         contains(OpenCodePins.v1Arm64.sha256),
       );
       expect(spec(linux, 'start')['data'], {
+        'requiredFreeBytes': '300000000',
         'runtime': 'opencode1',
         'openCodeChanged': 'true',
       });

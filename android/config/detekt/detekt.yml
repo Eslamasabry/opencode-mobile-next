@@ -1,0 +1,17 @@
+# Keep detekt 1.23.8's active default rules (--build-upon-default-config).
+# Existing debt is explicit in baseline.xml; new findings always fail the gate.
+build:
+  maxIssues: 0
+config:
+  validation: true
+  warningsAsErrors: true
+console-reports:
+  active: true
+  exclude:
+    - 'ProjectStatisticsReport'
+    - 'ComplexityReport'
+naming:
+  PackageNaming:
+    # This is the established Android namespace, not a per-file suppression.
+    # Preserve the normal pattern for all other packages and subpackages.
+    packagePattern: '[a-z]+(\.[a-z][A-Za-z0-9]*)*|io\.github\.eslamasabry\.opencode_mobile(\.[a-z][A-Za-z0-9]*)*'

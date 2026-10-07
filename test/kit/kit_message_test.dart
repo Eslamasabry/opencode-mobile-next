@@ -1,6 +1,8 @@
 // KitMessage (docs/ux-system/kit-api/KitMessage.md; STATE-16, KIT-41,
 // LOOK-26, LOOK-5, KIT-28, A11Y-5): the words of a transcript. The numbered
 // groups follow the spec's "Tests required".
+import 'dart:convert';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -14,6 +16,7 @@ import 'package:opencode_mobile/ui/kit/chat/kit_markdown.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_message.dart';
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
 import 'package:opencode_mobile/ui/kit/kit_divider.dart';
+import 'package:opencode_mobile/ui/kit/kit_image.dart';
 import 'package:opencode_mobile/ui/kit/kit_icon_button.dart';
 import 'package:opencode_mobile/ui/kit/kit_layout.dart';
 import 'package:opencode_mobile/ui/kit/kit_menu.dart';
@@ -95,6 +98,11 @@ List<KitMenuItem> _menu(List<String> ran) => [
   KitMenuItem(label: 'Copy message', onSelected: () => ran.add('copy')),
   KitMenuItem(label: 'Edit and resend', onSelected: () => ran.add('edit')),
 ];
+
+/// A 1×1 PNG.
+final _onePixelPng = base64Decode(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+);
 
 ThemeRoles _roles(WidgetTester tester) =>
     KitTokens.of(tester.element(find.byType(KitMessage))).roles;
@@ -299,6 +307,44 @@ void main() {
       tester.getSemantics(find.byKey(_bubbleKey)).label,
       allOf(contains('checkout_test.dart'), contains('screenshot.png')),
     );
+    semantics.dispose();
+  });
+
+  testWidgets('3b. a photo with pixels shows as a thumbnail that opens', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    var opened = 0;
+    await _pump(
+      tester,
+      _prompt(
+        attachments: [
+          KitAttachment(
+            id: 1,
+            label: 'screenshot.png',
+            kind: KitAttachmentKind.image,
+            thumbnail: KitImageSource.memory(_onePixelPng),
+            onOpen: () => opened++,
+            chipKey: const ValueKey('photo-open'),
+            thumbnailKey: const ValueKey('photo-thumb'),
+          ),
+          const KitAttachment(
+            id: 2,
+            label: 'notes.pdf',
+            kind: KitAttachmentKind.file,
+          ),
+        ],
+      ),
+    );
+    final thumb = find.byKey(const ValueKey('photo-thumb'));
+    expect(thumb, findsOneWidget);
+    expect(tester.getSize(thumb), const Size.square(KitLayout.promptPhotoSize));
+    // The photo is its picture, not its name; other files stay chips.
+    expect(find.textContaining('screenshot.png'), findsNothing);
+    expect(find.textContaining('notes.pdf'), findsOneWidget);
+    expect(find.bySemanticsLabel('Preview screenshot.png'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('photo-open')));
+    expect(opened, 1);
     semantics.dispose();
   });
 

@@ -1,0 +1,6 @@
+• Conversations read as turns: the agent's work folds under one line you can open.
+• Errors in plain words, with what happens next.
+• Several photos at once; Excel and Word files attach as text.
+• OpenCode 2.0, plus Claude Code, Codex and Pi through a Paseo helper.
+• Work in several projects at once.
+• 26 more themes.

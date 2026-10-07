@@ -1,0 +1,5 @@
+• A server found on this phone has a visible Connect button.
+• Phone setup shows connecting separately from installing, with cancel and retry.
+• Project, conversation and file screens put the main actions first.
+• Phone storage explains what the app keeps and how to clean it up.
+• A healthy server no longer gets stuck on the connecting screen.

@@ -1,0 +1,24 @@
+Reverted connection implementation to merge 98f48d33 while retaining new tests.
+Probe begins at final tick (44 s + 1 s), still unresolved at lifetime end.
+Exit code: 1
+Pending timers:
+00:00 +0 -1: BA7 busy snapshots without an owned transport have no watchdog wakeups [E]
+Pending timers:
+00:00 +0 -2: BA7 idle cancels a pending probe deadline [E]
+Pending timers:
+00:00 +0 -3: BA7 deleted cancels a pending probe deadline [E]
+Pending timers:
+00:00 +0 -4: BA7 error cancels a pending probe deadline [E]
+Pending timers:
+00:00 +0 -5: BA7 dispose cancels a pending probe deadline [E]
+Pending timers:
+00:00 +0 -6: BA7 disconnect cancels a pending probe deadline [E]
+Pending timers:
+00:00 +0 -7: BA7 suspend cancels a pending probe deadline [E]
+00:00 +0 -7: Some tests failed.
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 busy snapshots without an owned transport have no watchdog wakeups
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 deleted cancels a pending probe deadline
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 disconnect cancels a pending probe deadline
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 dispose cancels a pending probe deadline
+Restored implementation in finally.

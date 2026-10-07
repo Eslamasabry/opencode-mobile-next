@@ -1,0 +1,13 @@
+Reverted files to c9ea838e while retaining new tests.
+Exit code: 1
+00:00 +0 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: fallback names only phone agents and connected v1 [E]
+00:00 +0 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: fallback names only phone agents and connected v2 [E]
+00:00 +0 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: shared installation status follows runtime switches without naming the other OpenCode generation [E]
+00:07 +0 -4: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_tool_adapter_test.dart: OpenCode product names distinguish the runtime generations [E]
+00:07 +0 -4: Some tests failed.
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_tool_adapter_test.dart: OpenCode product names distinguish the runtime generations
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: fallback names only phone agents and connected v1
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: fallback names only phone agents and connected v2
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: shared installation status follows runtime switches without naming the other OpenCode generation
+Restored implementation in finally.

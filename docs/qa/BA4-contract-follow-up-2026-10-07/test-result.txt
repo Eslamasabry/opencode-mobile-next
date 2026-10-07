@@ -1,0 +1,13 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_certification_test.dart
+00:00 +0: bundled snapshot preserves the reviewed FQ1 JSON verbatim
+00:00 +1: current evidence has no exact runtime metadata and grants no flags
+00:00 +2: each exact pass cell grants only its corresponding capability
+00:00 +3: omitted architecture qualifies protocol capabilities across CPUs
+00:00 +4: present architecture scopes evidence to that CPU
+00:00 +5: photos require their own passing images cell
+00:00 +6: missing or mismatched pins and unknown architecture invalidate proof
+00:00 +7: only exact pass with safe repository evidence grants a capability
+00:00 +8: duplicate IDs invalidate all records including the OpenCode 1 alias
+00:00 +9: malformed and unrecognized records never grant capabilities
+00:00 +10: projection freezes input and retains unverified resume copy
+00:00 +11: All tests passed!

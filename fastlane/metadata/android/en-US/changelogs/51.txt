@@ -1,0 +1,5 @@
+• This phone runs OpenCode by itself: guided setup on a built-in Ubuntu.
+• AI Team for projects: plan, build, check and merge with receipts; you confirm before main.
+• A full redesign.
+• Chat opens instantly, streams faster and shows Stop on the message box.
+• Inbox across servers and While you were away.

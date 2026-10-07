@@ -298,6 +298,7 @@ KitRequestCard permissionRequestCard(
     ),
     onDetails: onDetails,
     detailsKey: detailsKey,
+    inList: inList,
   );
 }
 

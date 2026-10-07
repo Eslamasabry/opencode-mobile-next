@@ -253,9 +253,14 @@ esac
 ''')
         ..setLastModifiedSync(DateTime.now());
       Process.runSync('chmod', ['+x', '${bin.path}/apt-get']);
-      File(
-        '${bin.path}/dpkg',
-      ).writeAsStringSync('#!/bin/sh\necho "dpkg \$*" >> "\$APT_LOG"\n');
+      File('${bin.path}/dpkg').writeAsStringSync(r'''#!/bin/sh
+echo "dpkg $*" >> "$APT_LOG"
+case "$1" in
+  -s)
+    echo "Package: $2"
+    echo 'Status: install ok installed' ;;
+esac
+''');
       Process.runSync('chmod', ['+x', '${bin.path}/dpkg']);
       env = {
         'PATH': '${bin.path}:${Platform.environment['PATH']}',
@@ -291,9 +296,11 @@ esac
       expect(first.stdout, contains('Setting up git'));
       final log = File(env['APT_LOG']!).readAsLinesSync();
       expect(log.first, 'dpkg --configure -a');
-      expect(log[1], contains('update'));
-      expect(log[2], contains('-o APT::Status-Fd=3 install -y'));
-      expect(log[2], endsWith('git curl'));
+      expect(log[1], 'dpkg --audit');
+      expect(log[2], contains('update'));
+      expect(log[3], contains('-o APT::Status-Fd=3 install -y'));
+      expect(log[3], endsWith('git curl'));
+      expect(log.sublist(4), ['dpkg -s git', 'dpkg -s curl']);
 
       // Fresh lists: no second update.
       final second = await sh('oc_apt_install git', env: env);

@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/sse.dart';
+import 'package:opencode_mobile/domain/server_gateway.dart'
+    show ServerCapabilities;
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/automation_policy.dart';
 import 'package:opencode_mobile/state/connection.dart';
@@ -20,7 +22,15 @@ import 'support/complete_message_history.dart';
 /// modes this phone really supports.
 
 class _Api extends OpenCodeApi with CompleteMessageHistory {
-  _Api() : super(baseUrl: 'http://localhost');
+  _Api({this.asksBeforeActing = true}) : super(baseUrl: 'http://localhost');
+
+  /// Whether this runtime sends permission requests at all.
+  final bool asksBeforeActing;
+
+  @override
+  ServerCapabilities get capabilities => asksBeforeActing
+      ? ServerCapabilities.allV1
+      : const ServerCapabilities(permissionRequests: false);
 
   @override
   Future<void> respondPermission(
@@ -57,6 +67,7 @@ class _Store extends ProfileStore {
 Future<(_Controller, SharedPreferences)> _boot({
   AutomationSupervision supervision = AutomationSupervision.balanced,
   bool isolated = false,
+  bool asksBeforeActing = true,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
@@ -65,7 +76,7 @@ Future<(_Controller, SharedPreferences)> _boot({
     'server-a',
   ).setSupervision(supervision);
   final controller = _Controller(_Store(prefs: prefs), isIsolated: isolated)
-    ..api = _Api()
+    ..api = _Api(asksBeforeActing: asksBeforeActing)
     ..status = StreamStatus.connected;
   addTearDown(controller.dispose);
   controller.sessionsById['parent'] = Session(id: 'parent', title: 'Parent');
@@ -135,6 +146,24 @@ void main() {
     await tester.pumpAndSettle();
     // Both automatic modes read the same; the menu says which.
     expect(find.text('Auto-approve'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a runtime that never asks before acting shows no chip', (
+    tester,
+  ) async {
+    // FC1: the mode is shown for runtimes that ask (a capability), and
+    // hidden otherwise, even when a saved mode would say "Auto-approve".
+    final (controller, _) = await _boot(asksBeforeActing: false);
+    await controller.setSessionAutoApproval(
+      'parent',
+      const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
+    );
+    await _pump(tester, controller);
+    expect(find.byKey(const Key('composer-model-context')), findsOneWidget);
+    expect(_chip, findsNothing);
+    expect(find.text('Asks first'), findsNothing);
+    expect(find.text('Auto-approve'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

@@ -103,8 +103,10 @@ final class AgentToolAdapter {
 
   final AgentRunUser runsAs;
 
-  /// Device evidence shows a card call reaches the app and an answer returns
-  /// (docs/qa/agent-cards-2026-10-07). Registration alone never sets this.
+  /// Recorded runtime evidence qualifies the card transport under the
+  /// accepted trust model. Live verification still gates readiness; full
+  /// journey evidence is recorded separately (docs/design/BA6-contract.md).
+  /// Registration alone never sets this.
   final bool cardsQualified;
 
   /// The display-only card tool is allowed in the agent's own permission
@@ -154,20 +156,21 @@ final class AgentToolAdapter {
     planToolName: 'ExitPlanMode',
   );
 
-  /// OC1 1.18.32 calls `oc-ui_show` (device fixture, 2026-10-07), but its
-  /// agents can write the root runtime, so cards stay unqualified until the
-  /// agent-tool launch boundary is proven (docs/verification/oc-gaps).
+  /// OC1 1.18.32 calls `oc-ui_show` (captured device fixture, 2026-10-07).
+  /// The owner accepts one in-app Ubuntu trust zone; live readiness still
+  /// requires the owned helper and a connected MCP server. See BA6 contract.
   static const openCode1 = AgentToolAdapter._(
     id: 'openCode1',
-    displayName: 'OpenCode',
+    displayName: 'OpenCode 1',
     naming: McpToolNaming.serverUnderscore,
     config: McpConfigFormat.openCodeV1,
     runsAs: AgentRunUser.root,
+    cardsQualified: true,
   );
 
   static const openCode2 = AgentToolAdapter._(
     id: 'openCode2',
-    displayName: 'OpenCode',
+    displayName: 'OpenCode 2',
     naming: McpToolNaming.serverUnderscore,
     config: McpConfigFormat.openCodeV2,
     runsAs: AgentRunUser.root,

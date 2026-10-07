@@ -63,6 +63,14 @@ TextSpan kitCurrentSpan(BuildContext context, String word) => TextSpan(
   ),
 );
 
+/// The start of a row's supporting line that marks the one choice to take
+/// when unsure, in the accent colour: "Recommended · ". The word carries the
+/// meaning, never the colour alone (STATE-9).
+TextSpan kitRecommendedSpan(BuildContext context) => kitCurrentSpan(
+  context,
+  lookupAppLocalizations(Localizations.localeOf(context)).kitChoiceRecommended,
+);
+
 /// The one overflow button (⋮): opens [items] with [showKitMenu]. For a top
 /// bar or a section; a row's menu is KitRow.menu (no per-row ⋮, KIT-28).
 /// With [enabled] false or no [items] the button is not shown (STATE-8):

@@ -229,6 +229,7 @@ class ConnectionChatsHost implements ChatsHost {
                 // A list holds many rows: its Answer is secondary, as a
                 // list question's is, so no row claims the screen's primary.
                 secondary: true,
+                inList: true,
               );
         // Questions and forms wait behind a permission request, and a card
         // follows them: the list answers the request first, and the buttons of the

@@ -9,12 +9,17 @@ extension _PaseoPrompts on PaseoGateway {
     String? mode,
     String? variant,
     List<Map<String, String>> images = const [],
+    void Function()? beforeSend,
   }) async {
+    final browserRequested = _browserRequestedFor(id);
+    final browserRevision = _browserRevision(id);
+    if (browserRequested) _requireBrowserScope();
     final scope = _scope;
     final locationEpoch = _locationEpoch;
     final provider = model == null || model.providerID.isEmpty
         ? (_draftProviders[id] ?? paseoDefaultProvider)
         : model.providerID;
+    if (browserRequested && provider != 'claude') throw _browserUnavailable;
     await _requireProviderAvailable(provider);
     _checkLocation(scope, locationEpoch);
     final modes = _modesFor(provider);
@@ -50,13 +55,21 @@ extension _PaseoPrompts on PaseoGateway {
               'thinkingOptionId': variant,
             if (title != null && title != 'New conversation') 'title': title,
           },
-          'initialPrompt': prompt,
-          if (images.isNotEmpty) 'images': images,
-          'clientMessageId': messageID,
+          if (!browserRequested) 'initialPrompt': prompt,
+          if (!browserRequested && images.isNotEmpty) 'images': images,
+          if (!browserRequested) 'clientMessageId': messageID,
           'labels': <String, String>{},
         },
         mutation: true,
         timeout: const Duration(seconds: 90),
+        beforeSend: () {
+          _checkLocation(scope, locationEpoch);
+          if (_browserRequestedFor(id) != browserRequested ||
+              (browserRequested && _browserRevision(id) != browserRevision)) {
+            throw _browserUnavailable;
+          }
+          if (!browserRequested) beforeSend?.call();
+        },
       );
     } finally {
       _creating--;
@@ -68,6 +81,20 @@ extension _PaseoPrompts on PaseoGateway {
       throw PaseoFailure(PaseoFailureKind.invalidResponse);
     }
     final realID = paseoString(agent['id'], max: 256);
+    if (browserRequested &&
+        (_browserRevision(id) != browserRevision || !_drafts.contains(id))) {
+      // The cold session was created by this request but never received a turn.
+      // Retire only its validated daemon ID; never resurrect the removed draft.
+      if (agent['cwd'] == scope) {
+        try {
+          await transport.request('archive_agent_request', {
+            'agentId': realID,
+          }, mutation: true);
+        } catch (_) {}
+      }
+      throw _browserUnavailable;
+    }
+    _moveBrowserRequest(id, realID);
     _realIDs[id] = realID;
     _appIDs[realID] = id;
     if (_remember(agent) == null) {
@@ -79,6 +106,32 @@ extension _PaseoPrompts on PaseoGateway {
     _drafts.remove(id);
     _draftProviders.remove(id);
     _draftModels.remove(id);
+    if (_creating == 0) {
+      final held = _heldEvents.toList();
+      _heldEvents.clear();
+      held.forEach(_onEvent);
+    }
+    if (browserRequested) {
+      final reservation = await _beforeBrowserLaunch(id, requiredBrowser: true);
+      _checkLocation(scope, locationEpoch);
+      await transport.request(
+        'send_agent_message_request',
+        {
+          'agentId': realID,
+          'text': prompt,
+          'messageId': messageID,
+          if (images.isNotEmpty) 'images': images,
+        },
+        mutation: true,
+        timeout: const Duration(seconds: 60),
+        beforeSend: () {
+          _checkLocation(scope, locationEpoch);
+          _checkBrowserLaunch(id, reservation);
+          beforeSend?.call();
+        },
+      );
+    }
+
     if (_creating == 0) {
       final held = _heldEvents.toList();
       _heldEvents.clear();
@@ -96,6 +149,7 @@ extension _PaseoPrompts on PaseoGateway {
   }) async {
     final agent = _agents[id];
     if (agent == null) return;
+    final reservation = await _beforeBrowserLaunch(id);
     final available = agent['availableModes'];
     final modeIDs = available is List
         ? available.whereType<Map>().map((m) => m['id']).whereType<String>()
@@ -103,10 +157,12 @@ extension _PaseoPrompts on PaseoGateway {
     if (mode != null &&
         mode != agent['currentModeId'] &&
         modeIDs.contains(mode)) {
-      await transport.request('set_agent_mode_request', {
-        'agentId': _real(id),
-        'modeId': mode,
-      }, mutation: true);
+      await transport.request(
+        'set_agent_mode_request',
+        {'agentId': _real(id), 'modeId': mode},
+        mutation: true,
+        beforeSend: () => _checkBrowserLaunch(id, reservation),
+      );
       agent['currentModeId'] = mode;
     }
     if (model != null &&
@@ -114,10 +170,12 @@ extension _PaseoPrompts on PaseoGateway {
         model.modelID.isNotEmpty &&
         model.modelID != paseoDefaultModel &&
         model.modelID != agent['model']) {
-      await transport.request('set_agent_model_request', {
-        'agentId': _real(id),
-        'modelId': model.modelID,
-      }, mutation: true);
+      await transport.request(
+        'set_agent_model_request',
+        {'agentId': _real(id), 'modelId': model.modelID},
+        mutation: true,
+        beforeSend: () => _checkBrowserLaunch(id, reservation),
+      );
       agent['model'] = model.modelID;
     }
   }

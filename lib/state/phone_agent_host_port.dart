@@ -1,6 +1,7 @@
 import '../builtin/agents/phone_agents_host.dart';
 import '../domain/agent_catalog.dart';
 import '../domain/agent_sign_in.dart';
+import '../domain/agent_auth_probe.dart';
 import '../domain/phone_agent_host.dart';
 import '../domain/phone_agents.dart';
 import '../paseo/gateway.dart';
@@ -30,9 +31,31 @@ abstract interface class PhoneAgentHostPort implements PhoneAgentHost {
 }
 
 /// Production adapter; adds nothing but the shared interface.
-final class BuiltinPhoneAgentHostPort implements PhoneAgentHostPort {
+abstract interface class PhoneAgentAuthPort {
+  Future<AgentAuthProbeResult> probeSignIn(String agentId);
+  bool supportsSignOut(String agentId);
+  Future<AgentAuthProbeResult> signOut(String agentId);
+}
+
+abstract interface class PhoneAgentLivenessPort {
+  Future<bool?> helperRunning();
+}
+
+final class BuiltinPhoneAgentHostPort
+    implements PhoneAgentHostPort, PhoneAgentAuthPort, PhoneAgentLivenessPort {
   BuiltinPhoneAgentHostPort(this._host);
   final BuiltinPhoneAgents _host;
+  @override
+  Future<bool?> helperRunning() => _host.helperRunning();
+
+  @override
+  Future<AgentAuthProbeResult> probeSignIn(String agentId) =>
+      _host.probeSignIn(agentId);
+  @override
+  bool supportsSignOut(String agentId) => _host.supportsSignOut(agentId);
+  @override
+  Future<AgentAuthProbeResult> signOut(String agentId) =>
+      _host.signOut(agentId);
 
   @override
   Stream<AgentSetupProgress> get setupChanges => _host.setupChanges;

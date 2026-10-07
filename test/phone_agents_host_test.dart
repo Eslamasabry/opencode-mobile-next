@@ -12,6 +12,7 @@ import 'package:opencode_mobile/builtin/setup/setup_engine.dart'
     show expandSelection;
 import 'package:opencode_mobile/builtin/setup/claude_scripts.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
+import 'package:opencode_mobile/domain/agent_auth_probe.dart';
 import 'package:opencode_mobile/domain/phone_agent_host.dart';
 import 'package:opencode_mobile/l10n/app_localizations_en.dart';
 import 'package:opencode_mobile/state/profiles.dart';
@@ -36,6 +37,9 @@ void main() {
   var versionValid = true;
   var refuseDelete = false;
   var setupOwner = 'phone';
+  var authOutput = '{"state":"signedOut"}';
+  var authBridgePresent = true;
+  final authCalls = <Map>[];
   Completer<void>? versionEntered;
   Completer<void>? versionRelease;
   final lock = File(PaseoPhoneScripts.packageLockAsset).readAsStringSync();
@@ -49,6 +53,9 @@ void main() {
     versionValid = true;
     refuseDelete = false;
     setupOwner = 'phone';
+    authOutput = '{"state":"signedOut"}';
+    authBridgePresent = true;
+    authCalls.clear();
     versionEntered = null;
     versionRelease = null;
     final messenger =
@@ -74,6 +81,10 @@ void main() {
     messenger.setMockMethodCallHandler(_native, (call) async {
       calls.add(call.method);
       switch (call.method) {
+        case 'agentAuthProbe':
+          if (!authBridgePresent) throw MissingPluginException();
+          authCalls.add(call.arguments as Map);
+          return jsonDecode(authOutput);
         case 'setupStatus':
           return jsonEncode({
             'params': {
@@ -146,6 +157,57 @@ void main() {
     messenger.setMockMethodCallHandler(_storage, null);
     messenger.setMockMethodCallHandler(_native, null);
   });
+
+  test(
+    'BA1 probe uses the stable private home and returns only narrow account facts',
+    () async {
+      final out = await host.probeSignIn('claude');
+      expect(out.state, AgentAuthProbeState.signedOut);
+      expect(await host.helperRunning(), isFalse);
+      running = true;
+      expect(await host.helperRunning(), isTrue);
+      final call = authCalls.single;
+      expect(call['profileId'], 'phone');
+      expect(call['agentId'], 'claude');
+      expect(call['action'], 'probe');
+      expect(call['timeoutSeconds'], 10);
+      expect(call['script'], contains("HOME='/home/oc/.oc-profiles/phone'"));
+      expect(
+        call['script'],
+        contains("CLAUDE_CONFIG_DIR='/home/oc/.oc-profiles/phone/claude'"),
+      );
+      authOutput =
+          '{"state":"signedIn","accountDisplayName":"Example account"}';
+      expect(
+        (await host.probeSignIn('claude')).accountDisplayName,
+        'Example account',
+      );
+      authOutput = '{"loggedIn":true,"unexpected":"raw CLI text"}';
+      expect(
+        (await host.probeSignIn('claude')).state,
+        AgentAuthProbeState.error,
+      );
+      authOutput = '{"state":"signedOut"}';
+      expect(
+        (await host.signOut('claude')).state,
+        AgentAuthProbeState.signedOut,
+      );
+      expect(authCalls.last['script'], contains('logout'));
+    },
+  );
+
+  test(
+    'BA1 missing private bridge stays unavailable and never uses setup output',
+    () async {
+      authBridgePresent = false;
+      expect(
+        (await host.probeSignIn('fx')).error,
+        AgentAuthProbeError.probeUnsupported,
+      );
+      expect(host.supportsSignOut('fx'), isFalse);
+      expect(calls, isNot(contains('run')));
+    },
+  );
 
   test(
     'shared engine installs as oc with Python and conditional host Node',
@@ -241,6 +303,54 @@ void main() {
       expect((await host.inspect('claude')).architectureQualified, false);
     },
   );
+  test(
+    'legacy fx check still qualifies after owner migration and never after failed retry',
+    () async {
+      abi = 'x86_64';
+      expect((await host.selfTest('claude')).passed, true);
+      final ownerGates = prefs.getString('${phoneAgentGatePrefix}phone')!;
+      expect((await host.selfTest('fx')).passed, true);
+      final allGates =
+          jsonDecode(prefs.getString('${phoneAgentGatePrefix}phone')!) as Map;
+      await prefs.setString('${phoneAgentGatePrefix}phone', ownerGates);
+      await prefs.setString(
+        '${phoneAgentGatePrefix}old',
+        jsonEncode({'fx': allGates['fx']}),
+      );
+      await prefs.setString('oc.phoneAgentOwner.phone', 'phone');
+      await prefs.setString('oc.phoneAgentOwner.old', 'phone');
+      await prefs.setString(
+        'oc.profiles',
+        jsonEncode([
+          ServerProfile(
+            id: 'phone',
+            name: 'One',
+            baseUrl: 'http://127.0.0.1:4097',
+          ).toJson(),
+          ServerProfile(
+            id: 'old',
+            name: 'Two',
+            baseUrl: 'http://127.0.0.1:4097',
+            flavor: ServerFlavor.v2,
+          ).toJson(),
+        ]),
+      );
+      final store = ProfileStore(prefs: prefs);
+      await store.load();
+      expect((await host.inspect('claude')).architectureQualified, true);
+      expect((await host.inspect('fx')).architectureQualified, true);
+      // Qualification still depends on the current installation and ABI.
+      abi = 'arm64-v8a';
+      expect((await host.inspect('fx')).architectureQualified, false);
+      abi = 'x86_64';
+      versionValid = false;
+      expect((await host.selfTest('fx')).passed, false);
+      await store.load();
+      expect((await host.inspect('fx')).architectureQualified, false);
+      expect((await host.inspect('claude')).architectureQualified, true);
+    },
+  );
+
   test(
     'failed retry clears prior proof and never starts daemon after wrong version',
     () async {

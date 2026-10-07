@@ -1,6 +1,6 @@
 # BB2 native crash supervision contract
 
-Date: 2026-10-07; verified on 2026-10-08. Status: IMPLEMENTED / FOCUSED CHECKS AND NATIVE EMULATOR ACCEPTANCE PASS. OpenCode2 is restored and connected; requested Claude Ready restoration remains unresolved due profile-scoped sign-in state. Native changes remain unreleased.
+Date: 2026-10-07; verified on 2026-10-08. Status: IMPLEMENTED / FOCUSED CHECKS AND NATIVE EMULATOR ACCEPTANCE PASS. OpenCode2 is restored and connected. The coordinator relaxed pre-integration restoration to installed app/data and runnable server, because BA5 shared-agent ownership was absent from the test APK; this requirement is met. Native changes remain unreleased.
 
 Finish line: killing the exact tracked OpenCode server revives it through native
 1–60 second backoff, resets that backoff after 30 seconds of stable uptime,
@@ -107,3 +107,5 @@ the person opens the app; force-stop/reopen tests persisted Stop intent only.
 Native changes need a new owner-approved release. This slice does not publish.
 
 The shared-emulator test preserves existing saved configuration and account state. After isolated acceptance, restore the app through its existing Start/connect path and verify OpenCode 2 connected and Claude Code Ready. This QA authorization does not enable sticky restoration or reboot behavior.
+
+Coordinator continuation: merge feat/genui-fe without rebasing before BB3 and build future device APKs from that merged branch. BA5 supplies shared phone-agent ownership; do not move credentials. BB6 browser account qualification is skipped pending accounts.

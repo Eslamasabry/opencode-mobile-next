@@ -1,6 +1,6 @@
-# BB2 native supervision — runtime passed; sequence blocked on Claude restoration
+# BB2 native supervision — runtime acceptance passed
 
-Started 2026-10-07; emulator qualification completed 2026-10-08. Base: `3bd79a8c`, branch `sol/bb-runtime`.
+Started 2026-10-07; emulator qualification completed 2026-10-08. Base: `3bd79a8c`, branch `sol/bb-runtime`; BB2 candidate committed as `e657025d` before integration merge.
 
 Implemented: native exact-process crash supervision with 1–60 second backoff, a 30-second stable-uptime delay reset, persisted person Stop intent, current policy/generation admission and the existing single durable three-attempt budget. Migration stages the spent Dart count while disabled, saves a rejecting Dart v2 marker, then activates the existing native record. Rebinding cannot replenish retries. Historical confirmed receipts are bounded and deleted through the existing suspension/deletion hook. App launch cannot bypass scheduled/exhausted native recovery or use unattended manual Start. No UI or Connection files changed; BB3 is unstarted.
 
@@ -26,7 +26,7 @@ Original native recovery keys were kept in memory and restored in `finally`, wit
 
 Final authored Start restores real **OpenCode2 2.0.10**, authenticated health and Connected/Running UI. See [final server screenshot](restored-opencode2-final.jpg). Full harness exit is **1 solely because Claude Ready remains unproven**; native BB2 assertions themselves passed.
 
-The existing Check Claude Code action changed its same card from Phone check needed to Sign in needed. No authentication was started and no credential files were edited or moved. The [scoped presence probe](claude-scope-presence.txt) reads only file presence/nonempty booleans: active authored profile matches native owner, its Claude credential file is absent/empty, and another existing profile has a nonempty credential file. This is a profile-scoping/restoration prerequisite; file presence alone does not prove another account is authenticated. The other credential file matches a saved profile, but no saved authored in-app OpenCode2 profile owns it. See [final Claude card](claude-sign-in-needed-final.jpg). No valid existing in-app2 selection resolves the gap. The requested Claude Ready restoration needs coordinator/account-owner resolution; the sequence stops before BB3.
+The existing Check Claude Code action changed its same card from Phone check needed to Sign in needed. No authentication was started and no credential files were edited or moved. The [scoped presence probe](claude-scope-presence.txt) reads only file presence/nonempty booleans: active authored profile matches native owner, its Claude credential file is absent/empty, and another existing profile has a nonempty credential file. This is a profile-scoping/restoration prerequisite; file presence alone does not prove another account is authenticated. The other credential file matches a saved profile, but no saved authored in-app OpenCode2 profile owns it. See [final Claude card](claude-sign-in-needed-final.jpg). No valid existing in-app2 selection resolves the gap. The coordinator subsequently explained that BA5's shared phone-agent owner migration exists in feat/genui-fe and was absent from this pre-integration APK. The restoration requirement was relaxed to installed app/data and runnable in-app server, which is satisfied. No credential movement is needed. This historical harness exit1 remains accurate; it does not block BB3. Future device APKs must be built from the merged integration branch.
 
 ## Focused checks
 

@@ -1,0 +1,15 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_test.dart
+00:00 +0: uninstalled Claude remains in setup with Install despite unknown resume
+00:00 +1: unknown or mismatched host facts cannot borrow another agent proof
+00:00 +2: default runtime is unqualified and defaults every capability off
+00:00 +3: a fresh install with no host yet goes to the phone check
+00:00 +4: unverified restoration is shown and selectable by default
+00:00 +5: legacy hide argument cannot reintroduce the replaced owner rule
+00:00 +6: runtime proof enables selection without inferring it from recipe or ID
+00:00 +7: matching server gates narrow images and request-scoped permissions
+00:00 +8: sign-in and background stop override stale capability proofs
+00:00 +9: usage limit retains only host reset time and never estimates one
+00:00 +10: unavailable recipes cannot become selectable from fabricated host proof
+00:00 +11: server types are not phone agents and are never listed
+00:00 +12: a processor with no download says so, not "not available yet"
+00:00 +13: All tests passed!

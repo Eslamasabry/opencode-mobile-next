@@ -54,7 +54,8 @@ class FormAnswerReceipts extends ChangeNotifier {
   }
 }
 
-/// One captured request uses the same card and receipt in the list and chat.
+/// One captured request uses the same card and receipt in the list and chat
+/// ([inList] under a Conversations row, placed as the list places it).
 Widget capturedFormRequestCard(
   BuildContext context,
   ConnectionController connection,
@@ -64,6 +65,7 @@ Widget capturedFormRequestCard(
   String? who,
   DateTime? since,
   bool secondary = false,
+  bool inList = false,
   VoidCallback? onAnswer,
 }) => ListenableBuilder(
   key: key,
@@ -99,6 +101,7 @@ Widget capturedFormRequestCard(
       onDetails:
           onAnswer ??
           () => unawaited(presentCapturedForm(context, connection, request)),
+      inList: inList,
     );
   },
 );
