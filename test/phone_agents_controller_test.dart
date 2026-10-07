@@ -581,6 +581,10 @@ Future<_World> _world(
       return api;
     },
     repositoryFactory: (api) => _OcRepo(api, script),
+    v2GatewayFactory: (_) {
+      final api = _OcApi(script);
+      return (gateway: api, operations: _OcRepo(api, script));
+    },
     eventStreamFactory:
         ({required api, required onEvent, required onStatus, onError}) =>
             _Stream(
@@ -1466,6 +1470,46 @@ void main() {
     expect(w.events.log.where((e) => e == 'host.start'), hasLength(1));
     c.dispose();
   });
+
+  test(
+    'BA5 protocol switch keeps host account and conversation rows',
+    () async {
+      final w = await ready(null);
+      final c = w.controller;
+      w.signIn.phase = AgentSignInPhase.signedIn;
+      await c.recheckAgentSignIn('claude');
+      final original = c.store.profiles.single;
+      final two = ServerProfile(
+        id: 'two',
+        name: 'OpenCode 2',
+        baseUrl: original.baseUrl,
+        flavor: ServerFlavor.v2,
+      );
+      await c.store.upsert(two);
+      final owner = c.agentSignInProfileId;
+      final hosts = w.hosts.length;
+      await c.connect(two);
+      await c.refreshAgentRows();
+      expect(c.agentSignInProfileId, owner);
+      expect(c.agentSignInState('claude')?.phase, AgentSignInPhase.signedIn);
+      expect(w.hosts.length, hosts);
+      expect(
+        c.chatFeed().items.any(
+          (row) => row.sourceId?.startsWith('paseo:') == true,
+        ),
+        isTrue,
+      );
+      await c.connect(original);
+      await c.refreshAgentRows();
+      expect(c.agentSignInProfileId, owner);
+      expect(w.hosts.length, hosts);
+      expect(
+        c.agentRows.firstWhere((row) => row.id == 'claude').chatSelectable,
+        isTrue,
+      );
+      c.dispose();
+    },
+  );
 
   test(
     'deletion closes auth, setup, host and feeds before ProfileStore',

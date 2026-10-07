@@ -192,6 +192,7 @@ extension _ConnectionControllerDeletionImpl on ConnectionController {
     // Retain these owners through a failed row/Keystore commit as well as
     // through queue preflight. ProfileStore sweeps them after the row commits.
     final retainedKeys = {
+      ...store.retainedPhoneAgentPreferenceKeys(profileId),
       'oc.automaticActivity.$profileId',
       AutomationPolicyController.keyFor(profileId),
       'oc.teamEngineDeleted.$profileId',

@@ -143,12 +143,12 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   ServerProfile? get _paProfile {
     final main = _self._connectedProfile ?? _self.profile;
     if (main == null || BuiltinLinux.managesServerUrl(main.baseUrl)) {
-      return main;
+      return main == null ? null : _self.store.phoneAgentOwnerProfile(main);
     }
     for (final side in _self._sides.values) {
       final profile = side._connectedProfile;
       if (profile != null && BuiltinLinux.managesServerUrl(profile.baseUrl)) {
-        return profile;
+        return _self.store.phoneAgentOwnerProfile(profile);
       }
     }
     return main;
@@ -767,6 +767,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (ok(open)) yield open!;
     final last = _self._ocLastUsed;
     if (ok(last)) yield last!;
+    // Switching the OpenCode protocol changes its last-used project, but
+    // these conversations still belong to the same Ubuntu agent home.
+    for (final row in _paSavedRows) {
+      if (ok(row.item.directory)) yield row.item.directory;
+    }
+    for (final directory in _paSources.keys) {
+      if (ok(directory)) yield directory;
+    }
     if (profile != null) {
       for (final recent in _self.store.recentLocations(profile.id)) {
         if (ok(recent.directory)) yield recent.directory!;
@@ -1402,6 +1410,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   /// Deletion hook: runs before ProfileStore removes the profile.
   Future<void> _paCloseForDeletion(String profileId) async {
+    if (_self.store.phoneAgentOwnerRetainedAfterRemoving(profileId)) return;
+    profileId = _self.store.phoneAgentOwnerId(profileId);
     if (_paHostProfile != profileId &&
         _paProfile?.id != profileId &&
         _paSignIns.isEmpty) {
