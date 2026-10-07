@@ -1,7 +1,7 @@
 # BA4 — evidence-backed agent capabilities
 
-Finish line: an exact recorded agent/runtime tuple grants only capabilities
-whose individual certification cells pass, and all other cases fail closed.
+Finish line: exact recorded agent/helper versions grant only capabilities whose
+individual certification cells pass, respecting any recorded architecture scope.
 Non-goal: creating certification evidence, signing in agents, or claiming that
 an installed binary is qualified. FQ1 owns the matrix and device qualification.
 
@@ -44,16 +44,23 @@ qualification fields supplied by the certifier:
   "helperVersion": "exact observed Paseo helper version",
   "architecture": "arm64",
   "cells": {
-    "resume": {"state": "pass", "evidence": "docs/qa/item/README.md#resume"}
+    "resume": {"state": "pass", "evidence": "docs/qa/item/README.md#resume"},
+    "images": {"state": "pass", "evidence": "docs/qa/item/README.md#photos"}
   }
 }
 ```
 
 The example fields are a shape, not evidence or real version pins. Both
-versions must be nonempty exact tokens; architecture is `arm64` or `x64`.
-Before granting any flag, all three must equal the selected descriptor's
-`recipe.version`, observed helper version, and observed host architecture.
-Unknown helper/architecture, absent recipe, version changes, unknown agents,
+versions must be nonempty exact tokens and equal the selected descriptor's
+`recipe.version` and observed connected helper version before any flag is granted.
+`architecture` is optional. When absent, protocol-level evidence applies on
+every architecture, including when the host architecture has not been observed.
+When present, it must be `arm64` or `x64` and match the observed host architecture;
+an unknown host architecture cannot satisfy a scoped row. Explicit null, empty,
+or invalid architecture values invalidate the row rather than widening its scope.
+This follows the coordinator's 2026-10-07 decision: Paseo protocol evidence from
+the x64 emulator may qualify arm64 phones unless the certifier limits its scope.
+Unknown helper, absent recipe, version changes, unknown agents,
 duplicate IDs (even one malformed duplicate), malformed cells and unrecognized
 cell names/states return no capabilities. `opencode1` is the sole explicit ID
 alias for catalog `opencode`; alias collisions also invalidate the record.
@@ -77,17 +84,24 @@ flag. `partial`, `untested`, `blocked`, `off`, `fail`, `n/a` and missing cells
 grant nothing; a passing install/version/smoke/cards cell grants none of these
 five capabilities. A passing subset remains a subset, not agent-wide
 certification. Evidence files remain owned and reviewed by FQ1.
+The `images` cell qualifies sending photos to an agent, including photo cards.
+Passing `cards` alone does not qualify images; the two cells are independent.
 
 ## Current state and frontend behavior
 
-The 2026-10-07 FQ1 matrix currently omits `agentVersion`, `helperVersion` and
-`architecture` on every row. Its bundled projection therefore grants **zero**
-capabilities, including rows with passing permission cells. Do not invent
-metadata from today's catalog or a release constant to activate old evidence.
+The coordinator's versioned 2026-10-07 matrix qualifies Claude Code `2.1.283`
+through an observed connected Paseo `0.9.2` helper for resume, models,
+permissions, images and cancel. Architecture is omitted, so these protocol
+capabilities also apply to arm64 phones. Other agents, including fx, remain
+unverified. A missing or different helper version still grants no capabilities.
+The bundled snapshot is regenerated from that reviewed matrix. The images
+citation is normalized to the same document and `#5` anchor, removing its prose
+annotation; evidence and pass state are unchanged. Do not invent metadata from
+the catalog or a release constant to activate other agents.
 
 Connection uses the observed connected helper version and host architecture;
-unknown observations are null. Replace the Claude identity-based resume
-override with this projection. Claude can continue using the existing
+unknown observations are null. The certification projection replaces the Claude
+identity-based resume override. An unqualified Claude can use the existing
 `AgentResumeNotice` UI when `resumeVerified` is false: "Can't reopen old chats"
 and "Starts a new chat", with explicit acknowledgement before a fresh chat.
 No raw technical error or credential appears in this contract. Missing evidence
@@ -98,8 +112,12 @@ or new persisted credential/data exists.
 
 Root runs `test/agent_certification_test.dart` under the shared test lock, plus
 affected connection tests after integration. It covers independent positive
-flags, exact pin/architecture matching, null metadata, version invalidation,
+flags, exact agent/helper matching, optional architecture and scoped matching,
+independent photos qualification, null metadata, version invalidation,
 non-pass and unsafe evidence, malformed/unknown records, duplicates and alias
-collisions, immutable inputs, bundled parity, current all-false projection and
-resume copy. A negative control that returns all-false from `capabilitiesFor`
+collisions, immutable inputs, bundled parity, Claude's actual bundled evidence
+on arm64/x64, other agents staying unverified and unverified resume copy.
+A negative control that returns all-false from `capabilitiesFor`
 must fail the independent positive projection test; restoring it must pass.
+Reverting optional architecture must fail the cross-CPU regression; disabling
+the images projection must fail the photos regression.

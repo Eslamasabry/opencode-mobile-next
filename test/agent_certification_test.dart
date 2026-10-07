@@ -55,22 +55,40 @@ void main() {
     expect(jsonDecode(agentCertificationBundledJson), isA<Map>());
   });
 
-  test(
-    'current evidence has no exact runtime metadata and grants no flags',
-    () {
-      for (final descriptor in AgentCatalog.builtIn.agents) {
-        for (final architecture in AgentArchitecture.values) {
-          expectClosed(
-            AgentCertificationMatrix.bundled.capabilitiesFor(
-              descriptor: descriptor,
-              architecture: architecture,
-              helperVersion: '0.9.2',
-            ),
-          );
-        }
-      }
-    },
-  );
+  test('bundled Claude evidence qualifies arm64 and x64 with exact helper', () {
+    expect(claude.recipe!.version, '2.1.283');
+    for (final architecture in AgentArchitecture.values) {
+      final proof = AgentCertificationMatrix.bundled.capabilitiesFor(
+        descriptor: claude,
+        architecture: architecture,
+        helperVersion: '0.9.2',
+      );
+      expect(proof.resumeVerified, isTrue);
+      expect(flags(proof), everyElement(isTrue));
+    }
+    for (final helperVersion in [null, '0.9.3']) {
+      expectClosed(
+        AgentCertificationMatrix.bundled.capabilitiesFor(
+          descriptor: claude,
+          architecture: AgentArchitecture.arm64,
+          helperVersion: helperVersion,
+        ),
+      );
+    }
+  });
+
+  test('bundled fx and other agents remain unverified on arm64', () {
+    for (final descriptor in AgentCatalog.builtIn.agents) {
+      if (descriptor.id == 'claude') continue;
+      expectClosed(
+        AgentCertificationMatrix.bundled.capabilitiesFor(
+          descriptor: descriptor,
+          architecture: AgentArchitecture.arm64,
+          helperVersion: '0.9.2',
+        ),
+      );
+    }
+  });
 
   test('each exact pass cell grants only its corresponding capability', () {
     final names = ['resume', 'models', 'permission', 'images', 'abort'];
@@ -90,6 +108,58 @@ void main() {
         cell: {'state': 'pass', 'evidence': 'docs/qa/example/README.md'},
     };
     expectClosed(project([installed]));
+  });
+
+  test('omitted architecture qualifies protocol capabilities across CPUs', () {
+    final row = record()..remove('architecture');
+    for (final architecture in [...AgentArchitecture.values, null]) {
+      expect(
+        flags(project([row], architecture: architecture)),
+        everyElement(isTrue),
+      );
+    }
+    expectClosed(project([row], helperVersion: null));
+    expectClosed(project([row], helperVersion: '0.9.3'));
+    for (final field in ['agentVersion', 'helperVersion']) {
+      expectClosed(project([Map.of(row)..remove(field)]));
+      expectClosed(project([Map.of(row)..[field] = 'different-version']));
+    }
+  });
+
+  test('present architecture scopes evidence to that CPU', () {
+    for (final certified in AgentArchitecture.values) {
+      final row = record()..['architecture'] = certified.name;
+      for (final observed in [...AgentArchitecture.values, null]) {
+        expect(
+          flags(project([row], architecture: observed)),
+          everyElement(observed == certified),
+        );
+      }
+    }
+  });
+
+  test('photos require their own passing images cell', () {
+    final row = record()..remove('architecture');
+    row['cells'] = <String, dynamic>{
+      'cards': {'state': 'pass', 'evidence': 'docs/qa/example/README.md'},
+    };
+    expectClosed(project([row]));
+    final cells = row['cells'] as Map;
+    for (final state in ['pass', 'partial', 'fail', 'off', 'untested']) {
+      cells['images'] = {
+        'state': state,
+        'evidence': 'docs/qa/example/README.md#photos',
+      };
+      expect(flags(project([row], architecture: AgentArchitecture.arm64)), [
+        false,
+        false,
+        false,
+        state == 'pass',
+        false,
+      ]);
+    }
+    cells['images'] = {'state': 'pass', 'evidence': null};
+    expectClosed(project([row]));
   });
 
   test(

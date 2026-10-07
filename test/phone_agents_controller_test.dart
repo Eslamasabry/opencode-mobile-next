@@ -772,15 +772,25 @@ void main() {
     },
   );
 
-  test('BA4 does not infer Claude resume from its provider name', () async {
+  test('BA4 gives arm64 Claude the connected helper certification', () async {
     final w = await ready(null);
     addTearDown(w.controller.dispose);
+    expect(await w.host.architecture(), AgentArchitecture.arm64);
+    await w.controller.refreshAgentRows();
     final proof = w.state.inspectedCapabilities['claude']!;
-    expect(proof.resumeVerified, isFalse);
-    expect(proof.modelList, isFalse);
-    expect(proof.permissions, isFalse);
-    expect(proof.images, isFalse);
-    expect(proof.cancel, isFalse);
+    expect(proof.resumeVerified, isTrue);
+    expect(proof.modelList, isTrue);
+    expect(proof.permissions, isTrue);
+    expect(proof.images, isTrue);
+    expect(proof.cancel, isTrue);
+    for (final entry in w.state.inspectedCapabilities.entries) {
+      if (entry.key == 'claude') continue;
+      expect(entry.value.resumeVerified, isFalse);
+      expect(entry.value.modelList, isFalse);
+      expect(entry.value.permissions, isFalse);
+      expect(entry.value.images, isFalse);
+      expect(entry.value.cancel, isFalse);
+    }
   });
 
   test(

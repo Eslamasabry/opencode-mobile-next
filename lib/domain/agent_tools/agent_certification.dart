@@ -3,7 +3,7 @@ import 'dart:convert';
 import '../agent_catalog.dart';
 import 'agent_certification_snapshot.dart';
 
-/// Qualification for an exact agent pin, helper version, and architecture.
+/// Qualification for exact agent/helper versions, optionally scoped to a CPU.
 /// Installation, identity, and non-pass cells never grant runtime capabilities.
 final class AgentCertificationMatrix {
   AgentCertificationMatrix._(this._records);
@@ -41,11 +41,11 @@ final class AgentCertificationMatrix {
   }) {
     final record = _records[_canonicalId(descriptor.id)];
     if (record == null ||
-        architecture == null ||
         helperVersion == null ||
         record.agentVersion != descriptor.recipe?.version ||
         record.helperVersion != helperVersion ||
-        record.architecture != architecture.name) {
+        (record.architecture != null &&
+            record.architecture != architecture?.name)) {
       return const AgentCapabilities();
     }
     return AgentCapabilities(
@@ -71,7 +71,7 @@ final class _CertificationRecord {
 
   final String agentVersion;
   final String helperVersion;
-  final String architecture;
+  final String? architecture;
   final Set<String> passed;
 
   static const _cells = {
@@ -106,7 +106,10 @@ final class _CertificationRecord {
     final cells = row['cells'];
     if (!_version(agentVersion) ||
         !_version(helperVersion) ||
-        !AgentArchitecture.values.any((value) => value.name == architecture) ||
+        (row.containsKey('architecture') &&
+            !AgentArchitecture.values.any(
+              (value) => value.name == architecture,
+            )) ||
         cells is! Map) {
       return null;
     }
@@ -129,7 +132,7 @@ final class _CertificationRecord {
     return _CertificationRecord(
       agentVersion: agentVersion as String,
       helperVersion: helperVersion as String,
-      architecture: architecture as String,
+      architecture: architecture as String?,
       passed: Set.unmodifiable(passed),
     );
   }
