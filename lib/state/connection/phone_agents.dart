@@ -428,7 +428,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
             capabilities: _paHostCapabilities(descriptor, arch),
           );
           if (runtime.installed &&
-              descriptor.signInMethod != AgentSignInMethod.none) {
+              descriptor.signInMethod != AgentSignInMethod.none &&
+              (host is PhoneAgentAuthPort || runtime.signInPhase == null)) {
             final auth = await _paProbeSignIn(host, descriptor.id);
             if (_self._disposed || _paHost != host || _paHostProfile != owner) {
               return;
