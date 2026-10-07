@@ -116,6 +116,22 @@ class DeviceReceiptTest(unittest.TestCase):
             output = '\n'.join('INSTRUMENTATION_STATUS: bd9NativeCheck=' + name + ':PASS' for name in names)
             self.assertEqual(smoke.failure_diagnosis(output), {'native_checks': []})
 
+    def test_fixed_flutter_phases_are_reportable_without_raw_details(self):
+        phases = ('fixture', 'preferences', 'bootstrap', 'conversation', 'screenshot',
+                  'cleanup', 'complete', 'initializing', 'no_tests', 'multiple_tests')
+        for phase in phases:
+            category = 'flutter_' + phase
+            output = ('synthetic-provider-detail\n'
+                      'INSTRUMENTATION_RESULT: bd9Failure=' + category)
+            self.assertEqual(smoke.failure_diagnosis(output),
+                             {'native_checks': [], 'failure_code': category})
+            with self.assertRaises(smoke.SmokeFailure):
+                smoke.parse_instrumentation(output)
+        for category in ('flutter_unknown_phase', 'flutter_fixture synthetic-provider-detail',
+                         'flutter_bootstrap:synthetic-provider-detail'):
+            self.assertEqual(smoke.failure_diagnosis(
+                'INSTRUMENTATION_RESULT: bd9Failure=' + category), {'native_checks': []})
+
     def test_restore_not_called_without_acquiring_lock(self):
         with tempfile.TemporaryDirectory() as directory:
             args = argparse.Namespace(output=Path(directory), apk=Path('missing'), test_apk=Path('missing'),
