@@ -459,6 +459,12 @@ void main() {
     );
     await tester.pump();
     expect(find.text('Run a shell command'), findsOneWidget);
+    // Allow, then Undo inside the window: nothing is sent.
+    await tester.tap(find.byKey(const Key('permission-card-allow')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('permission-card-undo')));
+    await tester.pump(const Duration(seconds: 4));
+    expect(w.servers[_termux]!.replies, isEmpty);
     await tester.tap(find.byKey(const Key('permission-card-allow')));
     // Held for its Undo window, then sent to Termux, not this server.
     await tester.pump(const Duration(seconds: 4));

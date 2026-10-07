@@ -159,6 +159,9 @@ class ConnectionChatsHost implements ChatsHost {
           permission: permission,
           who: item.agentLabel ?? 'OpenCode',
           answered: answers.answerFor(permission.id),
+          // Held for its Undo window: collapsed, with Undo, as in the chat.
+          heldLabel: owner.delayedAnswers.heldLabel(permission.id),
+          onUndo: () => owner.delayedAnswers.undo(permission.id),
           onAllow: () => answer('once'),
           onReject: () => answer('reject'),
           alwaysAllow: permissionAlwaysStep(

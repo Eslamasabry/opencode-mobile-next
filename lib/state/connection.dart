@@ -765,6 +765,8 @@ class ConnectionController extends ChangeNotifier
     _feedDispose();
     _paShutdown();
     _sideShutdown();
+    // A held answer is sent, not lost.
+    delayedAnswers.dispose();
     _savedPrompts?.dispose();
     _savedPrompts = null;
     store.changes.removeListener(_profilesSaved);
