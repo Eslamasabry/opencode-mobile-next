@@ -122,6 +122,32 @@ void main() {
     expect(find.text('Git'), findsNWidgets(2));
   });
 
+  clocked('Done tags an idle row that finished unseen; running wins', (
+    tester,
+  ) async {
+    final at = DateTime(2026, 9, 26, 10);
+    await _pump(
+      tester,
+      FakeChatsHost(
+        FakeChatFeedSource(
+          items: [
+            chat('a', 'Seen chat', at: at),
+            chat('b', 'Finished chat', at: at, finishedUnseen: true),
+            chat(
+              'c',
+              'Busy chat',
+              at: at,
+              status: ChatStatus.running,
+              finishedUnseen: true,
+            ),
+          ],
+        ),
+      ),
+    );
+    expect(find.text('Done'), findsOneWidget);
+    expect(find.text('Running'), findsWidgets);
+  });
+
   clocked('the Needs you chip shows its count and filters', (tester) async {
     await _pump(tester, FakeChatsHost(_source()));
     expect(find.text('Needs you · 1'), findsOneWidget);

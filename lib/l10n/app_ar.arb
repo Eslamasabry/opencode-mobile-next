@@ -5058,6 +5058,7 @@
   "chatsHomeNeedsYou": "بانتظارك",
   "chatsHomeNeedsYouCount": "بانتظارك · {count}",
   "chatsHomeRunning": "قيد العمل",
+  "chatsHomeDone": "تم",
   "chatsHomeToday": "اليوم",
   "chatsHomeEarlier": "سابقًا",
   "chatsHomeOnlyProject": "تُعرض المحادثات في {project} فقط. لا يستطيع هذا الخادم سرد كل المشاريع.",

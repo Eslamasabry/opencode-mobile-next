@@ -554,6 +554,10 @@ class _ChatsHomeScreenState extends ConsumerState<ChatsHomeScreen> {
               label: l10n.chatsHomeRunning,
               tone: KitStatusTagTone.running,
             ),
+            ChatStatus.idle when item.finishedUnseen => KitStatusTag(
+              label: l10n.chatsHomeDone,
+              tone: KitStatusTagTone.done,
+            ),
             _ => null,
           };
     return KitFeedItem(

@@ -26859,6 +26859,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatsHomeRunning => 'Running';
 
   @override
+  String get chatsHomeDone => 'Done';
+
+  @override
   String get chatsHomeToday => 'Today';
 
   @override

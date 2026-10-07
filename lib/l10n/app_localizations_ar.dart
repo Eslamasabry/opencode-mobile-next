@@ -26982,6 +26982,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatsHomeRunning => 'قيد العمل';
 
   @override
+  String get chatsHomeDone => 'تم';
+
+  @override
   String get chatsHomeToday => 'اليوم';
 
   @override
