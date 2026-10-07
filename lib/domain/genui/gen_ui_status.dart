@@ -31,8 +31,12 @@ final class GenUiSetupOff extends GenUiSetupStatus {
 }
 
 final class GenUiSetupUnavailable extends GenUiSetupStatus {
-  const GenUiSetupUnavailable({required this.reason});
+  const GenUiSetupUnavailable({required this.reason, this.affected = const []});
   final GenUiSetupProblem reason;
+
+  /// The agents [reason] is about; empty when it is about none in
+  /// particular (the server, or no agent here at all).
+  final List<GenUiAgent> affected;
 }
 
 final class GenUiSetupInstalling extends GenUiSetupStatus {
@@ -47,11 +51,20 @@ final class GenUiSetupOn extends GenUiSetupStatus {
 }
 
 final class GenUiSetupPartial extends GenUiSetupStatus {
-  GenUiSetupPartial({required List<GenUiAgent> agents, required this.reason})
-    : agents = List.unmodifiable(agents);
+  GenUiSetupPartial({
+    required List<GenUiAgent> agents,
+    required this.reason,
+    List<GenUiAgent> affected = const [],
+  }) : agents = List.unmodifiable(agents),
+       affected = List.unmodifiable(affected);
+
+  /// The agents cards are on for.
   @override
   final List<GenUiAgent> agents;
   final GenUiSetupProblem reason;
+
+  /// The agents [reason] is about: cards are not on for them.
+  final List<GenUiAgent> affected;
 }
 
 final class GenUiSetupRestartRequired extends GenUiSetupStatus {
@@ -62,6 +75,10 @@ final class GenUiSetupRestartRequired extends GenUiSetupStatus {
 }
 
 final class GenUiSetupFailed extends GenUiSetupStatus {
-  const GenUiSetupFailed({required this.reason});
+  const GenUiSetupFailed({required this.reason, this.affected = const []});
   final GenUiSetupProblem reason;
+
+  /// The agents [reason] is about; empty when it is about none in
+  /// particular.
+  final List<GenUiAgent> affected;
 }
