@@ -95,6 +95,9 @@ jobs:
           test -n "$base" || { echo 'A full manual gate needs commit_base' >&2; exit 64; }
           tool/qa/check_commits.sh "$base" "$head"
 
+      - name: Test APK size and startup budget scripts
+        run: python3 -m unittest discover -s tool/release -p 'test_*.py'
+
       - name: Verify release metadata
         run: flutter test --no-pub --concurrency=1 test/release_metadata_test.dart
 
@@ -183,6 +186,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
       # Native harness tests compile Kotlin and run it on the JVM.
       - name: Set up Java 17
@@ -250,6 +255,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Set up Java 17
         uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
@@ -321,11 +328,39 @@ jobs:
             > android/key.properties
           chmod 600 android/key.properties
 
+      - name: Read previous published release APK size
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch --force --tags origin
+          baseline="$(git describe --tags --match 'v*' --abbrev=0 HEAD^)"
+          echo "APK_BASELINE_TAG=$baseline" >> "$GITHUB_ENV"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$baseline" > "$RUNNER_TEMP/apk-baseline.json"
+
       - name: Compile test-signed release APK
         run: flutter build apk --release
 
       - name: Verify release artifact exists
         run: test -s build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Gate APK size growth
+        run: |
+          python3 tool/release/check_apk_size.py \
+            --apk build/app/outputs/flutter-apk/app-release.apk \
+            --baseline-release-json "$RUNNER_TEMP/apk-baseline.json" \
+            --baseline-tag "$APK_BASELINE_TAG" --max-growth-mib 5 \
+            --output build/release-metrics/apk-size.json
+          cat build/release-metrics/apk-size.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload APK size measurements
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: apk-size-${{ github.sha }}
+          path: build/release-metrics/apk-size.json
+          if-no-files-found: ignore
+          retention-days: 90
 
       - name: Upload test-signed APK
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
