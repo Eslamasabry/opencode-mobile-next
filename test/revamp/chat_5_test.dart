@@ -16,6 +16,7 @@ import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/api2/gateway_mappers.dart'
     show api2ServerCapabilities;
+import 'package:opencode_mobile/domain/form_request.dart' show Api2FormInfo;
 import 'package:opencode_mobile/state/automation_policy.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
@@ -32,7 +33,20 @@ class _Api extends OpenCodeApi with CompleteMessageHistory {
 
   final bool forms;
   final replies = <(String, String)>[];
+  final pendingFormInventory = <String, Api2FormInfo>{};
   bool failReplies = false;
+
+  void publishForm(ConnectionController controller, EventEnvelope event) {
+    final form = Api2FormInfo.fromJson(
+      Map<String, dynamic>.from(event.properties['form'] as Map),
+    )!;
+    pendingFormInventory[form.id] = form;
+    controller.handleEventForTesting(event);
+  }
+
+  @override
+  Future<List<Api2FormInfo>> pendingForms() async =>
+      pendingFormInventory.values.toList();
 
   @override
   ServerCapabilities get capabilities =>
@@ -65,7 +79,9 @@ class _Api extends OpenCodeApi with CompleteMessageHistory {
     String sessionID,
     String formID,
     Map<String, dynamic> answer,
-  ) async {}
+  ) async {
+    pendingFormInventory.remove(formID);
+  }
 }
 
 class _Questions extends ProductRepository {
@@ -103,6 +119,7 @@ Future<ConnectionController> _controller(
   await store.load();
   final controller = ConnectionController(store)
     ..api = api
+    ..directory = '/work/app'
     ..status = StreamStatus.connected;
   if (questions != null) controller.repository = questions;
   return controller;
@@ -278,11 +295,12 @@ void main() {
 
   testWidgets('an OpenCode 2 form is the same card, and its answers survive '
       'closing and a restart', (tester) async {
-    final conn = await _controller(_Api(forms: true));
+    final api = _Api(forms: true);
+    final conn = await _controller(api);
     addTearDown(conn.dispose);
     addTearDown(debugForgetFormAnswers);
     await _pumpChat(tester, conn);
-    conn.handleEventForTesting(_form());
+    api.publishForm(conn, _form());
     await tester.pumpAndSettle();
 
     final card = _card(tester);

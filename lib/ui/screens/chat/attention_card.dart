@@ -651,37 +651,20 @@ class _FormRequestCardState extends State<_FormRequestCard> {
   @override
   Widget build(BuildContext context) => _RequestSlot(child: _content(context));
 
-  Widget _content(BuildContext context) => ListenableBuilder(
-    listenable: FormAnswerReceipts.instance,
-    builder: (context, _) {
-      final l10n = _chatL10n(context);
-      final form = widget.form;
-      final title = form.title ?? l10n.chatUiInputRequested;
-      final sent = FormAnswerReceipts.instance.receiptFor(form.id);
-      final sending = sent != null && !sent.failed;
-      return KitRequestCard.ask(
-        kind: KitRequestKind.form,
-        title: title,
-        who: _requestWho(context),
-        reason: KitNeedsYouReason.decision,
-        ifIgnored: _requestIfIgnored(context, 0),
-        announcement: l10n.chatUiQuestionLabel(title),
-        since: _seen,
-        detail: l10n.chatUiQuestionCount(form.fields.length),
-        phase: sending ? KitRequestPhase.sending : KitRequestPhase.waiting,
-        answer: sending ? l10n.kitRequestSendAnswers : null,
-        receipt: sent == null
-            ? null
-            : sent.failed
-            ? KitReceipt(state: KitReceiptState.refused, reason: sent.error)
-            : KitReceipt(state: KitReceiptState.sending, since: sent.since),
-        answers: KitRequestInSheet(
-          key: ValueKey('form-request-answer-${form.id}'),
-        ),
-        onDetails: widget.onAnswer,
-      );
-    },
-  );
+  Widget _content(BuildContext context) {
+    final connection = _requestConnection(context);
+    final request = connection?.formRequestForForm(widget.form);
+    if (connection == null || request == null) return const SizedBox.shrink();
+    return capturedFormRequestCard(
+      context,
+      connection,
+      request,
+      answerKey: ValueKey('form-request-answer-${widget.form.id}'),
+      who: _requestWho(context),
+      since: _seen,
+      onAnswer: widget.onAnswer,
+    );
+  }
 }
 
 /// A single-line, self-hiding note above the composer for composer-local

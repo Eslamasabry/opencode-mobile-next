@@ -9,6 +9,7 @@ import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
+import 'package:opencode_mobile/domain/form_request.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
@@ -23,6 +24,8 @@ import 'package:flutter/material.dart';
 
 import '../tool/capture/fixtures.dart' show captureTheme;
 import 'package:shared_preferences/shared_preferences.dart';
+
+part 'support/feed_forms_tests.dart';
 
 // The one Conversations list over every connection on this phone (see
 // docs/design/all-connections-one-list-2026-10-06.md): the in-app Ubuntu as
@@ -278,6 +281,8 @@ Future<_World> _world(
   String main = 'ubuntu',
   PhoneAgentHostPort Function(ServerProfile profile)? agents,
   void Function(Map<String, _Server> servers)? before,
+  _Server Function()? serverFactory,
+  _Api Function(_Server server, String baseUrl)? apiFactory,
 }) async {
   SharedPreferences.setMockInitialValues({
     'oc.profiles': jsonEncode([
@@ -290,14 +295,19 @@ Future<_World> _world(
   final prefs = await SharedPreferences.getInstance();
   final store = ProfileStore(prefs: prefs);
   await store.load();
-  final servers = {_ubuntu: _Server(), _termux: _Server(), _vps: _Server()};
+  final servers = {
+    for (final url in [_ubuntu, _termux, _vps])
+      url: serverFactory?.call() ?? _Server(),
+  };
   servers[_ubuntu]!.global = [_row('u1', '/root/projects/app', updated: 9)];
   servers[_termux]!.global = [_row('t1', '/data/home/site', updated: 7)];
   servers[_vps]!.global = [_row('v1', '/srv/api', updated: 3)];
   before?.call(servers);
   final controller = ConnectionController(
     store,
-    apiFactory: (profile) => _Api(servers[profile.baseUrl]!, profile.baseUrl),
+    apiFactory: (profile) =>
+        apiFactory?.call(servers[profile.baseUrl]!, profile.baseUrl) ??
+        _Api(servers[profile.baseUrl]!, profile.baseUrl),
     repositoryFactory: (api) => _Repo(api as _Api),
     eventStreamFactory:
         ({required api, required onEvent, required onStatus, onError}) =>
@@ -332,6 +342,7 @@ Future<_World> _world(
 
 void main() {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
+  _feedFormsTests();
   tearDown(() => debugPlatformCapabilities = null);
   setUpAll(() => HttpOverrides.global = _RealHttpOverrides());
   tearDownAll(() => HttpOverrides.global = null);

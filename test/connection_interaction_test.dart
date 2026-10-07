@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
+import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/api2/models.dart';
 import 'package:opencode_mobile/background/live_background.dart';
 import 'package:opencode_mobile/state/connection.dart';
@@ -128,12 +130,41 @@ class _StubRepository implements ProductRepository {
 }
 
 Future<ConnectionController> _controller(_V2InteractionApi api) async {
-  SharedPreferences.setMockInitialValues(const {});
+  SharedPreferences.setMockInitialValues(const {
+    'oc.profiles':
+        '[{"id":"interaction","name":"Test server","baseUrl":"http://127.0.0.1:1"}]',
+    'oc.activeProfile': 'interaction',
+  });
   final prefs = await SharedPreferences.getInstance();
-  final controller = ConnectionController(ProfileStore(prefs: prefs))
+  final store = ProfileStore(prefs: prefs);
+  await store.load();
+  api.setLocation(directory: '/work');
+  final controller = ConnectionController(store)
     ..api = api
+    ..directory = '/work'
+    ..status = StreamStatus.connected
     ..repository = _StubRepository();
   return controller;
+}
+
+void _publishForm(
+  ConnectionController controller,
+  _V2InteractionApi api,
+  String formID,
+  String sessionID,
+) {
+  final properties = _formJson(formID, sessionID);
+  final form = Api2FormInfo.fromJson(
+    properties['form'] as Map<String, dynamic>,
+  )!;
+  api.pendingFormsResult = [
+    for (final current in api.pendingFormsResult)
+      if (current.id != formID || current.sessionID != sessionID) current,
+    form,
+  ];
+  controller.handleEventForTesting(
+    EventEnvelope(type: 'form.v2.created', properties: properties),
+  );
 }
 
 void _enqueue(
@@ -161,7 +192,13 @@ void _enqueue(
 }
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  final binding = TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() {
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+      (_) async => null,
+    );
+  });
 
   group('form state', () {
     test(
@@ -171,12 +208,7 @@ void main() {
         final controller = await _controller(api);
         addTearDown(controller.dispose);
 
-        controller.handleEventForTesting(
-          EventEnvelope(
-            type: 'form.v2.created',
-            properties: _formJson('frm_1', 'ses_1'),
-          ),
-        );
+        _publishForm(controller, api, 'frm_1', 'ses_1');
         expect(controller.forms, contains('frm_1'));
         expect(controller.formForSession('ses_1')?.id, 'frm_1');
         expect(controller.formForSession('ses_other'), isNull);
@@ -216,12 +248,7 @@ void main() {
       final api = _V2InteractionApi();
       final controller = await _controller(api);
       addTearDown(controller.dispose);
-      controller.handleEventForTesting(
-        EventEnvelope(
-          type: 'form.v2.created',
-          properties: _formJson('frm_1', 'ses_1'),
-        ),
-      );
+      _publishForm(controller, api, 'frm_1', 'ses_1');
 
       await controller.replyForm('frm_1', {'env': 'prod'});
       final reply = api.formReplies.single;
@@ -240,12 +267,7 @@ void main() {
         );
       final controller = await _controller(api);
       addTearDown(controller.dispose);
-      controller.handleEventForTesting(
-        EventEnvelope(
-          type: 'form.v2.created',
-          properties: _formJson('frm_1', 'ses_1'),
-        ),
-      );
+      _publishForm(controller, api, 'frm_1', 'ses_1');
 
       await expectLater(
         controller.replyForm('frm_1', {'env': 'prod'}),
@@ -263,12 +285,7 @@ void main() {
         );
       final controller = await _controller(api);
       addTearDown(controller.dispose);
-      controller.handleEventForTesting(
-        EventEnvelope(
-          type: 'form.v2.created',
-          properties: _formJson('frm_1', 'ses_1'),
-        ),
-      );
+      _publishForm(controller, api, 'frm_1', 'ses_1');
 
       await expectLater(
         controller.replyForm('frm_1', {'env': 'nope'}),
@@ -281,12 +298,7 @@ void main() {
       final api = _V2InteractionApi();
       final controller = await _controller(api);
       addTearDown(controller.dispose);
-      controller.handleEventForTesting(
-        EventEnvelope(
-          type: 'form.v2.created',
-          properties: _formJson('frm_1', 'ses_1'),
-        ),
-      );
+      _publishForm(controller, api, 'frm_1', 'ses_1');
 
       await controller.cancelForm('frm_1');
       expect(api.formCancels.single, ('ses_1', 'frm_1'));
@@ -297,12 +309,7 @@ void main() {
       final api = _V2InteractionApi();
       final controller = await _controller(api);
       addTearDown(controller.dispose);
-      controller.handleEventForTesting(
-        EventEnvelope(
-          type: 'form.v2.created',
-          properties: _formJson('frm_1', 'ses_1'),
-        ),
-      );
+      _publishForm(controller, api, 'frm_1', 'ses_1');
       _enqueue(controller);
       controller.handleEventForTesting(
         EventEnvelope(
