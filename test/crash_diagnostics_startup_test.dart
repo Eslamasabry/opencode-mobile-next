@@ -6,6 +6,44 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/diagnostics/app_diagnostics.dart';
 import 'package:opencode_mobile/diagnostics/crash_diagnostics.dart';
 
+class _ManualStartupTiming implements CrashDiagnosticsStartupTiming {
+  @override
+  Duration elapsed = Duration.zero;
+  Duration? budget;
+  final _deadline = Completer<void>();
+
+  void advance(Duration duration) {
+    elapsed += duration;
+    final limit = budget;
+    if (limit != null && elapsed >= limit && !_deadline.isCompleted) {
+      _deadline.complete();
+    }
+  }
+
+  @override
+  Future<CrashDiagnosticsController?> timeout(
+    Future<CrashDiagnosticsController?> pending,
+    Duration budget, {
+    required CrashDiagnosticsController? Function() onTimeout,
+  }) {
+    this.budget = budget;
+    advance(Duration.zero);
+    final result = Completer<CrashDiagnosticsController?>();
+    pending.then(
+      (value) {
+        if (!result.isCompleted) result.complete(value);
+      },
+      onError: (Object error, StackTrace stack) {
+        if (!result.isCompleted) result.completeError(error, stack);
+      },
+    );
+    _deadline.future.then((_) {
+      if (!result.isCompleted) result.complete(onTimeout());
+    });
+    return result.future;
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const channel = MethodChannel('oc/crash_diagnostics');
@@ -13,10 +51,12 @@ void main() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   late AppDiagnosticsController diagnostics;
   late Directory directory;
+  late _ManualStartupTiming timing;
 
   setUp(() {
     CrashDiagnosticsStartup.resetForTesting();
     diagnostics = AppDiagnosticsController();
+    timing = _ManualStartupTiming();
     directory = Directory.systemTemp.createTempSync('crash-startup-test-');
   });
 
@@ -27,15 +67,37 @@ void main() {
     directory.deleteSync(recursive: true);
   });
 
-  test('blocking reply beyond the launch budget remains unavailable', () async {
+  testWidgets('production default still expires at 300 ms', (tester) async {
+    final reply = Completer<Object?>();
+    messenger.setMockMethodCallHandler(channel, (_) => reply.future);
+    var completed = false;
+    final opened = CrashDiagnosticsStartup.start(
+      diagnostics,
+      nativeChannel: channel,
+    );
+    unawaited(opened.then((_) => completed = true));
+    await tester.pump(const Duration(milliseconds: 299));
+    expect(completed, isFalse);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(completed, isTrue);
+    expect(await opened, isNull);
+    expect(CrashDiagnosticsStartup.current, isNull);
+    expect(directory.listSync(), isEmpty);
+  });
+
+  test('reply beyond the elapsed launch budget remains unavailable', () async {
     messenger.setMockMethodCallHandler(channel, (_) async {
-      sleep(
+      timing.advance(
         CrashDiagnosticsStartup.launchBudget + const Duration(milliseconds: 50),
       );
       return {'directory': directory.path};
     });
     expect(
-      await CrashDiagnosticsStartup.start(diagnostics, nativeChannel: channel),
+      await CrashDiagnosticsStartup.start(
+        diagnostics,
+        nativeChannel: channel,
+        timing: timing,
+      ),
       isNull,
     );
     expect(CrashDiagnosticsStartup.current, isNull);
@@ -51,8 +113,16 @@ void main() {
       final opened = CrashDiagnosticsStartup.start(
         diagnostics,
         nativeChannel: channel,
+        timing: timing,
       );
-      expect(await opened.timeout(const Duration(seconds: 2)), isNull);
+      var completed = false;
+      unawaited(opened.then((_) => completed = true));
+      expect(timing.budget, const Duration(milliseconds: 300));
+      timing.advance(const Duration(milliseconds: 299));
+      await Future<void>.delayed(Duration.zero);
+      expect(completed, isFalse);
+      timing.advance(const Duration(milliseconds: 1));
+      expect(await opened, isNull);
       expect(await readyBeforeFirstFrame, isNull);
       expect(await CrashDiagnosticsStartup.ready, isNull);
       expect(CrashDiagnosticsStartup.current, isNull);
@@ -77,10 +147,13 @@ void main() {
     consent.writeAsStringSync('$epoch');
     final reply = Completer<Object?>();
     messenger.setMockMethodCallHandler(channel, (_) => reply.future);
-    expect(
-      await CrashDiagnosticsStartup.start(diagnostics, nativeChannel: channel),
-      isNull,
+    final opened = CrashDiagnosticsStartup.start(
+      diagnostics,
+      nativeChannel: channel,
+      timing: timing,
     );
+    timing.advance(CrashDiagnosticsStartup.launchBudget);
+    expect(await opened, isNull);
     reply.complete({'directory': directory.path});
     await Future<void>.delayed(Duration.zero);
     expect(CrashDiagnosticsStartup.current, isNull);
@@ -102,6 +175,7 @@ void main() {
       final controller = await CrashDiagnosticsStartup.start(
         diagnostics,
         nativeChannel: channel,
+        timing: timing,
       );
       expect(controller, isNotNull);
       expect(controller!.enabled, isTrue);
@@ -131,6 +205,7 @@ void main() {
       final controller = await CrashDiagnosticsStartup.start(
         diagnostics,
         nativeChannel: channel,
+        timing: timing,
       );
       expect(controller, isNotNull);
       expect(controller!.savedCount, 2);
@@ -171,6 +246,7 @@ void main() {
       final controller = await CrashDiagnosticsStartup.start(
         diagnostics,
         nativeChannel: channel,
+        timing: timing,
       );
       expect(controller, isNotNull);
       expect(controller!.clear(), isTrue);

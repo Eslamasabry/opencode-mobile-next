@@ -34,6 +34,10 @@ FAILURE_CODES = frozenset((
     'flutter_socket_failure', 'flutter_bad_state', 'flutter_expectation',
     'flutter_type_failure', 'flutter_null_failure', 'flutter_initialization_failure',
     'flutter_assertion', 'flutter_timeout', 'export_screenshot',
+    'flutter_fixture', 'flutter_preferences', 'flutter_bootstrap',
+    'flutter_conversation', 'flutter_screenshot', 'flutter_cleanup',
+    'flutter_complete', 'flutter_initializing', 'flutter_no_tests',
+    'flutter_multiple_tests',
 ))
 
 

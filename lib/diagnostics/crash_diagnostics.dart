@@ -306,6 +306,32 @@ class CrashDiagnosticsController extends ChangeNotifier {
   }
 }
 
+/// Tests control elapsed time and deadline delivery independently of host load.
+@visibleForTesting
+abstract interface class CrashDiagnosticsStartupTiming {
+  Duration get elapsed;
+
+  Future<CrashDiagnosticsController?> timeout(
+    Future<CrashDiagnosticsController?> pending,
+    Duration budget, {
+    required CrashDiagnosticsController? Function() onTimeout,
+  });
+}
+
+class _MonotonicStartupTiming implements CrashDiagnosticsStartupTiming {
+  final _stopwatch = Stopwatch()..start();
+
+  @override
+  Duration get elapsed => _stopwatch.elapsed;
+
+  @override
+  Future<CrashDiagnosticsController?> timeout(
+    Future<CrashDiagnosticsController?> pending,
+    Duration budget, {
+    required CrashDiagnosticsController? Function() onTimeout,
+  }) => pending.timeout(budget, onTimeout: onTimeout);
+}
+
 class CrashDiagnosticsStartup {
   static const launchBudget = Duration(milliseconds: 300);
   static const _channel = MethodChannel('oc/crash_diagnostics');
@@ -332,10 +358,11 @@ class CrashDiagnosticsStartup {
   static Future<CrashDiagnosticsController?> start(
     AppDiagnosticsController diagnostics, {
     @visibleForTesting MethodChannel? nativeChannel,
+    @visibleForTesting CrashDiagnosticsStartupTiming? timing,
   }) {
     if (_opening != null) return _opening!;
     final readiness = _readiness;
-    return _opening = _startBounded(diagnostics, nativeChannel).then((
+    return _opening = _startBounded(diagnostics, nativeChannel, timing).then((
       controller,
     ) {
       if (!readiness.isCompleted) readiness.complete(controller);
@@ -346,12 +373,13 @@ class CrashDiagnosticsStartup {
   static Future<CrashDiagnosticsController?> _startBounded(
     AppDiagnosticsController diagnostics,
     MethodChannel? nativeChannel,
+    CrashDiagnosticsStartupTiming? timing,
   ) {
     var expired = false;
     final generation = _generation;
-    final elapsed = Stopwatch()..start();
+    final clock = timing ?? _MonotonicStartupTiming();
     bool canOpen() =>
-        !expired && elapsed.elapsed < launchBudget && generation == _generation;
+        !expired && clock.elapsed < launchBudget && generation == _generation;
     final pending = _open(diagnostics, nativeChannel, canOpen).then((
       controller,
     ) {
@@ -378,7 +406,8 @@ class CrashDiagnosticsStartup {
       });
       return controller;
     });
-    return pending.timeout(
+    return clock.timeout(
+      pending,
       launchBudget,
       onTimeout: () {
         expired = true;

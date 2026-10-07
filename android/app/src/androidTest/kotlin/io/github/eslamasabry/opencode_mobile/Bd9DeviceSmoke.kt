@@ -52,8 +52,7 @@ class Bd9DeviceSmoke : Instrumentation() {
             }
             stage = "flutter_results"
             val results = IntegrationTestPlugin.testResults.get(RESULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            stage = if (results.values.any { it.contains("fixture_conversation_not_visible") })
-                "conversation_not_visible" else "flutter_assertion"
+            stage = failureStage(results)
             check(results.size == 1 && results.values.all { it == "success" })
             report.putString("bd9FlutterTests", results.size.toString())
             report.putString("bd9Flutter", "PASS")
@@ -70,6 +69,35 @@ class Bd9DeviceSmoke : Instrumentation() {
             report.putString("bd9Result", if (passed) "PASS" else "FAIL")
             finish(if (passed) Activity.RESULT_OK else Activity.RESULT_CANCELED, report)
         }
+    }
+
+    private fun failureStage(results: Map<String, String>): String {
+        // Inspect known markers only in memory; never emit raw failure details.
+        if (results.isEmpty()) return "flutter_no_tests"
+        if (results.size != 1) return "flutter_multiple_tests"
+        val markers = listOf(
+            "bd9_phase_initializing:" to "flutter_initializing",
+            "bd9_phase_fixture:" to "flutter_fixture",
+            "bd9_phase_preferences:" to "flutter_preferences",
+            "bd9_phase_bootstrap:" to "flutter_bootstrap",
+            "bd9_phase_conversation:" to "flutter_conversation",
+            "bd9_phase_screenshot:" to "flutter_screenshot",
+            "bd9_phase_cleanup:" to "flutter_cleanup",
+            "bd9_phase_complete:" to "flutter_complete",
+            "fixture_conversation_not_visible" to "conversation_not_visible",
+            "MissingPluginException" to "flutter_missing_plugin",
+            "PlatformException" to "flutter_platform_failure",
+            "SocketException" to "flutter_socket_failure",
+            "Bad state:" to "flutter_bad_state",
+            "TestFailure" to "flutter_expectation",
+            "Null check operator used" to "flutter_null_failure",
+            "LateInitializationError" to "flutter_initialization_failure",
+            "TypeError" to "flutter_type_failure",
+            "is not a subtype" to "flutter_type_failure",
+        )
+        return markers.firstOrNull { (marker, _) ->
+            results.values.any { it.contains(marker) }
+        }?.second ?: "flutter_assertion"
     }
 
     private fun exportScreenshot() {

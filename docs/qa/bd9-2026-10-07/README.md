@@ -235,3 +235,83 @@ launchable. That handoff is still incomplete: the QA integration target remains
 installed and normal-main restoration is blocked by the explicit coordinator
 build/device freeze. The FYI does not explicitly lift that freeze; do not start
 another build or device session until the coordinator says go.
+
+
+## Coordinator integration follow-up (2026-10-08)
+
+The explicit GO lifts the earlier machine/device freeze. Merged coordinator
+candidate94d0dbd4 into this worktree in beabc90b before regression repair.
+All four coordinator-named files now pass through the shared machine lock:
+phone_crash_native_test.dart plus report_problem_capture_test.dart (17 tests),
+repository_hygiene_test.dart (15 tests), release_script_contract_test.dart
+(2 tests). Commits e80f5b7f,12906231,2cf16291 explain the intentional privacy,
+notice-inventory and patch-plan usage snapshot updates. Each original failure
+was reproduced first. No product behavior was weakened to satisfy a snapshot.
+
+Full pinned Flutter analyzer reports no issues after this merge. Three BD9
+host fixture/SDK tests and12 private receipt-checker tests pass. The Arabic
+ratchet also passes with508 remaining missing keys after frontend translations.
+No full Flutter suite is claimed by Sol; Claude owns that gate.
+
+The Kotlin checkpoint discovered four new findings in the merged
+PhoneAgentHost.kt from another lane (LongMethod, ThrowsCount, MaxLineLength,
+MagicNumber). Its owner must resolve them, or delegate that file to Sol;
+no baseline expansion is being used to admit them. The two temporary BD9
+classifier findings have been refactored and await the next checkpoint.
+Device qualification and normal-product restoration continue below.
+
+
+## Renewed hold and latest device outcome (2026-10-08)
+
+The next locked session again passed all seven native predicates. Flutter
+returned a failed result with only generic release diagnostic text; there is
+no passing conversation screenshot. The exact private host receipt is recorded
+in device-failure.json. The normal product restoration hook ran inside the SAME
+emulator flock, but its release build failed at compileReleaseJavaWithJavac:
+the generated registrant referenced IntegrationTestPlugin after its dev-only
+release dependency was filtered out. normal-restore.json honestly records FAIL.
+**The emulator still has the QA target; normal installation/launch remains
+incomplete.** No uninstall, data reset, signer substitution or downgrade occurred.
+
+The coordinator renewed the memory hold during the in-flight session. That
+existing build/session has ended. No new build or device session will start
+until an explicit go. Signing properties and intermediates are absent; original
+Gradle settings are restored and no worktree Gradle daemon remains.
+
+The restore failure is traced to the local --no-pub optimization: the pinned
+FlutterCommand.regeneratePlatformSpecificToolingIfApplicable returns before
+release registrant generation when shouldRunPub is false. The committed dry
+planner tool/qa/bd9_release_build.py now permits regeneration for both QA and
+normal builds; seven offline tests pass and reintroducing --no-pub fails.
+Existing CI builds already permit regeneration. The local authorized driver
+now consumes this planner; its corrected build is NOT yet verified on device.
+
+FlutterErrorDetails can omit diagnostic properties in release formatting.
+The QA-only reporter now supplies authored phase/type labels through an
+explicit toString override, excluding exceptions, frames and metadata. Native
+classification accepts only known labels and records empty/multiple result
+maps as failure. The host's phase allowlist passes21 tests and its strict PASS
+parser remains unchanged. These phase changes still need native/device checks
+after the hold. The next allowed device work must restore normal-main2201
+FIRST, then resume BD9 diagnosis with restoration on every session outcome.
+
+The final Temurin detekt checkpoint before this hold confirms ZERO new BD9
+findings, but four new findings in merged PhoneAgentHost.kt still block the
+global gate. Its owner/delegation remains an open question; the baseline was
+not expanded. Subsequent code-only phase changes are not claimed native-checked.
+
+
+Code-only follow-up checks during the renewed hold:
+
+- tool/qa/bd9_smoke_reporting_test.dart:3 focused Flutter tests PASS through
+  machine_lock, --no-pub --concurrency=1. Removing the fixed formatter and
+  falling back to the SDK's details formatter fails the exact phase test
+  (exit1); finally restored source and all3 PASS again. Provider/metadata
+  sentinels are synthetic; metadata callbacks are not evaluated.
+- python3 -m unittest tool.qa.test_bd9_release_build
+  tool.qa.test_bd9_device_smoke:28 offline tests PASS. This covers the
+  no-pub command regression, locked restoration, phase allowlist and strict
+  result parsing. No signing/build/device action is invoked by these tests.
+- Changed Dart files were formatted with the pinned Dart and language3.10.
+  The new native phase markers are source-only until go; the previous full
+  analyzer checkpoint predates these last Dart additions.
