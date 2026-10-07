@@ -241,6 +241,15 @@ Dart-only fixes ship as `./scripts/release.sh patch --publish`, run against the
 exact released `x.y.z+N`. Changes to native code, assets or
 `pubspec.yaml`/`pubspec.lock` need a new release.
 
+**Release notes have two layers** (`docs/releases/TEMPLATE.md`): "What changed
+for you", two to five plain-word bullets a user can act on, above "Technical
+changes", the full list. `python3 tool/release/release_notes.py new x.y.z+N`
+drafts the file and the technical list from the commits since the last tag;
+`check` validates it (`scripts/release.sh release|sideload` runs it first);
+`store --write` saves the top layer as the fastlane changelog
+`fastlane/metadata/android/en-US/changelogs/N.txt` (write the Arabic one in
+`ar/` by hand).
+
 **CI token (one-time owner step).** The release job fails closed without the
 `SHOREBIRD_TOKEN` repository secret. To create it, the owner runs
 `shorebird login:ci` locally, then

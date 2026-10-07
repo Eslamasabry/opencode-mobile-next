@@ -354,6 +354,15 @@ case "$MODE" in
   patch) assert_patchable_diff ;;
 esac
 
+# A new release (not a patch of an existing one) ships two-layer notes: "What
+# changed for you" in plain words, then the technical list
+# (docs/releases/TEMPLATE.md). Checked before the long gates run.
+if [[ "$MODE" == release || "$MODE" == sideload ]]; then
+  echo "==> Checking release notes docs/releases/$RELEASE_TAG.md"
+  python3 tool/release/release_notes.py check "docs/releases/$RELEASE_TAG.md" ||
+    fail "Release notes need both layers. Draft them with: python3 tool/release/release_notes.py new $VERSION"
+fi
+
 echo "==> Analyzing Dart code"
 flutter analyze
 echo "==> Running recursive Flutter tests in bounded serial chunks"
