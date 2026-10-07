@@ -136,8 +136,12 @@ extension _PaseoEvents on PaseoGateway {
   void _removed(Object? id) {
     if (id is! String || !_sessions.containsKey(id)) return;
     final session = _sessions[id]!;
+    final daemonSessionID = _real(id);
     _forget(id);
-    _emit('session.deleted', {'info': paseoSessionJson(session)});
+    _emit('session.deleted', {
+      'info': paseoSessionJson(session),
+      'daemonSessionID': daemonSessionID,
+    });
   }
 
   void _onStream(

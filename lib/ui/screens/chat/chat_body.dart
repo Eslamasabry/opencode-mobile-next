@@ -35,6 +35,7 @@ extension _ChatBody on _ChatScreenState {
                 child: _ChatLoadError(
                   error: _error!,
                   onRetry: () => unawaited(_load()),
+                  agentName: _conn.isAgentBackend ? _conn.profile?.name : null,
                 ),
               ),
               if (!_watching)

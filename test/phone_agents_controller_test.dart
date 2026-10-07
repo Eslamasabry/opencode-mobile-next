@@ -45,6 +45,9 @@ import 'paseo_acp_pilot_test.dart' show FakePaseoSocket;
 part 'support/phone_agents_genui_tests.dart';
 part 'support/phone_agents_native_question_tests.dart';
 part 'support/phone_agents_list_question_tests.dart';
+part 'support/phone_agents_list_permission_tests.dart';
+part 'support/phone_agents_reopen_tests.dart';
+part 'support/phone_agents_photo_card_tests.dart';
 
 const _project = '/root/projects/app';
 const _stamp = '2026-10-03T08:00:00Z';
@@ -609,6 +612,9 @@ void main() {
   _genUiFeedRefreshTests();
   _nativeQuestionControllerTests();
   _listQuestionTests();
+  _listPermissionTests();
+  _reopenAgentTests();
+  _photoCardAliasTests();
 
   const dir = _project;
 

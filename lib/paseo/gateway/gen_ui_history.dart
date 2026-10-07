@@ -2,6 +2,7 @@ part of '../gateway.dart';
 
 extension _PaseoGenUiHistory on PaseoGateway {
   Future<bool> _genUiIdle(String sessionID) async {
+    sessionID = _app(sessionID);
     validateGenUiHistoryRequest(sessionID, null, 1);
     if (_isSubagent(sessionID) || _drafts.contains(sessionID)) return false;
     final scope = _scope;

@@ -11,6 +11,7 @@ class _FeedQuestionRoute {
     this.revision,
     this.controller,
     this.delegate,
+    this.directoryQuestion,
   }) : contents = _questionContents(question);
 
   final ChatFeedItem item;
@@ -22,6 +23,7 @@ class _FeedQuestionRoute {
   final Object? revision;
   final ConnectionController? controller;
   final PendingRequestIdentity? delegate;
+  final _DirectoryQuestion? directoryQuestion;
 }
 
 extension _FeedQuestions on ConnectionController {
@@ -61,16 +63,30 @@ extension _FeedQuestions on ConnectionController {
         : _sideForSource(sourceID);
     if (owner == null ||
         owner._disposed ||
-        owner.directory != item.directory ||
         !_feedContainsQuestionRow(
           owner._ocChatFeed(const ChatFeedFilter(includeSubagents: true)),
           item,
         )) {
       return null;
     }
-    final question = owner.questionForSession(item.sessionID);
+    final scoped = owner.directory == item.directory
+        ? null
+        : owner._feedDirectoryQuestions[item.directory]?.values
+              .where(
+                (entry) =>
+                    entry.question.sessionID == item.sessionID &&
+                    owner._directoryQuestionCurrent(entry),
+              )
+              .firstOrNull;
+    final question = owner.directory == item.directory
+        ? owner.questionForSession(item.sessionID)
+        : scoped?.question;
     final profileID = (owner._connectedProfile ?? owner.profile)?.id;
-    if (question == null || profileID == null) return null;
+    if (question == null ||
+        profileID == null ||
+        !isProfileReadable(profileID)) {
+      return null;
+    }
     // Give the list its own snapshot; never annotate the chat's model object.
     final copy = PendingQuestion(
       id: question.id,
@@ -82,7 +98,8 @@ extension _FeedQuestions on ConnectionController {
       profileID: profileID,
       question: copy,
       controller: owner,
-      delegate: owner.questionIdentity(question),
+      delegate: scoped == null ? owner.questionIdentity(question) : null,
+      directoryQuestion: scoped,
     );
     return copy;
   }
@@ -109,7 +126,10 @@ extension _FeedQuestions on ConnectionController {
   }
 
   bool _isFeedQuestionPending(_FeedQuestionRoute route) {
-    if (_questionContents(route.question) != route.contents) return false;
+    if (!isProfileReadable(route.profileID) ||
+        _questionContents(route.question) != route.contents) {
+      return false;
+    }
     final gateway = route.gateway;
     if (gateway != null) {
       final pair = _paSources[route.item.directory];
@@ -138,12 +158,21 @@ extension _FeedQuestions on ConnectionController {
           owner,
         ) &&
         (owner._connectedProfile ?? owner.profile)?.id == route.profileID &&
-        owner.directory == route.item.directory &&
+        (route.directoryQuestion != null
+            ? owner._directoryQuestionCurrent(route.directoryQuestion!) &&
+                  identical(
+                    owner._feedDirectoryQuestions[route.item.directory]?[route
+                        .question
+                        .id],
+                    route.directoryQuestion,
+                  )
+            : owner.directory == route.item.directory) &&
         _feedContainsQuestionRow(
           owner._ocChatFeed(const ChatFeedFilter(includeSubagents: true)),
           route.item,
         ) &&
-        owner.isRequestPending(route.delegate!);
+        (route.directoryQuestion != null ||
+            owner.isRequestPending(route.delegate!));
   }
 
   Future<void> _replyToFeedQuestion(
@@ -179,6 +208,54 @@ extension _FeedQuestions on ConnectionController {
         unawaited(route.source!.refreshAfterActivity());
       } else {
         final owner = route.controller!;
+        if (route.directoryQuestion case final entry?) {
+          if (entry.attempted) {
+            throw const ProductException(
+              'Delivery is unconfirmed. Refresh the conversation before answering again.',
+            );
+          }
+          final pair = owner._buildTransportPair(entry.profile);
+          try {
+            pair.gateway.setLocation(directory: item.directory);
+            pair.operations.setLocation(directory: item.directory);
+            if (!isRequestPending(expectedRequest)) return;
+            entry.attempted = true;
+            if (entry.modern) {
+              if (captured == null) {
+                await pair.gateway.rejectQuestionV2(
+                  item.sessionID,
+                  route.question.id,
+                );
+              } else {
+                await pair.gateway.answerQuestionV2(
+                  item.sessionID,
+                  route.question.id,
+                  captured,
+                );
+              }
+            } else if (captured == null) {
+              await pair.operations.rejectQuestion(route.question.id);
+            } else {
+              await pair.operations.answerQuestion(route.question.id, captured);
+            }
+            expectedRequest._retired = true;
+            owner._feedQuestionEpoch++;
+            if (identical(
+              owner._feedDirectoryQuestions[item.directory]?[route.question.id],
+              entry,
+            )) {
+              owner._feedDirectoryQuestions[item.directory]?.remove(
+                route.question.id,
+              );
+            }
+            if (!owner._disposed) owner._notifyListeners();
+            if (!_disposed) _notifyListeners();
+            owner._feedScheduleRefresh();
+          } finally {
+            pair.gateway.close();
+          }
+          return;
+        }
         await owner._sendQuestionReply(
           owner.api,
           owner.repository,

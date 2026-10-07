@@ -29,6 +29,9 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
     if (maxPages < 1 || maxPages > 8 || refreshTimeout <= Duration.zero) {
       throw ArgumentError('Feed read bounds are invalid.');
     }
+    _permissionChanges = gateway.nativePermissionChanges.listen((_) {
+      if (_valid) _notify();
+    });
     _questionChanges = gateway.nativeQuestionChanges.listen((_) {
       if (_valid) _notify();
     });
@@ -50,6 +53,7 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
   final String? _directory, _projectName;
   final _changes = StreamController<void>.broadcast();
   late final StreamSubscription<void> _questionChanges;
+  late final StreamSubscription<void> _permissionChanges;
   List<ChatFeedItem> _items = const [];
   final _draftProviders = <String, String>{};
   bool _complete = false, _disposed = false;
@@ -211,23 +215,17 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
         bySession[key] = titled;
       }
       final statuses = await gateway.sessionStatuses();
-      final permissions = await gateway.pendingPermissions();
       if (!_current(revision)) return;
-      final needsYou = permissions
-          .map((permission) => permission.sessionID)
-          .toSet();
       _items = List.unmodifiable(
         sessions.values.map((session) {
           final provider =
               gateway.providerIdForSession(session.id) ??
               _draftProviders[session.id];
-          final status = needsYou.contains(session.id)
-              ? ChatStatus.needsYou
-              : switch (statuses[session.id]) {
-                  'busy' || 'retry' => ChatStatus.running,
-                  'error' => ChatStatus.failed,
-                  _ => ChatStatus.idle,
-                };
+          final status = switch (statuses[session.id]) {
+            'busy' || 'retry' => ChatStatus.running,
+            'error' => ChatStatus.failed,
+            _ => ChatStatus.idle,
+          };
           return ChatFeedItem(
             sessionID: session.id,
             title: session.title?.isNotEmpty == true
@@ -255,6 +253,7 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
 
   ChatFeedItem _withCards(ChatFeedItem item) {
     if ((!gateway.hasNativeQuestion(item.sessionID) &&
+            gateway.nativePermissionSnapshot(item.sessionID) == null &&
             hasWaitingCard?.call(item.sessionID) != true) ||
         item.status == ChatStatus.needsYou) {
       return item;
@@ -422,6 +421,7 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
     // This is a local broadcast subscription: cancellation unregisters it
     // synchronously, with no transport cleanup to await.
     unawaited(_questionChanges.cancel());
+    unawaited(_permissionChanges.cancel());
     await _changes.close();
   }
 }

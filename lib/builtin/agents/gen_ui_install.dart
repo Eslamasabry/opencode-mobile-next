@@ -4,8 +4,8 @@ import '../../domain/genui/gen_ui_status.dart';
 import '../builtin_linux.dart';
 import 'gen_ui_install_scripts.dart';
 
-// A parser or persisted recipe does not qualify a live backend. Keep enable
-// admission separate from cleanup, which must handle legacy registrations.
+// A parser or persisted recipe does not qualify a live backend. Installation
+// can stage OpenCode, but only this evidence-backed set may become ready.
 const _qualifiedAgents = {GenUiAgent.claude};
 
 /// Configuration outcome only. It never establishes live tool availability.
@@ -122,9 +122,7 @@ final class ManagedGenUiInstaller implements GenUiInstaller {
         const GenUiSetupFailed(reason: GenUiSetupProblem.storageFailed),
       );
     }
-    final requested = enabled
-        ? agents.intersection(_qualifiedAgents)
-        : Set<GenUiAgent>.of(agents);
+    final requested = Set<GenUiAgent>.of(agents);
     final result = Completer<GenUiSetupStatus>();
     _tail = _tail.then((_) async {
       try {
@@ -164,6 +162,13 @@ final class ManagedGenUiInstaller implements GenUiInstaller {
         case GenUiInstallOutcome.registered:
           changed = true;
           if (enabled) {
+            // Persisted config/self-check is only preparation. A permissive
+            // verifier must not promote an unqualified transport. Adding an
+            // OpenCode runtime here requires recorded device evidence first.
+            if (!_qualifiedAgents.contains(agent)) {
+              failure ??= GenUiSetupProblem.notQualified;
+              break;
+            }
             final verifier = _verifier;
             if (verifier == null) {
               failure ??= GenUiSetupProblem.notQualified;

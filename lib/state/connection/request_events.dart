@@ -5,6 +5,7 @@ part of '../connection.dart';
 extension _ConnectionControllerRequestEventsImpl on ConnectionController {
   /// Permission, question, form and inbox events.
   void _onRequestEvent(EventEnvelope env, Map<String, dynamic> props) {
+    _invalidateFeedDirectoryQuestions(env);
     switch (env.type) {
       case 'permission.asked':
         _handlePermission(props);

@@ -48,6 +48,15 @@ class _Server {
   /// Questions waiting, and the answers the server received.
   List<PendingQuestion> questions = [];
   final answered = <(String, List<List<String>>)>[];
+  final questionReads = <String?>[];
+  final questionWrites = <String?>[];
+  final rejected = <String>[];
+  bool modern = false;
+  bool failQuestions = false;
+  bool failWrite = false;
+  int sessionReads = 0;
+  Completer<void>? questionGate;
+  void Function(EventEnvelope)? globalEvent;
 }
 
 class _Api extends OpenCodeApi {
@@ -62,9 +71,24 @@ class _Api extends OpenCodeApi {
   @override
   Future<List<Session>> sessions() async => const [];
   @override
-  Future<Session> session(String id) async => server.global
-      .map((row) => row.session)
-      .firstWhere((session) => session.id == id);
+  Future<Session> session(String id) async {
+    server.sessionReads++;
+    return server.global
+        .map((row) => row.session)
+        .firstWhere((session) => session.id == id);
+  }
+
+  List<PendingQuestion> get scopedQuestions => server.questions
+      .where(
+        (q) =>
+            directory == null ||
+            server.global.any(
+              (r) =>
+                  r.session.id == q.sessionID &&
+                  r.session.directory == directory,
+            ),
+      )
+      .toList();
   @override
   Future<Map<String, String>> sessionStatuses() async => const {};
   @override
@@ -97,8 +121,48 @@ class _Api extends OpenCodeApi {
   Future<List<PermissionRequest>> pendingPermissionsV2() =>
       Future.error(ApiException('V2 unavailable', statusCode: 404));
   @override
-  Future<List<Map<String, dynamic>>> pendingQuestionsV2() =>
-      Future.error(ApiException('V2 unavailable', statusCode: 404));
+  Future<List<Map<String, dynamic>>> pendingQuestionsV2() async {
+    if (server.failQuestions) throw StateError('Read failed');
+    if (!server.modern) throw ApiException('V2 unavailable', statusCode: 404);
+    server.questionReads.add(directory);
+    return [
+      for (final q in scopedQuestions)
+        {
+          'id': q.id,
+          'sessionID': q.sessionID,
+          'questions': [
+            for (final p in q.prompts)
+              {
+                'header': p.title,
+                'question': p.question,
+                'options': [
+                  for (final c in p.choices)
+                    {'label': c.label, 'description': c.description},
+                ],
+              },
+          ],
+        },
+    ];
+  }
+
+  @override
+  Future<void> answerQuestionV2(
+    String sessionID,
+    String requestID,
+    List<List<String>> answers,
+  ) async {
+    server.questionWrites.add(directory);
+    server.answered.add((requestID, answers));
+    server.questions.removeWhere((q) => q.id == requestID);
+  }
+
+  @override
+  Future<void> rejectQuestionV2(String sessionID, String requestID) async {
+    server.questionWrites.add(directory);
+    server.rejected.add(requestID);
+    server.questions.removeWhere((q) => q.id == requestID);
+  }
+
   @override
   Future<List<FileNode>> listFiles(String path) async => const [];
 }
@@ -109,13 +173,31 @@ class _Repo extends SdkProductRepository {
   @override
   Future<ChatDefaults> loadChatDefaults() async => const ChatDefaults();
   @override
-  Future<List<PendingQuestion>> listQuestions() async => api.server.questions;
+  Future<List<PendingQuestion>> listQuestions() async {
+    api.server.questionReads.add(api.directory);
+    if (api.server.modern || api.server.failQuestions) {
+      throw StateError('Legacy unavailable');
+    }
+    final result = api.scopedQuestions;
+    await api.server.questionGate?.future;
+    return result;
+  }
+
+  @override
+  Future<void> rejectQuestion(String requestID) async {
+    api.server.questionWrites.add(api.directory);
+    api.server.rejected.add(requestID);
+    api.server.questions.removeWhere((q) => q.id == requestID);
+  }
+
   @override
   Future<void> answerQuestion(
     String requestID,
     List<List<String>> answers,
   ) async {
+    api.server.questionWrites.add(api.directory);
     api.server.answered.add((requestID, answers));
+    if (api.server.failWrite) throw StateError('Delivery unknown');
     api.server.questions = [
       for (final q in api.server.questions)
         if (q.id != requestID) q,
@@ -224,6 +306,16 @@ Future<_World> _world(
               onStatus: onStatus,
               onError: onError,
             ),
+    globalEventStreamFactory:
+        ({required api, required onEvent, required onStatus, onError}) {
+          (api as _Api).server.globalEvent = onEvent;
+          return _Stream(
+            api: api,
+            onEvent: onEvent,
+            onStatus: onStatus,
+            onError: onError,
+          );
+        },
     localWakeLockEnsurer: () async {},
     phoneEngineBridge: _NoEngineBridge(),
     phoneAgentHostFactory: agents,
@@ -499,15 +591,20 @@ void main() {
       before: (servers) => servers[_termux]!.questions = [question],
     );
     final c = w.controller;
-    // The list answers a side server's question once its location is
-    // prepared (the row was opened before).
-    await c.openChatFeedItem(
-      c.chatFeed().items.firstWhere((item) => item.sessionID == 't1'),
+    final unopened = c.chatFeed().items.firstWhere(
+      (item) => item.sessionID == 't1',
     );
-    final side = c.connectionForRow(
-      c.chatFeed().items.firstWhere((item) => item.sessionID == 't1'),
-    )!;
-    await side.refreshPendingQuestions();
+    final side = c.connectionForRow(unopened)!;
+    final beforeLocation = side.directory;
+    side.elsewhereAttention.handle(
+      EventEnvelope(
+        type: 'question.asked',
+        directory: unopened.directory,
+        properties: {'id': question.id, 'sessionID': question.sessionID},
+      ),
+    );
+    await side.refreshChatFeed();
+    expect(side.directory, beforeLocation);
     await tester.pump(const Duration(milliseconds: 50));
     final row = c.chatFeed().items.firstWhere((item) => item.sessionID == 't1');
     final host = ConnectionChatsHost(c);
@@ -547,6 +644,234 @@ void main() {
         ),
     ],
   );
+
+  testWidgets('side deletion immediately fences captured question replies', (
+    tester,
+  ) async {
+    final (w, _, row) = await questionRow(tester, question());
+    final c = w.controller;
+    final request = c.questionIdentityForFeedItem(
+      row,
+      c.questionForFeedItem(row)!,
+    );
+    final deletion = c.deleteProfileAndLocalData('termux');
+    expect(c.isRequestPending(request), isFalse);
+    await c.answerQuestionForFeedItem(row, [
+      ['Staging'],
+    ], expectedRequest: request);
+    expect(w.servers[_termux]!.answered, isEmpty);
+    await deletion;
+    await tester.pumpWidget(const SizedBox());
+    c.dispose();
+  });
+
+  testWidgets(
+    'global event during slow read invalidates and triggers trailing refresh',
+    (tester) async {
+      final (w, _, row) = await questionRow(tester, question());
+      final c = w.controller,
+          side = c.connectionForRow(row)!,
+          server = w.servers[_termux]!;
+      final request = c.questionIdentityForFeedItem(
+        row,
+        c.questionForFeedItem(row)!,
+      );
+      server.questionGate = Completer<void>();
+      final read = side.refreshChatFeed();
+      await tester.pump();
+      server.questions = [question(prompts: 2)];
+      server.globalEvent!(
+        EventEnvelope(
+          type: 'question.updated',
+          directory: row.directory,
+          properties: {'id': 'q1', 'sessionID': 't1'},
+        ),
+      );
+      expect(c.isRequestPending(request), isFalse);
+      await tester.pump(const Duration(milliseconds: 2100));
+      server.questionGate!.complete();
+      server.questionGate = null;
+      await read;
+      expect(c.questionForFeedItem(row), isNull);
+      await tester.pump(const Duration(milliseconds: 2100));
+      await tester.pump();
+      expect(c.questionForFeedItem(row)?.prompts, hasLength(2));
+      await tester.pumpWidget(const SizedBox());
+      c.dispose();
+    },
+  );
+
+  testWidgets('editing a profile retires captured directory questions', (
+    tester,
+  ) async {
+    final (w, _, row) = await questionRow(tester, question());
+    final c = w.controller;
+    final request = c.questionIdentityForFeedItem(
+      row,
+      c.questionForFeedItem(row)!,
+    );
+    final profile = c.store.profiles.firstWhere((p) => p.id == 'termux');
+    profile.baseUrl = 'https://replacement.example.com';
+    expect(c.isRequestPending(request), isFalse);
+    await tester.pumpWidget(const SizedBox());
+    c.dispose();
+  });
+
+  testWidgets('waiting reads are directory scoped, bounded and rotate', (
+    tester,
+  ) async {
+    final w = await _world(tester);
+    final c = w.controller, server = w.servers[_ubuntu]!;
+    for (var i = 0; i < 7; i++) {
+      final folder = '/root/project$i';
+      server.global.add(_row('waiting$i', folder));
+      server.questions.add(
+        PendingQuestion(
+          id: 'q$i',
+          sessionID: 'waiting$i',
+          prompts: question().prompts,
+        ),
+      );
+      c.elsewhereAttention.handle(
+        EventEnvelope(
+          type: 'question.asked',
+          directory: folder,
+          properties: {'id': 'q$i', 'sessionID': 'waiting$i'},
+        ),
+      );
+    }
+    server.global.add(_row('idle', '/root/idle'));
+    server.questionReads.clear();
+    final before = server.sessionReads;
+    await c.refreshChatFeed();
+    expect(server.questionReads, hasLength(4));
+    expect(server.questionReads.toSet(), hasLength(4));
+    expect(server.questionReads, isNot(contains('/root/idle')));
+    final first = server.questionReads.toSet();
+    server.questionReads.clear();
+    await c.refreshChatFeed();
+    expect(server.questionReads, hasLength(4));
+    expect({...first, ...server.questionReads}, hasLength(7));
+    expect(server.sessionReads, before);
+    c.dispose();
+  });
+
+  testWidgets('changed or failed scoped reads retire captured questions', (
+    tester,
+  ) async {
+    final (w, _, row) = await questionRow(tester, question());
+    final c = w.controller, side = c.connectionForRow(row)!;
+    final captured = c.questionIdentityForFeedItem(
+      row,
+      c.questionForFeedItem(row)!,
+    );
+    w.servers[_termux]!.questions = [question(prompts: 2)];
+    await side.refreshChatFeed();
+    expect(c.isRequestPending(captured), isFalse);
+    await c.answerQuestionForFeedItem(row, [
+      ['Staging'],
+    ], expectedRequest: captured);
+    expect(w.servers[_termux]!.answered, isEmpty);
+    final next = c.questionIdentityForFeedItem(
+      row,
+      c.questionForFeedItem(row)!,
+    );
+    w.servers[_termux]!.failQuestions = true;
+    await side.refreshChatFeed();
+    expect(c.isRequestPending(next), isFalse);
+    expect(c.questionForFeedItem(row), isNull);
+    await tester.pumpWidget(const SizedBox());
+    c.dispose();
+  });
+
+  testWidgets('uncertain scoped write is never dispatched twice', (
+    tester,
+  ) async {
+    final (w, _, row) = await questionRow(tester, question());
+    final c = w.controller, server = w.servers[_termux]!;
+    server.failWrite = true;
+    final request = c.questionIdentityForFeedItem(
+      row,
+      c.questionForFeedItem(row)!,
+    );
+    await expectLater(
+      c.answerQuestionForFeedItem(row, [
+        ['Staging'],
+      ], expectedRequest: request),
+      throwsStateError,
+    );
+    await c.connectionForRow(row)!.refreshChatFeed();
+    final refreshed = c.questionIdentityForFeedItem(
+      row,
+      c.questionForFeedItem(row)!,
+    );
+    await expectLater(
+      c.answerQuestionForFeedItem(row, [
+        ['Staging'],
+      ], expectedRequest: refreshed),
+      throwsA(isA<ProductException>()),
+    );
+    expect(server.answered, hasLength(1));
+    await tester.pumpWidget(const SizedBox());
+    c.dispose();
+  });
+
+  for (final modern in [false, true]) {
+    testWidgets(
+      'main other directory question routes answer and reject modern=$modern',
+      (tester) async {
+        final w = await _world(
+          tester,
+          before: (servers) {
+            servers[_ubuntu]!.modern = modern;
+            servers[_ubuntu]!.questions = [question()];
+            servers[_ubuntu]!.global.add(_row('t1', '/root/other'));
+          },
+        );
+        final c = w.controller;
+        final location = c.directory;
+        c.elsewhereAttention.handle(
+          EventEnvelope(
+            type: 'question.asked',
+            directory: '/root/other',
+            properties: {'id': 'q1', 'sessionID': 't1'},
+          ),
+        );
+        await c.refreshChatFeed();
+        final row = c.chatFeed().items.firstWhere(
+          (r) => r.sessionID == 't1' && r.sourceId == 'opencode',
+        );
+        final q = c.questionForFeedItem(row);
+        expect(q, isNotNull);
+        final identity = c.questionIdentityForFeedItem(row, q!);
+        await c.answerQuestionForFeedItem(row, [
+          ['Staging'],
+        ], expectedRequest: identity);
+        expect(w.servers[_ubuntu]!.questionWrites, ['/root/other']);
+        expect(c.isRequestPending(identity), isFalse);
+        expect(c.directory, location);
+        w.servers[_ubuntu]!.questions = [
+          PendingQuestion(
+            id: 'q2',
+            sessionID: 't1',
+            prompts: question().prompts,
+          ),
+        ];
+        await c.refreshChatFeed();
+        final again = c.questionForFeedItem(row)!;
+        await c.rejectQuestionForFeedItem(
+          row,
+          expectedRequest: c.questionIdentityForFeedItem(row, again),
+        );
+        expect(w.servers[_ubuntu]!.rejected, ['q2']);
+        expect(w.servers[_ubuntu]!.questionWrites, [
+          '/root/other',
+          '/root/other',
+        ]);
+        c.dispose();
+      },
+    );
+  }
 
   testWidgets('a waiting question shows under its row and is answered '
       'there, with Undo', (tester) async {

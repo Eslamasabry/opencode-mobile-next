@@ -97,7 +97,9 @@ mixin _ConnectionControllerGenUi on ChangeNotifier implements GenUiController {
   @override
   List<GenUiCard> waitingCardsForSession(String sessionID) {
     final scope = _genUiScope;
-    return scope == null ? const [] : _genUiState.waiting(scope, sessionID);
+    return scope == null
+        ? const []
+        : _genUiState.waiting(scope, _self._genUiSessionID(scope, sessionID));
   }
 
   @override
@@ -123,7 +125,10 @@ mixin _ConnectionControllerGenUi on ChangeNotifier implements GenUiController {
       directory: item.directory,
       workspace: source.startsWith('paseo:') ? null : _self.workspace,
     );
-    return _genUiState.waiting(scope, item.sessionID);
+    return _genUiState.waiting(
+      scope,
+      _self._genUiSessionID(scope, item.sessionID),
+    );
   }
 
   @override
@@ -131,7 +136,12 @@ mixin _ConnectionControllerGenUi on ChangeNotifier implements GenUiController {
     final scope = _genUiScope;
     return scope == null
         ? null
-        : _genUiState.cardForPart(scope, sessionID, messageID, part);
+        : _genUiState.cardForPart(
+            scope,
+            _self._genUiSessionID(scope, sessionID),
+            messageID,
+            part,
+          );
   }
 
   @override
@@ -142,7 +152,9 @@ mixin _ConnectionControllerGenUi on ChangeNotifier implements GenUiController {
       _self._genUiStateForScope(card.scope).summary(card);
   @override
   GenUiDeliveryState genUiDeliveryFor(GenUiCard card) =>
-      _self._genUiStateForScope(card.scope).delivery(card);
+      _self._genUiHasAliasDispatch(card)
+      ? GenUiDeliveryState.deliveryUnknown
+      : _self._genUiStateForScope(card.scope).delivery(card);
   @override
   void undoGenUiAnswer(GenUiCard card) =>
       _self._genUiStateForScope(card.scope).undo(card);
@@ -158,6 +170,13 @@ mixin _ConnectionControllerGenUi on ChangeNotifier implements GenUiController {
     if (side != null) {
       return side.answerGenUi(card, answer, attachments: attachments);
     }
+    if (_self._genUiHasAliasDispatch(card)) {
+      return Future.error(
+        const ProductException(
+          'Check the conversation before sending this answer again.',
+        ),
+      );
+    }
     final state = _self._genUiStateForScope(card.scope);
     final owner = _genUiParent ?? _self._genUiPhoneController;
     return state.answer(card, answer, attachments).whenComplete(() {
@@ -172,6 +191,34 @@ mixin _ConnectionControllerGenUi on ChangeNotifier implements GenUiController {
 }
 
 extension _ConnectionGenUiImpl on ConnectionController {
+  // A new phone conversation has a local draft ID in its feed gateway and a
+  // daemon ID in its chat gateway. Card state and its durable send fence must
+  // use the same identity in both views, scoped to this exact phone source.
+  String _genUiSessionID(GenUiScope scope, String id) {
+    final owner = _genUiParent ?? _genUiPhoneController;
+    return owner._genUiPhoneSources[scope]?.gateway.daemonSessionId(id) ?? id;
+  }
+
+  bool _genUiHasAliasDispatch(GenUiCard card) {
+    if (!card.scope.sourceId.startsWith('paseo:')) return false;
+    // Old local-ID dispatch records remain untouched. After restart their
+    // alias may no longer be known; a matching scoped call stays fail closed.
+    try {
+      return _genUiStateForScope(card.scope).journal
+          .read(card.scope.profileID)
+          .any(
+            (entry) =>
+                entry.scope == card.scope &&
+                entry.sessionID != card.sessionID &&
+                entry.messageID == card.messageID &&
+                entry.callID == card.callID &&
+                entry.dispatchID != null,
+          );
+    } catch (_) {
+      return true;
+    }
+  }
+
   ConnectionController get _genUiPhoneController {
     final id = _paProfile?.id;
     if (id != null && id != (_connectedProfile ?? profile)?.id) {
@@ -252,11 +299,9 @@ extension _ConnectionGenUiImpl on ConnectionController {
           _genUiSetup[id] = const GenUiSetupInstalling();
           _genUiChanged();
           final installer = _genUiInstaller ??= ManagedGenUiInstaller.builtin();
-          // Enable only runtimes with end-to-end qualification. Keep legacy
-          // registrations removable even after qualification changes.
-          final agents = on
-              ? <GenUiAgent>{GenUiAgent.claude}
-              : GenUiAgent.values.toSet();
+          // Stage managed registrations; the installer independently gates
+          // effective readiness on end-to-end runtime qualification.
+          final agents = GenUiAgent.values.toSet();
           final result = await installer.setEnabled(
             profileId: id,
             agents: agents,
@@ -359,7 +404,12 @@ extension _ConnectionGenUiImpl on ConnectionController {
     _genUiSync();
     final scope = _genUiScope;
     if (scope != null) {
-      _genUiState.observe(scope, sessionID, messages, tailComplete: complete);
+      final id = _genUiSessionID(scope, sessionID);
+      if (id != sessionID) {
+        _genUiQueueTarget(GenUiTarget(scope, id));
+        return;
+      }
+      _genUiState.observe(scope, id, messages, tailComplete: complete);
     }
   }
 
@@ -395,22 +445,39 @@ extension _ConnectionGenUiImpl on ConnectionController {
     if (part is Map && part['sessionID'] != null && part['sessionID'] != sid) {
       return;
     }
+    final id = _genUiSessionID(currentScope, sid);
     if (event.type == 'session.deleted') {
-      unawaited(
-        _genUiState.removeSession(currentScope, sid).catchError((Object _) {}),
-      );
+      // The feed gateway drops its alias before broadcasting deletion.
+      final captured = props['daemonSessionID'];
+      final deletedID =
+          currentScope.sourceId.startsWith('paseo:') &&
+              captured is String &&
+              captured.isNotEmpty
+          ? captured
+          : id;
+      for (final removedID in {sid, deletedID}) {
+        unawaited(
+          _genUiState
+              .removeSession(currentScope, removedID)
+              .catchError((Object _) {}),
+        );
+      }
       return;
     }
     if (!event.type.startsWith('message.') &&
         !event.type.startsWith('session.')) {
       return;
     }
-    _genUiState.stale(currentScope, sid);
-    _genUiQueueTarget(GenUiTarget(currentScope, sid));
+    _genUiState.stale(currentScope, id);
+    _genUiQueueTarget(GenUiTarget(currentScope, id));
   }
 
   void _genUiQueueTarget(GenUiTarget target) {
     if (_disposed || !_genUiState.available(target.scope)) return;
+    target = GenUiTarget(
+      target.scope,
+      _genUiSessionID(target.scope, target.sessionID),
+    );
     // Bounded coalescing; a later feed/reconnect pass covers evicted hints.
     if (_genUiTargets.length >= 100) {
       _genUiTargets.remove(_genUiTargets.keys.first);
@@ -521,7 +588,9 @@ extension _ConnectionGenUiImpl on ConnectionController {
       initialLastUsedProjectDirectory: _ocLastUsed,
       hasWaitingCard: (id) =>
           scope != null &&
-          controller()._genUiState.waiting(scope, id).isNotEmpty,
+          controller()._genUiState
+              .waiting(scope, controller()._genUiSessionID(scope, id))
+              .isNotEmpty,
       cardsIncomplete: () => controller()._genUiState.recoveryIncomplete,
       refreshCards: (items) async {
         if (scope == null) return;
@@ -597,7 +666,8 @@ extension _ConnectionGenUiImpl on ConnectionController {
               _genUiPhoneSources[scope]?.sessions?.call() ?? const <String>[];
           unawaited(
             _genUiState.recover([
-              for (final id in ids.take(20)) GenUiTarget(scope, id),
+              for (final id in ids.take(20))
+                GenUiTarget(scope, _genUiSessionID(scope, id)),
             ]),
           );
         }

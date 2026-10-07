@@ -6,7 +6,7 @@ import 'gen_ui_server.dart';
 import 'paseo_scripts.dart';
 
 /// App-authored script; no agent-supplied strings participate in construction.
-/// A system Node is required for root OpenCode. The agent-writable private
+/// A root-owned Node is required for OpenCode. The agent-writable private
 /// Node is only ever used by the uid-1000 Claude runner.
 String genUiInstallScript({
   required String profileId,
@@ -188,14 +188,40 @@ def remove_show(path):
     if not settings['permissions']: settings.pop('permissions')
     save_json(path, settings)
 
+# Fixed app-owned candidate paths: the built-in setup installs the first;
+# distro-based installations may already provide the second. Never search
+# PATH or follow /usr/local/bin/node into agent-controlled locations.
+ROOT_NODES = ('/opt/node/bin/node', '/usr/bin/node')
+
+def root_owned(path):
+    # Check existing ancestors before creating anything below them. Together
+    # with safe() this refuses symlinks, foreign owners and writable ancestors.
+    # Guest metadata remains a precondition, not a confinement qualification.
+    path = pathlib.Path(path)
+    for part in [*reversed(path.parents), path]:
+        try: info = os.stat(part, follow_symlinks=False)
+        except FileNotFoundError: return
+        if stat.S_ISLNK(info.st_mode) or info.st_uid != 0 or info.st_mode & 0o022: fail(22)
+
 def root_executable(path):
-    # /bin and /lib may be system symlinks; the configured runtime itself and
-    # its /usr ancestors must not be redirectable or writable by agent uid.
     if not safe(path): fail(20)
-    for part in [pathlib.Path(path), *pathlib.Path(path).parents]:
-        info = os.stat(part, follow_symlinks=False)
-        if info.st_uid != 0 or info.st_mode & 0o022: fail(22)
+    root_owned(path)
     if not os.access(path, os.X_OK): fail(20)
+
+def root_node(manifest, helper):
+    if manifest:
+        entry = manifest.get('entry')
+        command = entry.get('command') if isinstance(entry, dict) else None
+        if (not isinstance(command, list) or len(command) != 2
+          or command[0] not in ROOT_NODES or command[1] != helper): fail(21)
+        # Keep the owned argv stable when candidates appear/disappear. Disable
+        # must still remove this entry even if its runtime was uninstalled.
+        return command[0]
+    for candidate in ROOT_NODES:
+        if not safe(candidate): continue
+        root_executable(candidate)
+        return candidate
+    fail(20)
 
 def cli(args, environment):
     if not safe(args[0]) or not os.access(args[0], os.X_OK): return False
@@ -242,20 +268,26 @@ def main():
     kind, owner = d['kind'], d['profile']
     claude = kind == 'claude'
     if os.getuid() != (1000 if claude else 0): fail(22)
+    if d['verify'] and not claude: fail(24)
     directory, config_path = d['directory'], d['config']
     if not d['enable'] and not safe(directory, directory=True): sys.exit(11)
+    if not claude: root_owned(directory)
     if not safe(directory, directory=True, create=not d['verify']): fail(20)
     lock_path = directory + '/lock'
+    if not claude: root_owned(lock_path)
     safe(lock_path)
     lock = os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
     try: fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError: fail(23)
     marker, helper = directory + '/enabled', directory + '/server.cjs'
     manifest_path = directory + '/owners.json'
-    for path in [marker, helper, manifest_path]: safe(path)
+    for path in [marker, helper, manifest_path]:
+        if not claude: root_owned(path)
+        safe(path)
     manifest = read_json(manifest_path)
     if not d['enable'] and not manifest: sys.exit(11)
     config_parent = str(pathlib.Path(config_path).parent)
+    if not claude: root_owned(config_path)
     if not safe(config_parent, directory=True, create=not d['verify']): fail(20)
     # JSONC has precedence/merge semantics we cannot preserve through JSON.
     # Refuse it rather than modifying or silently shadowing the user's file.
@@ -264,6 +296,7 @@ def main():
     settings_path = config_parent + '/settings.json'
     show_allowed = claude and d['enable'] and SHOW_PERMISSION in show_permissions(read_json(settings_path))
     owned = bool(manifest)
+    if not claude: d['node'] = root_node(manifest, helper)
     expected = ({'type':'stdio','command':d['node'],'args':[helper],'env':{}}
       if claude else {'type':'local','command':[d['node'], helper],
       **({'enabled':True} if kind == 'openCode1' else {'disabled':False,'codemode':False})})

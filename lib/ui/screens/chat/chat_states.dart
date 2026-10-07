@@ -53,10 +53,15 @@ class _ChatOpeningExcerpt extends StatelessWidget {
 
 /// The conversation could not be loaded and nothing of it is on screen yet.
 class _ChatLoadError extends StatelessWidget {
-  const _ChatLoadError({required this.error, required this.onRetry});
+  const _ChatLoadError({
+    required this.error,
+    required this.onRetry,
+    this.agentName,
+  });
 
   final Object error;
   final VoidCallback onRetry;
+  final String? agentName;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +73,9 @@ class _ChatLoadError extends StatelessWidget {
       // Every load failure draws the unplugged cable (design standard §10).
       illustration: const StatesUnpluggedScene(),
       title: l10n.chatLoadFailedTitle,
-      body: l10n.chatLoadFailedBody,
+      body: agentName == null
+          ? l10n.chatLoadFailedBody
+          : l10n.agentNotAnsweringPhone(KitBidi.auto(agentName!)),
       primary: KitAction(
         key: const ValueKey('chat-load-retry'),
         label: l10n.commonRetry,

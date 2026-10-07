@@ -44,8 +44,18 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
 
   Future<void> _ocRefresh() {
     _feedWanted = true;
-    return _feedRefreshing ??= _refreshFeed().whenComplete(() {
+    if (_feedRefreshing case final running?) return running;
+    final epoch = _self._feedQuestionEpoch;
+    final generation = _self._generation;
+    return _feedRefreshing = _refreshFeed().whenComplete(() {
       _feedRefreshing = null;
+      // A debounce that fired during a slow read only joined this future.
+      // Preserve the invalidating event as a trailing refresh.
+      if (!_self._disposed &&
+          generation == _self._generation &&
+          epoch != _self._feedQuestionEpoch) {
+        _feedScheduleRefresh();
+      }
     });
   }
 
@@ -60,7 +70,11 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
     });
   }
 
-  void _feedDispose() => _feedDebounce?.cancel();
+  void _feedDispose() {
+    _feedDebounce?.cancel();
+    _self._feedQuestionEpoch++;
+    _self._feedDirectoryQuestions.clear();
+  }
 
   Future<void> _refreshFeed() async {
     final currentRepository = _self.repository;
@@ -130,6 +144,8 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
     _feedLoaded = true;
     _feedLoading = false;
     _feedComplete = complete;
+    await _self._refreshFeedDirectoryQuestions();
+    if (_self._disposed || !_self._isCurrent(generation, currentApi)) return;
     _self._genUiRefreshFeed();
     _self._notifyListeners();
   }
