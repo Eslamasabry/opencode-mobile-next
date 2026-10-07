@@ -16948,84 +16948,84 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kitTimeMinute => 'الدقيقة';
 
   @override
-  String get kitTimePeriod => 'Morning or afternoon';
+  String get kitTimePeriod => 'صباحًا أو مساءً';
 
   @override
-  String get kitTimeInvalid => 'Not a time';
+  String get kitTimeInvalid => 'وقت غير صالح';
 
   @override
-  String get kitDateTimeNotSet => 'Not set';
+  String get kitDateTimeNotSet => 'غير محدد';
 
   @override
   String kitDateTimeClear(String title) {
-    return 'Clear $title';
+    return 'مسح $title';
   }
 
   @override
-  String get kitDateUnavailable => 'That day can’t be chosen';
+  String get kitDateUnavailable => 'لا يمكن اختيار ذلك اليوم';
 
   @override
-  String get filesLoadingFolder => 'Opening folder…';
+  String get filesLoadingFolder => 'جارٍ فتح المجلد…';
 
   @override
-  String get filesSearching => 'Searching…';
+  String get filesSearching => 'جارٍ البحث…';
 
   @override
-  String get filesShowHidden => 'Show hidden files';
+  String get filesShowHidden => 'إظهار الملفات المخفية';
 
   @override
   String get filesOnlyHidden =>
-      'This folder has only hidden files and folders.';
+      'لا يحتوي هذا المجلد إلا على ملفات ومجلدات مخفية.';
 
   @override
-  String get filesCopyName => 'Copy name';
+  String get filesCopyName => 'نسخ الاسم';
 
   @override
   String globalSessionsMoveTitle(String project) {
-    return 'Move to $project?';
+    return 'هل تريد النقل إلى $project؟';
   }
 
   @override
   String globalSessionsMoveBody(String title, String from, String to) {
-    return '“$title” moves from $from to $to through the server’s sync system.';
+    return 'تُنقل «$title» من $from إلى $to عبر نظام مزامنة الخادم.';
   }
 
   @override
   String get globalSessionsMoveWhileWorking =>
-      'It is working now. Moving it may interrupt the current step.';
+      'المحادثة تعمل الآن. قد يقاطع نقلها الخطوة الحالية.';
 
   @override
   String globalSessionsMoveBack(String project) {
-    return 'To move it back, open $project and choose Continue here in All conversations.';
+    return 'لإعادتها، افتح $project واختر «المتابعة هنا» في كل المحادثات.';
   }
 
   @override
-  String get globalSessionsFilterLabel => 'Show';
+  String get globalSessionsFilterLabel => 'عرض';
 
   @override
-  String get globalSessionsFilterActive => 'Active';
+  String get globalSessionsFilterActive => 'النشطة';
 
   @override
   String get globalSessionsArchivedNoMatchMessage =>
-      'No archived conversation has that title. Try a shorter search.';
+      'لا توجد محادثة مؤرشفة بهذا العنوان. جرّب بحثًا أقصر.';
 
   @override
-  String get globalSessionsArchivedEmptyTitle => 'No archived conversations';
+  String get globalSessionsArchivedEmptyTitle => 'لا توجد محادثات مؤرشفة';
 
   @override
   String get globalSessionsArchivedEmptyMessage =>
-      'Conversations you archive in Work appear here.';
+      'تظهر هنا المحادثات التي تؤرشفها في المهام.';
 
   @override
-  String get globalSessionsShowActive => 'Show active conversations';
+  String get globalSessionsShowActive => 'عرض المحادثات النشطة';
 
   @override
   String globalSessionsProjectInUse(String project) {
-    return '$project · In use';
+    return '$project · قيد الاستخدام';
   }
 
   @override
-  String get globalSessionsCopyFolder => 'Copy folder path';
+  String get globalSessionsCopyFolder => 'نسخ مسار المجلد';
 
   @override
   String get worktreesStartConversation => 'بدء محادثة جديدة هنا';
@@ -17050,50 +17050,50 @@ class AppLocalizationsAr extends AppLocalizations {
   String get worktreesSetupFailedWord => 'فشل الإعداد';
 
   @override
-  String get importNeedsFile => 'Choose a JSON file first.';
+  String get importNeedsFile => 'اختر ملف JSON أولًا.';
 
   @override
-  String get importNeedsDestination => 'Choose where to import it first.';
+  String get importNeedsDestination => 'اختر وجهة الاستيراد أولًا.';
 
   @override
-  String get importFileLabel => 'File';
+  String get importFileLabel => 'الملف';
 
   @override
-  String get importPreviewLabel => 'Conversation';
+  String get importPreviewLabel => 'المحادثة';
 
   @override
   String importMessages(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count messages',
-      one: '1 message',
+      other: 'عدد الرسائل: $count',
+      one: 'رسالة واحدة',
     );
     return '$_temp0';
   }
 
   @override
-  String get importNoDestinationsTitle => 'Nowhere to import';
+  String get importNoDestinationsTitle => 'لا توجد وجهة للاستيراد';
 
   @override
   String importOnServer(String server) {
-    return 'On $server';
+    return 'على $server';
   }
 
   @override
-  String get importChangeDestinationShort => 'Change';
+  String get importChangeDestinationShort => 'تغيير الوجهة';
 
   @override
-  String get importConversationId => 'Conversation ID';
+  String get importConversationId => 'معرّف المحادثة';
 
   @override
-  String get importParentId => 'Parent conversation ID';
+  String get importParentId => 'معرّف المحادثة الأم';
 
   @override
-  String get importFolder => 'Folder';
+  String get importFolder => 'المجلد';
 
   @override
-  String get importEnvironmentId => 'Cloud environment ID';
+  String get importEnvironmentId => 'معرّف البيئة السحابية';
 
   @override
   String get phoneSetupStartUseTermuxOne => 'استخدام النسخة في Termux';
@@ -17183,25 +17183,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get transcriptTogglesReasoningOn =>
-      'When on, the model\'s reasoning opens under each answer.';
+      'عند التفعيل، يُفتح استدلال النموذج أسفل كل رد.';
 
   @override
   String get transcriptTogglesUsageOn =>
-      'When on, each message shows its time, tokens and cost.';
+      'عند التفعيل، تعرض كل رسالة وقتها ورموزها وتكلفتها.';
 
   @override
   String get transcriptTogglesScope =>
-      'These apply to every conversation on this device.';
+      'تسري هذه الخيارات على كل المحادثات على هذا الجهاز.';
 
   @override
-  String get handoffSheetCopyCommand => 'Copy command';
+  String get handoffSheetCopyCommand => 'نسخ الأمر';
 
   @override
-  String get handoffSheetReloadConversation => 'Try again';
+  String get handoffSheetReloadConversation => 'حاول مجددًا';
 
   @override
   String get handoffSheetPhoneServerNote =>
-      'If the other phone does not have this server saved yet, it says so and offers to open Servers so you can add it.';
+      'إذا لم يُحفظ هذا الخادم على الهاتف الآخر بعد، يوضح ذلك ويتيح فتح الخوادم لإضافته.';
 
   @override
   String get modelPickerChooseFirst => 'اختر نموذجًا أولًا.';
@@ -17326,50 +17326,50 @@ class AppLocalizationsAr extends AppLocalizations {
   String get teamPhoneRemoveConfirm => 'حذف الفريق';
 
   @override
-  String get productStatesActionFailedTitle => 'Couldn\'t finish that';
+  String get productStatesActionFailedTitle => 'تعذّر إكمال ذلك';
 
   @override
-  String get productStatesSwitchServer => 'Switch server';
+  String get productStatesSwitchServer => 'تبديل الخادم';
 
   @override
-  String get externalLinkBlockedTitle => 'Link blocked';
+  String get externalLinkBlockedTitle => 'الرابط محظور';
 
   @override
   String get externalLinkBlockedBody =>
-      'This app opens only https:// links, and http:// links after you confirm.';
+      'يفتح هذا التطبيق روابط https:// فقط، وروابط http:// بعد تأكيدك.';
 
   @override
   String externalLinkOpensHost(String host) {
-    return 'Opens $host outside this app.';
+    return 'يفتح $host خارج هذا التطبيق.';
   }
 
   @override
-  String get externalLinkDontOpen => 'Don\'t open';
+  String get externalLinkDontOpen => 'إلغاء الفتح';
 
   @override
-  String get externalLinkCopy => 'Copy link';
+  String get externalLinkCopy => 'نسخ الرابط';
 
   @override
-  String get externalLinkAddress => 'Full address';
+  String get externalLinkAddress => 'العنوان الكامل';
 
   @override
-  String get externalLinkOpenFailedTitle => 'Couldn\'t open link';
+  String get externalLinkOpenFailedTitle => 'تعذّر فتح الرابط';
 
   @override
   String get runCommandReconnecting =>
-      'OpenCode is reconnecting. Try again in a moment.';
+      'جارٍ إعادة اتصال OpenCode. حاول مجددًا بعد قليل.';
 
   @override
   String runCommandArgumentsHelper(String command) {
-    return 'Text passed to /$command. Leave it empty if the command takes none.';
+    return 'النص الذي يُمرّر إلى /$command. اتركه فارغًا إذا لم يحتج الأمر إلى معاملات.';
   }
 
   @override
-  String get runCommandRunsIn => 'Runs in';
+  String get runCommandRunsIn => 'يعمل في';
 
   @override
   String runCommandFailedTitle(String command) {
-    return 'Couldn\'t run /$command';
+    return 'تعذّر تشغيل /$command';
   }
 
   @override
@@ -17472,31 +17472,31 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get gateSheetDestructiveBody =>
-      'The host marks this action as destructive. Approving it can\'t be undone from the phone.';
+      'يصنّف المضيف هذا الإجراء على أنه إتلافي. لا يمكن التراجع عن الموافقة عليه من الهاتف.';
 
   @override
-  String get gateSheetAnswerLabel => 'Your answer';
+  String get gateSheetAnswerLabel => 'إجابتك';
 
   @override
   String get gateSheetAfterAnswer =>
-      'The team carries on as soon as the host confirms your answer.';
+      'يتابع الفريق بمجرد أن يؤكّد المضيف إجابتك.';
 
   @override
-  String get gateSheetFixIt => 'Ask the team to fix it';
+  String get gateSheetFixIt => 'طلب إصلاح المشكلة من الفريق';
 
   @override
   String gateSheetFixItDetail(String agent) {
-    return 'Sends the error to $agent and asks it to find the cause and carry on.';
+    return 'يرسل الخطأ إلى $agent ويطلب منه معرفة السبب والمتابعة.';
   }
 
   @override
   String gateSheetFixRequest(String task, String error) {
-    return 'The task “$task” failed with this error:\n$error\nPlease find the cause, fix it and carry on.';
+    return 'فشلت المهمة «$task» بهذا الخطأ:\n$error\nيرجى معرفة السبب وإصلاحه والمتابعة.';
   }
 
   @override
   String gateSheetOpenAgent(String agent) {
-    return 'Open $agent\'s page';
+    return 'فتح صفحة $agent';
   }
 
   @override
@@ -17535,7 +17535,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get teamAgentScreenLabelId => 'معرّف الوكيل';
 
   @override
-  String get gateSheetSendNeedsText => 'Type an answer first';
+  String get gateSheetSendNeedsText => 'اكتب إجابة أولًا';
 
   @override
   String teamAgentsChecked(String age) {
@@ -17655,20 +17655,20 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get reviewWorkspaceScopes => 'Changes to show';
+  String get reviewWorkspaceScopes => 'التغييرات المطلوب عرضها';
 
   @override
-  String get reviewWorkspaceRefreshFailed => 'Couldn\'t refresh the changes';
+  String get reviewWorkspaceRefreshFailed => 'تعذّر تحديث التغييرات';
 
   @override
-  String get reviewWorkspaceSlowTitle => 'Still reading the changes';
+  String get reviewWorkspaceSlowTitle => 'لا تزال قراءة التغييرات جارية';
 
   @override
   String get reviewWorkspaceSlowBody =>
-      'The server runs git to compare the files. A big project can take a minute.';
+      'يشغّل الخادم git لمقارنة الملفات. قد يستغرق المشروع الكبير دقيقة.';
 
   @override
-  String get reviewWorkspaceAllViewedTitle => 'You\'ve seen every file';
+  String get reviewWorkspaceAllViewedTitle => 'راجعت كل الملفات';
 
   @override
   String reviewWorkspaceAllViewedMessage(int count) {
@@ -17676,41 +17676,41 @@ class AppLocalizationsAr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count notes are on the prompt, ready to send from the conversation.',
-      one: '1 note is on the prompt, ready to send from the conversation.',
+          'الملاحظات المضافة إلى الطلب وعددها $count جاهزة للإرسال من المحادثة.',
+      one: 'ملاحظة واحدة مضافة إلى الطلب وجاهزة للإرسال من المحادثة.',
     );
     return '$_temp0';
   }
 
   @override
-  String get reviewWorkspaceBackToChat => 'Back to the conversation';
+  String get reviewWorkspaceBackToChat => 'العودة إلى المحادثة';
 
   @override
   String reviewWorkspaceCommentOnFile(String file) {
-    return 'Comment on $file';
+    return 'التعليق على $file';
   }
 
   @override
   String reviewWorkspaceAddFileToPrompt(String file) {
-    return 'Add $file to the prompt';
+    return 'إضافة $file إلى الطلب';
   }
 
   @override
-  String get reviewWorkspaceAddComment => 'Add comment to prompt';
+  String get reviewWorkspaceAddComment => 'إضافة التعليق إلى الطلب';
 
   @override
-  String get reviewWorkspaceCommentEmpty => 'Type a comment first.';
+  String get reviewWorkspaceCommentEmpty => 'اكتب تعليقًا أولًا.';
 
   @override
-  String get reviewWorkspaceCommentLabel => 'Your comment';
+  String get reviewWorkspaceCommentLabel => 'تعليقك';
 
   @override
   String get reviewWorkspaceCommentHint =>
-      'What should the agent check or change?';
+      'ما الذي ينبغي أن يفحصه الوكيل أو يغيّره؟';
 
   @override
   String get reviewWorkspaceCommentHelper =>
-      'Kept if you close this, until you add it.';
+      'يبقى محفوظًا إذا أغلقت هذا العرض، حتى تضيفه.';
 
   @override
   String get integrationsMcpTitle => 'خوادم MCP';
@@ -17860,51 +17860,51 @@ class AppLocalizationsAr extends AppLocalizations {
   String get integrationsCopyResourceAddress => 'نسخ العنوان';
 
   @override
-  String get terminalScreenSourceLabel => 'Where the shell runs';
+  String get terminalScreenSourceLabel => 'مكان تشغيل مفسّر الأوامر';
 
   @override
-  String get terminalScreenNameLabel => 'Name';
+  String get terminalScreenNameLabel => 'الاسم';
 
   @override
-  String get terminalScreenRenameConfirm => 'Rename';
+  String get terminalScreenRenameConfirm => 'تغيير الاسم';
 
   @override
-  String get terminalScreenNameEmpty => 'Type a name.';
+  String get terminalScreenNameEmpty => 'اكتب اسمًا.';
 
   @override
   String terminalScreenStopTitle(String name) {
-    return 'Stop $name?';
+    return 'هل تريد إيقاف $name؟';
   }
 
   @override
   String get terminalScreenStopBody =>
-      'The program and everything it started stop, and the terminal goes away. Its output can\'t be brought back.';
+      'يتوقف البرنامج وكل ما شغّله وتختفي الطرفية. لا يمكن استعادة مخرجاتها.';
 
   @override
   String terminalScreenRemoveTitle(String name) {
-    return 'Remove $name?';
+    return 'هل تريد إزالة $name؟';
   }
 
   @override
   String get terminalScreenRemoveBody =>
-      'The terminal and its output go away. This can\'t be undone.';
+      'تختفي الطرفية ومخرجاتها. لا يمكن التراجع عن ذلك.';
 
   @override
-  String get terminalScreenStopConfirm => 'Stop terminal';
+  String get terminalScreenStopConfirm => 'إيقاف الطرفية';
 
   @override
-  String get terminalScreenRemoveConfirm => 'Remove terminal';
+  String get terminalScreenRemoveConfirm => 'إزالة الطرفية';
 
   @override
-  String get terminalScreenCreateFailed => 'Couldn\'t start a terminal';
+  String get terminalScreenCreateFailed => 'تعذّر تشغيل طرفية';
 
   @override
   String terminalScreenRemoveEnded(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Remove $count ended terminals',
-      one: 'Remove 1 ended terminal',
+      other: 'إزالة الطرفيات المنتهية وعددها $count',
+      one: 'إزالة طرفية منتهية واحدة',
     );
     return '$_temp0';
   }
@@ -17914,128 +17914,128 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Remove $count ended terminals?',
-      one: 'Remove 1 ended terminal?',
+      other: 'هل تريد إزالة الطرفيات المنتهية وعددها $count؟',
+      one: 'هل تريد إزالة طرفية منتهية واحدة؟',
     );
     return '$_temp0';
   }
 
   @override
   String get terminalScreenRemoveEndedBody =>
-      'Their output goes away too. Running terminals stay.';
+      'تختفي مخرجاتها أيضًا. تبقى الطرفيات قيد التشغيل.';
 
   @override
-  String get terminalScreenUsePhone => 'Use this phone\'s terminal';
+  String get terminalScreenUsePhone => 'استخدام طرفية هذا الهاتف';
 
   @override
   String terminalScreenRowRunning(String command) {
-    return 'Running · $command';
+    return 'قيد التشغيل · $command';
   }
 
   @override
   String terminalScreenRowEnded(String code, String command) {
-    return 'Ended · code $code · $command';
+    return 'انتهت · الرمز $code · $command';
   }
 
   @override
   String terminalScreenRowEndedNoCode(String command) {
-    return 'Ended · $command';
+    return 'انتهت · $command';
   }
 
   @override
   String terminalScreenMenuLabel(String name) {
-    return 'Actions for $name';
+    return 'إجراءات $name';
   }
 
   @override
   String terminalScreenOpen(String name) {
-    return 'Open $name';
+    return 'فتح $name';
   }
 
   @override
   String terminalScreenRename(String name) {
-    return 'Rename $name';
+    return 'تغيير اسم $name';
   }
 
   @override
   String terminalScreenStop(String name) {
-    return 'Stop $name';
+    return 'إيقاف $name';
   }
 
   @override
   String terminalScreenRemove(String name) {
-    return 'Remove $name';
+    return 'إزالة $name';
   }
 
   @override
-  String get terminalScreenLoading => 'Loading terminals';
+  String get terminalScreenLoading => 'جارٍ تحميل الطرفيات';
 
   @override
   String get terminalScreenPaused =>
-      'Paused while the app is in the background';
+      'متوقفة مؤقتًا أثناء وجود التطبيق في الخلفية';
 
   @override
-  String get terminalScreenConnecting => 'Connecting to the terminal';
+  String get terminalScreenConnecting => 'جارٍ الاتصال بالطرفية';
 
   @override
-  String get terminalScreenCopy => 'Copy output';
+  String get terminalScreenCopy => 'نسخ المخرجات';
 
   @override
   String terminalScreenPaste(String name) {
-    return 'Paste into $name';
+    return 'اللصق في $name';
   }
 
   @override
-  String get terminalScreenDetails => 'Terminal details';
+  String get terminalScreenDetails => 'تفاصيل الطرفية';
 
   @override
   String terminalScreenDetailsTitle(String name) {
-    return '$name details';
+    return 'تفاصيل $name';
   }
 
   @override
-  String get terminalScreenDetailCommand => 'Command';
+  String get terminalScreenDetailCommand => 'الأمر';
 
   @override
-  String get terminalScreenDetailFolder => 'Folder';
+  String get terminalScreenDetailFolder => 'المجلد';
 
   @override
-  String get terminalScreenDetailPid => 'Process id';
+  String get terminalScreenDetailPid => 'معرّف العملية';
 
   @override
-  String get terminalScreenDetailExit => 'Exit code';
+  String get terminalScreenDetailExit => 'رمز الخروج';
 
   @override
   String localTerminalStopNamedTitle(String name) {
-    return 'Stop $name?';
+    return 'هل تريد إيقاف $name؟';
   }
 
   @override
   String localTerminalPasteNamed(String name) {
-    return 'Paste into $name';
+    return 'اللصق في $name';
   }
 
   @override
-  String get localTerminalCopySelection => 'Copy selection';
+  String get localTerminalCopySelection => 'نسخ التحديد';
 
   @override
   String defaultShellOnlyOne(String name) {
-    return '$name · the only shell this server offers';
+    return '$name · مفسّر الأوامر الوحيد الذي يتيحه هذا الخادم';
   }
 
   @override
   String defaultShellSaveFailed(String error) {
-    return 'Couldn\'t change the shell. $error Tap to try again.';
+    return 'تعذّر تغيير مفسّر الأوامر. $error اضغط للمحاولة مجددًا.';
   }
 
   @override
-  String get terminalScreenReadableMode => 'Show as readable text';
+  String get terminalScreenReadableMode => 'العرض كنص مقروء';
 
   @override
-  String get terminalScreenLiveMode => 'Show as live terminal';
+  String get terminalScreenLiveMode => 'العرض كطرفية مباشرة';
 
   @override
-  String get localTerminalSetUpLinux => 'Set up Linux on this phone';
+  String get localTerminalSetUpLinux => 'إعداد Linux على هذا الهاتف';
 
   @override
   String get messageViewSendAgain => 'إرسال هذه الرسالة مجددًا';
@@ -18044,71 +18044,69 @@ class AppLocalizationsAr extends AppLocalizations {
   String get messageViewContinueReply => 'متابعة هذا الرد';
 
   @override
-  String get reviewRunResultsLoadingTitle => 'Loading run results';
+  String get reviewRunResultsLoadingTitle => 'جارٍ تحميل نتائج التشغيل';
 
   @override
-  String get reviewRunResultsErrorTitle => 'Couldn\'t load run results';
+  String get reviewRunResultsErrorTitle => 'تعذّر تحميل نتائج التشغيل';
 
   @override
-  String get reviewRunResultsErrorBody =>
-      'The server didn\'t send this run\'s history.';
+  String get reviewRunResultsErrorBody => 'لم يرسل الخادم سجل هذا التشغيل.';
 
   @override
-  String get reviewRunResultsEmptyTitle => 'Nothing to show yet';
+  String get reviewRunResultsEmptyTitle => 'لا يوجد ما يُعرض بعد';
 
   @override
-  String get reviewRunResultsScopeChangedTitle => 'The project changed';
+  String get reviewRunResultsScopeChangedTitle => 'تغيّر المشروع';
 
   @override
-  String get reviewRunResultsCloseAction => 'Close run results';
+  String get reviewRunResultsCloseAction => 'إغلاق نتائج التشغيل';
 
   @override
   String get reviewRunResultsRunningNotice =>
-      'Still running. This shows what it has done so far; pull down for the latest.';
+      'لا يزال التشغيل جاريًا. يُعرض ما أُنجز حتى الآن؛ اسحب لأسفل لعرض الأحدث.';
 
   @override
   String get reviewRunResultsRefreshFailed =>
-      'Couldn\'t refresh. This is what was loaded before.';
+      'تعذّر التحديث. هذه البيانات التي حُمّلت سابقًا.';
 
   @override
-  String get reviewRunResultsReviewChanges => 'Review changed files';
+  String get reviewRunResultsReviewChanges => 'مراجعة الملفات المتغيّرة';
 
   @override
-  String get reviewRevertSheetTitle => 'Undo from this prompt?';
+  String get reviewRevertSheetTitle => 'هل تريد التراجع بدءًا من هذا الطلب؟';
 
   @override
   String get reviewRevertSheetBody =>
-      'This prompt and everything after it are hidden while you review. Nothing is final until you choose.';
+      'يُخفى هذا الطلب وكل ما يليه أثناء المراجعة. لا يُثبّت شيء نهائيًا حتى تختار.';
 
   @override
-  String get reviewRevertPromptLabel => 'From this prompt';
+  String get reviewRevertPromptLabel => 'بدءًا من هذا الطلب';
 
   @override
-  String get reviewRevertFilesToggle => 'Put files back too';
+  String get reviewRevertFilesToggle => 'استعادة الملفات أيضًا';
 
   @override
   String get reviewRevertFilesToggleHint =>
-      'Files go back to how they were before this prompt.';
+      'تعود الملفات إلى حالتها قبل هذا الطلب.';
 
   @override
-  String get reviewRevertSheetAction => 'Undo and review';
+  String get reviewRevertSheetAction => 'تطبيق التراجع ومراجعته';
 
   @override
-  String get reviewRevertStageFailed =>
-      'Couldn\'t set up the undo. Nothing was hidden.';
+  String get reviewRevertStageFailed => 'تعذّر إعداد التراجع. لم يُخفَ شيء.';
 
   @override
-  String get reviewRevertScreenTitle => 'Review the undo';
+  String get reviewRevertScreenTitle => 'مراجعة التراجع';
 
   @override
   String get reviewRevertScreenIntro =>
-      'This prompt and everything after it are hidden. Nothing is final until you choose below.';
+      'هذا الطلب وكل ما يليه مخفي. لا يُثبّت شيء نهائيًا حتى تختار أدناه.';
 
   @override
-  String get reviewRevertFilesLabel => 'Files in this undo';
+  String get reviewRevertFilesLabel => 'الملفات في هذا التراجع';
 
   @override
-  String get reviewRevertNoFiles => 'No files change with this undo.';
+  String get reviewRevertNoFiles => 'لا تتغيّر ملفات بهذا التراجع.';
 
   @override
   String reviewRevertFileLines(int added, int removed) {
@@ -18121,94 +18119,96 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get reviewRevertRestoreTitle => 'Put everything back';
+  String get reviewRevertRestoreTitle => 'استعادة كل شيء';
 
   @override
-  String get reviewRevertKeepTitle => 'Delete the hidden messages';
+  String get reviewRevertKeepTitle => 'حذف الرسائل المخفية';
 
   @override
-  String get reviewRevertKeepConfirmTitle => 'Delete hidden messages forever?';
+  String get reviewRevertKeepConfirmTitle =>
+      'هل تريد حذف الرسائل المخفية نهائيًا؟';
 
   @override
-  String get reviewRevertKeepConfirmBody => 'This can\'t be undone.';
+  String get reviewRevertKeepConfirmBody => 'لا يمكن التراجع عن ذلك.';
 
   @override
-  String get reviewRevertKeepConfirmAction => 'Delete hidden messages';
+  String get reviewRevertKeepConfirmAction => 'حذف الرسائل المخفية';
 
   @override
   String get reviewRevertKeepConsequenceMessages =>
-      'The hidden prompt and every message after it are deleted';
+      'يُحذف الطلب المخفي وكل رسالة تليه';
 
   @override
-  String get reviewRevertKeepConsequenceFiles => 'Files stay as they are now';
+  String get reviewRevertKeepConsequenceFiles =>
+      'تبقى الملفات على حالتها الحالية';
 
   @override
-  String get reviewRevertRestoreConfirmTitle => 'Put everything back?';
+  String get reviewRevertRestoreConfirmTitle => 'هل تريد استعادة كل شيء؟';
 
   @override
   String get reviewRevertRestoreConfirmBody =>
-      'The hidden messages come back, and the files in this undo return to how they were when you set it up. You can undo from a prompt again later.';
+      'تعود الرسائل المخفية، وتعود الملفات في هذا التراجع إلى حالتها عند إعداده. يمكنك التراجع بدءًا من طلب مجددًا لاحقًا.';
 
   @override
-  String get reviewRevertRestoreConsequenceMessages =>
-      'The hidden messages come back';
+  String get reviewRevertRestoreConsequenceMessages => 'تعود الرسائل المخفية';
 
   @override
   String reviewRevertRestoreConsequenceFiles(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count files are replaced, with any edits made since',
-      one: '1 file is replaced, with any edits made since',
+      other:
+          'تُستبدل الملفات وعددها $count، بما في ذلك أي تعديلات أُجريت منذ ذلك الحين',
+      one: 'يُستبدل ملف واحد، بما في ذلك أي تعديلات أُجريت منذ ذلك الحين',
     );
     return '$_temp0';
   }
 
   @override
   String get reviewRevertRestoreConsequenceUnknownFiles =>
-      'Files in this undo are replaced, with any edits made since';
+      'تُستبدل الملفات في هذا التراجع، بما في ذلك أي تعديلات أُجريت منذ ذلك الحين';
 
   @override
-  String get reviewRevertStaleTitle => 'The undo changed';
+  String get reviewRevertStaleTitle => 'تغيّر التراجع';
 
   @override
-  String get reviewRevertNoneTitle => 'Nothing to review';
+  String get reviewRevertNoneTitle => 'لا يوجد ما يُراجع';
 
   @override
   String get reviewRevertNoneBody =>
-      'There\'s no undo waiting in this conversation.';
+      'لا يوجد تراجع ينتظر المراجعة في هذه المحادثة.';
 
   @override
-  String get reviewRevertBackAction => 'Back to the conversation';
+  String get reviewRevertBackAction => 'العودة إلى المحادثة';
 
   @override
-  String get reviewRevertKeptTitle => 'Undo kept';
+  String get reviewRevertKeptTitle => 'ثُبّت التراجع';
 
   @override
   String get reviewRevertKeptBody =>
-      'The hidden messages are deleted. Files stay as they are.';
+      'حُذفت الرسائل المخفية. تبقى الملفات على حالتها الحالية.';
 
   @override
-  String get reviewRevertRestoredTitle => 'Everything is back';
+  String get reviewRevertRestoredTitle => 'استُعيد كل شيء';
 
   @override
   String get reviewRevertRestoredBody =>
-      'The messages and files are back as they were.';
+      'عادت الرسائل والملفات إلى حالتها السابقة.';
 
   @override
   String get reviewRevertFailed =>
-      'That didn\'t finish. Check the conversation, then try again.';
+      'لم يكتمل ذلك. تحقّق من المحادثة، ثم حاول مجددًا.';
 
   @override
-  String get perfTraceClearTimings => 'Clear timings';
+  String get perfTraceClearTimings => 'مسح التوقيتات';
 
   @override
   String appDiagnosticsClearTitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Clear $count errors?',
-      one: 'Clear 1 error?',
+      other: 'هل تريد مسح الأخطاء وعددها $count؟',
+      one: 'هل تريد مسح خطأ واحد؟',
     );
     return '$_temp0';
   }
@@ -18219,9 +18219,9 @@ class AppLocalizationsAr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'The $count errors kept on this phone are removed, also from the saved report. This can\'t be undone.',
+          'تُزال الأخطاء المحفوظة على هذا الهاتف وعددها $count، ومن التقرير المحفوظ أيضًا. لا يمكن التراجع عن ذلك.',
       one:
-          'The error kept on this phone is removed, also from the saved report. This can\'t be undone.',
+          'يُزال الخطأ المحفوظ على هذا الهاتف، ومن التقرير المحفوظ أيضًا. لا يمكن التراجع عن ذلك.',
     );
     return '$_temp0';
   }
@@ -18231,56 +18231,56 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Clear $count errors',
-      one: 'Clear 1 error',
+      other: 'مسح الأخطاء وعددها $count',
+      one: 'مسح خطأ واحد',
     );
     return '$_temp0';
   }
 
   @override
-  String get capabilityStateHere => 'Works here';
+  String get capabilityStateHere => 'يعمل هنا';
 
   @override
-  String get capabilityStateNotServer => 'Not on this server';
+  String get capabilityStateNotServer => 'غير متاح على هذا الخادم';
 
   @override
-  String get capabilityStateNotDevice => 'Not on this device';
+  String get capabilityStateNotDevice => 'غير متاح على هذا الجهاز';
 
   @override
-  String get capabilityNeedsAndroid => 'Needs the Android app';
+  String get capabilityNeedsAndroid => 'يحتاج تطبيق Android';
 
   @override
   String capabilityAvailableCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count features work here',
-      one: '1 feature works here',
+      other: 'ميزات تعمل هنا: $count',
+      one: 'ميزة واحدة تعمل هنا',
     );
     return '$_temp0';
   }
 
   @override
   String get capabilityAvailableCountDetail =>
-      'Show what this server and device can do';
+      'عرض ما يمكن لهذا الخادم والجهاز فعله';
 
   @override
-  String get capabilityAddServer => 'Add a server that has these';
+  String get capabilityAddServer => 'إضافة خادم يتيح هذه الميزات';
 
   @override
   String get capabilityAddServerDetail =>
-      'Connect another computer or set one up on this phone, then switch to it';
+      'اتصل بحاسوب آخر أو أعدّ خادمًا على هذا الهاتف، ثم بدّل إليه';
 
   @override
-  String get keepRunningAllSetTitle => 'You\'re set';
+  String get keepRunningAllSetTitle => 'الإعداد مكتمل';
 
   @override
   String get keepRunningAllSetBody =>
-      'Android leaves the app running in the background. There is nothing else to allow on this phone.';
+      'يترك Android التطبيق يعمل في الخلفية. لا توجد أذونات أخرى مطلوبة على هذا الهاتف.';
 
   @override
   String get keepRunningDailyLimit =>
-      'On Android 15 and newer, Android allows background syncing for about 6 hours a day, even with everything here allowed. After that the app pauses in the background until you open it.';
+      'على Android 15 والإصدارات الأحدث، يتيح Android المزامنة في الخلفية لنحو 6 ساعات يوميًا، حتى مع السماح بكل ما هنا. بعدها يتوقف التطبيق مؤقتًا في الخلفية حتى تفتحه.';
 
   @override
   String get aboutTitle => 'حول التطبيق';
@@ -18326,10 +18326,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get aboutPackageId => 'معرّف الحزمة';
 
   @override
-  String get providerQuotaProviderLabel => 'Provider';
+  String get providerQuotaProviderLabel => 'المزوّد';
 
   @override
-  String get providerQuotaRouteLabel => 'Collector route';
+  String get providerQuotaRouteLabel => 'مسار أداة الجمع';
 
   @override
   String get usageHubUnavailableTitle => 'لا يوجد استخدام لعرضه';
@@ -18399,125 +18399,123 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voiceSetupBusyReason => 'يتوفّر بعد التنزيل';
 
   @override
-  String get shorebirdUpdateReadyTitle => 'App update ready';
+  String get shorebirdUpdateReadyTitle => 'تحديث التطبيق جاهز';
 
   @override
   String get shorebirdUpdateReadyBody =>
-      'It takes effect when you fully close the app and open it again.';
+      'يسري عند إغلاق التطبيق بالكامل وفتحه مجددًا.';
 
   @override
   String desktopReleaseAvailable(String tag) {
-    return 'Update $tag is available';
+    return 'التحديث $tag متاح';
   }
 
   @override
   String get desktopReleaseWhatChanged =>
-      'The release page lists what changed and has the downloads.';
+      'تعرض صفحة الإصدار التغييرات وروابط التنزيل.';
 
   @override
-  String get desktopReleaseOpenPage => 'Open release page';
+  String get desktopReleaseOpenPage => 'فتح صفحة الإصدار';
 
   @override
-  String get runningWorkTitle => 'Work in this conversation';
+  String get runningWorkTitle => 'العمل في هذه المحادثة';
 
   @override
-  String get runningWorkFailed => 'Failed';
+  String get runningWorkFailed => 'فشل';
 
   @override
   String runningWorkAgentState(String state) {
-    return 'Agent · $state';
+    return 'الوكيل · $state';
   }
 
   @override
   String runningWorkCommandState(String state) {
-    return 'Command · $state';
+    return 'الأمر · $state';
   }
 
   @override
   String get runningWorkOffline =>
-      'Reconnecting. Try again once the server answers.';
+      'جارٍ إعادة الاتصال. حاول مجددًا عندما يردّ الخادم.';
 
   @override
   String runningWorkStopAgent(String title) {
-    return 'Stop “$title”';
+    return 'إيقاف «$title»';
   }
 
   @override
   String runningWorkStopAgentTitle(String title) {
-    return 'Stop “$title”?';
+    return 'هل تريد إيقاف «$title»؟';
   }
 
   @override
   String get runningWorkStopAgentBody =>
-      'The agent stops where it is. Its conversation and the files it changed are kept.';
+      'يتوقف الوكيل عند خطوته الحالية. تبقى محادثته والملفات التي غيّرها محفوظة.';
 
   @override
-  String get runningWorkStopAgentConfirm => 'Stop agent';
+  String get runningWorkStopAgentConfirm => 'إيقاف الوكيل';
 
   @override
-  String get runningWorkScopeChangedTitle => 'Server or project changed';
+  String get runningWorkScopeChangedTitle => 'تغيّر الخادم أو المشروع';
 
   @override
-  String get runningWorkAgentsFailed =>
-      'Couldn\'t load this conversation\'s agents.';
+  String get runningWorkAgentsFailed => 'تعذّر تحميل وكلاء هذه المحادثة.';
 
   @override
-  String get runningWorkCommandsFailed =>
-      'Couldn\'t load this conversation\'s commands.';
+  String get runningWorkCommandsFailed => 'تعذّر تحميل أوامر هذه المحادثة.';
 
   @override
-  String get runningWorkEmptyTitle => 'Nothing running';
+  String get runningWorkEmptyTitle => 'لا يوجد عمل جارٍ';
 
   @override
   String get runningWorkEmptyBody =>
-      'Agents and commands this conversation starts show here while they run and after they end.';
+      'تظهر هنا الوكلاء والأوامر التي تبدأها هذه المحادثة أثناء عملها وبعد انتهائها.';
 
   @override
   String get runningWorkBackgroundBody =>
-      'The work keeps running on the server and its results come back here.';
+      'يواصل العمل التشغيل على الخادم وتعود نتائجه إلى هنا.';
 
   @override
-  String get runningWorkBackgroundAction => 'Keep chatting while it runs';
+  String get runningWorkBackgroundAction => 'متابعة المحادثة أثناء التشغيل';
 
   @override
-  String get shellOutputCopyFirst => 'Copy output first';
+  String get shellOutputCopyFirst => 'نسخ المخرجات أولًا';
 
   @override
-  String get shellOutputLimitTitle => 'Stop it after…';
+  String get shellOutputLimitTitle => 'الإيقاف بعد…';
 
   @override
   String shellOutputStopsIn(String time) {
-    return 'stops in $time';
+    return 'يتوقف خلال $time';
   }
 
   @override
-  String get shellOutputNoLimit => 'no time limit';
+  String get shellOutputNoLimit => 'بلا مهلة زمنية';
 
   @override
   String shellOutputAboutToStop(String time) {
-    return 'It stops in $time. Change timeout to give it longer.';
+    return 'يتوقف خلال $time. غيّر المهلة لمنحه وقتًا أطول.';
   }
 
   @override
-  String get shellOutputReadFailed => 'Couldn\'t read the output.';
+  String get shellOutputReadFailed => 'تعذّرت قراءة المخرجات.';
 
   @override
-  String get shellOutputLimitFailed => 'Couldn\'t change the time limit.';
+  String get shellOutputLimitFailed => 'تعذّر تغيير المهلة الزمنية.';
 
   @override
-  String get shellOutputDetailCommand => 'Command as typed';
+  String get shellOutputDetailCommand => 'الأمر كما كُتب';
 
   @override
-  String get shellOutputDetailFolder => 'Folder';
+  String get shellOutputDetailFolder => 'المجلد';
 
   @override
-  String get shellOutputDetailExit => 'Exit code';
+  String get shellOutputDetailExit => 'رمز الخروج';
 
   @override
-  String get shellOutputDetailId => 'Command ID';
+  String get shellOutputDetailId => 'معرّف الأمر';
 
   @override
-  String get shellOutputReading => 'Reading output';
+  String get shellOutputReading => 'جارٍ قراءة المخرجات';
 
   @override
   String get sessionDestinationWarpTitle => 'نقل إلى السحابة';
@@ -18579,28 +18577,27 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get consoleOrganizationWhatChanges =>
-      'Models, providers and billing follow the organization you pick.';
+      'تتبع النماذج والمزوّدون والفوترة المؤسسة التي تختارها.';
 
   @override
   String consoleOrganizationSwitchBody(String organization) {
-    return '$organization becomes the organization for models, providers and billing. Models reload; nothing running is stopped.';
+    return 'تصبح $organization المؤسسة الخاصة بالنماذج والمزوّدين والفوترة. يُعاد تحميل النماذج؛ لا يتوقف أي عمل جارٍ.';
   }
 
   @override
   String consoleOrganizationSwitchConfirm(String organization) {
-    return 'Switch to $organization';
+    return 'التبديل إلى $organization';
   }
 
   @override
-  String get consoleOrganizationLoadFailed =>
-      'Couldn\'t load your organizations';
+  String get consoleOrganizationLoadFailed => 'تعذّر تحميل مؤسساتك';
 
   @override
-  String get consoleOrganizationNoneTitle => 'No organizations';
+  String get consoleOrganizationNoneTitle => 'لا توجد مؤسسات';
 
   @override
   String get consoleOrganizationOnlyOne =>
-      'This is your only organization, so there is nothing to switch to.';
+      'هذه مؤسستك الوحيدة، لذا لا توجد مؤسسة أخرى للتبديل إليها.';
 
   @override
   String get sessionContextLoading => 'جارٍ تحميل السياق';
@@ -18677,14 +18674,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sessionContextModelId => 'معرّف النموذج';
 
   @override
-  String get demoScreenTitle => 'Try it offline';
+  String get demoScreenTitle => 'التجربة دون اتصال';
 
   @override
-  String get demoScreenSimulated => 'Simulated · nothing is saved';
+  String get demoScreenSimulated => 'محاكاة · لا يُحفظ شيء';
 
   @override
   String get demoScreenFinished =>
-      'That\'s the whole loop: a prompt, a reply and a reviewed edit.';
+      'هذه هي الخطوات كاملة: طلب وردّ وتعديل تمت مراجعته.';
 
   @override
   String sessionContextPercent(String percent) {
@@ -18703,51 +18700,51 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get activeContextLoading => 'Reading the active context…';
+  String get activeContextLoading => 'جارٍ قراءة السياق النشط…';
 
   @override
   String activeContextAllCount(int count) {
-    return 'All messages · $count';
+    return 'كل الرسائل · $count';
   }
 
   @override
-  String get activeContextChangedTitle => 'This view is outdated';
+  String get activeContextChangedTitle => 'هذا العرض قديم';
 
   @override
-  String get activeContextFailedTitle => 'Couldn\'t read the context';
+  String get activeContextFailedTitle => 'تعذّرت قراءة السياق';
 
   @override
   String get activeContextIntro =>
-      'What the model reads on its next turn, after the latest summary.';
+      'ما يقرؤه النموذج في دوره التالي، بعد أحدث ملخّص.';
 
   @override
   String get activeContextEmptyDetail =>
-      'Nothing is kept for the next turn yet. Pull down to check again.';
+      'لم يُحتفظ بشيء للدور التالي بعد. اسحب لأسفل للتحقّق مجددًا.';
 
   @override
-  String get activeContextWhat => 'active context';
+  String get activeContextWhat => 'السياق النشط';
 
   @override
   String activeContextRowMenu(String type) {
-    return 'Actions for $type';
+    return 'إجراءات $type';
   }
 
   @override
   String activeContextOpenMessage(String type) {
-    return 'Open $type';
+    return 'فتح $type';
   }
 
   @override
   String activeContextCopyMessage(String type) {
-    return 'Copy $type text';
+    return 'نسخ نص $type';
   }
 
   @override
-  String get activeContextMessageId => 'Message id';
+  String get activeContextMessageId => 'معرّف الرسالة';
 
   @override
   String activeContextCopyPart(String part) {
-    return 'Copy $part';
+    return 'نسخ $part';
   }
 
   @override
@@ -18862,87 +18859,86 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get webSourcesInvalidUrl =>
-      'Enter an HTTP or HTTPS address without a user name or password.';
+      'أدخل عنوان HTTP أو HTTPS دون اسم مستخدم أو كلمة مرور.';
 
   @override
-  String get webSearchFailedTitle => 'Search didn\'t finish';
+  String get webSearchFailedTitle => 'لم يكتمل البحث';
 
   @override
-  String get webSearchTryAgain => 'Search again';
+  String get webSearchTryAgain => 'البحث مجددًا';
 
   @override
-  String get webSearchBusy => 'Wait for the search to finish.';
+  String get webSearchBusy => 'انتظر اكتمال البحث.';
 
   @override
-  String get webSearchQueryHint => 'For example: flutter golden tests';
+  String get webSearchQueryHint =>
+      'مثلًا: اختبارات المقارنة المرئية في flutter';
 
   @override
-  String get webSearchNeedsProvider =>
-      'Set up a search provider on this server first.';
+  String get webSearchNeedsProvider => 'أعدّ مزوّد بحث على هذا الخادم أولًا.';
 
   @override
-  String get webSearchEmptyDetail => 'Try other words, or paste a link below.';
+  String get webSearchEmptyDetail => 'جرّب كلمات أخرى أو الصق رابطًا أدناه.';
 
   @override
   String webSearchResults(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count results',
-      one: '1 result',
+      other: 'عدد النتائج: $count',
+      one: 'نتيجة واحدة',
     );
     return '$_temp0';
   }
 
   @override
-  String get webSourcesAdded => 'Added';
+  String get webSourcesAdded => 'تمت الإضافة';
 
   @override
   String webSourcesAddNamed(String title) {
-    return 'Add $title to prompt';
+    return 'إضافة $title إلى الطلب';
   }
 
   @override
   String webSourcesRowMenu(String title) {
-    return 'Actions for $title';
+    return 'إجراءات $title';
   }
 
   @override
   String webSourcesOpenHost(String host) {
-    return 'Open $host in browser';
+    return 'فتح $host في المتصفح';
   }
 
   @override
-  String get webSourcesAddLink => 'Add link to prompt';
+  String get webSourcesAddLink => 'إضافة رابط إلى الطلب';
 
   @override
-  String get webSourcesPasteDetail =>
-      'A public address, with an optional excerpt';
+  String get webSourcesPasteDetail => 'عنوان عام، مع مقتطف اختياري';
 
   @override
   String webSourcesRemoveNamed(String title) {
-    return 'Remove $title from prompt';
+    return 'إزالة $title من الطلب';
   }
 
   @override
-  String get webSearchSearching => 'Searching…';
+  String get webSearchSearching => 'جارٍ البحث…';
 
   @override
-  String get webSearchFindingProviders => 'Finding search providers…';
+  String get webSearchFindingProviders => 'جارٍ البحث عن مزوّدي البحث…';
 
   @override
   String webSourcesDone(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Add $count sources to prompt',
-      one: 'Add 1 source to prompt',
+      other: 'إضافة المصادر إلى الطلب وعددها $count',
+      one: 'إضافة مصدر واحد إلى الطلب',
     );
     return '$_temp0';
   }
 
   @override
-  String get webSourcesScopeChangedTitle => 'The server changed';
+  String get webSourcesScopeChangedTitle => 'تغيّر الخادم';
 
   @override
   String get sessionExportFormatLabel => 'الصيغة';
@@ -20028,7 +20024,7 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'إيقاف $count عمليات مساعدة يتيمة',
+      other: 'إيقاف العمليات المساعدة اليتيمة وعددها $count',
       one: 'إيقاف عملية مساعدة يتيمة واحدة',
     );
     return '$_temp0';
@@ -20039,7 +20035,7 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'هل تريد إيقاف $count عمليات مساعدة يتيمة؟',
+      other: 'هل تريد إيقاف العمليات المساعدة اليتيمة وعددها $count؟',
       one: 'هل تريد إيقاف العملية المساعدة اليتيمة؟',
     );
     return '$_temp0';
@@ -21504,7 +21500,7 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count حالات رفض',
+      other: 'حالات الرفض: $count',
       one: 'رفض واحد',
     );
     return '$_temp0';
