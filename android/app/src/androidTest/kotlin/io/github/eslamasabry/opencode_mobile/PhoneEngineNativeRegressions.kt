@@ -20,15 +20,22 @@ import java.util.concurrent.atomic.AtomicReference
 /** Real packaged daemon, real occupied TCP port, and forged child-pipe control. */
 internal object PhoneEngineNativeRegressions {
     /** Stable-target subset: no daemon, service, Ubuntu or provider mutations. */
-    fun runOfflineSmoke(context: Context): List<String> {
+    fun runOfflineSmoke(context: Context, passed: (String) -> Unit = {}): List<String> {
         check(context.packageName == "io.github.eslamasabry.opencode_mobile")
         refusesUnauthenticatedChildBeforeHttp(context)
+        passed("auth_pipe_before_http")
         propagatesOnlyStaticPrivateFailureFrames(context)
+        passed("private_failure_frames")
         requiresGenuineServerPassword(context)
+        passed("qa_password_file")
         acceptsOnlyAuthenticatedHealthTiers()
+        passed("authenticated_health_tiers")
         trustsOnlyRegisteredPdfProcess(context)
+        passed("registered_pdf_identity")
         signsBeforeRequiringProtection()
+        passed("receipt_before_protection")
         stopsRemainingServicesAfterFailure()
+        passed("stop_callback_order")
         return listOf("auth_pipe_before_http", "private_failure_frames", "qa_password_file",
             "authenticated_health_tiers", "registered_pdf_identity", "receipt_before_protection",
             "stop_callback_order")

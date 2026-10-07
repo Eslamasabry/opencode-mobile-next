@@ -12,6 +12,7 @@ import io.flutter.embedding.android.FlutterView
 import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 /** Test APK only. RELEASE AOT results arrive through the integration-test plugin. */
 class Bd9DeviceSmoke : Instrumentation() {
@@ -27,18 +28,20 @@ class Bd9DeviceSmoke : Instrumentation() {
         val report = Bundle()
         var passed = false
         var activity: Activity? = null
+        var stage = "native_regressions"
         try {
             check(explicitlyEnabled && targetContext.packageName == STABLE_PACKAGE)
-            val checks = PhoneEngineNativeRegressions.runOfflineSmoke(targetContext)
-            checks.forEach { name ->
+            val checks = PhoneEngineNativeRegressions.runOfflineSmoke(targetContext) { name ->
                 sendStatus(0, Bundle().apply { putString("bd9NativeCheck", "$name:PASS") })
             }
             report.putString("bd9PhoneEngineChecks", checks.size.toString())
             report.putString("bd9PhoneEngine", "PASS")
+            stage = "launch_activity"
             activity = startActivitySync(Intent(targetContext, MainActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             // Release registrants omit dev plugins; this test runner registers
             // its QA-only dependency without adding it to production startup.
+            stage = "register_plugin"
             val flutterActivity = activity as FlutterActivity
             runOnMainSync {
                 val view = checkNotNull(flutterActivity.findViewById<FlutterView>(FlutterActivity.FLUTTER_VIEW_ID))
@@ -47,15 +50,21 @@ class Bd9DeviceSmoke : Instrumentation() {
                     engine.plugins.add(IntegrationTestPlugin())
                 }
             }
+            stage = "flutter_results"
             val results = IntegrationTestPlugin.testResults.get(RESULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            stage = if (results.values.any { it.contains("fixture_conversation_not_visible") })
+                "conversation_not_visible" else "flutter_assertion"
             check(results.size == 1 && results.values.all { it == "success" })
             report.putString("bd9FlutterTests", results.size.toString())
             report.putString("bd9Flutter", "PASS")
+            stage = "export_screenshot"
             exportScreenshot()
             passed = true
+        } catch (_: TimeoutException) {
+            report.putString("bd9Failure", "flutter_timeout")
         } catch (_: Throwable) {
             // Never expose Throwable text, Dart failure details or credentials.
-            report.putString("bd9Failure", "device_smoke_failed")
+            report.putString("bd9Failure", stage)
         } finally {
             activity?.let { current -> runOnMainSync { current.finish() } }
             report.putString("bd9Result", if (passed) "PASS" else "FAIL")

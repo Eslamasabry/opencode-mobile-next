@@ -28,6 +28,13 @@ RESULTS = {
     'bd9FlutterTests': '1', 'bd9Flutter': 'PASS', 'bd9Result': 'PASS',
 }
 SCREENSHOT = f'/sdcard/Android/data/{PACKAGE}/files/bd9-conversations.jpg'
+FAILURE_CODES = frozenset((
+    'native_regressions', 'launch_activity', 'register_plugin', 'flutter_results',
+    'conversation_not_visible', 'flutter_missing_plugin', 'flutter_platform_failure',
+    'flutter_socket_failure', 'flutter_bad_state', 'flutter_expectation',
+    'flutter_type_failure', 'flutter_null_failure', 'flutter_initialization_failure',
+    'flutter_assertion', 'flutter_timeout', 'export_screenshot',
+))
 
 
 class SmokeFailure(ValueError):
@@ -53,6 +60,25 @@ def parse_instrumentation(output):
         raise SmokeFailure('smoke_proof_incomplete')
     return {'native_checks': checks, 'phone_engine': 'PASS', 'flutter_tests': 1,
             'flutter': 'PASS', 'result': 'PASS'}
+
+
+def failure_diagnosis(output):
+    """Recover only an ordered native prefix and one known failure category."""
+    checks, failures = [], []
+    valid_checks = True
+    for line in output.splitlines():
+        if line.startswith('INSTRUMENTATION_STATUS: bd9NativeCheck='):
+            value = line.partition('=')[2]
+            if len(checks) >= len(CHECKS) or value != CHECKS[len(checks)] + ':PASS':
+                valid_checks = False
+            elif valid_checks:
+                checks.append(CHECKS[len(checks)])
+        elif line.startswith('INSTRUMENTATION_RESULT: bd9Failure='):
+            failures.append(line.partition('=')[2])
+    diagnosis = {'native_checks': checks if valid_checks else []}
+    if len(failures) == 1 and failures[0] in FAILURE_CODES:
+        diagnosis['failure_code'] = failures[0]
+    return diagnosis
 
 
 def execute(command, *, timeout=30):
@@ -105,10 +131,17 @@ def verify_apk(apk, expected, *, is_test=False):
             raise SmokeFailure('apk_runner_mismatch')
 
 
-def run_device(args):
+def run_device(args, *, restore=None):
+    """Optionally restore the local normal app before releasing the device lock.
+
+    The trusted in-process callback receives the fixed adb command prefix. The
+    caller must already hold any build lock needed by that callback; the CLI
+    and CI workflow intentionally keep their existing candidate-only behavior.
+    """
     args.output.mkdir(parents=True, exist_ok=True)
     stage = 'apk_verification'
     report = {'device': SERIAL, 'version_code': 2201, 'result': 'FAIL'}
+    restore_failed = False
     try:
         verify_apk(args.apk, args.expected_signer)
         verify_apk(args.test_apk, args.expected_signer, is_test=True)
@@ -117,29 +150,50 @@ def run_device(args):
         with lock.open('a') as handle:
             fcntl.flock(handle, fcntl.LOCK_EX)
             adb = [args.adb, '-s', SERIAL]
-            stage = 'device_ready'
-            if execute(adb + ['get-state']).strip() != b'device':
-                raise SmokeFailure('emulator_not_ready')
-            stage = 'install_candidate'
-            execute(adb + ['install', '-r', str(args.apk)], timeout=90)
-            stage = 'install_android_test'
-            execute(adb + ['install', '-r', str(args.test_apk)], timeout=60)
-            stage = 'instrumentation'
-            result = execute(adb + ['shell', 'am', 'instrument', '-w', '-r', '-e', 'bd9Qa', 'true', RUNNER], timeout=180)
-            report.update(parse_instrumentation(result.decode('utf-8', errors='replace')))
-            stage = 'screenshot'
-            image = execute(adb + ['exec-out', 'cat', SCREENSHOT])
-            if not image.startswith(b'\xff\xd8') or not image.endswith(b'\xff\xd9') or len(image) > 200_000:
-                raise SmokeFailure('screenshot_invalid')
-            (args.output / 'conversations.jpg').write_bytes(image)
-            execute(adb + ['shell', 'rm', '-f', SCREENSHOT])
-            report['apk_sha256'] = hashlib.sha256(args.apk.read_bytes()).hexdigest()
-            report['signer_sha256'] = args.expected_signer.upper()
-            report['stage'] = 'complete'
+            try:
+                stage = 'device_ready'
+                if execute(adb + ['get-state']).strip() != b'device':
+                    raise SmokeFailure('emulator_not_ready')
+                stage = 'install_candidate'
+                execute(adb + ['install', '-r', str(args.apk)], timeout=90)
+                stage = 'install_android_test'
+                execute(adb + ['install', '-r', str(args.test_apk)], timeout=60)
+                stage = 'instrumentation'
+                result = execute(adb + ['shell', 'am', 'instrument', '-w', '-r', '-e', 'bd9Qa', 'true', RUNNER], timeout=180)
+                output = result.decode('utf-8', errors='replace')
+                try:
+                    report.update(parse_instrumentation(output))
+                except SmokeFailure:
+                    report.update(failure_diagnosis(output))
+                    raise
+                stage = 'screenshot'
+                image = execute(adb + ['exec-out', 'cat', SCREENSHOT])
+                if not image.startswith(b'\xff\xd8') or not image.endswith(b'\xff\xd9') or len(image) > 200_000:
+                    raise SmokeFailure('screenshot_invalid')
+                (args.output / 'conversations.jpg').write_bytes(image)
+                execute(adb + ['shell', 'rm', '-f', SCREENSHOT])
+                report['apk_sha256'] = hashlib.sha256(args.apk.read_bytes()).hexdigest()
+                report['signer_sha256'] = args.expected_signer.upper()
+                report['stage'] = 'complete'
+            finally:
+                if restore is not None:
+                    try:
+                        restore(adb)
+                        report['normal_app_restore'] = 'PASS'
+                    except Exception:
+                        # Callback errors may contain signing/device data.
+                        restore_failed = True
+                        report['normal_app_restore'] = 'FAIL'
     except SmokeFailure as failure:
         report.update(result='FAIL', stage=stage, error=str(failure))
     except OSError:
         report.update(result='FAIL', stage=stage, error='evidence_file_unavailable')
+    if restore_failed:
+        if report['result'] == 'PASS':
+            report.update(stage='normal_app_restore', error='normal_restore_failed')
+        report.update(result='FAIL', restore_error='normal_restore_failed')
+        if 'stage' not in report:
+            report['stage'] = stage
     (args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     for name in report.get('native_checks', []):
         print('PASS ' + name)
