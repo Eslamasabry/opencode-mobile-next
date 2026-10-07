@@ -158,11 +158,12 @@ final class GenUiStateController extends ChangeNotifier {
 
   void stale(GenUiScope scope, String sessionID) {
     final key = _sessionKey(scope, sessionID);
-    if (_views.containsKey(key) || _reads.containsKey(key)) {
-      _revisions[key] = (_revisions[key] ?? 0) + 1;
-    }
     final old = _views[key];
-    if (old != null) _views[key] = _View(old.messages, false, old.parsed);
+    if (old == null && !_reads.containsKey(key)) return;
+    // Invalidate every active read, even when the visible view is already stale.
+    _revisions[key] = (_revisions[key] ?? 0) + 1;
+    if (old == null || !old.complete) return;
+    _views[key] = _View(old.messages, false, old.parsed);
     _notify();
   }
 
@@ -684,9 +685,12 @@ final class GenUiStateController extends ChangeNotifier {
     final correlation = gateway is CorrelatedPromptGateway
         ? (gateway as CorrelatedPromptGateway).createPromptMessageID()
         : 'card-${DateTime.now().microsecondsSinceEpoch}-${++_dispatchSerial}';
-    await journal.put(
-      GenUiReference.card(card, source.endpoint, dispatchID: correlation),
+    final dispatch = GenUiReference.card(
+      card,
+      source.endpoint,
+      dispatchID: correlation,
     );
+    await journal.put(dispatch);
     var dispatched = false;
     bool stillOwned() =>
         !_disposed &&
@@ -720,7 +724,7 @@ final class GenUiStateController extends ChangeNotifier {
       }
     } catch (_) {
       if (!dispatched) {
-        await journal.remove(card.scope.profileID, card.identity);
+        await journal.discardUnsent(dispatch);
       } else if (stillOwned()) {
         _delivery[card.identity] = GenUiDeliveryState.deliveryUnknown;
       }

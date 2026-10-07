@@ -76,6 +76,36 @@ void main() {
                 ).readAsString(),
               )
               as List;
+      final directionalCodes = [
+        0x061c,
+        0x200e,
+        0x200f,
+        for (var code = 0x202a; code <= 0x202e; code++) code,
+        for (var code = 0x2066; code <= 0x2069; code++) code,
+      ];
+      cases.add({
+        'name': 'all-directional-controls-stripped',
+        'input': _input(
+          title: 'Before${String.fromCharCodes(directionalCodes)}After',
+        ),
+        'expectedTitle': 'BeforeAfter',
+      });
+      for (final code in directionalCodes) {
+        cases.add({
+          'name': 'directional-link-rejected-${code.toRadixString(16)}',
+          'input': {
+            ..._input(),
+            'body': [
+              {
+                'type': 'link',
+                'label': 'Link',
+                'url': 'https://example.com/a${String.fromCharCode(code)}b',
+              },
+            ],
+          },
+          'error': 'badValue',
+        });
+      }
       final process = await Process.start('node', [
         '-e',
         '''
@@ -114,6 +144,10 @@ process.stdin.on('end',()=>{const result=JSON.parse(input).map(c=>{try{return {v
         } else {
           expect(parsed, isA<GenUiParsed>(), reason: label);
           expect(js[i]['error'], isNull, reason: label);
+          if (c['expectedTitle'] != null) {
+            expect((parsed as GenUiParsed).card.title, c['expectedTitle']);
+            expect(js[i]['value']['title'], c['expectedTitle']);
+          }
           expect(
             _wire((parsed as GenUiParsed).card),
             js[i]['value'],

@@ -172,6 +172,47 @@ final class GenUiJournal {
     return [...kept, value];
   });
 
+  /// Remove this exact pre-dispatch reservation after the send fence refused it.
+  /// This is the only mutation allowed after close: it cannot add an entry or
+  /// clear a different dispatch. Callers must know no bytes were dispatched.
+  Future<void> discardUnsent(GenUiReference expected) {
+    final work = _writes.then((_) async {
+      if (expected.dispatchID == null) return;
+      final profile = expected.scope.profileID;
+      // A completed deletion sweep wins. Do not recreate even an empty journal.
+      if (!prefs.containsKey(key(profile))) return;
+      final entries = read(profile);
+      final kept = entries
+          .where(
+            (entry) =>
+                entry.identity != expected.identity ||
+                entry.revision != expected.revision ||
+                entry.endpoint != expected.endpoint ||
+                entry.dispatchID != expected.dispatchID,
+          )
+          .toList();
+      if (kept.length == entries.length) return;
+      // Compare and invoke the preference mutation without an intervening await;
+      // profile deletion cannot run between the existence check and this write.
+      final saved = kept.isEmpty
+          ? prefs.remove(key(profile))
+          : prefs.setString(
+              key(profile),
+              jsonEncode({
+                'v': 1,
+                'entries': kept.map((entry) => entry.toJson()).toList(),
+              }),
+            );
+      if (!await saved) {
+        throw const ProductException(
+          'The unsent card answer could not be cleared.',
+        );
+      }
+    });
+    _writes = work.then<void>((_) {}, onError: (Object _) {});
+    return work;
+  }
+
   Future<void> remove(String profile, String identity) => update(
     profile,
     (entries) => entries.where((e) => e.identity != identity).toList(),

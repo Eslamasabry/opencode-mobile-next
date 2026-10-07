@@ -4,6 +4,10 @@ import '../../domain/genui/gen_ui_status.dart';
 import '../builtin_linux.dart';
 import 'gen_ui_install_scripts.dart';
 
+// A parser or persisted recipe does not qualify a live backend. Keep enable
+// admission separate from cleanup, which must handle legacy registrations.
+const _qualifiedAgents = {GenUiAgent.claude};
+
 /// Configuration outcome only. It never establishes live tool availability.
 enum GenUiInstallOutcome {
   registered,
@@ -118,7 +122,9 @@ final class ManagedGenUiInstaller implements GenUiInstaller {
         const GenUiSetupFailed(reason: GenUiSetupProblem.storageFailed),
       );
     }
-    final requested = Set<GenUiAgent>.of(agents);
+    final requested = enabled
+        ? agents.intersection(_qualifiedAgents)
+        : Set<GenUiAgent>.of(agents);
     final result = Completer<GenUiSetupStatus>();
     _tail = _tail.then((_) async {
       try {
@@ -158,13 +164,19 @@ final class ManagedGenUiInstaller implements GenUiInstaller {
         case GenUiInstallOutcome.registered:
           changed = true;
           if (enabled) {
-            try {
-              if (await _verifier?.verify(profileId: profileId, agent: agent) ??
-                  false) {
-                ready.add(agent);
+            final verifier = _verifier;
+            if (verifier == null) {
+              failure ??= GenUiSetupProblem.notQualified;
+            } else {
+              try {
+                if (await verifier.verify(profileId: profileId, agent: agent)) {
+                  ready.add(agent);
+                } else {
+                  failure ??= GenUiSetupProblem.verificationFailed;
+                }
+              } catch (_) {
+                failure ??= GenUiSetupProblem.verificationFailed;
               }
-            } catch (_) {
-              // A failed readiness check leaves registration restart-required.
             }
           }
         case GenUiInstallOutcome.removalPending:
@@ -184,6 +196,11 @@ final class ManagedGenUiInstaller implements GenUiInstaller {
       }
     }
     if (failure != null) {
+      if (enabled && ready.isEmpty) {
+        return failure == GenUiSetupProblem.notQualified
+            ? GenUiSetupUnavailable(reason: failure)
+            : GenUiSetupFailed(reason: failure);
+      }
       return changed
           ? GenUiSetupPartial(agents: ready, reason: failure)
           : GenUiSetupFailed(reason: failure);
@@ -192,8 +209,13 @@ final class ManagedGenUiInstaller implements GenUiInstaller {
     if (enabled && ready.length == agents.length) {
       return GenUiSetupOn(agents: ready);
     }
-    // Unverified registrations and loaded catalog removal need a new runtime
-    // check. This never restarts agents or treats config writes as discovery.
-    return GenUiSetupRestartRequired(agents: ready);
+    if (enabled) {
+      return const GenUiSetupFailed(
+        reason: GenUiSetupProblem.verificationFailed,
+      );
+    }
+    // Removal of persisted config does not prove active catalogs dropped it.
+    // This status never promises that restarting repairs failed verification.
+    return GenUiSetupRestartRequired(agents: const []);
   }
 }

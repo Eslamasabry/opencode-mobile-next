@@ -34,9 +34,14 @@ function normalizeGenUiCard(input) {
     if (required.some(k => !Object.hasOwn(x,k)) || Object.values(x).some(v => v === null)) fail();
     return x;
   };
+  const directionalControls = String.fromCharCode(
+    0x061c, 0x200e, 0x200f, 0x202a, 0x202b, 0x202c,
+    0x202d, 0x202e, 0x2066, 0x2067, 0x2068, 0x2069);
+  const controls = new RegExp('[\\x00-\\x08\\x0b-\\x1f\\x7f-\\x9f' + directionalControls + ']', 'g');
+  const unsafeLinkCharacters = new RegExp('[\\s\\x00-\\x20\\x7f-\\x9f\\\\' + directionalControls + ']', 'u');
   const text = (x, max = 2000, label = false, min = 0) => {
     if (typeof x !== 'string' || scalar(x) > max) fail();
-    let s = x.replace(/[\x00-\x08\x0b-\x1f\x7f-\x9f\u061c\u200e-\u200f\u202a-\u202e\u2066-\u2069]/g, '');
+    let s = x.replace(controls, '');
     if (label) s = s.trim();
     if (scalar(s) < min) fail();
     return s;
@@ -102,7 +107,7 @@ function normalizeGenUiCard(input) {
       case 'diffStat': obj(o,['type','files'],['type','files']);return {type:o.type,files:arr(o.files,0,30).map(r=>{obj(r,['path','added','removed'],['path','added','removed']);return {path:text(r.path,256),added:int(r.added,0,9007199254740991),removed:int(r.removed,0,9007199254740991)};})};
       case 'progress': obj(o,['type','label','value'],['type','label','value']);num(o.value);if(o.value<0||o.value>1)fail();return {type:o.type,label:text(o.label,120,true),value:o.value};
       case 'callout': obj(o,['type','tone','text'],['type','tone','text']);return {type:o.type,tone:pick(o.tone,['info','warning','success']),text:text(o.text,500)};
-      case 'link': {obj(o,['type','label','url'],['type','label','url']);if(typeof o.url!=='string'||scalar(o.url)>2048||/[\s\x00-\x20\x7f-\x9f\u061c\u200e-\u200f\u202a-\u202e\u2066-\u2069\\]/u.test(o.url)||!/^https:\/\//i.test(o.url))fail(); let u;try {u=new URL(o.url);} catch {fail();} if(u.protocol!=='https:'||!u.hostname||u.username||u.password||o.url.split('/')[2].includes('@'))fail();return {type:o.type,label:text(o.label,120,true,1),url:o.url};}
+      case 'link': {obj(o,['type','label','url'],['type','label','url']);if(typeof o.url!=='string'||scalar(o.url)>2048||unsafeLinkCharacters.test(o.url)||!/^https:\/\//i.test(o.url))fail(); let u;try {u=new URL(o.url);} catch {fail();} if(u.protocol!=='https:'||!u.hostname||u.username||u.password||o.url.split('/')[2].includes('@'))fail();return {type:o.type,label:text(o.label,120,true,1),url:o.url};}
       default: fail();
     }
   };

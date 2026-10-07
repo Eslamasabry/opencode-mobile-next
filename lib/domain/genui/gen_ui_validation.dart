@@ -84,8 +84,23 @@ Map<String, dynamic> _obj(
   return Map<String, dynamic>.from(value);
 }
 
+final _directionalControls = String.fromCharCodes(const [
+  0x061c,
+  0x200e,
+  0x200f,
+  0x202a,
+  0x202b,
+  0x202c,
+  0x202d,
+  0x202e,
+  0x2066,
+  0x2067,
+  0x2068,
+  0x2069,
+]);
 final _controls = RegExp(
-  r'[\x00-\x08\x0b-\x1f\x7f-\x9f\u061c\u200e-\u200f\u202a-\u202e\u2066-\u2069]',
+  r'[\x00-\x08\x0b-\x1f\x7f-\x9f'
+  '$_directionalControls]',
 );
 String _text(Object? value, [int max = 2000, bool label = false, int min = 0]) {
   if (value is! String || _scalars(value) > max) _fail();
