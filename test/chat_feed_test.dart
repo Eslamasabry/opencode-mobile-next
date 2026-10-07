@@ -20,6 +20,7 @@ class _Script {
   List<GlobalSessionResult> global = [];
   List<WorkspaceProject> projects = [];
   bool acrossProjects = true;
+  bool projectsAreGit = true;
   final prompts = <(String, String)>[];
   final createdIn = <String?>[];
   int globalCalls = 0;
@@ -32,7 +33,9 @@ class _Api extends OpenCodeApi {
   String? located;
 
   @override
-  ServerCapabilities get capabilities => script.acrossProjects
+  ServerCapabilities get capabilities => !script.projectsAreGit
+      ? const ServerCapabilities(projectsAreGitRepositories: false)
+      : script.acrossProjects
       ? ServerCapabilities.allV1
       : const ServerCapabilities(globalSessionSearch: false);
 
@@ -264,6 +267,22 @@ void main() {
         expect(isTemporaryProjectDirectory(dir), isFalse, reason: dir);
       }
     });
+  });
+
+  testWidgets('a server that gives every folder a project shows no Git '
+      'badge', (tester) async {
+    final script = _Script()
+      ..projectsAreGit = false
+      ..global = [_global('a', '/work/api', updated: 5)]
+      ..projects = [_project('p1', '/work/api', name: 'API')];
+    final controller = await _connect(tester, await _store(), script);
+    await controller.refreshChatFeed();
+
+    final feed = chatFeedSourceOf(controller).chatFeed();
+    expect(feed.items.single.projectName, 'API');
+    expect(feed.items.single.isGit, isFalse);
+    await tester.pump(const Duration(seconds: 1));
+    controller.dispose();
   });
 
   testWidgets('feed: needs-you first, then running, then by time; filters', (

@@ -151,6 +151,12 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
     _self._notifyListeners();
   }
 
+  /// Only a server that keeps projects for git repositories alone tells a
+  /// git folder by its project; otherwise no Git badge rather than a wrong one.
+  bool _feedFolderIsGit(String directory) =>
+      _self.capabilities.projectsAreGitRepositories &&
+      _feedProjectFor(directory) != null;
+
   WorkspaceProject? _feedProjectFor(String directory) {
     for (final project in _feedProjects) {
       if (project.id == 'global') continue;
@@ -258,7 +264,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
         projectName: otherFolder
             ? otherFolderLabel(where)
             : _feedProjectName(where, projectName),
-        isGit: !otherFolder && _feedProjectFor(where) != null,
+        isGit: !otherFolder && _feedFolderIsGit(where),
         status: status,
         lastActivity: DateTime.fromMillisecondsSinceEpoch(stamp),
         preview: _feedPreview(id),
@@ -379,12 +385,16 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
     if (_feedCacheCurrent) {
       for (final project in _feedProjects) {
         if (project.id == 'global') continue;
-        addEmpty(project.directory, name: project.name, isGit: true);
+        addEmpty(
+          project.directory,
+          name: project.name,
+          isGit: _self.capabilities.projectsAreGitRepositories,
+        );
       }
     }
     final last = _ocLastUsed;
     if (last != null) {
-      addEmpty(last, isGit: _feedProjectFor(last) != null);
+      addEmpty(last, isGit: _feedFolderIsGit(last));
     }
     final here = _self.directory;
     if (here != null) addEmpty(here, isGit: _feedProjectFor(here) != null);

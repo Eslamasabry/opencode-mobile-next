@@ -148,6 +148,11 @@ class ServerCapabilities {
   /// backends with no such CLI (Codex).
   final bool cliSessionResume;
 
+  /// The server keeps projects only for git repositories, so "this folder
+  /// has a project" means "this folder is git" (OpenCode 1). False on
+  /// OpenCode 2, which gives every folder a project and reports no VCS.
+  final bool projectsAreGitRepositories;
+
   const ServerCapabilities({
     this.genUi = false,
     this.sessionAddressHandoff = false,
@@ -220,6 +225,7 @@ class ServerCapabilities {
     this.forms = false,
     this.inbox = false,
     this.cliSessionResume = true,
+    this.projectsAreGitRepositories = true,
   });
 
   /// Preserve every protocol capability while applying managed-host readiness.
@@ -294,6 +300,7 @@ class ServerCapabilities {
     forms: forms,
     inbox: inbox,
     cliSessionResume: cliSessionResume,
+    projectsAreGitRepositories: projectsAreGitRepositories,
   );
 
   static const allV1 = ServerCapabilities(

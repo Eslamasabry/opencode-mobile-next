@@ -9,6 +9,7 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
+import 'package:opencode_mobile/ui/kit/kit_request_card.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_host.dart';
 import 'package:opencode_mobile/ui/widgets/form_renderer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -173,6 +174,10 @@ void main() {
     );
     await pumpRows(tester, ['/other']);
     expect(find.text('Choose deployment'), findsOneWidget);
+    // A list row's Answer is secondary, as a list question's is: the list
+    // has no single primary action per row.
+    final card = tester.widget<KitRequestCard>(find.byType(KitRequestCard));
+    expect((card.answers! as KitRequestInSheet).secondary, isTrue);
     await open(tester, '/other');
     expect(find.byKey(const Key('form-sheet')), findsOneWidget);
     await tester.tap(find.byKey(const Key('form-submit')));
