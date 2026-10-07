@@ -127,6 +127,7 @@ extension _ConnectionControllerSessionCacheImpl on ConnectionController {
           isCurrent: current,
         );
         if (!current()) throw const ProductException('The session changed.');
+        _genUiObserve(sessionID, page.items, complete: boundary == null);
         // Disk caching is best effort and never delays authoritative hydration.
         if (boundary == null) {
           unawaited(

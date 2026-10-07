@@ -70,6 +70,7 @@ extension _ConnectionControllerDeletionImpl on ConnectionController {
     // Close admission synchronously, before any drain can yield. An epoch also
     // rejects old callbacks after a failed deletion makes the profile usable.
     _deletingReadProfiles.add(profileId);
+    final genUiDrain = _genUiCloseProfile(profileId);
     final sessionLinkDrain = SessionLinkBindings.closeProfile(
       store.prefs,
       profileId,
@@ -100,6 +101,7 @@ extension _ConnectionControllerDeletionImpl on ConnectionController {
             if (activity != null) activity.prepareForDeletion(),
             policy.pauseForDeletion(),
             sessionLinkDrain,
+            genUiDrain,
           ]);
           // Admitted activity inverses have finished; from here no new prompt
           // may join this profile while the removal is in progress.
@@ -108,6 +110,7 @@ extension _ConnectionControllerDeletionImpl on ConnectionController {
           await _quotaMonitor?.drain(profileId);
           // Phone agents first: auth, owned setup, host, feeds; ProfileStore
           // removal (native drain, secrets) follows inside the transaction.
+          await _genUiDeleteProfile(profileId);
           await _paCloseForDeletion(profileId);
           return _deleteProfileAndLocalData(
             profileId,
@@ -119,6 +122,7 @@ extension _ConnectionControllerDeletionImpl on ConnectionController {
           _deletingReadProfiles.remove(profileId);
           if (store.profiles.any((p) => p.id == profileId)) {
             _closedQueueProfiles.remove(profileId);
+            _genUiReopenProfile(profileId);
             activity?.cancelDeletion();
             policy.cancelDeletion();
             ConsentOwners.cancelDeletion(store.prefs, profileId);

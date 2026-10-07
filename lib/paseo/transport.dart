@@ -251,6 +251,7 @@ class PaseoTransport {
   int _nextID = 0;
   bool _closed = false;
   bool _initialized = false;
+  int? _boundedFrameBytes;
 
   /// Daemon version from `server_info`, null before the first handshake.
   String? serverVersion;
@@ -296,6 +297,7 @@ class PaseoTransport {
   }
 
   Future<int> _connect() async {
+    serverVersion = null;
     final epoch = ++_epoch;
     final socket = await socketFactory(endpoint, _password);
     if (_closed || epoch != _epoch) {
@@ -349,6 +351,38 @@ class PaseoTransport {
     }
   }
 
+  /// A read-only recovery request on a private connection. Its strict frame
+  /// budget cannot discard unrelated responses from the live connection.
+  Future<Map<String, dynamic>> requestBoundedHistory(
+    Map<String, dynamic> body, {
+    bool agentSnapshot = false,
+  }) async {
+    if (_closed) throw PaseoFailure(PaseoFailureKind.disconnected);
+    final isolated = PaseoTransport(
+      endpoint: endpoint.toString(),
+      password: _password,
+      socketFactory: socketFactory,
+    ).._boundedFrameBytes = 1024 * 1024;
+    try {
+      return await (() async {
+        await isolated.connect();
+        if (!isolated.connected || isolated.serverVersion != '0.9.2') {
+          throw PaseoFailure(PaseoFailureKind.unavailable);
+        }
+        return isolated.request(
+          agentSnapshot
+              ? 'fetch_agent_request'
+              : 'fetch_agent_timeline_request',
+          body,
+          timeout: const Duration(seconds: 10),
+          expectedEpoch: isolated.epoch,
+        );
+      })().timeout(const Duration(seconds: 10));
+    } finally {
+      await isolated.close();
+    }
+  }
+
   /// Sends a session request and completes with the response payload.
   Future<Map<String, dynamic>> request(
     String type,
@@ -356,6 +390,7 @@ class PaseoTransport {
     bool mutation = false,
     Duration? timeout,
     int? expectedEpoch,
+    void Function()? beforeSend,
   }) async {
     if (expectedEpoch != null && (!connected || expectedEpoch != _epoch)) {
       throw PaseoFailure(PaseoFailureKind.staleRequest);
@@ -371,9 +406,13 @@ class PaseoTransport {
             : PaseoFailureKind.disconnected,
       );
     }
+    if (_boundedFrameBytes != null && serverVersion != '0.9.2') {
+      throw PaseoFailure(PaseoFailureKind.unavailable);
+    }
     if (_pending.length >= maxPending) {
       throw PaseoFailure(PaseoFailureKind.overloaded);
     }
+    beforeSend?.call();
     final id = 'm${epoch}_${++_nextID}';
     final pending = _PendingRequest(mutation);
     _pending[id] = pending;
@@ -442,6 +481,11 @@ class PaseoTransport {
     if (frame is! String) return;
     try {
       if (frame.length > maxFrameBytes) throw const FormatException();
+      final cap = _boundedFrameBytes;
+      if (cap != null &&
+          (frame.length > cap || utf8.encode(frame).length > cap)) {
+        throw const FormatException();
+      }
       final json = jsonDecode(frame);
       if (json is! Map<String, dynamic>) throw const FormatException();
       final outer = json['type'];
@@ -459,9 +503,14 @@ class PaseoTransport {
           : const <String, dynamic>{};
       if (type == 'status' && payload['status'] == 'server_info') {
         final version = payload['version'];
-        if (version is String && version.length <= 64) {
-          serverVersion = version;
-        }
+        serverVersion =
+            version is String &&
+                version.length <= 64 &&
+                RegExp(
+                  r'^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$',
+                ).hasMatch(version)
+            ? version
+            : null;
         final ready = _ready;
         if (ready != null && !ready.isCompleted) ready.complete();
         return;
@@ -504,7 +553,9 @@ class PaseoTransport {
   }
 
   void _lost(int epoch) {
-    if (epoch != _epoch || _socket == null) return;
+    if (epoch != _epoch) return;
+    serverVersion = null;
+    if (_socket == null) return;
     final disconnectedEpoch = _epoch;
     // Invalidate callbacks and frames from the old socket before allowing a
     // future connect to allocate a replacement epoch.

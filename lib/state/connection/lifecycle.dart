@@ -454,6 +454,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   }
 
   void _clearLocationData() {
+    _genUiReset();
     _invalidatePhoneChatStatus();
     if (_phoneChatDispatchProfile != _connectedProfile?.id) {
       _phoneChatDispatch.reset();

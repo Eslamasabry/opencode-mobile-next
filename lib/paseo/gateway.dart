@@ -8,9 +8,12 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import '../api/models.dart';
+import '../api/gen_ui_history_http.dart';
+import '../domain/genui/gen_ui_history.dart';
 import '../domain/server_gateway.dart';
 import 'mappers.dart';
 import 'host_agent_providers.dart';
@@ -25,6 +28,7 @@ part 'gateway/providers.dart';
 part 'gateway/events.dart';
 part 'gateway/lifecycle.dart';
 part 'gateway/subagents.dart';
+part 'gateway/gen_ui_history.dart';
 
 class PaseoGateway
     implements
@@ -32,7 +36,9 @@ class PaseoGateway
         ServerOperationsGateway,
         HostAgentProviderGateway,
         HostAgentPermissionGateway,
-        SessionSelectionGateway {
+        SessionSelectionGateway,
+        GenUiHistoryGateway,
+        CorrelatedPromptGateway {
   final PaseoTransport transport;
   String? _directory;
   bool _closed = false;
@@ -504,6 +510,16 @@ class PaseoGateway
   // ---- history -----------------------------------------------------------
 
   @override
+  Future<bool> genUiSessionIdle(String sessionID) => _genUiIdle(sessionID);
+
+  @override
+  Future<GenUiHistoryPage> genUiHistoryPage(
+    String sessionID, {
+    String? cursor,
+    int limit = 50,
+  }) => _boundedGenUiHistory(sessionID, cursor: cursor, limit: limit);
+
+  @override
   Future<List<MessageWithParts>> messages(String id) async {
     if (_drafts.contains(id) && !_uncertain.contains(id)) return const [];
     if (_isSubagent(id)) return _subagentMessages(id);
@@ -556,6 +572,9 @@ class PaseoGateway
   // ---- prompts -----------------------------------------------------------
 
   @override
+  String createPromptMessageID() => _uuid();
+
+  @override
   Future<void> promptAsync(
     String sessionID, {
     required String text,
@@ -565,7 +584,65 @@ class PaseoGateway
     List<PromptAttachment> attachments = const [],
     List<PromptAgentMention> agentMentions = const [],
     PromptDelivery? delivery,
+  }) => _promptAsync(
+    sessionID,
+    messageID: _uuid(),
+    text: text,
+    model: model,
+    agent: agent,
+    variant: variant,
+    attachments: attachments,
+    agentMentions: agentMentions,
+    delivery: delivery,
+  );
+
+  @override
+  Future<void> promptWithMessageID(
+    String sessionID, {
+    required String messageID,
+    required String text,
+    ModelRef? model,
+    String? agent,
+    String? variant,
+    List<PromptAttachment> attachments = const [],
+    List<PromptAgentMention> agentMentions = const [],
+    PromptDelivery? delivery,
+    void Function()? beforeSend,
+  }) => _promptAsync(
+    sessionID,
+    messageID: messageID,
+    existingOnly: true,
+    beforeSend: beforeSend,
+    text: text,
+    model: model,
+    agent: agent,
+    variant: variant,
+    attachments: attachments,
+    agentMentions: agentMentions,
+    delivery: delivery,
+  );
+
+  Future<void> _promptAsync(
+    String sessionID, {
+    required String messageID,
+    bool existingOnly = false,
+    void Function()? beforeSend,
+    required String text,
+    ModelRef? model,
+    String? agent,
+    String? variant,
+    List<PromptAttachment> attachments = const [],
+    List<PromptAgentMention> agentMentions = const [],
+    PromptDelivery? delivery,
   }) async {
+    if (existingOnly && _drafts.contains(sessionID)) {
+      throw PaseoFailure(PaseoFailureKind.unavailable);
+    }
+    if (messageID.isEmpty ||
+        messageID.length > 256 ||
+        RegExp(r'[\x00-\x1f\x7f]').hasMatch(messageID)) {
+      throw PaseoFailure(PaseoFailureKind.invalidResponse);
+    }
     PromptTrace.sent(sessionID);
     if (_isSubagent(sessionID)) throw _PaseoSubagents._readOnly;
     if (agentMentions.isNotEmpty || delivery != null) {
@@ -578,7 +655,6 @@ class PaseoGateway
     final scope = _scope;
     final epoch = _locationEpoch;
     final prompt = paseoString(text, max: 1024 * 1024);
-    final messageID = _uuid();
     _awaitingTurn.add(sessionID);
     try {
       if (_drafts.contains(sessionID)) {
@@ -610,23 +686,32 @@ class PaseoGateway
         }
         _checkLocation(scope, epoch);
         await _applySelection(sessionID, model: model, mode: agent);
+        final realID = _real(sessionID);
         await transport.request(
           'send_agent_message_request',
           {
-            'agentId': _real(sessionID),
+            'agentId': realID,
             'text': prompt,
             'messageId': messageID,
             if (images.isNotEmpty) 'images': images,
           },
           mutation: true,
           timeout: const Duration(seconds: 60),
+          beforeSend: () {
+            _checkLocation(scope, epoch);
+            if (_real(sessionID) != realID) {
+              throw PaseoFailure(PaseoFailureKind.staleRequest);
+            }
+            beforeSend?.call();
+          },
         );
       }
       _checkLocation(scope, epoch);
       _statuses[sessionID] = 'busy';
-    } on PaseoFailure catch (error) {
+    } catch (error) {
       _awaitingTurn.remove(sessionID);
-      if (error.kind == PaseoFailureKind.deliveryUnknown) {
+      if (error is PaseoFailure &&
+          error.kind == PaseoFailureKind.deliveryUnknown) {
         _uncertain.add(sessionID);
       }
       rethrow;

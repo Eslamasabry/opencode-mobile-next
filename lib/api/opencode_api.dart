@@ -7,6 +7,7 @@ import 'package:opencode_sdk/opencode_sdk.dart' as sdk;
 import '../api2/models.dart' show Api2FormInfo, Api2FormState, Api2InboxItem;
 import '../domain/server_gateway.dart';
 import 'models.dart';
+import 'gen_ui_history.dart';
 import 'sse.dart';
 import '../diagnostics/perf_trace.dart';
 import '../ui/kit/kit_redact.dart';
@@ -16,6 +17,7 @@ import '../domain/loopback_host.dart' show isCleartextRemoteBase;
 
 /// HTTP client for a single opencode server (`opencode serve`).
 class OpenCodeApi
+    with OpenCodeGenUiHistory
     implements
         ServerGateway,
         SessionRetryGateway,
@@ -35,6 +37,7 @@ class OpenCodeApi
   Future<void> Function(String sessionID)? beforeSessionDispatch;
   void Function(String sessionID)? sessionDispatchSettled;
 
+  @override
   Dio get dio => _dio;
   @override
   String? get directory => _directory;

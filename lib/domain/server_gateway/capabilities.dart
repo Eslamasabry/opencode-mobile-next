@@ -2,6 +2,9 @@
 /// protocol generation. The v1 server exposes every listed feature, so its
 /// gateway reports [allV1]; a v2 gateway narrows these per endpoint support.
 class ServerCapabilities {
+  /// Qualified Agent cards on the managed host; never implied by a dialect.
+  final bool genUi;
+
   /// Portable session links remain off until private host, UI consent and
   /// authorized scoped lookup are verified together. No adapter enables this.
   final bool sessionAddressHandoff;
@@ -146,6 +149,7 @@ class ServerCapabilities {
   final bool cliSessionResume;
 
   const ServerCapabilities({
+    this.genUi = false,
     this.sessionAddressHandoff = false,
     this.setupConfigRead = false,
     this.setupConfigWrite = false,
@@ -217,6 +221,80 @@ class ServerCapabilities {
     this.inbox = false,
     this.cliSessionResume = true,
   });
+
+  /// Preserve every protocol capability while applying managed-host readiness.
+  ServerCapabilities withGenUi(bool value) => ServerCapabilities(
+    genUi: value,
+    sessionAddressHandoff: sessionAddressHandoff,
+    setupConfigRead: setupConfigRead,
+    setupConfigWrite: setupConfigWrite,
+    setupMcpInventory: setupMcpInventory,
+    setupAssistantSession: setupAssistantSession,
+    clientPromptMessageID: clientPromptMessageID,
+    commandReceipts: commandReceipts,
+    agentAccount: agentAccount,
+    hostAgentProviders: hostAgentProviders,
+    hostAgentPermissionActions: hostAgentPermissionActions,
+    promptAttachments: promptAttachments,
+    promptImagesOnly: promptImagesOnly,
+    promptEchoTextOnly: promptEchoTextOnly,
+    subagentReplies: subagentReplies,
+    subagentSessions: subagentSessions,
+    promptAgentMentions: promptAgentMentions,
+    offlinePromptQueue: offlinePromptQueue,
+    fileBrowsing: fileBrowsing,
+    terminal: terminal,
+    projectManagement: projectManagement,
+    globalSessionSearch: globalSessionSearch,
+    sessionDiff: sessionDiff,
+    sessionFork: sessionFork,
+    sessionCompact: sessionCompact,
+    persistentPermissionGrants: persistentPermissionGrants,
+    savedPermissionList: savedPermissionList,
+    messageCompletionEndsRun: messageCompletionEndsRun,
+    sessionRevert: sessionRevert,
+    sessionImportExport: sessionImportExport,
+    sessionNotes: sessionNotes,
+    serverCatalog: serverCatalog,
+    slashCommands: slashCommands,
+    profileAttentionPolling: profileAttentionPolling,
+    managedWorkspaces: managedWorkspaces,
+    workspaceWarp: workspaceWarp,
+    sessionSteal: sessionSteal,
+    consoleOrganizations: consoleOrganizations,
+    mcpOAuth: mcpOAuth,
+    mcpConfigWrites: mcpConfigWrites,
+    mcpRuntimeAdds: mcpRuntimeAdds,
+    mcpRuntimeRemovals: mcpRuntimeRemovals,
+    integrationCredentials: integrationCredentials,
+    integrationCommandAuth: integrationCommandAuth,
+    pluginInventory: pluginInventory,
+    webSearch: webSearch,
+    sessionShare: sessionShare,
+    sessionArchive: sessionArchive,
+    sessionTodos: sessionTodos,
+    messageDelete: messageDelete,
+    workspaceSymbols: workspaceSymbols,
+    textSearch: textSearch,
+    languageServiceStatus: languageServiceStatus,
+    formatterStatus: formatterStatus,
+    toolInventory: toolInventory,
+    experimentalCapabilities: experimentalCapabilities,
+    shellSettings: shellSettings,
+    developmentServices: developmentServices,
+    remoteUpgrade: remoteUpgrade,
+    clientDiagnostics: clientDiagnostics,
+    gitInit: gitInit,
+    providerRuntimeRefresh: providerRuntimeRefresh,
+    configuredProviderFallback: configuredProviderFallback,
+    globalEventStream: globalEventStream,
+    worktreeReset: worktreeReset,
+    worktreeCreate: worktreeCreate,
+    legacyQuestionRequests: legacyQuestionRequests,
+    forms: forms,
+    inbox: inbox,
+    cliSessionResume: cliSessionResume,
+  );
 
   static const allV1 = ServerCapabilities(
     clientPromptMessageID: true,

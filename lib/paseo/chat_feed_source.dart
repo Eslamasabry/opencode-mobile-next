@@ -20,6 +20,9 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
     this.refreshTimeout = const Duration(seconds: 45),
     String? initialLastUsedProjectDirectory,
     this.persistLastUsedProject,
+    this.hasWaitingCard,
+    this.cardsIncomplete,
+    this.refreshCards,
   }) : catalog = catalog ?? AgentCatalog.builtIn,
        _directory = gateway.directory,
        _projectName = projectName {
@@ -32,6 +35,9 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
     }
   }
 
+  final bool Function(String sessionID)? hasWaitingCard;
+  final bool Function()? cardsIncomplete;
+  final Future<void> Function(List<ChatFeedItem> items)? refreshCards;
   final PaseoGateway gateway;
   final AgentCatalog catalog;
   final bool isGit;
@@ -66,21 +72,27 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
   @override
   ChatFeedSnapshot chatFeed([ChatFeedFilter filter = ChatFeedFilter.all]) {
     final rows = _valid
-        ? _items.where((item) => chatFeedMatches(item, filter)).toList()
+        ? _items
+              .map(_withCards)
+              .where((item) => chatFeedMatches(item, filter))
+              .toList()
         : <ChatFeedItem>[];
     rows.sort(compareChatFeedItems);
     return ChatFeedSnapshot(
       items: List.unmodifiable(rows),
       acrossProjects: false,
       loading: _valid && _refreshing != null && _items.isEmpty,
-      complete: _valid && _complete,
+      complete: _valid && _complete && !(cardsIncomplete?.call() ?? false),
     );
   }
 
   @override
   List<ProjectSummary> get projectSummaries {
     if (!_valid || isTemporaryProjectDirectory(_directory)) return const [];
-    final rows = _items.where((item) => !item.isSubagent).toList();
+    final rows = _items
+        .map(_withCards)
+        .where((item) => !item.isSubagent)
+        .toList();
     DateTime? latest;
     for (final item in rows) {
       if (latest == null || item.lastActivity.isAfter(latest)) {
@@ -223,9 +235,33 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
         }),
       );
       _complete = complete;
+      await refreshCards?.call(_items);
     } catch (_) {
       if (_current(revision)) _complete = false;
     }
+  }
+
+  ChatFeedItem _withCards(ChatFeedItem item) {
+    if (hasWaitingCard?.call(item.sessionID) != true ||
+        item.status == ChatStatus.needsYou) {
+      return item;
+    }
+    return ChatFeedItem(
+      sessionID: item.sessionID,
+      title: item.title,
+      directory: item.directory,
+      projectName: item.projectName,
+      isGit: item.isGit,
+      status: ChatStatus.needsYou,
+      lastActivity: item.lastActivity,
+      preview: item.preview,
+      parentID: item.parentID,
+      agentId: item.agentId,
+      agentLabel: item.agentLabel,
+      sourceId: item.sourceId,
+      sourceLabel: item.sourceLabel,
+      finishedUnseen: item.finishedUnseen,
+    );
   }
 
   String _label(String provider) {

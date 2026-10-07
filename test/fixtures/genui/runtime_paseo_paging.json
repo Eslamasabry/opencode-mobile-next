@@ -1,0 +1,44 @@
+{
+  "capture": {
+    "date": "2026-10-07",
+    "device": "emulator-5554",
+    "paseo": "0.9.2",
+    "sanitization": "counts and flags only; no session IDs or conversation content"
+  },
+  "sessionsObserved": 2,
+  "tail": {
+    "request": {
+      "direction": "tail",
+      "limit": 1,
+      "projection": "projected"
+    },
+    "entryCount": 1,
+    "hasOlder": true,
+    "hasNewer": false,
+    "reset": false,
+    "gap": false,
+    "staleCursor": false,
+    "error": null,
+    "startCursorKeys": [
+      "epoch",
+      "seq"
+    ]
+  },
+  "before": {
+    "request": {
+      "direction": "before",
+      "limit": 1,
+      "projection": "projected",
+      "cursor": "prior startCursor"
+    },
+    "entryCount": 1,
+    "hasOlder": true,
+    "hasNewer": true,
+    "reset": false,
+    "gap": false,
+    "staleCursor": false,
+    "error": null,
+    "sameEpoch": true,
+    "endSeqLessThanPriorStartSeq": true
+  }
+}

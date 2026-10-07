@@ -587,11 +587,27 @@ String genUiAnswerText(GenUiCard card, GenUiAnswer answer) =>
     throw UnimplementedError();
 ```
 
+The coordinator-approved second API addition is:
+
+```dart
+({String cardId, String summary})? genUiAnswerEnvelope(MessageWithParts message);
+```
+
+This validates the bounded user-message envelope without claiming that a particular
+card was settled. Card state still requires the scoped, card-specific validator.
+The four controller additions supply trusted assistant scope/ownership and cached
+part parsing, derive state from authoritative tail coverage, expose only an answered
+receipt summary, and undo a held (never already-sent) answer respectively.
+
 ### `gen_ui_controller.dart`
 
 ```dart
 /// Public controller surface. Implemented by ConnectionController integration.
 abstract interface class GenUiController {
+  GenUiParse? genUiCardForPart(String sessionID, String messageID, Part part);
+  GenUiCardState genUiStateForCard(GenUiCard card);
+  String? genUiAnswerSummary(GenUiCard card);
+  void undoGenUiAnswer(GenUiCard card);
   List<GenUiCard> waitingCardsForSession(String sessionID);
   List<GenUiCard> waitingCardsForFeedItem(ChatFeedItem item);
   Future<void> answerGenUi(

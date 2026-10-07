@@ -12,6 +12,7 @@ import '../api/models.dart';
 import '../domain/server_gateway.dart';
 import '../domain/parallel_requests.dart';
 import 'client.dart';
+import 'gen_ui_history.dart';
 import 'gateway_events.dart';
 import 'gateway_mappers.dart';
 import 'models.dart';
@@ -26,6 +27,7 @@ import '../diagnostics/perf_trace.dart';
 /// result or throws a typed [ProductException], and the matching
 /// [ServerCapabilities] flag is false (see [api2ServerCapabilities]).
 class Api2Gateway
+    with Api2GenUiHistory
     implements ServerGateway, SessionSelectionGateway, WebSearchGateway {
   final Api2Client client;
 
@@ -43,6 +45,7 @@ class Api2Gateway
          workspace: workspace,
        );
 
+  @override
   Api2Transport get transport => client.transport;
 
   @override

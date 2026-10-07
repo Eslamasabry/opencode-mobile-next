@@ -263,6 +263,7 @@ extension _ConnectionControllerSessionsImpl on ConnectionController {
       if (statusError != null) _recordLocationError(sessionsError!);
       _notifyListeners();
       _saveSessionInventoryPreview();
+      _genUiRefreshFeed();
       unawaited(_refreshPinnedSessions());
     } catch (error) {
       if (!_isCurrentSessionsRefresh(
@@ -281,6 +282,12 @@ extension _ConnectionControllerSessionsImpl on ConnectionController {
   }
 
   void _removeSession(String id) {
+    final cardScope = _genUiScope;
+    if (cardScope != null) {
+      unawaited(
+        _genUiState.removeSession(cardScope, id).catchError((Object _) {}),
+      );
+    }
     _failedAttentionSessions.remove(id);
     _markSessionChanged(id);
     _deletedSessionIDs.add(id);
