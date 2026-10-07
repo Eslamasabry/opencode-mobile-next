@@ -451,11 +451,12 @@ extension _ChatCommandActions on _ChatScreenState {
         return candidate.name.trim();
       }
     }
-    // While the models are still being read, the name seen before (or the
-    // model alone) stands in: never "provider/model" for a moment.
+    // While the models are still being read, the name seen before (or one
+    // made from the id) stands in: never "provider/model" or a raw id like
+    // "claude-sonnet-5" for a moment.
     if (_conn.catalog == null || _conn.catalogLoading) {
       return _conn.knownModelName(model.providerID, model.modelID) ??
-          model.modelID;
+          modelNameFromId(model.modelID);
     }
     return presentedModelLabel(model.providerID, model.modelID);
   }

@@ -24,14 +24,18 @@ enum _Scene {
   chatChoice('agent_card_chat_choice'),
   chatForm('agent_card_chat_form'),
   chatReport('agent_card_chat_report'),
-  listChoice('agent_card_list_choice');
+  listChoice('agent_card_list_choice'),
+
+  /// FC2: a permission request and an agent card under their rows sit the
+  /// same way (one card shape, placed by the list).
+  listMixed('agent_card_list_mixed');
 
   const _Scene(this.name);
   final String name;
 }
 
 GenUiCard _card(_Scene scene) => switch (scene) {
-  _Scene.chatChoice || _Scene.listChoice => agentCard(
+  _Scene.chatChoice || _Scene.listChoice || _Scene.listMixed => agentCard(
     title: 'Which database should I use?',
     body: const [
       GenUiText(text: 'Two fit this project. Pick the one you want to keep.'),
@@ -101,10 +105,51 @@ Future<void> _mount(
     controller: gen,
     parse: GenUiParsed(card),
     agentLabel: 'Claude Code',
-    inList: scene == _Scene.listChoice,
+    inList: scene == _Scene.listChoice || scene == _Scene.listMixed,
   );
   final Widget app;
-  if (scene == _Scene.listChoice) {
+  if (scene == _Scene.listMixed) {
+    final host =
+        FakeChatsHost(
+            FakeChatFeedSource(
+              items: [
+                chat(
+                  'p',
+                  'Fix the login bug',
+                  at: DateTime(2026, 10, 7, 11, 42),
+                  status: ChatStatus.needsYou,
+                  preview: 'Allow running the tests?',
+                ),
+                chat(
+                  'a',
+                  'Choose a database',
+                  at: DateTime(2026, 10, 7, 11, 40),
+                  status: ChatStatus.needsYou,
+                  agentId: 'claude',
+                  agentLabel: 'Claude Code',
+                  preview: 'Two fit this project.',
+                ),
+              ],
+            ),
+          )
+          ..requestCards['p'] = KitRequestCard.ask(
+            kind: KitRequestKind.permission,
+            title: 'Run a shell command',
+            who: 'OpenCode',
+            reason: KitNeedsYouReason.decision,
+            ifIgnored: 'The agent waits; nothing is lost.',
+            announcement: 'Permission needed: Run a shell command',
+            summary: 'flutter test test/login_test.dart',
+            inList: true,
+            answers: KitRequestDecide(
+              onAllow: () {},
+              onReject: () {},
+              secondary: true,
+            ),
+          )
+          ..requestCards['a'] = view;
+    app = chatsApp(host, const ChatsHomeScreen(), light: light);
+  } else if (scene == _Scene.listChoice) {
     final host = FakeChatsHost(
       FakeChatFeedSource(
         items: [

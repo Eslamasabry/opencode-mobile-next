@@ -386,6 +386,7 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
       answers: answers,
       onDetails: onDetails,
       detailsKey: const Key('question-card-more'),
+      inList: widget.inList,
     );
   }
 

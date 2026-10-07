@@ -61,6 +61,12 @@ class ServerCapabilities {
   final bool sessionCompact;
   final bool persistentPermissionGrants;
 
+  /// The runtime asks before it acts (permission requests the app answers),
+  /// so a conversation's approval mode (Asks first / Auto-approve) means
+  /// something. False for a runtime that never asks: the composer then shows
+  /// no approval chip rather than one that promises a question never coming.
+  final bool permissionRequests;
+
   /// Whether standing grants can be listed and revoked from the app. A
   /// runtime can honour "always allow" for a conversation without keeping a
   /// list the app can read back (Paseo applies the rule inside the agent).
@@ -180,6 +186,7 @@ class ServerCapabilities {
     this.sessionFork = true,
     this.sessionCompact = true,
     this.persistentPermissionGrants = true,
+    this.permissionRequests = true,
     this.savedPermissionList = true,
     this.messageCompletionEndsRun = true,
     this.sessionRevert = true,
@@ -256,6 +263,7 @@ class ServerCapabilities {
     sessionFork: sessionFork,
     sessionCompact: sessionCompact,
     persistentPermissionGrants: persistentPermissionGrants,
+    permissionRequests: permissionRequests,
     savedPermissionList: savedPermissionList,
     messageCompletionEndsRun: messageCompletionEndsRun,
     sessionRevert: sessionRevert,

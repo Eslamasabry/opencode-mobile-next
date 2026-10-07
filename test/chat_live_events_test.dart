@@ -4567,7 +4567,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('match this UI'), findsOneWidget);
-      expect(find.text('1000101752.jpg'), findsOneWidget);
+      // The photo shows once, as its thumbnail (FC4).
+      expect(find.bySemanticsLabel('Preview 1000101752.jpg'), findsOneWidget);
     },
   );
 
@@ -4927,7 +4928,8 @@ void main() {
     expect(find.text('report.pdf'), findsOneWidget);
     expect(find.bySemanticsLabel('Preview report.pdf'), findsOneWidget);
     expect(find.text('Review this image'), findsOneWidget);
-    expect(find.text('diagram.png'), findsOneWidget);
+    // A photo shows as its thumbnail, not its name (FC4).
+    expect(find.text('diagram.png'), findsNothing);
     expect(find.bySemanticsLabel('Preview diagram.png'), findsOneWidget);
 
     final diagram = find.bySemanticsLabel('Preview diagram.png');

@@ -47,10 +47,11 @@ extension _ChatComposerRegion on _ChatScreenState {
   /// running work can be sent to the background. They used to be a bar and a
   /// link of their own, repeated above the composer on every running turn.
   List<Widget> _composerStatusChips(BoxConstraints bodyConstraints) {
-    final approval = _conn.isIsolated
-        ? null
-        : _conn.autoApprovalFor(widget.sessionID);
-    // Always there in a conversation (not an isolated one). A request
+    final approval = _approvalModeOffered(_conn)
+        ? _conn.autoApprovalFor(widget.sessionID)
+        : null;
+    // Always there in a conversation whose runtime asks before it acts
+    // (not an isolated one, not a runtime that never asks). A request
     // waiting for a person has its own card, the main thing on screen; the
     // chip stays beside it unchanged, since it is how the person switches
     // to approving automatically. Only a window too short for a strip
