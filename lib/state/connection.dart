@@ -106,6 +106,7 @@ import '../domain/phone_agents.dart';
 import '../domain/phone_agents_source.dart';
 import '../domain/agent_sign_in.dart';
 import '../domain/agent_catalog.dart';
+import '../domain/agent_auth_probe.dart';
 import '../paseo/chat_feed_source.dart';
 import '../builtin/agents/phone_agents_host.dart' show BuiltinPhoneAgents;
 import '../builtin/agents/agent_sign_in.dart' show ChannelAgentSignInHost;

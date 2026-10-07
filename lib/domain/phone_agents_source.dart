@@ -12,6 +12,7 @@
 library;
 
 import 'agent_sign_in.dart';
+import 'agent_auth_probe.dart';
 import 'chat_feed.dart';
 import 'merged_chat_feed.dart';
 import 'phone_agent_host.dart';
@@ -20,6 +21,15 @@ import 'phone_agents.dart';
 /// Stable id of OpenCode in [ChatAgentChoice.agentId] (the chat feed's
 /// [defaultChatAgentId]).
 const openCodeChatAgentId = defaultChatAgentId;
+
+/// Optional account surface for sources with qualified private CLI probes.
+/// Keeps account UI independent of native bridges and concrete controllers.
+abstract interface class PhoneAgentAccountSource {
+  AgentAuthProbeResult? agentAccount(String agentId);
+  Future<bool> confirmAgentSignIn(String agentId);
+  bool canSignOutAgent(String agentId);
+  Future<void> signOutAgent(String agentId);
+}
 
 /// One entry of the agent chip's sheet.
 final class ChatAgentChoice {
