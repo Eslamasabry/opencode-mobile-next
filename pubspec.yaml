@@ -14,7 +14,7 @@ dependencies:
   intl: any
   cupertino_icons: ^1.0.8
   # KitSince reads the time through package:clock so tests can fake it.
-  clock: ^1.1.2
+  clock: ^1.1.3
   # Dropping files onto the composer. Flutter exposes no native file-drop
   # channel of its own on desktop, so this is the one dependency the desktop
   # interaction work needs. Pinned exactly, because it registers a platform
@@ -80,17 +80,17 @@ dependencies:
   qr: 3.0.2
   record: 7.1.1
   scrollable_positioned_list: 0.3.8
-  sherpa_onnx: 1.13.7
+  sherpa_onnx: 1.13.8
   shared_preferences: ^2.3.3
   shorebird_code_push: 2.0.7
-  url_launcher: ^6.3.1
+  url_launcher: ^6.3.3
   uuid: ^4.5.1
   xterm: ^4.0.0
   # Held at 1.x on purpose: 2.x returns package:material_ui ColorSchemes, which
   # are a different type from Flutter's and cannot feed ThemeData until the
   # whole app moves to material_ui. 1.9 carries the surface-role fix.
   dynamic_color: ^1.9.0
-  package_info_plus: ^10.2.1
+  package_info_plus: ^10.2.2
   window_manager: ^0.5.2
   # Already present transitively via window_manager. Declared explicitly
   # because lib/desktop/window_state.dart imports it directly to clamp the
