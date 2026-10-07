@@ -392,6 +392,36 @@ void main() {
     });
   });
 
+  group('held answer words', () {
+    testWidgets('a single choice reads what was chosen, then Undo', (
+      tester,
+    ) async {
+      final gen = FakeGenUi();
+      final card = agentCard(ask: choiceAsk());
+      await _pump(tester, _view(gen, card));
+      await tester.tap(find.text(_b('SQLite')));
+      await tester.pumpAndSettle();
+      gen.set(card, delivery: GenUiDeliveryState.held);
+      await tester.pumpAndSettle();
+      expect(find.text(_b('SQLite')), findsOneWidget);
+      expect(find.text(_en.agentCardSent), findsNothing);
+      expect(find.text(_en.kitUndoAction), findsOneWidget);
+    });
+
+    testWidgets('a confirm reads its own label', (tester) async {
+      final gen = FakeGenUi();
+      final card = agentCard(
+        ask: const GenUiConfirmAsk(confirmLabel: 'Run it'),
+      );
+      await _pump(tester, _view(gen, card));
+      await tester.tap(find.text('Run it'));
+      await tester.pumpAndSettle();
+      gen.set(card, delivery: GenUiDeliveryState.held);
+      await tester.pumpAndSettle();
+      expect(find.text(_b('Run it')), findsOneWidget);
+    });
+  });
+
   group('confirm', () {
     testWidgets('Confirm and Cancel answer true and false', (tester) async {
       final gen = FakeGenUi();

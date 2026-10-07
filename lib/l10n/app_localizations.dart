@@ -43602,6 +43602,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Required'**
   String get agentCardFieldRequiredHint;
+
+  /// Agent card: held answer line when the words of the answer are not known to this view.
+  ///
+  /// In en, this message translates to:
+  /// **'Your answer'**
+  String get agentCardYourAnswer;
 }
 
 class _AppLocalizationsDelegate

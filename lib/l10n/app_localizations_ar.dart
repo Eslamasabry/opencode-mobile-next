@@ -27761,4 +27761,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get agentCardFieldRequiredHint => 'مطلوب';
+
+  @override
+  String get agentCardYourAnswer => 'إجابتك';
 }

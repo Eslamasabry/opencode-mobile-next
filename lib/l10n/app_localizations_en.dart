@@ -27643,4 +27643,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agentCardFieldRequiredHint => 'Required';
+
+  @override
+  String get agentCardYourAnswer => 'Your answer';
 }

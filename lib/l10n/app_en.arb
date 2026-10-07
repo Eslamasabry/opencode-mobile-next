@@ -32985,5 +32985,9 @@
   "agentCardFieldRequiredHint": "Required",
   "@agentCardFieldRequiredHint": {
     "description": "Agent card form: helper line under a required field."
+  },
+  "agentCardYourAnswer": "Your answer",
+  "@agentCardYourAnswer": {
+    "description": "Agent card: held answer line when the words of the answer are not known to this view."
   }
 }

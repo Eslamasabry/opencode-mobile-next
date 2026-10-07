@@ -225,11 +225,14 @@ class _MessageView extends StatelessWidget {
   }
 
   Widget _promptTurn(BuildContext context, List<Part> visibleParts) {
-    final text = visibleParts
-        .where((part) => part.type == 'text')
-        .map((part) => part.text)
-        .where((value) => value.trim().isNotEmpty)
-        .join('\n');
+    final answer = genUiAnswerEnvelope(m);
+    final text =
+        answer?.summary ??
+        visibleParts
+            .where((part) => part.type == 'text')
+            .map((part) => part.text)
+            .where((value) => value.trim().isNotEmpty)
+            .join('\n');
     final created = m.info.time?.created;
     final noReply = onSendAgainNoReply;
     return KitTurn(

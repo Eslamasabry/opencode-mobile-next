@@ -5260,5 +5260,6 @@
   "cardsProblemRemovalFailed": "تعذّرت إزالة البطاقات بالكامل. حاول مرة أخرى بعد إعادة تشغيل الوكيل.",
   "cardsProblemStorageFailed": "تعذّر على الهاتف حفظ الإعداد.",
   "cardsProblemBusy": "الهاتف مشغول بأمر آخر. حاول بعد قليل.",
-  "agentCardFieldRequiredHint": "مطلوب"
+  "agentCardFieldRequiredHint": "مطلوب",
+  "agentCardYourAnswer": "إجابتك"
 }

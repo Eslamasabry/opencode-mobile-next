@@ -81,7 +81,10 @@ class _Controller extends ConnectionController implements GenUiController {
 }
 
 class _Api extends OpenCodeApi with CompleteMessageHistory {
-  _Api() : super(baseUrl: 'http://localhost');
+  _Api({this.answerText}) : super(baseUrl: 'http://localhost');
+
+  /// A person's answer message (the app's own envelope), when a test has one.
+  final String? answerText;
 
   @override
   Future<List<MessageWithParts>> messages(String id) async => [
@@ -127,6 +130,18 @@ class _Api extends OpenCodeApi with CompleteMessageHistory {
         ),
       ],
     ),
+    if (answerText != null)
+      MessageWithParts(
+        info: MessageInfo(
+          id: 'm3',
+          sessionID: id,
+          role: 'user',
+          time: MsgTime(created: 4, completed: 4),
+        ),
+        parts: [
+          Part(id: 'p4', messageID: 'm3', type: 'text', text: answerText!),
+        ],
+      ),
   ];
   @override
   Future<Session> session(String id) async => Session(id: id);
@@ -140,14 +155,14 @@ class _Api extends OpenCodeApi with CompleteMessageHistory {
   Future<List<FileNode>> listFiles([String path = '']) async => const [];
 }
 
-Future<_Controller> _controller(FakeGenUi gen) async {
+Future<_Controller> _controller(FakeGenUi gen, {String? answerText}) async {
   SharedPreferences.setMockInitialValues({});
   final c = _Controller(
     ProfileStore(prefs: await SharedPreferences.getInstance()),
     gen,
   );
   c
-    ..api = _Api()
+    ..api = _Api(answerText: answerText)
     ..repository = _Repository()
     ..status = StreamStatus.connected;
   c.sessionsById['s1'] = Session(id: 's1');
@@ -176,6 +191,48 @@ Future<void> _open(WidgetTester tester, _Controller c) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('the answer message shows only its summary, and copies it', (
+    tester,
+  ) async {
+    String? copied;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied = (call.arguments as Map)['text'] as String?;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    final gen = FakeGenUi();
+    final card = agentCard(callID: 'c1', ask: choiceAsk());
+    gen.cards['c1'] = GenUiParsed(card);
+    gen.states['c1'] = GenUiCardState.answered;
+    final text = genUiAnswerText(card, GenUiChoiceAnswer(const ['sqlite']));
+    expect(text, contains('[oc-ui answer'));
+    final c = await _controller(gen, answerText: text);
+    await _open(tester, c);
+
+    expect(
+      find.textContaining('oc-ui answer', findRichText: true),
+      findsNothing,
+    );
+    expect(find.textContaining('"callId"', findRichText: true), findsNothing);
+    final bubble = find.text('SQLite', findRichText: true);
+    expect(bubble, findsWidgets);
+    await tester.longPress(find.byKey(const ValueKey('user-prompt-m3')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('message-menu-copy')));
+    await tester.pumpAndSettle();
+    expect(copied, 'SQLite');
+  });
 
   setUp(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

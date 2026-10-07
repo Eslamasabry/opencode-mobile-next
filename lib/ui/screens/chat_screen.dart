@@ -549,11 +549,16 @@ class _ChatScreenState extends State<ChatScreen>
     if (mounted) setState(() {});
   }
 
-  static String _messageText(MessageWithParts message) => message.parts
-      .where((part) => part.type == 'text' && !part.synthetic)
-      .map((part) => part.text)
-      .where((value) => value.trim().isNotEmpty)
-      .join('\n\n');
+  /// A message's words. A person's answer to an agent card is the app's own
+  /// envelope; its words are the summary, never the tag or the JSON.
+  static String _messageText(MessageWithParts message) =>
+      (message.info.role == 'user' ? genUiAnswerEnvelope(message) : null)
+          ?.summary ??
+      message.parts
+          .where((part) => part.type == 'text' && !part.synthetic)
+          .map((part) => part.text)
+          .where((value) => value.trim().isNotEmpty)
+          .join('\n\n');
 
   void _notifyOfferChanged() {
     if (mounted) setState(() {});

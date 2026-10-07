@@ -56,6 +56,12 @@ class _AgentCardViewState extends State<AgentCardView> {
   /// What the person entered, by card identity: an answer taken back with
   /// Undo returns as it was. Dropped once the card is answered or passed over.
   final Map<String, AgentCardDraft> _drafts = {};
+
+  /// The words of the answer this view sent, by card identity: what the held
+  /// line says while the Undo window runs ("SQLite", "Run it").
+  final Map<String, String> _heldWords = {};
+
+  static final _tag = RegExp(r'^\[oc-ui answer [^\]]*\] ');
   String? _error;
 
   Future<void> _answer(
@@ -65,6 +71,14 @@ class _AgentCardViewState extends State<AgentCardView> {
   }) async {
     if (_submitting) return;
     final l10n = AppLocalizations.of(context);
+    try {
+      _heldWords[card.identity] = genUiAnswerText(
+        card,
+        answer,
+      ).split('\n').first.replaceFirst(_tag, '');
+    } catch (_) {
+      _heldWords.remove(card.identity);
+    }
     setState(() {
       _submitting = true;
       _error = null;
@@ -128,7 +142,10 @@ class _AgentCardViewState extends State<AgentCardView> {
         (state == GenUiCardState.answered ||
             state == GenUiCardState.passedOver) &&
         delivery != GenUiDeliveryState.held;
-    if (closed) _drafts.remove(card.identity);
+    if (closed) {
+      _drafts.remove(card.identity);
+      _heldWords.remove(card.identity);
+    }
 
     if (delivery == GenUiDeliveryState.held) {
       return KitAgentCard(
@@ -138,7 +155,9 @@ class _AgentCardViewState extends State<AgentCardView> {
         body: body,
         mode: KitAgentCardMode.receipt,
         inList: widget.inList,
-        receiptLabel: summary ?? l10n.agentCardSent,
+        // Nothing is sent yet: the line says what is about to be.
+        receiptLabel:
+            summary ?? _heldWords[card.identity] ?? l10n.agentCardYourAnswer,
         onUndo: () => gen.undoGenUiAnswer(card),
         expandLabel: l10n.agentCardShow,
       );
