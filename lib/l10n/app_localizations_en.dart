@@ -6030,6 +6030,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatUiWaitForThisRunInstead => 'Wait for this run instead';
 
   @override
+  String get chatUiLoadTools => 'Load tools';
+
+  @override
+  String chatUiToolFrom(String tool, String server) {
+    return '$tool · $server';
+  }
+
+  @override
   String get chatUiWebSearch => 'Web search';
 
   @override

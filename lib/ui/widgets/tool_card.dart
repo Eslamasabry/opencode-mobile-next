@@ -8,6 +8,7 @@ import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import '../kit/chat/kit_markdown.dart';
 import '../kit/chat/kit_tool_row.dart';
+import '../kit/kit_bidi.dart';
 import '../kit/kit_buttons.dart';
 import '../kit/kit_code_block.dart';
 import '../kit/kit_details_fold.dart';

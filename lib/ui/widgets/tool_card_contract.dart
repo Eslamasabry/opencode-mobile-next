@@ -330,9 +330,16 @@ class _ToolContract {
         title = strings.activeContextSkill;
         subtitle = _valueString(input['name']);
         break;
+      case 'toolsearch':
+        // Claude Code looking up which of its tools to load.
+        kind = _ToolKind.generic;
+        title = strings.chatUiLoadTools;
+        subtitle = null;
       default:
         kind = _ToolKind.generic;
-        title = state.title?.trim().isNotEmpty == true ? state.title! : rawName;
+        title = state.title?.trim().isNotEmpty == true
+            ? state.title!
+            : _mcpTitle(rawName, strings) ?? rawName;
         subtitle = null;
     }
     if (metadata['truncated'] == true &&
@@ -349,6 +356,18 @@ class _ToolContract {
       removed: removed,
       exitCode: exitCode,
       nativeSubagent: name == 'subagent',
+    );
+  }
+
+  /// "mcp__github__create_issue" → "create issue · github": a tool an MCP
+  /// server adds, in words; null for any other name.
+  static String? _mcpTitle(String name, AppLocalizations strings) {
+    final match = RegExp(r'^mcp__(.+?)__(.+)$').firstMatch(name);
+    if (match == null) return null;
+    String words(String raw) => raw.replaceAll(RegExp(r'[_]+'), ' ').trim();
+    return strings.chatUiToolFrom(
+      KitBidi.auto(words(match.group(2)!)),
+      KitBidi.auto(words(match.group(1)!)),
     );
   }
 

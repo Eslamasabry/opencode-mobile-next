@@ -6078,6 +6078,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatUiWaitForThisRunInstead => 'انتظار هذا التشغيل بدلًا من ذلك';
 
   @override
+  String get chatUiLoadTools => 'تحميل الأدوات';
+
+  @override
+  String chatUiToolFrom(String tool, String server) {
+    return '$tool · $server';
+  }
+
+  @override
   String get chatUiWebSearch => 'البحث في الويب';
 
   @override

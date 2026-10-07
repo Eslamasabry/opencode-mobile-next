@@ -10148,6 +10148,18 @@ abstract class AppLocalizations {
   /// **'Wait for this run instead'**
   String get chatUiWaitForThisRunInstead;
 
+  /// Chat journey: tool row title when the agent looks up which tools it can use (Claude Code ToolSearch)
+  ///
+  /// In en, this message translates to:
+  /// **'Load tools'**
+  String get chatUiLoadTools;
+
+  /// Chat journey: tool row title for a tool an MCP server adds: the tool's name, then the server's name
+  ///
+  /// In en, this message translates to:
+  /// **'{tool} · {server}'**
+  String chatUiToolFrom(String tool, String server);
+
   /// Chat journey: Web search
   ///
   /// In en, this message translates to:

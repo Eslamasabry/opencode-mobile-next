@@ -2193,6 +2193,8 @@
   "chatUiWaitForTheCurrentRunToFinish": "انتظر انتهاء التشغيل الحالي، ثم أرسل",
   "chatUiWaitForThisRunInstead": "انتظار هذا التشغيل بدلًا من ذلك",
   "chatUiWaitingForThisRunToFinish": "بانتظار انتهاء هذا التشغيل",
+  "chatUiLoadTools": "تحميل الأدوات",
+  "chatUiToolFrom": "{tool} · {server}",
   "chatUiWebSearch": "البحث في الويب",
   "chatUiWhatChangedRecently": "ما الذي تغيّر مؤخرًا؟",
   "chatUiWhenTheAssistantPlansWorkAsA": "عندما يخطط المساعد للعمل في صورة قائمة مهام، تظهر عناصرها هنا.",

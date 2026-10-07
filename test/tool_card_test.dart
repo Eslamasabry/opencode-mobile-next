@@ -75,6 +75,41 @@ void main() {
 }
 
 void _shellTests() {
+  testWidgets('Claude Code looking up tools reads "Load tools"', (
+    tester,
+  ) async {
+    await _pumpTool(
+      tester,
+      name: 'toolsearch',
+      state: ToolState.fromJson({
+        'status': 'completed',
+        'input': {'query': 'select:mcp__oc-ui__show'},
+        'output': 'Loaded.',
+        'metadata': <String, Object?>{},
+      }, toolName: 'toolsearch'),
+    );
+    expect(find.text('Load tools'), findsOneWidget);
+    expect(find.text('toolsearch'), findsNothing);
+  });
+
+  testWidgets('a tool an MCP server adds reads in words with its server', (
+    tester,
+  ) async {
+    await _pumpTool(
+      tester,
+      name: 'mcp__github__create_issue',
+      state: ToolState.fromJson({
+        'status': 'completed',
+        'input': {'title': 'Bug'},
+        'output': 'Created.',
+        'metadata': <String, Object?>{},
+      }, toolName: 'mcp__github__create_issue'),
+    );
+    expect(_text('create issue'), findsOneWidget);
+    expect(_text('github'), findsOneWidget);
+    expect(_text('mcp__'), findsNothing);
+  });
+
   testWidgets('a passing command says so in words, not "exit 0"', (
     tester,
   ) async {

@@ -5225,6 +5225,15 @@
   "@chatUiWaitForThisRunInstead": {
     "description": "Chat journey: Wait for this run instead"
   },
+  "chatUiLoadTools": "Load tools",
+  "@chatUiLoadTools": {
+    "description": "Chat journey: tool row title when the agent looks up which tools it can use (Claude Code ToolSearch)"
+  },
+  "chatUiToolFrom": "{tool} · {server}",
+  "@chatUiToolFrom": {
+    "description": "Chat journey: tool row title for a tool an MCP server adds: the tool's name, then the server's name",
+    "placeholders": {"tool": {"type": "String"}, "server": {"type": "String"}}
+  },
   "chatUiWebSearch": "Web search",
   "@chatUiWebSearch": {
     "description": "Chat journey: Web search"
