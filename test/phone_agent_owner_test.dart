@@ -62,7 +62,7 @@ void main() {
       final s = await store(
         [profile('one')],
         extra: {
-          'oc.agentPhoneGate.one': '{"claude":"fingerprint"}',
+          'oc.agentPhoneGate.one': '{"claude":{"fingerprint":"pin"}}',
           'oc.agentFeed.one': '[{"sessionID":"chat"}]',
           'oc.phoneAgentsUsed.one': true,
         },
@@ -91,7 +91,10 @@ void main() {
           profile('termux', url: 'http://127.0.0.1:4096'),
           profile('remote', url: 'http://192.168.1.2:4097'),
         ],
-        extra: {'oc.agentPhoneGate.checked': '{"claude":"proof"}'},
+        extra: {
+          'oc.agentPhoneGate.empty': '{}',
+          'oc.agentPhoneGate.checked': '{"claude":{"fingerprint":"proof"}}',
+        },
       );
       expect(s.phoneAgentOwnerId('empty'), 'checked');
       expect(s.phoneAgentOwnerId('two'), 'checked');
@@ -108,7 +111,7 @@ void main() {
       final s = await store(
         [profile('one'), profile('two', flavor: ServerFlavor.v2)],
         extra: {
-          'oc.agentPhoneGate.one': '{"claude":"proof"}',
+          'oc.agentPhoneGate.one': '{"claude":{"fingerprint":"proof"}}',
           'oc.agentFeed.one': '[]',
           'oc.sessionAutoApproval.one.agents': '{"chat":true}',
         },

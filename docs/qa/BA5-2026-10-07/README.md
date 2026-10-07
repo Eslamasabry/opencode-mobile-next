@@ -13,3 +13,8 @@ original owner while another protocol remains, and deleting the final alias.
 
 Device switch/restart evidence is pending candidate APK build/install. This
 record does not claim the full item Done until that journey is captured.
+
+Migration edge-case follow-up: an empty gate left by a failed phone check must
+not outrank an actually checked home. The legacy migration test failed before
+this refinement (expected checked, actual empty), then all three ownership
+cases passed after requiring a recorded fingerprint/nonempty chat cache.

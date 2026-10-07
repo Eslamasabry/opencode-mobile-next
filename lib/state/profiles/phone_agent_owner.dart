@@ -35,10 +35,30 @@ extension PhoneAgentOwnership on ProfileStore {
     if (owner == null) {
       // Old installs may already have several protocol profiles. Prefer a
       // checked home, then the home with cached chats, then creation order.
-      int score(ServerProfile p) =>
-          (prefs.containsKey('$phoneAgentGatePrefix${p.id}') ? 4 : 0) +
-          (prefs.containsKey('oc.agentFeed.${p.id}') ? 2 : 0) +
-          (prefs.getBool('oc.phoneAgentsUsed.${p.id}') == true ? 1 : 0);
+      int score(ServerProfile p) {
+        var result = prefs.getBool('oc.phoneAgentsUsed.${p.id}') == true
+            ? 1
+            : 0;
+        try {
+          final gates = jsonDecode(
+            prefs.getString('$phoneAgentGatePrefix${p.id}') ?? '{}',
+          );
+          if (gates is Map &&
+              gates.values.any(
+                (gate) => gate is Map && gate['fingerprint'] is String,
+              )) {
+            result += 4;
+          }
+          final rows = jsonDecode(
+            prefs.getString('oc.agentFeed.${p.id}') ?? '[]',
+          );
+          if (rows is List && rows.isNotEmpty) result += 2;
+        } catch (_) {
+          /* Malformed preferences never establish a checked home. */
+        }
+        return result;
+      }
+
       var candidate = local.first;
       for (final profile in local.skip(1)) {
         if (score(profile) > score(candidate)) candidate = profile;
