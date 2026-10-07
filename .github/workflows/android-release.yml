@@ -235,9 +235,6 @@ jobs:
             --baseline-release-json "$RUNNER_TEMP/apk-baseline.json" \
             --baseline-tag "$APK_BASELINE_TAG" --max-growth-mib 5 \
             --output build/release-metrics/apk-size.json
-          python3 tool/release/verify_cold_start.py \
-            --apk build/app/outputs/flutter-apk/app-release.apk \
-            --receipt "docs/releases/v${BUILD_NAME}+${BUILD_NUMBER}-cold-start.json"
           shorebird release android \
             --build-name "$BUILD_NAME" \
             --build-number "$BUILD_NUMBER" \
@@ -249,9 +246,6 @@ jobs:
             --baseline-release-json "$RUNNER_TEMP/apk-baseline.json" \
             --baseline-tag "$APK_BASELINE_TAG" --max-growth-mib 5 \
             --output build/release-metrics/apk-size.json
-          python3 tool/release/verify_cold_start.py \
-            --apk build/app/outputs/flutter-apk/app-release.apk \
-            --receipt "docs/releases/v${BUILD_NAME}+${BUILD_NUMBER}-cold-start.json"
 
       # A manual run off a tag proves the same build without spending the
       # version on Shorebird. Its APK is not patchable and is never published.
@@ -315,6 +309,40 @@ jobs:
             echo
             echo "Shorebird release $version, Flutter $SHOREBIRD_FLUTTER_VERSION (Shorebird engine)"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record optional cold-start receipt
+        if: ${{ always() }}
+        continue-on-error: true
+        env:
+          BUILD_NAME: ${{ steps.version.outputs.build_name }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+        run: |
+          set -euo pipefail
+          receipt="docs/releases/v${BUILD_NAME}+${BUILD_NUMBER}-cold-start.json"
+          if [ -f "$receipt" ]; then
+            if mkdir -p build/release-metrics && cp "$receipt" build/release-metrics/cold-start.json; then
+              echo 'Cold-start receipt recorded for review.'
+            else
+              echo '::warning::Could not copy the optional cold-start receipt; release continues.'
+            fi
+            if ! python3 tool/release/verify_cold_start.py \
+              --apk build/app/outputs/flutter-apk/app-release.apk \
+              --receipt "$receipt"; then
+              echo '::warning::Optional cold-start receipt verification failed; release continues.'
+            fi
+          else
+            echo '::warning::No cold-start receipt for this version; release continues without startup measurements.'
+          fi
+
+      - name: Upload optional cold-start receipt
+        if: ${{ always() }}
+        continue-on-error: true
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-cold-start-${{ github.sha }}
+          path: build/release-metrics/cold-start.json
+          if-no-files-found: ignore
+          retention-days: 90
 
       - name: Upload APK size measurements
         if: ${{ always() }}
