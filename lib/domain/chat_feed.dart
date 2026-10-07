@@ -48,7 +48,13 @@ class ChatFeedItem {
     this.agentLabel,
     this.sourceId,
     this.sourceLabel,
+    this.finishedUnseen = false,
   });
+
+  /// Its last run finished after the person last opened it (the list's
+  /// "Done" tag). Contract of 2026-10-07: computed by each feed from the
+  /// device's read watermarks; false for a saved row and while running.
+  final bool finishedUnseen;
 
   /// The server's session id; pass it to `selectLocationForExistingSession`
   /// (with [directory]) and then open the chat.

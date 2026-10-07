@@ -58,6 +58,7 @@ import '../termux/bridge.dart';
 import 'effects.dart' show KitEffects;
 import '../builtin/builtin_linux.dart';
 import '../builtin/builtin_server.dart' show startBuiltinServer;
+import 'delayed_answers.dart';
 import '../builtin/builtin_server_recovery.dart';
 import 'isolated_task_launch.dart';
 import 'model_library.dart';
@@ -248,6 +249,10 @@ class ConnectionController extends ChangeNotifier
         _ConnectionControllerSideConnections {
   final ProfileStore store;
   final BackgroundLiveController backgroundLive;
+
+  /// Answers to agents' requests held briefly so they can be undone (see
+  /// delayed_answers.dart); shared by the chat and the Conversations list.
+  late final DelayedAnswers delayedAnswers = DelayedAnswers();
 
   /// The one home of quiet hours, Wi-Fi only, check-ins and the "what
   /// notifies me" choices. Both monitors and this controller's own alerts
