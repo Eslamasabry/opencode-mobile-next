@@ -106,6 +106,8 @@ import '../domain/phone_agents.dart';
 import '../domain/phone_agents_source.dart';
 import '../domain/agent_sign_in.dart';
 import '../domain/agent_catalog.dart';
+import '../domain/agent_tools/agent_certification.dart';
+import '../domain/agent_tools/browser_claude_launch.dart';
 import '../domain/agent_auth_probe.dart';
 import '../domain/turn_stall.dart';
 import '../paseo/chat_feed_source.dart';
@@ -301,6 +303,9 @@ class ConnectionController extends ChangeNotifier
   final V2GatewayPairFactory _v2GatewayFactory;
   final V2GatewayPairFactory _codexGatewayFactory;
   final V2GatewayPairFactory _paseoGatewayFactory;
+  final BrowserClaudeLaunchRegistry _browserLaunches;
+  final bool _ownsBrowserLaunches;
+
   final PhoneAgentHostPort Function(ServerProfile profile)?
   _phoneAgentHostFactory;
   final AgentSignInHost Function()? _agentSignInHostFactory;
@@ -470,6 +475,7 @@ class ConnectionController extends ChangeNotifier
         main.store,
         isSideBackend: true,
         genUiInstaller: main._genUiInstaller,
+        browserClaudeLaunchRegistry: main._browserLaunches,
         apiFactory: main._apiFactory,
         repositoryFactory: main._repositoryFactory,
         v2GatewayFactory: main._v2GatewayFactory,
@@ -483,6 +489,23 @@ class ConnectionController extends ChangeNotifier
         draftAttachmentVault: main._draftAttachmentVault,
         promptPhotoStore: main._promptPhotoStore,
       );
+
+  /// Explicit, transient browser choice for the active phone-agent chat.
+  Future<void> setAgentBrowserRequestedForSession(
+    String sessionID, {
+    required bool requested,
+  }) async {
+    final gateway = api;
+    if (gateway is! PaseoGateway) {
+      throw const ProductException(
+        'Open a Claude Code chat on this phone to use the agent browser.',
+      );
+    }
+    await gateway.setBrowserRequestedForSession(
+      sessionID,
+      requested: requested,
+    );
+  }
 
   ConnectionController(
     this.store, {
@@ -508,7 +531,11 @@ class ConnectionController extends ChangeNotifier
     PhoneAgentHostPort Function(ServerProfile profile)? phoneAgentHostFactory,
     AgentSignInHost Function()? agentSignInHostFactory,
     GenUiInstaller? genUiInstaller,
-  }) : _phoneAgentHostFactory = phoneAgentHostFactory,
+    BrowserClaudeLaunchRegistry? browserClaudeLaunchRegistry,
+  }) : _browserLaunches =
+           browserClaudeLaunchRegistry ?? BrowserClaudeLaunchRegistry(),
+       _ownsBrowserLaunches = browserClaudeLaunchRegistry == null,
+       _phoneAgentHostFactory = phoneAgentHostFactory,
        _agentSignInHostFactory = agentSignInHostFactory,
        _phoneEngineBridge = phoneEngineBridge,
        _phoneEngineGatewayBuilder = phoneEngineGatewayBuilder,

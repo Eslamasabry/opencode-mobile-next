@@ -1,0 +1,7 @@
+Reverted connection implementation to merge 98f48d33 while retaining new tests.
+Exit code: 1
+00:00 +0 -1: legacy host sign-in truth publishes inventory without a native read [E]
+00:00 +0 -1: Some tests failed.
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_legacy_auth_test.dart: legacy host sign-in truth publishes inventory without a native read
+Restored implementation in finally.

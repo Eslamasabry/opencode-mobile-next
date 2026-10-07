@@ -4,9 +4,18 @@ extension _ConnectionTurnStalls on ConnectionController {
   void _resetTurnStalls() {
     _turnStallTimer?.cancel();
     _turnStallTimer = null;
+    _cancelTurnStallProbe();
     _turnStallSessions.clear();
     _turnStalls.clear();
     _turnStallTransportConnected = null;
+  }
+
+  void _cancelTurnStallProbe() {
+    final cancellation = _turnStallProbeCancellation;
+    _turnStallProbeCancellation = null;
+    if (cancellation != null && !cancellation.isCompleted) {
+      cancellation.complete();
+    }
   }
 
   bool _turnWaiting(String id) =>
@@ -16,7 +25,16 @@ extension _ConnectionTurnStalls on ConnectionController {
       waitingCardsForSession(id).isNotEmpty;
 
   void _syncTurnStalls() {
-    if (_disposed || isIsolated || _lifecycleSuspended) return;
+    // Snapshot-only controllers do not own a live turn or a wakeup clock.
+    // Arm deadlines only alongside a transport owned by this controller.
+    if (_disposed ||
+        isIsolated ||
+        _lifecycleSuspended ||
+        _lifecycleWasBackgrounded ||
+        (!_turnStallTestClock && _events == null && _poll?.isActive != true)) {
+      _resetTurnStalls();
+      return;
+    }
     final now = DateTime.now();
     final active = {
       ...busySessions.where(_isPersonsSession),
@@ -45,6 +63,7 @@ extension _ConnectionTurnStalls on ConnectionController {
     if (active.isEmpty) {
       _turnStallTimer?.cancel();
       _turnStallTimer = null;
+      _cancelTurnStallProbe();
     } else {
       _turnStallTimer ??= Timer.periodic(
         turnStallTick,
@@ -91,26 +110,44 @@ extension _ConnectionTurnStalls on ConnectionController {
   }
 
   Future<void> _checkTurnStalls() async {
-    if (_disposed || _turnStallProbing || _lifecycleSuspended) return;
+    if (_disposed ||
+        _turnStallProbeCancellation != null ||
+        _lifecycleSuspended ||
+        _lifecycleWasBackgrounded) {
+      return;
+    }
     _syncTurnStalls();
     final probes = [
       for (final id in _turnStalls.dueSessionIds) ?_turnStalls.takeProbe(id),
     ];
     if (probes.isEmpty) return;
-    _turnStallProbing = true;
+    final cancellation = Completer<void>();
+    _turnStallProbeCancellation = cancellation;
+    final generation = _generation;
+    final tracker = _turnStalls;
     try {
       final evidence = await boundedTurnStallProbe(
         probe: _readTurnStallEvidence,
         transportConnected: isConnected,
+        cancelled: cancellation.future,
       );
-      if (_disposed || _lifecycleSuspended) return;
+      if (_disposed ||
+          _lifecycleSuspended ||
+          _lifecycleWasBackgrounded ||
+          generation != _generation ||
+          !identical(tracker, _turnStalls) ||
+          !identical(cancellation, _turnStallProbeCancellation)) {
+        return;
+      }
       var changed = false;
       for (final probe in probes) {
         if (_turnStalls.completeProbe(probe, evidence) != null) changed = true;
       }
       if (changed) _notifyListeners();
     } finally {
-      _turnStallProbing = false;
+      if (identical(cancellation, _turnStallProbeCancellation)) {
+        _turnStallProbeCancellation = null;
+      }
     }
   }
 }

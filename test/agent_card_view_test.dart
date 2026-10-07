@@ -746,7 +746,7 @@ void main() {
           agents: const [GenUiAgent.openCode1, GenUiAgent.openCode2],
           reason: GenUiSetupProblem.notQualified,
         ): _en.cardsStatusPartial(
-          'OpenCode',
+          'OpenCode 1, OpenCode 2',
           _en.cardsProblemNotQualified,
         ),
         GenUiSetupRestartRequired(agents: const [GenUiAgent.claude]): _en
@@ -772,12 +772,12 @@ void main() {
           agents: const [GenUiAgent.claude],
           reason: GenUiSetupProblem.notQualified,
           affected: const [GenUiAgent.openCode1, GenUiAgent.openCode2],
-        ): 'On for Claude Code. OpenCode hasn\'t been checked to work with '
+        ): 'On for Claude Code. OpenCode 1, OpenCode 2 hasn\'t been checked to work with '
             'cards yet.',
         const GenUiSetupUnavailable(
           reason: GenUiSetupProblem.notQualified,
           affected: [GenUiAgent.openCode2],
-        ): 'Not available. OpenCode hasn\'t been checked to work with cards '
+        ): 'Not available. OpenCode 2 hasn\'t been checked to work with cards '
             'yet.',
         const GenUiSetupFailed(
           reason: GenUiSetupProblem.registrationFailed,

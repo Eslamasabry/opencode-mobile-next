@@ -102,3 +102,19 @@ backend probes native helper process liveness before its endpoint. Main
 OpenCode probes health. Transport changes invalidate prior evidence without
 resetting the last-progress clock. One shared probe covers the due sessions on
 that connection, with no overlapping health reads.
+
+
+## Timer ownership follow-up
+
+Watchdog scheduling requires an event channel or active polling transport owned
+by this controller. Busy snapshots in a transportless controller never create
+wakeup work. `configureTurnStallForTesting` opts into the deterministic clock and
+probe explicitly; it is not a production bypass.
+
+`boundedTurnStallProbe` now accepts optional `cancelled: Future<void>`. Cancellation
+completes with unknown evidence and cancels the deadline timer. It never claims
+a helper or endpoint measurement, and late probe futures cannot complete again.
+Connection disposal, idle/deletion/error of all tracked turns, disconnect,
+transport retirement/generation changes and lifecycle suspension cancel the
+pending deadline. Resume starts a fresh silence period; keeping a background
+connection alive does not rearm foreground stall checks.

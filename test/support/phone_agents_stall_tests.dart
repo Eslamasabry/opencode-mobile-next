@@ -1,6 +1,101 @@
 part of '../phone_agents_controller_test.dart';
 
 void _turnStallControllerTests() {
+  testWidgets(
+    'BA7 busy snapshots without an owned transport have no watchdog wakeups',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final c = ConnectionController(
+        ProfileStore(prefs: await SharedPreferences.getInstance()),
+      )..api = _OcApi(_OcScript());
+      addTearDown(c.dispose);
+      c.noteLocalTurn('snapshot');
+      c.handleEventForTesting(
+        EventEnvelope(
+          type: 'session.status',
+          properties: {
+            'sessionID': 'snapshot',
+            'status': {'type': 'busy'},
+          },
+        ),
+      );
+      await tester.pump();
+      expect(c.busySessions, contains('snapshot'));
+      expect(c.turnStallFor('snapshot'), isNull);
+      // Test invariants run before addTearDown. A snapshot must own no timer.
+    },
+  );
+
+  for (final end in [
+    'idle',
+    'deleted',
+    'error',
+    'dispose',
+    'disconnect',
+    'suspend',
+  ]) {
+    testWidgets('BA7 $end cancels a pending probe deadline', (tester) async {
+      final w = await _world(tester);
+      final c = w.controller;
+      var elapsed = Duration.zero;
+      final hung = Completer<TurnStallEvidence>();
+      var probes = 0;
+      c.configureTurnStallForTesting(
+        elapsed: () => elapsed,
+        probe: () {
+          probes++;
+          return hung.future;
+        },
+      );
+      c.noteLocalTurn('silent');
+      elapsed = const Duration(seconds: 44);
+      await tester.pump(elapsed);
+      expect(probes, 0);
+      elapsed = turnStallSilence;
+      await tester.pump(const Duration(seconds: 1));
+      expect(probes, 1);
+      switch (end) {
+        case 'idle':
+          c.handleEventForTesting(
+            EventEnvelope(
+              type: 'session.idle',
+              properties: {'sessionID': 'silent'},
+            ),
+          );
+        case 'deleted':
+          c.handleEventForTesting(
+            EventEnvelope(
+              type: 'session.deleted',
+              properties: {
+                'info': {'id': 'silent'},
+              },
+            ),
+          );
+        case 'error':
+          c.handleEventForTesting(
+            EventEnvelope(
+              type: 'session.error',
+              properties: {
+                'sessionID': 'silent',
+                'error': {'name': 'MessageAbortedError'},
+              },
+            ),
+          );
+        case 'dispose':
+          c.dispose();
+        case 'disconnect':
+          await c.disconnect();
+        case 'suspend':
+          c.suspendForLifecycle();
+      }
+      await tester.pump();
+      expect(c.turnStallFor('silent'), isNull);
+      c.dispose();
+      await tester.pump();
+      // Leave the probe unresolved: teardown must find no timeout timer.
+    });
+  }
+
   for (final entry in {
     TurnStallKind.modelSlow: const TurnStallEvidence(
       transportConnected: true,

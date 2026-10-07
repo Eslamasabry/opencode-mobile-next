@@ -3,7 +3,18 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/domain/phone_agent_host.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
+
+class _RefusingGateStore extends InMemorySharedPreferencesStore {
+  _RefusingGateStore(super.data, this.refused) : super.withData();
+  String? refused;
+
+  @override
+  Future<bool> setValue(String type, String key, Object value) async =>
+      key == 'flutter.$refused' ? false : super.setValue(type, key, value);
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -105,6 +116,136 @@ void main() {
   );
 
   test(
+    'already mapped homes adopt every legacy check once without reviving retries',
+    () async {
+      final s = await store(
+        [profile('one'), profile('two', flavor: ServerFlavor.v2)],
+        extra: {
+          'oc.phoneAgentOwner.one': 'one',
+          'oc.phoneAgentOwner.two': 'one',
+          'oc.agentPhoneGate.one':
+              '{"claude":{"fingerprint":"current"},"pi":{"fingerprint":"owner"}}',
+          'oc.agentPhoneGate.two':
+              '{"fx":{"fingerprint":"fx-pin","architecture":"x64"},'
+              '"omp":{"fingerprint":"omp-pin"},'
+              '"pi":{"fingerprint":"old"},"invalid":{},"empty":{"fingerprint":""}}',
+        },
+      );
+      var gates =
+          jsonDecode(s.prefs.getString('oc.agentPhoneGate.one')!) as Map;
+      expect(gates.keys, unorderedEquals(['claude', 'pi', 'fx', 'omp']));
+      expect(gates['pi']['fingerprint'], 'owner');
+      expect(gates['fx']['architecture'], 'x64');
+      expect(s.prefs.getStringList('oc.phoneAgentGateMigration.one'), ['two']);
+      // A failed phone-check retry removes the old proof before doing work.
+      gates.remove('fx');
+      await s.prefs.setString('oc.agentPhoneGate.one', jsonEncode(gates));
+      await s.load();
+      gates = jsonDecode(s.prefs.getString('oc.agentPhoneGate.one')!) as Map;
+      expect(gates.containsKey('fx'), isFalse);
+      expect(gates.containsKey('omp'), isTrue);
+      await s.remove('one');
+      await s.load();
+      gates = jsonDecode(s.prefs.getString('oc.agentPhoneGate.one')!) as Map;
+      expect(gates.containsKey('fx'), isFalse);
+      expect(s.prefs.getStringList('oc.phoneAgentGateMigration.one'), ['two']);
+      // Retaining the separate legacy home never repeats its migration.
+      expect(s.prefs.getString('oc.agentPhoneGate.two'), contains('fx-pin'));
+    },
+  );
+
+  test('gate adoption excludes remote and Termux homes', () async {
+    final s = await store(
+      [
+        profile('one'),
+        profile('two', flavor: ServerFlavor.v2),
+        profile('termux', url: 'http://127.0.0.1:4096'),
+        profile('remote', url: 'http://192.168.1.2:4097'),
+      ],
+      extra: {
+        'oc.agentPhoneGate.one': '{"claude":{"fingerprint":"pin"}}',
+        'oc.agentPhoneGate.two': '{"fx":{"fingerprint":"fx-pin"}}',
+        'oc.agentPhoneGate.termux': '{"pi":{"fingerprint":"termux"}}',
+        'oc.agentPhoneGate.remote': '{"omp":{"fingerprint":"remote"}}',
+      },
+    );
+    final gates =
+        jsonDecode(s.prefs.getString('oc.agentPhoneGate.one')!) as Map;
+    expect(gates.keys, unorderedEquals(['claude', 'fx']));
+    expect(s.prefs.getStringList('oc.phoneAgentGateMigration.one'), ['two']);
+  });
+
+  test('malformed migration receipt refuses to revive old proof', () async {
+    await expectLater(
+      store(
+        [profile('one'), profile('two', flavor: ServerFlavor.v2)],
+        extra: {
+          'oc.phoneAgentOwner.one': 'one',
+          'oc.phoneAgentGateMigration.one': 'broken',
+          'oc.agentPhoneGate.one': '{}',
+          'oc.agentPhoneGate.two': '{"fx":{"fingerprint":"old"}}',
+        },
+      ),
+      throwsA(
+        isA<AgentHostException>().having(
+          (e) => e.reason,
+          'reason',
+          AgentHostFailure.storage,
+        ),
+      ),
+    );
+  });
+
+  test('malformed donor does not suppress another checked home', () async {
+    final s = await store(
+      [profile('one'), profile('bad'), profile('two', flavor: ServerFlavor.v2)],
+      extra: {
+        'oc.phoneAgentOwner.one': 'one',
+        'oc.agentPhoneGate.bad': 'broken',
+        'oc.agentPhoneGate.two': '{"fx":{"fingerprint":"fx-pin"}}',
+      },
+    );
+    expect(s.prefs.getString('oc.agentPhoneGate.one'), contains('fx-pin'));
+  });
+
+  for (final refused in [
+    'oc.agentPhoneGate.one',
+    'oc.phoneAgentGateMigration.one',
+  ]) {
+    test(
+      'refused $refused write preserves migration for a persisted retry',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'oc.profiles': jsonEncode([
+            profile('one').toJson(),
+            profile('two').toJson(),
+          ]),
+          'oc.phoneAgentOwner.one': 'one',
+          'oc.agentPhoneGate.one': '{}',
+          'oc.agentPhoneGate.two': '{"fx":{"fingerprint":"fx-pin"}}',
+        });
+        final original = SharedPreferencesStorePlatform.instance;
+        final disk = _RefusingGateStore(await original.getAll(), refused);
+        SharedPreferencesStorePlatform.instance = disk;
+        SharedPreferences.resetStatic();
+        addTearDown(() => SharedPreferencesStorePlatform.instance = original);
+        final prefs = await SharedPreferences.getInstance();
+        final s = ProfileStore(prefs: prefs);
+        await expectLater(s.load(), throwsA(isA<AgentHostException>()));
+        expect(prefs.getStringList('oc.phoneAgentGateMigration.one'), isNull);
+        if (refused == 'oc.agentPhoneGate.one') {
+          expect(prefs.getString('oc.agentPhoneGate.one'), '{}');
+        }
+        disk.refused = null;
+        await s.load();
+        await prefs.reload();
+        expect(prefs.getString('oc.agentPhoneGate.one'), contains('fx-pin'));
+        expect(prefs.getStringList('oc.phoneAgentGateMigration.one'), ['two']);
+      },
+    );
+  }
+
+  test(
     'deleting owner alias preserves agents until last protocol is removed',
     () async {
       secrets['oc.agentHostSecret.one'] = 'private';
@@ -124,6 +265,7 @@ void main() {
       expect(cleaned, isEmpty);
       expect(secrets.containsKey('oc.agentHostSecret.one'), isTrue);
       expect(s.prefs.containsKey('oc.agentPhoneGate.one'), isTrue);
+      expect(s.prefs.containsKey('oc.phoneAgentGateMigration.one'), isTrue);
       expect(s.prefs.containsKey('oc.sessionAutoApproval.one.agents'), isTrue);
       await s.load();
       expect(s.phoneAgentOwnerId('two'), 'one');
@@ -131,6 +273,7 @@ void main() {
       expect(cleaned, ['one']);
       expect(secrets.containsKey('oc.agentHostSecret.one'), isFalse);
       expect(s.prefs.containsKey('oc.agentPhoneGate.one'), isFalse);
+      expect(s.prefs.containsKey('oc.phoneAgentGateMigration.one'), isFalse);
       expect(s.prefs.containsKey('oc.agentFeed.one'), isFalse);
       expect(s.prefs.containsKey('oc.sessionAutoApproval.one.agents'), isFalse);
     },

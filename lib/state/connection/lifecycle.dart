@@ -353,6 +353,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   }
 
   int _beginGeneration({bool preserveConnectionAttempt = false}) {
+    _resetTurnStalls();
     _invalidatePhoneChatStatus();
     if (!preserveConnectionAttempt) connectionAttemptRevision++;
     _generation += 1;
@@ -429,6 +430,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   }
 
   void _retireTransport() {
+    _resetTurnStalls();
     _invalidatePhoneChatStatus();
     _syncPhoneChatHeartbeat();
     elsewhereAttention.markStale();

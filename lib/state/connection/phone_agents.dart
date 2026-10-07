@@ -425,10 +425,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
           runtime = await host.inspect(
             descriptor.id,
             signIn: _paSignIns[descriptor.id]?.state,
-            capabilities: _paHostCapabilities(descriptor),
+            capabilities: _paHostCapabilities(descriptor, arch),
           );
           if (runtime.installed &&
-              descriptor.signInMethod != AgentSignInMethod.none) {
+              descriptor.signInMethod != AgentSignInMethod.none &&
+              (host is PhoneAgentAuthPort || runtime.signInPhase == null)) {
             final auth = await _paProbeSignIn(host, descriptor.id);
             if (_self._disposed || _paHost != host || _paHostProfile != owner) {
               return;
@@ -499,13 +500,29 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// The helper is being started again by the app itself.
   bool _paAutoResuming = false;
 
-  /// What this phone's helper is known to do for [descriptor]: a runtime
-  /// fact, not a catalog claim. Claude's sessions resume through the helper
-  /// (resume_agent_request, proven on Paseo 0.9.2); the others are unproven.
-  AgentCapabilities _paHostCapabilities(AgentDescriptor descriptor) =>
-      descriptor.id == 'claude' && descriptor.route == AgentRoute.paseoNative
-      ? const AgentCapabilities(resumeVerified: true)
-      : descriptor.capabilities;
+  /// Exact matrix proof, checked against the observed connected helper and
+  /// processor. Unknown or stale evidence never inherits catalog capabilities.
+  AgentCapabilities _paHostCapabilities(
+    AgentDescriptor descriptor,
+    AgentArchitecture? architecture,
+  ) {
+    final observed = _paSources.values
+        .map((source) => source.gateway.transport)
+        .where((transport) => transport.connected)
+        .map((transport) => transport.serverVersion)
+        .whereType<String>()
+        .toSet();
+    final gateway = _paBackend?.api;
+    if (gateway is PaseoGateway && gateway.transport.connected) {
+      final version = gateway.transport.serverVersion;
+      if (version != null) observed.add(version);
+    }
+    return AgentCertificationMatrix.bundled.capabilitiesFor(
+      descriptor: descriptor,
+      architecture: architecture,
+      helperVersion: observed.length == 1 ? observed.single : null,
+    );
+  }
 
   static const _paSignInReadLimit = Duration(seconds: 10);
   final _paAuthResults = <String, AgentAuthProbeResult>{};
@@ -866,6 +883,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     final existing = _paSources[directory];
     if (existing != null) return existing.source;
     final gateway = await host.openGateway(directory);
+    _paWireBrowserGateway(gateway, directory);
     final folder = directory.split('/').where((p) => p.isNotEmpty).last;
     final source = _self._genUiPhoneFeed(gateway, directory, folder);
     _paSources[directory] = (gateway: gateway, source: source);
@@ -876,6 +894,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     _self._genUiDropPhone(directory);
     final entry = _paSources.remove(directory);
     if (entry == null) return;
+    await entry.gateway.revokeBrowserClaudeLaunches();
     await entry.source.dispose();
     entry.gateway.close();
   }
@@ -1353,11 +1372,26 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     required bool newChatAcknowledged,
   }) => _paStartNewChatReplacing(old, newChatAcknowledged: newChatAcknowledged);
 
+  void _paWireBrowserGateway(PaseoGateway gateway, String directory) {
+    final owner = _paProfile?.id;
+    if (owner == null) return;
+    gateway.configureBrowserClaudeLaunch(
+      registry: _self._browserLaunches,
+      profileId: owner,
+      sourceId: _paseoSourceId(directory),
+      sourceIdForDirectory: _paseoSourceId,
+    );
+  }
+
   // ---- closing ------------------------------------------------------------
 
   /// Closes everything this profile's phone agents own, in the order the
   /// deletion contract requires: auth, owned setup, host, then feeds.
   Future<void> _paCloseAll({required bool stopHost}) async {
+    final owner = _paHostProfile ?? _paProfile?.id;
+    if (owner != null) {
+      await _self._browserLaunches.revokeProfile(profileId: owner);
+    }
     _paDisposeBackend();
     for (final entry in _paSignIns.entries.toList()) {
       await _paSignInSubs.remove(entry.key)?.cancel();
@@ -1425,6 +1459,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// Controller disposal: stop listening; the host keeps running for the
   /// Android service owner.
   void _paShutdown() {
+    final owner = _paHostProfile ?? _paProfile?.id;
+    if (owner != null) {
+      unawaited(_self._browserLaunches.revokeProfile(profileId: owner));
+    }
+    if (_self._ownsBrowserLaunches) unawaited(_self._browserLaunches.close());
     _paDisposeBackend();
     _paHoldTimer?.cancel();
     _paHoldTimer = null;
