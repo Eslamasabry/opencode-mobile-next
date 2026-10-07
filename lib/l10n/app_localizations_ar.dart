@@ -27750,7 +27750,27 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cardsProblemNotQualified =>
-      'لم يُتحقق بعد من أن إصدار هذا الوكيل يعمل مع البطاقات.';
+      'لم يُتحقق بعد من أن البطاقات تعمل مع الوكلاء هنا.';
+
+  @override
+  String cardsProblemNotQualifiedFor(String agents) {
+    return 'لم يُتحقق بعد من أن $agents يعمل مع البطاقات.';
+  }
+
+  @override
+  String cardsProblemRegistrationFailedFor(String agents) {
+    return 'تعذّر إعلام $agents بالبطاقات.';
+  }
+
+  @override
+  String cardsProblemVerificationFailedFor(String agents) {
+    return 'تم تثبيت البطاقات لـ $agents لكنها لم تجتز الفحص.';
+  }
+
+  @override
+  String cardsProblemRemovalFailedFor(String agents) {
+    return 'تعذّرت إزالة البطاقات بالكامل من $agents. حاول مرة أخرى بعد إعادة التشغيل.';
+  }
 
   @override
   String get cardsProblemPermissionDenied => 'لم يسمح الهاتف بهذا التغيير.';

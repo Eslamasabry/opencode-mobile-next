@@ -32973,9 +32973,49 @@
   "@cardsProblemRuntimeMissing": {
     "description": "Cards setting reason."
   },
-  "cardsProblemNotQualified": "This agent version hasn't been checked to work with cards.",
+  "cardsProblemNotQualified": "Cards haven't been checked to work with the agents here yet.",
   "@cardsProblemNotQualified": {
     "description": "Cards setting reason."
+  },
+  "cardsProblemNotQualifiedFor": "{agents} hasn't been checked to work with cards yet.",
+  "@cardsProblemNotQualifiedFor": {
+    "description": "Cards setting: the named agents are not qualified for cards; {agents} is one or more product names",
+    "placeholders": {
+      "agents": {
+        "type": "String",
+        "example": "OpenCode"
+      }
+    }
+  },
+  "cardsProblemRegistrationFailedFor": "{agents} couldn't be told about cards.",
+  "@cardsProblemRegistrationFailedFor": {
+    "description": "Cards setting: registering cards with the named agents failed",
+    "placeholders": {
+      "agents": {
+        "type": "String",
+        "example": "OpenCode"
+      }
+    }
+  },
+  "cardsProblemVerificationFailedFor": "Cards were installed for {agents} but didn't pass the check.",
+  "@cardsProblemVerificationFailedFor": {
+    "description": "Cards setting: cards were installed for the named agents but did not verify",
+    "placeholders": {
+      "agents": {
+        "type": "String",
+        "example": "OpenCode"
+      }
+    }
+  },
+  "cardsProblemRemovalFailedFor": "Cards couldn't be fully removed from {agents}. Try again after a restart.",
+  "@cardsProblemRemovalFailedFor": {
+    "description": "Cards setting: removing cards from the named agents did not finish",
+    "placeholders": {
+      "agents": {
+        "type": "String",
+        "example": "OpenCode"
+      }
+    }
   },
   "cardsProblemPermissionDenied": "This phone wouldn't allow the change.",
   "@cardsProblemPermissionDenied": {

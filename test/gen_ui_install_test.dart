@@ -66,6 +66,11 @@ void main() {
     expect(verifier.calls, [GenUiAgent.claude]);
     expect(status, isA<GenUiSetupPartial>());
     expect(status.agents, [GenUiAgent.claude]);
+    // The problem names who it is about: the OpenCode runtimes, not Claude.
+    expect((status as GenUiSetupPartial).affected, [
+      GenUiAgent.openCode1,
+      GenUiAgent.openCode2,
+    ]);
   });
 
   test(
@@ -127,6 +132,7 @@ void main() {
       expect(status, isA<GenUiSetupPartial>());
       expect(status.agents, [GenUiAgent.claude]);
       expect(runner.calls, [GenUiAgent.claude, GenUiAgent.openCode1]);
+      expect((status as GenUiSetupPartial).affected, [GenUiAgent.openCode1]);
     },
   );
 
@@ -152,6 +158,7 @@ void main() {
         GenUiSetupProblem.notQualified,
       );
       expect(status.agents, isEmpty);
+      expect(status.affected, [GenUiAgent.openCode1, GenUiAgent.openCode2]);
     },
   );
 

@@ -149,7 +149,10 @@ final class ManagedGenUiInstaller implements GenUiInstaller {
     GenUiSetupProblem? failure;
     var changed = false;
     final ready = <GenUiAgent>[];
+    // Each agent's own problem, so the status can name who it is about.
+    final problems = <GenUiAgent, GenUiSetupProblem>{};
     for (final agent in agents) {
+      GenUiSetupProblem? problem;
       final outcome = await _runner.run(
         agent: agent,
         script: genUiInstallScript(
@@ -166,21 +169,21 @@ final class ManagedGenUiInstaller implements GenUiInstaller {
             // verifier must not promote an unqualified transport. Adding an
             // OpenCode runtime here requires recorded device evidence first.
             if (!agent.cardsQualified) {
-              failure ??= GenUiSetupProblem.notQualified;
+              problem ??= GenUiSetupProblem.notQualified;
               break;
             }
             final verifier = _verifier;
             if (verifier == null) {
-              failure ??= GenUiSetupProblem.notQualified;
+              problem ??= GenUiSetupProblem.notQualified;
             } else {
               try {
                 if (await verifier.verify(profileId: profileId, agent: agent)) {
                   ready.add(agent);
                 } else {
-                  failure ??= GenUiSetupProblem.verificationFailed;
+                  problem ??= GenUiSetupProblem.verificationFailed;
                 }
               } catch (_) {
-                failure ??= GenUiSetupProblem.verificationFailed;
+                problem ??= GenUiSetupProblem.verificationFailed;
               }
             }
           }
@@ -189,26 +192,38 @@ final class ManagedGenUiInstaller implements GenUiInstaller {
         case GenUiInstallOutcome.notInstalled:
           break;
         case GenUiInstallOutcome.runtimeMissing:
-          failure ??= GenUiSetupProblem.runtimeMissing;
+          problem ??= GenUiSetupProblem.runtimeMissing;
         case GenUiInstallOutcome.nameCollision:
-          failure ??= GenUiSetupProblem.conflict;
+          problem ??= GenUiSetupProblem.conflict;
         case GenUiInstallOutcome.unsafePath:
-          failure ??= GenUiSetupProblem.permissionDenied;
+          problem ??= GenUiSetupProblem.permissionDenied;
         case GenUiInstallOutcome.failed:
-          failure ??= enabled
+          problem ??= enabled
               ? GenUiSetupProblem.registrationFailed
               : GenUiSetupProblem.removalFailed;
       }
+      if (problem != null) {
+        failure ??= problem;
+        problems[agent] = problem;
+      }
     }
     if (failure != null) {
+      final affected = [
+        for (final MapEntry(:key, :value) in problems.entries)
+          if (value == failure) key,
+      ];
       if (enabled && ready.isEmpty) {
         return failure == GenUiSetupProblem.notQualified
-            ? GenUiSetupUnavailable(reason: failure)
-            : GenUiSetupFailed(reason: failure);
+            ? GenUiSetupUnavailable(reason: failure, affected: affected)
+            : GenUiSetupFailed(reason: failure, affected: affected);
       }
       return changed
-          ? GenUiSetupPartial(agents: ready, reason: failure)
-          : GenUiSetupFailed(reason: failure);
+          ? GenUiSetupPartial(
+              agents: ready,
+              reason: failure,
+              affected: affected,
+            )
+          : GenUiSetupFailed(reason: failure, affected: affected);
     }
     if (!enabled && !changed) return const GenUiSetupOff();
     if (enabled && ready.length == agents.length) {
