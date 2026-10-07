@@ -42391,6 +42391,12 @@ abstract class AppLocalizations {
   /// **'Running'**
   String get chatsHomeRunning;
 
+  /// Chats home: green row tag for a conversation whose last run finished after the person last opened it
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get chatsHomeDone;
+
   /// Chats home: section name
   ///
   /// In en, this message translates to:

@@ -32,6 +32,7 @@ void main() {
         children: const [
           KitStatusTag(label: 'Needs you', tone: KitStatusTagTone.needsYou),
           KitStatusTag(label: 'Running', tone: KitStatusTagTone.running),
+          KitStatusTag(label: 'Done', tone: KitStatusTagTone.done),
         ],
       ),
     },
@@ -44,11 +45,13 @@ void main() {
           children: [
             KitStatusTag(label: 'Needs you', tone: KitStatusTagTone.needsYou),
             KitStatusTag(label: 'Running', tone: KitStatusTagTone.running),
+            KitStatusTag(label: 'Done', tone: KitStatusTagTone.done),
           ],
         ),
       ),
     );
     expect(find.text('Needs you'), findsOneWidget);
     expect(find.text('Running'), findsOneWidget);
+    expect(find.text('Done'), findsOneWidget);
   });
 }

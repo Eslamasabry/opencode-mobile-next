@@ -16,6 +16,7 @@ Widget _part() => Row(
   children: const [
     KitStatusTag(label: 'Needs you', tone: KitStatusTagTone.needsYou),
     KitStatusTag(label: 'Running', tone: KitStatusTagTone.running),
+    KitStatusTag(label: 'Done', tone: KitStatusTagTone.done),
   ],
 );
 

@@ -31854,6 +31854,10 @@
   "@chatsHomeRunning": {
     "description": "Chats home: filter chip and row tag for conversations the agent is working in"
   },
+  "chatsHomeDone": "Done",
+  "@chatsHomeDone": {
+    "description": "Chats home: green row tag for a conversation whose last run finished after the person last opened it"
+  },
   "chatsHomeToday": "Today",
   "@chatsHomeToday": {
     "description": "Chats home: section name"

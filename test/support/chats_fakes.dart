@@ -272,6 +272,7 @@ ChatFeedItem chat(
   String? agentLabel,
   String? sourceId,
   String? sourceLabel,
+  bool finishedUnseen = false,
 }) => ChatFeedItem(
   sessionID: id,
   title: title,
@@ -286,6 +287,7 @@ ChatFeedItem chat(
   agentLabel: agentLabel,
   sourceId: sourceId,
   sourceLabel: sourceLabel,
+  finishedUnseen: finishedUnseen,
 );
 
 ProjectSummary project(
