@@ -188,39 +188,39 @@ class AppErrorCaptureHandle {
   }
 }
 
+/// Fixed categories deliberately avoid arbitrary exception text, runtime type
+/// names and stack strings in global crash handlers and previous log handlers.
+String appErrorCategory(Object error) {
+  if (error is StateError) return 'Invalid state';
+  if (error is ArgumentError) return 'Invalid argument';
+  if (error is TypeError) return 'Missing value';
+  if (error is UnsupportedError) return 'Unsupported operation';
+  return 'Application error';
+}
+
 AppErrorCaptureHandle installAppErrorCapture(
-  AppDiagnosticsController diagnostics,
-) {
+  AppDiagnosticsController diagnostics, {
+  void Function(Object error, StackTrace? stack, String source)? crashCapture,
+}) {
   final previousFlutter = FlutterError.onError;
   final previousPlatform = PlatformDispatcher.instance.onError;
   final previousBuilder = ErrorWidget.builder;
 
+  void capture(Object error, StackTrace? stack, String source) {
+    try {
+      if (crashCapture != null) {
+        crashCapture(error, stack, source);
+      } else {
+        diagnostics.record(appErrorCategory(error), null, source: source);
+      }
+    } catch (_) {}
+  }
+
   FlutterError.onError = (details) {
-    diagnostics.record(details.exception, details.stack, source: 'flutter');
+    capture(details.exception, details.stack, 'flutter');
     final safeDetails = FlutterErrorDetails(
-      exception: diagnostics.sanitize(details.exceptionAsString()),
-      stack: details.stack == null
-          ? null
-          : StackTrace.fromString(
-              diagnostics.sanitize(details.stack.toString()),
-            ),
-      library: details.library == null
-          ? null
-          : diagnostics.sanitize(details.library!),
-      context: details.context == null
-          ? null
-          : ErrorDescription(
-              diagnostics.sanitize(details.context!.toDescription()),
-            ),
-      stackFilter: details.stackFilter == null
-          ? null
-          : (lines) => details.stackFilter!(lines).map(diagnostics.sanitize),
-      informationCollector: details.informationCollector == null
-          ? null
-          : () => details.informationCollector!().map(
-              (node) =>
-                  ErrorDescription(diagnostics.sanitize(node.toDescription())),
-            ),
+      exception: appErrorCategory(details.exception),
+      library: 'Flutter framework',
       silent: details.silent,
     );
     final handler = previousFlutter;
@@ -231,18 +231,16 @@ AppErrorCaptureHandle installAppErrorCapture(
     }
   };
   PlatformDispatcher.instance.onError = (error, stack) {
-    diagnostics.record(error, stack, source: 'platform');
-    final safeError = diagnostics.sanitize(error.toString());
-    final safeStack = StackTrace.fromString(
-      diagnostics.sanitize(stack.toString()),
-    );
+    capture(error, stack, 'platform');
+    final safeError = appErrorCategory(error);
+    final safeStack = StackTrace.empty;
     // Also to the device log, so `adb logcat -s flutter` shows it.
-    debugPrintSynchronously('Uncaught error: $safeError\n$safeStack');
+    debugPrintSynchronously('Uncaught error: $safeError');
     previousPlatform?.call(safeError, safeStack);
     return true;
   };
   ErrorWidget.builder = (details) {
-    diagnostics.record(details.exception, details.stack, source: 'widget');
+    capture(details.exception, details.stack, 'widget');
     // Drawn wherever the failed widget was, possibly above every theme and
     // MediaQuery: fixed colours and the body role's style, nothing that
     // looks anything up.

@@ -25,6 +25,7 @@ import 'builtin/thermal_guard_teams.dart';
 import 'desktop/window_icon.dart';
 import 'desktop/window_state.dart';
 import 'diagnostics/app_diagnostics.dart';
+import 'diagnostics/crash_diagnostics.dart';
 import 'diagnostics/perf_trace.dart';
 import 'diagnostics/report_problem_startup.dart';
 import 'domain/connection_status.dart';
@@ -114,7 +115,14 @@ Future<void> main() async {
     unawaited(setUpDesktopWindow().then((_) => applyDesktopWindowIcon()));
   }
   final diagnostics = AppDiagnosticsController();
-  installAppErrorCapture(diagnostics);
+  // Consent is loaded before installing fatal handlers; unavailable storage
+  // leaves persistent crash capture off. Only fixed categories cross this path.
+  await CrashDiagnosticsStartup.start(diagnostics);
+  installAppErrorCapture(
+    diagnostics,
+    crashCapture: (error, stack, source) =>
+        CrashDiagnosticsStartup.current?.capture(error, stack, source),
+  );
   runApp(AppBootstrapGate(diagnostics: diagnostics));
   WidgetsBinding.instance.addPostFrameCallback((_) {
     PerfTrace.markOnce('app.first_frame');
