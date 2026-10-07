@@ -14496,7 +14496,7 @@ abstract class AppLocalizations {
   /// **'Read-only'**
   String get teamUiAccessReadOnly;
 
-  /// Hint inside the host address field of the manual add form
+  /// Field example: Hint inside the host address field of the manual add form
   ///
   /// In en, this message translates to:
   /// **'http://100.x.x.x:8373'**

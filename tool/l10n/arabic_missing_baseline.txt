@@ -1,4 +1,3 @@
 # Arabic missing-message debt baseline.
 # This baseline may only shrink; translate new English keys in the same change.
 # Prune translated or removed keys with tool/l10n/update_arabic_baseline.py.
-teamUiAddAddressHint

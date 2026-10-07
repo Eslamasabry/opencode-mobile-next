@@ -8282,5 +8282,6 @@
   "pickerSignInHint": "يفتح خيارات تسجيل الدخول لهذا الخادم",
   "pickerFreeOnlyNote": "يتوفر نموذج OpenCode المجاني فقط، وهو أبطأ.",
   "pickerProviderReady": "{name} جاهز. تظهر نماذجه في القائمة.",
-  "pickerProviderNotLoaded": "حُفظ {name}، لكن الخادم لم يحمّله بعد."
+  "pickerProviderNotLoaded": "حُفظ {name}، لكن الخادم لم يحمّله بعد.",
+  "teamUiAddAddressHint": "http://100.x.x.x:8373"
 }
