@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -73,6 +74,28 @@ class CrashDiagnosticsController extends ChangeNotifier {
       controller._enabledSince = 0;
       controller._storageFailed = true;
     }
+    diagnostics.addListener(controller._onDiagnostics);
+    return controller;
+  }
+
+  // Bootstrap disk reads run outside the UI isolate so a stuck filesystem
+  // cannot starve the launch timeout or freeze the opening frame.
+  static Future<CrashDiagnosticsController> _openInBackground({
+    required Directory directory,
+    required AppDiagnosticsController diagnostics,
+    required bool Function() canOpen,
+    Object? nativeCrash,
+    Object? anrTimestamp,
+  }) async {
+    final snapshot = await compute(
+      _readStartupSnapshot,
+      _StartupInput(directory.path, nativeCrash, anrTimestamp),
+    );
+    final controller = CrashDiagnosticsController._(directory, diagnostics);
+    if (!canOpen()) return controller;
+    controller._enabledSince = snapshot.enabledSince;
+    controller._storageFailed = snapshot.storageFailed;
+    controller._records = snapshot.records;
     diagnostics.addListener(controller._onDiagnostics);
     return controller;
   }
@@ -284,39 +307,165 @@ class CrashDiagnosticsController extends ChangeNotifier {
 }
 
 class CrashDiagnosticsStartup {
+  static const launchBudget = Duration(milliseconds: 300);
   static const _channel = MethodChannel('oc/crash_diagnostics');
   static CrashDiagnosticsController? current;
   static Future<CrashDiagnosticsController?>? _opening;
-  static Future<CrashDiagnosticsController?> get ready =>
-      _opening ?? Future.value();
+  static int _generation = 0;
+  static Completer<CrashDiagnosticsController?> _readiness = Completer();
+  static Future<CrashDiagnosticsController?> get ready => _readiness.future;
+
+  static void capture(
+    AppDiagnosticsController diagnostics,
+    Object error,
+    StackTrace? stack,
+    String source,
+  ) {
+    final controller = current;
+    if (controller == null) {
+      diagnostics.record(appErrorCategory(error), null, source: source);
+    } else {
+      controller.capture(error, stack, source);
+    }
+  }
 
   static Future<CrashDiagnosticsController?> start(
+    AppDiagnosticsController diagnostics, {
+    @visibleForTesting MethodChannel? nativeChannel,
+  }) {
+    if (_opening != null) return _opening!;
+    final readiness = _readiness;
+    return _opening = _startBounded(diagnostics, nativeChannel).then((
+      controller,
+    ) {
+      if (!readiness.isCompleted) readiness.complete(controller);
+      return controller;
+    });
+  }
+
+  static Future<CrashDiagnosticsController?> _startBounded(
     AppDiagnosticsController diagnostics,
-  ) => _opening ??= _open(diagnostics);
+    MethodChannel? nativeChannel,
+  ) {
+    var expired = false;
+    final generation = _generation;
+    final elapsed = Stopwatch()..start();
+    bool canOpen() =>
+        !expired && elapsed.elapsed < launchBudget && generation == _generation;
+    final pending = _open(diagnostics, nativeChannel, canOpen).then((
+      controller,
+    ) {
+      if (!canOpen()) {
+        controller?.dispose();
+        return null;
+      }
+      final restored = controller == null
+          ? <Map<String, Object>>[]
+          : List<Map<String, Object>>.of(controller._records);
+      current = controller;
+      // Settle readiness before notifying legacy synchronous report writers.
+      Timer.run(() {
+        if (controller == null || controller._closed) return;
+        for (final entry in restored) {
+          if (!controller._records.contains(entry)) continue;
+          diagnostics.record(
+            entry['category']!,
+            null,
+            source: 'crash.${entry['source']}',
+            at: DateTime.fromMillisecondsSinceEpoch(entry['time']! as int),
+          );
+        }
+      });
+      return controller;
+    });
+    return pending.timeout(
+      launchBudget,
+      onTimeout: () {
+        expired = true;
+        return null;
+      },
+    );
+  }
+
+  @visibleForTesting
+  static void resetForTesting() {
+    _generation++;
+    current?.dispose();
+    current = null;
+    _opening = null;
+    if (!_readiness.isCompleted) _readiness.complete(null);
+    _readiness = Completer();
+  }
 
   static Future<CrashDiagnosticsController?> _open(
     AppDiagnosticsController diagnostics,
+    MethodChannel? nativeChannel,
+    bool Function() canOpen,
   ) async {
     try {
       Map<Object?, Object?>? native;
-      if (!kIsWeb && Platform.isAndroid) {
-        native = await _channel.invokeMapMethod<Object?, Object?>('open');
+      final channel =
+          nativeChannel ?? (!kIsWeb && Platform.isAndroid ? _channel : null);
+      if (channel != null) {
+        native = await channel.invokeMapMethod<Object?, Object?>('open');
       }
+      // A late channel reply must not attach capture or touch consent/evidence.
+      if (!canOpen()) return null;
       final path = native?['directory'];
       final directory = path is String
           ? Directory(path)
           : Directory(
               '${(await getApplicationSupportDirectory()).path}/crash-diagnostics',
             );
-      final controller = CrashDiagnosticsController.open(
+      if (!canOpen()) return null;
+      final controller = await CrashDiagnosticsController._openInBackground(
         directory: directory,
         diagnostics: diagnostics,
+        canOpen: canOpen,
+        nativeCrash: native?['nativeCrash'],
+        anrTimestamp: native?['anrTimestamp'],
       );
-      controller.importNativeCrash(native?['nativeCrash']);
-      controller.importAndroidAnr(native?['anrTimestamp']);
-      return current = controller;
+      if (!canOpen()) {
+        controller.dispose();
+        return null;
+      }
+      return controller;
     } catch (_) {
       return null;
     }
+  }
+}
+
+class _StartupSnapshot {
+  const _StartupSnapshot(this.enabledSince, this.storageFailed, this.records);
+  final int enabledSince;
+  final bool storageFailed;
+  final List<Map<String, Object>> records;
+}
+
+class _StartupInput {
+  const _StartupInput(this.path, this.nativeCrash, this.anrTimestamp);
+  final String path;
+  final Object? nativeCrash;
+  final Object? anrTimestamp;
+}
+
+_StartupSnapshot _readStartupSnapshot(_StartupInput input) {
+  final diagnostics = AppDiagnosticsController();
+  final controller = CrashDiagnosticsController.open(
+    directory: Directory(input.path),
+    diagnostics: diagnostics,
+  );
+  try {
+    controller.importNativeCrash(input.nativeCrash);
+    controller.importAndroidAnr(input.anrTimestamp);
+    return _StartupSnapshot(
+      controller._enabledSince,
+      controller._storageFailed,
+      controller._records,
+    );
+  } finally {
+    controller.dispose();
+    diagnostics.dispose();
   }
 }

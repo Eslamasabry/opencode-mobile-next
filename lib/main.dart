@@ -115,17 +115,17 @@ Future<void> main() async {
     unawaited(setUpDesktopWindow().then((_) => applyDesktopWindowIcon()));
   }
   final diagnostics = AppDiagnosticsController();
-  // Consent is loaded before installing fatal handlers; unavailable storage
-  // leaves persistent crash capture off. Only fixed categories cross this path.
-  await CrashDiagnosticsStartup.start(diagnostics);
   installAppErrorCapture(
     diagnostics,
     crashCapture: (error, stack, source) =>
-        CrashDiagnosticsStartup.current?.capture(error, stack, source),
+        CrashDiagnosticsStartup.capture(diagnostics, error, stack, source),
   );
   runApp(AppBootstrapGate(diagnostics: diagnostics));
   WidgetsBinding.instance.addPostFrameCallback((_) {
     PerfTrace.markOnce('app.first_frame');
+    // Crash storage cannot delay the opening frame. Readiness is bounded;
+    // a late/hung channel leaves persistent Flutter crash capture off this run.
+    unawaited(CrashDiagnosticsStartup.start(diagnostics));
     // Disk-backed diagnostics are not needed to paint the opening state.
     // Capture imports buffered errors/timings when the store attaches, so
     // installing in-memory error capture above still protects early failures.

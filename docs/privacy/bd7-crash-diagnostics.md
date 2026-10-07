@@ -39,3 +39,9 @@ Android’s own lifecycle records and existing handled-error/performance reports
 retain their separate behavior. Device restart/crash/ANR qualification and the
 complete consent journey are still unverified; focused local evidence is in
 `docs/qa/bd7-2026-10-07/README.md`.
+
+Crash storage opens after the first frame, with a 300 ms readiness budget.
+Native-channel or background-file delays leave the Flutter crash store unavailable
+for this run; late results cannot attach capture. Existing consent is retained
+for a later restart. The native fatal handler independently follows that saved
+consent; a Flutter startup timeout does not revoke it.

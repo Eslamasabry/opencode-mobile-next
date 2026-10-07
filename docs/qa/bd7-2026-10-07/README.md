@@ -87,3 +87,35 @@ crash concurrent with the final consent recheck/rename can leave a safe
 categorical file after disable; the next disabled read/startup removes it and
 never imports it. Failed storage cleanup is an unavailable state, not a proved
 deletion. Those limits are explicit in the frontend/privacy contract.
+
+
+## Coordinator review follow-up
+
+Finish line: opening frame never waits for crash storage; readiness settles in
+300 ms with Flutter persistent capture unavailable for the run on timeout.
+Non-goal: changing consent UI, native consent policy or device qualification.
+
+Crash storage starts after the first frame. Its read/cleanup/native-import work
+runs in a background isolate. Only a timely safe snapshot attaches the controller;
+late completion cannot enable capture. Early/unavailable errors retain fixed
+categories in memory without serializing exception values or stacks. Existing
+saved consent is retained for restart; native capture still independently follows
+that consent.
+
+Pinned machine-locked focused checks: the existing 18 crash/diagnostic tests
+passed, and all six new startup tests passed after updating the import expectation.
+They cover a never-answering channel, blocked/late replies, stable readiness before
+the first frame, explicitly opted-in timely opening, provider-value exclusion from
+background imports, readiness before report-listener notification, no duplicate
+late capture and clear before notification. No full suite or device qualification
+is claimed.
+
+Actual guard-removal runs used this worktree under the test lock, restoring the
+source in a finally block: removing the 300 ms deadline fails the never-answering
+channel test; iterating live records fails the duplicate-import test; removing the
+clear guard fails the erased-record test. Each mutant returned exit 1. The restored
+six-test file then passed again. All values were synthetic.
+
+
+Pinned full `flutter analyze --no-pub` under the shared analyzer lock passed
+with no issues (43.3 seconds) on the final startup review snapshot.

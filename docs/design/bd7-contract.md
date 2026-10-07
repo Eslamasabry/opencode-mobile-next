@@ -8,7 +8,11 @@ accessibility checks and Android device qualification. Capture defaults OFF.
 Import `lib/diagnostics/crash_diagnostics.dart`.
 
 - `CrashDiagnosticsStartup.ready`: startup result; null means this store is
-  unavailable. Startup runs from `main()` before global error hooks attach.
+  unavailable. `main()` starts it after the opening frame; readiness resolves
+  within 300 ms. A timed-out or late reply cannot enable Flutter capture during
+  this run. Crash-store disk reads/import writes do not hold the UI isolate.
+  App-diagnostics notifications occur after readiness resolves; the separate
+  existing problem-report writer retains its own persistence behavior. Restart to retry.
 - `CrashDiagnosticsStartup.current`: same controller after startup succeeds.
 - `CrashDiagnosticsController.enabled`: whether this controller loaded/saved
   a valid explicit consent epoch. Defaults false; it is not a device-proof flag.
@@ -23,6 +27,9 @@ Import `lib/diagnostics/crash_diagnostics.dart`.
 - `bool clear()`: removes evidence and current App diagnostics, retaining consent
   if it was on. Advances the consent epoch so old OS-reported ANRs do not return.
 - The existing `AppDiagnosticsController.clear()` also clears this crash store.
+- `CrashDiagnosticsStartup.capture(diagnostics, error, stack, source)` retains
+  fixed categories in memory while startup is pending/unavailable; no stack or
+  exception text is recorded.
 - `capture(Object error, StackTrace? stack, String source)` is for global hooks,
   not UI. Supported sources: `flutter`, `platform`, `widget`. No error value or
   stack text is read or persisted.
