@@ -24,6 +24,7 @@ import '../../widgets/agent_card_photos.dart';
 import '../../widgets/agent_card_view.dart';
 import '../../widgets/external_link.dart' show openAgentSignInPage;
 import '../../widgets/phone_server_card.dart' show serverDisplayName;
+import '../chat_screen.dart' show questionRequestCard;
 import '../chat/permission_sheet.dart'
     show
         PermissionAnswers,
@@ -159,8 +160,11 @@ class ConnectionChatsHost implements ChatsHost {
       ]),
       builder: (context, _) {
         final waiting = owner?.permissionsForSession(item.sessionID) ?? [];
+        final question = owner?.questionForSession(item.sessionID);
         final card = _conn.waitingCardsForFeedItem(item).firstOrNull;
-        if (waiting.isEmpty && card == null) return const SizedBox.shrink();
+        if (waiting.isEmpty && question == null && card == null) {
+          return const SizedBox.shrink();
+        }
         Widget? request;
         if (owner != null && answers != null && waiting.isNotEmpty) {
           final permission = waiting.first;
@@ -186,8 +190,18 @@ class ConnectionChatsHost implements ChatsHost {
             ),
           );
         }
-        // A card waits behind any permission request: the list answers the
-        // request first, and the card's buttons are secondary here.
+        final questionView = owner == null || question == null
+            ? null
+            : questionRequestCard(
+                context,
+                key: ValueKey('chats-question-${question.id}'),
+                owner: owner,
+                question: question,
+                inList: true,
+              );
+        // A question waits behind a permission request and a card behind
+        // both: the list answers the request first, and the buttons of the
+        // others are secondary here.
         final cardView = card == null
             ? null
             : AgentCardView(
@@ -212,15 +226,17 @@ class ConnectionChatsHost implements ChatsHost {
                       )
                     : null,
               );
-        if (request == null) return cardView!;
-        if (cardView == null) return request;
+        final shown = [?request, ?questionView, ?cardView];
+        if (shown.length == 1) return shown.single;
+        final gap = SizedBox(height: KitTokens.of(context).space2);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            request,
-            SizedBox(height: KitTokens.of(context).space2),
-            cardView,
+            for (final (index, view) in shown.indexed) ...[
+              if (index > 0) gap,
+              view,
+            ],
           ],
         );
       },

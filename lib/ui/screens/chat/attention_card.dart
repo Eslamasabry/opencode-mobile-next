@@ -162,9 +162,18 @@ class _QuestionAttentionCard extends StatefulWidget {
     required this.replying,
     required this.onAnswer,
     required this.onMore,
+    this.connection,
+    this.inList = false,
   });
 
   final PendingQuestion question;
+
+  /// The connection that holds the question, when the card sits outside a
+  /// chat screen (under a Conversations row).
+  final ConnectionController? connection;
+
+  /// Under a list row: secondary buttons, no request slot.
+  final bool inList;
 
   /// The screen's own answer in flight (a sheet answered it); the card's
   /// own answers carry their receipt instead.
@@ -189,7 +198,36 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
   DateTime? _since;
   String? _refused;
 
+  /// The request this card was built for (list rows only).
+  PendingRequestIdentity? _shownRequest;
+
+  @override
+  void initState() {
+    super.initState();
+    final owner = widget.connection;
+    if (widget.inList && owner != null) {
+      _shownRequest = owner.questionIdentity(widget.question);
+    }
+  }
+
+  /// A long question (a plan to approve) in a list row: its first line only;
+  /// the sheet has the whole text.
+  String _listLine(String text) {
+    if (!widget.inList) return text;
+    final line = text
+        .split('\n')
+        .map((part) => part.trim())
+        .firstWhere((part) => part.isNotEmpty, orElse: () => '');
+    return line.isEmpty ? text : line;
+  }
+
   List<QuestionPrompt> get _prompts => widget.question.prompts;
+
+  ConnectionController? _conn(BuildContext context) =>
+      widget.connection ?? _requestConnection(context);
+
+  Widget _slot(Widget child) =>
+      widget.inList ? child : _RequestSlot(child: child);
 
   @override
   void dispose() {
@@ -240,7 +278,15 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
       });
     }
     try {
-      await conn.answerQuestion(widget.question.id, answers);
+      // Under a list row the answer names the request it was shown for, so
+      // a newer question of the same id is never answered by mistake.
+      await conn.answerQuestion(
+        widget.question.id,
+        answers,
+        expectedRequest: widget.inList
+            ? _shownRequest ??= conn.questionIdentity(widget.question)
+            : null,
+      );
       unawaited(_draft(conn)?.clear());
     } catch (error) {
       if (!mounted) return;
@@ -263,7 +309,7 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
         ? first!.title.trim()
         : l10n.chatUiOpenCodeNeedsInput;
     final count = _prompts.length;
-    final delayed = _requestConnection(context)?.delayedAnswers;
+    final delayed = _conn(context)?.delayedAnswers;
     final heldLabel = delayed?.heldLabel(widget.question.id);
     final held = delayed != null && heldLabel != null;
     final sending = !held && _answer != null;
@@ -278,8 +324,8 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
       detail: first == null || first.question.trim().isEmpty
           ? null
           : count > 1
-          ? l10n.chatUiQuestionsSummary(first.question, count)
-          : first.question,
+          ? l10n.chatUiQuestionsSummary(_listLine(first.question), count)
+          : _listLine(first.question),
       phase: held
           ? KitRequestPhase.answered
           : sending
@@ -306,17 +352,17 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
 
   @override
   Widget build(BuildContext context) {
-    final conn = _requestConnection(context);
-    if (conn == null) return _RequestSlot(child: _content(context));
+    final conn = _conn(context);
+    if (conn == null) return _slot(_content(context));
     return ListenableBuilder(
       listenable: conn.delayedAnswers,
-      builder: (context, _) => _RequestSlot(child: _content(context)),
+      builder: (context, _) => _slot(_content(context)),
     );
   }
 
   Widget _content(BuildContext context) {
     final l10n = _chatL10n(context);
-    final conn = _requestConnection(context);
+    final conn = _conn(context);
     final first = _prompts.firstOrNull;
     final single =
         first != null &&
@@ -390,6 +436,7 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
                     : choice.description,
               ),
           ],
+          secondary: widget.inList,
           onSend: (chosen) =>
               unawaited(_send(conn, [chosen.toList()], chosen.join(', '))),
         ),
@@ -407,11 +454,34 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
 
     return _card(
       context,
-      answers: const KitRequestInSheet(key: Key('question-card-answer')),
+      answers: KitRequestInSheet(
+        key: const Key('question-card-answer'),
+        secondary: widget.inList,
+      ),
       onDetails: widget.onMore,
     );
   }
 }
+
+/// A waiting question as the card under its Conversations row: the same
+/// card as in the chat, answered through [owner] (the connection that holds
+/// it) with its Undo window, secondary buttons (the list keeps its own one
+/// primary), and "Answer" opening the full question sheet over the list.
+Widget questionRequestCard(
+  BuildContext context, {
+  Key? key,
+  required ConnectionController owner,
+  required PendingQuestion question,
+  required bool inList,
+}) => _QuestionAttentionCard(
+  key: key,
+  question: question,
+  replying: false,
+  connection: owner,
+  inList: inList,
+  onAnswer: (answers) => unawaited(owner.answerQuestion(question.id, answers)),
+  onMore: () => unawaited(showQuestionSheet(context, owner, question)),
+);
 
 /// "Rate limited. Retrying 2 in 0:42" — the server sends no attempt ceiling,
 /// so the banner names the attempt rather than inventing a total. [now]

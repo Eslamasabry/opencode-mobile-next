@@ -44,6 +44,10 @@ class _Server {
   /// Permission requests waiting, and the replies the server received.
   List<PermissionRequest> permissions = [];
   final replies = <(String, String)>[];
+
+  /// Questions waiting, and the answers the server received.
+  List<PendingQuestion> questions = [];
+  final answered = <(String, List<List<String>>)>[];
 }
 
 class _Api extends OpenCodeApi {
@@ -105,7 +109,19 @@ class _Repo extends SdkProductRepository {
   @override
   Future<ChatDefaults> loadChatDefaults() async => const ChatDefaults();
   @override
-  Future<List<PendingQuestion>> listQuestions() async => const [];
+  Future<List<PendingQuestion>> listQuestions() async => api.server.questions;
+  @override
+  Future<void> answerQuestion(
+    String requestID,
+    List<List<String>> answers,
+  ) async {
+    api.server.answered.add((requestID, answers));
+    api.server.questions = [
+      for (final q in api.server.questions)
+        if (q.id != requestID) q,
+    ];
+  }
+
   @override
   Future<CatalogSnapshot> loadCatalog() async =>
       const CatalogSnapshot(providers: [], models: [], agents: []);
@@ -472,6 +488,130 @@ void main() {
     expect(w.servers[_ubuntu]!.replies, isEmpty);
     await tester.pumpWidget(const SizedBox());
     c.dispose();
+  });
+
+  Future<(_World, ConnectionChatsHost, ChatFeedItem)> questionRow(
+    WidgetTester tester,
+    PendingQuestion question,
+  ) async {
+    final w = await _world(
+      tester,
+      before: (servers) => servers[_termux]!.questions = [question],
+    );
+    final c = w.controller;
+    final side = c.connectionForRow(
+      c.chatFeed().items.firstWhere((item) => item.sessionID == 't1'),
+    )!;
+    await side.refreshPendingQuestions();
+    await tester.pump(const Duration(milliseconds: 50));
+    final row = c.chatFeed().items.firstWhere((item) => item.sessionID == 't1');
+    final host = ConnectionChatsHost(c);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: captureTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: Builder(
+              builder: (context) =>
+                  host.listRequest(context, row) ?? const SizedBox(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    return (w, host, row);
+  }
+
+  PendingQuestion question({int prompts = 1}) => PendingQuestion(
+    id: 'q1',
+    sessionID: 't1',
+    prompts: [
+      for (var i = 0; i < prompts; i++)
+        QuestionPrompt(
+          title: 'Pick a target',
+          question: 'Where should this deploy?',
+          multiple: false,
+          custom: true,
+          choices: const [
+            QuestionChoice(label: 'Staging', description: ''),
+            QuestionChoice(label: 'Production', description: ''),
+          ],
+        ),
+    ],
+  );
+
+  testWidgets('a waiting question shows under its row and is answered '
+      'there, with Undo', (tester) async {
+    final (w, _, _) = await questionRow(tester, question());
+    expect(find.text('Where should this deploy?'), findsOneWidget);
+    await tester.tap(find.text('Staging'));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(milliseconds: 300));
+    // Held for its Undo window: Undo sends nothing.
+    await tester.tap(find.byKey(const Key('question-card-undo')));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 4));
+    expect(w.servers[_termux]!.answered, isEmpty);
+    await tester.tap(find.text('Production'));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 3100));
+    // The send first checks the transport, which waits on real time.
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 300)),
+    );
+    await tester.pumpAndSettle();
+    final sent = w.servers[_termux]!.answered.single;
+    expect(sent.$1, 'q1');
+    expect(sent.$2, [
+      ['Production'],
+    ]);
+    expect(w.servers[_ubuntu]!.answered, isEmpty);
+    await tester.pumpWidget(const SizedBox());
+    w.controller.dispose();
+  });
+
+  testWidgets('a plan approval shows its first line and the two choices', (
+    tester,
+  ) async {
+    final (w, _, _) = await questionRow(
+      tester,
+      const PendingQuestion(
+        id: 'q1',
+        sessionID: 't1',
+        prompts: [
+          QuestionPrompt(
+            title: 'Plan',
+            question: 'Add a settings page\nStep 1: routes\nStep 2: tests',
+            multiple: false,
+            custom: false,
+            choices: [
+              QuestionChoice(label: 'Approve', description: ''),
+              QuestionChoice(label: 'Keep planning', description: ''),
+            ],
+          ),
+        ],
+      ),
+    );
+    expect(find.text('Add a settings page'), findsOneWidget);
+    expect(find.textContaining('Step 1'), findsNothing);
+    expect(find.text('Approve'), findsOneWidget);
+    expect(find.text('Keep planning'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    w.controller.dispose();
+  });
+
+  testWidgets('a long question opens the question sheet over the list', (
+    tester,
+  ) async {
+    final (w, _, _) = await questionRow(tester, question(prompts: 2));
+    await tester.tap(find.byKey(const Key('question-card-answer')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('question-sheet')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    w.controller.dispose();
   });
 
   testWidgets('a run that ends while you are away says Done until you open '

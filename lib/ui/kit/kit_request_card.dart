@@ -236,10 +236,15 @@ final class KitRequestChooseMany<T> extends KitRequestAnswers {
     required this.choices,
     required this.onSend,
     this.sendLabel,
+    this.secondary = false,
   });
 
   final List<KitChoice<T>> choices;
   final ValueChanged<Set<T>> onSend;
+
+  /// Answer drawn as a secondary button: for a card among others in a list,
+  /// where the screen keeps its own one primary (LAY-12).
+  final bool secondary;
 
   /// The sheet's Send; default "Send".
   final String? sendLabel;
@@ -274,10 +279,13 @@ final class KitRequestReply extends KitRequestAnswers {
 /// form, or anything too long to answer in place: one primary that opens
 /// the sheet ([KitRequestCard.ask]'s `onDetails`). Default label "Answer".
 final class KitRequestInSheet extends KitRequestAnswers {
-  const KitRequestInSheet({this.label, this.key});
+  const KitRequestInSheet({this.label, this.key, this.secondary = false});
 
   final String? label;
   final Key? key;
+
+  /// Answer drawn as a secondary button (a card among others in a list).
+  final bool secondary;
 }
 
 /// The one answer card, in the conversation, for everything an agent asks
@@ -1013,18 +1021,29 @@ class _KitRequestCardState extends State<KitRequestCard> {
       ),
       KitRequestChooseMany() => (
         null,
-        KitButton.primary(
-          label: l10n.kitRequestAnswer,
-          onPressed: widget.onDetails,
-        ),
+        answers.secondary
+            ? KitButton.secondary(
+                label: l10n.kitRequestAnswer,
+                onPressed: widget.onDetails,
+              )
+            : KitButton.primary(
+                label: l10n.kitRequestAnswer,
+                onPressed: widget.onDetails,
+              ),
       ),
       KitRequestInSheet() => (
         null,
-        KitButton.primary(
-          key: answers.key,
-          label: answers.label ?? l10n.kitRequestAnswer,
-          onPressed: widget.onDetails,
-        ),
+        answers.secondary
+            ? KitButton.secondary(
+                key: answers.key,
+                label: answers.label ?? l10n.kitRequestAnswer,
+                onPressed: widget.onDetails,
+              )
+            : KitButton.primary(
+                key: answers.key,
+                label: answers.label ?? l10n.kitRequestAnswer,
+                onPressed: widget.onDetails,
+              ),
       ),
       KitRequestReply() => _reply(context, answers),
     };
