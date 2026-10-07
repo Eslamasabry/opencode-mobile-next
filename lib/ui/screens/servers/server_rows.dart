@@ -216,12 +216,18 @@ class _WelcomeView extends StatelessWidget {
       required String title,
       required String detail,
       required VoidCallback onTap,
+      bool recommended = false,
     }) => KitRow(
       key: ValueKey(key),
       leading: KitRow.icon(context, icon),
       title: title,
       titleMaxLines: 2,
-      supporting: TextSpan(text: detail),
+      supporting: TextSpan(
+        children: [
+          if (recommended) kitRecommendedSpan(context),
+          TextSpan(text: detail),
+        ],
+      ),
       supportingMaxLines: 3,
       trailing: const KitChevron(),
       enabled: !busy,
@@ -331,20 +337,31 @@ class _WelcomeView extends StatelessWidget {
           ),
         ),
         SizedBox(height: tokens.space2),
-        KitRowGroup(
-          children: [
-            computer,
-            if (platformCapabilities.supportsTermux)
+        // FB3: someone with no server gets one clear default, as the
+        // phone needs nothing else. The computer and the demo stay one tap
+        // away, under "Other ways".
+        if (platformCapabilities.supportsTermux) ...[
+          KitRowGroup(
+            key: const ValueKey('welcome-recommended'),
+            children: [
               choice(
                 key: 'welcome-choice-phone',
                 icon: AppIconography.phone,
                 title: copy.onboardingTermuxSetup,
                 detail: copy.firstRunOnPhoneDetail,
                 onTap: onPhone,
+                recommended: true,
               ),
-            demo,
-          ],
-        ),
+            ],
+          ),
+          SizedBox(height: tokens.sectionGap),
+          KitRowGroup(
+            key: const ValueKey('welcome-other-ways'),
+            label: copy.phoneSetupStartOtherWays,
+            children: [computer, demo],
+          ),
+        ] else
+          KitRowGroup(children: [computer, demo]),
       ],
     );
   }

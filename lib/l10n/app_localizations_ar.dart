@@ -14884,7 +14884,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kitChoiceCurrent => 'Current';
 
   @override
-  String get kitChoiceRecommended => 'Recommended';
+  String get kitChoiceRecommended => 'موصى به';
 
   @override
   String get kitChoiceOtherSend => 'Send answer';
