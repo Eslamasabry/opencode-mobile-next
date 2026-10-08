@@ -123,8 +123,9 @@ Future<void> main() async {
   runApp(AppBootstrapGate(diagnostics: diagnostics));
   WidgetsBinding.instance.addPostFrameCallback((_) {
     PerfTrace.markOnce('app.first_frame');
-    // Crash storage cannot delay the opening frame. Readiness is bounded;
-    // a late/hung channel leaves persistent Flutter crash capture off this run.
+    // Crash storage cannot delay the opening frame. Launch waits at most the
+    // launch budget; a slow store keeps opening in the background and capture
+    // starts when it arrives (a hung channel leaves it off this run).
     unawaited(CrashDiagnosticsStartup.start(diagnostics));
     // Disk-backed diagnostics are not needed to paint the opening state.
     // Capture imports buffered errors/timings when the store attaches, so

@@ -25,8 +25,9 @@ import 'crash_report_share.dart';
 ///
 /// [crash] and [ready] are for tests; the app uses the controller opened
 /// at start-up ([CrashDiagnosticsStartup]). While start-up is still opening
-/// it (at most 300 ms after the first frame) the section draws nothing;
-/// when the store could not open it says so on a disabled switch.
+/// it the section draws nothing; opening may finish after the launch budget,
+/// and the section appears then. Only when the store could not open at all
+/// does it say so on a disabled switch.
 ///
 /// The backend clears App diagnostics whenever the choice changes or the
 /// reports are deleted. [savedErrors] is how many other errors the page
