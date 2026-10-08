@@ -94,6 +94,6 @@ multiple-underscore issue was corrected without adding ignores. Pinned Dart
 language-3.10 formatting and diff checks pass. The file-size ratchet passes:
 phone_agents.dart is 1430 lines, routes is 498; no budget was raised.
 
-Local commits: contract `87c64ff5d`, foreground/terminal `fec5d898c`, followed by
-the owner-binding/teardown and evidence commit at this branch's final HEAD.
+Local commits: contract `87c64ff5d`, foreground/terminal `fec5d898c`, owner-binding/teardown `9ab55c317`, and a final QA-log retention commit. Logs
+are explicitly tracked despite the repository-wide `*.log` ignore.
 Branch is ready for backend merge review. No push or device deployment occurred.
