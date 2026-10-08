@@ -10,6 +10,6 @@ test_wrong_confirmation_never_confirms (test_proof.ProofTests.test_wrong_confirm
 test_wrong_emulator_or_lock_refuses_before_device_access (test_proof.ProofTests.test_wrong_emulator_or_lock_refuses_before_device_access) ... ok
 
 ----------------------------------------------------------------------
-Ran 10 tests in 0.004s
+Ran 10 tests in 0.002s
 
 OK

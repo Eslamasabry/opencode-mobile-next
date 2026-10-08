@@ -4,6 +4,9 @@ Status: **backend implemented and locally verified; no device proof**. The coord
 APK 2197 receipt (path, full APK SHA-256, source revision, default-off Dart
 defines, signer verification) has not been delivered. That is the device-run
 prerequisite; no emulator operations or build were performed during preparation.
+Coordinator subsequently held APK 2197 because swap is 95% full. This branch is
+ready for merge after offline checks; device proof and certification rows will
+be batched by the coordinator when the artifact exists.
 
 Contract: [BA10-contract.md](../../design/BA10-contract.md). Public UI must expose
 “Remove {agent name}”, the contract's confirmation title/body, and “Cancel” /
@@ -53,6 +56,14 @@ Focused verification through `machine_lock`, pinned Flutter, concurrency 1:
 Total: 244 affected Flutter tests plus ten offline driver tests; not a full-suite,
 APK or device qualification. `phone_agents.dart` remains 1496 lines and the Paseo
 gateway remains 1470. Matrix cells have not been promoted without device evidence.
+
+The queued launch/storage/removal drivers are also carried from the earlier
+cert2 branch. The actual ADB removal adapter now requires BA10's separate title,
+explanation and unique “Remove” confirmation; its new test failed against the
+old copy before the fix. See [negative control](cert2-confirmation-negative-control.log)
+and [55 final offline cases](cert2-offline-final-tests.log), run through the test
+lock one at a time. Those drivers remain observation tools; real daemon launch,
+app cleanup and injected storage device cells are still deferred.
 
 The orchestration module is [proof.py](../../../tool/qa/ba10/proof.py). It takes an
 injected, locked device adapter and deliberately has no ADB/subprocess/device

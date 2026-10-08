@@ -130,12 +130,14 @@ class Ports:
         found=[node for node in self.ui() if self.text(node)==exact]
         if not found: return False
         self.tap_node(found[-1])
-        confirmation='Remove '+name+' from this phone? Your account and conversations stay saved.'
         nodes=self.ui()
-        if not any(self.text(node)==confirmation for node in nodes): return False
-        buttons=[node for node in nodes if self.text(node)==exact]
-        if not buttons: return False
-        self.tap_node(buttons[-1]); return True
+        labels={self.text(node) for node in nodes}
+        confirmation='Remove '+name+' from this phone?'
+        explanation='This removes the installed agent. Your accounts and conversations stay. You can install it again.'
+        if confirmation not in labels or explanation not in labels: return False
+        buttons=[node for node in nodes if self.text(node)=='Remove']
+        if len(buttons)!=1: return False
+        self.tap_node(buttons[0]); return True
     def target_not_installed_visible(self, agent_id):
         if agent_id != self.agent_id: return False
         return any(self.name in self.text(node).splitlines() and

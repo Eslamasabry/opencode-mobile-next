@@ -9,6 +9,30 @@ from unittest.mock import patch
 import run
 
 class Tests(unittest.TestCase):
+    def test_remove_uses_ba10_public_confirmation(self):
+        taps=[]
+        d=types.SimpleNamespace(launch_agents=lambda: None,
+            text=lambda node: node, tap_node=lambda node: taps.append(node))
+        ports=run.Ports(d,None,None,{'fx':{'name':'fx'}},'fx')
+        pages=iter([['Remove fx'], ['Remove fx from this phone?',
+            'This removes the installed agent. Your accounts and conversations stay. You can install it again.',
+            'Cancel', 'Remove']])
+        ports.ui=lambda: next(pages)
+        self.assertTrue(ports.app_remove('fx','fx'))
+        self.assertEqual(taps,['Remove fx','Remove'])
+
+    def test_remove_rejects_ambiguous_confirmation(self):
+        taps=[]
+        d=types.SimpleNamespace(launch_agents=lambda: None,
+            text=lambda node: node, tap_node=lambda node: taps.append(node))
+        ports=run.Ports(d,None,None,{'fx':{'name':'fx'}},'fx')
+        pages=iter([['Remove fx'], ['Remove fx from this phone?',
+            'This removes the installed agent. Your accounts and conversations stay. You can install it again.',
+            'Remove', 'Remove']])
+        ports.ui=lambda: next(pages)
+        self.assertFalse(ports.app_remove('fx','fx'))
+        self.assertEqual(taps,['Remove fx'])
+
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
         self.path=Path(self.tmp.name)/'receipt.json'

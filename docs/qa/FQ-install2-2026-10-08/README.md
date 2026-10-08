@@ -1,5 +1,12 @@
 # Install-cert2 preparation — 2026-10-08
 
+This is the archived preparation checkpoint. BA10 now supersedes removal's
+preliminary API and copy: see [BA10 evidence](../BA10-2026-10-08/README.md).
+Drivers are carried onto `sol/ba-remove-agent`; its confirmation follows BA10.
+Coordinator held APK 2197 due to host swap pressure; device rows are deferred
+for batching, with no matrix promotion. Archived source logs below describe
+their original candidate, not the later BA10 implementation.
+
 Branch `sol/ba-install-cert2` starts at coordinator `feat/genui-fe f0e33d96d`.
 Finish line: six agents have reviewed actual app launch/rejection, app-side
 removal and safely injected storage admission evidence. Non-goal: sign-in,
