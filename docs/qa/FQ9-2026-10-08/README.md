@@ -329,9 +329,9 @@ For upgrade history preservation, provide `--session-receipt` with `engine` (`op
 
 The background receipt has the same shape but exactly one `{id,title,promptID}` fixture. Title must be `<run-id>-background`; it is unique per run. Create this dedicated conversation and send the following bounded prompt **through the app UI**, in the app-managed OC1 project, using a working selected model:
 
-> FQ9_BACKGROUND_FIXTURE. Run the bash tool with exactly `sleep 120` twenty times sequentially. Use a separate tool call for each sleep. Do not run other commands, tools, parallel calls or file changes. After the twentieth sleep, reply DONE.
+> Use the exact `PROMPT` exported by [live_fixture.py](../../../tool/qa/fq9/live_fixture.py): one foreground 45-minute loop, ninety sequential 30-second sleeps, fixed numeric tool output and explicit 3,000,000 ms timeout. Send through the app composer. No parallel/background process, file writes or other tools.
 
-Existing permission policy remains intact; resolve any existing policy precondition without changing global saved grants in this driver. Enable background working and its notification permission through the app’s existing opt-in, wait for actual persisted first-tool progress, and keep that conversation visible. Twenty sleeps give 40 minutes total, leaving preparation headroom before the 30-minute dwell. The read-only discovery mode below finds the unique title in the exact project and exports only its session/user-message IDs; it does not start or modify a turn. The driver admits OC1 busy inference gaps between verified fixture calls but rejects retry state, unrelated/stale parents, foreign/synthetic parts, non-fixture commands and newer user prompts. Both checkpoints require newer real fixture calls. It sends no HTTP prompt/heartbeat, changes no model/engine and does not wake/relaunch the app during dwell. On return it verifies the same visible title and owned live/final state. Cleanup revalidates latest-prompt ownership before both abort and delete; a new prompt in the fixture is preserved and reported as a cleanup failure. Keep its receipt for manual recovery rather than deleting evidence of remaining work.
+Existing permission policy remains intact; resolve any existing policy precondition without changing global saved grants in this driver. Enable background working and its notification permission through the app’s existing opt-in, wait for actual persisted first-tool progress, and keep that conversation visible. A successfully completed loop requires at least 45 minutes; admission verifies the exact command and timeout and actual persisted ticks. The historical twenty-call fixture could finish when the model stopped scheduling calls and is no longer the device plan. The read-only discovery mode below finds the unique title in the exact project and exports only its session/user-message IDs; it does not start or modify a turn. The driver admits OC1 busy inference gaps between verified fixture calls but rejects retry state, unrelated/stale parents, foreign/synthetic parts, non-fixture commands and newer user prompts. Both checkpoints require newer real fixture calls. It sends no HTTP prompt/heartbeat, changes no model/engine and does not wake/relaunch the app during dwell. On return it verifies the same visible title and owned live/final state. Cleanup revalidates latest-prompt ownership before both abort and delete; a new prompt in the fixture is preserved and reported as a cleanup failure. Keep its receipt for manual recovery rather than deleting evidence of remaining work.
 
 ## Device schedule after APK 2197 is posted
 
@@ -366,3 +366,22 @@ The second-AVD serial/name examples are placeholders, not existing-device invent
 ## Local verification
 
 Generated default plans are in [offline-plans.json](offline-plans.json). Signer-fence and newer-prompt cleanup guard-removal counterexamples are recorded in `red-signer-fence.txt` and `red-newer-prompt-cleanup.txt`; the weakening occurred only in isolated test-process memory, with fake ports and unchanged source files. The final offline candidate passed **88 Python tests** serially under `machine_lock`, with clean formatting and static checks. Existing tracked application/QA sources remain unchanged and local document links passed. Focused results and source-preservation checks are recorded in [host-validation.json](host-validation.json) and `BC-status.md`. Unit fixtures use virtual time and injected ports; they never contact ADB, sleep through a dwell, install an APK or call a provider. No device result is recorded for this slice.
+
+### Retained terminal evidence — 2026-10-09
+
+The two inactive observations at about 20 minutes require terminal-state evidence.
+[Frozen contract](../../design/FQ9-terminal-evidence.md) defines the new fixture,
+closed projections and cleanup barrier. The current CLI always supplies a
+pre-cleanup collector. It captures exact owned message finish/error categories
+and millisecond timestamps, tool timing, and app-PID-filtered epoch logcat plus
+the app-managed server.log tail around 19–21 minutes. Raw data stays bounded
+in memory; reports contain fixed categories only. Omitted lines are counted.
+Capture failure keeps the session and private receipt, skipping resume and
+abort/delete. This distinguishes unknown/retry state from terminal completion
+or abort; an empty log projection does not prove there were no errors.
+
+Offline failing-first proofs: retention callback missing before implementation;
+terminal/log/capture modules missing before implementation. After integration,
+153 focused Python cases pass serially through machine_lock, with formatting,
+F/E9 lint and diff checks clean. No native build or app-source changes. Device
+run queues behind BA in one flock-w1800 reservation; BD7 remains parked.

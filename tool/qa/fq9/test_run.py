@@ -279,12 +279,17 @@ class RunTests(unittest.TestCase):
             signer=LOCAL_SIGNER,
             uid=10217,
         )
+        device.monotonic = lambda: 0
+        device.diagnostic_epoch_ms = lambda: 1000000
+        device.home = lambda: None
+        device.sleep = lambda seconds: None
         with patch.object(
             run.background,
             "run_background",
             return_value=dict(state="fail", code="background_turn_finished_early"),
-        ):
+        ) as driver:
             result = self.locked(device)
+        self.assertTrue(callable(driver.call_args.kwargs["before_cleanup"]))
         self.assertFalse(result["deviceQualified"])
         self.assertEqual(result["driver"]["code"], "background_turn_finished_early")
 

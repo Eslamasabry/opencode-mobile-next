@@ -20,6 +20,8 @@ import xml.etree.ElementTree as ET
 from .common import PACKAGE, SHARED_SERIAL, DriverFailure, digest_file
 from .observations import service_foreground, profile_projection
 from .runtime import AndroidRuntimeMixin
+from .diagnostic_logs import project_log, MAX_BYTES
+from .terminal import FAIL_CODES as TERMINAL_CODES
 
 BASE = f"/data/user/0/{PACKAGE}"
 FILES = BASE + "/files"
@@ -27,7 +29,7 @@ ID_PATTERN = r"[A-Za-z0-9_-]{1,100}"
 FGS = PACKAGE + "/.BackgroundConnectionService"
 BUILTIN_FGS = PACKAGE + "/.BuiltinServerService"
 
-FAIL_CODES = frozenset(
+FAIL_CODES = TERMINAL_CODES | frozenset(
     (
         "command_unavailable_or_timed_out",
         "command_failed",
@@ -46,6 +48,8 @@ FAIL_CODES = frozenset(
         "installed_apk_unavailable",
         "private_data_unavailable",
         "private_data_too_large",
+        "diagnostic_capture_failed",
+        "diagnostic_clock_invalid",
         "setup_active_or_unknown",
         "another_live_turn",
         "preservation_fixture_required",
@@ -283,6 +287,58 @@ class AndroidPorts(AndroidRuntimeMixin):
 
     def services(self):
         return self.text("shell", "dumpsys", "activity", "services", PACKAGE)
+
+    def diagnostic_epoch_ms(self):
+        raw = self.text("shell", "date", "+%s%3N")
+        if not re.fullmatch(r"[0-9]{13}", raw):
+            raise DriverFailure("diagnostic_clock_invalid")
+        return int(raw)
+
+    def _diagnostic_bytes(self, script):
+        # Never use general command spooling for private log bodies. Device
+        # output is bounded before capture; stdin is detached from locked PTY.
+        if not self.locked or self._uid is None:
+            raise DriverFailure("diagnostic_capture_failed")
+        try:
+            result = subprocess.run(
+                ["adb", "-s", self.serial, "exec-out", script],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                timeout=15,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            raise DriverFailure("diagnostic_capture_failed") from None
+        if result.returncode or len(result.stdout) > MAX_BYTES:
+            raise DriverFailure("diagnostic_capture_failed")
+        return result.stdout
+
+    def diagnostic_logs(self, start, end):
+        pid, birth = self._main_process()
+        if self._app_identity is not None and (pid, birth) != self._app_identity:
+            raise DriverFailure("diagnostic_capture_failed")
+        # PID is verified by exact package pidof and birth identity. Capture
+        # only its logs, then project their timestamps again within the window.
+        script = f"set -o pipefail; logcat -d -v epoch --pid={pid} | tail -c {MAX_BYTES}"
+        app = self._diagnostic_bytes("sh -c " + shlex.quote(script))
+        path = FILES + "/linux/server.log"
+        script = f"tail -c {MAX_BYTES} {shlex.quote(path)}"
+        server = self._diagnostic_bytes(f"su {self._uid} sh -c {shlex.quote(script)}")
+        if self._main_process() != (pid, birth):
+            raise DriverFailure("diagnostic_capture_failed")
+        return {
+            "app": project_log(
+                app,
+                source="app",
+                window_start_ms=start,
+                window_end_ms=end,
+                app_pids={int(pid)},
+            ),
+            "server": project_log(
+                server, source="server", window_start_ms=start, window_end_ms=end
+            ),
+        }
 
     def require_idle_setup(self):
         services = self.services()

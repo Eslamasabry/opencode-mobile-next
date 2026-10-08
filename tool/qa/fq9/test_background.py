@@ -87,6 +87,117 @@ class FakePorts:
 
 
 class BackgroundTests(unittest.TestCase):
+    def test_evidence_is_saved_before_resume_and_cleanup_on_every_owned_outcome(self):
+        for outcome in ("pass", "observation", "setup"):
+            with self.subTest(outcome=outcome):
+                ports = FakePorts()
+                if outcome == "observation":
+                    ports.changes = [(60, {"turnActive": False})]
+                elif outcome == "setup":
+                    ports.initial = {"foregroundService": False}
+
+                def capture():
+                    ports.calls.append(("capture", ports.now))
+                    self.assertFalse(ports.resumed)
+                    self.assertNotIn("cleanup", [call[0] for call in ports.calls])
+                    return True
+
+                result = run_background(ports, before_cleanup=capture)
+                actions = [call[0] for call in ports.calls]
+                self.assertEqual(actions.count("capture"), 1)
+                self.assertLess(actions.index("capture"), actions.index("cleanup"))
+                if outcome != "setup":
+                    self.assertLess(actions.index("capture"), actions.index("resume"))
+                self.assertTrue(result["evidenceCaptured"])
+                self.assertFalse(result["sessionRetained"])
+                self.assertTrue(result["cleanupSucceeded"])
+
+    def test_capture_requires_literal_true_and_failure_retains_session_without_resume(
+        self,
+    ):
+        for returned in (False, None, "true", 1, {"saved": True}, []):
+            with self.subTest(returned=type(returned).__name__):
+                ports = FakePorts()
+
+                def capture():
+                    ports.calls.append(("capture", ports.now))
+                    return returned
+
+                result = run_background(ports, before_cleanup=capture)
+                self.assert_safe_failure(result, "background_evidence_capture_failed")
+                self.assertFalse(result["evidenceCaptured"])
+                self.assertTrue(result["sessionRetained"])
+                self.assertFalse(result["cleanupAttempted"])
+                self.assertFalse(result["resumed"])
+                actions = [call[0] for call in ports.calls]
+                self.assertNotIn("resume", actions)
+                self.assertNotIn("cleanup", actions)
+                self.assertEqual(
+                    result["adapterFailure"],
+                    {
+                        "stage": "background_evidence_capture_failed",
+                        "code": "background_evidence_capture_failed",
+                    },
+                )
+                self.assertEqual(result["lastGoodObservation"]["elapsedSeconds"], 1800)
+
+    def test_failed_capture_preserves_original_diagnostics_and_last_good_observation(
+        self,
+    ):
+        ports = self.failing_observation(ProtocolHTTPFailure(503))
+
+        def capture():
+            raise RuntimeError("private transcript sk-unlogged")
+
+        result = run_background(ports, before_cleanup=capture)
+        self.assert_safe_failure(result, "background_observation_failed")
+        self.assertEqual(
+            result["errorCodes"],
+            ["background_observation_failed", "background_evidence_capture_failed"],
+        )
+        self.assertEqual(
+            result["adapterFailure"],
+            {
+                "stage": "background_observation_failed",
+                "code": "protocol_response_invalid",
+                "httpStatus": 503,
+            },
+        )
+        self.assertEqual(result["lastGoodObservation"]["elapsedSeconds"], 30)
+        self.assertTrue(result["sessionRetained"])
+        self.assertFalse(result["cleanupAttempted"])
+        self.assertFalse(result["resumed"])
+
+    def test_invalid_capture_callback_retains_owned_session(self):
+        for invalid in (False, "private callback sk-unlogged", {}, 1):
+            with self.subTest(invalid=type(invalid).__name__):
+                ports = FakePorts()
+                result = run_background(ports, before_cleanup=invalid)
+                self.assert_safe_failure(result, "background_evidence_capture_failed")
+                self.assertTrue(result["sessionRetained"])
+                self.assertFalse(result["cleanupAttempted"])
+                self.assertFalse(result["resumed"])
+
+    def test_unowned_fixture_never_calls_evidence_callback(self):
+        ports = FakePorts()
+        ports.initial = {"ownedTurn": False}
+
+        def capture():
+            self.fail("An unrelated fixture must not be inspected or mutated")
+
+        result = run_background(ports, before_cleanup=capture)
+        self.assert_safe_failure(result, "background_fixture_not_owned")
+        self.assertIsNone(result["evidenceCaptured"])
+        self.assertFalse(result["cleanupAttempted"])
+        self.assertFalse(result["resumed"])
+
+    def test_legacy_no_callback_does_not_claim_evidence_capture(self):
+        result = run_background(FakePorts())
+        self.assertEqual(result["state"], "pass")
+        self.assertIsNone(result["evidenceCaptured"])
+        self.assertFalse(result["sessionRetained"])
+        self.assertTrue(result["cleanupSucceeded"])
+
     def failing_observation(self, failure):
         ports = FakePorts()
         original = ports.live_snapshot

@@ -528,6 +528,22 @@ class PortTests(unittest.TestCase):
         self.assertFalse(self.live(retry=True).live_snapshot()["turnActive"])
         self.assertFalse(self.live(pending=True).live_snapshot()["turnActive"])
 
+    def test_45_minute_fixture_uses_persisted_ticks_and_explicit_timeout(self):
+        from .live_fixture import COMMAND, TIMEOUT_MS
+
+        p = self.live(command=COMMAND)
+        history = p._session_history(None, None)
+        history[0]["parts"][0]["text"] = "FQ9_BACKGROUND_FIXTURE_V2"
+        state = history[1]["parts"][0]["state"]
+        state.update(status="running", metadata={"output": "FQ9_TICK:1\nFQ9_TICK:2\n"})
+        state["input"]["timeout"] = TIMEOUT_MS
+        snapshot = p.live_snapshot()
+        self.assertTrue(snapshot["turnActive"])
+        self.assertEqual(snapshot["progressCounter"], 2)
+        state["input"]["timeout"] = 120000
+        with self.assertRaisesRegex(DriverFailure, "live_fixture_command_invalid"):
+            p.live_snapshot()
+
     def test_live_new_prompt_foreign_part_and_unbounded_command_refused(self):
         for kw, code in [
             ({"new_prompt": True}, "live_prompt_mismatch"),
