@@ -92,8 +92,9 @@ class AuthSmokeTest(unittest.TestCase):
             'INSTRUMENTATION_RESULT: bb8Failure=flutter_fx_probe\n'
             'INSTRUMENTATION_RESULT: bb8Failure=flutter_fx_probe'))
 
-    def test_readiness_timeout_and_cleanup_failures_are_fixed_and_never_pass(self):
-        for phase in ('flutter_ready', 'flutter_timeout', 'cleanup'):
+    def test_registration_readiness_timeout_and_cleanup_failures_are_fixed_and_never_pass(self):
+        for phase in ('register_view', 'register_engine', 'register_plugin',
+                      'register_ready', 'flutter_ready', 'flutter_timeout', 'cleanup'):
             output = 'INSTRUMENTATION_RESULT: bb8Failure=' + phase
             self.assertEqual(smoke.failure_phase(output), phase)
             with self.assertRaises(smoke.shared.SmokeFailure):

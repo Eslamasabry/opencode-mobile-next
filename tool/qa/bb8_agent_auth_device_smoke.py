@@ -32,7 +32,8 @@ RESULTS = {
     'bb8FlutterTests': '1', 'bb8Flutter': 'PASS', 'bb8Result': 'PASS',
 }
 FAILURES = frozenset((
-    'authorization', 'launch_activity', 'register_plugin', 'flutter_results',
+    'authorization', 'launch_activity', 'register_plugin', 'register_view',
+    'register_engine', 'register_ready', 'flutter_results',
     'receipt', 'flutter_initializing', 'flutter_profile', 'flutter_claude_probe',
     'flutter_fx_probe', 'flutter_fx_logout', 'flutter_fx_after_logout',
     'flutter_receipt', 'flutter_ready', 'flutter_timeout', 'cleanup',
