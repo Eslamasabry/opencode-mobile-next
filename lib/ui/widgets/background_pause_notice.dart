@@ -32,10 +32,11 @@ String backgroundPauseMessage(
 }
 
 /// App-wide condition (FD3): Android stopped the background connection.
-/// One line in the status slot every screen already shows, with Resume
-/// named for what it starts. While Android confirms the start the action
-/// works in place; when it is not confirmed the pause stays and the line
-/// offers Keep running in the background, with Resume again under More.
+/// One compact line in the status slot every screen already shows: the
+/// reason sentence and an inline "Resume" (read as "Resume background
+/// connection"), nothing under it. While Android confirms the start the
+/// line only says it is resuming; when it is not confirmed the pause stays
+/// and the line offers Keep running settings, with Resume again under More.
 ///
 /// It shares [KitStatusKind.appStopped] with the app-exit notice ("Android
 /// stopped the app; background checks paused"), so the slot shows one of
@@ -72,10 +73,18 @@ KitStatus? backgroundPauseKitStatus(
     );
   }
 
+  // Inline it is the compact "Resume" (the line already names the
+  // background connection); a screen reader still hears the full target.
   final resumeAction = KitAction(
     key: const ValueKey('background-pause-resume'),
+    label: l10n.backgroundPauseResumeShort,
+    semanticsLabel: l10n.backgroundPauseResume,
+    onPressed: () => unawaited(resume()),
+  );
+  // In the More menu the item stands alone, so it says the whole target.
+  final resumeAgain = KitAction(
+    key: const ValueKey('background-pause-resume'),
     label: l10n.backgroundPauseResume,
-    working: notice.phase == BackgroundPauseNoticePhase.resuming,
     onPressed: () => unawaited(resume()),
   );
   final keepRunning = KitAction(
@@ -100,7 +109,6 @@ KitStatus? backgroundPauseKitStatus(
       tone: AppStatusTone.progress,
       message: l10n.backgroundPauseResuming,
       since: notice.resumingSince,
-      action: resumeAction,
     ),
     BackgroundPauseNoticePhase.failed => KitStatus(
       kind: KitStatusKind.appStopped,
@@ -109,9 +117,8 @@ KitStatus? backgroundPauseKitStatus(
       icon: common.icon,
       tone: AppStatusTone.failure,
       message: l10n.backgroundPauseResumeFailed,
-      supporting: l10n.backgroundPauseResumeFailedNext,
       action: keepRunning,
-      more: [if (notice.canResume) resumeAction],
+      more: [if (notice.canResume) resumeAgain],
       onDismiss: source.dismiss,
     ),
     BackgroundPauseNoticePhase.paused => KitStatus(
@@ -122,7 +129,6 @@ KitStatus? backgroundPauseKitStatus(
       // Neutral, as the app-exit line: amber is needs-you only (LOOK-24).
       tone: AppStatusTone.neutral,
       message: backgroundPauseMessage(context, l10n, notice, now: now),
-      supporting: l10n.backgroundPauseConsequence,
       action: notice.canResume ? resumeAction : keepRunning,
       more: [if (notice.canResume) keepRunning],
       onDismiss: source.dismiss,

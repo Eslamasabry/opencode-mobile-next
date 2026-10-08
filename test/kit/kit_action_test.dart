@@ -1184,4 +1184,30 @@ void main() {
       expect(tester.hasRunningAnimations, isFalse);
     });
   });
+
+  testWidgets('a compact label keeps its full target for a screen reader '
+      '(semanticsLabel)', (tester) async {
+    var taps = 0;
+    await _pumpAt(
+      tester,
+      KitButton.fromAction(
+        KitAction(
+          label: 'Resume',
+          semanticsLabel: 'Resume background connection',
+          onPressed: () => taps++,
+        ),
+        role: KitButtonRole.tertiary,
+      ),
+    );
+    expect(find.text('Resume'), findsOneWidget);
+    final semantics = tester.ensureSemantics();
+    expect(
+      find.bySemanticsLabel('Resume background connection'),
+      findsOneWidget,
+    );
+    expect(find.bySemanticsLabel('Resume'), findsNothing);
+    semantics.dispose();
+    await tester.tap(find.text('Resume'));
+    expect(taps, 1);
+  });
 }

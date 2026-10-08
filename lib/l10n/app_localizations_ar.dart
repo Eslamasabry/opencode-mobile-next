@@ -14001,12 +14001,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String backgroundPauseTimeLimit(String at) {
-    return 'أوقف Android الاتصال في الخلفية مؤقتًا $at لتوفير البطارية.';
+    return 'أُوقف الاتصال في الخلفية مؤقتًا $at لتوفير البطارية.';
   }
 
   @override
   String get backgroundPauseRestricted =>
-      'أوقف Android الاتصال في الخلفية مؤقتًا لأن استخدام البطارية مقيَّد لهذا التطبيق.';
+      'أُوقف الاتصال في الخلفية مؤقتًا: استخدام البطارية مقيَّد.';
 
   @override
   String backgroundPauseUserStopped(String at) {
@@ -14015,24 +14015,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backgroundPauseInterrupted =>
-      'توقف الاتصال في الخلفية. لم يذكر Android السبب.';
-
-  @override
-  String get backgroundPauseConsequence =>
-      'لن تصلك الردود والأسئلة كإشعارات حتى يعمل من جديد.';
+      'توقف الاتصال في الخلفية لسبب غير معروف.';
 
   @override
   String get backgroundPauseResume => 'استئناف الاتصال في الخلفية';
 
   @override
+  String get backgroundPauseResumeShort => 'استئناف';
+
+  @override
   String get backgroundPauseResuming => 'جارٍ استئناف الاتصال في الخلفية…';
 
   @override
-  String get backgroundPauseResumeFailed => 'تعذّر استئناف الاتصال في الخلفية.';
-
-  @override
-  String get backgroundPauseResumeFailedNext =>
-      'افتح «الاستمرار في العمل في الخلفية» لترى ما يسمح به Android، ثم حاول مجددًا.';
+  String get backgroundPauseResumeFailed =>
+      'تعذّر الاستئناف. افتح إعدادات الاستمرار في العمل.';
 
   @override
   String get backgroundPauseOpenKeepRunning => 'فتح إعدادات الاستمرار في العمل';

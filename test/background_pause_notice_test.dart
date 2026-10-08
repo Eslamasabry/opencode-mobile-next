@@ -117,8 +117,8 @@ void main() {
       }
     });
 
-    testWidgets('each reason says why in one line, with Resume named for '
-        'what it starts', (tester) async {
+    testWidgets('each reason is one compact line: the reason and an inline '
+        'Resume that a screen reader hears with its target', (tester) async {
       final at = todayAt1510();
       final cases = {
         BackgroundPauseReason.timeLimit: _en.backgroundPauseTimeLimit(
@@ -133,13 +133,24 @@ void main() {
       for (final MapEntry(key: reason, value: words) in cases.entries) {
         await mountScope(tester, FakePauseGateway(pausedFor(reason, at: at)));
         expect(find.text(words), findsOneWidget, reason: reason.name);
-        expect(find.text(_en.backgroundPauseConsequence), findsOneWidget);
-        expect(find.text(_en.backgroundPauseResume), findsOneWidget);
+        // Nothing under the line: no consequence paragraph (owner,
+        // 2026-10-08: no big blocks of text creeping into every screen).
+        expect(
+          find.byKey(const ValueKey('kit-status-supporting')),
+          findsNothing,
+        );
+        expect(
+          find.widgetWithText(KitButton, _en.backgroundPauseResumeShort),
+          findsOneWidget,
+        );
+        expect(
+          find.bySemanticsLabel(_en.backgroundPauseResume),
+          findsOneWidget,
+        );
       }
       expect(
         _en.backgroundPauseTimeLimit('at 3:10 PM'),
-        'Android paused the background connection at 3:10 PM to save '
-        'battery.',
+        'Background connection paused at 3:10 PM to save battery.',
       );
     });
 
@@ -150,12 +161,17 @@ void main() {
       final gateway = FakePauseGateway(
         pausedFor(BackgroundPauseReason.timeLimit),
       )..gate = Completer();
-      await mountScope(tester, gateway);
-      await tester.tap(find.text(_en.backgroundPauseResume));
+      final notice = await mountScope(tester, gateway);
+      await tester.tap(find.text(_en.backgroundPauseResumeShort));
       await tester.pump();
+      // Only the progress line; no Resume under it while Android decides.
       expect(find.text(_en.backgroundPauseResuming), findsOneWidget);
-      // A second tap joins the first; Android is asked once.
-      await tester.tap(find.text(_en.backgroundPauseResume));
+      expect(
+        find.byKey(const ValueKey('background-pause-resume')),
+        findsNothing,
+      );
+      // A second request joins the first; Android is asked once.
+      unawaited(notice.resume());
       await tester.pump();
       expect(gateway.resumeCalls, 1);
 
@@ -182,17 +198,18 @@ void main() {
           error: DiagnosticsError.resumeFailed,
         );
       await mountScope(tester, gateway);
-      await tester.tap(find.text(_en.backgroundPauseResume));
+      await tester.tap(find.text(_en.backgroundPauseResumeShort));
       await tester.pump();
       await tester.pump();
       expect(find.text(_en.backgroundPauseResumeFailed), findsOneWidget);
-      expect(find.text(_en.backgroundPauseResumeFailedNext), findsOneWidget);
+      expect(find.byKey(const ValueKey('kit-status-supporting')), findsNothing);
       expect(
         find.widgetWithText(KitButton, _en.backgroundPauseOpenKeepRunning),
         findsOneWidget,
       );
       expect(gateway.backgroundPause.paused, isTrue);
       // The way to try again stays one menu away.
+      expect(find.text(_en.backgroundPauseResumeShort), findsNothing);
       expect(find.text(_en.backgroundPauseResume), findsNothing);
       await tester.tap(find.byTooltip(_en.kitMore));
       await tester.pumpAndSettle();
@@ -206,11 +223,11 @@ void main() {
         ..answer = () =>
             BackgroundResumeResult(paused, error: DiagnosticsError.busy);
       await mountScope(tester, gateway);
-      await tester.tap(find.text(_en.backgroundPauseResume));
+      await tester.tap(find.text(_en.backgroundPauseResumeShort));
       await tester.pump();
       await tester.pump();
       expect(find.text(_en.backgroundPauseResumeFailed), findsNothing);
-      expect(find.text(_en.backgroundPauseResume), findsOneWidget);
+      expect(find.text(_en.backgroundPauseResumeShort), findsOneWidget);
     });
 
     testWidgets('when Android allows no resume, the action is Keep running '
@@ -221,7 +238,7 @@ void main() {
           pausedFor(BackgroundPauseReason.batteryRestricted, canResume: false),
         ),
       );
-      expect(find.text(_en.backgroundPauseResume), findsNothing);
+      expect(find.text(_en.backgroundPauseResumeShort), findsNothing);
       expect(find.text(_en.backgroundPauseOpenKeepRunning), findsOneWidget);
     });
 
@@ -261,7 +278,7 @@ void main() {
       );
       final ar = lookupAppLocalizations(const Locale('ar'));
       expect(find.text(ar.backgroundPauseInterrupted), findsOneWidget);
-      expect(find.text(ar.backgroundPauseResume), findsOneWidget);
+      expect(find.text(ar.backgroundPauseResumeShort), findsOneWidget);
     });
   });
 

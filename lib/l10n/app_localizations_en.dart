@@ -13905,39 +13905,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String backgroundPauseTimeLimit(String at) {
-    return 'Android paused the background connection $at to save battery.';
+    return 'Background connection paused $at to save battery.';
   }
 
   @override
   String get backgroundPauseRestricted =>
-      'Android paused the background connection because battery use is restricted for this app.';
+      'Background connection paused: battery use is restricted.';
 
   @override
   String backgroundPauseUserStopped(String at) {
-    return 'The background connection stopped when the app was closed $at.';
+    return 'Background connection stopped when the app closed $at.';
   }
 
   @override
   String get backgroundPauseInterrupted =>
-      'The background connection stopped. Android didn\'t say why.';
-
-  @override
-  String get backgroundPauseConsequence =>
-      'Replies and questions won\'t reach you as notifications until it runs again.';
+      'Background connection stopped for an unknown reason.';
 
   @override
   String get backgroundPauseResume => 'Resume background connection';
 
   @override
-  String get backgroundPauseResuming => 'Resuming the background connection…';
+  String get backgroundPauseResumeShort => 'Resume';
+
+  @override
+  String get backgroundPauseResuming => 'Resuming background connection…';
 
   @override
   String get backgroundPauseResumeFailed =>
-      'Couldn\'t resume the background connection.';
-
-  @override
-  String get backgroundPauseResumeFailedNext =>
-      'Open Keep running in the background to see what Android allows, then try again.';
+      'Couldn\'t resume. Open Keep running settings.';
 
   @override
   String get backgroundPauseOpenKeepRunning => 'Open Keep running settings';

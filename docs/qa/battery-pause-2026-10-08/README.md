@@ -1,7 +1,9 @@
 # FD3 "Paused to save battery" notice: evidence record (2026-10-08)
 
 Branch `fe/battery-pause`, based on `feat/genui-fe` at `8644d15d` (merge of
-`sol/bc-diagnostics`, the FD3 backend). Feature commit `33425f63`.
+`sol/bc-diagnostics`, the FD3 backend). Feature commit `33425f63`. Current
+`feat/genui-fe` was merged in (`8f358bf8`), then the compact rework followed
+in its own commit.
 
 ## Finish line
 
@@ -42,16 +44,25 @@ Order (`appStoppedLines`):
 
 Connection problems still win over both (a higher kind).
 
-### States and copy
+### States and copy (compact, after coordinator review 2026-10-08)
 
-| State | Line | Supporting | Action | More |
-| --- | --- | --- | --- | --- |
-| Time limit | Android paused the background connection at 3:10 PM to save battery. | Replies and questions won't reach you as notifications until it runs again. | Resume background connection | Open Keep running settings |
-| Battery restricted | Android paused the background connection because battery use is restricted for this app. | same | same (or Open Keep running settings when `canResume` is false) | same |
-| App closed | The background connection stopped when the app was closed at 3:10 PM. | same | same | same |
-| Unknown stop | The background connection stopped. Android didn't say why. | same | same | same |
-| Resume pending | Resuming the background connection… (tone progress) | — | Resume (working; a second tap joins the first) | — |
-| Resume failed / unavailable | Couldn't resume the background connection. (tone failure) | Open Keep running in the background to see what Android allows, then try again. | Open Keep running settings | Resume background connection |
+The owner reported that big blocks of text were spreading into every screen
+from this slot. So the line is the reason sentence only (at most 2 lines at
+phone width), with one compact inline action. Nothing sits under it.
+
+| State | Line | Inline action | More (⋯) |
+| --- | --- | --- | --- |
+| Time limit | Background connection paused at 3:10 PM to save battery. | Resume (read as "Resume background connection") | Open Keep running settings |
+| Battery restricted | Background connection paused: battery use is restricted. | Resume (or Open Keep running settings when `canResume` is false) | same |
+| App closed | Background connection stopped when the app closed at 3:10 PM. | Resume | same |
+| Unknown stop | Background connection stopped for an unknown reason. | Resume | same |
+| Resume pending | Resuming background connection… (tone progress) | none | none |
+| Resume failed / unavailable | Couldn't resume. Open Keep running settings. (tone failure) | Open Keep running settings | Resume background connection |
+
+The consequence paragraph ("Replies and questions won't reach you…") and the
+failure paragraph were removed. Kit addition: `KitAction.semanticsLabel`,
+passed through `KitButton.fromAction`, so a compact label keeps its full
+target for screen readers (test in `test/kit/kit_action_test.dart`).
 
 - A time is given only where the contract says `at` is the stop time (time
   limit, app closed). For a restriction or an unknown stop it is only when
@@ -61,6 +72,8 @@ Connection problems still win over both (a higher kind).
 - A confirmed start (gateway state active, not paused) makes the line go
   away. A screen reader hears "Background connection resumed." A failure
   changes the line's message, which the status line announces itself.
+- While the start is pending, the line has no action. A second request
+  joins the first and Android is asked only once.
 - Dismissal: the close button hides that pause (`reason@at`) for good, also
   after a restart (`oc.backgroundPauseDismissed`, app-global like the
   receipt, not profile data). A later, different pause shows again. There is
@@ -73,8 +86,8 @@ Connection problems still win over both (a higher kind).
 New file `test/background_pause_notice_test.dart` (12 tests) mounts the real
 `AppConnectionStatusScope` with a fake gateway (`test/support/fake_pause_gateway.dart`):
 - nothing shows while the connection runs, is off, or the phone cannot tell
-- each reason's line, the consequence line and the Resume label
-- Resume calls the gateway once (double tap), shows resuming, then the line goes away and the result is announced
+- each reason is one line with nothing under it; the inline Resume has the full target in semantics
+- Resume calls the gateway once (a second request joins), the pending line has no action, then the line goes away and the result is announced
 - an unconfirmed resume keeps the pause, offers Open Keep running settings, Resume again under More
 - busy is not a failure
 - `canResume: false` offers Keep running instead
@@ -104,9 +117,18 @@ Results on the final tree:
   Result: `00:04 +2 -10: Some tests failed.` Among the failures: the dismissed-pause restart test (R2), the failed-resume test (R3), the order test (R4), and every scope test that expects the line (R1).
   After restoring, the same file passes again (`+85` run above).
 
+### Compact rework (after review)
+
+- Test set on the merged and compacted tree: `background_pause_notice_test`, `goldens/background_pause_golden_test` (goldens regenerated, then compared), `kit/kit_action_test`, `kit/kit_status_line_test`, `kit_ratchet_test`, `ui_glossary_test`, `app_exit_recovery_test`, `goldens/work_tab_golden_test`, `goldens/work_parts_golden_test`, `app_lifecycle_test`, `builtin_server_autostart_test`: `01:37 +224: All tests passed!`
+- Full `flutter analyze --no-pub`: `No issues found!`
+- Red proofs: two mutations, then restored.
+  - The kit button drops the `semanticsLabel` wrap: the kit test "a compact label keeps its full target for a screen reader" fails.
+  - A supporting line goes back under the paused line: the notice test "each reason is one compact line…" fails.
+  - Result: `00:28 +58 -2: Some tests failed.`
+
 ## Screens
 
-`contact_sheet.png`: light on top, dark below, 412x915 frames cropped to the
+`contact_sheet.png` (compact version): light on top, dark below, 412x915 frames cropped to the
 top. Full frames are in this folder and match the goldens:
 `background_pause_{time_limit,restricted,user_stopped,interrupted,resuming,resume_failed,time_limit_ar}_{light,dark}.png`.
 
@@ -115,9 +137,10 @@ top. Full frames are in this folder and match the goldens:
 - The line is one live region. Its message (reason, resuming, failed) is
   announced when it changes. Success is announced once through
   `SemanticsService` because the line goes away.
-- The actions name their target ("Resume background connection", "Open Keep
-  running settings"). The working state keeps the button enabled; a second
-  tap joins the first and does not start Android twice.
+- The actions name their target: the inline "Resume" is read as "Resume
+  background connection" (`KitAction.semanticsLabel`), and "Open Keep running
+  settings" is spelled out. While the start is pending there is no action
+  to tap twice.
 - Arabic is laid out right to left (see `time_limit_ar`).
 
 ## Privacy / security
