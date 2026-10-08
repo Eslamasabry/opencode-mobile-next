@@ -1,0 +1,45 @@
+FFFF
+======================================================================
+FAIL: test_version_pass_requires_exact_observed_pin (tool.qa.fq3.test_update_matrix.EvidenceValidationTest.test_version_pass_requires_exact_observed_pin) (engine='opencode', observed=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq3/test_update_matrix.py", line 138, in test_version_pass_requires_exact_observed_pin
+    self.assert_rejected(run)
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq3/test_update_matrix.py", line 106, in assert_rejected
+    with self.assertRaises(updater.InvalidEvidence):
+AssertionError: InvalidEvidence not raised
+
+======================================================================
+FAIL: test_version_pass_requires_exact_observed_pin (tool.qa.fq3.test_update_matrix.EvidenceValidationTest.test_version_pass_requires_exact_observed_pin) (engine='opencode', observed='9.9.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq3/test_update_matrix.py", line 138, in test_version_pass_requires_exact_observed_pin
+    self.assert_rejected(run)
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq3/test_update_matrix.py", line 106, in assert_rejected
+    with self.assertRaises(updater.InvalidEvidence):
+AssertionError: InvalidEvidence not raised
+
+======================================================================
+FAIL: test_version_pass_requires_exact_observed_pin (tool.qa.fq3.test_update_matrix.EvidenceValidationTest.test_version_pass_requires_exact_observed_pin) (engine='opencode2', observed=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq3/test_update_matrix.py", line 138, in test_version_pass_requires_exact_observed_pin
+    self.assert_rejected(run)
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq3/test_update_matrix.py", line 106, in assert_rejected
+    with self.assertRaises(updater.InvalidEvidence):
+AssertionError: InvalidEvidence not raised
+
+======================================================================
+FAIL: test_version_pass_requires_exact_observed_pin (tool.qa.fq3.test_update_matrix.EvidenceValidationTest.test_version_pass_requires_exact_observed_pin) (engine='opencode2', observed='9.9.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq3/test_update_matrix.py", line 138, in test_version_pass_requires_exact_observed_pin
+    self.assert_rejected(run)
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq3/test_update_matrix.py", line 106, in assert_rejected
+    with self.assertRaises(updater.InvalidEvidence):
+AssertionError: InvalidEvidence not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.003s
+
+FAILED (failures=4)
