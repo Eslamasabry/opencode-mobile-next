@@ -395,3 +395,36 @@ inside the same flock on every outcome. If Flutter fails, use its fixed phase
 category to fix the actual smoke and repeat with a newly recorded candidate.
 BD9 remains blocked; no passing device smoke or normal-restoration receipt
 is claimed yet.
+
+
+## First authorized device run and conversation finder correction
+
+After explicit EMULATOR GO, the exact committed driver installed QA2201 and
+ran instrumentation while retaining the shared emulator flock. All seven
+native predicates passed. Flutter failed with the fixed conversation phase;
+no raw diagnostic text was written. Receipts: conversation-phase-attempt1.json
+and conversation-phase-build-attempt1.json. Before releasing the SAME flock,
+approved owner2195 was installed with-r-d, then installed-version/live-process/
+resumed-MainActivity/first-frame checks passed. The normal app was left
+installed and launchable; see normal-2195-restore-attempt1.json.
+
+The UI trace establishes a QA finder bug: KitFeedItem renders KitBidi.auto(title)
+with FSI/PDI isolation, so exact raw title matching cannot succeed. The shared
+QA finder now matches the rendered kit text; the real KitFeedItem regression
+finds and taps its visible row. Reverting to raw matching fails (exit1), finally
+restored matcher passes. No UI or production gateway/controller edit.
+
+The initial global-inventory refresh depends on an event arriving after the
+Chats reader is mounted. The smoke now exercises the actual list's normal
+pull-to-refresh gesture, then awaits health/global-inventory read evidence
+before asserting. A real KitRefresh widget test verifies that gesture invokes
+refresh exactly once; removing the gesture fails (exit1), then restored source
+passes. The underlying startup refresh timing is a separate frontend/state
+observation for Claude; no automatic-refresh qualification is claimed by this
+manual-refresh smoke. Strict read-only and global-read assertions remain.
+
+All eight focused finder/gesture/fixture/reporter tests PASS serially through
+machine_lock. Full pinned analyzer clean10.8s after removing one unnecessary
+import. All44 offline command/receipt/restoration tests PASS. The dispatch-only
+workflow now runs those affected checks; YAML/Bash dry checks PASS. No CI run.
+Updated QA build and a passing device JPG remain required for BD9 completion.
