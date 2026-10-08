@@ -1,6 +1,8 @@
 # FQ3 — repeatable in-app Ubuntu protocol checks
 
 Candidate branch: `sol/bc-fq3`, based on integration `8644d15d`.
+
+Shared-device baseline update (coordinator, 2026-10-08): normal app is now **2196**, integration `d777082c`, existing APK `/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk`, known local signer prefix `1DE5BF08`. After future device runs, restore2196 with `adb install -r -d` while holding `/home/eslam/Storage/tmp/oc-emulator.lock`. The completed evidence below remains bound to2195; it does not qualify2196. A future certification run needs an explicit new candidate/build pin and new evidence. Coordinator reports the emulator currently uses OC1, with21% free on `/data` after removing the stale fixture; its full PC backup is `/home/eslam/Storage/tmp/emulator-p16a-installer-fix-backup-20261008.tar.gz`.
 Target: emulator-5554, installed app build **2195**, OC1 **1.18.32**, OC2 **2.0.10**. This is emulator protocol evidence; existing matrix UI/install evidence stays separate. No app installation, data clearing, credential enrollment, readiness promotion or network upload is part of this runner.
 
 Run from the repository root with the pinned Dart:
