@@ -2264,6 +2264,22 @@
     {
       "file": "lib/ui/screens/settings/server_plugins_section.dart",
       "reason": "ServerPluginsSection is the 'Plugins on this server' section of the This server page (server-settings); its elements keep their plugins-* ids on that page's host."
+    },
+    {
+      "file": "lib/ui/screens/crash_reports_section.dart",
+      "reason": "CrashReportsSection is the 'Crash reports' opt-in block of App diagnostics (host page app-diagnostics), not a surface of its own; its switch, Share and Delete actions belong to that page."
+    },
+    {
+      "file": "lib/ui/screens/crash_report_share.dart",
+      "reason": "Preview sheet opened from the Crash reports block of App diagnostics showing exactly what Share sends; part of the app-diagnostics page flow, no route of its own."
+    },
+    {
+      "file": "lib/ui/screens/exit_history_section.dart",
+      "reason": "ExitHistorySection is the 'Recent app exits' block of App diagnostics (host page app-diagnostics), not a surface of its own."
+    },
+    {
+      "file": "lib/ui/screens/recent_error_words.dart",
+      "reason": "Pure helpers that turn recorded error categories into plain words for App diagnostics; no visual surface or gestures."
     }
   ],
   "notes": [

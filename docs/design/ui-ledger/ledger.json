@@ -1,5 +1,5 @@
 {
- "generatedFrom": "8a349dc671c97e09217f9af96daf173b7a7e466c",
+ "generatedFrom": "d014542786fb39423f38b83218daee8727361a51",
  "pages": [
   {
    "id": "system",
@@ -38913,6 +38913,21 @@
    "part": "e-workspace"
   },
   {
+   "file": "lib/ui/screens/crash_report_share.dart",
+   "reason": "Preview sheet opened from the Crash reports block of App diagnostics showing exactly what Share sends; part of the app-diagnostics page flow, no route of its own.",
+   "part": "j1-settings-more"
+  },
+  {
+   "file": "lib/ui/screens/crash_reports_section.dart",
+   "reason": "CrashReportsSection is the 'Crash reports' opt-in block of App diagnostics (host page app-diagnostics), not a surface of its own; its switch, Share and Delete actions belong to that page.",
+   "part": "j1-settings-more"
+  },
+  {
+   "file": "lib/ui/screens/exit_history_section.dart",
+   "reason": "ExitHistorySection is the 'Recent app exits' block of App diagnostics (host page app-diagnostics), not a surface of its own.",
+   "part": "j1-settings-more"
+  },
+  {
    "file": "lib/ui/screens/files/files_actions.dart",
    "reason": "Part file of lib/ui/screens/files_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
    "part": "f-files-review-terminal"
@@ -39001,6 +39016,11 @@
    "file": "lib/ui/screens/phone_setup/phone_setup_welcome_entry.dart",
    "reason": "PhoneSetupWelcomeEntry is the first-run welcome's own status line about a phone setup job that already exists (running / stopped part way / done but nothing saved); embedded in servers-welcome (lib/ui/screens/servers_screen.dart:710), not a surface of its own. Its action button opens phone-setup-progress or resumes/reopens the job.",
    "part": "h-termux"
+  },
+  {
+   "file": "lib/ui/screens/recent_error_words.dart",
+   "reason": "Pure helpers that turn recorded error categories into plain words for App diagnostics; no visual surface or gestures.",
+   "part": "j1-settings-more"
   },
   {
    "file": "lib/ui/screens/servers/profile_editor.dart",
