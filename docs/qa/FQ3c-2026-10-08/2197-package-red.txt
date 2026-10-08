@@ -1,0 +1,16 @@
+............E.......
+======================================================================
+ERROR: test_installed_identity_selects_exact_package_among_prefix_variants (tool.qa.fq9.test_ports.PortTests.test_installed_identity_selects_exact_package_among_prefix_variants)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq9/test_ports.py", line 224, in test_installed_identity_selects_exact_package_among_prefix_variants
+    actual = p.installed_identity()
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq9/ports.py", line 213, in installed_identity
+    raise DriverFailure("installed_identity_unavailable")
+tool.qa.fq9.common.DriverFailure: installed_identity_unavailable
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.007s
+
+FAILED (errors=1)

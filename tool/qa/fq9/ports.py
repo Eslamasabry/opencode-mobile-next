@@ -208,10 +208,18 @@ class AndroidPorts(AndroidRuntimeMixin):
         listing = self.text(
             "shell", "cmd", "package", "list", "packages", "--user", "0", "-U", PACKAGE
         )
-        match = re.fullmatch("package:" + re.escape(PACKAGE) + r" uid:(\d+)", listing)
-        if not match or int(match[1]) < 10000:
+        matches = [
+            match
+            for row in listing.splitlines()
+            if (
+                match := re.fullmatch(
+                    "package:" + re.escape(PACKAGE) + r" uid:(\d+)", row
+                )
+            )
+        ]
+        if len(matches) != 1 or int(matches[0][1]) < 10000:
             raise DriverFailure("installed_identity_unavailable")
-        self._uid = int(match[1])
+        self._uid = int(matches[0][1])
         path = self.text("shell", "pm", "path", "--user", "0", PACKAGE)
         if not re.fullmatch(r"package:/data/app/[^\s\x00]+/base\.apk", path):
             raise DriverFailure("installed_apk_path_invalid")

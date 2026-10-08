@@ -1,5 +1,10 @@
 # FQ3c: five OC2 failures
 
+Update after APK 2197 was posted: [device results and classifications](2197-results.md).
+Latest targeted Allow, Deny and cards checks passed; model/image remain failed
+on the selected `exo-free` HTTP 503 responses. The original host-only slice and
+its historical pending state are preserved below.
+
 Branch `sol/bc-fq3c`, base `feat/genui-fe` f0e33d96d407ff68782b49702e88269d197ae96e. [Backend and coordinator copy contract](../../design/BC-FQ3c-contract.md).
 
 Finish line: classify the five OC2 failures, repair proven defects with regressions, and record cleaned, model-scoped device results on the coordinator-posted normal APK 2197. No UI/localization edits, provider enrollment, credential copying, app-data reset or push. Device work is pending the coordinator's APK 2197 post; no new device qualification is claimed here.

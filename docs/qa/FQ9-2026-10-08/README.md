@@ -1,5 +1,33 @@
 # FQ9 pre-release device checklist — offline drivers
 
+## APK 2197 preflight update
+
+The coordinator posted 2197 from `feat/genui-fe` 9485f0c7. Host and locked
+installed-APK checks verified the posted SHA-256, build/package and local signer;
+the shared emulator already had those exact normal bytes installed, UID 10217.
+No package update, reset, sign-in change or long background fixture was attempted.
+
+| Row | Recorded current state |
+|---|---|
+| Previous 2196 → 2197, retaining data | [Real locked driver preflight](2197-upgrade-preflight.json) refused `upgrade_previous_mismatch`: installed baseline is already 2197. Previous 2196 bytes/certificate were independently checked and same-signer; no previous APK was installed to manufacture a baseline. Before/after normal identities matched; no mutation. |
+| Published stable 1.2.0 → candidate | [CLI refusal](2197-stable-preflight.json): reviewed published artifact/provenance receipt absent (`baseline_artifact_required`). The locally built 2196 also reports version 1.2.0 but is not a reviewed published stable asset. No stable download, signer substitution or update occurred. |
+| Live-turn background survival 5/30 minutes | [Deferred](2197-background-deferred.json): coordinator currently requires short emulator sessions; this gate needs a booked uninterrupted 30-minute dwell. No fixture started or checkpoints shortened. |
+| Clean first run | [CLI refusal](2197-fresh-preflight.json): shared emulator requires a separately provisioned clean AVD (`dedicated_avd_required`). No user/profile creation, uninstall, clear or new emulator was attempted. |
+
+All four remain **device unqualified**. Retention/sign-in semantics, physical
+battery behavior and clean onboarding are not inferred from preflight results.
+The exact-package parser was repaired after Android returned normal plus
+preview/test prefix matches; duplicate/missing exact rows and system UIDs still
+refuse. The version-faithful driver suite now passes 90 Python tests through
+`machine_lock`. [FQ3c's normal-app witness](../FQ3c-2026-10-08/2197-final-device-check.json)
+records final normal 2197 preservation after the related short protocol runs.
+
+Build policy retained: no build was needed. Future builds require at least 6 GB
+available memory, coordinator-capped `GRADLE_OPTS` and exact owned daemon shutdown;
+Flutter/Dart jobs remain one at a time through `machine_lock`.
+
+## Original offline slice
+
 Branch `sol/bc-fq9` from `feat/genui-fe` **6a75894466151fa2fc45eef1d489fd82d7dee19a**. [Frozen contract and ownership](contract.md); [CLI](../../../tool/qa/fq9/run.py). Finish line: implement and unit-test four repeatable checklist drivers with a safe APK 2197 run plan. Device qualification is a later gate: the coordinator has deferred device work until APK 2197 is posted and a device slot is booked. No emulator, build, signing, download, push or production-source change was performed for this slice.
 
 The CLI defaults to an **offline plan**, even when a manifest is supplied. Only `--execute` loads artifact tools/ADB and takes the shared `/home/eslam/Storage/tmp/oc-emulator.lock`, nonblocking. A busy device returns `emulator_busy`; it does not queue a 30-minute hold behind another lane. Lock ownership lasts through checks, exact fixture cleanup, normal-app restoration/verification and evidence writing. All processes/output are bounded; reports contain fixed result tokens, validated artifact identities, booleans and numeric checkpoints. Credentials, preferences, transcripts, raw device errors and HTTP responses are never printed or stored in evidence. Private reads stay in bounded memory, including the runtime's own password under its app UID; no Keystore decryption or provider configuration read.

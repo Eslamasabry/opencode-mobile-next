@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "case": "upgrade",
+  "state": "blocked",
+  "code": "upgrade_previous_mismatch",
+  "candidateBuild": 2197,
+  "installedBuild": 2197,
+  "previousBuild": 2196,
+  "sameSigner": true,
+  "installedUID": 10217,
+  "deviceTouched": true,
+  "deviceMutated": false,
+  "normalIdentityVerified": true,
+  "deviceQualified": false
+}

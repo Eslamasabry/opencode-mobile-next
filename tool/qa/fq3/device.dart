@@ -90,7 +90,6 @@ class PhoneRuntime {
       final update = await adb([
         'install',
         '-r',
-        '-d',
         apk,
       ], timeout: const Duration(seconds: 180));
       if (update.exitCode != 0 ||

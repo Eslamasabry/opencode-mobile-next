@@ -65,8 +65,175 @@ void main() {
     expect(result['http503Retries'], 1);
     expect(result['toolCalledCount'], 1);
     expect(result['toolSuccessCount'], 1);
-    expect(result['permissionAskedCount'], 1);
+    expect(result['permissionAskedCount'], 2);
     expect(result['permissionRepliedCount'], 1);
+  });
+
+  test('owned global terminals count without accepting foreign scope', () {
+    final result = _observation().snapshot(
+      [
+        {
+          'type': 'session.execution.failed',
+          'data': {'sessionID': _session},
+        },
+        {
+          'type': 'session.execution.failed',
+          'data': {'sessionID': 'ses_other'},
+        },
+        {
+          'type': 'session.execution.failed',
+          'location': null,
+          'data': {'sessionID': _session},
+        },
+        _event('session.execution.failed', directory: '/foreign'),
+      ],
+      sessionID: _session,
+      eventStart: 0,
+    );
+    expect(result['executionFailedCount'], 1);
+    expect(result['terminalCount'], 1);
+  });
+
+  test('failure kinds are fixed counters and never raw provider errors', () {
+    final result = _observation().snapshot(
+      [
+        _event(
+          'session.execution.failed',
+          data: {
+            'error': {
+              'type': 'provider.no-route',
+              'message': 'Model unavailable: test-secret',
+            },
+          },
+        ),
+        _event(
+          'session.execution.failed',
+          data: {
+            'error': {'type': 'provider.auth', 'message': 'test-secret'},
+          },
+        ),
+        _event(
+          'session.execution.failed',
+          data: {
+            'error': {
+              'type': 'provider.no-route',
+              'message': 'untrusted test-secret',
+            },
+          },
+        ),
+      ],
+      sessionID: _session,
+      eventStart: 0,
+    );
+    expect(result['providerNoRouteCount'], 2);
+    expect(result['modelUnavailableCount'], 1);
+    expect(result['providerAuthCount'], 1);
+    expect(jsonEncode(result), isNot(contains('test-secret')));
+  });
+
+  test('card diagnostics distinguish nested ask and helper rejection', () {
+    final result = _observation().snapshot(
+      [
+        _event(
+          'session.tool.called',
+          data: {
+            'input': {
+              'v': 1,
+              'id': 'fq3-confirm',
+              'body': [
+                {
+                  'type': 'text',
+                  'text': 'test-secret',
+                  'ask': {'kind': 'confirm'},
+                },
+              ],
+            },
+          },
+        ),
+        _event(
+          'session.tool.called',
+          data: {
+            'input': {
+              'v': 1,
+              'id': 'fq3-confirm',
+              'ask': {'kind': 'confirm'},
+            },
+          },
+        ),
+        _event(
+          'session.tool.failed',
+          data: {
+            'error': {
+              'type': 'tool.execution',
+              'message': 'Agent card unavailable or invalid.',
+            },
+          },
+        ),
+        _event(
+          'session.tool.failed',
+          sessionID: 'ses_foreign',
+          data: {
+            'error': {'message': 'Agent card unavailable or invalid.'},
+          },
+        ),
+      ],
+      sessionID: _session,
+      eventStart: 0,
+    );
+    expect(result['probeCardNestedAskCount'], 1);
+    expect(result['probeCardTopLevelConfirmCount'], 1);
+    expect(result['cardHelperRejectedCount'], 1);
+    expect(jsonEncode(result), isNot(contains('test-secret')));
+  });
+
+  test('retained card input counts identify malformed model arguments', () {
+    final observation = _observation();
+    observation.recordRetainedCardCalls([
+      {
+        'type': 'assistant',
+        'content': [
+          {
+            'type': 'tool',
+            'name': 'oc-ui_show',
+            'state': {
+              'status': 'error',
+              'input': {
+                'v': 1,
+                'id': 'fq3-confirm',
+                'body': [
+                  {
+                    'ask': {'kind': 'confirm'},
+                    'text': 'test-secret',
+                  },
+                ],
+              },
+              'error': {'message': 'Agent card unavailable or invalid.'},
+            },
+          },
+          {
+            'type': 'tool',
+            'name': 'foreign',
+            'state': {
+              'input': {'v': 1},
+            },
+          },
+        ],
+      },
+      {
+        'type': 'user',
+        'content': [
+          {'type': 'tool', 'name': 'oc-ui_show'},
+        ],
+      },
+    ]);
+    final result = observation.snapshot([], sessionID: _session, eventStart: 0);
+    expect(result['retainedShowCallCount'], 1);
+    expect(result['retainedShowVersionValidCount'], 1);
+    expect(result['retainedShowIDValidCount'], 1);
+    expect(result['retainedShowTopLevelConfirmCount'], 0);
+    expect(result['retainedShowNestedAskCount'], 1);
+    expect(result['retainedShowHelperRejectedCount'], 1);
+    expect(jsonEncode(result), isNot(contains('test-secret')));
   });
 
   test(
