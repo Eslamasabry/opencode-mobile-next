@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "sourceRevision": "f8c04889c375519a112e28f1e094263bb6fe0693",
+  "scope": "2198_crash_only_driver_host_checks",
+  "result": "PASS",
+  "testsPassed": 70,
+  "command": "OC_TEST_SLOTS=1 tool/qa/machine_lock.sh test -- python3 -m unittest tool.qa.test_bd7_device_saved_report tool.qa.test_bd7_device_ui tool.qa.test_bd7_exit_proof tool.qa.test_bd7_device_crash_smoke",
+  "redControls": [
+    "share_preview_crop_rejected_before_fixed_copy_guard",
+    "unhashable_exception_code_raised_before_projection_guard",
+    "wrong_outer_artifact_admitted_before_2198_guard",
+    "layout_reflow_required_fresh_stable_guarded_capture",
+    "new_installer_ticket_refuses_before_pid_lookup_or_am_crash"
+  ],
+  "sourceSha256": {
+    "tool/qa/bd7_device_saved_report.py": "00a3534358796f1d79dc1cfe4dfeb13fba17c83ef196d5783d07b666de039f9a",
+    "tool/qa/bd7_device_ui.py": "fcf6914772c38294e07864a81604ede0db524fe3c4db36e966acba56b7aa9225",
+    "tool/qa/bd7_device_crash_smoke.py": "868240f0a9f25561e64962ae9975f73d55061e19b47222986b929517ba6bb81c",
+    "tool/qa/bd7_exit_proof.py": "ec032e72560e6bba9a8f7ca4879255f67adbbda876bb344d87e8edbee2a7cb63",
+    "tool/qa/test_bd7_device_saved_report.py": "f97fc3a87383202045f4ec102904932f812ece1636d304647a85a137bd29486f",
+    "tool/qa/test_bd7_device_ui.py": "685f936f0c2cd3b90883ef9ad25ae921d2b4c981a6f95ec364aa58d0a0ddc7ab",
+    "tool/qa/test_bd7_device_crash_smoke.py": "5705bb293a6263d3d4c7bd3912379efe2b5ae7f2b8d0e2a0a223da5a5c97fedb",
+    "tool/qa/test_bd7_exit_proof.py": "b11a839617b7e90361e7933b04c78257b1b4dc8dcf93ed47a34d9ca5679a3795"
+  },
+  "buildPerformed": false,
+  "deviceQualification": false
+}

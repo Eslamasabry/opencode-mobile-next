@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "runID": "fq9-20261009-2198-next",
+  "case": "background",
+  "candidateBuild": 2198,
+  "sourceRevision": "da32bd0a8a0fac11d3ca74fa51d7f553fd73f74f",
+  "oneContinuousReservation": true,
+  "promptSentThroughAppUI": true,
+  "readinessAttempt": 1,
+  "state": "fail",
+  "normalRestored": true,
+  "code": "live_fixture_not_ready",
+  "normalIdentityVerified": true,
+  "deviceQualified": false,
+  "restorePending": false,
+  "modelChoiceVerified": false,
+  "selectedModelWasGLM": true,
+  "assistantErrorCategory": "APIError",
+  "readinessSnapshot": {
+    "ownedTurn": true,
+    "appManaged": true,
+    "appVisible": true,
+    "appAlive": true,
+    "serverAlive": true,
+    "foregroundService": true,
+    "ongoingNotification": true,
+    "turnActive": false,
+    "progressCounter": 0,
+    "completed": false,
+    "failed": true
+  },
+  "dwellStarted": false,
+  "adapterFailure": {
+    "stage": "live_readiness",
+    "code": "live_fixture_not_ready"
+  },
+  "lastGoodObservation": null,
+  "ownedSessionCleanup": true,
+  "finalRestorationReceipt": "2198-final-restoration.json",
+  "intendedUIModel": "opencode/big-pickle",
+  "actualModelCategory": "GLM"
+}

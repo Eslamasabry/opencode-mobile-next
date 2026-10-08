@@ -6,17 +6,17 @@ from pathlib import Path
 import unittest
 
 try:
-    from .common import Artifact, DriverFailure, LOCAL_SIGNER
+    from .common import Artifact, CANDIDATE_BUILD, DriverFailure, LOCAL_SIGNER
     from .fresh import FAIL_CODES, plan_fresh, run_fresh
 except ImportError:
-    from common import Artifact, DriverFailure, LOCAL_SIGNER
+    from common import Artifact, CANDIDATE_BUILD, DriverFailure, LOCAL_SIGNER
     from fresh import FAIL_CODES, plan_fresh, run_fresh
 
 
-def candidate(build=2197):
+def candidate(build=CANDIDATE_BUILD):
     # Root verifies the complete Artifact before invoking this driver.
     return Artifact(
-        Path("/reviewed/oc-2197.apk"),
+        Path(f"/reviewed/oc-{CANDIDATE_BUILD}.apk"),
         build,
         "1.2.0",
         "a" * 64,
@@ -187,7 +187,7 @@ class FreshTest(unittest.TestCase):
             )
 
     def test_wrong_candidate_is_refused_before_device_observation(self):
-        for build in (2196, 2198, True, "2197", 2197.0):
+        for build in (2196, 2197, True, str(CANDIDATE_BUILD), float(CANDIDATE_BUILD)):
             ports = FakePorts()
             self.assert_failure(
                 "fresh_candidate_invalid", lambda: run_fresh(ports, candidate(build))

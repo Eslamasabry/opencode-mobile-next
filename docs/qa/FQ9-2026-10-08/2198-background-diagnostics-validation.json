@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "testCount": 111,
+  "command": [
+    "tool/qa/machine_lock.sh",
+    "test",
+    "--",
+    "python3",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tool/qa/fq9",
+    "-t",
+    "."
+  ],
+  "environment": {
+    "OC_TEST_SLOTS": "1"
+  },
+  "result": "pass",
+  "failingFirst": {
+    "test": "test_exact_adapter_category_and_last_good_observation_survive_resume",
+    "failure": "missing_adapterFailure",
+    "cases": [
+      "live_fixture_command_invalid",
+      "protocol_response_invalid_http503"
+    ]
+  },
+  "candidateBuild": 2198,
+  "candidateArtifact": {
+    "build": 2198,
+    "version": "1.2.0",
+    "sha256": "2069cc0ca62554e3fd798f8ba8bfa46f44ae84be4ff82142e87b495cdc8b89a3",
+    "signer": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c"
+  },
+  "driverFilesSha256": {
+    "__init__.py": "c6e252ba06321fccc8fca7724bc7643cd0f6d272077f2b3381838aabbb4ef93a",
+    "background.py": "288038a06b608233981f360c070f3f600000fbc60ad715e3dce5c8a8580c3d67",
+    "common.py": "9256807296a59bbb085c8685bb27f6dea76c7208f908a85ab77742666e88cbb0",
+    "fixture.py": "4b4be773f8159a188c1f9944348355cf4975f5dad074a63d03ccce7016062387",
+    "fresh.py": "fd84e1316e0bc17efbd2eb01c1aa5c3420ba4adeb4951a339f9273b724cc7f92",
+    "observations.py": "617840289f21a524c710c622b17552eeeb6b7fad23b80415e54d5e51bb0e7a7c",
+    "ports.py": "b977c8b8deee33fa387833ed93bbfd95011e207a99f0a5050e9c3139fc3996e0",
+    "run.py": "a92834a143117ff23efd1e3fabf9f8c35e93e117c9cb057e22ce2e857026cbb7",
+    "runtime.py": "b4aaf8f9581e8831050581cc6e27040f9fcb90ab02b8d00ef3fed519d8ceb930",
+    "test_background.py": "2e1b39404098fd2d09e49326a829bdb59537cc7afd134e5e1e17c06c597e3699",
+    "test_common.py": "5ce236876bcb2a2169496a7c8e6b1724b152814053077a408ef44bd9eb5a2864",
+    "test_fixture.py": "0245eb906495302fc26221231844410d8ac9cfaa0e729095a6be6e81a60f70a3",
+    "test_fresh.py": "93df7c721b86580576d8568d0b7277f36137e4a88261208de3be7b424fe7d236",
+    "test_ports.py": "7daaf121e3e24fc16de8f80884d361286a42f9cdfb43022d648cd722968f969f",
+    "test_run.py": "56dc676b1598dffabcac8ab2c22bd2eeb01b984e5a1d4a354f632921f8fe631c",
+    "test_upgrade.py": "036cd2ae4a5d4749bee6f98d43420c778f5d01bd9ff83112a25c948fb2ab0d7b",
+    "upgrade.py": "73cdfe136b2dcc17826b82eab83889101e3dfcd7da3215abc8798b7f19b3a1a2"
+  },
+  "deviceRun": false
+}
