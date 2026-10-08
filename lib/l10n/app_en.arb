@@ -33332,10 +33332,6 @@
   "@diagnosticsExitHistoryNote": {
     "description": "fd-diagnostics: Muted note under the exit history group."
   },
-  "diagnosticsExitHistoryEmpty": "No app exits recorded yet",
-  "@diagnosticsExitHistoryEmpty": {
-    "description": "fd-diagnostics: Row when Android has no recorded exits for the app."
-  },
   "diagnosticsExitHistoryUnsupported": "Not available on this phone",
   "@diagnosticsExitHistoryUnsupported": {
     "description": "fd-diagnostics: Row title when the phone cannot report exit history."
@@ -33483,5 +33479,53 @@
   "backgroundPauseResumed": "Background connection resumed.",
   "@backgroundPauseResumed": {
     "description": "battery-pause (FD3): Screen-reader announcement after Android confirmed the background connection runs again."
+  },
+  "diagnosticsExitNoProblems": "No unexpected closes recently.",
+  "@diagnosticsExitNoProblems": {
+    "description": "exit-list-focus: Line under Recent app exits when no exit was a problem."
+  },
+  "diagnosticsExitRoutine": "{count, plural, =1{1 routine close (updates, you closed it)} other{{count} routine closes (updates, you closed it)}}",
+  "@diagnosticsExitRoutine": {
+    "description": "exit-list-focus: Quiet row that folds the routine exits (updates, the person closing the app).",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "diagnosticsExitShowAll": "{count, plural, =1{Show all 1} other{Show all {count}}}",
+  "@diagnosticsExitShowAll": {
+    "description": "exit-list-focus: Row that shows every problem exit beyond the first five.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "diagnosticsExitUnknown": "Closed for an unknown reason",
+  "@diagnosticsExitUnknown": {
+    "description": "exit-list-focus: Exit category: Android gave no reason."
+  },
+  "diagnosticsExitToday": "Today {time}",
+  "@diagnosticsExitToday": {
+    "description": "exit-list-focus: Time of an exit earlier today.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "08:37"
+      }
+    }
+  },
+  "diagnosticsExitYesterday": "Yesterday {time}",
+  "@diagnosticsExitYesterday": {
+    "description": "exit-list-focus: Time of an exit yesterday.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "08:37"
+      }
+    }
   }
 }

@@ -8334,7 +8334,6 @@
   "agentNamesPair": "{first} و {second}",
   "diagnosticsExitHistoryTitle": "آخر مرات إغلاق التطبيق",
   "diagnosticsExitHistoryNote": "يسجّل Android كل مرة يُغلق فيها التطبيق. لا يُرسل شيء من هنا تلقائيًا.",
-  "diagnosticsExitHistoryEmpty": "لم تُسجَّل مرات إغلاق للتطبيق بعد",
   "diagnosticsExitHistoryUnsupported": "غير متاح على هذا الهاتف",
   "diagnosticsExitHistoryUnsupportedBody": "يحتفظ Android 11 والإصدارات الأحدث بهذا السجل.",
   "diagnosticsExitHistoryFailed": "تعذّرت قراءة آخر مرات إغلاق التطبيق. حاول مرة أخرى أو أعد فتح التطبيق.",
@@ -8366,5 +8365,11 @@
   "backgroundPauseResuming": "جارٍ استئناف الاتصال في الخلفية…",
   "backgroundPauseResumeFailed": "تعذّر الاستئناف. افتح إعدادات الاستمرار في العمل.",
   "backgroundPauseOpenKeepRunning": "فتح إعدادات الاستمرار في العمل",
-  "backgroundPauseResumed": "تم استئناف الاتصال في الخلفية."
+  "backgroundPauseResumed": "تم استئناف الاتصال في الخلفية.",
+  "diagnosticsExitNoProblems": "لا توجد مرات إغلاق غير متوقعة مؤخرًا.",
+  "diagnosticsExitRoutine": "{count, plural, =1{إغلاق اعتيادي واحد (تحديثات، أو أغلقته أنت)} =2{إغلاقان اعتياديان (تحديثات، أو أغلقته أنت)} few{{count} مرات إغلاق اعتيادية (تحديثات، أو أغلقته أنت)} many{{count} مرة إغلاق اعتيادية (تحديثات، أو أغلقته أنت)} other{{count} مرة إغلاق اعتيادية (تحديثات، أو أغلقته أنت)}}",
+  "diagnosticsExitShowAll": "{count, plural, =1{عرض الكل (1)} other{عرض الكل ({count})}}",
+  "diagnosticsExitUnknown": "أُغلق لسبب غير معروف",
+  "diagnosticsExitToday": "اليوم {time}",
+  "diagnosticsExitYesterday": "أمس {time}"
 }

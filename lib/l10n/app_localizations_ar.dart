@@ -27973,9 +27973,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'يسجّل Android كل مرة يُغلق فيها التطبيق. لا يُرسل شيء من هنا تلقائيًا.';
 
   @override
-  String get diagnosticsExitHistoryEmpty => 'لم تُسجَّل مرات إغلاق للتطبيق بعد';
-
-  @override
   String get diagnosticsExitHistoryUnsupported => 'غير متاح على هذا الهاتف';
 
   @override
@@ -28095,4 +28092,46 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backgroundPauseResumed => 'تم استئناف الاتصال في الخلفية.';
+
+  @override
+  String get diagnosticsExitNoProblems =>
+      'لا توجد مرات إغلاق غير متوقعة مؤخرًا.';
+
+  @override
+  String diagnosticsExitRoutine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مرة إغلاق اعتيادية (تحديثات، أو أغلقته أنت)',
+      many: '$count مرة إغلاق اعتيادية (تحديثات، أو أغلقته أنت)',
+      few: '$count مرات إغلاق اعتيادية (تحديثات، أو أغلقته أنت)',
+      two: 'إغلاقان اعتياديان (تحديثات، أو أغلقته أنت)',
+      one: 'إغلاق اعتيادي واحد (تحديثات، أو أغلقته أنت)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String diagnosticsExitShowAll(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'عرض الكل ($count)',
+      one: 'عرض الكل (1)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get diagnosticsExitUnknown => 'أُغلق لسبب غير معروف';
+
+  @override
+  String diagnosticsExitToday(String time) {
+    return 'اليوم $time';
+  }
+
+  @override
+  String diagnosticsExitYesterday(String time) {
+    return 'أمس $time';
+  }
 }

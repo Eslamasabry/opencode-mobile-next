@@ -43987,12 +43987,6 @@ abstract class AppLocalizations {
   /// **'Android records each time the app closes. Nothing here is sent automatically.'**
   String get diagnosticsExitHistoryNote;
 
-  /// fd-diagnostics: Row when Android has no recorded exits for the app.
-  ///
-  /// In en, this message translates to:
-  /// **'No app exits recorded yet'**
-  String get diagnosticsExitHistoryEmpty;
-
   /// fd-diagnostics: Row title when the phone cannot report exit history.
   ///
   /// In en, this message translates to:
@@ -44184,6 +44178,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Background connection resumed.'**
   String get backgroundPauseResumed;
+
+  /// exit-list-focus: Line under Recent app exits when no exit was a problem.
+  ///
+  /// In en, this message translates to:
+  /// **'No unexpected closes recently.'**
+  String get diagnosticsExitNoProblems;
+
+  /// exit-list-focus: Quiet row that folds the routine exits (updates, the person closing the app).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 routine close (updates, you closed it)} other{{count} routine closes (updates, you closed it)}}'**
+  String diagnosticsExitRoutine(int count);
+
+  /// exit-list-focus: Row that shows every problem exit beyond the first five.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Show all 1} other{Show all {count}}}'**
+  String diagnosticsExitShowAll(int count);
+
+  /// exit-list-focus: Exit category: Android gave no reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed for an unknown reason'**
+  String get diagnosticsExitUnknown;
+
+  /// exit-list-focus: Time of an exit earlier today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today {time}'**
+  String diagnosticsExitToday(String time);
+
+  /// exit-list-focus: Time of an exit yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday {time}'**
+  String diagnosticsExitYesterday(String time);
 }
 
 class _AppLocalizationsDelegate
