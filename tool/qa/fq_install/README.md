@@ -60,8 +60,9 @@ before committing them.
 - Auth probes other than Claude/fx currently return `probeUnsupported`; that is
   unavailable evidence, not proven signed-out. The empty-HOME CLI probe is
   separate from the app profile's auth projection.
-- APK2196 has merged KitRow semantics for Check this phone; the driver uses its
-  observed final-row bounds fallback. It expects English copy, the current
+- APK2196 can assign whole-group bounds even to an exact Check this phone label;
+  the driver uses a small row's center or the observed final-row position in a
+  merged group. It expects English copy, the current
   Settings/Agents structure, and the dev emulator's display geometry. A missing
   target captures a screenshot and stops; do not certify from the driver alone.
 - Tiny fx downloads may complete before the Cancel tap. The driver records

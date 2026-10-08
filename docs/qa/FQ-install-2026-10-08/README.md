@@ -144,3 +144,23 @@ cleanup increased free space by **298,692,608 bytes** and left no target payload
 link, stage, lock or PID. App uninstall and injected low-space limitations remain.
 The reusable locked driver completed this replay, including waiting for
 automatic and later phone checks before cleanup.
+
+
+## omp-acp
+
+Oh My Pi: [device observations](omp-acp-device.json),
+[validated report](omp-acp-report.json), [cancel screenshot](omp-acp-cancelled.jpg),
+[phone check](omp-acp-after-install-check.jpg), [after cleanup](omp-acp-after-cleanup.jpg).
+
+The app installed **18.5.1**; receipt/link, CLI version and fresh public phone
+check passed. Free space before install was 1,825,345,536 bytes. Cancel at
+10,485,760 / 280,536,544 download bytes stopped the job and cleaned stage/lock.
+A distinct retry completed. App auth returned `probeUnsupported`. Empty-home
+ACP initialized and created a session without a prompt in 10.53 s; this does
+not prove inference or signed-out status. No login, prompt or orphan PID.
+App launch qualification remains partial. Scoped cleanup increased free space
+by **280,174,592 bytes**; no target payload/link/stage/lock/process remained.
+App uninstall and injected app low-space cases retain the shared limitations.
+The earlier explicit check missed an oversized merged control, so the final run
+was repeated with the corrected action bounds and all public check summaries
+completed before cleanup.

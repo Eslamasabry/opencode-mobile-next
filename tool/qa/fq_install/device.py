@@ -34,13 +34,15 @@ def tap_node(n):
  adb('shell','input','tap',str((a+c)//2),str((b+d)//2));time.sleep(.4)
 def tap(label,nodes=None,contains=False):
  nodes=nodes or ui();found=[n for n in nodes if (label in text(n) if contains else label==text(n))]
- if not found and label=='Check this phone':
-  merged=[n for n in nodes if 'Check this phone' in text(n)]
-  if merged:
-   a,b,c,e=map(int,re.findall(r'\d+',merged[-1].get('bounds')))
-   # APK2196 merges this final KitRow's semantics into its group's label.
-   # The observed screenshot places it at the end of the group.
-   adb('shell','input','tap',str((a+c)//2),str(e-84));time.sleep(.4);return
+ if label=='Check this phone':
+  candidates=[n for n in nodes if 'Check this phone' in text(n)]
+  if candidates:
+   candidates.sort(key=lambda n: int(re.findall(r'\d+',n.get('bounds'))[3])-int(re.findall(r'\d+',n.get('bounds'))[1]))
+   a,b,c,e=map(int,re.findall(r'\d+',candidates[0].get('bounds')))
+   # A merged node can have the exact action text but the whole-group bounds.
+   y=(b+e)//2 if e-b<250 else e-84
+   print(json.dumps({'action':'Check this phone','bounds':[a,b,c,e],'tap':[int((a+c)//2),y]}),flush=True)
+   adb('shell','input','tap',str((a+c)//2),str(y));time.sleep(.4);return
  if not found:
   shot('navigation-target-missing')
   raise RuntimeError('Target unavailable: '+label)

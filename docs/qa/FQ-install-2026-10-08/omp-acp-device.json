@@ -1,0 +1,279 @@
+[
+  {
+    "phase": "space-before",
+    "at": 895760.55,
+    "availableBytes": 1825402880
+  },
+  {
+    "phase": "inventory-before",
+    "at": 895787.91,
+    "allocatedBytes": 0,
+    "pinMatches": false,
+    "linkMatches": false,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": false,
+    "staging": [],
+    "lockPresent": false
+  },
+  {
+    "phase": "space-before-cancel",
+    "at": 895788.11,
+    "availableBytes": 1825345536
+  },
+  {
+    "phase": "install-dispatched",
+    "at": 895793.14
+  },
+  {
+    "phase": "mid-download",
+    "at": 895798.25,
+    "component": {
+      "state": "running",
+      "stage": "Installing agent",
+      "done": 10485760,
+      "total": 280536544,
+      "version": null
+    },
+    "expectedDownloadBytes": 280536544,
+    "partial": true
+  },
+  {
+    "phase": "cancel-tapped",
+    "at": 895798.67
+  },
+  {
+    "phase": "native-terminal",
+    "at": 895798.69,
+    "state": "cancelled",
+    "component": {
+      "state": "pending",
+      "stage": "Installing agent",
+      "done": 10485760,
+      "total": 280536544,
+      "version": null
+    }
+  },
+  {
+    "phase": "cancel-result",
+    "at": 895798.91,
+    "cancelled": true,
+    "allocatedBytes": 8192,
+    "pinMatches": false,
+    "linkMatches": false,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": true,
+    "staging": [],
+    "lockPresent": false
+  },
+  {
+    "phase": "retry-dispatched",
+    "at": 895809.19,
+    "availableBytes": 1825296384
+  },
+  {
+    "phase": "native-terminal",
+    "at": 895838.02,
+    "state": "done",
+    "component": {
+      "state": "done",
+      "stage": "Installing agent",
+      "done": 280536544,
+      "total": 280536544,
+      "version": null
+    }
+  },
+  {
+    "phase": "retry-result",
+    "at": 895838.02,
+    "state": "done",
+    "component": {
+      "state": "done",
+      "stage": "Installing agent",
+      "done": 280536544,
+      "total": 280536544,
+      "version": null
+    }
+  },
+  {
+    "phase": "fresh-phone-check-ui",
+    "at": 895924.9,
+    "passed": true,
+    "texts": [
+      "Agents",
+      "Claude Code is ready on this phone.",
+      "Oh My Pi is ready on this phone.",
+      "fx is ready on this phone.",
+      "Claude Code",
+      "Ready",
+      "Codex",
+      "Install Codex",
+      "Gemini CLI",
+      "Install Gemini CLI",
+      "Qwen Code",
+      "Install Qwen Code",
+      "Goose",
+      "Install Goose",
+      "Oh My Pi",
+      "Sign in needed",
+      "Sign in to Oh My Pi",
+      "fx",
+      "Sign in to fx",
+      "Check this phone"
+    ]
+  },
+  {
+    "phase": "phone-check",
+    "at": 895924.92,
+    "gates": [
+      {
+        "profile": "1790839392073695",
+        "matches": true,
+        "architecture": "x64"
+      }
+    ]
+  },
+  {
+    "phase": "account-free-app-state",
+    "at": 895926.97,
+    "texts": [
+      "Agents",
+      "Claude Code is ready on this phone.",
+      "Oh My Pi is ready on this phone.",
+      "fx is ready on this phone.",
+      "Claude Code",
+      "Ready",
+      "Codex",
+      "Install Codex",
+      "Gemini CLI",
+      "Install Gemini CLI",
+      "Qwen Code",
+      "Install Qwen Code",
+      "Goose",
+      "Install Goose",
+      "Oh My Pi",
+      "Sign in needed",
+      "Sign in to Oh My Pi",
+      "fx",
+      "Sign in to fx",
+      "Check this phone"
+    ]
+  },
+  {
+    "phase": "installed-inventory",
+    "at": 895927.51,
+    "allocatedBytes": 280588288,
+    "pinMatches": true,
+    "linkMatches": true,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": true,
+    "staging": [],
+    "lockPresent": false
+  },
+  {
+    "phase": "version-probe",
+    "at": 895927.77,
+    "exitCode": 0,
+    "versionMatches": true
+  },
+  {
+    "phase": "auth-probe",
+    "at": 895927.92,
+    "state": "error",
+    "error": "probeUnsupported"
+  },
+  {
+    "phase": "account-free-cli-launch",
+    "at": 895938.64,
+    "agent": "omp-acp",
+    "state": "session_created_without_prompt",
+    "sentPrompt": false,
+    "sentLogin": false,
+    "initialize": {
+      "state": "response"
+    },
+    "advertisedAuthMethods": 1,
+    "sessionNew": {
+      "state": "response"
+    },
+    "processExitCode": 143,
+    "invalidStdoutLines": 0,
+    "clientRequestsRefused": 0,
+    "notifications": 0,
+    "rawBytes": {
+      "stdout": 1383,
+      "stderr": 0
+    },
+    "stderrClass": "none",
+    "leftoverOwnedPids": [],
+    "elapsedSeconds": 10.53
+  },
+  {
+    "phase": "cleanup-before",
+    "at": 895938.94,
+    "availableBytes": 1609183232,
+    "allocatedBytes": 280588288,
+    "pinMatches": true,
+    "linkMatches": true,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": true,
+    "staging": [],
+    "lockPresent": false
+  },
+  {
+    "phase": "manual-cleanup",
+    "at": 895941.66,
+    "allocatedBytes": 280588288,
+    "pinMatches": true,
+    "linkMatches": true,
+    "targetPids": [],
+    "removed": true,
+    "leftovers": false,
+    "staging": [],
+    "lockPresent": false
+  },
+  {
+    "phase": "cleanup-after",
+    "at": 895941.85,
+    "availableBytes": 1889357824,
+    "allocatedBytes": 0,
+    "pinMatches": false,
+    "linkMatches": false,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": false,
+    "staging": [],
+    "lockPresent": false
+  },
+  {
+    "phase": "cleanup-ui",
+    "at": 895960.56,
+    "texts": [
+      "Agents",
+      "Claude Code",
+      "Ready",
+      "Codex",
+      "Install Codex",
+      "Gemini CLI",
+      "Install Gemini CLI",
+      "Qwen Code",
+      "Install Qwen Code",
+      "Goose",
+      "Install Goose",
+      "Oh My Pi",
+      "Install Oh My Pi",
+      "fx",
+      "Sign in needed",
+      "Sign in to fx",
+      "Check this phone"
+    ]
+  },
+  {
+    "phase": "normal-app-final",
+    "at": 895960.66,
+    "version2196": true
+  }
+]

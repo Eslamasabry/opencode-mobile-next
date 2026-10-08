@@ -18,7 +18,7 @@ Machine-readable copy: [agent-certification-matrix.json](agent-certification-mat
 | Gemini CLI | 0.62.0 | ACP via Paseo | ✅ | ✅ | ❌ | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
 | Qwen Code | 0.24.7 | ACP via Paseo | ✅ | ✅ | ❌ | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
 | Goose | 1.53.0 | ACP via Paseo | ✅ | ✅ | ❌ | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
-| Oh My Pi |  | ACP via Paseo | · | · | · | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
+| Oh My Pi | 18.5.1 | ACP via Paseo | ✅ | ✅ | ❌ | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
 
 ## What each column means
 
@@ -98,6 +98,9 @@ Machine-readable copy: [agent-certification-matrix.json](agent-certification-mat
 
 **Oh My Pi**
 
+- install: pass — docs/qa/FQ-install-2026-10-08/README.md#omp-acp
+- version: pass — docs/qa/FQ-install-2026-10-08/README.md#omp-acp
+- signedOut: fail — docs/qa/FQ-install-2026-10-08/README.md#omp-acp
 - cards: n/a — no cards adapter yet
 
 ## How to fill a cell
@@ -159,6 +162,7 @@ These cells qualify installation only. Phone check means the check completed; a 
 | Gemini CLI | 0.62.0 | 0.62.0 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
 | Qwen Code | 0.24.7 | 0.24.7 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
 | Goose | 1.53.0 | 1.53.0 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
+| Oh My Pi | 18.5.1 | 18.5.1 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
 
 **Codex** — fq-install-codex-2196-20261008; docs/qa/FQ-install-2026-10-08/README.md#codex
 
@@ -203,3 +207,14 @@ These cells qualify installation only. Phone check means the check completed; a 
 - cancelRetry: pass — `verified`; facts `{"asserted":true,"cancelObserved":true,"retryCompleted":true}`
 - lowStorage: partial — `policy_harness_only`; facts `{"appThresholdOverride":false,"asserted":false,"deviceFilled":false,"guardPolicyVerified":true}`
 - uninstall: partial — `no_app_removal_path`; facts `{"asserted":false,"bytesFreed":298692608,"leftoversRemoved":true,"noOrphans":true,"removedViaApp":false}`
+
+**Oh My Pi** — fq-install-omp-acp-2196-20261008; docs/qa/FQ-install-2026-10-08/README.md#omp-acp
+
+- install: pass — `verified`; facts `{"asserted":true,"checksumVerified":true,"installedViaApp":true}`
+- version: pass — `verified`; facts `{"asserted":true}`
+- signedOut: fail — `probe_unsupported`; facts `{"asserted":false,"namedSignedOut":false}`
+- phoneCheck: pass — `verified`; facts `{"asserted":true,"completed":true}`
+- launchNoAccount: partial — `cli_only_app_route_unavailable`; facts `{"asserted":false,"emptyHome":true,"noHang":true,"noOrphans":true,"sentLogin":false,"sentPrompt":false}`
+- cancelRetry: pass — `verified`; facts `{"asserted":true,"cancelObserved":true,"retryCompleted":true}`
+- lowStorage: partial — `policy_harness_only`; facts `{"appThresholdOverride":false,"asserted":false,"deviceFilled":false,"guardPolicyVerified":true}`
+- uninstall: partial — `no_app_removal_path`; facts `{"asserted":false,"bytesFreed":280174592,"leftoversRemoved":true,"noOrphans":true,"removedViaApp":false}`
