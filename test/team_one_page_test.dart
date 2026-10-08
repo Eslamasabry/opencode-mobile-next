@@ -6,8 +6,9 @@
 // rather than stacking a second copy, and the conversation's menu stops the
 // task through the confirm sheet with a receipt in the conversation.
 //
-// The notification door is covered in team_gate_answer_test.dart, the Work
-// row in team_discover_test.dart and the board card in team_board_test.dart.
+// The notification door is covered in team_gate_rows_notifications_test.dart,
+// the Work row in team_discover_test.dart and the board card in
+// team_board_test.dart.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
