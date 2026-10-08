@@ -294,6 +294,16 @@ class AndroidPorts(AndroidRuntimeMixin):
                 raise DriverFailure("setup_active_or_unknown") from None
             if state not in ("done", "cancelled", "interrupted", "failed", "idle"):
                 raise DriverFailure("setup_active_or_unknown")
+        writer = BASE + "/shared_prefs/builtin_component_writer.xml"
+        if self.exists(writer):
+            try:
+                values = ET.fromstring(self.private_bytes(writer))
+                if values.tag != "map" or any(
+                    entry.get("name") == "ticket" for entry in values
+                ):
+                    raise DriverFailure("setup_active_or_unknown")
+            except ET.ParseError:
+                raise DriverFailure("setup_active_or_unknown") from None
 
     def install_update(self, artifact):
         self.require_idle_setup()
@@ -428,15 +438,21 @@ class AndroidPorts(AndroidRuntimeMixin):
         self.close_protocol()
         self._socket = None  # an APK update legitimately restarts its server
         last = None
-        for _ in range(12):
+        deadline = time.monotonic() + 90
+        while True:
             try:
                 histories = self._history_digests()
                 break
             except DriverFailure as failure:
                 last = failure
-                time.sleep(1)
-        else:
-            raise last
+                # An updated runtime may rotate its listener and password while
+                # booting. Refresh only here; live dwell identity stays fixed.
+                self.close_protocol()
+                self._socket = None
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise last
+                time.sleep(min(1, remaining))
         profiles, preferences = profile_projection(
             self.private_bytes(BASE + "/shared_prefs/FlutterSharedPreferences.xml")
         )

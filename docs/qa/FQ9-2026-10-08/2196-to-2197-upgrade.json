@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "runID": "fq9-20261008-retained-a",
+  "sourceRevision": "8787099496fad9b188dc93a9598f231680664769",
+  "case": "upgrade",
+  "previousBuild": 2196,
+  "candidateBuild": 2197,
+  "baselineSetupAuthorized": true,
+  "state": "fail",
+  "manualChecksPending": true,
+  "deviceQualified": false,
+  "code": "upgrade_verification_failed",
+  "normalRestored": true
+}

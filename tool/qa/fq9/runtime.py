@@ -27,6 +27,14 @@ FGS = PACKAGE + "/.BackgroundConnectionService"
 BUILTIN_FGS = PACKAGE + "/.BuiltinServerService"
 
 
+class ProtocolHTTPFailure(DriverFailure):
+    """Retain only HTTP status internally, never response bodies or headers."""
+
+    def __init__(self, status):
+        super().__init__("protocol_response_invalid")
+        self.status = status
+
+
 class AndroidRuntimeMixin:
     def find_live_receipt(self, directory):
         """Export only the dedicated app-started fixture's public identities."""
@@ -113,9 +121,15 @@ class AndroidRuntimeMixin:
             if not forwarded.isdigit() or not 1024 <= int(forwarded) <= 65535:
                 raise DriverFailure("forward_failed")
             self._forward = int(forwarded)
-        health = self.protocol(
-            "GET", "/api/health" if engine == "opencode2" else "/global/health"
-        )
+        try:
+            health = self.protocol(
+                "GET", "/api/health" if engine == "opencode2" else "/global/health"
+            )
+        except ProtocolHTTPFailure as failure:
+            if engine != "opencode2" or failure.status != 404:
+                raise
+            info = self.protocol("GET", "/api/info")
+            health = {"healthy": True, **info} if type(info) is dict else None
         version = health.get("version") if type(health) is dict else None
         if (
             type(health) is not dict
@@ -151,6 +165,10 @@ class AndroidRuntimeMixin:
             return json.loads(raw)
         except DriverFailure:
             raise
+        except urllib.error.HTTPError as error:
+            status = error.code
+            error.close()
+            raise ProtocolHTTPFailure(status) from None
         except (OSError, ValueError, urllib.error.URLError):
             raise DriverFailure("protocol_response_invalid") from None
 
