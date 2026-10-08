@@ -175,6 +175,24 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   @override
   bool get phoneAgentsNeedRestart => _paNeedRestart;
 
+  final _paBusySubscriptions = <PaseoGateway, StreamSubscription<void>>{};
+  final _paOrdinaryStarts = <Object>{};
+  bool? _paHelperObserved;
+  int _paIdleLifecycleEpoch = 0;
+  Future<void>? _paIdleResume;
+  Object? _paIdleToken;
+  String? _paIdleOwner;
+  int? _paIdleGeneration;
+
+  /// Null denies native idle admission; no lease deadline proves a turn ended.
+  bool? localPhoneAgentWorkBusy(String profileId) =>
+      _paLocalWorkBusy(profileId);
+
+  Future<void> resumePhoneAgentsAfterIdle({
+    required String profileId,
+    required int expectedIdleGeneration,
+  }) => _paResumeAfterIdle(profileId, expectedIdleGeneration);
+
   // ---- host and auth owners ------------------------------------------------
 
   PhoneAgentHostPort _paEnsureHost() {
@@ -485,8 +503,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       );
     }
     if (_self._disposed || _paHost != host || _paHostProfile != owner) return;
+    await _paObserveHelper(host, owner);
+    if (_self._disposed || _paHost != host || _paHostProfile != owner) return;
     final now = DateTime.now();
     final autoResume =
+        !_self._lifecycleWasBackgrounded &&
         rows.any((row) => row.status == PhoneAgentStatus.stoppedInBackground) &&
         (_paAutoResumedAt == null ||
             now.difference(_paAutoResumedAt!) > const Duration(minutes: 1));
@@ -515,7 +536,9 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (autoResume) {
       _paAutoResumedAt = now;
       unawaited(
-        resumeAgentHost().catchError((Object _) {}).whenComplete(() {
+        _paResumeOrdinaryHost(
+          automatic: true,
+        ).catchError((Object _) {}).whenComplete(() {
           _paAutoResuming = false;
           if (!_self._disposed) _self._notifyListeners();
         }),
@@ -658,15 +681,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       _self._runAgentPhoneCheck(agentId);
 
   @override
-  Future<void> resumeAgentHost() async {
-    final host = _paEnsureHost();
-    try {
-      await host.start();
-    } finally {
-      await refreshAgentRows();
-      unawaited(refreshChatFeed());
-    }
-  }
+  Future<void> resumeAgentHost() => _paResumeOrdinaryHost(automatic: false);
 
   // ---- sign-in ------------------------------------------------------------
 
@@ -867,7 +882,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       return await _paAddSource(host, directory);
     } catch (_) {}
     try {
-      await host.start();
+      await _paStartOrdinaryHost(host, automatic: false);
     } on AgentHostException catch (error) {
       // Another start is already running: wait for it below.
       if (error.reason != AgentHostFailure.busy) rethrow;
@@ -893,7 +908,16 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   ) async {
     final existing = _paSources[directory];
     if (existing != null) return existing.source;
+    final owner = _paHostProfile;
+    final epoch = _paIdleLifecycleEpoch;
     final gateway = await host.openGateway(directory);
+    if (_self._disposed ||
+        !identical(_paHost, host) ||
+        owner != _paHostProfile ||
+        epoch != _paIdleLifecycleEpoch) {
+      gateway.close();
+      throw _PhoneAgentIdle._idleStale;
+    }
     _paWireBrowserGateway(gateway, directory);
     final folder = directory.split('/').where((p) => p.isNotEmpty).last;
     final source = _self._genUiPhoneFeed(gateway, directory, folder);
@@ -1389,6 +1413,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   void _paWireBrowserGateway(PaseoGateway gateway, String directory) {
     final owner = _paProfile?.id;
     if (owner == null) return;
+    _paWatchLocalWork(gateway);
     gateway.configureBrowserClaudeLaunch(
       registry: _self._browserLaunches,
       profileId: owner,

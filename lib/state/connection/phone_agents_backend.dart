@@ -133,7 +133,7 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
           agent != null && (await host.inspect(agent)).hostAvailable;
       if (!running) {
         try {
-          await host.start();
+          await _paStartOrdinaryHost(host, automatic: true);
         } on AgentHostException catch (error) {
           if (error.reason != AgentHostFailure.busy) rethrow;
         }
@@ -199,7 +199,9 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
     unawaited(() async {
       try {
         final runtime = await host.inspect(agent);
-        if (!runtime.hostAvailable && runtime.installed) await host.start();
+        if (!runtime.hostAvailable && runtime.installed) {
+          await _paStartOrdinaryHost(host, automatic: true);
+        }
       } catch (_) {
         // The next reconnect checks again.
       }
@@ -242,19 +244,5 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
       if (_self._disposed) return;
       unawaited(refreshAgentRows().catchError((Object _) {}));
     });
-  }
-
-  void _paDisposeBackend() {
-    _paBackendWatch?.cancel();
-    _paBackendWatch = null;
-    _paListRefresh?.cancel();
-    _paListRefresh = null;
-    _paBackend?.removeListener(_paBackendChanged);
-    final backend = _paBackend;
-    _paBackend = null;
-    _paBackendHost = null;
-    _paOwners.clear();
-    _paOpenCodeOpened.clear();
-    if (backend != null && !backend._disposed) backend.dispose();
   }
 }

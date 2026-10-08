@@ -1,0 +1,9 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: on the built-in server Settings has an Agents row that opens the section with Check this phone
+setup: status read took over 10 s
+00:01 +1: on a remote server the row stays, says why, and offers no switch without a built-in server
+00:01 +2: with a built-in server saved, the page offers the switch
+00:02 +3: off a phone, with no agents, there is no Agents row
+00:02 +4: (tearDownAll)
+00:02 +4: All tests passed!

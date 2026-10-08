@@ -1,3 +1,4 @@
+export '../builtin/agents/phone_agents_host.dart' show PhoneAgentIdleState;
 import '../builtin/agents/phone_agents_host.dart';
 import '../domain/agent_catalog.dart';
 import '../domain/agent_sign_in.dart';
@@ -41,6 +42,18 @@ abstract interface class PhoneAgentLivenessPort {
   Future<bool?> helperRunning();
 }
 
+abstract interface class PhoneAgentGuardedStartPort {
+  Future<void> startWhileCurrent({required bool Function() stillCurrent});
+}
+
+abstract interface class PhoneAgentIdleHostPort {
+  Future<PhoneAgentIdleState> idleState();
+  Future<void> resumeAfterIdle({
+    required int expectedIdleGeneration,
+    required bool Function() stillCurrent,
+  });
+}
+
 abstract interface class PhoneAgentRemovalPort {
   Future<AgentRemovalResult> removeAgent(String agentId);
 }
@@ -50,9 +63,24 @@ final class BuiltinPhoneAgentHostPort
         PhoneAgentHostPort,
         PhoneAgentAuthPort,
         PhoneAgentLivenessPort,
-        PhoneAgentRemovalPort {
+        PhoneAgentRemovalPort,
+        PhoneAgentIdleHostPort,
+        PhoneAgentGuardedStartPort {
   BuiltinPhoneAgentHostPort(this._host);
   final BuiltinPhoneAgents _host;
+  @override
+  Future<void> startWhileCurrent({required bool Function() stillCurrent}) =>
+      _host.start(stillCurrent: stillCurrent);
+  @override
+  Future<PhoneAgentIdleState> idleState() => _host.idleState();
+  @override
+  Future<void> resumeAfterIdle({
+    required int expectedIdleGeneration,
+    required bool Function() stillCurrent,
+  }) => _host.resumeAfterIdle(
+    expectedIdleGeneration: expectedIdleGeneration,
+    stillCurrent: stillCurrent,
+  );
   @override
   Future<AgentRemovalResult> removeAgent(String agentId) =>
       _host.removeAgent(agentId);

@@ -1,0 +1,17 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart
+00:00 +0: scoped feed preserves provider identity without a selected model
+00:00 +1: agent filtering and clearing retain the original filter contract
+00:00 +2: bounded pagination reports partial rows without inventing global inventory
+00:00 +3: repeated cursors stop the bounded read
+00:00 +4: a failed refresh retains rows and exposes only partial truth
+00:00 +5: coalesced refresh and disposal fence a late response
+00:00 +6: changing gateway scope hides held rows and prevents retargeting
+00:00 +7: timeout keeps bounded partial state and rejects late completion
+00:00 +8: unknown agents and other projects are refused before a draft is made
+00:00 +9: pending permission outranks a running row without exposing details
+00:00 +10: selected runtime survives an empty initial draft until first prompt
+00:00 +11: phone Claude always asks for the asking mode: listed [default]
+00:00 +12: phone Claude always asks for the asking mode: listed []
+00:00 +13: phone Claude always asks for the asking mode: listed [bypassPermissions]
+00:00 +14: remember callback is optional and scope-fenced
+00:00 +15: All tests passed!

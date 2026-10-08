@@ -1,0 +1,30 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: BA idle connected unknown inventory overrides stale helper stop
+00:00 +0 -1: BA idle connected unknown inventory overrides stale helper stop [E]
+  Expected: null
+    Actual: <false>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/support/phone_agents_idle_tests.dart 213:7     _phoneIdleTests.<fn>
+  
+00:00 +0 -1: BA idle native generation revoked during feed cannot report restored
+00:00 +0 -2: BA idle native generation revoked during feed cannot report restored [E]
+  Expected: throws <Instance of 'ProductException'> with `cause`: 'idle_resume_stale'
+    Actual: <Instance of 'Future<Null>'>
+     Which: emitted <null>
+  
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/support/phone_agents_idle_tests.dart 336:13   _phoneIdleTests.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                         _CustomZone.registerUnaryCallback
+  test/support/phone_agents_idle_tests.dart 321:17   _phoneIdleTests.<fn>
+  
+00:00 +0 -2: (tearDownAll)
+00:00 +0 -2: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle connected unknown inventory overrides stale helper stop
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle native generation revoked during feed cannot report restored

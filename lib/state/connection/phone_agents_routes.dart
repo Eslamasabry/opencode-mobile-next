@@ -37,6 +37,7 @@ extension _PhoneAgentRoutes on _ConnectionControllerPhoneAgents {
   /// Failed drains retain this snapshot for retry rather than losing the PTY.
   _PhoneAgentCloseScope? _paCaptureClose(String owner) {
     if (_paHostProfile != null && _paHostProfile != owner) return null;
+    _paClearIdleOwner();
     final host = _paHost;
     final binding = _paForegroundBinding;
     final backend = _paBackend;

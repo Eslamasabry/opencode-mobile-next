@@ -56,6 +56,7 @@ part 'support/phone_agents_stall_tests.dart';
 part 'support/phone_agents_check_publication_tests.dart';
 part 'support/phone_agents_capability_refresh_tests.dart';
 part 'support/phone_agents_removal_tests.dart';
+part 'support/phone_agents_idle_tests.dart';
 
 const _project = '/root/projects/app';
 const _stamp = '2026-10-03T08:00:00Z';
@@ -634,6 +635,7 @@ Future<_World> _world(
   GenUiInstaller? genUiInstaller,
   BrowserClaudeLaunchRegistry? browserClaudeLaunchRegistry,
   bool removalSupported = false,
+  bool idleSupported = false,
 }) async {
   final profileJson = {
     'id': 'local',
@@ -681,7 +683,9 @@ Future<_World> _world(
     localWakeLockEnsurer: () async {},
     phoneEngineBridge: _NoEngineBridge(),
     phoneAgentHostFactory: (profile) {
-      final host = removalSupported
+      final host = idleSupported
+          ? _IdleHost(events, profile.id, state)
+          : removalSupported
           ? _RemovableHost(events, profile.id, state)
           : _FakeHost(events, profile.id, state);
       hosts.add(host);
@@ -722,6 +726,7 @@ void main() {
   _phoneCheckPublicationTests();
   _phoneCapabilityRefreshTests();
   _phoneRemovalTests();
+  _phoneIdleTests();
 
   const dir = _project;
 

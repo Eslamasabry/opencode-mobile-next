@@ -1,0 +1,19 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_idle_host_test.dart
+00:00 +0: ordinary host start foreground loss during secret read prevents dispatch
+00:00 +0 -1: ordinary host start foreground loss during secret read prevents dispatch [E]
+  Expected: <null>
+    Actual: {
+              'profileId': 'idle-owner',
+              'password': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+              'port': 4099,
+              'config': '{"version":1,"daemon":{"listen":"127.0.0.1:4099","relay":{"enabled":false},"serviceProxy":{"enabled":false},"mcp":{"injectIntoAgents":false}},"features":{"webUi":{"enabled":false},"dictation":{"enabled":false},"voiceMode":{"enabled":false}},"log":{"level":"fatal","file":{"level":"fatal","path":"daemon.log","rotate":{"maxSize":"1M","maxFiles":1}}},"agents":{"providers":{"gemini":{"extends":"acp","label":"Gemini CLI","command":["/home/oc/.local/bin/gemini","--acp"]},"qwen":{"extends":"acp","label":"Qwen Code","command":["/home/oc/.local/bin/qwen","--acp"]},"goose":{"extends":"acp","label":"Goose","command":["/home/oc/.local/bin/goose","acp"]},"omp-acp":{"extends":"acp","label":"Oh My Pi","command":["/home/oc/.local/bin/omp","acp"]},"fx":{"extends":"acp","label":"fx","command":["/home/oc/.local/bin/fx","acp"]}}}}'
+            }
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_agents_idle_host_test.dart 264:7         main.<fn>
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_idle_host_test.dart: ordinary host start foreground loss during secret read prevents dispatch
