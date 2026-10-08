@@ -108,6 +108,19 @@ class _Repository extends SdkProductRepository {
   Future<void> refreshProviderRuntime() async {}
   @override
   Future<WorkspaceProject?> loadCurrentProject() async => null;
+  // Startup/reconnect reads all-project inventory; keep that read on the fake server.
+  @override
+  Future<ServerPage<GlobalSessionResult>> listGlobalSessions({
+    String? search,
+    bool includeArchived = false,
+    String? cursor,
+    int limit = 50,
+  }) => server.answer(
+    '/experimental/session',
+    150,
+    () => const ServerPage(items: <GlobalSessionResult>[]),
+  );
+
   @override
   Future<List<WorkspaceProject>> listProjects() async => const [];
   @override

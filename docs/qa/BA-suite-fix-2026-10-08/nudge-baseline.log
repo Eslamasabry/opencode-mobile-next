@@ -1,0 +1,107 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/nudge_moments_test.dart
+00:00 +0: approvals the third request of one kind points at Approvals
+Pending timers:
+Timer (duration: 0:00:02.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#5      _ConnectionControllerChatFeed._feedScheduleRefresh (package:opencode_mobile/state/connection/chat_feed.dart:88:21)
+#6      _FeedQuestionReads._invalidateFeedDirectoryQuestions (package:opencode_mobile/state/connection/feed_question_reads.dart:64:5)
+#7      _ConnectionControllerRequestEventsImpl._onRequestEvent (package:opencode_mobile/state/connection/request_events.dart:8:5)
+#8      _ConnectionControllerEventsImpl._onEvent (package:opencode_mobile/state/connection/events.dart:325:9)
+#9      _ConnectionControllerEvents.handleEventForTesting (package:opencode_mobile/state/connection/events.dart:28:60)
+#10     main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/nudge_moments_test.dart:254:18)
+<asynchronous suspension>
+#11     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#12     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  the third request of one kind points at Approvals
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +0 -1: approvals the third request of one kind points at Approvals [E]
+  Test failed. See exception logs above.
+  The test description was: the third request of one kind points at Approvals
+
+Warning: At least one test in this suite creates an HttpClient. When running a test suite that uses
+TestWidgetsFlutterBinding, all HTTP requests will return status code 400, and no network request
+will actually be made. Any test expecting a real network connection and status code will fail.
+To test code that needs an HttpClient, provide your own HttpClient implementation to the code under
+test, so that your test can consistently provide a testable response to the code under test.
+00:02 +0 -1: approvals closing it removes it for good
+Pending timers:
+Timer (duration: 0:00:02.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#5      _ConnectionControllerChatFeed._feedScheduleRefresh (package:opencode_mobile/state/connection/chat_feed.dart:88:21)
+#6      _FeedQuestionReads._invalidateFeedDirectoryQuestions (package:opencode_mobile/state/connection/feed_question_reads.dart:64:5)
+#7      _ConnectionControllerRequestEventsImpl._onRequestEvent (package:opencode_mobile/state/connection/request_events.dart:8:5)
+#8      _ConnectionControllerEventsImpl._onEvent (package:opencode_mobile/state/connection/events.dart:325:9)
+#9      _ConnectionControllerEvents.handleEventForTesting (package:opencode_mobile/state/connection/events.dart:28:60)
+#10     main.<anonymous closure>.askAndAnswer (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/nudge_moments_test.dart:230:18)
+#11     main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/nudge_moments_test.dart:296:13)
+<asynchronous suspension>
+#12     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#13     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  closing it removes it for good
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +0 -2: approvals closing it removes it for good [E]
+  Test failed. See exception logs above.
+  The test description was: closing it removes it for good
+
+00:02 +0 -2: approvals never during first run before the first reply
+00:03 +1 -2: review what changed tips wait while first run still owes its notification question
+00:03 +2 -2: review what changed a finished run that edited files opens the review
+00:04 +3 -2: review what changed closing it removes it
+00:04 +4 -2: review what changed absent where the server has no review
+00:04 +5 -2: leave and be told a minute of waiting with notifications on
+00:05 +6 -2: leave and be told closing it removes it
+00:05 +7 -2: leave and be told never when Android has not granted notifications
+00:05 +8 -2: compact above 80 percent the card compacts the conversation
+00:05 +9 -2: compact closing it removes it without compacting
+00:05 +10 -2: compact quiet below the threshold and where compacting is absent
+00:05 +11 -2: card layout 320 dp, text scale 2.5, en
+00:06 +12 -2: card layout above the composer at 320 dp, 2.5, en
+00:06 +13 -2: card layout 320 dp, text scale 2.5, ar
+00:06 +14 -2: card layout above the composer at 320 dp, 2.5, ar
+00:06 +15 -2: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/nudge_moments_test.dart: approvals closing it removes it for good
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/nudge_moments_test.dart: approvals the third request of one kind points at Approvals
