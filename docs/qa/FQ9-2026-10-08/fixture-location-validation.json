@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "scope": "offline_fixture_location_repair",
+  "checks": [
+    {
+      "command": [
+        "tool/qa/machine_lock.sh",
+        "test",
+        "--",
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tool/qa/fq9",
+        "-t",
+        "."
+      ],
+      "environment": {
+        "OC_TEST_SLOTS": "1"
+      },
+      "passed": true,
+      "testCount": 105
+    },
+    {
+      "command": [
+        "ruff",
+        "format",
+        "--check",
+        "--target-version",
+        "py310",
+        "tool/qa/fq9"
+      ],
+      "passed": true
+    },
+    {
+      "command": [
+        "ruff",
+        "check",
+        "--select",
+        "F,E9",
+        "tool/qa/fq9"
+      ],
+      "passed": true
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "passed": true
+    }
+  ],
+  "driverFilesSha256": {
+    "__init__.py": "c6e252ba06321fccc8fca7724bc7643cd0f6d272077f2b3381838aabbb4ef93a",
+    "background.py": "3c673b6ea9a5fe028ab6711b8c88d3816eeab085eac97c3cf53383fd8b1d6a4f",
+    "common.py": "cd7f1078ce4357ea2b71cacb8c2b50e5397f6b0077bb790ff51188297b76faab",
+    "fixture.py": "4b4be773f8159a188c1f9944348355cf4975f5dad074a63d03ccce7016062387",
+    "fresh.py": "719c4d2072a2727891cb799290e71d190b542d52a2e12cad604e2dbc78e3f37f",
+    "observations.py": "31a572de9784b5cb6371f44a72b41cca2f6ed299175290bcf1a2c51a9db5a299",
+    "ports.py": "b977c8b8deee33fa387833ed93bbfd95011e207a99f0a5050e9c3139fc3996e0",
+    "run.py": "917b282daf0a9e3d1844fed4b716db720db29b2c22752cd06735f52049467b5f",
+    "runtime.py": "b4aaf8f9581e8831050581cc6e27040f9fcb90ab02b8d00ef3fed519d8ceb930",
+    "test_background.py": "9b504b4986bd01ccfa201e5e0a7c04617f407279f4bc7f9bf43c10db418f5e9d",
+    "test_common.py": "26087d22a2067de6bfe095bad7bac6ecf4604f0fb8fde9a283a75a12226f0edb",
+    "test_fixture.py": "0245eb906495302fc26221231844410d8ac9cfaa0e729095a6be6e81a60f70a3",
+    "test_fresh.py": "ca4280be968242a7740896423403d20bc70022bb3eeb189f3c2831523cd8a1e1",
+    "test_ports.py": "f4d68570e9219abbb55b263cc0785ab6944e4c640f0c52b21e755eb09d42ef12",
+    "test_run.py": "515a47d3ed298336c3f09d3d38af78f430e84968948e65a8216f91dbf4693977",
+    "test_upgrade.py": "036cd2ae4a5d4749bee6f98d43420c778f5d01bd9ff83112a25c948fb2ab0d7b",
+    "upgrade.py": "73cdfe136b2dcc17826b82eab83889101e3dfcd7da3215abc8798b7f19b3a1a2"
+  },
+  "redControl": {
+    "mutation": "replace canonical files/projects backing with hidden legacy files/linux/ubuntu/root/projects",
+    "regressionFailures": 1,
+    "regressionErrors": 0,
+    "passed": true
+  },
+  "productionChanged": false,
+  "apkBuildRun": false,
+  "deviceActionsAfterCoordinatorHold": false,
+  "emulatorRecoveryOwner": "BB",
+  "deviceGateComplete": false,
+  "classification": "harness_contaminated_upgrade_refusal"
+}

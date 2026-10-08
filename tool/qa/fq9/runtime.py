@@ -1,7 +1,8 @@
-"""Read-only app-managed runtime observations and exact owned-turn cleanup.
+"""App-managed runtime observations, settled fixture writes and owned cleanup.
 
 OC1 is the live-survival scope; OC2 HTTP reads support static preservation only.
-No server start, HTTP prompts, provider config reads or credential persistence.
+Only the upgrade seeder posts a no-reply fixture; live survival never posts a
+prompt. No server start, provider config reads or credential persistence.
 """
 
 import base64
@@ -143,7 +144,7 @@ class AndroidRuntimeMixin:
             raise DriverFailure("app_managed_engine_unavailable")
         self._runtime_version = version
 
-    def protocol(self, method, path, *, query=None):
+    def protocol(self, method, path, *, query=None, body=None):
         if self._forward is None or self._password is None:
             raise DriverFailure("protocol_unavailable")
         url = f"http://127.0.0.1:{self._forward}{path}"
@@ -151,7 +152,13 @@ class AndroidRuntimeMixin:
             url += "?" + urllib.parse.urlencode(query)
         header = base64.b64encode(b"opencode:" + self._password).decode("ascii")
         request = urllib.request.Request(
-            url, method=method, headers={"Authorization": "Basic " + header}
+            url,
+            method=method,
+            data=json.dumps(body).encode() if body is not None else None,
+            headers={
+                "Authorization": "Basic " + header,
+                "Content-Type": "application/json",
+            },
         )
         try:
             # No env proxy or redirect may receive the in-memory credential.

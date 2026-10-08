@@ -12,7 +12,7 @@ import re
 import subprocess
 import sys
 
-from . import background, fresh, ports, upgrade
+from . import background, fixture, fresh, ports, upgrade
 from .common import (
     CANDIDATE_BUILD,
     LOCK,
@@ -58,6 +58,8 @@ FAIL_CODES = (
             "session_receipt_required",
             "evidence_already_exists",
             "discovery_arguments_invalid",
+            "fixture_seed_arguments_invalid",
+            "fixture_receipt_unavailable",
         )
     )
 )
@@ -100,6 +102,13 @@ def plan(args, artifacts=None):
                 "reviewed_published_stable_1_2_0_apk",
                 "second_avd_if_shared_baseline_is_newer",
             ]
+        if getattr(args, "seed_history_receipt", None):
+            result["fixtureSeeding"] = {
+                "engineScope": "app_managed_oc1",
+                "projectBacking": "files/projects",
+                "guestRoot": "/root/projects",
+                "manualReopenAndCleanupRequired": True,
+            }
         baseline = "stable" if args.case == "stable" else "previous"
         if artifacts and baseline in artifacts:
             result["signerCompatible"] = (
@@ -181,6 +190,15 @@ def run_locked(args, artifacts, receipt, output, *, port_factory=ports.AndroidPo
                 result["driver"] = fresh.run_fresh(device, artifacts["candidate"])
             elif args.case in ("upgrade", "stable"):
                 baseline = artifacts["stable" if args.case == "stable" else "previous"]
+                seed_output = getattr(args, "seed_history_receipt", None)
+                if seed_output is not None:
+                    if not exact_identity(device.installed_identity(), baseline):
+                        raise DriverFailure("upgrade_previous_mismatch")
+                    fixture.seed_history_fixture(
+                        device, lambda value: write_private_receipt(seed_output, value)
+                    )
+                    result["historySeeded"] = True
+                    result["fixtureUsesAppProjectBacking"] = True
                 result["driver"] = upgrade.run_upgrade(
                     device,
                     baseline,
@@ -272,6 +290,21 @@ def write_report(output, report):
         raise DriverFailure("evidence_unavailable") from None
 
 
+def write_private_receipt(output, receipt):
+    """Exclusive private identity receipt; never contains a password or key."""
+    import os
+
+    try:
+        fd = os.open(output, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        with os.fdopen(fd, "w") as stream:
+            json.dump(receipt, stream, indent=2)
+            stream.write("\n")
+    except FileExistsError:
+        raise DriverFailure("evidence_already_exists") from None
+    except OSError:
+        raise DriverFailure("fixture_receipt_unavailable") from None
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -280,6 +313,7 @@ def main(argv=None):
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--session-receipt", type=Path)
+    parser.add_argument("--seed-history-receipt", type=Path)
     parser.add_argument("--discover-turn-receipt", type=Path)
     parser.add_argument("--directory")
     parser.add_argument("--serial", default=SHARED_SERIAL)
@@ -298,6 +332,15 @@ def main(argv=None):
         ):
             raise DriverFailure("dedicated_avd_required")
         artifacts = load_manifest(args.manifest) if args.manifest else None
+        if args.seed_history_receipt and (
+            args.case != "upgrade"
+            or args.session_receipt is not None
+            or not args.seed_history_receipt.is_absolute()
+            or args.seed_history_receipt.resolve().is_relative_to(Path.cwd().resolve())
+        ):
+            raise DriverFailure("fixture_seed_arguments_invalid")
+        if args.seed_history_receipt and args.seed_history_receipt.exists():
+            raise DriverFailure("evidence_already_exists")
         if args.discover_turn_receipt and (
             args.case != "background"
             or args.session_receipt is not None
@@ -317,7 +360,11 @@ def main(argv=None):
         if args.case == "fresh" and args.serial == SHARED_SERIAL:
             raise DriverFailure("dedicated_avd_required")
         receipt = None
-        if args.case != "fresh" and not args.discover_turn_receipt:
+        if (
+            args.case != "fresh"
+            and not args.discover_turn_receipt
+            and not args.seed_history_receipt
+        ):
             if args.session_receipt is None:
                 raise DriverFailure("session_receipt_required")
             receipt = load_session_receipt(

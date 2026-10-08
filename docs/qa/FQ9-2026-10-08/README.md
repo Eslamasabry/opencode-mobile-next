@@ -1,5 +1,66 @@
 # FQ9 pre-release device checklist
 
+## Corrected refusal classification — 2026-10-09
+
+Finish line for `sol/bc-update-refusal`: establish fixture provenance and fix
+offline FQ9 seeding to use the app's actual project backing location. Non-goals:
+BB native edits, further emulator actions until BB completes recovery, builds,
+private-state repair, and background/upgrade qualification.
+
+**The collision was caused by the FQ9 harness.** Its temporary seeding helper
+explicitly ran `mkdir -p .../files/linux/ubuntu/root/projects/fq9-fixture`
+before creating the HTTP session. That created the hidden legacy entry seen
+by BB; it did not traverse the running guest's `/root/projects` bind. BB's
+`sol/bb-runtime` evidence in `docs/qa/BB-upgrade-2026-10-08/README.md` identifies
+this as the sole legacy entry, absent from persistent `files/projects`.
+
+`BuiltinProjectStorage.projects` is `File(filesDir, "projects")`, and
+`BuiltinLinux.prootCommand` binds it to guest `/root/projects`. The collision
+guard already exists in 2196 (`d777082c`). Supported 2196 guest/project creation
+therefore writes persistent storage and does **not** produce this hidden legacy
+entry. No real 2196 product path to this particular collision was demonstrated;
+external/private filesystem manipulation can create it, as this harness did.
+The preserved failed update receipt remains truthful about refusal, but this
+run is **harness-contaminated and does not certify an APK-update regression**.
+BB owns the product recovery; no legacy data/ticket will be erased by FQ9.
+
+The incomplete refusal investigation was stopped on coordinator instruction;
+its locked shell exited. This branch continues with offline driver repair only.
+
+The reviewed CLI now supports `--seed-history-receipt /absolute/private.json`
+for **upgrade only**, on an already verified exact previous baseline and a
+healthy idle app-managed OC1 server. It creates an exclusive, owner-checked
+`files/projects/<run-id>` directory (guest `/root/projects/<run-id>`), a uniquely
+titled session and a no-reply user fixture. Missing/symlink backing roots and
+existing fixture paths refuse; there is no legacy fallback. The private receipt
+is saved with mode 0600 before the user-message write. The old temporary seed
+command was retired rather than left available for reuse.
+
+After BB explicitly finishes recovery and the previous baseline is separately
+authorized/ready, use the existing internally locked CLI, without an outer
+flock:
+
+```sh
+python3 -m tool.qa.fq9.run --case upgrade --execute \
+  --manifest /home/eslam/Storage/tmp/fq9-2197-artifacts.json \
+  --seed-history-receipt /home/eslam/Storage/tmp/fq9-retained-next.json \
+  --run-id fq9-20261009-retained-a
+```
+
+This option never installs a previous APK to manufacture a baseline. Keep the
+receipt for manual candidate UI reopening and exact session/empty-project
+cleanup afterwards; a prompt interruption also retains the receipt for recovery.
+The intentionally no-reply message needs no provider/model enrollment. Existing
+`--session-receipt` remains available for operator-created OC1/OC2 fixtures.
+
+Offline verification ([generated receipt](fixture-location-validation.json)):
+105 driver tests, including real temporary-filesystem
+backing/legacy separation, no-follow/exclusive creation, seed ownership/idle
+checks, private receipt ordering, CLI baseline fences and a red control that
+reintroduces the original legacy target. No device rerun, native change or build
+was performed after the coordinator's hold; recovery and clean certification
+remain BB/coordinator gates.
+
 ## Authorized 2196 → 2197 and booked background run
 
 Branch `sol/bc-fq9-device` from `feat/genui-fe` `8787099496fad9b188dc93a9598f231680664769`.

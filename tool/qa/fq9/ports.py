@@ -77,6 +77,8 @@ FAIL_CODES = frozenset(
         "fresh_readback_failed",
         "normal_restore_identity_mismatch",
         "app_launch_failed",
+        "fixture_project_unavailable",
+        "fixture_seed_invalid",
     )
 )
 
@@ -311,6 +313,33 @@ class AndroidPorts(AndroidRuntimeMixin):
         # Preserve full app data and refuse to select/remove the baseline.
         self.mutated = True  # even an interrupted package-manager call may act
         self.adb("install", "-r", "-d", str(artifact.apk), timeout=180)
+
+    def prepare_fixture_project(self):
+        """Create only under the app's backing directory for /root/projects.
+
+        The guest mount hides rootfs/root/projects. Writing there on the host
+        manufactures a legacy/persistent collision on the next app launch.
+        Require the app-prepared backing root; never create a legacy fallback.
+        """
+        if (
+            not self.locked
+            or self._uid is None
+            or not re.fullmatch(r"fq9-[A-Za-z0-9_-]{1,80}", self.run_id)
+        ):
+            raise DriverFailure("fixture_project_unavailable")
+        projects = FILES + "/projects"
+        fixture = projects + "/" + self.run_id
+        self.mutated = True  # interrupted mkdir may act; normal restore still runs
+        result = self.as_app(
+            f"[ ! -L {shlex.quote(projects)} ] && "
+            f"[ -d {shlex.quote(projects)} ] && "
+            f'[ "$(stat -c %u {shlex.quote(projects)})" = {self._uid} ] || exit 71; '
+            f"umask 077; mkdir {shlex.quote(fixture)} || exit 71; "
+            "printf fq9_project_created"
+        )
+        if result != b"fq9_project_created":
+            raise DriverFailure("fixture_project_unavailable")
+        return "/root/projects/" + self.run_id
 
     def install_fresh(self, artifact):
         snapshot = self.fresh_snapshot()
