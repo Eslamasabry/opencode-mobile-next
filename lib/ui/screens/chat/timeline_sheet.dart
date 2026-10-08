@@ -43,7 +43,13 @@ class _TimelineSheet extends StatefulWidget {
 
 class _TimelineSheetState extends State<_TimelineSheet> {
   final _search = TextEditingController();
-  final _index = TranscriptSearchIndex();
+  late final _index = TranscriptSearchIndex(
+    toolLabel: (part) => toolLabel(
+      part.toolName ?? '',
+      state: part.toolState,
+      l10n: _chatL10n(context),
+    ),
+  );
 
   @override
   void initState() {
@@ -84,14 +90,15 @@ class _TimelineSheetState extends State<_TimelineSheet> {
         .toList();
     if (files.isNotEmpty) return files.join(', ');
 
-    final tools = message.parts
-        .where((part) => part.type == 'tool')
-        .map((part) => part.toolName?.trim())
-        .whereType<String>()
-        .where((name) => name.isNotEmpty)
-        .toList();
+    // The tools in words, each once, as their step rows name them.
+    final strings = _chatL10n(context);
+    final tools = <String>{
+      for (final part in message.parts)
+        if (part.type == 'tool')
+          toolLabel(part.toolName ?? '', state: part.toolState, l10n: strings),
+    };
     if (tools.isNotEmpty) {
-      return _chatL10n(context).chatUiToolsSummary(tools.join(', '));
+      return strings.chatUiToolsSummary(tools.join(', '));
     }
 
     final reasoning = message.parts

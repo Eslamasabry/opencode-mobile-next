@@ -202,7 +202,17 @@ mixin _ChatFindFields {
   final _findFocus = FocusNode();
   final _findNavigationFocus = FocusNode(skipTraversal: true);
   BuildContext? _findExcerptContext;
-  final _findIndex = TranscriptSearchIndex();
+
+  /// Searches tool calls by their words, as the transcript shows them; the
+  /// host sets [_findToolL10n] each build.
+  late final _findIndex = TranscriptSearchIndex(
+    toolLabel: (part) => toolLabel(
+      part.toolName ?? '',
+      state: part.toolState,
+      l10n: _findToolL10n,
+    ),
+  );
+  AppLocalizations? _findToolL10n;
   Timer? _findDebounce;
   bool _findOpen = false;
   String _findQuery = '';
@@ -215,6 +225,7 @@ mixin _ChatFindFields {
 
 extension _ChatFind on _ChatScreenState {
   void _syncFind() {
+    _findToolL10n = _chatL10n(context);
     _findHits = _findOpen ? _findIndex.search(_visibleHistory, _findQuery) : [];
     final retained = _findHits.indexWhere((match) => match.key == _findKey);
     _findCursor = retained >= 0

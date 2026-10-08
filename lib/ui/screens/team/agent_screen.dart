@@ -56,12 +56,30 @@ import '../../widgets/team_controls.dart' show teamControlReceipt;
 import '../../widgets/team_host_form.dart' show showTeamHostGuideSheet;
 import '../../widgets/team_now.dart';
 import '../../widgets/team_vocabulary.dart';
+import '../../widgets/tool_card.dart' show toolLabel;
 import '../team_conversation/team_conversation.dart';
 import 'gate_sheet.dart' show showGateSheet;
 import 'team_states.dart';
 
 AppLocalizations _copy(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
+
+/// A team agent's step in plain words ("Ran the tests"); the raw command
+/// waits under Technical details. Any other tool is named as its step row
+/// names it ([toolLabel]), never by its raw id.
+@visibleForTesting
+String agentStepWords(AppLocalizations l10n, AgentStep step) =>
+    switch (step.kind) {
+      AgentStepKind.command => l10n.teamAgentStepCommand,
+      AgentStepKind.test => l10n.teamAgentStepTest,
+      AgentStepKind.read => l10n.teamAgentStepRead,
+      AgentStepKind.edit => l10n.teamAgentStepEdit,
+      AgentStepKind.search => l10n.teamAgentStepSearch,
+      AgentStepKind.other =>
+        step.tool.trim().isEmpty
+            ? l10n.teamAgentStepCommand
+            : l10n.teamAgentStepTool(toolLabel(step.tool, l10n: l10n)),
+    };
 
 class AgentScreen extends StatefulWidget {
   const AgentScreen({
@@ -224,21 +242,6 @@ class _AgentScreenState extends State<AgentScreen> {
     }
     return null;
   }
-
-  /// A step in plain words ("Ran the tests"); the raw command waits under
-  /// Technical details.
-  static String _stepWords(AppLocalizations l10n, AgentStep step) =>
-      switch (step.kind) {
-        AgentStepKind.command => l10n.teamAgentStepCommand,
-        AgentStepKind.test => l10n.teamAgentStepTest,
-        AgentStepKind.read => l10n.teamAgentStepRead,
-        AgentStepKind.edit => l10n.teamAgentStepEdit,
-        AgentStepKind.search => l10n.teamAgentStepSearch,
-        AgentStepKind.other =>
-          step.tool.trim().isEmpty
-              ? l10n.teamAgentStepCommand
-              : l10n.teamAgentStepTool(step.tool.trim()),
-      };
 
   /// The raw command of [step], its first line, for Technical details.
   static String? _stepCommand(AgentStep? step) {
@@ -766,7 +769,7 @@ class _AgentScreenState extends State<AgentScreen> {
             leading: KitRow.icon(context, AppIconography.terminal),
             title: step == null
                 ? l10n.teamAgentLastActive(elapsed(lastActive!))
-                : l10n.teamAgentLastStep(_stepWords(l10n, step)),
+                : l10n.teamAgentLastStep(agentStepWords(l10n, step)),
             supporting: step != null && lastActive != null
                 ? TextSpan(text: l10n.teamAgentLastActive(elapsed(lastActive)))
                 : null,

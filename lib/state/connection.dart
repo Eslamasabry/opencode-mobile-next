@@ -24,6 +24,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/models.dart';
 import '../domain/session_history.dart';
+import '../domain/tool_label.dart';
 import '../domain/session_stop.dart';
 import '../codex/gateway.dart';
 import '../codex/transport.dart' show CodexFailure, CodexFailureKind;
@@ -774,8 +775,14 @@ class ConnectionController extends ChangeNotifier
         return 'Planning…';
       case '':
         return 'Working…';
+      case _ when isAgentCardTool(tool):
+        return 'Showing a card…';
+      case _ when isBackgroundTaskNotice(tool):
+        return 'Checking a background task…';
       default:
-        return 'Running $tool…';
+        // Never the raw id (`render_mermaid_diagram`): its words.
+        final words = toolIdWords(tool);
+        return words.isEmpty ? 'Working…' : 'Running $words…';
     }
   }
 
