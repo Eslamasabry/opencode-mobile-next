@@ -46,7 +46,7 @@ void main() {
   PerfTrace.logSink = null;
   KitMotion.loops = false;
 
-  testWidgets('BD9 release launch to local server conversation list', (
+  testWidgets('BD2 automatic first conversation load without refresh', (
     tester,
   ) async {
     phase = Bd9SmokePhase.fixture;
@@ -96,14 +96,19 @@ void main() {
         findsOneWidget,
         reason: 'fixture_conversation_not_visible',
       );
-      await bd9RefreshConversations(tester);
+      // Do not refresh or send input: this must prove the controller's first
+      // inventory fetch when the home reader mounts after the streams start.
       while ((!server.reads.contains('/global/health') ||
               !server.reads.contains('/experimental/session')) &&
           DateTime.now().isBefore(deadline)) {
         await tester.pump(const Duration(milliseconds: 150));
       }
       expect(server.reads, contains('/global/health'));
-      expect(server.reads, contains('/experimental/session'));
+      expect(
+        server.reads,
+        contains('/experimental/session'),
+        reason: 'automatic_global_inventory_not_loaded',
+      );
       expect(
         server.refusedWrites,
         isEmpty,

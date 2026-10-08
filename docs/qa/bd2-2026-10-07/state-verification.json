@@ -1,0 +1,44 @@
+{
+  "base_commit": "4fd44e0482b7037ae84d2cdf6aa52e8b73a0cd86",
+  "flutter": "3.47.1 / 91f8bd75076e9c740aa13cf67eb9ec1a093f68f5",
+  "new_regressions": 11,
+  "focused_flutter_tests": 193,
+  "focused_test_files": [
+    "test/chat_feed_initial_load_test.dart",
+    "test/chat_feed_test.dart",
+    "test/connection_sse_test.dart",
+    "test/connection_v2_gateway_test.dart",
+    "test/phone_agents_controller_test.dart",
+    "test/side_connections_test.dart",
+    "tool/qa/bd9_device_smoke_fixture_test.dart",
+    "tool/qa/bd9_conversation_finder_test.dart"
+  ],
+  "restored_regressions": 11,
+  "analyzer": "PASS: no issues found (33.2s)",
+  "offline_python_tests": 44,
+  "mutations": [
+    {
+      "mutation": "original_state",
+      "exit_code": 1,
+      "expected_failure": "missing inventory request"
+    },
+    {
+      "mutation": "no_location_reconnect",
+      "exit_code": 1,
+      "expected_failure": "missing inventory request"
+    },
+    {
+      "mutation": "lost_inventory_invalidation",
+      "exit_code": 1,
+      "expected_failure": "missing inventory request"
+    },
+    {
+      "mutation": "merged_refresh_dependency",
+      "exit_code": 1,
+      "expected_failure": "missing inventory request"
+    }
+  ],
+  "native_changes": false,
+  "full_suite": "Coordinator-owned; not run",
+  "device": "Pending"
+}
