@@ -1,0 +1,12 @@
+{
+  "appBuild": 2198,
+  "sourceRevision": "064a43a3687773626dc5ce37853446c29be41e0c",
+  "apkSha256": "2069cc0ca62554e3fd798f8ba8bfa46f44ae84be4ff82142e87b495cdc8b89a3",
+  "signerMatches": true,
+  "installedHashMatches": true,
+  "claudeSignedInVisible": true,
+  "signOutOffered": true,
+  "claudeRemoveOffered": false,
+  "accountValuePersisted": false,
+  "claudeAccountActionInvoked": false
+}

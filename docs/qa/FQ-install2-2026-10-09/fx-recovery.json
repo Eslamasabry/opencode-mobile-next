@@ -1,0 +1,106 @@
+{
+  "observationUsesAppUid": false,
+  "before": {
+    "claudeSignedInVisible": false,
+    "claudeSignInNeededVisible": true,
+    "resumeVisible": false,
+    "fx": {
+      "allocatedBytes": 0,
+      "pinMatches": false,
+      "linkMatches": false,
+      "targetPids": [],
+      "removed": false,
+      "leftovers": false,
+      "staging": [],
+      "lockPresent": false
+    },
+    "nativeJob": {
+      "jobId": "setup-1791488001755808",
+      "state": "done",
+      "components": {
+        "linux": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "essentials": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "node": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "opencode": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "start": {
+          "state": "done",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        }
+      }
+    }
+  },
+  "resumeTapped": false,
+  "after": {
+    "claudeSignedInVisible": false,
+    "claudeSignInNeededVisible": true,
+    "resumeVisible": false,
+    "fx": {
+      "allocatedBytes": 0,
+      "pinMatches": false,
+      "linkMatches": false,
+      "targetPids": [],
+      "removed": false,
+      "leftovers": false,
+      "staging": [],
+      "lockPresent": false
+    },
+    "nativeJob": {
+      "jobId": "setup-1791488001755808",
+      "state": "done",
+      "components": {
+        "linux": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "essentials": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "node": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "opencode": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "start": {
+          "state": "done",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        }
+      }
+    }
+  }
+}

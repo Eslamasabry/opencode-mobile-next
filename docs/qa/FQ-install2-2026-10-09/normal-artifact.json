@@ -1,0 +1,9 @@
+{
+  "normal": {
+    "apk": "/home/eslam/Storage/tmp/oc-apk-share/oc-2198.apk",
+    "build": 2198,
+    "sha256": "2069cc0ca62554e3fd798f8ba8bfa46f44ae84be4ff82142e87b495cdc8b89a3",
+    "sourceRevision": "064a43a3687773626dc5ce37853446c29be41e0c",
+    "dartDefines": {}
+  }
+}

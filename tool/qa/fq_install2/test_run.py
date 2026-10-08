@@ -6,32 +6,103 @@ import tempfile
 import types
 import unittest
 from unittest.mock import patch
+import xml.etree.ElementTree as ET
 import run
+
+REMOVE_BODY = ('This removes the installed agent from this phone. Your accounts '
+               'and conversations stay, and you can install it again.')
+
+def node(text, description=''):
+    return ET.Element('node', {'text':text, 'content-desc':description})
 
 class Tests(unittest.TestCase):
     def test_remove_uses_ba10_public_confirmation(self):
+        # Current localized BA10 copy supersedes the preliminary contract.
         taps=[]
         d=types.SimpleNamespace(launch_agents=lambda: None,
             text=lambda node: node, tap_node=lambda node: taps.append(node))
         ports=run.Ports(d,None,None,{'fx':{'name':'fx'}},'fx')
-        pages=iter([['Remove fx'], ['Remove fx from this phone?',
-            'This removes the installed agent. Your accounts and conversations stay. You can install it again.',
-            'Cancel', 'Remove']])
+        pages=iter([['Remove fx'], ['Remove fx?', REMOVE_BODY,
+            'Cancel', 'Remove fx']])
         ports.ui=lambda: next(pages)
         self.assertTrue(ports.app_remove('fx','fx'))
-        self.assertEqual(taps,['Remove fx','Remove'])
+        self.assertEqual(taps,['Remove fx','Remove fx'])
 
     def test_remove_rejects_ambiguous_confirmation(self):
         taps=[]
         d=types.SimpleNamespace(launch_agents=lambda: None,
             text=lambda node: node, tap_node=lambda node: taps.append(node))
         ports=run.Ports(d,None,None,{'fx':{'name':'fx'}},'fx')
-        pages=iter([['Remove fx'], ['Remove fx from this phone?',
-            'This removes the installed agent. Your accounts and conversations stay. You can install it again.',
-            'Remove', 'Remove']])
+        pages=iter([['Remove fx'], ['Remove fx?', REMOVE_BODY,
+            'Remove fx', 'Remove fx']])
         ports.ui=lambda: next(pages)
         self.assertFalse(ports.app_remove('fx','fx'))
         self.assertEqual(taps,['Remove fx'])
+
+    def current_ports(self, pages):
+        taps=[]
+        d=types.SimpleNamespace(launch_agents=lambda: None,
+            text=lambda n: (n.get('text') or n.get('content-desc') or ''),
+            tap_node=lambda n: taps.append((n.get('text'),n.get('content-desc'))))
+        ports=run.Ports(d,None,None,{'fx':{'name':'fx'}},'fx')
+        frames=iter(pages)
+        ports.ui=lambda: next(frames)
+        return ports,taps
+
+    def test_current_remove_opens_only_target_sheet_then_confirms_and_dismisses(self):
+        ports,taps=self.current_ports([
+            [node('Claude Code\nReady'),node('Sign in','Sign in to Claude Code'),
+             node('fx\nSign in needed'),node('Sign in','Sign in to fx')],
+            [node('Sign in with fx'),node('Remove fx')],
+            [node('Remove fx?'),node(REMOVE_BODY),node('Cancel'),node('Remove fx')],
+            [node('fx removed. Freed 12 MB.'),node('Done')],
+            [node('fx\nNot installed · 12 MB'),node('Install','Install fx')],
+        ])
+        self.assertTrue(ports.app_remove('fx','fx'))
+        self.assertTrue(ports.target_not_installed_visible('fx'))
+        self.assertEqual(taps,[('Sign in','Sign in to fx'),('Remove fx',''),
+                              ('Remove fx',''),('Done','')])
+
+    def test_target_scoped_semantics_survive_generic_visible_chip_copy(self):
+        ports,_=self.current_ports([])
+        self.assertEqual(ports.text(node('Sign in','Sign in to fx')),'Sign in to fx')
+        self.assertEqual(ports.text(node('Install','Install fx')),'Install fx')
+
+    def test_install_opens_scoped_sheet_then_uses_its_unique_install_action(self):
+        ports,taps=self.current_ports([
+            [node('Install','Install Claude Code'),node('Install','Install fx')],
+            [node('Install fx')],
+        ])
+        ports.tap_install('fx')
+        self.assertEqual(taps,[('Install','Install fx'),('Install fx','')])
+
+    def test_install_refuses_unscoped_or_foreign_action(self):
+        ports,taps=self.current_ports([[node('Install'),node('Install','Install Claude Code')]])
+        with self.assertRaisesRegex(RuntimeError,'target_install_action_missing'):
+            ports.tap_install('fx')
+        self.assertEqual(taps,[])
+
+    def test_remove_does_not_use_unscoped_sign_in_or_another_agent(self):
+        ports,taps=self.current_ports([[node('fx\nSign in needed'),node('Sign in'),
+                                      node('Sign in','Sign in to Claude Code')]])
+        self.assertFalse(ports.app_remove('fx','fx'))
+        self.assertEqual(taps,[])
+
+    def test_remove_rejects_foreign_confirmation_button(self):
+        ports,taps=self.current_ports([
+            [node('Remove fx')],
+            [node('Remove fx?'),node(REMOVE_BODY),node('Remove Claude Code')],
+        ])
+        self.assertFalse(ports.app_remove('fx','fx'))
+        self.assertEqual(taps,[('Remove fx','')])
+
+    def test_not_installed_requires_row_after_done_not_just_success_copy(self):
+        ports,taps=self.current_ports([
+            [node('fx removed. Freed 12 MB.'),node('Done')],
+            [node('Claude Code\nReady')],
+        ])
+        self.assertFalse(ports.target_not_installed_visible('fx'))
+        self.assertEqual(taps,[('Done','')])
 
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)

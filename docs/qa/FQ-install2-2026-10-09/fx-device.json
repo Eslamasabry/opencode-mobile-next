@@ -1,0 +1,55 @@
+{
+  "agentId": "fx",
+  "appBuild": 2198,
+  "sourceRevision": "064a43a3687773626dc5ce37853446c29be41e0c",
+  "normalRestored": true,
+  "availableBeforeBytes": 1690329088,
+  "errorType": "RuntimeError",
+  "errorCode": "app_install_timeout",
+  "terminalSetup": {
+    "jobId": "setup-1791488001755808",
+    "state": "done",
+    "components": {
+      "linux": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "essentials": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "node": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "opencode": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "start": {
+        "state": "done",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      }
+    }
+  },
+  "terminalInventory": {
+    "allocatedBytes": 0,
+    "pinMatches": false,
+    "linkMatches": false,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": false,
+    "staging": [],
+    "lockPresent": false
+  }
+}

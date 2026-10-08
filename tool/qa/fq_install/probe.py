@@ -2,7 +2,8 @@ import sys,subprocess,shlex,json,re
 import device as d
 ROOT='/data/user/0/'+d.PKG+'/files/linux/ubuntu'
 FILES='/data/user/0/'+d.PKG+'/files'
-def probe(script,agent_user=False,profile=None):
+def probe(script,agent_user=False,profile=None,observation=False):
+ if observation and profile is not None:raise ValueError('Observation cannot enter an account profile')
  if profile is not None and not re.fullmatch(r'[A-Za-z0-9_-]{1,80}',profile):raise RuntimeError('Invalid profile identity')
  apk=d.adb('shell','cmd','package','path',d.PKG).strip().removeprefix('package:')
  uid=d.adb('shell','stat','-c','%u',FILES).strip()
@@ -14,7 +15,11 @@ def probe(script,agent_user=False,profile=None):
  args+=['/usr/bin/env','-i','HOME='+home,'PATH=/home/oc/.local/bin:/home/oc/.local/node/bin:/usr/bin:/bin','LANG=C.UTF-8','CLAUDE_CONFIG_DIR='+home+'/claude','CODEX_HOME='+home+'/codex','/usr/bin/python3','-c',script]
  env={'PROOT_LOADER':native+'/libproot-loader.so','PROOT_TMP_DIR':ROOT+'/tmp','LD_LIBRARY_PATH':native}
  cmd=' '.join(k+'='+shlex.quote(v) for k,v in env.items())+' '+shlex.join(args)
- return d.adb('shell','su '+uid+' /system/bin/sh -c '+shlex.quote(cmd),timeout=80)
+ # Read-only QA inventory must not create an unregistered app-UID root
+ # while native ownership checks run. This changes instrumentation only;
+ # never use observation mode for auth or mutation/cleanup proof.
+ execution_uid='0' if observation else uid
+ return d.adb('shell','su '+execution_uid+' /system/bin/sh -c '+shlex.quote(cmd),timeout=80)
 def setup():
  raw=d.adb('shell','cat',FILES+'/linux/setup.json')
  j=json.loads(raw)
