@@ -3,6 +3,7 @@ part of '../phone_agents_controller_test.dart';
 class _RemovableHost extends _FakeHost implements PhoneAgentRemovalPort {
   _RemovableHost(super.events, super.profileId, super.state);
   Future<void> Function(String)? removal;
+  bool disposed = false;
   AgentRemovalResult? result;
   AgentSetupProgress progress = const AgentSetupProgress(
     agentId: '',
@@ -10,6 +11,12 @@ class _RemovableHost extends _FakeHost implements PhoneAgentRemovalPort {
   );
   @override
   AgentSetupProgress get setupProgress => progress;
+  @override
+  Future<void> dispose() async {
+    disposed = true;
+    await super.dispose();
+  }
+
   @override
   Future<AgentRemovalResult> removeAgent(String id) async {
     events.log.add('remove.$id');
@@ -28,7 +35,215 @@ const _removalUnconfirmedCopy =
 Matcher _removalFailure(String copy) =>
     throwsA(isA<ProductException>().having((e) => e.message, 'message', copy));
 
+class _ReplacementForegroundPort implements AgentSignInForegroundPort {
+  int reservations = 0;
+  @override
+  AgentSignInForegroundLease reserveAgentSignInForeground() {
+    reservations++;
+    return _ReplacementForegroundLease();
+  }
+}
+
+class _ReplacementForegroundLease implements AgentSignInForegroundLease {
+  bool released = false;
+  @override
+  Future<void> get ready => Future.value();
+  @override
+  bool get active => !released;
+  @override
+  Stream<void> get lost => const Stream.empty();
+  @override
+  Future<void> release() async => released = true;
+}
+
 void _phoneRemovalTests() {
+  test(
+    'BB6 main foreground binding exists before a terminal request',
+    () async {
+      final w = await _world(null);
+      addTearDown(w.controller.dispose);
+      await w.controller.refreshAgentRows();
+      final owner = w.controller.agentSignInProfileId!;
+      final binding = AgentSignInForegroundRegistry.bindingFor(owner);
+      expect(binding, isNotNull);
+      expect(binding!.current, isTrue);
+      final lease = binding.reserve();
+      // The actual shared controller is the production port. Linux cannot
+      // start Android's foreground service; admission must fail before a PTY.
+      await expectLater(
+        lease.ready,
+        throwsA(
+          isA<AgentSignInForegroundException>().having(
+            (e) => e.reason,
+            'reason',
+            AgentSignInForegroundFailure.unsupported,
+          ),
+        ),
+      );
+      await lease.release();
+    },
+  );
+  test('BB6 owner deletion waits for registered terminal cleanup', () async {
+    final w = await _world(
+      null,
+      secure: _FakeSecure({'oc.agentHostSecret.local': 'x' * 64}),
+    );
+    final c = w.controller;
+    addTearDown(c.dispose);
+    await c.refreshAgentRows();
+    final binding = AgentSignInForegroundRegistry.bindingFor('local');
+    expect(binding, isNotNull);
+    final entered = Completer<void>();
+    final drain = Completer<void>();
+    addTearDown(() {
+      if (!drain.isCompleted) drain.complete();
+    });
+    binding!.addCleanup(() async {
+      w.events.log.add('terminal.drain');
+      entered.complete();
+      await drain.future;
+    });
+    w.events.log.clear();
+    final deletion = c.deleteProfileAndLocalData('local');
+    await entered.future;
+    expect(AgentSignInForegroundRegistry.bindingFor('local'), isNull);
+    expect(w.events.log, ['terminal.drain']);
+    expect(c.store.profiles.any((p) => p.id == 'local'), isTrue);
+    drain.complete();
+    expect((await deletion).removedProfile, isTrue);
+    expect(w.events.log, [
+      'terminal.drain',
+      'host.cancelInstall',
+      'host.stop',
+      'host.dispose',
+      'profileStore.cleanup',
+    ]);
+  });
+  test('BB6 protocol alias retains the canonical foreground owner', () async {
+    final w = await _world(null);
+    final c = w.controller;
+    addTearDown(c.dispose);
+    await c.refreshAgentRows();
+    final binding = AgentSignInForegroundRegistry.bindingFor('local');
+    expect(binding, isNotNull);
+    var drained = false;
+    binding!.addCleanup(() async {
+      drained = true;
+    });
+    final original = c.store.profiles.single;
+    final alias = ServerProfile(
+      id: 'two',
+      name: 'OpenCode 2',
+      baseUrl: original.baseUrl,
+      flavor: ServerFlavor.v2,
+    );
+    await c.store.upsert(alias);
+    await c.connect(alias);
+    await c.refreshAgentRows();
+    expect(c.agentSignInProfileId, 'local');
+    expect(AgentSignInForegroundRegistry.bindingFor('local'), same(binding));
+    expect(AgentSignInForegroundRegistry.bindingFor('two'), isNull);
+    expect((await c.deleteProfileAndLocalData('two')).removedProfile, isTrue);
+    expect(drained, isFalse);
+    expect(binding.current, isTrue);
+  });
+  test(
+    'BB6 failed terminal drain blocks deletion and remains retryable',
+    () async {
+      final w = await _world(
+        null,
+        secure: _FakeSecure({'oc.agentHostSecret.local': 'x' * 64}),
+      );
+      final c = w.controller;
+      addTearDown(c.dispose);
+      await c.refreshAgentRows();
+      final binding = AgentSignInForegroundRegistry.bindingFor('local');
+      expect(binding, isNotNull);
+      var attempts = 0;
+      binding!.addCleanup(() async {
+        attempts++;
+        if (attempts == 1) throw StateError('cleanup-test-marker');
+      });
+      w.events.log.clear();
+      await expectLater(
+        c.deleteProfileAndLocalData('local'),
+        throwsA(
+          isA<ProductException>().having(
+            (e) => e.message,
+            'message',
+            'Sign-in could not be stopped. Keep the app open and try again.',
+          ),
+        ),
+      );
+      expect(c.store.profiles.any((p) => p.id == 'local'), isTrue);
+      expect(w.events.log, isEmpty);
+      expect(
+        (await c.deleteProfileAndLocalData('local')).removedProfile,
+        isTrue,
+      );
+      expect(attempts, 2);
+      expect(w.events.log, contains('profileStore.cleanup'));
+    },
+  );
+  test(
+    'BB6 old foreground drain cannot dispose replacement host or unbind newer generation',
+    () async {
+      final w = await _world(null, removalSupported: true);
+      final c = w.controller;
+      var disposed = false;
+      addTearDown(() {
+        if (!disposed) c.dispose();
+      });
+      await c.refreshAgentRows();
+      final original = w.host as _RemovableHost;
+      final oldBinding = AgentSignInForegroundRegistry.bindingFor('local');
+      expect(oldBinding, isNotNull);
+      final entered = Completer<void>();
+      final drain = Completer<void>();
+      addTearDown(() {
+        if (!drain.isCompleted) drain.complete();
+      });
+      oldBinding!.addCleanup(() async {
+        entered.complete();
+        await drain.future;
+      });
+      // Exercise an owner replacement against in-memory test preferences,
+      // without accessing real native account homes or service processes.
+      await c.store.prefs.setString('oc.phoneAgentOwner.local', 'replacement');
+      await c.refreshAgentRows();
+      await entered.future;
+      final replacement = w.host as _RemovableHost;
+      final replacementBinding = AgentSignInForegroundRegistry.bindingFor(
+        'replacement',
+      );
+      expect(replacement, isNot(same(original)));
+      expect(replacementBinding, isNotNull);
+      expect(replacement.disposed, isFalse);
+      drain.complete();
+      for (var i = 0; i < 30 && !original.disposed; i++) {
+        await Future<void>.delayed(Duration.zero);
+      }
+      expect(original.disposed, isTrue);
+      expect(replacement.disposed, isFalse);
+      expect(
+        AgentSignInForegroundRegistry.bindingFor('replacement'),
+        same(replacementBinding),
+      );
+      final port = _ReplacementForegroundPort();
+      final newer = AgentSignInForegroundRegistry.bind('replacement', port);
+      c.dispose();
+      disposed = true;
+      final lease = newer.reserve();
+      await lease.ready;
+      expect(port.reservations, 1);
+      expect(
+        AgentSignInForegroundRegistry.bindingFor('replacement'),
+        same(newer),
+      );
+      await lease.release();
+      await AgentSignInForegroundRegistry.unbind(newer);
+    },
+  );
   test(
     'removal removes only target rows and keeps Claude chats and account',
     () async {

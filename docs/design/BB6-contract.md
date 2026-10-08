@@ -44,7 +44,7 @@ Notification permission must be allowed before service admission and PTY launch.
 Unsupported, paused, permission-denied or unavailable admission prevents launch
 and yields a closed typed failure with plain guidance. The caller must give a
 concrete way forward. The sign-in terminal's fixed public copy in
-[`LocalTerminal._signInFailure`](../../lib/builtin/local_terminal.dart) is:
+[`LocalTerminalSessions._signInFailure`](../../lib/builtin/local_terminal.dart) is:
 
 | Failure | Public copy |
 | --- | --- |

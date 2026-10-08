@@ -33,12 +33,18 @@ class _Port implements AgentSignInForegroundPort {
 
 void main() {
   test('successive replacement cannot skip the oldest pending drain', () async {
-    final first = AgentSignInForegroundRegistry.bind('foreground-chain', _Port());
+    final first = AgentSignInForegroundRegistry.bind(
+      'foreground-chain',
+      _Port(),
+    );
     final drain = Completer<void>();
     first.addCleanup(() => drain.future);
     AgentSignInForegroundRegistry.bind('foreground-chain', _Port());
     final lastPort = _Port();
-    final last = AgentSignInForegroundRegistry.bind('foreground-chain', lastPort);
+    final last = AgentSignInForegroundRegistry.bind(
+      'foreground-chain',
+      lastPort,
+    );
     final lease = last.reserve();
     await pumpEventQueue();
     final beforeDrain = List<String>.of(lastPort.log);

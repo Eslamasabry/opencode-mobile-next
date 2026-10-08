@@ -56,6 +56,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   PhoneAgentHostPort? _paHost;
   String? _paHostProfile;
+  AgentSignInForegroundBinding? _paForegroundBinding;
+  final _paClosingOwners = <String, _PhoneAgentCloseScope>{};
   StreamSubscription<AgentSetupProgress>? _paSetupSub;
   final _paSignIns = <String, AgentSignInSession>{};
   final _paSignInSubs = <String, StreamSubscription<AgentSignInState>>{};
@@ -178,9 +180,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   PhoneAgentHostPort _paEnsureHost() {
     final profile = _paProfile;
     if (!phoneAgentsAvailable || profile == null) throw _notReady;
+    if (_paClosingOwners.containsKey(profile.id)) {
+      throw _PhoneAgentRoutes._signInStopFailed;
+    }
     final existing = _paHost;
     if (existing != null && _paHostProfile == profile.id) return existing;
-    if (existing != null) unawaited(_paCloseAll(stopHost: false));
+    if (existing != null) {
+      unawaited(_paCloseAll(stopHost: false).catchError((Object _) {}));
+    }
     final factory = _self._phoneAgentHostFactory;
     final host = factory != null
         ? factory(profile)
@@ -189,8 +196,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
           );
     _paHost = host;
     _paHostProfile = profile.id;
+    if (!_self._isSecondary) {
+      _paForegroundBinding = AgentSignInForegroundRegistry.bind(
+        profile.id,
+        _self.backgroundLive,
+      );
+    }
     _paSetupSub = host.setupChanges.listen((progress) {
-      if (_self._disposed) return;
+      if (_self._disposed || !identical(_paHost, host)) return;
       _self._notifyListeners();
       if (progress.phase == AgentSetupPhase.done) {
         unawaited(refreshAgentRows());
@@ -203,9 +216,9 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     final descriptor = _paCatalog.byId(agentId);
     final profile = _paProfile;
     if (descriptor == null || profile == null) throw _notReady;
+    _paEnsureHost();
     final existing = _paSignIns[agentId];
     if (existing != null) return existing;
-    _paEnsureHost();
     final session = AgentSignInSession(
       host: (_self._agentSignInHostFactory ?? ChannelAgentSignInHost.new)(),
       profileId: profile.id,
@@ -219,7 +232,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   void _paListen(String agentId, AgentSignInSession session) {
     _paSignInSubs[agentId] = session.changes.listen((state) {
-      if (_self._disposed) return;
+      if (_self._disposed || !identical(_paSignIns[agentId], session)) return;
       _self._notifyListeners();
       if (state.phase == AgentSignInPhase.signedIn ||
           state.phase == AgentSignInPhase.limitReached) {
@@ -1386,58 +1399,10 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   // ---- closing ------------------------------------------------------------
 
-  /// Closes everything this profile's phone agents own, in the order the
-  /// deletion contract requires: auth, owned setup, host, then feeds.
-  Future<void> _paCloseAll({required bool stopHost}) async {
-    _paRemovalToken = null;
-    _paRemovingAgent = null;
-    final owner = _paHostProfile ?? _paProfile?.id;
-    if (owner != null) {
-      await _self._browserLaunches.revokeProfile(profileId: owner);
-    }
-    _paDisposeBackend();
-    for (final entry in _paSignIns.entries.toList()) {
-      await _paSignInSubs.remove(entry.key)?.cancel();
-      try {
-        await entry.value.close();
-      } catch (_) {
-        // Native cleanup drains this profile's processes again on removal.
-      }
-    }
-    _paSignIns.clear();
-    final host = _paHost;
-    _paHost = null;
-    _paHostProfile = null;
-    await _paSetupSub?.cancel();
-    _paSetupSub = null;
-    if (host != null) {
-      try {
-        await host.cancelInstall();
-      } catch (_) {}
-      if (stopHost) {
-        try {
-          await host.stop();
-        } catch (_) {}
-      }
-      try {
-        await host.dispose();
-      } catch (_) {}
-    }
-    final merged = _paMerged;
-    _paMerged = null;
-    await _paMergedSub?.cancel();
-    _paMergedSub = null;
-    if (merged != null) await merged.dispose();
-    for (final directory in _paSources.keys.toList()) {
-      await _paDropSource(directory);
-    }
-    _paLive.clear();
-    _paAuthResults.clear();
-    _paAuthRevisions.clear();
-    _paChecks.clear();
-    _paRows = const [];
-    _paHostRunning = false;
-  }
+  Future<void> _paCloseAll({required bool stopHost}) => _paCloseOwned(
+    _paHostProfile ?? _paForegroundBinding?.profileId ?? _paProfile?.id,
+    stopHost: stopHost,
+  );
 
   /// Deletion hook: runs before ProfileStore removes the profile.
   Future<void> _paCloseForDeletion(String profileId) async {
@@ -1445,10 +1410,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     profileId = _self.store.phoneAgentOwnerId(profileId);
     if (_paHostProfile != profileId &&
         _paProfile?.id != profileId &&
-        _paSignIns.isEmpty) {
+        _paSignIns.isEmpty &&
+        !_paClosingOwners.containsKey(profileId)) {
       return;
     }
-    await _paCloseAll(stopHost: true);
+    await _paCloseOwned(profileId, stopHost: true);
     if (!_self._disposed) _self._notifyListeners();
   }
 
@@ -1459,38 +1425,6 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (!_self._disposed) _self._notifyListeners();
   }
 
-  /// Controller disposal: stop listening; the host keeps running for the
-  /// Android service owner.
-  void _paShutdown() {
-    _paRemovalToken = null;
-    _paRemovingAgent = null;
-    final owner = _paHostProfile ?? _paProfile?.id;
-    if (owner != null) {
-      unawaited(_self._browserLaunches.revokeProfile(profileId: owner));
-    }
-    if (_self._ownsBrowserLaunches) unawaited(_self._browserLaunches.close());
-    _paDisposeBackend();
-    _paHoldTimer?.cancel();
-    _paHoldTimer = null;
-    _paReadingTimer?.cancel();
-    _paReadingTimer = null;
-    _paSyncTimer?.cancel();
-    _paSignInRecheck?.cancel();
-    _paSignInRecheck = null;
-    unawaited(_paSetupSub?.cancel());
-    unawaited(_paMergedSub?.cancel());
-    for (final sub in _paSignInSubs.values) {
-      unawaited(sub.cancel());
-    }
-    unawaited(_paMerged?.dispose());
-    for (final entry in _paSources.values) {
-      unawaited(entry.source.dispose());
-      entry.gateway.close();
-    }
-    _paSources.clear();
-    for (final session in _paSignIns.values) {
-      unawaited(session.close().catchError((Object _) {}));
-    }
-    _paSignIns.clear();
-  }
+  /// Disposal drains captured terminals; the Android service owns the host.
+  void _paShutdown() => _paShutdownOwned();
 }
