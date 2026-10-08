@@ -83,7 +83,8 @@ projects a missing-ring read as `saved_crash_ring_unavailable`; this refinement
 is host-tested and did not get exercised past navigation in attempt6. Recovery
 must preserve consent, avoid concurrent writable snapshot readers and prevent
 expired attempts from attaching or committing data. Claude owns any UI retry
-hook. No product fix was made or a replacement APK built in this slice.
+hook. No product fix was made or a replacement APK built during this historical
+2196 device-qualification slice; the later backend correction is recorded below.
 
 ## Privacy and host checks
 
@@ -100,7 +101,7 @@ Raw UI/XML, exception values, OS descriptions, logs and traces remain unsaved.
 Projection and screenshot guards accept fixed copy, numeric metadata and dates;
 unknown or editable content is refused. Each retained JPG is under100KB.
 
-[Host manifest](host-verification.json):52 deterministic offline Python tests
+[Historical2196 host manifest](host-verification.json):52 deterministic offline Python tests
 passed for parsing, UI privacy/navigation, process ownership, rollback and
 failure projection. Behavioral controls failed before fixes or with guards
 reverted, then passed with exact sources restored. Controls cover shell quoting,
@@ -108,6 +109,45 @@ disabled consent, exact degraded hints, transient hung accessibility dumps and
 missing-ring evidence. Mistyped selectors and one mock-fixture error were
 corrected and are not counted as failing-first evidence. Python compilation,
 diff and documentation-link checks passed. Pinned `flutter pub get` ran once.
-No Dart/native product edits: analyzer, Kotlin gate and APK build are not
-applicable. The full suite remains coordinator-owned. Commits are local only;
+There were no Dart/native product edits in that historical snapshot: analyzer,
+Kotlin gate and APK build were not applicable to it. Its source-hash manifest
+describes the historical driver, which has since changed. The full suite remains
+coordinator-owned. Commits are local only;
 no amend, push, PR, signing change or publication occurred.
+
+## Late-open correction checkpoint
+
+The coordinator subsequently authorized a backend correction on the same
+branch for crash-store opening that finishes after the startup budget. This
+checkpoint extends the historical2196 qualification above; it does not replace
+its findings or qualify saved-report capture and preview.
+
+The intended behavior is that startup still returns within its bounded300ms
+budget, while crash-store readiness remains pending until the actual controller
+is available. A late successful open must publish that real controller rather
+than permanently resolve readiness to null. Resetting the startup generation
+must cancel stale publication, and restored diagnostics must replay once after
+the current generation becomes ready.
+
+The correction is **implemented and host-verified**. The
+[late-open verification receipt](late-open-verification.json) records39 passing
+focused Flutter tests across `crash_diagnostics_startup_test.dart` (13),
+`crash_diagnostics_test.dart` and `crash_reports_section_test.dart`. Pinned full
+`flutter analyze` was clean in11.3s on the final Dart snapshot. The slow-open
+regression failed as expected against the old source and with the fix reverted;
+removing the generation guard also failed as expected. The reset-during-replay
+regression initially failed, then passed after the per-record generation guard
+was added. All53 offline Python QA checks passed; the2197 candidate preflight
+test failed as expected before the candidate metadata was switched. The
+[late-open frontend contract](../../design/bd7-late-open-contract.md) records the
+readiness behavior. The local correction commit is forthcoming and will be
+appended by the lead.
+
+The current driver accepts and defaults to2197; normal restoration remains2196.
+The2197 APK file is absent, and no build or device session ran in this correction
+turn. The historical2196 device/source-hash manifest does not qualify the changed
+driver or the late-open correction. The complete saved-report flow still
+requires a rerun against the coordinator's2197 candidate, including real
+native-crash and ANR capture, saved rows and previews, private diagnostics
+rollback, and normal-app restoration inside the same emulator lock. Until those
+receipts exist, saved-report qualification remains **BLOCKED**.

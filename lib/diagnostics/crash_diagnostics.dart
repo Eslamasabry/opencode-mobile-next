@@ -453,6 +453,9 @@ class CrashDiagnosticsStartup {
   static Future<CrashDiagnosticsController?>? _opening;
   static int _generation = 0;
   static Completer<CrashDiagnosticsController?> _readiness = Completer();
+
+  /// Actual store readiness, independent of the bounded launch wait.
+  /// A slow open keeps this pending; failure or reset resolves to null.
   static Future<CrashDiagnosticsController?> get ready => _readiness.future;
 
   static void capture(
@@ -475,25 +478,25 @@ class CrashDiagnosticsStartup {
     @visibleForTesting CrashDiagnosticsStartupTiming? timing,
   }) {
     if (_opening != null) return _opening!;
-    final readiness = _readiness;
-    return _opening = _startBounded(diagnostics, nativeChannel, timing).then((
-      controller,
-    ) {
-      if (!readiness.isCompleted) readiness.complete(controller);
-      return controller;
-    });
+    return _opening = _startBounded(
+      diagnostics,
+      nativeChannel,
+      timing,
+      _readiness,
+    );
   }
 
   static Future<CrashDiagnosticsController?> _startBounded(
     AppDiagnosticsController diagnostics,
     MethodChannel? nativeChannel,
     CrashDiagnosticsStartupTiming? timing,
+    Completer<CrashDiagnosticsController?> readiness,
   ) {
-    var expired = false;
     final generation = _generation;
     final clock = timing ?? _MonotonicStartupTiming();
-    bool canOpen() =>
-        !expired && clock.elapsed < launchBudget && generation == _generation;
+    // The budget bounds only the launch caller. Opening stays off the UI
+    // isolate and may publish later, unless this generation was reset.
+    bool canOpen() => generation == _generation;
     final pending = _open(diagnostics, nativeChannel, canOpen).then((
       controller,
     ) {
@@ -505,10 +508,13 @@ class CrashDiagnosticsStartup {
           ? <Map<String, Object>>[]
           : List<Map<String, Object>>.of(controller._records);
       current = controller;
+      if (!readiness.isCompleted) readiness.complete(controller);
       // Settle readiness before notifying legacy synchronous report writers.
       Timer.run(() {
-        if (controller == null || controller._closed) return;
+        if (!canOpen() || controller == null || controller._closed) return;
         for (final entry in restored) {
+          // A synchronous diagnostic listener may reset startup mid-replay.
+          if (!canOpen() || controller._closed) break;
           if (!controller._records.contains(entry)) continue;
           diagnostics.record(
             entry['category']!,
@@ -520,14 +526,7 @@ class CrashDiagnosticsStartup {
       });
       return controller;
     });
-    return clock.timeout(
-      pending,
-      launchBudget,
-      onTimeout: () {
-        expired = true;
-        return null;
-      },
-    );
+    return clock.timeout(pending, launchBudget, onTimeout: () => null);
   }
 
   @visibleForTesting
@@ -552,7 +551,7 @@ class CrashDiagnosticsStartup {
       if (channel != null) {
         native = await channel.invokeMapMethod<Object?, Object?>('open');
       }
-      // A late channel reply must not attach capture or touch consent/evidence.
+      // A reply from a reset generation must not attach or touch evidence.
       if (!canOpen()) return null;
       final path = native?['directory'];
       final directory = path is String

@@ -48,7 +48,7 @@ def verify_candidate(apk, signer):
         raise DeviceFailure('candidate_signer_mismatch')
     raw = shared.execute([shared.android_tool('aapt'), 'dump', 'badging', str(apk)])
     match = re.search(rb"^package: name='([^']+)' versionCode='([0-9]+)'", raw, re.M)
-    if match is None or match[1] != PACKAGE.encode() or match[2] != b'2196':
+    if match is None or match[1] != PACKAGE.encode() or match[2] != b'2197':
         raise DeviceFailure('candidate_identity_mismatch')
     return hashlib.sha256(apk.read_bytes()).hexdigest()
 
@@ -281,7 +281,7 @@ class DeviceSession:
 
 def run(args):
     args.output.mkdir(parents=True, exist_ok=True)
-    report = {'device': shared.SERIAL, 'version_code': 2196, 'result': 'FAIL'}
+    report = {'device': shared.SERIAL, 'version_code': 2197, 'result': 'FAIL'}
     stage = 'apk_preflight'
     session = DeviceSession(args.adb, args.output)
     try:
@@ -343,7 +343,7 @@ def run(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--apk', type=Path, default=NORMAL_APK)
+    parser.add_argument('--apk', type=Path, default=Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2197.apk'))
     parser.add_argument('--expected-signer', required=True)
     parser.add_argument('--output', type=Path, default=Path('build/bd7-device-proof'))
     parser.add_argument('--adb', default='adb')

@@ -14,6 +14,25 @@ from tool.qa import bd7_device_crash_smoke as smoke
 
 
 class CrashSmokeTest(unittest.TestCase):
+    def test_candidate_accepts_only_2197_while_normal_restore_stays_2196(self):
+        signer = 'A' * 64
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / 'candidate.apk'
+            apk.write_bytes(b'public-apk-fixture')
+            for version, accepted in (('2197', True), ('2196', False)):
+                responses = [
+                    ('Signer #1 certificate SHA-256 digest: ' + signer).encode(),
+                    ("package: name='" + smoke.PACKAGE + "' versionCode='" + version + "'").encode(),
+                ]
+                with patch.object(smoke.shared, 'android_tool', side_effect=lambda name: name), \
+                     patch.object(smoke.shared, 'execute', side_effect=responses):
+                    if accepted:
+                        self.assertEqual(len(smoke.verify_candidate(apk, signer)), 64)
+                    else:
+                        with self.assertRaisesRegex(smoke.DeviceFailure, '^candidate_identity_mismatch$'):
+                            smoke.verify_candidate(apk, signer)
+        self.assertEqual(smoke.NORMAL_APK.name, 'oc-2196.apk')
+
     def test_cold_launch_waits_for_settings_semantics_before_navigation(self):
         session = smoke.DeviceSession('adb', Path('.'))
         session.ui = Mock()
@@ -159,7 +178,7 @@ class CrashSmokeTest(unittest.TestCase):
     def fixture(self, *, fail_at=None, normal_failed=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            args = argparse.Namespace(apk=root / '2196.apk', expected_signer='a' * 64,
+            args = argparse.Namespace(apk=root / '2197.apk', expected_signer='a' * 64,
                                       adb='adb', output=root / 'proof')
             order = []
             session = Mock()
