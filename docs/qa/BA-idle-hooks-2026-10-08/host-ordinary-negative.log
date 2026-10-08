@@ -70,14 +70,14 @@ Try `flutter pub outdated` for more information.
   Expected: throws <Instance of 'AgentHostException'> with `reason`: AgentHostFailure:<AgentHostFailure.stale>
     Actual: <Instance of 'Future<void>'>
      Which: emitted <null>
-  
+
   package:matcher                                    expectLater
   package:flutter_test/src/widget_tester.dart 507:8  expectLater
   test/phone_agents_idle_host_test.dart 254:13       main.<fn>
   ===== asynchronous gap ===========================
   dart:async                                         _CustomZone.registerUnaryCallback
   test/phone_agents_idle_host_test.dart 251:7        main.<fn>
-  
+
 00:00 +0 -1: Some tests failed.
 
 Failing tests:

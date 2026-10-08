@@ -71,14 +71,14 @@ Try `flutter pub outdated` for more information.
   Expected: throws <Instance of 'ProductException'> with `cause`: 'idle_resume_stale'
     Actual: <Instance of 'Future<Null>'>
      Which: emitted <null>
-  
+
   package:matcher                                    expectLater
   package:flutter_test/src/widget_tester.dart 507:8  expectLater
   test/support/phone_agents_idle_tests.dart 335:13   _phoneIdleTests.<fn>
   ===== asynchronous gap ===========================
   dart:async                                         _CustomZone.registerUnaryCallback
   test/support/phone_agents_idle_tests.dart 320:17   _phoneIdleTests.<fn>
-  
+
 00:00 +0 -1: (tearDownAll)
 00:00 +0 -1: Some tests failed.
 

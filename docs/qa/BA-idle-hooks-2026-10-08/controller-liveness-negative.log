@@ -70,11 +70,11 @@ Try `flutter pub outdated` for more information.
 00:00 +0 -1: BA idle connected unknown inventory overrides stale helper stop [E]
   Expected: null
     Actual: <false>
-  
+
   package:matcher                                     expect
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/support/phone_agents_idle_tests.dart 207:7     _phoneIdleTests.<fn>
-  
+
 00:00 +0 -1: (tearDownAll)
 00:00 +0 -1: Some tests failed.
 

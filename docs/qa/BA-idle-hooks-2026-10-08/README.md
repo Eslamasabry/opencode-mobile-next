@@ -56,7 +56,8 @@ tool/qa/machine_lock.sh test -- <pinned-flutter> test --no-pub --concurrency=1 <
 **245 passed**, all nine manifest files completed. [Analyzer](analyzer.log): no
 issues. [Manifest](test-manifest.txt), [completion ledger](completed-files.txt)
 and [candidate Dart source hashes](candidate-sources.sha256) identify the exact
-candidate. Largest changed library: gateway.dart 1488 lines, under 1500.
+candidate. Captured logs are normalized only for trailing whitespace; assertion
+content is retained. Largest changed library: gateway.dart 1488 lines, under 1500.
 
 ## Failing-first controls
 

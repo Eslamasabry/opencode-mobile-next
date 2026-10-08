@@ -3,11 +3,11 @@
 00:00 +0 -1: new parent during child inventory cannot restore known idle [E]
   Expected: null
     Actual: <false>
-  
+
   package:matcher                                     expect
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/paseo_idle_busy_test.dart 265:5                main.<fn>
-  
+
 00:00 +0 -1: Some tests failed.
 
 Failing tests:

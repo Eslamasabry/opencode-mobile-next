@@ -3,20 +3,20 @@
 00:00 +0 -1: unseen permission parent needs child inventory after resolution [E]
   Expected: null
     Actual: <false>
-  
+
   package:matcher                                     expect
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/paseo_idle_busy_test.dart 408:7                main.<fn>
-  
+
 00:00 +0 -1: unseen subagent parent needs inventory after child completion
 00:00 +0 -2: unseen subagent parent needs inventory after child completion [E]
   Expected: null
     Actual: <false>
-  
+
   package:matcher                                     expect
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/paseo_idle_busy_test.dart 430:7                main.<fn>
-  
+
 00:00 +0 -2: Some tests failed.
 
 Failing tests:

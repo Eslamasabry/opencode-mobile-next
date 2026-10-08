@@ -4,33 +4,33 @@
   Expected: throws <Instance of 'AgentHostException'>
     Actual: <Instance of 'Future<void>'>
      Which: emitted <null>
-  
+
   package:matcher                                    expectLater
   package:flutter_test/src/widget_tester.dart 507:8  expectLater
   test/phone_agents_idle_host_test.dart 233:13       main.<fn>
   ===== asynchronous gap ===========================
   dart:async                                         _CustomZone.registerUnaryCallback
   test/phone_agents_idle_host_test.dart 230:7        main.<fn>
-  
+
 00:00 +0 -1: idle host native token changed during hello refuses readiness
 00:00 +0 -2: idle host native token changed during hello refuses readiness [E]
   Expected: throws <Instance of 'AgentHostException'>
     Actual: <Instance of 'Future<void>'>
      Which: emitted <null>
-  
+
   package:matcher                                    expectLater
   package:flutter_test/src/widget_tester.dart 507:8  expectLater
   test/phone_agents_idle_host_test.dart 241:13       main.<fn>
-  
+
 00:00 +0 -2: idle host automatic start allows only complete foreground legacy or idle facts
 00:00 +0 -3: idle host automatic start allows only complete foreground legacy or idle facts [E]
   Expected: <false>
     Actual: <true>
-  
+
   package:matcher                                     expect
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/phone_agents_idle_host_test.dart 327:5         main.<fn>
-  
+
 00:00 +0 -3: Some tests failed.
 
 Failing tests:

@@ -69,29 +69,29 @@ Try `flutter pub outdated` for more information.
 00:00 +0 -1: closed parent status does not prove independent children idle [E]
   Expected: true
     Actual: <false>
-  
+
   package:matcher                                     expect
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/paseo_idle_busy_test.dart 312:7                main.<fn>
-  
+
 00:00 +0 -1: malformed completion ordering cannot erase an active turn
 00:00 +0 -2: malformed completion ordering cannot erase an active turn [E]
   Expected: true
     Actual: <false>
-  
+
   package:matcher                                     expect
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/paseo_idle_busy_test.dart 331:5                main.<fn>
-  
+
 00:00 +0 -2: stale archived snapshot cannot erase active turn or child
 00:00 +0 -3: stale archived snapshot cannot erase active turn or child [E]
   Expected: true
     Actual: <false>
-  
+
   package:matcher                                     expect
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/paseo_idle_busy_test.dart 355:5                main.<fn>
-  
+
 00:00 +0 -3: Some tests failed.
 
 Failing tests:
