@@ -27927,9 +27927,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Android records each time the app closes. Nothing here is sent automatically.';
 
   @override
-  String get diagnosticsExitHistoryEmpty => 'No app exits recorded yet';
-
-  @override
   String get diagnosticsExitHistoryUnsupported => 'Not available on this phone';
 
   @override
@@ -28046,4 +28043,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backgroundPauseResumed => 'Background connection resumed.';
+
+  @override
+  String get diagnosticsExitNoProblems => 'No unexpected closes recently.';
+
+  @override
+  String diagnosticsExitRoutine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count routine closes (updates, you closed it)',
+      one: '1 routine close (updates, you closed it)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String diagnosticsExitShowAll(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Show all $count',
+      one: 'Show all 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get diagnosticsExitUnknown => 'Closed for an unknown reason';
+
+  @override
+  String diagnosticsExitToday(String time) {
+    return 'Today $time';
+  }
+
+  @override
+  String diagnosticsExitYesterday(String time) {
+    return 'Yesterday $time';
+  }
 }

@@ -131,6 +131,7 @@ void main() {
           version: () async => '9.9.9+1',
           crash: crash,
           diagnosticsGateway: withGateway ?? gateway,
+          clock: () => DateTime(2026, 10, 8, 9),
         ),
       ),
     );
@@ -157,7 +158,7 @@ void main() {
       expect(find.text('Recent app exits'), findsOneWidget);
       expect(find.text('App stopped unexpectedly'), findsOneWidget);
       expect(find.text('Phone needed memory'), findsOneWidget);
-      expect(find.textContaining('2026-10-07 21:42'), findsOneWidget);
+      expect(find.textContaining('Yesterday 21:42'), findsOneWidget);
       expect(find.text('Reason code'), findsNothing);
       expect(find.textContaining('Nothing here is sent'), findsOneWidget);
 
@@ -181,7 +182,7 @@ void main() {
       await pump(tester);
       await tester.ensureVisible(_key('exit-history'));
       await tester.pumpAndSettle();
-      expect(find.text('No app exits recorded yet'), findsOneWidget);
+      expect(find.text('No unexpected closes recently.'), findsOneWidget);
       expect(find.text('Not available on this phone'), findsNothing);
       await tester.pumpWidget(const SizedBox.shrink());
 
@@ -194,7 +195,7 @@ void main() {
         find.text('Android 11 and later keep this record.'),
         findsOneWidget,
       );
-      expect(find.text('No app exits recorded yet'), findsNothing);
+      expect(find.text('No unexpected closes recently.'), findsNothing);
     });
 
     testWidgets('a failed read says so and Try again reads again', (

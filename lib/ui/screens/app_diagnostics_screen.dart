@@ -59,6 +59,7 @@ class AppDiagnosticsScreen extends StatefulWidget {
     this.crash,
     this.crashReady,
     this.diagnosticsGateway,
+    this.clock,
   });
 
   final ConnectionController? controller;
@@ -92,6 +93,9 @@ class AppDiagnosticsScreen extends StatefulWidget {
   /// defaults to the app's [deviceDiagnosticsGatewayProvider] when there is
   /// one. Without either, those parts stay off the page.
   final AppDiagnosticsGateway? diagnosticsGateway;
+
+  /// Tests: the moment exit times count "Today" and "Yesterday" from.
+  final DateTime Function()? clock;
 
   @override
   State<AppDiagnosticsScreen> createState() => _AppDiagnosticsScreenState();
@@ -183,7 +187,9 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen>
     final read = ++_exitRead;
     AppExitHistory history;
     try {
-      history = await gateway.exitHistory();
+      // The most Android gives, so problem exits are found among routine
+      // updates; the section shows the problems and folds the rest.
+      history = await gateway.exitHistory(limit: 50);
     } catch (_) {
       history = AppExitHistory(
         supported: true,
@@ -567,6 +573,7 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen>
               ExitHistorySection(
                 history: _exitHistory,
                 onRetry: () => unawaited(_loadExits()),
+                clock: widget.clock,
               ),
               SizedBox(height: tokens.sectionGap),
               // Timings are for whoever reads the report, not the person

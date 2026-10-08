@@ -57,27 +57,30 @@ class _Gateway extends ChangeNotifier implements AppDiagnosticsGateway {
       reports.share(preview);
 }
 
+AppExitEntry _exit(AppExitCategory category, DateTime at, int reason) =>
+    AppExitEntry(reason: reason, importance: 100, at: at, category: category);
+
+/// The APK 2196 device check: problems among many updates and closes.
 final _exits = AppExitHistory(
   supported: true,
   entries: [
-    AppExitEntry(
-      reason: 4,
-      importance: 100,
-      at: DateTime(2026, 10, 7, 21, 42),
-      category: AppExitCategory.crash,
-    ),
-    AppExitEntry(
-      reason: 3,
-      importance: 400,
-      at: DateTime(2026, 10, 6, 8, 5),
-      category: AppExitCategory.lowMemory,
-    ),
-    AppExitEntry(
-      reason: 1,
-      importance: 400,
-      at: DateTime(2026, 10, 5, 19, 30),
-      category: AppExitCategory.normal,
-    ),
+    _exit(AppExitCategory.update, DateTime(2026, 10, 8, 8, 37), 10),
+    _exit(AppExitCategory.forceStop, DateTime(2026, 10, 8, 8, 28), 11),
+    _exit(AppExitCategory.update, DateTime(2026, 10, 8, 8, 20), 10),
+    _exit(AppExitCategory.update, DateTime(2026, 10, 8, 8, 18), 10),
+    _exit(AppExitCategory.crash, DateTime(2026, 10, 7, 21, 42), 4),
+    _exit(AppExitCategory.update, DateTime(2026, 10, 7, 20, 11), 10),
+    _exit(AppExitCategory.lowMemory, DateTime(2026, 10, 6, 8, 5), 3),
+    _exit(AppExitCategory.update, DateTime(2026, 10, 5, 19, 30), 10),
+  ],
+);
+
+/// Only routine exits: no problem to show.
+final _routineOnly = AppExitHistory(
+  supported: true,
+  entries: [
+    _exit(AppExitCategory.update, DateTime(2026, 10, 8, 8, 37), 10),
+    _exit(AppExitCategory.forceStop, DateTime(2026, 10, 7, 22, 3), 11),
   ],
 );
 
@@ -172,6 +175,7 @@ void main() {
               version: () async => '1.2.0+2171',
               crash: crash,
               diagnosticsGateway: gateway,
+              clock: () => DateTime(2026, 10, 8, 9),
             ),
           ),
         ),
@@ -208,6 +212,35 @@ void main() {
           await tester.tap(find.text('App stopped unexpectedly'));
           await tester.pumpAndSettle();
         },
+      );
+    });
+
+    testWidgets('recent app exits, routine opened ($theme)', (tester) async {
+      await shot(
+        tester,
+        'exit_history_routine_open',
+        light: light,
+        history: _exits,
+        then: () async {
+          final routine = find.byKey(const ValueKey('exit-history-routine'));
+          await tester.ensureVisible(routine);
+          await tester.pumpAndSettle();
+          await tester.tap(routine);
+          await tester.pumpAndSettle();
+          await Scrollable.ensureVisible(
+            tester.element(routine),
+            alignment: 0.1,
+          );
+        },
+      );
+    });
+
+    testWidgets('recent app exits, no problems ($theme)', (tester) async {
+      await shot(
+        tester,
+        'exit_history_no_problems',
+        light: light,
+        history: _routineOnly,
       );
     });
 
