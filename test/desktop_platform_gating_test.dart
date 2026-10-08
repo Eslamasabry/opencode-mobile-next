@@ -430,6 +430,17 @@ void main() {
       return BackgroundLiveController(
         preferences: prefs,
         invoke: (method, [arguments]) async {
+          if (method == 'getBackgroundPause') {
+            return const {
+              'supported': true,
+              'active': false,
+              'paused': false,
+              'reason': 'none',
+              'at': null,
+              'canResume': false,
+            };
+          }
+
           calls.add(method);
           return <String, dynamic>{
             'active': true,

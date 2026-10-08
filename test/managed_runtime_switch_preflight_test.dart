@@ -122,7 +122,19 @@ void main() {
           (gateway: MonitorTestGateway(), operations: MonitorTestOperations()),
       backgroundLive: BackgroundLiveController(
         preferences: store.prefs,
-        invoke: (method, [arguments]) async => const {},
+        invoke: (method, [arguments]) async {
+          if (method == 'getBackgroundPause') {
+            return const {
+              'supported': true,
+              'active': false,
+              'paused': false,
+              'reason': 'none',
+              'at': null,
+              'canResume': false,
+            };
+          }
+          return const {};
+        },
       ),
     );
     controller.adoptConnectedProfileForTesting(local);
@@ -459,7 +471,19 @@ void main() {
           localWakeLockEnsurer: () async {},
           backgroundLive: BackgroundLiveController(
             preferences: store.prefs,
-            invoke: (method, [arguments]) async => const {},
+            invoke: (method, [arguments]) async {
+              if (method == 'getBackgroundPause') {
+                return const {
+                  'supported': true,
+                  'active': false,
+                  'paused': false,
+                  'reason': 'none',
+                  'at': null,
+                  'canResume': false,
+                };
+              }
+              return const {};
+            },
           ),
         );
         await controller.connect(local);

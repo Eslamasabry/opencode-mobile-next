@@ -70,6 +70,17 @@ void main() {
         final background = BackgroundLiveController(
           preferences: store.prefs,
           invoke: (method, [arguments]) async {
+            if (method == 'getBackgroundPause') {
+              return const {
+                'supported': true,
+                'active': false,
+                'paused': false,
+                'reason': 'none',
+                'at': null,
+                'canResume': false,
+              };
+            }
+
             if (method == 'showCodingAlert') posted = arguments;
             return {
               'enabled': true,

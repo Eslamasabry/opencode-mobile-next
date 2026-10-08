@@ -35,6 +35,9 @@ Future<ConnectionController> _controller({
   Map<String, Object> legacy = const {},
   int servers = 2,
   bool notificationGranted = true,
+  // Android has stopped the service at its time limit: its own answer to
+  // the next read of the pause says so.
+  bool timedOut = false,
   void Function(String method)? onInvoke,
 }) async {
   SharedPreferences.setMockInitialValues({
@@ -59,15 +62,28 @@ Future<ConnectionController> _controller({
     preferences: preferences,
     liveStatusDebounce: Duration.zero,
     invoke: (method, [arguments]) async {
+      // What Android says about the background connection: still allowed,
+      // or stopped at its time limit (then every status carries it).
+      final pause = {
+        'supported': true,
+        'active': false,
+        'paused': timedOut,
+        'reason': timedOut ? 'timeLimit' : 'none',
+        'at': timedOut ? 1791428400000 : null,
+        'canResume': timedOut,
+      };
+      if (method == 'getBackgroundPause') return pause;
+
       onInvoke?.call(method);
       if (method == 'showCodingAlert') {
         return {'shown': notificationGranted};
       }
       return {
-        'enabled': method != 'disable',
-        'active': method != 'disable',
+        'enabled': !timedOut && method != 'disable',
+        'active': !timedOut && method != 'disable',
         'notificationGranted': notificationGranted,
         'batteryOptimizationIgnored': false,
+        if (timedOut) 'backgroundPause': pause,
       };
     },
   );
@@ -532,11 +548,23 @@ void main() {
       final live = BackgroundLiveController(
         preferences: preferences,
         liveStatusDebounce: Duration.zero,
-        invoke: (method, [arguments]) async => {
-          'enabled': true,
-          'active': true,
-          'notificationGranted': granted,
-          'batteryOptimizationIgnored': false,
+        invoke: (method, [arguments]) async {
+          if (method == 'getBackgroundPause') {
+            return const {
+              'supported': true,
+              'active': false,
+              'paused': false,
+              'reason': 'none',
+              'at': null,
+              'canResume': false,
+            };
+          }
+          return {
+            'enabled': true,
+            'active': true,
+            'notificationGranted': granted,
+            'batteryOptimizationIgnored': false,
+          };
         },
       );
       await live.restore();
@@ -597,6 +625,13 @@ void main() {
   });
 
   group('layout at 320 dp and 2.5x text', () {
+    // The timeout notice is an Android row: lay it out as Android, not as
+    // the host the tests run on.
+    setUp(
+      () => debugPlatformCapabilities = const PlatformCapabilities.android(),
+    );
+    tearDown(() => debugPlatformCapabilities = null);
+
     for (final locale in const [Locale('en'), Locale('ar')]) {
       testWidgets('no overflow in ${locale.languageCode}', (tester) async {
         const phone = Size(320, 640);
@@ -605,6 +640,7 @@ void main() {
         addTearDown(tester.view.reset);
         // Everything on: every conditional row is laid out.
         final controller = await _controller(
+          timedOut: true,
           legacy: {
             for (final id in ['profile-1', 'profile-2'])
               ProfileMonitor.rulesKey(id): jsonEncode(

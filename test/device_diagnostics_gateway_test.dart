@@ -36,9 +36,18 @@ void main() {
     );
     background = BackgroundLiveController(
       preferences: await SharedPreferences.getInstance(),
-      invoke: (method, [arguments]) async => const {
-        'enabled': false,
-        'active': false,
+      invoke: (method, [arguments]) async {
+        if (method == 'getBackgroundPause') {
+          return const {
+            'supported': true,
+            'active': false,
+            'paused': false,
+            'reason': 'none',
+            'at': null,
+            'canResume': false,
+          };
+        }
+        return const {'enabled': false, 'active': false};
       },
     );
     shared = [];
