@@ -26,7 +26,7 @@ Status: **Implemented — cycle 2026-09-05-01**
 - Trigger and impact: Type a file name, refresh matching results, or switch Files → Symbols → Files. File search waits for Submit while Symbols searches as typed; Refresh/Retry replaces results with directory contents while the query remains visible; switching surfaces can retain search results after clearing the query.
 - Location: `lib/ui/screens/files_screen.dart`, `_searchFiles`, `_selectSurface`, `_fileListContent`, search field callbacks.
 - Implementation: Debounce file queries with stale-response guards, use a current-query refresh helper, and reload the original directory when leaving search mode.
-- Minimal verification: Relevant file-search and symbol-search cases in `test/product_ui_regression_test.dart`; one short search/refresh/surface-switch check.
+- Minimal verification: Relevant file-search and symbol-search cases in `test/product_ui_regression_*test.dart`; one short search/refresh/surface-switch check.
 
 ## FE-003 — Show the active execution directory in Workspace
 
@@ -44,7 +44,7 @@ Status: **Implemented — cycle 2026-09-05-01**
 - Trigger and impact: Open a project file from chat with attachment and reference actions available. Up to five icon buttons crowd the unbounded filename; the mobile sheet has no visible Close. Copy can run before content loads and copies the truncated display buffer for large files.
 - Location: `lib/ui/screens/files_screen.dart`, `__FileViewerState.build` and its Copy action.
 - Implementation: Give filename/path and Close a clear header. Move secondary actions to overflow or a wrapping toolbar. Disable Copy before text loads and copy the full loaded content.
-- Minimal verification: Existing file-preview/attachment cases in `test/product_ui_regression_test.dart` and compact text-scale coverage; confirm Copy uses the original content.
+- Minimal verification: Existing file-preview/attachment cases in `test/product_ui_regression_*test.dart` and compact text-scale coverage; confirm Copy uses the original content.
 
 ## FE-005 — Run a server command without requiring an existing chat
 
@@ -62,7 +62,7 @@ Status: **Implemented — cycle 2026-09-05-03**
 - Trigger and impact: Load Commands, Skills, References, or Terminal, then pull to refresh after the server becomes unavailable. Each screen records an error but renders it only when its list is null. Previously loaded rows remain with no indication that refresh failed, so terminal status and available commands appear current. The same suppression happens after refreshing a successfully loaded empty list.
 - Location: `lib/ui/screens/library/commands_screen.dart`, `_load`/`build`; `lib/ui/screens/library/skills_screen.dart`, `_load`/`_body`; `lib/ui/screens/library/references_screen.dart`, `_load`/`_body`; `lib/ui/screens/terminal_screen.dart`, `_TerminalScreenState._load`/`build`.
 - Implementation: Keep the previous list and scroll position, but show a compact inline refresh-failed message with Retry whenever an error accompanies loaded data, including an empty list. Clear the notice after successful refresh. Guard overlapping loads or reuse a generation token so an older response cannot overwrite a later refresh. Reuse the existing ProductErrorState only for a first load that has no data.
-- Minimal verification: Reuse the fake repositories in `test/library_skills_test.dart` and `test/product_ui_regression_test.dart`; successful load → failing refresh retains rows and shows Retry → successful retry clears the notice. A representative shared pattern check is sufficient; no golden refresh campaign.
+- Minimal verification: Reuse the fake repositories in `test/library_skills_test.dart` and `test/product_ui_regression_*test.dart`; successful load → failing refresh retains rows and shows Retry → successful retry clears the notice. A representative shared pattern check is sufficient; no golden refresh campaign.
 
 ## FE-007 — Make Default shell's retry action actually retry
 
@@ -107,7 +107,7 @@ Status: **Implemented — cycle 2026-09-05-04**
 - Trigger and impact: Open Files, descend into a folder, and use Android Back to return to its parent. Files changes `_path` within one route and has no back handler, so `HomeScreen._onRootPop` instead says “Press back again to exit” and then exits. The root breadcrumb's only label is `/`, which does not describe its destination to assistive technology.
 - Location: `lib/ui/screens/home_screen.dart`, `PopScope` (129–131) and `_onRootPop` (216–232); `lib/ui/screens/files_screen.dart`, `_navigateTo` (203–208) and breadcrumb actions (725–747).
 - Implementation: Let the active Files surface consume Back while it has search state or a non-root path: clear search first, otherwise navigate one directory up through the existing loader. Only the active IndexedStack child should consume Back; preview routes and keyboard dismissal retain their normal behavior. Use the existing exit guard once Files is at its root. Give the root/ancestor breadcrumbs descriptive semantic labels such as “Project root” and “Open folder lib”, and identify the current folder without presenting it as an actionable destination.
-- Minimal verification: Combine `test/home_navigation_test.dart` with the nested-files fixture in `test/product_ui_regression_test.dart`: Back at `lib/src` loads `lib` without sending `SystemNavigator.pop`; Back with a search clears it; the inactive Files tab does not intercept another screen. Check the root breadcrumb's semantic label in the same harness.
+- Minimal verification: Combine `test/home_navigation_test.dart` with the nested-files fixture in `test/product_ui_regression_*test.dart`: Back at `lib/src` loads `lib` without sending `SystemNavigator.pop`; Back with a search clears it; the inactive Files tab does not intercept another screen. Check the root breadcrumb's semantic label in the same harness.
 
 ## v1 readiness scope — current evidence, not a release approval
 
