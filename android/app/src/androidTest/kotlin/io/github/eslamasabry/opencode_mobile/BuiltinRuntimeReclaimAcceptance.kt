@@ -80,43 +80,21 @@ internal class BuiltinRuntimeReclaimAcceptance(
     }
 
     private fun capabilities(linux: BuiltinLinux) = synchronized(linux) {
-        fun probe(method: String): Pair<Boolean, String> = try {
-            val target = try { BuiltinLinux::class.java.getDeclaredMethod(method) }
-                catch (missing: NoSuchMethodException) {
-                    if (method != "knownOtherRuntime") throw missing
-                    BuiltinLinux::class.java.getDeclaredMethod(method, java.lang.Process::class.java,
-                        Boolean::class.javaPrimitiveType)
-                }.apply { isAccessible = true }
-            if (target.parameterCount == 0) target.invoke(linux) else target.invoke(linux, null, false)
-            true to "none"
-        } catch (failure: Throwable) {
-            val error = (failure as? java.lang.reflect.InvocationTargetException)?.targetException ?: failure
-            false to when (error) {
-                is java.util.ConcurrentModificationException -> "inventoryChanged"
-                is NullPointerException -> "invalidContext"
-                is IllegalArgumentException -> "identityInvalid"
-                is LinkageError -> "runtimeLinkageUnavailable"
-                is ClassCastException -> "identityTypeInvalid"
-                is android.system.ErrnoException -> "kernelUnavailable"
-                is SecurityException -> "permissionDenied"
-                is java.io.IOException -> "ioUnavailable"
-                is IllegalStateException -> "identityUnavailable"
-                is ReflectiveOperationException -> "reflectionUnavailable"
-                else -> "capabilityUnavailable"
-            }
-        }
-        val boot = probe("bootIdentity")
-        val inventory = probe("knownOtherRuntime")
+        val boot = probe(linux, "bootIdentity")
+        val inventory = probe(linux, "knownOtherRuntime")
         val bootReadable = try { File("/proc/sys/kernel/random/boot_id").readText().trim().isNotEmpty() }
-            catch (_: Throwable) { false }
-        val bootCountAvailable = try { Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT, -1) >= 0 }
-            catch (_: Throwable) { false }
+        catch (_: Throwable) { false }
+        val bootCountAvailable = try { Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT,
+                -1) >= 0 }
+        catch (_: Throwable) { false }
         val recipePresent = try {
             BuiltinLinux::class.java.getDeclaredField("serverRecipe").apply { isAccessible = true }.get(linux) != null
         } catch (_: Throwable) { false }
         val bindingMatches = try {
-            val profile = BuiltinLinux::class.java.getDeclaredField("supervisionProfile").apply { isAccessible = true }.get(linux)
-            val enabled = BuiltinLinux::class.java.getDeclaredField("supervisionEnabled").apply { isAccessible = true }.getBoolean(linux)
+            val profile = BuiltinLinux::class.java.getDeclaredField("supervisionProfile").apply { isAccessible =
+                    true }.get(linux)
+            val enabled = BuiltinLinux::class.java.getDeclaredField("supervisionEnabled").apply { isAccessible =
+                    true }.getBoolean(linux)
             val owner = native.getString("owner", null)
             owner != null && profile == owner && enabled && native.getBoolean("enabled", false)
         } catch (_: Throwable) { false }
@@ -129,9 +107,11 @@ internal class BuiltinRuntimeReclaimAcceptance(
             putString("bb3KnownRuntimeFailure", inventory.second)
             putBoolean("bb3MemoryRecipePresent", recipePresent)
             putBoolean("bb3BoundOwnerEnabledMatches", bindingMatches)
-            putString("bb3RestorePhase", linux.restorePhase.takeIf { it in listOf("idle", "waiting", "restoring", "unavailable") } ?: "unavailable")
+            putString("bb3RestorePhase", linux.restorePhase.takeIf { it in listOf("idle", "waiting", "restoring",
+                    "unavailable") } ?: "unavailable")
             putString("bb3RestoreReason", linux.restoreReason?.takeIf { it in listOf("stopped", "policyDisabled",
-                "budgetExhausted", "ownershipUnknown", "storageUnavailable", "componentRecoveryRequired", "systemTimeout") }
+                    "budgetExhausted", "ownershipUnknown", "storageUnavailable", "componentRecoveryRequired",
+                    "systemTimeout") }
                 ?: if (linux.restoreReason == null) "none" else "ownershipUnknown")
         }
     }
@@ -157,8 +137,8 @@ internal class BuiltinRuntimeReclaimAcceptance(
                 val behaviors = saved.optJSONObject("behaviors")
                 NativeRecoveryBudget.policyAllows(mapOf("version" to saved.opt("version"),
                     "supervision" to saved.opt("supervision"), "behaviors" to mapOf(
-                        "restartPhoneServer" to behaviors?.opt("restartPhoneServer"),
-                        "pollRestartHealth" to behaviors?.opt("pollRestartHealth"))))
+                    "restartPhoneServer" to behaviors?.opt("restartPhoneServer"),
+                    "pollRestartHealth" to behaviors?.opt("pollRestartHealth"))))
             }
             markerValid && policyValid
         } catch (_: Throwable) { false }
@@ -178,18 +158,22 @@ internal class BuiltinRuntimeReclaimAcceptance(
         requireSafe(!linux.serverRunning && !linux.serverRestartWanted, "bb3_person_server_present")
         requireSafe(!flutter.contains(marker) && !flutter.contains(policy) &&
             !native.contains("oc.builtinRecoveryBudget.$PROFILE") && !evidence.exists(), "bb3_fixture_exists")
-        requireSafe(linux.run("command -v opencode2 >/dev/null 2>&1 && test -s /root/.oc-builtin/server.password", 10L).exitCode == 0,
+        requireSafe(linux.run("command -v opencode2 >/dev/null 2>&1 && test -s /root/.oc-builtin/server.password",
+            10L).exitCode == 0,
             "bb3_actual_opencode2_unavailable")
         val binary = linux.run("readlink -f \"${'$'}(command -v opencode2)\"", 10L)
         val guest = binary.output.trim()
         requireSafe(binary.exitCode == 0 && Regex("/[A-Za-z0-9_./-]{1,500}").matches(guest), "bb3_executable_unknown")
         executable = File(linux.rootfs, guest.removePrefix("/")).canonicalPath
-        requireSafe(executable!!.startsWith(linux.rootfs.canonicalPath + File.separator), "bb3_executable_outside_rootfs")
+        requireSafe(executable!!.startsWith(linux.rootfs.canonicalPath + File.separator),
+            "bb3_executable_outside_rootfs")
         linux.stageServerRecovery(PROFILE, NativeRecoveryBudget().map())
         requireSafe(flutter.edit().putString(marker, "{\"version\":2,\"nativeAuthority\":true}")
-            .putString(policy, "{\"version\":1,\"supervision\":\"high\",\"behaviors\":{\"restartPhoneServer\":true,\"pollRestartHealth\":true}}")
+            .putString(policy,
+            QA_POLICY_ENABLED)
             .commit(), "bb3_fixture_save_failed")
-        val activity = existingMainActivity() ?: instrumentation.startActivitySync(Intent(context, MainActivity::class.java)
+        val activity = existingMainActivity() ?: instrumentation.startActivitySync(Intent(context,
+            MainActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         try {
             linux.startService(BOOTSTRAP, "sleep 180", null, null)
@@ -201,7 +185,8 @@ internal class BuiltinRuntimeReclaimAcceptance(
             val initialProcesses = identities()
             saveEvidence(JSONObject().put("version", 1).put("stage", "bootstrapping")
                 .put("app", JSONObject(identity(Process.myPid()).map())).put("members", JSONArray())
-                .put("fixtureOthers", JSONArray(bootstrapIdentities(linux, initialProcesses).map { JSONObject(it.map()) }))
+                .put("fixtureOthers", JSONArray(bootstrapIdentities(linux,
+                initialProcesses).map { JSONObject(it.map()) }))
                 .put("serverExecutable", executable).put("activityAbsent", true))
             Thread.sleep(2_000L)
             linux.bindServerRecovery(PROFILE, null, true)
@@ -217,18 +202,7 @@ internal class BuiltinRuntimeReclaimAcceptance(
             awaitHealth()
             writeEvidence(linux, "armed", healthy = true)
             if (arguments.getString("staleIdentity") == "true") {
-                val key = "oc.builtinRuntimeOwnership.$PROFILE"
-                val record = JSONObject(native.getString(key, null) ?: throw Refused("bb3_ownership_missing"))
-                for (name in listOf("root", "leader")) {
-                    val value = record.getJSONObject(name)
-                    value.put("startTicks", value.getLong("startTicks") + 1L)
-                }
-                // Both identity and nonce mismatch ensure no fallback to the live session.
-                val nonce = record.getString("nonce")
-                record.put("nonce", (if (nonce[0] == '0') "1" else "0") + nonce.drop(1))
-                requireSafe(native.edit().putString(key, record.toString()).commit(), "bb3_stale_receipt_save_failed")
-                val saved = JSONObject(evidence.readText()).put("staleIdentity", true)
-                saveEvidence(saved)
+                staleIdentity()
             }
             // --no-restart completion detaches AMS instrumentation while retaining this FGS.
         } finally {
@@ -237,12 +211,13 @@ internal class BuiltinRuntimeReclaimAcceptance(
         }
     }
 
-    private fun writeEvidence(linux: BuiltinLinux, stage: String, healthy: Boolean, receipt: NativeRuntimeReceipt? = null) {
+    private fun writeEvidence(linux: BuiltinLinux, stage: String, healthy: Boolean,
+        receipt: NativeRuntimeReceipt? = null) {
         val pid = Process.myPid()
         val processes = identities()
         val stored = receipt ?: run {
             val raw = native.getString("oc.builtinRuntimeOwnership.$PROFILE", null)
-                ?: throw Refused("bb3_ownership_missing")
+            ?: throw Refused("bb3_ownership_missing")
             val value = JSONObject(raw)
             fun process(key: String): RuntimeProcessIdentity {
                 val item = value.getJSONObject(key)
@@ -254,7 +229,8 @@ internal class BuiltinRuntimeReclaimAcceptance(
         }
         val root = stored.root ?: throw Refused("bb3_ownership_root_missing")
         val children = mutableSetOf(root.pid)
-        repeat(processes.size) { processes.forEach { identity -> if (identity.parent in children) children.add(identity.pid) } }
+        repeat(processes.size) { processes.forEach { identity -> if (identity.parent in children) children
+                    .add(identity.pid) } }
         val safe = JSONObject().put("version", 1).put("stage", stage).put("app", JSONObject(identity(pid).map()))
             .put("members", JSONArray(processes.filter { it.pid in children }.map { JSONObject(it.map()) }))
             .put("serverExecutable", executable)
@@ -307,37 +283,16 @@ internal class BuiltinRuntimeReclaimAcceptance(
 
     private fun commitStaleWitness(linux: BuiltinLinux) {
         requireWitnessScope(linux)
-        val pidValue = arguments.getString("witnessPid")
-        val ticksValue = arguments.getString("witnessStartTicks")
-        requireSafe(pidValue != null && Regex("[1-9][0-9]{0,9}").matches(pidValue), "bb3_witness_pid_invalid")
-        requireSafe(ticksValue != null && Regex("[1-9][0-9]{0,18}").matches(ticksValue), "bb3_witness_ticks_invalid")
-        val pid = pidValue?.toIntOrNull() ?: throw Refused("bb3_witness_pid_invalid")
-        val ticks = ticksValue?.toLongOrNull() ?: throw Refused("bb3_witness_ticks_invalid")
-        requireSafe(pid > 1 && pid != Process.myPid() && ticks in 1L until Long.MAX_VALUE,
-            "bb3_witness_identity_invalid")
-        val actual = RuntimeProcessIdentity.stat(readBounded(File("/proc/$pid/stat"), 4096))
-        requireSafe(actual.pid == pid && actual.startTicks == ticks && actual.session == pid && actual.group == pid,
-            "bb3_witness_kernel_identity_invalid")
-        fun uidMatches(): Boolean {
-            val uidLine = readBounded(File("/proc/$pid/status"), 32 * 1024).lineSequence()
-                .singleOrNull { it.startsWith("Uid:") } ?: return false
-            val values = uidLine.substringAfter(':').trim().split(Regex("\\s+"))
-            return values.size == 4 && values.all { it.toIntOrNull() == Process.myUid() }
-        }
-        requireSafe(uidMatches(), "bb3_witness_uid_invalid")
+        val (actual, ticks) = witnessIdentity()
+        val pid = actual.pid
+        requireSafe(witnessUidMatches(pid), "bb3_witness_uid_invalid")
         val witnessGroup = readBounded(File("/proc/$pid/cgroup"), 16 * 1024).trim()
         val appGroup = readBounded(File("/proc/${Process.myPid()}/cgroup"), 16 * 1024).trim()
         requireSafe(witnessGroup.isNotEmpty() && appGroup.isNotEmpty() && witnessGroup != appGroup,
             "bb3_witness_lifecycle_group_invalid")
         val key = "oc.builtinRuntimeOwnership.$PROFILE"
-        val raw = native.getString(key, null) ?: throw Refused("bb3_ownership_missing")
-        requireSafe(raw.length <= 64 * 1024, "bb3_witness_receipt_invalid")
-        val record = JSONObject(raw)
-        requireSafe(record.keys().asSequence().toSet() == setOf("version", "boot", "nonce", "generation", "root", "leader", "other") &&
-            record.optInt("version") == 1 && record.optJSONObject("root") != null && record.optJSONObject("leader") != null,
-            "bb3_witness_receipt_invalid")
+        val (raw, record) = witnessReceipt(key)
         val nonce = record.getString("nonce")
-        requireSafe(Regex("[0-9a-f]{64}").matches(nonce), "bb3_witness_receipt_invalid")
         val mismatched = JSONObject(actual.map()).put("startTicks", ticks + 1L)
         record.put("root", JSONObject(mismatched.toString())).put("leader", JSONObject(mismatched.toString()))
             .put("nonce", (if (nonce[0] == '0') "1" else "0") + nonce.drop(1))
@@ -345,7 +300,7 @@ internal class BuiltinRuntimeReclaimAcceptance(
         val rechecked = RuntimeProcessIdentity.stat(readBounded(File("/proc/$pid/stat"), 4096))
         val currentWitnessGroup = readBounded(File("/proc/$pid/cgroup"), 16 * 1024).trim()
         val currentAppGroup = readBounded(File("/proc/${Process.myPid()}/cgroup"), 16 * 1024).trim()
-        requireSafe(actual == rechecked && uidMatches() && currentWitnessGroup == witnessGroup &&
+        requireSafe(actual == rechecked && witnessUidMatches(pid) && currentWitnessGroup == witnessGroup &&
             currentAppGroup.isNotEmpty() && currentWitnessGroup != currentAppGroup, "bb3_witness_identity_changed")
         requireSafe(native.getString("owner", null) == PROFILE && native.getString("restoreOwner", null) == PROFILE &&
             native.getString(key, null) == raw && linux.serverRestorationArmed, "bb3_witness_fixture_changed")
@@ -379,11 +334,14 @@ internal class BuiltinRuntimeReclaimAcceptance(
     }
     private fun identity(pid: Int) = RuntimeProcessIdentity.stat(File("/proc/$pid/stat").readText())
 
-    private fun bootstrapIdentities(linux: BuiltinLinux, processes: List<RuntimeProcessIdentity>): List<RuntimeProcessIdentity> {
+    private fun bootstrapIdentities(linux: BuiltinLinux,
+        processes: List<RuntimeProcessIdentity>): List<RuntimeProcessIdentity> {
         val field = BuiltinLinux::class.java.getDeclaredField("services").apply { isAccessible = true }
         val service = (field.get(linux) as Map<*, *>)[BOOTSTRAP] ?: return emptyList()
-        val process = service.javaClass.getDeclaredField("process").apply { isAccessible = true }.get(service) as java.lang.Process
-        val root = (process.javaClass.getDeclaredField("pid").apply { isAccessible = true }.get(process) as Number).toInt()
+        val process = service.javaClass.getDeclaredField("process").apply { isAccessible = true }
+            .get(service) as java.lang.Process
+        val root = (process.javaClass.getDeclaredField("pid").apply { isAccessible = true }
+            .get(process) as Number).toInt()
         val owned = mutableSetOf(root)
         repeat(processes.size) { processes.forEach { if (it.parent in owned) owned.add(it.pid) } }
         return processes.filter { it.pid in owned }
@@ -400,7 +358,8 @@ internal class BuiltinRuntimeReclaimAcceptance(
             val thread = type.getDeclaredMethod("currentActivityThread").invoke(null)
             val records = type.getDeclaredField("mActivities").apply { isAccessible = true }.get(thread) as Map<*, *>
             activity = records.values.mapNotNull { record ->
-                record?.javaClass?.getDeclaredField("activity")?.apply { isAccessible = true }?.get(record) as? MainActivity
+                record?.javaClass?.getDeclaredField("activity")?.apply { isAccessible = true }
+                    ?.get(record) as? MainActivity
             }.singleOrNull { !it.isDestroyed }
         }
         return activity
@@ -410,23 +369,14 @@ internal class BuiltinRuntimeReclaimAcceptance(
         val checkpoint = CountDownLatch(1)
         val failure = AtomicReference<String?>(null)
         val field = BuiltinLinux::class.java.getDeclaredField("runtimeQaGateCheckpoint").apply { isAccessible = true }
-        val callback: (String, NativeRuntimeReceipt) -> Unit = { stage, receipt ->
-            if (stage == "prepared") {
-                writeEvidence(linux, "prepared", healthy = false, receipt = receipt)
-                checkpoint.countDown()
-                // The real native launch worker stays blocked after instrumentation has finished.
-                // Watchdog revokes before throwing, so legacy manual fallback cannot run the payload.
-                Thread.sleep(150_000L)
-                try { linux.requestServerStop() } catch (_: Throwable) { }
-                throw Refused("bb3_host_death_not_observed")
-            }
-        }
+        val callback = heldGateCallback(linux, checkpoint)
         field.set(linux, callback)
         val sentinel = File(linux.rootfs, "root/.oc-bb3-gate-workload")
         requireSafe(!sentinel.exists(), "bb3_gate_sentinel_exists")
         Thread({
             try {
-                linux.startServer("printf executed > /root/.oc-bb3-gate-workload\n" + recipe.restorationScript(), 4097, request)
+                linux.startServer("printf executed > /root/.oc-bb3-gate-workload\n" + recipe.restorationScript(),
+                    4097, request)
                 failure.set("bb3_gate_checkpoint_not_held")
             } catch (error: Refused) { failure.set(error.safeCode) }
             catch (_: Throwable) { failure.set("bb3_gate_launch_failed") }
@@ -450,25 +400,8 @@ internal class BuiltinRuntimeReclaimAcceptance(
         val deadline = SystemClock.elapsedRealtime() + 60_000L
         while (SystemClock.elapsedRealtime() < deadline) {
             for (route in listOf("/api/health", "/api/info")) {
-              val healthy = try {
-                val connection = URL("http://127.0.0.1:4097$route").openConnection() as HttpURLConnection
-                try {
-                    connection.connectTimeout = 500; connection.readTimeout = 500
-                    connection.setRequestProperty("Authorization", authorization)
-                    if (connection.responseCode != 200) false else {
-                        val text = connection.inputStream.bufferedReader().use { reader ->
-                            val buffer = CharArray(4097)
-                            val count = reader.read(buffer)
-                            if (count !in 1..4096) "" else String(buffer, 0, count)
-                        }
-                        val body = JSONObject(text)
-                        body.optString("version").isNotEmpty() &&
-                            (if (route == "/api/health") body.optBoolean("healthy", false)
-                             else body.has("pid") || body.optJSONArray("urls") != null)
-                    }
-                } finally { connection.disconnect() }
-              } catch (_: Throwable) { false }
-              if (healthy) return
+                val healthy = healthProbe(route, authorization)
+                if (healthy) return
             }
             Thread.sleep(100)
         }
@@ -481,8 +414,7 @@ internal class BuiltinRuntimeReclaimAcceptance(
 
     private fun awaitStopped(linux: BuiltinLinux, reason: String) {
         val deadline = SystemClock.elapsedRealtime() + 10_000L
-        while ((linux.serverRunning || linux.serverRecoveryScheduled || foreground()) &&
-            SystemClock.elapsedRealtime() < deadline) Thread.sleep(100)
+        while (stopPending(linux) && SystemClock.elapsedRealtime() < deadline) Thread.sleep(100)
         requireSafe(!linux.serverRunning && !linux.serverRestartWanted && !linux.serverRestorationArmed &&
             !linux.serverRecoveryScheduled && !foreground(), "bb3_stop_not_drained")
         requireSafe(native.getString("restoreReason", null) == reason, "bb3_stop_reason_invalid")
@@ -515,7 +447,144 @@ internal class BuiltinRuntimeReclaimAcceptance(
     private fun emit(block: Bundle.() -> Unit) { instrumentation.sendStatus(0, Bundle().apply(block)) }
     private fun requireSafe(value: Boolean, code: String) { if (!value) throw Refused(code) }
     private companion object {
+        private const val QA_POLICY_ENABLED =
+            "{\"version\":1,\"supervision\":\"high\",\"behaviors\":" +
+        "{\"restartPhoneServer\":true,\"pollRestartHealth\":true}}"
+
         const val PROFILE = "qa_bb3_reclaim"
         const val BOOTSTRAP = "qa-bb3-bootstrap"
     }
+    private fun probe(linux: BuiltinLinux, method: String): Pair<Boolean, String> = try {
+        val target = try { BuiltinLinux::class.java.getDeclaredMethod(method) }
+        catch (missing: NoSuchMethodException) {
+            if (method != "knownOtherRuntime") throw missing
+            BuiltinLinux::class.java.getDeclaredMethod(method, java.lang.Process::class.java,
+                Boolean::class.javaPrimitiveType)
+        }.apply { isAccessible = true }
+        if (target.parameterCount == 0) target.invoke(linux) else target.invoke(linux, null, false)
+        true to "none"
+    } catch (failure: Throwable) {
+        val error = (failure as? java.lang.reflect.InvocationTargetException)?.targetException ?: failure
+        false to capabilityFailure(error)
+    }
+
+    private fun capabilityFailure(error: Throwable): String {
+        return when (error) {
+            is java.util.ConcurrentModificationException -> "inventoryChanged"
+            is NullPointerException -> "invalidContext"
+            is IllegalArgumentException -> "identityInvalid"
+            is LinkageError -> "runtimeLinkageUnavailable"
+            is ClassCastException -> "identityTypeInvalid"
+            is android.system.ErrnoException -> "kernelUnavailable"
+            is SecurityException -> "permissionDenied"
+            is java.io.IOException -> "ioUnavailable"
+            is IllegalStateException -> "identityUnavailable"
+            is ReflectiveOperationException -> "reflectionUnavailable"
+            else -> "capabilityUnavailable"
+        }
+    }
+
+    private fun staleIdentity() {
+        val key = "oc.builtinRuntimeOwnership.$PROFILE"
+        val record = JSONObject(native.getString(key, null) ?: throw Refused("bb3_ownership_missing"))
+        for (name in listOf("root", "leader")) {
+            val value = record.getJSONObject(name)
+            value.put("startTicks", value.getLong("startTicks") + 1L)
+        }
+        // Both identity and nonce mismatch ensure no fallback to the live session.
+        val nonce = record.getString("nonce")
+        record.put("nonce", (if (nonce[0] == '0') "1" else "0") + nonce.drop(1))
+        requireSafe(native.edit().putString(key, record.toString()).commit(), "bb3_stale_receipt_save_failed")
+        val saved = JSONObject(evidence.readText()).put("staleIdentity", true)
+        saveEvidence(saved)
+    }
+
+    private fun witnessUidMatches(pid: Int): Boolean {
+        val uidLine = readBounded(File("/proc/$pid/status"), 32 * 1024).lineSequence()
+            .singleOrNull { it.startsWith("Uid:") } ?: return false
+        val values = uidLine.substringAfter(':').trim().split(Regex("\\s+"))
+        return values.size == 4 && values.all { it.toIntOrNull() == Process.myUid() }
+    }
+
+    private fun witnessReceipt(key: String): Pair<String, JSONObject> {
+        val raw = native.getString(key, null) ?: throw Refused("bb3_ownership_missing")
+        requireSafe(raw.length <= 64 * 1024, "bb3_witness_receipt_invalid")
+        val record = JSONObject(raw)
+        requireSafe(record.keys().asSequence().toSet() == setOf("version", "boot", "nonce", "generation", "root",
+            "leader", "other") &&
+            record.optInt("version") == 1 && record.optJSONObject("root") != null &&
+            record.optJSONObject("leader") != null,
+            "bb3_witness_receipt_invalid")
+        requireSafe(Regex("[0-9a-f]{64}").matches(record.getString("nonce")), "bb3_witness_receipt_invalid")
+        return raw to record
+    }
+
+    private fun witnessPid(value: String?): Int =
+        value?.toIntOrNull() ?: throw Refused("bb3_witness_pid_invalid")
+
+    private fun witnessTicks(value: String?): Long =
+        value?.toLongOrNull() ?: throw Refused("bb3_witness_ticks_invalid")
+
+    private fun heldGateCallback(linux: BuiltinLinux, checkpoint: CountDownLatch):
+    (String, NativeRuntimeReceipt) -> Unit {
+        return { stage, receipt ->
+            if (stage == "prepared") {
+                writeEvidence(linux, "prepared", healthy = false, receipt = receipt)
+                checkpoint.countDown()
+                // The real native launch worker stays blocked after instrumentation has finished.
+                // Watchdog revokes before throwing, so legacy manual fallback cannot run the payload.
+                Thread.sleep(150_000L)
+                try { linux.requestServerStop() } catch (_: Throwable) { }
+                throw Refused("bb3_host_death_not_observed")
+            }
+        }
+    }
+
+    private fun healthProbe(route: String, authorization: String): Boolean {
+        return try {
+            val connection = URL("http://127.0.0.1:4097$route").openConnection() as HttpURLConnection
+            try {
+                connection.connectTimeout = 500; connection.readTimeout = 500
+                connection.setRequestProperty("Authorization", authorization)
+                if (connection.responseCode != 200) false else {
+                    val text = readHealthBody(connection)
+                    val body = JSONObject(text)
+                    validHealthBody(body, route)
+                }
+            } finally { connection.disconnect() }
+        } catch (_: Throwable) { false }
+    }
+
+    private fun stopPending(linux: BuiltinLinux) =
+        linux.serverRunning || linux.serverRecoveryScheduled || foreground()
+
+    private fun witnessIdentity(): Pair<RuntimeProcessIdentity, Long> {
+        val pidValue = arguments.getString("witnessPid")
+        val ticksValue = arguments.getString("witnessStartTicks")
+        requireSafe(pidValue != null && Regex("[1-9][0-9]{0,9}").matches(pidValue), "bb3_witness_pid_invalid")
+        requireSafe(ticksValue != null && Regex("[1-9][0-9]{0,18}").matches(ticksValue), "bb3_witness_ticks_invalid")
+        val pid = witnessPid(pidValue)
+        val ticks = witnessTicks(ticksValue)
+        requireSafe(pid > 1 && pid != Process.myPid() && ticks in 1L until Long.MAX_VALUE,
+            "bb3_witness_identity_invalid")
+        val actual = RuntimeProcessIdentity.stat(readBounded(File("/proc/$pid/stat"), 4096))
+        requireSafe(actual.pid == pid && actual.startTicks == ticks && actual.session == pid && actual.group == pid,
+            "bb3_witness_kernel_identity_invalid")
+        return actual to ticks
+    }
+
+    private fun readHealthBody(connection: HttpURLConnection): String {
+        return connection.inputStream.bufferedReader().use { reader ->
+            val buffer = CharArray(4097)
+            val count = reader.read(buffer)
+            if (count !in 1..4096) "" else String(buffer, 0, count)
+        }
+    }
+
+    private fun validHealthBody(body: JSONObject, route: String): Boolean {
+        return body.optString("version").isNotEmpty() &&
+            (if (route == "/api/health") body.optBoolean("healthy", false)
+            else body.has("pid") || body.optJSONArray("urls") != null)
+    }
+
 }
