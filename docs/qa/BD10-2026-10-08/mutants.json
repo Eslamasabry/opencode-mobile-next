@@ -1,0 +1,30 @@
+[
+  {
+    "mutant": "ignore-saved-choice",
+    "expectedExit": 1,
+    "actualExit": 1,
+    "behaviorFailure": true,
+    "restored": true
+  },
+  {
+    "mutant": "widget-lookups",
+    "expectedExit": 1,
+    "actualExit": 1,
+    "behaviorFailure": true,
+    "restored": true
+  },
+  {
+    "mutant": "server-lookups",
+    "expectedExit": 1,
+    "actualExit": 1,
+    "behaviorFailure": true,
+    "restored": true
+  },
+  {
+    "mutant": "drop-locale-refresh",
+    "expectedExit": 1,
+    "actualExit": 1,
+    "behaviorFailure": true,
+    "restored": true
+  }
+]

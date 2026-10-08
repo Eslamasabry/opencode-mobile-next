@@ -110,6 +110,15 @@ void main() {
     expect(result.historyCounts.values, contains(2));
   });
 
+  test('rolling event cache retains fresh diagnostic observations', () async {
+    final wire = _Wire()..rollingEventCache = true;
+    final result = await probe(wire, {'image'});
+    expect(result.results['image']?['state'], 'pass');
+    expect(result.observations['image']?['executionSucceededCount'], 1);
+    expect(result.observations['image']?['textDeltaCount'], 1);
+    expect(result.observations['image']?['toolProgressCount'], 0);
+  });
+
   test(
     'explicit enabled UI model overrides a retrying backend default',
     () async {
@@ -164,6 +173,99 @@ void main() {
         'stream',
       }, model: 'opencode/big-pickle');
       expect(result.results['stream']?['code'], 'completed_assistant_missing');
+    },
+  );
+
+  test(
+    'model switch records the retrying alternative without qualifying or falling back',
+    () async {
+      final wire = _Wire()..uiSelectionFixture = true;
+      final result = await probe(wire, {
+        'modelSwitch',
+      }, model: 'opencode/big-pickle');
+      expect(result.results['modelSwitch']?['state'], 'fail');
+      expect(result.results['modelSwitch']?['code'], 'timeout');
+      expect(result.results['modelSwitch']?['facts'], isEmpty);
+      expect(wire.createBodies, hasLength(2));
+      expect(wire.createBodies.last['model'], {
+        'id': 'big-pickle',
+        'providerID': 'opencode',
+      });
+      expect(wire.sessions['ses_2']?['model'], _Wire.backendDefault);
+      expect(
+        wire.paths.where((path) => path == '/api/session/ses_2/model'),
+        hasLength(1),
+      );
+      expect(
+        wire.paths.where((path) => path.endsWith('/prompt')),
+        hasLength(1),
+      );
+      final observed = result.observations['modelSwitch'];
+      expect(observed?['model'], 'opencode/exo-free');
+      expect(observed?['stage'], 'await_terminal');
+      expect(observed?['modelSelectedCount'], 1);
+      expect(observed?['retryCount'], 10);
+      expect(observed?['http503Retries'], 10);
+      expect(observed?['terminalCount'], 0);
+      expect(wire.active, contains('ses_2'));
+    },
+  );
+
+  test(
+    'nonvision selected model uses the retrying vision model and remains failed',
+    () async {
+      final wire = _Wire()..uiSelectionFixture = true;
+      final result = await probe(wire, {'image'}, model: 'opencode/big-pickle');
+      expect(result.results['image']?['state'], 'fail');
+      expect(result.results['image']?['code'], 'timeout');
+      expect(result.results['image']?['facts'], isEmpty);
+      expect(wire.createBodies, hasLength(2));
+      expect(wire.createBodies.last['model'], _Wire.backendDefault);
+      expect(wire.imageSubmitted, isTrue);
+      expect(
+        wire.paths.where((path) => path.endsWith('/prompt')),
+        hasLength(1),
+      );
+      final observed = result.observations['image'];
+      expect(observed?['model'], 'opencode/exo-free');
+      expect(observed?['stage'], 'await_terminal');
+      expect(observed?['retryCount'], 10);
+      expect(observed?['http503Retries'], 10);
+      expect(observed?['terminalCount'], 0);
+      expect(wire.active, contains('ses_2'));
+    },
+  );
+
+  test(
+    'retained model without an owned selection event fails at selection observation',
+    () async {
+      for (final mismatch in ['absent', 'foreign']) {
+        final wire = _Wire()
+          ..uiSelectionFixture = true
+          ..selectionEventMismatch = mismatch;
+        final result = await probe(wire, {
+          'modelSwitch',
+        }, model: 'opencode/big-pickle');
+        expect(
+          result.results['modelSwitch']?['state'],
+          'fail',
+          reason: mismatch,
+        );
+        expect(
+          result.results['modelSwitch']?['code'],
+          'timeout',
+          reason: mismatch,
+        );
+        final readback = await wire.request('GET', '/api/session/ses_2');
+        expect(readback['data']['model'], _Wire.backendDefault);
+        expect(wire.paths.where((path) => path.endsWith('/prompt')), isEmpty);
+        final observed = result.observations['modelSwitch'];
+        expect(observed?['model'], 'opencode/exo-free', reason: mismatch);
+        expect(observed?['stage'], 'await_selection', reason: mismatch);
+        expect(observed?['modelSelectedCount'], 0, reason: mismatch);
+        expect(observed?['retryCount'], 0, reason: mismatch);
+        expect(observed?['terminalCount'], 0, reason: mismatch);
+      }
     },
   );
 
@@ -312,6 +414,21 @@ void main() {
     },
   );
 
+  test('stable MCP inventory must belong to the requested location', () async {
+    for (final directory in ['/other/project', '', null, 7]) {
+      final wire = _Wire()
+        ..stable = true
+        ..cardMcpDirectory = directory;
+      final result = await probe(wire, {'cards'});
+      expect(
+        result.results['cards']?['code'],
+        'cards_inventory_scope_mismatch',
+      );
+      expect(wire.paths.where((path) => path.endsWith('/prompt')), isEmpty);
+      expect(wire.createBodies, hasLength(1));
+    }
+  });
+
   test('foreign permission cannot receive approval', () async {
     final wire = _Wire()..foreignPermission = true;
     final result = await probe(wire, {'permissionAllow'});
@@ -336,10 +453,10 @@ void main() {
       );
       expect(wire.createBodies.skip(2).map((b) => b['permissions']), [
         [
-          {'action': 'bash', 'resource': '*', 'effect': 'ask'},
+          {'action': 'shell', 'resource': '*', 'effect': 'ask'},
         ],
         [
-          {'action': 'bash', 'resource': '*', 'effect': 'ask'},
+          {'action': 'shell', 'resource': '*', 'effect': 'ask'},
         ],
       ]);
       expect(wire.paths.any((p) => p.contains('/config')), isFalse);
@@ -371,10 +488,112 @@ void main() {
   });
 
   test(
-    'card receipt requires an actual executed completed assistant call',
+    'retained card without fresh matching tool success cannot pass',
     () async {
       final result = await probe(_Wire()..fabricatedCard = true, {'cards'});
-      expect(result.results['cards']?['code'], 'cards_tool_call_missing');
+      expect(result.results['cards']?['state'], 'fail');
+      expect(
+        result.results['cards']?['facts'] as Map,
+        isNot(containsPair('answerReceipt', true)),
+      );
+    },
+  );
+
+  test(
+    'completed local MCP card with provider executed false passes',
+    () async {
+      final wire = _Wire()
+        ..stable = true
+        ..localCard = true;
+      final result = await probe(wire, {'cards'});
+      expect(result.results['cards']?['state'], 'pass');
+      expect(
+        result.results['cards']?['facts'],
+        containsPair('cardsToolCall', true),
+      );
+      expect(
+        result.results['cards']?['facts'],
+        containsPair('answerReceipt', true),
+      );
+      final call = wire.transcripts.values
+          .expand((messages) => messages)
+          .where((m) => m['type'] == 'assistant')
+          .expand((m) => m['content'] as List)
+          .whereType<Map>()
+          .singleWhere((part) => part['type'] == 'tool');
+      expect(call['executed'], isFalse);
+      expect((call['state'] as Map)['status'], 'completed');
+      expect(
+        wire.events.where((event) => event['type'] == 'session.tool.success'),
+        hasLength(1),
+      );
+    },
+  );
+
+  test(
+    'unavailable MCP helper fails before a card prompt or receipt',
+    () async {
+      for (final status in [
+        'missing',
+        'pending',
+        'disabled',
+        'failed',
+        'needs_auth',
+      ]) {
+        final wire = _Wire()..cardMcpStatus = status;
+        final result = await probe(wire, {'cards'});
+        expect(result.results['cards']?['state'], 'fail', reason: status);
+        expect(wire.paths.where((path) => path.endsWith('/prompt')), isEmpty);
+      }
+    },
+  );
+
+  test(
+    'card success must be fresh and match session location message and call',
+    () async {
+      for (final mismatch in [
+        'session',
+        'location',
+        'message',
+        'call',
+        'stale',
+      ]) {
+        final wire = _Wire()..cardSuccessMismatch = mismatch;
+        final result = await probe(wire, {'cards'});
+        expect(result.results['cards']?['state'], 'fail', reason: mismatch);
+        expect(
+          wire.transcripts.values
+              .expand((messages) => messages)
+              .where(
+                (message) =>
+                    message['type'] == 'user' &&
+                    (message['text'] as String).startsWith('[oc-ui answer '),
+              ),
+          isEmpty,
+          reason: mismatch,
+        );
+      }
+    },
+  );
+
+  test(
+    'pending errored or malformed retained card calls stay failed',
+    () async {
+      for (final state in [
+        'pending',
+        'running',
+        'error',
+        'wrong-input',
+        'missing-id',
+        'missing-output',
+      ]) {
+        final result = await probe(_Wire()..cardState = state, {'cards'});
+        expect(result.results['cards']?['state'], 'fail', reason: state);
+      }
+      final wrongModel = await probe(_Wire()..wrongInferenceModel = true, {
+        'cards',
+      });
+      expect(wrongModel.results['cards']?['state'], 'fail');
     },
   );
 
@@ -416,13 +635,20 @@ class _Wire extends Fq3Wire {
   bool foreignCatalogFirst = false;
   bool primaryImage = true;
   bool uiSelectionFixture = false;
+  String? selectionEventMismatch;
   int emptyCatalogReads = 0;
   int disableSecondaryReads = 0;
   int catalogReads = 0;
   bool foreignPermission = false;
   bool stable = false;
+  bool rollingEventCache = false;
+  Object? cardMcpDirectory = '/fq3/disposable';
   bool wrongImageAnswer = false;
   bool fabricatedCard = false;
+  bool localCard = false;
+  String cardMcpStatus = 'connected';
+  String? cardSuccessMismatch;
+  String cardState = 'completed';
   bool omitReceipt = false;
   bool imageSubmitted = false;
   int reconnects = 0;
@@ -454,6 +680,7 @@ class _Wire extends Fq3Wire {
       'location': {'directory': '/fq3/disposable'},
       'data': {'sessionID': id, ...data},
     });
+    if (rollingEventCache && events.length > 2000) events.removeAt(0);
   }
 
   Map<String, dynamic> assistant(
@@ -477,7 +704,34 @@ class _Wire extends Fq3Wire {
 
   void complete(String id, String text, {List<Map<String, dynamic>>? content}) {
     if (!omitAssistant) {
-      transcripts[id]!.add(assistant(id, text, content: content));
+      final message = assistant(id, text, content: content);
+      transcripts[id]!.add(message);
+      if (content != null &&
+          !fabricatedCard &&
+          cardSuccessMismatch != 'stale') {
+        for (final tool in content.where((part) => part['type'] == 'tool')) {
+          emit(
+            'session.tool.success',
+            cardSuccessMismatch == 'session' ? 'ses_foreign' : id,
+            {
+              'id': cardSuccessMismatch == 'call' ? 'call_foreign' : tool['id'],
+              'assistantMessageID': cardSuccessMismatch == 'message'
+                  ? 'msg_foreign'
+                  : message['id'],
+              'content': [
+                {
+                  'type': 'text',
+                  'text': 'Card accepted for display in OpenCode Mobile.',
+                },
+              ],
+              'executed': !localCard,
+            },
+          );
+          if (cardSuccessMismatch == 'location') {
+            events.last['location'] = {'directory': '/foreign/project'};
+          }
+        }
+      }
     }
     emit('session.text.delta', foreignDelta ? 'ses_foreign' : id, {
       'delta': text,
@@ -521,7 +775,8 @@ class _Wire extends Fq3Wire {
               'capabilities': {
                 'input': [
                   'text',
-                  if (model != primary || primaryImage) 'image',
+                  if (model != uiModel && (model != primary || primaryImage))
+                    'image',
                 ],
               },
             },
@@ -530,6 +785,20 @@ class _Wire extends Fq3Wire {
     }
     if (path == '/api/model/default') {
       return {'data': uiSelectionFixture ? backendDefault : primary};
+    }
+    if (path == '/api/mcp') {
+      expect(method, 'GET');
+      expect(query, {'location[directory]': '/fq3/disposable'});
+      return {
+        'location': {'directory': cardMcpDirectory},
+        'data': [
+          if (cardMcpStatus != 'missing')
+            {
+              'name': 'oc-ui',
+              'status': {'status': cardMcpStatus},
+            },
+        ],
+      };
     }
     if (path == '/api/session/active') {
       return {
@@ -559,7 +828,13 @@ class _Wire extends Fq3Wire {
     final operation = parts[4];
     if (operation == 'model') {
       sessions[id]!['model'] = data['model'];
-      emit('session.model.selected', id, {'model': data['model']});
+      if (selectionEventMismatch != 'absent') {
+        emit(
+          'session.model.selected',
+          selectionEventMismatch == 'foreign' ? 'ses_foreign' : id,
+          {'model': data['model']},
+        );
+      }
       return null;
     }
     if (operation == 'message') return {'data': transcripts[id]};
@@ -579,10 +854,44 @@ class _Wire extends Fq3Wire {
         'reply': reply,
       });
       final tool = transcripts[id]!.last['content'] as List;
-      (tool.first as Map)['state'] = {
+      final call = tool.first as Map;
+      final input = (call['state'] as Map)['input'];
+      call['state'] = {
         'status': reply == 'once' ? 'completed' : 'error',
+        'input': input,
+        if (reply == 'once')
+          'content': [
+            {'type': 'text', 'text': 'FQ3_ALLOW'},
+          ],
+        if (reply == 'reject')
+          'error': {'type': 'aborted', 'message': 'Permission rejected.'},
       };
-      complete(id, 'Outcome reported.');
+      if (stable) {
+        call['executed'] = false;
+        final message = transcripts[id]!.last;
+        (message['time'] as Map)['completed'] = 2;
+        emit(
+          reply == 'once' ? 'session.tool.success' : 'session.tool.failed',
+          id,
+          {
+            'id': call['id'],
+            'assistantMessageID': message['id'],
+            'executed': false,
+            if (reply == 'once')
+              'content': [
+                {'type': 'text', 'text': 'FQ3_ALLOW'},
+              ],
+            if (reply == 'reject')
+              'error': {'type': 'aborted', 'message': 'Permission rejected.'},
+          },
+        );
+        if (reply == 'reject') {
+          emit('session.execution.interrupted', id);
+          active.remove(id);
+          return null;
+        }
+      }
+      complete(id, stable ? 'FQ3_ALLOW' : 'Outcome reported.');
       return null;
     }
     if (operation == 'interrupt') {
@@ -601,6 +910,21 @@ class _Wire extends Fq3Wire {
     }
     emit('session.execution.started', id);
     active.add(id);
+    if (data['files'] != null) {
+      final uri = ((data['files'] as List).single as Map)['uri'] as String;
+      expect(uri, startsWith('data:image/png;base64,'));
+      expect(base64Decode(uri.split(',').last).take(8), [
+        137,
+        80,
+        78,
+        71,
+        13,
+        10,
+        26,
+        10,
+      ]);
+      imageSubmitted = true;
+    }
     if (uiSelectionFixture &&
         (sessions[id]!['model'] as Map)['id'] == 'exo-free') {
       final unfinished = assistant(id, '');
@@ -624,7 +948,10 @@ class _Wire extends Fq3Wire {
         'data': {'id': 'inbox'},
       };
     }
-    if (text.contains('Use the bash tool')) {
+    if (text.contains('Use the bash tool') ||
+        text.contains('Use the shell tool')) {
+      final name = stable ? 'shell' : 'bash';
+      expect(text, contains('Use the $name tool'));
       final command = text.contains('FQ3_ALLOW')
           ? 'printf FQ3_ALLOW'
           : 'printf FQ3_DENY';
@@ -636,7 +963,7 @@ class _Wire extends Fq3Wire {
             {
               'type': 'tool',
               'id': 'call_permission',
-              'name': 'bash',
+              'name': name,
               'state': {
                 'status': 'running',
                 'input': {'command': command},
@@ -648,9 +975,13 @@ class _Wire extends Fq3Wire {
       final request = {
         'id': 'per_1',
         'sessionID': foreignPermission ? 'ses_foreign' : id,
-        'action': 'bash',
+        'action': name,
         'resources': [command],
-        'source': {'type': 'tool', 'id': 'call_permission'},
+        'source': {
+          'type': 'tool',
+          'id': 'call_permission',
+          'messageID': transcripts[id]!.last['id'],
+        },
       };
       pending[id] = request;
       emit('permission.asked', id, request);
@@ -659,19 +990,6 @@ class _Wire extends Fq3Wire {
       };
     }
     if (data['files'] != null) {
-      final uri = ((data['files'] as List).single as Map)['uri'] as String;
-      expect(uri, startsWith('data:image/png;base64,'));
-      expect(base64Decode(uri.split(',').last).take(8), [
-        137,
-        80,
-        78,
-        71,
-        13,
-        10,
-        26,
-        10,
-      ]);
-      imageSubmitted = true;
       complete(
         id,
         wrongImageAnswer ? 'Image received.' : '{"left":"red","right":"blue"}',
@@ -683,16 +1001,30 @@ class _Wire extends Fq3Wire {
         content: [
           {
             'type': 'tool',
-            'id': 'call_card',
+            'id': cardState == 'missing-id' ? '' : 'call_card',
             'name': 'oc-ui_show',
-            'executed': !fabricatedCard,
+            'executed': !localCard,
+            'time': {'created': 1, 'ran': 1, 'completed': 2},
             'state': {
-              'status': 'completed',
+              'status': ['pending', 'running', 'error'].contains(cardState)
+                  ? cardState
+                  : 'completed',
               'input': {
                 'v': 1,
-                'id': 'fq3-confirm',
+                'id': cardState == 'wrong-input' ? 'other-card' : 'fq3-confirm',
+                'title': 'FQ3 confirmation',
+                'body': [
+                  {'type': 'text', 'text': 'Confirm this disposable probe.'},
+                ],
                 'ask': {'kind': 'confirm'},
               },
+              if (cardState != 'missing-output')
+                'content': [
+                  {
+                    'type': 'text',
+                    'text': 'Card accepted for display in OpenCode Mobile.',
+                  },
+                ],
             },
           },
         ],
@@ -712,6 +1044,24 @@ class _Wire extends Fq3Wire {
   Future<void> openEvents(String path, {Map<String, String>? query}) async {
     expect(path, '/api/event');
     eventQueries.add(Map.from(query ?? {}));
+    if (rollingEventCache) {
+      for (var i = 0; i < 2000; i++) {
+        emit('session.tool.progress', 'ses_foreign');
+      }
+    }
+    if (cardSuccessMismatch == 'stale') {
+      emit('session.tool.success', 'ses_2', {
+        'id': 'call_card',
+        'assistantMessageID': 'msg_2',
+        'content': [
+          {
+            'type': 'text',
+            'text': 'Card accepted for display in OpenCode Mobile.',
+          },
+        ],
+        'executed': true,
+      });
+    }
   }
 
   @override

@@ -65,7 +65,7 @@ def model_scoped_run():
     run = live_run()
     run["schemaVersion"] = 2
     run["attestation"]["cleanupCompleted"] = True
-    run["appBuild"] = 2196
+    run["appBuild"] = 2197
     run["evidence"] = f'{updater.CURRENT_EVIDENCE_DIRECTORY}/{run["runID"]}.json'
     for engine in run["engines"].values():
         engine["modelSelection"] = {"source": "explicit", "requested": "opencode/big-pickle"}
@@ -117,6 +117,48 @@ class EvidenceValidationTest(unittest.TestCase):
         with self.assertRaises(updater.InvalidEvidence):
             updater.validate_run(run)
 
+    def test_fq3c_build_2197_requires_its_exact_schema_two_evidence_directory(self):
+        run = model_scoped_run()
+        run["appBuild"] = 2197
+        run["evidence"] = f'docs/qa/FQ3c-2026-10-08/{run["runID"]}.json'
+        original = copy.deepcopy(run)
+        self.assertEqual(updater.validate_run(run), original)
+        updated = updater.apply_run(existing_matrix(), run)
+        self.assertEqual(updated["agents"][0]["protocolCertification"]["deviceBuild"], 2197)
+        self.assertIn("../qa/FQ3c-2026-10-08/fq3-test-001.json",
+                      updater.render_markdown(updated))
+        self.assertEqual(run, original)
+        for build, directory in (
+            (2196, "docs/qa/FQ3c-2026-10-08"),
+            (2197, "docs/qa/FQ3b-2026-10-08"),
+            (2197, "docs/qa/FQ3-2026-10-08"),
+        ):
+            rejected = copy.deepcopy(run)
+            rejected["appBuild"] = build
+            rejected["evidence"] = f'{directory}/{run["runID"]}.json'
+            self.assert_rejected(rejected)
+
+    def test_fq3c_build_2197_cannot_use_schema_one_to_escape_cleanup(self):
+        for directory in ("docs/qa/FQ3-2026-10-08",
+                          "docs/qa/FQ3b-2026-10-08", "docs/qa/FQ3c-2026-10-08"):
+            run = live_run()
+            run["appBuild"] = 2197
+            run["evidence"] = f'{directory}/{run["runID"]}.json'
+            self.assert_rejected(run)
+        run = model_scoped_run()
+        run["appBuild"] = 2197
+        run["evidence"] = f'docs/qa/FQ3c-2026-10-08/{run["runID"]}.json'
+        run["attestation"]["cleanupCompleted"] = False
+        self.assert_rejected(run)
+
+    def test_fq3c_migration_preserves_archived_schema_two_2196_report(self):
+        run = model_scoped_run()
+        run["appBuild"] = 2196
+        run["evidence"] = f'docs/qa/FQ3b-2026-10-08/{run["runID"]}.json'
+        original = copy.deepcopy(run)
+        self.assertEqual(updater.validate_run(run), original)
+        self.assertEqual(run, original)
+
     def test_live_assertions_record_only_the_separate_protocol_namespace(self):
         matrix = existing_matrix()
         original = copy.deepcopy(matrix)
@@ -156,7 +198,7 @@ class EvidenceValidationTest(unittest.TestCase):
         self.assertEqual(updater.validate_run(historical), historical)
         current = live_run()
         current["appBuild"] = 2196
-        current["evidence"] = f'{updater.CURRENT_EVIDENCE_DIRECTORY}/{current["runID"]}.json'
+        current["evidence"] = f'{updater.PREVIOUS_EVIDENCE_DIRECTORY}/{current["runID"]}.json'
         self.assertEqual(updater.validate_run(current), current)
         updated = updater.apply_run(existing_matrix(), current)
         self.assertEqual(updated["agents"][0]["protocolCertification"]["deviceBuild"], 2196)

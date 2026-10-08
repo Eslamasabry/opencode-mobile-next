@@ -116,10 +116,10 @@ class BuiltinServerService : Service() {
         manager?.createNotificationChannel(
             NotificationChannel(
                 CHANNEL_ID,
-                "OpenCode on this phone",
+                NativeStrings.get(this, R.string.native_phone_server_channel),
                 NotificationManager.IMPORTANCE_LOW,
             ).apply {
-                description = "Shown while the phone server or project engine runs"
+                description = NativeStrings.get(this@BuiltinServerService, R.string.native_phone_server_description)
                 setShowBadge(false)
             },
         )
@@ -147,11 +147,11 @@ class BuiltinServerService : Service() {
         }
         return builder
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle(title ?: "OpenCode is running on this phone")
-            .setContentText("Your agent keeps working while you use other apps.")
+            .setContentTitle(title ?: NativeStrings.get(this, R.string.native_phone_server_title))
+            .setContentText(NativeStrings.get(this, R.string.native_phone_server_body))
             .setOngoing(true)
             .setContentIntent(open)
-            .addAction(Notification.Action.Builder(null, "Stop", stop).build())
+            .addAction(Notification.Action.Builder(null, NativeStrings.get(this, R.string.native_stop), stop).build())
             .build()
     }
 

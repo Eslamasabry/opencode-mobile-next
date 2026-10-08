@@ -22,7 +22,6 @@ import io.flutter.plugin.common.MethodChannel
 class VoiceDownloadNotifications(private val activity: Activity) {
     private val permissionResults = mutableListOf<MethodChannel.Result>()
     private val manager get() = activity.getSystemService(NotificationManager::class.java)
-    private val arabic get() = activity.resources.configuration.locales[0].language == "ar"
 
     fun handle(call: MethodCall, result: MethodChannel.Result): Boolean {
         when (call.method) {
@@ -70,7 +69,7 @@ class VoiceDownloadNotifications(private val activity: Activity) {
             notifications.createNotificationChannel(
                 NotificationChannel(
                     CHANNEL_ID,
-                    if (arabic) "إعداد الصوت" else "Voice setup",
+                    NativeStrings.get(activity, R.string.native_voice_setup),
                     NotificationManager.IMPORTANCE_LOW
                 )
             )
@@ -122,10 +121,10 @@ class VoiceDownloadNotifications(private val activity: Activity) {
             if (!available()) return false
             val phase = call.argument<String>("phase")
             val text = when (phase) {
-                "downloading" -> if (arabic) "جارٍ تنزيل حزمة الصوت" else "Downloading voice pack"
-                "verifying" -> if (arabic) "جارٍ تجهيز الصوت" else "Preparing voice input"
-                "complete" -> if (arabic) "الإدخال الصوتي جاهز" else "Voice input is ready"
-                "failed" -> if (arabic) "تعذّر إعداد الصوت. افتح التطبيق للمحاولة مجددًا." else "Voice setup failed. Open the app to try again."
+                "downloading" -> NativeStrings.get(activity, R.string.native_voice_downloading)
+                "verifying" -> NativeStrings.get(activity, R.string.native_voice_preparing)
+                "complete" -> NativeStrings.get(activity, R.string.native_voice_ready)
+                "failed" -> NativeStrings.get(activity, R.string.native_voice_failed)
                 else -> return false
             }
             val total = (call.argument<Number>("totalBytes")?.toLong() ?: 0L).coerceAtLeast(0L)
@@ -141,7 +140,7 @@ class VoiceDownloadNotifications(private val activity: Activity) {
                 Notification.Builder(activity, CHANNEL_ID)
             } else Notification.Builder(activity)
             builder.setSmallIcon(android.R.drawable.stat_sys_download)
-                .setContentTitle(if (arabic) "إعداد الصوت" else "Voice setup")
+                .setContentTitle(NativeStrings.get(activity, R.string.native_voice_setup))
                 .setContentText(text)
                 .setContentIntent(open)
                 .setOnlyAlertOnce(true)

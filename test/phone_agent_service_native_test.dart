@@ -31,6 +31,8 @@ void main() {
     'daemon-request-threw-after-revocation',
     'setup-timeout-async-revocation',
     'destroy-revokes-kind',
+    'localized-copy-ar',
+    'localized-copy-en',
   ];
 
   setUpAll(() async {

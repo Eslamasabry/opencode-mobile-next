@@ -11,7 +11,7 @@ import 'fq3/oc1.dart';
 import 'fq3/oc2.dart';
 import 'fq3/session_ownership.dart';
 
-const evidenceDirectory = 'docs/qa/FQ3b-2026-10-08';
+const evidenceDirectory = 'docs/qa/FQ3c-2026-10-08';
 const lock = '/home/eslam/Storage/tmp/oc-emulator.lock';
 const phases = <String, Set<String>>{
   'stream': {'stream'},
@@ -207,6 +207,7 @@ Future<void> phase(List<String> args, String runID) async {
             key: fail(preflightCode),
         },
     'ownedSessions': run?.sessionIDs ?? [],
+    if (engine == 'opencode2') 'observations': run?.observations ?? {},
   };
   File('$evidenceDirectory/$runID-$engine-$caseName.json').writeAsStringSync(
     '${const JsonEncoder.withIndent('  ').convert(output)}\n',

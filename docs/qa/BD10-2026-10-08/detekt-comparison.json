@@ -1,0 +1,9 @@
+{
+  "upstreamRevision": "c99437e9e",
+  "upstreamFindings": 315,
+  "candidateFindings": 315,
+  "introducedFindings": 0,
+  "removedFindings": 0,
+  "baselineChanged": false,
+  "fullGateExit": 2
+}

@@ -82,7 +82,7 @@ Future<void> main() async {
     }
     result['recentCompletedAssistantModels'] = counts;
     File(
-      'docs/qa/FQ3b-2026-10-08/public-model-comparison.json',
+      'docs/qa/FQ3c-2026-10-08/public-model-comparison.json',
     ).writeAsStringSync(
       '${const JsonEncoder.withIndent('  ').convert(result)}\n',
     );

@@ -1,0 +1,20 @@
+test_signer_mismatch_is_blocked_before_any_mutation (tool.qa.fq9.test_upgrade.UpgradeTest.test_signer_mismatch_is_blocked_before_any_mutation) ... FAIL
+
+======================================================================
+FAIL: test_signer_mismatch_is_blocked_before_any_mutation (tool.qa.fq9.test_upgrade.UpgradeTest.test_signer_mismatch_is_blocked_before_any_mutation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq9/test_upgrade.py", line 142, in test_signer_mismatch_is_blocked_before_any_mutation
+    self.refused(
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq9/test_upgrade.py", line 103, in refused
+    self.assertEqual(caught.exception.code, code)
+AssertionError: 'upgrade_install_failed' != 'upgrade_signer_mismatch'
+- upgrade_install_failed
++ upgrade_signer_mismatch
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+FAILED (failures=1)
+EXPECTED GUARD-REMOVAL FAILURE; source files unchanged; fake ports only.

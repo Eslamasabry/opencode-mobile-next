@@ -1,0 +1,13 @@
+Expected regression failure before the corresponding harness repair; base f0e33d96d407ff68782b49702e88269d197ae96e.
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_evidence_test.dart
+00:00 +0: current phase requires build 2197 and rejects archived 2196
+00:00 +0 -1: current phase requires build 2197 and rejects archived 2196 [E]
+  Protocol assertion failed
+  tool/qa/fq3/evidence.dart 117:5    validatePhaseEvidence
+  test/fq3_evidence_test.dart 41:7   _validate
+  test/fq3_evidence_test.dart 63:12  main.<fn>
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_evidence_test.dart: current phase requires build 2197 and rejects archived 2196

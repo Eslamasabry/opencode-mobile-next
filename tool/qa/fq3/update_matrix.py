@@ -14,9 +14,15 @@ import tempfile
 
 REPO = Path(__file__).resolve().parents[3]
 EVIDENCE_DIRECTORY = "docs/qa/FQ3-2026-10-08"
-CURRENT_EVIDENCE_DIRECTORY = "docs/qa/FQ3b-2026-10-08"
-EVIDENCE_DIRECTORIES = (EVIDENCE_DIRECTORY, CURRENT_EVIDENCE_DIRECTORY)
-CERTIFIED_BUILDS = (2195, 2196)
+PREVIOUS_EVIDENCE_DIRECTORY = "docs/qa/FQ3b-2026-10-08"
+CURRENT_EVIDENCE_DIRECTORY = "docs/qa/FQ3c-2026-10-08"
+HISTORICAL_EVIDENCE_DIRECTORIES = (EVIDENCE_DIRECTORY, PREVIOUS_EVIDENCE_DIRECTORY)
+EVIDENCE_DIRECTORIES = (*HISTORICAL_EVIDENCE_DIRECTORIES, CURRENT_EVIDENCE_DIRECTORY)
+MODEL_SCOPED_DIRECTORIES = {
+    2196: PREVIOUS_EVIDENCE_DIRECTORY,
+    2197: CURRENT_EVIDENCE_DIRECTORY,
+}
+CERTIFIED_BUILDS = (2195, 2196, 2197)
 MATRIX_PATH = "docs/verification/agent-certification-matrix.json"
 MARKDOWN_PATH = "docs/verification/agent-certification-matrix.md"
 PROTOCOL_SCOPE = "in-app Ubuntu protocol; no UI/restart/install qualification"
@@ -97,9 +103,15 @@ def validate_run(run):
     require(type(run["appBuild"]) is int and run["appBuild"] in CERTIFIED_BUILDS,
             "Evidence is from another app build.")
     if run["schemaVersion"] == 2:
-        require(run["appBuild"] == 2196 and
-                run["evidence"] == f'{CURRENT_EVIDENCE_DIRECTORY}/{run["runID"]}.json',
-                "New model-scoped evidence requires the current build and directory.")
+        directory = MODEL_SCOPED_DIRECTORIES.get(run["appBuild"])
+        require(directory is not None and
+                run["evidence"] == f'{directory}/{run["runID"]}.json',
+                "Model-scoped evidence requires its exact build and directory.")
+    else:
+        require(run["appBuild"] in (2195, 2196) and run["evidence"] in (
+            f'{directory}/{run["runID"]}.json'
+            for directory in HISTORICAL_EVIDENCE_DIRECTORIES
+        ), "Schema one is reserved for historical evidence.")
     require(run["scope"] == "phone-runtime", "Live phone-runtime evidence is required.")
     require(type(run["sourceRevision"]) is str and
             re.fullmatch(r"[0-9a-f]{40}", run["sourceRevision"]),

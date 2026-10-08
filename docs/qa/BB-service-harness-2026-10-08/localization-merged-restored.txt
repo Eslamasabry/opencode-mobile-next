@@ -1,0 +1,35 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: (setUpAll)
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: setup-main-denied
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: daemon-main-denied
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: setup-channel-denied
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: daemon-timeout-denied
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: daemon-stop-denied
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: result-notification-denied
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: dispatch-denied
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: armed-null-sticky
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: unarmed-null-rejected
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: restoration-disarmed-not-sticky
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: explicit-unarmed-not-sticky
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: daemon-timeout-async-revocation
+00:00 +12: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: daemon-stop-async-revocation
+00:00 +13: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: daemon-request-threw-after-revocation
+00:00 +14: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: setup-timeout-async-revocation
+00:00 +15: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: destroy-revokes-kind
+00:00 +16: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: localized-copy-ar
+00:01 +17: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: localized-copy-en
+00:01 +18: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: (tearDownAll)
+00:01 +18: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/native_strings_test.dart
+00:01 +18: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_strings_test.dart: (setUpAll)
+00:07 +18: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_strings_test.dart: native resource locale: arabic-override
+00:07 +19: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_strings_test.dart: native resource locale: english-override
+00:07 +20: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_strings_test.dart: native resource locale: system-ar
+00:07 +21: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_strings_test.dart: native resource locale: system-list
+00:07 +22: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_strings_test.dart: native resource locale: untranslated-app
+00:07 +23: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_strings_test.dart: native resource locale: unsupported-system
+00:07 +24: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_strings_test.dart: native resource locale: invalid-choice
+00:07 +25: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_strings_test.dart: native resource locale: read-refused
+00:07 +26: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_strings_test.dart: native resource locale: choice-changes
+00:08 +27: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_strings_test.dart: native resource locale: resource-formatting
+00:08 +28: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_strings_test.dart: (tearDownAll)
+00:08 +28: All tests passed!

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'common.dart';
+import 'oc2_observation.dart';
 
 /// The stable server may publish an empty catalog before plugins settle.
 /// A catalog entry proves availability only; scenario checks still infer.
@@ -79,6 +80,37 @@ class _Oc2Probe {
   Map<String, dynamic>? selected;
   String? initialSession;
   String? streamedSession;
+  Oc2ProbeObservation? observation;
+  String? observationSession;
+
+  void checkpoint(String stage) => observation?.checkpoint(stage);
+
+  Future<void> observe(
+    String capability,
+    Future<Map<String, Object?>> Function() action,
+  ) => run.check(capability, () async {
+    final current = Oc2ProbeObservation(
+      capability: capability,
+      directory: run.options.directory,
+    );
+    final previous = Set<Map<String, dynamic>>.identity()..addAll(wire.events);
+    observation = current;
+    observationSession = null;
+    try {
+      return await action();
+    } finally {
+      final id = observationSession;
+      if (id != null) {
+        run.observations[capability] = current.snapshot(
+          wire.events.where((event) => !previous.contains(event)),
+          sessionID: id,
+          eventStart: 0,
+        )..['eventWindowMayBeTruncated'] = wire.events.length >= 2000;
+      }
+      observation = null;
+      observationSession = null;
+    }
+  });
 
   Future<void> runChecks() async {
     await run.check('version', () async {
@@ -124,7 +156,7 @@ class _Oc2Probe {
       run.require(selected != null, 'configured_model_unavailable');
       return {'enabledModels': models.length, 'selectedModelAvailable': true};
     });
-    await run.check('modelSwitch', () async {
+    await observe('modelSwitch', () async {
       final model = requireModel();
       final alternatives = models
           .where((m) => !_sameModel(_ref(model), _ref(m)))
@@ -136,24 +168,29 @@ class _Oc2Probe {
           alternatives.firstOrNull;
       run.require(alternative != null, 'alternative_model_missing');
       final id = await create(model: model);
+      observation?.selectModel(_modelName(alternative!));
       final fresh = Set<Map<String, dynamic>>.identity()..addAll(wire.events);
+      checkpoint('select_model');
       await wire.request(
         'POST',
         '/api/session/$id/model',
         body: {'model': _ref(alternative!)},
       );
+      checkpoint('await_selection');
       await wire.waitFor(
         (e) =>
             !fresh.contains(e) &&
             belongs(e, id, 'session.model.selected') &&
             _sameModel(_map(e['data'])['model'], _ref(alternative)),
       );
+      checkpoint('verify_selection');
       run.require(
         _sameModel((await session(id))['model'], _ref(alternative)),
         'model_selection_not_retained',
       );
       final messages = await turn(id, 'Reply exactly FQ3_SWITCH_OK.');
       requireAnswer(messages, 'FQ3_SWITCH_OK', model: alternative);
+      checkpoint('complete');
       return {'selectionObserved': true, 'inferenceVerified': true};
     });
     await run.check('stream', () async {
@@ -251,10 +288,10 @@ class _Oc2Probe {
       );
       return {'refetched': true, 'retainedMessages': after.length};
     });
-    await run.check('permissionAllow', () => permission(allow: true));
-    await run.check('permissionDeny', () => permission(allow: false));
-    await run.check('image', image);
-    await run.check('cards', cards);
+    await observe('permissionAllow', () => permission(allow: true));
+    await observe('permissionDeny', () => permission(allow: false));
+    await observe('image', image);
+    await observe('cards', cards);
   }
 
   Map<String, dynamic> requireModel() {
@@ -266,6 +303,8 @@ class _Oc2Probe {
     Map<String, dynamic>? model,
     List<Map<String, String>>? permissions,
   }) async {
+    checkpoint('create');
+    if (model != null) observation?.selectModel(_modelName(model));
     final info = _map(
       _data(
         await wire.request(
@@ -287,6 +326,7 @@ class _Oc2Probe {
       'invalid_owned_session',
     );
     run.sessionIDs.add(id as String);
+    observationSession = id;
     await run.options.onSessionCreated?.call(id);
     return id;
   }
@@ -313,6 +353,7 @@ class _Oc2Probe {
   }
 
   Future<void> prompt(String id, String text, {List<Object>? files}) async {
+    checkpoint('prompt');
     await wire.request(
       'POST',
       '/api/session/$id/prompt',
@@ -333,6 +374,7 @@ class _Oc2Probe {
     final previous = (await history(id)).map((m) => m['id']).toSet();
     final fresh = Set<Map<String, dynamic>>.identity()..addAll(wire.events);
     await prompt(id, text, files: files);
+    checkpoint('await_terminal');
     final ended = await wire.waitFor(
       (e) =>
           !fresh.contains(e) &&
@@ -343,6 +385,7 @@ class _Oc2Probe {
       ended['type'] == 'session.execution.succeeded',
       'inference_execution_failed',
     );
+    checkpoint('verify_outcome');
     final messages = (await history(
       id,
     )).where((m) => !previous.contains(m['id'])).toList();
@@ -370,11 +413,12 @@ class _Oc2Probe {
   }
 
   Future<Map<String, Object?>> permission({required bool allow}) async {
+    final toolName = wire.isStableOc2 ? 'shell' : 'bash';
     final id = await create(
       model: requireModel(),
       permissions: wire.isStableOc2
-          ? const [
-              {'action': 'bash', 'resource': '*', 'effect': 'ask'},
+          ? [
+              {'action': toolName, 'resource': '*', 'effect': 'ask'},
             ]
           : null,
     );
@@ -384,20 +428,24 @@ class _Oc2Probe {
     final fresh = Set<Map<String, dynamic>>.identity()..addAll(wire.events);
     await prompt(
       id,
-      'Use the bash tool to run exactly `$command`. '
+      'Use the $toolName tool to run exactly `$command`. '
       'Do not run any other command. Then briefly report the outcome.',
     );
+    checkpoint('await_permission');
     final asked = await wire.waitFor(
       (e) => !fresh.contains(e) && belongs(e, id, 'permission.asked'),
     );
     final request = _map(asked['data']);
     final requestId = request['id'];
     final source = _map(request['source']);
+    checkpoint('verify_permission');
     run.require(
       requestId is String &&
           RegExp(r'^per_[a-zA-Z0-9]+$').hasMatch(requestId) &&
-          request['action'] == 'bash' &&
-          source['type'] == 'tool',
+          request['action'] == toolName &&
+          source['type'] == 'tool' &&
+          source['id'] is String &&
+          source['messageID'] is String,
       'permission_tool_request_missing',
     );
     final pending = _list(
@@ -408,22 +456,29 @@ class _Oc2Probe {
       'permission_request_not_pending',
     );
     final tools = (await history(id))
-        .where((m) => m['type'] == 'assistant')
+        .where(
+          (m) =>
+              m['type'] == 'assistant' &&
+              m['id'] == source['messageID'] &&
+              _sameModel(m['model'], _ref(requireModel())),
+        )
         .expand(_content)
         .where((t) => t['type'] == 'tool' && t['id'] == source['id']);
     run.require(
       tools.any(
         (t) =>
-            t['name'] == 'bash' &&
+            t['name'] == toolName &&
             _map(_map(t['state'])['input'])['command'] == command,
       ),
       'permission_command_not_owned_probe',
     );
+    checkpoint('reply_permission');
     await wire.request(
       'POST',
       '/api/session/$id/permission/$requestId/reply',
       body: {'reply': reply},
     );
+    checkpoint('await_reply');
     await wire.waitFor(
       (e) =>
           !fresh.contains(e) &&
@@ -431,30 +486,104 @@ class _Oc2Probe {
           _map(e['data'])['requestID'] == requestId &&
           _map(e['data'])['reply'] == reply,
     );
+    checkpoint('await_terminal');
     final ended = await wire.waitFor(
       (e) =>
           !fresh.contains(e) &&
           _terminalTypes.any((type) => belongs(e, id, type)),
     );
     run.require(
-      ended['type'] == 'session.execution.succeeded',
+      ended['type'] ==
+          (wire.isStableOc2 && !allow
+              ? 'session.execution.interrupted'
+              : 'session.execution.succeeded'),
       'permission_turn_failed',
     );
+    checkpoint('verify_outcome');
     final finished = (await history(id))
-        .where((m) => m['type'] == 'assistant')
+        .where(
+          (m) =>
+              m['type'] == 'assistant' &&
+              m['id'] == source['messageID'] &&
+              _sameModel(m['model'], _ref(requireModel())),
+        )
         .expand(_content)
         .where((t) => t['type'] == 'tool' && t['id'] == source['id']);
     run.require(
       finished.any(
-        (t) => _map(t['state'])['status'] == (allow ? 'completed' : 'error'),
+        (t) =>
+            t['name'] == toolName &&
+            _map(_map(t['state'])['input'])['command'] == command &&
+            _map(t['state'])['status'] == (allow ? 'completed' : 'error'),
       ),
       'permission_outcome_missing',
     );
+    if (wire.isStableOc2) {
+      bool ownedToolEvent(Map<String, dynamic> event, String type) =>
+          !fresh.contains(event) &&
+          belongs(event, id, type) &&
+          _map(event['data'])['id'] == source['id'] &&
+          _map(event['data'])['assistantMessageID'] == source['messageID'];
+      if (allow) {
+        run.require(
+          wire.events.any((e) => ownedToolEvent(e, 'session.tool.success')) &&
+              finished.any((t) => _toolOutput(t).trim() == marker),
+          'permission_command_output_missing',
+        );
+      } else {
+        run.require(
+          wire.events.any(
+                (e) =>
+                    ownedToolEvent(e, 'session.tool.failed') &&
+                    _map(_map(e['data'])['error'])['type'] == 'aborted',
+              ) &&
+              finished.any(
+                (t) => _map(_map(t['state'])['error'])['type'] == 'aborted',
+              ),
+          'permission_decline_not_verified',
+        );
+        run.require(
+          !wire.events.any(
+            (e) =>
+                ownedToolEvent(e, 'session.tool.success') ||
+                ownedToolEvent(e, 'session.tool.progress') ||
+                (!fresh.contains(e) && belongs(e, id, 'session.shell.started')),
+          ),
+          'permission_decline_execution_observed',
+        );
+      }
+      checkpoint('verify_idle');
+      await permissionSettled(id);
+    }
+    checkpoint('complete');
     return {
       'requestObserved': true,
       'replyObserved': true,
       'toolOutcomeVerified': true,
     };
+  }
+
+  Future<void> permissionSettled(String id) async {
+    final elapsed = Stopwatch()..start();
+    while (true) {
+      final pending = _map(
+        await wire.request('GET', '/api/session/$id/permission'),
+      )['data'];
+      final active = _map(
+        await wire.request('GET', '/api/session/active'),
+      )['data'];
+      run.require(
+        pending is List &&
+            pending.every((item) => item is Map) &&
+            active is Map,
+        'permission_settlement_invalid',
+      );
+      if ((pending as List).isEmpty && !(active as Map).containsKey(id)) return;
+      if (elapsed.elapsed >= const Duration(seconds: 2)) {
+        throw const ProbeFailure('permission_settlement_pending');
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
   }
 
   Future<Map<String, Object?>> image() async {
@@ -499,12 +628,38 @@ class _Oc2Probe {
       if (verified) break;
     }
     run.require(verified, 'image_content_answer_missing');
+    checkpoint('complete');
     return {'imageAnswerVerified': true};
   }
 
   Future<Map<String, Object?>> cards() async {
     final model = requireModel();
-    final id = await create(model: model);
+    checkpoint('inventory');
+    final inventory = await wire.request('GET', '/api/mcp', query: location);
+    final inventoryLocation = _map(inventory)['location'];
+    run.require(
+      (!wire.isStableOc2 && inventoryLocation == null) ||
+          _map(inventoryLocation)['directory'] == run.options.directory,
+      'cards_inventory_scope_mismatch',
+    );
+    final helpers = _list(inventory);
+    run.require(
+      helpers.any(
+        (helper) =>
+            helper['name'] == 'oc-ui' &&
+            _map(helper['status'])['status'] == 'connected',
+      ),
+      'cards_helper_unavailable',
+    );
+    final id = await create(
+      model: model,
+      permissions: wire.isStableOc2
+          ? const [
+              {'action': 'oc-ui_show', 'resource': '*', 'effect': 'allow'},
+            ]
+          : null,
+    );
+    final fresh = Set<Map<String, dynamic>>.identity()..addAll(wire.events);
     const cardId = 'fq3-confirm';
     final messages = await turn(
       id,
@@ -515,20 +670,38 @@ class _Oc2Probe {
       'When the following tagged answer confirms it, reply exactly '
       'FQ3_CARD_CONFIRMED.',
     );
-    final tool = messages
-        .where(_completedAssistant)
-        .expand(_content)
-        .where(
-          (t) =>
-              t['type'] == 'tool' &&
-              t['name'] == 'oc-ui_show' &&
-              t['executed'] == true &&
-              _map(t['state'])['status'] == 'completed' &&
-              _map(_map(t['state'])['input'])['v'] == 1 &&
-              _map(_map(t['state'])['input'])['id'] == cardId &&
-              _map(_map(_map(t['state'])['input'])['ask'])['kind'] == 'confirm',
-        )
-        .firstOrNull;
+    checkpoint('await_tool');
+    Map<String, dynamic>? tool;
+    for (final message in messages.where(_completedAssistant)) {
+      if (!_sameModel(message['model'], _ref(model))) continue;
+      for (final candidate in _content(message)) {
+        final callID = candidate['id'];
+        if (candidate['type'] != 'tool' ||
+            candidate['name'] != 'oc-ui_show' ||
+            callID is! String ||
+            !RegExp(r'^[A-Za-z0-9_-]{1,128}$').hasMatch(callID) ||
+            _map(candidate['state'])['status'] != 'completed' ||
+            _toolOutput(candidate).trim().isEmpty ||
+            _map(_map(candidate['state'])['input'])['v'] != 1 ||
+            _map(_map(candidate['state'])['input'])['id'] != cardId ||
+            _map(_map(_map(candidate['state'])['input'])['ask'])['kind'] !=
+                'confirm') {
+          continue;
+        }
+        final success = wire.events.any(
+          (e) =>
+              !fresh.contains(e) &&
+              belongs(e, id, 'session.tool.success') &&
+              _map(e['data'])['id'] == callID &&
+              _map(e['data'])['assistantMessageID'] == message['id'],
+        );
+        if (success) {
+          tool = candidate;
+          break;
+        }
+      }
+      if (tool != null) break;
+    }
     run.require(
       tool != null && tool['id'] is String,
       'cards_tool_call_missing',
@@ -540,12 +713,14 @@ class _Oc2Probe {
           'callId': tool!['id'],
           'value': {'confirm': true},
         })}';
+    checkpoint('send_receipt');
     final answers = await turn(id, receipt);
     run.require(
       answers.any((m) => m['type'] == 'user' && m['text'] == receipt),
       'cards_user_receipt_missing',
     );
     requireAnswer(answers, 'FQ3_CARD_CONFIRMED', model: model);
+    checkpoint('complete');
     return {'cardsToolCall': true, 'answerReceipt': true};
   }
 
@@ -576,6 +751,12 @@ String _text(Map<String, dynamic> message) => _content(message)
     .where((p) => p['type'] == 'text')
     .map((p) => p['text'] as String? ?? '')
     .join();
+String _toolOutput(Map<String, dynamic> tool) =>
+    (_map(tool['state'])['content'] as List? ?? [])
+        .whereType<Map>()
+        .where((item) => item['type'] == 'text' && item['text'] is String)
+        .map((item) => item['text'] as String)
+        .join('\n');
 bool _completedAssistant(Map<String, dynamic> message) =>
     message['type'] == 'assistant' &&
     message['error'] == null &&

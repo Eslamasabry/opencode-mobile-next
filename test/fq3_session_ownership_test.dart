@@ -15,6 +15,7 @@ SessionOwnership _create(
   String revision = _revision,
   String engine = 'opencode',
   bool legacy = false,
+  int? appBuild,
   List<String> ids = const [],
 }) => SessionOwnership.create(
   file,
@@ -24,7 +25,7 @@ SessionOwnership _create(
   engine: engine,
   caseName: 'stream',
   appUID: 10123,
-  appBuild: legacy ? 2195 : 2196,
+  appBuild: appBuild ?? (legacy ? 2195 : 2197),
   legacy: legacy,
   sessionIDs: ids,
 );
@@ -47,6 +48,29 @@ void main() {
     file = File('${temporary.path}/intent-ownership.json');
   });
   tearDown(() => temporary.deleteSync(recursive: true));
+
+  test(
+    'new and archived build ledgers remain recoverable without rewriting',
+    () async {
+      for (final build in [2195, 2196, 2197]) {
+        final ledgerFile = File('${temporary.path}/intent-$build.json');
+        final ledger = _create(
+          ledgerFile,
+          appBuild: build,
+          legacy: build == 2195,
+          ids: ['ses_Fixture1'],
+        );
+        final before = ledgerFile.readAsStringSync();
+        final reopened = SessionOwnership.read(ledgerFile);
+        expect(reopened.sessionIDs, ['ses_Fixture1']);
+        expect(ledgerFile.readAsStringSync(), before);
+        expect(jsonDecode(before)['appBuild'], build);
+        await ledger.markDeleted('ses_Fixture1');
+        ledger.removeIfEmpty();
+        expect(ledgerFile.existsSync(), isFalse);
+      }
+    },
+  );
 
   test(
     'intent and each ID survive reopening before phase results return',

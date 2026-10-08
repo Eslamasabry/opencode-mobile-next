@@ -328,6 +328,9 @@ class MainActivity : FlutterActivity() {
                         SessionsWidgetProvider.refreshAll(this)
                         result.success(mapOf("refreshed" to true))
                     }
+                    "refreshNativeLocale" -> result.success(
+                        mapOf("updated" to runCatching { NativeNotificationLocale.refresh(this) }.isSuccess)
+                    )
                     "updateLiveStatus" -> {
                         result.success(
                             mapOf(
@@ -716,7 +719,8 @@ class MainActivity : FlutterActivity() {
                         components.map(::setupSpec),
                         params?.let { org.json.JSONObject(it) },
                         SetupRunner.Texts(
-                            channel = texts["channel"] ?: "Setup",
+                            channel = texts["channel"] ?: NativeStrings.get(
+                                applicationContext, R.string.native_setup_channel),
                             title = texts["title"] ?: "",
                             progress = texts["progress"] ?: "{percent}%",
                             done = texts["done"] ?: "",

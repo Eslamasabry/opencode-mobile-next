@@ -1,0 +1,24 @@
+Expected pre-fix harness regression failure; the observed result is not device qualification.
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_oc2_test.dart
+00:00 +0: stable MCP inventory must belong to the requested location
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: cards: pass (verified)
+00:00 +0 -1: stable MCP inventory must belong to the requested location [E]
+  Expected: 'cards_inventory_scope_mismatch'
+    Actual: 'verified'
+     Which: is different.
+            Expected: cards_inve ...
+              Actual: verified
+                      ^
+             Differ at offset 0
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/fq3_oc2_test.dart 414:7                        main.<fn>
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_oc2_test.dart: stable MCP inventory must belong to the requested location

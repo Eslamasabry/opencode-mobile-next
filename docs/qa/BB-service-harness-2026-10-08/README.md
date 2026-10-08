@@ -27,3 +27,17 @@ requested gate and is still in progress. This repairs
 a host fixture; historical BB3/BB9/BB4 device proof does not become a fresh
 merged-build device qualification. No emulator session, APK installation or
 account operation is part of this fixture checkpoint.
+
+Localization follow-up: coordinator `feat/genui-fe` advanced to6151bda44
+while the first merge was being verified. A second no-rebase merge retains BD
+localized English/Arabic service assertions plus BB's nine lifecycle assertions.
+`localization-merged-restored.txt`: all18 service +10 native locale scenarios
+pass. The preceding log records a wrong auxiliary filename (18 service scenarios
+passed but nonexistent auxiliary test failed to load); the corrected run is the
+valid gate. No production fix was needed for that invocation error.
+
+Pinned detekt1.23.8 checked this checkpoint against the committed baseline and
+reported351 issues (`detekt-initial/`, exit2), including BB4 additions. The
+coordinator subsequently transferred this gate explicitly to BD/sol/bd-detekt.
+No baseline entries, suppressions or Kotlin gate edits were made by BB. This is
+a recorded failing gate, not a pass.

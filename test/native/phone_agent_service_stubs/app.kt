@@ -6,6 +6,7 @@ import io.github.eslamasabry.opencode_mobile.ServiceEvents
 open class Service : Context() {
     @Volatile var stopped = false
     @Volatile var foreground = false
+    var foregroundNotification: Notification? = null
     open fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = 0
     open fun onTimeout(startId: Int, fgsType: Int) {}
     open fun onBind(intent: Intent?): IBinder? = null
@@ -13,6 +14,7 @@ open class Service : Context() {
     fun startForeground(id: Int, notification: Notification, type: Int = 0) {
         if (denyForeground) throw SecurityException("policy")
         foreground = true
+        foregroundNotification = notification
         ServiceEvents.add("foreground.start")
     }
     fun stopForeground(flags: Int) { foreground = false; ServiceEvents.add("foreground.stop") }
@@ -21,29 +23,37 @@ open class Service : Context() {
     companion object { const val START_STICKY = 1; const val START_NOT_STICKY = 2; const val STOP_FOREGROUND_REMOVE = 1; var denyForeground = false }
 }
 class Notification {
+    var title = ""
+    var text = ""
+    val actions = mutableListOf<Action>()
     class Builder {
+        private val notification = Notification()
         constructor(context: Context)
         constructor(context: Context, channel: String)
         fun setSmallIcon(icon: Int) = this
-        fun setContentTitle(title: String) = this
-        fun setContentText(text: String) = this
+        fun setContentTitle(title: String) = apply { notification.title = title }
+        fun setContentText(text: String) = apply { notification.text = text }
         fun setOngoing(on: Boolean) = this
         fun setOnlyAlertOnce(on: Boolean) = this
         fun setAutoCancel(on: Boolean) = this
         fun setContentIntent(intent: PendingIntent) = this
-        fun addAction(action: Action) = this
-        fun build() = Notification()
+        fun addAction(action: Action) = apply { notification.actions.add(action) }
+        fun build() = notification
     }
-    class Action {
-        class Builder(icon: Any?, label: String, intent: PendingIntent) { fun build() = Action() }
+    class Action(val label: String) {
+        class Builder(icon: Any?, private val label: String, intent: PendingIntent) { fun build() = Action(label) }
     }
 }
-class NotificationChannel(id: String, name: String, importance: Int) {
+class NotificationChannel(val id: String, val name: String, importance: Int) {
     var description: String = ""
     fun setShowBadge(on: Boolean) {}
 }
 class NotificationManager {
-    fun createNotificationChannel(channel: NotificationChannel) { if (denyChannel) throw SecurityException("policy") }
+    val channels = mutableListOf<NotificationChannel>()
+    fun createNotificationChannel(channel: NotificationChannel) {
+        if (denyChannel) throw SecurityException("policy")
+        channels.add(channel)
+    }
     fun notify(id: Int, notification: Notification) { if (denyNotify) throw SecurityException("policy") }
     fun cancel(id: Int) {}
     companion object {
