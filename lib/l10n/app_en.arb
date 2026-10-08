@@ -33211,5 +33211,33 @@
   "crashReportsClearedToo": "The saved crash reports are deleted too.",
   "@crashReportsClearedToo": {
     "description": "crash-consent (BD7): Consequence line on the Clear errors confirmation when crash reports are saved."
+  },
+  "recentErrorScreen": "A screen couldn't be drawn",
+  "@recentErrorScreen": {
+    "description": "plain-recent-errors: Plain title of a recent error from drawing a screen (Flutter framework)."
+  },
+  "recentErrorConnection": "Lost the live connection to the server",
+  "@recentErrorConnection": {
+    "description": "plain-recent-errors: Plain title of a recent error from the server's live event stream."
+  },
+  "recentErrorAndroidExit": "Android closed the app",
+  "@recentErrorAndroidExit": {
+    "description": "plain-recent-errors: Plain title of a recent entry recording that Android ended the app."
+  },
+  "recentErrorTemperature": "Phone temperature changed",
+  "@recentErrorTemperature": {
+    "description": "plain-recent-errors: Plain title of a recent entry from the phone temperature guard."
+  },
+  "recentErrorStartup": "The app had trouble starting",
+  "@recentErrorStartup": {
+    "description": "plain-recent-errors: Plain title of a recent error recorded while the app was starting."
+  },
+  "recentErrorReportStore": "Couldn't open saved problem reports",
+  "@recentErrorReportStore": {
+    "description": "plain-recent-errors: Plain title of a recent error when the saved problem report store could not open."
+  },
+  "recentErrorGeneric": "Something went wrong",
+  "@recentErrorGeneric": {
+    "description": "plain-recent-errors: Plain title of any other recent error."
   }
 }

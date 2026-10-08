@@ -27880,4 +27880,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get crashReportsClearedToo => 'تُحذف تقارير الأعطال المحفوظة أيضًا.';
+
+  @override
+  String get recentErrorScreen => 'تعذّر رسم إحدى الشاشات';
+
+  @override
+  String get recentErrorConnection => 'انقطع الاتصال المباشر بالخادم';
+
+  @override
+  String get recentErrorAndroidExit => 'أغلق Android التطبيق';
+
+  @override
+  String get recentErrorTemperature => 'تغيّرت حرارة الهاتف';
+
+  @override
+  String get recentErrorStartup => 'واجه التطبيق مشكلة أثناء التشغيل';
+
+  @override
+  String get recentErrorReportStore => 'تعذّر فتح بلاغات المشكلات المحفوظة';
+
+  @override
+  String get recentErrorGeneric => 'حدث خطأ ما';
 }

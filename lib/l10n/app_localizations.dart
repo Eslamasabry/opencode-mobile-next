@@ -43836,6 +43836,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The saved crash reports are deleted too.'**
   String get crashReportsClearedToo;
+
+  /// plain-recent-errors: Plain title of a recent error from drawing a screen (Flutter framework).
+  ///
+  /// In en, this message translates to:
+  /// **'A screen couldn\'t be drawn'**
+  String get recentErrorScreen;
+
+  /// plain-recent-errors: Plain title of a recent error from the server's live event stream.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost the live connection to the server'**
+  String get recentErrorConnection;
+
+  /// plain-recent-errors: Plain title of a recent entry recording that Android ended the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Android closed the app'**
+  String get recentErrorAndroidExit;
+
+  /// plain-recent-errors: Plain title of a recent entry from the phone temperature guard.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone temperature changed'**
+  String get recentErrorTemperature;
+
+  /// plain-recent-errors: Plain title of a recent error recorded while the app was starting.
+  ///
+  /// In en, this message translates to:
+  /// **'The app had trouble starting'**
+  String get recentErrorStartup;
+
+  /// plain-recent-errors: Plain title of a recent error when the saved problem report store could not open.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open saved problem reports'**
+  String get recentErrorReportStore;
+
+  /// plain-recent-errors: Plain title of any other recent error.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get recentErrorGeneric;
 }
 
 class _AppLocalizationsDelegate

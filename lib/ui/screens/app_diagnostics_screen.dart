@@ -15,6 +15,7 @@ import '../kit/kit.dart';
 import '../widgets/external_link.dart';
 import 'crash_reports_section.dart';
 import 'perf_trace_section.dart';
+import 'recent_error_words.dart';
 
 /// Opens Report a problem, prefilled with [error] when a failure brought the
 /// person here. Every "Report a problem" in the app ends here (P8.2).
@@ -434,11 +435,13 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                       KitExpandRow(
                         key: ValueKey('diagnostic-entry-${entry.id ?? index}'),
                         leading: KitRow.icon(context, AppIconography.error),
-                        title: entry.message.split('\n').first,
+                        // Plain words by where it came from; the message
+                        // and source id are technical: Details only.
+                        title: recentErrorTitle(copy, entry),
+                        titleMaxLines: 2,
                         supporting: TextSpan(
                           text: [
-                            KitBidi.ltr(entry.source),
-                            _time(entry.time),
+                            KitBidi.ltr(_time(entry.time)),
                             if (entry.occurrences > 1)
                               copy.e7SettingsDiagnosticOccurrences(
                                 entry.occurrences,
@@ -453,12 +456,21 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                               end: tokens.gutter,
                               bottom: tokens.space3,
                             ),
-                            child: KitText.mono(
-                              [
+                            child: KitDetailsFold(
+                              foldKey: ValueKey(
+                                'diagnostic-details-${entry.id ?? index}',
+                              ),
+                              initiallyExpanded: true,
+                              values: [
+                                KitTechnicalValue(
+                                  copy.crashReportDetailSource,
+                                  entry.source,
+                                ),
+                              ],
+                              text: [
                                 entry.message,
                                 if (entry.stack.isNotEmpty) entry.stack,
                               ].join('\n\n'),
-                              selectable: true,
                             ),
                           ),
                         ],
@@ -491,9 +503,10 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
 }
 
 /// An entry the opt-in crash store recorded (`crash.flutter`, `crash.anr`,
-/// ...): listed by [CrashReportsSection], not in the recent errors.
+/// ...): listed by [CrashReportsSection], not in the recent errors. The
+/// native summary (`crash.last`) is not one and stays listed.
 bool _isCrashRecord(ProblemReportEvent event) =>
-    event.source.startsWith('crash.');
+    crashStoreSources.contains(event.source);
 
 /// The count on Settings' Report a problem row: errors kept on this phone
 /// (the saved report when it opened, else this run's).

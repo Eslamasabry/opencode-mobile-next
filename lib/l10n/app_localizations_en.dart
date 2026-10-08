@@ -27835,4 +27835,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get crashReportsClearedToo =>
       'The saved crash reports are deleted too.';
+
+  @override
+  String get recentErrorScreen => 'A screen couldn\'t be drawn';
+
+  @override
+  String get recentErrorConnection => 'Lost the live connection to the server';
+
+  @override
+  String get recentErrorAndroidExit => 'Android closed the app';
+
+  @override
+  String get recentErrorTemperature => 'Phone temperature changed';
+
+  @override
+  String get recentErrorStartup => 'The app had trouble starting';
+
+  @override
+  String get recentErrorReportStore => 'Couldn\'t open saved problem reports';
+
+  @override
+  String get recentErrorGeneric => 'Something went wrong';
 }
