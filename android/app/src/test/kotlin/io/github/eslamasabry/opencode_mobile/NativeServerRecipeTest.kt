@@ -14,7 +14,7 @@ class NativeServerRecipeTest {
     @Test
     fun requestAndStoredRecipeRoundTripWithoutLaunchInput() {
         for (runtime in listOf("openCode1", "openCode2")) {
-            val recipe = request(runtime = runtime)
+            val recipe = request(value = requested("runtime" to runtime))
             assertEquals(mapOf(
                 "version" to 1,
                 "profileId" to "phone_1-A",
@@ -155,7 +155,7 @@ class NativeServerRecipeTest {
 
     @Test
     fun coldOpenCodeTwoKeepsIsolatedPathsAndDoesNotRewriteContext() {
-        val script = request(runtime = "openCode2").restorationScript()
+        val script = request(value = requested("runtime" to "openCode2")).restorationScript()
         assertEquals(commonScriptPrefix() +
             "mkdir -p /root/.oc-opencode2/data/opencode /root/.oc-opencode2/cache " +
             "/root/.oc-opencode2/state /root/.oc-opencode2/config/opencode\n" +
@@ -188,11 +188,10 @@ class NativeServerRecipeTest {
 
     private fun request(
         profile: String = "phone_1-A",
-        runtime: String = "openCode1",
         bound: String? = profile,
         packageVersion: Long = 2201L,
         rootfsGeneration: String = generation,
-        value: Map<*, *> = requested("profileId" to profile, "runtime" to runtime),
+        value: Map<*, *> = requested("profileId" to profile),
     ): NativeServerRecipe =
         NativeServerRecipe.fromRequest(value, bound, packageVersion, rootfsGeneration)
 

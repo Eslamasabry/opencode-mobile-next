@@ -1,5 +1,11 @@
 package io.github.eslamasabry.opencode_mobile
 
+private const val PROC_STAT_MIN_FIELDS = 20
+private const val PROC_STAT_START_TICKS_INDEX = 19
+private const val PROC_STAT_SESSION_INDEX = 3
+private const val MAX_OTHER_RUNTIME_IDENTITIES = 128
+private const val MAX_STICKY_ATTEMPTS = 3
+
 /** Kernel identity is never a PID alone. These records contain no argv, output or credentials. */
 internal data class RuntimeProcessIdentity(
     val pid: Int, val startTicks: Long, val parent: Int, val group: Int, val session: Int,
@@ -15,9 +21,9 @@ internal data class RuntimeProcessIdentity(
             require(end > value.indexOf('('))
             val pid = value.substringBefore(' ').toInt()
             val fields = value.substring(end + 1).trim().split(Regex("\\s+"))
-            require(fields.size >= 20)
-            return RuntimeProcessIdentity(pid, fields[19].toLong(), fields[1].toInt(),
-                fields[2].toInt(), fields[3].toInt())
+            require(fields.size >= PROC_STAT_MIN_FIELDS)
+            return RuntimeProcessIdentity(pid, fields[PROC_STAT_START_TICKS_INDEX].toLong(), fields[1].toInt(),
+                fields[2].toInt(), fields[PROC_STAT_SESSION_INDEX].toInt())
         }
         fun read(value: Map<*, *>): RuntimeProcessIdentity {
             require(value.keys == setOf("pid", "startTicks", "parent", "group", "session"))
@@ -39,7 +45,7 @@ internal data class NativeRuntimeReceipt(
     init {
         require(Regex("[0-9a-f-]{36}").matches(boot))
         require(Regex("[0-9a-f]{64}").matches(nonce) && generation > 0)
-        require(other.size <= 128 && other.map { it.pid }.distinct().size == other.size)
+        require(other.size <= MAX_OTHER_RUNTIME_IDENTITIES && other.map { it.pid }.distinct().size == other.size)
         require((root == null) == (leader == null))
         if (leader != null) require(leader.pid == leader.session && leader.pid == leader.group)
     }
@@ -83,7 +89,7 @@ internal object NativeRuntimeOwnership {
         requestProfile != null && requestProfile == owner && enabled && migrationValid && policyAllows
     fun stickyAllowed(recipeValid: Boolean, identityCommitted: Boolean, admitted: Boolean,
         attempts: Int, liveServer: Boolean) = recipeValid && identityCommitted && admitted &&
-        attempts in 0..3 && (attempts < 3 || liveServer)
+        attempts in 0..MAX_STICKY_ATTEMPTS && (attempts < MAX_STICKY_ATTEMPTS || liveServer)
     fun manualFallbackAllowed(released: Boolean, drained: Boolean, wanted: Boolean) = !released && drained && wanted
     data class Drain(val server: List<RuntimeProcessIdentity>, val other: Set<Int>)
     fun plan(receipt: NativeRuntimeReceipt, boot: String,
@@ -99,21 +105,31 @@ internal object NativeRuntimeOwnership {
             require(byPid[leader.pid] == null || leader.sameProcess(byPid[leader.pid])) { "ownershipUnknown" }
         }
         val knownOther = receipt.other.filter { it.sameProcess(byPid[it.pid]) }.map { it.pid }.toMutableSet()
-        fun expand(roots: MutableSet<Int>) {
-            var changed: Boolean
-            do { changed = false; for (p in current) if (p.parent in roots && roots.add(p.pid)) changed = true } while (changed)
-        }
-        expand(knownOther)
+        expand(current, knownOther)
         val server = mutableSetOf<Int>()
         receipt.root?.takeIf { it.sameProcess(byPid[it.pid]) }?.let { server.add(it.pid) }
         receipt.leader?.let { leader ->
             for (p in current) if (p.session == leader.session && nonceMatches(p.pid, receipt.nonce)) server.add(p.pid)
         }
-        expand(server)
+        expand(current, server)
         require(server.intersect(knownOther).isEmpty()) { "ownershipUnknown" }
-        require(!requireCompleteInventory || current.all { it.pid in registered || it.pid in server || it.pid in knownOther }) { "ownershipUnknown" }
+        require(!requireCompleteInventory || current.all {
+            it.pid in registered || it.pid in server || it.pid in knownOther
+        }) { "ownershipUnknown" }
         // A prepared gate has no executable workload. Unknown survivors still fail closed above.
-        return Drain(current.filter { it.pid in server }.sortedBy { if (it.pid == receipt.root?.pid) 1 else 0 }, knownOther)
+        return Drain(
+            current.filter { it.pid in server }.sortedBy { if (it.pid == receipt.root?.pid) 1 else 0 }, knownOther,
+        )
+    }
+
+    private fun expand(current: List<RuntimeProcessIdentity>, roots: MutableSet<Int>) {
+        var changed: Boolean
+        do {
+            changed = false
+            for (process in current) {
+                if (process.parent in roots && roots.add(process.pid)) changed = true
+            }
+        } while (changed)
     }
 }
 

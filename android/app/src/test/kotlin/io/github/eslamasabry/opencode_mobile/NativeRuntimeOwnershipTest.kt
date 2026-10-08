@@ -1,13 +1,18 @@
 package io.github.eslamasabry.opencode_mobile
 
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NativeRuntimeOwnershipTest {
     private val boot = "11111111-1111-1111-1111-111111111111"
     private val nonce = "a".repeat(64)
-    private fun p(pid: Int, parent: Int = 1, sid: Int = pid, ticks: Long = 10) = RuntimeProcessIdentity(pid, ticks, parent, sid, sid)
-    private fun receipt(other: List<RuntimeProcessIdentity> = emptyList()) = NativeRuntimeReceipt(boot, nonce, 1, p(20), p(21, 20), other)
+    private fun p(pid: Int, parent: Int = 1, sid: Int = pid, ticks: Long = 10) =
+        RuntimeProcessIdentity(pid, ticks, parent, sid, sid)
+    private fun receipt(other: List<RuntimeProcessIdentity> = emptyList()) =
+        NativeRuntimeReceipt(boot, nonce, 1, p(20), p(21, 20), other)
     @Test fun coldWorkerCannotAdoptReplacementStartOrSpendItsBudget() {
         val worker = NativeRuntimeOwnership.ColdWorker(4, 7)
         val events = mutableListOf<String>()
@@ -142,7 +147,9 @@ class NativeRuntimeOwnershipTest {
     @Test fun zeroSessionGenericRootNeverWeakensTheCommittedGateLeaderProof() {
         val root = RuntimeProcessIdentity(20, 10, 1, 373, 0)
         val leader = RuntimeProcessIdentity(21, 10, 20, 21, 0)
-        assertThrows(IllegalArgumentException::class.java) { NativeRuntimeReceipt(boot, nonce, 1, root, leader, emptyList()) }
+        assertThrows(IllegalArgumentException::class.java) {
+            NativeRuntimeReceipt(boot, nonce, 1, root, leader, emptyList())
+        }
         assertEquals(root, NativeRuntimeReceipt(boot, nonce, 1, root, p(21, 20), emptyList()).root)
     }
     @Test fun recordedOtherRuntimeAndItsCurrentChildrenAreExcluded() {
@@ -153,7 +160,9 @@ class NativeRuntimeOwnershipTest {
         assertEquals(setOf(20, 21), plan.server.map { it.pid }.toSet())
     }
     @Test fun deadLeaderOrphanRequiresInheritedNonce() {
-        val plan = NativeRuntimeOwnership.plan(receipt(), boot, listOf(p(22, sid = 21)), emptySet()) { _, n -> n == nonce }
+        val plan = NativeRuntimeOwnership.plan(receipt(), boot, listOf(p(22, sid = 21)), emptySet()) { _, n ->
+            n == nonce
+        }
         assertEquals(22, plan.server.single().pid)
     }
     @Test fun explicitStopSelectsOnlyProvenServerAndLeavesUnknownRuntimeAlone() {
@@ -173,7 +182,9 @@ class NativeRuntimeOwnershipTest {
     }
     @Test fun reusedOtherPidDoesNotBecomeAnExclusion() {
         assertThrows(IllegalArgumentException::class.java) {
-            NativeRuntimeOwnership.plan(receipt(listOf(p(40))), boot, listOf(p(40, ticks = 11)), emptySet()) { _, _ -> false }
+            NativeRuntimeOwnership.plan(receipt(listOf(p(40))), boot, listOf(p(40, ticks = 11)), emptySet()) { _, _ ->
+                false
+            }
         }
     }
     @Test fun bootMismatchFailsClosed() {
