@@ -644,6 +644,9 @@ class BuiltinLinux(private val context: Context) {
 
     private val blockedAgentProfiles = mutableSetOf<String>()
     private val agentProcessProfiles = mutableMapOf<Process, String>()
+    private val authOtherOwners = PhoneAgentAuthOtherOwners { process ->
+        pidOf(process)?.let { pid -> kernelIdentity(pid)?.let { it.pid to it.startTicks.toString() } }
+    }
 
     /**
      * An agent's own sign-in (`claude auth login`, `codex login`, …) for
@@ -720,6 +723,7 @@ class BuiltinLinux(private val context: Context) {
         processes.add(process)
         agentProcessProfiles.entries.removeAll { !it.key.isAlive }
         agentProcessProfiles[process] = profileId
+        authOtherOwners.register(process, privateOutput)
         processConfinement[process] = prootIsConfined
         try {
             if (foreground) trackPrivateAgentService("agent-auth.$profileId", process, null)
@@ -794,7 +798,7 @@ class BuiltinLinux(private val context: Context) {
             { profile, argv -> startAgentProcess(profile, argv, privateOutput = true) },
             { profile, quiet -> synchronized(this) {
                 if (quiet()) PhoneAgentAuthLock.clear(context.filesDir, profile)
-            } })
+            } }, authOtherOwners::snapshot)
     }
 
     /** Private auth output bypasses neither the generic receipt filter nor owner checks. */

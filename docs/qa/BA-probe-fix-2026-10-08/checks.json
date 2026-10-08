@@ -1,0 +1,43 @@
+{
+  "base": "9485f0c7c7c39e721d50fb036a76ae77596d14f0",
+  "branch": "sol/ba-probe-fix",
+  "date": "2026-10-09",
+  "testCommand": "JAVA_OPTS=-Xmx256m tool/qa/machine_lock.sh test -- PINNED_FLUTTER test --no-pub --concurrency=1 <file>",
+  "results": {
+    "phone_agent_auth_native_test.dart": {
+      "red": {
+        "pass": 42,
+        "fail": 5
+      },
+      "green": 47,
+      "revertConcurrentRed": true,
+      "restoredGreen": 47
+    },
+    "phone_agent_auth_other_owners_test.dart": {
+      "red": {
+        "pass": 7,
+        "fail": 1
+      },
+      "green": 8
+    },
+    "agent_auth_probe_test.dart": 12,
+    "builtin_linux_test.dart": 23
+  },
+  "focusedAnalyzer": "clean",
+  "authSdk37Kotlin": "compiled, -Xmx256m, no Gradle",
+  "securityReview": "approved, read only",
+  "deviceControl": "flock -w1800 timed out; commands not executed",
+  "apkBuild": "not admitted; available3901MiB <6144MiB",
+  "normalApp": "2197 unchanged",
+  "originalDeviceRegression": "not yet qualified",
+  "sha256": {
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt": "3053165e22d41feefa70bf7848d716cb9495a078d382dc9294c503053696cfd7",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthRuntime.kt": "e1cc606e42f6ba46cbaa89271580d66f1108f291541de08b302bbfb9de3341d3",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthProcessTree.kt": "7683910197bcc004e38f8602e2b6866cca5501a2e920cf5c48a6f0c47759b9d4",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthOtherOwners.kt": "cca402a2ca86f3b80d2a936ef97be0e80c98f876ce153d6c0807dd6d7768f2ee",
+    "test/phone_agent_auth_native_test.dart": "259795240e2e385b850557157eeed8728fe15e292e2abb63980a630b019707b6",
+    "test/phone_agent_auth_other_owners_test.dart": "1e15f44e1265e76666ef511f0140f2c9de92957400f7972d1bcefde145fc9d61",
+    "test/native/phone_agent_auth_harness.kt": "3c7e11ab14d0fcb93013fdb4334655f2e5274d7726eef31d15e309fa0ac689fb",
+    "test/native/phone_agent_auth_other_owners_harness.kt": "ee708ae1f547e1826b05fc4b0026058a7a407a8e812947dd1a77afe9158f6313"
+  }
+}

@@ -12,6 +12,7 @@ internal class PhoneAgentAuthRuntime(
     context: Context,
     launch: (String, List<String>) -> Process,
     clearLock: (String, () -> Boolean) -> Unit,
+    otherAgentOwners: () -> Set<Pair<Int, String>> = { emptySet() },
 ) {
     private companion object {
         const val POLL_MILLIS = 20L
@@ -23,7 +24,7 @@ internal class PhoneAgentAuthRuntime(
         { checkNotNull(File("/proc").listFiles()).toList() }, ::sameUid)
     private val tree = PhoneAgentAuthProcessTree(::processId, ::inventory, { pid, signal ->
         try { Os.kill(pid, signal) } catch (_: android.system.ErrnoException) { /* Exit raced the signal. */ }
-    })
+    }, outsideOwners = otherAgentOwners)
     private val probe = PhoneAgentAuthProbe(
         start = { profile, argv ->
             val process = launch(profile, argv)

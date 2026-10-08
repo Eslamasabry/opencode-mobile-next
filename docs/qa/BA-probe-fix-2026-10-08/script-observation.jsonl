@@ -1,0 +1,4 @@
+{"version": "2197"}
+{"sample": 0, "statuses": ["Agents", "Check this phone", "Claude Code", "Sign in needed", "Sign in to Claude Code", "Codex", "Install Codex", "Gemini CLI", "Install Gemini CLI", "Qwen Code", "Install Qwen Code", "Goose", "Install Goose", "Oh My Pi", "Install Oh My Pi", "fx", "Install fx"]}
+{"sample": 1, "statuses": ["Agents", "Check this phone", "Claude Code", "Sign in needed", "Sign in to Claude Code", "Codex", "Install Codex", "Gemini CLI", "Install Gemini CLI", "Qwen Code", "Install Qwen Code", "Goose", "Install Goose", "Oh My Pi", "Install Oh My Pi", "fx", "Install fx"]}
+{"auth_script_diagnostic": {"state": "signedIn"}}
