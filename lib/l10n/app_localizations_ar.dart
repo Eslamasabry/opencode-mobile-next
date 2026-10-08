@@ -27964,4 +27964,98 @@ class AppLocalizationsAr extends AppLocalizations {
   String agentNamesPair(String first, String second) {
     return '$first و $second';
   }
+
+  @override
+  String get diagnosticsExitHistoryTitle => 'آخر مرات إغلاق التطبيق';
+
+  @override
+  String get diagnosticsExitHistoryNote =>
+      'يسجّل Android كل مرة يُغلق فيها التطبيق. لا يُرسل شيء من هنا تلقائيًا.';
+
+  @override
+  String get diagnosticsExitHistoryEmpty => 'لم تُسجَّل مرات إغلاق للتطبيق بعد';
+
+  @override
+  String get diagnosticsExitHistoryUnsupported => 'غير متاح على هذا الهاتف';
+
+  @override
+  String get diagnosticsExitHistoryUnsupportedBody =>
+      'يحتفظ Android 11 والإصدارات الأحدث بهذا السجل.';
+
+  @override
+  String get diagnosticsExitHistoryFailed =>
+      'تعذّرت قراءة آخر مرات إغلاق التطبيق. حاول مرة أخرى أو أعد فتح التطبيق.';
+
+  @override
+  String get diagnosticsExitNormal => 'أُغلق التطبيق';
+
+  @override
+  String get diagnosticsExitUpdate => 'حُدّث التطبيق';
+
+  @override
+  String get diagnosticsExitForceStop => 'أُوقف التطبيق';
+
+  @override
+  String get diagnosticsExitLowMemory => 'احتاج الهاتف إلى الذاكرة';
+
+  @override
+  String get diagnosticsExitCrash => 'توقف التطبيق بشكل غير متوقع';
+
+  @override
+  String get diagnosticsExitKilled => 'أنهى Android التطبيق';
+
+  @override
+  String get diagnosticsExitReasonCode => 'رمز السبب';
+
+  @override
+  String get diagnosticsExitImportance => 'الأهمية';
+
+  @override
+  String get diagnosticsExitSummary => 'الملخص';
+
+  @override
+  String get diagnosticsReportOpen => 'مشاركة تقارير الأعطال المحفوظة';
+
+  @override
+  String get diagnosticsReportTitle => 'معاينة تقرير الأعطال';
+
+  @override
+  String get diagnosticsReportPrivacy =>
+      'فئات الأخطاء وأوقاتها فقط، دون رسائل أو محادثات. لا يغادر شيء هذا الهاتف حتى تنقر مشاركة التقرير.';
+
+  @override
+  String diagnosticsReportSize(int count, String size) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تقرير · $size',
+      many: '$count تقريرًا · $size',
+      few: '$count تقارير · $size',
+      two: 'تقريران · $size',
+      one: 'تقرير واحد · $size',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get diagnosticsReportShare => 'مشاركة التقرير';
+
+  @override
+  String get diagnosticsReportStale =>
+      'تغيّرت التفاصيل المحفوظة. راجع التقرير الجديد قبل المشاركة.';
+
+  @override
+  String get diagnosticsReportShareFailed =>
+      'تعذّر فتح المشاركة. حاول مرة أخرى.';
+
+  @override
+  String get diagnosticsReportCaptureOff =>
+      'حفظ تقارير الأعطال متوقف. شغّله لحفظ أخطاء التطبيق القادمة.';
+
+  @override
+  String get diagnosticsReportEmpty => 'لا توجد تقارير أعطال محفوظة للمشاركة.';
+
+  @override
+  String get diagnosticsUnavailable =>
+      'هذه التفاصيل غير متاحة. أعد فتح التطبيق وحاول مرة أخرى.';
 }

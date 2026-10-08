@@ -43974,6 +43974,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{first} and {second}'**
   String agentNamesPair(String first, String second);
+
+  /// fd-diagnostics: Header of the exit history group on Report a problem.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent app exits'**
+  String get diagnosticsExitHistoryTitle;
+
+  /// fd-diagnostics: Muted note under the exit history group.
+  ///
+  /// In en, this message translates to:
+  /// **'Android records each time the app closes. Nothing here is sent automatically.'**
+  String get diagnosticsExitHistoryNote;
+
+  /// fd-diagnostics: Row when Android has no recorded exits for the app.
+  ///
+  /// In en, this message translates to:
+  /// **'No app exits recorded yet'**
+  String get diagnosticsExitHistoryEmpty;
+
+  /// fd-diagnostics: Row title when the phone cannot report exit history.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available on this phone'**
+  String get diagnosticsExitHistoryUnsupported;
+
+  /// fd-diagnostics: Supporting line when exit history is not supported.
+  ///
+  /// In en, this message translates to:
+  /// **'Android 11 and later keep this record.'**
+  String get diagnosticsExitHistoryUnsupportedBody;
+
+  /// fd-diagnostics: Notice when reading exit history failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read recent app exits. Try again, or reopen the app.'**
+  String get diagnosticsExitHistoryFailed;
+
+  /// fd-diagnostics: Exit category: normal close.
+  ///
+  /// In en, this message translates to:
+  /// **'App closed'**
+  String get diagnosticsExitNormal;
+
+  /// fd-diagnostics: Exit category: app update.
+  ///
+  /// In en, this message translates to:
+  /// **'App updated'**
+  String get diagnosticsExitUpdate;
+
+  /// fd-diagnostics: Exit category: force stop.
+  ///
+  /// In en, this message translates to:
+  /// **'App stopped'**
+  String get diagnosticsExitForceStop;
+
+  /// fd-diagnostics: Exit category: low memory.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone needed memory'**
+  String get diagnosticsExitLowMemory;
+
+  /// fd-diagnostics: Exit category: crash.
+  ///
+  /// In en, this message translates to:
+  /// **'App stopped unexpectedly'**
+  String get diagnosticsExitCrash;
+
+  /// fd-diagnostics: Exit category: killed by the system.
+  ///
+  /// In en, this message translates to:
+  /// **'Android ended the app'**
+  String get diagnosticsExitKilled;
+
+  /// fd-diagnostics: Details label: Android's numeric exit reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason code'**
+  String get diagnosticsExitReasonCode;
+
+  /// fd-diagnostics: Details label: Android's numeric process importance.
+  ///
+  /// In en, this message translates to:
+  /// **'Importance'**
+  String get diagnosticsExitImportance;
+
+  /// fd-diagnostics: Details label: the fixed safe summary of the exit.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get diagnosticsExitSummary;
+
+  /// fd-diagnostics: Row that opens the crash report preview before sharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Share saved crash reports'**
+  String get diagnosticsReportOpen;
+
+  /// fd-diagnostics: Title of the crash report preview sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview crash report'**
+  String get diagnosticsReportTitle;
+
+  /// fd-diagnostics: Subtitle of the preview sheet: what is in the report and when it leaves.
+  ///
+  /// In en, this message translates to:
+  /// **'Only error categories and times, no messages or conversations. Nothing leaves this phone until you tap Share report.'**
+  String get diagnosticsReportPrivacy;
+
+  /// fd-diagnostics: Line above the preview text: how many records and how large.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 report · {size}} other{{count} reports · {size}}}'**
+  String diagnosticsReportSize(int count, String size);
+
+  /// fd-diagnostics: Primary action of the preview sheet: opens the system share sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Share report'**
+  String get diagnosticsReportShare;
+
+  /// fd-diagnostics: Notice when the preview went stale and was rebuilt.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved details changed. Check the new report before sharing.'**
+  String get diagnosticsReportStale;
+
+  /// fd-diagnostics: Notice when the share sheet could not open.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open sharing. Try again.'**
+  String get diagnosticsReportShareFailed;
+
+  /// fd-diagnostics: Notice when a report cannot be built because saving is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved crash reports are off. Turn them on to save future app errors.'**
+  String get diagnosticsReportCaptureOff;
+
+  /// fd-diagnostics: Notice when there is nothing to put in a report.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved crash reports to share.'**
+  String get diagnosticsReportEmpty;
+
+  /// fd-diagnostics: Notice when the diagnostics store is unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'These details are unavailable. Reopen the app and try again.'**
+  String get diagnosticsUnavailable;
 }
 
 class _AppLocalizationsDelegate
