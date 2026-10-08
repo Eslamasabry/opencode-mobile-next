@@ -84,8 +84,9 @@ void main(List<String> args) {
       'deviceQualified': false,
     };
     final output = File('$directory/$runID-summary.json');
-    if (output.existsSync())
+    if (output.existsSync()) {
       throw const ProbeFailure('evidence_already_exists');
+    }
     output.writeAsStringSync(
       '${const JsonEncoder.withIndent('  ').convert(summary)}\n',
     );

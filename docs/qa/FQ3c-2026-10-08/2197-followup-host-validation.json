@@ -5,5 +5,6 @@
   "fullSuiteRun": false,
   "buildRun": false,
   "productionFilesChanged": false,
-  "purpose": "Stable shell stdout/exit notice assertion and card diagnostic counters"
+  "purpose": "Stable shell stdout/exit notice assertion and card diagnostic counters",
+  "initialAnalyzer": "One curly_braces_in_flow_control_structures lint in summary generator; fixed before follow-up device runs"
 }
