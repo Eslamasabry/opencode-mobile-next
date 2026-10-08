@@ -40,4 +40,48 @@ These source fixes do not belong to unmodified APK2196's device evidence.
 Codex/Goose's extracted peaks exceed the shared doubled-download/minimum policy;
 that separate shared-policy issue is recorded for BC in BA-status.md.
 
-Device evidence and per-agent outcomes are in progress.
+## Shared edge-case limits
+
+[Android storage-policy proof](low-storage-policy-emulator.log) runs the actual
+production `SetupDiskSpace` object in dalvikvm with deterministic `usableSpace`
+values (0, threshold minus one, exact threshold and healthy-to-low). It performs
+no download and fills no storage. The existing harness's device-lock wait was
+extended in a temporary copy after contention; no policy or app was changed.
+[31 focused storage tests](storage-focused-tests.log) passed under machine_lock.
+These prove the policy, rather than an app installation with injected low space.
+
+There is no individual-agent removal action. Each target's owned installation,
+launch link, staging files and lock are manually removed only after setup is
+terminal and no exact target PIDs remain. Shared Node/Paseo, Claude, account
+homes and conversations remain in place. This is cleanup proof; uninstall stays
+partial until the product has a removal path.
+
+Account-free CLI probes use an isolated empty HOME and authored clean environment,
+never authenticate, log in or send prompts. Raw stdout/stderr stay private and
+are deleted; evidence contains closed states and counts only. Protocol startup
+alone does not certify the app's unavailable authenticated conversation route.
+The requests follow the [Codex app-server contract](https://developers.openai.com/codex/app-server/)
+and [ACP session setup](https://github.com/agentclientprotocol/agent-client-protocol/blob/main/docs/protocol/v1/session-setup.mdx).
+
+## Codex
+
+[Device observations](codex-device.json), [validated report](codex-report.json),
+[cancel screenshot](codex-cancelled.jpg), [phone check](codex-after-install-check.jpg),
+[after cleanup](codex-after-cleanup.jpg).
+
+On APK2196, app installation and fresh public phone check passed; the catalog
+receipt and CLI both reported **0.160.0**. Free space before install was
+1,884,884,992 bytes. Cancel at 4,288,512 / 109,304,578 download bytes produced a
+cancelled native job; staging/lock vanished, leaving only an empty target parent.
+A distinct retry job completed. The app auth probe returned `probeUnsupported`,
+so the signed-out app cell fails rather than inheriting a guess from the UI's
+“Sign in needed” line. Empty-home app-server initialize and account/read returned
+signed out, requires sign-in, in 2.63 s; no prompt/login or orphan process.
+App launch qualification remains partial because the app cannot route this
+unverified signed-out agent into a conversation. Scoped cleanup freed
+**289,132,544 bytes** and left no target files, links, stages, locks or PIDs.
+Uninstall and installed-app low-storage cases remain partial for the shared
+limits above. Claude remained Ready after the completed public checks.
+
+The early navigation/canonical-directory harness mistakes were corrected and
+excluded from the final observations. They are not agent failures.

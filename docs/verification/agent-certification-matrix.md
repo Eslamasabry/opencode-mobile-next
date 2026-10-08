@@ -14,7 +14,7 @@ Machine-readable copy: [agent-certification-matrix.json](agent-certification-mat
 | OpenCode 1 | 1.18.32 | OpenCode 1 server | · | · | · | · | · | ✅ | · | · | · | · | · | · | ✅ |
 | OpenCode 2 |  | OpenCode 2 server | · | · | · | · | · | · | · | ✅ | · | · | · | · | ⛔ |
 | fx | 0.0.12 | ACP via Paseo | ✅ | · | ✅ | 🟡 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
-| Codex |  | Paseo native | · | · | · | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
+| Codex | 0.160.0 | Paseo native | ✅ | ✅ | ❌ | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
 | Gemini CLI |  | ACP via Paseo | · | · | · | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
 | Qwen Code |  | ACP via Paseo | · | · | · | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
 | Goose |  | ACP via Paseo | · | · | · | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
@@ -70,6 +70,9 @@ Machine-readable copy: [agent-certification-matrix.json](agent-certification-mat
 
 **Codex**
 
+- install: pass — docs/qa/FQ-install-2026-10-08/README.md#codex
+- version: pass — docs/qa/FQ-install-2026-10-08/README.md#codex
+- signedOut: fail — docs/qa/FQ-install-2026-10-08/README.md#codex
 - cards: n/a — no cards adapter yet
 
 **Gemini CLI**
@@ -134,3 +137,24 @@ FQ3 legend: ✅ protocol assertion passed · ❌ assertion failed or prerequisit
 - image: fail — `inference_execution_failed`; facts `{}`
 - cards: fail — `inference_execution_failed`; facts `{}`
 - protocolSwitch: pass — `verified`; facts `{"asserted":true,"bothHistoriesPreserved":true,"freshClients":true,"oc1Sessions":16,"oc2Sessions":16}`
+
+## Phone-agent install certification
+
+App installation on x64 emulator; signed-out, no account qualification.
+
+These cells qualify installation only. Phone check means the check completed; a signed-out agent remains unavailable for authenticated chat. No account sign-in, prompt smoke, or runtime capabilities are granted here.
+
+| Agent | Expected | Observed | Build | install | version | signedOut | phoneCheck | launchNoAccount | cancelRetry | lowStorage | uninstall |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Codex | 0.160.0 | 0.160.0 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
+
+**Codex** — fq-install-codex-2196-20261008; docs/qa/FQ-install-2026-10-08/README.md#codex
+
+- install: pass — `verified`; facts `{"asserted":true,"checksumVerified":true,"installedViaApp":true}`
+- version: pass — `verified`; facts `{"asserted":true}`
+- signedOut: fail — `probe_unsupported`; facts `{"asserted":false,"namedSignedOut":false}`
+- phoneCheck: pass — `verified`; facts `{"asserted":true,"completed":true}`
+- launchNoAccount: partial — `cli_only_app_route_unavailable`; facts `{"asserted":false,"emptyHome":true,"noHang":true,"noOrphans":true,"sentLogin":false,"sentPrompt":false}`
+- cancelRetry: pass — `verified`; facts `{"asserted":true,"cancelObserved":true,"retryCompleted":true}`
+- lowStorage: partial — `policy_harness_only`; facts `{"appThresholdOverride":false,"asserted":false,"deviceFilled":false,"guardPolicyVerified":true}`
+- uninstall: partial — `no_app_removal_path`; facts `{"asserted":false,"bytesFreed":289132544,"leftoversRemoved":true,"noOrphans":true,"removedViaApp":false}`

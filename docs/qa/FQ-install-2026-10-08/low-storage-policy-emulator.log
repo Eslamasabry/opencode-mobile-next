@@ -1,0 +1,13 @@
+Emulator: emulator-5554; Android dalvikvm production policy
+Production SetupDiskSpace SHA256: b63e8971b8b6ded4fa387938df6611d289f0b3a275120700125bbd2b9149ba89
+Isolation: deterministic usableSpace override and real scratch directory; no disk filling
+PASS install available=0 required=300000000: There is not enough free space on this phone. Free some storage and try again.; no mutation
+PASS install available=299999999 required=300000000: There is not enough free space on this phone. Free some storage and try again.; no mutation
+PASS install exact threshold allows work
+PASS launch available=0 required=128000000: There is not enough free space on this phone. Free some storage and try again.; no mutation
+PASS launch available=127999999 required=128000000: There is not enough free space on this phone. Free some storage and try again.; no mutation
+PASS launch exact threshold allows work
+PASS fresh guard sees healthy-to-low change before next mutation
+PASS real Android filesystem and nearest existing ancestor; no leaf creation
+PASS download size overflow saturates instead of allowing an undersized guard
+PASS: Android production disk policy blocks low space before work and allows healthy work
