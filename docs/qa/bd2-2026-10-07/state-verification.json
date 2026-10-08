@@ -50,7 +50,7 @@
   ],
   "native_changes": false,
   "full_suite": "Coordinator-owned; not run",
-  "device": "Pending",
+  "device": "PASS: automatic global-only conversation, no input; same-lock normal2195 restoration",
   "restored_state_and_fixture_tests": 16,
   "final_source_sha256": {
     "lib/state/connection/chat_feed.dart": "b9e2ca65a23a96af96bb9948a0d4b053bafcc6e9135af0b46d19a27c693aedf5",
@@ -59,5 +59,7 @@
     "test/chat_feed_initial_load_test.dart": "2dd2be1e8a83cadb2dc552cac6b1cabecbb8f1d4e77e2e0f72882881d2f3f5f1",
     "integration_test/bd9_device_smoke_fixture.dart": "4b3396bbb694dcc6a2f27fe0814f75503b0c04bb90bc35686433d43f75bfa33a",
     "integration_test/bd9_device_smoke_test.dart": "b54b96829c7b4d1abd617bf9656330cdeccd56fc4f15cdc558ae5cbff186bfe5"
-  }
+  },
+  "app_source_commit": "fe7052de0eeee9109eab0f1528ee5900e8e4c2cd",
+  "g33": "FAIL: immutable ddd23e17 lacks body and author trailer; subsequent source commit passes"
 }

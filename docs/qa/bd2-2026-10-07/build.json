@@ -1,0 +1,76 @@
+{
+  "app_sha256": "1c1ceea2f31f80220bb2c03daf938b818f06e3460b23f71db5afe2b149d5d71e",
+  "test_apk_sha256": "6aded269e60aa69d147935e0b887289736346fd7d1b61bcb3dc37ce0cca592d0",
+  "native_runner_sha256": "40331f2b4d21f9973fcd9ca13fb13cdfabd0d263eef2237bf0d3bd30189b6c93",
+  "dart_smoke_sha256": "b54b96829c7b4d1abd617bf9656330cdeccd56fc4f15cdc558ae5cbff186bfe5",
+  "dart_finder_sha256": "29cf6bf95d4355cfbbf3bcbd2b1f9baec05f8de6b206ac5b9827e77d67646a81",
+  "candidate_base_commit": "fe7052de0eeee9109eab0f1528ee5900e8e4c2cd",
+  "jdk": "/tmp/oc-bd9-temurin17/jdk-17.0.20.1+1",
+  "state_source_sha256": {
+    "lib/state/connection/chat_feed.dart": "b9e2ca65a23a96af96bb9948a0d4b053bafcc6e9135af0b46d19a27c693aedf5",
+    "lib/state/connection/events.dart": "41d16b8b22e6d3ea4ae5efc03a8375740bf140097e0f801793549a0e557a1572",
+    "lib/state/connection/lifecycle.dart": "8c626303f23a4bf67d6cf512c822d01af4a2bc71f845ce539efcd7cef3570575",
+    "test/chat_feed_initial_load_test.dart": "2dd2be1e8a83cadb2dc552cac6b1cabecbb8f1d4e77e2e0f72882881d2f3f5f1"
+  },
+  "normal_owner_version_code": 2195,
+  "dart_fixture_sha256": "4b3396bbb694dcc6a2f27fe0814f75503b0c04bb90bc35686433d43f75bfa33a",
+  "native_test_build_source_commit": "ddd23e17d7385404fabbd9014e4dd144683a776a",
+  "native_harness_reused_unchanged": true,
+  "native_source_unchanged_between_app_and_test_candidates": true,
+  "final_app_build": {
+    "jdk": "/tmp/oc-bd9-temurin17/jdk-17.0.20.1+1",
+    "builds": [
+      {
+        "command": [
+          "/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter",
+          "build",
+          "apk",
+          "--release",
+          "--build-number",
+          "2201",
+          "--target",
+          "integration_test/bd9_device_smoke_test.dart",
+          "--android-project-arg=ocBd9Smoke=true"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 260.7,
+        "owned_daemon_pids_stopped": [],
+        "intermediates_deleted": true
+      }
+    ],
+    "signing_deleted": true,
+    "gradle_settings_restored": true
+  },
+  "native_test_build": {
+    "command": [
+      "/home/eslam/Storage/Code/oc_app-sol-bd/android/gradlew",
+      "-p",
+      "/home/eslam/Storage/Code/oc_app-sol-bd/android",
+      ":app:assembleReleaseAndroidTest",
+      "--no-daemon",
+      "-PocBd9Smoke=true",
+      "-Ptarget=/home/eslam/Storage/Code/oc_app-sol-bd/integration_test/bd9_device_smoke_test.dart",
+      "-PflutterVersionCode=2201"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 173.5,
+    "owned_daemon_pids_stopped": [
+      2481061
+    ],
+    "intermediates_deleted": true
+  },
+  "app_bytes": 100480697,
+  "test_apk_bytes": 46720,
+  "screenshot_bytes": 25689,
+  "screenshot_sha256": "4076ef14f2bfe0adee5bac3fd006d95d338d895b0602c10a6e7d2c5455758c9f",
+  "owned_daemon_cleanup": {
+    "first_app_pid_2438611": "exited automatically",
+    "test_pid_2481061": "stopped and absent",
+    "remaining_worktree_gradle_daemons": 0,
+    "final_app_single_use_daemon": "exited before observation"
+  },
+  "duplicate_gradle_apk_deleted": true,
+  "temporary_signing_deleted": true,
+  "intermediates_deleted": true,
+  "gradle_settings_restored": true
+}

@@ -12,8 +12,8 @@ Reference: [GitHub skipping workflow runs](https://docs.github.com/en/actions/ma
 
 ## BD2 refresh — automatic conversation inventory first load
 
-Status: state implementation and focused host qualification PASS. Release
-emulator qualification is pending. No completed device result is claimed yet.
+Status: **BD2 refresh behavior and release emulator qualification PASS**.
+The immutable first-commit G33 metadata exception is recorded below for import.
 
 Finish line: the state controller loads the global conversation inventory after
 cold start, runtime switch and reconnect without requiring a user gesture or
@@ -112,14 +112,14 @@ and matching test APK in place; do not copy APKs.
 | Focused state and smoke tests | PASS: 195 Flutter tests, 44 offline Python tests |
 | Pinned analyzer | PASS: no issues found (17.4s) |
 | Kotlin gate | Not required unless native source changes |
-| Release app and matching instrumentation build | Pending |
-| Automatic first-load device result and small JPG | Pending |
-| Same-lock normal 2195 restoration and launch | Pending |
-| Signing, intermediates and owned-daemon cleanup | Pending |
-| Local commits with `[skip ci]` | Pending |
+| Release app and matching instrumentation build | PASS: final AOT260.7s; unchanged native harness173.5s |
+| Automatic first-load device result and small JPG | PASS: global-only row, no input, 25,689-byte JPG |
+| Same-lock normal 2195 restoration and launch | PASS: installed version, live/resumed activity, first frame |
+| Signing, intermediates and owned-daemon cleanup | PASS: no remaining worktree Gradle daemon |
+| Local commits with `[skip ci]` | ddd23e17, fe7052de0; evidence commit follows |
 
-Implemented, enabled, verified and committed states will be recorded separately
-after execution. No push, PR, tag, release, patch, CI invocation or publication
+Implemented and enabled in the state layer; host and emulator verified;
+source committed locally. The emulator has been restored to normal2195. No push, PR, tag, release, patch, CI invocation or publication
 is authorized or claimed here.
 
 ### State checkpoint
@@ -175,11 +175,58 @@ source restoration passes 13 state regressions and all 3 fixture tests.
 These results supersede the earlier 193-test checkpoint. No full-suite pass is
 claimed. The native harness is unchanged: the first QA app and test build pass
 (724.8s and 173.5s); the final Dart-only follow-up rebuilds the app and retains
-the same version2201/signer-qualified instrumentation APK. Device qualification
-is still pending the final app artifact.
+the same version2201/signer-qualified instrumentation APK. The final app artifact is device-qualified in the record below.
 
 Commit metadata exception: immutable source commit `ddd23e17` has `[skip ci]`
 but lacks G33's body and author trailer. The local range check reports those
 two violations. No commit was amended or rewritten; the coordinator must
 account for this when importing the patch. Subsequent commits carry complete
 messages. This is not a passing G33 range or a merge-ready full-gate claim.
+
+### Final device qualification — PASS (2026-10-08)
+
+Final application source: `fe7052de0`. Pinned Flutter/Temurin17 release2201
+AOT build passes in260.7s, including all six native ELF/source-attestation
+checks. The unchanged native instrumentation harness was built from
+`ddd23e17` in173.5s; the only later source changes are Dart and evidence, with
+no Android diff. Both artifacts have the required stable package/version2201
+(where present) and unchanged approved local signer. No older application
+artifact is used for this qualification. Exact APK, source and screenshot
+identities and commands are in [build.json](build.json).
+
+Command: `python3 /tmp/bd2-qualify-and-restore.py`. The driver explicitly calls
+`prepare_restore` before any device access, then passes that callback to
+`run_device`. One `/home/eslam/Storage/tmp/oc-emulator.lock` covers install-r,
+instrumentation, screenshot collection and the `finally` restoration. The native command is:
+
+```sh
+adb -s emulator-5554 shell am instrument -w -r -e bd9Qa true \
+  io.github.eslamasabry.opencode_mobile.test/io.github.eslamasabry.opencode_mobile.Bd9DeviceSmoke
+```
+
+No other device is used.
+
+[Device receipt](report.json): seven bounded native predicates PASS, exactly
+one Flutter test PASS, complete terminal proof, and automatic first conversation
+load PASS. The title exists only in the global endpoint's response: the test
+requires that HTTP request, actual visible title and zero writes, with no pull
+or other input. [Small screenshot](conversations.jpg) was visually checked:
+the connected synthetic profile and global-only conversation are visible.
+
+[Normal restoration](normal-restore.json) passes **inside the same lock before
+release**: `adb -s emulator-5554 install -r -d` of the approved owner
+`oc-2195.apk`, then installed2195, live process, resumed MainActivity and first
+frame. No uninstall, clear-data, signer change or production-profile write.
+
+Signing properties and app intermediates are absent; committed Gradle settings
+are restored; no Gradle daemon remains in this worktree. The first app's owned
+single-use daemon2438611 exited, and owned test daemon2481061 was stopped.
+The final app's single-use daemon had already exited by cleanup. The duplicate
+Gradle APK was deleted only after digest equality; the newest application and
+matching test APK remain in their original output paths. No APK was copied.
+
+No UI file, native source, storage format or localization changed. The existing
+frontend feed accessors and loading/completeness states require no new hook.
+This proof covers the release emulator and isolated read-only fixture; it does
+not claim a physical device, real model, full PhoneEngine acceptance, full suite,
+CI run, deployment or release. No push, PR, tag, patch or publication occurred.
