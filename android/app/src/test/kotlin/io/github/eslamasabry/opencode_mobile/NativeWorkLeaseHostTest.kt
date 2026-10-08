@@ -2,6 +2,8 @@ package io.github.eslamasabry.opencode_mobile
 
 import org.junit.Assert.*
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 class NativeWorkLeaseHostTest {
     private class Fixture(val cap: Long = 21_600_000, hasWake: Boolean = true) {
@@ -293,5 +295,346 @@ class NativeWorkLeaseHostTest {
         f.host.adopt("setup", WorkLeases.Kind.SETUP) { true }
         f.host.adopt("sign", WorkLeases.Kind.SIGN_IN) { true }
         assertEquals(0, f.host.diagnostics()["activeCount"])
+    }
+    @Test fun sameChatNameIsIsolatedBetweenOpenCodeAndTwoAgentProfiles() {
+        val f = Fixture()
+        f.host.chat("reply", true, 1000, true)
+        f.host.agentChat("profile_a", "reply", true, 1000, true)
+        f.host.agentChat("profile_b", "reply", true, 1000, true)
+        assertEquals(3, f.host.diagnostics()["activeCount"])
+        f.host.agentChat("profile_a", "reply", false, 0, false)
+        assertEquals(2, f.host.diagnostics()["activeCount"])
+        assertEquals(setOf("profile_b"), f.host.agentProfiles())
+        f.host.chat("reply", false, 0, false)
+        assertEquals(1, f.host.diagnostics()["activeCount"])
+        f.host.agentChat("profile_b", "reply", false, 0, false)
+        assertFalse(f.host.held)
+        assertEquals(false, f.host.logicalWorkBusy())
+    }
+    @Test fun agentOffAfterHelperLossOnlyReleasesItsOwnProfileAndName() {
+        val f = Fixture()
+        f.host.adopt("setup", WorkLeases.Kind.SETUP) { true }
+        f.host.agentChat("a", "one", true, 1000, true)
+        f.host.agentChat("a", "two", true, 1000, true)
+        f.host.agentChat("b", "one", true, 1000, true)
+        f.host.agentChat("a", "one", false, -1, false)
+        assertEquals(mapOf("setup" to 1, "chat" to 2), f.host.diagnostics()["kinds"])
+        f.host.agentChat("a", "two", false, 0, false)
+        f.host.agentChat("b", "one", false, 0, false)
+        assertTrue(f.host.held)
+        assertEquals(mapOf("setup" to 1), f.host.diagnostics()["kinds"])
+    }
+    @Test fun serverLossRevokesOnlyOpenCodeScopeAndDoesNotCloseAgentReplies() {
+        val f = Fixture()
+        f.host.chat("reply", true, 1000, true)
+        f.host.agentChat("a", "reply", true, 1000, true)
+        f.host.serverGone()
+        assertEquals(1, f.host.diagnostics()["activeCount"])
+        assertEquals(true, f.host.agentChat("a", "reply", true, 1000, true)["held"])
+        assertEquals(true, f.host.chat("reply", true, 1000, true)["capped"])
+    }
+    @Test fun helperLossClosesOnlyMatchingProfileWithoutRevivingItsRememberedRun() {
+        val f = Fixture()
+        f.host.chat("reply", true, 1000, true)
+        f.host.agentChat("a", "reply", true, 1000, true)
+        f.host.agentChat("b", "reply", true, 1000, true)
+        f.host.helperGone("a")
+        assertEquals(2, f.host.diagnostics()["activeCount"])
+        assertEquals(setOf("a", "b"), f.host.agentProfiles())
+        assertEquals(true, f.host.agentChat("a", "reply", true, 1000, true)["capped"])
+        assertEquals(true, f.host.agentChat("b", "reply", true, 1000, true)["held"])
+        assertEquals(true, f.host.chat("reply", true, 1000, true)["held"])
+        f.host.agentChat("a", "reply", false, 0, false)
+        assertEquals(true, f.host.agentChat("a", "reply", true, 1000, true)["held"])
+    }
+    @Test fun foregroundStopRevokesBothChatScopesWithoutReleasingSetup() {
+        val f = Fixture()
+        f.host.adopt("setup", WorkLeases.Kind.SETUP) { true }
+        f.host.chat("reply", true, 1000, true)
+        f.host.agentChat("a", "reply", true, 1000, true)
+        f.host.revokeForegroundWork()
+        assertEquals(mapOf("setup" to 1), f.host.diagnostics()["kinds"])
+        assertEquals(true, f.host.chat("reply", true, 1000, true)["capped"])
+        assertEquals(true, f.host.agentChat("a", "reply", true, 1000, true)["capped"])
+        assertFalse(f.host.foregroundHeld)
+    }
+    @Test fun expiredAgentReplyCannotRenewOrReadmitUntilMatchingOff() {
+        val f = Fixture()
+        f.host.agentChat("a", "reply", true, 1000, true)
+        f.now = 1000
+        f.pulse()
+        assertFalse(f.host.held)
+        assertEquals(true, f.host.logicalWorkBusy())
+        assertEquals(true, f.host.agentChat("a", "reply", true, 1000, true)["capped"])
+        f.host.agentChat("b", "reply", false, 0, false)
+        assertEquals(true, f.host.agentChat("a", "reply", true, 1000, true)["capped"])
+        f.host.agentChat("a", "reply", false, 0, false)
+        assertEquals(true, f.host.agentChat("a", "reply", true, 1000, true)["held"])
+    }
+    @Test fun overlappingAgentProfilesCannotExtendContinuousHardCap() {
+        val f = Fixture(2000)
+        f.host.agentChat("a", "reply", true, 1500, true)
+        f.now = 1000
+        f.host.agentChat("b", "reply", true, 1500, true)
+        f.host.agentChat("a", "reply", true, 1500, true)
+        f.now = 2000
+        f.pulse()
+        assertFalse(f.host.held)
+        assertEquals(true, f.host.agentChat("a", "reply", true, 1000, true)["capped"])
+        assertEquals(true, f.host.agentChat("b", "reply", true, 1000, true)["capped"])
+        assertEquals(true, f.host.logicalWorkBusy())
+    }
+    @Test fun agentScopeRequiresValidOpaqueIdentityAndAnAdmittedHelper() {
+        val f = Fixture()
+        for (profile in listOf("", "a.b", "a/b", "a:b", "a".repeat(81))) {
+            assertEquals(false, f.host.agentChat(profile, "reply", true, 1000, true)["held"])
+        }
+        for (name in listOf("", "a/b", "a".repeat(81))) {
+            assertEquals(false, f.host.agentChat("a", name, true, 1000, true)["held"])
+        }
+        assertEquals(false, f.host.agentChat("a", "reply", true, 1000, false)["held"])
+        assertEquals(false, f.host.agentChat("a", "reply", true, 0, true)["held"])
+        assertTrue(f.host.agentProfiles().isEmpty())
+        assertEquals(false, f.host.logicalWorkBusy())
+        assertEquals(true, f.host.agentChat("a".repeat(80), "b".repeat(80), true, 1000, true)["held"])
+    }
+    @Test fun helperDeniedDuringExistingReplyClosesRatherThanReadmitsItsToken() {
+        val f = Fixture()
+        f.host.agentChat("a", "reply", true, 1000, true)
+        assertEquals(false, f.host.agentChat("a", "reply", true, 1000, false)["held"])
+        assertFalse(f.host.held)
+        assertEquals(true, f.host.agentChat("a", "reply", true, 1000, true)["capped"])
+        assertEquals(true, f.host.logicalWorkBusy())
+    }
+    @Test fun logicalCapacityIsSharedAcrossBothScopesAndNativeOwnersIncludingClosedRuns() {
+        val f = Fixture()
+        f.host.adopt("setup", WorkLeases.Kind.SETUP) { true }
+        repeat(63) { f.host.chat("reply.$it", true, 1000, true) }
+        repeat(64) { f.host.agentChat("a", "reply.$it", true, 1000, true) }
+        assertEquals(128, f.host.diagnostics()["activeCount"])
+        assertEquals(false, f.host.agentChat("b", "extra", true, 1000, true)["held"])
+        f.host.adopt("extra", WorkLeases.Kind.SIGN_IN) { true }
+        assertEquals(128, f.host.diagnostics()["activeCount"])
+        f.host.revokeForegroundWork()
+        assertEquals(1, f.host.diagnostics()["activeCount"])
+        assertTrue(f.host.authorizeForegroundWork(f.host.foregroundGeneration()))
+        assertEquals(false, f.host.agentChat("b", "extra", true, 1000, true)["held"])
+        f.host.agentChat("b", "reply.0", false, 0, false)
+        assertEquals(false, f.host.agentChat("b", "extra", true, 1000, true)["held"])
+        f.host.agentChat("a", "reply.0", false, 0, false)
+        assertEquals(true, f.host.agentChat("b", "extra", true, 1000, true)["held"])
+    }
+    @Test fun returnedProfileSnapshotCannotChangeInternalOwners() {
+        val f = Fixture()
+        f.host.agentChat("a", "reply", true, 1000, true)
+        val original = f.host.agentProfiles()
+        f.host.agentChat("b", "reply", true, 1000, true)
+        assertEquals(setOf("a"), original)
+        assertEquals(setOf("a", "b"), f.host.agentProfiles())
+    }
+    @Test fun terminalProtectionRaceCannotExceedCombinedLogicalOwnerLimit() {
+        val f = Fixture()
+        repeat(127) { f.host.chat("reply.$it", true, 1000, true) }
+        f.terminals = mapOf(1 to false)
+        f.protect = { f.host.agentChat("a", "reply", true, 1000, true); true }
+        f.pulse()
+        assertEquals(128, f.host.diagnostics()["activeCount"])
+        assertEquals(mapOf("chat" to 128), f.host.diagnostics()["kinds"])
+        // Once an actual logical slot ends, the still-live terminal can be observed.
+        f.host.chat("reply.0", false, 0, false)
+        f.protect = { true }
+        f.pulse()
+        assertEquals(128, f.host.diagnostics()["activeCount"])
+        assertEquals(1, (f.host.diagnostics()["kinds"] as Map<*, *>)["terminal"])
+    }
+    @Test fun logicalIdleRequiresConfirmedNoWorkRatherThanRemainingCpuHolds() {
+        val f = Fixture()
+        assertEquals(false, f.host.logicalWorkBusy())
+        var live = true
+        f.host.adopt("setup", WorkLeases.Kind.SETUP) { live }
+        assertEquals(true, f.host.logicalWorkBusy())
+        live = false // No pulse has released its CPU token yet.
+        assertTrue(f.host.held)
+        assertEquals(false, f.host.logicalWorkBusy())
+    }
+    @Test fun cappedAndRevokedSetupRemainsLogicallyBusyUntilActualCompletion() {
+        val f = Fixture(2000)
+        var live = true
+        f.host.adopt("setup", WorkLeases.Kind.SETUP) { live }
+        f.now = 2000
+        f.pulse()
+        assertFalse(f.host.held)
+        assertEquals(true, f.host.logicalWorkBusy())
+        f.host.revokeSetupWork()
+        assertEquals(true, f.host.logicalWorkBusy())
+        live = false
+        assertEquals(false, f.host.logicalWorkBusy())
+    }
+    @Test fun cappedOpenCodeChatRemainsLogicallyBusyUntilExplicitOff() {
+        val f = Fixture()
+        f.host.chat("reply", true, 1000, true)
+        f.now = 1000
+        assertFalse(f.host.held)
+        assertEquals(true, f.host.logicalWorkBusy())
+        f.host.serverGone()
+        assertEquals(true, f.host.logicalWorkBusy())
+        f.host.chat("reply", false, 0, false)
+        assertEquals(false, f.host.logicalWorkBusy())
+    }
+    @Test fun unknownOwnerOrTerminalSnapshotCannotProveIdle() {
+        val f = Fixture()
+        f.snapshotUnavailable = true
+        assertNull(f.host.logicalWorkBusy())
+        f.snapshotUnavailable = false
+        f.host.adopt("setup", WorkLeases.Kind.SETUP) { error("unavailable") }
+        assertNull(f.host.logicalWorkBusy())
+        f.host.release("setup")
+        assertEquals(false, f.host.logicalWorkBusy())
+    }
+    @Test fun positivelyBusyEvidenceWinsOverAnUnknownIndependentSource() {
+        val f = Fixture()
+        f.host.adopt("unknown", WorkLeases.Kind.SETUP) { error("unavailable") }
+        f.host.adopt("live", WorkLeases.Kind.SIGN_IN) { true }
+        f.snapshotUnavailable = true
+        assertEquals(true, f.host.logicalWorkBusy())
+        f.host.release("live")
+        f.snapshotUnavailable = false
+        f.terminals = mapOf(17 to false)
+        assertEquals(true, f.host.logicalWorkBusy())
+        f.terminals = emptyMap()
+        f.host.chat("reply", true, 1000, true)
+        assertEquals(true, f.host.logicalWorkBusy())
+    }
+    @Test fun liveTerminalIsLogicallyBusyBeforeLeaseObservationAndAfterCap() {
+        val f = Fixture(2000)
+        f.terminals = mapOf(1 to false)
+        assertFalse(f.host.held)
+        assertEquals(true, f.host.logicalWorkBusy())
+        f.pulse()
+        f.now = 2000
+        f.pulse()
+        assertFalse(f.host.held)
+        assertEquals(true, f.host.logicalWorkBusy())
+        f.terminals = emptyMap()
+        assertEquals(false, f.host.logicalWorkBusy())
+    }
+    @Test fun ownerReplacementDuringLivenessReadCannotProveIdleOrUseStaleBusyEvidence() {
+        val f = Fixture()
+        f.host.adopt("setup", WorkLeases.Kind.SETUP) {
+            f.host.release("setup")
+            f.host.adopt("setup", WorkLeases.Kind.SETUP) { false }
+            true
+        }
+        assertNull(f.host.logicalWorkBusy())
+        assertEquals(false, f.host.logicalWorkBusy())
+    }
+    @Test fun newlyAdoptedOwnerDuringTerminalReadMakesIdleUnknownUntilResampled() {
+        val f = Fixture()
+        f.terminalProvider = {
+            f.host.adopt("setup", WorkLeases.Kind.SETUP) { false }
+            emptyMap()
+        }
+        assertNull(f.host.logicalWorkBusy())
+        f.terminalProvider = null
+        assertEquals(false, f.host.logicalWorkBusy())
+    }
+    @Test fun logicalLivenessAndTerminalCallbacksRunOutsideHostGuard() {
+        val f = Fixture()
+        val ownerReleased = CountDownLatch(1)
+        val chatReleased = CountDownLatch(1)
+        f.host.adopt("setup", WorkLeases.Kind.SETUP) {
+            Thread({ f.host.release("setup"); ownerReleased.countDown() }, "fixture-release-owner")
+                .apply { isDaemon = true; start() }
+            check(ownerReleased.await(1, TimeUnit.SECONDS))
+            false
+        }
+        assertNull(f.host.logicalWorkBusy()) // The captured owner was removed.
+        f.terminalProvider = {
+            Thread({ f.host.chat("absent", false, 0, false); chatReleased.countDown() }, "fixture-release-chat")
+                .apply { isDaemon = true; start() }
+            check(chatReleased.await(1, TimeUnit.SECONDS))
+            emptyMap()
+        }
+        assertEquals(false, f.host.logicalWorkBusy())
+        assertEquals(0L, ownerReleased.count)
+        assertEquals(0L, chatReleased.count)
+    }
+    @Test fun foregroundRevocationDeniesFreshChatIdsInBothScopesEvenWithRunningHelpers() {
+        val f = Fixture()
+        assertEquals(0L, f.host.foregroundGeneration())
+        f.host.revokeForegroundWork()
+        assertEquals(1L, f.host.foregroundGeneration())
+        assertEquals(mapOf("held" to false, "capped" to false), f.host.chat("fresh", true, 1000, true))
+        assertEquals(mapOf("held" to false, "capped" to false), f.host.agentChat("a", "fresh", true, 1000, true))
+        assertFalse(f.host.held)
+        assertTrue(f.host.agentProfiles().isEmpty())
+        assertEquals(false, f.host.logicalWorkBusy())
+    }
+    @Test fun exactGenerationAuthorizationAllowsNewRunsButNeverRevivesRevokedNames() {
+        val f = Fixture()
+        f.host.chat("old", true, 1000, true)
+        f.host.agentChat("a", "old", true, 1000, true)
+        f.host.revokeForegroundWork()
+        assertTrue(f.host.authorizeForegroundWork(f.host.foregroundGeneration()))
+        assertEquals(mapOf("held" to false, "capped" to true), f.host.chat("old", true, 1000, true))
+        assertEquals(mapOf("held" to false, "capped" to true), f.host.agentChat("a", "old", true, 1000, true))
+        assertEquals(true, f.host.chat("new", true, 1000, true)["held"])
+        assertEquals(true, f.host.agentChat("a", "new", true, 1000, true)["held"])
+        assertEquals(2, f.host.diagnostics()["activeCount"])
+    }
+    @Test fun launchCapturedBeforeStopCannotAuthorizeAfterRevocation() {
+        val f = Fixture()
+        val captured = f.host.foregroundGeneration()
+        f.host.revokeForegroundWork()
+        assertFalse(f.host.authorizeForegroundWork(captured))
+        assertEquals(false, f.host.chat("fresh", true, 1000, true)["held"])
+        assertEquals(false, f.host.agentChat("a", "fresh", true, 1000, true)["held"])
+        assertFalse(f.host.held)
+    }
+    @Test fun everyRevocationInvalidatesEarlierAuthorizedGeneration() {
+        val f = Fixture()
+        f.host.revokeForegroundWork()
+        val first = f.host.foregroundGeneration()
+        assertTrue(f.host.authorizeForegroundWork(first))
+        assertEquals(true, f.host.agentChat("a", "first", true, 1000, true)["held"])
+        f.host.revokeForegroundWork()
+        assertFalse(f.host.authorizeForegroundWork(first))
+        assertEquals(false, f.host.agentChat("a", "second", true, 1000, true)["held"])
+        assertTrue(f.host.authorizeForegroundWork(f.host.foregroundGeneration()))
+        assertEquals(true, f.host.agentChat("a", "second", true, 1000, true)["held"])
+    }
+    @Test fun offStillEndsExactLogicalRunsWhileChatAdmissionIsClosed() {
+        val f = Fixture()
+        f.host.chat("reply", true, 1000, true)
+        f.host.agentChat("a", "reply", true, 1000, true)
+        f.host.revokeForegroundWork()
+        assertEquals(true, f.host.logicalWorkBusy())
+        f.host.chat("reply", false, 0, false)
+        assertEquals(true, f.host.logicalWorkBusy())
+        f.host.agentChat("a", "reply", false, 0, false)
+        assertEquals(false, f.host.logicalWorkBusy())
+        assertEquals(false, f.host.agentChat("a", "reply", true, 1000, true)["held"])
+    }
+    @Test fun zeroHoldClosureRetainsBothExistingLogicalKeysWithoutCpuOrAdmission() {
+        val f = Fixture()
+        f.host.chat("reply", true, 1000, true)
+        f.host.agentChat("a", "reply", true, 1000, true)
+        assertEquals(false, f.host.agentChat("a", "reply", true, 0, true)["held"])
+        assertEquals(1, f.host.diagnostics()["activeCount"])
+        assertEquals(false, f.host.chat("reply", true, 0, true)["held"])
+        assertFalse(f.host.held)
+        assertEquals(true, f.host.logicalWorkBusy())
+        assertEquals(setOf("a"), f.host.agentProfiles())
+        f.host.revokeForegroundWork()
+        f.host.agentChat("a", "reply", true, 0, false)
+        f.host.chat("reply", true, 0, false)
+        assertEquals(true, f.host.logicalWorkBusy())
+        assertFalse(f.host.held)
+        assertTrue(f.host.authorizeForegroundWork(f.host.foregroundGeneration()))
+        assertEquals(true, f.host.agentChat("a", "reply", true, 1000, true)["capped"])
+        assertEquals(true, f.host.chat("reply", true, 1000, true)["capped"])
+        f.host.agentChat("a", "reply", false, 0, false)
+        f.host.chat("reply", false, 0, false)
+        assertEquals(false, f.host.logicalWorkBusy())
     }
 }

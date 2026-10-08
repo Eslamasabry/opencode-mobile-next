@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/tmp/oc-bb4-agent-normal-restore-session.py", line 21, in <module>
+    original_tree=ET.fromstring(d.cat(H.FLUTTER))
+                                ^^^^^^^^^^^^^^^^
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb9_component_update_acceptance.py", line 159, in cat
+    require(result.returncode == 0, 'private_snapshot_unavailable')
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb3_runtime_acceptance.py", line 65, in require
+    raise Refused(code)
+bb3_runtime_acceptance.Refused: private_snapshot_unavailable

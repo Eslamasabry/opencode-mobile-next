@@ -17,7 +17,10 @@ controls=[
  ('refused-renewal',watch,'      } else if (!status.held) {\n        await _releaseLease();','      } else if (!status.held) {','rejected renewal closes only its lease and stops renewing'),
  ('failed-handoff',watch,'        await _releaseLease();\n        if (_currentLeaseIntent(generation)) _stopRenewing();\n        return;','        if (_currentLeaseIntent(generation)) _stopRenewing();\n        return;', 'acquire exception drains partial lease and leaves chain usable'),
  ('independent-id',watch,'_leaseId = leaseId ?? _newLeaseId(),',"_leaseId = leaseId ?? 'chat.shared',",'two watches use distinct IDs and cleanup preserves other work'),
- ('channel-result','lib/builtin/builtin_linux.dart','    return raw is Map<Object?, Object?>\n        ? BuiltinWorkLeaseStatus.fromMap(raw)\n        : const BuiltinWorkLeaseStatus();','    return const BuiltinWorkLeaseStatus();','named chat acquisition uses the frozen channel contract'),
+ ('channel-result','lib/builtin/builtin_linux.dart',
+  "    final raw = await _invoke<Object?>('setChatWorkLease', {\n      'leaseId': leaseId,\n      'on': on,\n      'forMs': hold.inMilliseconds,\n    });\n    return raw is Map<Object?, Object?>\n        ? BuiltinWorkLeaseStatus.fromMap(raw)\n        : const BuiltinWorkLeaseStatus();",
+  "    final raw = await _invoke<Object?>('setChatWorkLease', {\n      'leaseId': leaseId,\n      'on': on,\n      'forMs': hold.inMilliseconds,\n    });\n    return const BuiltinWorkLeaseStatus();",
+  'named chat acquisition uses the frozen channel contract'),
 ]
 for label,file,before,after,name in controls:
  if len(sys.argv)>1 and [x[0] for x in controls].index(label)<[x[0] for x in controls].index(sys.argv[1]): continue

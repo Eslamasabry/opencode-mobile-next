@@ -2,6 +2,7 @@
 """Focused BB4 JVM regressions; coordinator owns the source freeze and checks.
 
 Run: tool/qa/machine_lock.sh build -- python3 tool/qa/bb4_native_regression.py
+Agent controls: append --agent-scope-only to that command.
 
 Temporarily mutates only WorkLeases.kt/NativeWorkLeaseHost.kt, restores their
 original bytes in finally, and runs both affected classes green. Android API37
@@ -20,7 +21,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[2]
 MAIN = ROOT / 'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile'
 TEST = ROOT / 'android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile'
-EVIDENCE = ROOT / 'docs/qa/BB4-2026-10-07'
+EVIDENCE = ROOT / 'docs/qa/BB4-agent-work-2026-10-08'
 PACKAGE = 'io.github.eslamasabry.opencode_mobile.'
 JDK = Path('/home/eslam/Storage/tmp/codex-audit3-temurin17/jdk-17.0.20.1+1')
 KOTLIN = Path('/home/eslam/.sdkman/candidates/kotlin/2.3.20')
@@ -29,7 +30,7 @@ CACHE = Path('/home/eslam/.gradle/caches/modules-2/files-2.1')
 JUNIT = CACHE / 'junit/junit/4.13.2/8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12/junit-4.13.2.jar'
 HAMCREST = CACHE / 'org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar'
 CLASSES = ('WorkLeasesTest', 'NativeWorkLeaseHostTest', 'SetupWorkScopesTest')
-EXPECTED_TESTS = 46
+EXPECTED_TESTS = 73
 # Each control selects exactly one behavior test, not the whole mutant suite.
 # Removing the lifetime cap requires removing its renewal and sweep enforcement
 # together; deleting only one leaves the independent bound intact.
@@ -47,8 +48,12 @@ MUTATIONS = (
         ('if (revision != scheduleRevision) return@task', 'Unit'),
     ), 'NativeWorkLeaseHostTest', 'terminalObservationPreemptsPendingChatExpiryAndCancelledCallbackIsInert'),
     ('unknown_terminal_retention', 'NativeWorkLeaseHost.kt', (
-        ('val running = try { terminalWork() } catch (_: Throwable) { null }',
-         'val running = try { terminalWork() } catch (_: Throwable) { emptyMap() }'),
+        ('internal fun pulse() {\n'
+         '        // Read external lifecycle owners outside our guard: terminal creation holds its own monitor.\n'
+         '        val running = try { terminalWork() } catch (_: Throwable) { null }',
+         'internal fun pulse() {\n'
+         '        // Read external lifecycle owners outside our guard: terminal creation holds its own monitor.\n'
+         '        val running = try { terminalWork() } catch (_: Throwable) { emptyMap() }'),
     ), 'NativeWorkLeaseHostTest', 'unknownTerminalSnapshotCannotReviveCappedSameSessionOrRepeatProtection'),
     ('missing_wake_clear', 'NativeWorkLeaseHost.kt', (
         ('val lock = wake ?: run { leases.clear(); return }', 'val lock = wake ?: return'),
@@ -64,6 +69,38 @@ MUTATIONS = (
         ('leases.entries.removeAll { now >= it.value.expiresAtMs || now >= it.value.hardDeadlineMs }',
          'leases.entries.removeAll { now >= it.value.expiresAtMs }'),
     ), 'NativeWorkLeaseHostTest', 'automaticallyRenewedSetupAndSignInStopAtSixHourContinuousCap'),
+)
+
+AGENT_MUTATIONS = (
+    ('agent_helper_exact_profile_isolation', 'NativeWorkLeaseHost.kt', (
+        ('agentChats.keys.filter { it.profile == profile }.forEach { key ->',
+         'agentChats.keys.filter { true }.forEach { key ->'),
+    ), 'NativeWorkLeaseHostTest', 'helperLossClosesOnlyMatchingProfileWithoutRevivingItsRememberedRun'),
+    ('agent_helper_running_admission', 'NativeWorkLeaseHost.kt', (
+        ('setChat(agentChats, AgentChat(profile, name), on, holdMs, helperRunning)',
+         'setChat(agentChats, AgentChat(profile, name), on, holdMs, true)'),
+    ), 'NativeWorkLeaseHostTest', 'agentScopeRequiresValidOpaqueIdentityAndAnAdmittedHelper'),
+    ('agent_server_loss_scope_isolation', 'NativeWorkLeaseHost.kt', (
+        ('fun serverGone() = synchronized(guard) {',
+         'fun serverGone() = synchronized(guard) {\n'
+         '        agentChats.values.filterNotNull().forEach { leases.release(it) }'),
+    ), 'NativeWorkLeaseHostTest', 'serverLossRevokesOnlyOpenCodeScopeAndDoesNotCloseAgentReplies'),
+    ('logical_busy_independent_cpu_cap', 'NativeWorkLeaseHost.kt', (
+        ('fun logicalWorkBusy(): Boolean? {', 'fun logicalWorkBusy(): Boolean? {\n        return held'),
+    ), 'NativeWorkLeaseHostTest', 'cappedAndRevokedSetupRemainsLogicallyBusyUntilActualCompletion'),
+    ('logical_busy_unknown_snapshot_refusal', 'NativeWorkLeaseHost.kt', (
+        ('if (!unchanged || running == null || liveness.values.any { it == null }) null else false',
+         'if (!unchanged || liveness.values.any { it == null }) null else false'),
+    ), 'NativeWorkLeaseHostTest', 'unknownOwnerOrTerminalSnapshotCannotProveIdle'),
+    ('agent_fresh_id_revocation_latch', 'NativeWorkLeaseHost.kt', (
+        ('chatAdmissionOpen = false', 'chatAdmissionOpen = true'),
+    ), 'NativeWorkLeaseHostTest', 'foregroundRevocationDeniesFreshChatIdsInBothScopesEvenWithRunningHelpers'),
+    ('agent_stale_generation_rearm', 'NativeWorkLeaseHost.kt', (
+        ('if (expectedGeneration != foregroundRevision) return@synchronized false', 'Unit'),
+    ), 'NativeWorkLeaseHostTest', 'launchCapturedBeforeStopCannotAuthorizeAfterRevocation'),
+    ('agent_zero_hold_retains_logical_key', 'NativeWorkLeaseHost.kt', (
+        ('if (chats.containsKey(key)) chats[key] = null', 'chats.remove(key)'),
+    ), 'NativeWorkLeaseHostTest', 'zeroHoldClosureRetainsBothExistingLogicalKeysWithoutCpuOrAdmission'),
 )
 
 RUNNER = """import org.junit.runner.JUnitCore
@@ -143,17 +180,34 @@ class Checks:
 
 
 def main():
-    require(sys.argv[1:] in ([], ['--setup-scope-only'], ['--restored-only']), 'bb4_unsupported_arguments')
-    selected = () if sys.argv[1:] == ['--restored-only'] else (MUTATIONS[:2] if sys.argv[1:] else MUTATIONS)
+    selections = {
+        (): MUTATIONS,
+        ('--setup-scope-only',): MUTATIONS[:2],
+        ('--agent-scope-only',): AGENT_MUTATIONS,
+        ('--restored-only',): (),
+    }
+    arguments = tuple(sys.argv[1:])
+    require(arguments in selections, 'bb4_unsupported_arguments')
+    selected = selections[arguments]
     for artifact in (JDK / 'bin/java', KOTLIN / 'bin/kotlinc', ANDROID, JUNIT, HAMCREST,
                      KOTLIN / 'lib/kotlin-stdlib.jar'):
         require(artifact.is_file(), 'bb4_pinned_jvm_artifact_missing')
     sources = {name: MAIN / name for name in ('WorkLeases.kt', 'NativeWorkLeaseHost.kt', 'SetupWorkScopes.kt')}
     originals = {name: path.read_bytes() for name, path in sources.items()}
     tests = {TEST / (name + '.kt'): (TEST / (name + '.kt')).read_bytes() for name in CLASSES}
-    for _, name, replacements, _, _ in selected:
-        for before, _ in replacements:
+    for _, name, replacements, klass, method in selected:
+        require(klass in CLASSES, 'bb4_mutation_test_class_invalid')
+        test_text = tests[TEST / (klass + '.kt')].decode()
+        methods = list(re.finditer(r'@Test\s+fun\s+' + re.escape(method) + r'\s*\(', test_text))
+        require(len(methods) == 1, 'bb4_mutation_test_not_unique')
+        following = re.search(r'@Test\s+fun\s+', test_text[methods[0].end():])
+        end = methods[0].end() + following.start() if following else len(test_text)
+        require(re.search(r'\bassert(?:Equals|True|False|Null|NotNull|Same|NotSame|Throws)\s*\(',
+                          test_text[methods[0].end():end]) is not None,
+                'bb4_mutation_test_assertion_missing')
+        for before, after in replacements:
             require(originals[name].decode().count(before) == 1, 'bb4_mutation_guard_not_unique')
+            require(before != after, 'bb4_mutation_no_change')
     EVIDENCE.mkdir(parents=True, exist_ok=True)
     red = EVIDENCE / 'native-lease-jvm-red.txt'
     restored = EVIDENCE / 'native-lease-jvm-restored.txt'
@@ -166,6 +220,14 @@ def main():
         failure = None
         controls = 0
         try:
+            if selected:
+                print('RUN original selected behavior tests', flush=True)
+                checks.compile()
+                for label, _, _, klass, method in selected:
+                    code, count, failures, assertions, successful = checks.run(klass, method)
+                    record(red, f'baseline={label} test={klass}.{method} exit={code} run={count} failures={failures} assertions={assertions}')
+                    require(code == 0 and count == 1 and failures == assertions == 0 and successful,
+                            'bb4_original_behavior_not_green')
             for label, name, replacements, klass, method in selected:
                 for source, original in originals.items():
                     require(sources[source].read_bytes() == original, 'bb4_source_freeze_changed')
@@ -174,7 +236,9 @@ def main():
                 print('RUN red=' + label, flush=True)
                 mutated = originals[name]
                 for before, after in replacements:
+                    require(mutated.count(before.encode()) == 1, 'bb4_mutation_guard_not_unique')
                     mutated = mutated.replace(before.encode(), after.encode(), 1)
+                require(mutated != originals[name], 'bb4_mutation_no_change')
                 try:
                     sources[name].write_bytes(mutated)
                     checks.compile()

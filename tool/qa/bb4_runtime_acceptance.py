@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 import bb9_component_update_acceptance as H
 
-LEASE_FIELDS={'bb4WorkLeasesPassed','bb4NativeExpiryPassed','bb4IndependentOwnersPassed','bb4TerminalLifecyclePassed','bb4SetupRevocationPassed'}
+LEASE_FIELDS={'bb4WorkLeasesPassed','bb4NativeExpiryPassed','bb4IndependentOwnersPassed','bb4TerminalLifecyclePassed','bb4SetupRevocationPassed','bb4AgentScopePassed'}
 def configure(host=H):
  host.STEPS['bb4WorkLeases']='bb4WorkLeasesPassed'
  host.FIELDS |= LEASE_FIELDS
@@ -15,7 +15,7 @@ def configure(host=H):
   def run(self):
    fields=self.device.instrument('bb4WorkLeases')
    host.require(all(fields.get(key)=='true' for key in LEASE_FIELDS),'bb4_native_lease_scenario_unproven')
-   self.evidence.append('PASS actual_native_expiry_setup_signin_terminal_chat_independence_and_terminal_lifecycle')
+   self.evidence.append('PASS actual_native_expiry_setup_signin_terminal_chat_and_exact_helper_scope_independence_stop_revocation')
   def cleanup(self):
    # Native fixture finally drains the exact new terminal/process and deletes only its empty temporary home.
    host.require(self.device.cat(host.FIXTURE,required=False) is None,'bb4_unrelated_fixture_present')

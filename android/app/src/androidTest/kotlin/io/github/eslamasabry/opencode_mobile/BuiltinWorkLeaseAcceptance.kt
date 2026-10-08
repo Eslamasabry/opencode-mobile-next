@@ -30,6 +30,7 @@ internal class BuiltinWorkLeaseAcceptance(private val instrumentation: Instrumen
         val home = File(linux.rootfs, "home/oc/.oc-profiles/$profile")
         requireSafe(!home.exists())
         var child: Process? = null
+        var helper: Process? = null
         var installer: Process? = null
         var terminal: LocalTerminal.Session? = null
         try {
@@ -40,9 +41,15 @@ internal class BuiltinWorkLeaseAcceptance(private val instrumentation: Instrumen
             linux.setChatWorkLease(name, false, 1000)
             linux.withSetupWork {
                 requireSafe(linux.workHeld && count(linux, "setup") == 1)
+                val host = linux.startAgentProcess(profile, listOf("/bin/sh", "-c", "IFS= read -r unused"))
+                helper = host
+                linux.trackPrivateAgentService("agent-host.$profile", host, null)
+                requireSafe(linux.setPhoneAgentChatWorkLease(profile, name, true, 15000)["held"] == true)
+                requireSafe(linux.setPhoneAgentChatWorkLease("bb4_wrong_owner", name, true, 15000)["held"] == false)
                 requireSafe(linux.setChatWorkLease(name, true, 15000)["held"] == true)
+                requireSafe(count(linux, "chat") == 2)
                 linux.setChatWorkLease(name, false, 15000)
-                requireSafe(linux.workHeld && count(linux, "chat") == 0)
+                requireSafe(linux.workHeld && count(linux, "chat") == 1)
                 // Same production private process launcher as PhoneAgentSignIn.launch.
                 val signIn = linux.startSignInProcess(profile, listOf("/bin/sh", "-c", "IFS= read -r unused"), false)
                 child = signIn
@@ -54,6 +61,10 @@ internal class BuiltinWorkLeaseAcceptance(private val instrumentation: Instrumen
                 linux.stopServer()
                 requireSafe(linux.workHeld && count(linux, "setup") == 1 && count(linux, "sign_in") == 1 && count(linux, "terminal") == 1)
                 requireSafe(!linux.serverRunning && BuiltinServerService.isForegroundRunning)
+                // The exact helper continues after OpenCode loss; its same-named lease is independent.
+                requireSafe(host.isAlive && count(linux, "chat") == 1)
+                linux.setPhoneAgentChatWorkLease(profile, name, false, 15000)
+                requireSafe(count(linux, "chat") == 0)
                 LocalTerminal.get(context).remove(shell.id); terminal = null
                 waitFor { count(linux, "terminal") == 0 }
                 requireSafe(linux.workHeld && signIn.isAlive)
@@ -72,6 +83,16 @@ internal class BuiltinWorkLeaseAcceptance(private val instrumentation: Instrumen
             val delayed = linux.prepareSetupWork()
             linux.revokeSetupWork()
             linux.withSetupWork(delayed) { requireSafe(!linux.workHeld && count(linux, "setup") == 0) }
+            // Stop/timeout revocation denies fresh opaque IDs even before this live helper drains.
+            requireSafe(helper?.isAlive == true && BuiltinServerService.isForegroundRunning)
+            requireSafe(linux.setPhoneAgentChatWorkLease(profile, name, true, 15000)["held"] == true)
+            linux.revokeForegroundWork()
+            requireSafe(!linux.workHeld && count(linux, "chat") == 0)
+            requireSafe(linux.setPhoneAgentChatWorkLease(profile, "$name.late", true, 15000)["held"] == false)
+            requireSafe(linux.setPhoneAgentChatWorkLease(profile, name, true, 15000)["capped"] == true)
+            linux.setPhoneAgentChatWorkLease(profile, name, false, 15000)
+            linux.setPhoneAgentChatWorkLease(profile, "$name.late", false, 15000)
+            linux.stopService("agent-host.$profile"); helper = null
             waitFor { !linux.workHeld }
             requireSafe(count(linux, "chat") == 0 && count(linux, "setup") == 0 && count(linux, "sign_in") == 0 && count(linux, "terminal") == 0)
             instrumentation.sendStatus(0, Bundle().apply {
@@ -80,11 +101,15 @@ internal class BuiltinWorkLeaseAcceptance(private val instrumentation: Instrumen
                 putBoolean("bb4IndependentOwnersPassed", true)
                 putBoolean("bb4TerminalLifecyclePassed", true)
                 putBoolean("bb4SetupRevocationPassed", true)
+                putBoolean("bb4AgentScopePassed", true)
             })
         } finally {
             linux.setChatWorkLease(name, false, 1000)
             terminal?.let { LocalTerminal.get(context).remove(it.id) }
             child?.let { linux.stopAgentProcess(it) }
+            linux.setPhoneAgentChatWorkLease(profile, name, false, 15000)
+            linux.setPhoneAgentChatWorkLease(profile, "$name.late", false, 15000)
+            helper?.let { linux.stopService("agent-host.$profile") }
             installer?.let { linux.stopInstaller(it); linux.finishInstaller(it) }
             linux.deleteAgentHome(profile)
             requireSafe(!home.exists())

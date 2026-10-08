@@ -1,0 +1,10 @@
+unknown-creation: expected behavioral assertion failure
+obsolete-on: expected behavioral assertion failure
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb4_agent_work_regression.py", line 45, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb4_agent_work_regression.py", line 38, in main
+    assert code==1 and '[E]' in log and 'Expected:' in log and 'Some tests failed.' in log,(label,'not_behavioral_red')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('late-disposed-owner', 'not_behavioral_red')

@@ -1,0 +1,8 @@
+{
+  "serial": "emulator-5554",
+  "avd": "OC_API35",
+  "existingDataPreserved": true,
+  "snapshotLoad": false,
+  "startedExistingAvd": false,
+  "privateAccess": true
+}

@@ -26,6 +26,94 @@ void main() {
     messenger.setMockMethodCallHandler(channel, null);
   });
 
+  test(
+    'agent chat lease carries the separate profile and opaque name',
+    () async {
+      final state = await BuiltinLinux(channel: channel)
+          .setPhoneAgentChatWorkLease(
+            profileId: 'phone_owner',
+            leaseId: 'agent.opaque',
+            on: true,
+          );
+      expect(calls.single.method, 'setPhoneAgentChatWorkLease');
+      expect(calls.single.arguments, {
+        'profileId': 'phone_owner',
+        'leaseId': 'agent.opaque',
+        'on': true,
+        'forMs': 900000,
+      });
+      expect(state.held, isTrue);
+    },
+  );
+
+  test('agent off preserves its profile even after helper loss', () async {
+    response = {'held': false, 'capped': false};
+    await BuiltinLinux(channel: channel).setPhoneAgentChatWorkLease(
+      profileId: 'old_owner',
+      leaseId: 'agent.old',
+      on: false,
+    );
+    expect(calls.single.arguments, {
+      'profileId': 'old_owner',
+      'leaseId': 'agent.old',
+      'on': false,
+      'forMs': 900000,
+    });
+  });
+
+  test(
+    'agent profile and opaque name are validated before native handoff',
+    () async {
+      final linux = BuiltinLinux(channel: channel);
+      for (final id in ['', '../owner', 'owner\n', 'a' * 81]) {
+        await expectLater(
+          linux.setPhoneAgentChatWorkLease(
+            profileId: id,
+            leaseId: 'agent.valid',
+            on: true,
+          ),
+          throwsA(isA<BuiltinLinuxException>()),
+        );
+        await expectLater(
+          linux.setPhoneAgentChatWorkLease(
+            profileId: 'valid_owner',
+            leaseId: id,
+            on: true,
+          ),
+          throwsA(isA<BuiltinLinuxException>()),
+        );
+      }
+      expect(calls, isEmpty);
+    },
+  );
+
+  test(
+    'agent malformed receipt and unsupported platform deny admission',
+    () async {
+      final linux = BuiltinLinux(channel: channel);
+      response = {'held': true};
+      expect(
+        (await linux.setPhoneAgentChatWorkLease(
+          profileId: 'owner',
+          leaseId: 'agent.valid',
+          on: true,
+        )).held,
+        isFalse,
+      );
+      debugPlatformCapabilities = const PlatformCapabilities.linuxDesktop();
+      calls.clear();
+      expect(
+        (await linux.setPhoneAgentChatWorkLease(
+          profileId: 'owner',
+          leaseId: 'agent.valid',
+          on: true,
+        )).held,
+        isFalse,
+      );
+      expect(calls, isEmpty);
+    },
+  );
+
   test('named chat acquisition uses the frozen channel contract', () async {
     final status = await BuiltinLinux(
       channel: channel,

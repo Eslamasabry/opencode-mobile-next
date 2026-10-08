@@ -98,6 +98,18 @@ class _Linux extends BuiltinLinux {
   /// A fresh start answers (false: it runs but stays silent).
   bool answersAfterStart = true;
 
+  final agentHolds = <({String profileId, String leaseId, bool on})>[];
+  @override
+  Future<BuiltinWorkLeaseStatus> setPhoneAgentChatWorkLease({
+    required String profileId,
+    required String leaseId,
+    required bool on,
+    Duration hold = const Duration(minutes: 15),
+  }) async {
+    agentHolds.add((profileId: profileId, leaseId: leaseId, on: on));
+    return BuiltinWorkLeaseStatus(held: on);
+  }
+
   @override
   Future<BuiltinLinuxStatus> status() async => BuiltinLinuxStatus(
     installed: true,
@@ -303,15 +315,84 @@ void main() {
     serverProbe = probeServerConnection;
   });
 
-  PhoneServerHealing bind() => healing = PhoneServerHealing(
-    connection: connection,
-    starter: starter,
-    createRecovery: (record) => BuiltinServerRecovery(
-      store: store,
-      linux: linux,
-      starter: starter,
-      onRestart: record,
-    ),
+  PhoneServerHealing bind({bool? Function(String)? localAgentWorkBusy}) =>
+      healing = PhoneServerHealing(
+        connection: connection,
+        starter: starter,
+        localAgentWorkBusy: localAgentWorkBusy,
+        createRecovery: (record) => BuiltinServerRecovery(
+          store: store,
+          linux: linux,
+          starter: starter,
+          onRestart: record,
+        ),
+      );
+
+  test(
+    'local agent truth owns a separate lease across background and unknown',
+    () async {
+      await prefs.setString(
+        'oc.phoneAgentOwner.${phone.id}',
+        'shared_agent_owner',
+      );
+      bool? busy = true;
+      final queried = <String>[];
+      final owner = bind(
+        localAgentWorkBusy: (profileId) {
+          queried.add(profileId);
+          return busy;
+        },
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(queried.toSet(), {phone.id});
+      expect(linux.agentHolds, hasLength(1));
+      expect(linux.agentHolds.single.profileId, 'shared_agent_owner');
+      final leaseId = linux.agentHolds.single.leaseId;
+      owner.setForeground(false);
+      busy = null;
+      store.updates.notifyListeners();
+      await Future<void>.delayed(Duration.zero);
+      expect(linux.agentHolds.where((call) => !call.on), isEmpty);
+      busy = false;
+      store.updates.notifyListeners();
+      await Future<void>.delayed(Duration.zero);
+      expect(linux.agentHolds.last, (
+        profileId: 'shared_agent_owner',
+        leaseId: leaseId,
+        on: false,
+      ));
+      expect(linux.starts, 0);
+      expect(linux.restarts, 0);
+    },
+  );
+
+  test(
+    'agent lease closes when its runtime profile becomes unreadable',
+    () async {
+      bind(localAgentWorkBusy: (_) => true);
+      await Future<void>.delayed(Duration.zero);
+      final lease = linux.agentHolds.single;
+      connection.blocked.add(phone.id);
+      store.updates.notifyListeners();
+      await Future<void>.delayed(Duration.zero);
+      expect(linux.agentHolds.last, (
+        profileId: lease.profileId,
+        leaseId: lease.leaseId,
+        on: false,
+      ));
+    },
+  );
+
+  test(
+    'missing or throwing local agent inventory never creates a CPU lease',
+    () async {
+      bind(
+        localAgentWorkBusy: (_) =>
+            throw StateError('synthetic unavailable inventory'),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(linux.agentHolds, isEmpty);
+    },
   );
 
   test(

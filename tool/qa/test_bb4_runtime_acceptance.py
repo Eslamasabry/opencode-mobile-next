@@ -15,6 +15,12 @@ class LeaseAdapterTest(unittest.TestCase):
    self.device.instrument.return_value={key:'true' for key in B.LEASE_FIELDS-{absent}}
    with self.assertRaises(H.Q.Refused):self.session().run()
    self.assertEqual([],self.evidence)
+ def test_legacy_server_only_proof_cannot_qualify_agent_scope(self):
+  self.device.instrument.return_value={key:'true' for key in (
+   'bb4WorkLeasesPassed','bb4NativeExpiryPassed','bb4IndependentOwnersPassed',
+   'bb4TerminalLifecyclePassed','bb4SetupRevocationPassed')}
+  with self.assertRaises(H.Q.Refused):self.session().run()
+  self.assertEqual([],self.evidence)
  def test_refused_native_case_cannot_be_reported_as_pass(self):
   self.device.instrument.side_effect=H.Q.Refused('instrument_failed')
   with self.assertRaises(H.Q.Refused):self.session().run()

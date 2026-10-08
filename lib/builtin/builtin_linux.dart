@@ -819,6 +819,35 @@ class BuiltinLinux {
         : const BuiltinWorkLeaseStatus();
   }
 
+  /// A local agent turn has its own scope, admitted only by its live helper.
+  /// Off drains this exact opaque owner even if that helper has since stopped.
+  Future<BuiltinWorkLeaseStatus> setPhoneAgentChatWorkLease({
+    required String profileId,
+    required String leaseId,
+    required bool on,
+    Duration hold = const Duration(minutes: 15),
+  }) async {
+    if (!supported) return const BuiltinWorkLeaseStatus();
+    if (RegExp(r'^[A-Za-z0-9_.-]{1,80}$').firstMatch(leaseId)?.end !=
+            leaseId.length ||
+        RegExp(r'^[A-Za-z0-9_-]{1,80}$').firstMatch(profileId)?.end !=
+            profileId.length) {
+      throw const BuiltinLinuxException(
+        'This chat could not keep the phone awake. Try again.',
+        code: 'work_lease_invalid',
+      );
+    }
+    final raw = await _invoke<Object?>('setPhoneAgentChatWorkLease', {
+      'profileId': profileId,
+      'leaseId': leaseId,
+      'on': on,
+      'forMs': hold.inMilliseconds,
+    });
+    return raw is Map<Object?, Object?>
+        ? BuiltinWorkLeaseStatus.fromMap(raw)
+        : const BuiltinWorkLeaseStatus();
+  }
+
   /// How proot runs the server now and whether the phone is kept awake.
   Future<BuiltinPerformance> performance() async {
     if (!supported) return const BuiltinPerformance();
@@ -982,6 +1011,7 @@ class BuiltinLinux {
             'status',
             'holdAwakeForWork',
             'setChatWorkLease',
+            'setPhoneAgentChatWorkLease',
             'performance',
           }.contains(method)
           ? 50

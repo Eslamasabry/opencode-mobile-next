@@ -1,0 +1,9 @@
+PASS existing_OC_API35_ready_same_data_no_snapshot_or_wipe
+Traceback (most recent call last):
+  File "/tmp/oc-bb4-agent-normal-restore-session.py", line 9, in <module>
+    H.inherited_lock()
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb9_component_update_acceptance.py", line 564, in inherited_lock
+    require(len(found) == 1, 'inherited_emulator_lock_unconfirmed')
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb3_runtime_acceptance.py", line 65, in require
+    raise Refused(code)
+bb3_runtime_acceptance.Refused: inherited_emulator_lock_unconfirmed

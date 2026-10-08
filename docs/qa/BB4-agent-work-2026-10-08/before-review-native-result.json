@@ -1,0 +1,34 @@
+{
+  "suites": [
+    {
+      "class": "WorkLeasesTest",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "NativeWorkLeaseHostTest",
+      "tests": 43,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "SetupWorkScopesTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "IdleStopPolicyTest",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "tests": 83,
+  "historicalCandidate": "before admission-latch and retained-busy review fixes"
+}

@@ -15,12 +15,14 @@ import '../state/profiles.dart';
 import 'builtin_linux.dart';
 import 'builtin_server.dart';
 import 'builtin_server_recovery.dart';
+import 'phone_agent_work_watch.dart';
 
 /// App-lifetime owner: recovery does not depend on opening This phone.
 final phoneServerHealingProvider = Provider<PhoneServerHealing>((ref) {
   final healing = PhoneServerHealing(
     connection: ref.read(connProvider),
     starter: ref.read(builtinServerStarterProvider),
+    localAgentWorkBusy: ref.read(connProvider).localPhoneAgentWorkBusy,
     createRecovery: (record) => BuiltinServerRecovery(
       store: ref.read(connProvider).store,
       linux: ref.read(builtinLinuxProvider),
@@ -36,11 +38,21 @@ class PhoneServerHealing {
   PhoneServerHealing({
     required this.connection,
     required this.starter,
+    this.localAgentWorkBusy,
     required BuiltinServerRecovery Function(BuiltinRestartRecorder)
     createRecovery,
   }) {
     recovery = createRecovery(_recordRestart);
     report = LifecycleReportController(linux: recovery.linux);
+    agentWork = PhoneAgentWorkWatch(
+      hold: (profileId, leaseId, on, hold) =>
+          recovery.linux.setPhoneAgentChatWorkLease(
+            profileId: profileId,
+            leaseId: leaseId,
+            on: on,
+            hold: hold,
+          ),
+    );
     recovery.addListener(_recoveryChanged);
     recovery.connectionUnsettled = _connectionUnsettled;
     connection.store.changes.addListener(_syncProfile);
@@ -60,6 +72,10 @@ class PhoneServerHealing {
   final BuiltinServerStarter starter;
   late final BuiltinServerRecovery recovery;
   late final LifecycleReportController report;
+  late final PhoneAgentWorkWatch agentWork;
+
+  /// BA supplies current inventory truth. Absence remains unknown and acquires nothing.
+  final bool? Function(String profileId)? localAgentWorkBusy;
   ServerProfile? _owner;
   int _reportedReadyCount = -1;
   bool _foreground = false;
@@ -121,6 +137,7 @@ class PhoneServerHealing {
       report.invalidate();
     }
     recovery.setProfile(selected);
+    _observeAgentWork();
   }
 
   /// The app is on this phone's server and its connection is down: the
@@ -135,6 +152,23 @@ class PhoneServerHealing {
 
   void _connectionChanged() {
     if (!_disposed && _connectionUnsettled()) recovery.expedite();
+    _observeAgentWork();
+  }
+
+  void _observeAgentWork() {
+    if (_disposed) return;
+    final owner = _owner;
+    if (owner == null || !connection.isProfileReadable(owner.id)) {
+      agentWork.observe(profileId: null, busy: null);
+      return;
+    }
+    final profileId = connection.store.phoneAgentOwnerId(owner.id);
+    bool? busy;
+    try {
+      // BA resolves the readable server alias into the shared agent owner.
+      busy = localAgentWorkBusy?.call(owner.id);
+    } catch (_) {}
+    agentWork.observe(profileId: profileId, busy: busy);
   }
 
   void setForeground(bool value) {
@@ -388,6 +422,7 @@ class PhoneServerHealing {
     connection.removeListener(_connectionChanged);
     starter.beforeManualStart = null;
     recovery.removeListener(_recoveryChanged);
+    agentWork.dispose();
     recovery.dispose();
     report.dispose();
   }

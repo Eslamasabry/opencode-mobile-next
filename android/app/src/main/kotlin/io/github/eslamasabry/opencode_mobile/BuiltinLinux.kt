@@ -71,6 +71,8 @@ class BuiltinLinux(private val context: Context) {
     private var latestBoundaryControls = emptyMap<String, Any?>()
     internal fun phoneBoundaryControls(): Map<String, Any?> = latestBoundaryControls.toMap()
     private val processConfinement = java.util.IdentityHashMap<Process, Boolean>()
+    // Captured before an authored foreground launch; a late registration cannot recapture after Stop.
+    private val agentWorkAdmissions = java.util.IdentityHashMap<Process, Long>()
 
     // A corrupt/symlink marker still requires protection. Never fall back to
     // legacy execution merely because marker bytes or a packaged ELF changed.
@@ -684,6 +686,8 @@ class BuiltinLinux(private val context: Context) {
         privateOutput: Boolean, workKind: WorkLeases.Kind?): Process {
         check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId)) { "The agent host is unavailable." }
         check(installed && argv.isNotEmpty() && profileId !in blockedAgentProfiles) { "The agent host is unavailable." }
+        val workGeneration = if (synchronized(recoveryLock) { activityResumed })
+            workLeases.foregroundGeneration() else null
         val profileHome = PhoneAgentPaths.prepare(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId")
         Os.chmod(profileHome.absolutePath, 448)
         val guestHome = "/home/oc/.oc-profiles/$profileId"
@@ -697,6 +701,8 @@ class BuiltinLinux(private val context: Context) {
         processes.add(process)
         agentProcessProfiles.entries.removeAll { !it.key.isAlive }
         agentProcessProfiles[process] = profileId
+        agentWorkAdmissions.entries.removeAll { !it.key.isAlive }
+        workGeneration?.let { agentWorkAdmissions[process] = it }
         processConfinement[process] = prootIsConfined
         try {
             if (foreground) trackPrivateAgentService("agent-auth.$profileId", process, null)
@@ -716,7 +722,10 @@ class BuiltinLinux(private val context: Context) {
         removeService(name)
         services[name] = serviceStarted(name, process, port, "Agents are working on this phone")
         recordRunning()
-        try { BuiltinServerService.start(context, currentNotice()) }
+        try {
+            BuiltinServerService.start(context, currentNotice())
+            agentWorkAdmissions.remove(process)?.let { workLeases.authorizeForegroundWork(it) }
+        }
         catch (_: Throwable) {
             try { stopAgentProcess(process) } catch (_: Throwable) { }
             removeStoppedService(name)
@@ -2436,6 +2445,7 @@ class BuiltinLinux(private val context: Context) {
      */
     @Synchronized
     fun startService(name: String, script: String, port: Int?, notice: String?) {
+        val workGeneration = workLeases.foregroundGeneration()
         check(installed) { "Ubuntu is not installed in the app yet" }
         require(NAME.matches(name)) { "Invalid service name: $name" }
         require(name != PHONE_ENGINE) { "The native phone engine has a dedicated launcher." }
@@ -2455,7 +2465,10 @@ class BuiltinLinux(private val context: Context) {
             synchronized(recoveryLock) { manualStartGeneration = recoveryGeneration }
         }
         launchService(name, script, port, notice)
-        if (name == SERVER) synchronized(recoveryLock) { manualStartGeneration = recoveryGeneration }
+        if (name == SERVER) {
+            workLeases.authorizeForegroundWork(workGeneration)
+            synchronized(recoveryLock) { manualStartGeneration = recoveryGeneration }
+        }
     }
 
     private fun launchService(
@@ -2595,6 +2608,9 @@ class BuiltinLinux(private val context: Context) {
         // A reply cannot run on a server that is gone: never keep the phone
         // awake for it.
         if (!serverRunning) workLeases.serverGone()
+        workLeases.agentProfiles().forEach { profile ->
+            if (services["agent-host.$profile"]?.process?.isAlive != true) workLeases.helperGone(profile)
+        }
         val running = services.values.any { it.process.isAlive } || workLeases.foregroundHeld
         val holdsRecovery = try {
             val profile = synchronized(recoveryLock) { supervisionProfile }
@@ -2673,6 +2689,15 @@ class BuiltinLinux(private val context: Context) {
     val workHeld: Boolean get() = workLeases.held
     fun setChatWorkLease(name: String, on: Boolean, forMs: Long): Map<String, Boolean> =
         workLeases.chat(name, on, forMs, serverRunning)
+    /** A helper chat owns a different lease scope from OpenCode server replies. */
+    fun setPhoneAgentChatWorkLease(profile: String, name: String, on: Boolean, forMs: Long): Map<String, Boolean> {
+        return synchronized(this) {
+            val admitted = profile !in blockedAgentProfiles &&
+                services["agent-host.$profile"]?.process?.isAlive == true &&
+                BuiltinServerService.isForegroundRunning
+            workLeases.agentChat(profile, name, on, forMs, admitted)
+        }
+    }
     fun holdAwakeForWork(on: Boolean, forMs: Long): Boolean =
         setChatWorkLease("legacy.reply", on, forMs)["held"] == true
     internal fun revokeForegroundWork() = workLeases.revokeForegroundWork()

@@ -1,0 +1,7 @@
+late-disposed-owner: expected behavioral assertion failure
+mandatory-old-off: expected behavioral assertion failure
+native-cap: expected behavioral assertion failure
+busy-tombstone: expected behavioral assertion failure
+late-closed-owner: expected behavioral assertion failure
+independent-names: expected behavioral assertion failure
+PASS selected behavior controls; restored helper chat/bridge/healing/provider files
