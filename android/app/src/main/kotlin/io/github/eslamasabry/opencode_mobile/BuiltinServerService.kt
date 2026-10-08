@@ -27,48 +27,52 @@ class BuiltinServerService : Service() {
         private set
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (BuildConfig.BUILTIN_RUNTIME_QA) runtimeQaLastStartId = startId
-        try {
-            if (intent?.action == ACTION_STOP) {
-                stopRuntime(startId)
-                return START_NOT_STICKY
-            }
-            createChannel()
-            val notification = buildNotification(intent?.getStringExtra(EXTRA_TITLE))
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                startForeground(
-                    NOTIFICATION_ID,
-                    notification,
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
-                )
-            } else {
-                startForeground(NOTIFICATION_ID, notification)
-            }
-            foregroundShown = true
-            // A stop that arrived before Android ran this waited for the
-            // notification (stopping a promised service first crashes the app).
-            if (stopPending) {
-                stopPending = false
-                try { stopForeground(STOP_FOREGROUND_REMOVE) } catch (_: Throwable) { }
-                try { stopSelf(startId) } catch (_: Throwable) { }
-                return START_NOT_STICKY
-            }
-            val linux = BuiltinLinux.get(applicationContext)
-            if (intent == null) {
-                if (!linux.serverRestorationArmed) {
-                    linux.rejectServerRestoration()
-                    try { stopForeground(STOP_FOREGROUND_REMOVE) } catch (_: Throwable) { }
-                    stopSelf(startId)
-                    return START_NOT_STICKY
-                }
-                linux.restoreServerAfterProcessReclaim()
-            }
-            return if (linux.serverRestorationArmed) START_STICKY else START_NOT_STICKY
+        return try {
+            startOrStopRuntime(intent, startId)
         } catch (_: Throwable) {
-            // Android invokes this after startForegroundService returned. A
-            // policy rejection cannot throw through its caller's channel guard.
+            // Policy rejection cannot throw through the caller's channel guard.
             stopRuntime(startId)
+            START_NOT_STICKY
         }
-        return START_NOT_STICKY
+    }
+
+    private fun startOrStopRuntime(intent: Intent?, startId: Int): Int {
+        if (intent?.action == ACTION_STOP) {
+            stopRuntime(startId)
+            return START_NOT_STICKY
+        }
+        createChannel()
+        val notification = buildNotification(intent?.getStringExtra(EXTRA_TITLE))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(
+                NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
+        }
+        foregroundShown = true
+        // A promised foreground service must show its notification before stopping.
+        return if (stopPending) {
+            stopPending = false
+            try { stopForeground(STOP_FOREGROUND_REMOVE) } catch (_: Throwable) { }
+            try { stopSelf(startId) } catch (_: Throwable) { }
+            START_NOT_STICKY
+        } else restoreRuntimeForStart(intent, startId)
+    }
+
+    private fun restoreRuntimeForStart(intent: Intent?, startId: Int): Int {
+        val linux = BuiltinLinux.get(applicationContext)
+        return if (intent == null && !linux.serverRestorationArmed) {
+            linux.rejectServerRestoration()
+            try { stopForeground(STOP_FOREGROUND_REMOVE) } catch (_: Throwable) { }
+            stopSelf(startId)
+            START_NOT_STICKY
+        } else {
+            if (intent == null) linux.restoreServerAfterProcessReclaim()
+            if (linux.serverRestorationArmed) START_STICKY else START_NOT_STICKY
+        }
     }
 
     // No foreground service has an unbounded lifetime, including specialUse.

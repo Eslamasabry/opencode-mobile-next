@@ -1,0 +1,269 @@
+Focused native file count: 25
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/background_pause_native_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bd/test/background_pause_native_test.dart: (setUpAll)
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bd/test/background_pause_native_test.dart: native background receipt: timeout-reopen
+00:01 +1: /home/eslam/Storage/Code/oc_app-sol-bd/test/background_pause_native_test.dart: native background receipt: task-removal
+00:01 +2: /home/eslam/Storage/Code/oc_app-sol-bd/test/background_pause_native_test.dart: native background receipt: current-restriction
+00:01 +3: /home/eslam/Storage/Code/oc_app-sol-bd/test/background_pause_native_test.dart: native background receipt: user-stop
+00:01 +4: /home/eslam/Storage/Code/oc_app-sol-bd/test/background_pause_native_test.dart: native background receipt: old-exit-interruption
+00:01 +5: /home/eslam/Storage/Code/oc_app-sol-bd/test/background_pause_native_test.dart: native background receipt: intentional-clear
+00:01 +6: /home/eslam/Storage/Code/oc_app-sol-bd/test/background_pause_native_test.dart: native background receipt: failed-commit
+00:01 +7: /home/eslam/Storage/Code/oc_app-sol-bd/test/background_pause_native_test.dart: native background receipt: confirmed-start
+00:02 +8: /home/eslam/Storage/Code/oc_app-sol-bd/test/background_pause_native_test.dart: native background receipt: reason-eleven
+00:02 +9: /home/eslam/Storage/Code/oc_app-sol-bd/test/background_pause_native_test.dart: (tearDownAll)
+00:02 +9: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/bb8_main_callback_native_test.dart
+00:05 +9: /home/eslam/Storage/Code/oc_app-sol-bd/test/bb8_main_callback_native_test.dart: (setUpAll)
+00:05 +9: /home/eslam/Storage/Code/oc_app-sol-bd/test/bb8_main_callback_native_test.dart: native BB8 main callback: callback-success
+00:06 +10: /home/eslam/Storage/Code/oc_app-sol-bd/test/bb8_main_callback_native_test.dart: native BB8 main callback: callback-failure
+00:06 +11: /home/eslam/Storage/Code/oc_app-sol-bd/test/bb8_main_callback_native_test.dart: (tearDownAll)
+00:06 +11: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/bb8_native_ready_test.dart
+00:08 +11: /home/eslam/Storage/Code/oc_app-sol-bd/test/bb8_native_ready_test.dart: first frame completes before readiness and auth work
+00:08 +12: /home/eslam/Storage/Code/oc_app-sol-bd/test/bb8_native_ready_test.dart: auth work waits for native readiness
+00:08 +13: /home/eslam/Storage/Code/oc_app-sol-bd/test/bb8_native_ready_test.dart: missing native handler retries before auth work
+00:08 +14: /home/eslam/Storage/Code/oc_app-sol-bd/test/bb8_native_ready_test.dart: unexpected native ready reply refuses auth work
+00:08 +15: /home/eslam/Storage/Code/oc_app-sol-bd/test/bb8_native_ready_test.dart: unanswered readiness expires after ten seconds
+00:08 +16: /home/eslam/Storage/Code/oc_app-sol-bd/test/bb8_native_ready_test.dart: missing handler stops retrying at the readiness deadline
+00:08 +17: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart
+00:10 +17: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: (setUpAll)
+00:19 +17: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: native project storage: fresh
+00:20 +18: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: native project storage: migration
+00:20 +19: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: native project storage: empty-destination
+00:21 +20: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: native project storage: retry-after-rename
+00:21 +21: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: native project storage: retain-reinstall-delete
+00:21 +22: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: native project storage: reset-rootfs
+00:21 +23: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: native project storage: collision
+00:21 +24: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: native project storage: symlink-ancestors
+00:21 +25: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: native project storage: symlink-contents
+00:21 +26: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: native project storage: measurement
+00:21 +27: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: native project storage: inspection-failure
+00:22 +28: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: native project storage: deletion-failure
+00:22 +29: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: native project storage: read-only-directories
+00:22 +30: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: native project storage: invalid-size
+00:22 +31: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_storage_native_test.dart: (tearDownAll)
+00:22 +31: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_server_recovery_native_test.dart
+00:24 +31: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_server_recovery_native_test.dart: spent legacy budget migrates once with marker before activation
+00:24 +32: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_server_recovery_native_test.dart: failed native staging keeps legacy spent attempts across retry
+00:24 +33: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_server_recovery_native_test.dart: retrying staged migration never overwrites native spent attempts
+00:24 +34: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_server_recovery_native_test.dart: valid v2 marker with missing native budget admits no restart
+00:24 +35: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_server_recovery_native_test.dart: corrupt migration marker admits no native binding or restart
+00:24 +36: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_server_recovery_native_test.dart: malformed native snapshot fails closed
+00:24 +37: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_server_recovery_native_test.dart: direct and background reservations share three attempts across owners
+00:24 +38: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_server_recovery_native_test.dart: only confirmed manual Start resets native attempts
+00:24 +39: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_server_recovery_native_test.dart: healthy manual Start resets budget with automatic restart disabled
+00:24 +40: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_server_recovery_native_test.dart: Stop background and scheduled native recovery never dispatch from Dart
+00:24 +41: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_server_recovery_native_test.dart: legacy pending confirmation survives migration and records after Stop
+00:24 +42: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_server_recovery_native_test.dart: native background pending attempt is confirmed without another dispatch
+00:24 +43: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_server_recovery_native_test.dart: historical confirmed receipt survives later crash and records once
+00:24 +44: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_server_recovery_native_test.dart: profile deletion drains the active check and native erase before sweep
+00:24 +45: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_shortcut_native_contract_test.dart
+00:25 +45: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_shortcut_native_contract_test.dart: the manifest publishes the static shortcuts resource
+00:26 +46: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_shortcut_native_contract_test.dart: the preview shortcuts differ only in the package they open
+00:26 +47: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_shortcut_native_contract_test.dart: every declared shortcut targets MainActivity with a whitelisted id
+00:26 +48: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_shortcut_native_contract_test.dart: the native whitelist matches the declared shortcut ids
+00:26 +49: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_shortcut_native_contract_test.dart: the extra is removed before the whitelist decides
+00:26 +50: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_shortcut_native_contract_test.dart: consumeLaunchAction acknowledges readiness and drains once
+00:26 +51: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_shortcut_native_contract_test.dart: a live tap is pushed only once Dart is listening
+00:26 +52: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_shortcut_native_contract_test.dart: engine teardown forgets the channel and its readiness
+00:26 +53: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_surfaces_native_contract_test.dart
+00:29 +53: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_surfaces_native_contract_test.dart: pinned-session shortcuts the channel exposes the session drain and the publisher
+00:29 +54: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_surfaces_native_contract_test.dart: pinned-session shortcuts a tap carries the two IDs only and both extras are consumed
+00:29 +55: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_surfaces_native_contract_test.dart: pinned-session shortcuts consumeSessionLaunch drains once
+00:29 +56: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_surfaces_native_contract_test.dart: pinned-session shortcuts a live tap is pushed only once Dart is listening
+00:29 +57: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_surfaces_native_contract_test.dart: pinned-session shortcuts the publisher targets MainActivity with the same extras
+00:29 +58: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_surfaces_native_contract_test.dart: pinned-session shortcuts stale entries are disabled before the new set is published
+00:29 +59: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_surfaces_native_contract_test.dart: pinned-session shortcuts the shortcut icon exists and the compat library is declared
+00:29 +60: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_surfaces_native_contract_test.dart: Quick Settings tile is registered with the binding permission and QS action
+00:29 +61: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_surfaces_native_contract_test.dart: Quick Settings tile reads the key the Dart writer uses, from the Flutter prefs file
+00:29 +62: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_surfaces_native_contract_test.dart: Quick Settings tile a tap sends the whitelisted Activity action and nothing more
+00:29 +63: /home/eslam/Storage/Code/oc_app-sol-bd/test/launch_surfaces_native_contract_test.dart: Quick Settings tile degrades to the bare label and has localized copy
+00:29 +64: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/native_crash_test.dart
+00:32 +64: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_crash_test.dart: reads the latest JVM crash independently of exit history
+00:32 +65: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_crash_test.dart: invalid native input fails closed without paths or sign-in data
+00:32 +66: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_crash_test.dart: bounded metadata never converts unknown objects to text
+00:32 +67: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_crash_test.dart: wrapped service crash retains the bounded safe permission cause
+00:32 +68: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_crash_test.dart: oc/lifecycle launch report accepts the native crash contract
+00:32 +69: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_crash_test.dart: startup emits one crash.last and persists its full bounded stack
+00:32 +70: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/native_locale_refresh_test.dart
+00:33 +70: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_locale_refresh_test.dart: (setUpAll)
+00:43 +70: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_locale_refresh_test.dart: native locale refresh: phone-fallback
+00:44 +71: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_locale_refresh_test.dart: native locale refresh: supplied-title
+00:44 +72: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_locale_refresh_test.dart: native locale refresh: channel-policy
+00:44 +73: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_locale_refresh_test.dart: native locale refresh: empty-surfaces
+00:44 +74: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_locale_refresh_test.dart: (tearDownAll)
+00:44 +74: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/native_notification_copy_test.dart
+00:45 +74: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_notification_copy_test.dart: notification resources cover both languages and compatible slots
+00:45 +75: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_notification_copy_test.dart: widget authored fallback and time labels use localized resources
+00:46 +76: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_notification_copy_test.dart: agent titles are localized templates without English prefix inference
+00:47 +77: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/native_strings_test.dart
+00:51 +77: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_strings_test.dart: (setUpAll)
+01:01 +77: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_strings_test.dart: native resource locale: arabic-override
+01:01 +78: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_strings_test.dart: native resource locale: english-override
+01:02 +79: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_strings_test.dart: native resource locale: system-ar
+01:02 +80: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_strings_test.dart: native resource locale: system-list
+01:02 +81: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_strings_test.dart: native resource locale: untranslated-app
+01:02 +82: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_strings_test.dart: native resource locale: unsupported-system
+01:03 +83: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_strings_test.dart: native resource locale: invalid-choice
+01:03 +84: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_strings_test.dart: native resource locale: read-refused
+01:03 +85: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_strings_test.dart: native resource locale: choice-changes
+01:03 +86: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_strings_test.dart: native resource locale: resource-formatting
+01:04 +87: /home/eslam/Storage/Code/oc_app-sol-bd/test/native_strings_test.dart: (tearDownAll)
+01:04 +87: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/opencode_native_install_test.dart
+01:08 +87: /home/eslam/Storage/Code/oc_app-sol-bd/test/opencode_native_install_test.dart: the pinned native install the production script picks the pinned archive for each CPU, checks it before unpacking, and uses no npm
+01:08 +88: /home/eslam/Storage/Code/oc_app-sol-bd/test/opencode_native_install_test.dart: the pinned native install the in-app components use it; Termux keeps its shared text
+01:09 +89: /home/eslam/Storage/Code/oc_app-sol-bd/test/opencode_native_install_test.dart: the pinned native install npm installs that remain allow exactly their own package's install scripts
+01:09 +90: /home/eslam/Storage/Code/oc_app-sol-bd/test/opencode_native_install_test.dart: the pinned native install ARM64 gets the arm64 archive: installed, proven, linked; the old npm wrapper is replaced and the check passes afterwards
+01:09 +91: /home/eslam/Storage/Code/oc_app-sol-bd/test/opencode_native_install_test.dart: the pinned native install x86_64 gets the x64 archive; OpenCode 2 unpacks the npm platform package's program as opencode2
+01:10 +92: /home/eslam/Storage/Code/oc_app-sol-bd/test/opencode_native_install_test.dart: the pinned native install a checksum mismatch stops before anything is unpacked
+01:10 +93: /home/eslam/Storage/Code/oc_app-sol-bd/test/opencode_native_install_test.dart: the pinned native install post-activation failure restores the previous native program and link
+01:13 +94: /home/eslam/Storage/Code/oc_app-sol-bd/test/opencode_native_install_test.dart: the pinned native install an archive without the program, a program that does not run and one that does not start each end with their own reason and keep the previous install
+01:14 +95: /home/eslam/Storage/Code/oc_app-sol-bd/test/opencode_native_install_test.dart: the pinned native install real pinned OpenCode on this PC (smoke)
+  Skip: set OC_SMOKE_REAL_OPENCODE=1 (downloads ~150 MB)
+01:14 +95 ~1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_permissions_test.dart
+01:16 +95 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_permissions_test.dart: same-ID command and suggested rule replace the pending permission
+01:16 +96 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_permissions_test.dart: native permission snapshots detach data and preserve equivalent revisions
+01:16 +97 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_permissions_test.dart: hidden suggested rule changes invalidate a captured approval
+01:16 +98 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_permissions_test.dart: changed hidden input invalidates an otherwise identical display
+01:16 +99 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_permissions_test.dart: malformed replacement retires the prior actionable permission
+01:16 +100 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_permissions_test.dart: resolve and disconnect retire revisions without resending
+01:17 +101 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_permissions_test.dart: location change and session deletion notify and retire permissions
+01:17 +102 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_permissions_test.dart: feed permission attention updates without a refresh or timeline subscription
+01:17 +103 ~1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart
+01:18 +103 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: Claude native questions become typed questions, never permissions
+01:18 +104 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: Claude answers use exact question keys and string multi/custom values
+01:18 +105 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: pi uses header keys and preserves optional comment with empty answer
+01:18 +106 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: omp uses header keys and preserves optional comment with empty answer
+01:18 +107 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: plan displays full plan and approval never restores bypass mode
+01:18 +108 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: keep planning denies without interrupt or persistent permission
+01:18 +109 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: question reject sends deny; legacy permission replies cannot approve it
+01:19 +110 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: wrong session, duplicate, invalid values and disconnected answers never send
+01:19 +111 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: snapshots recover pending questions and retire resolved ones
+01:19 +112 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: malformed question is not turned into a generic approval
+01:19 +113 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: feed reports live questions as needs-you and clears after reply
+01:19 +114 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: unknown or mismatched provider questions never become approvals
+01:19 +115 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: Claude duplicate headers keep distinct full-question answer keys
+01:19 +116 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: options-free native input permits custom text and optional empty string
+01:19 +117 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: required answer cannot be empty and closed choices cannot be invented
+01:19 +118 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: resolved and scope-changed question replies never send
+01:19 +119 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: isOther alias permits custom text and malformed flags never approve
+01:19 +120 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: changed question revision replaces the visible prompt, rejects old closed choice
+01:19 +121 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: malformed same-session replacement invalidates the previous question
+01:19 +122 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_native_questions_test.dart: a colliding request in another session cannot invalidate a question
+01:20 +123 ~1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart
+01:23 +123 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: (setUpAll)
+01:23 +123 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: request-admission
+01:25 +124 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: request-rejection
+01:26 +125 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: projection-valid
+01:27 +126 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: projection-rejection
+01:27 +127 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: private-success
+01:28 +128 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: invalid-no-launch
+01:29 +129 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: prepare-denied
+01:29 +130 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: start-failure
+01:29 +131 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: timeout
+01:29 +132 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: logout-timeout
+01:29 +133 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: wait-failure
+01:29 +134 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: reader-failure
+01:29 +135 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: output-overflow
+01:29 +136 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: output-overflow-timeout
+01:30 +137 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: blocked-profile
+01:30 +138 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: retained-dead-root
+01:30 +139 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: deletion-during-run
+01:30 +140 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: tree-dead-root
+01:30 +141 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: tree-pid-reuse
+01:30 +142 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: tree-zombie
+01:30 +143 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: tree-unconfirmed-drain
+01:30 +144 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: tree-missing-identity
+01:31 +145 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: tree-inventory-failure
+01:32 +146 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: tree-root-only-then-orphan
+01:32 +147 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: tree-signal-reuse
+01:33 +148 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: tree-failed-start-unknown
+01:33 +149 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: cold-registered-owner
+01:33 +150 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: cold-unknown-owner
+01:33 +151 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: deadline-absolute-probe
+01:33 +152 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: deadline-absolute-logout
+01:33 +153 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: inventory-valid
+01:33 +154 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: inventory-unreadable
+01:34 +155 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: inventory-malformed
+01:34 +156 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: inventory-vanished
+01:34 +157 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: inventory-cross-uid
+01:34 +158 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: lock-empty-exact
+01:34 +159 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: lock-nonempty-retained
+01:35 +160 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: native private agent auth: lock-foreign-symlink
+01:35 +161 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_auth_native_test.dart: (tearDownAll)
+01:35 +161 ~1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_host_native_test.dart
+01:36 +161 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_host_native_test.dart: (setUpAll)
+01:47 +161 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_host_native_test.dart: native phone host: low-space-launch
+01:48 +162 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_host_native_test.dart: native phone host: healthy-launch
+01:50 +163 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_host_native_test.dart: native phone host: exited-at-once
+01:51 +164 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_host_native_test.dart: native phone host: concurrent-start
+01:53 +165 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_host_native_test.dart: (tearDownAll)
+01:53 +165 ~1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_paths_native_test.dart
+01:54 +165 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_paths_native_test.dart: (setUpAll)
+02:04 +165 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_paths_native_test.dart: native agent launch directory: anchor-alias
+02:05 +166 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_paths_native_test.dart: native agent launch directory: managed-symlink
+02:05 +167 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_paths_native_test.dart: native agent launch directory: managed-ancestor-symlink
+02:05 +168 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_paths_native_test.dart: native agent launch directory: projects-symlink
+02:05 +169 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_paths_native_test.dart: native agent launch directory: repeat
+02:05 +170 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_paths_native_test.dart: (tearDownAll)
+02:05 +170 ~1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_run_native_test.dart
+02:07 +170 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_run_native_test.dart: (setUpAll)
+02:17 +170 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_run_native_test.dart: native agent setup run: receipts
+02:17 +171 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_run_native_test.dart: native agent setup run: reader-failure
+02:17 +172 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_run_native_test.dart: native agent setup run: stdin-failure
+02:17 +173 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_run_native_test.dart: native agent setup run: wait-failure
+02:17 +174 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_run_native_test.dart: native agent setup run: log-failure
+02:17 +175 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_run_native_test.dart: native agent setup run: timeout
+02:17 +176 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_run_native_test.dart: (tearDownAll)
+02:17 +176 ~1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_service_native_test.dart
+02:18 +176 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_service_native_test.dart: (setUpAll)
+02:18 +176 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_service_native_test.dart: native agent service callback: setup-main-denied
+02:18 +177 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_service_native_test.dart: native agent service callback: daemon-main-denied
+02:18 +178 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_service_native_test.dart: native agent service callback: setup-channel-denied
+02:18 +179 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_service_native_test.dart: native agent service callback: daemon-timeout-denied
+02:18 +180 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_service_native_test.dart: native agent service callback: daemon-stop-denied
+02:18 +181 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_service_native_test.dart: native agent service callback: result-notification-denied
+02:18 +182 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_service_native_test.dart: native agent service callback: dispatch-denied
+02:18 +183 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_service_native_test.dart: native agent service callback: localized-copy-ar
+02:18 +184 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_service_native_test.dart: native agent service callback: localized-copy-en
+02:18 +185 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agent_service_native_test.dart: (tearDownAll)
+02:18 +185 ~1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_crash_native_test.dart
+02:20 +185 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_crash_native_test.dart: (setUpAll)
+02:20 +185 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_crash_native_test.dart: native channel/crash: reply-once
+02:20 +186 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_crash_native_test.dart: native channel/crash: reply-detached
+02:20 +187 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_crash_native_test.dart: native channel/crash: crash-redaction
+02:20 +188 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_crash_native_test.dart: native channel/crash: crash-chain-and-storage-failure
+02:20 +189 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_crash_native_test.dart: native channel/crash: crash-symlinks
+02:20 +190 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_crash_native_test.dart: (tearDownAll)
+02:20 +190 ~1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/session_address_link_native_test.dart
+02:21 +190 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_address_link_native_test.dart: Android executes the same ASCII byte ceiling before Dart delivery
+02:27 +191 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_address_link_native_test.dart: native consumes invalid intents before bounded capture without logging
+02:27 +192 ~1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/session_link_native_contract_test.dart
+02:28 +192 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_link_native_contract_test.dart: the manifest declares exactly one VIEW filter for the link
+02:28 +193 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_link_native_contract_test.dart: the native scheme and host match the Dart link shape
+02:28 +194 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_link_native_contract_test.dart: the intent is consumed before the link is parked
+02:29 +195 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_link_native_contract_test.dart: consumeSessionLink acknowledges readiness and drains once
+02:29 +196 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_link_native_contract_test.dart: the bridge never forwards anything but the URI text
+02:29 +197 ~1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/setup_runner_native_test.dart
+02:29 +197 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/setup_runner_native_test.dart: (setUpAll)
+02:45 +197 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/setup_runner_native_test.dart: native setup persistence: ordered-terminal
+02:46 +198 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/setup_runner_native_test.dart: native setup persistence: installer-routed
+02:46 +199 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/setup_runner_native_test.dart: native setup persistence: typed-write-failure
+02:46 +200 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/setup_runner_native_test.dart: native setup persistence: failed-start-status
+02:46 +201 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/setup_runner_native_test.dart: native setup persistence: service-start-denied
+02:46 +202 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/setup_runner_native_test.dart: native setup persistence: service-finish-denied
+02:46 +203 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/setup_runner_native_test.dart: native setup persistence: service-update-denied
+02:46 +204 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/setup_runner_native_test.dart: native setup persistence: agent-output-private
+02:46 +205 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/setup_runner_native_test.dart: native setup persistence: low-space-first
+02:46 +206 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/setup_runner_native_test.dart: native setup persistence: low-space-next
+02:46 +207 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/setup_runner_native_test.dart: native setup persistence: paseo-checksum-failed
+02:46 +208 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/setup_runner_native_test.dart: native setup persistence: paseo-launch-failed
+02:46 +209 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/setup_runner_native_test.dart: (tearDownAll)
+02:46 +209 ~1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/share_intent_native_contract_test.dart
+02:50 +209 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/share_intent_native_contract_test.dart: native share delivery waits for Dart readiness acknowledgment
+02:50 +210 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/share_intent_native_contract_test.dart: native share-out opens the chooser without this app as a target
+02:50 +211 ~1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/termux_setup_native_test.dart
+02:50 +211 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/termux_setup_native_test.dart: (setUpAll)
+02:50 +211 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/termux_setup_native_test.dart: Termux durable shell: progress-and-finish
+02:52 +212 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/termux_setup_native_test.dart: Termux durable shell: cancel-and-resume
+02:54 +213 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/termux_setup_native_test.dart: Termux durable shell: interrupted-launch
+02:54 +214 ~1: /home/eslam/Storage/Code/oc_app-sol-bd/test/termux_setup_native_test.dart: (tearDownAll)
+02:54 +214 ~1: All tests passed!

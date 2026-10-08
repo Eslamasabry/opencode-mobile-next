@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="4.3">
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeServerRecipeTest.kt">
+	<error line="189" column="24" severity="warning" message="The function request(profile: String, runtime: String, bound: String?, packageVersion: Long, rootfsGeneration: String, value: Map&lt;*, *&gt;) has too many parameters. The current threshold is set to 6." source="detekt.LongParameterList" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeRecoveryBudgetTest.kt">
+	<error line="320" column="28" severity="warning" message="The function manualReset(resumed: Boolean, wanted: Boolean, userStopped: Boolean, boundProfile: String?, requestedProfile: String, manualGeneration: Long?, currentGeneration: Long, running: Boolean, nativeOwned: Boolean) has too many parameters. The current threshold is set to 6." source="detekt.LongParameterList" />
+	<error line="342" column="26" severity="warning" message="The function admission(enabled: Boolean, wanted: Boolean, userStopped: Boolean, generation: Long, expectedGeneration: Long, markerValid: Boolean, policyAllowed: Boolean) has too many parameters. The current threshold is set to 6." source="detekt.LongParameterList" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRuntimeOwnership.kt">
+	<error line="89" column="9" severity="warning" message="The function plan appears to be too complex based on Cyclomatic Complexity (complexity: 19). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="104" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="114" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="116" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="18" column="36" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="19" column="55" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="20" column="43" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="42" column="31" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="86" column="24" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="86" column="41" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeComponentUpdateRecovery.kt">
+	<error line="11" column="16" severity="warning" message="Class &apos;NativeComponentUpdateRecovery&apos; with &apos;14&apos; functions detected. Defined threshold inside classes is set to &apos;11&apos;" source="detekt.TooManyFunctions" />
+	<error line="84" column="17" severity="warning" message="Function path has 3 return statements which exceeds the limit of 2." source="detekt.ReturnCount" />
+	<error line="98" column="17" severity="warning" message="Function validateAncestors has 3 return statements which exceeds the limit of 2." source="detekt.ReturnCount" />
+	<error line="19" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="65" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="105" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="122" column="65" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="125" column="69" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="126" column="29" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="128" column="32" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="178" column="108" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="181" column="24" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="224" column="41" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeInstallerOwnership.kt">
+	<error line="80" column="9" severity="warning" message="The function withCurrentRuntimePeers appears to be too complex based on Cyclomatic Complexity (complexity: 16). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="38" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="67" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="19" column="34" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="45" column="40" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="82" column="34" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="88" column="31" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="89" column="35" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="115" column="31" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="124" column="35" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinServerService.kt">
+	<error line="28" column="18" severity="warning" message="Function onStartCommand is nested too deeply." source="detekt.NestedBlockDepth" />
+	<error line="28" column="18" severity="warning" message="Function onStartCommand has 5 return statements which exceeds the limit of 2." source="detekt.ReturnCount" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt">
+	<error line="374" column="17" severity="warning" message="The function runInstallerScript appears to be too complex based on Cyclomatic Complexity (complexity: 26). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="374" column="17" severity="warning" message="Function runInstallerScript has 3 return statements which exceeds the limit of 2." source="detekt.ReturnCount" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt">
+	<error line="1743" column="33" severity="warning" message="The function startGatedServer(script: String, log: File, recipe: NativeServerRecipe, attemptGeneration: Long?, supervisorGeneration: Long?, scheduleId: Long?) has too many parameters. The current threshold is set to 6." source="detekt.LongParameterList" />
+	<error line="2449" column="30" severity="warning" message="The function launchService(name: String, script: String, port: Int?, notice: String?, expectedGeneration: Long?, nativeOwned: Boolean, nativeSupervisionGeneration: Long?, nativeAttemptGeneration: Long?, nativeScheduleId: Long?) has too many parameters. The current threshold is set to 6." source="detekt.LongParameterList" />
+	<error line="206" column="9" severity="warning" message="The function run is too long (65). The maximum length is 60." source="detekt.LongMethod" />
+	<error line="440" column="17" severity="warning" message="The function startQualifiedInstaller is too long (92). The maximum length is 60." source="detekt.LongMethod" />
+	<error line="1743" column="17" severity="warning" message="The function startGatedServer is too long (77). The maximum length is 60." source="detekt.LongMethod" />
+	<error line="1909" column="23" severity="warning" message="The function restoreServerAfterProcessReclaim is too long (100). The maximum length is 60." source="detekt.LongMethod" />
+	<error line="2449" column="17" severity="warning" message="The function launchService is too long (63). The maximum length is 60." source="detekt.LongMethod" />
+	<error line="389" column="17" severity="warning" message="The function recoverColdComponentUpdates appears to be too complex based on Cyclomatic Complexity (complexity: 19). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="440" column="17" severity="warning" message="The function startQualifiedInstaller appears to be too complex based on Cyclomatic Complexity (complexity: 37). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="1743" column="17" severity="warning" message="The function startGatedServer appears to be too complex based on Cyclomatic Complexity (complexity: 43). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="1862" column="18" severity="warning" message="The function rejectServerRestoration appears to be too complex based on Cyclomatic Complexity (complexity: 15). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="1909" column="23" severity="warning" message="The function restoreServerAfterProcessReclaim appears to be too complex based on Cyclomatic Complexity (complexity: 30). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="2171" column="17" severity="warning" message="The function scheduleNativeRecovery appears to be too complex based on Cyclomatic Complexity (complexity: 20). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="2449" column="17" severity="warning" message="The function launchService appears to be too complex based on Cyclomatic Complexity (complexity: 25). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="389" column="17" severity="warning" message="Function recoverColdComponentUpdates is nested too deeply." source="detekt.NestedBlockDepth" />
+	<error line="440" column="17" severity="warning" message="Function startQualifiedInstaller is nested too deeply." source="detekt.NestedBlockDepth" />
+	<error line="1803" column="21" severity="warning" message="This condition is too complex (7). Defined complexity threshold for conditions is set to &apos;4&apos;" source="detekt.ComplexCondition" />
+	<error line="1814" column="21" severity="warning" message="This condition is too complex (7). Defined complexity threshold for conditions is set to &apos;4&apos;" source="detekt.ComplexCondition" />
+	<error line="2001" column="38" severity="warning" message="Instead of catching for a general exception type and checking for a specific exception type, use multiple catch blocks." source="detekt.InstanceOfCheckForException" />
+	<error line="1832" column="17" severity="warning" message="Function startManualServer has 3 return statements which exceeds the limit of 2." source="detekt.ReturnCount" />
+	<error line="1909" column="23" severity="warning" message="Function restoreServerAfterProcessReclaim has 4 return statements which exceeds the limit of 2." source="detekt.ReturnCount" />
+	<error line="2171" column="17" severity="warning" message="Function scheduleNativeRecovery has 5 return statements which exceeds the limit of 2." source="detekt.ReturnCount" />
+	<error line="1909" column="23" severity="warning" message="Too many throw statements in the function restoreServerAfterProcessReclaim. The maximum number of allowed throw statements is 2." source="detekt.ThrowsCount" />
+	<error line="296" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="344" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="416" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="465" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1555" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1595" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1646" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1649" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1666" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1680" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1700" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1703" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1705" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1718" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1724" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1732" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1742" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1743" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1779" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1790" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1791" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1799" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1820" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1963" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1966" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1971" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1974" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1979" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="2080" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="2165" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="2201" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="2209" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="2395" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="2567" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="2616" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="209" column="64" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="224" column="30" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="318" column="29" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="379" column="56" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="381" column="89" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="381" column="109" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="383" column="101" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="414" column="72" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="416" column="104" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="416" column="124" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="418" column="116" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="513" column="34" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="1608" column="38" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="1619" column="75" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="1621" column="83" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="1621" column="90" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="1659" column="35" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="1660" column="36" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="1702" column="56" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="1704" column="85" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="1704" column="105" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="1706" column="97" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="1939" column="92" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="1968" column="38" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="1976" column="38" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="1990" column="73" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="2195" column="57" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="2379" column="27" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinInstallerProducerQaService.kt">
+	<error line="128" column="17" severity="warning" message="The function launch is too long (69). The maximum length is 60." source="detekt.LongMethod" />
+	<error line="57" column="18" severity="warning" message="The function onStartCommand appears to be too complex based on Cyclomatic Complexity (complexity: 25). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="128" column="17" severity="warning" message="The function launch appears to be too complex based on Cyclomatic Complexity (complexity: 23). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="200" column="17" severity="warning" message="The function release appears to be too complex based on Cyclomatic Complexity (complexity: 17). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="237" column="17" severity="warning" message="The function loadExport appears to be too complex based on Cyclomatic Complexity (complexity: 26). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="286" column="17" severity="warning" message="The function prove appears to be too complex based on Cyclomatic Complexity (complexity: 15). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="444" column="17" severity="warning" message="The function finish appears to be too complex based on Cyclomatic Complexity (complexity: 15). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="128" column="17" severity="warning" message="Function launch is nested too deeply." source="detekt.NestedBlockDepth" />
+	<error line="30" column="7" severity="warning" message="Class &apos;BuiltinInstallerProducerQaService&apos; with &apos;26&apos; functions detected. Defined threshold inside classes is set to &apos;11&apos;" source="detekt.TooManyFunctions" />
+	<error line="393" column="98" severity="warning" message="This else block is empty and can be removed." source="detekt.EmptyElseBlock" />
+	<error line="183" column="16" severity="warning" message="The caught exception is too generic. Prefer catching specific exceptions to the case that is currently handled." source="detekt.TooGenericExceptionCaught" />
+	<error line="128" column="17" severity="warning" message="Too many throw statements in the function launch. The maximum number of allowed throw statements is 2." source="detekt.ThrowsCount" />
+	<error line="286" column="17" severity="warning" message="Too many throw statements in the function prove. The maximum number of allowed throw statements is 2." source="detekt.ThrowsCount" />
+	<error line="280" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="291" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="295" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="312" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="352" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="353" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="365" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="393" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="406" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="412" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="421" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="493" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="494" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="496" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="497" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="175" column="61" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="178" column="44" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="180" column="30" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="257" column="37" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="257" column="40" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="260" column="71" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="264" column="62" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="298" column="16" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="310" column="53" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="312" column="118" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="315" column="25" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="316" column="31" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="316" column="35" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="316" column="55" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="323" column="107" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="331" column="35" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="331" column="60" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="349" column="28" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="352" column="60" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="353" column="59" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="398" column="86" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="400" column="43" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="403" column="34" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="408" column="31" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="410" column="30" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="429" column="59" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="468" column="50" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinRuntimeAcceptance.kt">
+	<error line="98" column="17" severity="warning" message="The function supervision is too long (165). The maximum length is 60." source="detekt.LongMethod" />
+	<error line="34" column="18" severity="warning" message="The function onStart appears to be too complex based on Cyclomatic Complexity (complexity: 30). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="98" column="17" severity="warning" message="The function supervision appears to be too complex based on Cyclomatic Complexity (complexity: 38). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="98" column="17" severity="warning" message="Function supervision is nested too deeply." source="detekt.NestedBlockDepth" />
+	<error line="272" column="17" severity="warning" message="Function awaitHealth is nested too deeply." source="detekt.NestedBlockDepth" />
+	<error line="227" column="21" severity="warning" message="This condition is too complex (5). Defined complexity threshold for conditions is set to &apos;4&apos;" source="detekt.ComplexCondition" />
+	<error line="384" column="17" severity="warning" message="Too many throw statements in the function persisted. The maximum number of allowed throw statements is 2." source="detekt.ThrowsCount" />
+	<error line="65" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="139" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="187" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="207" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="221" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="226" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="239" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="336" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentFilesystemAcceptance.kt">
+	<error line="30" column="9" severity="warning" message="The function execute is too long (64). The maximum length is 60." source="detekt.LongMethod" />
+	<error line="30" column="9" severity="warning" message="The function execute appears to be too complex based on Cyclomatic Complexity (complexity: 16). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="316" column="17" severity="warning" message="The function validateRecords appears to be too complex based on Cyclomatic Complexity (complexity: 18). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="30" column="9" severity="warning" message="Function execute is nested too deeply." source="detekt.NestedBlockDepth" />
+	<error line="80" column="44" severity="warning" message="This else block is empty and can be removed." source="detekt.EmptyElseBlock" />
+	<error line="30" column="9" severity="warning" message="Too many throw statements in the function execute. The maximum number of allowed throw statements is 2." source="detekt.ThrowsCount" />
+	<error line="144" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="146" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="170" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="206" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="292" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="313" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="347" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="408" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="409" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="439" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="454" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="246" column="9" severity="warning" message="The loop contains more than one break or continue statement. The code should be refactored to increase readability." source="detekt.LoopWithTooManyJumpStatements" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinRuntimeReclaimAcceptance.kt">
+	<error line="82" column="17" severity="warning" message="The function capabilities appears to be too complex based on Cyclomatic Complexity (complexity: 32). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="177" column="17" severity="warning" message="The function prepare appears to be too complex based on Cyclomatic Complexity (complexity: 15). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="308" column="17" severity="warning" message="The function commitStaleWitness appears to be too complex based on Cyclomatic Complexity (complexity: 27). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="446" column="17" severity="warning" message="Function awaitHealth is nested too deeply." source="detekt.NestedBlockDepth" />
+	<error line="484" column="16" severity="warning" message="This condition is too complex (4). Defined complexity threshold for conditions is set to &apos;4&apos;" source="detekt.ComplexCondition" />
+	<error line="308" column="17" severity="warning" message="Too many throw statements in the function commitStaleWitness. The maximum number of allowed throw statements is 2." source="detekt.ThrowsCount" />
+	<error line="409" column="17" severity="warning" message="Too many throw statements in the function prepareHeldGate. The maximum number of allowed throw statements is 2." source="detekt.ThrowsCount" />
+	<error line="112" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="118" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="119" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="132" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="134" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="181" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="187" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="190" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="192" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="204" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="240" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="257" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="336" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="337" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="382" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="385" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="386" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="403" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="429" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentUpdateAcceptance.kt">
+	<error line="318" column="17" severity="warning" message="The function prepare is too long (63). The maximum length is 60." source="detekt.LongMethod" />
+	<error line="535" column="17" severity="warning" message="The function cleanup is too long (88). The maximum length is 60." source="detekt.LongMethod" />
+	<error line="164" column="17" severity="warning" message="The function concurrentChecks is too long (121). The maximum length is 60." source="detekt.LongMethod" />
+	<error line="22" column="16" severity="warning" message="Class BuiltinComponentUpdateAcceptance is too large. Consider splitting it into smaller pieces." source="detekt.LargeClass" />
+	<error line="36" column="9" severity="warning" message="The function execute appears to be too complex based on Cyclomatic Complexity (complexity: 26). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="164" column="17" severity="warning" message="The function concurrentChecks appears to be too complex based on Cyclomatic Complexity (complexity: 56). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="318" column="17" severity="warning" message="The function prepare appears to be too complex based on Cyclomatic Complexity (complexity: 15). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="391" column="17" severity="warning" message="The function commitExternal appears to be too complex based on Cyclomatic Complexity (complexity: 26). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="535" column="17" severity="warning" message="The function cleanup appears to be too complex based on Cyclomatic Complexity (complexity: 49). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="673" column="17" severity="warning" message="The function readNoFollow appears to be too complex based on Cyclomatic Complexity (complexity: 19). Defined complexity threshold for methods is set to &apos;15&apos;" source="detekt.CyclomaticComplexMethod" />
+	<error line="36" column="9" severity="warning" message="Function execute is nested too deeply." source="detekt.NestedBlockDepth" />
+	<error line="106" column="60" severity="warning" message="This else block is empty and can be removed." source="detekt.EmptyElseBlock" />
+	<error line="687" column="98" severity="warning" message="This else block is empty and can be removed." source="detekt.EmptyElseBlock" />
+	<error line="36" column="9" severity="warning" message="Too many throw statements in the function execute. The maximum number of allowed throw statements is 2." source="detekt.ThrowsCount" />
+	<error line="52" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="94" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="129" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="213" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="227" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="249" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="260" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="263" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="357" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="360" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="365" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="368" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="410" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="427" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="452" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="523" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="549" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="558" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="560" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="564" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="602" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="658" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="659" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="687" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeInstallerOwnershipTest.kt">
+	<error line="3" column="1" severity="warning" message="org.junit.Assert.* is a wildcard import. Replace it with fully qualified imports." source="detekt.WildcardImport" />
+	<error line="17" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="57" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="152" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="171" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="185" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="257" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeRuntimeOwnershipTest.kt">
+	<error line="3" column="1" severity="warning" message="org.junit.Assert.* is a wildcard import. Replace it with fully qualified imports." source="detekt.WildcardImport" />
+	<error line="9" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="10" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="145" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="156" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="176" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeComponentUpdateRecoveryTest.kt">
+	<error line="3" column="1" severity="warning" message="org.junit.Assert.* is a wildcard import. Replace it with fully qualified imports." source="detekt.WildcardImport" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeInstallerVisibilityTest.kt">
+	<error line="3" column="1" severity="warning" message="org.junit.Assert.* is a wildcard import. Replace it with fully qualified imports." source="detekt.WildcardImport" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeInstallerVisibility.kt">
+	<error line="9" column="31" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="9" column="56" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/ServiceDiagnostics.kt">
+	<error line="29" column="13" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRecoveryBudget.kt">
+	<error line="74" column="13" severity="warning" message="Function policyAllows has 3 return statements which exceeds the limit of 2." source="detekt.ReturnCount" />
+	<error line="50" column="1" severity="warning" message="Line detected, which is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="14" column="26" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="34" column="55" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="51" column="36" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="53" column="35" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+</file>
+<file name="../../../../../tmp/bd5-full-revert/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/RestartBackoff.kt">
+	<error line="4" column="31" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="7" column="25" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="7" column="47" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="10" column="48" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="16" column="30" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="16" column="37" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+	<error line="19" column="33" severity="warning" message="This expression contains a magic number. Consider defining it to a well named constant." source="detekt.MagicNumber" />
+</file>
+</checkstyle>

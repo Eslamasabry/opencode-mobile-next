@@ -3,10 +3,12 @@ package io.github.eslamasabry.opencode_mobile
 /** A missing /proc entry never proves that a recorded installer process died. */
 internal object NativeInstallerVisibility {
     private const val SAFE = "ownershipUnknown"
+    private const val MAX_KNOWN_IDENTITIES = 130
+    private const val MAX_INVENTORY_IDENTITIES = 128
 
     fun requireMissingGone(known: List<RuntimeProcessIdentity>, inventory: List<RuntimeProcessIdentity>,
         confirmedGone: (Int) -> Boolean) {
-        require(known.size <= 130 && inventory.size <= 128) { SAFE }
+        require(known.size <= MAX_KNOWN_IDENTITIES && inventory.size <= MAX_INVENTORY_IDENTITIES) { SAFE }
         val current = inventory.associateBy { it.pid }
         require(current.size == inventory.size) { SAFE }
         val identities = linkedMapOf<Int, RuntimeProcessIdentity>()

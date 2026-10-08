@@ -1,0 +1,50 @@
+{
+  "io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest": {
+    "tests": 21,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "io.github.eslamasabry.opencode_mobile.NativeInstallerOwnershipTest": {
+    "tests": 35,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "io.github.eslamasabry.opencode_mobile.NativeInstallerVisibilityTest": {
+    "tests": 13,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "io.github.eslamasabry.opencode_mobile.NativeRecoveryBudgetTest": {
+    "tests": 21,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "io.github.eslamasabry.opencode_mobile.NativeRuntimeOwnershipTest": {
+    "tests": 28,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "io.github.eslamasabry.opencode_mobile.NativeServerRecipeTest": {
+    "tests": 14,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "io.github.eslamasabry.opencode_mobile.RestartBackoffTest": {
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "io.github.eslamasabry.opencode_mobile.ServiceDiagnosticsTest": {
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+}

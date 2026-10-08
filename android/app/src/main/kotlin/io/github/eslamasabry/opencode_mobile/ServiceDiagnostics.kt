@@ -26,9 +26,13 @@ data class ServiceDiagnostics(
         // Exit 137 indicates SIGKILL; it cannot distinguish memory pressure
         // from Android's phantom-process policy (or another external kill).
         "exitReason" to when (lastExitCode) {
-            137 -> "memory_or_phantom_kill"
+            SIGKILL_EXIT_CODE -> "memory_or_phantom_kill"
             null -> "unknown"
             else -> "exited"
         },
     )
+
+    private companion object {
+        const val SIGKILL_EXIT_CODE = 137
+    }
 }

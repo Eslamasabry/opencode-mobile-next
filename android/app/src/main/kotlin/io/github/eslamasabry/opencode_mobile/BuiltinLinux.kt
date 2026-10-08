@@ -206,25 +206,7 @@ class BuiltinLinux(private val context: Context) {
     fun run(script: String, timeoutSeconds: Long = 600, agentUser: Boolean = false): Result {
         val began = SystemClock.elapsedRealtime()
         val timeoutMillis = TimeUnit.SECONDS.toMillis(timeoutSeconds).coerceAtLeast(0L)
-        val queueDeadline = began + timeoutMillis.coerceAtMost(10000L)
-        var admitted: Process? = null
-        while (admitted == null) {
-            admitted = synchronized(this) {
-                if (installerProcess == null) {
-                    check(SystemClock.elapsedRealtime() - began <= timeoutMillis) {
-                        "Another phone task is running. Wait a moment and try again."
-                    }
-                    startInstaller(script, InstallerTarget.entries.toSet(), InstallerOperation.CHECK, agentUser)
-                } else null
-            }
-            if (admitted == null) {
-                check(SystemClock.elapsedRealtime() < queueDeadline) {
-                    "Another phone task is running. Wait a moment and try again."
-                }
-                Thread.sleep(50)
-            }
-        }
-        val process = admitted
+        val process = admitCheckProcess(script, timeoutMillis, began, agentUser)
         val output = StringBuilder()
         val readerFailed = java.util.concurrent.atomic.AtomicBoolean()
         var reader: Thread? = null
@@ -271,6 +253,28 @@ class BuiltinLinux(private val context: Context) {
         }
     }
 
+    private fun admitCheckProcess(script: String, timeoutMillis: Long, began: Long, agentUser: Boolean): Process {
+        val queueDeadline = began + timeoutMillis.coerceAtMost(RUN_ADMISSION_WINDOW_MS)
+        var admitted: Process? = null
+        while (admitted == null) {
+            admitted = synchronized(this) {
+                if (installerProcess == null) {
+                    check(SystemClock.elapsedRealtime() - began <= timeoutMillis) {
+                        "Another phone task is running. Wait a moment and try again."
+                    }
+                    startInstaller(script, InstallerTarget.entries.toSet(), InstallerOperation.CHECK, agentUser)
+                } else null
+            }
+            if (admitted == null) {
+                check(SystemClock.elapsedRealtime() < queueDeadline) {
+                    "Another phone task is running. Wait a moment and try again."
+                }
+                Thread.sleep(PROCESS_POLL_MS)
+            }
+        }
+        return admitted
+    }
+
     /**
      * Starts [script] inside Ubuntu with its output appended to [log], or piped
      * back when [log] is null. proot is given --kill-on-exit, so stopping it
@@ -293,7 +297,9 @@ class BuiltinLinux(private val context: Context) {
             .start().also { processes.add(it); processConfinement[it] = prootIsConfined }
     }
 
-    private val installerPreferences by lazy { context.getSharedPreferences("builtin_component_writer", Context.MODE_PRIVATE) }
+    private val installerPreferences by lazy {
+        context.getSharedPreferences("builtin_component_writer", Context.MODE_PRIVATE)
+    }
     private val installerGuard = Any()
     @Volatile private var installerProcess: Process? = null
     private var installerLaunchId: String? = null
@@ -315,7 +321,7 @@ class BuiltinLinux(private val context: Context) {
 
     private fun installerTicket(): InstallerTicket? {
         val raw = installerPreferences.getString("ticket", null) ?: return null
-        check(raw.length <= 131072) { componentUpdateFailure }
+        check(raw.length <= MAX_RECEIPT_CHARS) { componentUpdateFailure }
         fun decode(value: Any?, depth: Int = 0): Any? {
             check(depth <= 16) { componentUpdateFailure }
             return when (value) {
@@ -341,7 +347,9 @@ class BuiltinLinux(private val context: Context) {
             registeredRuntimePids(), ::installerAbsenceConfirmed, ::nonceMatches)
 
     /** Only live completion can admit current native peers; cold ownership is never broadened. */
-    private fun liveInstallerPlan(ticket: InstallerTicket, expectedProcess: Process, launchId: String): NativeRuntimeOwnership.Drain {
+    private fun liveInstallerPlan(
+        ticket: InstallerTicket, expectedProcess: Process, launchId: String,
+    ): NativeRuntimeOwnership.Drain {
         check(installerProcess === expectedProcess && installerLaunchId == launchId && ticket.id == launchId) {
             componentUpdateFailure
         }
@@ -376,11 +384,12 @@ class BuiltinLinux(private val context: Context) {
         fun plan(): NativeRuntimeOwnership.Drain = if (expectedProcess == null) installerPlan(ticket) else {
             liveInstallerPlan(ticket, expectedProcess, launchId ?: error(componentUpdateFailure))
         }
-        val deadline = SystemClock.elapsedRealtime() + 5000L
+        val deadline = SystemClock.elapsedRealtime() + OWNED_DRAIN_TIMEOUT_MS
         for (identity in plan().server) signalInstaller(identity, OsConstants.SIGTERM)
-        while (plan().server.isNotEmpty() && SystemClock.elapsedRealtime() < deadline - 2000L) Thread.sleep(50)
+        while (plan().server.isNotEmpty() &&
+            SystemClock.elapsedRealtime() < deadline - OWNED_DRAIN_KILL_WINDOW_MS) Thread.sleep(PROCESS_POLL_MS)
         for (identity in plan().server) signalInstaller(identity, OsConstants.SIGKILL)
-        while (plan().server.isNotEmpty() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(50)
+        while (plan().server.isNotEmpty() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(PROCESS_POLL_MS)
         check(plan().server.isEmpty()) { componentUpdateFailure }
     }
 
@@ -399,26 +408,7 @@ class BuiltinLinux(private val context: Context) {
             if (pending) {
                 // A saved server receipt proves exact children, never that they cannot write.
                 // Drain it before recovery rather than treating old helpers as trusted readers.
-                val profile = recoveryPreferences.getString("restoreOwner", null)
-                if (profile != null) {
-                    val old = ownership(profile)
-                    if (old.boot == bootIdentity()) {
-                        fun oldMembers(): List<RuntimeProcessIdentity> {
-                            val current = sameUidInventory()
-                            NativeInstallerVisibility.requireMissingGone(
-                                listOfNotNull(old.root, old.leader) + old.other, current, ::installerAbsenceConfirmed)
-                            val plan = NativeRuntimeOwnership.plan(old, bootIdentity(), current, registeredRuntimePids(),
-                                requireCompleteInventory = false, nonceMatches = ::nonceMatches)
-                            return (plan.server + current.filter { it.pid in plan.other }).distinctBy { it.pid }
-                        }
-                        val deadline = SystemClock.elapsedRealtime() + 5000L
-                        for (identity in oldMembers()) signalInstaller(identity, OsConstants.SIGTERM)
-                        while (oldMembers().isNotEmpty() && SystemClock.elapsedRealtime() < deadline - 2000L) Thread.sleep(50)
-                        for (identity in oldMembers()) signalInstaller(identity, OsConstants.SIGKILL)
-                        while (oldMembers().isNotEmpty() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(50)
-                        check(oldMembers().isEmpty()) { componentUpdateFailure }
-                    }
-                }
+                recoverPendingServerReceipt()
                 componentRecovery.recoverAfterQuiescence {
                     installerProcess == null && processes.none { it.isAlive } &&
                         agentProcessProfiles.keys.none { it.isAlive } &&
@@ -428,6 +418,32 @@ class BuiltinLinux(private val context: Context) {
             if (ticket != null) check(installerPreferences.edit().remove("ticket").commit()) { componentUpdateFailure }
             componentUpdatesRecovered = true
         } catch (_: Throwable) { throw IllegalStateException(componentUpdateFailure) }
+    }
+
+    private fun recoverPendingServerReceipt() {
+        val profile = recoveryPreferences.getString("restoreOwner", null)
+        if (profile != null) {
+            val old = ownership(profile)
+            if (old.boot == bootIdentity()) drainPreviousServer(old)
+        }
+    }
+
+    private fun drainPreviousServer(old: NativeRuntimeReceipt) {
+        fun oldMembers(): List<RuntimeProcessIdentity> {
+            val current = sameUidInventory()
+            NativeInstallerVisibility.requireMissingGone(
+                listOfNotNull(old.root, old.leader) + old.other, current, ::installerAbsenceConfirmed)
+            val plan = NativeRuntimeOwnership.plan(old, bootIdentity(), current, registeredRuntimePids(),
+                requireCompleteInventory = false, nonceMatches = ::nonceMatches)
+            return (plan.server + current.filter { it.pid in plan.other }).distinctBy { it.pid }
+        }
+        val deadline = SystemClock.elapsedRealtime() + OWNED_DRAIN_TIMEOUT_MS
+        for (identity in oldMembers()) signalInstaller(identity, OsConstants.SIGTERM)
+        while (oldMembers().isNotEmpty() &&
+            SystemClock.elapsedRealtime() < deadline - OWNED_DRAIN_KILL_WINDOW_MS) Thread.sleep(PROCESS_POLL_MS)
+        for (identity in oldMembers()) signalInstaller(identity, OsConstants.SIGKILL)
+        while (oldMembers().isNotEmpty() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(PROCESS_POLL_MS)
+        check(oldMembers().isEmpty()) { componentUpdateFailure }
     }
 
     /** Fixed typed scope; script bytes and account/output values never enter the durable ticket. */
@@ -462,7 +478,9 @@ class BuiltinLinux(private val context: Context) {
         try {
             val launched = ProcessBuilder(prootCommand(listOf("/usr/bin/env", "OC_RUNTIME_OWNER=$nonce",
                 "/usr/bin/setsid", "/bin/sh", "-c", gate), agentUser)).redirectErrorStream(true).apply {
-                environment().clear(); environment().putAll(prootEnvironment()); environment()["OC_RUNTIME_OWNER"] = nonce
+                environment().clear()
+                environment().putAll(prootEnvironment())
+                environment()["OC_RUNTIME_OWNER"] = nonce
             }.start()
             process = launched
             installerProcess = launched
@@ -470,65 +488,81 @@ class BuiltinLinux(private val context: Context) {
             processes.add(launched); processConfinement[launched] = prootIsConfined
             exactRoot = pidOf(launched)?.let { kernelIdentity(it) }
             check(exactRoot != null && processUid(exactRoot!!.pid) == AndroidProcess.myUid()) { componentUpdateFailure }
-            val read = java.util.concurrent.FutureTask<String> {
-                val bytes = java.io.ByteArrayOutputStream()
-                while (bytes.size() < 128) {
-                    val value = launched.inputStream.read(); check(value >= 0) { componentUpdateFailure }
-                    if (value == 10) return@FutureTask bytes.toString("US-ASCII")
-                    bytes.write(value)
-                }
-                error(componentUpdateFailure)
-            }
-            Thread(read, "phone-installer-gate").apply { isDaemon = true; start() }
-            val header = read.get(5, TimeUnit.SECONDS).split(' ')
-            check(header.size == 3 && header[0] == "OC-INSTALL-1" && header[1] == nonce) { componentUpdateFailure }
-            val pid = pidOf(launched) ?: error(componentUpdateFailure)
-            val root = kernelIdentity(pid) ?: error(componentUpdateFailure)
-            val leader = kernelIdentity(header[2].toInt()) ?: error(componentUpdateFailure)
-            check(processUid(pid) == AndroidProcess.myUid() && processUid(leader.pid) == AndroidProcess.myUid() &&
-                leader.pid in descendants(pid) && nonceMatches(leader.pid, nonce)) { componentUpdateFailure }
-            val committed = NativeInstallerOwnership.committed(prepared, root, leader)
+            val committed = readInstallerIdentity(launched, nonce, prepared)
             committedTicket = committed
             installerPlan(committed) // No unknown previous writer can pass the workload gate.
             synchronized(installerGuard) { saveInstaller(committed) }
             launched.outputStream.write("$nonce\n".toByteArray(Charsets.US_ASCII))
             launched.outputStream.flush(); launched.outputStream.close()
-            Thread({
-                while (installerProcess === launched) {
-                    try {
-                        synchronized(this@BuiltinLinux) { synchronized(installerGuard) {
-                            if (installerProcess !== launched) return@Thread
-                            val ticket = installerTicket() ?: return@Thread
-                            if (ticket.id != nonce) return@Thread
-                            val observed = liveInstallerPlan(ticket, launched, nonce).server
-                            if (observed != ticket.observed) saveInstaller(ticket.copy(observed = observed))
-                        } }
-                    } catch (_: Throwable) {
-                        synchronized(this@BuiltinLinux) { synchronized(installerGuard) {
-                            if (installerProcess !== launched) return@Thread
-                            try { drainInstaller(committed, launched, nonce) } catch (_: Throwable) { }
-                        } }
-                        return@Thread // Durable receipt remains; completion must still prove the drain.
-                    }
-                    Thread.sleep(100)
-                }
-            }, "phone-installer-ownership").apply { isDaemon = true; start() }
+            monitorInstallerOwnership(launched, nonce, committed)
             return launched
         } catch (_: Throwable) {
             try { process?.outputStream?.close() } catch (_: Throwable) { }
-            try {
-                committedTicket?.let { drainInstaller(it) } ?: exactRoot?.let { root ->
-                    // Before permit, capture descendants only while the original root is current.
-                    if (root.sameProcess(kernelIdentity(root.pid))) {
-                        val captured = (descendants(root.pid).mapNotNull { kernelIdentity(it) } + root)
-                            .filter { processUid(it.pid) == AndroidProcess.myUid() }
-                        for (identity in captured) signalInstaller(identity, OsConstants.SIGKILL)
-                    }
-                }
-            } catch (_: Throwable) { }
+            drainFailedInstaller(committedTicket, exactRoot)
             installerProcess = null
             installerLaunchId = null
             throw IllegalStateException(componentUpdateFailure)
+        }
+    }
+
+    private fun readInstallerIdentity(launched: Process, nonce: String, prepared: InstallerTicket): InstallerTicket {
+        val read = java.util.concurrent.FutureTask<String> {
+            val bytes = java.io.ByteArrayOutputStream()
+            while (bytes.size() < 128) {
+                val value = launched.inputStream.read(); check(value >= 0) { componentUpdateFailure }
+                if (value == 10) return@FutureTask bytes.toString("US-ASCII")
+                bytes.write(value)
+            }
+            error(componentUpdateFailure)
+        }
+        Thread(read, "phone-installer-gate").apply { isDaemon = true; start() }
+        val header = read.get(5, TimeUnit.SECONDS).split(' ')
+        check(header.size == 3 && header[0] == "OC-INSTALL-1" && header[1] == nonce) { componentUpdateFailure }
+        val pid = pidOf(launched) ?: error(componentUpdateFailure)
+        val root = kernelIdentity(pid) ?: error(componentUpdateFailure)
+        val leader = kernelIdentity(header[2].toInt()) ?: error(componentUpdateFailure)
+        check(processUid(pid) == AndroidProcess.myUid() && processUid(leader.pid) == AndroidProcess.myUid() &&
+            leader.pid in descendants(pid) && nonceMatches(leader.pid, nonce)) { componentUpdateFailure }
+        return NativeInstallerOwnership.committed(prepared, root, leader)
+    }
+
+    private fun monitorInstallerOwnership(launched: Process, nonce: String, committed: InstallerTicket) {
+        Thread({
+            while (installerProcess === launched) {
+                try {
+                    synchronized(this@BuiltinLinux) { synchronized(installerGuard) {
+                        if (installerProcess !== launched) return@Thread
+                        val ticket = installerTicket() ?: return@Thread
+                        if (ticket.id != nonce) return@Thread
+                        val observed = liveInstallerPlan(ticket, launched, nonce).server
+                        if (observed != ticket.observed) saveInstaller(ticket.copy(observed = observed))
+                    } }
+                } catch (_: Throwable) {
+                    synchronized(this@BuiltinLinux) { synchronized(installerGuard) {
+                        if (installerProcess !== launched) return@Thread
+                        try { drainInstaller(committed, launched, nonce) } catch (_: Throwable) { }
+                    } }
+                    return@Thread // Durable receipt remains; completion must still prove the drain.
+                }
+                Thread.sleep(OWNERSHIP_POLL_MS)
+            }
+        }, "phone-installer-ownership").apply { isDaemon = true; start() }
+    }
+
+    private fun drainFailedInstaller(committed: InstallerTicket?, exactRoot: RuntimeProcessIdentity?) {
+        try {
+            committed?.let { drainInstaller(it) } ?: exactRoot?.let { root ->
+                drainExactInstallerRoot(root)
+            }
+        } catch (_: Throwable) { }
+    }
+
+    private fun drainExactInstallerRoot(root: RuntimeProcessIdentity) {
+        // Before permit, capture descendants only while the original root is current.
+        if (root.sameProcess(kernelIdentity(root.pid))) {
+            val captured = (descendants(root.pid).mapNotNull { kernelIdentity(it) } + root)
+                .filter { processUid(it.pid) == AndroidProcess.myUid() }
+            for (identity in captured) signalInstaller(identity, OsConstants.SIGKILL)
         }
     }
 
@@ -1552,7 +1586,8 @@ class BuiltinLinux(private val context: Context) {
         context.getSharedPreferences("builtin_server_recovery", Context.MODE_PRIVATE)
     private val recoveryLock = Any()
     private var activityResumed = false
-    private var recoveryGeneration = try { recoveryPreferences.getLong("runtimeGeneration", 0L) } catch (_: Throwable) { 0L }
+    private var recoveryGeneration = try { recoveryPreferences.getLong("runtimeGeneration", 0L) }
+        catch (_: Throwable) { 0L }
     private val processBirthGeneration = recoveryGeneration
     private var wantedRevision = 0L
     private var userStopped = recoveryPreferences.getBoolean("userStopped",
@@ -1592,7 +1627,8 @@ class BuiltinLinux(private val context: Context) {
     // Cold restoration metadata is isolated from scripts, account data and process output.
     @Volatile var restorePhase: String = if (recoveryPreferences.contains("restoreReason")) "unavailable" else "idle"
         private set
-    @Volatile var restoreReason: String? = try { recoveryPreferences.getString("restoreReason", null) } catch (_: Throwable) { "storageUnavailable" }
+    @Volatile var restoreReason: String? = try { recoveryPreferences.getString("restoreReason", null) }
+        catch (_: Throwable) { "storageUnavailable" }
         private set
     private var serverRecipe: NativeServerRecipe? = null
     private var coldRestoreStarted = false
@@ -1605,7 +1641,7 @@ class BuiltinLinux(private val context: Context) {
     private fun bootIdentity() = File("/proc/sys/kernel/random/boot_id").readText().trim()
     @Suppress("DEPRECATION")
     private fun packageIdentity(): Long = context.packageManager.getPackageInfo(context.packageName, 0).let {
-        if (Build.VERSION.SDK_INT >= 28) it.longVersionCode else it.versionCode.toLong()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) it.longVersionCode else it.versionCode.toLong()
     }
     private fun rootfsIdentity() = ready.readText().trim()
     private fun restoreUnavailable(reason: String) { restorePhase = "unavailable"; restoreReason = reason }
@@ -1615,10 +1651,11 @@ class BuiltinLinux(private val context: Context) {
             .putString("backoffBoot", bootIdentity()).commit()) { "storageUnavailable" }
     }
     private fun restoredDelay(): Long {
-        if (recoveryPreferences.getString("backoffBoot", null) != bootIdentity()) return 1000L
-        restartBackoff.restore(recoveryPreferences.getLong("backoffNext", 1000L),
+        if (recoveryPreferences.getString("backoffBoot", null) != bootIdentity()) return MIN_RESTART_DELAY_MS
+        restartBackoff.restore(recoveryPreferences.getLong("backoffNext", MIN_RESTART_DELAY_MS),
             recoveryPreferences.getLong("backoffAt", 0L))
-        return restartBackoff.remainingMs(SystemClock.elapsedRealtime()).coerceIn(1000L, 60000L)
+        return restartBackoff.remainingMs(SystemClock.elapsedRealtime())
+            .coerceIn(MIN_RESTART_DELAY_MS, MAX_RESTART_DELAY_MS)
     }
 
     private fun kernelIdentity(pid: Int): RuntimeProcessIdentity? = try {
@@ -1643,10 +1680,14 @@ class BuiltinLinux(private val context: Context) {
     private fun registeredRuntimePids(): Set<Int> = registeredAppProcessIds(
         context.getSystemService(ActivityManager::class.java)?.runningAppProcesses,
         context.packageName, AndroidProcess.myUid()).toSet() + AndroidProcess.myPid()
-    private fun knownOtherRuntime(exclude: Process? = null, includeServer: Boolean = false): List<RuntimeProcessIdentity> {
+    private fun knownOtherRuntime(
+        exclude: Process? = null, includeServer: Boolean = false,
+    ): List<RuntimeProcessIdentity> {
         val roots = processes.filter { it.isAlive && it !== exclude && (includeServer || it !== services[SERVER]?.process) }.map {
             pidOf(it) ?: error("ownershipUnknown")
-        } + services.filterKeys { includeServer || it != SERVER }.values.filter { it.process.isAlive && it.process !== exclude }.map {
+        } + services.filterKeys { includeServer || it != SERVER }.values
+            .filter { it.process.isAlive && it.process !== exclude }
+            .map {
             pidOf(it.process) ?: error("ownershipUnknown")
         } + LocalTerminal.get(context).list().filter { it.running }.map { it.pid }
         val ids = roots.flatMap { listOf(it) + descendants(it) }.distinct()
@@ -1656,14 +1697,15 @@ class BuiltinLinux(private val context: Context) {
     private fun nonceMatches(pid: Int, nonce: String): Boolean = try {
         // Inspect only the ownership key; never expose another environment value.
         val bytes = File("/proc/$pid/environ").inputStream().use { input ->
-            val limit = ByteArray(131073); val size = input.read(limit)
-            if (size < 0 || size > 131072) return false
+            val limit = ByteArray(MAX_ENV_BYTES + 1); val size = input.read(limit)
+            if (size < 0 || size > MAX_ENV_BYTES) return false
             String(limit, 0, size, Charsets.UTF_8)
         }
         bytes.split('\u0000').any { it == "OC_RUNTIME_OWNER=$nonce" }
     } catch (_: Throwable) { false }
     private fun writeOwnership(profile: String, receipt: NativeRuntimeReceipt) {
-        check(recoveryPreferences.edit().putString(ownershipKey(profile), JSONObject(receipt.map()).toString()).commit()) {
+        check(recoveryPreferences.edit()
+            .putString(ownershipKey(profile), JSONObject(receipt.map()).toString()).commit()) {
             "storageUnavailable"
         }
     }
@@ -1677,7 +1719,9 @@ class BuiltinLinux(private val context: Context) {
         return NativeRuntimeReceipt.read(value)
     }
     private fun drainKey(profile: String) = "oc.builtinRuntimeDrain.$profile"
-    private fun capturePendingDrain(edit: android.content.SharedPreferences.Editor, profile: String?, includeOther: Boolean = false) {
+    private fun capturePendingDrain(
+        edit: android.content.SharedPreferences.Editor, profile: String?, includeOther: Boolean = false,
+    ) {
         if (profile != null) {
             val raw = recoveryPreferences.getString(ownershipKey(profile), null)
             if (raw != null) edit.putString(drainKey(profile), raw).putString("drainOwner", profile)
@@ -1697,13 +1741,19 @@ class BuiltinLinux(private val context: Context) {
             val current = sameUidInventory()
             val plan = NativeRuntimeOwnership.plan(receipt, bootIdentity(), current,
                 registeredRuntimePids(), requireCompleteInventory = false, nonceMatches = ::nonceMatches)
-            return (plan.server + if (includeOther) current.filter { it.pid in plan.other } else emptyList()).distinctBy { it.pid }
+            return (plan.server + if (includeOther) current.filter { it.pid in plan.other } else emptyList())
+                .distinctBy { it.pid }
         }
-        val deadline = SystemClock.elapsedRealtime() + 5000L
-        for (identity in targets()) if (identity.sameProcess(kernelIdentity(identity.pid))) Os.kill(identity.pid, OsConstants.SIGTERM)
-        while (targets().isNotEmpty() && SystemClock.elapsedRealtime() < deadline - 2000L) Thread.sleep(50)
-        for (identity in targets()) if (identity.sameProcess(kernelIdentity(identity.pid))) Os.kill(identity.pid, OsConstants.SIGKILL)
-        while (targets().isNotEmpty() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(50)
+        val deadline = SystemClock.elapsedRealtime() + OWNED_DRAIN_TIMEOUT_MS
+        for (identity in targets()) if (identity.sameProcess(kernelIdentity(identity.pid))) {
+            Os.kill(identity.pid, OsConstants.SIGTERM)
+        }
+        while (targets().isNotEmpty() &&
+            SystemClock.elapsedRealtime() < deadline - OWNED_DRAIN_KILL_WINDOW_MS) Thread.sleep(PROCESS_POLL_MS)
+        for (identity in targets()) if (identity.sameProcess(kernelIdentity(identity.pid))) {
+            Os.kill(identity.pid, OsConstants.SIGKILL)
+        }
+        while (targets().isNotEmpty() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(PROCESS_POLL_MS)
         check(targets().isEmpty()) { "ownershipUnknown" }
         try {
             // A normal app start may create new tracked helpers after the old Stop
@@ -1715,13 +1765,15 @@ class BuiltinLinux(private val context: Context) {
             NativeRuntimeOwnership.plan(liveReceipt, bootIdentity(), current, registeredRuntimePids(),
                 nonceMatches = ::nonceMatches)
         } catch (error: Throwable) { restoreUnavailable("ownershipUnknown"); throw error }
-        check(recoveryPreferences.edit().remove("drainOwner").remove("drainAll").remove(drainKey(profile)).commit()) { "storageUnavailable" }
+        check(recoveryPreferences.edit().remove("drainOwner").remove("drainAll")
+            .remove(drainKey(profile)).commit()) { "storageUnavailable" }
     }
 
     private fun nextRuntimeGeneration(): Long {
         val previous = recoveryPreferences.getLong("runtimeGeneration", 0)
         val next = maxOf(previous, recoveryGeneration) + 1
-        check(next > 0 && recoveryPreferences.edit().putLong("runtimeGeneration", next).commit()) { "storageUnavailable" }
+        check(next > 0 && recoveryPreferences.edit()
+            .putLong("runtimeGeneration", next).commit()) { "storageUnavailable" }
         recoveryGeneration = next
         return next
     }
@@ -1729,7 +1781,8 @@ class BuiltinLinux(private val context: Context) {
         val targets = listOf("opt/opencode", "opt/opencode2", "opt/oc-claude/claude",
             "home/oc/.local/share/oc-paseo/0.9.2-82d16f9c432d", "home/oc/.local/share/oc-agents/claude/2.1.283")
         val paths = targets.map { "$it.oc-pending" } + listOf(
-            "usr/local/bin/opencode.oc-pending", "usr/local/bin/opencode2.oc-pending", "usr/local/bin/claude.oc-pending",
+            "usr/local/bin/opencode.oc-pending", "usr/local/bin/opencode2.oc-pending",
+            "usr/local/bin/claude.oc-pending",
             "home/oc/.local/bin/paseo.oc-pending", "home/oc/.local/bin/claude.oc-pending",
             "home/oc/.local/share/oc-agents/.lock-claude")
         return paths.any { path ->
@@ -1738,9 +1791,23 @@ class BuiltinLinux(private val context: Context) {
         }
     }
 
+    private data class ServiceLaunch(
+        val expectedGeneration: Long? = null,
+        val nativeOwned: Boolean = false,
+        val nativeSupervisionGeneration: Long? = null,
+        val nativeAttemptGeneration: Long? = null,
+        val nativeScheduleId: Long? = null,
+    )
+
     /** Workload cannot pass stdin gate until kernel/session identity has been durably committed. */
-    private class GateUnavailable(val legacySafe: Boolean) : IllegalStateException("The phone server could not restart.")
-    private fun startGatedServer(script: String, log: File, recipe: NativeServerRecipe, attemptGeneration: Long? = null, supervisorGeneration: Long? = null, scheduleId: Long? = null): Process {
+    private class GateUnavailable(val legacySafe: Boolean) :
+        IllegalStateException("The phone server could not restart.")
+    private fun startGatedServer(
+        script: String, log: File, recipe: NativeServerRecipe, launch: ServiceLaunch = ServiceLaunch(),
+    ): Process {
+        val attemptGeneration = launch.nativeAttemptGeneration
+        val supervisorGeneration = launch.nativeSupervisionGeneration
+        val scheduleId = launch.nativeScheduleId
         val nonce = ByteArray(32).also { java.security.SecureRandom().nextBytes(it) }
             .joinToString("") { "%02x".format(it) }
         val generation = attemptGeneration ?: nextRuntimeGeneration()
@@ -1759,50 +1826,24 @@ class BuiltinLinux(private val context: Context) {
         processes.add(process); processConfinement[process] = prootIsConfined
         val gateState = NativeRuntimeGate()
         try {
-            val read = java.util.concurrent.FutureTask<String> {
-                val bytes = java.io.ByteArrayOutputStream()
-                while (bytes.size() < 128) {
-                    val b = process.inputStream.read()
-                    check(b >= 0) { "ownershipUnknown" }
-                    if (b == 10) return@FutureTask bytes.toString("US-ASCII")
-                    bytes.write(b)
-                }
-                error("ownershipUnknown")
-            }
-            Thread(read, "phone-runtime-gate").start()
-            val header = read.get(5, TimeUnit.SECONDS).split(' ')
-            check(header.size == 3 && header[0] == "OC-GATE-1" && header[1] == nonce) { "ownershipUnknown" }
-            val rootPid = pidOf(process) ?: error("ownershipUnknown")
-            val root = kernelIdentity(rootPid) ?: error("ownershipUnknown")
-            val leader = kernelIdentity(header[2].toInt()) ?: error("ownershipUnknown")
-            check(leader.pid in descendants(rootPid) && processUid(leader.pid) == AndroidProcess.myUid() &&
-                leader.session == leader.pid && leader.group == leader.pid && nonceMatches(leader.pid, nonce)) { "ownershipUnknown" }
-            val launchedIdentity = prepared.copy(root = root, leader = leader)
+            val launchedIdentity = readServerIdentity(process, nonce, prepared)
             // Test-only checkpoint is outside admission lock: Stop can still revoke a blocked gate.
             gateCheckpointForQa("prepared", launchedIdentity)
             synchronized(recoveryLock) {
-                check(restartWanted && !userStopped && supervisionProfile == recipe.profileId &&
-                    generation == recoveryGeneration && (supervisorGeneration == null ||
-                        nativeAdmitted(recipe.profileId, supervisorGeneration)) &&
-                    (scheduleId == null || scheduleId == recoveryScheduleId)) { "ownershipUnknown" }
-                writeOwnership(recipe.profileId, launchedIdentity)
-                // Persist only after actual setsid/session capability and current ownership are proved.
-                check(recoveryPreferences.edit().putString(recipeKey(recipe.profileId), JSONObject(recipe.map()).toString())
-                    .putString("restoreOwner", recipe.profileId).remove("restoreReason").commit()) { "storageUnavailable" }
-                gateState.identityCommitted()
-                gateState.release {
-                    process.outputStream.write("$nonce\n".toByteArray(Charsets.US_ASCII)); process.outputStream.flush()
-                    process.outputStream.close()
+                check(gateAdmissionCurrent(recipe.profileId, generation, supervisorGeneration, scheduleId)) {
+                    "ownershipUnknown"
                 }
+                commitServerGate(recipe, launchedIdentity, gateState, process, nonce)
             }
             log.parentFile?.mkdirs()
-            Thread({ try { FileOutputStream(log, true).use { process.inputStream.copyTo(it) } } catch (_: Throwable) { } },
+            Thread({
+                try { FileOutputStream(log, true).use { process.inputStream.copyTo(it) } }
+                catch (_: Throwable) { }
+            },
                 "phone-runtime-output").start()
             gateCheckpointForQa("released", launchedIdentity)
             synchronized(recoveryLock) {
-                if (generation == recoveryGeneration && restartWanted && !userStopped &&
-                    (supervisorGeneration == null || supervisorGeneration == supervisionGeneration) &&
-                    (scheduleId == null || scheduleId == recoveryScheduleId)) {
+                if (gateGenerationCurrent(generation, supervisorGeneration, scheduleId)) {
                     restorePhase = "idle"; restoreReason = null
                 }
             }
@@ -1811,14 +1852,70 @@ class BuiltinLinux(private val context: Context) {
             try { process.outputStream.close() } catch (_: Throwable) { }
             try { stopTree(process) } catch (_: Throwable) { }
             synchronized(recoveryLock) {
-                if (generation == recoveryGeneration && restartWanted && !userStopped &&
-                    (supervisorGeneration == null || supervisorGeneration == supervisionGeneration) &&
-                    (scheduleId == null || scheduleId == recoveryScheduleId)) restoreUnavailable("ownershipUnknown")
+                if (gateGenerationCurrent(generation, supervisorGeneration, scheduleId)) {
+                    restoreUnavailable("ownershipUnknown")
+                }
             }
             val rootPid = pidOf(process)
             val drained = !process.isAlive && (rootPid == null || descendants(rootPid).isEmpty())
-            throw GateUnavailable(NativeRuntimeOwnership.manualFallbackAllowed(gateState.released, drained, serverRestartWanted))
+            throw GateUnavailable(
+                NativeRuntimeOwnership.manualFallbackAllowed(gateState.released, drained, serverRestartWanted))
         }
+    }
+
+    private fun commitServerGate(
+        recipe: NativeServerRecipe, identity: NativeRuntimeReceipt, gateState: NativeRuntimeGate,
+        process: Process, nonce: String,
+    ) {
+        writeOwnership(recipe.profileId, identity)
+        // Persist only after actual setsid/session capability and current ownership are proved.
+        check(recoveryPreferences.edit()
+            .putString(recipeKey(recipe.profileId), JSONObject(recipe.map()).toString())
+            .putString("restoreOwner", recipe.profileId)
+                .remove("restoreReason").commit()) { "storageUnavailable" }
+        gateState.identityCommitted()
+        gateState.release {
+            process.outputStream.write("$nonce\n".toByteArray(Charsets.US_ASCII)); process.outputStream.flush()
+            process.outputStream.close()
+        }
+    }
+
+    private fun gateGenerationCurrent(generation: Long, supervisorGeneration: Long?, scheduleId: Long?): Boolean =
+        generation == recoveryGeneration && restartWanted && !userStopped &&
+            (supervisorGeneration == null || supervisorGeneration == supervisionGeneration) &&
+            (scheduleId == null || scheduleId == recoveryScheduleId)
+
+    private fun gateAdmissionCurrent(
+        profile: String, generation: Long, supervisorGeneration: Long?, scheduleId: Long?,
+    ): Boolean = restartWanted && !userStopped && supervisionProfile == profile &&
+        generation == recoveryGeneration &&
+        (supervisorGeneration == null || nativeAdmitted(profile, supervisorGeneration)) &&
+        (scheduleId == null || scheduleId == recoveryScheduleId)
+
+    private fun readServerIdentity(
+        process: Process, nonce: String, prepared: NativeRuntimeReceipt,
+    ): NativeRuntimeReceipt {
+        val read = java.util.concurrent.FutureTask<String> {
+            val bytes = java.io.ByteArrayOutputStream()
+            while (bytes.size() < 128) {
+                val b = process.inputStream.read()
+                check(b >= 0) { "ownershipUnknown" }
+                if (b == 10) return@FutureTask bytes.toString("US-ASCII")
+                bytes.write(b)
+            }
+            error("ownershipUnknown")
+        }
+        Thread(read, "phone-runtime-gate").start()
+        val header = read.get(5, TimeUnit.SECONDS).split(' ')
+        check(header.size == 3 && header[0] == "OC-GATE-1" && header[1] == nonce) { "ownershipUnknown" }
+        val rootPid = pidOf(process) ?: error("ownershipUnknown")
+        val root = kernelIdentity(rootPid) ?: error("ownershipUnknown")
+        val leader = kernelIdentity(header[2].toInt()) ?: error("ownershipUnknown")
+        check(leader.pid in descendants(rootPid) && processUid(leader.pid) == AndroidProcess.myUid() &&
+            leader.session == leader.pid && leader.group == leader.pid && nonceMatches(leader.pid, nonce)) {
+            "ownershipUnknown"
+        }
+        return prepared.copy(root = root, leader = leader)
     }
 
     private fun disarmRestoration(reason: String) {
@@ -1830,14 +1927,18 @@ class BuiltinLinux(private val context: Context) {
         restoreUnavailable(reason)
     }
     private fun startManualServer(script: String, log: File): Process {
-        val recipe = serverRecipe ?: return start(script, log)
+        val recipe = serverRecipe
+        return if (recipe == null) start(script, log) else startManualWithRecipe(script, log, recipe)
+    }
+
+    private fun startManualWithRecipe(script: String, log: File, recipe: NativeServerRecipe): Process {
         // Lack of a readable boot/kernel capability disables restoration, not authored Start.
-        try { bootIdentity(); knownOtherRuntime() }
+        val capable = try { bootIdentity(); knownOtherRuntime(); true }
         catch (_: Throwable) {
             disarmRestoration("ownershipUnknown")
-            return start(script, log)
+            false
         }
-        return try { startGatedServer(script, log, recipe) }
+        return if (!capable) start(script, log) else try { startGatedServer(script, log, recipe) }
         catch (error: GateUnavailable) {
             // A capability failure before release never executes the payload. Preserve authored Start.
             if (!error.legacySafe || !serverRestartWanted) throw error
@@ -1863,16 +1964,7 @@ class BuiltinLinux(private val context: Context) {
         var owesDrain = false
         synchronized(recoveryLock) {
             val profile = recoveryPreferences.getString("restoreOwner", null)
-            val reason = try {
-                when {
-                    !restartWanted || userStopped -> recoveryPreferences.getString("restoreReason", null)
-                        .takeIf { it == "systemTimeout" } ?: "stopped"
-                    profile == null -> "ownershipUnknown"
-                    !nativeAdmitted(profile, supervisionGeneration) -> "policyDisabled"
-                    readBudget(profile).attempts >= 3 -> "budgetExhausted"
-                    else -> "storageUnavailable"
-                }
-            } catch (_: Throwable) { "storageUnavailable" }
+            val reason = restorationRejectionReason(profile)
             restoreUnavailable(reason)
             // Denial never reserves. Persist owed cleanup before Android removes foreground.
             // Only a previous-process receipt may be captured; a newer manual gate is untouched.
@@ -1893,6 +1985,17 @@ class BuiltinLinux(private val context: Context) {
         }, "phone-runtime-revoked-drain").start()
     }
 
+    private fun restorationRejectionReason(profile: String?): String = try {
+        when {
+            !restartWanted || userStopped -> recoveryPreferences.getString("restoreReason", null)
+                .takeIf { it == "systemTimeout" } ?: "stopped"
+            profile == null -> "ownershipUnknown"
+            !nativeAdmitted(profile, supervisionGeneration) -> "policyDisabled"
+            readBudget(profile).attempts >= 3 -> "budgetExhausted"
+            else -> "storageUnavailable"
+        }
+    } catch (_: Throwable) { "storageUnavailable" }
+
     private class ColdRestoreRevoked : IllegalStateException()
 
     // Call only with the BuiltinLinux monitor held when inspecting the service map.
@@ -1907,109 +2010,154 @@ class BuiltinLinux(private val context: Context) {
 
     /** Called only after Android has established the recreated service's foreground notification. */
     @Synchronized fun restoreServerAfterProcessReclaim() {
-        if (coldRestoreStarted || serverRunning) return
-        if (!serverRestorationArmed) { rejectServerRestoration(); return }
-        coldRestoreStarted = true
+        if (!prepareColdRestore()) return
         val profile = recoveryPreferences.getString("restoreOwner", null)
         if (profile == null) {
             if (recoveryPreferences.contains("drainOwner")) Thread({
                 try { synchronized(this) { drainPendingOwnedServer() } }
                 catch (_: Throwable) { restoreUnavailable("ownershipUnknown") }
             }, "phone-runtime-revoked-drain").start()
-            return
+        } else {
+            val worker = createColdRestoreWorker(profile)
+            if (worker != null) Thread({ runColdRestore(worker, profile) }, "phone-runtime-restore").start()
         }
-        val worker = synchronized(recoveryLock) {
-            // Stop may have revoked authority after the earlier durable eligibility read.
-            if (!nativeAdmitted(profile, supervisionGeneration)) return
+    }
+
+    private fun prepareColdRestore(): Boolean {
+        if (coldRestoreStarted || serverRunning) return false
+        return if (!serverRestorationArmed) {
+            rejectServerRestoration()
+            false
+        } else {
+            coldRestoreStarted = true
+            true
+        }
+    }
+
+    private fun createColdRestoreWorker(profile: String): NativeRuntimeOwnership.ColdWorker? =
+        synchronized(recoveryLock) {
+        // Stop may have revoked authority after the earlier durable eligibility read.
+        if (!nativeAdmitted(profile, supervisionGeneration)) null else {
             NativeRuntimeOwnership.ColdWorker(supervisionGeneration, ++recoveryScheduleId).also {
                 scheduledRecovery = true
                 restorePhase = "waiting"; restoreReason = null
             }
         }
-        Thread({
-            try {
-                val delayUntil = SystemClock.elapsedRealtime() + restoredDelay()
-                while (SystemClock.elapsedRealtime() < delayUntil) {
-                    val current = synchronized(recoveryLock) {
-                        worker.runIfCurrent(supervisionGeneration, recoveryScheduleId) {
-                            if (!nativeAdmitted(profile, worker.generation)) throw ColdRestoreRevoked()
-                        }
-                    }
-                    if (!current) throw ColdRestoreRevoked()
-                    Thread.sleep((delayUntil - SystemClock.elapsedRealtime()).coerceIn(1L, 100L))
-                }
-                synchronized(this) {
-                    var recipe: NativeServerRecipe? = null
-                    var receipt: NativeRuntimeReceipt? = null
-                    // Outside the short recovery admission lock: installer drain can wait.
-                    recoverColdComponentUpdates()
-                    withColdRestoreAdmission(worker, profile) {
-                        if (readBudget(profile).attempts >= 3) {
-                            restoreUnavailable("budgetExhausted"); throw ColdRestoreRevoked()
-                        }
-                        if (componentRecoveryPending()) {
-                            restoreUnavailable("componentRecoveryRequired"); throw ColdRestoreRevoked()
-                        }
-                        recipe = NativeServerRecipe.read(jsonMap(recoveryPreferences.getString(recipeKey(profile), null)
-                            ?: error("storageUnavailable")))
-                        check(recipe!!.compatible(packageIdentity(), rootfsIdentity())) { "storageUnavailable" }
-                        receipt = ownership(profile)
-                    }
-                    val oldReceipt = receipt!!
-                    val plan = NativeRuntimeOwnership.plan(oldReceipt, bootIdentity(), sameUidInventory(),
-                        registeredRuntimePids(), nonceMatches = ::nonceMatches)
-                    // Admission and each exact signal share Stop's short lock; no newer owner is selected.
-                    for (identity in plan.server) withColdRestoreAdmission(worker, profile) {
-                        if (identity.sameProcess(kernelIdentity(identity.pid))) Os.kill(identity.pid, OsConstants.SIGTERM)
-                    }
-                    val deadline = SystemClock.elapsedRealtime() + 3000
-                    while (plan.server.any { it.sameProcess(kernelIdentity(it.pid)) } && SystemClock.elapsedRealtime() < deadline) {
-                        withColdRestoreAdmission(worker, profile) { }
-                        Thread.sleep(50)
-                    }
-                    for (identity in plan.server) withColdRestoreAdmission(worker, profile) {
-                        if (identity.sameProcess(kernelIdentity(identity.pid))) Os.kill(identity.pid, OsConstants.SIGKILL)
-                    }
-                    val drainDeadline = SystemClock.elapsedRealtime() + 2000
-                    while (plan.server.any { it.sameProcess(kernelIdentity(it.pid)) } && SystemClock.elapsedRealtime() < drainDeadline) {
-                        withColdRestoreAdmission(worker, profile) { }
-                        Thread.sleep(50)
-                    }
-                    check(plan.server.none { it.sameProcess(kernelIdentity(it.pid)) }) { "ownershipUnknown" }
-                    NativeRuntimeOwnership.plan(oldReceipt, bootIdentity(), sameUidInventory(), registeredRuntimePids(), nonceMatches = ::nonceMatches)
-                        .also { check(it.server.isEmpty()) { "ownershipUnknown" } }
-                    var reservedGeneration: Long? = null
-                    withColdRestoreAdmission(worker, profile) {
-                        restorePhase = "restoring"
-                        serverRecipe = recipe!!
-                        // Runtime identity generation is independent of the immutable admission ticket.
-                        val runtimeGeneration = nextRuntimeGeneration()
-                        reservedGeneration = reserveNativeAttempt(profile, runtimeGeneration).recoveryGeneration
-                    }
-                    withColdRestoreAdmission(worker, profile) { }
-                    launchService(SERVER, recipe!!.restorationScript(), 4097, null, nativeOwned = true,
-                        nativeSupervisionGeneration = worker.generation,
-                        nativeAttemptGeneration = reservedGeneration,
-                        nativeScheduleId = worker.scheduleId)
-                }
-            } catch (error: Throwable) {
-                synchronized(recoveryLock) {
-                    worker.runIfCurrent(supervisionGeneration, recoveryScheduleId) {
-                        // Stop and system timeout own their published reason after revocation.
-                        if (restartWanted && !userStopped) {
-                            if (!nativeAdmitted(profile, worker.generation)) restoreUnavailable("policyDisabled")
-                            else if (error !is ColdRestoreRevoked) restoreUnavailable(
-                                if (error.message == "ownershipUnknown") "ownershipUnknown" else "storageUnavailable")
-                        }
-                    }
-                }
-            } finally {
-                synchronized(recoveryLock) {
-                    worker.runIfCurrent(supervisionGeneration, recoveryScheduleId) { scheduledRecovery = false }
-                }
-                synchronized(this) { serviceSetChanged() }
+    }
+
+    private fun runColdRestore(worker: NativeRuntimeOwnership.ColdWorker, profile: String) {
+        try {
+            awaitColdRestoreDelay(worker, profile)
+            synchronized(this) {
+                // Outside the short recovery admission lock: installer drain can wait.
+                recoverColdComponentUpdates()
+                val (recipe, oldReceipt) = readColdRestoreState(worker, profile)
+                drainColdServer(worker, profile, oldReceipt)
+                val reservedGeneration = reserveColdRestore(worker, profile, recipe)
+                withColdRestoreAdmission(worker, profile) { }
+                launchService(SERVER, recipe.restorationScript(), SERVER_DEFAULT_PORT, null,
+                    ServiceLaunch(nativeOwned = true, nativeSupervisionGeneration = worker.generation,
+                        nativeAttemptGeneration = reservedGeneration, nativeScheduleId = worker.scheduleId))
             }
-        }, "phone-runtime-restore").start()
+        } catch (_: ColdRestoreRevoked) {
+            coldRestoreFailed(worker, profile, null)
+        } catch (error: Throwable) {
+            coldRestoreFailed(worker, profile, error)
+        } finally {
+            synchronized(recoveryLock) {
+                worker.runIfCurrent(supervisionGeneration, recoveryScheduleId) { scheduledRecovery = false }
+            }
+            synchronized(this) { serviceSetChanged() }
+        }
+    }
+
+    private fun awaitColdRestoreDelay(worker: NativeRuntimeOwnership.ColdWorker, profile: String) {
+        val delayUntil = SystemClock.elapsedRealtime() + restoredDelay()
+        while (SystemClock.elapsedRealtime() < delayUntil) {
+            val current = synchronized(recoveryLock) {
+                worker.runIfCurrent(supervisionGeneration, recoveryScheduleId) {
+                    if (!nativeAdmitted(profile, worker.generation)) throw ColdRestoreRevoked()
+                }
+            }
+            if (!current) throw ColdRestoreRevoked()
+            Thread.sleep((delayUntil - SystemClock.elapsedRealtime()).coerceIn(1L, OWNERSHIP_POLL_MS))
+        }
+    }
+
+    private fun readColdRestoreState(
+        worker: NativeRuntimeOwnership.ColdWorker, profile: String,
+    ): Pair<NativeServerRecipe, NativeRuntimeReceipt> {
+        var recipe: NativeServerRecipe? = null
+        var receipt: NativeRuntimeReceipt? = null
+        withColdRestoreAdmission(worker, profile) {
+            if (readBudget(profile).attempts >= 3) {
+                restoreUnavailable("budgetExhausted"); throw ColdRestoreRevoked()
+            }
+            if (componentRecoveryPending()) {
+                restoreUnavailable("componentRecoveryRequired"); throw ColdRestoreRevoked()
+            }
+            recipe = NativeServerRecipe.read(jsonMap(recoveryPreferences.getString(recipeKey(profile), null)
+                ?: error("storageUnavailable")))
+            check(recipe!!.compatible(packageIdentity(), rootfsIdentity())) { "storageUnavailable" }
+            receipt = ownership(profile)
+        }
+        return recipe!! to receipt!!
+    }
+
+    private fun drainColdServer(
+        worker: NativeRuntimeOwnership.ColdWorker, profile: String, oldReceipt: NativeRuntimeReceipt,
+    ) {
+        val plan = NativeRuntimeOwnership.plan(oldReceipt, bootIdentity(), sameUidInventory(),
+            registeredRuntimePids(), nonceMatches = ::nonceMatches)
+        // Admission and each exact signal share Stop's short lock; no newer owner is selected.
+        for (identity in plan.server) withColdRestoreAdmission(worker, profile) {
+            if (identity.sameProcess(kernelIdentity(identity.pid))) Os.kill(identity.pid, OsConstants.SIGTERM)
+        }
+        val deadline = SystemClock.elapsedRealtime() + 3000
+        while (plan.server.any { it.sameProcess(kernelIdentity(it.pid)) } && SystemClock.elapsedRealtime() < deadline) {
+            withColdRestoreAdmission(worker, profile) { }
+            Thread.sleep(PROCESS_POLL_MS)
+        }
+        for (identity in plan.server) withColdRestoreAdmission(worker, profile) {
+            if (identity.sameProcess(kernelIdentity(identity.pid))) Os.kill(identity.pid, OsConstants.SIGKILL)
+        }
+        val drainDeadline = SystemClock.elapsedRealtime() + 2000
+        while (plan.server.any { it.sameProcess(kernelIdentity(it.pid)) } &&
+            SystemClock.elapsedRealtime() < drainDeadline) {
+            withColdRestoreAdmission(worker, profile) { }
+            Thread.sleep(PROCESS_POLL_MS)
+        }
+        check(plan.server.none { it.sameProcess(kernelIdentity(it.pid)) }) { "ownershipUnknown" }
+        NativeRuntimeOwnership.plan(oldReceipt, bootIdentity(), sameUidInventory(), registeredRuntimePids(),
+            nonceMatches = ::nonceMatches)
+            .also { check(it.server.isEmpty()) { "ownershipUnknown" } }
+    }
+
+    private fun reserveColdRestore(
+        worker: NativeRuntimeOwnership.ColdWorker, profile: String, recipe: NativeServerRecipe,
+    ): Long? {
+        var reservedGeneration: Long? = null
+        withColdRestoreAdmission(worker, profile) {
+            restorePhase = "restoring"
+            serverRecipe = recipe
+            // Runtime identity generation is independent of the immutable admission ticket.
+            val runtimeGeneration = nextRuntimeGeneration()
+            reservedGeneration = reserveNativeAttempt(profile, runtimeGeneration).recoveryGeneration
+        }
+        return reservedGeneration
+    }
+
+    private fun coldRestoreFailed(worker: NativeRuntimeOwnership.ColdWorker, profile: String, error: Throwable?) {
+        synchronized(recoveryLock) {
+            worker.runIfCurrent(supervisionGeneration, recoveryScheduleId) {
+                // Stop and system timeout own their published reason after revocation.
+                if (restartWanted && !userStopped) {
+                    if (!nativeAdmitted(profile, worker.generation)) restoreUnavailable("policyDisabled")
+                    else if (error != null) restoreUnavailable(
+                        if (error.message == "ownershipUnknown") "ownershipUnknown" else "storageUnavailable")
+                }
+            }
+        }
     }
 
     private fun budgetKey(profile: String) = "oc.builtinRecoveryBudget.$profile"
@@ -2077,7 +2225,9 @@ class BuiltinLinux(private val context: Context) {
         val reset = NativeRecoveryBudget(revision = current.revision + 1)
         check(recoveryPreferences.edit()
             .putString(budgetKey(profile), JSONObject(reset.map()).toString())
-            .putString("oc.builtinRecoveryReceipts.$profile", JSONArray(archived.map { JSONObject(it.map()) }).toString()).commit())
+
+                .putString("oc.builtinRecoveryReceipts.$profile",
+                    JSONArray(archived.map { JSONObject(it.map()) }).toString()).commit())
         synchronized(recoveryLock) {
             if (manualStartGeneration == recoveryGeneration) manualStartGeneration = null
         }
@@ -2162,58 +2312,85 @@ class BuiltinLinux(private val context: Context) {
             "builtin-restart:${java.util.UUID.randomUUID()}")
         check(recoveryPreferences.edit()
             .putString(budgetKey(profile), JSONObject(reserved.map()).toString())
-            .putString("oc.builtinRecoveryReceipts.$profile", JSONArray(archived.map { JSONObject(it.map()) }).toString())
+
+                .putString("oc.builtinRecoveryReceipts.$profile",
+                    JSONArray(archived.map { JSONObject(it.map()) }).toString())
             .commit()) { "recovery_unavailable" }
         return reserved
     }
 
+    private data class RecoverySchedule(val profile: String, val generation: Long, val id: Long)
+
     /** Exit worker owns timing and restart; no activity callback or Dart dispatch is needed. */
     private fun scheduleNativeRecovery(service: Service) {
-        val script = service.script ?: return
-        val port = service.port ?: return
-        val profile: String
-        val generation: Long
-        val scheduleId: Long
-        synchronized(recoveryLock) {
-            profile = supervisionProfile ?: return
-            if (!supervisionEnabled || !restartWanted || userStopped) return
-            generation = supervisionGeneration
-            scheduleId = ++recoveryScheduleId
-            scheduledRecovery = true
+        val script = service.script
+        val port = service.port
+        if (script != null && port != null) {
+            val schedule = prepareNativeRecovery(service)
+            if (schedule != null) {
+                val worker = Thread({ runNativeRecovery(schedule, script, port) }, "phone-native-recovery")
+                try { worker.start() } catch (_: Throwable) {
+                    synchronized(recoveryLock) {
+                        if (recoveryScheduleId == schedule.id) scheduledRecovery = false
+                    }
+                }
+            }
         }
+    }
+
+    private fun recoveryScheduleAllowed(): Boolean = supervisionEnabled && restartWanted && !userStopped
+
+    private fun claimRecoverySchedule(): RecoverySchedule? = synchronized(recoveryLock) {
+        val profile = supervisionProfile
+        if (profile == null || !recoveryScheduleAllowed()) null else {
+            val generation = supervisionGeneration
+            val scheduleId = ++recoveryScheduleId
+            scheduledRecovery = true
+            RecoverySchedule(profile, generation, scheduleId)
+        }
+    }
+
+    private fun prepareNativeRecovery(service: Service): RecoverySchedule? {
+        val schedule = claimRecoverySchedule() ?: return null
         restartBackoff.exited(SystemClock.elapsedRealtime() - service.startedAt, SystemClock.elapsedRealtime())
-        try { persistRestartBackoff() } catch (_: Throwable) {
+        return try { persistRestartBackoff(); schedule } catch (_: Throwable) {
             restoreUnavailable("storageUnavailable")
             synchronized(recoveryLock) { scheduledRecovery = false }
-            return
+            null
         }
-        val worker = Thread({
-            try {
-                while (nativeAdmitted(profile, generation)) {
-                    val remaining = synchronized(this) { restartBackoff.remainingMs(SystemClock.elapsedRealtime()) }
-                    if (remaining <= 0L) break
-                    Thread.sleep(remaining.coerceAtMost(100L))
-                }
-                synchronized(this) {
-                    if (!nativeAdmitted(profile, generation) || serverRunning) return@synchronized
-                    val budget = readBudget(profile)
-                    if (budget.attempts >= 3) return@synchronized
-                    val reserved = reserveNativeAttempt(profile, if (serverRecipe != null) nextRuntimeGeneration() else recoveryGeneration)
-                    launchService(SERVER, script, port, null, nativeOwned = true,
-                        nativeSupervisionGeneration = generation,
-                        nativeAttemptGeneration = reserved.recoveryGeneration)
-                }
-            } catch (_: Throwable) { /* Fail closed: no launch without durable reservation. */ }
-            finally {
-                synchronized(recoveryLock) {
-                    if (supervisionGeneration == generation && recoveryScheduleId == scheduleId) scheduledRecovery = false
-                }
-                synchronized(this) { serviceSetChanged() }
+    }
+
+    private fun runNativeRecovery(schedule: RecoverySchedule, script: String, port: Int) {
+        val profile = schedule.profile
+        val generation = schedule.generation
+        val scheduleId = schedule.id
+        try {
+            while (nativeAdmitted(profile, generation)) {
+                val remaining = synchronized(this) { restartBackoff.remainingMs(SystemClock.elapsedRealtime()) }
+                if (remaining <= 0L) break
+                Thread.sleep(remaining.coerceAtMost(OWNERSHIP_POLL_MS))
             }
-        }, "phone-native-recovery")
-        try { worker.start() } catch (_: Throwable) {
-            synchronized(recoveryLock) { if (recoveryScheduleId == scheduleId) scheduledRecovery = false }
+            synchronized(this) {
+                launchNativeRecovery(profile, generation, script, port)
+            }
+        } catch (_: Throwable) { /* Fail closed: no launch without durable reservation. */ }
+        finally {
+            synchronized(recoveryLock) {
+                if (supervisionGeneration == generation && recoveryScheduleId == scheduleId) scheduledRecovery = false
+            }
+            synchronized(this) { serviceSetChanged() }
         }
+    }
+
+    private fun launchNativeRecovery(profile: String, generation: Long, script: String, port: Int) {
+        if (!nativeAdmitted(profile, generation) || serverRunning) return
+        val budget = readBudget(profile)
+        if (budget.attempts >= 3) return
+        val reserved = reserveNativeAttempt(profile,
+            if (serverRecipe != null) nextRuntimeGeneration() else recoveryGeneration)
+        launchService(SERVER, script, port, null,
+            ServiceLaunch(nativeOwned = true, nativeSupervisionGeneration = generation,
+                nativeAttemptGeneration = reserved.recoveryGeneration))
     }
 
     /** Called on the main thread: invalidation never waits for runtime I/O. */
@@ -2338,7 +2515,7 @@ class BuiltinLinux(private val context: Context) {
             check(policyPermits(profile))
             reserveNativeAttempt(profile, expectedGeneration)
         }
-        launchService(SERVER, script, port, null, expectedGeneration)
+        launchService(SERVER, script, port, null, ServiceLaunch(expectedGeneration = expectedGeneration))
         val accepted = synchronized(recoveryLock) { admitted() }
         if (!accepted) {
             removeService(SERVER)
@@ -2376,7 +2553,7 @@ class BuiltinLinux(private val context: Context) {
     @Synchronized
     fun startServer(script: String, port: Int, restoreRecipe: Map<*, *>? = null) {
         val requested = restoreRecipe?.let {
-            check(port == 4097) { "The phone server could not restart." }
+            check(port == SERVER_DEFAULT_PORT) { "The phone server could not restart." }
             NativeServerRecipe.fromRequest(it, it["profileId"] as? String, packageIdentity(), rootfsIdentity())
         }
         val eligible = NativeRuntimeOwnership.manualRecipeEligible(requested?.profileId, supervisionProfile,
@@ -2392,7 +2569,9 @@ class BuiltinLinux(private val context: Context) {
         }
         startService(SERVER, script, port, null)
         if (requested != null && !eligible) restoreUnavailable("policyDisabled")
-        else if (requested != null && !serverRestorationArmed && restoreReason == null) restoreUnavailable("ownershipUnknown")
+        else if (requested != null && !serverRestorationArmed && restoreReason == null) {
+            restoreUnavailable("ownershipUnknown")
+        }
     }
 
     private data class StoppedServer(val script: String, val port: Int)
@@ -2451,12 +2630,10 @@ class BuiltinLinux(private val context: Context) {
         script: String,
         port: Int?,
         notice: String?,
-        expectedGeneration: Long? = null,
-        nativeOwned: Boolean = false,
-        nativeSupervisionGeneration: Long? = null,
-        nativeAttemptGeneration: Long? = null,
-        nativeScheduleId: Long? = null,
+        launch: ServiceLaunch = ServiceLaunch(),
     ): Process {
+        val nativeOwned = launch.nativeOwned
+        val nativeAttemptGeneration = launch.nativeAttemptGeneration
         // Exit monitor already removed an autonomous crash. Do not notify an
         // empty set after the final reservation: that would stop the retained
         // FGS between reserving attempt three and creating its child.
@@ -2464,12 +2641,36 @@ class BuiltinLinux(private val context: Context) {
         val log = serviceLogFile(name)
         // One log per run; the previous one stays for a look after a crash.
         if (log.isFile) log.renameTo(File(home, "$name.previous.log"))
-        val process = if (nativeOwned) {
+        val process = launchServiceProcess(name, script, log, launch)
+        process.outputStream.close()
+        services[name] = serviceStarted(name, process, port, notice, script)
+        if (name == SERVER && nativeOwned) synchronized(recoveryLock) {
+            nativeRecoveryAttempt = RecoveryAttempt(process, nativeAttemptGeneration ?: error("recovery_unavailable"))
+            recoveryAttempt = null
+        }
+        recordRunning()
+        try {
+            // Native crash recovery retains the existing FGS during its bounded delay.
+            // Re-requesting a background FGS start would lose Android 12+ admission.
+            if (!nativeOwned) BuiltinServerService.start(context, currentNotice())
+        } catch (error: Exception) {
+            // A refused foreground service must not leave an unsupervised child.
+            removeService(name)
+            throw error
+        }
+        monitorServiceExit(name, process)
+        return process
+    }
+
+    private fun launchServiceProcess(name: String, script: String, log: File, launch: ServiceLaunch): Process {
+        val nativeOwned = launch.nativeOwned
+        val expectedGeneration = launch.expectedGeneration
+        val nativeSupervisionGeneration = launch.nativeSupervisionGeneration
+        return if (nativeOwned) {
             val profile = synchronized(recoveryLock) { supervisionProfile } ?: error("recovery_unavailable")
             val supervisorGeneration = nativeSupervisionGeneration ?: error("recovery_unavailable")
             check(nativeAdmitted(profile, supervisorGeneration))
-            if (name == SERVER && serverRecipe != null) startGatedServer(script, log, serverRecipe!!,
-                nativeAttemptGeneration, supervisorGeneration, nativeScheduleId)
+            if (name == SERVER && serverRecipe != null) startGatedServer(script, log, serverRecipe!!, launch)
             else synchronized(recoveryLock) {
                 check(nativeAdmitted(profile, supervisorGeneration))
                 start(script, log)
@@ -2488,22 +2689,9 @@ class BuiltinLinux(private val context: Context) {
                 recoveryAttempt = RecoveryAttempt(it, expectedGeneration)
             }
         }
-        process.outputStream.close()
-        services[name] = serviceStarted(name, process, port, notice, script)
-        if (name == SERVER && nativeOwned) synchronized(recoveryLock) {
-            nativeRecoveryAttempt = RecoveryAttempt(process, nativeAttemptGeneration ?: error("recovery_unavailable"))
-            recoveryAttempt = null
-        }
-        recordRunning()
-        try {
-            // Native crash recovery retains the existing FGS during its bounded delay.
-            // Re-requesting a background FGS start would lose Android 12+ admission.
-            if (!nativeOwned) BuiltinServerService.start(context, currentNotice())
-        } catch (error: Exception) {
-            // A refused foreground service must not leave an unsupervised child.
-            removeService(name)
-            throw error
-        }
+    }
+
+    private fun monitorServiceExit(name: String, process: Process) {
         // A service that exits on its own (a crash, a bad config) takes its
         // share of the "running" notification with it.
         try {
@@ -2528,7 +2716,6 @@ class BuiltinLinux(private val context: Context) {
             try { removeService(name) } catch (_: Throwable) { }
             throw IllegalStateException("The phone service could not start.")
         }
-        return process
     }
 
     @Synchronized
@@ -2564,7 +2751,9 @@ class BuiltinLinux(private val context: Context) {
 
     @Synchronized
     fun stopAllServices(expectedStopRevision: Long? = null) {
-        if (expectedStopRevision != null && synchronized(recoveryLock) { !NativeRuntimeOwnership.revocationMayCommit(expectedStopRevision, wantedRevision) }) {
+        if (expectedStopRevision != null && synchronized(recoveryLock) {
+                !NativeRuntimeOwnership.revocationMayCommit(expectedStopRevision, wantedRevision)
+            }) {
             drainPendingOwnedServer()
             return
         }
@@ -2613,7 +2802,9 @@ class BuiltinLinux(private val context: Context) {
     private fun recordRunning() {
         try {
             val owner = recoveryPreferences.getString("restoreOwner", null)
-            if (owner != null && serverRunning) writeOwnership(owner, ownership(owner).copy(other = knownOtherRuntime()))
+            if (owner != null && serverRunning) {
+                writeOwnership(owner, ownership(owner).copy(other = knownOtherRuntime()))
+            }
         } catch (_: Throwable) { restoreUnavailable("storageUnavailable") }
         try {
             AppLifecycle.recordServices(
@@ -3049,6 +3240,17 @@ class BuiltinLinux(private val context: Context) {
     }
 
     companion object {
+        private const val RUN_ADMISSION_WINDOW_MS = 10_000L
+        private const val PROCESS_POLL_MS = 50L
+        private const val OWNED_DRAIN_TIMEOUT_MS = 5_000L
+        private const val OWNED_DRAIN_KILL_WINDOW_MS = 2_000L
+        private const val OWNERSHIP_POLL_MS = 100L
+        private const val MIN_RESTART_DELAY_MS = 1_000L
+        private const val MAX_RESTART_DELAY_MS = 60_000L
+        private const val MAX_RECEIPT_CHARS = 131_072
+        private const val MAX_ENV_BYTES = 131_072
+        private const val SERVER_DEFAULT_PORT = 4097
+
         internal fun registeredAppProcessIds(records: List<ActivityManager.RunningAppProcessInfo>?,
             packageName: String, uid: Int): Set<Int> = records.orEmpty().filter {
                 it.pid > 0 && it.uid == uid && it.processName == "$packageName:local_pdf" &&

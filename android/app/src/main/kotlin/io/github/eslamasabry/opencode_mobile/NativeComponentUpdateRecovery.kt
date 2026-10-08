@@ -16,7 +16,8 @@ internal class NativeComponentUpdateRecovery(
 ) {
     enum class Kind { DIRECTORY, REGULAR, SYMLINK, OTHER }
     data class Stat(val kind: Kind, val device: Long, val inode: Long, val size: Long) {
-        fun sameObject(other: Stat?) = other != null && kind == other.kind && device == other.device && inode == other.inode
+        fun sameObject(other: Stat?) = other != null && kind == other.kind &&
+            device == other.device && inode == other.inode
     }
     interface ReceiptHandle : Closeable {
         fun stat(): Stat
@@ -42,15 +43,16 @@ internal class NativeComponentUpdateRecovery(
     private val links = listOf("/usr/local/bin/opencode", "/usr/local/bin/opencode2",
         "/usr/local/bin/claude", "/home/oc/.local/bin/paseo", "/home/oc/.local/bin/claude")
         .map { Target(it, Kind.REGULAR, link = true) }
+    private val paths = Paths(filesDir, home, rootfs, fs)
     private val legacyLock = "/home/oc/.local/share/oc-agents/.lock-claude"
 
     /** Refuses unsafe ancestry/code roots even when there is no reachable journal. */
     fun hasPending(): Boolean = safe {
         validateCode()
         val pending = (code + links).any { target ->
-            path(target.guest)?.let { fs.lstat(sibling(it, ".oc-pending")) != null } == true
+            paths.resolve(target.guest)?.let { fs.lstat(paths.sibling(it, ".oc-pending")) != null } == true
         }
-        val lock = path(legacyLock)?.let { fs.lstat(it) }
+        val lock = paths.resolve(legacyLock)?.let { fs.lstat(it) }
         check(lock == null || lock.kind == Kind.DIRECTORY)
         pending || lock != null
     }
@@ -60,15 +62,17 @@ internal class NativeComponentUpdateRecovery(
         validateCode()
         if (!hasPending()) return@safe
         check(isQuiescent())
-        val lock = path(legacyLock)
+        val lock = paths.resolve(legacyLock)
         val legacy = lock?.let { fs.lstat(it) }
-        if (lock != null && legacy != null) check(legacy.kind == Kind.DIRECTORY && checkedChildren(lock, legacy).isEmpty())
+        if (lock != null && legacy != null) {
+            check(legacy.kind == Kind.DIRECTORY && paths.checkedChildren(lock, legacy).isEmpty())
+        }
         // Recover installed code before exposing/restoring any command link.
         for (target in code + links) recover(target, isQuiescent)
         if (lock != null) {
             val before = fs.lstat(lock)
             if (before != null) {
-                check(before.kind == Kind.DIRECTORY && checkedChildren(lock, before).isEmpty())
+                check(before.kind == Kind.DIRECTORY && paths.checkedChildren(lock, before).isEmpty())
                 mutate(lock, isQuiescent) { check(before.sameObject(fs.lstat(lock))); fs.rmdir(lock) }
                 sync(lock.parentFile ?: error(FAILURE), isQuiescent)
             }
@@ -76,56 +80,22 @@ internal class NativeComponentUpdateRecovery(
     }
 
     private fun validateCode() {
-        for (target in code) path(target.guest)?.let { active ->
+        for (target in code) paths.resolve(target.guest)?.let { active ->
             fs.lstat(active)?.let { check(matches(it, target)) }
         }
     }
 
-    private fun path(guest: String): File? {
-        check(guest.startsWith('/') && guest.split('/').drop(1).all { it.isNotEmpty() && it !in setOf(".", "..") })
-        if (!validateAncestors(rootfs)) return null
-        val segments = guest.removePrefix("/").split('/')
-        var parent = rootfs
-        for (segment in segments.dropLast(1)) {
-            parent = File(parent, segment)
-            val stat = fs.lstat(parent) ?: return null
-            check(stat.kind == Kind.DIRECTORY)
-        }
-        return File(parent, segments.last())
-    }
-
-    /** Anchor at app-authored filesDir; walk every private ancestor without following links. */
-    private fun validateAncestors(directory: File): Boolean {
-        val base = filesDir.absoluteFile
-        val homePath = home.absoluteFile
-        val root = rootfs.absoluteFile
-        val destination = directory.absoluteFile
-        fun normalized(file: File) = file.toPath().normalize().toFile() == file
-        check(listOf(base, homePath, root, destination).all(::normalized))
-        check(homePath.path.startsWith(base.path + File.separator) && root.path.startsWith(homePath.path + File.separator))
-        check(destination == root || destination.path.startsWith(root.path + File.separator))
-        val baseStat = fs.lstat(base) ?: return false
-        check(baseStat.kind == Kind.DIRECTORY)
-        var current = base
-        val segments = destination.path.removePrefix(base.path + File.separator).split(File.separatorChar)
-        for (segment in segments) {
-            current = File(current, segment)
-            val stat = fs.lstat(current) ?: return false
-            check(stat.kind == Kind.DIRECTORY)
-        }
-        return true
-    }
-
     private fun receipt(file: File): String {
-        check(validateAncestors(file.parentFile ?: error(FAILURE)))
+        check(paths.validateAncestors(file.parentFile ?: error(FAILURE)))
         val before = fs.lstat(file) ?: error(FAILURE)
-        check(before.kind == Kind.REGULAR && before.size in 1L..16L)
+        check(before.kind == Kind.REGULAR && before.size in 1L..MAX_RECEIPT_BYTES.toLong())
         val bytes = fs.openReceiptNoFollow(file).use { descriptor ->
             val opened = descriptor.stat()
-            check(opened.kind == Kind.REGULAR && opened.size in 1L..16L && before.sameObject(opened))
-            descriptor.read(17)
+            check(opened.kind == Kind.REGULAR && opened.size in 1L..MAX_RECEIPT_BYTES.toLong() &&
+                before.sameObject(opened))
+            descriptor.read(RECEIPT_READ_LIMIT)
         }
-        check(bytes.size in 1..16 && before.sameObject(fs.lstat(file)))
+        check(bytes.size in 1..MAX_RECEIPT_BYTES && before.sameObject(fs.lstat(file)))
         return when (bytes.toString(Charsets.US_ASCII)) {
             "existing", "existing\n" -> "existing"
             "new", "new\n" -> "new"
@@ -134,12 +104,12 @@ internal class NativeComponentUpdateRecovery(
     }
 
     private fun recover(target: Target, quiescent: () -> Boolean) {
-        val active = path(target.guest) ?: return
-        val pending = sibling(active, ".oc-pending")
+        val active = paths.resolve(target.guest) ?: return
+        val pending = paths.sibling(active, ".oc-pending")
         val pendingStat = fs.lstat(pending) ?: return
         fs.lstat(active)?.let { check(matches(it, target)) }
         val intent = receipt(pending)
-        val good = sibling(active, ".oc-good")
+        val good = paths.sibling(active, ".oc-good")
         if (intent == "existing") {
             val backup = fs.lstat(good)
             if (backup != null) {
@@ -167,20 +137,14 @@ internal class NativeComponentUpdateRecovery(
     private fun matches(stat: Stat, target: Target) =
         if (target.link) stat.kind in setOf(Kind.SYMLINK, Kind.REGULAR) else stat.kind == target.kind
 
-    private fun checkedChildren(directory: File, before: Stat): List<File> {
-        check(validateAncestors(directory) && before.kind == Kind.DIRECTORY && before.sameObject(fs.lstat(directory)))
-        val children = fs.children(directory)
-        check(before.sameObject(fs.lstat(directory)))
-        check(children.all { it.parentFile == directory && it.name.isNotEmpty() && it.name !in setOf(".", "..") })
-        return children
-    }
-
-    private fun remove(file: File, quiescent: () -> Boolean, depth: Int = 0, budget: IntArray = intArrayOf(100_000)) {
-        check(validateAncestors(file.parentFile ?: error(FAILURE)))
+    private fun remove(
+        file: File, quiescent: () -> Boolean, depth: Int = 0, budget: IntArray = intArrayOf(MAX_REMOVE_ENTRIES),
+    ) {
+        check(paths.validateAncestors(file.parentFile ?: error(FAILURE)))
         val before = fs.lstat(file) ?: return
-        check(depth <= 64 && --budget[0] >= 0)
+        check(depth <= MAX_REMOVE_DEPTH && --budget[0] >= 0)
         if (before.kind == Kind.DIRECTORY) {
-            for (child in checkedChildren(file, before)) remove(child, quiescent, depth + 1, budget)
+            for (child in paths.checkedChildren(file, before)) remove(child, quiescent, depth + 1, budget)
             mutate(file, quiescent) { check(before.sameObject(fs.lstat(file))); fs.rmdir(file) }
         } else {
             check(before.kind in setOf(Kind.REGULAR, Kind.SYMLINK))
@@ -190,20 +154,92 @@ internal class NativeComponentUpdateRecovery(
     }
 
     private inline fun mutate(file: File, quiescent: () -> Boolean, action: () -> Unit) {
-        check(validateAncestors(file.parentFile ?: error(FAILURE)))
+        check(paths.validateAncestors(file.parentFile ?: error(FAILURE)))
         check(quiescent())
         action()
     }
     private fun sync(directory: File, quiescent: () -> Boolean) {
-        check(validateAncestors(directory) && quiescent())
+        check(paths.validateAncestors(directory) && quiescent())
         fs.syncDirectory(directory)
     }
-    private fun sibling(file: File, suffix: String) = File(file.path + suffix)
     private inline fun <T> safe(action: () -> T): T = try { action() }
         catch (_: Exception) { throw IllegalStateException(FAILURE) }
 
     companion object {
+        private const val MAX_RECEIPT_BYTES = 16
+        private const val RECEIPT_READ_LIMIT = MAX_RECEIPT_BYTES + 1
+        private const val MAX_REMOVE_ENTRIES = 100_000
+        private const val MAX_REMOVE_DEPTH = 64
         const val FAILURE = "A component update could not be restored. Run setup again."
+    }
+
+    private class Paths(
+        private val filesDir: File, private val home: File,
+        private val rootfs: File, private val fs: Fs,
+    ) {
+        fun resolve(guest: String): File? {
+            check(guest.startsWith('/') && guest.split('/').drop(1).all { it.isNotEmpty() && it !in setOf(".", "..") })
+            return if (!validateAncestors(rootfs)) {
+                null
+            } else {
+                val segments = guest.removePrefix("/").split('/')
+                var parent: File? = rootfs
+                for (segment in segments.dropLast(1)) {
+                    val next = File(checkNotNull(parent), segment)
+                    val stat = fs.lstat(next)
+                    if (stat == null) {
+                        parent = null
+                        break
+                    }
+                    check(stat.kind == Kind.DIRECTORY)
+                    parent = next
+                }
+                parent?.let { File(it, segments.last()) }
+            }
+        }
+
+        /** Anchor at app-authored filesDir; walk every private ancestor without following links. */
+        fun validateAncestors(directory: File): Boolean {
+            val base = filesDir.absoluteFile
+            val homePath = home.absoluteFile
+            val root = rootfs.absoluteFile
+            val destination = directory.absoluteFile
+            fun normalized(file: File) = file.toPath().normalize().toFile() == file
+            check(listOf(base, homePath, root, destination).all(::normalized))
+            check(homePath.path.startsWith(base.path + File.separator) &&
+                root.path.startsWith(homePath.path + File.separator))
+            check(destination == root || destination.path.startsWith(root.path + File.separator))
+            val baseStat = fs.lstat(base)
+            return if (baseStat == null) {
+                false
+            } else {
+                check(baseStat.kind == Kind.DIRECTORY)
+                var current = base
+                var complete = true
+                val segments = destination.path.removePrefix(base.path + File.separator).split(File.separatorChar)
+                for (segment in segments) {
+                    current = File(current, segment)
+                    val stat = fs.lstat(current)
+                    if (stat == null) {
+                        complete = false
+                        break
+                    }
+                    check(stat.kind == Kind.DIRECTORY)
+                }
+                complete
+            }
+        }
+
+        fun sibling(file: File, suffix: String) = File(file.path + suffix)
+
+        fun checkedChildren(directory: File, before: Stat): List<File> {
+            check(validateAncestors(directory) && before.kind == Kind.DIRECTORY &&
+                before.sameObject(fs.lstat(directory)))
+            val children = fs.children(directory)
+            check(before.sameObject(fs.lstat(directory)))
+            check(children.all { it.parentFile == directory && it.name.isNotEmpty() && it.name !in setOf(".", "..") })
+            return children
+        }
     }
 
     internal object AndroidFs : Fs {
@@ -221,7 +257,7 @@ internal class NativeComponentUpdateRecovery(
             return object : ReceiptHandle {
                 override fun stat() = stat(Os.fstat(descriptor))
                 override fun read(maximum: Int): ByteArray {
-                    check(maximum in 1..17)
+                    check(maximum in 1..RECEIPT_READ_LIMIT)
                     val bytes = ByteArray(maximum)
                     var total = 0
                     while (total < maximum) {

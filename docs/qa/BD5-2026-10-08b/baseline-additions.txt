@@ -1,0 +1,6 @@
+LongParameterList:NativeRuntimeOwnership.kt$NativeRuntimeOwnership$(receipt: NativeRuntimeReceipt, boot: String, current: List<RuntimeProcessIdentity>, registered: Set<Int>, requireCompleteInventory: Boolean = true, nonceMatches: (Int, String) -> Boolean, )
+LongParameterList:NativeRecoveryBudget.kt$NativeRecoveryBudget.Companion$(resumed: Boolean, wanted: Boolean, userStopped: Boolean, boundProfile: String?, requestedProfile: String, manualGeneration: Long?, currentGeneration: Long, running: Boolean, nativeOwned: Boolean)
+LongParameterList:NativeRecoveryBudget.kt$NativeRecoveryBudget.Companion$(enabled: Boolean, wanted: Boolean, userStopped: Boolean, generation: Long, expectedGeneration: Long, markerValid: Boolean, policyAllowed: Boolean)
+LongParameterList:NativeInstallerOwnership.kt$NativeInstallerOwnership$(ticket: InstallerTicket, rootfsGeneration: String, boot: String, inventory: List<RuntimeProcessIdentity>, registeredReaders: Set<Int>, absenceConfirmed: (Int) -> Boolean, nonceMatches: (Int, String) -> Boolean, )
+UnusedParameter:NativeRecoveryBudget.kt$NativeRecoveryBudget$at: Long
+UnusedParameter:BuiltinLinux.kt$BuiltinLinux$legacy: Map<*, *>?
