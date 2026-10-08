@@ -1,0 +1,54 @@
+{
+  "runID": "fq3-20261008b-cert",
+  "sourceRevision": "13d00fbb7649672491aa8458b7cd4cd807b188af",
+  "attemptID": "attempt-1791441726737274-2681731",
+  "cleanupCode": null,
+  "engine": "opencode2",
+  "case": "reconnect",
+  "cliVersion": "2.0.10",
+  "observedVersion": "2.0.10",
+  "appUID": 10217,
+  "appBuild": 2196,
+  "serverKind": "app-managed",
+  "testedModel": "opencode/big-pickle",
+  "results": {
+    "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "healthy": true,
+        "asserted": true
+      }
+    },
+    "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "created": true,
+        "asserted": true
+      }
+    },
+    "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "enabledModels": 11,
+        "selectedModelAvailable": true,
+        "asserted": true
+      }
+    },
+    "reconnect": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "refetched": true,
+        "retainedMessages": 3,
+        "asserted": true
+      }
+    }
+  },
+  "ownedSessions": [
+    "ses_ee5b1ce20ffelijayFZ7LpCqWN",
+    "ses_ee5b1cde7ffeVFJUqaBmdFkORd"
+  ]
+}

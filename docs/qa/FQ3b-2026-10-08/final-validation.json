@@ -1,0 +1,48 @@
+{
+  "scope": "host-validation-of-completed-candidate-evidence",
+  "sourceRevision": "13d00fbb7649672491aa8458b7cd4cd807b188af",
+  "runID": "fq3-20261008b-cert",
+  "validatedAt": "2026-10-08T07:20:05.812561+00:00",
+  "appBuild": 2196,
+  "appUID": 10217,
+  "schemaValidated": true,
+  "cleanupAcknowledged": true,
+  "remainingOwnershipJournals": 0,
+  "phasesPerEngine": {
+    "opencode": 8,
+    "opencode2": 8
+  },
+  "phaseServerKinds": {
+    "opencode": {
+      "abort": "owned",
+      "allow": "owned",
+      "cards": "owned",
+      "deny": "owned",
+      "image": "owned",
+      "model": "owned",
+      "reconnect": "owned",
+      "stream": "owned"
+    },
+    "opencode2": {
+      "abort": "app-managed",
+      "allow": "owned",
+      "cards": "app-managed",
+      "deny": "app-managed",
+      "image": "app-managed",
+      "model": "app-managed",
+      "reconnect": "app-managed",
+      "stream": "app-managed"
+    }
+  },
+  "ownedSessionsPerEngine": {
+    "opencode": 16,
+    "opencode2": 16
+  },
+  "priorAppToolCellsUnchanged": true,
+  "priorFQ3ArtifactsUnchanged": true,
+  "protocolSwitchPassed": true,
+  "passes": {
+    "opencode": 10,
+    "opencode2": 6
+  }
+}

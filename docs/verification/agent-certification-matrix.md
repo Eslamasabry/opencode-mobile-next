@@ -98,39 +98,41 @@ in-app Ubuntu protocol; no UI/restart/install qualification.
 
 These results apply only to the recorded emulator build and in-app runtime. They do not update BA4 cells or qualify UI, installation, app/server restart or other CPU architectures. protocolSwitch means fresh-client connection switching with both owned histories refetched, not app UI switching.
 
-| Agent | Expected | Observed | Build | Run | version | create | models | modelSwitch | stream | abort | reconnect | permissionAllow | permissionDeny | image | cards | protocolSwitch |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| OpenCode 1 | 1.18.32 | 1.18.32 | 2195 | fq3-20261008-settled | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
-| OpenCode 2 | 2.0.10 | 2.0.10 | 2195 | fq3-20261008-settled | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Agent | Expected | Observed | Build | Run | Base model scope | version | create | models | modelSwitch | stream | abort | reconnect | permissionAllow | permissionDeny | image | cards | protocolSwitch |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| OpenCode 1 | 1.18.32 | 1.18.32 | 2196 | fq3-20261008b-cert | explicit: zai-coding-plan/glm-5.3 | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| OpenCode 2 | 2.0.10 | 2.0.10 | 2196 | fq3-20261008b-cert | explicit: opencode/big-pickle | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+Model-dependent passes apply to the recorded base model selection. An explicit selection does not qualify server-default inference or other base models.
 
 FQ3 legend: ✅ protocol assertion passed · ❌ assertion failed or prerequisite missing.
 
-**OpenCode 1** — [fq3-20261008-settled](../qa/FQ3-2026-10-08/fq3-20261008-settled.json)
+**OpenCode 1** — [fq3-20261008b-cert](../qa/FQ3b-2026-10-08/fq3-20261008b-cert.json)
 
 - version: pass — `verified`; facts `{"asserted":true,"healthy":true}`
 - create: pass — `verified`; facts `{"asserted":true,"retained":true}`
 - models: pass — `verified`; facts `{"asserted":true,"connectedModels":18}`
-- stream: pass — `verified`; facts `{"asserted":true,"completedReply":true,"streamedDelta":true}`
+- stream: fail — `oc1_prompt_error`; facts `{}`
 - reconnect: pass — `verified`; facts `{"asserted":true,"messages":2,"refetched":true}`
 - modelSwitch: pass — `verified`; facts `{"asserted":true,"selectionObserved":true}`
-- abort: fail — `oc1_after_abort_reply_mismatch`; facts `{}`
+- abort: pass — `verified`; facts `{"asserted":true,"interrupted":true,"usableAfterAbort":true}`
 - permissionAllow: pass — `verified`; facts `{"asserted":true,"replyObserved":true,"requestObserved":true}`
 - permissionDeny: pass — `verified`; facts `{"asserted":true,"replyObserved":true,"requestObserved":true}`
-- image: fail — `oc1_image_content_unverified`; facts `{}`
+- image: pass — `verified`; facts `{"asserted":true,"imageAnswerVerified":true}`
 - cards: pass — `verified`; facts `{"answerReceipt":true,"asserted":true,"cardsToolCall":true}`
 - protocolSwitch: pass — `verified`; facts `{"asserted":true,"bothHistoriesPreserved":true,"freshClients":true,"oc1Sessions":16,"oc2Sessions":16}`
 
-**OpenCode 2** — [fq3-20261008-settled](../qa/FQ3-2026-10-08/fq3-20261008-settled.json)
+**OpenCode 2** — [fq3-20261008b-cert](../qa/FQ3b-2026-10-08/fq3-20261008b-cert.json)
 
 - version: pass — `verified`; facts `{"asserted":true,"healthy":true}`
 - create: pass — `verified`; facts `{"asserted":true,"created":true}`
-- models: pass — `verified`; facts `{"asserted":true,"enabledModels":84,"selectedModelAvailable":true}`
-- stream: fail — `timeout`; facts `{}`
-- reconnect: fail — `timeout`; facts `{}`
-- modelSwitch: fail — `inference_execution_failed`; facts `{}`
-- abort: fail — `timeout`; facts `{}`
+- models: pass — `verified`; facts `{"asserted":true,"enabledModels":11,"selectedModelAvailable":true}`
+- stream: pass — `verified`; facts `{"asserted":true,"completedReply":true,"streamedDelta":true}`
+- reconnect: pass — `verified`; facts `{"asserted":true,"refetched":true,"retainedMessages":3}`
+- modelSwitch: fail — `timeout`; facts `{}`
+- abort: pass — `verified`; facts `{"asserted":true,"interrupted":true,"midStreamObserved":true,"usableAfterAbort":true}`
 - permissionAllow: fail — `timeout`; facts `{}`
 - permissionDeny: fail — `timeout`; facts `{}`
-- image: fail — `inference_execution_failed`; facts `{}`
-- cards: fail — `inference_execution_failed`; facts `{}`
+- image: fail — `timeout`; facts `{}`
+- cards: fail — `cards_tool_call_missing`; facts `{}`
 - protocolSwitch: pass — `verified`; facts `{"asserted":true,"bothHistoriesPreserved":true,"freshClients":true,"oc1Sessions":16,"oc2Sessions":16}`
