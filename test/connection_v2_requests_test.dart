@@ -781,6 +781,8 @@ void main() {
         ['Yes'],
       ]);
       expect(api.questionReplies.single.$1, 'session-live');
+      // The live question schedules one debounced inventory refresh; let it run.
+      await tester.pump(const Duration(seconds: 3));
     },
   );
 
