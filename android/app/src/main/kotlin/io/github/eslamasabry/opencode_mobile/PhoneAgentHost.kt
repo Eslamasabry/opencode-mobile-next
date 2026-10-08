@@ -3,6 +3,8 @@ package io.github.eslamasabry.opencode_mobile
 import android.os.Build
 import java.util.concurrent.TimeUnit
 
+private const val AGENT_STARTUP_GRACE_MS = 1500L
+
 /** No provider output, passwords or OAuth data enter ordinary service logs. */
 class PhoneAgentHost(private val linux: BuiltinLinux) {
     private val children = mutableMapOf<String, Process>()
@@ -28,16 +30,52 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
             check(children.values.none { it.isAlive }) { "The agent host is unavailable." }
             check(starting.isEmpty()) { "The agent host is still starting. Wait a moment and try again." }
             SetupDiskSpace.error(linux.home, SetupDiskSpace.MIN_LAUNCH_BYTES)?.let {
-                throw IllegalStateException(it)
+                error(it)
             }
             starting.add(profile)
             (generations[profile] ?: 0L).also { generations[profile] = it }
         }
+        var child: Process? = null
+        // No reader retains even one line: CLI startup can mention host secrets.
+        var outputReader: Thread? = null
+        var failureMessage = "The agent host could not start. Run its setup check and try again."
+        try {
+            linux.writeAgentConfig(profile, config)
+            linux.clearStaleAgentLoginLock(profile)
+            val started = linux.startAgentProcess(profile, listOf("/bin/sh", "-c", launchScript(port)))
+            child = started
+            outputReader = drain(started)
+            started.outputStream.use { output ->
+                output.write((password + "\n").toByteArray(Charsets.US_ASCII))
+                output.flush()
+            }
+            // Catch rejected launch flags and startup crashes before registering
+            // the daemon. Its output is discarded even when it exits here.
+            if (started.waitFor(AGENT_STARTUP_GRACE_MS, TimeUnit.MILLISECONDS)) {
+                failureMessage = "The agent host stopped as soon as it started. Run its setup check and try again."
+                throw IllegalStateException(failureMessage)
+            }
+            synchronized(this) {
+                check(profile !in deleted && generations[profile] == generation && children[profile]?.isAlive != true)
+                children[profile] = started
+                linux.trackPrivateAgentService("agent-host.$profile", started, port)
+            }
+            return status(profile)
+        } catch (_: Throwable) {
+            synchronized(this) { if (children[profile] === child) children.remove(profile) }
+            child?.let { cleanup(it, outputReader) }
+            throw IllegalStateException(failureMessage)
+        } finally {
+            synchronized(this) { starting.remove(profile) }
+        }
+    }
+
+    private fun launchScript(port: Int): String {
         // A Claude process Android stopped mid-refresh leaves Claude's login
         // lock behind, and the first message then fails with "another Claude
         // Code process is refreshing it". No Claude process of this profile
         // runs now (the helper starts them all), so a lock left is stale.
-        val script = """
+        return """
             set -eu
             umask 077
             [ "${'$'}(id -u)" = 1000 ]
@@ -57,36 +95,6 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
             # foreground deployment command reads config.json plus these overrides.
             exec /home/oc/.local/bin/paseo daemon run --home "${'$'}HOME/paseo" </dev/null
         """.trimIndent()
-        var child: Process? = null
-        // No reader retains even one line: CLI startup can mention host secrets.
-        var outputReader: Thread? = null
-        var failureMessage = "The agent host could not start. Run its setup check and try again."
-        try {
-            linux.writeAgentConfig(profile, config)
-            linux.clearStaleAgentLoginLock(profile)
-            val started = linux.startAgentProcess(profile, listOf("/bin/sh", "-c", script))
-            child = started
-            outputReader = drain(started)
-            started.outputStream.use { output -> output.write((password + "\n").toByteArray(Charsets.US_ASCII)); output.flush() }
-            // Catch rejected launch flags and startup crashes before registering
-            // the daemon. Its output is discarded even when it exits here.
-            if (started.waitFor(1500, TimeUnit.MILLISECONDS)) {
-                failureMessage = "The agent host stopped as soon as it started. Run its setup check and try again."
-                throw IllegalStateException(failureMessage)
-            }
-            synchronized(this) {
-                check(profile !in deleted && generations[profile] == generation && children[profile]?.isAlive != true)
-                children[profile] = started
-                linux.trackPrivateAgentService("agent-host.$profile", started, port)
-            }
-            return status(profile)
-        } catch (_: Throwable) {
-            synchronized(this) { if (children[profile] === child) children.remove(profile) }
-            child?.let { cleanup(it, outputReader) }
-            throw IllegalStateException(failureMessage)
-        } finally {
-            synchronized(this) { starting.remove(profile) }
-        }
     }
 
     fun stop(profile: String): Map<String, Any?> {
