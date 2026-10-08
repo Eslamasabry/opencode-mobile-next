@@ -133,6 +133,12 @@ EventEnvelope _permission() => EventEnvelope(
   },
 );
 
+/// A live question or permission schedules one debounced inventory refresh
+/// (2 s, coalesced); a test that ends before it fires would leave the timer
+/// pending, so these tests let it run.
+Future<void> _afterInventoryRefresh(WidgetTester tester) =>
+    tester.pump(const Duration(seconds: 3));
+
 /// An answer waits out its undo window before it is sent.
 Future<void> _afterHold(WidgetTester tester) async {
   await tester.pump(const Duration(seconds: 3));
@@ -173,6 +179,7 @@ void main() {
       final row = find.byKey(ValueKey('question-card-option-$index'));
       expect(tester.getSize(row).height, greaterThanOrEqualTo(48));
     }
+    await _afterInventoryRefresh(tester);
   });
 
   testWidgets('a Claude Code chat names Claude Code as the one who asks', (
@@ -193,6 +200,7 @@ void main() {
       find.textContaining(RegExp('Claude Code.*needs input')),
       findsOneWidget,
     );
+    await _afterInventoryRefresh(tester);
   });
 
   testWidgets('an OpenCode chat keeps "The agent"', (tester) async {
@@ -204,6 +212,7 @@ void main() {
 
     final card = tester.widget<KitRequestCard>(find.byType(KitRequestCard));
     expect(card.who, 'The agent');
+    await _afterInventoryRefresh(tester);
   });
 
   testWidgets('tapping a single-select choice answers immediately', (
@@ -333,6 +342,7 @@ void main() {
 
     // The full question sheet, as a form's Answer opens the form.
     expect(find.text('OpenCode needs input'), findsOneWidget);
+    await _afterInventoryRefresh(tester);
   });
 
   testWidgets('more than two prompts also collapse to the Answer button', (
@@ -346,6 +356,7 @@ void main() {
 
     expect(find.byKey(const Key('question-card-answer')), findsOneWidget);
     expect(find.textContaining('3 questions'), findsOneWidget);
+    await _afterInventoryRefresh(tester);
   });
 
   testWidgets('Details opens the one request sheet', (tester) async {
@@ -361,6 +372,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('question-sheet')), findsOneWidget);
+    await _afterInventoryRefresh(tester);
   });
 
   testWidgets('a pending permission outranks the question card', (
@@ -378,6 +390,7 @@ void main() {
       find.byKey(const ValueKey('question-card-question-1')),
       findsNothing,
     );
+    await _afterInventoryRefresh(tester);
   });
 
   testWidgets('a failed answer keeps the card and says why', (tester) async {
