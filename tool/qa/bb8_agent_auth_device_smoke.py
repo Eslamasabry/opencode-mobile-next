@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Qualify the private auth channel on emulator-5554 and restore owner2195.
+"""Qualify the private auth channel on emulator-5554 and restore owner2196.
 
 Raw instrumentation/tool output stays in memory. There are no screenshots or
 account labels; fixed states and account-label presence are the only proof.
@@ -21,7 +21,7 @@ from tool.qa.bd9_normal_restore import prepare_restore
 
 RUNNER_NAME = shared.PACKAGE + '.Bb8DeviceSmoke'
 RUNNER = shared.PACKAGE + '.test/' + RUNNER_NAME
-NORMAL_APK = Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2195.apk')
+NORMAL_APK = Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk')
 DEFAULT_PROFILE_ID = '1790839392073695'
 PROFILE_PATTERN = r'[A-Za-z0-9_-]{1,80}'
 OWNER_PREFIX = 'flutter.oc.phoneAgentOwner.'

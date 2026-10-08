@@ -188,3 +188,19 @@ the cross-language harness at merge. There are no open BB8 implementation
 questions. This is not full model, physical-device or all-agent certification;
 full-suite validation remains coordinator-owned. No CI run, PR, tag, patch,
 publication, deployment or release is claimed.
+
+## Current restoration target
+
+After the completed BB8 qualification, the coordinator designated normal 2196
+(`feat/genui-fe` d777082c, approved 1DE5 signer) for future device runs. BB8 now
+uses `/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk`; the shared restore helper
+requires package/installed version 2196 and still installs with `-r -d` inside
+the existing emulator lock. Historical 2195 receipts above remain unchanged.
+
+Two updated offline success checks failed against the old defaults, then all
+30 driver/restoration tests passed. Tests also reject a stale 2195 APK or
+installed version. The supplied [2196 APK preflight](normal-2196-preflight.json)
+passed file, package, version and signer verification without invoking adb.
+This is preflight evidence, not a new installation or device proof. The
+coordinator reports the emulator currently uses OpenCode 1 and has 21% free
+space; no emulator access or cleanup was performed for this update.

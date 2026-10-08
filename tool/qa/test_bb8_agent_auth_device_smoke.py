@@ -159,8 +159,9 @@ class AuthSmokeTest(unittest.TestCase):
                  patch.object(smoke.shared, 'execute', side_effect=execute), \
                  contextlib.redirect_stdout(io.StringIO()) as captured:
                 code = smoke.run_device(args)
-            prepare.assert_called_once_with(smoke.NORMAL_APK, args.expected_signer,
-                                            args.output / 'normal-restore.json')
+            prepare.assert_called_once_with(
+                Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk'),
+                args.expected_signer, args.output / 'normal-restore.json')
             self.assertEqual(restored, [True])
             report = json.loads((args.output / 'report.json').read_text())
             self.assertNotIn('private-synthetic-account', str(report) + captured.getvalue())

@@ -41,4 +41,4 @@ No authentication output is inferred from CLI success/provider availability.
 The pinned script performs the supported logout and then the same status probe.
 Device qualification calls the real merged adapter/channel: Claude probe only,
 fx probe, fx-only logout, then fx signedOut. Real Claude is never logged out.
-The shared emulator lock spans candidate install, proof and approved 2195 restore.
+The shared emulator lock spans candidate install, proof and current coordinator-designated normal APK restore (2196).
