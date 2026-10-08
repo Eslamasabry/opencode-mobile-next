@@ -64,6 +64,7 @@ void main() {
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupJob.kt',
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRuntimeOwnership.kt',
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeInstallerOwnership.kt',
+        'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeInstallerVisibility.kt',
         if (File(
           'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupPersistence.kt',
         ).existsSync())
