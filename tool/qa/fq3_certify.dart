@@ -422,24 +422,34 @@ Future<bool> cleanupOwnedSessions(
     for (final file in files) {
       PhoneRuntime? runtime;
       Fq3Wire? wire;
+      var stage = 'read';
       try {
         final ownership = SessionOwnership.read(File(file.path));
         if (!allOwned && ownership.runID != runID) continue;
+        stage = 'inspect';
         runtime = await PhoneRuntime.inspect(ownership.runID);
+        stage = 'uid';
         requireConsistentAppUID(ownership.appUID, runtime.uid);
+        stage = 'start';
         wire = Fq3Wire(
           baseUrl: await runtime.start(ownership.engine == 'opencode2'),
           password: runtime.password,
         );
+        stage = 'delete';
         await cleanupLedger(wire, ownership);
+      } on ProbeFailure catch (error) {
+        failed = true;
+        stdout.writeln('FQ3 owned cleanup $stage: ${error.code}');
       } catch (_) {
         failed = true;
+        stdout.writeln('FQ3 owned cleanup $stage: cleanup_failed');
       } finally {
         try {
           await wire?.close();
           await runtime?.close();
         } catch (_) {
           failed = true;
+          stdout.writeln('FQ3 owned cleanup close: cleanup_failed');
         }
       }
     }
