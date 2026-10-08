@@ -15547,6 +15547,60 @@
   "@appExitKeepRunning": {
     "description": "Notice action: opens the keep-running guidance"
   },
+  "backgroundPauseTimeLimit": "Android paused the background connection {at} to save battery.",
+  "@backgroundPauseTimeLimit": {
+    "description": "battery-pause (FD3): App-wide notice when Android's daily background limit stopped the background connection. {at} is 'at 3:10 PM' or 'on Sep 25 at 8:19 PM'.",
+    "placeholders": {
+      "at": {
+        "type": "String"
+      }
+    }
+  },
+  "backgroundPauseRestricted": "Android paused the background connection because battery use is restricted for this app.",
+  "@backgroundPauseRestricted": {
+    "description": "battery-pause (FD3): App-wide notice when Android's battery restriction stopped the background connection."
+  },
+  "backgroundPauseUserStopped": "The background connection stopped when the app was closed {at}.",
+  "@backgroundPauseUserStopped": {
+    "description": "battery-pause (FD3): App-wide notice when the app was closed (Recents, Settings or the phone maker) while the background connection ran. {at} is 'at 3:10 PM' or 'on Sep 25 at 8:19 PM'.",
+    "placeholders": {
+      "at": {
+        "type": "String"
+      }
+    }
+  },
+  "backgroundPauseInterrupted": "The background connection stopped. Android didn't say why.",
+  "@backgroundPauseInterrupted": {
+    "description": "battery-pause (FD3): App-wide notice when the background connection stopped for an unknown reason."
+  },
+  "backgroundPauseConsequence": "Replies and questions won't reach you as notifications until it runs again.",
+  "@backgroundPauseConsequence": {
+    "description": "battery-pause (FD3): Supporting line under the pause notice: what the pause means for the person."
+  },
+  "backgroundPauseResume": "Resume background connection",
+  "@backgroundPauseResume": {
+    "description": "battery-pause (FD3): Notice action that starts the background connection again."
+  },
+  "backgroundPauseResuming": "Resuming the background connection…",
+  "@backgroundPauseResuming": {
+    "description": "battery-pause (FD3): Notice line while Android confirms the background connection started."
+  },
+  "backgroundPauseResumeFailed": "Couldn't resume the background connection.",
+  "@backgroundPauseResumeFailed": {
+    "description": "battery-pause (FD3): Notice line when Android did not confirm the start; the pause stays."
+  },
+  "backgroundPauseResumeFailedNext": "Open Keep running in the background to see what Android allows, then try again.",
+  "@backgroundPauseResumeFailedNext": {
+    "description": "battery-pause (FD3): Way forward under a failed resume."
+  },
+  "backgroundPauseOpenKeepRunning": "Open Keep running settings",
+  "@backgroundPauseOpenKeepRunning": {
+    "description": "battery-pause (FD3): Notice action that opens the Keep running in the background settings (Notifications and background page)."
+  },
+  "backgroundPauseResumed": "Background connection resumed.",
+  "@backgroundPauseResumed": {
+    "description": "battery-pause (FD3): Screen-reader announcement after Android confirmed the background connection runs again."
+  },
   "keepRunningTitle": "Keep running in the background",
   "@keepRunningTitle": {
     "description": "Settings row and screen title: what to allow so Android does not close the app"
