@@ -15,6 +15,8 @@ import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/domain/agent_sign_in.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/agents/agents_section.dart';
+import 'package:opencode_mobile/ui/screens/agents/agents_text.dart'
+    show agentPayloadSize;
 
 import '../tool/capture/fixtures.dart' show loadCaptureFonts;
 import 'support/agents_fakes.dart';
@@ -48,6 +50,7 @@ Future<void> _pump(
   WidgetTester tester,
   FakePhoneAgentsSource agents, {
   LocalTerminalSessions? terminal,
+  Locale locale = const Locale('en'),
 }) async {
   tester.view.physicalSize = const Size(412, 915);
   tester.view.devicePixelRatio = 1;
@@ -64,6 +67,7 @@ Future<void> _pump(
       host,
       ListView(children: const [AgentsSection()]),
       terminal: terminal,
+      locale: locale,
     ),
   );
   await tester.pumpAndSettle();
@@ -211,6 +215,47 @@ void main() {
         findsOneWidget,
       );
       expect(find.textContaining('Signed'), findsNothing);
+    });
+  });
+
+  group('the download size reads in order', () {
+    testWidgets('a not-installed row isolates its size left to right, in '
+        'English and in Arabic', (tester) async {
+      final size = agentPayloadSize('gemini')!;
+      expect(size, matches(RegExp(r'^\u2066\d+(\.\d)? (MB|GB)\u2069$')));
+      for (final locale in const [Locale('en'), Locale('ar')]) {
+        await _pump(
+          tester,
+          FakeAccountAgentsSource(
+            rows: [agentRowFor('gemini', FakeAgentStage.notInstalled)],
+          ),
+          locale: locale,
+        );
+        // "21 MB" sits whole between isolate marks: the row's line ends in
+        // the size, so no bidi run can swap the digits and the unit.
+        final line = tester
+            .widget<KitRow>(find.byKey(const ValueKey('agents-row-gemini')))
+            .supporting!
+            .toPlainText();
+        expect(
+          line.endsWith(size),
+          isTrue,
+          reason: '${locale.languageCode}: $line',
+        );
+      }
+    });
+
+    testWidgets('the install question isolates it too', (tester) async {
+      await _pump(
+        tester,
+        FakeAccountAgentsSource(
+          rows: [agentRowFor('gemini', FakeAgentStage.notInstalled)],
+        ),
+        locale: const Locale('ar'),
+      );
+      await tester.tap(find.byKey(const ValueKey('agents-fix-gemini')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining(agentPayloadSize('gemini')!), findsWidgets);
     });
   });
 

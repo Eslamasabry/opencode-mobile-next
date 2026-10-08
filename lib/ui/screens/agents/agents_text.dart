@@ -25,7 +25,8 @@ IconData agentIcon(String iconKey) => switch (iconKey) {
 
 /// The agent's own download size ("98 MB", "1.2 GB") from the catalog, or
 /// null when the recipe does not say. Only the agent payload, never the
-/// whole setup.
+/// whole setup. Isolated left to right, so the digits and the unit keep
+/// their order ("21 MB", never "MB 21") inside right-to-left copy.
 String? agentPayloadSize(String agentId) {
   final bytes = AgentCatalog.builtIn.agents
       .where((agent) => agent.id == agentId)
@@ -34,9 +35,11 @@ String? agentPayloadSize(String agentId) {
       ?.artifacts[AgentArchitecture.arm64]
       ?.downloadBytes;
   if (bytes == null) return null;
-  return bytes >= 1000000000
-      ? '${(bytes / 1000000000).toStringAsFixed(1)} GB'
-      : '${(bytes / 1000000).round()} MB';
+  return KitBidi.ltr(
+    bytes >= 1000000000
+        ? '${(bytes / 1000000000).toStringAsFixed(1)} GB'
+        : '${(bytes / 1000000).round()} MB',
+  );
 }
 
 /// Where a row stands, in words: one line, and a second quiet line where it
