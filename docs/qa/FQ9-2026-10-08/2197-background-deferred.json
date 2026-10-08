@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "candidateBuild": 2197,
+  "case": "background",
+  "state": "deferred",
+  "reason": "coordinator_requires_short_emulator_sessions",
+  "requiredCheckpointsSeconds": [
+    300,
+    1800
+  ],
+  "requiresUninterruptedReservation": true,
+  "deviceTouched": false,
+  "deviceQualified": false,
+  "fixtureStarted": false
+}

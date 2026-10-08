@@ -24,21 +24,25 @@ def service_foreground(output, component):
 
 
 def ongoing_notification(output):
-    for block in re.split(r"(?=\s*NotificationRecord\()", output):
-        header = block.splitlines()[0:2]
-        if not any(
-            re.search(r"\bpkg=" + re.escape(PACKAGE) + r"\b", line)
-            and re.search(r"\bid=4747\b", line)
-            for line in header
+    for block in re.split(r"(?=NotificationRecord\()", output):
+        header = block.lstrip().splitlines()[0:1]
+        if not header or not (
+            header[0].startswith("NotificationRecord(")
+            and re.search(r"\bpkg=" + re.escape(PACKAGE) + r"\b", header[0])
+            and re.search(r"\bid=4747\b", header[0])
         ):
             continue
-        flags = re.search(r"\bflags=0x([0-9a-fA-F]+)\b", block)
-        if (
-            flags
-            and int(flags[1], 16) & 2
-            and re.search(r"\bchannel(?:Id)?=opencode_live_connection\b", block)
-        ):
-            return True
+        for line in block.splitlines():
+            if not re.search(r"\bchannel(?:Id)?=opencode_live_connection\b", line):
+                continue
+            # Newer Android prints notification flags by name. Read the
+            # channel's notification line, never a PendingIntent's flags.
+            flags = re.search(r"\bflags=(0x[0-9a-fA-F]+|[A-Z_]+(?:\|[A-Z_]+)*)\b", line)
+            if flags and (
+                (flags[1].startswith("0x") and int(flags[1], 16) & 2)
+                or "ONGOING_EVENT" in flags[1].split("|")
+            ):
+                return True
     return False
 
 

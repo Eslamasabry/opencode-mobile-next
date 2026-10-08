@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "runID": "fq9-20261009-live-b",
+  "case": "background",
+  "candidateBuild": 2197,
+  "sourceRevision": "235cced5dce685d6f28158a7ac6e110303a527cc",
+  "oneContinuousReservation": true,
+  "promptSentThroughAppUI": true,
+  "readinessAttempt": 3,
+  "model": "opencode/big-pickle",
+  "state": "fail",
+  "normalRestored": true,
+  "driver": {
+    "state": "fail",
+    "code": "background_observation_failed",
+    "checkpoints": [
+      {
+        "seconds": 300,
+        "elapsedSeconds": 300.60647867200896,
+        "background": true,
+        "turnActive": true,
+        "progressDelta": 3
+      }
+    ],
+    "dwellSeconds": 1240.4390097711002,
+    "homeAttempted": true,
+    "resumed": true,
+    "cleanupAttempted": true,
+    "cleanupSucceeded": true,
+    "errorCodes": [
+      "background_observation_failed"
+    ]
+  },
+  "deviceQualified": false
+}

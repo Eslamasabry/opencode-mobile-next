@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "onlyOwnedSessionsTargeted": true,
+  "settledSessionsDeleted": 2,
+  "onlyEmptyOwnedProjectDirectoriesRemoved": true,
+  "emptyOwnedProjectDirectoriesRemoved": 2,
+  "legacyFixtureAbsent": true,
+  "normalRestored": false,
+  "state": "pass"
+}

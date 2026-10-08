@@ -172,6 +172,113 @@ private fun processTreeScenario(scenario: String) {
     check(signals.none { it.first == unrelated.pid })
 }
 
+private fun outsideTreeScenario(scenario: String) {
+    val process = AuthProcess("{}")
+    val root = PhoneAgentAuthProcessIdentity(110, 1, "private-root", 'S')
+    val leaf = PhoneAgentAuthProcessIdentity(120, 110, "private-child", 'S')
+    val helper = PhoneAgentAuthProcessIdentity(300, 1, "helper-root", 'S')
+    val helperChild = PhoneAgentAuthProcessIdentity(310, 300, "helper-child", 'S')
+    val unknown = PhoneAgentAuthProcessIdentity(320, 1, "unknown-child", 'S')
+    var records = listOf(root, leaf)
+    var registered = setOf(helper.pid to helper.start)
+    var registryReadable = true
+    var now = 0L
+    val signals = mutableListOf<Pair<Int, Int>>()
+    val tree = PhoneAgentAuthProcessTree(
+        pid = { root.pid }, inventory = { records },
+        signal = { pid, signal ->
+            check(pid == root.pid || pid == leaf.pid) { "Independent helper or unknown task was signalled" }
+            signals.add(pid to signal)
+            if (signal == 9) records = records.filter { it.pid != pid }
+        },
+        nano = { now }, pause = { now += TimeUnit.MILLISECONDS.toNanos(it) },
+        outsideOwners = {
+            if (!registryReadable) throw IOException(PRIVATE)
+            registered
+        },
+    )
+    check(tree.track(process))
+    records += listOf(helper, helperChild)
+    when (scenario) {
+        "outside-helper-after-baseline" -> {
+            check(tree.stop(process)) { "Registered helper falsely retired a completed private auth process" }
+            check(records == listOf(helper, helperChild))
+        }
+        "outside-unknown-orphan" -> {
+            records += unknown
+            check(!tree.stop(process)) { "Unknown orphan was mistaken for a registered helper child" }
+        }
+        "outside-wrong-root-cookie" -> {
+            registered = setOf(helper.pid to "wrong-cookie")
+            check(!tree.stop(process)) { "Unmatched helper identity excluded unrelated new tasks" }
+        }
+        "outside-reused-root-cookie" -> {
+            records = records.map { if (it.pid == helper.pid) it.copy(start = "reused-cookie") else it }
+            check(!tree.stop(process)) { "Reused helper PID excluded a new process tree" }
+        }
+        "outside-private-identities-win" -> {
+            registered += setOf(root.pid to root.start, leaf.pid to leaf.start)
+            check(tree.stop(process)) { "Outside callback claimed captured private identities" }
+            check(signals.contains(root.pid to 9) && signals.contains(leaf.pid to 9))
+            check(records == listOf(helper, helperChild))
+        }
+        "outside-retained-helper-child", "outside-reused-helper-child" -> {
+            tree.capture(process)
+            records = records.filter { it.pid != helper.pid }.map {
+                if (it.pid == helperChild.pid) it.copy(parent = 1,
+                    start = if (scenario == "outside-reused-helper-child") "reused-child" else it.start) else it
+            }
+            registered = emptySet()
+            if (scenario == "outside-retained-helper-child") {
+                check(tree.stop(process)) { "Observed helper descendant lost attribution when its parent exited" }
+                check(records == listOf(helperChild.copy(parent = 1)))
+            } else {
+                check(!tree.stop(process)) { "Reused helper descendant PID kept another process's attribution" }
+            }
+        }
+        "outside-registry-failure" -> {
+            records = listOf(root, leaf)
+            registryReadable = false
+            check(!tree.stop(process)) { "Unobservable outside ownership certified private drainage" }
+        }
+        else -> error("Unknown authored outside-owner scenario")
+    }
+    check(signals.none { it.first == helper.pid || it.first == helperChild.pid || it.first == unknown.pid })
+}
+
+private fun privateWithHelper(valid: Map<String, Any?>) {
+    val helper = PhoneAgentAuthProcessIdentity(300, 1, "helper-root", 'S')
+    val helperChild = PhoneAgentAuthProcessIdentity(310, 300, "helper-child", 'S')
+    var records = emptyList<PhoneAgentAuthProcessIdentity>()
+    var starts = 0
+    var now = 0L
+    val tree = PhoneAgentAuthProcessTree(pid = { 110 }, inventory = { records }, signal = { pid, signal ->
+        check(pid == 110 || pid == 120) { "Private auth signalled the live independent helper" }
+        if (signal == 9) records = records.filter { it.pid != pid }
+    }, nano = { now }, pause = { now += TimeUnit.MILLISECONDS.toNanos(it) },
+        outsideOwners = { setOf(helper.pid to helper.start) })
+    val probe = PhoneAgentAuthProbe(start = { _, _ ->
+        starts++
+        val process = AuthProcess("{\"state\":\"signedIn\"}")
+        records += listOf(PhoneAgentAuthProcessIdentity(110, 1, "auth-root-$starts", 'S'),
+            PhoneAgentAuthProcessIdentity(120, 110, "auth-child-$starts", 'S'))
+        check(tree.track(process))
+        process
+    }, waitFor = { process, seconds ->
+        if (records.none { it.pid == helper.pid }) records += listOf(helper, helperChild)
+        val finished = process.waitFor(seconds, TimeUnit.SECONDS)
+        records = records.filter { it.pid != 110 }.map { if (it.pid == 120) it.copy(parent = 1) else it }
+        finished
+    }, stop = { tree.stop(it) })
+    check(probe.run(valid) == mapOf("state" to "signedIn")) {
+        "Concurrent owned helper replaced a signed-in auth result with a host failure"
+    }
+    check(probe.run(valid) == mapOf("state" to "signedIn") && starts == 2) {
+        "Completed auth was retained and blocked a later request while the helper ran"
+    }
+    check(records == listOf(helper, helperChild))
+}
+
 private fun inventoryScenario(scenario: String) {
     val root = Files.createTempDirectory("bb8-private-inventory-").toFile()
     val directory = File(root, "110").apply { check(mkdir()) }
@@ -257,6 +364,10 @@ fun main(args: Array<String>) {
     val fixtures = File(args[1])
     val valid = request(fixtures)
     when (scenario) {
+        "outside-helper-after-baseline", "outside-unknown-orphan", "outside-wrong-root-cookie",
+        "outside-reused-root-cookie", "outside-private-identities-win", "outside-retained-helper-child",
+        "outside-reused-helper-child", "outside-registry-failure" -> outsideTreeScenario(scenario)
+        "private-success-helper-concurrent" -> privateWithHelper(valid)
         "lock-empty-exact", "lock-nonempty-retained", "lock-foreign-symlink" -> lockScenario(scenario)
         "inventory-valid", "inventory-unreadable", "inventory-malformed", "inventory-vanished",
         "inventory-cross-uid" -> inventoryScenario(scenario)

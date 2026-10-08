@@ -46,6 +46,27 @@ class ObservationTests(unittest.TestCase):
         )
         self.assertFalse(ongoing_notification(mixed))
 
+    def test_android_named_flags_ignore_pending_intent_hex_flags(self):
+        named = (
+            f"\n\n  NotificationRecord(a: pkg={PACKAGE} id=4747 "
+            "Notification(channel=opencode_live_connection "
+            "flags=ONGOING_EVENT|ONLY_ALERT_ONCE|NO_CLEAR|FOREGROUND_SERVICE))\n"
+            "    contentIntent=PendingIntent(flags=0x800)\n"
+        )
+        self.assertTrue(ongoing_notification(named))
+        self.assertFalse(ongoing_notification(named.replace("ONGOING_EVENT|", "")))
+        self.assertFalse(ongoing_notification(named.replace(PACKAGE, "foreign")))
+        self.assertFalse(ongoing_notification(named.replace("4747", "4748")))
+        self.assertFalse(
+            ongoing_notification(named.replace("opencode_live_connection", "foreign"))
+        )
+        # An unrelated intent's hex flag cannot supply the ongoing bit.
+        self.assertFalse(
+            ongoing_notification(
+                named.replace("ONGOING_EVENT|", "").replace("0x800", "0x2")
+            )
+        )
+
     def test_socket_requires_single_loopback_listener_owned_by_app_uid(self):
         line = "  0: 0100007F:1001 00000000:0000 0A 0:0 0:0 0 10217 0 123456 1\n"
         self.assertEqual(socket_identity(line, 10217), "123456")
@@ -181,6 +202,73 @@ class PortTests(unittest.TestCase):
         p.exists(BASE)
         self.assertIn("su 10217 sh -c", calls[1][1])
 
+    def test_installed_identity_selects_exact_package_among_prefix_variants(self):
+        p = self.port()
+        listing = (
+            f"package:{PACKAGE}.preview uid:10218\n"
+            f"package:{PACKAGE} uid:10217\n"
+            f"package:{PACKAGE}.test uid:10219"
+        )
+        installed_path = "/data/app/fixture/base.apk"
+        calls = []
+
+        def text(*args, **kwargs):
+            calls.append(args)
+            if args == (
+                "shell",
+                "cmd",
+                "package",
+                "list",
+                "packages",
+                "--user",
+                "0",
+                "-U",
+                PACKAGE,
+            ):
+                return listing
+            self.assertEqual(args, ("shell", "pm", "path", "--user", "0", PACKAGE))
+            return "package:" + installed_path
+
+        def adb(*args, **kwargs):
+            self.assertEqual(args[:2], ("pull", installed_path))
+            self.assertEqual(kwargs, {"timeout": 90})
+            Path(args[2]).write_bytes(b"installed-apk-fixture")
+
+        identity = dict(
+            build=2197, version="1.2.0", sha256="a" * 64, signer=LOCAL_SIGNER
+        )
+        p.text = text
+        p.adb = adb
+        with patch("tool.qa.fq9.ports.apk_identity", return_value=identity) as verify:
+            actual = p.installed_identity()
+        self.assertEqual(actual, {**identity, "uid": 10217})
+        self.assertEqual(p._uid, 10217)
+        self.assertEqual(len(calls), 2)
+        verify.assert_called_once()
+
+    def test_installed_identity_refuses_missing_duplicate_or_system_uid_rows(self):
+        for listing in [
+            f"package:{PACKAGE}.preview uid:10218\npackage:{PACKAGE}.test uid:10219",
+            f"package:{PACKAGE} uid:10217\npackage:{PACKAGE} uid:10217",
+            f"package:{PACKAGE} uid:10217\npackage:{PACKAGE} uid:10218",
+            f"package:{PACKAGE}.preview uid:10218\npackage:{PACKAGE} uid:9999",
+        ]:
+            with self.subTest(listing=listing):
+                p = self.port()
+                calls = []
+                p.text = lambda *args, **kwargs: calls.append(args) or listing
+                p.adb = lambda *args, **kwargs: self.fail("APK pull after refusal")
+                with patch(
+                    "tool.qa.fq9.ports.apk_identity",
+                    side_effect=AssertionError("APK verification after refusal"),
+                ):
+                    with self.assertRaisesRegex(
+                        DriverFailure, "^installed_identity_unavailable$"
+                    ):
+                        p.installed_identity()
+                self.assertEqual(len(calls), 1)
+                self.assertIsNone(p._uid)
+
     def test_fresh_install_cannot_act_on_shared_or_used_avd(self):
         artifact = Artifact(
             Path("/unused"),
@@ -212,6 +300,27 @@ class PortTests(unittest.TestCase):
             ):
                 with self.assertRaisesRegex(DriverFailure, "dedicated_avd_required"):
                     p.install_fresh(artifact)
+
+    def test_done_setup_with_retained_installer_ticket_blocks_update(self):
+        p = self.port()
+        p.services = lambda: ""
+        p.exists = lambda path: True
+        p.private_bytes = lambda path: (
+            b'{"state":"done"}'
+            if path.endswith("setup.json")
+            else b'<map><string name="ticket">private ownership receipt</string></map>'
+        )
+        with patch(
+            "tool.qa.fq9.ports.verify_artifact",
+            side_effect=AssertionError("APK tools after retained ticket"),
+        ):
+            with self.assertRaisesRegex(DriverFailure, "setup_active_or_unknown"):
+                p.install_update(None)
+        self.assertFalse(p.mutated)
+        p.private_bytes = lambda path: (
+            b'{"state":"done"}' if path.endswith("setup.json") else b"<map/>"
+        )
+        p.require_idle_setup()
 
     def test_install_update_is_only_replace_downgrade_and_rechecks_artifact(self):
         p = self.port()
@@ -261,6 +370,93 @@ class PortTests(unittest.TestCase):
     def test_http_redirect_cannot_forward_runtime_credential(self):
         with self.assertRaisesRegex(DriverFailure, "protocol_response_invalid"):
             _NoRedirect().redirect_request(None, None, 302, "", {}, "https://evil.test")
+
+    def test_update_readiness_retries_for_app_startup_and_refreshes_transport(self):
+        p = self.port()
+        p._socket = "old"
+        attempts, closes = [], []
+        p.close_protocol = lambda: closes.append(p._socket)
+
+        def histories():
+            attempts.append(len(attempts))
+            if len(attempts) < 16:
+                p._socket = "stale"
+                raise DriverFailure("app_managed_engine_unavailable")
+            return {"fixture": "digest"}
+
+        p._history_digests = histories
+        p.private_bytes = lambda path: (
+            b"token"
+            if path == "/sentinel"
+            else b"secure"
+            if "FlutterSecureStorage" in path
+            else ObservationTests().prefs().encode()
+        )
+        profiles, preferences = profile_projection(ObservationTests().prefs())
+        snapshot = dict(
+            path="/sentinel",
+            token="token",
+            profiles=profiles,
+            preferences=preferences,
+            secure=hashlib.sha256(b"secure").digest(),
+            histories={"fixture": "digest"},
+        )
+        clock = [0]
+
+        def sleep(seconds):
+            clock[0] += seconds
+
+        with (
+            patch("tool.qa.fq9.ports.time.monotonic", side_effect=lambda: clock[0]),
+            patch("tool.qa.fq9.ports.time.sleep", side_effect=sleep),
+        ):
+            self.assertTrue(all(p.verify_preservation(snapshot).values()))
+        self.assertEqual(len(attempts), 16)
+        self.assertEqual(len(closes), 16)
+        self.assertIsNone(p._socket)
+
+    def test_update_readiness_deadline_is_bounded(self):
+        p = self.port()
+        p.close_protocol = lambda: None
+        p._history_digests = lambda: (_ for _ in ()).throw(
+            DriverFailure("protocol_response_invalid")
+        )
+        clock = [0]
+
+        def sleep(seconds):
+            clock[0] += seconds
+
+        with (
+            patch("tool.qa.fq9.ports.time.monotonic", side_effect=lambda: clock[0]),
+            patch("tool.qa.fq9.ports.time.sleep", side_effect=sleep),
+        ):
+            with self.assertRaisesRegex(DriverFailure, "protocol_response_invalid"):
+                p.verify_preservation({})
+        self.assertEqual(clock[0], 90)
+
+    def test_oc2_stable_health_falls_back_only_for_exact_404(self):
+        from .runtime import ProtocolHTTPFailure
+
+        for status in (404, 401, 503):
+            p = self.port()
+            p._forward, p._password = 40000, b"private"
+            calls = []
+
+            def protocol(method, path):
+                calls.append(path)
+                if path == "/api/health":
+                    raise ProtocolHTTPFailure(status)
+                return {"version": "2.0.10"}
+
+            p.protocol = protocol
+            if status == 404:
+                p._connect("opencode2")
+                self.assertEqual(p._runtime_version, "2.0.10")
+                self.assertEqual(calls, ["/api/health", "/api/info"])
+            else:
+                with self.assertRaises(DriverFailure):
+                    p._connect("opencode2")
+                self.assertEqual(calls, ["/api/health"])
 
     def live(
         self,

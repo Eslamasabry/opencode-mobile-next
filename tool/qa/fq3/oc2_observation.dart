@@ -19,6 +19,68 @@ class Oc2ProbeObservation {
   final String _directory;
   String _stage = 'create';
   String? _model;
+  final _retainedCards = <String, int>{
+    'retainedShowCallCount': 0,
+    'retainedShowVersionValidCount': 0,
+    'retainedShowIDValidCount': 0,
+    'retainedShowTopLevelConfirmCount': 0,
+    'retainedShowNestedAskCount': 0,
+    'retainedShowWrappedArgumentsCount': 0,
+    'retainedShowHelperRejectedCount': 0,
+  };
+
+  /// Caller supplies fresh HTTP messages from its exact owned session.
+  /// Preserve only fixed counts, never card text, IDs or arbitrary error data.
+  void recordRetainedCardCalls(List<Map<String, dynamic>> messages) {
+    void add(String key) {
+      if (_retainedCards[key]! < _countLimit) {
+        _retainedCards[key] = _retainedCards[key]! + 1;
+      }
+    }
+
+    for (final message in messages) {
+      final content = message['content'];
+      if (message['type'] != 'assistant' || content is! List) {
+        continue;
+      }
+      for (final call in content.whereType<Map>()) {
+        final state = call['state'];
+        if (call['type'] != 'tool' ||
+            call['name'] != 'oc-ui_show' ||
+            state is! Map) {
+          continue;
+        }
+        add('retainedShowCallCount');
+        final input = state['input'];
+        if (input is Map) {
+          if (input['v'] == 1) {
+            add('retainedShowVersionValidCount');
+          }
+          if (input['id'] == 'fq3-confirm') {
+            add('retainedShowIDValidCount');
+          }
+          final ask = input['ask'];
+          if (ask is Map && ask['kind'] == 'confirm') {
+            add('retainedShowTopLevelConfirmCount');
+          }
+          final body = input['body'];
+          if (body is List &&
+              body.whereType<Map>().any((node) => node.containsKey('ask'))) {
+            add('retainedShowNestedAskCount');
+          }
+          if (input['arguments'] is Map) {
+            add('retainedShowWrappedArgumentsCount');
+          }
+        }
+        final error = state['error'];
+        if (state['status'] == 'error' &&
+            error is Map &&
+            error['message'] == 'Agent card unavailable or invalid.') {
+          add('retainedShowHelperRejectedCount');
+        }
+      }
+    }
+  }
 
   static const _stages = {
     'create',
@@ -87,6 +149,12 @@ class Oc2ProbeObservation {
       for (final counter in _eventCounters.values) counter: 0,
       'http503Retries': 0,
       'terminalCount': 0,
+      'providerNoRouteCount': 0,
+      'modelUnavailableCount': 0,
+      'providerAuthCount': 0,
+      'probeCardNestedAskCount': 0,
+      'probeCardTopLevelConfirmCount': 0,
+      'cardHelperRejectedCount': 0,
     };
     void increment(String counter) {
       final current = counts[counter]!;
@@ -100,8 +168,8 @@ class Oc2ProbeObservation {
       final location = event['location'];
       if (data is! Map ||
           data['sessionID'] != sessionID ||
-          location is! Map ||
-          location['directory'] != _directory) {
+          (event.containsKey('location') &&
+              (location is! Map || location['directory'] != _directory))) {
         continue;
       }
       final type = event['type'];
@@ -113,16 +181,51 @@ class Oc2ProbeObservation {
         continue;
       }
       increment(counter);
+      if (type == 'session.tool.called') {
+        final input = data['input'];
+        if (input is Map && input['v'] == 1 && input['id'] == 'fq3-confirm') {
+          final ask = input['ask'];
+          if (ask is Map && ask['kind'] == 'confirm') {
+            increment('probeCardTopLevelConfirmCount');
+          }
+          final body = input['body'];
+          if (body is List &&
+              body.whereType<Map>().any((node) => node.containsKey('ask'))) {
+            increment('probeCardNestedAskCount');
+          }
+        }
+      }
+      if (type == 'session.tool.failed') {
+        final error = data['error'];
+        if (error is Map &&
+            error['message'] == 'Agent card unavailable or invalid.') {
+          increment('cardHelperRejectedCount');
+        }
+      }
       if (type == 'session.execution.succeeded' ||
           type == 'session.execution.failed' ||
           type == 'session.execution.interrupted') {
         increment('terminalCount');
       }
+      if (type == 'session.execution.failed' ||
+          type == 'session.retry.scheduled') {
+        final error = data['error'];
+        if (error is Map && error['type'] == 'provider.no-route') {
+          increment('providerNoRouteCount');
+          final message = error['message'];
+          if (message is String && message.startsWith('Model unavailable: ')) {
+            increment('modelUnavailableCount');
+          }
+        }
+        if (error is Map && error['type'] == 'provider.auth') {
+          increment('providerAuthCount');
+        }
+      }
       if (type == 'session.retry.scheduled' && _isHttp503(data)) {
         increment('http503Retries');
       }
     }
-    return {'stage': _stage, 'model': ?_model, ...counts};
+    return {'stage': _stage, 'model': ?_model, ...counts, ..._retainedCards};
   }
 
   static bool _isHttp503(Map<dynamic, dynamic> data) {

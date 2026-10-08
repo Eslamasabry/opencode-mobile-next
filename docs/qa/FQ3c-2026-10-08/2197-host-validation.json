@@ -1,0 +1,13 @@
+{
+  "base": "9485f0c7c7c39e721d50fb036a76ae77596d14f0",
+  "fq9TestsPassed": 90,
+  "focusedDartTestsPassed": 49,
+  "focusedAnalyzerClean": true,
+  "serialMachineLock": true,
+  "fullSuiteRun": false,
+  "buildRun": false,
+  "redProofs": [
+    "2197-observation-red.txt",
+    "2197-package-red.txt"
+  ]
+}

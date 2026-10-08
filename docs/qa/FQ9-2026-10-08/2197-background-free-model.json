@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "runID": "fq9-20261009-live-b",
+  "case": "background",
+  "candidateBuild": 2197,
+  "sourceRevision": "83f8247b55e23c6053e5fbf3d835990a0c5a7429",
+  "oneContinuousReservation": true,
+  "promptSentThroughAppUI": true,
+  "readinessAttempt": 2,
+  "model": "opencode/big-pickle",
+  "state": "fail",
+  "normalRestored": true,
+  "code": "live_fixture_not_ready",
+  "deviceQualified": false
+}

@@ -1,7 +1,8 @@
-"""Read-only app-managed runtime observations and exact owned-turn cleanup.
+"""App-managed runtime observations, settled fixture writes and owned cleanup.
 
 OC1 is the live-survival scope; OC2 HTTP reads support static preservation only.
-No server start, HTTP prompts, provider config reads or credential persistence.
+Only the upgrade seeder posts a no-reply fixture; live survival never posts a
+prompt. No server start, provider config reads or credential persistence.
 """
 
 import base64
@@ -25,6 +26,14 @@ FILES = f"/data/user/0/{PACKAGE}/files"
 ID_PATTERN = r"[A-Za-z0-9_-]{1,100}"
 FGS = PACKAGE + "/.BackgroundConnectionService"
 BUILTIN_FGS = PACKAGE + "/.BuiltinServerService"
+
+
+class ProtocolHTTPFailure(DriverFailure):
+    """Retain only HTTP status internally, never response bodies or headers."""
+
+    def __init__(self, status):
+        super().__init__("protocol_response_invalid")
+        self.status = status
 
 
 class AndroidRuntimeMixin:
@@ -113,9 +122,15 @@ class AndroidRuntimeMixin:
             if not forwarded.isdigit() or not 1024 <= int(forwarded) <= 65535:
                 raise DriverFailure("forward_failed")
             self._forward = int(forwarded)
-        health = self.protocol(
-            "GET", "/api/health" if engine == "opencode2" else "/global/health"
-        )
+        try:
+            health = self.protocol(
+                "GET", "/api/health" if engine == "opencode2" else "/global/health"
+            )
+        except ProtocolHTTPFailure as failure:
+            if engine != "opencode2" or failure.status != 404:
+                raise
+            info = self.protocol("GET", "/api/info")
+            health = {"healthy": True, **info} if type(info) is dict else None
         version = health.get("version") if type(health) is dict else None
         if (
             type(health) is not dict
@@ -129,7 +144,7 @@ class AndroidRuntimeMixin:
             raise DriverFailure("app_managed_engine_unavailable")
         self._runtime_version = version
 
-    def protocol(self, method, path, *, query=None):
+    def protocol(self, method, path, *, query=None, body=None):
         if self._forward is None or self._password is None:
             raise DriverFailure("protocol_unavailable")
         url = f"http://127.0.0.1:{self._forward}{path}"
@@ -137,7 +152,13 @@ class AndroidRuntimeMixin:
             url += "?" + urllib.parse.urlencode(query)
         header = base64.b64encode(b"opencode:" + self._password).decode("ascii")
         request = urllib.request.Request(
-            url, method=method, headers={"Authorization": "Basic " + header}
+            url,
+            method=method,
+            data=json.dumps(body).encode() if body is not None else None,
+            headers={
+                "Authorization": "Basic " + header,
+                "Content-Type": "application/json",
+            },
         )
         try:
             # No env proxy or redirect may receive the in-memory credential.
@@ -151,6 +172,10 @@ class AndroidRuntimeMixin:
             return json.loads(raw)
         except DriverFailure:
             raise
+        except urllib.error.HTTPError as error:
+            status = error.code
+            error.close()
+            raise ProtocolHTTPFailure(status) from None
         except (OSError, ValueError, urllib.error.URLError):
             raise DriverFailure("protocol_response_invalid") from None
 

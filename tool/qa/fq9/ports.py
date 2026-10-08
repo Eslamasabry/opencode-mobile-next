@@ -77,6 +77,8 @@ FAIL_CODES = frozenset(
         "fresh_readback_failed",
         "normal_restore_identity_mismatch",
         "app_launch_failed",
+        "fixture_project_unavailable",
+        "fixture_seed_invalid",
     )
 )
 
@@ -208,10 +210,18 @@ class AndroidPorts(AndroidRuntimeMixin):
         listing = self.text(
             "shell", "cmd", "package", "list", "packages", "--user", "0", "-U", PACKAGE
         )
-        match = re.fullmatch("package:" + re.escape(PACKAGE) + r" uid:(\d+)", listing)
-        if not match or int(match[1]) < 10000:
+        matches = [
+            match
+            for row in listing.splitlines()
+            if (
+                match := re.fullmatch(
+                    "package:" + re.escape(PACKAGE) + r" uid:(\d+)", row
+                )
+            )
+        ]
+        if len(matches) != 1 or int(matches[0][1]) < 10000:
             raise DriverFailure("installed_identity_unavailable")
-        self._uid = int(match[1])
+        self._uid = int(matches[0][1])
         path = self.text("shell", "pm", "path", "--user", "0", PACKAGE)
         if not re.fullmatch(r"package:/data/app/[^\s\x00]+/base\.apk", path):
             raise DriverFailure("installed_apk_path_invalid")
@@ -286,6 +296,16 @@ class AndroidPorts(AndroidRuntimeMixin):
                 raise DriverFailure("setup_active_or_unknown") from None
             if state not in ("done", "cancelled", "interrupted", "failed", "idle"):
                 raise DriverFailure("setup_active_or_unknown")
+        writer = BASE + "/shared_prefs/builtin_component_writer.xml"
+        if self.exists(writer):
+            try:
+                values = ET.fromstring(self.private_bytes(writer))
+                if values.tag != "map" or any(
+                    entry.get("name") == "ticket" for entry in values
+                ):
+                    raise DriverFailure("setup_active_or_unknown")
+            except ET.ParseError:
+                raise DriverFailure("setup_active_or_unknown") from None
 
     def install_update(self, artifact):
         self.require_idle_setup()
@@ -293,6 +313,33 @@ class AndroidPorts(AndroidRuntimeMixin):
         # Preserve full app data and refuse to select/remove the baseline.
         self.mutated = True  # even an interrupted package-manager call may act
         self.adb("install", "-r", "-d", str(artifact.apk), timeout=180)
+
+    def prepare_fixture_project(self):
+        """Create only under the app's backing directory for /root/projects.
+
+        The guest mount hides rootfs/root/projects. Writing there on the host
+        manufactures a legacy/persistent collision on the next app launch.
+        Require the app-prepared backing root; never create a legacy fallback.
+        """
+        if (
+            not self.locked
+            or self._uid is None
+            or not re.fullmatch(r"fq9-[A-Za-z0-9_-]{1,80}", self.run_id)
+        ):
+            raise DriverFailure("fixture_project_unavailable")
+        projects = FILES + "/projects"
+        fixture = projects + "/" + self.run_id
+        self.mutated = True  # interrupted mkdir may act; normal restore still runs
+        result = self.as_app(
+            f"[ ! -L {shlex.quote(projects)} ] && "
+            f"[ -d {shlex.quote(projects)} ] && "
+            f'[ "$(stat -c %u {shlex.quote(projects)})" = {self._uid} ] || exit 71; '
+            f"umask 077; mkdir {shlex.quote(fixture)} || exit 71; "
+            "printf fq9_project_created"
+        )
+        if result != b"fq9_project_created":
+            raise DriverFailure("fixture_project_unavailable")
+        return "/root/projects/" + self.run_id
 
     def install_fresh(self, artifact):
         snapshot = self.fresh_snapshot()
@@ -420,15 +467,21 @@ class AndroidPorts(AndroidRuntimeMixin):
         self.close_protocol()
         self._socket = None  # an APK update legitimately restarts its server
         last = None
-        for _ in range(12):
+        deadline = time.monotonic() + 90
+        while True:
             try:
                 histories = self._history_digests()
                 break
             except DriverFailure as failure:
                 last = failure
-                time.sleep(1)
-        else:
-            raise last
+                # An updated runtime may rotate its listener and password while
+                # booting. Refresh only here; live dwell identity stays fixed.
+                self.close_protocol()
+                self._socket = None
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise last
+                time.sleep(min(1, remaining))
         profiles, preferences = profile_projection(
             self.private_bytes(BASE + "/shared_prefs/FlutterSharedPreferences.xml")
         )

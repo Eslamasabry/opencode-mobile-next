@@ -168,6 +168,81 @@ class RunTests(unittest.TestCase):
             fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
         return result
 
+    def test_seed_receipt_uses_exact_baseline_and_is_saved_privately_under_lock(self):
+        device, calls = self.fake()
+        self.args.seed_history_receipt = self.root / "private-receipt.json"
+        previous = self.artifacts["previous"]
+        device.installed_identity = lambda: dict(
+            build=previous.build,
+            version=previous.version,
+            sha256=previous.sha256,
+            signer=previous.signer,
+        )
+        receipt = dict(
+            engine="opencode",
+            directory="/root/projects/fq9-fixture",
+            sessions=[dict(id="ses_1", title="fq9-fixture-retained")],
+        )
+
+        def seed(port, save):
+            self.assertTrue(port.locked)
+            calls.append("seed")
+            save(receipt)
+            port.history = receipt
+
+        with patch.object(run.fixture, "seed_history_fixture", side_effect=seed):
+            result = self.locked(device)
+        self.assertTrue(result["historySeeded"])
+        self.assertTrue(result["fixtureUsesAppProjectBacking"])
+        self.assertEqual(
+            json.loads(self.args.seed_history_receipt.read_text()), receipt
+        )
+        self.assertEqual(self.args.seed_history_receipt.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(calls, ["ready", "seed", "close", "restore"])
+
+    def test_seed_never_manufactures_a_previous_baseline(self):
+        device, calls = self.fake()
+        self.args.seed_history_receipt = self.root / "private-receipt.json"
+        device.installed_identity = lambda: dict(
+            build=2197, version="1.2.0", sha256="a" * 64, signer=LOCAL_SIGNER
+        )
+        with patch.object(
+            run.fixture,
+            "seed_history_fixture",
+            side_effect=AssertionError("seeded modern baseline"),
+        ):
+            result = self.locked(device)
+        self.assertEqual(result["code"], "upgrade_previous_mismatch")
+        self.assertFalse(self.args.seed_history_receipt.exists())
+
+    def test_invalid_seed_arguments_refuse_before_device_or_apk_tools(self):
+        variants = [
+            ["--case", "background"],
+            ["--case", "upgrade", "--session-receipt", "/unused"],
+        ]
+        for variant in variants:
+            with (
+                patch.object(
+                    run.ports, "verify_artifact", side_effect=AssertionError("APK tool")
+                ),
+                patch.object(run, "run_locked", side_effect=AssertionError("device")),
+                contextlib.redirect_stdout(io.StringIO()) as output,
+            ):
+                self.assertEqual(
+                    run.main(
+                        variant
+                        + [
+                            "--execute",
+                            "--seed-history-receipt",
+                            str(self.root / "receipt.json"),
+                        ]
+                    ),
+                    1,
+                )
+            self.assertEqual(
+                json.loads(output.getvalue())["code"], "fixture_seed_arguments_invalid"
+            )
+
     def test_success_restores_normal_and_writes_evidence_inside_lock(self):
         device, calls = self.fake()
         result = self.locked(device)

@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "checks": [
+    {
+      "command": [
+        "tool/qa/machine_lock.sh",
+        "test",
+        "--",
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tool/qa/fq9",
+        "-t",
+        "."
+      ],
+      "passed": true,
+      "testCount": 94
+    },
+    {
+      "command": [
+        "ruff",
+        "format",
+        "--check",
+        "--target-version",
+        "py310",
+        "tool/qa/fq9"
+      ],
+      "passed": true
+    },
+    {
+      "command": [
+        "ruff",
+        "check",
+        "--select",
+        "F,E9",
+        "tool/qa/fq9"
+      ],
+      "passed": true
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "passed": true
+    }
+  ],
+  "driverFilesSha256": {
+    "ports.py": "8c41addbbd62147eb9548a0a554fee1786cf785029c2ee9fbc0606bfa0cdbf4a",
+    "runtime.py": "f9fa2507344470dfacb4c98ad125869e2c839221235edc06825fe6a1c0b6ec55",
+    "test_ports.py": "f4d68570e9219abbb55b263cc0785ab6944e4c640f0c52b21e755eb09d42ef12"
+  },
+  "productionChanged": false,
+  "apkBuildRun": false,
+  "deviceGateComplete": false,
+  "backgroundDwellStarted": false
+}

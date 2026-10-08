@@ -527,7 +527,7 @@ class _Oc2Probe {
       if (allow) {
         run.require(
           wire.events.any((e) => ownedToolEvent(e, 'session.tool.success')) &&
-              finished.any((t) => _toolOutput(t).trim() == marker),
+              finished.any((t) => oc2ShellOutputVerified(t['state'], marker)),
           'permission_command_output_missing',
         );
       } else {
@@ -671,6 +671,7 @@ class _Oc2Probe {
       'FQ3_CARD_CONFIRMED.',
     );
     checkpoint('await_tool');
+    observation?.recordRetainedCardCalls(messages);
     Map<String, dynamic>? tool;
     for (final message in messages.where(_completedAssistant)) {
       if (!_sameModel(message['model'], _ref(model))) continue;
@@ -757,6 +758,31 @@ String _toolOutput(Map<String, dynamic> tool) =>
         .where((item) => item['type'] == 'text' && item['text'] is String)
         .map((item) => item['text'] as String)
         .join('\n');
+
+/// Stable ShellTool returns stdout and a separate exit notice, plus metadata.
+/// Do not flatten the notice into stdout or accept a marker in arbitrary text.
+bool oc2ShellOutputVerified(Object? value, String marker) {
+  final state = _map(value);
+  final content = state['content'];
+  final metadata = _map(state['metadata']);
+  if (state['status'] != 'completed' ||
+      content is! List ||
+      content.length != 2 ||
+      metadata['exit'] != 0 ||
+      metadata['truncated'] != false ||
+      metadata['timeout'] == true ||
+      metadata['status'] == 'running') {
+    return false;
+  }
+  final stdout = _map(content[0]);
+  final notice = _map(content[1]);
+  return stdout['type'] == 'text' &&
+      stdout['text'] is String &&
+      (stdout['text'] as String).trim() == marker &&
+      notice['type'] == 'text' &&
+      notice['text'] == 'Command exited with code 0.';
+}
+
 bool _completedAssistant(Map<String, dynamic> message) =>
     message['type'] == 'assistant' &&
     message['error'] == null &&

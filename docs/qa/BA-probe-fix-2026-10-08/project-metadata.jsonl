@@ -1,0 +1,7 @@
+{"location": "files", "kind": "directory", "empty": false}
+{"location": "cache", "kind": "directory", "empty": false}
+{"location": "projects", "kind": "directory", "empty": false}
+{"location": "linux", "kind": "directory", "empty": false}
+{"location": "rootfs", "kind": "directory", "empty": false}
+{"location": "guestRoot", "kind": "directory", "empty": false}
+{"location": "legacyProjects", "kind": "directory", "empty": false}

@@ -862,7 +862,10 @@ class _Wire extends Fq3Wire {
         if (reply == 'once')
           'content': [
             {'type': 'text', 'text': 'FQ3_ALLOW'},
+            if (stable) {'type': 'text', 'text': 'Command exited with code 0.'},
           ],
+        if (reply == 'once' && stable)
+          'metadata': {'exit': 0, 'truncated': false},
         if (reply == 'reject')
           'error': {'type': 'aborted', 'message': 'Permission rejected.'},
       };
@@ -880,7 +883,9 @@ class _Wire extends Fq3Wire {
             if (reply == 'once')
               'content': [
                 {'type': 'text', 'text': 'FQ3_ALLOW'},
+                {'type': 'text', 'text': 'Command exited with code 0.'},
               ],
+            if (reply == 'once') 'metadata': {'exit': 0, 'truncated': false},
             if (reply == 'reject')
               'error': {'type': 'aborted', 'message': 'Permission rejected.'},
           },

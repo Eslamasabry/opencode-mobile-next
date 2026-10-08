@@ -1,0 +1,10 @@
+{
+  "candidateBuild": 2197,
+  "candidateSha256": "03ae604a6a1ed06739091d75770a30a04cbc7436e9313f5d37a19f20fdff0eea",
+  "signerSha256": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c",
+  "installedUID": 10217,
+  "installedMatchesCandidate": true,
+  "device": "emulator-5554",
+  "dataCleared": false,
+  "apkInstalled": false
+}

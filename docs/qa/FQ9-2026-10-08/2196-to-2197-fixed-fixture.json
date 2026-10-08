@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "case": "upgrade",
+  "runID": "fq9-20261009-retained-b",
+  "sourceRevision": "83f8247b55e23c6053e5fbf3d835990a0c5a7429",
+  "previousBuild": 2196,
+  "candidateBuild": 2197,
+  "baselineSetupAuthorized": true,
+  "state": "pass",
+  "manualChecksPending": true,
+  "deviceQualified": false,
+  "normalRestored": true,
+  "oneContinuousReservation": true,
+  "baselineServerVersion": "1.18.32",
+  "fixtureUsesAppProjectBacking": true,
+  "driver": {
+    "state": "pass",
+    "code": "verified",
+    "facts": {
+      "sentinel": true,
+      "profiles": true,
+      "preferences": true,
+      "secureStorage": true,
+      "histories": true,
+      "uidRetained": true,
+      "publishedBaseline": false,
+      "keystoreSignInVerified": false,
+      "semanticHistoryVerified": false
+    }
+  }
+}
