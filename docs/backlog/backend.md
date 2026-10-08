@@ -69,7 +69,7 @@ Read-only reviews of the Flutter client's API adapters, domain and persisted sta
 - **Evidence:** `lib/api2/gateway_operations.dart`, `completeIntegrationOAuth`, removes `_oauthAttemptIntegration[attemptID]` immediately after POST success. `lib/ui/screens/library/integrations_screen.dart`, `_enterOAuthCode`, immediately calls `integrationOAuthStatus`, whose `_attemptIntegration` now throws that the attempt is no longer tracked. The captured OAuth complete route returns 204 and stores the credential; the status read is part of the existing UI flow.
 - **User impact:** A successful code-based provider connection is shown as a failed/abandoned sign-in and does not finish refreshing the model catalog.
 - **Implementation:** Keep the attempt's integration context through its required status read. If retiring it at a terminal status, cache that terminal result long enough for the existing completion/retry path. Cancel should still retire pending state. Do not alter the v1 completion contract.
-- **Minimal verification:** Existing code-OAuth widget scenario in `test/library_integrations_test.dart`; route a start → complete (204) → status (complete) sequence through the real v2 adapter and assert catalog refresh remains reachable.
+- **Minimal verification:** Existing code-OAuth widget scenario in `test/library_integrations_*_test.dart`; route a start → complete (204) → status (complete) sequence through the real v2 adapter and assert catalog refresh remains reachable.
 
 ## BE-008 — Keep provider and MCP actions in the displayed location
 
