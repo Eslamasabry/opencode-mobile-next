@@ -1,0 +1,30 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: runtime switch rechecks cards for the shared owner
+00:00 +0 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: runtime switch rechecks cards for the shared owner [E]
+  Expected: an object with length of <2>
+    Actual: [
+              ({_Set<AgentToolAdapter> agents, bool enabled, String profile}):(agents: {AgentToolAdapter(claude), AgentToolAdapter(openCode1), AgentToolAdapter(openCode2)}, enabled: true, profile: phone)
+            ]
+     Which: has length of <1>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/gen_ui_controller_test.dart 175:5              main.<fn>
+
+00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:01 +0 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: (setUpAll)
+00:01 +0 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone check retries a failed live cards verification
+00:01 +0 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone check retries a failed live cards verification [E]
+  Expected: <2>
+    Actual: <1>
+
+  package:matcher                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18           expect
+  test/support/phone_agents_check_publication_tests.dart 78:5  _phoneCheckPublicationTests.<fn>
+
+00:01 +0 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: (tearDownAll)
+00:01 +0 -2: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: runtime switch rechecks cards for the shared owner
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone check retries a failed live cards verification

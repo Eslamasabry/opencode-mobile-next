@@ -1,0 +1,65 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: runtime switch rechecks cards for the shared owner
+00:00 +0 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: runtime switch rechecks cards for the shared owner [E]
+  Expected: an object with length of <2>
+    Actual: [
+              ({_Set<AgentToolAdapter> agents, bool enabled, String profile}):(agents: {AgentToolAdapter(claude), AgentToolAdapter(openCode1), AgentToolAdapter(openCode2)}, enabled: true, profile: phone)
+            ]
+     Which: has length of <1>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/gen_ui_controller_test.dart 188:5              main.<fn>
+
+00:00 +0 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: retired runtime cannot publish its pending cards qualification
+00:00 +0 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: retired runtime cannot publish its pending cards qualification [E]
+  Expected: an object with length of <2>
+    Actual: [
+              ({_Set<AgentToolAdapter> agents, bool enabled, String profile}):(agents: {AgentToolAdapter(claude), AgentToolAdapter(openCode1), AgentToolAdapter(openCode2)}, enabled: true, profile: phone)
+            ]
+     Which: has length of <1>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/gen_ui_controller_test.dart 215:7              main.<fn>
+
+00:00 +0 -2: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:03 +0 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: (setUpAll)
+00:03 +0 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: finished phone check publishes fresh qualification before the next agent
+00:03 +0 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: finished phone check publishes fresh qualification before the next agent [E]
+  Expected: PhoneAgentStatus:<PhoneAgentStatus.ready>
+    Actual: PhoneAgentStatus:<PhoneAgentStatus.needsQualification>
+
+  package:matcher                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18           expect
+  test/support/phone_agents_check_publication_tests.dart 52:7  _phoneCheckPublicationTests.<fn>
+
+00:03 +0 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone check retries a failed live cards verification
+00:03 +0 -4: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone check retries a failed live cards verification [E]
+  Expected: <2>
+    Actual: <1>
+
+  package:matcher                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18           expect
+  test/support/phone_agents_check_publication_tests.dart 80:5  _phoneCheckPublicationTests.<fn>
+
+00:03 +0 -4: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone checks leave Cards explicitly off
+00:03 +1 -4: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone check completion cannot republish a retired host result
+00:03 +1 -5: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone check completion cannot republish a retired host result [E]
+  Expected: null
+    Actual: <Instance of 'AgentPhoneCheckResult'>
+
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test/support/phone_agents_check_publication_tests.dart 114:7  _phoneCheckPublicationTests.<fn>
+
+00:03 +1 -5: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: failed phone recheck never borrows the earlier ready result
+00:03 +2 -5: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: (tearDownAll)
+00:03 +2 -5: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: retired runtime cannot publish its pending cards qualification
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: runtime switch rechecks cards for the shared owner
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: finished phone check publishes fresh qualification before the next agent
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone check completion cannot republish a retired host result
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone check retries a failed live cards verification

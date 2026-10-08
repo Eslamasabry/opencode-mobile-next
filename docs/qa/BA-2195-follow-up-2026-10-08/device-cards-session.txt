@@ -1,0 +1,33 @@
+{"phase": "server-ready-before-proof", "claude": [], "fx": [], "cards": []}
+{"phase": "phone-runtime-before-switch", "claude": [], "fx": [], "cards": []}
+{"phase": "switch-OpenCode 1-0", "claude": [], "fx": [], "cards": []}
+{"phase": "switch-OpenCode 1-1", "claude": [], "fx": [], "cards": []}
+{"phase": "switch-OpenCode 1-2", "claude": [], "fx": [], "cards": []}
+{"phase": "switch-OpenCode 1-3", "claude": [], "fx": [], "cards": []}
+{"phase": "switch-OpenCode 1-4", "claude": [], "fx": [], "cards": []}
+{"phase": "switch-OpenCode 1-5", "claude": [], "fx": [], "cards": []}
+{"phase": "switch-OpenCode 1-6", "claude": [], "fx": [], "cards": []}
+{"phase": "switch-OpenCode 1-7", "claude": [], "fx": [], "cards": []}
+{"phase": "switch-OpenCode 1-8", "claude": [], "fx": [], "cards": []}
+{"phase": "switch-OpenCode 1-9", "claude": [], "fx": [], "cards": []}
+{"phase": "switch-OpenCode 1-10", "claude": [], "fx": [], "cards": []}
+{"phase": "switch-OpenCode 1-11", "claude": [], "fx": [], "cards": []}
+{"phase": "switch-OpenCode 1-12", "claude": [], "fx": [], "cards": []}
+{"phase": "cards-after-switch-0", "claude": ["Claude Code\nReady", "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"], "fx": ["fx\nSign in needed", "Sign in to fx"], "cards": ["Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"]}
+{"phase": "cards-after-switch-1", "claude": ["Claude Code\nReady", "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"], "fx": ["fx\nSign in needed", "Sign in to fx"], "cards": ["Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"]}
+{"phase": "cards-after-switch-2", "claude": ["Claude Code\nReady", "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"], "fx": ["fx\nSign in needed", "Sign in to fx"], "cards": ["Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"]}
+{"phase": "cards-after-switch-3", "claude": ["Claude Code\nReady", "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"], "fx": ["fx\nSign in needed", "Sign in to fx"], "cards": ["Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"]}
+{"phase": "cards-after-switch-4", "claude": ["Claude Code\nReady", "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"], "fx": ["fx\nSign in needed", "Sign in to fx"], "cards": ["Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"]}
+{"phase": "cards-after-switch-5", "claude": ["Claude Code\nReady", "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"], "fx": ["fx\nSign in needed", "Sign in to fx"], "cards": ["Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"]}
+{"phase": "cards-after-switch-6", "claude": ["Claude Code\nReady", "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"], "fx": ["fx\nSign in needed", "Sign in to fx"], "cards": ["Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"]}
+{"phase": "cards-after-switch-7", "claude": ["Claude Code\nReady", "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"], "fx": ["fx\nSign in needed", "Sign in to fx"], "cards": ["Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"]}
+{"phase": "cards-after-switch-8", "claude": ["Claude Code\nReady", "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"], "fx": ["fx\nSign in needed", "Sign in to fx"], "cards": ["Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"]}
+{"phase": "cards-after-switch-9", "claude": ["Claude Code\nReady", "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"], "fx": ["fx\nSign in needed", "Sign in to fx"], "cards": ["Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"]}
+{"phase": "cards-after-switch-10", "claude": ["Claude Code\nReady", "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"], "fx": ["fx\nSign in needed", "Sign in to fx"], "cards": ["Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"]}
+{"phase": "cards-after-switch-11", "claude": ["Claude Code\nReady", "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"], "fx": ["fx\nSign in needed", "Sign in to fx"], "cards": ["Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"]}
+OC1 Cards did not reach qualified status after switch
+Traceback (most recent call last):
+  File "/tmp/ba2195_proof.py", line 130, in <module>
+    if not proved: raise RuntimeError('OC1 Cards did not reach qualified status after switch')
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: OC1 Cards did not reach qualified status after switch

@@ -1,0 +1,6 @@
+{
+  "boot": "1",
+  "bootanim": "running",
+  "data": "Filesystem       Size Used Avail Use% Mounted on\n/dev/block/dm-46 7.7G 6.5G  1.1G  86% /data/user/0",
+  "package": "Service package: found"
+}
