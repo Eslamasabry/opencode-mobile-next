@@ -1,0 +1,48 @@
+{
+  "runID": "fq3-20261008-settled",
+  "sourceRevision": "d0c007fb6a275da18798f747cf804813a106664d",
+  "attemptID": "attempt-1791433041135064-2528674",
+  "cleanupCode": null,
+  "engine": "opencode2",
+  "case": "abort",
+  "cliVersion": "2.0.10",
+  "observedVersion": "2.0.10",
+  "appUID": 10217,
+  "appBuild": 2195,
+  "results": {
+    "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "healthy": true,
+        "asserted": true
+      }
+    },
+    "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "created": true,
+        "asserted": true
+      }
+    },
+    "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "enabledModels": 84,
+        "selectedModelAvailable": true,
+        "asserted": true
+      }
+    },
+    "abort": {
+      "state": "fail",
+      "code": "timeout",
+      "facts": {}
+    }
+  },
+  "ownedSessions": [
+    "ses_ee63cdff1ffeP8pHNerO5d7pNM",
+    "ses_ee63cdd04ffeFX00zVlN4juhMx"
+  ]
+}

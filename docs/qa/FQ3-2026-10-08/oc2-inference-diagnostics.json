@@ -1,0 +1,37 @@
+{
+  "sourceRevision": "d0c007fb6a275da18798f747cf804813a106664d",
+  "appBuild": 2195,
+  "appUID": 10217,
+  "ownedHistoryDiagnostics": {
+    "stream": {
+      "messages": 4,
+      "userMessages": 1,
+      "completedAssistants": 0,
+      "assistantErrors": 0,
+      "pendingProviderUse": 0,
+      "otherPendingPermissions": 0,
+      "opencodeProviderAssistants": 1,
+      "zaiProviderAssistants": 0
+    },
+    "reconnect": {
+      "messages": 4,
+      "userMessages": 1,
+      "completedAssistants": 0,
+      "assistantErrors": 0,
+      "pendingProviderUse": 0,
+      "otherPendingPermissions": 0,
+      "opencodeProviderAssistants": 1,
+      "zaiProviderAssistants": 0
+    },
+    "model": {
+      "messages": 3,
+      "userMessages": 1,
+      "completedAssistants": 0,
+      "assistantErrors": 0,
+      "pendingProviderUse": 0,
+      "otherPendingPermissions": 0,
+      "opencodeProviderAssistants": 0,
+      "zaiProviderAssistants": 0
+    }
+  }
+}

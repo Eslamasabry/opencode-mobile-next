@@ -1,0 +1,18 @@
+Controlled local fixture: phaseManifest equality guard temporarily removed; restored afterward.
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_history_manifest_test.dart
+00:00 +0: same session counts with changed IDs invalidate prior history
+00:00 +0 -1: same session counts with changed IDs invalidate prior history [E]
+  Expected: throws <Instance of 'ProbeFailure'> with `fixed failure code`: 'history_binding_mismatch'
+    Actual: <Closure: () => void>
+     Which: returned <null>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/fq3_history_manifest_test.dart 99:5            main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_history_manifest_test.dart: same session counts with changed IDs invalidate prior history
+
+exit=1

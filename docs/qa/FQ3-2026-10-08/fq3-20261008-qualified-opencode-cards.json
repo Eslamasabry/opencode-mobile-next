@@ -1,0 +1,51 @@
+{
+  "runID": "fq3-20261008-qualified",
+  "sourceRevision": "18115d517e9d2dd7485fa1909d63a9a5b56f192b",
+  "attemptID": "attempt-1791431989573150-2488130",
+  "cleanupCode": null,
+  "engine": "opencode",
+  "case": "cards",
+  "cliVersion": "1.18.32",
+  "observedVersion": "1.18.32",
+  "appUID": 10217,
+  "appBuild": 2195,
+  "results": {
+    "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "healthy": true,
+        "asserted": true
+      }
+    },
+    "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "retained": true,
+        "asserted": true
+      }
+    },
+    "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "connectedModels": 18,
+        "asserted": true
+      }
+    },
+    "cards": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "cardsToolCall": true,
+        "answerReceipt": true,
+        "asserted": true
+      }
+    }
+  },
+  "ownedSessions": [
+    "ses_ee64e2f45ffeV1vZP24nwYRpgS",
+    "ses_ee64e18aeffeIob3RdOmMPu9DW"
+  ]
+}

@@ -49,7 +49,7 @@ Machine-readable copy: [agent-certification-matrix.json](agent-certification-mat
 - abort: pass — docs/qa/FQ2-2026-10-07/README.md
 - resume: pass — docs/qa/FQ2-2026-10-07/README.md
 - cards: pass — docs/qa/agent-tools-2026-10-07/README.md #5
-- images: pass — docs/qa/agent-tools-2026-10-07/README.md #5 (photo card)
+- images: pass — docs/qa/agent-tools-2026-10-07/README.md#5
 
 **OpenCode 1**
 
@@ -91,3 +91,46 @@ Machine-readable copy: [agent-certification-matrix.json](agent-certification-mat
 ## How to fill a cell
 
 Run the scenario on a device, save a small JPG or log under `docs/qa/<item>-<date>/`, set the cell to `pass` with that path in the JSON, record agentVersion/helperVersion, then regenerate this table. A cell never turns `pass` from a unit test alone.
+
+## FQ3 protocol certification
+
+in-app Ubuntu protocol; no UI/restart/install qualification.
+
+These results apply only to the recorded emulator build and in-app runtime. They do not update BA4 cells or qualify UI, installation, app/server restart or other CPU architectures. protocolSwitch means fresh-client connection switching with both owned histories refetched, not app UI switching.
+
+| Agent | Expected | Observed | Build | Run | version | create | models | modelSwitch | stream | abort | reconnect | permissionAllow | permissionDeny | image | cards | protocolSwitch |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| OpenCode 1 | 1.18.32 | 1.18.32 | 2195 | fq3-20261008-settled | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| OpenCode 2 | 2.0.10 | 2.0.10 | 2195 | fq3-20261008-settled | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+FQ3 legend: ✅ protocol assertion passed · ❌ assertion failed or prerequisite missing.
+
+**OpenCode 1** — [fq3-20261008-settled](../qa/FQ3-2026-10-08/fq3-20261008-settled.json)
+
+- version: pass — `verified`; facts `{"asserted":true,"healthy":true}`
+- create: pass — `verified`; facts `{"asserted":true,"retained":true}`
+- models: pass — `verified`; facts `{"asserted":true,"connectedModels":18}`
+- stream: pass — `verified`; facts `{"asserted":true,"completedReply":true,"streamedDelta":true}`
+- reconnect: pass — `verified`; facts `{"asserted":true,"messages":2,"refetched":true}`
+- modelSwitch: pass — `verified`; facts `{"asserted":true,"selectionObserved":true}`
+- abort: fail — `oc1_after_abort_reply_mismatch`; facts `{}`
+- permissionAllow: pass — `verified`; facts `{"asserted":true,"replyObserved":true,"requestObserved":true}`
+- permissionDeny: pass — `verified`; facts `{"asserted":true,"replyObserved":true,"requestObserved":true}`
+- image: fail — `oc1_image_content_unverified`; facts `{}`
+- cards: pass — `verified`; facts `{"answerReceipt":true,"asserted":true,"cardsToolCall":true}`
+- protocolSwitch: pass — `verified`; facts `{"asserted":true,"bothHistoriesPreserved":true,"freshClients":true,"oc1Sessions":16,"oc2Sessions":16}`
+
+**OpenCode 2** — [fq3-20261008-settled](../qa/FQ3-2026-10-08/fq3-20261008-settled.json)
+
+- version: pass — `verified`; facts `{"asserted":true,"healthy":true}`
+- create: pass — `verified`; facts `{"asserted":true,"created":true}`
+- models: pass — `verified`; facts `{"asserted":true,"enabledModels":84,"selectedModelAvailable":true}`
+- stream: fail — `timeout`; facts `{}`
+- reconnect: fail — `timeout`; facts `{}`
+- modelSwitch: fail — `inference_execution_failed`; facts `{}`
+- abort: fail — `timeout`; facts `{}`
+- permissionAllow: fail — `timeout`; facts `{}`
+- permissionDeny: fail — `timeout`; facts `{}`
+- image: fail — `inference_execution_failed`; facts `{}`
+- cards: fail — `inference_execution_failed`; facts `{}`
+- protocolSwitch: pass — `verified`; facts `{"asserted":true,"bothHistoriesPreserved":true,"freshClients":true,"oc1Sessions":16,"oc2Sessions":16}`

@@ -178,7 +178,115 @@ const agentCertificationBundledJson = r'''{
      "evidence": null
     }
    },
-   "agentVersion": "1.18.32"
+   "agentVersion": "1.18.32",
+   "protocolCertification": {
+    "scope": "in-app Ubuntu protocol; no UI/restart/install qualification",
+    "expectedVersion": "1.18.32",
+    "observedVersion": "1.18.32",
+    "deviceBuild": 2195,
+    "runID": "fq3-20261008-settled",
+    "evidence": "docs/qa/FQ3-2026-10-08/fq3-20261008-settled.json",
+    "capabilities": {
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "healthy": true,
+       "asserted": true
+      }
+     },
+     "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "retained": true,
+       "asserted": true
+      }
+     },
+     "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "connectedModels": 18,
+       "asserted": true
+      }
+     },
+     "stream": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "streamedDelta": true,
+       "completedReply": true,
+       "asserted": true
+      }
+     },
+     "reconnect": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "refetched": true,
+       "messages": 2,
+       "asserted": true
+      }
+     },
+     "modelSwitch": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "selectionObserved": true,
+       "asserted": true
+      }
+     },
+     "abort": {
+      "state": "fail",
+      "code": "oc1_after_abort_reply_mismatch",
+      "facts": {}
+     },
+     "permissionAllow": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "requestObserved": true,
+       "replyObserved": true,
+       "asserted": true
+      }
+     },
+     "permissionDeny": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "requestObserved": true,
+       "replyObserved": true,
+       "asserted": true
+      }
+     },
+     "image": {
+      "state": "fail",
+      "code": "oc1_image_content_unverified",
+      "facts": {}
+     },
+     "cards": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "cardsToolCall": true,
+       "answerReceipt": true,
+       "asserted": true
+      }
+     },
+     "protocolSwitch": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "bothHistoriesPreserved": true,
+       "freshClients": true,
+       "oc1Sessions": 16,
+       "oc2Sessions": 16
+      }
+     }
+    }
+   }
   },
   {
    "id": "opencode2",
@@ -236,6 +344,92 @@ const agentCertificationBundledJson = r'''{
     "images": {
      "state": "untested",
      "evidence": null
+    }
+   },
+   "protocolCertification": {
+    "scope": "in-app Ubuntu protocol; no UI/restart/install qualification",
+    "expectedVersion": "2.0.10",
+    "observedVersion": "2.0.10",
+    "deviceBuild": 2195,
+    "runID": "fq3-20261008-settled",
+    "evidence": "docs/qa/FQ3-2026-10-08/fq3-20261008-settled.json",
+    "capabilities": {
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "healthy": true,
+       "asserted": true
+      }
+     },
+     "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "created": true,
+       "asserted": true
+      }
+     },
+     "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "enabledModels": 84,
+       "selectedModelAvailable": true,
+       "asserted": true
+      }
+     },
+     "stream": {
+      "state": "fail",
+      "code": "timeout",
+      "facts": {}
+     },
+     "reconnect": {
+      "state": "fail",
+      "code": "timeout",
+      "facts": {}
+     },
+     "modelSwitch": {
+      "state": "fail",
+      "code": "inference_execution_failed",
+      "facts": {}
+     },
+     "abort": {
+      "state": "fail",
+      "code": "timeout",
+      "facts": {}
+     },
+     "permissionAllow": {
+      "state": "fail",
+      "code": "timeout",
+      "facts": {}
+     },
+     "permissionDeny": {
+      "state": "fail",
+      "code": "timeout",
+      "facts": {}
+     },
+     "image": {
+      "state": "fail",
+      "code": "inference_execution_failed",
+      "facts": {}
+     },
+     "cards": {
+      "state": "fail",
+      "code": "inference_execution_failed",
+      "facts": {}
+     },
+     "protocolSwitch": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "bothHistoriesPreserved": true,
+       "freshClients": true,
+       "oc1Sessions": 16,
+       "oc2Sessions": 16
+      }
+     }
     }
    }
   },

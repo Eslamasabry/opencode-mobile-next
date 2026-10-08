@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "runID": "fq3-20261008-qualified",
+  "device": "emulator-5554",
+  "appBuild": 2195,
+  "sourceRevision": "18115d517e9d2dd7485fa1909d63a9a5b56f192b",
+  "startedAt": "2026-10-08T03:59:49.522191Z",
+  "scope": "phone-runtime",
+  "attestation": {
+    "runtime": "in-app-ubuntu",
+    "transport": "adb-forward",
+    "live": true,
+    "appUID": 10217,
+    "versionProbeUID": 10217,
+    "buildVerified": true,
+    "credentialSource": "runtime-launch-config"
+  },
+  "engines": {
+    "opencode": {
+      "expectedVersion": "1.18.32",
+      "observedVersion": "1.18.32",
+      "results": {
+        "version": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "healthy": true,
+            "asserted": true
+          }
+        },
+        "create": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "retained": true,
+            "asserted": true
+          }
+        },
+        "models": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "connectedModels": 18,
+            "asserted": true
+          }
+        },
+        "stream": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "streamedDelta": true,
+            "completedReply": true,
+            "asserted": true
+          }
+        },
+        "reconnect": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "refetched": true,
+            "messages": 2,
+            "asserted": true
+          }
+        },
+        "modelSwitch": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "selectionObserved": true,
+            "asserted": true
+          }
+        },
+        "abort": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "interrupted": true,
+            "usableAfterAbort": true,
+            "asserted": true
+          }
+        },
+        "permissionAllow": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "requestObserved": true,
+            "replyObserved": true,
+            "asserted": true
+          }
+        },
+        "permissionDeny": {
+          "state": "fail",
+          "code": "oc1_completion_timeout",
+          "facts": {}
+        },
+        "image": {
+          "state": "fail",
+          "code": "oc1_image_content_unverified",
+          "facts": {}
+        },
+        "cards": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "cardsToolCall": true,
+            "answerReceipt": true,
+            "asserted": true
+          }
+        }
+      }
+    },
+    "opencode2": {
+      "expectedVersion": "2.0.10",
+      "observedVersion": "2.0.10",
+      "results": {
+        "version": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "healthy": true,
+            "asserted": true
+          }
+        },
+        "create": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "created": true,
+            "asserted": true
+          }
+        },
+        "models": {
+          "state": "fail",
+          "code": "enabled_model_missing",
+          "facts": {}
+        },
+        "stream": {
+          "state": "fail",
+          "code": "model_prerequisite_missing",
+          "facts": {}
+        },
+        "reconnect": {
+          "state": "fail",
+          "code": "model_prerequisite_missing",
+          "facts": {}
+        },
+        "modelSwitch": {
+          "state": "fail",
+          "code": "model_prerequisite_missing",
+          "facts": {}
+        },
+        "abort": {
+          "state": "fail",
+          "code": "model_prerequisite_missing",
+          "facts": {}
+        },
+        "permissionAllow": {
+          "state": "fail",
+          "code": "model_prerequisite_missing",
+          "facts": {}
+        },
+        "permissionDeny": {
+          "state": "fail",
+          "code": "model_prerequisite_missing",
+          "facts": {}
+        },
+        "image": {
+          "state": "fail",
+          "code": "model_prerequisite_missing",
+          "facts": {}
+        },
+        "cards": {
+          "state": "fail",
+          "code": "model_prerequisite_missing",
+          "facts": {}
+        }
+      }
+    }
+  },
+  "protocolSwitch": {
+    "state": "fail",
+    "code": "nonempty_histories_missing",
+    "facts": {}
+  },
+  "evidence": "docs/qa/FQ3-2026-10-08/fq3-20261008-qualified.json"
+}
