@@ -315,3 +315,52 @@ Code-only follow-up checks during the renewed hold:
 - Changed Dart files were formatted with the pinned Dart and language3.10.
   The new native phase markers are source-only until go; the previous full
   analyzer checkpoint predates these last Dart additions.
+
+
+## Separate build GO and emulator authorization (2026-10-08)
+
+The coordinator lifted the build hold and delegated resume steps 2–5. The
+former normal-main2201 restore-first step is superseded: Claude owns the
+initial normal restoration using APK2195 from feat/genui-fe e2b3fe16, saved
+at /home/eslam/Storage/tmp/oc-apk-share/oc-2195.apk. Builds and checks use
+machine_lock; device sessions still await a separate EMULATOR GO.
+
+Every subsequent local QA run must retain one emulator flock through install,
+instrumentation, evidence and restoration. The restoration callback preflights
+the supplied owner APK's package/version2195/local signer/hash before any QA
+session, then installs it with adb -s emulator-5554 install -r -d inside the
+same flock. No normal release build or APK copy is needed. Normal launch must
+be proved after restoration; a failed restore keeps the overall receipt FAIL.
+
+This owner-authorized downgrade replaces the prior no-downgrade plan solely
+for restoration to the approved2195 APK. Never uninstall or change the signer.
+The strict seven-native/one-Flutter PASS parser remains unchanged. No device
+work or passing screenshot is claimed by this authorization update.
+
+Full pinned analyzer: no issues (15.9s). Focused host-native/contract tests:
+20 PASS serially through machine_lock. Fixture and fixed phase-reporting tests:
+6 PASS serially through machine_lock. Existing command/receipt Python tests:
+28 PASS. Detekt and the updated QA build follow once the shared build lock
+is available. No full-suite claim or CI execution.
+
+
+The native static checkpoint is now green (40cbde67): zero new findings with
+Temurin17, detekt1.23.8 and the unchanged baseline. Reverting the five corrected
+findings causes the real gate to fail; restored source passes again.
+
+Reusable owner restoration: tool/qa/bd9_normal_restore.py exposes
+prepare_restore(apk, expected_signer, receipt_path). It performs APK-only
+preflight before QA and returns a callback for run_device's existing same-flock
+finally path. The callback rejects changed hashes/wrong device prefixes,
+requires install -r -d Success, verifies installed version2195 and a live
+resumed MainActivity plus its first-frame marker within a bounded poll, and
+writes only categorical receipts. Synthetic image cleanup occurs after
+installation and cannot prevent restoration. Raw command output stays in
+memory. No builds or APK copies happen in this helper.
+
+Offline restoration tests:16 PASS; combined with command/receipt tests:44 PASS.
+Removing the authorized -d flag fails its regression (exit1), finally restored
+helper passes again. Existing callback tests already prove the emulator flock
+is held through restoration on both smoke success and failure.
+The helper is implemented/unit-verified; actual owner APK and device launch
+qualification still require the coordinator's file and EMULATOR GO.
