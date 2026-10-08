@@ -147,6 +147,35 @@ void main() {
       await shot(tester, 'crash_reports_off_with_errors', light: light);
     });
 
+    testWidgets('recent error opened to its Details ($theme)', (tester) async {
+      diagnostics
+        ..record(
+          StateError('Render failed while laying out the list'),
+          StackTrace.fromString('#0 build (lib/ui/chat.dart:42:3)'),
+          source: 'flutter',
+          at: DateTime(2026, 10, 7, 9, 41, 5),
+        )
+        ..record(
+          StateError('Event stream closed before the reply'),
+          null,
+          source: 'sse',
+          at: DateTime(2026, 10, 7, 9, 44, 9),
+        );
+      await shot(
+        tester,
+        'recent_error_details',
+        light: light,
+        then: () async {
+          final title = find.text('Lost the live connection to the server');
+          await tester.ensureVisible(title);
+          await tester.pumpAndSettle();
+          await tester.tap(title);
+          await tester.pumpAndSettle();
+          await Scrollable.ensureVisible(tester.element(title), alignment: 0.2);
+        },
+      );
+    });
+
     testWidgets('crash reports on with saved reports ($theme)', (tester) async {
       seed();
       await shot(tester, 'crash_reports_on', light: light);

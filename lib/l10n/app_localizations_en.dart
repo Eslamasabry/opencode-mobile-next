@@ -27843,6 +27843,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'The saved crash reports are deleted too.';
 
   @override
+  String get recentErrorScreen => 'A screen couldn\'t be drawn';
+
+  @override
+  String get recentErrorConnection => 'Lost the live connection to the server';
+
+  @override
+  String get recentErrorAndroidExit => 'Android closed the app';
+
+  @override
+  String get recentErrorTemperature => 'Phone temperature changed';
+
+  @override
+  String get recentErrorStartup => 'The app had trouble starting';
+
+  @override
+  String get recentErrorReportStore => 'Couldn\'t open saved problem reports';
+
+  @override
+  String get recentErrorGeneric => 'Something went wrong';
+
+  @override
   String get chatUiToolBackgroundTaskFinished => 'Background task finished';
 
   @override
@@ -27897,4 +27918,95 @@ class AppLocalizationsEn extends AppLocalizations {
   String agentNamesPair(String first, String second) {
     return '$first and $second';
   }
+
+  @override
+  String get diagnosticsExitHistoryTitle => 'Recent app exits';
+
+  @override
+  String get diagnosticsExitHistoryNote =>
+      'Android records each time the app closes. Nothing here is sent automatically.';
+
+  @override
+  String get diagnosticsExitHistoryEmpty => 'No app exits recorded yet';
+
+  @override
+  String get diagnosticsExitHistoryUnsupported => 'Not available on this phone';
+
+  @override
+  String get diagnosticsExitHistoryUnsupportedBody =>
+      'Android 11 and later keep this record.';
+
+  @override
+  String get diagnosticsExitHistoryFailed =>
+      'Couldn\'t read recent app exits. Try again, or reopen the app.';
+
+  @override
+  String get diagnosticsExitNormal => 'App closed';
+
+  @override
+  String get diagnosticsExitUpdate => 'App updated';
+
+  @override
+  String get diagnosticsExitForceStop => 'App stopped';
+
+  @override
+  String get diagnosticsExitLowMemory => 'Phone needed memory';
+
+  @override
+  String get diagnosticsExitCrash => 'App stopped unexpectedly';
+
+  @override
+  String get diagnosticsExitKilled => 'Android ended the app';
+
+  @override
+  String get diagnosticsExitReasonCode => 'Reason code';
+
+  @override
+  String get diagnosticsExitImportance => 'Importance';
+
+  @override
+  String get diagnosticsExitSummary => 'Summary';
+
+  @override
+  String get diagnosticsReportOpen => 'Share saved crash reports';
+
+  @override
+  String get diagnosticsReportTitle => 'Preview crash report';
+
+  @override
+  String get diagnosticsReportPrivacy =>
+      'Only error categories and times, no messages or conversations. Nothing leaves this phone until you tap Share report.';
+
+  @override
+  String diagnosticsReportSize(int count, String size) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reports · $size',
+      one: '1 report · $size',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get diagnosticsReportShare => 'Share report';
+
+  @override
+  String get diagnosticsReportStale =>
+      'Saved details changed. Check the new report before sharing.';
+
+  @override
+  String get diagnosticsReportShareFailed =>
+      'Couldn\'t open sharing. Try again.';
+
+  @override
+  String get diagnosticsReportCaptureOff =>
+      'Saved crash reports are off. Turn them on to save future app errors.';
+
+  @override
+  String get diagnosticsReportEmpty => 'No saved crash reports to share.';
+
+  @override
+  String get diagnosticsUnavailable =>
+      'These details are unavailable. Reopen the app and try again.';
 }

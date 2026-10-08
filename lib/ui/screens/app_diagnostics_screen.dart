@@ -1,11 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderScope;
 
 import '../../diagnostics/app_diagnostics.dart';
 import '../../diagnostics/crash_diagnostics.dart';
+import '../../diagnostics/device_diagnostics_gateway.dart';
 import '../../diagnostics/report_problem.dart';
 import '../../diagnostics/report_problem_startup.dart';
+import '../../domain/app_diagnostics_gateway.dart';
 import '../../feedback/problem_report.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/share_intent.dart';
@@ -14,7 +17,9 @@ import '../app_theme.dart';
 import '../kit/kit.dart';
 import '../widgets/external_link.dart';
 import 'crash_reports_section.dart';
+import 'exit_history_section.dart';
 import 'perf_trace_section.dart';
+import 'recent_error_words.dart';
 
 /// Opens Report a problem, prefilled with [error] when a failure brought the
 /// person here. Every "Report a problem" in the app ends here (P8.2).
@@ -53,6 +58,7 @@ class AppDiagnosticsScreen extends StatefulWidget {
     this.share,
     this.crash,
     this.crashReady,
+    this.diagnosticsGateway,
   });
 
   final ConnectionController? controller;
@@ -82,12 +88,25 @@ class AppDiagnosticsScreen extends StatefulWidget {
   /// Tests: when [crash] is null, the start-up result to wait for.
   final Future<CrashDiagnosticsController?>? crashReady;
 
+  /// Tests: device diagnostics (exit history, crash report sharing);
+  /// defaults to the app's [deviceDiagnosticsGatewayProvider] when there is
+  /// one. Without either, those parts stay off the page.
+  final AppDiagnosticsGateway? diagnosticsGateway;
+
   @override
   State<AppDiagnosticsScreen> createState() => _AppDiagnosticsScreenState();
 }
 
-class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
+class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen>
+    with WidgetsBindingObserver {
   final _description = TextEditingController();
+
+  AppDiagnosticsGateway? _gateway;
+  bool _gatewayResolved = false;
+
+  /// The latest exit history read (FD1); null while the first read runs.
+  AppExitHistory? _exitHistory;
+  int _exitRead = 0;
 
   /// What the person typed survives leaving the page (DATA-2); it is
   /// forgotten once the report went to GitHub or the share sheet. A report
@@ -134,7 +153,55 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
       };
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_gatewayResolved) return;
+    _gatewayResolved = true;
+    _gateway = widget.diagnosticsGateway ?? _appGateway();
+    if (_gateway == null) return;
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(_loadExits());
+  }
+
+  /// The app's gateway, when this page runs under its ProviderScope; a
+  /// scope without the live connection (previews, tests) has none.
+  AppDiagnosticsGateway? _appGateway() {
+    try {
+      return ProviderScope.containerOf(
+        context,
+        listen: false,
+      ).read(deviceDiagnosticsGatewayProvider);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Refreshed on open and whenever the person comes back to the app.
+  Future<void> _loadExits() async {
+    final gateway = _gateway;
+    if (gateway == null) return;
+    final read = ++_exitRead;
+    AppExitHistory history;
+    try {
+      history = await gateway.exitHistory();
+    } catch (_) {
+      history = AppExitHistory(
+        supported: true,
+        error: DiagnosticsError.unavailable,
+      );
+    }
+    if (!mounted || read != _exitRead) return;
+    setState(() => _exitHistory = history);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) unawaited(_loadExits());
+  }
+
+  @override
   void dispose() {
+    if (_gateway != null) WidgetsBinding.instance.removeObserver(this);
     _description.dispose();
     _jobLog?.dispose();
     super.dispose();
@@ -297,10 +364,21 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
         listenable: Listenable.merge(sources),
         builder: (context, _) {
           final events = _events;
+          // Android's exits show once: in Recent app exits when that list
+          // could be read, else here.
+          final exitsListed = switch (_exitHistory) {
+            final history? => history.supported && history.error == null,
+            null => false,
+          };
           // Crash records show once, in plain words, in their own section
           // below (CrashReportsSection); the report still carries them.
           final errors = events
-              .where((event) => event.isError && !_isCrashRecord(event))
+              .where(
+                (event) =>
+                    event.isError &&
+                    !_isCrashRecord(event) &&
+                    !(exitsListed && _isAndroidExit(event)),
+              )
               .toList();
           final error = widget.error;
           return ListView(
@@ -434,11 +512,13 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                       KitExpandRow(
                         key: ValueKey('diagnostic-entry-${entry.id ?? index}'),
                         leading: KitRow.icon(context, AppIconography.error),
-                        title: entry.message.split('\n').first,
+                        // Plain words by where it came from; the message
+                        // and source id are technical: Details only.
+                        title: recentErrorTitle(copy, entry),
+                        titleMaxLines: 2,
                         supporting: TextSpan(
                           text: [
-                            KitBidi.ltr(entry.source),
-                            _time(entry.time),
+                            KitBidi.ltr(_time(entry.time)),
                             if (entry.occurrences > 1)
                               copy.e7SettingsDiagnosticOccurrences(
                                 entry.occurrences,
@@ -453,12 +533,21 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                               end: tokens.gutter,
                               bottom: tokens.space3,
                             ),
-                            child: KitText.mono(
-                              [
+                            child: KitDetailsFold(
+                              foldKey: ValueKey(
+                                'diagnostic-details-${entry.id ?? index}',
+                              ),
+                              initiallyExpanded: true,
+                              values: [
+                                KitTechnicalValue(
+                                  copy.crashReportDetailSource,
+                                  entry.source,
+                                ),
+                              ],
+                              text: [
                                 entry.message,
                                 if (entry.stack.isNotEmpty) entry.stack,
                               ].join('\n\n'),
-                              selectable: true,
                             ),
                           ),
                         ],
@@ -472,6 +561,12 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                 crash: widget.crash,
                 ready: widget.crashReady,
                 savedErrors: errors.length,
+                gateway: _gateway,
+              ),
+              // FD1: Android's record of each time the app closed.
+              ExitHistorySection(
+                history: _exitHistory,
+                onRetry: () => unawaited(_loadExits()),
               ),
               SizedBox(height: tokens.sectionGap),
               // Timings are for whoever reads the report, not the person
@@ -491,9 +586,16 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
 }
 
 /// An entry the opt-in crash store recorded (`crash.flutter`, `crash.anr`,
-/// ...): listed by [CrashReportsSection], not in the recent errors.
+/// ...): listed by [CrashReportsSection], not in the recent errors. The
+/// native summary (`crash.last`) is not one and stays listed.
 bool _isCrashRecord(ProblemReportEvent event) =>
-    event.source.startsWith('crash.');
+    crashStoreSources.contains(event.source);
+
+/// An exit Android recorded (startup recovery), listed by
+/// [ExitHistorySection] when that list could be read.
+bool _isAndroidExit(ProblemReportEvent event) =>
+    event.kind == ProblemEventKind.androidExit ||
+    event.source == 'android.exit';
 
 /// The count on Settings' Report a problem row: errors kept on this phone
 /// (the saved report when it opened, else this run's).

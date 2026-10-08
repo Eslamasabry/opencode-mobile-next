@@ -4,9 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../diagnostics/crash_diagnostics.dart';
+import '../../domain/app_diagnostics_gateway.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
 import '../kit/kit.dart';
+import 'crash_report_share.dart';
 
 /// Saved crash reports on Report a problem (BD7 consent UI,
 /// docs/design/bd7-contract.md): one switch the person turns on to keep
@@ -30,17 +32,22 @@ import '../kit/kit.dart';
 /// reports are deleted. [savedErrors] is how many other errors the page
 /// lists above; only when there are some (or saved reports) does a line
 /// under the switch, and the delete question, say what goes with it.
+///
+/// With a [gateway] whose share sheet works, saved reports also offer
+/// "Share saved crash reports" (FD2, [openCrashReportShare]).
 class CrashReportsSection extends StatefulWidget {
   const CrashReportsSection({
     super.key,
     this.crash,
     this.ready,
     this.savedErrors = 0,
+    this.gateway,
   });
 
   final CrashDiagnosticsController? crash;
   final Future<CrashDiagnosticsController?>? ready;
   final int savedErrors;
+  final AppDiagnosticsGateway? gateway;
 
   @override
   State<CrashReportsSection> createState() => _CrashReportsSectionState();
@@ -50,6 +57,9 @@ class _CrashReportsSectionState extends State<CrashReportsSection> {
   CrashDiagnosticsController? _crash;
   bool _resolved = false;
   bool _actionFailed = false;
+
+  /// Why the last report could not be built, in plain words.
+  String? _shareProblem;
 
   @override
   void initState() {
@@ -92,6 +102,17 @@ class _CrashReportsSectionState extends State<CrashReportsSection> {
     if (!confirmed || !mounted) return;
     final ok = crash.clear();
     setState(() => _actionFailed = !ok);
+  }
+
+  Future<void> _share(AppDiagnosticsGateway gateway) {
+    setState(() => _shareProblem = null);
+    return openCrashReportShare(
+      context,
+      gateway,
+      onProblem: (words) {
+        if (mounted) setState(() => _shareProblem = words);
+      },
+    );
   }
 
   Future<void> _preview(CrashRecord record) {
@@ -166,6 +187,9 @@ class _CrashReportsSectionState extends State<CrashReportsSection> {
         final failed = _actionFailed || crash.storageFailed;
         final tokens = KitTokens.of(context);
         final effect = _effect(copy, enabled, records.length);
+        final gateway = widget.gateway;
+        final canShare =
+            records.isNotEmpty && gateway != null && gateway.shareSupported;
         return Column(
           key: const ValueKey('crash-reports'),
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -230,6 +254,13 @@ class _CrashReportsSectionState extends State<CrashReportsSection> {
                       ),
                       onTap: () => unawaited(_preview(record)),
                     ),
+                  if (canShare)
+                    KitRow(
+                      key: const ValueKey('crash-reports-share'),
+                      leading: KitRow.icon(context, AppIconography.upload),
+                      title: copy.diagnosticsReportOpen,
+                      onTap: () => unawaited(_share(gateway)),
+                    ),
                   if (records.isNotEmpty)
                     KitRow(
                       key: const ValueKey('crash-reports-delete'),
@@ -240,6 +271,19 @@ class _CrashReportsSectionState extends State<CrashReportsSection> {
                     ),
                 ],
               ),
+              if (_shareProblem case final problem?) ...[
+                SizedBox(height: tokens.space2),
+                Padding(
+                  padding: EdgeInsetsDirectional.symmetric(
+                    horizontal: tokens.gutter,
+                  ),
+                  child: KitNotice(
+                    key: const ValueKey('crash-reports-share-problem'),
+                    icon: AppIconography.info,
+                    message: problem,
+                  ),
+                ),
+              ],
             ],
           ],
         );

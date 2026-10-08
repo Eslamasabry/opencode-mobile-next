@@ -291,7 +291,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Bad state: saved before restart'), findsOneWidget);
+    // The saved error is listed in plain words; its message stays under
+    // the row's Details.
+    expect(find.text('Something went wrong'), findsOneWidget);
+    expect(find.textContaining('saved before restart'), findsNothing);
     expect(find.text('1 recent error'), findsOneWidget);
 
     await _tapKey(tester, 'clear-app-diagnostics');
