@@ -70,6 +70,7 @@ class DeviceReceiptTest(unittest.TestCase):
         code, report = self.run_restoration_fixture()
         self.assertEqual(code, 0)
         self.assertEqual(report['normal_app_restore'], 'PASS')
+        self.assertEqual(report['automatic_first_conversation_load'], 'PASS')
 
     def test_restore_after_instrumentation_failure_preserves_original_failure(self):
         code, report = self.run_restoration_fixture(outcome='instrumentation_failure')
@@ -77,6 +78,7 @@ class DeviceReceiptTest(unittest.TestCase):
         self.assertEqual(report['normal_app_restore'], 'PASS')
         self.assertEqual(report['error'], 'flutter_result_invalid')
         self.assertEqual(report['failure_code'], 'flutter_null_failure')
+        self.assertNotIn('automatic_first_conversation_load', report)
         self.assertEqual(report['native_checks'], list(smoke.CHECKS))
 
     def test_restore_after_early_device_failure(self):

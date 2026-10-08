@@ -25,8 +25,9 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
   bool _feedLoaded = false;
   bool _feedLoading = false;
   bool _feedComplete = true;
-  bool _feedWanted = false;
   Future<void>? _feedRefreshing;
+  int? _feedRefreshingGeneration;
+  int _feedRequestRevision = 0;
   Timer? _feedDebounce;
 
   bool get _ocAcross =>
@@ -43,35 +44,67 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
   bool get _feedCacheCurrent => _feedProfileID == _feedOwnerID;
 
   Future<void> _ocRefresh() {
-    _feedWanted = true;
-    if (_feedRefreshing case final running?) return running;
-    final epoch = _self._feedQuestionEpoch;
     final generation = _self._generation;
-    return _feedRefreshing = _refreshFeed().whenComplete(() {
+    // A pull or another explicit read consumes a pending automatic trigger.
+    _feedDebounce?.cancel();
+    _feedDebounce = null;
+    if (_feedRefreshingGeneration == generation) {
+      if (_feedRefreshing case final running?) return running;
+    }
+    final epoch = _self._feedQuestionEpoch;
+    final revision = _feedRequestRevision;
+    _feedRefreshingGeneration = generation;
+    late final Future<void> tracked;
+    tracked = _refreshFeed().whenComplete(() {
+      // A retired read must not clear the new runtime's single-flight slot.
+      if (!identical(_feedRefreshing, tracked)) return;
       _feedRefreshing = null;
+      _feedRefreshingGeneration = null;
       // A debounce that fired during a slow read only joined this future.
-      // Preserve the invalidating event as a trailing refresh.
+      // Preserve both inventory and waiting-request invalidations as one
+      // trailing refresh, even if neither stream emits another event.
       if (!_self._disposed &&
           generation == _self._generation &&
-          epoch != _self._feedQuestionEpoch) {
+          (revision != _feedRequestRevision ||
+              epoch != _self._feedQuestionEpoch)) {
         _feedScheduleRefresh();
+      }
+    });
+    return _feedRefreshing = tracked;
+  }
+
+  /// Startup and (re)connect reconcile even before Home reads the feed.
+  /// Session events share a bounded 2-second debounce; volatile OpenCode 2
+  /// events are reconciled by refetch, never by replay.
+  void _feedScheduleRefresh() {
+    if (_self._disposed || _self.api == null || _self.repository == null) {
+      return;
+    }
+    final generation = _self._generation;
+    _feedRequestRevision++;
+    // A busy stream must not postpone the first load or reconnect forever.
+    // Keep the first trigger's deadline while coalescing subsequent events.
+    if (_feedDebounce?.isActive ?? false) return;
+    _feedDebounce = Timer(const Duration(seconds: 2), () {
+      _feedDebounce = null;
+      if (!_self._disposed && generation == _self._generation) {
+        // This trigger belongs to OpenCode. Do not wait for another agent
+        // helper to start before reconciling this server's inventory.
+        unawaited(_ocRefresh());
       }
     });
   }
 
-  /// Called from the connection's event handlers: a server-wide session
-  /// event or a (re)connect asks for a refetch, coalesced to one per 2 s.
-  /// The OpenCode 2 stream is volatile, so the answer is always a refetch.
-  void _feedScheduleRefresh() {
-    if (!_feedWanted || _self._disposed) return;
+  void _feedRetireTransport() {
     _feedDebounce?.cancel();
-    _feedDebounce = Timer(const Duration(seconds: 2), () {
-      if (!_self._disposed) unawaited(_self.refreshChatFeed());
-    });
+    _feedDebounce = null;
+    _feedRefreshing = null;
+    _feedRefreshingGeneration = null;
+    _feedLoading = false;
   }
 
   void _feedDispose() {
-    _feedDebounce?.cancel();
+    _feedRetireTransport();
     _self._feedQuestionEpoch++;
     _self._feedDirectoryQuestions.clear();
     _self._feedDirectoryForms.clear();
@@ -300,7 +333,6 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
   }
 
   ChatFeedSnapshot _ocChatFeed([ChatFeedFilter filter = ChatFeedFilter.all]) {
-    _feedWanted = true;
     final across = _ocAcross;
     final wantDirectory = filter.projectDirectory == null
         ? null
@@ -343,7 +375,6 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
   }
 
   List<ProjectSummary> get _ocProjectSummaries {
-    _feedWanted = true;
     final byDirectory = <String, ProjectSummary>{};
     for (final item in _feedAllItems(includeSubagents: false)) {
       // Chats in temporary, home and root folders are listed, but their

@@ -83,6 +83,7 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
         if (!_isCurrentStream(generation, currentApi, stream)) return;
       }
       if (s == StreamStatus.connected) {
+        if (previousStatus != StreamStatus.connected) _feedScheduleRefresh();
         _streamConnects += 1;
         _genUiSync();
         _genUiRefreshFeed();

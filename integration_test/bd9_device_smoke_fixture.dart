@@ -67,7 +67,8 @@ class Bd9DeviceSmokeFixture {
 
     final Object? data = switch (path) {
       '/global/health' => {'healthy': true, 'version': '1.0.0'},
-      '/session' => [_session],
+      // Only the global inventory supplies the visible conversation.
+      '/session' => <Object>[],
       '/experimental/session' => [
         {
           ..._session,

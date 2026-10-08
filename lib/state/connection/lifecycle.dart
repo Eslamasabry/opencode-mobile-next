@@ -431,6 +431,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   }
 
   void _retireTransport() {
+    _feedRetireTransport();
     _resetTurnStalls();
     _invalidatePhoneChatStatus();
     _syncPhoneChatHeartbeat();

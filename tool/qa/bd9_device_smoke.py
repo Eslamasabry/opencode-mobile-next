@@ -167,6 +167,7 @@ def run_device(args, *, restore=None):
                 output = result.decode('utf-8', errors='replace')
                 try:
                     report.update(parse_instrumentation(output))
+                    report['automatic_first_conversation_load'] = 'PASS'
                 except SmokeFailure:
                     report.update(failure_diagnosis(output))
                     raise
