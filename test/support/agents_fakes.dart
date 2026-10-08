@@ -21,6 +21,9 @@ enum FakeAgentStage {
   ready,
   readyVerifiedResume,
   stopped,
+
+  /// Signed in, but the plan's limit is reached.
+  limitReached,
 }
 
 AgentRow agentRowFor(String id, FakeAgentStage stage) {
@@ -40,7 +43,9 @@ AgentRow agentRowFor(String id, FakeAgentStage stage) {
       hostAvailable: stage != FakeAgentStage.stopped,
       stoppedInBackground: stage == FakeAgentStage.stopped,
       architectureQualified: installed && qualified,
-      signInPhase: signedIn
+      signInPhase: stage == FakeAgentStage.limitReached
+          ? AgentSignInPhase.limitReached
+          : signedIn
           ? AgentSignInPhase.signedIn
           : AgentSignInPhase.signedOut,
       capabilities: AgentCapabilities(
@@ -426,5 +431,84 @@ class FakeAccountAgentsSource extends FakePhoneAgentsSource
       agentId,
       const AgentAuthProbeResult(state: AgentAuthProbeState.signedOut),
     );
+  }
+}
+
+/// A [FakeAccountAgentsSource] that can also remove an installed agent
+/// ([PhoneAgentRemovalSource], BA10), the way the controller does: an agent
+/// is removable when [removable] says so and it is installed (or its install
+/// failed or was interrupted); nothing is while a removal runs; a success puts
+/// the row back to Install; an install is refused while one runs.
+class FakeRemovableAgentsSource extends FakeAccountAgentsSource
+    implements PhoneAgentRemovalSource {
+  FakeRemovableAgentsSource({super.available, super.rows, super.selected});
+
+  /// Agents the host supports removing.
+  final removable = <String>{};
+
+  /// The agent being removed now (tests may set it to play another sheet).
+  String? removing;
+
+  /// Holds a running removal until completed.
+  Completer<void>? removeGate;
+
+  /// When set, the removal throws this instead of succeeding.
+  Object? removeError;
+
+  /// What a successful removal returns; 98 MB freed by default.
+  AgentRemovalResult? nextRemoval;
+
+  @override
+  String? get removingAgentId => removing;
+
+  @override
+  bool canRemoveAgent(String agentId) {
+    if (removing != null || !removable.contains(agentId)) return false;
+    final row = agentRows.where((row) => row.id == agentId).firstOrNull;
+    if (row == null) return false;
+    if (row.status != PhoneAgentStatus.needsInstall) return true;
+    return progress.agentId == agentId &&
+        (progress.phase == AgentSetupPhase.failed ||
+            progress.phase == AgentSetupPhase.interrupted);
+  }
+
+  @override
+  Future<void> installAgent(String agentId) async {
+    if (removing != null) {
+      throw const ProductException(
+        'This agent is in use. Finish its work and try again.',
+      );
+    }
+    await super.installAgent(agentId);
+  }
+
+  @override
+  Future<AgentRemovalResult> removeAgent(String agentId) async {
+    calls.add('remove:$agentId');
+    removing = agentId;
+    notifyListeners();
+    try {
+      await removeGate?.future;
+      final error = removeError;
+      if (error != null) throw error;
+      final result =
+          nextRemoval ??
+          AgentRemovalResult(
+            agentId: agentId,
+            freedBytes: 98000000,
+            alreadyAbsent: false,
+          );
+      super.rows = [
+        for (final row in agentRows)
+          if (row.id == agentId)
+            agentRowFor(agentId, FakeAgentStage.notInstalled)
+          else
+            row,
+      ];
+      return result;
+    } finally {
+      removing = null;
+      notifyListeners();
+    }
   }
 }

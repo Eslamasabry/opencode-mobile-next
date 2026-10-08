@@ -27332,6 +27332,49 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String agentsRemoveAction(String agent) {
+    return 'إزالة $agent';
+  }
+
+  @override
+  String agentsRemoveTitle(String agent) {
+    return 'إزالة $agent؟';
+  }
+
+  @override
+  String get agentsRemoveBody =>
+      'تزيل هذه الخطوة الوكيل المثبّت من هذا الهاتف. تبقى حساباتك ومحادثاتك، ويمكنك تثبيته مرة أخرى.';
+
+  @override
+  String agentsRemoving(String agent) {
+    return 'جارٍ إزالة $agent…';
+  }
+
+  @override
+  String agentsRemoved(String agent, String size) {
+    return 'تمت إزالة $agent. تم تحرير $size.';
+  }
+
+  @override
+  String agentsAlreadyRemoved(String agent) {
+    return 'تمت إزالة $agent بالفعل.';
+  }
+
+  @override
+  String get agentsRemoveUnsupported => 'لا يمكن إزالة هذا الوكيل هنا.';
+
+  @override
+  String get agentsRemoveBusy =>
+      'هذا الوكيل قيد الاستخدام. أنهِ عمله ثم حاول مرة أخرى.';
+
+  @override
+  String get agentsRemoveUnconfirmed =>
+      'تعذّر التأكد من إزالة هذا الوكيل. تحقق من هذا الهاتف وحاول مرة أخرى.';
+
+  @override
+  String get agentsDone => 'تم';
+
+  @override
   String get agentsModelTitle => 'اختر نموذجًا';
 
   @override

@@ -6,6 +6,7 @@ import '../../../domain/agent_sign_in.dart';
 import '../../../domain/agent_tools/agent_certification.dart';
 import '../../../domain/phone_agent_host.dart';
 import '../../../domain/product_failure.dart';
+import '../../../domain/server_gateway.dart' show ProductException;
 import '../../../domain/phone_agents.dart';
 import '../../../domain/phone_agents_source.dart';
 import '../../../l10n/app_localizations.dart';
@@ -34,13 +35,22 @@ String? agentPayloadSize(String agentId) {
       ?.recipe
       ?.artifacts[AgentArchitecture.arm64]
       ?.downloadBytes;
-  if (bytes == null) return null;
-  return KitBidi.ltr(
-    bytes >= 1000000000
-        ? '${(bytes / 1000000000).toStringAsFixed(1)} GB'
-        : '${(bytes / 1000000).round()} MB',
-  );
+  return bytes == null ? null : _sizeText(bytes);
 }
+
+/// What removing an agent freed ("98 MB", "412 kB"), as the host measured it,
+/// in the same left-to-right isolate as [agentPayloadSize].
+String agentFreedSize(int bytes) => _sizeText(bytes);
+
+String _sizeText(int bytes) => KitBidi.ltr(
+  bytes >= 1000000000
+      ? '${(bytes / 1000000000).toStringAsFixed(1)} GB'
+      : bytes >= 1000000
+      ? '${(bytes / 1000000).round()} MB'
+      : bytes >= 1000
+      ? '${(bytes / 1000).round()} kB'
+      : '$bytes B',
+);
 
 /// Where a row stands, in words: one line, and a second quiet line where it
 /// applies ("Can't reopen old conversations").
@@ -235,3 +245,29 @@ String agentSignInFailureText(
   AgentSignInFailure.unavailable => l10n.agentsSignInUnavailable,
   _ => l10n.agentsSignInFailed,
 };
+
+/// The sentence that ends a removal: what was freed, or that nothing was
+/// installed.
+String agentRemovalResultText(
+  AppLocalizations l10n,
+  String agent,
+  AgentRemovalResult result,
+) => result.alreadyAbsent
+    ? l10n.agentsAlreadyRemoved(KitBidi.auto(agent))
+    : l10n.agentsRemoved(
+        KitBidi.auto(agent),
+        agentFreedSize(result.freedBytes),
+      );
+
+/// The controller's three fixed removal messages (BA10) in the person's
+/// language. Anything else is the unconfirmed sentence: no raw error ever
+/// shows as copy.
+String agentRemovalFailureText(AppLocalizations l10n, Object error) {
+  final message = error is ProductException ? error.message : null;
+  return switch (message) {
+    "This agent can't be removed here." => l10n.agentsRemoveUnsupported,
+    'This agent is in use. Finish its work and try again.' =>
+      l10n.agentsRemoveBusy,
+    _ => l10n.agentsRemoveUnconfirmed,
+  };
+}

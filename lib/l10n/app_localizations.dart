@@ -43051,6 +43051,66 @@ abstract class AppLocalizations {
   /// **'Couldn\'t confirm that {agent} signed out. Try again.'**
   String agentsSignOutFailed(String agent);
 
+  /// Agent sheet, installed agent: the quiet destructive action that removes the installed agent from this phone (BA10)
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {agent}'**
+  String agentsRemoveAction(String agent);
+
+  /// Agent removal question: the title
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {agent}?'**
+  String agentsRemoveTitle(String agent);
+
+  /// Agent removal question: what removing does and keeps
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the installed agent from this phone. Your accounts and conversations stay, and you can install it again.'**
+  String get agentsRemoveBody;
+
+  /// Agent removal: progress while the host deletes the installed agent
+  ///
+  /// In en, this message translates to:
+  /// **'Removing {agent}…'**
+  String agentsRemoving(String agent);
+
+  /// Agent removal done: the measured size freed (the size is a left-to-right isolate)
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} removed. Freed {size}.'**
+  String agentsRemoved(String agent, String size);
+
+  /// Agent removal done: nothing was installed
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} is already removed.'**
+  String agentsAlreadyRemoved(String agent);
+
+  /// Agent removal failure: unsupported agent
+  ///
+  /// In en, this message translates to:
+  /// **'This agent can\'t be removed here.'**
+  String get agentsRemoveUnsupported;
+
+  /// Agent removal failure: the agent is running or another setup is in progress
+  ///
+  /// In en, this message translates to:
+  /// **'This agent is in use. Finish its work and try again.'**
+  String get agentsRemoveBusy;
+
+  /// Agent removal failure: unavailable, unsafe or unconfirmed removal
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t confirm this agent was removed. Check this phone and try again.'**
+  String get agentsRemoveUnconfirmed;
+
+  /// Agent sheet: closes a finished step
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get agentsDone;
+
   /// Agent model sheet title on New conversation (Claude Code and other phone agents).
   ///
   /// In en, this message translates to:

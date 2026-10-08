@@ -32501,6 +32501,74 @@
       }
     }
   },
+  "agentsRemoveAction": "Remove {agent}",
+  "@agentsRemoveAction": {
+    "description": "Agent sheet, installed agent: the quiet destructive action that removes the installed agent from this phone (BA10)",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsRemoveTitle": "Remove {agent}?",
+  "@agentsRemoveTitle": {
+    "description": "Agent removal question: the title",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsRemoveBody": "This removes the installed agent from this phone. Your accounts and conversations stay, and you can install it again.",
+  "@agentsRemoveBody": {
+    "description": "Agent removal question: what removing does and keeps"
+  },
+  "agentsRemoving": "Removing {agent}…",
+  "@agentsRemoving": {
+    "description": "Agent removal: progress while the host deletes the installed agent",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsRemoved": "{agent} removed. Freed {size}.",
+  "@agentsRemoved": {
+    "description": "Agent removal done: the measured size freed (the size is a left-to-right isolate)",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsAlreadyRemoved": "{agent} is already removed.",
+  "@agentsAlreadyRemoved": {
+    "description": "Agent removal done: nothing was installed",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsRemoveUnsupported": "This agent can't be removed here.",
+  "@agentsRemoveUnsupported": {
+    "description": "Agent removal failure: unsupported agent"
+  },
+  "agentsRemoveBusy": "This agent is in use. Finish its work and try again.",
+  "@agentsRemoveBusy": {
+    "description": "Agent removal failure: the agent is running or another setup is in progress"
+  },
+  "agentsRemoveUnconfirmed": "Couldn't confirm this agent was removed. Check this phone and try again.",
+  "@agentsRemoveUnconfirmed": {
+    "description": "Agent removal failure: unavailable, unsafe or unconfirmed removal"
+  },
+  "agentsDone": "Done",
+  "@agentsDone": {
+    "description": "Agent sheet: closes a finished step"
+  },
   "agentsModelTitle": "Choose a model",
   "@agentsModelTitle": {
     "description": "Agent model sheet title on New conversation (Claude Code and other phone agents)."

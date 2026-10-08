@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../domain/agent_auth_probe.dart';
 import '../../../domain/phone_agents.dart';
 import '../../../domain/phone_agents_source.dart';
 import '../../../l10n/app_localizations.dart';
@@ -108,6 +109,52 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
     );
   }
 
+  /// A signed-in agent opens its sheet: who it is signed in as, Sign in
+  /// again, Sign out and Remove. That includes one at its plan limit.
+  bool _opensSheet(AgentRow row) =>
+      row.fixAction == null &&
+      (row.chatSelectable || row.status == PhoneAgentStatus.limitReached);
+
+  Widget _agentRow(
+    BuildContext context,
+    AppLocalizations l10n,
+    AgentRow row, {
+    required AgentAuthProbeResult? account,
+    required bool removing,
+  }) {
+    final opens = !removing && _opensSheet(row);
+    final line = removing
+        ? l10n.agentsRemoving(KitBidi.auto(row.name))
+        : agentRowLine(l10n, row, account: account);
+    return KitRow(
+      key: ValueKey('agents-row-${row.id}'),
+      title: KitBidi.auto(row.name),
+      leading: KitRow.icon(context, agentIcon(row.iconKey)),
+      supporting: TextSpan(text: line),
+      supportingMaxLines: 3,
+      // The title names the agent: the chip says only the act, and every
+      // chip starts at one edge (owner, 2026-10-08).
+      chip: removing
+          ? null
+          : agentFixChip(
+              l10n,
+              row,
+              key: ValueKey('agents-fix-${row.id}'),
+              onPressed: () => unawaited(_fix(row)),
+            ),
+      trailing: opens ? const KitChevron() : null,
+      onTap: opens
+          ? () => unawaited(
+              showAgentSheet(
+                context,
+                agentId: row.id,
+                step: AgentSheetStep.signIn,
+              ),
+            )
+          : null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final host = ref.watch(chatsHostProvider);
@@ -129,6 +176,11 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
         final accounts = agents is PhoneAgentAccountSource
             ? agents as PhoneAgentAccountSource
             : null;
+        // The one agent being removed: its row says so and offers no act
+        // until the host is done.
+        final removing = agents is PhoneAgentRemovalSource
+            ? (agents as PhoneAgentRemovalSource).removingAgentId
+            : null;
         if (rows.isEmpty) {
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: tokens.gutter),
@@ -147,40 +199,12 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
               label: l10n.agentsSectionTitle,
               children: [
                 for (final row in rows)
-                  KitRow(
-                    key: ValueKey('agents-row-${row.id}'),
-                    title: KitBidi.auto(row.name),
-                    leading: KitRow.icon(context, agentIcon(row.iconKey)),
-                    supporting: TextSpan(
-                      text: agentRowLine(
-                        l10n,
-                        row,
-                        account: accounts?.agentAccount(row.id),
-                      ),
-                    ),
-                    supportingMaxLines: 3,
-                    // The title names the agent: the chip says only the act,
-                    // and every chip starts at one edge (owner, 2026-10-08).
-                    chip: agentFixChip(
-                      l10n,
-                      row,
-                      key: ValueKey('agents-fix-${row.id}'),
-                      onPressed: () => unawaited(_fix(row)),
-                    ),
-                    // A ready agent opens its sign-in step: who it is
-                    // signed in as, and Sign in again when that has expired.
-                    trailing: row.fixAction == null && row.chatSelectable
-                        ? const KitChevron()
-                        : null,
-                    onTap: row.fixAction == null && row.chatSelectable
-                        ? () => unawaited(
-                            showAgentSheet(
-                              context,
-                              agentId: row.id,
-                              step: AgentSheetStep.signIn,
-                            ),
-                          )
-                        : null,
+                  _agentRow(
+                    context,
+                    l10n,
+                    row,
+                    account: accounts?.agentAccount(row.id),
+                    removing: removing == row.id,
                   ),
                 if (rows.any(_installed))
                   KitRow(
