@@ -67,5 +67,5 @@ unchanged rootfs/budget and no helper intent creation. Locked emulator checks
 must use an actual reboot and actual same-signer replacement, show background
 server restoration without opening the Activity, and prove policy-on/Stop cases
 remain stopped. A simulated broadcast, synthetic version stamp or unit receipt
-alone does not establish the actual reboot/update journey. Restore normal2197
+alone does not establish the actual reboot/update journey. Restore normal2198
 with install-r in the same lock; account/auth data remain untouched.

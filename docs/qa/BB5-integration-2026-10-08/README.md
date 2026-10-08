@@ -39,7 +39,7 @@ native Gradle/JVM checks used the shared lock. No repository-wide test suite run
 | `flutter analyze` | clean after adding two required braces | [log](analyzer-final.txt) |
 | `python3 -m unittest discover -s tool/qa -p test_bb5_runtime_acceptance.py -v` | 20 pass | [log](python-host-final.txt) |
 | Updated host mocks with normal2198 | 28 pass | [log](python-host-2198.txt) |
-| Focused Gradle/JVM selection before coordinator merge | 172 pass | [log](native-gradle-focused.txt), [counts](native-gradle-counts.txt) |
+| Focused Gradle/JVM selection before coordinator merge | 172 pass | [log](native-gradle-premerge-focused.txt), [counts](native-gradle-counts.txt) |
 | Native guard removals / restored affected pure tests | 20 assertion reds / 123 pass | [red](native-idle-red.txt), [restored](native-idle-restored.txt) |
 
 Five production guards were removed individually. Each focused file failed at
@@ -132,7 +132,7 @@ before a build, with
 `GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx4g -Dkotlin.compiler.execution.strategy=in-process -Dorg.gradle.workers.max=2"`.
 The earlier memory hold and readings in [memory-watch.txt](memory-watch.txt) and
 [resource-gate.txt](resource-gate.txt) preceded the completed native checks.
-The coordinator subsequently ran the locked focused Gradle/JVM checks and
+This BB lane subsequently ran the locked focused Gradle/JVM checks and
 native guard controls. No shared process was killed or memory reclaimed from
 another lane.
 
@@ -140,7 +140,7 @@ The QA release APK failed because `GeneratedPluginRegistrant` referenced
 `dev.flutter.plugins.integration_test.IntegrationTestPlugin`, which was absent
 from the release classpath. [Build failure](release-app-registrant-failure.txt).
 The owned Gradle daemon, exact PID `3212856`, was stopped and this worktree's
-intermediates were deleted. No new APK or device proof resulted. The coordinator
+intermediates were deleted. No new APK or device proof resulted. This BB lane
 is adding a narrow `releaseImplementation` dependency for the existing
 `ocBuiltinRuntimeQa` flag; the one-runner guard remains intact. Rebuilding and
 native compilation on the merged candidate remain pending.
@@ -194,3 +194,13 @@ again. [Behavioral red](red-host-notification-marker.txt),
 and normal restoration to version2198, all 28 passed again in
 [python-host-2198.txt](python-host-2198.txt). These mocked checks establish no
 adb/SystemUI/device behavior; the actual tap fixture remains unqualified.
+
+## Merged-candidate resource watch
+
+The current watcher is exact owned PID `3222150`, session `17930`, started
+`2026-10-08T21:48:53Z`. It checks available memory every two minutes, for at
+most 60 minutes, and rechecks the 6144 MiB threshold inside the shared build
+lock. Its pending focused JVM command uses only `ocBuiltinRuntimeQa=true`,
+including the narrow release plugin dependency fix. At `22:01 UTC` memory
+was 3848 MiB; the merged compile had not started. BA has the next emulator
+turn; this lane has not acquired the emulator lock or changed the device.
