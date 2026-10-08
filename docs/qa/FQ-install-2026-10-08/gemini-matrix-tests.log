@@ -1,0 +1,16 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_certification_test.dart
+00:00 +0: bundled snapshot preserves the reviewed FQ1 JSON verbatim
+00:00 +1: bundled Claude evidence qualifies arm64 and x64 with exact helper
+00:00 +2: bundled other agents remain unverified on arm64 and x64
+00:00 +3: each exact pass cell grants only its corresponding capability
+00:00 +4: omitted architecture qualifies protocol capabilities across CPUs
+00:00 +5: present architecture scopes evidence to that CPU
+00:00 +6: photos require their own passing images cell
+00:00 +7: missing or mismatched pins and unknown architecture invalidate proof
+00:00 +8: only exact pass with safe repository evidence grants a capability
+00:00 +9: duplicate IDs invalidate all records including the OpenCode 1 alias
+00:00 +10: malformed and unrecognized records never grant capabilities
+00:00 +11: projection freezes input and retains unverified resume copy
+00:00 +12: certified for chat (the agent picker's gate) the bundled matrix certifies Claude Code and nothing else yet
+00:00 +13: certified for chat (the agent picker's gate) needs the pinned version with install and smoke passed
+00:00 +14: All tests passed!

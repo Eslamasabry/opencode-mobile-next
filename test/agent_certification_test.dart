@@ -77,16 +77,18 @@ void main() {
     }
   });
 
-  test('bundled fx and other agents remain unverified on arm64', () {
+  test('bundled other agents remain unverified on arm64 and x64', () {
     for (final descriptor in AgentCatalog.builtIn.agents) {
       if (descriptor.id == 'claude') continue;
-      expectClosed(
-        AgentCertificationMatrix.bundled.capabilitiesFor(
-          descriptor: descriptor,
-          architecture: AgentArchitecture.arm64,
-          helperVersion: '0.9.2',
-        ),
-      );
+      for (final architecture in AgentArchitecture.values) {
+        expectClosed(
+          AgentCertificationMatrix.bundled.capabilitiesFor(
+            descriptor: descriptor,
+            architecture: architecture,
+            helperVersion: '0.9.2',
+          ),
+        );
+      }
     }
   });
 

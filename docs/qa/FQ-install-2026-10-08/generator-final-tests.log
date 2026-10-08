@@ -1,0 +1,19 @@
+test_catalog_pins_match_every_current_install_agent (test_update_install_certification.InstallEvidenceTest.test_catalog_pins_match_every_current_install_agent) ... ok
+test_cli_refusal_does_not_echo_untrusted_input (test_update_install_certification.InstallEvidenceTest.test_cli_refusal_does_not_echo_untrusted_input) ... ok
+test_credentials_free_bounded_fact_schema (test_update_install_certification.InstallEvidenceTest.test_credentials_free_bounded_fact_schema) ... ok
+test_document_path_must_exist_and_stay_inside_qa (test_update_install_certification.InstallEvidenceTest.test_document_path_must_exist_and_stay_inside_qa) ... ok
+test_duplicate_json_fields_oversize_and_symbolic_reports_rejected (test_update_install_certification.InstallEvidenceTest.test_duplicate_json_fields_oversize_and_symbolic_reports_rejected) ... ok
+test_generator_check_is_read_only_and_detects_markdown_drift (test_update_install_certification.InstallEvidenceTest.test_generator_check_is_read_only_and_detects_markdown_drift) ... ok
+test_invalid_later_report_and_duplicates_leave_both_outputs_unchanged (test_update_install_certification.InstallEvidenceTest.test_invalid_later_report_and_duplicates_leave_both_outputs_unchanged) ... ok
+test_manual_cleanup_is_partial_and_cannot_be_promoted (test_update_install_certification.InstallEvidenceTest.test_manual_cleanup_is_partial_and_cannot_be_promoted) ... ok
+test_not_applicable_and_failed_checks_do_not_claim_asserted (test_update_install_certification.InstallEvidenceTest.test_not_applicable_and_failed_checks_do_not_claim_asserted) ... ok
+test_only_three_cells_and_target_install_metadata_change (test_update_install_certification.InstallEvidenceTest.test_only_three_cells_and_target_install_metadata_change) ... ok
+test_other_devices_architectures_agents_and_bad_fields_rejected (test_update_install_certification.InstallEvidenceTest.test_other_devices_architectures_agents_and_bad_fields_rejected) ... ok
+test_pass_requires_observed_facts_and_numeric_reclaimed_bytes (test_update_install_certification.InstallEvidenceTest.test_pass_requires_observed_facts_and_numeric_reclaimed_bytes) ... ok
+test_unknown_helper_is_not_inherited_from_old_evidence (test_update_install_certification.InstallEvidenceTest.test_unknown_helper_is_not_inherited_from_old_evidence) ... ok
+test_version_pass_requires_exact_pin_and_app_install_pass (test_update_install_certification.InstallEvidenceTest.test_version_pass_requires_exact_pin_and_app_install_pass) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.063s
+
+OK

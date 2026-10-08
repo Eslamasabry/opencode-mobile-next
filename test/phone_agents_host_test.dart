@@ -7,9 +7,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/agents/agent_components.dart';
 import 'package:opencode_mobile/builtin/agents/paseo_scripts.dart';
 import 'package:opencode_mobile/builtin/agents/phone_agents_host.dart';
+import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
+import 'package:opencode_mobile/builtin/setup/preflight.dart';
 import 'package:opencode_mobile/builtin/setup/setup_engine.dart'
-    show expandSelection;
+    show ChannelSetupEngine, expandSelection;
 import 'package:opencode_mobile/builtin/setup/claude_scripts.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/domain/agent_auth_probe.dart';
@@ -42,6 +44,8 @@ void main() {
   final authCalls = <Map>[];
   Completer<void>? versionEntered;
   Completer<void>? versionRelease;
+  Completer<void>? architectureEntered;
+  Completer<void>? architectureRelease;
   final lock = File(PaseoPhoneScripts.packageLockAsset).readAsStringSync();
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
@@ -58,6 +62,8 @@ void main() {
     authCalls.clear();
     versionEntered = null;
     versionRelease = null;
+    architectureEntered = null;
+    architectureRelease = null;
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(_storage, (call) async {
@@ -92,6 +98,10 @@ void main() {
             },
           });
         case 'agentHostStatus':
+          if (architectureRelease != null) {
+            architectureEntered!.complete();
+            await architectureRelease!.future;
+          }
           return {'abi': abi, 'running': running};
         case 'startAgentHost':
           final args = call.arguments as Map;
@@ -387,6 +397,172 @@ void main() {
     expect(engine.restores, 0);
     expect(engine.cancels, 0);
   });
+  test('cancel after handoff still stops an exactly owned setup job', () async {
+    await host.install('claude');
+    await host.cancelInstall();
+    expect(engine.cancels, 1);
+  });
+  test('cancel during local checks never hands an install to native', () async {
+    await host.dispose();
+    final linux = _HeldAgentChecks();
+    host = BuiltinPhoneAgents(
+      profileId: 'phone',
+      prefs: prefs,
+      loadLock: () async => lock,
+      engineFactory: (_, _) => ChannelSetupEngine(
+        linux: linux,
+        strings: AppLocalizationsEn.new,
+        components: (_, _) => const [
+          SetupComponent(
+            id: 'agent-claude',
+            title: 'Claude Code',
+            shortTitle: 'Claude Code',
+            agentUser: true,
+            checkScript: 'false',
+            installScript: 'true',
+          ),
+        ],
+      ),
+    );
+    setupOwner = 'other-phone';
+    final installing = host.install('claude');
+    await linux.entered.future;
+    await host.cancelInstall();
+    linux.release.complete();
+    await installing;
+    expect(host.setupProgress.phase, AgentSetupPhase.interrupted);
+    expect(linux.starts, 0);
+    expect(linux.cancels, 0);
+  });
+  test('cancel retires an install awaiting architecture', () async {
+    architectureEntered = Completer<void>();
+    architectureRelease = Completer<void>();
+    final installing = host.install('claude');
+    await architectureEntered!.future;
+    await host.cancelInstall();
+    architectureRelease!.complete();
+    await expectLater(
+      installing,
+      throwsA(
+        isA<AgentHostException>().having(
+          (error) => error.reason,
+          'reason',
+          AgentHostFailure.stale,
+        ),
+      ),
+    );
+    expect(engine.runs, isEmpty);
+    expect(prefs.getString('${phoneAgentInstallPrefix}phone'), isNull);
+    architectureRelease = null;
+    await host.install('claude');
+    expect(engine.runs, [
+      {'agent-claude'},
+    ]);
+  });
+  test('cancel retires an install awaiting preparation', () async {
+    await host.dispose();
+    final entered = Completer<void>();
+    final release = Completer<void>();
+    host = BuiltinPhoneAgents(
+      profileId: 'phone',
+      prefs: prefs,
+      loadLock: () async {
+        entered.complete();
+        await release.future;
+        return lock;
+      },
+      engineFactory: (_, _) => engine,
+    );
+    final installing = host.install('claude');
+    await entered.future;
+    await host.cancelInstall();
+    release.complete();
+    await expectLater(
+      installing,
+      throwsA(
+        isA<AgentHostException>().having(
+          (error) => error.reason,
+          'reason',
+          AgentHostFailure.stale,
+        ),
+      ),
+    );
+    expect(engine.runs, isEmpty);
+    expect(prefs.getString('${phoneAgentInstallPrefix}phone'), isNull);
+  });
+  for (final sample in [
+    (id: 'omp-acp', expectedBytes: 561073088),
+    (id: 'fx', expectedBytes: 300000000),
+  ]) {
+    test(
+      'native storage guard includes ${sample.id} catalog download',
+      () async {
+        await host.dispose();
+        final captured = <Map<String, Object?>>[];
+        Map<String, Object?>? job;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(_native, (call) async {
+              switch (call.method) {
+                case 'agentHostStatus':
+                  return {'abi': 'x86_64', 'running': false};
+                case 'status':
+                  return {'installed': true, 'phase': 'ready'};
+                case 'setupStatus':
+                  return job == null ? null : jsonEncode(job);
+                case 'run':
+                  return {'exitCode': 0, 'output': ''};
+                case 'startSetup':
+                  final args = call.arguments as Map;
+                  captured.addAll([
+                    for (final spec in args['components'] as List)
+                      Map<String, Object?>.from(spec as Map),
+                  ]);
+                  job = {
+                    'jobId': args['jobId'],
+                    'state': 'done',
+                    'order': [for (final spec in captured) spec['id']],
+                    'components': {
+                      for (final spec in captured)
+                        spec['id'] as String: {'state': 'done'},
+                    },
+                  };
+                  return null;
+              }
+              return null;
+            });
+        host = BuiltinPhoneAgents(
+          profileId: 'phone',
+          prefs: prefs,
+          loadLock: () async => lock,
+        );
+        await host.install(sample.id);
+        final target = captured.singleWhere(
+          (spec) => spec['id'] == 'agent-${sample.id}',
+        );
+        expect(
+          (target['data'] as Map)['requiredFreeBytes'],
+          '${sample.expectedBytes}',
+        );
+        final common = phoneAgentComponents(
+          AppLocalizationsEn(),
+          AgentCatalog.builtIn.byId(sample.id)!,
+          lock,
+        ).where((component) => component.id != 'agent-${sample.id}');
+        for (final component in common) {
+          final spec = captured.singleWhere(
+            (spec) => spec['id'] == component.id,
+          );
+          expect(
+            (spec['data'] as Map)['requiredFreeBytes'],
+            '${requiredSetupFreeBytes(component.downloadBytes ?? 0)}',
+            reason:
+                'Shared dependency ${component.id} keeps its own storage policy',
+          );
+        }
+        expect(host.setupProgress.phase, AgentSetupPhase.done);
+      },
+    );
+  }
   test(
     'running installation requires continue instead of a second install',
     () async {
@@ -493,4 +669,45 @@ void main() {
       expect(secrets.keys, ['unrelated']);
     },
   );
+}
+
+class _HeldAgentChecks extends BuiltinLinux {
+  final entered = Completer<void>();
+  final release = Completer<void>();
+  var starts = 0;
+  var cancels = 0;
+
+  @override
+  Future<String?> setupStatus() async => null;
+
+  @override
+  Future<BuiltinLinuxStatus> status() async => const BuiltinLinuxStatus(
+    installed: true,
+    phase: BuiltinLinuxPhase.ready,
+    serverRunning: false,
+  );
+
+  @override
+  Future<BuiltinLinuxRunResult> runAgentSetupCheck(
+    String script, {
+    Duration timeout = const Duration(minutes: 2),
+  }) async {
+    entered.complete();
+    await release.future;
+    return const BuiltinLinuxRunResult(exitCode: 0, output: '');
+  }
+
+  @override
+  Future<void> startSetup({
+    required String jobId,
+    required List<Map<String, Object?>> components,
+    required Map<String, Map<String, String>> params,
+    required Map<String, String> texts,
+  }) async {
+    starts++;
+    throw StateError('Unexpected native handoff');
+  }
+
+  @override
+  Future<void> cancelSetup() async => cancels++;
 }

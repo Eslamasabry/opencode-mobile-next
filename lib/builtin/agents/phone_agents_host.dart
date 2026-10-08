@@ -61,6 +61,7 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
   SetupEngine? _engine;
   void Function()? _engineListener;
   String? _installAgent;
+  bool _installRunPending = false;
   bool _disposed = false;
   int _generation = 0;
   bool _startInFlight = false;
@@ -189,11 +190,26 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
     final agent = _agent(id);
     final lock = await _loadLock();
     if (_disposed) throw const AgentHostException(AgentHostFailure.stale);
+    // Keep restore independent of another native ABI read. Admission uses
+    // the largest known authored download across supported architectures.
+    int? downloadBytes;
+    for (final artifact in agent.recipe!.artifacts.values) {
+      final bytes = artifact.downloadBytes;
+      if (bytes != null && (downloadBytes == null || bytes > downloadBytes)) {
+        downloadBytes = bytes;
+      }
+    }
     _engine =
         _engineFactory?.call(agent, lock) ??
         ChannelSetupEngine(
           linux: _linux,
-          components: (l10n, _) => phoneAgentComponents(l10n, agent, lock),
+          components: (l10n, _) => [
+            for (final component in phoneAgentComponents(l10n, agent, lock))
+              if (component.id == 'agent-${agent.id}')
+                component.withDownloadBytes(downloadBytes)
+              else
+                component,
+          ],
         );
     _installAgent = id;
     _engineListener = () {
@@ -223,25 +239,36 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
 
   @override
   Future<void> install(String agentId) async {
-    if (_engine?.progress.value.state == SetupState.running) {
+    if (_installRunPending ||
+        _engine?.progress.value.state == SetupState.running) {
       throw const AgentHostException(AgentHostFailure.busy);
     }
+    final generation = _generation;
     final arch = await architecture();
+    _checkGeneration(generation);
     final agent = _agent(agentId);
     if (arch == null || !agent.installableOn(arch)) {
       throw const AgentHostException(AgentHostFailure.wrongArchitecture);
     }
     await _password();
+    _checkGeneration(generation);
     final engine = await _prepareEngine(agentId);
+    _checkGeneration(generation);
     if (!await prefs.setString('$phoneAgentInstallPrefix$profileId', agentId)) {
       throw const AgentHostException(AgentHostFailure.storage);
     }
-    await engine.run(
-      {'agent-$agentId'},
-      params: {
-        'phoneAgentOwner': {'profileId': profileId, 'agentId': agentId},
-      },
-    );
+    _checkGeneration(generation);
+    _installRunPending = true;
+    try {
+      await engine.run(
+        {'agent-$agentId'},
+        params: {
+          'phoneAgentOwner': {'profileId': profileId, 'agentId': agentId},
+        },
+      );
+    } finally {
+      _installRunPending = false;
+    }
   }
 
   @override
@@ -255,7 +282,11 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
   @override
   Future<void> cancelInstall() async {
     _generation++;
-    if (_installAgent != null && await _ownsSetupJob(_installAgent!)) {
+    // run() includes local checks before native ownership exists. During
+    // that handoff the engine's local cancellation flag prevents dispatch.
+    // Once run() returns, only our exact durable owner may stop a native job.
+    if (_installRunPending ||
+        (_installAgent != null && await _ownsSetupJob(_installAgent!))) {
       await _engine?.cancel();
     }
   }

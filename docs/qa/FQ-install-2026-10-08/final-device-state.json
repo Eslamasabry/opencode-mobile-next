@@ -1,0 +1,75 @@
+{
+  "device": "emulator-5554",
+  "appBuild": 2196,
+  "sourceRevision": "d777082c37d41a16d92634c2f8f2360475247249",
+  "agents": {
+    "codex": {
+      "allocatedBytes": 0,
+      "pinMatches": false,
+      "linkMatches": false,
+      "targetPids": [],
+      "removed": false,
+      "leftovers": false,
+      "staging": [],
+      "lockPresent": false
+    },
+    "gemini": {
+      "allocatedBytes": 0,
+      "pinMatches": false,
+      "linkMatches": false,
+      "targetPids": [],
+      "removed": false,
+      "leftovers": false,
+      "staging": [],
+      "lockPresent": false
+    },
+    "qwen": {
+      "allocatedBytes": 0,
+      "pinMatches": false,
+      "linkMatches": false,
+      "targetPids": [],
+      "removed": false,
+      "leftovers": false,
+      "staging": [],
+      "lockPresent": false
+    },
+    "goose": {
+      "allocatedBytes": 0,
+      "pinMatches": false,
+      "linkMatches": false,
+      "targetPids": [],
+      "removed": false,
+      "leftovers": false,
+      "staging": [],
+      "lockPresent": false
+    },
+    "omp-acp": {
+      "allocatedBytes": 0,
+      "pinMatches": false,
+      "linkMatches": false,
+      "targetPids": [],
+      "removed": false,
+      "leftovers": false,
+      "staging": [],
+      "lockPresent": false
+    },
+    "fx": {
+      "allocatedBytes": 0,
+      "pinMatches": false,
+      "linkMatches": false,
+      "targetPids": [],
+      "removed": false,
+      "leftovers": false,
+      "staging": [],
+      "lockPresent": false
+    }
+  },
+  "apkSha256": "78074bc8c8f3244b252ae11f23cb3dc4d748b989c95c33e25111f6c16716af56",
+  "originalApkHashMatches": true,
+  "networkBitsPerSecond": {
+    "upload": 0.0,
+    "download": 0.0
+  },
+  "availableBytes": 1901592576,
+  "claudeReady": true
+}

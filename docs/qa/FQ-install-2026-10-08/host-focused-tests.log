@@ -1,0 +1,24 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart
+00:00 +0: BA1 probe uses the stable private home and returns only narrow account facts
+00:00 +1: BA1 missing private bridge stays unavailable and never uses setup output
+00:00 +2: shared engine installs as oc with Python and conditional host Node
+00:00 +3: the native host launches Paseo 0.9.2 without removed launch flags
+00:00 +4: ARM64 gate requires install version daemon and exact Paseo hello
+00:00 +5: x64 pass cannot qualify ARM64 and changed architecture invalidates gate
+00:00 +6: legacy fx check still qualifies after owner migration and never after failed retry
+00:00 +7: failed retry clears prior proof and never starts daemon after wrong version
+00:00 +8: stopped self-test cannot start a daemon after a late version check
+00:00 +9: restore and cancel cannot operate another profile setup job
+00:00 +10: cancel after handoff still stops an exactly owned setup job
+00:00 +11: cancel during local checks never hands an install to native
+00:00 +12: cancel retires an install awaiting architecture
+00:00 +13: cancel retires an install awaiting preparation
+00:00 +14: native storage guard includes omp-acp catalog download
+00:00 +15: native storage guard includes fx catalog download
+00:00 +16: running installation requires continue instead of a second install
+00:00 +17: background loss exposes resume and reuses the Keystore slot
+00:00 +18: restore resumes same persisted component selection with safe progress
+00:00 +19: profile removal drains native account home before deleting password
+00:00 +20: failed native drain preserves profile and secure slot for retry
+00:00 +21: saved-sign-in reset includes orphan agent slots and preserves unrelated secrets
+00:00 +22: All tests passed!
