@@ -1,0 +1,47 @@
+{
+  "base": "f0e33d96d407ff68782b49702e88269d197ae96e",
+  "branch": "sol/bd-bd7",
+  "state": "BLOCKED: coordinator APK2197 not posted; host harness ready",
+  "source_sha256": {
+    "tool/qa/bd7_device_crash_smoke.py": "330da3510cdd8685921282abee33b3b2a0422aaf783360bf349835c4ff1fa61b",
+    "tool/qa/bd7_device_ui.py": "33d49a1f4190328b9c5b5c4e80aa8e47a6f106416b0c5c60559191347330acb0",
+    "tool/qa/bd7_exit_proof.py": "ec032e72560e6bba9a8f7ca4879255f67adbbda876bb344d87e8edbee2a7cb63",
+    "tool/qa/test_bd7_device_crash_smoke.py": "57d4371cbd728d4da4b262ec7c2ef493a0a91a570a420f0b990f1d0b03c2da7a",
+    "tool/qa/test_bd7_device_ui.py": "263cb1fd504ade1689e7b02e602d5cdc3d0259f053321d67f71fe31b847ee237",
+    "tool/qa/test_bd7_exit_proof.py": "b11a839617b7e90361e7933b04c78257b1b4dc8dcf93ed47a34d9ca5679a3795"
+  },
+  "offline": {
+    "result": "PASS",
+    "tests": 46,
+    "command": "python3 -m unittest tool.qa.test_bd7_exit_proof tool.qa.test_bd7_device_ui tool.qa.test_bd7_device_crash_smoke"
+  },
+  "failing_controls": [
+    {
+      "control": "unguarded exit package and ringfield projection",
+      "tests": 2,
+      "result": "EXPECTED FAIL (both missing ProofFailure assertions)"
+    },
+    {
+      "control": "removed exact process identity guard",
+      "result": "EXPECTED FAIL (missing DeviceFailure assertion)"
+    },
+    {
+      "control": "removed screenshot fixed-copy guard",
+      "result": "EXPECTED FAIL (missing unsafe_screenshot assertion)"
+    },
+    {
+      "control": "removed Android UID ownership guard",
+      "result": "EXPECTED FAIL (missing identity rejection)"
+    },
+    {
+      "control": "falsey XML leaf crash dialog title",
+      "result": "EXPECTED FAIL (Close app not tapped); explicit None check PASS"
+    }
+  ],
+  "restored_source_and_offline": "PASS",
+  "device_run": false,
+  "flutter_changes": false,
+  "native_changes": false,
+  "pub_get": "pinned once PASS",
+  "full_suite": "not run; coordinator-owned"
+}
