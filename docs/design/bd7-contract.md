@@ -7,13 +7,19 @@ accessibility checks and Android device qualification. Capture defaults OFF.
 
 Import `lib/diagnostics/crash_diagnostics.dart`.
 
-- `CrashDiagnosticsStartup.ready`: startup result; null means this store is
-  unavailable. `main()` starts it after the opening frame; readiness resolves
-  within 300 ms. A timed-out or late reply cannot enable Flutter capture during
-  this run. Crash-store disk reads/import writes do not hold the UI isolate.
-  App-diagnostics notifications occur after readiness resolves; the separate
-  existing problem-report writer retains its own persistence behavior. Restart to retry.
-- `CrashDiagnosticsStartup.current`: same controller after startup succeeds.
+- `CrashDiagnosticsStartup.start(diagnostics)`: starts opening after the first
+  frame and returns within 300 ms. A null result caused by that deadline means
+  opening is still pending; it does not mean the store is unavailable. Background
+  opening continues without holding the UI isolate.
+- `CrashDiagnosticsStartup.ready`: the actual opening result. It remains pending
+  while the native channel or background storage work is pending, including
+  beyond 300 ms. It resolves with the real controller when opening succeeds,
+  or null when opening fails. UI awaits this future to choose availability.
+- `CrashDiagnosticsStartup.current`: the same controller when opening succeeds,
+  including after the launch wait expires. Reset/generation changes discard
+  stale opening results so they cannot attach a controller. Restored evidence
+  is replayed to App diagnostics once, after readiness settles; the separate
+  existing problem-report writer retains its own persistence behavior.
 - `CrashDiagnosticsController.enabled`: whether this controller loaded/saved
   a valid explicit consent epoch. Defaults false; it is not a device-proof flag.
 - `storageFailed`: the latest storage operation failed. Treat this as unavailable
@@ -29,7 +35,8 @@ Import `lib/diagnostics/crash_diagnostics.dart`.
 - The existing `AppDiagnosticsController.clear()` also clears this crash store.
 - `CrashDiagnosticsStartup.capture(diagnostics, error, stack, source)` retains
   fixed categories in memory while startup is pending/unavailable; no stack or
-  exception text is recorded.
+  exception text is recorded. Completing opening does not change consent or
+  replay errors captured before opt-in into the saved crash store.
 - `capture(Object error, StackTrace? stack, String source)` is for global hooks,
   not UI. Supported sources: `flutter`, `platform`, `widget`. No error value or
   stack text is read or persisted.
