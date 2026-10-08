@@ -133,7 +133,7 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
           agent != null && (await host.inspect(agent)).hostAvailable;
       if (!running) {
         try {
-          await host.start();
+          await _paStartOrdinaryHost(host, automatic: true);
         } on AgentHostException catch (error) {
           if (error.reason != AgentHostFailure.busy) rethrow;
         }
@@ -199,7 +199,9 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
     unawaited(() async {
       try {
         final runtime = await host.inspect(agent);
-        if (!runtime.hostAvailable && runtime.installed) await host.start();
+        if (!runtime.hostAvailable && runtime.installed) {
+          await _paStartOrdinaryHost(host, automatic: true);
+        }
       } catch (_) {
         // The next reconnect checks again.
       }

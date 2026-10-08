@@ -1,0 +1,18 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_idle_host_test.dart
+00:00 +0: idle host projects strict native receipt for a cold process
+00:00 +1: idle host restores with original secret guarded wire and owned hello
+00:00 +2: idle host never creates a missing secret
+00:00 +3: idle host rejects corrupt or unreadable secrets without writes
+00:00 +4: idle host malformed and old receipts cannot authorize restoration
+00:00 +5: idle host previously stopped helper stays stopped
+00:00 +6: idle host owner changes during secret read prevent dispatch
+00:00 +7: idle host coalesces same token and refuses a different token
+00:00 +8: idle host native token changed during secure read cannot dispatch
+00:00 +9: idle host native token changed during hello refuses readiness
+00:00 +10: ordinary host start foreground loss during secret read prevents dispatch
+00:00 +11: idle host stop fences a pending secure read
+00:00 +12: idle host dispose fences a pending secure read
+00:00 +13: idle host requires actual pinned hello and closes rejected probe
+00:00 +14: idle host reconnect cannot create a secret after guarded resume
+00:00 +15: idle host automatic start allows only complete foreground legacy or idle facts
+00:00 +16: All tests passed!

@@ -81,6 +81,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   /// The body of [suspendForLifecycle].
   void _suspendForLifecycle() {
     if (_disposed || isIsolated) return;
+    ++_paIdleLifecycleEpoch;
     _resetTurnStalls();
     _lifecycleWasBackgrounded = true;
     _quotaMonitor?.setRuntime(

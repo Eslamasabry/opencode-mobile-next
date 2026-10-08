@@ -1,0 +1,12 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_payload_use_test.dart
+00:00 +0: denied acquisition prevents draft create and does not release
+00:00 +1: acquires before first create await and holds until RPC acknowledgement
+00:00 +2: held acquisition blocks all draft RPC work until admitted
+00:00 +3: resume acquires before fetching and releases after daemon request
+00:00 +4: correlated existing-session prompt also leases actual send
+00:00 +5: denied existing send and resume dispatch no RPC and never release
+00:00 +6: RPC failure releases without replacing its fixed error
+00:00 +7: scope changed during admission releases and dispatches no RPC
+00:00 +8: gateway closed during admission releases and dispatches no RPC
+00:00 +9: default callbacks keep ordinary create resume and send paths working
+00:00 +10: All tests passed!

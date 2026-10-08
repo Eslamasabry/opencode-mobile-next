@@ -24,6 +24,36 @@ import 'agent_install_guard.dart';
 import 'agent_removal_scripts.dart';
 import 'paseo_scripts.dart';
 
+/// Strict native idle receipt. Missing or malformed fields never admit resume.
+final class PhoneAgentIdleState {
+  const PhoneAgentIdleState({
+    required this.supported,
+    this.idleStopped,
+    this.helperStopped,
+    this.generation,
+    this.serverRestartWanted,
+    this.serverRunning,
+    this.legacyUnsupported = false,
+  });
+  final bool? supported;
+  final bool? idleStopped;
+  final bool? helperStopped;
+  final int? generation;
+  final bool? serverRestartWanted;
+  final bool? serverRunning;
+  final bool legacyUnsupported;
+
+  bool get automaticStartAllowed =>
+      supported == false ||
+      legacyUnsupported ||
+      (supported == true &&
+          idleStopped == false &&
+          helperStopped == false &&
+          generation == 0 &&
+          serverRestartWanted == true &&
+          serverRunning == true);
+}
+
 /// Built-in implementation. UI consumes PhoneAgentHost and safe domain rows;
 /// the connection controller owns gateways and never creates a second profile.
 final class BuiltinPhoneAgents implements PhoneAgentHost {
@@ -110,6 +140,201 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
   Future<bool?> helperRunning() async {
     final value = (await _invoke('agentHostStatus'))['running'];
     return value is bool ? value : null;
+  }
+
+  Future<PhoneAgentIdleState> idleState() async {
+    final raw = await _invoke('status');
+    bool? boolean(String key) => raw[key] is bool ? raw[key] as bool : null;
+    final token = raw['serverIdleGeneration'];
+    const idleFields = [
+      'serverIdlePolicySupported',
+      'serverIdleStopped',
+      'serverIdleHelperStopped',
+      'serverIdleGeneration',
+    ];
+    return PhoneAgentIdleState(
+      supported: boolean('serverIdlePolicySupported'),
+      idleStopped: boolean('serverIdleStopped'),
+      helperStopped: boolean('serverIdleHelperStopped'),
+      generation: token is int && token >= 0 ? token : null,
+      serverRestartWanted: boolean('serverRestartWanted'),
+      serverRunning: boolean('serverRunning'),
+      legacyUnsupported: idleFields.every((key) => !raw.containsKey(key)),
+    );
+  }
+
+  Future<void>? _idleResume;
+  int? _idleToken;
+  Completer<void>? _idleCancelled;
+  PaseoTransport? _idleProbe;
+  bool _idleReadOnlySecret = false;
+
+  Future<void> resumeAfterIdle({
+    required int expectedIdleGeneration,
+    required bool Function() stillCurrent,
+  }) {
+    if (_disposed || !stillCurrent() || expectedIdleGeneration < 0) {
+      return Future.error(const AgentHostException(AgentHostFailure.stale));
+    }
+    if (_idleResume != null) {
+      if (_idleToken == expectedIdleGeneration) return _idleResume!;
+      return Future.error(const AgentHostException(AgentHostFailure.stale));
+    }
+    if (_removeInFlight || _startInFlight) {
+      return Future.error(const AgentHostException(AgentHostFailure.busy));
+    }
+    final cancelled = _idleCancelled = Completer<void>();
+    _idleToken = expectedIdleGeneration;
+    _startInFlight = true;
+    final generation = _generation;
+    final pending = _restoreIdle(
+      expectedIdleGeneration,
+      generation,
+      stillCurrent,
+      cancelled,
+    );
+    _idleResume = pending.whenComplete(() {
+      _idleResume = null;
+      _idleToken = null;
+      _idleCancelled = null;
+      _startInFlight = false;
+    });
+    return _idleResume!;
+  }
+
+  Future<T> _idleAwait<T>(
+    Future<T> operation,
+    Completer<void> cancelled, {
+    Duration timeout = const Duration(seconds: 8),
+  }) => Future.any<T>([
+    operation,
+    cancelled.future.then<T>(
+      (_) => throw const AgentHostException(AgentHostFailure.stale),
+    ),
+  ]).timeout(timeout);
+
+  void _idleFence(int generation, bool Function() stillCurrent) {
+    _checkGeneration(generation);
+    if (!stillCurrent()) {
+      throw const AgentHostException(AgentHostFailure.stale);
+    }
+  }
+
+  Future<String> _existingPassword() async {
+    try {
+      final value = await secure.read(
+        key: '$phoneAgentHostSecretPrefix$profileId',
+      );
+      if (value == null || !RegExp(r'^[a-f0-9]{64}$').hasMatch(value)) {
+        throw const AgentHostException(AgentHostFailure.storage);
+      }
+      return value;
+    } catch (_) {
+      throw const AgentHostException(AgentHostFailure.storage);
+    }
+  }
+
+  void _validateIdleReceipt(
+    PhoneAgentIdleState receipt,
+    int token, {
+    bool requireOwedHelper = false,
+  }) {
+    if (receipt.supported != true ||
+        receipt.idleStopped == null ||
+        receipt.helperStopped == null ||
+        receipt.generation != token ||
+        receipt.serverRestartWanted != true ||
+        receipt.serverRunning != true ||
+        (requireOwedHelper && receipt.helperStopped != true)) {
+      throw const AgentHostException(AgentHostFailure.unavailable);
+    }
+  }
+
+  Future<void> _restoreIdle(
+    int token,
+    int generation,
+    bool Function() stillCurrent,
+    Completer<void> cancelled,
+  ) async {
+    try {
+      final receipt = await _idleAwait(idleState(), cancelled);
+      _idleFence(generation, stillCurrent);
+      _validateIdleReceipt(receipt, token);
+      if (receipt.helperStopped == false) return;
+      final password = await _idleAwait(_existingPassword(), cancelled);
+      _idleFence(generation, stillCurrent);
+      final currentReceipt = await _idleAwait(idleState(), cancelled);
+      _idleFence(generation, stillCurrent);
+      _validateIdleReceipt(currentReceipt, token, requireOwedHelper: true);
+      KitRedact.registerKnownSecret(password);
+      _cachedPassword = password;
+      _idleReadOnlySecret = true;
+      await _idleAwait(
+        _invoke('startAgentHost', {
+          'password': password,
+          'port': 4099,
+          'config': configuration(),
+          'idleResume': true,
+          'expectedIdleGeneration': token,
+        }),
+        cancelled,
+      );
+      _idleFence(generation, stillCurrent);
+      final probe = _idleProbe = _transport(password);
+      final elapsed = Stopwatch()..start();
+      try {
+        while (elapsed.elapsed < const Duration(seconds: 30)) {
+          _idleFence(generation, stillCurrent);
+          final remaining = const Duration(seconds: 30) - elapsed.elapsed;
+          try {
+            await _idleAwait(probe.connect(), cancelled, timeout: remaining);
+            _idleFence(generation, stillCurrent);
+            if (probe.serverVersion != PaseoPhoneScripts.version) {
+              throw const AgentHostException(AgentHostFailure.hello);
+            }
+            final currentReceipt = await _idleAwait(
+              idleState(),
+              cancelled,
+              timeout: const Duration(seconds: 30) - elapsed.elapsed,
+            );
+            _idleFence(generation, stillCurrent);
+            _validateIdleReceipt(currentReceipt, token);
+            return;
+          } on AgentHostException {
+            rethrow;
+          } catch (_) {
+            _idleFence(generation, stillCurrent);
+            if (elapsed.elapsed >= const Duration(seconds: 30)) break;
+            await _idlePause(cancelled);
+          }
+        }
+        throw const AgentHostException(AgentHostFailure.hello);
+      } finally {
+        await probe.close();
+        if (identical(_idleProbe, probe)) _idleProbe = null;
+      }
+    } on AgentHostException {
+      rethrow;
+    } catch (_) {
+      throw const AgentHostException(AgentHostFailure.unavailable);
+    }
+  }
+
+  Future<void> _idlePause(Completer<void> cancelled) async {
+    final elapsed = Completer<void>();
+    final timer = Timer(const Duration(milliseconds: 500), elapsed.complete);
+    try {
+      await _idleAwait(elapsed.future, cancelled);
+    } finally {
+      timer.cancel();
+    }
+  }
+
+  void _cancelIdleRestore() {
+    final cancelled = _idleCancelled;
+    if (cancelled != null && !cancelled.isCompleted) cancelled.complete();
+    final probe = _idleProbe;
+    if (probe != null) unawaited(probe.close());
   }
 
   /// Removes only an authored agent payload; accounts and chats are retained.
@@ -426,6 +651,7 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
   @override
   Future<void> cancelInstall() async {
     _generation++;
+    _cancelIdleRestore();
     // run() includes local checks before native ownership exists. During
     // that handoff the engine's local cancellation flag prevents dispatch.
     // Once run() returns, only our exact durable owner may stop a native job.
@@ -516,25 +742,32 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
 
   /// Install gate can bootstrap the daemon. Chat still uses separate resume proof.
   @override
-  Future<void> start() async {
+  Future<void> start({bool Function()? stillCurrent}) async {
     if (_removeInFlight || _startInFlight) {
       throw const AgentHostException(AgentHostFailure.busy);
     }
     _startInFlight = true;
     final generation = _generation;
-    try {
-      final password = await _password();
-      if (generation != _generation || _disposed) {
+    void fence() {
+      _checkGeneration(generation);
+      if (stillCurrent != null && !stillCurrent()) {
         throw const AgentHostException(AgentHostFailure.stale);
       }
+    }
+
+    try {
+      // Ordinary foreground actions can create a secret, but a stale owner
+      // cannot begin that work or dispatch after the secure-storage await.
+      fence();
+      _idleReadOnlySecret = false;
+      final password = await _password();
+      fence();
       await _invoke('startAgentHost', {
         'password': password,
         'port': 4099,
         'config': configuration(),
       });
-      if (generation != _generation || _disposed) {
-        throw const AgentHostException(AgentHostFailure.stale);
-      }
+      fence();
     } finally {
       _startInFlight = false;
     }
@@ -588,6 +821,7 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
   @override
   Future<void> stop() async {
     _generation++;
+    _cancelIdleRestore();
     await _invoke('stopAgentHost');
   }
 
@@ -596,7 +830,9 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
         directory.split('/').any((p) => p == '..' || p == '.')) {
       throw const AgentHostException(AgentHostFailure.unavailable);
     }
-    final transport = _transport(await _password());
+    final transport = _transport(
+      await (_idleReadOnlySecret ? _existingPassword() : _password()),
+    );
     try {
       await transport.connect();
     } catch (_) {
@@ -607,6 +843,7 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
       transport: transport,
       directory: directory,
       defaultProviderModes: const {'claude': 'default'},
+      trackLocalWork: true,
       beforePayloadUse: _beginPayloadUse,
       afterPayloadUse: _endPayloadUse,
     );
@@ -627,6 +864,7 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
       transport: _transport(password),
       directory: directory,
       defaultProviderModes: const {'claude': 'default'},
+      trackLocalWork: true,
       beforePayloadUse: _beginPayloadUse,
       afterPayloadUse: _endPayloadUse,
     );
@@ -822,6 +1060,7 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
   Future<void> dispose() async {
     _disposed = true;
     _generation++;
+    _cancelIdleRestore();
     _detachEngine();
     await _changes.close();
   }

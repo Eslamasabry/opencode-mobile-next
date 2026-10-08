@@ -1,0 +1,39 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart
+00:00 +0: endpoint policy cleartext is limited to this device and Tailscale
+00:00 +1: endpoint policy profile validators agree and an empty password is allowed
+00:00 +2: endpoint policy a paseo profile round-trips without its password
+00:00 +3: a rejected password is an authentication failure
+00:00 +4: hello claims only what the client implements
+00:00 +5: the agent's own commands are listed without its plumbing
+00:00 +6: an update keeps the conversation's model and mode
+00:00 +7: sessions are this folder's unarchived agents
+00:00 +8: ready runtimes become providers; modes become agents
+00:00 +9: a daemon still listing its models is waited for, not believed
+00:00 +10: a new conversation stays local until its first prompt names the runtime
+00:00 +11: a new conversation keeps its app id while the daemon uses its own
+00:00 +12: a new conversation replays events that raced ahead of the create answer
+00:00 +13: a new conversation a spawn-time idle snapshot does not end the run
+00:00 +14: streaming a finished turn finishes its replies
+00:00 +15: streaming assistant text is announced once, then streamed as deltas
+00:00 +16: streaming a replayed sequence number is ignored
+00:00 +17: streaming reasoning deltas share one message until another item
+00:00 +18: streaming a tool call is one message updated by snapshots
+00:00 +19: streaming a failed turn surfaces safe fixed copy
+00:00 +20: streaming events for another folder's agent are dropped
+00:00 +21: permissions a write request becomes an edit card with its file
+00:00 +22: permissions once allows; always also applies the provider's rule
+00:00 +23: permissions reject denies with the reason; cancel also interrupts
+00:00 +24: permissions an answered request does not return from a stale snapshot
+00:00 +25: permissions a request answered elsewhere is retired by the next snapshot
+00:00 +26: history maps the merged timeline and primes the live stream
+00:00 +27: delete archives, and an archive elsewhere removes the session
+00:00 +28: a refused request is a fixed failure, never the daemon's text
+00:00 +29: a dropped socket reconnects and re-reads the agent list
+00:01 +30: sub-agents a sub-agent is its conversation's child, and its card opens it
+00:01 +31: sub-agents its steps stream into its own conversation
+00:01 +32: sub-agents its history is read from the helper; it takes no replies
+00:01 +33: sub-agents an old conversation's cards link to the sub-agents the helper still knows
+00:01 +34: probe bad input never opens a socket
+00:01 +35: probe a verified daemon names its ready runtimes
+00:01 +36: permission mapping covers shell and unknown tools
+00:01 +37: All tests passed!
