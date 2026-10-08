@@ -1,0 +1,71 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart
+00:00 +0: missing foreground binding refuses sign-in before native PTY start
+00:00 +0 -1: missing foreground binding refuses sign-in before native PTY start [E]
+  Expected: empty
+    Actual: WhereIterable<String>:['sign-in no-registered-owner-foreground-test 24 x 80']
+  
+  package:matcher                                       expect
+  package:flutter_test/src/widget_tester.dart 473:18    expect
+  test/local_terminal_signin_foreground_test.dart 48:5  main.<fn>
+  
+00:00 +0 -1: reserves synchronously and waits for active foreground before PTY start
+00:00 +0 -2: reserves synchronously and waits for active foreground before PTY start [E]
+  Expected: <1>
+    Actual: <0>
+  
+  package:matcher                                       expect
+  package:flutter_test/src/widget_tester.dart 473:18    expect
+  test/local_terminal_signin_foreground_test.dart 61:5  main.<fn>
+  
+00:00 +0 -2: ending pending native start drains its late exact ID before releasing foreground
+00:00 +0 -3: ending pending native start drains its late exact ID before releasing foreground [E]
+  A LocalShell was used after being disposed.
+  Once you have called dispose() on a LocalShell, it can no longer be used.
+  package:flutter/src/foundation/change_notifier.dart 184:9   ChangeNotifier.debugAssertNotDisposed.<fn>
+  package:flutter/src/foundation/change_notifier.dart 191:6   ChangeNotifier.debugAssertNotDisposed
+  package:flutter/src/foundation/change_notifier.dart 414:27  ChangeNotifier.notifyListeners
+  package:opencode_mobile/builtin/local_terminal.dart 318:5   LocalShell._failed
+  package:opencode_mobile/builtin/local_terminal.dart 565:13  LocalTerminalSessions._launch
+  ===== asynchronous gap ===========================
+  dart:async                                                  _CustomZone.registerUnaryCallback
+  package:opencode_mobile/builtin/local_terminal.dart 556:20  LocalTerminalSessions._launch
+  package:opencode_mobile/builtin/local_terminal.dart 532:15  LocalTerminalSessions.startSignIn
+  test/local_terminal_signin_foreground_test.dart 79:28       main.<fn>
+  
+  Expected: false
+    Actual: <true>
+  
+  package:matcher                                       expect
+  package:flutter_test/src/widget_tester.dart 473:18    expect
+  test/local_terminal_signin_foreground_test.dart 91:5  main.<fn>
+  
+00:00 +0 -3: disposing a pending sign-in drains late native ID without reopening URL
+00:00 +0 -4: disposing a pending sign-in drains late native ID without reopening URL [E]
+  A LocalShell was used after being disposed.
+  Once you have called dispose() on a LocalShell, it can no longer be used.
+  package:flutter/src/foundation/change_notifier.dart 184:9   ChangeNotifier.debugAssertNotDisposed.<fn>
+  package:flutter/src/foundation/change_notifier.dart 191:6   ChangeNotifier.debugAssertNotDisposed
+  package:flutter/src/foundation/change_notifier.dart 414:27  ChangeNotifier.notifyListeners
+  package:opencode_mobile/builtin/local_terminal.dart 318:5   LocalShell._failed
+  package:opencode_mobile/builtin/local_terminal.dart 565:13  LocalTerminalSessions._launch
+  ===== asynchronous gap ===========================
+  dart:async                                                  _CustomZone.registerUnaryCallback
+  package:opencode_mobile/builtin/local_terminal.dart 556:20  LocalTerminalSessions._launch
+  package:opencode_mobile/builtin/local_terminal.dart 532:15  LocalTerminalSessions.startSignIn
+  test/local_terminal_signin_foreground_test.dart 104:28      main.<fn>
+  
+  Expected: contains 'remove 1'
+    Actual: ['sign-in owner 24 x 80']
+     Which: does not contain 'remove 1'
+  
+  package:matcher                                        expect
+  package:flutter_test/src/widget_tester.dart 473:18     expect
+  test/local_terminal_signin_foreground_test.dart 115:5  main.<fn>
+  
+00:00 +0 -4: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: disposing a pending sign-in drains late native ID without reopening URL
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: ending pending native start drains its late exact ID before releasing foreground
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: missing foreground binding refuses sign-in before native PTY start
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: reserves synchronously and waits for active foreground before PTY start

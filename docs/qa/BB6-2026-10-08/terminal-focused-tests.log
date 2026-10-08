@@ -1,0 +1,241 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart: successive replacement cannot skip the oldest pending drain
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart: replacement waits for old terminal drain and foreground release
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart: old unbind cannot clear a replacement binding
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart: cancelling a reservation before the drain gate never starts a service
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart: failed cleanup blocks admission and remains retryable
+00:00 +5: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: missing foreground binding refuses sign-in before native PTY start
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: reserves synchronously and waits for active foreground before PTY start
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: ending pending native start drains its late exact ID before releasing foreground
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: disposing a pending sign-in drains late native ID without reopening URL
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: cancel during foreground admission ends promptly without issuing native start
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: admission refusal uses fixed words and releases without native launch
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: inactive admission cannot launch a PTY
+00:00 +12: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: native sign-in errors never expose platform or CLI text
+00:00 +13: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: exit holds foreground through authentication checking until explicit end
+00:00 +14: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: foreground loss drains only its sign-in and leaves normal shells alone
+00:00 +15: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: duplicate ends share a drain and hold protection until native removal completes
+00:00 +16: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: failed drain retains protection and allows an exact-ID retry
+00:00 +17: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: owner unbind drains registered pending PTY before releasing its delegate
+00:00 +18: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart
+00:03 +18: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: a new shell starts at the terminal size, then runs
+00:03 +19: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: a new shell a failed start says why
+00:03 +20: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: a new shell shells are numbered in the order they were opened
+00:03 +21: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output is drawn and every chunk is answered
+00:03 +22: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output a character split across two chunks arrives whole
+00:03 +23: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output a wide character at the last column wraps whole
+00:03 +24: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output after clear, a selection copies the words it covers
+00:03 +25: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output output for a shell this side does not know is still answered
+00:03 +26: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output an exit ends the shell with its code
+00:03 +27: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: input typed text reaches the shell as UTF-8
+00:03 +28: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: input a sticky Ctrl turns the next typed letter into its control byte
+00:03 +29: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: input nothing is sent before the shell runs or after it ended
+00:03 +30: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: size a resize reaches the shell once the view settles
+00:03 +31: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: shells outlive the screen load adopts shells Android runs, with their recent output
+00:03 +32: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: shells outlive the screen load runs once
+00:03 +33: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: shells outlive the screen restart replaces an ended shell
+00:03 +34: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: shells outlive the screen stop leaves the shell listed as ended
+00:03 +35: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: channel events are parsed from the Android shapes
+00:04 +36: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart
+00:13 +36: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: (setUpAll)
+00:13 +36: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: fx: its Vercel device page opens and its code copies
+00:13 +37: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: Codex: its device page and the code on the next line
+00:14 +38: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: Claude: a page it broke across rows opens whole, and there is no code to copy
+Pending timers:
+Timer (duration: 0:00:00.080000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#5      LocalShell._resized (package:opencode_mobile/builtin/local_terminal.dart:293:20)
+#6      new LocalShell._.<anonymous closure> (package:opencode_mobile/builtin/local_terminal.dart:227:39)
+#7      Terminal.resize (package:xterm/src/terminal.dart:362:15)
+#8      RenderTerminal._resizeTerminalIfNeeded (package:xterm/src/ui/render.dart:347:17)
+#9      RenderTerminal._updateViewportSize (package:xterm/src/ui/render.dart:340:7)
+#10     RenderTerminal.performLayout (package:xterm/src/ui/render.dart:211:5)
+#11     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#12     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#13     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#14     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#15     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#16     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#17     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#18     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#19     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#20     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#21     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#22     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#23     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#24     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#25     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#26     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#27     _RenderCustomClip.performLayout (package:flutter/src/rendering/proxy_box.dart:1549:11)
+#28     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#29     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#30     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#31     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#32     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#33     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#34     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#35     RenderPadding.performLayout (package:flutter/src/rendering/shifted_box.dart:262:12)
+#36     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#37     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#38     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#39     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#40     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#41     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#42     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#43     ChildLayoutHelper.layoutChild (package:flutter/src/rendering/layout_helper.dart:62:11)
+#44     RenderFlex._computeSizes (package:flutter/src/rendering/flex.dart:1275:26)
+#45     RenderFlex.performLayout (package:flutter/src/rendering/flex.dart:1329:32)
+#46     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#47     ChildLayoutHelper.layoutChild (package:flutter/src/rendering/layout_helper.dart:62:11)
+#48     RenderFlex._computeSizes (package:flutter/src/rendering/flex.dart:1275:26)
+#49     RenderFlex.performLayout (package:flutter/src/rendering/flex.dart:1329:32)
+#50     RenderObject._layoutWithoutResize (package:flutter/src/rendering/object.dart:2771:7)
+#51     PipelineOwner.flushLayout (package:flutter/src/rendering/object.dart:1174:18)
+#52     PipelineOwner.flushLayout (package:flutter/src/rendering/object.dart:1187:15)
+#53     AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2434:27)
+#54     RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558:5)
+#55     SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#56     SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
+#57     AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2261:9)
+#60     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#61     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#62     WidgetTester.pump.<anonymous closure> (package:flutter_test/src/widget_tester.dart:652:53)
+#65     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#66     WidgetTester.pump (package:flutter_test/src/widget_tester.dart:652:27)
+#67     _print (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart:86:16)
+<asynchronous suspension>
+#68     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart:183:5)
+<asynchronous suspension>
+#69     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#70     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 7 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  Claude: a page it broke across rows opens whole, and there is no code to copy
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:14 +38 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: Claude: a page it broke across rows opens whole, and there is no code to copy [E]
+  Test failed. See exception logs above.
+  The test description was: Claude: a page it broke across rows opens whole, and there is no code to copy
+  
+00:14 +38 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: the newest page wins
+Pending timers:
+Timer (duration: 0:00:00.080000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#5      LocalShell._resized (package:opencode_mobile/builtin/local_terminal.dart:293:20)
+#6      new LocalShell._.<anonymous closure> (package:opencode_mobile/builtin/local_terminal.dart:227:39)
+#7      Terminal.resize (package:xterm/src/terminal.dart:362:15)
+#8      RenderTerminal._resizeTerminalIfNeeded (package:xterm/src/ui/render.dart:347:17)
+#9      RenderTerminal._updateViewportSize (package:xterm/src/ui/render.dart:340:7)
+#10     RenderTerminal.performLayout (package:xterm/src/ui/render.dart:211:5)
+#11     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#12     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#13     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#14     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#15     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#16     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#17     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#18     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#19     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#20     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#21     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#22     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#23     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#24     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#25     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#26     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#27     _RenderCustomClip.performLayout (package:flutter/src/rendering/proxy_box.dart:1549:11)
+#28     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#29     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#30     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#31     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#32     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#33     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#34     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#35     RenderPadding.performLayout (package:flutter/src/rendering/shifted_box.dart:262:12)
+#36     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#37     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#38     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#39     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#40     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#41     RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118:18)
+#42     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#43     ChildLayoutHelper.layoutChild (package:flutter/src/rendering/layout_helper.dart:62:11)
+#44     RenderFlex._computeSizes (package:flutter/src/rendering/flex.dart:1275:26)
+#45     RenderFlex.performLayout (package:flutter/src/rendering/flex.dart:1329:32)
+#46     RenderObject.layout (package:flutter/src/rendering/object.dart:2923:7)
+#47     ChildLayoutHelper.layoutChild (package:flutter/src/rendering/layout_helper.dart:62:11)
+#48     RenderFlex._computeSizes (package:flutter/src/rendering/flex.dart:1275:26)
+#49     RenderFlex.performLayout (package:flutter/src/rendering/flex.dart:1329:32)
+#50     RenderObject._layoutWithoutResize (package:flutter/src/rendering/object.dart:2771:7)
+#51     PipelineOwner.flushLayout (package:flutter/src/rendering/object.dart:1174:18)
+#52     PipelineOwner.flushLayout (package:flutter/src/rendering/object.dart:1187:15)
+#53     AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2434:27)
+#54     RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558:5)
+#55     SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#56     SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
+#57     AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2261:9)
+#60     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#61     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#62     WidgetTester.pump.<anonymous closure> (package:flutter_test/src/widget_tester.dart:652:53)
+#65     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#66     WidgetTester.pump (package:flutter_test/src/widget_tester.dart:652:27)
+#67     _print (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart:86:16)
+<asynchronous suspension>
+#68     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart:198:5)
+<asynchronous suspension>
+#69     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#70     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 7 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  the newest page wins
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:14 +38 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: the newest page wins [E]
+  Test failed. See exception logs above.
+  The test description was: the newest page wins
+  
+00:14 +38 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: plain http and this phone's own pages are never offered
+00:14 +39 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: the buttons leave once the sign-in ends
+00:14 +40 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: (tearDownAll)
+00:14 +40 -2: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: Claude: a page it broke across rows opens whole, and there is no code to copy
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: the newest page wins

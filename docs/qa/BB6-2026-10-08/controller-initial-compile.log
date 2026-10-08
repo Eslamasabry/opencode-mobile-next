@@ -1,0 +1,30 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+lib/background/live_background.dart:244:14: Error: Type '_SignInForegroundState' not found.
+  late final _SignInForegroundState _signInForeground =
+             ^^^^^^^^^^^^^^^^^^^^^^
+lib/background/live_background.dart:244:14: Error: '_SignInForegroundState' isn't a type.
+  late final _SignInForegroundState _signInForeground =
+             ^^^^^^^^^^^^^^^^^^^^^^
+lib/background/live_background.dart:245:7: Error: The method '_SignInForegroundState' isn't defined for the type 'BackgroundLiveController'.
+ - 'BackgroundLiveController' is from 'package:opencode_mobile/background/live_background.dart' ('lib/background/live_background.dart').
+Try correcting the name to the name of an existing method, or defining a method named '_SignInForegroundState'.
+      _SignInForegroundState(this);
+      ^^^^^^^^^^^^^^^^^^^^^^
+00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart [E]
+  Failed to load "/home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart":
+  Compilation failed for testPath=/home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: lib/background/live_background.dart:244:14: Error: Type '_SignInForegroundState' not found.
+    late final _SignInForegroundState _signInForeground =
+               ^^^^^^^^^^^^^^^^^^^^^^
+  lib/background/live_background.dart:244:14: Error: '_SignInForegroundState' isn't a type.
+    late final _SignInForegroundState _signInForeground =
+               ^^^^^^^^^^^^^^^^^^^^^^
+  lib/background/live_background.dart:245:7: Error: The method '_SignInForegroundState' isn't defined for the type 'BackgroundLiveController'.
+   - 'BackgroundLiveController' is from 'package:opencode_mobile/background/live_background.dart' ('lib/background/live_background.dart').
+  Try correcting the name to the name of an existing method, or defining a method named '_SignInForegroundState'.
+        _SignInForegroundState(this);
+        ^^^^^^^^^^^^^^^^^^^^^^
+  .
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart

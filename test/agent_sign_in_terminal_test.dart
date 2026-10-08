@@ -8,6 +8,7 @@ import '../tool/capture/fixtures.dart' show loadCaptureFonts;
 import 'support/agents_fakes.dart';
 import 'support/chats_fakes.dart';
 import 'support/fake_local_terminal.dart';
+import 'support/fake_sign_in_foreground.dart';
 
 const _open = ValueKey('agents-sign-in-terminal-open');
 const _copy = ValueKey('agents-sign-in-terminal-copy-code');
@@ -43,7 +44,10 @@ Future<_Run> _pump(WidgetTester tester, String agentId) async {
         ),
         agentId: agentId,
         agentName: agentId,
-        sessions: LocalTerminalSessions(backend: backend),
+        sessions: LocalTerminalSessions(
+          backend: backend,
+          signInForeground: FakeSignInForeground(),
+        ),
         openPage: (context, url) async => opened.add(url),
       ),
     ),

@@ -1,0 +1,213 @@
+Resolving dependencies...
+Downloading packages...
+  android_file_picker 1.1.0 (2.0.1 available)
+  clock 1.1.2 (1.1.3 available)
+  code_assets 2.0.0 (2.1.0 available)
+  cross_file 0.3.5+5 (0.4.0 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  dbus 0.7.15 (0.8.0 available)
+  dio_web_adapter 2.2.1 (2.2.2 available)
+  dynamic_color 1.9.0 (2.1.0 available)
+  equatable 2.0.7 (3.0.0 available)
+  file_picker 12.2.0 (13.1.0 available)
+  file_picker_darwin 1.1.0 (2.1.2 available)
+  file_picker_linux 1.1.0 (2.0.2 available)
+  file_picker_platform_interface 3.3.0 (4.0.0 available)
+  file_picker_web 3.1.0 (4.0.1 available)
+  flutter_secure_storage_darwin 0.4.0 (0.4.3 available)
+  flutter_secure_storage_linux 3.0.2 (3.0.3 available)
+  flutter_timezone 5.1.0 (5.1.1 available)
+  image_picker 1.2.3 (1.2.4 available)
+  image_picker_android 0.8.13+22 (0.8.13+25 available)
+  image_picker_ios 0.8.13+7 (0.8.13+9 available)
+  image_picker_platform_interface 2.11.1 (2.11.2 available)
+  jni 1.0.3 (1.1.0 available)
+  jni_flutter 1.0.2 (1.0.4+1 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  mime 2.0.0 (2.1.0 available)
+  objective_c 9.6.0 (9.6.2 available)
+  package_config 2.2.0 (3.0.0 available)
+  package_info_plus 10.2.1 (10.2.2 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  pub_semver 2.2.0 (2.2.1 available)
+  qr 3.0.2 (4.0.0 available)
+  record_android 2.1.2 (2.2.0 available)
+  record_linux 2.1.1 (2.1.2 available)
+  record_web 2.1.2 (2.1.3 available)
+  record_windows 2.2.3 (2.3.0 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.27 (2.4.28 available)
+  shared_preferences_foundation 2.5.6 (2.5.7 available)
+  sherpa_onnx 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_arm64 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_armeabi 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_x86 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_x86_64 1.13.7 (1.13.8 available)
+  sherpa_onnx_ios 1.13.7 (1.13.8 available)
+  sherpa_onnx_linux 1.13.7 (1.13.8 available)
+  sherpa_onnx_macos 1.13.7 (1.13.8 available)
+  sherpa_onnx_web 1.13.7 (1.13.8 available)
+  sherpa_onnx_windows 1.13.7 (1.13.8 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  test_api 0.7.12 (0.7.14 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  url_launcher_android 6.3.32 (6.3.33 available)
+  url_launcher_ios 6.4.1 (6.4.2 available)
+  url_launcher_linux 3.2.2 (3.2.3 available)
+  url_launcher_macos 3.2.5 (3.2.6 available)
+  url_launcher_windows 3.1.5 (3.1.6 available)
+  vector_math 2.4.2 (2.4.3 available)
+  windows_file_picker 1.2.0 (2.0.1 available)
+  xml 7.0.1 (7.1.0 available)
+  yaml 3.1.3 (3.1.4 available)
+Got dependencies!
+61 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: (setUpAll)
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent chip is hidden without phone agents
+00:01 +1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent chip is hidden while phoneAgentsAvailable is false
+00:01 +2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent chip shows OpenCode beside the project when available
+00:01 +3: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent chip send starts the conversation with the chosen agent
+00:01 +4: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent model chip lists the chosen agent's own models, not OpenCode's
+00:01 +5: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent model chip OpenCode keeps the server model chip
+00:01 +6: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet lists agents with one line of state each
+00:01 +7: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet choosing a ready agent selects it and closes
+00:01 +8: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet certified ready agents come first; the rest are dimmed and say why, with a way forward where there is one
+
+Warning: A call to tap() with finder "Found 1 widget with key [<'agents-choice-gemini'>]: [
+  KitRow-[<'agents-choice-gemini'>](dependencies: [InheritedCupertinoTheme, MediaQuery, _InheritedTheme, _LocalizationsScope-[GlobalKey#68c4d]]),
+]" derived an Offset (Offset(206.0, 735.0)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: RenderSemanticsAnnotations#d9b5f relayoutBoundary=up32
+The hit test result at that offset is: HitTestResult(_RenderInkFeatures#b6711@Offset(186.0, 172.0), RenderCustomPaint#f232a@Offset(186.0, 172.0), RenderPhysicalShape#bd608@Offset(186.0, 172.0), RenderFlex#bba7e@Offset(186.0, 172.0), RenderPadding#bf6a3@Offset(186.0, 172.0), RenderFlex#dcaf2@Offset(186.0, 172.0), RenderPadding#aa1c8@Offset(206.0, 180.0), RenderSliverToBoxAdapter@(mainAxis: 180.0, crossAxis: 206.0), RenderShrinkWrappingViewport#06b18@Offset(206.0, 180.0), RenderIgnorePointer#b9742@Offset(206.0, 180.0), RenderSemanticsAnnotations#002d8@Offset(206.0, 180.0), RenderPointerListener#7fe76@Offset(206.0, 180.0), RenderSemanticsGestureHandler#4d562@Offset(206.0, 180.0), RenderPointerListener#fb2a7@Offset(206.0, 180.0), _RenderScrollSemantics#a25be@Offset(206.0, 180.0), RenderClipRect#045f2@Offset(206.0, 180.0), _RenderKitSheetFrame#9156c@Offset(206.0, 246.0), RenderAnimatedOpacity#4bbb4@Offset(206.0, 246.0), RenderStack#ab829@Offset(206.0, 246.0), RenderPadding#b2530@Offset(206.0, 246.0), RenderPadding#b2de0@Offset(206.0, 246.0), RenderPadding#c92d2@Offset(206.0, 294.0), RenderStack#6e62b@Offset(206.0, 294.0), _RenderInkFeatures#08cef@Offset(206.0, 294.0), RenderCustomPaint#21506@Offset(206.0, 294.0), RenderPhysicalShape#e6877@Offset(206.0, 294.0), RenderConstrainedBox#a9fb2@Offset(206.0, 294.0), RenderPositionedBox#ee1f0@Offset(206.0, 294.0), RenderPointerListener#8e154@Offset(206.0, 294.0), _RenderBottomSheetLayoutWithSizeListener#3fa08@Offset(206.0, 735.0), RenderClipRect#8172c@Offset(206.0, 735.0), RenderSemanticsAnnotations#43a63@Offset(206.0, 735.0), RenderPadding#8be97@Offset(206.0, 735.0), RenderSemanticsAnnotations#a9ecf@Offset(206.0, 735.0), RenderRepaintBoundary#524e8@Offset(206.0, 735.0), RenderIgnorePointer#1f4de@Offset(206.0, 735.0), RenderRepaintBoundary#1b7cd@Offset(206.0, 735.0), RenderSemanticsAnnotations#d15db@Offset(206.0, 735.0), RenderOffstage#78480@Offset(206.0, 735.0), RenderSemanticsAnnotations#dae62@Offset(206.0, 735.0), _RenderTheater#05587@Offset(206.0, 735.0), RenderAbsorbPointer#cd3ef@Offset(206.0, 735.0), RenderPointerListener#16568@Offset(206.0, 735.0), RenderSemanticsAnnotations#715d4@Offset(206.0, 735.0), RenderSemanticsAnnotations#dc14f@Offset(206.0, 735.0), RenderSemanticsAnnotations#ab9e8@Offset(206.0, 735.0), RenderSemanticsAnnotations#2b5fa@Offset(206.0, 735.0), RenderTapRegionSurface#2d4bb@Offset(206.0, 735.0), RenderSemanticsAnnotations#2a6f5@Offset(206.0, 735.0), RenderSemanticsAnnotations#11e88@Offset(206.0, 735.0), HitTestEntry<HitTestTarget>#f4d5a(_ReusableRenderView#41bbe), HitTestEntry<HitTestTarget>#3a182(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:223:20)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+#6      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+00:02 +9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet an agent that is not installed shows its state
+00:02 +10: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet install, cancel, then sign in happen in the same sheet
+00:02 +11: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet a finished install that cannot move on reads rows once
+00:02 +12: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet a failed phone check says which step and what to do
+00:02 +13: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet as a shortcut to install a not-installed row shows its size and an Install chip
+00:03 +14: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet as a shortcut to install tapping it runs install, phone check and sign-in in place
+00:03 +15: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet as a shortcut to install a real blocker says exactly why, not "not available yet"
+
+Warning: A call to tap() with finder "Found 1 widget with key [<'agents-choice-arm-only'>]: [
+  KitRow-[<'agents-choice-arm-only'>](dependencies: [InheritedCupertinoTheme, MediaQuery, _InheritedTheme, _LocalizationsScope-[GlobalKey#ef8df]]),
+]" derived an Offset (Offset(206.0, 865.0)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: RenderSemanticsAnnotations#bab07 relayoutBoundary=up32
+The hit test result at that offset is: HitTestResult(_RenderInkFeatures#96c87@Offset(186.0, 91.0), RenderCustomPaint#b0af0@Offset(186.0, 91.0), RenderPhysicalShape#da8c2@Offset(186.0, 91.0), RenderFlex#8e976@Offset(186.0, 91.0), RenderPadding#788f0@Offset(186.0, 91.0), RenderFlex#c185f@Offset(186.0, 91.0), RenderPadding#9b72a@Offset(206.0, 99.0), RenderSliverToBoxAdapter@(mainAxis: 99.0, crossAxis: 206.0), RenderShrinkWrappingViewport#46a59@Offset(206.0, 99.0), RenderIgnorePointer#f6b6f@Offset(206.0, 99.0), RenderSemanticsAnnotations#f36cd@Offset(206.0, 99.0), RenderPointerListener#63fd1@Offset(206.0, 99.0), RenderSemanticsGestureHandler#91c91@Offset(206.0, 99.0), RenderPointerListener#0176e@Offset(206.0, 99.0), _RenderScrollSemantics#1fd7f@Offset(206.0, 99.0), RenderClipRect#cbb90@Offset(206.0, 99.0), _RenderKitSheetFrame#ade09@Offset(206.0, 165.0), RenderAnimatedOpacity#b9b61@Offset(206.0, 165.0), RenderStack#56d55@Offset(206.0, 165.0), RenderPadding#7d5af@Offset(206.0, 165.0), RenderPadding#3bb97@Offset(206.0, 165.0), RenderPadding#5e14e@Offset(206.0, 213.0), RenderStack#a556e@Offset(206.0, 213.0), _RenderInkFeatures#11320@Offset(206.0, 213.0), RenderCustomPaint#cf2f3@Offset(206.0, 213.0), RenderPhysicalShape#06ffb@Offset(206.0, 213.0), RenderConstrainedBox#ac9c6@Offset(206.0, 213.0), RenderPositionedBox#3aee8@Offset(206.0, 213.0), RenderPointerListener#b98a9@Offset(206.0, 213.0), _RenderBottomSheetLayoutWithSizeListener#7f4d4@Offset(206.0, 865.0), RenderClipRect#3d123@Offset(206.0, 865.0), RenderSemanticsAnnotations#86d9d@Offset(206.0, 865.0), RenderPadding#79e00@Offset(206.0, 865.0), RenderSemanticsAnnotations#1d51c@Offset(206.0, 865.0), RenderRepaintBoundary#c1cf4@Offset(206.0, 865.0), RenderIgnorePointer#275ec@Offset(206.0, 865.0), RenderRepaintBoundary#046ce@Offset(206.0, 865.0), RenderSemanticsAnnotations#d9f0a@Offset(206.0, 865.0), RenderOffstage#458f7@Offset(206.0, 865.0), RenderSemanticsAnnotations#d1cee@Offset(206.0, 865.0), _RenderTheater#c129e@Offset(206.0, 865.0), RenderAbsorbPointer#22711@Offset(206.0, 865.0), RenderPointerListener#dd0d4@Offset(206.0, 865.0), RenderSemanticsAnnotations#0c855@Offset(206.0, 865.0), RenderSemanticsAnnotations#5f1ab@Offset(206.0, 865.0), RenderSemanticsAnnotations#a0f7d@Offset(206.0, 865.0), RenderSemanticsAnnotations#3ee99@Offset(206.0, 865.0), RenderTapRegionSurface#c65e3@Offset(206.0, 865.0), RenderSemanticsAnnotations#1ec59@Offset(206.0, 865.0), RenderSemanticsAnnotations#b5c4f@Offset(206.0, 865.0), HitTestEntry<HitTestTarget>#e45e4(_ReusableRenderView#41bbe), HitTestEntry<HitTestTarget>#3cc1c(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:454:20)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+#6      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+00:03 +16: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet as a shortcut to install server types are not listed as agents
+00:03 +17: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet as a shortcut to install a failed step says it in words and Details show the text
+00:03 +18: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal runs Claude's own sign-in; its page opens through the safe opener and no code passes through the app
+00:03 +19: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal signed in, it still offers to sign in again
+00:03 +20: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal each agent signs in with its own login command
+00:04 +21: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal Codex runs its device sign-in, in words that are not Claude's
+00:04 +22: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal ending without signing in says so and starts again
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: an object with length of <2>
+  Actual: WhereIterable<String>:['sign-in local 38 x 50']
+   Which: has length of <1>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:651:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart line 651
+The test description was:
+  ending without signing in says so and starts again
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:04 +22 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal ending without signing in says so and starts again [E]
+  Test failed. See exception logs above.
+  The test description was: ending without signing in says so and starts again
+  
+00:04 +22 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal leaving the terminal ends Claude's sign-in
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: contains 'remove 1'
+  Actual: ['sign-in local 38 x 50', 'list', 'resize 1 32 x 50']
+   Which: does not contain 'remove 1'
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:663:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart line 663
+The test description was:
+  leaving the terminal ends Claude's sign-in
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:04 +22 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal leaving the terminal ends Claude's sign-in [E]
+  Test failed. See exception logs above.
+  The test description was: leaving the terminal ends Claude's sign-in
+  
+00:04 +22 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations a plan limit is one quiet line with its reset time
+00:04 +23 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations a limit without a time says try again later
+00:05 +24 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations Signed out opens the setup sheet at sign-in
+00:05 +25 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations Stopped in the background resumes the host
+00:05 +26 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations one restart offer closes the app
+00:05 +27 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations a row that cannot reopen asks before starting a new one
+00:05 +28 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations a row that can reopen opens straight away
+00:05 +29 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents a ready agent opens its sign-in step, with Sign in again
+00:05 +30 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents draws nothing without phone agents
+00:05 +31 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents lists each agent with the act it needs
+00:05 +32 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents each act is a short chip, all starting at one edge
+00:05 +33 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents Check this phone shows each step in plain words
+00:05 +34 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents a passed check says the agent is ready
+00:05 +35 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents a fix action opens the sheet at its step
+00:05 +36 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: (tearDownAll)
+00:05 +36 -2: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart
+00:06 +36 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: (setUpAll)
+00:06 +36 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: fx: its Vercel device page opens and its code copies
+00:07 +37 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: Codex: its device page and the code on the next line
+00:07 +38 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: Claude: a page it broke across rows opens whole, and there is no code to copy
+00:07 +39 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: the newest page wins
+00:07 +40 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: plain http and this phone's own pages are never offered
+00:08 +41 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: the buttons leave once the sign-in ends
+00:08 +42 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: (tearDownAll)
+00:08 +42 -2: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal ending without signing in says so and starts again
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal leaving the terminal ends Claude's sign-in

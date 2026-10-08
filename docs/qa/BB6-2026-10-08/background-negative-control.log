@@ -1,0 +1,11 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart
+00:00 +0: sign-in lease acknowledges foreground without changing user preference
+00:00 +0 -1: sign-in lease acknowledges foreground without changing user preference [E]
+  AgentSignInForegroundException(unavailable)
+  package:opencode_mobile/background/live_background.dart 281:7  BackgroundLiveController.reserveAgentSignInForeground
+  test/background_signin_foreground_test.dart 113:34             main.<fn>
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: sign-in lease acknowledges foreground without changing user preference

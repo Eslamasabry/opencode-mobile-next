@@ -19,6 +19,7 @@ import 'package:opencode_mobile/ui/screens/chats/new_chat_screen.dart';
 import '../tool/capture/fixtures.dart' show loadCaptureFonts;
 import 'support/agents_fakes.dart';
 import 'support/fake_local_terminal.dart';
+import 'support/fake_sign_in_foreground.dart';
 import 'support/chats_fakes.dart';
 
 final _now = DateTime(2026, 10, 3, 12);
@@ -54,6 +55,15 @@ Future<void> _openSheet(WidgetTester tester) async {
 }
 
 Finder _name(String text) => find.text(KitBidi.auto(text));
+
+void _expectClaudeSignIn(FakeLocalTerminalBackend terminal) {
+  // Foreground admission is awaited before PTY launch, so the screen can lay
+  // out first. Verify scope, command and valid dimensions rather than 24 x 80.
+  final starts = terminal.calls.where((call) => call.startsWith('sign-in '));
+  expect(starts, hasLength(1));
+  expect(starts.single, matches(r'^sign-in local [1-9]\d* x [1-9]\d*$'));
+  expect(terminal.programs.single, ['claude', 'auth', 'login', '--claudeai']);
+}
 
 void main() {
   setUpAll(loadCaptureFonts);
@@ -241,7 +251,10 @@ void main() {
       await _newChat(
         tester,
         host,
-        terminal: LocalTerminalSessions(backend: terminal),
+        terminal: LocalTerminalSessions(
+          backend: terminal,
+          signInForeground: FakeSignInForeground(),
+        ),
       );
       await _openSheet(tester);
       await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
@@ -283,7 +296,7 @@ void main() {
       expect(agents.calls, isNot(contains('sign-in:claude')));
       await tester.tap(find.byKey(const ValueKey('agents-sign-in-start')));
       await tester.pumpAndSettle();
-      expect(terminal.calls, contains('sign-in local 24 x 80'));
+      _expectClaudeSignIn(terminal);
       // Claude signs in and its sign-in ends: the sheet says so, then closes.
       agents.signedInAfterTerminal = true;
       terminal.exit(1, 0);
@@ -509,7 +522,10 @@ void main() {
       await _newChat(
         tester,
         host,
-        terminal: LocalTerminalSessions(backend: terminal),
+        terminal: LocalTerminalSessions(
+          backend: terminal,
+          signInForeground: FakeSignInForeground(),
+        ),
       );
       await _openSheet(tester);
       await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
@@ -524,7 +540,7 @@ void main() {
       final agents = signedOutClaude();
       final host = _host(agents: agents);
       final terminal = await openTerminal(tester, host);
-      expect(terminal.calls, contains('sign-in local 24 x 80'));
+      _expectClaudeSignIn(terminal);
       expect(
         find.byKey(const ValueKey('agents-sign-in-terminal-view')),
         findsOneWidget,
@@ -556,7 +572,10 @@ void main() {
       await _newChat(
         tester,
         _host(agents: agents),
-        terminal: LocalTerminalSessions(backend: terminal),
+        terminal: LocalTerminalSessions(
+          backend: terminal,
+          signInForeground: FakeSignInForeground(),
+        ),
       );
       final context = tester.element(find.byType(NewChatScreen));
       unawaited(
@@ -596,7 +615,10 @@ void main() {
         await _newChat(
           tester,
           _host(agents: agents),
-          terminal: LocalTerminalSessions(backend: terminal),
+          terminal: LocalTerminalSessions(
+            backend: terminal,
+            signInForeground: FakeSignInForeground(),
+          ),
         );
         await _openSheet(tester);
         await tester.tap(find.byKey(const ValueKey('agents-choice-codex')));
