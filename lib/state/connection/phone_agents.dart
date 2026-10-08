@@ -39,7 +39,11 @@ final class _OpenCodeFeed implements ChatFeedSource {
 
 /// [ConnectionController]'s [PhoneAgentsSource] and [AgentChatFeedSource].
 mixin _ConnectionControllerPhoneAgents on ChangeNotifier
-    implements PhoneAgentsSource, AgentChatFeedSource, PhoneAgentAccountSource {
+    implements
+        PhoneAgentsSource,
+        AgentChatFeedSource,
+        PhoneAgentAccountSource,
+        PhoneAgentRemovalSource {
   ConnectionController get _self;
 
   static const _notReady = ProductException(
@@ -60,6 +64,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   final _paChecks = <String, AgentPhoneCheckResult>{};
   final _paLive = <String>{};
   bool _paNeedRestart = false;
+  String? _paRemovingAgent;
   Future<void>? _paRefreshingRows;
   final _paSources =
       <String, ({PaseoGateway gateway, PaseoChatFeedSource source})>{};
@@ -621,6 +626,13 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     await host.install(agentId);
     if (!_self._disposed) _self._notifyListeners();
   }
+
+  @override
+  String? get removingAgentId => _paRemovingAgent;
+  @override
+  bool canRemoveAgent(String agentId) => _paCanRemoveAgent(agentId);
+  @override
+  Future<void> removeAgent(String agentId) => _paRemoveAgent(agentId);
 
   @override
   Future<void> cancelAgentInstall() async {
@@ -1271,6 +1283,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       return _self._ocStartChatIn(directory, firstPrompt: firstPrompt);
     }
     if (!phoneAgentsAvailable) throw _notReady;
+    if (_paRemovingAgent != null) {
+      throw const ProductException(
+        'An agent is being removed. Wait for it to finish and try again.',
+      );
+    }
     if (_paRows.isEmpty) await refreshAgentRows();
     final row = _paRowFor(agentId);
     final descriptor = row == null ? null : _paCatalog.byId(row.id);

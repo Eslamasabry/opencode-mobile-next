@@ -41,10 +41,20 @@ abstract interface class PhoneAgentLivenessPort {
   Future<bool?> helperRunning();
 }
 
+abstract interface class PhoneAgentRemovalPort {
+  Future<void> removeAgent(String agentId);
+}
+
 final class BuiltinPhoneAgentHostPort
-    implements PhoneAgentHostPort, PhoneAgentAuthPort, PhoneAgentLivenessPort {
+    implements
+        PhoneAgentHostPort,
+        PhoneAgentAuthPort,
+        PhoneAgentLivenessPort,
+        PhoneAgentRemovalPort {
   BuiltinPhoneAgentHostPort(this._host);
   final BuiltinPhoneAgents _host;
+  @override
+  Future<void> removeAgent(String agentId) => _host.removeAgent(agentId);
   @override
   Future<bool?> helperRunning() => _host.helperRunning();
 

@@ -33,11 +33,15 @@ final class AgentSetupProgress {
     required this.phase,
     this.fraction,
     this.componentId,
+    this.failure,
   });
   final String agentId;
   final AgentSetupPhase phase;
   final double? fraction;
   final String? componentId;
+
+  /// Closed failure projection. Native/provider error text never reaches UI.
+  final AgentHostFailure? failure;
 }
 
 enum AgentPhoneCheckStep { install, version, daemon, hello }

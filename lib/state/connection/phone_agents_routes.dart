@@ -2,6 +2,66 @@ part of '../connection.dart';
 
 // Opening and replacing feed rows retains their captured source and directory.
 extension _PhoneAgentRoutes on _ConnectionControllerPhoneAgents {
+  static const _removableAgents = {
+    'codex',
+    'gemini',
+    'qwen',
+    'goose',
+    'omp-acp',
+    'fx',
+  };
+
+  bool _paCanRemoveAgent(String id) =>
+      phoneAgentsAvailable &&
+      _paHost is PhoneAgentRemovalPort &&
+      _removableAgents.contains(id) &&
+      {
+        PhoneAgentStatus.stoppedInBackground,
+        PhoneAgentStatus.signedOut,
+        PhoneAgentStatus.limitReached,
+        PhoneAgentStatus.ready,
+        PhoneAgentStatus.needsQualification,
+      }.contains(_paRowFor(id)?.status);
+
+  Future<void> _paRemoveAgent(String id) async {
+    if (!_removableAgents.contains(id) || !phoneAgentsAvailable) {
+      throw const ProductException('This agent cannot be removed here.');
+    }
+    if (_paRemovingAgent != null) {
+      throw const ProductException(
+        'An agent is being removed. Wait for it to finish and try again.',
+      );
+    }
+    final host = _paEnsureHost();
+    if (host is! PhoneAgentRemovalPort) {
+      throw const ProductException(
+        'Removal is not available on this phone yet. Update the app and try again.',
+      );
+    }
+    final owner = _paHostProfile;
+    _paRemovingAgent = id;
+    _self._notifyListeners();
+    try {
+      await (host as PhoneAgentRemovalPort).removeAgent(id);
+      if (_self._disposed || _paHost != host || _paHostProfile != owner) return;
+      _paChecks.remove(id);
+      await refreshAgentRows();
+    } on AgentHostException catch (error) {
+      throw ProductException(
+        error.reason == AgentHostFailure.busy
+            ? 'This agent is still in use. Finish its setup or conversation and try again.'
+            : 'The agent could not be removed. Refresh Agents and try again.',
+      );
+    } catch (_) {
+      throw const ProductException(
+        'The agent could not be removed. Refresh Agents and try again.',
+      );
+    } finally {
+      _paRemovingAgent = null;
+      if (!_self._disposed) _self._notifyListeners();
+    }
+  }
+
   Future<ChatFeedRoute> _paOpenChatFeedItem(ChatFeedItem item) async {
     // A saved row whose folder has not been read yet opens on the agent's
     // backend directly; it starts the helper when needed.
