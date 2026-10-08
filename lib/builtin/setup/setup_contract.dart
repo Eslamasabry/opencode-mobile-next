@@ -27,6 +27,7 @@ class SetupComponent {
     this.defaultOn = false,
     this.estimatedSeconds = 60,
     this.downloadBytes,
+    this.installedBytes,
     this.downloadSize = const DownloadSize.unknown(),
     this.removeScript,
     this.presenceScript,
@@ -60,6 +61,10 @@ class SetupComponent {
 
   /// Display/preflight estimate only. Never use this for mobile consent.
   final int? downloadBytes;
+
+  /// Conservative known extracted/copied payload bytes for peak storage
+  /// admission. Null is unknown; this is independent of download consent.
+  final int? installedBytes;
 
   /// Trusted payload evidence for consent. Unknown unless a pinned manifest
   /// covers this installation; apt/npm estimates and HEAD overrides are not it.
@@ -116,6 +121,7 @@ class SetupComponent {
         defaultOn: defaultOn,
         estimatedSeconds: estimatedSeconds,
         downloadBytes: bytes,
+        installedBytes: installedBytes,
         downloadSize: evidence ?? downloadSize,
         removeScript: removeScript,
         presenceScript: presenceScript,
@@ -127,6 +133,31 @@ class SetupComponent {
         jobStep: jobStep,
         app: app,
       );
+
+  /// Adds known extracted payload evidence while retaining other metadata.
+  SetupComponent withInstalledBytes(int? bytes) => SetupComponent(
+    id: id,
+    title: title,
+    shortTitle: shortTitle,
+    checkScript: checkScript,
+    installScript: installScript,
+    dependsOn: dependsOn,
+    required: required,
+    defaultOn: defaultOn,
+    estimatedSeconds: estimatedSeconds,
+    downloadBytes: downloadBytes,
+    installedBytes: bytes,
+    downloadSize: downloadSize,
+    removeScript: removeScript,
+    presenceScript: presenceScript,
+    sizeScript: sizeScript,
+    why: why,
+    summary: summary,
+    native: native,
+    agentUser: agentUser,
+    jobStep: jobStep,
+    app: app,
+  );
 
   /// Keep the selected app component's payload evidence with its display size.
   SetupComponent withAppOffer(SetupAppOffer offer) =>

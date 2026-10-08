@@ -491,11 +491,13 @@ void main() {
     expect(prefs.getString('${phoneAgentInstallPrefix}phone'), isNull);
   });
   for (final sample in [
-    (id: 'omp-acp', expectedBytes: 561073088),
+    (id: 'codex', expectedBytes: 465514826),
+    (id: 'goose', expectedBytes: 460456104),
+    (id: 'omp-acp', expectedBytes: 628181952),
     (id: 'fx', expectedBytes: 300000000),
   ]) {
     test(
-      'native storage guard includes ${sample.id} catalog download',
+      'native storage guard includes ${sample.id} catalog install peak',
       () async {
         await host.dispose();
         final captured = <Map<String, Object?>>[];

@@ -6,6 +6,8 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/setup/preflight.dart';
+import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
+import 'package:opencode_mobile/state/download_size.dart';
 import 'package:opencode_mobile/voice/device.dart';
 
 const _download = 165000000; // 165 MB, the default registry's total.
@@ -33,7 +35,157 @@ void main() {
       expect(requiredSetupFreeBytes(0), 300 * 1000 * 1000);
       expect(requiredSetupFreeBytes(1000), 300 * 1000 * 1000);
     });
+
+    test(
+      'known extracted payload counts with retained download and scratch',
+      () {
+        expect(
+          requiredSetupFreeBytes(120000000, installedBytes: 350000000),
+          120000000 + 350000000 + 64 * 1024 * 1024,
+        );
+        expect(requiredSetupFreeBytes(1000, installedBytes: 1000), 300000000);
+        expect(
+          requiredSetupFreeBytes(500000000, installedBytes: 1),
+          1000000000,
+        );
+      },
+    );
+
+    test('unknown and nonpositive extracted sizes retain legacy admission', () {
+      for (final installed in <int?>[null, 0, -1]) {
+        expect(
+          requiredSetupFreeBytes(120000000, installedBytes: installed),
+          300000000,
+        );
+        expect(
+          requiredSetupFreeBytes(500000000, installedBytes: installed),
+          1000000000,
+        );
+      }
+      expect(
+        requiredSetupFreeBytes(-1, installedBytes: 350000000),
+        350000000 + 64 * 1024 * 1024,
+      );
+    });
+
+    test(
+      'known peak and doubled download saturate without integer overflow',
+      () {
+        const maximum = 0x7fffffffffffffff;
+        const scratch = 64 * 1024 * 1024;
+        expect(requiredSetupFreeBytes(1, installedBytes: maximum), maximum);
+        expect(
+          requiredSetupFreeBytes(1, installedBytes: maximum - scratch - 1),
+          maximum,
+        );
+        expect(
+          requiredSetupFreeBytes(1, installedBytes: maximum - scratch - 2),
+          maximum - 1,
+        );
+        expect(requiredSetupFreeBytes(maximum, installedBytes: 1), maximum);
+        expect(
+          requiredSetupFreeBytes(maximum ~/ 2 + 1, installedBytes: 1),
+          maximum,
+        );
+      },
+    );
   });
+
+  test('known extracted peak forwards through storage and full preflight', () {
+    const download = 120000000;
+    const installed = 350000000;
+    const required = download + installed + 64 * 1024 * 1024;
+    final low = checkSetupStoragePreflight(
+      required - 1,
+      downloadBytes: download,
+      installedBytes: installed,
+    );
+    expect(low.issue, SetupPreflightIssue.lowSpace);
+    expect(low.bytesToFree, 1);
+    expect(
+      checkSetupStoragePreflight(
+        required,
+        downloadBytes: download,
+        installedBytes: installed,
+      ).supported,
+      isTrue,
+    );
+    expect(
+      checkSetupStoragePreflight(
+        null,
+        downloadBytes: download,
+        installedBytes: installed,
+      ).supported,
+      isTrue,
+    );
+    final full = checkSetupPreflight(
+      _device(availableBytes: required - 1),
+      downloadBytes: download,
+      installedBytes: installed,
+    );
+    expect(full.issue, SetupPreflightIssue.lowSpace);
+    expect(full.bytesToFree, 1);
+    expect(
+      checkSetupPreflight(
+        _device(availableBytes: required),
+        downloadBytes: download,
+        installedBytes: installed,
+      ).supported,
+      isTrue,
+    );
+  });
+
+  test(
+    'component clones preserve known extracted payload and other metadata',
+    () {
+      const component = SetupComponent(
+        id: 'fixture',
+        title: 'Fixture',
+        shortTitle: 'Fixture',
+        checkScript: 'check',
+        installScript: 'install',
+        dependsOn: ['dependency'],
+        required: true,
+        defaultOn: true,
+        estimatedSeconds: 13,
+        downloadBytes: 120000000,
+        installedBytes: 350000000,
+        removeScript: 'remove',
+        presenceScript: 'present',
+        sizeScript: 'size',
+        why: 'Required fixture',
+        summary: 'Fixture summary',
+        agentUser: true,
+      );
+      final copied = component.withDownloadBytes(42);
+      expect(copied.downloadBytes, 42);
+      expect(copied.installedBytes, 350000000);
+      final offer = component.withAppOffer(
+        const SetupAppOffer(
+          downloadBytes: 77,
+          downloadSize: DownloadSize.unknown(),
+        ),
+      );
+      expect(offer.downloadBytes, 77);
+      expect(offer.installedBytes, 350000000);
+      final changed = copied.withInstalledBytes(123);
+      expect(changed.installedBytes, 123);
+      expect(changed.downloadBytes, 42);
+      expect(changed.dependsOn, ['dependency']);
+      expect(changed.required, isTrue);
+      expect(changed.defaultOn, isTrue);
+      expect(changed.estimatedSeconds, 13);
+      expect(changed.checkScript, 'check');
+      expect(changed.installScript, 'install');
+      expect(changed.removeScript, 'remove');
+      expect(changed.presenceScript, 'present');
+      expect(changed.sizeScript, 'size');
+      expect(changed.why, 'Required fixture');
+      expect(changed.summary, 'Fixture summary');
+      expect(changed.agentUser, isTrue);
+      expect(changed.withInstalledBytes(null).installedBytes, isNull);
+    },
+  );
 
   test(
     'repeatable storage check respects fresh readings and exact threshold',

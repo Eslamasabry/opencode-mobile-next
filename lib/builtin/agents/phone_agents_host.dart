@@ -191,12 +191,19 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
     final lock = await _loadLock();
     if (_disposed) throw const AgentHostException(AgentHostFailure.stale);
     // Keep restore independent of another native ABI read. Admission uses
-    // the largest known authored download across supported architectures.
+    // the largest known authored download and payload independently across
+    // supported architectures, without changing download/consent metadata.
     int? downloadBytes;
+    int? installedBytes;
     for (final artifact in agent.recipe!.artifacts.values) {
       final bytes = artifact.downloadBytes;
       if (bytes != null && (downloadBytes == null || bytes > downloadBytes)) {
         downloadBytes = bytes;
+      }
+      final payloadBytes = artifact.installedBytes;
+      if (payloadBytes != null &&
+          (installedBytes == null || payloadBytes > installedBytes)) {
+        installedBytes = payloadBytes;
       }
     }
     _engine =
@@ -206,7 +213,9 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
           components: (l10n, _) => [
             for (final component in phoneAgentComponents(l10n, agent, lock))
               if (component.id == 'agent-${agent.id}')
-                component.withDownloadBytes(downloadBytes)
+                component
+                    .withDownloadBytes(downloadBytes)
+                    .withInstalledBytes(installedBytes)
               else
                 component,
           ],

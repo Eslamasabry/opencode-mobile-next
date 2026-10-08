@@ -1,0 +1,110 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: requiredSetupFreeBytes is twice the download size once that clears the floor
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: requiredSetupFreeBytes never drops below the floor for a tiny or zero download
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: requiredSetupFreeBytes known extracted payload counts with retained download and scratch
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: requiredSetupFreeBytes unknown and nonpositive extracted sizes retain legacy admission
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: requiredSetupFreeBytes known peak and doubled download saturate without integer overflow
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: known extracted peak forwards through storage and full preflight
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: component clones preserve known extracted payload and other metadata
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: repeatable storage check respects fresh readings and exact threshold
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight passes a supported, roomy, well-remembered phone
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight blocks a 32-bit-only ABI, reporting the CPU it found
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight an x86_64 device passes: the rootfs ships for it too
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight an unknown (empty) ABI list never blocks
+00:00 +12: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight blocks under the memory floor, naming both numbers
+00:00 +13: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight 1,700 MB is under the floor: refused
+00:00 +14: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight a nominal 2 GB phone (1,972 MB) may set up, with the slow note
+00:00 +15: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight exactly at the memory floor passes, with the slow note
+00:00 +16: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight a nominal 3 GB phone (2,900 MB) still gets the slow note
+00:00 +17: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight 4,096 MB passes with no note
+00:00 +18: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight 3 GB (3,072 MB) and over carries no note
+00:00 +19: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight low space on a slow phone still blocks: space is checked first
+00:00 +20: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight an unknown (null) memory reading never blocks
+00:00 +21: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight blocks low space, naming exactly how many bytes to free
+00:00 +22: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight exactly the required space passes
+00:00 +23: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight an unknown (null) storage reading never blocks
+00:00 +24: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_preflight_test.dart: checkSetupPreflight ABI is checked before memory or space: nothing else matters without a rootfs
+00:00 +25: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart
+00:00 +25: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: startSetup receives retained download plus known extracted payload peak
+00:00 +26: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: resume rule components whose checks pass are skipped with their version, the rest get the prelude and their install script
+00:00 +27: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: resume rule nothing is checked inside Ubuntu before it is installed; the Linux base is native with localised labels
+00:00 +28: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: resume rule the running state and the job list are published before run returns, while the checks still run
+00:00 +29: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: resume rule an interrupted job continues with its own params unless new ones are given
+00:00 +30: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: resume rule a first setup says so in its params, and the flag survives a restart and a Continue
+00:00 +31: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: resume rule the first-setup flag is laid over a stopped job's params, never instead of them
+00:00 +32: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: resume rule jobs from the This phone card are not first setups
+00:00 +33: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: resume rule Continue after a failed OpenCode install (build 2062: npm's wrapper in place, the start failed) replaces only OpenCode
+00:00 +34: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: resume rule a finished job does not lend its params to the next run
+00:00 +35: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: resume rule a job already running is watched, not started again
+00:00 +36: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: the start step runs the finisher once and reports it done
+00:00 +37: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: the start step a failed start fails the job in plain words
+00:00 +38: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: the start step the job keeps polling without listeners while it runs, and stops once it is over and nobody watches
+00:01 +39: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: the start step polling survives a status read that fails or never answers (Android 15 run, 2026-09-24: the screen froze on the Linux base while the job finished)
+setup: status poll failed: Bad state: the channel failed
+#0      FakeLinux.setupStatus (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart:110:11)
+#1      _SetupEnginePoll._read (package:opencode_mobile/builtin/setup/setup_engine/poll.dart:237:27)
+#2      _SetupEnginePoll._refresh (package:opencode_mobile/builtin/setup/setup_engine/poll.dart:55:26)
+#3      _SetupEnginePoll._tick (package:opencode_mobile/builtin/setup/setup_engine/poll.dart:29:15)
+#4      _SetupEnginePoll._tick.<anonymous closure> (package:opencode_mobile/builtin/setup/setup_engine/poll.dart:24:3)
+#5      StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)
+#6      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:48)
+#7      _rootRun (dart:async/zone_root.dart:27:47)
+#8      _CustomZone.run (dart:async/zone.dart:810:35)
+#9      _CustomZone.runGuarded (dart:async/zone.dart:702:7)
+#10     _CustomZone.bindCallbackGuarded.<anonymous closure> (dart:async/zone.dart:743:23)
+#11     StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)
+#12     StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:48)
+#13     _rootRun (dart:async/zone_root.dart:35:13)
+#14     _CustomZone.run (dart:async/zone.dart:810:35)
+#15     _CustomZone.bindCallback.<anonymous closure> (dart:async/zone.dart:726:23)
+#16     Timer._createTimer.<anonymous closure> (dart:async-patch/timer_patch.dart:18:15)
+#17     _Timer._runTimers (dart:isolate-patch/timer_impl.dart:423:19)
+#18     _Timer._handleMessage (dart:isolate-patch/timer_impl.dart:454:5)
+#19     _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:192:12)
+
+setup: status read took over 0 s
+00:01 +40: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: cancel stops the native job; finished components stay
+00:01 +41: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: cancel while still checking, nothing is handed to the native side
+00:01 +42: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: restore reads an interrupted job after a restart
+00:01 +43: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: installedOptional runs only the optional checks
+00:01 +44: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: selection required and selected components, their dependencies, in dependency order even when the registry is not
+00:01 +45: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: selection a dependency cycle is an error, not a hang
+00:01 +46: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: selection the real registry: every dependency exists and comes first
+00:01 +47: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: weights and ETA done counts whole, bytes and percent count real, a bare stage counts half
+00:01 +48: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: weights and ETA a new stage never moves the bar backwards
+00:01 +49: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: weights and ETA no ETA before 10 s of real progress; then the remaining estimates scaled by the measured pace
+00:01 +50: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: setup.json the recorded interrupted job parses completely
+00:01 +51: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: setup.json keys keep the written order without "order"; unknown fields and states are tolerated; garbage is no job
+00:01 +52: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: errors in plain words a download without internet names the part and the cause
+00:01 +53: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: errors in plain words checksum, full storage and anything else
+00:01 +54: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: errors in plain words a failed job maps to failed progress with both errors
+00:01 +55: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: errors in plain words OCTRACE timing lines never reach the job log people see; the log ends with the real error
+00:01 +56: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: combined checks parse passing, failing and missing checks with versions
+00:01 +57: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: trace each finished component is a span timed by the runner's own clock, recorded once however often it is read
+00:01 +58: /home/eslam/Storage/Code/oc_app-sol-ba/test/setup_engine_test.dart: trace the checks are one span
+00:01 +59: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart
+00:01 +59: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: BA1 probe uses the stable private home and returns only narrow account facts
+00:01 +60: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: BA1 missing private bridge stays unavailable and never uses setup output
+00:01 +61: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: shared engine installs as oc with Python and conditional host Node
+00:01 +62: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: the native host launches Paseo 0.9.2 without removed launch flags
+00:01 +63: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: ARM64 gate requires install version daemon and exact Paseo hello
+00:02 +64: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: x64 pass cannot qualify ARM64 and changed architecture invalidates gate
+00:02 +65: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: legacy fx check still qualifies after owner migration and never after failed retry
+00:02 +66: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: failed retry clears prior proof and never starts daemon after wrong version
+00:02 +67: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: stopped self-test cannot start a daemon after a late version check
+00:02 +68: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: restore and cancel cannot operate another profile setup job
+00:02 +69: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: cancel after handoff still stops an exactly owned setup job
+00:02 +70: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: cancel during local checks never hands an install to native
+00:02 +71: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: cancel retires an install awaiting architecture
+00:02 +72: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: cancel retires an install awaiting preparation
+00:02 +73: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: native storage guard includes codex catalog install peak
+00:02 +74: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: native storage guard includes goose catalog install peak
+00:02 +75: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: native storage guard includes omp-acp catalog install peak
+00:02 +76: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: native storage guard includes fx catalog install peak
+00:02 +77: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: running installation requires continue instead of a second install
+00:02 +78: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: background loss exposes resume and reuses the Keystore slot
+00:02 +79: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: restore resumes same persisted component selection with safe progress
+00:02 +80: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: profile removal drains native account home before deleting password
+00:02 +81: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: failed native drain preserves profile and secure slot for retry
+00:02 +82: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: saved-sign-in reset includes orphan agent slots and preserves unrelated secrets
+00:02 +83: All tests passed!
