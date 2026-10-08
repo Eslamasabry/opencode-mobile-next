@@ -85,3 +85,23 @@ limits above. Claude remained Ready after the completed public checks.
 
 The early navigation/canonical-directory harness mistakes were corrected and
 excluded from the final observations. They are not agent failures.
+
+
+## Gemini
+
+[Device observations](gemini-device.json), [validated report](gemini-report.json),
+[cancel screenshot](gemini-cancelled.jpg), [phone check](gemini-after-install-check.jpg),
+[after cleanup](gemini-after-cleanup.jpg).
+
+Gemini CLI **0.62.0** installed via the app and passed a fresh public phone check.
+The pinned receipt/link and CLI version matched. Free space before installation
+was 1,885,786,112 bytes. Cancellation at 10,784,768 / 20,787,241 pinned download
+bytes stopped the job and removed stage/lock; native total was temporarily zero
+for the chunked response, so the catalog's known length bounds this observation.
+A distinct retry completed. App auth returned `probeUnsupported`; its signed-out
+cell fails. Empty-home ACP initialize succeeded and session/new returned
+`authentication_required` (-32000) in 2.28 s, with no login, prompt or orphan PID.
+Full app launch remains partial. Manual cleanup reclaimed **99,860,480 bytes**;
+no target files, links, stages, locks or processes remained. Uninstall and
+installed-app low-space coverage retain the shared limits above. Claude/fx
+phone-check summaries remained passed when this check finished.
