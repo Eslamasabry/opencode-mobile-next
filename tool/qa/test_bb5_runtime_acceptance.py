@@ -254,7 +254,7 @@ class NormalArtifactTest(unittest.TestCase):
     def test_wrong_version_refuses_without_any_device_command(self):
         device = Mock()
         with self.assertRaises(H.Q.Refused):
-            B.validate_normal(device, SimpleNamespace(version=2200, normal_version=2197))
+            B.validate_normal(device, SimpleNamespace(version=2200, normal_version=2198))
         device.run.assert_not_called()
 
     def test_normal_hash_sidecar_and_signer_are_all_checked_before_mutation(self):
@@ -262,11 +262,11 @@ class NormalArtifactTest(unittest.TestCase):
             apk = Path(directory) / 'normal.apk'; apk.write_bytes(b'private-test-artifact')
             digest = B.hashlib.sha256(apk.read_bytes()).hexdigest()
             sidecar = Path(directory) / 'normal.sha256'; sidecar.write_text(digest + '  normal.apk\n')
-            args = SimpleNamespace(version=2197, normal_version=2197, normal_sha=digest,
+            args = SimpleNamespace(version=2198, normal_version=2198, normal_sha=digest,
                 normal_apk=apk, normal_sidecar=sidecar, apksigner=Path('apksigner'), aapt=Path('aapt'))
             device = Mock()
             device.run.side_effect = [SimpleNamespace(returncode=0, stdout='Signer #1 certificate SHA-256 digest: ' + H.Q.CERT),
-                SimpleNamespace(returncode=0, stdout="package: name='" + H.PACKAGE + "' versionCode='2197'")]
+                SimpleNamespace(returncode=0, stdout="package: name='" + H.PACKAGE + "' versionCode='2198'")]
             B.validate_normal(device, args)
             device.adb.assert_not_called(); device.write_dead.assert_not_called()
             sidecar.write_text('0'*64)
@@ -275,7 +275,7 @@ class NormalArtifactTest(unittest.TestCase):
 
     def test_normal_restore_install_r_never_downgrades_or_uninstalls(self):
         device = Mock(); device.cat.return_value = None
-        device.adb.return_value = SimpleNamespace(returncode=0, stdout='versionCode=2197', stderr='')
+        device.adb.return_value = SimpleNamespace(returncode=0, stdout='versionCode=2198', stderr='')
         device.installed_hash.return_value = 'a'*64
         args = SimpleNamespace(normal_apk=Path('normal.apk'), normal_sha='a'*64)
         with patch.object(B, 'validate_normal') as validate, patch.object(B, 'restore_metadata') as restore, patch.object(H, 'real_start') as start, \

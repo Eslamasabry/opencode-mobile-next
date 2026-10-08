@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """BB5 private emulator session. Import is inert; whole-session inherited flock is required.
 
-The QA and known normal APK both use versionCode2197. A different version refuses
+The QA and known normal APK both use versionCode2198. A different version refuses
 before mutation rather than requesting a downgrade, uninstall or data clearing.
 Initial authorized replacement/force-stop is QA setup, not proof that existing
 chats are idle. Native scenario admission proves logical work quiescence after
@@ -30,7 +30,7 @@ IDLE_FIELDS = {'bb5IdlePassed', 'bb5RealIdlePassed', 'bb5ExactDrainPassed',
                'bb5StoppedIntentPassed', 'bb5ForegroundResumePassed',
                'bb5HelperAcknowledgementPassed', 'bb5BudgetPreserved', 'bb5ExplicitStopPassed',
                'bb5IdleNotificationPassed', 'bb5NotificationTapPassed'}
-VERSION = 2197
+VERSION = 2198
 IDLE_BODIES = {
     'Phone server paused while idle. Tap to open OpenCode.',
     'خادم الهاتف متوقف مؤقتًا لعدم وجود نشاط. اضغط لفتح OpenCode.',
@@ -411,11 +411,11 @@ def restore_normal(device, args, original_flutter, evidence):
         raise H.Q.Refused('bb5_normal_restore_unproven')
     H.require(device.installed_hash(H.PACKAGE) == args.normal_sha, 'bb5_normal_installed_hash_mismatch')
     metadata = device.adb('shell', 'dumpsys', 'package', H.PACKAGE, timeout=5)
-    H.require(metadata.returncode == 0 and re.search(r'\bversionCode=2197\b', metadata.stdout),
+    H.require(metadata.returncode == 0 and re.search(r'\bversionCode=2198\b', metadata.stdout),
               'bb5_normal_installed_version_mismatch')
     # Actual normal app/UI proves Connected, not an HTTP response or stale QA boolean.
     H.real_start(device, H.selected_profile(original_flutter), evidence)
-    evidence.append('PASS normal_2197_same_signer_install_r_data_preserved_actual_Connected_OC2')
+    evidence.append('PASS normal_2198_same_signer_install_r_data_preserved_actual_Connected_OC2')
 
 
 def main():
@@ -450,9 +450,9 @@ def main():
             try:
                 restore_normal(device, args, original_flutter, evidence)
             except Exception as error:
-                evidence.append('FAIL normal_2197_restoration_' + H.safe_error(error)); code = 1
+                evidence.append('FAIL normal_2198_restoration_' + H.safe_error(error)); code = 1
         if code == 0:
-            evidence.append('PASS BB5_locked_actual_idle_stop_resume_and_normal_2197_restoration')
+            evidence.append('PASS BB5_locked_actual_idle_stop_resume_and_normal_2198_restoration')
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text('\n'.join(evidence) + '\n')
         print('\n'.join(evidence), flush=True)
