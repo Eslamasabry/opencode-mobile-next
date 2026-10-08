@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../domain/agent_auth_probe.dart';
 import '../../../domain/agent_sign_in.dart';
 import '../../../domain/phone_agent_host.dart';
 import '../../../domain/phone_agents.dart';
@@ -56,9 +57,21 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
   // re-read the phone on every rebuild.
   bool _doneHandled = false;
   bool _signInKicked = false;
+  // The agent's own sign-out is running (up to 20 seconds). The frame holds
+  // its signed-in layout until it ends, so a failed attempt never flashes the
+  // sign-in layout.
+  bool _signingOut = false;
   Timer? _closeSoon;
 
   PhoneAgentsSource get _agents => ref.read(chatsHostProvider).agents!;
+
+  /// Present only when the source has qualified status checks and logout.
+  PhoneAgentAccountSource? get _accounts {
+    final agents = _agents;
+    return agents is PhoneAgentAccountSource
+        ? agents as PhoneAgentAccountSource
+        : null;
+  }
 
   @override
   void initState() {
@@ -262,6 +275,57 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
       const Duration(milliseconds: 900),
       () => unawaited(_chooseAfterSignIn(id)),
     );
+  }
+
+  /// Asks first, then runs the agent's own logout. Conversations are not
+  /// touched. The status check, not the logout's exit code, decides whether
+  /// the agent is signed out: if it cannot confirm that, the sheet says so
+  /// and reads the real state again.
+  Future<void> _signOut(String id) async {
+    final accounts = _accounts;
+    if (accounts == null || _signingOut) return;
+    final l10n = AppLocalizations.of(context);
+    final name = KitBidi.auto(_name(id));
+    final confirmed = await showKitConfirm(
+      context,
+      title: l10n.agentsSignOutTitle(name),
+      body: l10n.agentsSignOutBody(name),
+      confirmLabel: l10n.agentsSignOutAction(name),
+      consequenceItems: [
+        KitConsequence(
+          l10n.agentsSignOutKept(name),
+          mark: KitConsequenceMark.kept,
+        ),
+      ],
+      sheetKey: const ValueKey('agents-sign-out-sheet'),
+      confirmKey: const ValueKey('agents-sign-out-confirm'),
+    );
+    if (!confirmed || !mounted) return;
+    setState(() {
+      _signingOut = true;
+      _notice = null;
+    });
+    try {
+      await accounts.signOutAgent(id);
+    } catch (error) {
+      // Plain words with the way forward; the technical text is under
+      // Details. The unconfirmed answer is replaced by a fresh read.
+      if (mounted) {
+        setState(
+          () => _notice = AgentFailure(
+            l10n.agentsSignOutFailed(name),
+            agentFailure(l10n, error).technical,
+          ),
+        );
+      }
+      try {
+        await _agents.recheckAgentSignIn(id);
+      } catch (_) {
+        // The next read of the sheet shows what the agent says.
+      }
+    } finally {
+      if (mounted) setState(() => _signingOut = false);
+    }
   }
 
   Future<void> _chooseAfterSignIn(String id) async {
@@ -504,16 +568,25 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     final state = _agents.agentSignInState(id);
     final phase = state?.phase;
     final checking = state == null || !state.inspected;
-    final signedIn = phase == AgentSignInPhase.signedIn;
+    final signedIn = phase == AgentSignInPhase.signedIn || _signingOut;
     final hostKey = state?.hostOnlyApiKey ?? false;
     final limit = phase == AgentSignInPhase.limitReached;
+    // Sign out is offered only where the agent's own logout is qualified and
+    // its status check confirmed the sign-in.
+    final accounts = _accounts;
+    final canSignOut =
+        _signingOut ||
+        (phase == AgentSignInPhase.signedIn &&
+            accounts != null &&
+            accounts.agentAccount(id)?.state == AgentAuthProbeState.signedIn &&
+            accounts.canSignOutAgent(id));
 
     KitAction? primary;
     if (signedIn) {
       primary = KitAction(
         key: const ValueKey('agents-sign-in-done'),
         label: l10n.agentsSignInDone(name),
-        onPressed: () => unawaited(_choose(id)),
+        onPressed: _signingOut ? null : () => unawaited(_choose(id)),
       );
     } else if (!checking && !hostKey && !limit) {
       primary = KitAction(
@@ -544,7 +617,7 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
       title: signedIn ? l10n.agentsSignedIn : l10n.agentsSignInTitle(name),
       leading: _backToList,
       onClose: () => unawaited(_close()),
-      loading: checking,
+      loading: checking || _signingOut,
       primary: primary,
       // The agent's own status can say signed in while its login no longer
       // works (an expired session): signing in again is always offered.
@@ -552,9 +625,17 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
           ? KitAction(
               key: const ValueKey('agents-sign-in-again'),
               label: l10n.agentsSignInAgain,
-              onPressed: () => unawaited(_openSignIn()),
+              onPressed: _signingOut ? null : () => unawaited(_openSignIn()),
             )
           : null,
+      tertiary: [
+        if (canSignOut)
+          KitAction(
+            key: const ValueKey('agents-sign-out'),
+            label: l10n.agentsSignOutAction(name),
+            onPressed: _signingOut ? null : () => unawaited(_signOut(id)),
+          ),
+      ],
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

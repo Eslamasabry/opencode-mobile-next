@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/phone_agents.dart';
+import '../../../domain/phone_agents_source.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
 import '../../kit/kit.dart';
@@ -123,6 +124,11 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
           for (final row in agents.agentRows)
             if (row.setupVisible) row,
         ];
+        // Only a source with qualified status checks can say who is signed
+        // in; any other keeps the plain wording.
+        final accounts = agents is PhoneAgentAccountSource
+            ? agents as PhoneAgentAccountSource
+            : null;
         if (rows.isEmpty) {
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: tokens.gutter),
@@ -145,8 +151,14 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
                     key: ValueKey('agents-row-${row.id}'),
                     title: KitBidi.auto(row.name),
                     leading: KitRow.icon(context, agentIcon(row.iconKey)),
-                    supporting: TextSpan(text: agentRowLine(l10n, row)),
-                    supportingMaxLines: 2,
+                    supporting: TextSpan(
+                      text: agentRowLine(
+                        l10n,
+                        row,
+                        account: accounts?.agentAccount(row.id),
+                      ),
+                    ),
+                    supportingMaxLines: 3,
                     // The title names the agent: the chip says only the act,
                     // and every chip starts at one edge (owner, 2026-10-08).
                     chip: agentFixChip(

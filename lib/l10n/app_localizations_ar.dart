@@ -27302,6 +27302,36 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String agentsSignedInAs(String account) {
+    return 'تم تسجيل الدخول باسم $account';
+  }
+
+  @override
+  String agentsSignOutAction(String agent) {
+    return 'تسجيل الخروج من $agent';
+  }
+
+  @override
+  String agentsSignOutTitle(String agent) {
+    return 'تسجيل الخروج من $agent؟';
+  }
+
+  @override
+  String agentsSignOutBody(String agent) {
+    return 'لن يتمكن $agent من بدء محادثات جديدة حتى تسجّل الدخول مرة أخرى.';
+  }
+
+  @override
+  String agentsSignOutKept(String agent) {
+    return 'تبقى محادثاتك مع $agent كما هي.';
+  }
+
+  @override
+  String agentsSignOutFailed(String agent) {
+    return 'تعذّر التأكد من تسجيل الخروج من $agent. حاول مرة أخرى.';
+  }
+
+  @override
   String get agentsModelTitle => 'اختر نموذجًا';
 
   @override

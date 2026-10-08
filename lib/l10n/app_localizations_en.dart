@@ -27265,6 +27265,36 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String agentsSignedInAs(String account) {
+    return 'Signed in as $account';
+  }
+
+  @override
+  String agentsSignOutAction(String agent) {
+    return 'Sign out of $agent';
+  }
+
+  @override
+  String agentsSignOutTitle(String agent) {
+    return 'Sign out of $agent?';
+  }
+
+  @override
+  String agentsSignOutBody(String agent) {
+    return '$agent can\'t start new conversations until you sign in again.';
+  }
+
+  @override
+  String agentsSignOutKept(String agent) {
+    return 'Your conversations with $agent stay.';
+  }
+
+  @override
+  String agentsSignOutFailed(String agent) {
+    return 'Couldn\'t confirm that $agent signed out. Try again.';
+  }
+
+  @override
   String get agentsModelTitle => 'Choose a model';
 
   @override

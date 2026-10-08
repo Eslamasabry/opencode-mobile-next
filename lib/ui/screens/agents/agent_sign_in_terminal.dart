@@ -151,18 +151,28 @@ class _AgentSignInTerminalScreenState
     }
   }
 
-  /// Claude's sign-in ended: ask it whether it is signed in now.
+  /// The agent's sign-in ended: ask it whether it is signed in now. The
+  /// terminal's exit, even a clean one, proves nothing; only the agent's own
+  /// status check does, so with a source that has one the answer is its.
   Future<void> _check() async {
     setState(() => _checking = true);
-    await widget.agents.recheckAgentSignIn(widget.agentId);
+    final agents = widget.agents;
+    final bool signedIn;
+    if (agents is PhoneAgentAccountSource) {
+      signedIn = await (agents as PhoneAgentAccountSource).confirmAgentSignIn(
+        widget.agentId,
+      );
+    } else {
+      await agents.recheckAgentSignIn(widget.agentId);
+      final row = agents.agentRows
+          .where((row) => row.id == widget.agentId)
+          .firstOrNull;
+      signedIn =
+          agents.agentSignInState(widget.agentId)?.phase ==
+              AgentSignInPhase.signedIn ||
+          (row?.chatSelectable ?? false);
+    }
     if (!mounted) return;
-    final row = widget.agents.agentRows
-        .where((row) => row.id == widget.agentId)
-        .firstOrNull;
-    final signedIn =
-        widget.agents.agentSignInState(widget.agentId)?.phase ==
-            AgentSignInPhase.signedIn ||
-        (row?.chatSelectable ?? false);
     if (signedIn) {
       Navigator.of(context).pop(true);
       return;
