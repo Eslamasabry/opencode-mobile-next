@@ -1,0 +1,39 @@
+{
+  "engine": "opencode",
+  "case": "allow",
+  "cliVersion": "1.18.32",
+  "observedVersion": "1.18.32",
+  "appUID": 10217,
+  "appBuild": 2195,
+  "results": {
+    "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "healthy": true,
+        "asserted": true
+      }
+    },
+    "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "retained": true,
+        "asserted": true
+      }
+    },
+    "models": {
+      "state": "fail",
+      "code": "request_timeout",
+      "facts": {}
+    },
+    "permissionAllow": {
+      "state": "fail",
+      "code": "event_stream_unavailable",
+      "facts": {}
+    }
+  },
+  "ownedSessions": [
+    "ses_ee65db4efffeAFJJp8GajOsN8K"
+  ]
+}

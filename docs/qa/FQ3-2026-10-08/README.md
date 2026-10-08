@@ -7,7 +7,7 @@ Run from the repository root with the pinned Dart:
 
 ```sh
 /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart \
-  tool/qa/fq3_certify.dart --run-id fq3-20261008-cert \
+  tool/qa/fq3_certify.dart --run-id fq3-20261008-qualified \
   --oc1-model zai-coding-plan/glm-5.3 --oc2-model zai-coding-plan/glm-5.3
 ```
 
@@ -31,4 +31,6 @@ Final run and outcomes are appended after execution. None of the exploratory or 
 
 Exploratory cleanup correction: TERM alone left owned PRoot descendants running. The earlier Android shell UID could not reliably inspect their process metadata, and the guest cwd view did not identify them. Root-side kernel metadata plus the exact generated `--rootfs`/`--cwd` argv identified 18 owned processes, which were removed by exact PID/start-time checks; no process-name pattern kill was used. Android restarted during this memory-pressure episode; app build 2195 and its private data remained installed. The final driver captures descendants, uses TERM then KILL only for matching owned identities, verifies they are gone, and never stops the app-managed port. Root adb was restored after Android's restart. These exploratory attempts are not certification results.
 
-Local gate before the recorded candidate: 46 serial focused Flutter checks passed (including existing certification parsing), 19 Python validation checks passed, both guard-removal red proofs failed at the expected assertion and were restored, full pinned Flutter analyzer clean. No full suite or APK build was run for this QA-only change.
+Local gate before the recorded candidate: 81 serial focused Flutter checks passed (including existing certification parsing), 19 Python validation checks passed, both guard-removal red proofs failed at the expected assertion and were restored, full pinned Flutter analyzer clean. No full suite or APK build was run for this QA-only change.
+
+Evidence freshness: every phase carries a unique attempt token, candidate revision, run ID and attested build/UID/both version witnesses. Nonzero child exit, stale files, mixed identities or incomplete cleanup cannot contribute passes. Lock acquisition waits without owning the emulator; each completed scenario releases it. History equality uses ordered durable content digests only in memory, never transcript or digest artifacts. The interrupted `fq3-20261008-cert` attempt is provisional evidence only and is not imported into the matrix.
