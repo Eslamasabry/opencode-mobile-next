@@ -19,9 +19,19 @@ MAIN = ROOT / 'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile
 TEST = ROOT / 'android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile'
 OUT = ROOT / 'docs/qa/BB5-integration-2026-10-08'
 CLASSES = ('IdleStopPolicyTest', 'NativeIdleStateTest', 'NativeIdleHeartbeatTest',
-           'NativeIdleTimerTest', 'NativeIdleReceiverDispatchTest', 'NativeAgentHostAdmissionTest')
-SOURCES = ('IdleStopPolicy.kt', 'NativeIdleState.kt', 'NativeIdleHeartbeat.kt', 'NativeIdleTimer.kt', 'NativeAgentHostAdmission.kt')
+           'NativeIdleTimerTest', 'NativeIdleReceiverDispatchTest', 'NativeAgentHostAdmissionTest',
+           'NativeIdleReturnNotificationTest')
+SOURCES = ('IdleStopPolicy.kt', 'NativeIdleState.kt', 'NativeIdleHeartbeat.kt', 'NativeIdleTimer.kt',
+           'NativeAgentHostAdmission.kt', 'NativeIdleReturnNotification.kt')
 CONTROLS = (
+    ('notification_foreground', 'NativeIdleReturnNotification.kt', (('!state.foreground &&', ''),),
+     'NativeIdleReturnNotificationTest', 'foregroundReturnRemovesNotificationAndAllowsLaterIdleShow'),
+    ('notification_deduplicate', 'NativeIdleReturnNotification.kt', (('if (shown == key) return true', ''),),
+     'NativeIdleReturnNotificationTest', 'repeatedSameOwnerGenerationDoesNotShowAgain'),
+    ('notification_prior_process_clear', 'NativeIdleReturnNotification.kt',
+     (('@Synchronized fun clear() {\n        shown = null',
+       '@Synchronized fun clear() {\n        if (shown == null) return\n        shown = null'),),
+     'NativeIdleReturnNotificationTest', 'stalePlatformNotificationIsRemovedWithoutAnInMemoryKey'),
     ('helper_ticket_epoch', 'NativeAgentHostAdmission.kt', (('current.activityEpoch != ticket.epoch ||', ''),),
      'NativeAgentHostAdmissionTest', 'pauseAndReturnDoNotReviveTheOldTicket'),
     ('helper_ticket_generation', 'NativeAgentHostAdmission.kt', (('state.generation == token &&', ''),),

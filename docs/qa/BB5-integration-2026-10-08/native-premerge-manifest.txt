@@ -1,5 +1,5 @@
-BB5 merged2198 native/host candidate atbfbb6dac8 plus uncommitted draft; JNI/Android/device gate pending.
-a9707340100f1f5acea43b1e9741264adac1975d0d108540ebc56589a404d86c  android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt
+Uncompiled BB5 native source/notification/host candidate;2026-10-09 local. No JVM/Android/device pass claimed.
+7fa73875271950d7e014cd737204f6308a3a30227655fdf460fd47c88229f851  android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt
 bb67bd77b5063cfe2974866e276bbf6839efb999b9033190562a5496327ef956  android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/MainActivity.kt
 aa567b45ead1401ad1dc8dcafc45c19cd46871f2b9443ec3ccb5f03505373330  android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinServerService.kt
 b0ddcca03f25394a6add9f789b6d8d1fd7918a182afd29e6b7e5777ae1c3b7e7  android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/IdleStopPolicy.kt
@@ -18,9 +18,4 @@ efdbeb2c6fa1ae8f40424c31146d9fabc7e4ac06570a5ba2e9931acf882e9dc2  android/app/sr
 9f1cfd45715fbac32db09663a41bdfd199e41fe872065acc55f3db725561f234  android/app/src/main/res/values/bb_idle_strings.xml
 95fa8529a0aadb243b8d9681b354d32d2deb5092659bb5a7cb9f72be6d9e52da  android/app/src/main/res/values-ar/bb_idle_strings.xml
 6d837e5c5c0cdb282145a936c92f66682e6268054b0f3e399d8fcc12b8eb479d  tool/qa/bb5_native_regression.py
-416fd1755173d7e6bc3e72d52a11b3c23e993d93a0e3f84924f16517399333a5  tool/qa/bb5_runtime_acceptance.py
-bc248fb2efc972e9a8423f66bd45d1682073205104cc54a7d54e3ea77cc62db7  android/app/build.gradle.kts
-cca402a2ca86f3b80d2a936ef97be0e80c98f876ce153d6c0807dd6d7768f2ee  android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthOtherOwners.kt
-e1cc606e42f6ba46cbaa89271580d66f1108f291541de08b302bbfb9de3341d3  android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthRuntime.kt
-7683910197bcc004e38f8602e2b6866cca5501a2e920cf5c48a6f0c47759b9d4  android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthProcessTree.kt
-ce5d34c2f7608781e2d7f1c5dbfa0ab7dca0c4d25a08d7ade39db6a5a637ab39  tool/qa/test_bb5_runtime_acceptance.py
+fe0f956102f0bce08fab86eea3df1b37f4fa95f6dd81c4032186a2e5ad207fd2  tool/qa/bb5_runtime_acceptance.py
