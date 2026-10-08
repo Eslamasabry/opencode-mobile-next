@@ -23,9 +23,9 @@ class NormalRestoreTest(unittest.TestCase):
         self.commands = []
         self.clock = 0
         self.signer = SIGNER
-        self.version = 2195
+        self.version = 2196
         self.package = restore.smoke.PACKAGE
-        self.installed_version = 2195
+        self.installed_version = 2196
         self.install_result = b'Success\n'
         self.launch_result = b'Status: ok\n'
         self.pid = b'1234\n'
@@ -111,7 +111,7 @@ class NormalRestoreTest(unittest.TestCase):
         self.assert_failure(self.prepared, 'normal_apk_package_mismatch')
 
     def test_wrong_version_blocks_session(self):
-        self.version = 2201
+        self.version = 2195
         self.assert_failure(self.prepared, 'normal_apk_version_mismatch')
 
     def test_changed_hash_blocks_install(self):
@@ -140,7 +140,7 @@ class NormalRestoreTest(unittest.TestCase):
                             for command in self.commands))
         report = self.report()
         self.assertEqual(report['result'], 'PASS')
-        self.assertEqual(report['version_code'], 2195)
+        self.assertEqual(report['version_code'], 2196)
         self.assertEqual(report['signer_sha256'], SIGNER)
         self.assertEqual(report['install'], 'PASS')
         self.assertTrue(report['process_alive'])
@@ -174,7 +174,7 @@ class NormalRestoreTest(unittest.TestCase):
 
     def test_installed_version_must_be_owner_version(self):
         callback = self.prepared()
-        self.installed_version = 2201
+        self.installed_version = 2195
         self.assert_failure(lambda: callback(['adb', '-s', 'emulator-5554']),
                             'normal_installed_version_mismatch')
 

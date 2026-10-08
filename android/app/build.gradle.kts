@@ -13,6 +13,7 @@ val ocPreview = (project.findProperty("ocPreview") as String?) == "true"
 val ocStableEngineQa = (project.findProperty("ocStableEngineQa") as String?) == "true"
 // Test-only release AOT smoke entry point and separate instrumentation runner.
 val ocBd9Smoke = (project.findProperty("ocBd9Smoke") as String?) == "true"
+val ocBb8Smoke = (project.findProperty("ocBb8Smoke") as String?) == "true"
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.isFile) {
@@ -40,7 +41,7 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         testInstrumentationRunner = "io.github.eslamasabry.opencode_mobile." +
-            (if (ocBd9Smoke) "Bd9DeviceSmoke" else "PhoneEngineAcceptance")
+            (if (ocBb8Smoke) "Bb8DeviceSmoke" else if (ocBd9Smoke) "Bd9DeviceSmoke" else "PhoneEngineAcceptance")
         // A preview build installs beside the stable app instead of over it
         // (`flutter build apk --android-project-arg=ocPreview=true`): its own
         // package, name, data and built-in Ubuntu, so trying a new version

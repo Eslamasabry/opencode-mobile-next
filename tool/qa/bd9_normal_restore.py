@@ -12,7 +12,7 @@ import time
 
 from tool.qa import bd9_device_smoke as smoke
 
-NORMAL_VERSION = 2195
+NORMAL_VERSION = 2196
 LAUNCH_BUDGET_SECONDS = 10
 POLL_SECONDS = 0.25
 FIRST_FRAME = b'OCTRACE mark app.first_frame'

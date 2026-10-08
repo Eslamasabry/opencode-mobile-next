@@ -1,0 +1,265 @@
+{
+  "base": "d777082c3",
+  "branch": "sol/bd-bb8",
+  "date": "2026-10-08",
+  "source_sha256": {
+    "android/app/build.gradle.kts": "daa4bd04f5a950411ed5356fbefaba42c88b755cd026f216b0f54d7119a003d3",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt": "aed4c5f0579c683efaf5443ed62d3e1f0160f7387c6662c9a12170c5fe344a03",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/MainActivity.kt": "5f9a810feedfbb031efc3226ab0b13cb04bc5b6788196e2e9694c5c34ebc2ad5",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthCapture.kt": "00d82efa3838eadb616eb4d2a3d922edaee8b04d880d82ed169f4117ab4fa222",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthColdOwner.kt": "2067990d0ca8e330e16ce6cbfcc85b633a6bc16f780d43461092363e5d3a43f9",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthDeadline.kt": "b8536eddf5c8aadadbac02f3548f8253fb5810de18906e0892016e1714c6a8b8",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthInventory.kt": "5e23417319368a6ce0cbd987a46ecfc348b5c704ef0881b8d3ab79b96d121908",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthJson.kt": "aa34368a9f7441c62f484fd6e9e570046372374272cb6afed5cbe8e974c06758",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthLock.kt": "cf3e6ad349c55b1cc01aa4fc94cd00aac1aabf6f3bfaf5d1492c44f11ed56945",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthProbe.kt": "31d1da9b075365db67a94e2d320ecfbbbcce5bcf29a96b7af6c6fb6130d40155",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthProcessTree.kt": "5732bca4ac206e8151a4cb91f6f93882e0d3d63eacbde329e5add8e72f25086b",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthProjection.kt": "33225f81279f4cec0e0f43c5907d99def88a743cfa32a87a8dba6e20b51b4451",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthRequest.kt": "91c194cba53f340971d96f72e496877c45b345b9c589521177c73f067e18de7a",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentAuthRuntime.kt": "c0610f5c9441b82950ddbd2e940c3c745f9ba5ed8d23eed95082c30ff3401614",
+    "android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/Bb8DeviceSmoke.kt": "74770ac72a97bfb615e412fcd9deb0f06b91439915a1107df007688cdcd8a7d1",
+    "test/phone_agent_auth_native_test.dart": "49fc91360124979b8fed3ee55bba55d2a24f4a765ea19f5a8d7eedabd3cf2029",
+    "test/native/phone_agent_auth_harness.kt": "9bcdd94c804c5a62fc3f55bc8ae22638fe9a507de7302a3f3fa099928881d1c0",
+    "integration_test/bb8_agent_auth_device_test.dart": "42f1ff2ca24064fce99b9869c7717c1fde47869c0339483b11100ab7ac6446b1",
+    "tool/qa/bb8_agent_auth_device_smoke.py": "db5b5b6a8379c3897b4fa3b4388242a73fb8e32e9494a6159c310fde99eb287c",
+    "tool/qa/test_bb8_agent_auth_device_smoke.py": "651fb25ce3376fa704bc518e2985d3536123e9bd902af36eda5641cd1277be97",
+    "integration_test/bb8_native_ready.dart": "d5cd60cfb2e54facacc3d5816c58e337d9c2daee510a870d4055d6efe91f52c3",
+    "test/bb8_native_ready_test.dart": "d0c3dcb17884e7273a7f2c519621517396fce567b5d0a8789c6bf14e4b113096",
+    "android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/Bb8MainCallback.kt": "de775edc3816c9d5d9675b3154c66160497f686b7b252639d5f674da61cfcb01",
+    "test/native/bb8_main_callback_harness.kt": "23a936ddf5c27b589190ebe9fa38ae51d1dfc3f973e215172ac4ae8df59ceee5",
+    "test/bb8_main_callback_native_test.dart": "2d4a9df120279abfeba85b091d0b8910137034362e1d36dedcd31066541d4c5a",
+    "android/app/phone-engine-instrumentation.pro": "c32b00265a5a2d177f5b2e9a0b4810f3ea0c51ecda1de81c2e49667259e5de43"
+  },
+  "focused": {
+    "result": "PASS",
+    "total": 88,
+    "native_auth_scenarios": 38,
+    "files": [
+      "test/bb8_main_callback_native_test.dart",
+      "test/bb8_native_ready_test.dart",
+      "test/phone_agent_auth_native_test.dart",
+      "test/agent_auth_probe_test.dart",
+      "test/phone_agents_host_test.dart",
+      "test/phone_agents_legacy_auth_test.dart",
+      "test/phone_agent_paths_native_test.dart",
+      "test/phone_agent_run_native_test.dart"
+    ],
+    "readiness_scenarios": 6,
+    "qa_native_callback_scenarios": 2
+  },
+  "existing_native_sign_in": {
+    "result": "PASS",
+    "fake_process_scenarios": 13,
+    "command": "tool/qa/machine_lock.sh test -- tool/qa/phone_agent_sign_in_harness.sh"
+  },
+  "offline_device_and_restore": {
+    "result": "PASS",
+    "tests": 30,
+    "command": "python3 -m unittest tool.qa.test_bb8_agent_auth_device_smoke tool.qa.test_bd9_normal_restore"
+  },
+  "analyzer": {
+    "result": "PASS",
+    "issues": 0,
+    "seconds": 15.1
+  },
+  "kotlin": {
+    "result": "PASS",
+    "new_findings": 0,
+    "baseline_changed": false,
+    "command": "tool/qa/kotlin_static_analysis.sh"
+  },
+  "failing_first": {
+    "absent_bridge": "EXPECTED FAIL before implementation",
+    "removed_guards_34_case_snapshot": [
+      {
+        "mutation": "authored-script",
+        "scenario": "request-rejection",
+        "exit_code": 1,
+        "expected_failure": true
+      },
+      {
+        "mutation": "unknown-fields",
+        "scenario": "projection-rejection",
+        "exit_code": 1,
+        "expected_failure": true
+      },
+      {
+        "mutation": "timeout",
+        "scenario": "timeout",
+        "exit_code": 1,
+        "expected_failure": true
+      },
+      {
+        "mutation": "retained-owner",
+        "scenario": "retained-dead-root",
+        "exit_code": 1,
+        "expected_failure": true
+      },
+      {
+        "mutation": "dead-root",
+        "scenario": "tree-dead-root",
+        "exit_code": 1,
+        "expected_failure": true
+      },
+      {
+        "mutation": "pid-reuse",
+        "scenario": "tree-pid-reuse",
+        "exit_code": 1,
+        "expected_failure": true
+      },
+      {
+        "mutation": "cold-owner",
+        "scenario": "cold-unknown-owner",
+        "exit_code": 1,
+        "expected_failure": true
+      },
+      {
+        "mutation": "deletion",
+        "scenario": "deletion-during-run",
+        "exit_code": 1,
+        "expected_failure": true
+      },
+      {
+        "mutation": "unattributed-orphan",
+        "scenario": "tree-root-only-then-orphan",
+        "exit_code": 1,
+        "expected_failure": true
+      },
+      {
+        "mutation": "signal-revalidation",
+        "scenario": "tree-signal-reuse",
+        "exit_code": 1,
+        "expected_failure": true
+      },
+      {
+        "mutation": "incomplete-start",
+        "scenario": "tree-failed-start-unknown",
+        "exit_code": 1,
+        "expected_failure": true
+      },
+      {
+        "mutation": "unreadable-inventory",
+        "scenario": "inventory-unreadable",
+        "exit_code": 1,
+        "expected_failure": true
+      },
+      {
+        "mutation": "absolute-deadline",
+        "scenario": "deadline-absolute-probe",
+        "exit_code": 1,
+        "expected_failure": true
+      },
+      {
+        "restored_native_exit_code": 0
+      }
+    ],
+    "removed_lock_guards_37_case_snapshot": [
+      {
+        "mutation": "foreign-link",
+        "scenario": "lock-foreign-symlink",
+        "expected_failure": true,
+        "exit_code": 1
+      },
+      {
+        "mutation": "nonempty-lock",
+        "scenario": "lock-nonempty-retained",
+        "expected_failure": true,
+        "exit_code": 1
+      },
+      {
+        "restored_native_exit_code": 0
+      }
+    ],
+    "overflow_timeout": {
+      "scenario": "output-overflow-timeout",
+      "preceding_implementation": "EXPECTED FAIL",
+      "final_38_case_snapshot": "PASS",
+      "synchronization": "in-memory EOF latch; fake wait deadline; no sleep"
+    },
+    "qa_readiness": {
+      "absent_rendezvous": {
+        "result": "EXPECTED FAIL",
+        "tests": 5,
+        "behaviors": [
+          "blocks auth until native plugin ready",
+          "missing-handler retries",
+          "wrong reply rejected",
+          "ten-second unanswered deadline; late reply ignored",
+          "deadline cancels retries"
+        ]
+      },
+      "fixed_phase_projection_removed": {
+        "result": "EXPECTED FAIL",
+        "test": "test_readiness_and_native_timeout_failures_are_fixed_and_never_pass"
+      },
+      "restored": {
+        "widget_tests": 6,
+        "offline_tests": 30,
+        "result": "PASS"
+      },
+      "fake_clock": true,
+      "test_sleeps": false,
+      "first_frame_prerequisite": {
+        "old_order": "EXPECTED FAIL",
+        "correct_first_frame_then_ready_order": "PASS",
+        "test": "first frame completes before readiness and auth work"
+      }
+    },
+    "qa_main_callback": {
+      "scenario": "callback-failure",
+      "old_direct_callback": "EXPECTED FAIL; framework completion not reached",
+      "guarded_runnable": "PASS; framework completes and helper returns false",
+      "test_sleeps": false
+    },
+    "qa_activity_launch": {
+      "synchronous_launch": "FAIL outer instrument130s, normal2195restored",
+      "corrected_launch": "nonblocking startActivity + ActivityMonitor.waitForActivityWithTimeout(20000)",
+      "device_final": "PASS final corrected runner; same-lock normal2195 restored",
+      "bounded_monitor_attempt": "FAIL register_plugin; normal2195 restored PASS",
+      "registration_lookup": "recursive actual FlutterView lookup; fixed registration stage projection",
+      "recursive_view_attempt": "FAIL register_ready; native view/engine/plugin succeeded; normal2195 restored PASS"
+    },
+    "qa_readiness_abi": {
+      "pre_fix_device": "FAIL register_ready",
+      "r8_mapping_before_fix": {
+        "BinaryMessenger": "renamed",
+        "MethodChannel": "renamed",
+        "DartExecutor.getBinaryMessenger": "inlined",
+        "MethodChannel.setMethodCallHandler": "renamed"
+      },
+      "fixed": "narrow QA-only channel ABI keep rules",
+      "restored_device": "PASS final matching app/test APKs"
+    }
+  },
+  "full_suite": {
+    "run_here": false,
+    "owner": "coordinator"
+  },
+  "privacy": {
+    "real_output_or_credentials_in_evidence": false,
+    "account_value_in_evidence": false
+  },
+  "native_implementation_commit": "e9c38ffc4",
+  "qa_source_commits": [
+    "9c57fd626",
+    "0ed9ddb1f"
+  ],
+  "commit_gate": {
+    "result": "PASS",
+    "command": "tool/qa/check_commits.sh d777082c3 HEAD",
+    "commits": 3
+  },
+  "device": {
+    "result": "PASS",
+    "report": "report.json",
+    "restore": "normal-restore.json",
+    "claude": "signedIn",
+    "fx": "signedOut",
+    "fx_logout": "signedOut",
+    "fx_after_logout": "signedOut",
+    "real_claude_logout": false,
+    "account_value_recorded": false,
+    "one_lock_spans_install_proof_restore": true,
+    "app_hash_matches_build": true
+  }
+}
