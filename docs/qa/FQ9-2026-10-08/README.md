@@ -1,4 +1,62 @@
-# FQ9 pre-release device checklist — offline drivers
+# FQ9 pre-release device checklist
+
+## Authorized 2196 → 2197 and booked background run
+
+Branch `sol/bc-fq9-device` from `feat/genui-fe` `8787099496fad9b188dc93a9598f231680664769`.
+Finish line: exercise the actual same-signer 2196 → 2197 data-retaining update
+and one uninterrupted live-turn HOME dwell with 5/30-minute checkpoints, clean
+owned fixtures, and restore exact normal 2197 under the shared emulator lock.
+Non-goals: builds, Claude sign-in changes, published-stable qualification,
+new AVDs, physical-device battery qualification, and pushes.
+
+The coordinator explicitly authorized installing local 2196 as the previous
+baseline with data retained and booked the 30-minute reservation after BA. This
+supersedes the earlier modern-baseline refusal and short-session deferral below
+for this run only. A blocking outer `flock` owns preparation, both drivers and
+restoration continuously; adapters are invoked directly within that reservation
+instead of nesting the CLI's nonblocking lock. Stable still needs an approved
+CI-signed candidate/asset; clean first run still needs a second AVD.
+
+### First reservation: real update failed runtime verification
+
+Both approved artifacts were independently verified against their reviewed
+hashes and local signer. The app switched OC2 → OC1 through its existing UI;
+OC1 1.18.32 was healthy and idle. The explicitly authorized data-retaining
+`adb install -r -d` established exact 2196. A dedicated settled no-inference
+conversation and user message were seeded under `/root/projects/fq9-fixture`;
+the 2196 UI rendered that message and its selected GLM-5.3 Highspeed model.
+The expected no-reply notice came from the fixture's deliberate `noReply` flag.
+
+[Actual 2196 → 2197 driver result](2196-to-2197-upgrade.json) is **FAIL**:
+`upgrade_verification_failed`. Package installation and UID retention succeeded,
+but the app-managed listener did not return within 90 seconds, so complete
+history/storage comparison could not finish. The app displayed its existing
+start-refused state; both its Start and connect and setup Open actions refused.
+The cached fixture row alone does not prove live history or credential usability.
+An app-advised reboot retained data but did not restore server availability.
+
+Bounded, memory-only private metadata observations: `ubuntu.ready` contained a
+valid 64-hex digest; `builtin_component_writer` still contained an installer
+ticket while setup said done; after reboot `drainOwner` was absent, wanted and
+enabled were true and userStopped was false. No ticket body, nonce, preference
+values, credentials, logs or transcript were exported. A retained ticket is a
+concrete cold-recovery prerequisite, but these observations do **not** establish
+the exact native exception. Native ownership/installer checks remain intact.
+
+The coordinator reprioritized BA before any live background fixture or measured
+HOME dwell. Root restored with `adb install -r oc-2197.apk`, independently
+verified exact normal bytes/certificate/UID, closed owned forwards and exited
+the locked shell. [Restoration witness](2197-priority-handoff.json). The one
+settled owned history remains for precise cleanup once the runtime is usable;
+its private receipt is outside the repository. BA goes first; background work
+queues afterwards and still requires one uninterrupted 30-minute reservation.
+
+QA-only fixes were driven by failing tests: upgrade startup now uses the app's
+90-second window and refreshes a failed post-update transport; OC2 static reads
+fallback from health to info only on exact HTTP 404; a done setup with a durable
+installer ticket now refuses package mutation before installing. These fixes
+do not claim to repair the native runtime refusal. All 94 driver tests pass
+serially through `machine_lock`; no Flutter/native/APK build was required.
 
 ## APK 2197 preflight update
 

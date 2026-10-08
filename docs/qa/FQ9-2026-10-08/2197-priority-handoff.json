@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "normalBuild": 2197,
+  "normalRestored": true,
+  "installed": {
+    "build": 2197,
+    "version": "1.2.0",
+    "sha256": "03ae604a6a1ed06739091d75770a30a04cbc7436e9313f5d37a19f20fdff0eea",
+    "signer": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c",
+    "uid": 10217
+  },
+  "runStage": "released_for_BA_before_dwell",
+  "ownedForwardsClosed": true
+}
