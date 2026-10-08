@@ -105,6 +105,72 @@ class DiagnosticLogTests(unittest.TestCase):
         self.assertNotIn("ses_private", json.dumps(result))
         self.assertNotIn("transcript", json.dumps(result))
 
+    def test_frozen_effect_logger_projects_real_session_log_call_shapes(self):
+        result = self.server(
+            b"timestamp=2026-10-08T20:19:00.123Z level=INFO run=private-run message=loop session.id=ses_private step=10\n"
+            b"timestamp=2026-10-08T20:19:01.000Z level=Info run=private-run message=process session.id=ses_private messageID=msg_private\n"
+            b'timestamp=2026-10-08T20:20:00Z level=Error run=private-run message=process session.id=ses_private messageID=msg_private error="private conversation Basic SECRET" stack="private stack"\n'
+            b'timestamp=2026-10-08T20:20:01Z level=INFO run=private-run message="exiting loop" session.id=ses_private\n'
+            b"timestamp=2026-10-08T20:20:02Z level=INFO run=private-run message=cancel session.id=ses_private\n"
+        )
+        self.assertEqual(
+            [e["category"] for e in result["events"]],
+            [
+                "session_prompt_loop",
+                "session_processor_start",
+                "session_processor_error",
+                "session_prompt_loop_exit",
+                "session_prompt_cancel",
+            ],
+        )
+        self.assertEqual(result["events"][0]["timestampMs"], START + 123)
+        encoded = json.dumps(result)
+        for private in (
+            "private-run",
+            "ses_private",
+            "msg_private",
+            "conversation",
+            "SECRET",
+            "stack",
+        ):
+            self.assertNotIn(private, encoded)
+
+    def test_frozen_execution_error_allows_actual_repeated_message_not_fake_headers(
+        self,
+    ):
+        result = self.server(
+            b'timestamp=2026-10-08T20:19:00Z level=ERROR run=private-run message="Failed to drain Session" message="private Cause pretty output" sessionID=ses_private cause="private provider token"\n'
+            b"timestamp=2026-10-08T20:19:00Z level=INFO run=private-run message=loop session.id=ses_private step=1 level=ERROR\n"
+            b"timestamp=2026-10-08T20:19:00Z level=INFO run=private-run message=loop session.id=ses_private step=1 timestamp=2026-10-08T20:20:00Z\n"
+        )
+        self.assertEqual(
+            [e["category"] for e in result["events"]], ["session_prompt_error"]
+        )
+
+    def test_frozen_private_fields_cannot_replace_message_or_supply_lifecycle_signature(
+        self,
+    ):
+        result = self.server(
+            b'timestamp=2026-10-08T20:19:00Z level=ERROR run=private-run message="private conversation" cause="message=loop session.id=ses_private step=1"\n'
+            b"timestamp=2026-10-08T20:19:00Z level=ERROR run=private-run error.message=loop session.id=ses_private step=1\n"
+            b"timestamp=2026-10-08T20:19:00Z level=ERROR run=private-run message=loop\n"
+            b"timestamp=2026-10-08T20:19:00Z level=INFO run=private-run message=publishing type=session.error\n"
+            b"timestamp=2026-10-08T20:19:00Z level=INFO run=private-run message=loop session.id=ses_private step=1 trailing-private-text\n"
+            b"timestamp=2026-10-08T20:19:00Z level=UNKNOWN run=private-run message=loop session.id=ses_private step=1\n"
+        )
+        self.assertEqual(result["events"], [])
+        self.assertEqual(result["omittedLines"], 6)
+
+    def test_frozen_levels_timestamps_causes_and_ansi_are_bounded_safe(self):
+        result = self.server(
+            b'\x1b[31mtimestamp="2026-10-08T20:19:00+00:00" level=INFO run=private-run message=loop session.id=ses_private step=1 cause="{ \\"message\\": \\"SECRET\\" }"\x1b[0m\n'
+            b"timestamp=2026-10-08T20:18:59Z level=INFO run=private-run message=loop session.id=ses_private step=1\n"
+            b"timestamp=not-a-time level=INFO run=private-run message=loop session.id=ses_private step=1\n"
+        )
+        self.assertEqual(len(result["events"]), 1)
+        self.assertEqual(result["timeUnavailableLines"], 1)
+        self.assertNotIn("SECRET", json.dumps(result))
+
     def test_private_structured_values_do_not_become_log_signatures(self):
         result = self.server(
             b'INFO 2026-10-08T20:19:00Z +0ms service=other text="service=session.prompt error" message\n'

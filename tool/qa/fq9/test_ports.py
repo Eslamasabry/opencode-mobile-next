@@ -192,6 +192,54 @@ class PortTests(unittest.TestCase):
             with self.assertRaisesRegex(DriverFailure, "device_unavailable"):
                 p.adb("get-state")
 
+    def test_private_log_capture_is_bounded_memory_and_stdin_is_detached(self):
+        import subprocess
+        import types
+        from .diagnostic_logs import MAX_BYTES
+
+        p = self.port()
+        p.locked = True
+        p._uid = 10217
+        with patch(
+            "tool.qa.fq9.ports.execute", side_effect=AssertionError("private spool")
+        ):
+            with patch(
+                "tool.qa.fq9.ports.subprocess.run",
+                return_value=types.SimpleNamespace(
+                    returncode=0, stdout=b"private-not-exported"
+                ),
+            ) as run:
+                self.assertEqual(
+                    p._diagnostic_bytes("authored-command"), b"private-not-exported"
+                )
+                self.assertIs(run.call_args.kwargs["stdin"], subprocess.DEVNULL)
+                self.assertIs(run.call_args.kwargs["stdout"], subprocess.PIPE)
+            with patch(
+                "tool.qa.fq9.ports.subprocess.run",
+                return_value=types.SimpleNamespace(
+                    returncode=0, stdout=b"x" * (MAX_BYTES + 1)
+                ),
+            ):
+                with self.assertRaisesRegex(DriverFailure, "diagnostic_capture_failed"):
+                    p._diagnostic_bytes("authored-command")
+
+    def test_actual_oc1_application_log_is_captured_and_pid_reuse_refuses(self):
+        p = self.port()
+        p.locked = True
+        p._uid = 10217
+        p._app_identity = ("123", "999")
+        p._main_process = lambda: ("123", "999")
+        calls = []
+        p._diagnostic_bytes = lambda script: calls.append(script) or b""
+        report = p.diagnostic_logs(1000, 2000)
+        self.assertIn("serverApplication", report)
+        self.assertIn("--pid=123", calls[0])
+        self.assertIn("/.local/share/opencode/log/opencode.log", calls[2])
+        p._main_process = lambda: ("123", "1000")
+        with self.assertRaisesRegex(DriverFailure, "diagnostic_capture_failed"):
+            p.diagnostic_logs(1000, 2000)
+        self.assertEqual(len(calls), 3)
+
     def test_private_absence_observation_uses_privileged_emulator_identity(self):
         p = self.port()
         calls = []
@@ -543,6 +591,14 @@ class PortTests(unittest.TestCase):
         state["input"]["timeout"] = 120000
         with self.assertRaisesRegex(DriverFailure, "live_fixture_command_invalid"):
             p.live_snapshot()
+
+    def test_pending_unparsed_tool_is_not_ready_instead_of_an_invalid_command(self):
+        p = self.live()
+        state = p._session_history(None, None)[1]["parts"][0]["state"]
+        state.update(status="pending", input={})
+        snapshot = p.live_snapshot()
+        self.assertFalse(snapshot["turnActive"])
+        self.assertEqual(snapshot["progressCounter"], 0)
 
     def test_live_new_prompt_foreign_part_and_unbounded_command_refused(self):
         for kw, code in [

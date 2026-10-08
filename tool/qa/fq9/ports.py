@@ -320,11 +320,20 @@ class AndroidPorts(AndroidRuntimeMixin):
             raise DriverFailure("diagnostic_capture_failed")
         # PID is verified by exact package pidof and birth identity. Capture
         # only its logs, then project their timestamps again within the window.
-        script = f"set -o pipefail; logcat -d -v epoch --pid={pid} | tail -c {MAX_BYTES}"
+        script = (
+            f"set -o pipefail; logcat -d -v epoch --pid={pid} | tail -c {MAX_BYTES}"
+        )
         app = self._diagnostic_bytes("sh -c " + shlex.quote(script))
         path = FILES + "/linux/server.log"
         script = f"tail -c {MAX_BYTES} {shlex.quote(path)}"
         server = self._diagnostic_bytes(f"su {self._uid} sh -c {shlex.quote(script)}")
+        # OC1's default logger writes to its XDG data home. server.log may
+        # contain only the startup banner; it is not the application log.
+        path = FILES + "/linux/ubuntu/root/.local/share/opencode/log/opencode.log"
+        script = f"tail -c {MAX_BYTES} {shlex.quote(path)}"
+        application = self._diagnostic_bytes(
+            f"su {self._uid} sh -c {shlex.quote(script)}"
+        )
         if self._main_process() != (pid, birth):
             raise DriverFailure("diagnostic_capture_failed")
         return {
@@ -337,6 +346,9 @@ class AndroidPorts(AndroidRuntimeMixin):
             ),
             "server": project_log(
                 server, source="server", window_start_ms=start, window_end_ms=end
+            ),
+            "serverApplication": project_log(
+                application, source="server", window_start_ms=start, window_end_ms=end
             ),
         }
 

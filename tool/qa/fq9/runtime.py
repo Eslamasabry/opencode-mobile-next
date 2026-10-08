@@ -313,11 +313,15 @@ class AndroidRuntimeMixin:
                 raise DriverFailure("live_scope_mismatch")
             state = tool.get("state", {})
             command = state.get("input", {}).get("command")
-            if command not in ("sleep 120", COMMAND):
-                raise DriverFailure("live_fixture_command_invalid")
             call = tool.get("callID")
             if not isinstance(call, str) or not re.fullmatch(ID_PATTERN, call):
                 raise DriverFailure("live_scope_mismatch")
+            # OC1 persists pending tool parts before parsing their arguments.
+            # They are zero progress, not proof of an executed foreign command.
+            if state.get("status") == "pending" and command in (None, ""):
+                continue
+            if command not in ("sleep 120", COMMAND):
+                raise DriverFailure("live_fixture_command_invalid")
             if state.get("status") in ("running", "completed"):
                 if command == COMMAND:
                     if (

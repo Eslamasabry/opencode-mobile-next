@@ -385,3 +385,33 @@ terminal/log/capture modules missing before implementation. After integration,
 153 focused Python cases pass serially through machine_lock, with formatting,
 F/E9 lint and diff checks clean. No native build or app-source changes. Device
 run queues behind BA in one flock-w1800 reservation; BD7 remains parked.
+
+Preparation note: normal2198 and app-managed OC1 are already healthy, while a
+durable CHECK ticket remains. BD7/crash and engine/installer transitions stay
+parked. The chat-only reservation permits this independent running server to
+execute the fixed no-file-write tool; it does not claim installer quiescence.
+Only an exact CHECK ticket with no SetupService foreground activity is admitted
+for new dedicated conversation preparation; INSTALL or unknown shape refuses.
+The owned project is created exclusively under canonical files/projects.
+
+First admission, terminal-a, did not begin a timed dwell. The model submitted
+the exact command with a string timeout, received a tool validation error, and
+then started the exact command with integer3000000. The strict one-call
+fixture refused admission. Capture initially refused that malformed argument;
+its barrier preserved the session. A failing-first projector fix now exports
+invalid tool timeout as null while keeping the error state and timestamps.
+[Retry evidence](2198-terminal-a-capture-retry.json) records busy/running, one
+prior errored tool, the valid running tool and its3000000ms timeout before
+abort/delete. The session was deleted only after this capture succeeded.
+[Initial admission](2198-terminal-a-background.json) and
+[initial blocked capture](2198-terminal-a-before-cleanup.json) are preserved.
+
+The native redirected server.log contained a51-byte startup banner, so the
+collector now additionally reads OC1
+files/linux/ubuntu/root/.local/share/opencode/log/opencode.log. Its actual
+frozen Effect key=value formatter has source-backed fixed lifecycle
+categories; private IDs, messages, stacks and causes are excluded. Each source
+is a bounded512KiB tail; unknown lines are explicitly omitted. An unparsed
+pending tool is zero progress/not ready rather than an invalid executed
+command (failing-first coverage). Revised prompt explicitly requires a JSON
+number.161 focused cases pass serially via machine_lock; no app-source edits.

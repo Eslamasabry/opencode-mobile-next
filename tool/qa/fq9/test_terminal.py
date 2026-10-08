@@ -133,6 +133,16 @@ class TerminalProjectionTest(unittest.TestCase):
                 self.assertEqual(result["latestAssistant"]["errorCategory"], category)
                 self.assertNotIn("PRIVATE", json.dumps(result))
 
+    def test_invalid_tool_argument_is_a_tool_error_not_invalid_history(self):
+        messages = history(tool_status="error")
+        messages[-1]["parts"][0]["state"]["input"]["timeout"] = (
+            "PRIVATE_INVALID_ARGUMENT"
+        )
+        result = self.project(messages, {})
+        self.assertEqual(result["outcome"], "errored")
+        self.assertIsNone(result["tools"]["timings"][0]["timeoutMs"])
+        self.assertNotIn("PRIVATE", json.dumps(result))
+
     def test_retry_omits_message_and_bounds_numeric_metadata(self):
         result = self.project(
             status={

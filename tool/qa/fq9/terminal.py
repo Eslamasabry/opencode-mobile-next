@@ -174,9 +174,13 @@ def project_terminal(history, status, receipt):
                     "state": kind,
                     "start": _integer(time.get("start"), "terminal_history_invalid"),
                     "end": _integer(time.get("end"), "terminal_history_invalid"),
-                    "timeoutMs": _integer(
-                        inputs.get("timeout"), "terminal_history_invalid"
-                    ),
+                    # Tool arguments are model input. A validation error may
+                    # retain a string/invalid timeout; preserve the error and
+                    # timing without treating that argument as invalid history.
+                    "timeoutMs": inputs.get("timeout")
+                    if type(inputs.get("timeout")) is int
+                    and 0 <= inputs["timeout"] <= MAX_INTEGER
+                    else None,
                 }
             )
 

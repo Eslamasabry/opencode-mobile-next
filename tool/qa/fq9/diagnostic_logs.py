@@ -6,6 +6,10 @@ Only fixed native messages and structured OpenCode logger signatures survive.
 Unknown lines are omitted, not evidence that no error occurred. Android
 threadtime has neither year nor timezone: it cannot prove this epoch window.
 OpenCode's ISO logger timestamps without a suffix use its UTC convention.
+The frozen 1.18.32 Effect logger uses fully key=value fields, not the legacy
+service-prefixed formatter. Actual prompt/processor call shapes below derive
+from source 545f51d26cc39a907d2867492d498d9607ea5fa4. Frozen event publication
+does not log a "publishing" signature; only the older formatter has that rule.
 This module has no process, device, filesystem or network operations.
 """
 
@@ -32,6 +36,24 @@ _LEVELS = {
     "WARN": "warning",
     "ERROR": "error",
 }
+_EFFECT_LEVELS = {
+    "TRACE": "verbose",
+    "DEBUG": "debug",
+    "INFO": "info",
+    "WARN": "warning",
+    "ERROR": "error",
+    "FATAL": "fatal",
+    "Trace": "verbose",
+    "Debug": "debug",
+    "Info": "info",
+    "Warn": "warning",
+    "Error": "error",
+    "Fatal": "fatal",
+}
+_TIMESTAMP = re.compile(
+    r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}"
+    r"(?:\.[0-9]{1,9})?(?:Z|[+-][0-9]{2}:[0-9]{2})?|[0-9]{10,12}(?:\.[0-9]{1,9})?"
+)
 _APP_EPOCH = re.compile(
     r"^\s*(?P<seconds>[0-9]{1,12})(?:\.(?P<fraction>[0-9]{1,9}))?\s+"
     r"(?P<pid>[0-9]{1,10})\s+(?P<tid>[0-9]{1,10})\s+(?P<level>[VDIWEF])\s+"
@@ -69,6 +91,9 @@ CATEGORIES = frozenset(
         *_SERVER_MESSAGES.values(),
         "previous_process_exit",
         "session_error_published",
+        "session_processor_error",
+        "session_prompt_loop_exit",
+        "session_prompt_cancel",
     )
 )
 
@@ -95,13 +120,15 @@ def _iso_ms(value):
         return None
 
 
-def _metadata(value):
+def _metadata(value, *, effect=False):
     """Consume complete fields before the final fixed message, never substrings.
 
     OpenCode serializes string/object fields as JSON and plain scalars as bare
     tokens. Parse a JSON field in full so private values containing whitespace,
     fake service names or a final-message word cannot become structural fields.
-    Only the authored service/type identifiers are needed after tokenization.
+    Only selected fields and the presence of annotation names are needed after
+    tokenization. Effect's multiple string messages repeat message=; preserve
+    its first authored message and consume the remaining private values.
     """
     position = 0
     seen = set()
@@ -110,9 +137,9 @@ def _metadata(value):
     while position < len(value):
         field = _FIELD.match(value, position)
         if field is None:
-            return selected, value[position:]
+            return selected, value[position:], seen
         name = field[1]
-        if name in seen:
+        if name in seen and not (effect and name == "message"):
             return None
         seen.add(name)
         position = field.end()
@@ -132,12 +159,15 @@ def _metadata(value):
                 end += 1
             item = value[position:end]
             position = end
-        if name in ("service", "type"):
+        selected_names = (
+            ("timestamp", "level", "message") if effect else ("service", "type")
+        )
+        if name in selected_names and name not in selected:
             # A JSON object/array in one of these fields is never an identifier.
             selected[name] = item if isinstance(item, str) else None
         while position < len(value) and value[position].isspace():
             position += 1
-    return selected, ""
+    return selected, "", seen
 
 
 def _app_event(line, app_pids):
@@ -169,7 +199,52 @@ def _app_event(line, app_pids):
     }, False
 
 
+def _effect_event(line):
+    fields = _metadata(line, effect=True)
+    if fields is None:
+        return None, False
+    selected, tail, annotations = fields
+    if tail or not {"timestamp", "level", "run", "message"}.issubset(annotations):
+        return None, False
+    raw_timestamp = selected.get("timestamp")
+    if not isinstance(raw_timestamp, str) or not _TIMESTAMP.fullmatch(raw_timestamp):
+        return None, True
+    timestamp = _iso_ms(raw_timestamp)
+    if timestamp is None:
+        return None, True
+    level = _EFFECT_LEVELS.get(selected.get("level"))
+    message = selected.get("message")
+    category = None
+    if (
+        level == "info"
+        and {"session.id", "step"}.issubset(annotations)
+        and message == "loop"
+    ):
+        category = "session_prompt_loop"
+    elif {"session.id", "messageID"}.issubset(annotations) and message == "process":
+        if level == "info":
+            category = "session_processor_start"
+        elif level == "error":
+            category = "session_processor_error"
+    elif level == "info" and "session.id" in annotations:
+        if message == "exiting loop":
+            category = "session_prompt_loop_exit"
+        elif message == "cancel":
+            category = "session_prompt_cancel"
+    elif (
+        level == "error"
+        and "sessionID" in annotations
+        and message == "Failed to drain Session"
+    ):
+        category = "session_prompt_error"
+    if category is None:
+        return None, False
+    return {"timestampMs": timestamp, "level": level, "category": category}, False
+
+
 def _server_event(line):
+    if line.startswith("timestamp="):
+        return _effect_event(line)
     header = _SERVER.fullmatch(line)
     if header is None:
         return None, bool(re.match(r"^(?:DEBUG|INFO|WARN|ERROR)\s", line))
@@ -179,7 +254,7 @@ def _server_event(line):
     fields = _metadata(header["metadata"])
     if fields is None:
         return None, False
-    selected, message = fields
+    selected, message, _ = fields
     service = selected.get("service")
     category = _SERVER_MESSAGES.get((service, message))
     if (

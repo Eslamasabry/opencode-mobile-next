@@ -6,7 +6,9 @@ COMMAND = 'i=0; while [ "$i" -lt 90 ]; do sleep 30; i=$((i+1)); echo FQ9_TICK:$i
 TIMEOUT_MS = 3000000
 PROMPT = (
     "FQ9_BACKGROUND_FIXTURE_V2. Execute exactly one foreground bash tool call. "
-    "Set timeout to 3000000 milliseconds and command to exactly: " + COMMAND + ". "
+    "Set timeout to the JSON NUMBER 3000000 (not a quoted string) milliseconds and command to exactly: "
+    + COMMAND
+    + ". "
     "Do not change the command, run it in background, use parallel calls, write "
     "files or run other tools. Wait for this call to finish before replying DONE. "
     "The ninety sequential sleeps intentionally take at least 45 minutes."
