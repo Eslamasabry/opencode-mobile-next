@@ -1,0 +1,71 @@
+{
+  "fxRows": [
+    {
+      "copy": [
+        "fx"
+      ],
+      "bounds": "[42,1678][1038,1846]",
+      "clickable": "false"
+    }
+  ],
+  "appAuthoredCopy": [
+    "Agents",
+    "Check this phone",
+    "Sign in needed"
+  ],
+  "ui": [
+    {
+      "label": "Install fx",
+      "kind": "content-desc",
+      "bounds": "[733,1699][899,1825]",
+      "clickable": "true",
+      "enabled": "true"
+    }
+  ],
+  "nativeJob": {
+    "state": "done",
+    "components": {
+      "linux": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "essentials": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "node": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "opencode": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "start": {
+        "state": "done",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      }
+    }
+  },
+  "fx": {
+    "allocatedBytes": 0,
+    "pinMatches": false,
+    "linkMatches": false,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": false,
+    "staging": [],
+    "lockPresent": false
+  },
+  "availableBytes": 1690312704
+}

@@ -17,6 +17,11 @@ class Tests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             account_mask_boxes([Element('node',{'text':'Signed in as synthetic-account','bounds':''})])
 
+    def test_scrim_masks_background_when_modal_hides_account_semantics(self):
+        nodes=[Element('node',{'text':'Scrim','bounds':'[0,0][1080,2400]'}),
+               Element('node',{'content-desc':'Install fx','bounds':'[53,2164][1028,2295]'})]
+        self.assertEqual(account_mask_boxes(nodes),[(0,0,1080,2400)])
+
     def test_unknown_native_error_is_not_exported_as_fixed_code(self):
         self.assertIsNone(closed_error_code(RuntimeError('synthetic_provider_key')))
         self.assertEqual(closed_error_code(RuntimeError('app_install_timeout')), 'app_install_timeout')

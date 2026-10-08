@@ -22,7 +22,9 @@ def account_mask_boxes(nodes):
     boxes = []
     for node in nodes:
         copy = (node.get('text') or '') + '\n' + (node.get('content-desc') or '')
-        if 'Claude Code' not in copy and 'Signed in as ' not in copy:
+        # Modal barriers hide background account semantics, not its pixels.
+        # Mask the entire barrier; use fresh non-modal rows for image evidence.
+        if 'Claude Code' not in copy and 'Signed in as ' not in copy and 'Scrim' not in copy.splitlines():
             continue
         bounds = node.get('bounds', '')
         if not re.fullmatch(r'\[\d+,\d+\]\[\d+,\d+\]', bounds):
