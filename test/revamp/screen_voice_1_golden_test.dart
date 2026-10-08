@@ -1,6 +1,6 @@
 // Golden renders of screen-voice-1's pages (wave 2b), rebuilt from kit
 // parts: the voice model setup sheet (not installed, installed, downloading,
-// failed), its delete confirmation and the voice licenses page with one
+// failed), its delete confirmation and the voice licenses group of About with one
 // license open. The voice input sheet is gone: voice is a composer mode
 // (P10.3, test/revamp/slice_p10_3_golden_test.dart). Phone 412x915 and one wide window (1280x800), dark and light
 // (owner decision 2026-09-27: no Arabic), with the app's real fonts at
@@ -15,7 +15,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/voice/model_manager.dart';
 import 'package:opencode_mobile/voice/model_manifest.dart';
-import 'package:opencode_mobile/voice/notices.dart';
 import 'package:opencode_mobile/voice/voice_ui.dart';
 
 import '../../tool/capture/fixtures.dart' show loadCaptureFonts;
@@ -161,7 +160,7 @@ void main() {
           'notices_loaded',
           light: light,
           size: size,
-          home: const VoiceNoticesPage(),
+          home: noticesHost,
         );
       });
     }
@@ -171,7 +170,7 @@ void main() {
         tester,
         'notices_license',
         light: light,
-        home: const VoiceNoticesPage(),
+        home: noticesHost,
         then: () async {
           await tester.pumpAndSettle();
           await tester.tap(find.text('ONNX Runtime'));

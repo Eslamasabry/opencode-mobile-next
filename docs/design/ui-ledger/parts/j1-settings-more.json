@@ -1151,7 +1151,7 @@
       "widget": "AboutScreen",
       "presentedBy": [],
       "line": 30,
-      "purpose": "Build identity (version, update check, Details), non-affiliation and build notices, Tips and shortcuts (Show tips again; keyboard shortcuts on a desktop) and Open source (all package licences, the voice models' licences on Android, the third-party notices). The privacy policy moved to Privacy and data (slice-P3.10).",
+      "purpose": "Build identity (version, update check, Details), non-affiliation and build notices, Tips and shortcuts (Show tips again; keyboard shortcuts on a desktop) and Open source (all package licences, the voice models' licences on Android as a Voice licenses group, the third-party notices). The privacy policy moved to Privacy and data (slice-P3.10).",
       "reachedFrom": [
         {
           "page": "settings",
@@ -1216,15 +1216,15 @@
           "destructive": false
         },
         {
-          "id": "about-voice-notices",
+          "id": "about-voice-licence-row",
           "type": "list-tile",
-          "label": "Voice licenses and provenance",
-          "key": "settings-voice-notices",
+          "label": "<voice component name> / <maker · license>",
+          "key": "voice-notice-<id>",
           "line": 304,
-          "action": "navigate",
-          "target": "voice-notices",
+          "action": "open-sheet",
+          "target": null,
           "targetWidget": null,
-          "effect": "showVoiceNotices(context).",
+          "effect": "showVoiceNoticeLicense: opens the part's license text in the kit viewer, with an Open website action (openExternalLink). The four rows form the Voice licenses group under Open source (FG6: the Voice licenses page is gone).",
           "gates": [
             "platformCapabilities.supportsVoice"
           ],

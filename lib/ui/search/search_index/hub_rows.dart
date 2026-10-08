@@ -563,9 +563,16 @@ extension _IndexHubRows on _IndexBuild {
         title: l10n.e7SettingsUi94,
         keywords:
             '${l10n.settingsHubSearchAboutAliases} ${l10n.e7SettingsDetailUi18}',
-        pages: const ['voice-notices'],
+        pages: const ['about'],
         gate: (scope) => scope.platform.supportsVoice,
-        open: (context, _) async => showVoiceNotices(context),
+        // The voice licences are a group of About; from anywhere else, open
+        // About arrived at it.
+        open: _screen(
+          (scope) => KitArrivalScope(
+            rowId: 'settings-voice-notices',
+            child: AboutScreen(controller: scope.controller),
+          ),
+        ),
       ),
     ];
   }

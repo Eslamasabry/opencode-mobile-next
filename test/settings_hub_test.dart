@@ -1084,13 +1084,24 @@ void main() {
       await tester.tap(_row('settings-about-notices'));
       await tester.pumpAndSettle();
       expect(find.byType(AboutScreen), findsOneWidget);
-      expect(
-        find.descendant(
-          of: _row('about-open-source'),
-          matching: _row('settings-voice-notices'),
-        ),
-        findsOneWidget,
-      );
+      // The four parts are rows of About itself, below Open source: the
+      // Voice licenses page is gone.
+      for (final part in const [
+        'whisper',
+        'sherpa-onnx',
+        'onnx-runtime',
+        'record',
+      ]) {
+        expect(
+          find.descendant(
+            of: _row('about-voice-licences'),
+            matching: _row('voice-notice-$part'),
+          ),
+          findsOneWidget,
+          reason: part,
+        );
+      }
+      expect(find.text(_en.voiceNoticesTitle), findsOneWidget);
       expect(_row('about-tabs'), findsNothing);
       expect(_row('settings-show-tips-again'), findsOneWidget);
     });

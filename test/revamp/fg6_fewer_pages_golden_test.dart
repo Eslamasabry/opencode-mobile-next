@@ -18,6 +18,7 @@ import 'package:opencode_mobile/codex/gateway.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/external_agents.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/ui/screens/about_screen.dart';
 import 'package:opencode_mobile/ui/screens/capabilities_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 
@@ -240,6 +241,16 @@ void main() {
           initialSection: ToolsSection.externalAgents,
           externalAgentStore: agents,
         ),
+      );
+    });
+    testWidgets('About, with the voice licenses · $mode', (tester) async {
+      await _shot(
+        tester,
+        'about_loaded_$mode',
+        light: light,
+        home: (c) => AboutScreen(controller: c),
+        size: const Size(412, 1300),
+        asset: true,
       );
     });
     testWidgets('Tools on Codex · $mode', (tester) async {

@@ -215,7 +215,6 @@ graph LR
   timeline_sheet(["timeline-sheet"])
   tools["tools"]:::ext
   voice_model_setup_sheet(["voice-model-setup-sheet"])
-  voice_notices["voice-notices"]
   web_sources["web-sources"]:::ext
   work_sheet["work-sheet"]:::ext
   global_shortcuts --> chat
@@ -343,7 +342,6 @@ graph LR
   embedded_team_planning_card --> chat
   team_phone_onboarding_success --> chat
   settings --> voice_model_setup_sheet
-  about --> voice_notices
   commands --> chat
   session_context --> active_context
   active_context --> active_context_message
@@ -364,7 +362,6 @@ graph LR
   chat -.-> embedded_product_states
   session_context -.-> embedded_product_states
   session_relations -.-> embedded_product_states
-  voice_notices -.-> embedded_product_states
   prompt_stash_sheet --> chat_stash_attachments_unavailable_sheet
   prompt_stash_sheet --> chat_stash_restore_confirm_sheet
   embedded_pending_sends_strip --> chat_resend_queued_draft_sheet
@@ -385,7 +382,6 @@ graph LR
   chat -.-> embedded_permission_attention_card
   chat --> embedded_voice_conversation_controls
   chat --> voice_model_setup_sheet
-  appearance_settings --> voice_notices
   chat -.-> embedded_tool_card
   embedded_prompt_error_banner -.-> embedded_tool_card
   about -.-> embedded_markdown_text
@@ -1103,7 +1099,6 @@ graph LR
   usage["usage"]:::ext
   usage_hub["usage-hub"]
   voice_model_setup_sheet["voice-model-setup-sheet"]:::ext
-  voice_notices["voice-notices"]:::ext
   web_sources["web-sources"]
   home_shell --> settings
   home_shell --> notifications_settings
@@ -1159,7 +1154,6 @@ graph LR
   appearance_settings --> theme_pack_preview_sheet
   privacy_settings --> privacy_settings_clear_queued_sheet
   privacy_settings --> privacy_settings_clear_drafts_sheet
-  about --> voice_notices
   app_diagnostics --> app_diagnostics_clear_sheet
   commands --> chat
   skills --> skill_activation_sheet
@@ -1189,7 +1183,6 @@ graph LR
   settings -.-> embedded_product_states
   skills -.-> embedded_product_states
   tools -.-> embedded_product_states
-  appearance_settings --> voice_notices
   about -.-> embedded_markdown_text
   skill_activation_sheet -.-> embedded_file_preview_body
   skills -.-> embedded_file_preview_body
@@ -1268,7 +1261,6 @@ graph LR
   team_home["team-home"]:::ext
   terminal["terminal"]:::ext
   tools["tools"]:::ext
-  voice_notices["voice-notices"]:::ext
   worktrees["worktrees"]:::ext
   prompt_stash_sheet --> confirm_sheet
   embedded_message_view -.-> embedded_context_menu_region
@@ -1299,7 +1291,6 @@ graph LR
   team_home -.-> embedded_product_states
   terminal -.-> embedded_product_states
   tools -.-> embedded_product_states
-  voice_notices -.-> embedded_product_states
   worktrees -.-> embedded_product_states
   classDef ext stroke-dasharray: 4 3,opacity:0.7
 ```
@@ -1395,7 +1386,6 @@ graph LR
 | `continue-on-phone-sheet` | sheet | 2 / 3 | `chat`<br>`session-menu-sheet` / session-menu-sheet-continue-phone | _none_ |
 | `embedded-tool-card` | overlay | 1 / 2 | `chat` / (embedded)<br>`embedded-prompt-error-banner` / (embedded) | embedded-tool-card-open-subagent-session -> `chat`<br>embedded-tool-card-diff-see-all -> `file-preview-sheet`<br>embedded-tool-card-output-see-all -> `file-preview-sheet`<br>embedded-tool-card-image-preview -> `file-preview-sheet`<br>embedded-tool-card-output-file -> `file-preview-sheet`<br>(embedded) -> `embedded-markdown-text`<br>(embedded) -> `embedded-mobile-task-list` |
 | `embedded-transcript-display-toggles` | overlay | 2 / 3 | `session-menu-sheet`<br>`session-menu-sheet` / (embedded) | _none_ |
-| `voice-notices` | screen | 2 / 2 | `appearance-settings`<br>`about` / about-voice-notices | (embedded) -> `embedded-product-states` |
 | `voice-model-setup-sheet` | sheet | 1 / 3 | `chat`<br>`settings` / settings-voice | voice-model-setup-sheet-pack-delete -> `voice-model-setup-sheet-delete-dialog` |
 | `voice-model-setup-sheet-delete-dialog` | dialog | 2 / 4 | `voice-model-setup-sheet` / voice-model-setup-sheet-pack-delete | _none_ |
 
@@ -1600,7 +1590,7 @@ graph LR
 
 | Page | Kind | Depth | Inbound (page / element) | Outbound (element -> page) |
 |---|---|---|---|---|
-| `about` | screen | 1 / 1 | `settings` / settings-about-notices<br>`system` / system-named-route-about-lib-main-dart-1238-to-about<br>`servers` / servers-about<br>`servers-welcome` / servers-welcome-about | about-keyboard-shortcuts -> `shortcuts-help-dialog`<br>about-voice-notices -> `voice-notices`<br>(embedded) -> `embedded-markdown-text`<br>-> `about-open-source-tab` |
+| `about` | screen | 1 / 1 | `settings` / settings-about-notices<br>`system` / system-named-route-about-lib-main-dart-1238-to-about<br>`servers` / servers-about<br>`servers-welcome` / servers-welcome-about | about-keyboard-shortcuts -> `shortcuts-help-dialog`<br>(embedded) -> `embedded-markdown-text`<br>-> `about-open-source-tab` |
 | `about-open-source-tab` | tab | 2 / 2 | `about` | _none_ |
 | `app-diagnostics` | screen | 1 / 3 | `settings`<br>`chat`<br>`command-palette-dialog` / command-palette-dialog-cmd-diagnostics<br>`system` / system-named-route-debug-via-desktop-command-diagnostics-lib-main-d-to-app-diagnostics<br>`command-launcher-sheet` / chat-command-debug<br>`team-conversation` / team-conversation-no-progress-report | app-diagnostics-clear -> `app-diagnostics-clear-sheet` |
 | `app-diagnostics-clear-sheet` | sheet | 2 / 4 | `app-diagnostics` / app-diagnostics-clear | _none_ |
@@ -1633,7 +1623,7 @@ graph LR
 | `coding-settings-shell-sheet` | sheet | 1 / 3 | `settings` / settings-default-shell | _none_ |
 | `notifications-settings` | screen | 1 / 2 | `settings` / settings-category-background<br>`provider-quota` / provider-quota-monitor-notification-settings<br>`home-shell` / home-shell-app-exit-keep-running<br>`termux-setup-installed` / termux-setup-installed-keep-running | notifications-settings-quiet-start -> `notifications-settings-quiet-time-dialog`<br>notifications-settings-quiet-end -> `notifications-settings-quiet-time-dialog` |
 | `notifications-settings-quiet-time-dialog` | dialog | 2 / 3 | `notifications-settings` / notifications-settings-quiet-start<br>`notifications-settings` / notifications-settings-quiet-end | _none_ |
-| `appearance-settings` | screen | 1 / 3 | `settings` / settings-category-appearance<br>`command-launcher-sheet` / chat-command-themes | appearance-settings-language -> `language-sheet`<br>appearance-settings-theme-pack -> `theme-pack-preview-sheet`<br>-> `voice-notices` |
+| `appearance-settings` | screen | 1 / 3 | `settings` / settings-category-appearance<br>`command-launcher-sheet` / chat-command-themes | appearance-settings-language -> `language-sheet`<br>appearance-settings-theme-pack -> `theme-pack-preview-sheet` |
 | `privacy-settings` | screen | 1 / 3 | `settings` / settings-category-privacy | privacy-settings-clear-queued -> `privacy-settings-clear-queued-sheet`<br>privacy-settings-clear-drafts -> `privacy-settings-clear-drafts-sheet` |
 | `privacy-settings-clear-drafts-sheet` | sheet | 2 / 4 | `privacy-settings` / privacy-settings-clear-drafts | _none_ |
 | `privacy-settings-clear-queued-sheet` | sheet | 2 / 4 | `privacy-settings` / privacy-settings-clear-queued | _none_ |
@@ -1663,5 +1653,5 @@ graph LR
 | `embedded-context-menu-region` | overlay | 1 / 2 | `embedded-message-view` / (embedded)<br>`embedded-prompt-error-banner` / (embedded)<br>`files` / (embedded)<br>`global-sessions` / (embedded)<br>`managed-workspaces` / (embedded)<br>`terminal` / (embedded)<br>`worktrees` / (embedded) | _none_ |
 | `confirm-sheet` | sheet | 3 / 4 | `prompt-stash-sheet` / prompt-stash-sheet-delete | _none_ |
 | `external-link-dialog` | dialog | 2 / 2 | `desktop-release-notice` / desktop-release-notice-view<br>`external-agents`<br>`web-sources`<br>`integrations`<br>`embedded-markdown-text` / embedded-markdown-text-link<br>`form-sheet` / form-sheet-external-card<br>`tailscale-setup` / tailscale-setup-install<br>`tailscale-setup` / tailscale-setup-serve-docs<br>`tailscale-setup` / tailscale-setup-android-docs<br>`agent-account` / agent-account-open-sign-in<br>`external-task` / external-task-review-link<br>`development-services` / development-services-visit | _none_ |
-| `embedded-product-states` | overlay | 0 / 2 | `active-context` / (embedded)<br>`chat` / (embedded)<br>`commands` / (embedded)<br>`files` / (embedded)<br>`global-sessions` / (embedded)<br>`managed-workspaces` / (embedded)<br>`project-health` / (embedded)<br>`projects` / (embedded)<br>`references` / (embedded)<br>`review-workspace` / (embedded)<br>`saved-permissions` / (embedded)<br>`server-settings` / (embedded)<br>`session-context` / (embedded)<br>`session-destination-sheet` / (embedded)<br>`session-relations` / (embedded)<br>`settings` / (embedded)<br>`skills` / (embedded)<br>`team-agent` / (embedded)<br>`team-home` / (embedded)<br>`terminal` / (embedded)<br>`tools` / (embedded)<br>`voice-notices` / (embedded)<br>`worktrees` / (embedded) | _none_ |
+| `embedded-product-states` | overlay | 0 / 2 | `active-context` / (embedded)<br>`chat` / (embedded)<br>`commands` / (embedded)<br>`files` / (embedded)<br>`global-sessions` / (embedded)<br>`managed-workspaces` / (embedded)<br>`project-health` / (embedded)<br>`projects` / (embedded)<br>`references` / (embedded)<br>`review-workspace` / (embedded)<br>`saved-permissions` / (embedded)<br>`server-settings` / (embedded)<br>`session-context` / (embedded)<br>`session-destination-sheet` / (embedded)<br>`session-relations` / (embedded)<br>`settings` / (embedded)<br>`skills` / (embedded)<br>`team-agent` / (embedded)<br>`team-home` / (embedded)<br>`terminal` / (embedded)<br>`tools` / (embedded)<br>`worktrees` / (embedded) | _none_ |
 

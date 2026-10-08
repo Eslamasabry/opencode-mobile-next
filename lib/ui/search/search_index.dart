@@ -14,7 +14,6 @@ import '../../state/connection.dart';
 import '../../state/phone_host.dart' show PhoneHostKind;
 import '../../termux/bridge.dart' show TermuxBridge;
 import '../../voice/model_manager.dart';
-import '../../voice/notices.dart';
 import '../../voice/voice_ui.dart';
 import '../app_iconography.dart';
 import '../desktop/desktop_interaction.dart';

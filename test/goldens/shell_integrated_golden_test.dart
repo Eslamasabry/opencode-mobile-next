@@ -124,73 +124,67 @@ void main() {
       ('shell_conversations_new', 0, 'chats-new-chat'),
       ('shell_files_project_sheet', 1, 'project-hub-context'),
     ]) {
-      testWidgets(
-        '$name · $mode',
-        (tester) async {
-          tester.view.physicalSize = const Size(412, 915);
-          tester.view.devicePixelRatio = 1;
-          addTearDown(tester.view.reset);
-          debugPlatformCapabilities = const PlatformCapabilities.android();
-          addTearDown(() => debugPlatformCapabilities = null);
-          SharedPreferences.setMockInitialValues({});
-          final prefs = await SharedPreferences.getInstance();
-          final controller = ConnectionController(_Store(prefs: prefs))
-            ..api = _Api()
-            ..repository = _Repository()
-            ..status = StreamStatus.connected
-            ..directory = '/root/projects/alpha';
-          ProjectFolderActions.builtinLinuxOverride = _Linux();
-          ProjectFolderActions.folderListerOverride = (path) async => [
-            for (final (n, git) in _tree[path] ?? const <(String, bool)>[])
-              FolderEntry(
-                name: n,
-                path: path == '/' ? '/$n' : '$path/$n',
-                isGit: git,
-              ),
-          ];
-          addTearDown(() {
-            ProjectFolderActions.builtinLinuxOverride = null;
-            ProjectFolderActions.folderListerOverride = null;
-            controller.dispose();
-          });
-          final boundary = GlobalKey();
-          await withClock(Clock.fixed(_now), () async {
-            await tester.pumpWidget(
-              RepaintBoundary(
-                key: boundary,
-                child: ProviderScope(
-                  overrides: [
-                    connProvider.overrideWithValue(controller),
-                    chatsHostProvider.overrideWithValue(
-                      FakeChatsHost(_source()),
-                    ),
-                  ],
-                  child: MaterialApp(
-                    debugShowCheckedModeBanner: false,
-                    theme: captureTheme(light: light),
-                    supportedLocales: AppLocalizations.supportedLocales,
-                    localizationsDelegates:
-                        AppLocalizations.localizationsDelegates,
-                    home: HomeScreen(initialTab: tab),
-                  ),
+      testWidgets('$name · $mode', (tester) async {
+        tester.view.physicalSize = const Size(412, 915);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        debugPlatformCapabilities = const PlatformCapabilities.android();
+        addTearDown(() => debugPlatformCapabilities = null);
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final controller = ConnectionController(_Store(prefs: prefs))
+          ..api = _Api()
+          ..repository = _Repository()
+          ..status = StreamStatus.connected
+          ..directory = '/root/projects/alpha';
+        ProjectFolderActions.builtinLinuxOverride = _Linux();
+        ProjectFolderActions.folderListerOverride = (path) async => [
+          for (final (n, git) in _tree[path] ?? const <(String, bool)>[])
+            FolderEntry(
+              name: n,
+              path: path == '/' ? '/$n' : '$path/$n',
+              isGit: git,
+            ),
+        ];
+        addTearDown(() {
+          ProjectFolderActions.builtinLinuxOverride = null;
+          ProjectFolderActions.folderListerOverride = null;
+          controller.dispose();
+        });
+        final boundary = GlobalKey();
+        await withClock(Clock.fixed(_now), () async {
+          await tester.pumpWidget(
+            RepaintBoundary(
+              key: boundary,
+              child: ProviderScope(
+                overrides: [
+                  connProvider.overrideWithValue(controller),
+                  chatsHostProvider.overrideWithValue(FakeChatsHost(_source())),
+                ],
+                child: MaterialApp(
+                  debugShowCheckedModeBanner: false,
+                  theme: captureTheme(light: light),
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  localizationsDelegates:
+                      AppLocalizations.localizationsDelegates,
+                  home: HomeScreen(initialTab: tab),
                 ),
               ),
-            );
-            await tester.pump(const Duration(milliseconds: 600));
-            if (then != null) {
-              await tester.tap(find.byKey(ValueKey(then)));
-            }
-            await tester.pumpAndSettle();
-          });
-          expect(tester.takeException(), isNull);
-          await expectLater(
-            find.byKey(boundary),
-            matchesGoldenFile('${name}_$mode.png'),
+            ),
           );
-          await tester.pumpWidget(const SizedBox.shrink());
-        },
-        variant: TargetPlatformVariant.only(TargetPlatform.android),
-      );
+          await tester.pump(const Duration(milliseconds: 600));
+          if (then != null) {
+            await tester.tap(find.byKey(ValueKey(then)));
+          }
+          await tester.pumpAndSettle();
+        });
+        expect(tester.takeException(), isNull);
+        await expectLater(
+          find.byKey(boundary),
+          matchesGoldenFile('${name}_$mode.png'),
+        );
+        await tester.pumpWidget(const SizedBox.shrink());
+      }, variant: TargetPlatformVariant.only(TargetPlatform.android));
     }
   }
 }

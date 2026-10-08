@@ -1,5 +1,5 @@
 // screen-voice-1 (wave 2b): the voice model setup sheet, its delete
-// confirmation, the voice input sheet and the voice licenses page, rebuilt
+// confirmation, the voice input sheet and the voice licenses group of About, rebuilt
 // from kit parts. These tests assert what the person sees and what reaches
 // the voice model manager.
 import 'package:flutter/material.dart';
@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/voice/model_manager.dart';
 import 'package:opencode_mobile/voice/model_manifest.dart';
-import 'package:opencode_mobile/voice/notices.dart';
 import 'package:opencode_mobile/voice/voice_ui.dart';
 
 import 'screen_voice_1_fixtures.dart';
@@ -242,12 +241,12 @@ void main() {
     });
   });
 
-  group('voice licenses page', () {
+  group('voice licenses group (Settings › About)', () {
     testWidgets('lists each part with its maker and license', (tester) async {
       tester.view.physicalSize = voicePhone;
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      await tester.pumpWidget(voiceHost(home: const VoiceNoticesPage()));
+      await tester.pumpWidget(voiceHost(home: noticesHost));
       await tester.pumpAndSettle();
 
       expect(find.text('Voice licenses'), findsOneWidget);
@@ -266,7 +265,7 @@ void main() {
       tester.view.physicalSize = voicePhone;
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      await tester.pumpWidget(voiceHost(home: const VoiceNoticesPage()));
+      await tester.pumpWidget(voiceHost(home: noticesHost));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('ONNX Runtime'));

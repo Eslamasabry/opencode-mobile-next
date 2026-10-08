@@ -1,5 +1,5 @@
 {
- "generatedFrom": "6d88220738e516e1ae3cddbf32357b7c57e23fba",
+ "generatedFrom": "8a349dc671c97e09217f9af96daf173b7a7e466c",
  "pages": [
   {
    "id": "system",
@@ -10787,50 +10787,6 @@
      "targetWidget": null,
      "effect": "_setTimestamps(value) -> connection.setTranscriptTimestampsVisible(value).",
      "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "voice-notices",
-   "title": "Voice licenses and provenance",
-   "kind": "screen",
-   "area": "chat",
-   "file": "lib/voice/notices.dart",
-   "widget": "VoiceNoticesPage",
-   "presentedBy": [
-    "showVoiceNotices"
-   ],
-   "line": 74,
-   "purpose": "Full-screen selectable text of the bundled third-party notices and licences for the on-device voice stack.",
-   "reachedFrom": [
-    {
-     "page": "appearance-settings",
-     "element": null,
-     "evidence": "lib/ui/screens/settings/personal_settings_screens.dart:434"
-    },
-    {
-     "page": "about",
-     "element": "about-voice-notices"
-    }
-   ],
-   "gates": [
-    "platformCapabilities.supportsVoice (opener tile)"
-   ],
-   "elements": [
-    {
-     "id": "voice-notices-retry",
-     "type": "button",
-     "label": "[ProductErrorState Try again]",
-     "key": null,
-     "file": "lib/voice/notices.dart",
-     "line": 49,
-     "action": "other",
-     "target": null,
-     "effect": "_retry(): reloads loadVoiceNotices() from rootBundle.",
-     "gates": [
-      "snapshot.hasError"
-     ],
      "destructive": false
     }
    ]
@@ -29203,7 +29159,7 @@
    "widget": "AboutScreen",
    "presentedBy": [],
    "line": 30,
-   "purpose": "Build identity (version, update check, Details), non-affiliation and build notices, Tips and shortcuts (Show tips again; keyboard shortcuts on a desktop) and Open source (all package licences, the voice models' licences on Android, the third-party notices). The privacy policy moved to Privacy and data (slice-P3.10).",
+   "purpose": "Build identity (version, update check, Details), non-affiliation and build notices, Tips and shortcuts (Show tips again; keyboard shortcuts on a desktop) and Open source (all package licences, the voice models' licences on Android as a Voice licenses group, the third-party notices). The privacy policy moved to Privacy and data (slice-P3.10).",
    "reachedFrom": [
     {
      "page": "settings",
@@ -29271,16 +29227,16 @@
      "destructive": false
     },
     {
-     "id": "about-voice-notices",
+     "id": "about-voice-licence-row",
      "type": "list-tile",
-     "label": "Voice licenses and provenance",
-     "key": "settings-voice-notices",
+     "label": "<voice component name> / <maker · license>",
+     "key": "voice-notice-<id>",
      "file": "lib/ui/screens/about_screen.dart",
      "line": 304,
-     "action": "navigate",
-     "target": "voice-notices",
+     "action": "open-sheet",
+     "target": null,
      "targetWidget": null,
-     "effect": "showVoiceNotices(context).",
+     "effect": "showVoiceNoticeLicense: opens the part's license text in the kit viewer, with an Open website action (openExternalLink). The four rows form the Voice licenses group under Open source (FG6: the Voice licenses page is gone).",
      "gates": [
       "platformCapabilities.supportsVoice"
      ],
@@ -34785,11 +34741,6 @@
      "via": "embedded"
     },
     {
-     "page": "voice-notices",
-     "element": null,
-     "via": "embedded"
-    },
-    {
      "page": "worktrees",
      "element": null,
      "via": "embedded"
@@ -34823,7 +34774,6 @@
     "team-home",
     "terminal",
     "tools",
-    "voice-notices",
     "worktrees"
    ],
    "elements": [
@@ -37546,11 +37496,6 @@
     "to": "shortcuts-help-dialog"
    },
    {
-    "from": "about",
-    "element": "about-voice-notices",
-    "to": "voice-notices"
-   },
-   {
     "from": "guide",
     "element": "guide-add-server",
     "to": "profile-editor"
@@ -38121,12 +38066,6 @@
     "via": "embedded"
    },
    {
-    "from": "voice-notices",
-    "element": null,
-    "to": "embedded-product-states",
-    "via": "embedded"
-   },
-   {
     "from": "worktrees",
     "element": null,
     "to": "embedded-product-states",
@@ -38311,11 +38250,6 @@
     "from": "chat",
     "element": null,
     "to": "voice-model-setup-sheet"
-   },
-   {
-    "from": "appearance-settings",
-    "element": null,
-    "to": "voice-notices"
    },
    {
     "from": "chat",
