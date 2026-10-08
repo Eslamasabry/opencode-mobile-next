@@ -1,13 +1,18 @@
 {
-  "agentId": "fx",
-  "appBuild": 2198,
-  "sourceRevision": "064a43a3687773626dc5ce37853446c29be41e0c",
-  "normalRestored": true,
-  "availableBeforeBytes": 1690329088,
-  "errorType": "RuntimeError",
-  "errorCode": "app_install_timeout",
-  "terminalSetup": {
-    "jobId": "setup-1791488001755808",
+  "fxRows": [],
+  "appAuthoredCopy": [
+    "Choose an agent"
+  ],
+  "ui": [
+    {
+      "label": "Install fx",
+      "kind": "content-desc",
+      "bounds": "[53,2164][1028,2295]",
+      "clickable": "true",
+      "enabled": "true"
+    }
+  ],
+  "nativeJob": {
     "state": "done",
     "components": {
       "linux": {
@@ -42,7 +47,7 @@
       }
     }
   },
-  "terminalInventory": {
+  "fx": {
     "allocatedBytes": 0,
     "pinMatches": false,
     "linkMatches": false,
@@ -51,5 +56,6 @@
     "leftovers": false,
     "staging": [],
     "lockPresent": false
-  }
+  },
+  "availableBytes": 1690320896
 }

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """One normal2198 target under an outer flock; no account or shell removal actions."""
 import argparse
+import functools
 import hashlib
 from io import BytesIO
 import json
@@ -43,8 +44,10 @@ def closed_error_code(error):
     return str(error) if isinstance(error, RuntimeError) and str(error) in allowed else None
 
 
-def configure_device(d, output):
+def configure_device(d, output, p=None):
     d.configure(output)
+    if p is not None:
+        p.probe = functools.partial(p.probe, observation=True)
     original = d.adb
     def rooted_read(*args, **kwargs):
         if (args and args[0] == 'shell' and len(args) > 2 and
@@ -108,7 +111,7 @@ def run_case(agent_id):
         raise RuntimeError('unsupported_agent')
     d, p, a, metadata = run.legacy_ports()
     QA.mkdir(parents=True, exist_ok=True)
-    configure_device(d, QA)
+    configure_device(d, QA, p)
     class Ports(run.Ports):
         freed_display = None
         last_job = None
