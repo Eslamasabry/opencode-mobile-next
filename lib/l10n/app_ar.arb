@@ -5272,7 +5272,7 @@
   "activityAgentNeedsInput": "{agent} يحتاج إلى إدخال",
   "agentsSignInOpenPage": "افتح صفحة تسجيل الدخول",
   "agentsSignInCopyCode": "انسخ الرمز {code}",
-  "cardsProblemNotQualifiedFor": "لم يُتحقق بعد من أن {agents} يعمل مع البطاقات.",
+  "cardsProblemNotQualifiedFor": "{count, plural, =1{لم يُتحقق بعد من أن {agents} يعمل مع البطاقات.} =2{لم يُتحقق بعد من أن {agents} يعملان مع البطاقات.} other{لم يُتحقق بعد من أن {agents} تعمل مع البطاقات.}}",
   "cardsProblemRegistrationFailedFor": "تعذّر إعلام {agents} بالبطاقات.",
   "cardsProblemVerificationFailedFor": "تم تثبيت البطاقات لـ {agents} لكنها لم تجتز الفحص.",
   "cardsProblemRemovalFailedFor": "تعذّرت إزالة البطاقات بالكامل من {agents}. حاول مرة أخرى بعد إعادة التشغيل.",
@@ -8317,5 +8317,12 @@
   "chatStallHelperDown": "توقف مساعد الوكيل على هذا الهاتف. أوقف الرد وحاول مرة أخرى.",
   "chatStallConnectionLost": "انقطع الاتصال بالوكيل. أوقف الرد وحاول مرة أخرى عند عودته.",
   "chatStallConnectionUnchecked": "لم يصل أي جديد منذ مدة، وتعذّر التحقق من الاتصال. انتظر، أو أوقف الرد وحاول مرة أخرى.",
-  "kitWorkHideSteps": "إخفاء الخطوات"
+  "kitWorkHideSteps": "إخفاء الخطوات",
+  "connectionSwitchingTo": "جارٍ التبديل إلى {target}…",
+  "shellServerSwitching": "جارٍ التبديل…",
+  "agentsStateNotCertified": "لم يُعتمد على هذا الإصدار بعد",
+  "agentsChipSignIn": "تسجيل الدخول",
+  "agentsChipResume": "استئناف",
+  "agentsChipCheck": "فحص",
+  "agentNamesPair": "{first} و {second}"
 }

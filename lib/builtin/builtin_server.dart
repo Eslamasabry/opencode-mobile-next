@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -292,6 +293,31 @@ class BuiltinServerStarter extends ChangeNotifier {
   /// True while a start is waiting for the server to answer.
   bool get starting => _starting;
 
+  /// The profile a running start brings up, or null when none runs. While
+  /// the app switches this phone between OpenCode versions it is the
+  /// version being switched to, not the one being left.
+  ServerProfile? get startingProfile => _starting ? _startingProfile : null;
+  ServerProfile? _startingProfile;
+
+  /// The server this starter is bringing up: [startingProfile] while a start
+  /// runs, then for [handover] after a confirmed start answered, the moment
+  /// between "the server answers" and "the app connected to it". A status
+  /// line uses it to name the server being switched to, never the one being
+  /// left ("Switching to OpenCode 1…").
+  ServerProfile? get bringingUp {
+    final starting = startingProfile;
+    if (starting != null) return starting;
+    final until = _handoverUntil;
+    if (until == null || !clock.now().isBefore(until)) return null;
+    return _handoverProfile;
+  }
+
+  /// How long [bringingUp] keeps naming a server that answered: a connect
+  /// follows within moments.
+  static const handover = Duration(seconds: 10);
+  ServerProfile? _handoverProfile;
+  DateTime? _handoverUntil;
+
   /// Grows by one on every start that ended with the server answering, so a
   /// screen waiting on a stopped server knows to connect again.
   int get readyCount => _readyCount;
@@ -407,6 +433,9 @@ class BuiltinServerStarter extends ChangeNotifier {
       );
     }
     _starting = true;
+    _startingProfile = profile;
+    _handoverProfile = null;
+    _handoverUntil = null;
     _failure = null;
     _failedProfileID = null;
     _notify();
@@ -427,6 +456,7 @@ class BuiltinServerStarter extends ChangeNotifier {
       );
     }
     _starting = false;
+    _startingProfile = null;
     if (failure == null) {
       DeliberateServerStop.clearLater(profile.id);
       _installed = true;
@@ -435,6 +465,8 @@ class BuiltinServerStarter extends ChangeNotifier {
       if (!automatic) {
         _manualReadyCount++;
         _manuallyStartedProfileId = profile.id;
+        _handoverProfile = profile;
+        _handoverUntil = clock.now().add(handover);
       }
       // A team the person turned on comes back with OpenCode: Android
       // stops both when it reclaims the app.

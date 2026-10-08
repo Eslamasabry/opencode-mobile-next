@@ -90,6 +90,19 @@ class KitSince extends StatefulWidget {
     Localizations.localeOf(context),
   ).kitSinceStillWaiting(KitMotion.escalateAfter.inSeconds);
 
+  /// [slowLabel] for a wait that has run [elapsed]: "Still waiting after
+  /// 23 s" under a minute (never under the escalation's own 8 s), then
+  /// "Waiting 1 min" ([waitingLabel]), for a slow line that keeps counting.
+  static String slowLabelAt(BuildContext context, Duration elapsed) {
+    if (elapsed.inMinutes >= 1) return waitingLabel(context, elapsed);
+    final seconds = elapsed.inSeconds < KitMotion.escalateAfter.inSeconds
+        ? KitMotion.escalateAfter.inSeconds
+        : elapsed.inSeconds;
+    return lookupAppLocalizations(
+      Localizations.localeOf(context),
+    ).kitSinceStillWaiting(seconds);
+  }
+
   /// "Waiting 4 min" / "Waiting less than a minute", on whole minutes of
   /// [elapsed].
   static String waitingLabel(BuildContext context, Duration elapsed) {
