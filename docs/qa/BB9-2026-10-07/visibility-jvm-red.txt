@@ -1,0 +1,7 @@
+BB9 visibility removed-fix controls; pure Kotlin/JUnit; machine test lock.
+toolchain=Temurin17.0.20.1+1 Kotlin2.3.20 JUnit4.13.2 compilerHeapMiB=256 testHeapMiB=128
+control=integration_missing_gone test=NativeInstallerOwnershipTest.missingRecordedProcessMustBeIndependentlyConfirmedGone exit=1 run=1 failures=1
+control=policy_absence_proof test=NativeInstallerVisibilityTest.aliveOrUnreadableMissingProcessRefuses exit=1 run=1 failures=1
+control=policy_reused_pid test=NativeInstallerVisibilityTest.reusedPidRefusesBeforeAnyOtherMissingIdentityIsProbed exit=1 run=1 failures=1
+control=policy_unique_inventory test=NativeInstallerVisibilityTest.duplicateInventoryPidsRefuseEvenWithIdenticalEntries exit=1 run=1 failures=1
+PASS controls=4 expectedRegressionFailures=4 restoredGatePassed=true

@@ -446,6 +446,11 @@ class MainActivity : FlutterActivity() {
                             result.error("engine_unavailable", "The phone engine is unavailable.", null)
                         } else if (call.method in setOf("startAgentHost", "agentHostStatus", "stopAgentHost", "deleteAgentHost", "agentHostVersion", "agentHostWorkspace", "startAgentSignIn", "readAgentSignInChallenge", "submitAgentSignInCode", "cancelAgentSignIn", "agentSignInStatus")) {
                             result.error("agent_unavailable", "The agent is unavailable. Try again.", null)
+                        } else if (call.method in setOf("restartServer", "stageServerRecovery", "bindServerRecovery",
+                            "serverRecoveryBudget", "serverRecoveryReceipts", "ackServerRecoveryReceipt",
+                            "updateServerRecoveryReceipt", "confirmManualServerStart", "unbindServerRecovery",
+                            "deleteServerRecovery")) {
+                            result.error("recovery_unavailable", "The phone server could not restart.", null)
                         } else if (error is SetupPersistenceException) {
                             result.error(SetupPersistenceException.CODE, null, null)
                         } else {
@@ -523,6 +528,10 @@ class MainActivity : FlutterActivity() {
                     "serverRunning" to linux.serverRunning,
                     "serverRestartWanted" to linux.serverRestartWanted,
                     "serverRecoveryGeneration" to linux.serverRecoveryGeneration,
+                    "serverRecoveryAuthority" to true,
+                    "serverRecoveryScheduled" to linux.serverRecoveryScheduled,
+                    "restorePhase" to linux.restorePhase,
+                    "restoreReason" to linux.restoreReason,
                     "serverPort" to linux.port,
                     "serverUptimeMs" to linux.serverUptimeMs,
                     "services" to linux.runningServices(),
@@ -554,7 +563,7 @@ class MainActivity : FlutterActivity() {
                     return
                 }
                 inBackground {
-                    linux.startServer(script, port)
+                    linux.startServer(script, port, call.argument<Map<*, *>>("restoreRecipe"))
                     null
                 }
             }
@@ -568,6 +577,41 @@ class MainActivity : FlutterActivity() {
                 }
                 inBackground {
                     linux.restartServer(script, port, generation)
+                    null
+                }
+            }
+            "stageServerRecovery" -> inBackground {
+                linux.stageServerRecovery(call.argument<String>("profileId") ?: error("recovery_unavailable"),
+                    call.argument<Map<String, Any?>>("legacyBudget") ?: error("recovery_unavailable"))
+            }
+            "bindServerRecovery" -> inBackground {
+                linux.bindServerRecovery(call.argument<String>("profileId") ?: error("recovery_unavailable"),
+                    call.argument<Map<String, Any?>>("legacyBudget"), call.argument<Boolean>("enabled") == true)
+            }
+            "serverRecoveryBudget" -> inBackground {
+                linux.serverRecoveryBudget(call.argument<String>("profileId") ?: error("recovery_unavailable"))
+            }
+            "serverRecoveryReceipts" -> inBackground {
+                linux.serverRecoveryReceipts(call.argument<String>("profileId") ?: error("recovery_unavailable"))
+            }
+            "ackServerRecoveryReceipt" -> inBackground {
+                linux.ackServerRecoveryReceipt(call.argument<String>("profileId") ?: error("recovery_unavailable"),
+                    call.argument<String>("eventId") ?: error("recovery_unavailable"))
+                null
+            }
+            "updateServerRecoveryReceipt" -> inBackground {
+                linux.updateServerRecoveryReceipt(call.argument<String>("profileId") ?: error("recovery_unavailable"),
+                    call.argument<Map<String, Any?>>("budget") ?: error("recovery_unavailable"))
+            }
+            "confirmManualServerStart" -> inBackground {
+                linux.confirmManualServerStart(call.argument<String>("profileId") ?: error("recovery_unavailable"))
+            }
+            "unbindServerRecovery", "deleteServerRecovery" -> {
+                val profile = call.argument<String>("profileId") ?: ""
+                linux.unbindServerRecovery(profile)
+                inBackground {
+                    if (call.method == "deleteServerRecovery") linux.deleteServerRecovery(profile)
+                    else linux.persistServerRecoveryUnbind(profile)
                     null
                 }
             }

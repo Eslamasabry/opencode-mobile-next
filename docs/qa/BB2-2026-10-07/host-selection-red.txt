@@ -1,0 +1,13 @@
+F
+======================================================================
+FAIL: test_connected_evidence_must_belong_to_open_code_two (tool.qa.test_bb2_runtime_acceptance.RestorationEvidenceTest.test_connected_evidence_must_belong_to_open_code_two)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb2_runtime_acceptance.py", line 18, in test_connected_evidence_must_belong_to_open_code_two
+    self.assertFalse(acceptance.connected_open_code_two(["BD9 local fixture\nConnected", "In-app Ubuntu\nOpenCode 2\nStopped"], {"Connected"}))
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (failures=1)

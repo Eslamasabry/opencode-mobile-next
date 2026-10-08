@@ -1,0 +1,9 @@
+Historical failed harness attempt. The exact_independent_witness_tree_drained line was not accepted: undiscovered launch ownership was unproven. Original-state/Connected restoration passed.
+PASS installed_signer_and_version_preflight
+installedVersion=2202
+PASS exact_independent_witness_tree_drained
+FAIL primary_witness_read_failed
+PASS original_native_preferences_preserved
+PASS existing_owner_policy_and_marker_digests_preserved
+PASS explicit_person_Start_rearmed_fresh_kernel_ownership
+PASS shared_owner_authenticated_OpenCode2_and_connected_UI_restored

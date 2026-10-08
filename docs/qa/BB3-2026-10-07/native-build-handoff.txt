@@ -1,0 +1,10 @@
+BB3 native qualification, 2026-10-08; no device operations by native owner.
+Affected five-class Gradle JVM:68 tests pass; Kotlin/Java/unit compile pass.
+Current pure helper checkpoint:40 tests pass; three additional exact removed-fix red controls fail as intended, production restored. Root identity fixture first red was inconclusive due redundant inventory refusal; corrected isolated server-only fixture red fails, final40 pass.
+QA2202 target Flutter release build exit0,451.2s. Runner exact initial compile failed nullable RecentTaskInfo plus missing dev integration_test test-only classpath; root fixed both AndroidTest-only boundaries. Final exact runner Gradle assembleReleaseAndroidTest exit0,3m59s.
+Both APKs signer1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C verified.
+Target build/app/outputs/flutter-apk/app-release.apk SHA2562e506ed7c79c05f90a46a96f3057f7ff079819973a7973b590ad9974c6c3f597; versionCode2202. Packaged Flutter/AOT x86_64 only; inherited native plugin/phone-engine libraries also include ARM ABIs. Exact engine/native hashes in target-artifact.txt.
+Runner build/app/outputs/apk/androidTest/release/app-release-androidTest.apk SHA25683c5e1aa994bfed451cc2f3051840679e673ec125541b812c891460f42f1329a.
+Target hash and green native source hashes unchanged after runner build.
+Cleanup:all recorded owned waiters/clients/daemons/aapt2/gen_snapshot exited naturally; no process kills. build/app/intermediates absent; target duplicate outputs/apk removed; only newest target plus necessary runner retained, no APK copies. Owned temporary generator/pure runner/jar/build scripts removed.
+Whole-tree git diff --check clean. No commit/push/release or device proof. Root owns final device qualification and restoration.

@@ -1,0 +1,5 @@
+finalServerWanted=True
+finalUserStopped=False
+personBudgetAfter=0
+qaNativeKeysAbsent=True
+qaFixtureDirectoryAbsent=True

@@ -1,0 +1,14 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart
+00:00 +0: the launch start (QA B1) starts a stopped server past an exhausted crash budget, connects, and gives the budget back once it answers
+00:00 +0 -1: the launch start (QA B1) starts a stopped server past an exhausted crash budget, connects, and gives the budget back once it answers [E]
+  Expected: <0>
+    Actual: <3>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_server_healing_test.dart 384:7           main.<fn>.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) starts a stopped server past an exhausted crash budget, connects, and gives the budget back once it answers

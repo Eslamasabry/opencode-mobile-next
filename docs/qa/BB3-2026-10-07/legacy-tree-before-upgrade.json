@@ -1,0 +1,124 @@
+{
+  "app": {
+    "pid": 27417,
+    "startTicks": 7575948,
+    "parent": 374,
+    "group": 374,
+    "session": 0,
+    "state": "R"
+  },
+  "shellUid": "0",
+  "descendants": [
+    {
+      "pid": 27417,
+      "startTicks": 7575948,
+      "parent": 374,
+      "group": 374,
+      "session": 0,
+      "state": "R",
+      "uid": "10217",
+      "managedProot": false,
+      "mappedRuntimes": [],
+      "currentAtCapture": true
+    },
+    {
+      "pid": 27531,
+      "startTicks": 7576309,
+      "parent": 27417,
+      "group": 374,
+      "session": 0,
+      "state": "S",
+      "uid": "10217",
+      "managedProot": true,
+      "mappedRuntimes": [],
+      "currentAtCapture": true
+    },
+    {
+      "pid": 27534,
+      "startTicks": 7576315,
+      "parent": 27531,
+      "group": 374,
+      "session": 0,
+      "state": "S",
+      "uid": "10217",
+      "managedProot": false,
+      "mappedRuntimes": [
+        "openCode1"
+      ],
+      "currentAtCapture": true
+    },
+    {
+      "pid": 27618,
+      "startTicks": 7576966,
+      "parent": 27417,
+      "group": 374,
+      "session": 0,
+      "state": "S",
+      "uid": "10217",
+      "managedProot": true,
+      "mappedRuntimes": [],
+      "currentAtCapture": true
+    },
+    {
+      "pid": 27621,
+      "startTicks": 7576970,
+      "parent": 27618,
+      "group": 374,
+      "session": 0,
+      "state": "S",
+      "uid": "10217",
+      "managedProot": false,
+      "mappedRuntimes": [],
+      "currentAtCapture": true
+    },
+    {
+      "pid": 27736,
+      "startTicks": 7578079,
+      "parent": 27621,
+      "group": 374,
+      "session": 0,
+      "state": "S",
+      "uid": "10217",
+      "managedProot": false,
+      "mappedRuntimes": [],
+      "currentAtCapture": true
+    },
+    {
+      "pid": 27749,
+      "startTicks": 7578225,
+      "parent": 27736,
+      "group": 374,
+      "session": 0,
+      "state": "S",
+      "uid": "10217",
+      "managedProot": false,
+      "mappedRuntimes": [],
+      "currentAtCapture": true
+    },
+    {
+      "pid": 27910,
+      "startTicks": 7579932,
+      "parent": 27534,
+      "group": 374,
+      "session": 0,
+      "state": "S",
+      "uid": "10217",
+      "managedProot": false,
+      "mappedRuntimes": [],
+      "currentAtCapture": true
+    },
+    {
+      "pid": 27968,
+      "startTicks": 7580718,
+      "parent": 27749,
+      "group": 374,
+      "session": 0,
+      "state": "S",
+      "uid": "10217",
+      "managedProot": false,
+      "mappedRuntimes": [],
+      "currentAtCapture": true
+    }
+  ],
+  "readOnly": true
+}

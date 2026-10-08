@@ -13,9 +13,21 @@ class BuiltinLinux private constructor(context: Context) {
     }
     fun install(progress: InstallProgress) {}
     fun start(script: String, directory: String?, agentUser: Boolean = false): Process = ProcessBuilder("sh", "-c", script).start()
+    internal fun startInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation, agentUser: Boolean = false): Process {
+        check(operation == InstallerOperation.INSTALL && targets.isNotEmpty())
+        installerStarts++
+        return ProcessBuilder("sh", "-c", script).start()
+    }
+    fun finishInstaller(process: Process) {
+        check(process.waitFor(3, java.util.concurrent.TimeUnit.SECONDS))
+        installerFinishes++
+    }
+    fun stopInstaller(process: Process) { process.destroyForcibly() }
     companion object {
         const val TAG = "test"
         const val VERSION = "test"
+        var installerStarts = 0
+        var installerFinishes = 0
         fun get(context: Context) = BuiltinLinux(context)
         fun stopTree(process: Process, graceMs: Long = 0) { process.destroyForcibly() }
     }

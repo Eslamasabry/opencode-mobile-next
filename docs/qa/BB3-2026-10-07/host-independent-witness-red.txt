@@ -1,0 +1,32 @@
+FFF
+======================================================================
+FAIL: test_stale_prepare_requires_live_independent_witness_receipt (proof.ReclaimProofTest.test_stale_prepare_requires_live_independent_witness_receipt)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_runtime_acceptance.py", line 40, in test_stale_prepare_requires_live_independent_witness_receipt
+    helper.start.assert_called_once()
+  File "/usr/lib/python3.12/unittest/mock.py", line 923, in assert_called_once
+    raise AssertionError(msg)
+AssertionError: Expected 'start' to have been called once. Called 0 times.
+
+======================================================================
+FAIL: test_stale_prepare_refuses_reused_witness_pid (proof.ReclaimProofTest.test_stale_prepare_refuses_reused_witness_pid)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_runtime_acceptance.py", line 50, in test_stale_prepare_refuses_reused_witness_pid
+    with self.assertRaisesRegex(acceptance.Refused, "stale_witness_receipt_unproven"):
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_failed_stale_launch_retains_helper_for_cleanup (proof.ReclaimProofTest.test_failed_stale_launch_retains_helper_for_cleanup)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_runtime_acceptance.py", line 60, in test_failed_stale_launch_retains_helper_for_cleanup
+    with self.assertRaisesRegex(acceptance.Refused, "witness_start_timeout"):
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.005s
+
+FAILED (failures=3)
+PASS all three removed-witness integration controls failed

@@ -1,0 +1,14 @@
+test_policy_values_ignore_xml_layout_and_refuse_value_changes (__main__.RestoreTests.test_policy_values_ignore_xml_layout_and_refuse_value_changes) ... FAIL
+
+======================================================================
+FAIL: test_policy_values_ignore_xml_layout_and_refuse_value_changes (__main__.RestoreTests.test_policy_values_ignore_xml_layout_and_refuse_value_changes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb9_component_update_acceptance_test.py", line 189, in test_policy_values_ignore_xml_layout_and_refuse_value_changes
+    self.assertTrue(H.preference_equal(left,right))
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

@@ -1,0 +1,4 @@
+PASS bounded_exact_payload_bootstrap_same_signer_in_place_data_preserved
+PASS original_native_preferences_preserved
+FAIL restoration_shared_owner_runnable_restore_unproven
+FAIL instrumentation_replaced_app

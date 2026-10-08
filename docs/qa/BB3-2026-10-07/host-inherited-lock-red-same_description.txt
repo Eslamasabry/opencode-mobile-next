@@ -1,0 +1,18 @@
+E
+======================================================================
+ERROR: test_inherited_batch_lock_uses_same_open_description (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_inherited_batch_lock_uses_same_open_description)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_runtime_acceptance.py", line 23, in test_inherited_batch_lock_uses_same_open_description
+    with acceptance.emulator_session_lock(owned.fileno(), owned.name):
+  File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb3_runtime_acceptance.py", line 553, in emulator_session_lock
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+BlockingIOError: [Errno 11] Resource temporarily unavailable
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+FAILED (errors=1)

@@ -22,6 +22,60 @@ enum BuiltinLinuxPhase {
   };
 }
 
+/// Native restoration after OS process reclamation; force-stop stays stopped.
+enum BuiltinServerRestorePhase {
+  idle,
+  waiting,
+  restoring,
+  unavailable;
+
+  static BuiltinServerRestorePhase parse(Object? value) => switch (value) {
+    null || 'idle' => idle,
+    'waiting' => waiting,
+    'restoring' => restoring,
+    _ => unavailable,
+  };
+}
+
+/// Fixed reasons only; native process identity and errors stay private.
+enum BuiltinServerRestoreReason {
+  stopped,
+  policyDisabled,
+  budgetExhausted,
+  ownershipUnknown,
+  storageUnavailable,
+  componentRecoveryRequired,
+  systemTimeout;
+
+  static BuiltinServerRestoreReason? parse(Object? value) => switch (value) {
+    null => null,
+    'stopped' => stopped,
+    'policyDisabled' => policyDisabled,
+    'budgetExhausted' => budgetExhausted,
+    'storageUnavailable' => storageUnavailable,
+    'componentRecoveryRequired' => componentRecoveryRequired,
+    'systemTimeout' => systemTimeout,
+    _ => ownershipUnknown,
+  };
+}
+
+/// Selects a canonical native command. Contains no script or account data.
+class BuiltinServerRestoreRecipe {
+  const BuiltinServerRestoreRecipe({
+    required this.profileId,
+    required this.runtime,
+  });
+
+  final String profileId;
+  final TermuxRuntime runtime;
+
+  Map<String, Object> toMap() => {
+    'version': 1,
+    'profileId': profileId,
+    'runtime': runtime.name,
+  };
+}
+
 /// One reading of `status`.
 class BuiltinLinuxStatus {
   const BuiltinLinuxStatus({
@@ -31,6 +85,10 @@ class BuiltinLinuxStatus {
     this.serverRunning = false,
     this.serverRestartWanted = false,
     this.serverRecoveryGeneration,
+    this.serverRecoveryAuthority = false,
+    this.serverRecoveryScheduled = false,
+    this.restorePhase = BuiltinServerRestorePhase.idle,
+    this.restoreReason,
     this.serverUptime,
     this.serverPort,
     this.abi = '',
@@ -47,6 +105,10 @@ class BuiltinLinuxStatus {
       serverRunning = false,
       serverRestartWanted = false,
       serverRecoveryGeneration = null,
+      serverRecoveryAuthority = false,
+      serverRecoveryScheduled = false,
+      restorePhase = BuiltinServerRestorePhase.idle,
+      restoreReason = null,
       serverUptime = null,
       serverPort = null,
       abi = '',
@@ -63,6 +125,10 @@ class BuiltinLinuxStatus {
       serverRunning: map['serverRunning'] == true,
       serverRestartWanted: map['serverRestartWanted'] == true,
       serverRecoveryGeneration: asInt(map['serverRecoveryGeneration']),
+      serverRecoveryAuthority: map['serverRecoveryAuthority'] == true,
+      serverRecoveryScheduled: map['serverRecoveryScheduled'] == true,
+      restorePhase: BuiltinServerRestorePhase.parse(map['restorePhase']),
+      restoreReason: BuiltinServerRestoreReason.parse(map['restoreReason']),
       serverUptime: switch (asInt(map['serverUptimeMs'])) {
         final int ms when ms >= 0 => Duration(milliseconds: ms),
         _ => null,
@@ -89,6 +155,12 @@ class BuiltinLinuxStatus {
 
   /// Admission token invalidated by pause, cancellation and manual actions.
   final int? serverRecoveryGeneration;
+
+  /// Native is the sole durable budget writer once the profile is migrated.
+  final bool serverRecoveryAuthority;
+  final bool serverRecoveryScheduled;
+  final BuiltinServerRestorePhase restorePhase;
+  final BuiltinServerRestoreReason? restoreReason;
 
   /// How long the app's own tracked OpenCode process has run; null when none
   /// runs, or from an older APK that does not say.
@@ -124,6 +196,62 @@ enum BuiltinProotMode {
   };
 }
 
+/// Classification of an exit, without inferring a confirmed memory shortage.
+enum BuiltinServiceExitReason {
+  /// Exit 137 may be a memory or Android phantom-process kill. The exit code
+  /// alone cannot distinguish those from another SIGKILL.
+  memoryOrPhantomKill,
+  exited,
+  unknown;
+
+  static BuiltinServiceExitReason parse(Object? value) => switch (value) {
+    'memory_or_phantom_kill' => memoryOrPhantomKill,
+    'exited' => exited,
+    _ => unknown,
+  };
+}
+
+/// One app-owned service's lifetime diagnostics, without command or log text.
+class BuiltinServiceDiagnostics {
+  const BuiltinServiceDiagnostics({
+    this.running = false,
+    this.lastExitCode,
+    this.lastUptimeMs,
+    this.uptimeMs,
+    this.restartCount = 0,
+    this.exitReason = BuiltinServiceExitReason.unknown,
+  });
+
+  factory BuiltinServiceDiagnostics.fromMap(Map<Object?, Object?> map) {
+    // Native counters are integers. Do not truncate fractional or non-finite
+    // values into apparently valid diagnostics.
+    int? asInt(Object? value) => value is int ? value : null;
+    int? nonNegativeInt(Object? value) => switch (asInt(value)) {
+      final int number when number >= 0 => number,
+      _ => null,
+    };
+    return BuiltinServiceDiagnostics(
+      running: map['running'] == true,
+      lastExitCode: asInt(map['lastExitCode']),
+      lastUptimeMs: nonNegativeInt(map['lastUptimeMs']),
+      uptimeMs: nonNegativeInt(map['uptimeMs']),
+      restartCount: nonNegativeInt(map['restartCount']) ?? 0,
+      exitReason: BuiltinServiceExitReason.parse(map['exitReason']),
+    );
+  }
+
+  final bool running;
+  final int? lastExitCode;
+
+  /// Completed run duration. Null means no valid observation is available.
+  final int? lastUptimeMs;
+
+  /// Current run duration. Null means no run or no valid observation.
+  final int? uptimeMs;
+  final int restartCount;
+  final BuiltinServiceExitReason exitReason;
+}
+
 /// One reading of `performance`: what the Performance details show.
 class BuiltinPerformance {
   const BuiltinPerformance({
@@ -132,16 +260,24 @@ class BuiltinPerformance {
     this.prootFilters,
     this.serverFilters,
     this.workHeld = false,
+    this.services = const {},
   });
 
   factory BuiltinPerformance.fromMap(Map<Object?, Object?> map) {
-    int? asInt(Object? value) => value is num ? value.toInt() : null;
+    int? asInt(Object? value) => value is int ? value : null;
     return BuiltinPerformance(
       serverRunning: map['serverRunning'] == true,
       prootMode: BuiltinProotMode.parse(map['prootMode']),
       prootFilters: asInt(map['prootFilters']),
       serverFilters: asInt(map['serverFilters']),
       workHeld: map['workHeld'] == true,
+      services: Map.unmodifiable({
+        if (map['services'] case final Map services)
+          for (final entry in services.entries)
+            if (entry.key case final String name when name.isNotEmpty)
+              if (entry.value case final Map<Object?, Object?> diagnostics)
+                name: BuiltinServiceDiagnostics.fromMap(diagnostics),
+      }),
     );
   }
 
@@ -155,6 +291,10 @@ class BuiltinPerformance {
 
   /// Whether the phone is kept awake for a running reply now.
   final bool workHeld;
+
+  /// Current and previously launched services keyed by native service name.
+  /// Empty on older APKs. These snapshots contain no credentials or log text.
+  final Map<String, BuiltinServiceDiagnostics> services;
 }
 
 /// The answer of one `run`.
@@ -382,8 +522,26 @@ class BuiltinLinux {
     );
   }
 
-  Future<void> startServer(String script, {int port = serverPort}) =>
-      _invoke<void>('startServer', {'script': script, 'port': port});
+  Future<void> startServer(
+    String script, {
+    int port = serverPort,
+    BuiltinServerRestoreRecipe? restoreRecipe,
+  }) async {
+    final arguments = {
+      'script': script,
+      'port': port,
+      if (restoreRecipe != null) 'restoreRecipe': restoreRecipe.toMap(),
+    };
+    try {
+      await _invoke<void>('startServer', arguments);
+    } on BuiltinLinuxException {
+      if (restoreRecipe == null) rethrow;
+      throw const BuiltinLinuxException(
+        'The phone server could not start. Open setup and try again.',
+        code: 'server_start_unavailable',
+      );
+    }
+  }
 
   /// Restarts only a stopped server whose native intent and admission token
   /// still match, while the Android activity is resumed. Does not opt in.
@@ -405,6 +563,95 @@ class BuiltinLinux {
       _invokeRecovery('confirmServerRecovery', {
         'expectedGeneration': expectedGeneration,
       });
+
+  /// Saves the legacy count in native storage without arming crash recovery.
+  Future<Map<Object?, Object?>> stageServerRecovery(
+    String profileId,
+    Map<String, Object?> legacyBudget,
+  ) => _recoveryMap('stageServerRecovery', {
+    'profileId': profileId,
+    'legacyBudget': legacyBudget,
+  });
+
+  Future<Map<Object?, Object?>> bindServerRecovery({
+    required String profileId,
+    required bool enabled,
+    Map<String, Object?>? legacyBudget,
+  }) => _recoveryMap('bindServerRecovery', {
+    'profileId': profileId,
+    'enabled': enabled,
+    'legacyBudget': ?legacyBudget,
+  });
+
+  Future<List<Map<Object?, Object?>>> serverRecoveryReceipts(
+    String profileId,
+  ) async {
+    try {
+      final value = await _invoke<List<Object?>>('serverRecoveryReceipts', {
+        'profileId': profileId,
+      });
+      if (value == null ||
+          value.any((receipt) => receipt is! Map<Object?, Object?>)) {
+        throw const BuiltinLinuxException(
+          'The phone server could not restart.',
+          code: 'recovery_unavailable',
+        );
+      }
+      return value.cast<Map<Object?, Object?>>();
+    } catch (_) {
+      throw const BuiltinLinuxException(
+        'The phone server could not restart.',
+        code: 'recovery_unavailable',
+      );
+    }
+  }
+
+  Future<void> ackServerRecoveryReceipt(String profileId, String eventId) =>
+      _invokeRecovery('ackServerRecoveryReceipt', {
+        'profileId': profileId,
+        'eventId': eventId,
+      });
+
+  Future<Map<Object?, Object?>> serverRecoveryBudget(String profileId) =>
+      _recoveryMap('serverRecoveryBudget', {'profileId': profileId});
+
+  Future<Map<Object?, Object?>> updateServerRecoveryReceipt(
+    String profileId,
+    Map<String, Object?> budget,
+  ) => _recoveryMap('updateServerRecoveryReceipt', {
+    'profileId': profileId,
+    'budget': budget,
+  });
+
+  Future<Map<Object?, Object?>> confirmManualServerStart(String profileId) =>
+      _recoveryMap('confirmManualServerStart', {'profileId': profileId});
+
+  Future<void> unbindServerRecovery(String profileId, {bool delete = false}) =>
+      _invokeRecovery(
+        delete ? 'deleteServerRecovery' : 'unbindServerRecovery',
+        {'profileId': profileId},
+      );
+
+  Future<Map<Object?, Object?>> _recoveryMap(
+    String method,
+    Map<String, Object?> arguments,
+  ) async {
+    try {
+      final value = await _invoke<Map<Object?, Object?>>(method, arguments);
+      if (value == null) {
+        throw const BuiltinLinuxException(
+          'The phone server could not restart.',
+          code: 'recovery_unavailable',
+        );
+      }
+      return value;
+    } catch (_) {
+      throw const BuiltinLinuxException(
+        'The phone server could not restart.',
+        code: 'recovery_unavailable',
+      );
+    }
+  }
 
   /// Invalidates pending automatic work without changing the person's intent.
   Future<void> cancelServerRecovery() =>

@@ -1,0 +1,9 @@
+Zero-session candidate: only RuntimeProcessIdentity generic session guard changed from >0 to >=0; PID/start/parent/group and strict gate leader proof unchanged.
+Pre-fix exact stat/read regression: 1 run,1 failure; after fix:1 run,0 failures.
+Affected pure ownership/recipe/backoff:43 PASS.
+Gradle NativeRuntimeOwnershipTest:23 tests,0 failures,0 errors; BUILD SUCCESSFUL2m13s.
+No extra mutations, APK package job, adb or device actions.
+Exact recorded owned processes remaining: none; no signals issued.
+Owned temporary pure runner/jar removed. Only owned build/app/intermediates removed with scoped Python root assertion.
+Historical target8e0 and runnerbf3 SHA256 unchanged.
+Native source checkpoint verified current; prior fingerprints preserved. Android/device qualification of revised source remains root-owned next step.

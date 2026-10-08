@@ -10,8 +10,9 @@ AgentDescriptor _agent(
   String version = '1.2.3',
   AgentArtifactFormat format = AgentArtifactFormat.executable,
   String? member,
+  String id = 'fixture',
 }) => AgentDescriptor(
-  id: 'fixture',
+  id: id,
   name: 'Fixture',
   iconKey: 'fixture',
   route: AgentRoute.paseoNative,
@@ -21,7 +22,7 @@ AgentDescriptor _agent(
   resumeReason: 'No resume proof',
   recipe: AgentInstallRecipe(
     version: version,
-    executable: 'fixture',
+    executable: id,
     artifacts: {
       AgentArchitecture.x64: AgentArtifact(
         url: Uri.parse('https://example.invalid/pinned'),
@@ -90,6 +91,65 @@ void main() {
   tearDown(() async {
     await temp.delete(recursive: true);
   });
+
+  test(
+    'Claude check restores interrupted code before probing its link',
+    () async {
+      final agent = _agent(await guest.hash, id: 'claude');
+      expect((await guest.run(AgentPhoneScripts.install(agent))).exitCode, 0);
+      final finalPath = '${guest.home}/.local/share/oc-agents/claude/1.2.3';
+      await Directory(finalPath).rename('$finalPath.oc-good');
+      await Directory(finalPath).create();
+      await File('$finalPath/launch').writeAsString('#!/bin/sh\nexit 2\n');
+      await File('$finalPath.oc-pending').writeAsString('existing\n');
+      final result = await guest.run(AgentPhoneScripts.check(agent));
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect(await File('$finalPath.oc-pending').exists(), isFalse);
+      expect(await File('$finalPath/payload/claude').exists(), isTrue);
+    },
+  );
+
+  test(
+    'Claude check refuses another installer lock without changing code',
+    () async {
+      final agent = _agent(await guest.hash, id: 'claude');
+      expect((await guest.run(AgentPhoneScripts.install(agent))).exitCode, 0);
+      final lock = Directory(
+        '${guest.home}/.local/share/oc-agents/.lock-claude',
+      );
+      await lock.create();
+      final sentinel = File('${lock.path}/owner')..writeAsStringSync('fixture');
+      final result = await guest.run(AgentPhoneScripts.check(agent));
+      expect(result.exitCode, isNot(0));
+      expect(
+        result.stderr,
+        contains('Another Claude install may still be running'),
+      );
+      expect(await sentinel.readAsString(), 'fixture');
+    },
+  );
+
+  test(
+    'failed Claude active probe restores the prior pinned executable',
+    () async {
+      final original = await File(guest.payload).readAsString();
+      final agent = _agent(await guest.hash, id: 'claude');
+      expect((await guest.run(AgentPhoneScripts.install(agent))).exitCode, 0);
+      await File(guest.payload).writeAsString(
+        '#!/bin/sh\ncase "\$0" in *".new/"*) printf "1.2.3\\n";; *) exit 2;; esac\n',
+      );
+      final update = _agent(await guest.hash, id: 'claude');
+      final result = await guest.run(AgentPhoneScripts.install(update));
+      expect(result.exitCode, isNot(0));
+      expect(
+        result.stderr,
+        contains('Claude could not finish updating. Run setup again.'),
+      );
+      final finalPath = '${guest.home}/.local/share/oc-agents/claude/1.2.3';
+      expect(await File('$finalPath/payload/claude').readAsString(), original);
+      expect((await guest.run(AgentPhoneScripts.check(agent))).exitCode, 0);
+    },
+  );
 
   test(
     'every catalog recipe generates valid shell without executing downloads',

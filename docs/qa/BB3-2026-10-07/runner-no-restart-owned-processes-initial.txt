@@ -1,0 +1,3 @@
+pid=2523018 ppid=2522991 comm=machine_lock.sh startTicks=88584751
+pid=2523022 ppid=2523018 comm=java startTicks=88584752
+pid=2523086 ppid=2523022 comm=java startTicks=88584844

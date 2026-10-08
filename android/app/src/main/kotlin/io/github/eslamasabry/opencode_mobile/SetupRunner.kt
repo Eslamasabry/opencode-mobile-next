@@ -186,7 +186,7 @@ class SetupRunner private constructor(private val context: Context) {
             (lock as Object).notifyAll()
         }
         // The script and everything it started (npm, curl, apt) end with it.
-        running?.let { try { BuiltinLinux.stopTree(it) } catch (_: Exception) { } }
+        running?.let { try { linux.stopInstaller(it) } catch (_: Exception) { } }
     }
 
     /** The app finished (or failed) a `step` component of [jobId]. */
@@ -365,13 +365,20 @@ class SetupRunner private constructor(private val context: Context) {
     private fun runScript(spec: Spec, component: SetupComponentStatus): String? {
         if (!linux.installed) return "The Linux base is not installed"
         val script = spec.script ?: return "No script for ${spec.id}"
-        val started = linux.start(script, null, agentUser = spec.agentUser)
-        synchronized(lock) {
-            if (cancelled) {
-                BuiltinLinux.stopTree(started, graceMs = 0)
-                return "cancelled"
-            }
+        val started = linux.startInstaller(script, NativeInstallerOwnership.targetsForComponent(spec.id),
+            InstallerOperation.INSTALL, agentUser = spec.agentUser)
+        return try { runInstallerScript(spec, component, started) }
+        finally { linux.finishInstaller(started) }
+    }
+
+    private fun runInstallerScript(spec: Spec, component: SetupComponentStatus, started: Process): String? {
+        val wasCancelled = synchronized(lock) {
             process = started
+            cancelled
+        }
+        if (wasCancelled) {
+            linux.stopInstaller(started)
+            return "cancelled"
         }
         var last: String? = null
         try {
@@ -397,12 +404,12 @@ class SetupRunner private constructor(private val context: Context) {
                 }
             }
         } catch (error: SetupPersistenceException) {
-            BuiltinLinux.stopTree(started)
+            linux.stopInstaller(started)
             synchronized(lock) { process = null }
             throw error
         } catch (_: Exception) {
             // A failed/closed pipe must not leak a running child.
-            try { BuiltinLinux.stopTree(started) } catch (_: Exception) { }
+            try { linux.stopInstaller(started) } catch (_: Exception) { }
         }
         val code = try { started.waitFor() } finally {
             synchronized(lock) { process = null }
@@ -494,7 +501,7 @@ class SetupRunner private constructor(private val context: Context) {
             (lock as Object).notifyAll()
             process
         }
-        running?.let { try { BuiltinLinux.stopTree(it) } catch (_: Exception) { } }
+        running?.let { try { linux.stopInstaller(it) } catch (_: Exception) { } }
     }
 
     private fun writeNow() {

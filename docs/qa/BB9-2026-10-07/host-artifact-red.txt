@@ -1,0 +1,18 @@
+test_real_gradle_runner_has_no_version_but_target_is_exact (__main__.ArtifactTests.test_real_gradle_runner_has_no_version_but_target_is_exact) ... ERROR
+
+======================================================================
+ERROR: test_real_gradle_runner_has_no_version_but_target_is_exact (__main__.ArtifactTests.test_real_gradle_runner_has_no_version_but_target_is_exact)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/oc-bb9-session-test.py", line 181, in test_real_gradle_runner_has_no_version_but_target_is_exact
+    H.validate_candidates(device,args)
+  File "/tmp/oc-bb9-session.py", line 299, in validate_candidates
+    require(badging.returncode == 0 and match and match[1] == package and (int(match[2]) == args.version if package == PACKAGE else int(match[2]) > 0), 'candidate_metadata_mismatch')
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb3_runtime_acceptance.py", line 65, in require
+    raise Refused(code)
+bb3_runtime_acceptance.Refused: candidate_metadata_mismatch
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+FAILED (errors=1)

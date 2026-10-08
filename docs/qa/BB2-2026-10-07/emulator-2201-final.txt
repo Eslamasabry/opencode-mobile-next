@@ -1,0 +1,31 @@
+installedVersionBefore=2201
+candidateVersion=2201
+personBudgetBefore=0
+PASS signed_in_place_install
+PASS signed_in_place_install
+stopForQa qaInitialStopDrained=true
+stopForQa builtinRuntimeResult=PASS
+diagnostics exitReason=memory_or_phantom_kill
+diagnostics lastExitCode=137
+diagnostics lastUptimeMs=2164
+diagnostics restartCount=8
+diagnostics running=false
+diagnostics lastExitCode=7
+diagnostics lastUptimeMs=2019
+diagnostics restartCount=9
+diagnostics running=false
+diagnostics profileDiagnosticsDeleted=true
+diagnostics builtinRuntimeResult=PASS
+persisted lastExitCode=7
+persisted lastUptimeMs=2019
+persisted restartCount=9
+persisted running=false
+persisted builtinRuntimeResult=PASS
+PASS BB1_emulator_acceptance
+supervision builtinRuntimeFailure=actual_opencode_pid_missing
+supervision builtinRuntimeResult=FAIL
+FAIL primary_QA_instrumentation_failed
+PASS original_native_keys_restored_with_temporary_stop
+PASS explicit_existing_profile_start
+PASS restored_OpenCode2_authenticated_health_and_connected_UI
+FAIL restore_claude_ready_unproven

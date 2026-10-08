@@ -1,0 +1,3 @@
+personBudgetBefore=1
+PASS original_native_keys_restored_with_temporary_stop
+FAIL restore_opencode2_connection_unproven

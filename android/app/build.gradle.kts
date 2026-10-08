@@ -14,6 +14,10 @@ val ocStableEngineQa = (project.findProperty("ocStableEngineQa") as String?) == 
 // Test-only release AOT smoke entry point and separate instrumentation runner.
 val ocBd9Smoke = (project.findProperty("ocBd9Smoke") as String?) == "true"
 val ocBb8Smoke = (project.findProperty("ocBb8Smoke") as String?) == "true"
+val ocBuiltinRuntimeQa = (project.findProperty("ocBuiltinRuntimeQa") as String?) == "true"
+require(listOf(ocBd9Smoke, ocBb8Smoke, ocBuiltinRuntimeQa).count { it } <= 1) {
+    "Choose one instrumentation runner per QA build."
+}
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.isFile) {
@@ -22,6 +26,9 @@ if (keystorePropertiesFile.isFile) {
 
 android {
     namespace = "io.github.eslamasabry.opencode_mobile"
+    buildFeatures {
+        buildConfig = true
+    }
     // flutter_secure_storage 11 ships AAR metadata that requires API 37;
     // Flutter 3.47 still defaults to 36. Pin explicitly until Flutter's
     // default catches up, then drop this back to flutter.compileSdkVersion.
@@ -40,8 +47,15 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Native acceptance checkpoint hooks are inactive in normal releases.
+        buildConfigField("boolean", "BUILTIN_RUNTIME_QA", ocBuiltinRuntimeQa.toString())
         testInstrumentationRunner = "io.github.eslamasabry.opencode_mobile." +
-            (if (ocBb8Smoke) "Bb8DeviceSmoke" else if (ocBd9Smoke) "Bd9DeviceSmoke" else "PhoneEngineAcceptance")
+            when {
+                ocBuiltinRuntimeQa -> "BuiltinRuntimeAcceptance"
+                ocBb8Smoke -> "Bb8DeviceSmoke"
+                ocBd9Smoke -> "Bd9DeviceSmoke"
+                else -> "PhoneEngineAcceptance"
+            }
         // A preview build installs beside the stable app instead of over it
         // (`flutter build apk --android-project-arg=ocPreview=true`): its own
         // package, name, data and built-in Ubuntu, so trying a new version
@@ -131,9 +145,13 @@ androidComponents.onVariants(androidComponents.selector().withBuildType("release
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
     // Flutter 3.47 excludes dev plugins from release configurations. The
     // explicit AOT smoke needs the native result bridge in this test build.
     if (ocBd9Smoke) add("releaseImplementation", project(":integration_test"))
+    // All instrumentation sources compile together, including the BD9 runner.
+    // Its bridge stays in the test APK for other QA/production target variants.
+    androidTestImplementation(project(":integration_test"))
     // ShortcutManagerCompat for the pinned-session launcher shortcuts
     // (PinnedSessionShortcuts.kt); same major line the Flutter embedding
     // already pulls in transitively, pinned so the compile classpath is

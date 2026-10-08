@@ -1,0 +1,8 @@
+Receipt-level ephemeral peer policy implemented; installer wrapper delegates unchanged.
+Initial and restored final: 33 tests PASS (previous 28 plus 5 receipt-level regressions).
+Four exact removed-fix controls: 1 test / 1 failure each; restored source.
+Controls: admission, descendant/owned rejection, exact tracked identity, recorded-reader collision.
+All checks machine_lock test; compiler256MB/metaspace192MB runner128MB.
+No Gradle/APK/device checks performed; root owns integration and qualification.
+No peer exemptions persisted; cold plans remain unchanged.
+Exact owned processes absent, temporary runner and JAR removed.

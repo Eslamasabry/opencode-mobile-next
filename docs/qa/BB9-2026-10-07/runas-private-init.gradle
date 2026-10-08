@@ -1,0 +1,90 @@
+// BB9 private emulator fixture: change only a generated manifest, not Flutter's build mode.
+import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
+import javax.xml.XMLConstants
+import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.transform.TransformerFactory
+import javax.xml.transform.dom.DOMSource
+import javax.xml.transform.stream.StreamResult
+
+abstract class Bb9ReleaseQaManifest extends DefaultTask {
+    @InputFile @PathSensitive(PathSensitivity.NONE)
+    abstract RegularFileProperty getInputManifest()
+    @OutputFile
+    abstract RegularFileProperty getOutputManifest()
+
+    @TaskAction
+    void writePrivateQaManifest() {
+        def input = inputManifest.get().asFile
+        if (!input.isFile() || input.length() < 1 || input.length() > 262144) {
+            throw new GradleException('BB9 manifest input refused')
+        }
+        def factory = DocumentBuilderFactory.newInstance()
+        factory.setNamespaceAware(true)
+        factory.setFeature('http://apache.org/xml/features/disallow-doctype-decl', true)
+        factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, '')
+        factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, '')
+        def document = factory.newDocumentBuilder().parse(input)
+        def root = document.documentElement
+        def android = 'http://schemas.android.com/apk/res/android'
+        def apps = root.getElementsByTagName('application')
+        if (root.tagName != 'manifest' ||
+            root.getAttribute('package') != 'io.github.eslamasabry.opencode_mobile' ||
+            root.getAttributeNS(android, 'versionCode') != '2206' || apps.length != 1) {
+            throw new GradleException('BB9 packaged manifest identity refused')
+        }
+        def app = apps.item(0)
+        if (!(app.getAttributeNS(android, 'debuggable') in ['', 'false'])) {
+            throw new GradleException('BB9 original release manifest refused')
+        }
+        app.setAttributeNS(android, 'android:debuggable', 'true')
+        def output = outputManifest.get().asFile
+        if (output.canonicalFile == input.canonicalFile) {
+            throw new GradleException('BB9 manifest input mutation refused')
+        }
+        output.parentFile.mkdirs()
+        def transformers = TransformerFactory.newInstance()
+        transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, '')
+        transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, '')
+        transformers.newTransformer().transform(new DOMSource(document), new StreamResult(output))
+    }
+}
+
+gradle.beforeProject { p ->
+    if (p.path == ':app') {
+        p.plugins.withId('com.android.application') {
+            def components = p.extensions.getByName('androidComponents')
+            components.finalizeDsl { app ->
+                def release = app.buildTypes.getByName('release')
+                if (p.findProperty('ocBuiltinRuntimeQa') != 'true' ||
+                    p.findProperty('ocStableEngineQa') != 'true' ||
+                    p.findProperty('ocPreview') == 'true' ||
+                    app.defaultConfig.applicationId != 'io.github.eslamasabry.opencode_mobile' ||
+                    app.defaultConfig.versionCode != 2206 || release.debuggable ||
+                    release.signingConfig == null || release.signingConfig.name != 'release') {
+                    throw new GradleException('BB9 private release QA identity refused')
+                }
+            }
+            def loader = p.plugins.findPlugin('com.android.application').class.classLoader
+            def artifact = loader.loadClass('com.android.build.api.artifact.SingleArtifact$MERGED_MANIFEST')
+                .getField('INSTANCE').get(null)
+            components.onVariants(components.selector().withBuildType('release')) { variant ->
+                if (variant.name != 'release') throw new GradleException('BB9 QA variant refused')
+                def task = p.tasks.register('bb9ReleaseQaManifest', Bb9ReleaseQaManifest)
+                def operation = variant.artifacts.use(task)
+                def method = operation.class.methods.find { it.name == 'wiredWithFiles' &&
+                    it.parameterCount == 2 && it.parameterTypes[0].name == 'kotlin.jvm.functions.Function1' }
+                if (method == null) throw new GradleException('BB9 public manifest artifact API unavailable')
+                def inputGetter = ({ t -> t.inputManifest }).asType(method.parameterTypes[0])
+                def outputGetter = ({ t -> t.outputManifest }).asType(method.parameterTypes[1])
+                method.invoke(operation, inputGetter, outputGetter).toTransform(artifact)
+            }
+        }
+    }
+}

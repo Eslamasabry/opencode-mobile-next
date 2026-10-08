@@ -22,6 +22,7 @@ void main() {
   late String jsonJar;
   const scenarios = [
     'ordered-terminal',
+    'installer-routed',
     'typed-write-failure',
     'failed-start-status',
     'service-start-denied',
@@ -61,6 +62,8 @@ void main() {
       sources: [
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt',
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupJob.kt',
+        'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRuntimeOwnership.kt',
+        'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeInstallerOwnership.kt',
         if (File(
           'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupPersistence.kt',
         ).existsSync())

@@ -1,0 +1,8 @@
+pid=2298900 ppid=2298898 comm=flock startTicks=88114520
+pid=2334594 ppid=2298900 comm=dart:flutter_to startTicks=88203093
+pid=2334692 ppid=2334594 comm=java startTicks=88203229
+public_vm_options pid=2334692 ['-Dorg.gradle.workers.max=1']
+pid=2334792 ppid=2334692 comm=java startTicks=88203375
+public_vm_options pid=2334792 ['-XX:MaxMetaspaceSize=1g', '-Xmx2g']
+pid=2336453 ppid=2334792 comm=dart:flutter_to startTicks=88206515
+pid=2338545 ppid=2336453 comm=gen_snapshot startTicks=88211076

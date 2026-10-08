@@ -1,0 +1,30 @@
+F
+======================================================================
+FAIL: test_equals_in_apk_path_cannot_be_consumed_as_env_assignment (test_bb9_external_installer.ExternalTests.test_equals_in_apk_path_cannot_be_consumed_as_env_assignment)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb9_external_installer.py", line 109, in test_equals_in_apk_path_cannot_be_consumed_as_env_assignment
+    self.assertEqual(args[:4],['/system/bin/sh','-c','exec "$@"','oc-bb9-owned-launch'])
+AssertionError: Lists differ: ['--root-id', '--kill-on-exit', '--rootfs=/[81 chars]env'] != ['/system/bin/sh', '-c', 'exec "$@"', 'oc-bb9-owned-launch']
+
+First differing element 0:
+'--root-id'
+'/system/bin/sh'
+
++ ['/system/bin/sh', '-c', 'exec "$@"', 'oc-bb9-owned-launch']
+- ['--root-id',
+-  '--kill-on-exit',
+-  '--rootfs=/data/user/0/io.github.eslamasabry.opencode_mobile/files/linux/ubuntu',
+-  '/usr/bin/env']
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+FAILED (failures=1)
+............................
+----------------------------------------------------------------------
+Ran 28 tests in 0.036s
+
+OK
+PASS removed_equals_exec_fix_expected_assertion_failure
+PASS restored_equals_exec_fix_35_green

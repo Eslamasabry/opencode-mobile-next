@@ -1,0 +1,8 @@
+emulator5554_state=device
+installedVersion=2195
+authenticatedOpenCode2Healthy=false
+foregroundService=true
+nativeOwnerPresent=true
+currentRestoreRecipePresent=false
+currentRestoreOwnershipPresent=false
+readOnlyBaseline=true

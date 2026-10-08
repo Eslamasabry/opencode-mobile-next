@@ -1,0 +1,8 @@
+PASS bounded_exact_payload_bootstrap_same_signer_in_place_data_preserved
+phase=real_start outcome=before
+phase=real_start outcome=failure category=refused
+phase=person_restore outcome=before
+PASS original_native_preferences_preserved
+phase=person_restore outcome=failure category=refused
+FAIL restoration_shared_owner_runnable_restore_unproven
+FAIL normal_connected_restore_unproven

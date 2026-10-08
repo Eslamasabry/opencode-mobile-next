@@ -1,0 +1,25 @@
+Mock-only QA lifecycle checkpoint; no adb/device execution.
+Command: tool/qa/machine_lock.sh test -- python3 -m unittest tool.qa.test_bb3_runtime_acceptance -v
+test_ams_dump_requires_current_process_and_rejects_active_instrumentation (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_ams_dump_requires_current_process_and_rejects_active_instrumentation) ... ok
+test_authenticated_health_keeps_password_device_local_and_requires_real_health (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_authenticated_health_keeps_password_device_local_and_requires_real_health) ... ok
+test_default_policy_requires_enabled_real_binding_and_strict_marker (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_default_policy_requires_enabled_real_binding_and_strict_marker) ... ok
+test_health_alone_never_proves_os_recovery (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_health_alone_never_proves_os_recovery) ... ok
+test_higher_person_budget_survives_restore_and_fixture_keys_are_removed (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_higher_person_budget_survives_restore_and_fixture_keys_are_removed) ... ok
+test_host_never_kills_app_with_active_instrumentation (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_host_never_kills_app_with_active_instrumentation) ... ok
+test_installed_candidate_requires_exact_bytes_without_installing (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_installed_candidate_requires_exact_bytes_without_installing) ... ok
+test_instrumentation_attach_never_replaces_normal_process (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_instrumentation_attach_never_replaces_normal_process) ... ok
+test_instrumentation_refuses_absent_or_replaced_app (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_instrumentation_refuses_absent_or_replaced_app) ... ok
+test_preparation_finishes_attach_before_host_can_kill_normal_app (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_preparation_finishes_attach_before_host_can_kill_normal_app) ... ok
+test_present_policy_never_falls_back_to_default_on_invalid_data (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_present_policy_never_falls_back_to_default_on_invalid_data) ... ok
+test_primary_failure_is_retained_when_cleanup_also_fails (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_primary_failure_is_retained_when_cleanup_also_fails) ... ok
+test_reused_pid_or_zombie_never_counts_as_original_identity (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_reused_pid_or_zombie_never_counts_as_original_identity) ... ok
+test_signal_requires_exact_identity_and_shell_preserves_one_script (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_signal_requires_exact_identity_and_shell_preserves_one_script) ... ok
+test_stat_parser_handles_parentheses_and_spaces_in_comm (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_stat_parser_handles_parentheses_and_spaces_in_comm) ... ok
+test_untrusted_status_or_account_text_is_not_evidence (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_untrusted_status_or_account_text_is_not_evidence) ... ok
+test_v1_health_without_version_cannot_certify_OpenCode2 (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_v1_health_without_version_cannot_certify_OpenCode2) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.004s
+
+OK
+Exit code: 0

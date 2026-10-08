@@ -1,0 +1,25 @@
+Standalone worker; no Gradle/APK/adb, no daemons, no process signals.
+green_compile rootPid=2701285 rootStartTicks=89787258 exit=0
+green_compile pid=2701285 startTicks=89787258 completed=true
+green_compile pid=2701310 startTicks=89787260 completed=true
+green_test rootPid=2701363 rootStartTicks=89787845 exit=0
+green_test pid=2701363 startTicks=89787845 completed=true
+green_test pid=2701364 startTicks=89787845 completed=true
+green_test pid=2701389 startTicks=89787851 completed=true
+red_compile rootPid=2701420 rootStartTicks=89787916 exit=0
+red_compile pid=2701420 startTicks=89787916 completed=true
+red_compile pid=2701445 startTicks=89787919 completed=true
+red_test rootPid=2701487 rootStartTicks=89788504 exit=1
+red_test pid=2701487 startTicks=89788504 completed=true
+red_test pid=2701488 startTicks=89788504 completed=true
+red_test pid=2701513 startTicks=89788507 completed=true
+restored_compile rootPid=2701544 rootStartTicks=89788596 exit=0
+restored_compile pid=2701544 startTicks=89788596 completed=true
+restored_compile pid=2701569 startTicks=89788601 completed=true
+restored_test rootPid=2701618 rootStartTicks=89789184 exit=0
+restored_test pid=2701618 startTicks=89789184 completed=true
+restored_test pid=2701619 startTicks=89789185 completed=true
+restored_test pid=2701644 startTicks=89789191 completed=true
+ARTIFACT removed=/home/eslam/Storage/tmp/bb9-component-worker-tests.jar absent=true
+ARTIFACT removed=/home/eslam/Storage/tmp/bb9-component-worker-red-tests.jar absent=true
+ARTIFACT removed=/home/eslam/Storage/tmp/bb9-component-worker-red.kt absent=true

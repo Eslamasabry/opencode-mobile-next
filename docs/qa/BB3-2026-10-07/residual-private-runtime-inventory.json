@@ -1,0 +1,214 @@
+{
+  "appPresent": false,
+  "roots": [
+    891,
+    1273,
+    30217,
+    30961,
+    31249,
+    32445,
+    32527,
+    32747
+  ],
+  "records": [
+    {
+      "pid": 346,
+      "startTicks": 7838012,
+      "parent": 32752,
+      "group": 32745,
+      "session": 32745,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 891,
+      "startTicks": 7851133,
+      "parent": 1,
+      "group": 889,
+      "session": 889,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": true,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 924,
+      "startTicks": 7851143,
+      "parent": 891,
+      "group": 889,
+      "session": 889,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 1273,
+      "startTicks": 7868608,
+      "parent": 1,
+      "group": 1272,
+      "session": 1272,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": true,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 1284,
+      "startTicks": 7868681,
+      "parent": 1273,
+      "group": 1272,
+      "session": 1272,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 30217,
+      "startTicks": 7753528,
+      "parent": 1,
+      "group": 30215,
+      "session": 30215,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": true,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 30221,
+      "startTicks": 7753643,
+      "parent": 30217,
+      "group": 30215,
+      "session": 30215,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 30961,
+      "startTicks": 7774005,
+      "parent": 1,
+      "group": 30959,
+      "session": 30959,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": true,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 30967,
+      "startTicks": 7774009,
+      "parent": 30961,
+      "group": 30959,
+      "session": 30959,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 31249,
+      "startTicks": 7784059,
+      "parent": 1,
+      "group": 31247,
+      "session": 31247,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": true,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 31254,
+      "startTicks": 7784063,
+      "parent": 31249,
+      "group": 31247,
+      "session": 31247,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 31326,
+      "startTicks": 7785609,
+      "parent": 31254,
+      "group": 31247,
+      "session": 31247,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 32445,
+      "startTicks": 7818049,
+      "parent": 1,
+      "group": 32443,
+      "session": 32443,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": true,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 32451,
+      "startTicks": 7818057,
+      "parent": 32445,
+      "group": 32443,
+      "session": 32443,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 32527,
+      "startTicks": 7829937,
+      "parent": 1,
+      "group": 32525,
+      "session": 32525,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": true,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 32533,
+      "startTicks": 7829941,
+      "parent": 32527,
+      "group": 32525,
+      "session": 32525,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 32747,
+      "startTicks": 7836884,
+      "parent": 1,
+      "group": 32745,
+      "session": 32745,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": true,
+      "installerOrSignInMarkers": false
+    },
+    {
+      "pid": 32752,
+      "startTicks": 7836885,
+      "parent": 32747,
+      "group": 32745,
+      "session": 32745,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "installerOrSignInMarkers": false
+    }
+  ],
+  "unknownSameUid": []
+}

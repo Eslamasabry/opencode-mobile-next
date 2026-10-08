@@ -16,6 +16,7 @@ class _FakeLinux extends BuiltinLinux {
   int statusReads = 0;
   final scripts = <String>[];
   final started = <String>[];
+  final restorationRecipes = <BuiltinServerRestoreRecipe?>[];
   BuiltinLinuxRunResult Function(String script)? runAnswer;
 
   @override
@@ -39,8 +40,13 @@ class _FakeLinux extends BuiltinLinux {
   }
 
   @override
-  Future<void> startServer(String script, {int port = 4097}) async {
+  Future<void> startServer(
+    String script, {
+    int port = 4097,
+    BuiltinServerRestoreRecipe? restoreRecipe,
+  }) async {
     started.add(script);
+    restorationRecipes.add(restoreRecipe);
     serverRunning = !serverDies;
   }
 }
@@ -94,6 +100,11 @@ void main() {
       expect(failure, isNull);
       expect(linux.scripts.single, BuiltinLinux.writePasswordScript('secret'));
       expect(linux.started.single, contains('opencode2 serve'));
+      expect(linux.restorationRecipes.single?.toMap(), {
+        'version': 1,
+        'profileId': 'builtin',
+        'runtime': 'openCode2',
+      });
       expect(
         linux.started.single,
         BuiltinLinux.serverScript(runtime: TermuxRuntime.openCode2),

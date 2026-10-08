@@ -1,0 +1,16 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart
+00:00 +0: Claude check restores interrupted code before probing its link
+00:00 +0 -1: Claude check restores interrupted code before probing its link [E]
+  Expected: <0>
+    Actual: <1>
+  cat: /home/eslam/Storage/tmp/claude-tmp/oc-agent-scripts-UCCUWP/home/.local/share/oc-agents/claude/1.2.3/.oc-pin: No such file or directory
+
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_agent_scripts_test.dart 106:7            main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: Claude check restores interrupted code before probing its link

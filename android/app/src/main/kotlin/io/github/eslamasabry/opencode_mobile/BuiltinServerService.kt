@@ -16,14 +16,17 @@ import android.os.IBinder
  * Keeps the app alive while the OpenCode server (and, when it is on, AI Team)
  * runs inside it, together with the native Rust phone project engine.
  *
- * The services are children of the app's process, so when Android reclaims
- * the process they go with it, mid-task. While any of them runs, this service
- * holds the app in the foreground state with an ongoing notification that
+ * A PRoot child may survive Android reclaiming the app process. A qualified
+ * canonical server can be restored only after durable exact ownership proves
+ * its old children drained. While a child runs, this service keeps an ongoing notification that
  * says so and offers Stop, which stops them all. It starts with the first
  * service and ends with the last (BuiltinLinux.startService/stopService).
  */
 class BuiltinServerService : Service() {
+    @Volatile internal var runtimeQaLastStartId: Int = 0
+        private set
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (BuildConfig.BUILTIN_RUNTIME_QA) runtimeQaLastStartId = startId
         try {
             if (intent?.action == ACTION_STOP) {
                 stopRuntime(startId)
@@ -47,7 +50,19 @@ class BuiltinServerService : Service() {
                 stopPending = false
                 try { stopForeground(STOP_FOREGROUND_REMOVE) } catch (_: Throwable) { }
                 try { stopSelf(startId) } catch (_: Throwable) { }
+                return START_NOT_STICKY
             }
+            val linux = BuiltinLinux.get(applicationContext)
+            if (intent == null) {
+                if (!linux.serverRestorationArmed) {
+                    linux.rejectServerRestoration()
+                    try { stopForeground(STOP_FOREGROUND_REMOVE) } catch (_: Throwable) { }
+                    stopSelf(startId)
+                    return START_NOT_STICKY
+                }
+                linux.restoreServerAfterProcessReclaim()
+            }
+            return if (linux.serverRestorationArmed) START_STICKY else START_NOT_STICKY
         } catch (_: Throwable) {
             // Android invokes this after startForegroundService returned. A
             // policy rejection cannot throw through its caller's channel guard.
@@ -58,16 +73,24 @@ class BuiltinServerService : Service() {
 
     // No foreground service has an unbounded lifetime, including specialUse.
     override fun onTimeout(startId: Int, fgsType: Int) {
-        stopRuntime(startId)
+        stopRuntime(startId, "systemTimeout")
         try { stopForeground(STOP_FOREGROUND_REMOVE) } catch (_: Throwable) { }
+        // Android gives only a few seconds: tree shutdown must not delay revocation.
+        try { stopSelf(startId) } catch (_: Throwable) { }
     }
 
-    private fun stopRuntime(startId: Int) {
+    private fun stopRuntime(startId: Int, reason: String = "stopped") {
         try {
             val linux = BuiltinLinux.get(applicationContext)
-            try { linux.requestServerStop() } catch (_: Throwable) { }
+            var revision: Long? = null
+            try { linux.requestServerStop(reason, includeOther = true, onRevoked = { revision = it }) }
+            catch (_: Throwable) { /* Retain the exact invalidation revision even if durable storage failed. */ }
+            val capturedRevision = revision
             Thread({
-                try { linux.stopAllServices() } catch (_: Throwable) { }
+                try {
+                    if (capturedRevision != null) linux.stopAllServices(capturedRevision)
+                    else linux.drainRevokedRuntimeChildren()
+                } catch (_: Throwable) { }
                 finally { try { stopSelf(startId) } catch (_: Throwable) { } }
             }, "phone-service-policy-stop").start()
         } catch (_: Throwable) {

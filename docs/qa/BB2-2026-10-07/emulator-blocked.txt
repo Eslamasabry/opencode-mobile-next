@@ -1,0 +1,5 @@
+BLOCKED BB2 device qualification
+External orphan sleep PID1935127 PPID1 inherited emulator lock; dead original holderPID1935126.
+Earlier unrelated waiter1936292 precedes own queued harness1939576.
+Own harness remained queued with zero children; terminated exactPID1939576, session exit143.
+No BB2 install or instrumentation occurred. No unrelated process or descriptor touched.

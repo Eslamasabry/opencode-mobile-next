@@ -1,0 +1,20 @@
+[
+  {
+    "name": "NativeInstallerOwnershipTest",
+    "tests": "35",
+    "failures": "0",
+    "errors": "0"
+  },
+  {
+    "name": "NativeInstallerVisibilityTest",
+    "tests": "13",
+    "failures": "0",
+    "errors": "0"
+  },
+  {
+    "name": "NativeComponentUpdateRecoveryTest",
+    "tests": "21",
+    "failures": "0",
+    "errors": "0"
+  }
+]

@@ -1,0 +1,26 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart
+00:00 +0: bridge restoration start failures expose safe copy and way forward
+00:00 +0 -1: bridge restoration start failures expose safe copy and way forward [E]
+  Expected: throws <Instance of 'BuiltinLinuxException'> with `code`: 'server_start_unavailable' and `message`: 'The phone server could not start. Open setup and try again.'
+    Actual: <Instance of 'Future<void>'>
+     Which: threw BuiltinLinuxException:<private native error>
+            stack package:opencode_mobile/builtin/builtin_linux.dart 969:7  BuiltinLinux._invokeUntraced
+                  ===== asynchronous gap ===========================
+                  package:matcher                                           expectLater
+                  package:flutter_test/src/widget_tester.dart 507:8         expectLater
+                  test/builtin_linux_test.dart 112:15                       main.<fn>.<fn>
+
+            which has `code` with value 'native_internal_error' which is different.
+                  Expected: server_sta ...
+                    Actual: native_int ...
+                            ^
+                   Differ at offset 0
+
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/builtin_linux_test.dart 112:15                main.<fn>.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge restoration start failures expose safe copy and way forward

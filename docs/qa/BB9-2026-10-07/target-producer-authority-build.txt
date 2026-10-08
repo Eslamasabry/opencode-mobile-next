@@ -1,0 +1,34 @@
+BB9 cold-start rollback integration target; pinned Flutter release, build lock, JDK17, one Gradle worker/2GB.
+Running Gradle task 'assembleRelease'...
+WARNING: Your app uses the following plugins that apply Kotlin Gradle Plugin (KGP): desktop_drop, flutter_timezone
+Future versions of Flutter will fail to build if your app uses plugins that apply KGP.
+
+Please check the changelogs of these plugins and upgrade to a version that supports Built-in Kotlin.
+If no such version exists, report the issue to the plugin. If necessary, here is a guide on filing
+an issue against a plugin: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers#report-incompatible-kotlin-gradle-plugin-usage-to-plugin-authors
+
+If you are a plugin author, please migrate your plugin to Built-in Kotlin using this guide: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
+"ar": 508 untranslated message(s).
+To see a detailed report, use the untranslated-messages-file
+option in the l10n.yaml file:
+untranslated-messages-file: desiredFileName.txt
+<other option>: <other selection>
+
+
+This will generate a JSON format file containing all messages that
+need to be translated.
+Font asset "Phosphor.ttf" was tree-shaken, reducing it from 488636 to 42080 bytes (91.4% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Font asset "Phosphor-Duotone.ttf" was tree-shaken, reducing it from 567808 to 1184 bytes (99.8% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Font asset "Phosphor-Fill.ttf" was tree-shaken, reducing it from 449252 to 1152 bytes (99.7% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 5000 bytes (99.7% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+PASS app-release.apk arm64-v8a/libaiteam_boundary_probe.so 66a6f1dbdf096f4f02a30740044441834c4a2ddbb7128992f5b76a3114588513
+PASS app-release.apk arm64-v8a/libaiteam_engine.so 12934b5aadf6040fe2574e6f0bfb34e11613bd0d7c0954a9d05d6d0e84531c13
+PASS app-release.apk arm64-v8a/libaiteam_sandbox.so 4debcf79ae5a47b0dc583e0f0a6283fffdc22f4b0974a453322e1adf856a4632
+PASS app-release.apk x86_64/libaiteam_boundary_probe.so 9e5d4b0763ca5a9197d6709296194410bdbd3ce8c517a9633f9a36cbc957bc75
+PASS app-release.apk x86_64/libaiteam_engine.so d0236e1e8722a1f81d6e3717cb88c442159b00d63a406b6343a23c8dfd393919
+PASS app-release.apk x86_64/libaiteam_sandbox.so ac7994e8ca84854f8c24f4ddc8f87100ffd3f4056bc440dddf121ed2769742bb
+PASS phone_engine_packaging
+Running Gradle task 'assembleRelease'...                          264.0s
+✓ Built build/app/outputs/flutter-apk/app-release.apk (65.0MB)
+
+PROCESS_EXIT=0

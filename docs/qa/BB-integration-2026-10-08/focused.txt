@@ -1,0 +1,138 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge status reads the contract map
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge an unknown phase and missing fields read as idle
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge run sends the script and timeout and reads the result
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge every other method speaks the contract
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge a platform error becomes the human message
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge recovery map errors expose only safe copy and code
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge recovery receipt list errors expose only safe copy and code
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge a build without the channel says so
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: server address is its own port, never the Termux-managed one
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts the install uses the shared setup text at the pinned version
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts the server binds 127.0.0.1 only and reads its password file
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts the password is quoted and never in the server script
+00:00 +12: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts versions are read the way the Termux manager trims them
+00:00 +13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts every script parses as shell
+00:00 +14: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts project folders: create makes a git project once, list and exists read them back
+00:00 +15: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts create refuses a relative path
+00:00 +16: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts a profile runs the runtime it was set up with
+00:00 +17: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: shared OpenCode setup script the Termux manager script changes only on purpose
+00:00 +18: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: shared OpenCode setup script the Termux manager embeds the shared text in its heredoc
+00:00 +19: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_performance_diagnostics_test.dart
+00:00 +19: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_performance_diagnostics_test.dart: performance reads each service lifetime through the channel
+00:00 +20: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_performance_diagnostics_test.dart: older APKs and absent channel results have no service records
+00:00 +21: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_performance_diagnostics_test.dart: malformed service containers and entries are ignored
+00:00 +22: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_performance_diagnostics_test.dart: malformed numeric fields never fabricate an exit or uptime
+00:00 +23: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_performance_diagnostics_test.dart: an unknown reason stays unknown even with exit 137
+00:00 +24: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_performance_diagnostics_test.dart: zero durations are observations rather than missing values
+00:00 +25: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_performance_diagnostics_test.dart: unsupported platforms return an empty snapshot without a call
+00:00 +26: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart
+00:01 +26: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: confirmed crash recovery records one act and retains consumed budget
+00:01 +27: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: explicit stop and background never dispatch a restart
+00:01 +28: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: shared restart and poll policy each prevent healing
+00:01 +29: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: three failures exhaust across resume and owner recreation
+00:01 +30: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: manual confirmed Start resets exhausted budget
+00:01 +31: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: policy revoked during password write prevents native dispatch
+00:01 +32: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: explicit stop during password write wins native generation race
+00:01 +33: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: background during health confirmation cannot record success
+00:01 +34: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: unhealthy live process is never overlapped with another attempt
+00:01 +35: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: late healthy answer confirms same attempt without another restart
+00:01 +36: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: bound phone owner rejects another profile at the same address
+00:01 +37: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: manual owner persistence failure prevents native launch
+00:01 +38: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: confirmed receipt logs after recreation even when the server stopped
+00:01 +39: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: failed healing still exposes installed server and safe failure for cards
+00:01 +40: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: malformed durable budget fails closed
+00:01 +41: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: profile deletion during start drains before scoped preference sweep
+00:01 +42: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart
+00:02 +42: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: spent legacy budget migrates once with marker before activation
+00:02 +43: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: failed native staging keeps legacy spent attempts across retry
+00:02 +44: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: retrying staged migration never overwrites native spent attempts
+00:02 +45: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: valid v2 marker with missing native budget admits no restart
+00:02 +46: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: corrupt migration marker admits no native binding or restart
+00:02 +47: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: malformed native snapshot fails closed
+00:02 +48: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: direct and background reservations share three attempts across owners
+00:02 +49: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: only confirmed manual Start resets native attempts
+00:02 +50: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: healthy manual Start resets budget with automatic restart disabled
+00:02 +51: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: Stop background and scheduled native recovery never dispatch from Dart
+00:02 +52: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: legacy pending confirmation survives migration and records after Stop
+00:02 +53: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: native background pending attempt is confirmed without another dispatch
+00:02 +54: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: historical confirmed receipt survives later crash and records once
+00:02 +55: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: profile deletion drains the active check and native erase before sweep
+00:02 +56: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart
+00:03 +56: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: app-lifetime owner heals only in foreground and reconnects once
+00:03 +57: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: persisted runtime owner wins over another selected local profile
+00:03 +58: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a restart confirmed after its initial timeout still reconnects
+00:03 +59: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: ambiguous legacy profiles wait for an explicit Start to claim ownership
+00:03 +60: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the shared restart policy and explicit Stop each prevent healing
+00:03 +61: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: explicit connect works with automatic reconnect off and shares deduplication
+00:03 +62: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: profile deletion admission cannot be reopened by a store notification
+00:03 +63: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: native exhausted budget survives opening and owner recreation
+00:03 +64: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: opening cannot supersede a scheduled native retry
+00:03 +65: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) starts a stopped server past an exhausted crash budget, connects, and gives the budget back once it answers
+00:03 +66: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) waits for the first resume before it does anything
+00:03 +67: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) leaves an explicitly stopped server stopped
+00:03 +68: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) leaves it stopped when restarting the phone server is off
+00:03 +69: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) only connects to a server that already runs
+00:03 +70: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) tries once more after a fast failure, then leaves the reason
+00:03 +71: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) a timeout is not tried again on its own
+00:03 +72: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) a failed crash restart counts as the first try
+00:03 +73: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) one that rejects our password is replaced at launch
+00:03 +74: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) one older than the stale age that stays silent is replaced
+00:03 +75: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) a young one that is still booting is waited for, not killed
+00:03 +76: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) a young one that never answers is replaced once it is stale
+00:03 +77: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) a healthy server whose connect failed is connected again by the health poll, once per back-off
+00:04 +78: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) the back-off holds automatic reconnects; Try again does not wait
+00:04 +79: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_owner_test.dart
+00:04 +79: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_owner_test.dart: new protocol profile reuses checked home through restart and back
+00:04 +80: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_owner_test.dart: legacy profiles prefer checked existing owner without copying secrets
+00:04 +81: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_owner_test.dart: already mapped homes adopt every legacy check once without reviving retries
+00:04 +82: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_owner_test.dart: gate adoption excludes remote and Termux homes
+00:04 +83: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_owner_test.dart: malformed migration receipt refuses to revive old proof
+00:04 +84: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_owner_test.dart: malformed donor does not suppress another checked home
+00:04 +85: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_owner_test.dart: refused oc.agentPhoneGate.one write preserves migration for a persisted retry
+00:04 +86: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_owner_test.dart: refused oc.phoneAgentGateMigration.one write preserves migration for a persisted retry
+00:04 +87: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_owner_test.dart: deleting owner alias preserves agents until last protocol is removed
+00:04 +88: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/crash_diagnostics_test.dart
+00:05 +88: /home/eslam/Storage/Code/oc_app-sol-bb/test/crash_diagnostics_test.dart: capture defaults off and discards a legacy native record
+00:05 +89: /home/eslam/Storage/Code/oc_app-sol-bb/test/crash_diagnostics_test.dart: provider keys and arbitrary exception and stack values never reach disk
+00:05 +90: /home/eslam/Storage/Code/oc_app-sol-bb/test/crash_diagnostics_test.dart: capture does not invoke hostile error.toString
+00:05 +91: /home/eslam/Storage/Code/oc_app-sol-bb/test/crash_diagnostics_test.dart: saved error survives reopen and imports into App diagnostics
+00:05 +92: /home/eslam/Storage/Code/oc_app-sol-bb/test/crash_diagnostics_test.dart: reapplying enabled consent preserves saved evidence
+00:05 +93: /home/eslam/Storage/Code/oc_app-sol-bb/test/crash_diagnostics_test.dart: disable erases Flutter and native evidence and consent across reopen
+00:05 +94: /home/eslam/Storage/Code/oc_app-sol-bb/test/crash_diagnostics_test.dart: App diagnostics clear removes native and saved crash evidence
+00:05 +95: /home/eslam/Storage/Code/oc_app-sol-bb/test/crash_diagnostics_test.dart: ANR and native import accept only timestamps since consent and deduplicate
+00:05 +96: /home/eslam/Storage/Code/oc_app-sol-bb/test/crash_diagnostics_test.dart: ring and snapshot byte budget remain bounded
+00:05 +97: /home/eslam/Storage/Code/oc_app-sol-bb/test/crash_diagnostics_test.dart: corrupt restored categories fail closed without entering diagnostics
+00:05 +98: /home/eslam/Storage/Code/oc_app-sol-bb/test/crash_diagnostics_test.dart: storage failure never throws into error handling
+00:05 +99: /home/eslam/Storage/Code/oc_app-sol-bb/test/crash_diagnostics_test.dart: pending snapshot symlink cannot redirect private evidence
+00:05 +100: /home/eslam/Storage/Code/oc_app-sol-bb/test/crash_diagnostics_test.dart: global Flutter and platform hooks delegate only categories, never keys
+Uncaught error: Invalid state
+00:05 +101: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/native_crash_test.dart
+00:06 +101: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_crash_test.dart: reads the latest JVM crash independently of exit history
+00:06 +102: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_crash_test.dart: invalid native input fails closed without paths or sign-in data
+00:06 +103: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_crash_test.dart: bounded metadata never converts unknown objects to text
+00:06 +104: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_crash_test.dart: wrapped service crash retains the bounded safe permission cause
+00:06 +105: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_crash_test.dart: oc/lifecycle launch report accepts the native crash contract
+00:06 +106: /home/eslam/Storage/Code/oc_app-sol-bb/test/native_crash_test.dart: startup emits one crash.last and persists its full bounded stack
+00:06 +107: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_host_native_test.dart
+00:06 +107: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_host_native_test.dart: (setUpAll)
+00:12 +107: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_host_native_test.dart: native phone host: low-space-launch
+00:12 +108: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_host_native_test.dart: native phone host: healthy-launch
+00:13 +109: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_host_native_test.dart: native phone host: exited-at-once
+00:14 +110: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_host_native_test.dart: native phone host: concurrent-start
+00:15 +111: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_host_native_test.dart: (tearDownAll)
+00:15 +111: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart
+00:16 +111: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: (setUpAll)
+00:16 +111: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: ordered-terminal
+00:17 +112: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: typed-write-failure
+00:17 +113: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: failed-start-status
+00:17 +114: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: service-start-denied
+00:17 +115: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: service-finish-denied
+00:17 +116: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: service-update-denied
+00:17 +117: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: agent-output-private
+00:17 +118: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: low-space-first
+00:17 +119: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: low-space-next
+00:17 +120: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: paseo-checksum-failed
+00:17 +121: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: paseo-launch-failed
+00:17 +122: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: (tearDownAll)
+00:17 +122: All tests passed!

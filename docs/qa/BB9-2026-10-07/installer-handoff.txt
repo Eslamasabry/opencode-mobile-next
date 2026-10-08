@@ -1,0 +1,7 @@
+NativeInstallerOwnership helper only; production launch/startup integration pending.
+Initial/restored pure JVM: 18 tests PASS each.
+Five removed-fix controls: each one exact test failed, exit 1; all compiles exit 0.
+All pure checks machine_lock test; compiler256MB/metaspace192MB runner128MB.
+Strict metadata-only ticket, typed fixed targets, exact observed-start verification, complete same-UID inventory supplied by integration, root-last selection, unknown survivor refusal.
+Integration must prove observed ancestry/nonce and UID before persisting observations; revalidate UID/start before each signal. Clear ticket only after a fresh complete inventory yields empty installer plan.
+Only two assigned source/test files written in worktree. No production wiring/build/device qualification claimed.

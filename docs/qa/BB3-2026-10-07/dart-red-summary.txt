@@ -1,0 +1,5 @@
+status: targeted red failure proved; source restored
+metadata: targeted red failure proved; source restored
+safe-error: targeted red failure proved; source restored
+authored-start: targeted red failure proved; source restored
+Restored affected Dart files passed

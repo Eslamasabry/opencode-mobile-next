@@ -1,0 +1,5 @@
+Cold worker immutable generation/schedule callback policy integrated in production metadata selection, exact signal admission, reservation, gate commit, public status and finally cleanup.
+Initial and restored focused pure checkpoints: 48 tests PASS each.
+Four removed-fix exact tests: each 1 test, 1 failure, exit 1; each compile exit 0.
+No admission lock held across drain sleeps/gate I/O. Monitor then recoveryLock for service-map checks; Stop uses recoveryLock only. Runtime generation allocation remains separate, durable, under current worker admission.
+No Gradle/APK/device qualification in this checkpoint.

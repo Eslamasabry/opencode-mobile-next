@@ -1,0 +1,14 @@
+test_health_alone_never_proves_os_recovery (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_health_alone_never_proves_os_recovery) ... FAIL
+
+======================================================================
+FAIL: test_health_alone_never_proves_os_recovery (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_health_alone_never_proves_os_recovery)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_runtime_acceptance.py", line 21, in test_health_alone_never_proves_os_recovery
+    self.assertFalse(acceptance.recovery_proven(*missing))
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+FAILED (failures=1)

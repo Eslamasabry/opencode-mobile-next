@@ -1,0 +1,4 @@
+pid=2633550 ppid=2633546 comm=machine_lock.sh startTicks=88953657
+pid=2634583 ppid=2633550 comm=java startTicks=88972526
+pid=2634623 ppid=2634583 comm=java startTicks=88972592
+pid=2635148 ppid=2634623 comm=aapt2 startTicks=88976981

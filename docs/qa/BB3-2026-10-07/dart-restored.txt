@@ -1,0 +1,37 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge status reads the contract map
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge an unknown phase and missing fields read as idle
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge restoration status exposes fixed state and timeout reason
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge unknown restoration status stays unavailable without raw copy
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge authored start passes only canonical restoration metadata
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge restoration start failures expose safe copy and way forward
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge run sends the script and timeout and reads the result
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge every other method speaks the contract
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge a platform error becomes the human message
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge recovery map errors expose only safe copy and code
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge recovery receipt list errors expose only safe copy and code
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge a build without the channel says so
+00:00 +12: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: server address is its own port, never the Termux-managed one
+00:00 +13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts the install uses the shared setup text at the pinned version
+00:00 +14: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts the server binds 127.0.0.1 only and reads its password file
+00:00 +15: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts the password is quoted and never in the server script
+00:00 +16: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts versions are read the way the Termux manager trims them
+00:00 +17: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts every script parses as shell
+00:00 +18: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts project folders: create makes a git project once, list and exists read them back
+00:00 +19: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts create refuses a relative path
+00:00 +20: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts a profile runs the runtime it was set up with
+00:00 +21: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: shared OpenCode setup script the Termux manager script changes only on purpose
+00:00 +22: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: shared OpenCode setup script the Termux manager embeds the shared text in its heredoc
+00:00 +23: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart
+00:01 +23: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: recognising the in-app server needs the address and Ubuntu installed here
+00:01 +24: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: startBuiltinServer writes the password, starts the profile runtime, waits
+00:01 +25: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: startBuiltinServer cancelled confirmation never reports successful startup
+00:01 +26: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: startBuiltinServer cancelled owner never starts the server
+00:01 +27: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: startBuiltinServer a server that exits is reported as such
+00:01 +28: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: BuiltinServerStarter starts a stopped server once, then not again
+00:01 +29: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: BuiltinServerStarter a failed start is kept for the card and not retried
+00:01 +30: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: BuiltinServerStarter leaves a running server alone
+00:01 +31: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: BuiltinServerStarter does nothing when Ubuntu is not installed
+00:01 +32: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: BuiltinProjectFolders create reports whether the folder is new
+00:01 +33: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: BuiltinProjectFolders exists reads test -d, and a bridge failure is not "missing"
+00:01 +34: All tests passed!

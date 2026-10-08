@@ -1,0 +1,592 @@
+
+removed_guard=unknown_uid
+......................................F....
+======================================================================
+FAIL: test_uid_scan_uses_builtins_before_private_environment_reads (test_bb3_stale_witness.WitnessTests.test_uid_scan_uses_builtins_before_private_environment_reads)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 434, in test_uid_scan_uses_builtins_before_private_environment_reads
+    self.assertTrue('if [ -z "$u" ]; then [ ! -d "$d" ] || exit 70;' in script,
+AssertionError: False is not true : live_unreadable_status_must_refuse_inventory
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.015s
+
+FAILED (failures=1)
+mock_proof=unknown_uid
+
+removed_guard=unknown_stat
+......................................F....
+======================================================================
+FAIL: test_uid_scan_uses_builtins_before_private_environment_reads (test_bb3_stale_witness.WitnessTests.test_uid_scan_uses_builtins_before_private_environment_reads)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 441, in test_uid_scan_uses_builtins_before_private_environment_reads
+    self.assertTrue('else [ ! -d "$d" ] || exit 70; fi;' in shell.call_args_list[1].args[0],
+AssertionError: False is not true : live_unreadable_stat_must_refuse_inventory
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.016s
+
+FAILED (failures=1)
+mock_proof=unknown_stat
+
+removed_guard=partial_cleanup
+.............FF..F...F.....................
+======================================================================
+FAIL: test_discovery_timeout_after_launch_still_drains_proven_tree (test_bb3_stale_witness.WitnessTests.test_discovery_timeout_after_launch_still_drains_proven_tree)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 241, in test_discovery_timeout_after_launch_still_drains_proven_tree
+    self.assertEqual(fixture.signals, [(81, 101, "TERM"), (80, 100, "TERM")])
+AssertionError: Lists differ: [] != [(81, 101, 'TERM'), (80, 100, 'TERM')]
+
+Second list contains 2 additional elements.
+First extra element 0:
+(81, 101, 'TERM')
+
+- []
++ [(81, 101, 'TERM'), (80, 100, 'TERM')]
+
+======================================================================
+FAIL: test_empty_discovery_after_launch_never_claims_clean (test_bb3_stale_witness.WitnessTests.test_empty_discovery_after_launch_never_claims_clean)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 257, in test_empty_discovery_after_launch_never_claims_clean
+    self.refuse(fixture.cleanup, "witness_cleanup_unproven")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_failed_launcher_reply_is_also_treated_as_possible_launch (test_bb3_stale_witness.WitnessTests.test_failed_launcher_reply_is_also_treated_as_possible_launch)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 267, in test_failed_launcher_reply_is_also_treated_as_possible_launch
+    self.assertTrue(fixture.drained)
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_launched_but_undiscoverable_root_is_explicit_cleanup_refusal (test_bb3_stale_witness.WitnessTests.test_launched_but_undiscoverable_root_is_explicit_cleanup_refusal)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 248, in test_launched_but_undiscoverable_root_is_explicit_cleanup_refusal
+    self.refuse(fixture.cleanup, "witness_cleanup_unproven")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.016s
+
+FAILED (failures=4)
+mock_proof=partial_cleanup
+
+removed_guard=launch_uncertainty
+.......FFFFFFFF..F...F.....FF...FF.........
+======================================================================
+FAIL: test_child_escaped_session_or_group_refuses_all_signals (test_bb3_stale_witness.WitnessTests.test_child_escaped_session_or_group_refuses_all_signals)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 283, in test_child_escaped_session_or_group_refuses_all_signals
+    self.refuse(fixture.cleanup, "witness_child_ownership_unknown")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_child_with_other_uid_is_never_signaled (test_bb3_stale_witness.WitnessTests.test_child_with_other_uid_is_never_signaled)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 290, in test_child_with_other_uid_is_never_signaled
+    self.refuse(fixture.cleanup, "witness_child_ownership_unknown")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_cleanup_does_not_expose_device_signal_errors (test_bb3_stale_witness.WitnessTests.test_cleanup_does_not_expose_device_signal_errors)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 368, in test_cleanup_does_not_expose_device_signal_errors
+    self.refuse(fixture.cleanup, "witness_cleanup_signal_failed")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_cleanup_escalates_only_exact_owned_identities (test_bb3_stale_witness.WitnessTests.test_cleanup_escalates_only_exact_owned_identities)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 316, in test_cleanup_escalates_only_exact_owned_identities
+    self.assertEqual(fixture.signals, [(81, 101, "TERM"), (80, 100, "TERM"),
+AssertionError: Lists differ: [] != [(81, 101, 'TERM'), (80, 100, 'TERM'), (81, 101, 'KILL'), (80, 100, 'KILL')]
+
+Second list contains 4 additional elements.
+First extra element 0:
+(81, 101, 'TERM')
+
+- []
++ [(81, 101, 'TERM'), (80, 100, 'TERM'), (81, 101, 'KILL'), (80, 100, 'KILL')]
+
+======================================================================
+FAIL: test_cleanup_is_bounded_even_when_owned_process_ignores_signals (test_bb3_stale_witness.WitnessTests.test_cleanup_is_bounded_even_when_owned_process_ignores_signals)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 361, in test_cleanup_is_bounded_even_when_owned_process_ignores_signals
+    self.refuse(fixture.cleanup, "witness_cleanup_timeout")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_cleanup_signals_only_witnessed_children_root_last (test_bb3_stale_witness.WitnessTests.test_cleanup_signals_only_witnessed_children_root_last)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 304, in test_cleanup_signals_only_witnessed_children_root_last
+    self.assertEqual(fixture.signals, [(81, 101, "TERM"), (80, 100, "TERM")])
+AssertionError: Lists differ: [] != [(81, 101, 'TERM'), (80, 100, 'TERM')]
+
+Second list contains 2 additional elements.
+First extra element 0:
+(81, 101, 'TERM')
+
+- []
++ [(81, 101, 'TERM'), (80, 100, 'TERM')]
+
+======================================================================
+FAIL: test_discovery_timeout_after_launch_still_drains_proven_tree (test_bb3_stale_witness.WitnessTests.test_discovery_timeout_after_launch_still_drains_proven_tree)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 241, in test_discovery_timeout_after_launch_still_drains_proven_tree
+    self.assertEqual(fixture.signals, [(81, 101, "TERM"), (80, 100, "TERM")])
+AssertionError: Lists differ: [] != [(81, 101, 'TERM'), (80, 100, 'TERM')]
+
+Second list contains 2 additional elements.
+First extra element 0:
+(81, 101, 'TERM')
+
+- []
++ [(81, 101, 'TERM'), (80, 100, 'TERM')]
+
+======================================================================
+FAIL: test_empty_discovery_after_launch_never_claims_clean (test_bb3_stale_witness.WitnessTests.test_empty_discovery_after_launch_never_claims_clean)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 257, in test_empty_discovery_after_launch_never_claims_clean
+    self.refuse(fixture.cleanup, "witness_cleanup_unproven")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_failed_launcher_reply_is_also_treated_as_possible_launch (test_bb3_stale_witness.WitnessTests.test_failed_launcher_reply_is_also_treated_as_possible_launch)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 264, in test_failed_launcher_reply_is_also_treated_as_possible_launch
+    self.assertTrue(fixture.launch_attempted)
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_launched_but_undiscoverable_root_is_explicit_cleanup_refusal (test_bb3_stale_witness.WitnessTests.test_launched_but_undiscoverable_root_is_explicit_cleanup_refusal)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 248, in test_launched_but_undiscoverable_root_is_explicit_cleanup_refusal
+    self.refuse(fixture.cleanup, "witness_cleanup_unproven")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_parent_must_drain_naturally_and_is_never_signaled (test_bb3_stale_witness.WitnessTests.test_parent_must_drain_naturally_and_is_never_signaled)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 354, in test_parent_must_drain_naturally_and_is_never_signaled
+    self.refuse(fixture.cleanup, "witness_parent_not_drained")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_parent_pid_reuse_is_preserved_not_signaled (test_bb3_stale_witness.WitnessTests.test_parent_pid_reuse_is_preserved_not_signaled)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 344, in test_parent_pid_reuse_is_preserved_not_signaled
+    self.assertEqual(fixture.identities[70]["startTicks"], 900)
+AssertionError: 100 != 900
+
+======================================================================
+FAIL: test_root_pid_reuse_is_refused_without_signal (test_bb3_stale_witness.WitnessTests.test_root_pid_reuse_is_refused_without_signal)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 323, in test_root_pid_reuse_is_refused_without_signal
+    self.refuse(fixture.cleanup, "witness_child_identity_changed")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_same_cgroup_refuses_but_retains_proven_identity_for_cleanup (test_bb3_stale_witness.WitnessTests.test_same_cgroup_refuses_but_retains_proven_identity_for_cleanup)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 211, in test_same_cgroup_refuses_but_retains_proven_identity_for_cleanup
+    self.assertEqual([value[0] for value in fixture.signals], [81, 80])
+AssertionError: Lists differ: [] != [81, 80]
+
+Second list contains 2 additional elements.
+First extra element 0:
+81
+
+- []
++ [81, 80]
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.016s
+
+FAILED (failures=14)
+mock_proof=launch_uncertainty
+
+removed_guard=start_window
+....................................F......
+======================================================================
+FAIL: test_start_and_cleanup_have_fixed_bounded_multiread_deadlines (test_bb3_stale_witness.WitnessTests.test_start_and_cleanup_have_fixed_bounded_multiread_deadlines)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 448, in test_start_and_cleanup_have_fixed_bounded_multiread_deadlines
+    self.assertEqual(fixture.deadline, 115)
+AssertionError: 105 != 115
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.015s
+
+FAILED (failures=1)
+mock_proof=start_window
+
+removed_guard=uid_scan
+......................................F....
+======================================================================
+FAIL: test_uid_scan_uses_builtins_before_private_environment_reads (test_bb3_stale_witness.WitnessTests.test_uid_scan_uses_builtins_before_private_environment_reads)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 430, in test_uid_scan_uses_builtins_before_private_environment_reads
+    self.assertTrue("while read -r key ruid euid suid fsuid extra" in script,
+AssertionError: False is not true : builtin_uid_scan_missing
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.015s
+
+FAILED (failures=1)
+mock_proof=uid_scan
+
+removed_guard=zero_session
+E..........................................
+======================================================================
+ERROR: test_android_app_zero_session_and_parent_are_valid_metadata (test_bb3_stale_witness.WitnessTests.test_android_app_zero_session_and_parent_are_valid_metadata)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 121, in test_android_app_zero_session_and_parent_are_valid_metadata
+    fixture = Fixture(value)
+              ^^^^^^^^^^^^^^
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 43, in __init__
+    super().__init__(MockDevice(), metadata() if value is None else value)
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb3_stale_witness.py", line 74, in __init__
+    require(identity_valid(metadata["app"]), "witness_app_invalid")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb3_stale_witness.py", line 20, in require
+    raise Refused(code)
+bb3_runtime_acceptance.Refused: witness_app_invalid
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.016s
+
+FAILED (errors=1)
+mock_proof=zero_session
+
+removed_guard=metadata
+.......................F...................
+======================================================================
+FAIL: test_metadata_rejects_missing_unknown_and_wrong_types (test_bb3_stale_witness.WitnessTests.test_metadata_rejects_missing_unknown_and_wrong_types) (value='dict')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 105, in test_metadata_rejects_missing_unknown_and_wrong_types
+    with self.subTest(value=type(value).__name__), self.assertRaises(witness.Refused):
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.016s
+
+FAILED (failures=1)
+mock_proof=metadata
+
+removed_guard=fixed_workload
+.............................F.............
+======================================================================
+FAIL: test_private_proot_rootfs_and_fixed_sleep_are_required (test_bb3_stale_witness.WitnessTests.test_private_proot_rootfs_and_fixed_sleep_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 139, in test_private_proot_rootfs_and_fixed_sleep_are_required
+    with self.assertRaises(witness.Refused):
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.016s
+
+FAILED (failures=1)
+mock_proof=fixed_workload
+
+removed_guard=environment
+...............F...........................
+======================================================================
+FAIL: test_environment_rejects_extra_wrong_native_and_wrong_private_tmp (test_bb3_stale_witness.WitnessTests.test_environment_rejects_extra_wrong_native_and_wrong_private_tmp)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 146, in test_environment_rejects_extra_wrong_native_and_wrong_private_tmp
+    self.refuse(lambda: Fixture(metadata() | {"environment": env}), "witness_environment_invalid")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.015s
+
+FAILED (failures=1)
+mock_proof=environment
+
+removed_guard=app_identity
+...F.......................................
+======================================================================
+FAIL: test_app_pid_reuse_and_changed_tuple_refuse_before_launch (test_bb3_stale_witness.WitnessTests.test_app_pid_reuse_and_changed_tuple_refuse_before_launch)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 158, in test_app_pid_reuse_and_changed_tuple_refuse_before_launch
+    self.refuse(fixture.start, "witness_app_changed")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.016s
+
+FAILED (failures=1)
+mock_proof=app_identity
+
+removed_guard=root_uid_nonce
+..........................................F
+======================================================================
+FAIL: test_wrong_uid_or_extra_environment_never_publishes_root (test_bb3_stale_witness.WitnessTests.test_wrong_uid_or_extra_environment_never_publishes_root)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 193, in test_wrong_uid_or_extra_environment_never_publishes_root
+    self.refuse(fixture.start, "witness_root_ownership_invalid")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 99, in refuse
+    self.assertEqual(str(caught.exception), code)
+AssertionError: 'witness_child_ownership_unknown' != 'witness_root_ownership_invalid'
+- witness_child_ownership_unknown
++ witness_root_ownership_invalid
+
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.017s
+
+FAILED (failures=1)
+mock_proof=root_uid_nonce
+
+removed_guard=session
+..................F........................
+======================================================================
+FAIL: test_group_and_session_must_equal_root_pid (test_bb3_stale_witness.WitnessTests.test_group_and_session_must_equal_root_pid)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 202, in test_group_and_session_must_equal_root_pid
+    self.refuse(fixture.start, "witness_session_invalid")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.017s
+
+FAILED (failures=1)
+mock_proof=session
+
+removed_guard=cgroup
+.F...............................F.........
+======================================================================
+FAIL: test_app_cgroup_subtree_is_not_outside_the_app (test_bb3_stale_witness.WitnessTests.test_app_cgroup_subtree_is_not_outside_the_app)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 221, in test_app_cgroup_subtree_is_not_outside_the_app
+    self.refuse(fixture.start, "witness_app_cgroup_shared")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_same_cgroup_refuses_but_retains_proven_identity_for_cleanup (test_bb3_stale_witness.WitnessTests.test_same_cgroup_refuses_but_retains_proven_identity_for_cleanup)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 208, in test_same_cgroup_refuses_but_retains_proven_identity_for_cleanup
+    self.refuse(fixture.start, "witness_app_cgroup_shared")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.020s
+
+FAILED (failures=2)
+mock_proof=cgroup
+
+removed_guard=child_ownership
+.......F...................................
+======================================================================
+FAIL: test_child_escaped_session_or_group_refuses_all_signals (test_bb3_stale_witness.WitnessTests.test_child_escaped_session_or_group_refuses_all_signals)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 282, in test_child_escaped_session_or_group_refuses_all_signals
+    self.refuse(fixture.start, "witness_child_ownership_unknown")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.016s
+
+FAILED (failures=1)
+mock_proof=child_ownership
+
+removed_guard=pid_reuse
+................................F..........
+======================================================================
+FAIL: test_root_pid_reuse_is_refused_without_signal (test_bb3_stale_witness.WitnessTests.test_root_pid_reuse_is_refused_without_signal)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 323, in test_root_pid_reuse_is_refused_without_signal
+    self.refuse(fixture.cleanup, "witness_child_identity_changed")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.015s
+
+FAILED (failures=1)
+mock_proof=pid_reuse
+
+removed_guard=root_last
+..........F.FF...................F.........
+======================================================================
+FAIL: test_cleanup_escalates_only_exact_owned_identities (test_bb3_stale_witness.WitnessTests.test_cleanup_escalates_only_exact_owned_identities)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 316, in test_cleanup_escalates_only_exact_owned_identities
+    self.assertEqual(fixture.signals, [(81, 101, "TERM"), (80, 100, "TERM"),
+AssertionError: Lists differ: [(80, 100, 'TERM'), (81, 101, 'TERM'), (80, 100, 'KILL'), (81, 101, 'KILL')] != [(81, 101, 'TERM'), (80, 100, 'TERM'), (81, 101, 'KILL'), (80, 100, 'KILL')]
+
+First differing element 0:
+(80, 100, 'TERM')
+(81, 101, 'TERM')
+
+- [(80, 100, 'TERM'), (81, 101, 'TERM'), (80, 100, 'KILL'), (81, 101, 'KILL')]
+?    ^    ^             ^    ^             ^    ^             ^    ^
+
++ [(81, 101, 'TERM'), (80, 100, 'TERM'), (81, 101, 'KILL'), (80, 100, 'KILL')]
+?    ^    ^             ^    ^             ^    ^             ^    ^
+
+
+======================================================================
+FAIL: test_cleanup_signals_only_witnessed_children_root_last (test_bb3_stale_witness.WitnessTests.test_cleanup_signals_only_witnessed_children_root_last)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 304, in test_cleanup_signals_only_witnessed_children_root_last
+    self.assertEqual(fixture.signals, [(81, 101, "TERM"), (80, 100, "TERM")])
+AssertionError: Lists differ: [(80, 100, 'TERM'), (81, 101, 'TERM')] != [(81, 101, 'TERM'), (80, 100, 'TERM')]
+
+First differing element 0:
+(80, 100, 'TERM')
+(81, 101, 'TERM')
+
+- [(80, 100, 'TERM'), (81, 101, 'TERM')]
+?    ^    ^             ^    ^
+
++ [(81, 101, 'TERM'), (80, 100, 'TERM')]
+?    ^    ^             ^    ^
+
+
+======================================================================
+FAIL: test_discovery_timeout_after_launch_still_drains_proven_tree (test_bb3_stale_witness.WitnessTests.test_discovery_timeout_after_launch_still_drains_proven_tree)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 241, in test_discovery_timeout_after_launch_still_drains_proven_tree
+    self.assertEqual(fixture.signals, [(81, 101, "TERM"), (80, 100, "TERM")])
+AssertionError: Lists differ: [(80, 100, 'TERM'), (81, 101, 'TERM')] != [(81, 101, 'TERM'), (80, 100, 'TERM')]
+
+First differing element 0:
+(80, 100, 'TERM')
+(81, 101, 'TERM')
+
+- [(80, 100, 'TERM'), (81, 101, 'TERM')]
+?    ^    ^             ^    ^
+
++ [(81, 101, 'TERM'), (80, 100, 'TERM')]
+?    ^    ^             ^    ^
+
+
+======================================================================
+FAIL: test_same_cgroup_refuses_but_retains_proven_identity_for_cleanup (test_bb3_stale_witness.WitnessTests.test_same_cgroup_refuses_but_retains_proven_identity_for_cleanup)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 211, in test_same_cgroup_refuses_but_retains_proven_identity_for_cleanup
+    self.assertEqual([value[0] for value in fixture.signals], [81, 80])
+AssertionError: Lists differ: [80, 81] != [81, 80]
+
+First differing element 0:
+80
+81
+
+- [80, 81]
++ [81, 80]
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.017s
+
+FAILED (failures=4)
+mock_proof=root_last
+
+removed_guard=wrapper_refusal
+..............................F............
+======================================================================
+FAIL: test_protected_wrapper_is_unavailable_before_any_launch (test_bb3_stale_witness.WitnessTests.test_protected_wrapper_is_unavailable_before_any_launch)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 152, in test_protected_wrapper_is_unavailable_before_any_launch
+    self.refuse(lambda: Fixture(value), "witness_capability_unavailable")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 97, in refuse
+    with self.assertRaises(witness.Refused) as caught:
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.015s
+
+FAILED (failures=1)
+mock_proof=wrapper_refusal
+
+removed_guard=deadline
+................F..........................
+======================================================================
+FAIL: test_expired_deadline_does_not_invoke_device (test_bb3_stale_witness.WitnessTests.test_expired_deadline_does_not_invoke_device)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 412, in test_expired_deadline_does_not_invoke_device
+    self.refuse(lambda: helper._shell("true"), "witness_deadline_exceeded")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_stale_witness.py", line 99, in refuse
+    self.assertEqual(str(caught.exception), code)
+AssertionError: 'witness_read_failed' != 'witness_deadline_exceeded'
+- witness_read_failed
++ witness_deadline_exceeded
+
+
+----------------------------------------------------------------------
+Ran 43 tests in 0.016s
+
+FAILED (failures=1)
+mock_proof=deadline

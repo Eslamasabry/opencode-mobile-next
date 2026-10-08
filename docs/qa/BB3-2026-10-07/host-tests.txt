@@ -1,0 +1,14 @@
+test_authenticated_health_keeps_password_device_local_and_requires_real_health (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_authenticated_health_keeps_password_device_local_and_requires_real_health) ... ok
+test_health_alone_never_proves_os_recovery (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_health_alone_never_proves_os_recovery) ... ok
+test_higher_person_budget_survives_restore_and_fixture_keys_are_removed (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_higher_person_budget_survives_restore_and_fixture_keys_are_removed) ... ok
+test_primary_failure_is_retained_when_cleanup_also_fails (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_primary_failure_is_retained_when_cleanup_also_fails) ... ok
+test_reused_pid_or_zombie_never_counts_as_original_identity (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_reused_pid_or_zombie_never_counts_as_original_identity) ... ok
+test_signal_requires_exact_identity_and_shell_preserves_one_script (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_signal_requires_exact_identity_and_shell_preserves_one_script) ... ok
+test_stat_parser_handles_parentheses_and_spaces_in_comm (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_stat_parser_handles_parentheses_and_spaces_in_comm) ... ok
+test_untrusted_status_or_account_text_is_not_evidence (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_untrusted_status_or_account_text_is_not_evidence) ... ok
+test_v1_health_without_version_cannot_certify_OpenCode2 (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_v1_health_without_version_cannot_certify_OpenCode2) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.002s
+
+OK

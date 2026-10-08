@@ -63,7 +63,11 @@ class _Linux extends BuiltinLinux {
   }) async => const BuiltinLinuxRunResult(exitCode: 0, output: '');
 
   @override
-  Future<void> startServer(String script, {int port = 4097}) async => starts++;
+  Future<void> startServer(
+    String script, {
+    int port = 4097,
+    BuiltinServerRestoreRecipe? restoreRecipe,
+  }) async => starts++;
 
   @override
   Future<void> restartServer(

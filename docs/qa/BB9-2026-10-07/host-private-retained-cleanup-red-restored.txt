@@ -1,0 +1,9 @@
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.007s
+
+OK
+PASS removed_guard_failed test_one_specific_refusal_allows_one_fresh_attempt
+PASS removed_guard_failed test_retained_fixture_needs_native_cleanup_before_any_new_start
+PASS removed_guard_failed test_other_refusal_is_never_retried
+PASS removed_guard_failed test_second_specific_refusal_cannot_claim_a_baseline

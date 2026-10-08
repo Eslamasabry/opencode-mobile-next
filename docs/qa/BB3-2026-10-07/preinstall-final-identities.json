@@ -1,0 +1,126 @@
+{
+  "app": {
+    "pid": 20648,
+    "startTicks": 1200104,
+    "parent": 373,
+    "group": 373,
+    "session": 0,
+    "state": "S"
+  },
+  "roots": [
+    20743,
+    20809
+  ],
+  "records": [
+    {
+      "pid": 20648,
+      "startTicks": 1200104,
+      "parent": 373,
+      "group": 373,
+      "session": 0,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "mappedPrivateServerOrphan": false
+    },
+    {
+      "pid": 20743,
+      "startTicks": 1200390,
+      "parent": 20648,
+      "group": 373,
+      "session": 0,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": true,
+      "mappedPrivateServerOrphan": false
+    },
+    {
+      "pid": 20747,
+      "startTicks": 1200399,
+      "parent": 20743,
+      "group": 373,
+      "session": 0,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "mappedPrivateServerOrphan": false
+    },
+    {
+      "pid": 20809,
+      "startTicks": 1200572,
+      "parent": 20648,
+      "group": 373,
+      "session": 0,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": true,
+      "mappedPrivateServerOrphan": false
+    },
+    {
+      "pid": 20812,
+      "startTicks": 1200577,
+      "parent": 20809,
+      "group": 373,
+      "session": 0,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "mappedPrivateServerOrphan": false
+    },
+    {
+      "pid": 20950,
+      "startTicks": 1201292,
+      "parent": 20747,
+      "group": 20950,
+      "session": 20950,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "mappedPrivateServerOrphan": false
+    },
+    {
+      "pid": 20998,
+      "startTicks": 1201394,
+      "parent": 20812,
+      "group": 373,
+      "session": 0,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "mappedPrivateServerOrphan": false
+    },
+    {
+      "pid": 21017,
+      "startTicks": 1201444,
+      "parent": 20998,
+      "group": 373,
+      "session": 0,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "mappedPrivateServerOrphan": false
+    },
+    {
+      "pid": 21095,
+      "startTicks": 1201814,
+      "parent": 21017,
+      "group": 373,
+      "session": 0,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "mappedPrivateServerOrphan": false
+    },
+    {
+      "pid": 22709,
+      "startTicks": 1210915,
+      "parent": 20747,
+      "group": 22709,
+      "session": 22709,
+      "state": "S",
+      "uid": 10217,
+      "managedProot": false,
+      "mappedPrivateServerOrphan": false
+    }
+  ]
+}

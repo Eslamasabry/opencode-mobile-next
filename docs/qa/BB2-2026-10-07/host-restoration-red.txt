@@ -1,0 +1,19 @@
+RESTORE native_preferences_and_existing_app
+F
+======================================================================
+FAIL: test_primary_install_failure_survives_failed_finally_restore (__main__.RestorationEvidenceTest.test_primary_install_failure_survives_failed_finally_restore)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb2_runtime_acceptance.py", line 49, in test_primary_install_failure_survives_failed_finally_restore
+    self.assertIn("FAIL primary_QA_install_version_downgrade_refused", evidence)
+AssertionError: 'FAIL primary_QA_install_version_downgrade_refused' not found in 'installedVersionBefore=2201\ncandidateVersion=2201\npersonBudgetBefore=1\nPASS original_native_keys_restored_with_temporary_stop\nFAIL restore_ui_dump_failed\n'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.119s
+
+FAILED (failures=1)
+installedVersionBefore=2201
+candidateVersion=2201
+personBudgetBefore=1
+PASS original_native_keys_restored_with_temporary_stop
+FAIL restore_ui_dump_failed

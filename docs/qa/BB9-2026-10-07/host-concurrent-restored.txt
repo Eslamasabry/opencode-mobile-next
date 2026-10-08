@@ -1,0 +1,32 @@
+test_real_gradle_runner_has_no_version_but_target_is_exact (__main__.ArtifactTests.test_real_gradle_runner_has_no_version_but_target_is_exact) ... ok
+test_inventory_rejects_other_format (__main__.BootstrapTests.test_inventory_rejects_other_format) ... ok
+test_inventory_uid_filter_and_cap (__main__.BootstrapTests.test_inventory_uid_filter_and_cap) ... ok
+test_mapped_private_orphan_requires_parent_one_and_exact_executable (__main__.BootstrapTests.test_mapped_private_orphan_requires_parent_one_and_exact_executable) ... ok
+test_same_package_private_alias_qualified (__main__.BootstrapTests.test_same_package_private_alias_qualified) ... ok
+test_unknown_payload_prevents_any_stop_install_signal (__main__.BootstrapTests.test_unknown_payload_prevents_any_stop_install_signal) ... ok
+test_cleanup_refusal_does_not_skip_person_restore (__main__.RestoreTests.test_cleanup_refusal_does_not_skip_person_restore) ... ok
+test_policy_values_ignore_xml_layout_and_refuse_value_changes (__main__.RestoreTests.test_policy_values_ignore_xml_layout_and_refuse_value_changes) ... ok
+test_ambiguous_managed_profile_refused (__main__.SchemaTests.test_ambiguous_managed_profile_refused) ... ok
+test_arbitrary_exception_text_redacted (__main__.SchemaTests.test_arbitrary_exception_text_redacted) ... ok
+test_invalid_safe_code_redacted (__main__.SchemaTests.test_invalid_safe_code_redacted) ... ok
+test_malformed_rejected (__main__.SchemaTests.test_malformed_rejected) ... ok
+test_output_drops_untrusted_secret_fields (__main__.SchemaTests.test_output_drops_untrusted_secret_fields) ... ok
+test_prior_good_retention (__main__.SchemaTests.test_prior_good_retention) ... ok
+test_six_boolean_fields_admitted (__main__.SchemaTests.test_six_boolean_fields_admitted) ... ok
+test_zero_session_app_and_duplicate_same_identity_allowed (__main__.SchemaTests.test_zero_session_app_and_duplicate_same_identity_allowed) ... ok
+test_activity_absent_is_mandatory (__main__.SessionTests.test_activity_absent_is_mandatory) ... ok
+test_actual_normal_start_precedes_read_only_verify (__main__.SessionTests.test_actual_normal_start_precedes_read_only_verify) ... ok
+test_additive_generation_must_match_and_is_not_restored (__main__.SessionTests.test_additive_generation_must_match_and_is_not_restored) ... ok
+test_app_pid_reuse_refuses_signal (__main__.SessionTests.test_app_pid_reuse_refuses_signal) ... ok
+test_detached_is_mandatory_before_signal (__main__.SessionTests.test_detached_is_mandatory_before_signal) ... ok
+test_host_metadata_write_cannot_change_journal (__main__.SessionTests.test_host_metadata_write_cannot_change_journal) ... ok
+test_instrumentation_cannot_supply_cold_proof (__main__.SessionTests.test_instrumentation_cannot_supply_cold_proof) ... ok
+test_natural_death_reported_without_drain_claim (__main__.SessionTests.test_natural_death_reported_without_drain_claim) ... ok
+test_remaining_writer_refuses_verify (__main__.SessionTests.test_remaining_writer_refuses_verify) ... ok
+test_saved_writer_ticket_must_match (__main__.SessionTests.test_saved_writer_ticket_must_match) ... ok
+test_survivors_reported_without_orphan_claim (__main__.SessionTests.test_survivors_reported_without_orphan_claim) ... ok
+
+----------------------------------------------------------------------
+Ran 27 tests in 0.010s
+
+OK

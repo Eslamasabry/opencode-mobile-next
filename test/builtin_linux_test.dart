@@ -59,7 +59,76 @@ void main() {
       expect(status.phase, BuiltinLinuxPhase.idle);
       expect(status.serverRunning, isFalse);
       expect(status.bytesUsed, isNull);
+      expect(status.restorePhase, BuiltinServerRestorePhase.idle);
+      expect(status.restoreReason, isNull);
     });
+
+    test('restoration status exposes fixed state and timeout reason', () async {
+      answer = (_) => {
+        'restorePhase': 'unavailable',
+        'restoreReason': 'systemTimeout',
+      };
+      final status = await BuiltinLinux().status();
+      expect(status.restorePhase, BuiltinServerRestorePhase.unavailable);
+      expect(status.restoreReason, BuiltinServerRestoreReason.systemTimeout);
+    });
+
+    test('unknown restoration status stays unavailable without raw copy', () {
+      final status = BuiltinLinuxStatus.fromMap({
+        'restorePhase': 'unexpected',
+        'restoreReason': 'private native error',
+      });
+      expect(status.restorePhase, BuiltinServerRestorePhase.unavailable);
+      expect(status.restoreReason, BuiltinServerRestoreReason.ownershipUnknown);
+    });
+
+    test('authored start passes only canonical restoration metadata', () async {
+      await BuiltinLinux().startServer(
+        'serve',
+        restoreRecipe: const BuiltinServerRestoreRecipe(
+          profileId: 'phone-profile',
+          runtime: TermuxRuntime.openCode2,
+        ),
+      );
+      expect(calls.single.method, 'startServer');
+      expect(calls.single.arguments, {
+        'script': 'serve',
+        'port': 4097,
+        'restoreRecipe': {
+          'version': 1,
+          'profileId': 'phone-profile',
+          'runtime': 'openCode2',
+        },
+      });
+    });
+
+    test(
+      'restoration start failures expose safe copy and way forward',
+      () async {
+        answer = (_) => throw PlatformException(
+          code: 'native_internal_error',
+          message: 'private native error',
+        );
+        await expectLater(
+          BuiltinLinux().startServer(
+            'serve',
+            restoreRecipe: const BuiltinServerRestoreRecipe(
+              profileId: 'phone-profile',
+              runtime: TermuxRuntime.openCode1,
+            ),
+          ),
+          throwsA(
+            isA<BuiltinLinuxException>()
+                .having((e) => e.code, 'code', 'server_start_unavailable')
+                .having(
+                  (e) => e.message,
+                  'message',
+                  'The phone server could not start. Open setup and try again.',
+                ),
+          ),
+        );
+      },
+    );
 
     test('run sends the script and timeout and reads the result', () async {
       answer = (_) => {'exitCode': 3, 'output': 'boom'};
@@ -113,6 +182,77 @@ void main() {
         ),
       );
     });
+
+    test('recovery map errors expose only safe copy and code', () async {
+      answer = (_) => throw PlatformException(
+        code: 'raw_native',
+        message: 'Raw JSON parser detail',
+        details: {'private': 'diagnostic'},
+      );
+      final linux = BuiltinLinux();
+      final operations = [
+        () => linux.stageServerRecovery('phone', {'version': 1}),
+        () => linux.bindServerRecovery(profileId: 'phone', enabled: true),
+        () => linux.serverRecoveryBudget('phone'),
+        () => linux.updateServerRecoveryReceipt('phone', {}),
+        () => linux.confirmManualServerStart('phone'),
+      ];
+      for (final operation in operations) {
+        await expectLater(
+          operation(),
+          throwsA(
+            isA<BuiltinLinuxException>()
+                .having(
+                  (error) => error.message,
+                  'safe copy',
+                  'The phone server could not restart.',
+                )
+                .having(
+                  (error) => error.code,
+                  'safe code',
+                  'recovery_unavailable',
+                ),
+          ),
+        );
+      }
+    });
+
+    test(
+      'recovery receipt list errors expose only safe copy and code',
+      () async {
+        answer = (_) => throw PlatformException(
+          code: 'raw_native',
+          message: 'Raw JSON parser detail',
+        );
+        await expectLater(
+          BuiltinLinux().serverRecoveryReceipts('phone'),
+          throwsA(
+            isA<BuiltinLinuxException>()
+                .having(
+                  (error) => error.message,
+                  'safe copy',
+                  'The phone server could not restart.',
+                )
+                .having(
+                  (error) => error.code,
+                  'safe code',
+                  'recovery_unavailable',
+                ),
+          ),
+        );
+        answer = (_) => ['malformed'];
+        await expectLater(
+          BuiltinLinux().serverRecoveryReceipts('phone'),
+          throwsA(
+            isA<BuiltinLinuxException>().having(
+              (error) => error.code,
+              'safe code',
+              'recovery_unavailable',
+            ),
+          ),
+        );
+      },
+    );
 
     test('a build without the channel says so', () async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

@@ -1,0 +1,32 @@
+Executed each exact test against a temporarily removed production fix; each 1 run, 1 failure, exit 1. Source restored in finally.
+exactKernelIdentityRejectsPidReuse: removed startTicks comparison.
+unknownSameUidProcessCannotBeKilled: removed complete same-UID inventory ownership admission.
+manualUnboundStartDoesNotArmColdRestoration: removed matching-profile check.
+unsupportedGateAllowsOnlyAnUnreleasedDrainedWantedManualFallback: removed unreleased requirement.
+arbitraryLaunchAndCredentialPayloadsAreRejectedWithSafeErrors: removed exact request key whitelist.
+snapshotRestoresTheSameDeadlineAndNextDelay: replaced restored next delay with 1000; expected4000 actual1000.
+Restored checkpoint passed31 tests.
+Mutation permitCannotBeWrittenBeforeDurableIdentityCommit exit=1
+Exact test: permitCannotBeWrittenBeforeDurableIdentityCommit: 1 run, 1 failures
+permitCannotBeWrittenBeforeDurableIdentityCommit(io.github.eslamasabry.opencode_mobile.NativeRuntimeOwnershipTest): expected java.lang.IllegalStateException to be thrown, but nothing was thrown
+Mutation schemaVersionRequiresIntOrLongOne exit=1
+Exact test: schemaVersionRequiresIntOrLongOne: 1 run, 1 failures
+schemaVersionRequiresIntOrLongOne(io.github.eslamasabry.opencode_mobile.NativeServerRecipeTest): Invalid recipe was accepted
+Mutation stickyRequiresValidDurableRecipeOwnershipAndBudget exit=1
+Exact test: stickyRequiresValidDurableRecipeOwnershipAndBudget: 1 run, 1 failures
+stickyRequiresValidDurableRecipeOwnershipAndBudget(io.github.eslamasabry.opencode_mobile.NativeRuntimeOwnershipTest): null
+Mutation staleStopCannotCommitOrDrainTheReplacementManualGeneration exit=1
+Exact test: staleStopCannotCommitOrDrainTheReplacementManualGeneration: 1 run, 1 failures
+staleStopCannotCommitOrDrainTheReplacementManualGeneration(io.github.eslamasabry.opencode_mobile.NativeRuntimeOwnershipTest): null
+Mutation denialDrainsOnlyPriorProcessReceiptAndNeverANewerManualStart exit=1
+Exact test: denialDrainsOnlyPriorProcessReceiptAndNeverANewerManualStart: 1 run, 1 failures
+denialDrainsOnlyPriorProcessReceiptAndNeverANewerManualStart(io.github.eslamasabry.opencode_mobile.NativeRuntimeOwnershipTest): null
+Mutation mismatchedLeaderIdentityRefusesSignalsEvenWhenNonceStillMatches exit=1
+Exact test: mismatchedLeaderIdentityRefusesSignalsEvenWhenNonceStillMatches: 1 run, 1 failures
+mismatchedLeaderIdentityRefusesSignalsEvenWhenNonceStillMatches(io.github.eslamasabry.opencode_mobile.NativeRuntimeOwnershipTest): expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown
+Mutation mismatchedRootIdentityRefusesSignalsBeforeSelectingAnyChildren exit=0
+Exact test: mismatchedRootIdentityRefusesSignalsBeforeSelectingAnyChildren: 1 run, 0 failures
+Mutation mismatchedRootIdentityRefusesSignalsBeforeSelectingAnyChildren exit=1
+Exact test: mismatchedRootIdentityRefusesSignalsBeforeSelectingAnyChildren: 1 run, 1 failures
+mismatchedRootIdentityRefusesSignalsBeforeSelectingAnyChildren(io.github.eslamasabry.opencode_mobile.NativeRuntimeOwnershipTest): expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown
+Root-identity red fixture refinement: initial complete-inventory fixture still rejected after root guard removal, so that red control was inconclusive (exit0). Corrected fixture uses server-only drain to isolate root identity refusal; repeated exact mutation exited1, production restored, current40 green exited0. Denial and leader controls exited1 unchanged.

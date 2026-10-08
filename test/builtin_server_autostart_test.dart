@@ -113,7 +113,11 @@ class _FakeLinux extends BuiltinLinux {
   }) async => const BuiltinLinuxRunResult(exitCode: 0, output: '');
 
   @override
-  Future<void> startServer(String script, {int port = 4097}) async {
+  Future<void> startServer(
+    String script, {
+    int port = 4097,
+    BuiltinServerRestoreRecipe? restoreRecipe,
+  }) async {
     starts++;
     events.add('start');
     serverRunning = !serverDies;

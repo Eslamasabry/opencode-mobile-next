@@ -1,0 +1,85 @@
+BB3 pure Kotlin/JUnit only; Android integration uncompiled under HOLD.
+Compiler: kotlinc -J-Xmx256m -J-XX:MaxMetaspaceSize=192m, machine_lock build flock.
+Runner: kotlin -J-Xmx128m, JUnit 4.13.2.
+Initial helpers: OK (27 tests), exit 0.
+Expanded helpers + durable backoff: OK (31 tests), exit 0.
+After six restored exact regression mutations: OK (31 tests), exit 0.
+No Gradle/APK/device/Flutter check ran.
+Current pure helper checkpoint exit=0
+JUnit version 4.13.2
+..................................
+Time: 0.048
+
+OK (34 tests)
+
+Current pure helper checkpoint exit=0
+JUnit version 4.13.2
+..................................
+Time: 0.058
+
+OK (34 tests)
+
+Reproduction: python3 tool/qa/bb3_pure_jvm_check.py
+Only subsequent release/schema mutations: python3 tool/qa/bb3_pure_jvm_check.py permitCannotBeWrittenBeforeDurableIdentityCommit schemaVersionRequiresIntOrLongOne
+Current pure helper checkpoint exit=0
+JUnit version 4.13.2
+....................................
+Time: 0.048
+
+OK (36 tests)
+
+Current pure helper checkpoint exit=0
+JUnit version 4.13.2
+....................................
+Time: 0.047
+
+OK (36 tests)
+
+Current pure helper checkpoint exit=0
+JUnit version 4.13.2
+....................................
+Time: 0.046
+
+OK (36 tests)
+
+Current pure helper checkpoint exit=0
+JUnit version 4.13.2
+....................................
+Time: 0.052
+
+OK (36 tests)
+
+Current pure helper checkpoint exit=0
+JUnit version 4.13.2
+.....................................
+Time: 0.046
+
+OK (37 tests)
+
+Current pure helper checkpoint exit=0
+JUnit version 4.13.2
+.....................................
+Time: 0.046
+
+OK (37 tests)
+
+Current pure helper checkpoint exit=0
+JUnit version 4.13.2
+........................................
+Time: 0.052
+
+OK (40 tests)
+
+Current pure helper checkpoint exit=0
+JUnit version 4.13.2
+........................................
+Time: 0.067
+
+OK (40 tests)
+
+Current pure helper checkpoint exit=0
+JUnit version 4.13.2
+........................................
+Time: 0.066
+
+OK (40 tests)

@@ -82,6 +82,7 @@ class PhoneServerHealing {
     }
     report.invalidate();
     recovery.setProfile(null);
+    await recovery.drainNativeCancellation();
     _ownerStorageFailed = true;
     await BuiltinServerOwner.forPreferences(connection.store.prefs).claim(
       profile.id,
@@ -89,6 +90,16 @@ class PhoneServerHealing {
     );
     _ownerStorageFailed = false;
     _syncProfile();
+    // The native launch snapshots its binding once. Drain migration and binding
+    // before sending the recipe, including a check invalidated by this transfer.
+    await recovery.check(profile);
+    if (recovery.value.profileId != profile.id) await recovery.check(profile);
+    if (_disposed ||
+        !connection.isProfileReadable(profile.id) ||
+        !identical(_owner, profile) ||
+        connection.store.prefs.getString(ownerKey) != profile.id) {
+      throw StateError('The server profile is unavailable.');
+    }
   }
 
   void _syncProfile() {
@@ -218,7 +229,11 @@ class PhoneServerHealing {
       // stops the app's own tracked process tree first (BuiltinLinux.kt
       // launchService → removeService), never anything found by name.
       final failure = await starter.start(profile);
-      if (failure == null || !failure.retryable || tries == 0) break;
+      if (failure == null) {
+        await recovery.check(profile);
+        break;
+      }
+      if (!failure.retryable || tries == 0) break;
       await Future<void>.delayed(launchRetryDelay);
     }
   }
@@ -258,6 +273,10 @@ class PhoneServerHealing {
     if (!mayAct() || !status.installed || !status.serverRestartWanted) {
       return false;
     }
+    // The native authority owns every unattended dispatch and its budget.
+    // Opening the app cannot turn exhaustion or a pending retry into a manual
+    // start. A live server that stays unhealthy needs the person's Start.
+    if (status.serverRecoveryAuthority) return false;
     if (!status.serverRunning) return true;
     // Running is not answering: a process can hold the port and never
     // accept our password (started with another password, hung while

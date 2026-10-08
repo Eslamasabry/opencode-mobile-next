@@ -1,0 +1,5 @@
+Isolated NativeBootIdentityTest: tests=9 failures=0 errors=0; Gradle success2m44s.
+Exact owned processes remaining: none; no signals issued.
+Historical target8e0 SHA256 unchanged.
+No helper integration, APK build or device actions.
+Actual device capability proves current boot identity succeeds. Parent explicitly superseded fallback work; no removed-fix red/restored run performed.

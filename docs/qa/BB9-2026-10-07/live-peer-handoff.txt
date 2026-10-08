@@ -1,0 +1,6 @@
+Frozen helper API withCurrentRuntimePeers(ticket, peers, inventory): InstallerTicket.
+Returns ephemeral peer exclusions; original durable ticket unchanged. Integration must bind exact current Process/nonce and use Linux monitor then installerGuard; never persist the returned peer exclusions or pass them to cold recovery.
+Newly admitted peers require present PID/start proof; current kernel parent/group/session replaces caller shape. Reject installer root/leader/observations, descendant closure, installer SID, reused observation/existing-other PID, prepared admission, bounds and duplicate inventory.
+Subsequent drainPlan retains complete inventory and Android reader collision guards.
+Initial/restored focused pure JVM: 28 tests PASS each. Seven exact removed-fix controls failed 1/1, expected exit 1, all compiles exit 0.
+All checks machine_lock test; compiler256MB/metaspace192MB runner128MB. Android integration/build/device qualification pending root.

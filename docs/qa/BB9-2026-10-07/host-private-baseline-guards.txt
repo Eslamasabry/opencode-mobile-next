@@ -1,0 +1,2 @@
+PASS one_specific_pre_fixture_recipe_refusal_retries_once
+PASS unrelated_refusal_propagates_without_retry
