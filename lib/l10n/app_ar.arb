@@ -5272,7 +5272,7 @@
   "activityAgentNeedsInput": "{agent} يحتاج إلى إدخال",
   "agentsSignInOpenPage": "افتح صفحة تسجيل الدخول",
   "agentsSignInCopyCode": "انسخ الرمز {code}",
-  "cardsProblemNotQualifiedFor": "لم يُتحقق بعد من أن {agents} يعمل مع البطاقات.",
+  "cardsProblemNotQualifiedFor": "{count, plural, =1{لم يُتحقق بعد من أن {agents} يعمل مع البطاقات.} =2{لم يُتحقق بعد من أن {agents} يعملان مع البطاقات.} other{لم يُتحقق بعد من أن {agents} تعمل مع البطاقات.}}",
   "cardsProblemRegistrationFailedFor": "تعذّر إعلام {agents} بالبطاقات.",
   "cardsProblemVerificationFailedFor": "تم تثبيت البطاقات لـ {agents} لكنها لم تجتز الفحص.",
   "cardsProblemRemovalFailedFor": "تعذّرت إزالة البطاقات بالكامل من {agents}. حاول مرة أخرى بعد إعادة التشغيل.",
@@ -8283,5 +8283,12 @@
   "pickerFreeOnlyNote": "يتوفر نموذج OpenCode المجاني فقط، وهو أبطأ.",
   "pickerProviderReady": "{name} جاهز. تظهر نماذجه في القائمة.",
   "pickerProviderNotLoaded": "حُفظ {name}، لكن الخادم لم يحمّله بعد.",
-  "teamUiAddAddressHint": "http://100.x.x.x:8373"
+  "teamUiAddAddressHint": "http://100.x.x.x:8373",
+  "connectionSwitchingTo": "جارٍ التبديل إلى {target}…",
+  "shellServerSwitching": "جارٍ التبديل…",
+  "agentsStateNotCertified": "لم يُعتمد على هذا الإصدار بعد",
+  "agentsChipSignIn": "تسجيل الدخول",
+  "agentsChipResume": "استئناف",
+  "agentsChipCheck": "فحص",
+  "agentNamesPair": "{first} و {second}"
 }

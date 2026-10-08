@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../app_iconography.dart';
 import 'kit_bidi.dart';
 import 'kit_buttons.dart';
+import 'kit_chip.dart';
 import 'kit_divider.dart';
 import 'kit_menu.dart';
 import 'kit_motion.dart';
@@ -61,10 +62,16 @@ class KitRow extends StatelessWidget {
     this.disabledReason,
     this.selected = false,
     this.action,
+    this.chip,
     this.titleAccent = false,
   }) : assert(
          action == null || trailing == null,
          'KitRow: the action takes the trailing slot; pass one or the other',
+       ),
+       assert(
+         chip == null || (trailing == null && action == null),
+         'KitRow: the chip takes the trailing slot; pass one of chip, action '
+         'or trailing',
        ),
        capability = null,
        enable = null,
@@ -85,13 +92,19 @@ class KitRow extends StatelessWidget {
     required this.title,
     required String reason,
     this.enable,
+    this.chip,
     this.capability,
     this.leading,
     this.server,
     this.titleKey,
     this.supportingKey,
     this.padding,
-  }) : supporting = null,
+  }) : assert(
+         enable == null || chip == null,
+         'KitRow.unavailable: pass the enable flow as a button or as a chip, '
+         'not both',
+       ),
+       supporting = null,
        disabledReason = reason,
        enabled = false,
        trailing = null,
@@ -197,6 +210,22 @@ class KitRow extends StatelessWidget {
   /// slot, so a row with an action has no [trailing].
   final KitAction? action;
 
+  /// The row's one act as a short chip ("Install", "Sign in") where the
+  /// title already names its target: every chip of a list starts at one
+  /// edge of a shared trailing column ([chipColumnWidth]), so a list of
+  /// acts reads as one column instead of ragged button labels of different
+  /// widths (owner, 2026-10-08). Screen readers hear
+  /// [KitRowChip.semanticsLabel], which names the target ("Install Codex").
+  /// From 1.3× text it moves under the supporting line, like [action]. On
+  /// [KitRow.unavailable] it is the way forward, and a tap anywhere on the
+  /// row runs it.
+  final KitRowChip? chip;
+
+  /// The trailing column a [chip] starts in: wide enough for the short act
+  /// words in both languages ("Install", "تسجيل الدخول"), so their start
+  /// edges line up down a list.
+  static const chipColumnWidth = 112.0;
+
   /// Only on [KitRow.unavailable]: the capabilities.json id ("voice.model").
   final String? capability;
 
@@ -293,13 +322,16 @@ class KitRow extends StatelessWidget {
     // The unavailable row's enable flow, or an enabled row's own action:
     // one tertiary button, trailing, under the text from 1.3× text.
     final enable = _unavailable ? this.enable : action;
-    final enableButton = enable == null
-        ? null
-        : KitButton.fromAction(
+    final chip = this.chip;
+    final Widget? enableButton = enable != null
+        ? KitButton.fromAction(
             enable,
             role: KitButtonRole.tertiary,
             expand: false,
-          );
+          )
+        : chip != null
+        ? _KitRowChipSlot(chip: chip)
+        : null;
     // From 1.3× text the enable action moves under the reason, so the
     // reason keeps the row's width instead of sharing it (A11Y-8).
     final enableBelow = enableButton != null && textScale >= 1.3;
@@ -414,7 +446,7 @@ class KitRow extends StatelessWidget {
   /// enabled: false with the reason as the hint; a tap anywhere on it runs
   /// [enable], since the whole row is the target.
   Widget _unavailableRow(Widget content) {
-    final run = enable?.onPressed;
+    final run = enable?.onPressed ?? chip?.onPressed;
     return Semantics(
       container: true,
       enabled: false,
@@ -473,6 +505,64 @@ class KitRow extends StatelessWidget {
       child: content,
     );
   }
+}
+
+/// A [KitRow]'s one act as a short chip (see [KitRow.chip]): the words on
+/// the chip, the target screen readers hear, and what a tap does.
+@immutable
+class KitRowChip {
+  const KitRowChip({
+    required this.label,
+    required this.semanticsLabel,
+    required this.onPressed,
+    this.key,
+  });
+
+  /// The act alone, from the caller's ARB: "Install", "Sign in".
+  final String label;
+
+  /// The act with its target (COPY-8, actions name their target): "Install
+  /// Codex". The chip's semantic label and tooltip-free name.
+  final String semanticsLabel;
+  final VoidCallback onPressed;
+
+  /// The chip's key, for tests.
+  final Key? key;
+}
+
+/// [KitRow.chip] in its column: at least [KitRow.chipColumnWidth] wide with
+/// the chip at the start, so chips of different widths share a start edge.
+/// One button node named with the target.
+class _KitRowChipSlot extends StatelessWidget {
+  const _KitRowChipSlot({required this.chip});
+
+  final KitRowChip chip;
+
+  @override
+  Widget build(BuildContext context) => ConstrainedBox(
+    constraints: const BoxConstraints(minWidth: KitRow.chipColumnWidth),
+    // A Row at its minimum size still honours the column's minimum width,
+    // with the chip at its start.
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: Semantics(
+            container: true,
+            button: true,
+            label: chip.semanticsLabel,
+            onTap: chip.onPressed,
+            excludeSemantics: true,
+            child: KitChip.action(
+              key: chip.key,
+              label: chip.label,
+              onPressed: chip.onPressed,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 /// Tells [KitRow.icon] tiles inside a disabled or unavailable row to paint

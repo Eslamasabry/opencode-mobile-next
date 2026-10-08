@@ -27726,8 +27726,15 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String cardsProblemNotQualifiedFor(String agents) {
-    return 'لم يُتحقق بعد من أن $agents يعمل مع البطاقات.';
+  String cardsProblemNotQualifiedFor(int count, String agents) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'لم يُتحقق بعد من أن $agents تعمل مع البطاقات.',
+      two: 'لم يُتحقق بعد من أن $agents يعملان مع البطاقات.',
+      one: 'لم يُتحقق بعد من أن $agents يعمل مع البطاقات.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -27743,5 +27750,30 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String cardsProblemRemovalFailedFor(String agents) {
     return 'تعذّرت إزالة البطاقات بالكامل من $agents. حاول مرة أخرى بعد إعادة التشغيل.';
+  }
+
+  @override
+  String connectionSwitchingTo(String target) {
+    return 'جارٍ التبديل إلى $target…';
+  }
+
+  @override
+  String get shellServerSwitching => 'جارٍ التبديل…';
+
+  @override
+  String get agentsStateNotCertified => 'لم يُعتمد على هذا الإصدار بعد';
+
+  @override
+  String get agentsChipSignIn => 'تسجيل الدخول';
+
+  @override
+  String get agentsChipResume => 'استئناف';
+
+  @override
+  String get agentsChipCheck => 'فحص';
+
+  @override
+  String agentNamesPair(String first, String second) {
+    return '$first و $second';
   }
 }

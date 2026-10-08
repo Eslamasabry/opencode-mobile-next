@@ -33042,13 +33042,17 @@
       }
     }
   },
-  "cardsProblemNotQualifiedFor": "{agents} hasn't been checked to work with cards yet.",
+  "cardsProblemNotQualifiedFor": "{count, plural, =1{{agents} hasn't been checked to work with cards yet.} other{{agents} haven't been checked to work with cards yet.}}",
   "@cardsProblemNotQualifiedFor": {
-    "description": "Cards setting: the named agents are not qualified for cards; {agents} is one or more product names",
+    "description": "Cards setting: the named agents are not qualified for cards; {agents} is one or more product names already joined as a list, {count} how many",
     "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      },
       "agents": {
         "type": "String",
-        "example": "OpenCode"
+        "example": "Claude Code and OpenCode 2"
       }
     }
   },
@@ -33079,6 +33083,50 @@
       "agents": {
         "type": "String",
         "example": "OpenCode"
+      }
+    }
+  },
+  "connectionSwitchingTo": "Switching to {target}…",
+  "@connectionSwitchingTo": {
+    "description": "Status line while the app switches this phone's own server to another OpenCode version; names the version being switched to, never the one being left",
+    "placeholders": {
+      "target": {
+        "type": "String",
+        "example": "OpenCode 1"
+      }
+    }
+  },
+  "shellServerSwitching": "Switching…",
+  "@shellServerSwitching": {
+    "description": "The status word beside the server name in the shell's server pill while this phone switches OpenCode versions"
+  },
+  "agentsStateNotCertified": "Not certified on this version yet",
+  "@agentsStateNotCertified": {
+    "description": "Agent picker: a ready agent whose installed version has not passed the app's certification checks, so it cannot be chosen yet"
+  },
+  "agentsChipSignIn": "Sign in",
+  "@agentsChipSignIn": {
+    "description": "Agent rows: the short Sign in chip; the row title names the agent and screen readers hear agentsSignInAction"
+  },
+  "agentsChipResume": "Resume",
+  "@agentsChipResume": {
+    "description": "Agent rows: the short Resume chip; the row title names the agent and screen readers hear agentsResumeAction"
+  },
+  "agentsChipCheck": "Check",
+  "@agentsChipCheck": {
+    "description": "Agent rows: the short phone-check chip; the row title names the agent and screen readers hear agentsCheckAction"
+  },
+  "agentNamesPair": "{first} and {second}",
+  "@agentNamesPair": {
+    "description": "Joins the last two agent names of a list: 'Claude Code and OpenCode 2'; {first} may itself be a comma list",
+    "placeholders": {
+      "first": {
+        "type": "String",
+        "example": "Claude Code"
+      },
+      "second": {
+        "type": "String",
+        "example": "OpenCode 2"
       }
     }
   }

@@ -345,6 +345,7 @@ class _KitChecklistState extends State<KitChecklist> {
             index: i,
             total: steps.length,
             slow: slow && i == current,
+            since: widget.since,
           ),
       ],
     );
@@ -475,6 +476,7 @@ class _StepRow extends StatelessWidget {
     required this.index,
     required this.total,
     required this.slow,
+    this.since,
   });
 
   final KitStep step;
@@ -482,14 +484,33 @@ class _StepRow extends StatelessWidget {
   final int total;
   final bool slow;
 
+  /// When the checklist's wait began: a slow working step counts from it.
+  final DateTime? since;
+
   @override
   Widget build(BuildContext context) {
+    final working = step.state == KitMarkState.working && !step.paused;
+    final since = this.since;
+    if (!slow || !working || since == null) return _row(context, null);
+    // The slow line counts on ("Still waiting after 23 s"): a number that
+    // stood at the escalation's 8 s for half a minute read as stuck. Only
+    // this row ticks; the live region keeps its one escalation.
+    return KitSince(
+      since: since,
+      ticks: KitSinceTicks.seconds,
+      builder: (context, status) => _row(context, status.elapsed),
+    );
+  }
+
+  Widget _row(BuildContext context, Duration? waited) {
     final tokens = KitTokens.of(context);
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final person = step._needsPerson;
     final working = step.state == KitMarkState.working && !step.paused;
     final supportingText = slow && working
-        ? KitSince.slowLabel(context)
+        ? (waited == null
+              ? KitSince.slowLabel(context)
+              : KitSince.slowLabelAt(context, waited))
         : step.supporting;
     final InlineSpan? supporting = person
         ? TextSpan(

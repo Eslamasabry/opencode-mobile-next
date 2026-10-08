@@ -57,6 +57,25 @@ final class AgentCertificationMatrix {
     );
   }
 
+  /// Whether the version of [agentId] this app installs (the catalog pin)
+  /// is certified for chat: the matrix has its row at exactly that agent
+  /// version, and both the install and the plain-prompt smoke cell passed
+  /// with evidence. This is the agent picker's gate ("Not certified on this
+  /// version yet"); runtime capabilities still come from [capabilitiesFor].
+  /// The matrix's full rule (every cell pass) is stricter and no agent meets
+  /// it yet, so it would hide the one working agent.
+  bool certifiedForChat(String agentId) {
+    final id = _canonicalId(agentId);
+    final record = _records[id];
+    final pinned = AgentCatalog.builtIn.byId(id)?.recipe?.version;
+    return record != null &&
+        pinned != null &&
+        record.agentVersion == pinned &&
+        record.passed.containsAll(_chatCells);
+  }
+
+  static const _chatCells = {'install', 'smoke'};
+
   // FQ1 names the OpenCode 1 catalog entry `opencode`; allow only this alias.
   static String _canonicalId(String id) => id == 'opencode1' ? 'opencode' : id;
 }

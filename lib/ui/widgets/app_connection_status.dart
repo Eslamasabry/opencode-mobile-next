@@ -11,6 +11,7 @@ import '../kit/kit.dart';
 import 'app_exit_notice.dart';
 import 'connection_status_banner.dart';
 import 'phone_server_restart.dart';
+import 'runtime_switch_status.dart';
 import 'thermal_notice.dart';
 
 /// App conditions live above the navigator, so every route uses one source
@@ -37,7 +38,7 @@ class AppConnectionStatusScope extends ConsumerWidget {
     return ValueListenableBuilder<ThermalGuard?>(
       valueListenable: thermal,
       builder: (context, guard, _) => ListenableBuilder(
-        listenable: Listenable.merge([controller, recovery, ?guard]),
+        listenable: Listenable.merge([controller, recovery, builtin, ?guard]),
         builder: (context, _) {
           final serverBack =
               controller.isConnected &&
@@ -56,6 +57,7 @@ class AppConnectionStatusScope extends ConsumerWidget {
                 controller,
                 serverOnThisPhone: phone.onThisPhone,
                 actionContext: actionContext,
+                switchingTo: phoneRuntimeSwitchTarget(controller, builtin),
                 onRestartServer: phone.restart == null
                     ? null
                     : () async {
