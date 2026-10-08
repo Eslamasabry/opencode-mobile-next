@@ -86,7 +86,20 @@ class Ports:
         raw=self.d.adb('shell','cat',path,timeout=12)
         if len(raw)>2*1024*1024: raise RuntimeError('ui_snapshot_too_large')
         return ET.fromstring(raw).findall('.//node')
-    def text(self, node): return self.d.text(node)
+    def text(self, node):
+        text=self.d.text(node).replace('\u2068','').replace('\u2069','')
+        # Current chips show the act alone; their accessibility label names
+        # the target. Only this driver's exact target can supply that label.
+        if hasattr(node,'get'):
+            description=(node.get('content-desc') or '').replace('\u2068','').replace('\u2069','')
+            scoped={'Install':'Install '+self.name,'Sign in':'Sign in to '+self.name,
+                    'Check':'Check '+self.name}
+            if scoped.get(text)==description:
+                return description
+        return text
+    def unique_action(self, nodes, labels):
+        found=[node for node in nodes if self.text(node) in labels]
+        return found[0] if len(found)==1 else None
     def tap_node(self, node): return self.d.tap_node(node)
     def back(self): self.d.adb('shell','input','keyevent','4'); time.sleep(.4)
     def capture_launch_rejection(self):
@@ -119,30 +132,63 @@ class Ports:
     def tap_install(self, agent_id):
         if agent_id != self.agent_id: raise RuntimeError('target_mismatch')
         self.d.launch_agents()
-        self.d.tap('Install '+self.name)
-        self.d.tap('Install '+self.name)
+        # First open the target's setup sheet, then dispatch its own install.
+        # Never tap an unscoped Install chip or reuse a list-frame coordinate.
+        for _ in range(2):
+            action=self.unique_action(self.ui(),{'Install '+self.name})
+            if action is None: raise RuntimeError('target_install_action_missing')
+            self.tap_node(action)
     def storage_guidance_visible(self):
         return any(STORAGE_COPY in self.text(node).splitlines() for node in self.ui())
     def app_remove(self, agent_id, name):
         if agent_id != self.agent_id or name != self.name: raise RuntimeError('target_mismatch')
         self.d.launch_agents()
         exact='Remove '+name
-        found=[node for node in self.ui() if self.text(node)==exact]
-        if not found: return False
-        self.tap_node(found[-1])
+        nodes=self.ui()
+        if sum(self.text(node)==exact for node in nodes)>1: return False
+        action=self.unique_action(nodes,{exact})
+        if action is None:
+            # Removal is inside the target's own setup/account sheet. These
+            # actions enter that sheet; they do not start sign-in or install.
+            inspection=self.unique_action(nodes,{'Sign in to '+name,'Install '+name})
+            if inspection is None:
+                # Ready account rows open their sheet directly. Require an
+                # explicit clickable row with the target name, never its chip
+                # or another account's row.
+                other_names={value['name'] for key,value in self.metadata.items()
+                             if key!=agent_id} | {'Claude Code'}
+                rows=[node for node in nodes if hasattr(node,'get') and
+                      node.get('clickable')=='true' and name in self.text(node).splitlines() and
+                      not other_names.intersection(self.text(node).splitlines())]
+                inspection=rows[0] if len(rows)==1 else None
+            if inspection is None: return False
+            self.tap_node(inspection)
+            action=self.unique_action(self.ui(),{exact})
+            if action is None: return False
+        self.tap_node(action)
         nodes=self.ui()
         labels={self.text(node) for node in nodes}
-        confirmation='Remove '+name+' from this phone?'
-        explanation='This removes the installed agent. Your accounts and conversations stay. You can install it again.'
+        confirmation='Remove '+name+'?'
+        explanation='This removes the installed agent from this phone. Your accounts and conversations stay, and you can install it again.'
         if confirmation not in labels or explanation not in labels: return False
-        buttons=[node for node in nodes if self.text(node)=='Remove']
-        if len(buttons)!=1: return False
-        self.tap_node(buttons[0]); return True
+        confirm=self.unique_action(nodes,{exact})
+        if confirm is None: return False
+        self.tap_node(confirm); return True
     def target_not_installed_visible(self, agent_id):
         if agent_id != self.agent_id: return False
+        nodes=self.ui()
+        # Success is displayed in the target sheet. Close only its confirmed
+        # success frame before requiring fresh list truth.
+        labels={self.text(node) for node in nodes}
+        if any(label.startswith(self.name+' removed. Freed ') or
+               label==self.name+' is already removed.' for label in labels):
+            done=self.unique_action(nodes,{'Done'})
+            if done is None: return False
+            self.tap_node(done)
+            nodes=self.ui()
         return any(self.name in self.text(node).splitlines() and
                    any(line.startswith('Not installed') for line in self.text(node).splitlines())
-                   for node in self.ui())
+                   for node in nodes)
     def install_if_absent(self):
         # Real storage check precedes every install dispatch.
         if self.available_storage_bytes()<800000000: raise RuntimeError('insufficient_real_storage')
