@@ -71,7 +71,8 @@ class PauseTileService : TileService() {
         val tile = qsTile ?: return
         val running = BackgroundConnectionService.active
         val paused = !running && LivePauseReceiver.isPausedByUser(this)
-        val subtitle = getString(
+        val subtitle = NativeStrings.get(
+            this,
             when {
                 running -> R.string.pause_tile_on
                 paused -> R.string.pause_tile_paused
@@ -85,10 +86,10 @@ class PauseTileService : TileService() {
             else -> Tile.STATE_UNAVAILABLE
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            tile.label = getString(R.string.pause_tile_label)
+            tile.label = NativeStrings.get(this, R.string.pause_tile_label)
             tile.subtitle = subtitle
         } else {
-            tile.label = getString(R.string.pause_tile_label_with_state, subtitle)
+            tile.label = NativeStrings.get(this, R.string.pause_tile_label_with_state, subtitle)
         }
         tile.updateTile()
     }

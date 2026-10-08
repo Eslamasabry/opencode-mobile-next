@@ -49,17 +49,17 @@ class AttentionTileService : TileService() {
         tile.icon = Icon.createWithResource(this, R.drawable.ic_launcher_monochrome)
         val subtitle = when {
             count == null -> null
-            count == 0 -> getString(R.string.tile_all_clear)
-            else -> resources.getQuantityString(R.plurals.tile_need_you, count, count)
+            count == 0 -> NativeStrings.get(this, R.string.tile_all_clear)
+            else -> NativeStrings.quantity(this, R.plurals.tile_need_you, count, count)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            tile.label = getString(R.string.tile_label)
+            tile.label = NativeStrings.get(this, R.string.tile_label)
             tile.subtitle = subtitle
         } else {
             tile.label = if (subtitle == null) {
-                getString(R.string.tile_label)
+                NativeStrings.get(this, R.string.tile_label)
             } else {
-                getString(R.string.tile_label_with_count, subtitle)
+                NativeStrings.get(this, R.string.tile_label_with_count, subtitle)
             }
         }
         tile.state = if (count != null && count > 0) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE

@@ -629,6 +629,18 @@ class BackgroundLiveController extends ChangeNotifier
     }
   }
 
+  /// Rebuilds native copy after the saved app language changes. This bypasses
+  /// status equality suppression, and does not enable any background service.
+  Future<void> refreshNativeLocale() async {
+    if (!platformCapabilities.supportsBackgroundService) return;
+    try {
+      await _invoke('refreshNativeLocale');
+    } catch (_) {
+      // Locale saving still succeeds on desktop or without an Android runner.
+      // Native renders read the saved preference again on the next update.
+    }
+  }
+
   LiveStatus? _lastPublishedLiveStatus;
   LiveStatus? _pendingLiveStatus;
   Timer? _liveStatusTimer;

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/state/app_locale.dart';
 import 'package:opencode_mobile/state/connection.dart';
@@ -41,6 +42,36 @@ void main() {
     );
   });
   tearDown(() => controller.dispose());
+
+  test(
+    'saved language refreshes native notifications after acknowledged write',
+    () async {
+      final calls = <String?>[];
+      const channel = MethodChannel('oc/background');
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            if (call.method == 'refreshNativeLocale') {
+              calls.add(
+                (await disk.getAll())['flutter.oc.appLocale'] as String?,
+              );
+            }
+            return <String, dynamic>{};
+          });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null),
+      );
+      await controller.setAppLocale(const Locale('ar'));
+      await controller.setAppLocale(null);
+      expect(calls, ['ar', null]);
+      disk.refuse = true;
+      await expectLater(
+        controller.setAppLocale(const Locale('en')),
+        throwsA(isA<AppLocaleSaveException>()),
+      );
+      expect(calls, ['ar', null]);
+    },
+  );
 
   test(
     'Arabic override survives new controller and system removes override',

@@ -1,6 +1,7 @@
 package android.content
 import android.app.NotificationManager
 open class Context {
+    var selectedLanguage = "en"
     val applicationContext: Context get() = this
     fun <T> getSystemService(type: Class<T>): T? = type.cast(NotificationManager.instance)
     fun startForegroundService(intent: Intent) { if (denyDispatch) throw SecurityException("policy") }

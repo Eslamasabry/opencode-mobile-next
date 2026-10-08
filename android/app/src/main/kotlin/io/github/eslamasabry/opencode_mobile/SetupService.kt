@@ -30,7 +30,8 @@ import android.os.IBinder
 class SetupService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         try {
-            val channel = intent?.getStringExtra(EXTRA_CHANNEL) ?: "Setup"
+            val channel = intent?.getStringExtra(EXTRA_CHANNEL)
+                ?: NativeStrings.get(this, R.string.native_setup_channel)
             val title = intent?.getStringExtra(EXTRA_TITLE) ?: ""
             val text = intent?.getStringExtra(EXTRA_TEXT) ?: ""
             createChannel(this, channel)

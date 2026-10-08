@@ -72,6 +72,8 @@ class SessionsWidgetProvider : AppWidgetProvider() {
 
         private fun buildViews(context: Context): RemoteViews {
             val views = RemoteViews(context.packageName, R.layout.widget_sessions)
+            views.setTextViewText(R.id.widget_new, NativeStrings.get(context, R.string.widget_new_session))
+            views.setTextViewText(R.id.widget_empty, NativeStrings.get(context, R.string.widget_empty))
 
             // Header and empty-state taps open the app normally.
             val open = PendingIntent.getActivity(
@@ -94,7 +96,8 @@ class SessionsWidgetProvider : AppWidgetProvider() {
             if (attention != null && attention > 0) {
                 views.setTextViewText(
                     R.id.widget_attention,
-                    context.resources.getQuantityString(
+                    NativeStrings.quantity(
+                        context,
                         R.plurals.tile_need_you,
                         attention,
                         attention
@@ -148,11 +151,11 @@ class SessionsWidgetProvider : AppWidgetProvider() {
                 views.setViewVisibility(rowIDs[index], View.VISIBLE)
                 views.setTextViewText(
                     titleIDs[index],
-                    session.optString("title", "Untitled conversation")
+                    session.optString("title", NativeStrings.get(context, R.string.shortcut_session_untitled))
                 )
                 views.setTextViewText(
                     timeIDs[index],
-                    relativeLabel(session.optLong("updatedAt", 0L))
+                    relativeLabel(context, session.optLong("updatedAt", 0L))
                 )
                 views.setImageViewResource(
                     dotIDs[index],
@@ -232,15 +235,15 @@ class SessionsWidgetProvider : AppWidgetProvider() {
             }
         }
 
-        private fun relativeLabel(updatedAt: Long): String {
+        private fun relativeLabel(context: Context, updatedAt: Long): String {
             if (updatedAt <= 0L) return ""
             val delta = System.currentTimeMillis() - updatedAt
             val minutes = delta / 60_000
             return when {
-                minutes < 1 -> "now"
-                minutes < 60 -> "${minutes}m"
-                minutes < 60 * 24 -> "${minutes / 60}h"
-                else -> "${minutes / (60 * 24)}d"
+                minutes < 1 -> NativeStrings.get(context, R.string.native_widget_now)
+                minutes < 60 -> NativeStrings.get(context, R.string.native_widget_minutes, minutes)
+                minutes < 60 * 24 -> NativeStrings.get(context, R.string.native_widget_hours, minutes / 60)
+                else -> NativeStrings.get(context, R.string.native_widget_days, minutes / (60 * 24))
             }
         }
     }

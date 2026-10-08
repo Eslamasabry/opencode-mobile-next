@@ -87,10 +87,10 @@ class BackgroundConnectionService : Service() {
         val manager = getSystemService(NotificationManager::class.java)
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "Live coding connection",
+            NativeStrings.get(this, R.string.native_live_channel),
             NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Shown while OpenCode keeps a server session live in the background"
+            description = NativeStrings.get(this@BackgroundConnectionService, R.string.native_live_description)
             setShowBadge(false)
         }
         manager.createNotificationChannel(channel)
@@ -164,6 +164,13 @@ class BackgroundConnectionService : Service() {
             return true
         }
 
+        /** Locale changes refresh fixed copy even when the session status is unchanged. */
+        fun refreshLocale(context: Context) {
+            if (!active) return
+            val manager = context.getSystemService(NotificationManager::class.java)
+            manager.notify(NOTIFICATION_ID, buildLiveNotification(context, liveStatus))
+        }
+
         /** Tells Dart the service stopped so the persisted preference and the
          *  settings switch follow the service rather than outliving it. */
         fun notifyDartStopped(reason: String, pause: Map<String, Any?>? = null) {
@@ -203,13 +210,19 @@ class BackgroundConnectionService : Service() {
             )
             val running = status.runningCount
             val pending = status.pendingCount
-            val title = status.title?.let { "OpenCode · $it" } ?: "OpenCode is connected"
+            val title = status.title?.let {
+                NativeStrings.get(context, R.string.native_live_named_title, it)
+            } ?: NativeStrings.get(context, R.string.native_live_title)
             val text = status.detail ?: when {
                 running > 0 && pending > 0 ->
-                    "${plural(running, "session")} running · ${plural(pending, "need")} you"
-                running > 0 -> "${plural(running, "session")} running"
-                pending > 0 -> "${plural(pending, "request")} ${if (pending == 1) "needs" else "need"} you"
-                else -> "Connected, nothing running"
+                    NativeStrings.get(
+                        context, R.string.native_live_counts,
+                        NativeStrings.quantity(context, R.plurals.native_live_running_sessions, running, running),
+                        NativeStrings.quantity(context, R.plurals.native_live_pending_requests, pending, pending)
+                    )
+                running > 0 -> NativeStrings.quantity(context, R.plurals.native_live_running_sessions, running, running)
+                pending > 0 -> NativeStrings.quantity(context, R.plurals.native_live_pending_requests, pending, pending)
+                else -> NativeStrings.get(context, R.string.native_live_idle)
             }
             val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 Notification.Builder(context, CHANNEL_ID)
@@ -232,7 +245,7 @@ class BackgroundConnectionService : Service() {
                 .addAction(
                     Notification.Action.Builder(
                         Icon.createWithResource(context, R.mipmap.ic_launcher),
-                        "Pause background",
+                        NativeStrings.get(context, R.string.native_pause_background),
                         pauseIntent
                     ).build()
                 )
@@ -245,18 +258,14 @@ class BackgroundConnectionService : Service() {
                 // pinned atop the shade while something is actually running.
                 builder.setRequestPromotedOngoing(true)
                 val chip = when {
-                    running > 0 -> "$running running"
-                    pending > 0 -> "$pending need you"
+                    running > 0 -> NativeStrings.quantity(context, R.plurals.native_chip_running, running, running)
+                    pending > 0 -> NativeStrings.quantity(context, R.plurals.native_chip_pending, pending, pending)
                     else -> null
                 }
                 builder.setShortCriticalText(chip)
             }
             return builder.build()
         }
-
-        private fun plural(count: Int, noun: String): String =
-            if (noun == "need") count.toString()
-            else "$count $noun${if (count == 1) "" else "s"}"
 
         fun start(context: Context) {
             val intent = Intent(context, BackgroundConnectionService::class.java)
@@ -298,39 +307,40 @@ class BackgroundConnectionService : Service() {
                 return false
             }
 
+            val agent = agentName.takeIf { it.matches(Regex("^[A-Za-z0-9 .-]{1,32}$")) } ?: "OpenCode"
             val content = when (kind) {
                 "quota" -> CodingAlertContent(
                     channelID = STATUS_CHANNEL_ID,
-                    title = "Provider usage reached your threshold",
-                    text = "Open to check current usage.",
+                    title = NativeStrings.get(context, R.string.native_alert_quota_title),
+                    text = NativeStrings.get(context, R.string.native_alert_quota_body),
                     category = Notification.CATEGORY_STATUS,
                     priority = Notification.PRIORITY_DEFAULT
                 )
                 "permission" -> CodingAlertContent(
                     channelID = ACTION_CHANNEL_ID,
-                    title = "OpenCode needs permission",
-                    text = "Tap to review the pending request.",
+                    title = NativeStrings.get(context, R.string.native_alert_permission_title, agent),
+                    text = NativeStrings.get(context, R.string.native_alert_permission_body),
                     category = Notification.CATEGORY_RECOMMENDATION,
                     priority = Notification.PRIORITY_HIGH
                 )
                 "question" -> CodingAlertContent(
                     channelID = ACTION_CHANNEL_ID,
-                    title = "OpenCode needs your input",
-                    text = "Tap to answer the pending question.",
+                    title = NativeStrings.get(context, R.string.native_alert_question_title, agent),
+                    text = NativeStrings.get(context, R.string.native_alert_question_body),
                     category = Notification.CATEGORY_RECOMMENDATION,
                     priority = Notification.PRIORITY_HIGH
                 )
                 "complete" -> CodingAlertContent(
                     channelID = STATUS_CHANNEL_ID,
-                    title = "OpenCode finished",
-                    text = "Tap to review the latest result.",
+                    title = NativeStrings.get(context, R.string.native_alert_complete_title, agent),
+                    text = NativeStrings.get(context, R.string.native_alert_complete_body),
                     category = Notification.CATEGORY_STATUS,
                     priority = Notification.PRIORITY_DEFAULT
                 )
                 "error" -> CodingAlertContent(
                     channelID = ACTION_CHANNEL_ID,
-                    title = "OpenCode session needs attention",
-                    text = "Tap to review the session error.",
+                    title = NativeStrings.get(context, R.string.native_alert_error_title, agent),
+                    text = NativeStrings.get(context, R.string.native_alert_error_body),
                     category = Notification.CATEGORY_ERROR,
                     priority = Notification.PRIORITY_HIGH
                 )
@@ -339,8 +349,8 @@ class BackgroundConnectionService : Service() {
                 // the session is named only inside the app.
                 "checkin" -> CodingAlertContent(
                     channelID = STATUS_CHANNEL_ID,
-                    title = "OpenCode is still working",
-                    text = "Tap to check in on the session.",
+                    title = NativeStrings.get(context, R.string.native_alert_checkin_title, agent),
+                    text = NativeStrings.get(context, R.string.native_alert_checkin_body),
                     category = Notification.CATEGORY_STATUS,
                     priority = Notification.PRIORITY_DEFAULT
                 )
@@ -350,29 +360,29 @@ class BackgroundConnectionService : Service() {
                 // the saved server's name.
                 "team_decision" -> CodingAlertContent(
                     channelID = ACTION_CHANNEL_ID,
-                    title = "AI Team needs a decision",
-                    text = "Tap to answer it in the app.",
+                    title = NativeStrings.get(context, R.string.native_team_decision_title),
+                    text = NativeStrings.get(context, R.string.native_team_decision_body),
                     category = Notification.CATEGORY_RECOMMENDATION,
                     priority = Notification.PRIORITY_HIGH
                 )
                 "team_run_failed" -> CodingAlertContent(
                     channelID = ACTION_CHANNEL_ID,
-                    title = "A run failed",
-                    text = "Tap to see what happened.",
+                    title = NativeStrings.get(context, R.string.native_team_failed_title),
+                    text = NativeStrings.get(context, R.string.native_team_failed_body),
                     category = Notification.CATEGORY_ERROR,
                     priority = Notification.PRIORITY_HIGH
                 )
                 "team_review" -> CodingAlertContent(
                     channelID = STATUS_CHANNEL_ID,
-                    title = "A run is ready for review",
-                    text = "Tap to review it.",
+                    title = NativeStrings.get(context, R.string.native_team_review_title),
+                    text = NativeStrings.get(context, R.string.native_team_review_body),
                     category = Notification.CATEGORY_STATUS,
                     priority = Notification.PRIORITY_DEFAULT
                 )
                 "team_completed" -> CodingAlertContent(
                     channelID = STATUS_CHANNEL_ID,
-                    title = "A run completed",
-                    text = "Tap to see the result.",
+                    title = NativeStrings.get(context, R.string.native_team_completed_title),
+                    text = NativeStrings.get(context, R.string.native_team_completed_body),
                     category = Notification.CATEGORY_STATUS,
                     priority = Notification.PRIORITY_DEFAULT
                 )
@@ -383,7 +393,7 @@ class BackgroundConnectionService : Service() {
                     if (text.isBlank()) return false
                     CodingAlertContent(
                         channelID = TEAM_PROGRESS_CHANNEL_ID,
-                        title = title.ifBlank { "AI Team" },
+                        title = title.ifBlank { NativeStrings.get(context, R.string.native_team_title) },
                         text = text,
                         category = Notification.CATEGORY_PROGRESS,
                         priority = Notification.PRIORITY_LOW
@@ -392,7 +402,7 @@ class BackgroundConnectionService : Service() {
                 else -> return false
             }
 
-            createCodingAlertChannels(manager)
+            createCodingAlertChannels(context, manager)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
                 manager.getNotificationChannel(content.channelID)?.importance ==
                 NotificationManager.IMPORTANCE_NONE
@@ -422,13 +432,8 @@ class BackgroundConnectionService : Service() {
             }
             builder
                 .setSmallIcon(R.mipmap.ic_launcher)
-                // A conversation with an agent on this phone names that agent
-                // ("Claude Code finished"); only a plain, short name is taken.
-                .setContentTitle(
-                    if (agentName.matches(Regex("^[A-Za-z0-9 .-]{1,32}$")) && content.title.startsWith("OpenCode"))
-                        agentName + content.title.removePrefix("OpenCode")
-                    else content.title
-                )
+                // Only a validated, short agent name enters the localized template.
+                .setContentTitle(content.title)
                 .setContentText(content.text)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(kind != "team_progress")
@@ -445,8 +450,8 @@ class BackgroundConnectionService : Service() {
                         .setPublicVersion(
                             Notification.Builder(context, TEAM_PROGRESS_CHANNEL_ID)
                                 .setSmallIcon(R.mipmap.ic_launcher)
-                                .setContentTitle("AI Team")
-                                .setContentText("Working")
+                                .setContentTitle(NativeStrings.get(context, R.string.native_team_title))
+                                .setContentText(NativeStrings.get(context, R.string.native_team_working))
                                 .build()
                         )
                 }
@@ -494,7 +499,7 @@ class BackgroundConnectionService : Service() {
                 kind == "permission" -> listOf(
                     Notification.Action.Builder(
                         icon,
-                        "Allow once",
+                        NativeStrings.get(context, R.string.native_allow_once),
                         PendingIntent.getBroadcast(
                             context,
                             notificationID * 4 + 1,
@@ -510,7 +515,7 @@ class BackgroundConnectionService : Service() {
                     }.build(),
                     Notification.Action.Builder(
                         icon,
-                        "Deny",
+                        NativeStrings.get(context, R.string.native_deny),
                         PendingIntent.getBroadcast(
                             context,
                             notificationID * 4 + 2,
@@ -522,7 +527,7 @@ class BackgroundConnectionService : Service() {
                 kind == "question" && quickReply -> listOf(
                     Notification.Action.Builder(
                         icon,
-                        "Reply",
+                        NativeStrings.get(context, R.string.native_reply),
                         PendingIntent.getBroadcast(
                             context,
                             notificationID * 4 + 3,
@@ -533,7 +538,7 @@ class BackgroundConnectionService : Service() {
                     )
                         .addRemoteInput(
                             RemoteInput.Builder(REMOTE_INPUT_REPLY)
-                                .setLabel("Reply")
+                                .setLabel(NativeStrings.get(context, R.string.native_reply))
                                 .build()
                         )
                         .build()
@@ -549,30 +554,30 @@ class BackgroundConnectionService : Service() {
             return true
         }
 
-        private fun createCodingAlertChannels(manager: NotificationManager) {
+        private fun createCodingAlertChannels(context: Context, manager: NotificationManager) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
             val action = NotificationChannel(
                 ACTION_CHANNEL_ID,
-                "Coding requests",
+                NativeStrings.get(context, R.string.native_coding_requests_channel),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Alerts when OpenCode needs permission or input"
+                description = NativeStrings.get(context, R.string.native_coding_requests_description)
                 lockscreenVisibility = Notification.VISIBILITY_PRIVATE
             }
             val status = NotificationChannel(
                 STATUS_CHANNEL_ID,
-                "Coding session updates",
+                NativeStrings.get(context, R.string.native_coding_status_channel),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Alerts when a background OpenCode session finishes"
+                description = NativeStrings.get(context, R.string.native_coding_status_description)
                 lockscreenVisibility = Notification.VISIBILITY_PRIVATE
             }
             val teamProgress = NotificationChannel(
                 TEAM_PROGRESS_CHANNEL_ID,
-                "AI Team progress",
+                NativeStrings.get(context, R.string.native_team_progress_channel),
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "A quiet line while the AI Team is working"
+                description = NativeStrings.get(context, R.string.native_team_progress_description)
                 lockscreenVisibility = Notification.VISIBILITY_PRIVATE
                 setShowBadge(false)
             }

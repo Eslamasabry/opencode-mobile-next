@@ -31,7 +31,7 @@ object PinnedSessionShortcuts {
             val sessionID = entry["id"]?.toString()?.trim().orEmpty()
             if (sessionID.isEmpty() || profileID.isEmpty()) return@mapNotNull null
             val title = entry["title"]?.toString()?.trim().orEmpty()
-                .ifEmpty { context.getString(R.string.shortcut_session_untitled) }
+                .ifEmpty { NativeStrings.get(context, R.string.shortcut_session_untitled) }
             ShortcutInfoCompat.Builder(context, "$ID_PREFIX$profileID:$sessionID")
                 .setShortLabel(title)
                 .setLongLabel(title)
@@ -58,7 +58,7 @@ object PinnedSessionShortcuts {
                 ShortcutManagerCompat.disableShortcuts(
                     context,
                     stale,
-                    context.getString(R.string.shortcut_session_unavailable)
+                    NativeStrings.get(context, R.string.shortcut_session_unavailable)
                 )
             }
             if (next.isNotEmpty()) {

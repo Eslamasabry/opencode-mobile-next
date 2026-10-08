@@ -354,10 +354,10 @@ void main() {
       service,
       contains('lockscreenVisibility = Notification.VISIBILITY_PRIVATE'),
     );
-    expect(service, contains('OpenCode needs permission'));
-    expect(service, contains('OpenCode needs your input'));
-    expect(service, contains('OpenCode finished'));
-    expect(service, contains('OpenCode session needs attention'));
+    expect(service, contains('R.string.native_alert_permission_title'));
+    expect(service, contains('R.string.native_alert_question_title'));
+    expect(service, contains('R.string.native_alert_complete_title'));
+    expect(service, contains('R.string.native_alert_error_title'));
     expect(service, contains('putExtra(EXTRA_CODING_ALERT_KIND, kind)'));
     expect(
       service,

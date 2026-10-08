@@ -27,6 +27,7 @@ mixin _ConnectionControllerSettings on ChangeNotifier {
     await _localeStore.save(value);
     if (_self._disposed) return;
     appLocale.value = value == null ? null : Locale(value.languageCode);
+    await _self.backgroundLive.refreshNativeLocale();
   }
 
   Future<void> setThemePack(ThemePackId value) async {
