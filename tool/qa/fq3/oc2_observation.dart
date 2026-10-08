@@ -90,6 +90,9 @@ class Oc2ProbeObservation {
       'providerNoRouteCount': 0,
       'modelUnavailableCount': 0,
       'providerAuthCount': 0,
+      'probeCardNestedAskCount': 0,
+      'probeCardTopLevelConfirmCount': 0,
+      'cardHelperRejectedCount': 0,
     };
     void increment(String counter) {
       final current = counts[counter]!;
@@ -116,6 +119,27 @@ class Oc2ProbeObservation {
         continue;
       }
       increment(counter);
+      if (type == 'session.tool.called') {
+        final input = data['input'];
+        if (input is Map && input['v'] == 1 && input['id'] == 'fq3-confirm') {
+          final ask = input['ask'];
+          if (ask is Map && ask['kind'] == 'confirm') {
+            increment('probeCardTopLevelConfirmCount');
+          }
+          final body = input['body'];
+          if (body is List &&
+              body.whereType<Map>().any((node) => node.containsKey('ask'))) {
+            increment('probeCardNestedAskCount');
+          }
+        }
+      }
+      if (type == 'session.tool.failed') {
+        final error = data['error'];
+        if (error is Map &&
+            error['message'] == 'Agent card unavailable or invalid.') {
+          increment('cardHelperRejectedCount');
+        }
+      }
       if (type == 'session.execution.succeeded' ||
           type == 'session.execution.failed' ||
           type == 'session.execution.interrupted') {

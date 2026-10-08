@@ -1,0 +1,9 @@
+{
+  "focusedDartTestsPassed": 91,
+  "focusedAnalyzerClean": true,
+  "serialMachineLock": true,
+  "fullSuiteRun": false,
+  "buildRun": false,
+  "productionFilesChanged": false,
+  "purpose": "Stable shell stdout/exit notice assertion and card diagnostic counters"
+}

@@ -131,6 +131,61 @@ void main() {
     expect(jsonEncode(result), isNot(contains('test-secret')));
   });
 
+  test('card diagnostics distinguish nested ask and helper rejection', () {
+    final result = _observation().snapshot(
+      [
+        _event(
+          'session.tool.called',
+          data: {
+            'input': {
+              'v': 1,
+              'id': 'fq3-confirm',
+              'body': [
+                {
+                  'type': 'text',
+                  'text': 'test-secret',
+                  'ask': {'kind': 'confirm'},
+                },
+              ],
+            },
+          },
+        ),
+        _event(
+          'session.tool.called',
+          data: {
+            'input': {
+              'v': 1,
+              'id': 'fq3-confirm',
+              'ask': {'kind': 'confirm'},
+            },
+          },
+        ),
+        _event(
+          'session.tool.failed',
+          data: {
+            'error': {
+              'type': 'tool.execution',
+              'message': 'Agent card unavailable or invalid.',
+            },
+          },
+        ),
+        _event(
+          'session.tool.failed',
+          sessionID: 'ses_foreign',
+          data: {
+            'error': {'message': 'Agent card unavailable or invalid.'},
+          },
+        ),
+      ],
+      sessionID: _session,
+      eventStart: 0,
+    );
+    expect(result['probeCardNestedAskCount'], 1);
+    expect(result['probeCardTopLevelConfirmCount'], 1);
+    expect(result['cardHelperRejectedCount'], 1);
+    expect(jsonEncode(result), isNot(contains('test-secret')));
+  });
+
   test(
     'retry counts accept structured statuses and exact internal status lines only',
     () {

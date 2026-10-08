@@ -1,0 +1,247 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_oc2_permission_contract_test.dart
+00:00 +0: stable Allow proves shell ask, owned reply and command output
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_output_missing)
+00:00 +0 -1: stable Allow proves shell ask, owned reply and command output [E]
+  Expected: 'pass'
+    Actual: 'fail'
+     Which: is different.
+            Expected: pass
+              Actual: fail
+                      ^
+             Differ at offset 0
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/fq3_oc2_permission_contract_test.dart 28:7     main.<fn>
+  
+00:00 +0 -1: stable plain Reject proves aborted call and interrupted idle
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: pass (verified)
+00:00 +1 -1: Allow rejects foreignAskedSession
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (fixture_event_missing)
+00:00 +2 -1: Deny rejects foreignAskedSession
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (fixture_event_missing)
+00:00 +3 -1: Allow rejects foreignPendingRequest
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_request_not_pending)
+00:00 +4 -1: Deny rejects foreignPendingRequest
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (permission_request_not_pending)
+00:00 +5 -1: Allow rejects foreignSourceCall
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_not_owned_probe)
+00:00 +6 -1: Deny rejects foreignSourceCall
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (permission_command_not_owned_probe)
+00:00 +7 -1: Allow rejects wrongCommand
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_not_owned_probe)
+00:00 +8 -1: Deny rejects wrongCommand
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (permission_command_not_owned_probe)
+00:00 +9 -1: Allow rejects foreignReplySession
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (fixture_event_missing)
+00:00 +10 -1: Deny rejects foreignReplySession
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (fixture_event_missing)
+00:00 +11 -1: Allow rejects foreignReplyRequest
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (fixture_event_missing)
+00:00 +12 -1: Deny rejects foreignReplyRequest
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (fixture_event_missing)
+00:00 +13 -1: Allow rejects missingReply
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (fixture_event_missing)
+00:00 +14 -1: Deny rejects missingReply
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (fixture_event_missing)
+00:00 +15 -1: Allow rejects missingRetainedCall
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_outcome_missing)
+00:00 +16 -1: Deny rejects missingRetainedCall
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (permission_outcome_missing)
+00:00 +17 -1: Allow rejects pendingRetained
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_output_missing)
+00:00 +18 -1: Deny rejects pendingRetained
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (permission_settlement_pending)
+00:02 +19 -1: Allow rejects activeRetained
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_output_missing)
+00:02 +20 -1: Deny rejects activeRetained
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (permission_settlement_pending)
+00:04 +21 -1: Allow rejects missingSuccess
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_output_missing)
+00:04 +22 -1: Allow rejects foreignSuccessCall
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_output_missing)
+00:04 +23 -1: Allow rejects foreignSuccessSession
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_output_missing)
+00:04 +24 -1: Allow rejects wrongOutput
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_output_missing)
+00:04 +25 -1: Allow rejects nonzeroNotice
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_output_missing)
+00:04 +26 -1: Allow rejects nonzeroExit
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_output_missing)
+00:04 +27 -1: Allow rejects timeoutNotice
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_output_missing)
+00:04 +28 -1: Allow rejects timeoutFlag
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_output_missing)
+00:04 +29 -1: Allow rejects truncatedOutput
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_output_missing)
+00:04 +30 -1: Allow rejects missingStdout
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_output_missing)
+00:04 +31 -1: Allow rejects fakeMarkerNotice
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_output_missing)
+00:04 +32 -1: Allow rejects singleStdout
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: pass (verified)
+00:04 +32 -2: Allow rejects singleStdout [E]
+  Expected: 'fail'
+    Actual: 'pass'
+     Which: is different.
+            Expected: fail
+              Actual: pass
+                      ^
+             Differ at offset 0
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/fq3_oc2_permission_contract_test.dart 123:7    main.<fn>
+  
+00:04 +32 -2: Allow rejects extraOutput
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionAllow: fail (permission_command_output_missing)
+00:04 +33 -2: Deny rejects interruptedAlone
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (permission_outcome_missing)
+00:04 +34 -2: Deny rejects foreignFailureCall
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (permission_decline_not_verified)
+00:04 +35 -2: Deny rejects foreignFailureSession
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (permission_decline_not_verified)
+00:04 +36 -2: Deny rejects wrongFailureType
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (permission_decline_not_verified)
+00:04 +37 -2: Deny rejects runningRetainedCall
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (permission_outcome_missing)
+00:04 +38 -2: Deny rejects successAfterReject
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (permission_decline_execution_observed)
+00:04 +39 -2: Deny rejects progressAfterReject
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (permission_decline_execution_observed)
+00:04 +40 -2: Deny rejects commandStartAfterReject
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: permissionDeny: fail (permission_decline_execution_observed)
+00:04 +41 -2: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_oc2_permission_contract_test.dart: Allow rejects singleStdout
+  /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_oc2_permission_contract_test.dart: stable Allow proves shell ask, owned reply and command output

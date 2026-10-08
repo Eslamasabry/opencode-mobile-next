@@ -1,0 +1,24 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_oc2_observation_test.dart
+00:00 +0: only fresh events from the owned session and location are counted
+00:00 +1: owned global terminals count without accepting foreign scope
+00:00 +2: failure kinds are fixed counters and never raw provider errors
+00:00 +3: card diagnostics distinguish nested ask and helper rejection
+00:00 +3 -1: card diagnostics distinguish nested ask and helper rejection [E]
+  Expected: <1>
+    Actual: <null>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/fq3_oc2_observation_test.dart 150:5            main.<fn>
+  
+00:00 +3 -1: retry counts accept structured statuses and exact internal status lines only
+00:00 +4 -1: counter whitelist never exports raw event content or qualification facts
+00:00 +5 -1: large event bursts saturate each counter independently
+00:00 +6 -1: each snapshot honors its boundary without retaining earlier counts
+00:00 +7 -1: invalid stages and model references refuse with fixed errors
+00:00 +8 -1: bounded public references remain valid without normalization or fallback
+00:00 +9 -1: malformed caller scope fails without reflecting caller text
+00:00 +10 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_oc2_observation_test.dart: card diagnostics distinguish nested ask and helper rejection

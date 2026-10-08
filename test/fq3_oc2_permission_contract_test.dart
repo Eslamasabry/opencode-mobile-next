@@ -43,6 +43,17 @@ void main() {
         wire.events.any((e) => e['type'] == 'session.tool.success'),
         isTrue,
       );
+      final content = wire.transcripts[wire.probeID]!.last['content'] as List;
+      final state = (content.single as Map)['state'] as Map;
+      expect(state['content'], [
+        {'type': 'text', 'text': 'FQ3_ALLOW'},
+        {'type': 'text', 'text': 'Command exited with code 0.'},
+      ]);
+      expect(state['metadata'], {
+        'status': 'completed',
+        'exit': 0,
+        'truncated': false,
+      });
     },
   );
 
@@ -97,6 +108,15 @@ void main() {
     _Fault.foreignSuccessCall,
     _Fault.foreignSuccessSession,
     _Fault.wrongOutput,
+    _Fault.nonzeroNotice,
+    _Fault.nonzeroExit,
+    _Fault.timeoutNotice,
+    _Fault.timeoutFlag,
+    _Fault.truncatedOutput,
+    _Fault.missingStdout,
+    _Fault.fakeMarkerNotice,
+    _Fault.singleStdout,
+    _Fault.extraOutput,
   ]) {
     test('Allow rejects ${fault.name}', () async {
       final run = await probe(_PermissionWire(fault: fault), allow: true);
@@ -137,6 +157,15 @@ enum _Fault {
   foreignSuccessCall,
   foreignSuccessSession,
   wrongOutput,
+  nonzeroNotice,
+  nonzeroExit,
+  timeoutNotice,
+  timeoutFlag,
+  truncatedOutput,
+  missingStdout,
+  fakeMarkerNotice,
+  singleStdout,
+  extraOutput,
   interruptedAlone,
   foreignFailureCall,
   foreignFailureSession,
@@ -346,14 +375,43 @@ class _PermissionWire extends Fq3Wire {
       'type': fault == _Fault.wrongFailureType ? 'tool.execution' : 'aborted',
       'message': 'The user declined this tool call',
     };
-    final output = [
-      {
-        'type': 'text',
-        'text': fault == _Fault.wrongOutput ? 'OTHER' : 'FQ3_ALLOW',
-      },
+    // ShellTool.toolResult maps stdout and ShellResult.notice to separate
+    // text items; metadata preserves the independently observed exit/flags.
+    final output = <Map<String, dynamic>>[
+      if (fault != _Fault.missingStdout)
+        {
+          'type': 'text',
+          'text':
+              fault == _Fault.wrongOutput || fault == _Fault.fakeMarkerNotice
+              ? 'OTHER'
+              : 'FQ3_ALLOW',
+        },
+      if (fault != _Fault.singleStdout)
+        {
+          'type': 'text',
+          'text': switch (fault) {
+            _Fault.nonzeroNotice => 'Command exited with code 1.',
+            _Fault.timeoutNotice => 'Command timed out before completion.',
+            _Fault.fakeMarkerNotice => 'FQ3_ALLOW\nCommand exited with code 0.',
+            _ => 'Command exited with code 0.',
+          },
+        },
+      if (fault == _Fault.extraOutput)
+        {'type': 'text', 'text': 'Unrelated command output'},
     ];
+    final metadata = {
+      'status': 'completed',
+      'exit': fault == _Fault.nonzeroExit ? 1 : 0,
+      'truncated': fault == _Fault.truncatedOutput,
+      if (fault == _Fault.timeoutFlag) 'timeout': true,
+    };
     tool['state'] = allow
-        ? {'status': 'completed', 'input': input, 'content': output}
+        ? {
+            'status': 'completed',
+            'input': input,
+            'content': output,
+            'metadata': metadata,
+          }
         : {'status': 'error', 'input': input, 'error': failure};
     assistant['time'] = {'created': 1, 'completed': 2};
     assistant['finish'] = allow ? 'stop' : 'error';
@@ -374,6 +432,7 @@ class _PermissionWire extends Fq3Wire {
             'assistantMessageID': messageID,
             'id': fault == _Fault.foreignSuccessCall ? 'call_foreign' : callID,
             'content': output,
+            'metadata': metadata,
             'executed': false,
           },
         );
