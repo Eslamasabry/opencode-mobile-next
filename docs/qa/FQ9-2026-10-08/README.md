@@ -1,5 +1,75 @@
 # FQ9 pre-release device checklist
 
+## Authorized fixture cleanup and clean rerun — 2026-10-09
+
+Finish line: remove only BC's verified empty hidden legacy fixture, exercise
+the real same-signer 2196 → 2197 update with the canonical seeder, and measure
+an app-started live OC1 turn at 300/1800 seconds under one uninterrupted emulator
+reservation; restore normal 2197 and clean exact owned sessions afterwards.
+Non-goals: BB native changes, unrelated private data/project cleanup, provider
+enrollment, Claude authentication, builds, stable CI upgrades or second AVDs.
+
+The coordinator authorized cleanup and the baseline install explicitly. The
+whole device session uses `flock -w 1800 .../oc-emulator.lock`. The old receipt
+matched the legacy project's exact guest path and owned title; its host path
+and all ancestors were real directories, its UID matched the app, and it was
+empty. Only `files/linux/ubuntu/root/projects/fq9-fixture` was removed, using
+nonrecursive `rmdir`; its parent, canonical projects, tickets and other private
+state were preserved. [Cleanup proof](2197-owned-legacy-cleanup.json).
+
+Initial 2197 Start and connect, setup Open and product Restart still refused
+after removal. The writer ticket cleared through the product path. The
+authorized retained-data `adb install -r -d` of exact 2196 then connected to
+app-managed OC1 1.18.32. The fixed seeder used canonical
+`files/projects/fq9-20261009-retained-b` and a no-reply owned history fixture.
+The [fresh update](2196-to-2197-fixed-fixture.json) passed the selected automated
+retention checks and restored verified normal 2197; its server was healthy.
+The retained title and user message also reopened in 2197's conversation UI.
+Keystore sign-in usability remains unverified; raw encrypted-storage retention
+and a reopened test conversation do not qualify all stored accounts/history.
+
+The initial [GLM readiness attempt](2197-background-fixed-fixture.json) never
+entered HOME dwell: the selected turn failed before a real tool call, and
+background working was off. Background working was enabled through the app's
+settings; no battery exemption/global approval/provider change was made. The
+owned failed prompt was aborted after latest-prompt verification, then the next
+fixture prompt was sent through the app composer with Big Pickle selected.
+
+The [free-model readiness attempt](2197-background-free-model.json) also refused,
+but its [readback](2197-background-readiness-observation.json) showed real tools
+and a healthy live turn. The remaining false negative was the notification
+parser: this Android prints named `ONGOING_EVENT` flags and also contains
+unrelated PendingIntent `flags=0x800`. The old reader expected a hex notification
+flag. The repair binds flags to the exact package/ID/channel's notification line
+and accepts the named ongoing bit. Its regression failed first; all **106**
+driver tests passed serially through `machine_lock`, with clean Ruff F/E9 and
+diff checks. [Generated parser proof](notification-parser-validation.json).
+Production app/native code is unchanged.
+
+The [full-duration attempt](2197-background-5-30-run.json) used the same exact
+owned session's latest app-sent prompt and corrected parser candidate
+`235cced5d`; earlier readiness failures remain separate receipts. The **5-minute
+checkpoint PASS** was observed at 300.606 seconds with three newer persisted
+tool-state transitions and the app still behind HOME. The **30-minute gate
+FAIL/unqualified**: an adapter observation failed at 1240.439 seconds with
+`background_observation_failed`. Resume then verified the owned turn and live
+app/server, and exact abort/delete cleanup succeeded. The driver did not retain
+the narrower adapter failure category, so this receipt does not establish an
+app/server crash or identify the root cause of the interrupted observation.
+No shortened dwell or recovered snapshot is counted as a 30-minute pass.
+
+[Final owned cleanup](2197-final-owned-cleanup.json) deleted both exact settled
+fixture sessions after checking their unchanged sole user marker, and removed
+only the two empty, app-owned canonical fixture project directories. The live
+fixture session had already been aborted/deleted by the driver. The legacy
+fixture remained absent. Background working was restored to the observed
+original Off setting through the product UI. [Final normal restoration](2197-final-normal-restoration.json)
+used `adb install -r` of the exact approved 2197 and independently verified its
+APK hash, signer and retained UID 10217. App-managed OC1 1.18.32 was healthy,
+managed turns idle, background service Off and owned forwards closed. The locked
+shell then exited; BC retains no emulator reservation. Published-stable and
+fresh-AVD gates remain pending their previously documented prerequisites.
+
 ## Corrected refusal classification — 2026-10-09
 
 Finish line for `sol/bc-update-refusal`: establish fixture provenance and fix
