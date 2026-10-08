@@ -43015,6 +43015,42 @@ abstract class AppLocalizations {
   /// **'Use {agent}'**
   String agentsSignInDone(String agent);
 
+  /// Settings > Agents row: the agent's own status check confirmed a sign-in and gave the account's name (the account is shown as given, never stored)
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {account}'**
+  String agentsSignedInAs(String account);
+
+  /// Agent sheet, signed in: the action that signs the agent out of its account on this phone; also the confirm button
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out of {agent}'**
+  String agentsSignOutAction(String agent);
+
+  /// Agent sign-out question: the title
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out of {agent}?'**
+  String agentsSignOutTitle(String agent);
+
+  /// Agent sign-out question: what signing out changes
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} can\'t start new conversations until you sign in again.'**
+  String agentsSignOutBody(String agent);
+
+  /// Agent sign-out question: what is kept (marked as kept)
+  ///
+  /// In en, this message translates to:
+  /// **'Your conversations with {agent} stay.'**
+  String agentsSignOutKept(String agent);
+
+  /// Agent sheet: the agent's own sign-out did not end with a confirmed signed-out status; the Sign out action is still there
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t confirm that {agent} signed out. Try again.'**
+  String agentsSignOutFailed(String agent);
+
   /// Agent model sheet title on New conversation (Claude Code and other phone agents).
   ///
   /// In en, this message translates to:

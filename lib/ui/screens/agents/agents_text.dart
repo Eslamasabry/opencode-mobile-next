@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../../../domain/agent_auth_probe.dart';
 import '../../../domain/agent_catalog.dart';
 import '../../../domain/agent_sign_in.dart';
 import '../../../domain/agent_tools/agent_certification.dart';
@@ -24,7 +25,8 @@ IconData agentIcon(String iconKey) => switch (iconKey) {
 
 /// The agent's own download size ("98 MB", "1.2 GB") from the catalog, or
 /// null when the recipe does not say. Only the agent payload, never the
-/// whole setup.
+/// whole setup. Isolated left to right, so the digits and the unit keep
+/// their order ("21 MB", never "MB 21") inside right-to-left copy.
 String? agentPayloadSize(String agentId) {
   final bytes = AgentCatalog.builtIn.agents
       .where((agent) => agent.id == agentId)
@@ -33,19 +35,33 @@ String? agentPayloadSize(String agentId) {
       ?.artifacts[AgentArchitecture.arm64]
       ?.downloadBytes;
   if (bytes == null) return null;
-  return bytes >= 1000000000
-      ? '${(bytes / 1000000000).toStringAsFixed(1)} GB'
-      : '${(bytes / 1000000).round()} MB';
+  return KitBidi.ltr(
+    bytes >= 1000000000
+        ? '${(bytes / 1000000000).toStringAsFixed(1)} GB'
+        : '${(bytes / 1000000).round()} MB',
+  );
 }
 
 /// Where a row stands, in words: one line, and a second quiet line where it
 /// applies ("Can't reopen old conversations").
-String agentRowLine(AppLocalizations l10n, AgentRow row) {
+///
+/// [account] is the agent's own sign-in status check. Only a check that
+/// confirmed a sign-in lets a ready row say "Signed in" (with the account's
+/// name when the check gave one); an install or a terminal's exit code never
+/// does. Without it the row keeps the plain "Ready".
+String agentRowLine(
+  AppLocalizations l10n,
+  AgentRow row, {
+  AgentAuthProbeResult? account,
+}) {
   switch (row.status) {
     case PhoneAgentStatus.ready:
-      return row.resumeLabel != null
-          ? '${l10n.agentsStateReady}\n${l10n.agentsStateCantReopen}'
+      final first = account?.state == AgentAuthProbeState.signedIn
+          ? agentSignedInLine(l10n, account!)
           : l10n.agentsStateReady;
+      return row.resumeLabel != null
+          ? '$first\n${l10n.agentsStateCantReopen}'
+          : first;
     case PhoneAgentStatus.needsInstall:
       final size = agentPayloadSize(row.id);
       return size == null
@@ -72,6 +88,16 @@ String agentRowLine(AppLocalizations l10n, AgentRow row) {
               : l10n.agentsStateUnavailable,
       };
   }
+}
+
+/// "Signed in as {account}" when the status check named the account (kept to
+/// one line, isolated so a Latin address inside Arabic copy stays whole),
+/// else "Signed in".
+String agentSignedInLine(AppLocalizations l10n, AgentAuthProbeResult account) {
+  final name = account.accountDisplayName?.replaceAll(RegExp(r'\s+'), ' ');
+  return name == null || name.trim().isEmpty
+      ? l10n.agentsSignedIn
+      : l10n.agentsSignedInAs(KitBidi.auto(name.trim()));
 }
 
 /// A step that failed: plain words with the way forward, and the technical

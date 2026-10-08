@@ -205,7 +205,7 @@ void main() {
     testWidgets('recent app exits, one opened ($theme)', (tester) async {
       await shot(
         tester,
-        'exit_history',
+        'exit_history_one_open',
         light: light,
         history: _exits,
         then: () async {

@@ -32446,6 +32446,61 @@
       }
     }
   },
+  "agentsSignedInAs": "Signed in as {account}",
+  "@agentsSignedInAs": {
+    "description": "Settings > Agents row: the agent's own status check confirmed a sign-in and gave the account's name (the account is shown as given, never stored)",
+    "placeholders": {
+      "account": {
+        "type": "String",
+        "example": "sam@example.com"
+      }
+    }
+  },
+  "agentsSignOutAction": "Sign out of {agent}",
+  "@agentsSignOutAction": {
+    "description": "Agent sheet, signed in: the action that signs the agent out of its account on this phone; also the confirm button",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSignOutTitle": "Sign out of {agent}?",
+  "@agentsSignOutTitle": {
+    "description": "Agent sign-out question: the title",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSignOutBody": "{agent} can't start new conversations until you sign in again.",
+  "@agentsSignOutBody": {
+    "description": "Agent sign-out question: what signing out changes",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSignOutKept": "Your conversations with {agent} stay.",
+  "@agentsSignOutKept": {
+    "description": "Agent sign-out question: what is kept (marked as kept)",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsSignOutFailed": "Couldn't confirm that {agent} signed out. Try again.",
+  "@agentsSignOutFailed": {
+    "description": "Agent sheet: the agent's own sign-out did not end with a confirmed signed-out status; the Sign out action is still there",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
   "agentsModelTitle": "Choose a model",
   "@agentsModelTitle": {
     "description": "Agent model sheet title on New conversation (Claude Code and other phone agents)."

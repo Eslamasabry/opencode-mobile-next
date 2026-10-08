@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+import 'package:opencode_mobile/domain/agent_auth_probe.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/domain/agent_sign_in.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
@@ -6,6 +9,8 @@ import 'package:opencode_mobile/domain/merged_chat_feed.dart';
 import 'package:opencode_mobile/domain/phone_agent_host.dart';
 import 'package:opencode_mobile/domain/phone_agents.dart';
 import 'package:opencode_mobile/domain/phone_agents_source.dart';
+import 'package:opencode_mobile/domain/server_gateway.dart'
+    show ProductException;
 import 'package:opencode_mobile/domain/server_gateway/capabilities.dart';
 
 /// How far an agent is, for [agentRowFor].
@@ -41,6 +46,26 @@ AgentRow agentRowFor(String id, FakeAgentStage stage) {
       capabilities: AgentCapabilities(
         resumeVerified: stage == FakeAgentStage.readyVerifiedResume,
       ),
+    ),
+  );
+}
+
+/// A row whose sign-in is [phase] as an agent's status check would leave it:
+/// signed in is ready, signed out needs a sign-in, failed (the check could not
+/// answer) also offers Sign in.
+AgentRow agentRowForPhase(String id, AgentSignInPhase phase) {
+  final descriptor = AgentCatalog.builtIn.byId(id)!;
+  return buildAgentRow(
+    descriptor: descriptor,
+    architecture: AgentArchitecture.arm64,
+    serverCapabilities: ServerCapabilities.allV1,
+    runtime: PhoneAgentRuntime(
+      agentId: id,
+      installed: true,
+      hostAvailable: true,
+      architectureQualified: true,
+      signInPhase: phase,
+      capabilities: const AgentCapabilities(),
     ),
   );
 }
@@ -295,4 +320,111 @@ class FakePhoneAgentsSource extends ChangeNotifier
   @override
   Future<void> closePhoneAgentsForSignInReset() async =>
       calls.add('close-for-reset');
+}
+
+/// A [FakePhoneAgentsSource] that also has the agent's own sign-in status
+/// check and logout ([PhoneAgentAccountSource]), the way the controller does
+/// for Claude and fx. [truth] is what the next status check would say per
+/// agent; what the app has read (and what its rows show) changes only when it
+/// reads again ([recheckAgentSignIn], [confirmAgentSignIn]) or after a
+/// sign-out. Account names are fake fixtures.
+class FakeAccountAgentsSource extends FakePhoneAgentsSource
+    implements PhoneAgentAccountSource {
+  FakeAccountAgentsSource({super.available, super.rows, super.selected});
+
+  /// What the agent's status check says right now.
+  final truth = <String, AgentAuthProbeResult>{};
+
+  /// What the app last read.
+  final _read = <String, AgentAuthProbeResult>{};
+
+  /// Agents whose own logout is qualified.
+  final signOutCapable = <String>{};
+
+  /// When set, the logout ends without a confirmed signed-out status.
+  bool logoutUnconfirmed = false;
+
+  /// Holds a running sign-out until completed.
+  Completer<void>? signOutGate;
+
+  /// Holds the next re-read of an agent's sign-in until completed.
+  Completer<void>? recheckGate;
+
+  /// The agent reads as [result] from now on, and the app has read it.
+  void check(String id, AgentAuthProbeResult result) {
+    truth[id] = result;
+    _apply(id, result);
+    notifyListeners();
+  }
+
+  void _apply(String id, AgentAuthProbeResult result, {bool rows = true}) {
+    _read[id] = result;
+    final phase = switch (result.state) {
+      AgentAuthProbeState.signedIn => AgentSignInPhase.signedIn,
+      AgentAuthProbeState.signedOut => AgentSignInPhase.signedOut,
+      AgentAuthProbeState.error => AgentSignInPhase.failed,
+    };
+    signIn[id] = AgentSignInState(
+      phase: phase,
+      method: AgentCatalog.builtIn.byId(id)!.signInMethod,
+      inspected: true,
+    );
+    if (rows) {
+      final next = agentRowForPhase(id, phase);
+      super.rows = [
+        for (final row in agentRows)
+          if (row.id == id) next else row,
+      ];
+    }
+  }
+
+  @override
+  AgentAuthProbeResult? agentAccount(String agentId) => _read[agentId];
+
+  @override
+  Future<void> recheckAgentSignIn(String agentId) async {
+    calls.add('recheck:$agentId');
+    await recheckGate?.future;
+    _apply(
+      agentId,
+      truth[agentId] ??
+          const AgentAuthProbeResult.failed(
+            AgentAuthProbeError.probeUnsupported,
+          ),
+    );
+    notifyListeners();
+  }
+
+  @override
+  Future<bool> confirmAgentSignIn(String agentId) async {
+    calls.add('confirm:$agentId');
+    await recheckAgentSignIn(agentId);
+    return _read[agentId]?.state == AgentAuthProbeState.signedIn;
+  }
+
+  @override
+  bool canSignOutAgent(String agentId) => signOutCapable.contains(agentId);
+
+  @override
+  Future<void> signOutAgent(String agentId) async {
+    calls.add('sign-out:$agentId');
+    await signOutGate?.future;
+    if (logoutUnconfirmed) {
+      // Like the controller: the unconfirmed answer is kept, rows are not
+      // refreshed, and the failure is a plain sentence.
+      _apply(
+        agentId,
+        const AgentAuthProbeResult.failed(AgentAuthProbeError.signOutFailed),
+        rows: false,
+      );
+      notifyListeners();
+      throw const ProductException(
+        'Sign out could not be confirmed. Check the agent in its terminal.',
+      );
+    }
+    check(
+      agentId,
+      const AgentAuthProbeResult(state: AgentAuthProbeState.signedOut),
+    );
+  }
 }
