@@ -105,3 +105,22 @@ Full app launch remains partial. Manual cleanup reclaimed **99,860,480 bytes**;
 no target files, links, stages, locks or processes remained. Uninstall and
 installed-app low-space coverage retain the shared limits above. Claude/fx
 phone-check summaries remained passed when this check finished.
+
+
+## Qwen
+
+[Device observations](qwen-device.json), [validated report](qwen-report.json),
+[cancel screenshot](qwen-cancelled.jpg), [phone check](qwen-after-install-check.jpg),
+[after cleanup](qwen-after-cleanup.jpg).
+
+Qwen Code **0.24.7** installed through the app. Receipt/link, CLI version and
+fresh public phone check passed. Before install, free space was 1,856,380,928
+bytes. Cancel at 7,647,232 / 31,240,308 catalog download bytes (chunked native
+total temporarily zero) stopped the job; staging/lock disappeared. A distinct
+retry completed. The auth bridge returned `probeUnsupported`. Empty-home ACP
+initialize succeeded, and session/new returned authentication-required (-32000)
+in 4.60 s; no prompt, login or orphan process. The app launch cell remains
+partial. Manual cleanup reclaimed **112,664,576 bytes**, with no owned target
+leftovers. App uninstall and injected app low-space coverage retain the shared
+limits. A stale startup sheet in the early driver was corrected before this
+fresh phone check; it was a navigation issue, not an install failure.
