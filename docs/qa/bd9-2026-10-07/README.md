@@ -364,3 +364,34 @@ helper passes again. Existing callback tests already prove the emulator flock
 is held through restoration on both smoke success and failure.
 The helper is implemented/unit-verified; actual owner APK and device launch
 qualification still require the coordinator's file and EMULATOR GO.
+
+
+## Updated candidate built; EMULATOR GO pending
+
+Candidate9fb9a9dc built both release artifacts with pinned Flutter and isolated
+Temurin17: QA AOT app in292.5s (100.4MB), matching release androidTest in156s.
+Both exact APKs pass local certificate/package/version2201/native-runner
+verification. Source/APK hashes, exact commands and JDK identity are recorded
+in [build-ready.json](build-ready.json). Native compilation and packaging pass.
+This supersedes earlier build receipts for the current source candidate; it
+does not supersede the earlier failed device evidence with a passing claim.
+
+The owner2195 normal APK now exists and passes local package/version/signer/hash
+preflight, recorded as READY in [normal-apk-preflight.json](normal-apk-preflight.json).
+Preparation performs no adb operation. This does not claim its installation
+or device launch. The local driver is ready to use the callback under the
+existing whole-session emulator flock after separate EMULATOR GO.
+
+Temporary android/key.properties and build/app/intermediates are absent.
+Gradle settings match the committed file; the exact owned daemon2247394 was
+stopped. The duplicate Gradle app APK was byte-verified against the newest
+Flutter APK and deleted; newest QA app plus matching test APK retained. No
+APK copy, uninstall, device session, CI invocation or publication occurred.
+
+Current stop condition: EMULATOR GO has not arrived. After authorization, run
+python3 /tmp/bd9-qualify-and-restore.py to execute the exact committed host smoke,
+record seven native/one Flutter PASS and bounded JPG, and restore owner2195
+inside the same flock on every outcome. If Flutter fails, use its fixed phase
+category to fix the actual smoke and repeat with a newly recorded candidate.
+BD9 remains blocked; no passing device smoke or normal-restoration receipt
+is claimed yet.
