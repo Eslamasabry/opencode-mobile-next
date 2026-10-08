@@ -4111,6 +4111,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get e7LocaleUiArabic => 'العربية';
 
   @override
+  String get e7LocaleUiJapanese => '日本語';
+
+  @override
+  String get e7LocaleUiChinese => '简体中文';
+
+  @override
+  String get e7LocaleUiSpanish => 'Español';
+
+  @override
+  String get e7LocaleUiPortuguese => 'Português (Brasil)';
+
+  @override
+  String get e7LocaleUiRussian => 'Русский';
+
+  @override
   String get e7LocaleUiSystem => 'استخدام لغة النظام';
 
   @override

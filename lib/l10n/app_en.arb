@@ -2711,6 +2711,26 @@
   "@e7LocaleUiArabic": {
     "description": "Locale selection or app shell: Arabic"
   },
+  "e7LocaleUiJapanese": "日本語",
+  "@e7LocaleUiJapanese": {
+    "description": "Language sheet: the language's own name (Japanese), written in that language and never translated, like the Arabic and English rows."
+  },
+  "e7LocaleUiChinese": "简体中文",
+  "@e7LocaleUiChinese": {
+    "description": "Language sheet: the language's own name (Chinese), written in that language and never translated, like the Arabic and English rows."
+  },
+  "e7LocaleUiSpanish": "Español",
+  "@e7LocaleUiSpanish": {
+    "description": "Language sheet: the language's own name (Spanish), written in that language and never translated, like the Arabic and English rows."
+  },
+  "e7LocaleUiPortuguese": "Português (Brasil)",
+  "@e7LocaleUiPortuguese": {
+    "description": "Language sheet: the language's own name (Portuguese), written in that language and never translated, like the Arabic and English rows."
+  },
+  "e7LocaleUiRussian": "Русский",
+  "@e7LocaleUiRussian": {
+    "description": "Language sheet: the language's own name (Russian), written in that language and never translated, like the Arabic and English rows."
+  },
   "e7LocaleUiSystem": "Use system language",
   "@e7LocaleUiSystem": {
     "description": "Locale selection or app shell: System"
