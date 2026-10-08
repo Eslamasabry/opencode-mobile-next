@@ -100,7 +100,14 @@ annotation; evidence and pass state are unchanged. Do not invent metadata from
 the catalog or a release constant to activate other agents.
 
 Connection uses the observed connected helper version and host architecture;
-unknown observations are null. The certification projection replaces the Claude
+unknown observations are null. When source synchronization supplies a different
+helper observation, the pending row refresh re-inspects the host once before it
+completes. This second scan does not synchronize sources again; it reads fresh
+phone gates and auth, rather than adding capabilities to an old Ready row.
+A delayed source retry also refreshes rows when its handshake supplies evidence,
+without requiring the person to reopen a screen. Unknown or mismatched versions
+still grant nothing. No host release constant substitutes for a live observation.
+The certification projection replaces the Claude
 identity-based resume override. An unqualified Claude can use the existing
 `AgentResumeNotice` UI when `resumeVerified` is false: "Can't reopen old chats"
 and "Starts a new chat", with explicit acknowledgement before a fresh chat.

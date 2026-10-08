@@ -390,7 +390,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         _paRefreshingRows = null;
       });
 
-  Future<void> _paRefreshRows() async {
+  Future<void> _paRefreshRows({bool syncSources = true}) async {
     if (!phoneAgentsAvailable) {
       if (_paRows.isNotEmpty) {
         _paRows = const [];
@@ -416,6 +416,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     } catch (_) {
       arch = null;
     }
+    final helperVersion = _self._paObservedHelperVersion;
     final rows = <AgentRow>[];
     var running = false;
     for (final descriptor in _paCatalog.agents) {
@@ -425,7 +426,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
           runtime = await host.inspect(
             descriptor.id,
             signIn: _paSignIns[descriptor.id]?.state,
-            capabilities: _paHostCapabilities(descriptor, arch),
+            capabilities: _self._paHostCapabilities(descriptor, arch),
           );
           if (runtime.installed &&
               descriptor.signInMethod != AgentSignInMethod.none &&
@@ -470,15 +471,23 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         rows.any((row) => row.status == PhoneAgentStatus.stoppedInBackground) &&
         (_paAutoResumedAt == null ||
             now.difference(_paAutoResumedAt!) > const Duration(minutes: 1));
-    // The helper is started again right away: "stopped" isn't said for the
-    // second that takes (at every app start after Android closed it).
-    if (autoResume) _paAutoResuming = true;
     _paRows = List.unmodifiable(rows);
     _paHostRunning = running;
     _paScheduleSignInRecheck(rows);
-    try {
-      await _paSyncSources();
-    } catch (_) {}
+    if (syncSources) {
+      try {
+        await _paSyncSources();
+      } catch (_) {}
+      if (_self._disposed || _paHost != host || _paHostProfile != owner) return;
+      // The first handshake may supply the exact version missing above.
+      // The second scan reads fresh gates and skips source synchronization.
+      if (_self._paObservedHelperVersion != helperVersion) {
+        await _paRefreshRows(syncSources: false);
+        return;
+      }
+    }
+    // Mark the auto-resume only for the final, freshly inspected rows.
+    if (autoResume) _paAutoResuming = true;
     if (!_self._disposed) _self._notifyListeners();
     // Rows are read when the person opens an agent screen or sheet: an
     // installed agent whose helper Android stopped is started again here
@@ -499,30 +508,6 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   /// The helper is being started again by the app itself.
   bool _paAutoResuming = false;
-
-  /// Exact matrix proof, checked against the observed connected helper and
-  /// processor. Unknown or stale evidence never inherits catalog capabilities.
-  AgentCapabilities _paHostCapabilities(
-    AgentDescriptor descriptor,
-    AgentArchitecture? architecture,
-  ) {
-    final observed = _paSources.values
-        .map((source) => source.gateway.transport)
-        .where((transport) => transport.connected)
-        .map((transport) => transport.serverVersion)
-        .whereType<String>()
-        .toSet();
-    final gateway = _paBackend?.api;
-    if (gateway is PaseoGateway && gateway.transport.connected) {
-      final version = gateway.transport.serverVersion;
-      if (version != null) observed.add(version);
-    }
-    return AgentCertificationMatrix.bundled.capabilitiesFor(
-      descriptor: descriptor,
-      architecture: architecture,
-      helperVersion: observed.length == 1 ? observed.single : null,
-    );
-  }
 
   static const _paSignInReadLimit = Duration(seconds: 10);
   final _paAuthResults = <String, AgentAuthProbeResult>{};
@@ -789,6 +774,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     final host = _paHost;
     final profile = _paProfile;
     if (host == null || profile == null) return;
+    final helperVersion = _self._paObservedHelperVersion;
     final wanted = _paHostRunning || assumeRunning
         ? _paDesiredDirectories().take(_maxPaseoSources).toList()
         : const <String>[];
@@ -830,6 +816,13 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       });
     } else if (!missed) {
       _paSyncRetries = 0;
+    }
+    // Retry syncs run without a row scan. Publish newly observed proof too.
+    if (!_self._disposed &&
+        _paHost == host &&
+        _paRefreshingRows == null &&
+        _self._paObservedHelperVersion != helperVersion) {
+      await refreshAgentRows();
     }
   }
 
