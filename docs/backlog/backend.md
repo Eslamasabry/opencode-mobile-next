@@ -41,7 +41,7 @@ Read-only reviews of the Flutter client's API adapters, domain and persisted sta
 - **Evidence:** `lib/api2/gateway_operations.dart`, `_Api2TerminalChannel._decodeFrame`, and `lib/api/product_repository.dart`, `_IoTerminalChannel._decodeFrame`, incremented the resume cursor with UTF-16 `text.length`. `docs/opencode2-protocol-notes.md` section 9 specifies an absolute byte offset.
 - **User impact:** Arabic, emoji and other multibyte output can replay or become corrupted after reconnect.
 - **Implementation:** Count incoming binary bytes or UTF-8 encoded string bytes, keeping server metadata cursor resets authoritative.
-- **Minimal verification:** Existing terminal transport checks in `test/product_repository_test.dart` and `test/terminal_accessibility_test.dart`; include a multibyte output frame and its resulting resume cursor.
+- **Minimal verification:** Existing terminal transport checks in `test/product_repository_*_test.dart` and `test/terminal_accessibility_test.dart`; include a multibyte output frame and its resulting resume cursor.
 
 ## BE-005 — Carry the v2 global-search pagination cursor
 
@@ -60,7 +60,7 @@ Read-only reviews of the Flutter client's API adapters, domain and persisted sta
 - **Evidence:** `lib/api2/gateway.dart`, `providers`; `lib/api2/gateway_operations.dart`, `loadCatalog`; and `lib/api/product_repository.dart`, `SdkProductRepository.loadCatalog`, start several requests, then attach error handlers by awaiting them one at a time. V2 `loadVersionControlHealth` uses the same delayed handling for its status request.
 - **User impact:** If a later request fails while an earlier request is still pending, its error escapes as an unhandled asynchronous error instead of reaching the existing recoverable catalog or project-health state.
 - **Implementation:** Await a typed record with `.wait` or use `Future.wait` so every request has a handler immediately. For intentionally optional VCS responses, attach each fallback before awaiting the group. Preserve typed `ApiException`/`ProductException` mapping when unwrapping record-wait errors.
-- **Minimal verification:** Existing catalog fixture in `test/product_repository_test.dart`; one delayed first request with an immediately failing later request, asserting one handled failure and no uncaught asynchronous error. Existing project-health checks cover the optional fallback behavior.
+- **Minimal verification:** Existing catalog fixture in `test/product_repository_*_test.dart`; one delayed first request with an immediately failing later request, asserting one handled failure and no uncaught asynchronous error. Existing project-health checks cover the optional fallback behavior.
 
 ## BE-007 — Keep OAuth attempt context through code confirmation
 
@@ -69,7 +69,7 @@ Read-only reviews of the Flutter client's API adapters, domain and persisted sta
 - **Evidence:** `lib/api2/gateway_operations.dart`, `completeIntegrationOAuth`, removes `_oauthAttemptIntegration[attemptID]` immediately after POST success. `lib/ui/screens/library/integrations_screen.dart`, `_enterOAuthCode`, immediately calls `integrationOAuthStatus`, whose `_attemptIntegration` now throws that the attempt is no longer tracked. The captured OAuth complete route returns 204 and stores the credential; the status read is part of the existing UI flow.
 - **User impact:** A successful code-based provider connection is shown as a failed/abandoned sign-in and does not finish refreshing the model catalog.
 - **Implementation:** Keep the attempt's integration context through its required status read. If retiring it at a terminal status, cache that terminal result long enough for the existing completion/retry path. Cancel should still retire pending state. Do not alter the v1 completion contract.
-- **Minimal verification:** Existing code-OAuth widget scenario in `test/library_integrations_test.dart`; route a start → complete (204) → status (complete) sequence through the real v2 adapter and assert catalog refresh remains reachable.
+- **Minimal verification:** Existing code-OAuth widget scenario in `test/library_integrations_*_test.dart`; route a start → complete (204) → status (complete) sequence through the real v2 adapter and assert catalog refresh remains reachable.
 
 ## BE-008 — Keep provider and MCP actions in the displayed location
 
@@ -78,13 +78,13 @@ Read-only reviews of the Flutter client's API adapters, domain and persisted sta
 - **Evidence:** `lib/api2/gateway_operations.dart`, `listIntegrations` and `listMcpServers`, send `_loc()`, but `connectIntegrationKey`, OAuth start/status/complete/cancel, and MCP add/connect/disconnect omit location queries. The captured contract declares the same optional deep-object location on each of these routes.
 - **User impact:** A project-specific provider or MCP server can be listed correctly but fail to connect, disconnect, or authenticate because the action is resolved against the server's default location.
 - **Implementation:** Forward the pinned directory/workspace on the affected location-scoped mutations and reads. Snapshot the starting location with OAuth attempt context and reuse that snapshot for later attempt actions. Credential-ID deletion remains governed by its own global route contract.
-- **Minimal verification:** Inspect outgoing requests from a v2 gateway pinned to both a directory and a workspace; verify list and actions carry the same scope. Reuse the MCP and integration fixture shapes in `test/product_repository_test.dart`; no native UI run is needed.
+- **Minimal verification:** Inspect outgoing requests from a v2 gateway pinned to both a directory and a workspace; verify list and actions carry the same scope. Reuse the MCP and integration fixture shapes in `test/product_repository_*_test.dart`; no native UI run is needed.
 
 ## BE-009 — Encode MCP timeout in the v2 wire shape
 
 - **Status:** Implemented — cycle 2026-09-05-02
 - **Priority / confidence:** High / high
-- **Evidence:** `lib/domain/server_gateway.dart`, `McpServerDraft.toConfigJson`, emits a scalar `timeout: timeoutMs`. `lib/api2/gateway_operations.dart`, `addMcpServer`, forwards that map unchanged. Captured `Mcp.LocalConfigEncoded` and `Mcp.RemoteConfigEncoded` instead define `timeout` as an object with optional positive integer `startup`, `catalog`, and `execution` fields. Existing scalar assertions in `test/product_repository_test.dart` belong to the v1 adapter.
+- **Evidence:** `lib/domain/server_gateway.dart`, `McpServerDraft.toConfigJson`, emits a scalar `timeout: timeoutMs`. `lib/api2/gateway_operations.dart`, `addMcpServer`, forwards that map unchanged. Captured `Mcp.LocalConfigEncoded` and `Mcp.RemoteConfigEncoded` instead define `timeout` as an object with optional positive integer `startup`, `catalog`, and `execution` fields. Existing scalar assertions in `test/product_repository_*_test.dart` belong to the v1 adapter.
 - **User impact:** Entering any optional timeout in Add MCP server makes the v2 request invalid, even though the form validates it successfully.
 - **Implementation:** Translate the draft at the v2 adapter boundary. Map the existing generic timeout to the named startup/catalog/execution durations consistently, or expose separate fields if different values are desired. Keep omitted timeout omitted and retain the v1 scalar representation.
 - **Minimal verification:** One local and one remote v2 MCP request with a timeout must match the captured object schema; existing v1 scalar expectations must remain unchanged.

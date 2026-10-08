@@ -274,7 +274,7 @@ status/tools/resources refetch pings; 404 `McpServerNotFoundError` is typed).
 Reuse `mcpRuntimeAdds`/`mcpConfigWrites` for scope copy, not as proof that
 removal is supported. Give the remove operation its own capability or an
 optional callable gateway surface with truthful unsupported handling. Wire test in
-`test/product_repository_test.dart` fixture shape.
+`test/product_repository_*_test.dart` fixture shape.
 
 ### E5 — Prompt-stash payload migration
 
