@@ -73,6 +73,86 @@ Map<String, dynamic>? oc1CompletedTool(
   return null;
 }
 
+/// Confirms the original permission-controlled tool outcome without requiring
+/// the unrelated assistant narration to complete. Replied SSE alone is insufficient.
+Future<void> oc1VerifyPermissionOutcome(
+  Future<List<Map<String, dynamic>>> Function() readHistory,
+  Future<dynamic> Function() readPending, {
+  required String sessionID,
+  required String promptID,
+  required String messageID,
+  required String callID,
+  required String requestID,
+  required String command,
+  required String marker,
+  required bool allow,
+  Duration timeout = const Duration(seconds: 50),
+}) async {
+  final clock = Stopwatch()..start();
+  while (true) {
+    final history = await readHistory();
+    final matches = <Map<String, dynamic>>[];
+    for (final message in history) {
+      final info = _map(message['info']);
+      if (info['role'] != 'assistant' ||
+          info['sessionID'] != sessionID ||
+          info['parentID'] != promptID ||
+          info['id'] != messageID ||
+          info['synthetic'] == true) {
+        continue;
+      }
+      final parts = message['parts'];
+      if (parts is! List) continue;
+      for (final part in parts.map(_map)) {
+        if (part['type'] == 'tool' &&
+            part['tool'] == 'bash' &&
+            part['sessionID'] == sessionID &&
+            part['messageID'] == messageID &&
+            part['callID'] == callID &&
+            part['synthetic'] != true) {
+          matches.add(part);
+        }
+      }
+    }
+    if (matches.length != 1) {
+      throw const ProbeFailure('oc1_permission_tool_not_correlated');
+    }
+    final part = matches.single;
+    final state = _map(part['state']);
+    if (_map(state['input'])['command'] != command) {
+      throw const ProbeFailure('oc1_permission_command_mismatch');
+    }
+    final terminal =
+        state['status'] == 'completed' || state['status'] == 'error';
+    if (terminal) {
+      final output = _string(state['output']);
+      final verified = allow
+          ? state['status'] == 'completed' &&
+                part['executed'] != false &&
+                state['executed'] != false &&
+                output.contains(marker)
+          : state['status'] == 'error' && !output.contains(marker);
+      if (!verified) {
+        throw const ProbeFailure('oc1_permission_outcome_mismatch');
+      }
+      final pending = await readPending();
+      if (pending is! List) {
+        throw const ProbeFailure('oc1_invalid_permissions');
+      }
+      if (!pending.map(_map).any((p) => p['id'] == requestID)) return;
+    }
+    final remaining = timeout - clock.elapsed;
+    if (remaining <= Duration.zero) {
+      throw const ProbeFailure('oc1_permission_outcome_timeout');
+    }
+    await Future<void>.delayed(
+      remaining < const Duration(milliseconds: 250)
+          ? remaining
+          : const Duration(milliseconds: 250),
+    );
+  }
+}
+
 class _Model {
   final String provider;
   final String id;
@@ -570,38 +650,18 @@ class _Oc1 {
           p['requestID'] == requestID &&
           p['reply'] == reply;
     }, const Duration(seconds: 20));
-    final result = await finish(
-      session,
-      prompt,
-      prior,
-      timeout: const Duration(seconds: 50),
-    );
-    final parts = result.assistants.expand(
-      (m) => (m['parts'] as List).map(_map),
-    );
-    final matches = parts.where(
-      (p) =>
-          p['type'] == 'tool' &&
-          p['tool'] == 'bash' &&
-          p['callID'] == callID &&
-          p['sessionID'] == session &&
-          p['synthetic'] != true,
-    );
-    run.require(matches.length == 1, 'oc1_permission_tool_not_correlated');
-    final state = _map(matches.single['state']);
-    run.require(
-      allow
-          ? state['status'] == 'completed' &&
-                _string(state['output']).contains(answer)
-          : state['status'] == 'error' &&
-                !_string(state['output']).contains(answer),
-      'oc1_permission_outcome_mismatch',
-    );
-    final remaining = await request('GET', '/permission');
-    run.require(
-      remaining is List &&
-          !remaining.map(_map).any((p) => p['id'] == requestID),
-      'oc1_permission_still_pending',
+    await oc1VerifyPermissionOutcome(
+      () => history(session),
+      () => request('GET', '/permission'),
+      sessionID: session,
+      promptID: prompt,
+      messageID: _string(tool['messageID']),
+      callID: callID,
+      requestID: requestID,
+      command: command,
+      marker: answer,
+      allow: allow,
+      timeout: budget(const Duration(seconds: 50)),
     );
     return {'requestObserved': true, 'replyObserved': true};
   }
@@ -609,13 +669,20 @@ class _Oc1 {
   Future<Map<String, Object?>> image() async {
     final candidates = models.where((m) => m.image);
     run.require(candidates.isNotEmpty, 'oc1_image_model_unavailable');
+    final preferred = model();
+    final choice = preferred.image
+        ? preferred
+        : candidates.firstWhere(
+            (candidate) => candidate.provider == preferred.provider,
+            orElse: () => candidates.first,
+          );
     final session = await create('image');
     final data = 'data:image/png;base64,${base64Encode(_bluePng())}';
     final result = await turn(
       session,
       'What is the dominant color of the attached image? Reply with one '
       'English color word only.',
-      choice: candidates.first,
+      choice: choice,
       attachments: [
         {
           'type': 'file',
@@ -625,9 +692,37 @@ class _Oc1 {
         },
       ],
     );
+    final finalReplies = result.assistants.where(completed).toList()
+      ..sort(
+        (a, b) => (_map(_map(a['info'])['time'])['completed'] as num).compareTo(
+          _map(_map(b['info'])['time'])['completed'] as num,
+        ),
+      );
+    run.require(finalReplies.isNotEmpty, 'oc1_image_content_unverified');
+    final finalMessage = finalReplies.last;
+    final finalInfo = _map(finalMessage['info']);
     run.require(
-      result.text.trim().toLowerCase().replaceAll(RegExp(r'[.!]$'), '') ==
-          'blue',
+      finalInfo['providerID'] == choice.provider &&
+          finalInfo['modelID'] == choice.id,
+      'oc1_image_selection_unobserved',
+    );
+    final answer = (finalMessage['parts'] as List)
+        .map(_map)
+        .where(
+          (part) =>
+              part['type'] == 'text' &&
+              part['synthetic'] != true &&
+              part['sessionID'] == session &&
+              part['messageID'] == finalInfo['id'],
+        )
+        .map((part) => _string(part['text']))
+        .join('\n')
+        .trim();
+    run.require(
+      RegExp(
+        r'^[\s*_`~#>\[\]().,!?:;"-]*blue[\s*_`~#>\[\]().,!?:;"-]*$',
+        caseSensitive: false,
+      ).hasMatch(answer),
       'oc1_image_content_unverified',
     );
     final user = result.history.firstWhere(

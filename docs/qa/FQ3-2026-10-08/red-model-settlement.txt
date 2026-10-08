@@ -1,0 +1,10 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_oc2_test.dart
+00:00 +0: model catalog waits for initial empty plugin snapshot to settle
+00:00 +0 -1: model catalog waits for initial empty plugin snapshot to settle [E]
+  Protocol assertion failed
+  tool/qa/fq3/oc2.dart 48:25  waitOc2ModelCatalog
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_oc2_test.dart: model catalog waits for initial empty plugin snapshot to settle

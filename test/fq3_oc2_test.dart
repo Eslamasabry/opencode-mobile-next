@@ -18,6 +18,83 @@ void main() {
     );
   }
 
+  test(
+    'model catalog waits for initial empty plugin snapshot to settle',
+    () async {
+      final wire = _Wire()..emptyCatalogReads = 2;
+      addTearDown(wire.close);
+      final models = await waitOc2ModelCatalog(
+        wire,
+        directory: '/fq3/disposable',
+        interval: Duration.zero,
+      );
+      expect(models, hasLength(2));
+      expect(wire.catalogReads, 3);
+    },
+  );
+
+  test(
+    'a requested model must become enabled before polling succeeds',
+    () async {
+      final wire = _Wire()..disableSecondaryReads = 1;
+      addTearDown(wire.close);
+      final models = await waitOc2ModelCatalog(
+        wire,
+        directory: '/fq3/disposable',
+        model: 'test/two',
+        interval: Duration.zero,
+      );
+      expect(models.any((m) => m['id'] == 'two'), isTrue);
+      expect(wire.catalogReads, 2);
+    },
+  );
+
+  test(
+    'empty catalog after bounded settlement is a failed prerequisite',
+    () async {
+      final wire = _Wire()..emptyCatalogReads = 100;
+      addTearDown(wire.close);
+      await expectLater(
+        waitOc2ModelCatalog(
+          wire,
+          directory: '/fq3/disposable',
+          timeout: Duration.zero,
+        ),
+        throwsA(
+          isA<ProbeFailure>().having(
+            (e) => e.code,
+            'fixed code',
+            'enabled_model_missing',
+          ),
+        ),
+      );
+      expect(wire.catalogReads, 1);
+    },
+  );
+
+  test(
+    'missing requested model stays failed despite other enabled models',
+    () async {
+      final wire = _Wire();
+      addTearDown(wire.close);
+      await expectLater(
+        waitOc2ModelCatalog(
+          wire,
+          directory: '/fq3/disposable',
+          model: 'test/missing',
+          timeout: Duration.zero,
+        ),
+        throwsA(
+          isA<ProbeFailure>().having(
+            (e) => e.code,
+            'fixed code',
+            'configured_model_unavailable',
+          ),
+        ),
+      );
+    },
+  );
+
   test('stream requires completed inference and a fresh owned delta', () async {
     final wire = _Wire();
     final result = await probe(wire, {'stream'});
@@ -234,6 +311,9 @@ class _Wire extends Fq3Wire {
   bool omitAbortDelta = false;
   bool foreignCatalogFirst = false;
   bool primaryImage = true;
+  int emptyCatalogReads = 0;
+  int disableSecondaryReads = 0;
+  int catalogReads = 0;
   bool foreignPermission = false;
   bool stable = false;
   bool wrongImageAnswer = false;
@@ -307,7 +387,9 @@ class _Wire extends Fq3Wire {
     final data = body as Map? ?? {};
     if (path == '/api/health') return {'healthy': true, 'version': 'beta-test'};
     if (path == '/api/model') {
+      catalogReads++;
       expect(query, {'location[directory]': '/fq3/disposable'});
+      if (catalogReads <= emptyCatalogReads) return {'data': []};
       return {
         'data': [
           for (final model in [
@@ -317,7 +399,8 @@ class _Wire extends Fq3Wire {
           ])
             {
               ...model,
-              'enabled': true,
+              'enabled':
+                  model != secondary || catalogReads > disableSecondaryReads,
               'capabilities': {
                 'input': [
                   'text',

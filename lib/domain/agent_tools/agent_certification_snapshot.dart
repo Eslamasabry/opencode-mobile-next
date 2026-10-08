@@ -178,7 +178,109 @@ const agentCertificationBundledJson = r'''{
      "evidence": null
     }
    },
-   "agentVersion": "1.18.32"
+   "agentVersion": "1.18.32",
+   "protocolCertification": {
+    "scope": "in-app Ubuntu protocol; no UI/restart/install qualification",
+    "expectedVersion": "1.18.32",
+    "observedVersion": "1.18.32",
+    "deviceBuild": 2195,
+    "runID": "fq3-20261008-qualified",
+    "evidence": "docs/qa/FQ3-2026-10-08/fq3-20261008-qualified.json",
+    "capabilities": {
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "healthy": true,
+       "asserted": true
+      }
+     },
+     "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "retained": true,
+       "asserted": true
+      }
+     },
+     "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "connectedModels": 18,
+       "asserted": true
+      }
+     },
+     "stream": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "streamedDelta": true,
+       "completedReply": true,
+       "asserted": true
+      }
+     },
+     "reconnect": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "refetched": true,
+       "messages": 2,
+       "asserted": true
+      }
+     },
+     "modelSwitch": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "selectionObserved": true,
+       "asserted": true
+      }
+     },
+     "abort": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "interrupted": true,
+       "usableAfterAbort": true,
+       "asserted": true
+      }
+     },
+     "permissionAllow": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "requestObserved": true,
+       "replyObserved": true,
+       "asserted": true
+      }
+     },
+     "permissionDeny": {
+      "state": "fail",
+      "code": "oc1_completion_timeout",
+      "facts": {}
+     },
+     "image": {
+      "state": "fail",
+      "code": "oc1_image_content_unverified",
+      "facts": {}
+     },
+     "cards": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "cardsToolCall": true,
+       "answerReceipt": true,
+       "asserted": true
+      }
+     },
+     "protocolSwitch": {
+      "state": "fail",
+      "code": "nonempty_histories_missing",
+      "facts": {}
+     }
+    }
+   }
   },
   {
    "id": "opencode2",
@@ -236,6 +338,82 @@ const agentCertificationBundledJson = r'''{
     "images": {
      "state": "untested",
      "evidence": null
+    }
+   },
+   "protocolCertification": {
+    "scope": "in-app Ubuntu protocol; no UI/restart/install qualification",
+    "expectedVersion": "2.0.10",
+    "observedVersion": "2.0.10",
+    "deviceBuild": 2195,
+    "runID": "fq3-20261008-qualified",
+    "evidence": "docs/qa/FQ3-2026-10-08/fq3-20261008-qualified.json",
+    "capabilities": {
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "healthy": true,
+       "asserted": true
+      }
+     },
+     "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "created": true,
+       "asserted": true
+      }
+     },
+     "models": {
+      "state": "fail",
+      "code": "enabled_model_missing",
+      "facts": {}
+     },
+     "stream": {
+      "state": "fail",
+      "code": "model_prerequisite_missing",
+      "facts": {}
+     },
+     "reconnect": {
+      "state": "fail",
+      "code": "model_prerequisite_missing",
+      "facts": {}
+     },
+     "modelSwitch": {
+      "state": "fail",
+      "code": "model_prerequisite_missing",
+      "facts": {}
+     },
+     "abort": {
+      "state": "fail",
+      "code": "model_prerequisite_missing",
+      "facts": {}
+     },
+     "permissionAllow": {
+      "state": "fail",
+      "code": "model_prerequisite_missing",
+      "facts": {}
+     },
+     "permissionDeny": {
+      "state": "fail",
+      "code": "model_prerequisite_missing",
+      "facts": {}
+     },
+     "image": {
+      "state": "fail",
+      "code": "model_prerequisite_missing",
+      "facts": {}
+     },
+     "cards": {
+      "state": "fail",
+      "code": "model_prerequisite_missing",
+      "facts": {}
+     },
+     "protocolSwitch": {
+      "state": "fail",
+      "code": "nonempty_histories_missing",
+      "facts": {}
+     }
     }
    }
   },

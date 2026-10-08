@@ -1,6 +1,65 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'common.dart';
+
+/// The stable server may publish an empty catalog before plugins settle.
+/// A catalog entry proves availability only; scenario checks still infer.
+Future<List<Map<String, dynamic>>> waitOc2ModelCatalog(
+  Fq3Wire wire, {
+  required String directory,
+  String? model,
+  Duration timeout = const Duration(seconds: 20),
+  Duration interval = const Duration(milliseconds: 250),
+}) async {
+  if (timeout.isNegative || interval.isNegative) {
+    throw const ProbeFailure('invalid_catalog_poll_budget');
+  }
+  final elapsed = Stopwatch()..start();
+  var sawEnabled = false;
+  var attempted = false;
+  while (true) {
+    if (attempted && elapsed.elapsed >= timeout) break;
+    attempted = true;
+    final remaining = timeout - elapsed.elapsed;
+    Object? response;
+    try {
+      response = await wire
+          .request(
+            'GET',
+            '/api/model',
+            query: {'location[directory]': directory},
+          )
+          .timeout(remaining.isNegative ? Duration.zero : remaining);
+    } on TimeoutException {
+      break;
+    }
+    if (response is! Map || response['data'] is! List) {
+      throw const ProbeFailure('invalid_model_catalog');
+    }
+    final models = _list(response)
+        .where(
+          (m) =>
+              m['enabled'] != false &&
+              _ref(m)['providerID'] != '' &&
+              _ref(m)['id'] != '',
+        )
+        .toList();
+    sawEnabled = sawEnabled || models.isNotEmpty;
+    if (models.isNotEmpty &&
+        (model == null || models.any((m) => _modelName(m) == model))) {
+      return models;
+    }
+    final budget = timeout - elapsed.elapsed;
+    if (budget <= Duration.zero) break;
+    await Future<void>.delayed(interval < budget ? interval : budget);
+  }
+  throw ProbeFailure(
+    sawEnabled && model != null
+        ? 'configured_model_unavailable'
+        : 'enabled_model_missing',
+  );
+}
 
 /// OC2 live events are volatile. Every assertion also reads owned state.
 Future<ProbeRun> runProtocol2(Fq3Wire wire, ProbeOptions options) async {
@@ -46,15 +105,11 @@ class _Oc2Probe {
       return {'created': true};
     });
     await run.check('models', () async {
-      models = _list(await wire.request('GET', '/api/model', query: location))
-          .where(
-            (m) =>
-                m['enabled'] != false &&
-                _ref(m)['providerID'] != '' &&
-                _ref(m)['id'] != '',
-          )
-          .toList();
-      run.require(models.isNotEmpty, 'enabled_model_missing');
+      models = await waitOc2ModelCatalog(
+        wire,
+        directory: run.options.directory,
+        model: run.options.model,
+      );
       final configured = run.options.model;
       if (configured != null) {
         selected = models.where((m) => _modelName(m) == configured).firstOrNull;
