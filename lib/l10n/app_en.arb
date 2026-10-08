@@ -5229,6 +5229,38 @@
   "@chatUiLoadTools": {
     "description": "Chat journey: tool row title when the agent looks up which tools it can use (Claude Code ToolSearch)"
   },
+  "chatUiToolBackgroundTaskFinished": "Background task finished",
+  "@chatUiToolBackgroundTaskFinished": {
+    "description": "Chat journey: step title for the agent's notice that a background task it started has finished (Claude Code task_notification)"
+  },
+  "chatUiToolBackgroundTaskFailed": "Background task failed",
+  "@chatUiToolBackgroundTaskFailed": {
+    "description": "Chat journey: step title for the agent's notice that a background task it started failed"
+  },
+  "chatUiToolBackgroundTaskStopped": "Background task stopped",
+  "@chatUiToolBackgroundTaskStopped": {
+    "description": "Chat journey: step title for the agent's notice that a background task it started was stopped"
+  },
+  "chatUiToolShowCard": "Show card",
+  "@chatUiToolShowCard": {
+    "description": "Chat journey: tool row title for the agent card tool (oc-ui show) before or instead of its card; the card's own title follows it"
+  },
+  "chatStallModelSlow": "The model is taking longer than usual. Wait, or stop the reply and try again.",
+  "@chatStallModelSlow": {
+    "description": "Chat journey: line under a running turn that has been silent for a while while the server still answers (the model is slow)"
+  },
+  "chatStallHelperDown": "The agent's helper on this phone stopped. Stop the reply and try again.",
+  "@chatStallHelperDown": {
+    "description": "Chat journey: line under a silent running turn when the agent's helper process on this phone is not running"
+  },
+  "chatStallConnectionLost": "The connection to the agent was lost. Stop the reply and try again once it is back.",
+  "@chatStallConnectionLost": {
+    "description": "Chat journey: line under a silent running turn when the live connection or the server is down"
+  },
+  "chatStallConnectionUnchecked": "Nothing has come back for a while and the connection could not be checked. Wait, or stop the reply and try again.",
+  "@chatStallConnectionUnchecked": {
+    "description": "Chat journey: line under a silent running turn when the connection could not be checked"
+  },
   "chatUiToolFrom": "{tool} · {server}",
   "@chatUiToolFrom": {
     "description": "Chat journey: tool row title for a tool an MCP server adds: the tool's name, then the server's name",
@@ -16230,6 +16262,10 @@
   "kitWorkWorking": "Working",
   "@kitWorkWorking": {
     "description": "KitWorkLine: starts the work chip's spoken label while a step is running"
+  },
+  "kitWorkHideSteps": "Hide steps",
+  "@kitWorkHideSteps": {
+    "description": "KitWorkLine: the work chip's words while its steps are open and a step runs; the running step in the list shows the progress"
   },
   "kitWorkEarlierSteps": "Show {count, plural, =1{1 earlier step} other{{count} earlier steps}}",
   "@kitWorkEarlierSteps": {

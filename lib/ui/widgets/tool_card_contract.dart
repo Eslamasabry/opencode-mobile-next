@@ -330,6 +330,20 @@ class _ToolContract {
         title = strings.activeContextSkill;
         subtitle = _valueString(input['name']);
         break;
+      case 'task_notification':
+        // Claude Code's notice that a background task it started ended.
+        kind = _ToolKind.generic;
+        title = switch (_valueString(input['status'])?.toLowerCase()) {
+          'failed' || 'error' => strings.chatUiToolBackgroundTaskFailed,
+          'killed' ||
+          'stopped' ||
+          'cancelled' ||
+          'canceled' => strings.chatUiToolBackgroundTaskStopped,
+          _ => strings.chatUiToolBackgroundTaskFinished,
+        };
+        subtitle =
+            _valueString(input['summary']) ??
+            _valueString(input['description']);
       case 'toolsearch':
         // Claude Code looking up which of its tools to load.
         kind = _ToolKind.generic;
@@ -337,10 +351,22 @@ class _ToolContract {
         subtitle = null;
       default:
         kind = _ToolKind.generic;
-        title = state.title?.trim().isNotEmpty == true
-            ? state.title!
-            : _mcpTitle(rawName, strings) ?? rawName;
-        subtitle = null;
+        if (AgentToolAdapters.cardShowNames.contains(rawName.trim())) {
+          // The agent card tool, before its card is drawn (still running) or
+          // where the connection draws none: in words, with the card's own
+          // title. Its server sets the raw name as the call's title, so
+          // that never wins here.
+          title = strings.chatUiToolShowCard;
+          subtitle = _valueString(input['title']);
+        } else {
+          // The server's own title for the call, unless it only repeats
+          // the tool's id; an id is never shown as it is.
+          final own = state.title?.trim();
+          title = own != null && own.isNotEmpty && own != rawName.trim()
+              ? own
+              : _mcpTitle(rawName, strings) ?? _toolWords(rawName);
+          subtitle = null;
+        }
     }
     if (metadata['truncated'] == true &&
         !details.contains(strings.chatUiTruncated)) {
@@ -369,6 +395,21 @@ class _ToolContract {
       KitBidi.auto(words(match.group(2)!)),
       KitBidi.auto(words(match.group(1)!)),
     );
+  }
+
+  /// "render_mermaid_diagram" → "Render mermaid diagram", "ExitWorktree"
+  /// → "Exit worktree": a tool id the app has no words for, as words.
+  static String _toolWords(String name) {
+    final words = name
+        .trim()
+        .replaceAllMapped(
+          RegExp(r'([a-z0-9])([A-Z])'),
+          (match) => '${match[1]} ${match[2]}',
+        )
+        .replaceAll(RegExp(r'[_\-.]+'), ' ')
+        .trim()
+        .toLowerCase();
+    return words.isEmpty ? name : KitText.sentenceCase(words);
   }
 
   static int? _positive(dynamic raw) {

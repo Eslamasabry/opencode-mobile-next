@@ -74,6 +74,10 @@ mixin _ChatTranscriptFields {
   /// The running turn's live line and the row that carries it, worked out
   /// once per build ([_liveTurn]).
   ({KitTurnLive live, int index})? _live;
+
+  /// The row that ends a turn the person stopped from here, which carries
+  /// its "You stopped this reply." line ([_stoppedTurnRow]).
+  int? _stoppedRow;
 }
 
 extension _ChatTranscript on _ChatScreenState {
@@ -261,6 +265,60 @@ extension _ChatTranscript on _ChatScreenState {
     );
   }
 
+  /// The running turn has gone quiet (the BA7 watchdog's finding): one plain
+  /// line saying why, with Stop and Details (FC3). The watchdog's contract
+  /// words and its evidence never reach the line; the facts it checked sit
+  /// behind Details as technical text.
+  KitTurnStall? _turnStallLine(BuildContext context) {
+    if (_conn.isIsolated || _watching) return null;
+    final stall = _conn.turnStallFor(widget.sessionID);
+    if (stall == null) return null;
+    final strings = _chatL10n(context);
+    final evidence = stall.evidence;
+    final message = switch (stall.kind) {
+      TurnStallKind.modelSlow => strings.chatStallModelSlow,
+      TurnStallKind.helperDown => strings.chatStallHelperDown,
+      TurnStallKind.network =>
+        evidence.endpointReachable == false || !evidence.transportConnected
+            ? strings.chatStallConnectionLost
+            : strings.chatStallConnectionUnchecked,
+    };
+    String fact(bool? value) => switch (value) {
+      true => 'yes',
+      false => 'no',
+      null => 'unknown',
+    };
+    final details = [
+      'cause: ${stall.kind.name}',
+      'silent_for: ${stall.silentFor.inSeconds}s',
+      'live_connection: ${fact(evidence.transportConnected)}',
+      'server_answered: ${fact(evidence.endpointReachable)}',
+      'helper_running: ${fact(evidence.helperRunning)}',
+    ].join('\n');
+    return KitTurnStall(
+      message: message,
+      actions: [
+        KitAction(
+          key: const Key('turn-stall-stop'),
+          label: strings.kitTurnLiveStop,
+          working: _aborting,
+          onPressed: () => unawaited(_abort()),
+        ),
+        KitAction(
+          key: const Key('turn-stall-details'),
+          label: strings.chatUiDetails,
+          onPressed: () => unawaited(
+            _showChatErrorDetails(
+              context,
+              title: strings.chatUiDetails,
+              text: details,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   /// This reply runs on the phone's own OpenCode while the AI Team on this
   /// phone has work going: the two share the phone, so a slow first word
   /// says why.
@@ -311,7 +369,11 @@ extension _ChatTranscript on _ChatScreenState {
     final rawMeta = _messageMeta(_messages, index);
     final meta = rawMeta.withModelLabel(_catalogModelNames(rawMeta.modelLabel));
     final parts = displayParts[index];
-    if (parts.isEmpty && meta.isEmpty && m.info.errorText == null) {
+    final stoppedHere = _stoppedRow == index;
+    if (parts.isEmpty &&
+        meta.isEmpty &&
+        m.info.errorText == null &&
+        !stoppedHere) {
       return const SizedBox.shrink();
     }
     final hit =
@@ -328,6 +390,8 @@ extension _ChatTranscript on _ChatScreenState {
     return _MessageView(
       key: ValueKey('message-${m.info.id}'),
       live: _live?.index == index ? _live!.live : null,
+      stall: _live?.index == index ? _turnStallLine(context) : null,
+      stoppedHere: stoppedHere,
       unanswered: !silent && unanswered?.$1 == index,
       onSendAgainNoReply: silent && !offline && unanswered?.$1 == index
           ? () => unawaited(

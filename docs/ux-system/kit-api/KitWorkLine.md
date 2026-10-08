@@ -94,6 +94,7 @@ class KitWorkLine extends StatefulWidget {
 | State | Leading mark (before the chip) | Chip label | Semantics label |
 |---|---|---|---|
 | running | `KitStatusMark(state: working)` | `now` if given, else `summaryOf` | "Working, {label}" |
+| running, expanded (2026-10-08) | none: the running step in the list carries the one spinner | "Hide steps" (`kitWorkHideSteps`) | "Working, Hide steps" |
 | waitingForYou | none (the KitRequestCard below carries the attention) | "Waiting for you" | "Waiting for you, {summary}" |
 | done | none (done is the normal state) | `summaryOf` | "{summary}" |
 | endedFailed | `KitStatusMark(state: failed)` with its word | `summaryOf` | "Didn't finish, {summary}" |

@@ -36,6 +36,7 @@ import '../../domain/session_handoff.dart';
 import '../../domain/run_result.dart';
 import '../../domain/session_history.dart';
 import '../../domain/transcript_search.dart';
+import '../../domain/turn_stall.dart';
 import 'running_work_sheet.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';

@@ -411,6 +411,7 @@ extension _ChatStream on _ChatScreenState {
       _messages.add(replacement);
     }
     pending.canonicalID = info.id;
+    if (_stoppedPromptID == pending.localID) _stoppedPromptID = info.id;
     _messageVersions.remove(pending.localID);
     if (pending.requestComplete) _pendingSends.remove(pending);
     return true;

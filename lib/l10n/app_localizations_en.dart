@@ -6033,6 +6033,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatUiLoadTools => 'Load tools';
 
   @override
+  String get chatUiToolBackgroundTaskFinished => 'Background task finished';
+
+  @override
+  String get chatUiToolBackgroundTaskFailed => 'Background task failed';
+
+  @override
+  String get chatUiToolBackgroundTaskStopped => 'Background task stopped';
+
+  @override
+  String get chatUiToolShowCard => 'Show card';
+
+  @override
+  String get chatStallModelSlow =>
+      'The model is taking longer than usual. Wait, or stop the reply and try again.';
+
+  @override
+  String get chatStallHelperDown =>
+      'The agent\'s helper on this phone stopped. Stop the reply and try again.';
+
+  @override
+  String get chatStallConnectionLost =>
+      'The connection to the agent was lost. Stop the reply and try again once it is back.';
+
+  @override
+  String get chatStallConnectionUnchecked =>
+      'Nothing has come back for a while and the connection could not be checked. Wait, or stop the reply and try again.';
+
+  @override
   String chatUiToolFrom(String tool, String server) {
     return '$tool · $server';
   }
@@ -14513,6 +14541,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kitWorkWorking => 'Working';
+
+  @override
+  String get kitWorkHideSteps => 'Hide steps';
 
   @override
   String kitWorkEarlierSteps(int count) {
