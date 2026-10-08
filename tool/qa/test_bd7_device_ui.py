@@ -142,6 +142,7 @@ class Bd7UiTest(unittest.TestCase):
             self.assertLessEqual(result['bytes'], 100_000)
             self.assertLessEqual(result['width'], 480)
             self.assertEqual(result['section'], 'Crash reports')
+            self.assertEqual(result['layout_retries'], 0)
             with Image.open(path) as image:
                 self.assertEqual(image.format, 'JPEG')
                 self.assertEqual(image.size, (480, 300))
@@ -230,6 +231,60 @@ class Bd7UiTest(unittest.TestCase):
                                 self.assertEqual(result['section'], 'Crash reports')
                                 self.assertTrue(path.exists())
                         self.assertEqual(captured.getvalue(), '')
+
+    def moving_screenshot_fixture(self, documents):
+        pending = iter(documents)
+        calls = []
+        def execute(command, *, timeout):
+            calls.append(command)
+            if command == ['exec-out', 'uiautomator', 'dump', '/dev/tty']:
+                return next(pending)
+            if command == ['exec-out', 'screencap', '-p']:
+                output = BytesIO()
+                color = 'red' if sum(c[:2] == ['exec-out', 'screencap'] for c in calls) == 1 else 'blue'
+                Image.new('RGB', (800, 1200), color).save(output, format='PNG')
+                return output.getvalue()
+            raise AssertionError('unexpected command')
+        return Bd7Ui(execute), calls
+
+    def test_one_moving_crop_retries_with_a_fresh_independently_guarded_frame(self):
+        old = xml(node('Crash reports', '[10,200][790,250]'))
+        settled = xml(node('Crash reports', '[10,300][790,350]'))
+        ui, calls = self.moving_screenshot_fixture([old, settled, settled, settled])
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'proof.jpg'
+            result = ui.screenshot(path)
+            self.assertEqual(result['layout_retries'], 1)
+            with Image.open(path) as image:
+                red, green, blue = image.getpixel((1, 1))
+                self.assertGreater(blue, red + 100)
+        self.assertEqual(sum(c[:2] == ['exec-out', 'screencap'] for c in calls), 2)
+
+    def test_persistent_crop_movement_stops_after_two_fresh_frames_without_file(self):
+        docs = [xml(node('Crash reports', f'[10,{top}][790,{top + 50}]'))
+                for top in (200, 300, 400, 500)]
+        ui, calls = self.moving_screenshot_fixture(docs)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'proof.jpg'
+            with self.assertRaisesRegex(Bd7UiFailure, '^unsafe_screenshot$'):
+                ui.screenshot(path)
+            self.assertFalse(path.exists())
+        self.assertEqual(sum(c[:2] == ['exec-out', 'screencap'] for c in calls), 2)
+
+    def test_rejected_private_text_or_editable_region_never_retries_movement(self):
+        old = xml(node('Crash reports', '[10,200][790,250]'))
+        for unsafe in (
+            node('synthetic-private-value', '[10,400][790,450]'),
+            node('12345', '[10,400][790,450]', editable='true'),
+        ):
+            changed = xml(node('Crash reports', '[10,300][790,350]'), unsafe)
+            ui, calls = self.moving_screenshot_fixture([old, changed])
+            with tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / 'proof.jpg'
+                with self.assertRaisesRegex(Bd7UiFailure, '^unsafe_screenshot$'):
+                    ui.screenshot(path)
+                self.assertFalse(path.exists())
+            self.assertEqual(sum(c[:2] == ['exec-out', 'screencap'] for c in calls), 1)
 
     def test_share_preview_crop_accepts_only_category_time_report_and_excludes_background(
         self,

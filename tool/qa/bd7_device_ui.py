@@ -301,13 +301,20 @@ class Bd7Ui:
 
     def screenshot(self, path, section='Crash reports'):
         try:
-            first = self._crop(section, self.nodes())
-            raw = self.execute(['exec-out', 'screencap', '-p'], timeout=10)
-            if not isinstance(raw, bytes) or len(raw) > 8_000_000:
-                raise ValueError()
-            second = self._crop(section, self.nodes())
-            if first != second:
-                raise ValueError()
+            for layout_retries in range(2):
+                first = self._crop(section, self.nodes())
+                raw = self.execute(['exec-out', 'screencap', '-p'], timeout=10)
+                if not isinstance(raw, bytes) or len(raw) > 8_000_000:
+                    raise ValueError()
+                second = self._crop(section, self.nodes())
+                if first == second:
+                    break
+                # Only two independently validated, safe rectangles that
+                # moved can retry. Invalid text/editable input raises above.
+                # Discard the old PNG; the retry captures a new guarded frame.
+                raw = None
+                if layout_retries == 1:
+                    raise ValueError()
             with Image.open(BytesIO(raw)) as original:
                 if original.format != 'PNG' or original.width * original.height > 16_000_000:
                     raise ValueError()
@@ -323,7 +330,8 @@ class Bd7Ui:
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     destination.write_bytes(output.getvalue())
                     return {'bytes': output.tell(), 'width': image.width,
-                            'height': image.height, 'section': section}
+                            'height': image.height, 'section': section,
+                            'layout_retries': layout_retries}
             raise ValueError()
         except Exception:
             raise Bd7UiFailure('unsafe_screenshot') from None
