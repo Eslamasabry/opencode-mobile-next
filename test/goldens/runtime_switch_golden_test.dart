@@ -7,6 +7,7 @@
 // and look at every changed image before committing it.
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/connection_status.dart';
@@ -32,6 +33,7 @@ void main() {
         tester.view.physicalSize = const Size(412, 915);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.reset);
+        debugDefaultTargetPlatformOverride = TargetPlatform.android; // ARCH-11
         final shell = await RuntimeSwitchShell.create();
         final boundary = GlobalKey();
         await tester.pumpWidget(
@@ -54,6 +56,7 @@ void main() {
         await tester.pump();
         await tester.pumpWidget(const SizedBox.shrink());
         shell.dispose();
+        debugDefaultTargetPlatformOverride = null;
       });
     }
   }

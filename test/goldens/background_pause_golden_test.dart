@@ -9,6 +9,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -109,6 +110,7 @@ Future<void> _golden(
   tester.view.physicalSize = const Size(412, 915);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
+  debugDefaultTargetPlatformOverride = TargetPlatform.android; // ARCH-11
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
   final notice = BackgroundPauseNotice(
@@ -164,6 +166,7 @@ Future<void> _golden(
     );
   } finally {
     await tester.pumpWidget(const SizedBox.shrink());
+    debugDefaultTargetPlatformOverride = null;
     notice.dispose();
     controller.dispose();
     recovery.dispose();
