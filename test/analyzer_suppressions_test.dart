@@ -6,7 +6,8 @@
 //
 // 1. Suppression comments in every Dart file of the repo (tracked or
 //    untracked-but-not-ignored, from `git ls-files`), except the generated
-//    SDK under packages/opencode_sdk/. Per file it keeps the number of
+//    SDK under packages/opencode_sdk/ and the gen-l10n output
+//    lib/l10n/app_localizations*.dart. Per file it keeps the number of
 //    `ignore` / `ignore_for_file` comments (matched by `_suppression` below)
 //    and the multiset of suppression tokens, one token per suppressed code:
 //    `ignore:avoid_print`, `ignore_for_file:type=lint`. A comma list gives
@@ -47,6 +48,9 @@ const _baselinePath = 'test/analyzer_suppressions_baseline.json';
 /// Generated from `contracts/` by tool/sdk/generate.sh; its own options file
 /// is tracked below, its Dart sources are not scanned for comments.
 const _generatedSdk = 'packages/opencode_sdk/';
+// flutter gen-l10n output: its fixed header ignores are the generator's, and
+// each new language adds a file with the same header.
+const _generatedL10n = 'lib/l10n/app_localizations';
 
 /// The suppression comment pattern from STANDARDS.md §18.2 G26.
 final _suppression = RegExp(r'//\s*ignore(_for_file)?:');
@@ -344,7 +348,11 @@ void main() {
   final comments = <String, int>{};
   final tokens = <String, List<String>>{};
   for (final path in files) {
-    if (!path.endsWith('.dart') || path.startsWith(_generatedSdk)) continue;
+    if (!path.endsWith('.dart') ||
+        path.startsWith(_generatedSdk) ||
+        path.startsWith(_generatedL10n)) {
+      continue;
+    }
     final text = File(path).readAsStringSync();
     final n = _suppression.allMatches(text).length;
     if (n == 0) continue;

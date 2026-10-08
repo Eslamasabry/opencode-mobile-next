@@ -11,7 +11,7 @@ internal data class NativeRecoveryBudget(
     val revision: Long = 0L,
 ) {
     fun reserve(at: Long, generation: Long, id: String): NativeRecoveryBudget {
-        check(attempts < 3 && !pending) { "recovery_unavailable" }
+        check(attempts < MAX_ATTEMPTS && !pending) { "recovery_unavailable" }
         return copy(attempts = attempts + 1, pending = true, eventId = id,
             recoveryGeneration = generation, confirmedAt = null, nextAt = null,
             revision = revision + 1)
@@ -22,6 +22,8 @@ internal data class NativeRecoveryBudget(
         "revision" to revision)
 
     companion object {
+        private const val MAX_ATTEMPTS = 3
+        private const val MAX_ARCHIVE_ENTRIES = 16
         fun read(value: Map<*, *>): NativeRecoveryBudget {
             fun integer(key: String): Long? {
                 val v = value[key] ?: return null
@@ -31,7 +33,7 @@ internal data class NativeRecoveryBudget(
             check(integer("version") == 1L) { "recovery_unavailable" }
             val attempts = integer("attempts")
             val pending = value["pending"]
-            check(attempts != null && attempts in 0L..3L && pending is Boolean)
+            check(attempts != null && attempts in 0L..MAX_ATTEMPTS.toLong() && pending is Boolean)
             val event = value["eventId"]
             val generation = integer("recoveryGeneration")
             val confirmed = integer("confirmedAt")
@@ -47,10 +49,12 @@ internal data class NativeRecoveryBudget(
         fun migrationAllows(value: Map<*, *>?): Boolean =
             value?.get("version") == 2 && value["nativeAuthority"] == true
 
-        fun archiveConfirmed(existing: List<NativeRecoveryBudget>, receipt: NativeRecoveryBudget): List<NativeRecoveryBudget> {
-            check(existing.size <= 16) { "recovery_unavailable" }
+        fun archiveConfirmed(
+            existing: List<NativeRecoveryBudget>, receipt: NativeRecoveryBudget,
+        ): List<NativeRecoveryBudget> {
+            check(existing.size <= MAX_ARCHIVE_ENTRIES) { "recovery_unavailable" }
             if (receipt.confirmedAt == null || existing.any { it.eventId == receipt.eventId }) return existing
-            check(existing.size < 16) { "recovery_unavailable" }
+            check(existing.size < MAX_ARCHIVE_ENTRIES) { "recovery_unavailable" }
             return existing + receipt
         }
 
@@ -72,10 +76,14 @@ internal data class NativeRecoveryBudget(
 
         /** A stored policy must match the pinned Dart schema; unknown data grants nothing. */
         fun policyAllows(value: Map<*, *>?): Boolean {
-            if (value == null || value["version"] != 1 ||
-                value["supervision"] !in listOf("high", "balanced", "autonomous")) return false
-            val behaviors = value["behaviors"] as? Map<*, *> ?: return false
-            return behaviors["restartPhoneServer"] == true && behaviors["pollRestartHealth"] == true
+            return if (value == null || value["version"] != 1 ||
+                value["supervision"] !in listOf("high", "balanced", "autonomous")) {
+                false
+            } else {
+                val behaviors = value["behaviors"] as? Map<*, *>
+                behaviors != null && behaviors["restartPhoneServer"] == true &&
+                    behaviors["pollRestartHealth"] == true
+            }
         }
     }
 }

@@ -1,0 +1,48 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/perf_catalog_budget_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: 20 minutes of chat with 6 wakes and 3 chat opens load the catalog at most twice
+00:00 +1: a wake is ready in one health check; the reload behind it skips a fresh catalog
+Pending timers:
+Timer (duration: 0:00:00.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#7      DioMixin.fetch.errorInterceptorWrapper.<anonymous closure> (package:dio/src/dio_mixin.dart:520:13)
+#21     FakeAsync.run.<anonymous closure>.<anonymous closure> (package:fake_async/fake_async.dart:189:18)
+#22     FakeAsync.flushMicrotasks (package:fake_async/fake_async.dart:200:32)
+#23     AutomatedTestWidgetsFlutterBinding.asyncBarrier (package:flutter_test/src/binding.dart:2519:24)
+#24     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1954:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 18 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  a wake is ready in one health check; the reload behind it skips a fresh catalog
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +1 -1: a wake is ready in one health check; the reload behind it skips a fresh catalog [E]
+  Test failed. See exception logs above.
+  The test description was: a wake is ready in one health check; the reload behind it skips a fresh catalog
+
+00:00 +1 -1: concurrent readers share one load; Reload during a load queues exactly one more
+00:00 +2 -1: a change event refreshes behind the list already shown
+00:00 +3 -1: past ten minutes a reader refreshes it in the background
+00:00 +4 -1: a load cut off by going to the background is dropped and never leaves the list loading
+00:00 +5 -1: without an event stream the waiting requests are still read on a wake
+00:00 +6 -1: (tearDownAll)
+00:00 +6 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/perf_catalog_budget_test.dart: a wake is ready in one health check; the reload behind it skips a fresh catalog

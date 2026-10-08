@@ -2,6 +2,7 @@ import '../../builtin/builtin_server.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../../state/profiles.dart';
+import '../../state/server_presentation.dart' show ProfilePresentation;
 
 /// The in-app server this phone is switching to while the app leaves another
 /// in-app server (OpenCode 2 to OpenCode 1), or null when no such switch
@@ -29,6 +30,4 @@ ServerProfile? phoneRuntimeSwitchTarget(
 
 /// The OpenCode version [profile] runs, as the switch confirmation names it.
 String phoneRuntimeName(AppLocalizations l10n, ServerProfile profile) =>
-    profile.flavor == ServerFlavor.v2
-    ? l10n.setupRuntimeTwo
-    : l10n.setupRuntimeOne;
+    profile.runsOpenCode2 ? l10n.setupRuntimeTwo : l10n.setupRuntimeOne;

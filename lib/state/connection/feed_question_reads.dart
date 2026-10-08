@@ -67,8 +67,11 @@ extension _FeedQuestionReads on ConnectionController {
 
   Future<void> _refreshFeedDirectoryQuestions() async {
     final target = _connectedProfile ?? profile;
+    // Per-folder reads open their own transports; an isolated session (the
+    // demo) has no network and keeps its inventory refresh only.
     if (target == null ||
         target.backend != ServerBackend.openCode ||
+        isIsolated ||
         _disposed) {
       return;
     }

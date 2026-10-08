@@ -201,16 +201,20 @@ void main() {
       // Was 120 checks (every 5 s): 240 status reads and 120 probes, each
       // probe two requests on OpenCode 1.
       expect(probes, inInclusiveRange(13, 15));
-      expect(linux.statusReads, lessThanOrEqualTo(2 * 15));
+      // Native recovery (e657025dd) adds the authority read to health and post-probe Stop checks.
+      expect(linux.statusReads, 3 * probes);
 
       recovery.setForeground(false);
       final away = probes;
+      final awayStatusReads = linux.statusReads;
       await tester.pump(const Duration(minutes: 10));
       expect(probes, away);
+      expect(linux.statusReads, awayStatusReads);
 
       recovery.setForeground(true);
       await tester.pump();
       expect(probes, away + 1);
+      expect(linux.statusReads, awayStatusReads + 3);
       recovery.dispose();
     });
 

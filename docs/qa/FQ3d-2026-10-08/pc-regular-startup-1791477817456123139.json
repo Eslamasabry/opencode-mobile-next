@@ -1,0 +1,11 @@
+{
+  "platform": "PC Linux; no emulator",
+  "cases": {},
+  "stoppedAt": "startup",
+  "binarySha256": "c2fe3b18be9e67222d136c818512e3a07213d86ffd5d9176919965d08ac9b9db",
+  "ownedServerPID": 2919136,
+  "run": "1791477817456123139",
+  "stopReason": "pc_server_startup_timeout",
+  "ownedServerExited": true,
+  "serverExitCode": -9
+}

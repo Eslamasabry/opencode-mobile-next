@@ -196,14 +196,14 @@ class NativeRecoveryBudgetTest {
 
     @Test
     fun admissionRequiresMatchingGenerationAndEveryCurrentPermission() {
-        assertTrue(admission())
-        assertFalse("disabled binding", admission(enabled = false))
-        assertFalse("server no longer wanted", admission(wanted = false))
-        assertFalse("user stopped server", admission(userStopped = true))
-        assertFalse("stale generation", admission(generation = 6L))
-        assertFalse("expected generation changed", admission(expectedGeneration = 8L))
-        assertFalse("invalid migration marker", admission(markerValid = false))
-        assertFalse("policy revoked", admission(policyAllowed = false))
+        assertTrue(AdmissionCase().allowed())
+        assertFalse("disabled binding", AdmissionCase(enabled = false).allowed())
+        assertFalse("server no longer wanted", AdmissionCase(wanted = false).allowed())
+        assertFalse("user stopped server", AdmissionCase(userStopped = true).allowed())
+        assertFalse("stale generation", AdmissionCase(generation = 6L).allowed())
+        assertFalse("expected generation changed", AdmissionCase(expectedGeneration = 8L).allowed())
+        assertFalse("invalid migration marker", AdmissionCase(markerValid = false).allowed())
+        assertFalse("policy revoked", AdmissionCase(policyAllowed = false).allowed())
     }
 
     @Test
@@ -235,22 +235,22 @@ class NativeRecoveryBudgetTest {
 
     @Test
     fun manualLiveProofForTheBoundProfileCanResetWithoutAutomationPermission() {
-        assertTrue(manualReset())
+        assertTrue(ManualResetCase().allowed())
     }
 
     @Test
     fun manualResetRejectsUnboundStaleStoppedPausedOrNativeOwnedProof() {
-        assertFalse("wrong requested profile", manualReset(requestedProfile = "other"))
-        assertFalse("wrong bound profile", manualReset(boundProfile = "other"))
-        assertFalse("missing bound profile", manualReset(boundProfile = null))
-        assertFalse("missing manual generation", manualReset(manualGeneration = null))
-        assertFalse("stale manual generation", manualReset(manualGeneration = 6L))
-        assertFalse("changed current generation", manualReset(currentGeneration = 8L))
-        assertFalse("paused profile", manualReset(resumed = false))
-        assertFalse("server no longer wanted", manualReset(wanted = false))
-        assertFalse("user stopped server", manualReset(userStopped = true))
-        assertFalse("native recovery owns launch", manualReset(nativeOwned = true))
-        assertFalse("server is not running", manualReset(running = false))
+        assertFalse("wrong requested profile", ManualResetCase(requestedProfile = "other").allowed())
+        assertFalse("wrong bound profile", ManualResetCase(boundProfile = "other").allowed())
+        assertFalse("missing bound profile", ManualResetCase(boundProfile = null).allowed())
+        assertFalse("missing manual generation", ManualResetCase(manualGeneration = null).allowed())
+        assertFalse("stale manual generation", ManualResetCase(manualGeneration = 6L).allowed())
+        assertFalse("changed current generation", ManualResetCase(currentGeneration = 8L).allowed())
+        assertFalse("paused profile", ManualResetCase(resumed = false).allowed())
+        assertFalse("server no longer wanted", ManualResetCase(wanted = false).allowed())
+        assertFalse("user stopped server", ManualResetCase(userStopped = true).allowed())
+        assertFalse("native recovery owns launch", ManualResetCase(nativeOwned = true).allowed())
+        assertFalse("server is not running", ManualResetCase(running = false).allowed())
     }
 
     @Test
@@ -317,45 +317,49 @@ class NativeRecoveryBudgetTest {
         }
     }
 
-    private fun manualReset(
-        resumed: Boolean = true,
-        wanted: Boolean = true,
-        userStopped: Boolean = false,
-        boundProfile: String? = "profile",
-        requestedProfile: String = "profile",
-        manualGeneration: Long? = 7L,
-        currentGeneration: Long = 7L,
-        running: Boolean = true,
-        nativeOwned: Boolean = false,
-    ): Boolean = NativeRecoveryBudget.manualResetAllowed(
-        resumed = resumed,
-        wanted = wanted,
-        userStopped = userStopped,
-        boundProfile = boundProfile,
-        requestedProfile = requestedProfile,
-        manualGeneration = manualGeneration,
-        currentGeneration = currentGeneration,
-        running = running,
-        nativeOwned = nativeOwned,
-    )
+    private data class ManualResetCase(
+        val resumed: Boolean = true,
+        val wanted: Boolean = true,
+        val userStopped: Boolean = false,
+        val boundProfile: String? = "profile",
+        val requestedProfile: String = "profile",
+        val manualGeneration: Long? = 7L,
+        val currentGeneration: Long = 7L,
+        val running: Boolean = true,
+        val nativeOwned: Boolean = false,
+    ) {
+        fun allowed(): Boolean = NativeRecoveryBudget.manualResetAllowed(
+            resumed = resumed,
+            wanted = wanted,
+            userStopped = userStopped,
+            boundProfile = boundProfile,
+            requestedProfile = requestedProfile,
+            manualGeneration = manualGeneration,
+            currentGeneration = currentGeneration,
+            running = running,
+            nativeOwned = nativeOwned,
+        )
+    }
 
-    private fun admission(
-        enabled: Boolean = true,
-        wanted: Boolean = true,
-        userStopped: Boolean = false,
-        generation: Long = 7L,
-        expectedGeneration: Long = 7L,
-        markerValid: Boolean = true,
-        policyAllowed: Boolean = true,
-    ): Boolean = NativeRecoveryBudget.admitted(
-        enabled = enabled,
-        wanted = wanted,
-        userStopped = userStopped,
-        generation = generation,
-        expectedGeneration = expectedGeneration,
-        markerValid = markerValid,
-        policyAllowed = policyAllowed,
-    )
+    private data class AdmissionCase(
+        val enabled: Boolean = true,
+        val wanted: Boolean = true,
+        val userStopped: Boolean = false,
+        val generation: Long = 7L,
+        val expectedGeneration: Long = 7L,
+        val markerValid: Boolean = true,
+        val policyAllowed: Boolean = true,
+    ) {
+        fun allowed(): Boolean = NativeRecoveryBudget.admitted(
+            enabled = enabled,
+            wanted = wanted,
+            userStopped = userStopped,
+            generation = generation,
+            expectedGeneration = expectedGeneration,
+            markerValid = markerValid,
+            policyAllowed = policyAllowed,
+        )
+    }
 
     private fun legacyBudget(vararg changes: Pair<String, Any?>): Map<String, Any?> = mapOf(
         "version" to 1, "attempts" to 0, "nextAt" to null, "pending" to false,

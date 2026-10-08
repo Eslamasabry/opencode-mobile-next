@@ -133,13 +133,41 @@ void main() {
     final end = service.indexOf('return START_NOT_STICKY', start);
     // The stop action hands over to stopRuntime, which does the work.
     expect(service.substring(start, end), contains('stopRuntime(startId)'));
-    final body = service.indexOf('private fun stopRuntime(');
-    final stop = service.substring(body, service.indexOf('override fun', body));
-    expect(stop, contains('Thread({'));
-    expect(stop, contains('.start()'));
+    final stop = method(service, 'private fun stopRuntime(');
+    final workerStart = stop.indexOf('Thread({');
+    final workerEnd = stop.indexOf('}, "phone-service-policy-stop").start()');
+    expect(workerStart, isNonNegative);
+    expect(workerEnd, greaterThan(workerStart));
+    final revocation = stop.substring(0, workerStart);
+    final worker = stop.substring(workerStart, workerEnd);
     expect(
-      stop.indexOf('Thread({'),
-      lessThan(stop.indexOf('.stopAllServices()')),
+      revocation,
+      contains(
+        'linux.requestServerStop(reason, includeOther = true, '
+        'onRevoked = { revision = it })',
+      ),
+    );
+    expect(revocation, contains('val capturedRevision = revision'));
+    expect(
+      revocation.indexOf('linux.requestServerStop('),
+      lessThan(revocation.indexOf('val capturedRevision = revision')),
+    );
+    expect(revocation, isNot(contains('linux.stopAllServices(')));
+    expect(revocation, isNot(contains('linux.drainRevokedRuntimeChildren()')));
+    // 2fe344b570 replaced the old zero-argument drain with exact Stop revisions.
+    expect(
+      worker,
+      contains(
+        'if (capturedRevision != null) linux.stopAllServices(capturedRevision)',
+      ),
+    );
+    expect(worker, contains('else linux.drainRevokedRuntimeChildren()'));
+    expect(worker, isNot(contains('linux.stopAllServices()')));
+    expect(
+      worker,
+      contains(
+        'finally { try { stopSelf(startId) } catch (_: Throwable) { } }',
+      ),
     );
   });
 }

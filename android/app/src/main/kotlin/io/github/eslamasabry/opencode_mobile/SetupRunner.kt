@@ -389,14 +389,7 @@ class SetupRunner private constructor(private val context: Context) {
             started.outputStream.close()
             started.inputStream.bufferedReader().forEachLine { line ->
                 val parsed = SetupProtocol.parse(line)
-                val event = if (!spec.agentUser) parsed else when (parsed) {
-                    is SetupProtocol.Event.Stage -> SetupProtocol.Event.Stage(
-                        if (spec.id == "agent-paseo" && parsed.label in PASEO_CHECK_STAGES)
-                            parsed.label else spec.stage ?: "Installing agent",
-                    )
-                    is SetupProtocol.Event.Version -> if (parsed.text == spec.version) parsed else null
-                    else -> parsed
-                }
+                val event = installerEvent(spec, parsed)
                 if (event == null) {
                     if (!spec.agentUser) {
                         logLine(line)
@@ -418,17 +411,28 @@ class SetupRunner private constructor(private val context: Context) {
         val code = try { started.waitFor() } finally {
             synchronized(lock) { process = null }
         }
-        if (cancelled) return "cancelled"
-        return if (code == 0) null else if (spec.agentUser) {
+        return if (cancelled) "cancelled" else installerFailure(spec, component, code, last)
+    }
+
+    private fun installerFailure(spec: Spec, component: SetupComponentStatus, code: Int, last: String?): String? =
+        if (code == 0) null else if (spec.agentUser) {
             if (spec.id == "agent-paseo") when (component.stage) {
                 "Checking Paseo checksum" -> "Paseo did not pass its checksum check. Run setup again."
                 "Checking Paseo launch command" -> "Paseo did not pass its launch command check. Run setup again."
                 "Checking Paseo version" -> "Paseo did not pass its version check. Run setup again."
                 else -> "The agent setup could not finish. Try again."
             } else "The agent setup could not finish. Try again."
+        } else (last ?: "exit $code").take(300)
+
+    private fun installerEvent(spec: Spec, parsed: SetupProtocol.Event?): SetupProtocol.Event? =
+        if (!spec.agentUser) parsed else when (parsed) {
+            is SetupProtocol.Event.Stage -> SetupProtocol.Event.Stage(
+                if (spec.id == "agent-paseo" && parsed.label in PASEO_CHECK_STAGES)
+                    parsed.label else spec.stage ?: "Installing agent",
+            )
+            is SetupProtocol.Event.Version -> if (parsed.text == spec.version) parsed else null
+            else -> parsed
         }
-            else (last ?: "exit $code").take(300)
-    }
 
     /**
      * Waits for the app to report the step: ten minutes, or the step's own

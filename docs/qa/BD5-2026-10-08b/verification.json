@@ -1,0 +1,68 @@
+{
+  "base": "6151bda44",
+  "branch": "sol/bd-detekt",
+  "source_sha256": {
+    "android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentFilesystemAcceptance.kt": "920f056c77c12f1af1b9999f0b64139f32896b8b2442bad3cc525c215a4f0413",
+    "android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentUpdateAcceptance.kt": "3c384774e4423ac9a0f8d94f2c1fcf47302c8052291783498f5de3a7109e1a30",
+    "android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinRuntimeAcceptance.kt": "8801ee3916b861e5e6fca51cab60a97e566088be1a5d3f7b8acf9c97d82257e0",
+    "android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinRuntimeReclaimAcceptance.kt": "04b5088f9922d2c6b417b04aa679274f06b47ec1951a0b130d1f3cc7d0db3a44",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinInstallerProducerQaService.kt": "2b0659722424011d05c7497577597629571faa070cd4370b2bbc4e84281a7dc3",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt": "310ef1e5bd362c4944dfb4b27092b552f520f39a3cd26d73a143da24982e5756",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinServerService.kt": "910a7c9f29dc330abf280812b01eed2d363acd40f0a9f9e37f606ad6c400bbe8",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeComponentUpdateRecovery.kt": "078cb4f9edf12e686c5b935ea3c6f1b90fb649ee25017c73769bac9f6abb3ef3",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeInstallerOwnership.kt": "df5f52adceb42a73b581d580356aa4d01c15dfe1d6904e3c21c40be612eb2118",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeInstallerVisibility.kt": "ff2026d490eb43d3755cef07206525b613074166548b1c67aefb4476b0034c6c",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRecoveryBudget.kt": "221eac9828247ca62d2d5026429bdf0f9c7d57e1ddfe76991bcc074c89dd8a26",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRuntimeOwnership.kt": "3e7c8579eba1bd82af684b48e437833fba02c86c2b48e543baf3518afffc76b9",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/RestartBackoff.kt": "eee25b78701037767b11187a8b2a2e70e9836c913349d58be4682b9261f822c0",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/ServiceDiagnostics.kt": "fa777c67bd1a2274e477af27756896ec1e77126a19b5d489d07db853a976aa7f",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt": "312cbf9ed01c43b1bf65258217197c81f7623dc0b5d925d7477f54abe7adb896",
+    "android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeComponentUpdateRecoveryTest.kt": "90ee4b9c9b94fa6b5fb3616b31720b73165435d9156e3d28b1fe60c63e82ac70",
+    "android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeInstallerOwnershipTest.kt": "44a5d7b212ee2e423076821d76f6518f816597af076001d6df50a78ae2b0d94e",
+    "android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeInstallerVisibilityTest.kt": "186c7216e30ed92a1407bd1f7e54196a46699cf37509df4bb386e1e39e561c80",
+    "android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeRecoveryBudgetTest.kt": "d266d640a71ffac11df6e0c749882d9e255339af38e79f1efa6377a4882a6516",
+    "android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeRuntimeOwnershipTest.kt": "1cc18ec36758ffc8528e592dc1eaa6462e1cf6c40c5087ae065253469599c87f",
+    "android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeServerRecipeTest.kt": "7bbfa984d6a89e637d0fb22b5cfb36b56fcbd83a0f557f754fe157bdb8f60048",
+    "android/config/detekt/baseline.xml": "fbc22dc9a7eaf29a8c810cf98a4609c6d25b35741fb2ffcd6cda116ff4d9f332",
+    "test/phone_agent_run_native_test.dart": "199aca7e5ab29684686714907ab6f7d8a6e28630f0030181aef7e1b13b144af9"
+  },
+  "native_fixtures": {
+    "files": 26,
+    "passed": 214,
+    "existing_skipped": 1,
+    "kotlinc_skipped": 0
+  },
+  "affected_pure_jvm": {
+    "classes": 8,
+    "passed": 145
+  },
+  "analyzer": "No issues found",
+  "baseline_additions": 6,
+  "red_gate": {
+    "initial_findings": 315,
+    "exit": 2,
+    "root_reverted_snapshot_findings": 90,
+    "root_reverted_snapshot_exit": 2,
+    "full_reverted_snapshot_findings": 309,
+    "full_reverted_snapshot_exit": 2
+  },
+  "actual_gradle": {
+    "exit": 0,
+    "release_jvm_tests": 145,
+    "failures": 0,
+    "compileReleaseKotlin": "passed",
+    "compileReleaseAndroidTestKotlin": "passed"
+  },
+  "final_detekt": {
+    "new_findings": 0,
+    "exit": 0
+  },
+  "registration_preparation": "Pinned flutter_tools.injectPlugins with releaseMode=true; ignored generated Java only",
+  "integration_head_checked": "aa3847d36",
+  "integration_android_changes_since_base": [],
+  "implementation_commits": [
+    "874f69f5fb1ef074f9196d83797a58198830ab5b",
+    "780dc67183793f7501725edad53d61ae0a4e0ec6",
+    "383b08b732d70dd5ccabf9ac1a23ff067a171205"
+  ]
+}

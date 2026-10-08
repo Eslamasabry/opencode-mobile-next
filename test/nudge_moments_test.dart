@@ -275,6 +275,8 @@ void main() {
       await askAndAnswer(tester, controller, 'r5', 'edit');
       expect(_nudge(NudgeId.approvals), findsNothing);
       expect(controller.nudges.record(NudgeId.approvals)?.dismissed, isTrue);
+      // Inventory reconciles before Home opens; dispose before timer verification.
+      controller.dispose();
     });
 
     testWidgets('closing it removes it for good', (tester) async {
@@ -295,6 +297,8 @@ void main() {
 
       await askAndAnswer(tester, controller, 'r4', 'bash');
       expect(_nudge(NudgeId.approvals), findsNothing);
+      // Inventory reconciles before Home opens; dispose before timer verification.
+      controller.dispose();
     });
 
     testWidgets('never during first run before the first reply', (

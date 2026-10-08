@@ -1,0 +1,21 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_lifecycle_guard_test.dart
+00:00 +0: every proot command prepares and binds persistent projects
+00:00 +1: installation preserves projects before replacing a rootfs
+00:00 +2: native removal independently enforces preservation and confirmation
+00:00 +3: setup and terminal admission use the runtime lock first
+00:00 +4: reinstall recreates proc bindings instead of reusing deleted files
+00:00 +5: runtime status and installation dispatch never wait on the UI thread
+00:00 +6: notification stop waits for runtime storage off the UI thread
+00:00 +6 -1: notification stop waits for runtime storage off the UI thread [E]
+  Expected: a value less than <-1>
+    Actual: <456>
+     Which: is not a value less than <-1>
+  
+  package:matcher                                       expect
+  package:flutter_test/src/widget_tester.dart 473:18    expect
+  test/builtin_project_lifecycle_guard_test.dart 140:5  main.<fn>
+  
+00:00 +6 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_project_lifecycle_guard_test.dart: notification stop waits for runtime storage off the UI thread

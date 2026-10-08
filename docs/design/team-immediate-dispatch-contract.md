@@ -172,7 +172,7 @@ Existing source-level behavior tests support the ordering and uncertainty model:
   covers both capability gates. Line 133 covers duplicate submissions, ordered
   calls and exact running-session evidence. Lines 209, 231 and 250 cover create
   refusal/missing ID, uncertain assignment, and disposal during submission.
-- [`team_controls_test.dart:970`](../../test/team_controls_test.dart#L970)
+- [`team_controls_start_run_test.dart:209`](../../test/team_controls_start_run_test.dart#L209)
   covers the current direct form's create-and-assign call order.
 
 These tests were inspected, not executed for this docs-only job; no fresh pass,

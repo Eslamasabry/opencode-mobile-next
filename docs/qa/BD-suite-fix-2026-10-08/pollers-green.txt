@@ -1,0 +1,7 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/perf_builtin_pollers_test.dart
+00:00 +0: setup engine a page that watches a finished setup reads it once a minute, not twice a second
+00:00 +1: setup engine a watched idle engine reads nothing in the background
+00:00 +2: setup engine a running job is still followed every 500 ms, and a watcher that arrives brings the read forward
+00:00 +3: built-in server recovery a healthy server is checked every 45 s in the foreground, at once on resume, and never in the background
+00:00 +4: built-in server recovery a server that went down is rechecked every 5 s
+00:00 +5: All tests passed!

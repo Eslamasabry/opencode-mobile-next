@@ -1,6 +1,9 @@
 package io.github.eslamasabry.opencode_mobile
 
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NativeInstallerOwnershipTest {
@@ -14,7 +17,8 @@ class NativeInstallerOwnershipTest {
     private fun ticket(observed: List<RuntimeProcessIdentity> = emptyList()) =
         NativeInstallerOwnership.committed(prepared(), p(20), p(21, 20)).copy(observed = observed)
     private fun plan(ticket: InstallerTicket = ticket(), inventory: List<RuntimeProcessIdentity> = emptyList(),
-        readers: Set<Int> = emptySet(), gone: (Int) -> Boolean = { true }, matches: (Int, String) -> Boolean = { _, _ -> false }) =
+        readers: Set<Int> = emptySet(), gone: (Int) -> Boolean = { true },
+        matches: (Int, String) -> Boolean = { _, _ -> false }) =
         NativeInstallerOwnership.drainPlan(ticket, rootfs, boot, inventory, readers, gone, matches)
     private fun safeReject(action: () -> Unit) {
         val error = assertThrows(IllegalArgumentException::class.java) { action() }
@@ -54,7 +58,9 @@ class NativeInstallerOwnershipTest {
         safeReject { ticket(listOf(p(22), p(22))) }
         safeReject { prepared().copy(observed = listOf(p(22))) }
         val other = p(40)
-        safeReject { ticket().copy(ownership = ticket().ownership.copy(other = listOf(other)), observed = listOf(other)) }
+        safeReject {
+            ticket().copy(ownership = ticket().ownership.copy(other = listOf(other)), observed = listOf(other))
+        }
         safeReject { ticket(listOf(p(20, ticks = 11))) }
     }
     @Test fun gateCommitRequiresPreparedReceiptAndStrictSessionLeader() {
@@ -149,7 +155,9 @@ class NativeInstallerOwnershipTest {
     }
     @Test fun livePeerProofRequiresPresentExactKernelStartIdentity() {
         val peer = p(50)
-        safeReject { NativeInstallerOwnership.withCurrentRuntimePeers(ticket(), listOf(peer), listOf(peer.copy(startTicks = 11))) }
+        safeReject {
+            NativeInstallerOwnership.withCurrentRuntimePeers(ticket(), listOf(peer), listOf(peer.copy(startTicks = 11)))
+        }
         safeReject { NativeInstallerOwnership.withCurrentRuntimePeers(ticket(), listOf(peer), emptyList()) }
     }
     @Test fun peerDedupUsesCurrentKernelShapeWithoutTrustingStaleMetadata() {
@@ -168,7 +176,9 @@ class NativeInstallerOwnershipTest {
     }
     @Test fun livePeersCannotHideRootLeaderOrObservedInstallerProcesses() {
         for (peer in listOf(p(20), p(21, 20), p(22))) {
-            safeReject { NativeInstallerOwnership.withCurrentRuntimePeers(ticket(listOf(p(22))), listOf(peer), listOf(peer)) }
+            safeReject {
+                NativeInstallerOwnership.withCurrentRuntimePeers(ticket(listOf(p(22))), listOf(peer), listOf(peer))
+            }
         }
     }
     @Test fun livePeersCannotHideUnobservedInstallerDescendants() {
@@ -182,7 +192,9 @@ class NativeInstallerOwnershipTest {
     }
     @Test fun reusedObservationRefusesBeforeAnyLivePeerAdmission() {
         val reused = p(22, ticks = 11)
-        safeReject { NativeInstallerOwnership.withCurrentRuntimePeers(ticket(listOf(p(22))), emptyList(), listOf(reused)) }
+        safeReject {
+            NativeInstallerOwnership.withCurrentRuntimePeers(ticket(listOf(p(22))), emptyList(), listOf(reused))
+        }
     }
     @Test fun boundedLivePeerProofRefusesOverflowDuplicateInventoryAndPreparedAdmission() {
         val peer = p(50)
@@ -254,7 +266,10 @@ class NativeInstallerOwnershipTest {
             emptyList(), emptyList()) }
     }
     @Test fun componentMappingUsesShippedIdsAndConservativeUnknownCoverage() {
-        assertEquals(setOf(InstallerTarget.OPENCODE1, InstallerTarget.OPENCODE2), NativeInstallerOwnership.targetsForComponent("opencode"))
+        assertEquals(
+            setOf(InstallerTarget.OPENCODE1, InstallerTarget.OPENCODE2),
+            NativeInstallerOwnership.targetsForComponent("opencode"),
+        )
         assertEquals(setOf(InstallerTarget.PASEO), NativeInstallerOwnership.targetsForComponent("agent-paseo"))
         assertEquals(setOf(InstallerTarget.CLAUDE), NativeInstallerOwnership.targetsForComponent("agent-claude"))
         assertEquals(InstallerTarget.entries.toSet(), NativeInstallerOwnership.targetsForComponent("node"))
