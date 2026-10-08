@@ -1,0 +1,10 @@
+{
+  "checkedAtUtc": "2026-10-08T22:05:30.312263+00:00",
+  "normalApk": "/home/eslam/Storage/tmp/oc-apk-share/oc-2198.apk",
+  "sha256": "2069cc0ca62554e3fd798f8ba8bfa46f44ae84be4ff82142e87b495cdc8b89a3",
+  "sidecarMatch": true,
+  "package": "io.github.eslamasabry.opencode_mobile",
+  "versionCode": 2198,
+  "signerSha256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C",
+  "scope": "Read-only local artifact verification; no device invocation or installed-state claim."
+}

@@ -204,3 +204,18 @@ lock. Its pending focused JVM command uses only `ocBuiltinRuntimeQa=true`,
 including the narrow release plugin dependency fix. At `22:01 UTC` memory
 was 3848 MiB; the merged compile had not started. BA has the next emulator
 turn; this lane has not acquired the emulator lock or changed the device.
+
+## Merged Dart checkpoint
+
+On `bc50d2817` plus the unchanged native draft, pinned Flutter analysis passed
+with no issues ([log](analyzer-merged-2198.txt)). The four affected files
+`builtin_server_recovery_test`, `phone_server_healing_test`,
+`phone_agent_work_provider_test` and `phone_server_idle_test` ran serially in
+one Flutter process: **79 passed** ([log](dart-merged-2198.txt)). The shared
+build lock wrapped each test/analyzer lock to prevent overlap with the native
+watcher. This is focused merged Dart coverage, not the full suite or an
+Android/device pass. Native/host manifest hashes remained unchanged.
+
+The local normal2198 artifact also passed hash-sidecar, version/package and full
+certificate checks ([receipt](normal-2198-artifact.json)); this read-only check
+proves no installed-device state.
