@@ -61,6 +61,7 @@ extension _PaseoEvents on PaseoGateway {
   void _onEvent(PaseoEvent event) {
     if (_closed || event.epoch != transport.epoch) return;
     try {
+      if (_trackLocalWork) _localWork.event(event);
       final p = event.payload;
       final rawID =
           p['agentId'] ?? (p['agent'] is Map ? p['agent']['id'] : null);
@@ -106,6 +107,8 @@ extension _PaseoEvents on PaseoGateway {
       }
     } catch (_) {
       // A malformed push is dropped. No payload reaches logs.
+    } finally {
+      if (_trackLocalWork) _localWork.changed();
     }
   }
 

@@ -76,14 +76,24 @@ extension _PaseoSessions on PaseoGateway {
   Future<Map<String, dynamic>> _fetchAgent(String id) async {
     final scope = _scope;
     final epoch = _locationEpoch;
+    final workRevision = _localWork.revision;
     final result = await transport.request('fetch_agent_request', {
       'agentId': _real(paseoString(id, max: 256)),
     });
     _checkLocation(scope, epoch);
     final agent = paseoObject(result['agent']);
     if (agent['id'] != _real(id)) {
+      if (_trackLocalWork) _localWork.malformed();
       throw PaseoFailure(PaseoFailureKind.invalidResponse);
     }
+    if (_trackLocalWork) {
+      _localWork.startEpoch(transport.epoch);
+      if (!_localWork.agent(agent, snapshotRevision: workRevision)) {
+        _localWork.malformed();
+      }
+      _localWork.changed();
+    }
+
     if (_remember(agent) == null) {
       throw PaseoFailure(PaseoFailureKind.scopeMismatch);
     }
