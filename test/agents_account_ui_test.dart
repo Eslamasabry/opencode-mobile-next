@@ -22,6 +22,7 @@ import '../tool/capture/fixtures.dart' show loadCaptureFonts;
 import 'support/agents_fakes.dart';
 import 'support/chats_fakes.dart';
 import 'support/fake_local_terminal.dart';
+import 'support/fake_sign_in_foreground.dart';
 
 const _account = 'Example account';
 const _signedIn = AgentAuthProbeResult(state: AgentAuthProbeState.signedIn);
@@ -564,7 +565,10 @@ void main() {
       await _pump(
         tester,
         agents,
-        terminal: LocalTerminalSessions(backend: terminal),
+        terminal: LocalTerminalSessions(
+          backend: terminal,
+          signInForeground: FakeSignInForeground(),
+        ),
       );
       await tester.tap(find.byKey(const ValueKey('agents-fix-claude')));
       await tester.pumpAndSettle();

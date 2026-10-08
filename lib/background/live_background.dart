@@ -4,9 +4,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../domain/agent_sign_in_foreground.dart';
 import '../domain/background_pause.dart';
 import '../domain/diagnostics_error.dart';
 import '../platform/platform_capabilities.dart';
+
+export '../domain/agent_sign_in_foreground.dart';
+
+part 'signin_foreground.dart';
 
 typedef BackgroundMethodInvoker =
     Future<Map<String, dynamic>> Function(
@@ -219,7 +224,8 @@ class LiveStatus {
 /// transport to remain useful while the Activity is backgrounded. Android may
 /// still enforce platform runtime limits, so every foreground transition also
 /// performs a normal REST reconciliation.
-class BackgroundLiveController extends ChangeNotifier {
+class BackgroundLiveController extends ChangeNotifier
+    implements AgentSignInForegroundPort {
   static const preferenceKey = 'oc.keepLiveInBackground';
   static const _channel = MethodChannel('oc/background');
 
@@ -234,6 +240,10 @@ class BackgroundLiveController extends ChangeNotifier {
   String? lastError;
   BackgroundPauseState _backgroundPause = BackgroundPauseState.unsupported;
   int _pauseRevision = 0;
+  bool _foregroundDisposed = false;
+  late final _SignInForegroundState _signInForeground = _SignInForegroundState(
+    this,
+  );
 
   BackgroundPauseState get backgroundPause => _backgroundPause;
 
@@ -269,6 +279,10 @@ class BackgroundLiveController extends ChangeNotifier {
     );
     return result ?? const {};
   }
+
+  @override
+  AgentSignInForegroundLease reserveAgentSignInForeground() =>
+      _signInForeground.reserve();
 
   Future<void> restore() async {
     if (_disableIfUnsupported()) return;
@@ -323,7 +337,7 @@ class BackgroundLiveController extends ChangeNotifier {
     try {
       // The native permission/start path waits a bounded time for foreground
       // activation. A start request accepted by Android is not yet a success.
-      final status = await _invoke('enable');
+      final status = await _signInForeground.invokeEnable();
       if (_disableIfUnsupported()) {
         return BackgroundResumeResult(
           backgroundPause,
@@ -394,6 +408,12 @@ class BackgroundLiveController extends ChangeNotifier {
 
   Future<bool> setEnabled(bool value) async {
     if (_disableIfUnsupported()) return false;
+    if (!value) {
+      _signInForeground.cancelForUser();
+      if (busy) return _signInForeground.disableUserClaim();
+    } else if (_signInForeground.hasClaims) {
+      return _signInForeground.enableUserClaim();
+    }
     if (busy || value && value == enabled && value == active) {
       return enabled;
     }
@@ -569,6 +589,8 @@ class BackgroundLiveController extends ChangeNotifier {
   /// is exactly when the user would have noticed anyway.
   @visibleForTesting
   void handleNativeTimeout([Object? arguments]) {
+    if (_foregroundDisposed) return;
+    _signInForeground.serviceStopped(AgentSignInForegroundFailure.paused);
     ++_pauseRevision;
     // The same push carries the "Pause background" notification action
     // (reason `userPause`): the user asked, so nothing is owed a warning.
@@ -700,11 +722,20 @@ class BackgroundLiveController extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_foregroundDisposed) return;
+    _foregroundDisposed = true;
+    _signInForeground.invalidate(AgentSignInForegroundFailure.cancelled);
     _cancelPendingLiveStatus();
     super.dispose();
   }
 
+  @override
+  void notifyListeners() {
+    if (!_foregroundDisposed) super.notifyListeners();
+  }
+
   bool _disableIfUnsupported() {
+    if (_foregroundDisposed) return true;
     if (platformCapabilities.supportsBackgroundService) return false;
     // A saved Android opt-in is not evidence that this platform can stay live.
     // Clear runtime state (including a previous platform override's status),
@@ -736,7 +767,9 @@ class BackgroundLiveController extends ChangeNotifier {
     lastError = null;
     notifyListeners();
     try {
-      final status = await _invoke(method);
+      final status = await (method == 'enable'
+          ? _signInForeground.invokeEnable()
+          : _invoke(method));
       if (_disableIfUnsupported()) return false;
       if (revision != _pauseRevision) return false;
       _applyStatus(status);
@@ -770,7 +803,10 @@ class BackgroundLiveController extends ChangeNotifier {
     _setActive(status['active'] == true);
     notificationGranted = status['notificationGranted'] == true;
     batteryOptimizationIgnored = status['batteryOptimizationIgnored'] == true;
-    if (status.containsKey('enabled')) enabled = status['enabled'] == true;
+    if (status.containsKey('enabled') &&
+        !_signInForeground.preservesUserClaim) {
+      enabled = status['enabled'] == true;
+    }
     if (status.containsKey('backgroundPause')) {
       _applyPauseState(
         BackgroundPauseState.fromPlatform(status['backgroundPause']),
@@ -787,6 +823,11 @@ class BackgroundLiveController extends ChangeNotifier {
   void _setActive(bool value) {
     final wasActive = active;
     active = value;
+    if (!active && wasActive) {
+      _signInForeground.serviceStopped(
+        AgentSignInForegroundFailure.unavailable,
+      );
+    }
     if (active != wasActive) {
       // A freshly started service shows the default copy until told
       // otherwise, so the next status must go through even if it equals the
@@ -803,6 +844,11 @@ class BackgroundLiveController extends ChangeNotifier {
     stoppedByAndroidTimeout =
         state.paused && state.reason == BackgroundPauseReason.timeLimit;
     if (!state.supported || state.paused) {
+      _signInForeground.serviceStopped(
+        state.supported
+            ? AgentSignInForegroundFailure.paused
+            : AgentSignInForegroundFailure.unsupported,
+      );
       enabled = false;
       _cancelPendingLiveStatus();
     }
