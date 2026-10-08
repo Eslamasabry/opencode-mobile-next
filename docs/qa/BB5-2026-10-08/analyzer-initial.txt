@@ -1,0 +1,16 @@
+machine_lock: waiting for a test slot (60s)
+machine_lock: waiting for a test slot (120s)
+machine_lock: got test slot 1 after 153s
+Analyzing 4 items...
+
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/builtin/builtin_linux.dart:627:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/builtin/phone_server_idle.dart:75:9 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • test/phone_server_idle_test.dart:196:11 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • test/phone_server_idle_test.dart:337:11 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • test/phone_server_idle_test.dart:339:11 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • test/phone_server_idle_test.dart:389:11 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • test/phone_server_idle_test.dart:391:11 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • test/phone_server_idle_test.dart:395:11 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • test/phone_server_idle_test.dart:397:11 • curly_braces_in_flow_control_structures
+
+9 issues found. (ran in 1.1s)

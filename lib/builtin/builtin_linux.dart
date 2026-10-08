@@ -87,6 +87,13 @@ class BuiltinLinuxStatus {
     this.serverRecoveryGeneration,
     this.serverRecoveryAuthority = false,
     this.serverRecoveryScheduled = false,
+    this.serverIdlePolicySupported = false,
+    this.serverIdleEnabled = false,
+    this.serverIdleMinutes,
+    this.serverIdleStopped = false,
+    this.serverIdleHelperStopped = false,
+    this.serverIdleGeneration,
+    bool? serverIdleReceiptValid,
     this.restorePhase = BuiltinServerRestorePhase.idle,
     this.restoreReason,
     this.serverUptime,
@@ -94,7 +101,7 @@ class BuiltinLinuxStatus {
     this.abi = '',
     this.bytesUsed,
     this.services = const [],
-  });
+  }) : _serverIdleReceiptValid = serverIdleReceiptValid;
 
   /// Nothing installed and nothing running: what a runner without the
   /// channel (desktop, tests) honestly has.
@@ -107,6 +114,13 @@ class BuiltinLinuxStatus {
       serverRecoveryGeneration = null,
       serverRecoveryAuthority = false,
       serverRecoveryScheduled = false,
+      serverIdlePolicySupported = false,
+      serverIdleEnabled = false,
+      serverIdleMinutes = null,
+      serverIdleStopped = false,
+      serverIdleHelperStopped = false,
+      serverIdleGeneration = null,
+      _serverIdleReceiptValid = false,
       restorePhase = BuiltinServerRestorePhase.idle,
       restoreReason = null,
       serverUptime = null,
@@ -118,6 +132,26 @@ class BuiltinLinuxStatus {
   factory BuiltinLinuxStatus.fromMap(Map<Object?, Object?> map) {
     int? asInt(Object? value) => value is num ? value.toInt() : null;
     final message = map['message'];
+    int? idleInteger(String key) =>
+        map[key] is int && (map[key] as int) >= 0 ? map[key] as int : null;
+    final idleMinutes = idleInteger('serverIdleMinutes');
+    final idleGeneration = idleInteger('serverIdleGeneration');
+    final idleValid =
+        map['serverIdlePolicySupported'] == true &&
+        [
+          'serverIdleEnabled',
+          'serverIdleStopped',
+          'serverIdleHelperStopped',
+          'serverRestartWanted',
+          'serverRunning',
+        ].every((key) => map[key] is bool) &&
+        idleMinutes != null &&
+        idleMinutes >= 1 &&
+        idleMinutes <= 60 &&
+        idleGeneration != null &&
+        (!(map['serverIdleStopped'] == true ||
+                map['serverIdleHelperStopped'] == true) ||
+            idleGeneration > 0);
     return BuiltinLinuxStatus(
       installed: map['installed'] == true,
       phase: BuiltinLinuxPhase.parse(map['phase']),
@@ -127,6 +161,13 @@ class BuiltinLinuxStatus {
       serverRecoveryGeneration: asInt(map['serverRecoveryGeneration']),
       serverRecoveryAuthority: map['serverRecoveryAuthority'] == true,
       serverRecoveryScheduled: map['serverRecoveryScheduled'] == true,
+      serverIdlePolicySupported: map['serverIdlePolicySupported'] == true,
+      serverIdleEnabled: map['serverIdleEnabled'] == true,
+      serverIdleMinutes: idleMinutes,
+      serverIdleStopped: map['serverIdleStopped'] == true,
+      serverIdleHelperStopped: map['serverIdleHelperStopped'] == true,
+      serverIdleGeneration: idleGeneration,
+      serverIdleReceiptValid: idleValid,
       restorePhase: BuiltinServerRestorePhase.parse(map['restorePhase']),
       restoreReason: BuiltinServerRestoreReason.parse(map['restoreReason']),
       serverUptime: switch (asInt(map['serverUptimeMs'])) {
@@ -159,6 +200,23 @@ class BuiltinLinuxStatus {
   /// Native is the sole durable budget writer once the profile is migrated.
   final bool serverRecoveryAuthority;
   final bool serverRecoveryScheduled;
+  final bool serverIdlePolicySupported;
+  final bool serverIdleEnabled;
+  final int? serverIdleMinutes;
+  final bool serverIdleStopped;
+  final bool serverIdleHelperStopped;
+  final int? serverIdleGeneration;
+  final bool? _serverIdleReceiptValid;
+  bool get serverIdleReceiptValid =>
+      _serverIdleReceiptValid ??
+      (serverIdlePolicySupported &&
+          serverIdleMinutes != null &&
+          serverIdleMinutes! >= 1 &&
+          serverIdleMinutes! <= 60 &&
+          serverIdleGeneration != null &&
+          serverIdleGeneration! >= 0 &&
+          (!(serverIdleStopped || serverIdleHelperStopped) ||
+              serverIdleGeneration! > 0));
   final BuiltinServerRestorePhase restorePhase;
   final BuiltinServerRestoreReason? restoreReason;
 
@@ -507,6 +565,97 @@ class BuiltinLinux {
     if (!supported) return const BuiltinLinuxStatus.absent();
     final raw = await _invoke<Map<Object?, Object?>>('status');
     return BuiltinLinuxStatus.fromMap(raw ?? const {});
+  }
+
+  /// Saves the authored idle policy on an APK supporting the full contract.
+  Future<BuiltinLinuxStatus> setPhoneServerIdlePolicy({
+    required bool enabled,
+    required int idleMinutes,
+  }) {
+    if (idleMinutes < 1 || idleMinutes > 60) {
+      throw const BuiltinLinuxException(
+        'Choose an idle time between 1 and 60 minutes.',
+        code: 'idle_policy_invalid',
+      );
+    }
+    return _idleStatus('setPhoneServerIdlePolicy', {
+      'enabled': enabled,
+      'idleMinutes': idleMinutes,
+    });
+  }
+
+  Future<BuiltinLinuxStatus> resumeIdleStoppedPhoneServer({
+    required String profileId,
+    required int expectedIdleGeneration,
+  }) {
+    _idleIdentity(profileId, expectedIdleGeneration);
+    return _idleStatus('resumeIdleStoppedPhoneServer', {
+      'profileId': profileId,
+      'expectedIdleGeneration': expectedIdleGeneration,
+    }, timeout: const Duration(seconds: 30));
+  }
+
+  Future<BuiltinLinuxStatus> completePhoneServerIdleResume({
+    required String profileId,
+    required int expectedIdleGeneration,
+  }) {
+    _idleIdentity(profileId, expectedIdleGeneration);
+    return _idleStatus('completePhoneServerIdleResume', {
+      'profileId': profileId,
+      'expectedIdleGeneration': expectedIdleGeneration,
+    });
+  }
+
+  void _idleIdentity(String profileId, int generation) {
+    if (RegExp(r'^[A-Za-z0-9_-]{1,80}$').firstMatch(profileId)?.end !=
+            profileId.length ||
+        generation <= 0) {
+      throw const BuiltinLinuxException(
+        'The phone server could not start. Open setup or try Start again.',
+        code: 'idle_resume_stale',
+      );
+    }
+  }
+
+  Future<void> observePhoneAgentWork({
+    required String profileId,
+    required bool? busy,
+  }) async {
+    if (!supported) return;
+    if (RegExp(r'^[A-Za-z0-9_-]{1,80}$').firstMatch(profileId)?.end !=
+        profileId.length) {
+      return;
+    }
+    try {
+      await _invoke<void>('observePhoneAgentWork', {
+        'profileId': profileId,
+        'busy': busy,
+      }).timeout(const Duration(seconds: 8));
+    } catch (_) {
+      /* Missing/failed heartbeat never proves native idle. */
+    }
+  }
+
+  Future<BuiltinLinuxStatus> _idleStatus(
+    String method,
+    Map<String, Object?> arguments, {
+    Duration timeout = const Duration(seconds: 8),
+  }) async {
+    if (!supported) return const BuiltinLinuxStatus.absent();
+    try {
+      final raw = await _invoke<Map<Object?, Object?>>(
+        method,
+        arguments,
+      ).timeout(timeout);
+      final result = BuiltinLinuxStatus.fromMap(raw ?? const {});
+      if (!result.serverIdleReceiptValid) throw const FormatException();
+      return result;
+    } catch (_) {
+      throw const BuiltinLinuxException(
+        'The phone server could not start. Open setup or try Start again.',
+        code: 'idle_resume_unavailable',
+      );
+    }
   }
 
   /// Starts the download and unpack; returns at once. Poll [status].
@@ -1012,6 +1161,7 @@ class BuiltinLinux {
             'holdAwakeForWork',
             'setChatWorkLease',
             'setPhoneAgentChatWorkLease',
+            'observePhoneAgentWork',
             'performance',
           }.contains(method)
           ? 50

@@ -1,7 +1,9 @@
 # BB5 — idle stop and guarded foreground resume
 
-Status: proposed integration contract; no BB5 implementation or qualification.
-BB4 native/device qualification and the BA integration below are prerequisites.
+Status: Dart contract groundwork; BB4 qualified at `30e5d9027` and BA hooks
+merged at `f561c3584`. Native wiring, lifecycle integration and device
+qualification remain pending. The coordinator's 2026-10-08 memory hold prohibits
+Gradle/APK builds and Kotlin Gradle tests until further notice.
 
 Finish line: after the configured background idle period, the app stops its
 owned phone server and previously running phone-agent helper; foreground return
@@ -16,6 +18,14 @@ BB owns native idle admission, exact runtime drain, persisted idle policy, the
 `BuiltinLinux` Dart bridge and `PhoneServerHealing`. BA owns all connection
 library parts and phone-agent gateway integration. Claude owns settings/copy UI.
 MethodChannel names and wire shapes must be frozen before parallel implementation.
+
+`PhoneServerIdle.check()` implements the proposed guarded resume sequence with
+injected foreground, readable-owner and BA restoration callbacks. `running` and
+`failure` expose bounded progress and the fixed `idle_resume_unavailable` code.
+`invalidate()` revokes pending continuations; `dispose()` prevents later state
+publication. This class is not yet wired into `PhoneServerHealing`, and the
+native channel handlers below are not implemented. No idle policy is enabled by
+this groundwork. See [the offline checkpoint](../qa/BB5-2026-10-08/README.md).
 
 Foreground return already reaches `PhoneServerHealing.setForeground(true)` from
 [`main.dart`](../../lib/main.dart). The current notification's content intent
@@ -35,7 +45,7 @@ request to reset its durable budget. An idle resume has a separate native path.
 | Field | Type | Meaning |
 | --- | --- | --- |
 | `serverIdlePolicySupported` | bool | This APK implements the complete idle contract. |
-| `serverIdleEnabled` | bool | Persisted policy; default true on a supporting APK. |
+| `serverIdleEnabled` | bool | Persisted policy; default false until the person enables idle stop. |
 | `serverIdleMinutes` | int? | Persisted threshold, 1–60; initial value 5. |
 | `serverIdleStopped` | bool | An intentional idle stop, independent of user stop. |
 | `serverIdleHelperStopped` | bool | This idle generation stopped a previously live phone-agent helper. |
@@ -63,6 +73,36 @@ Existing recovery policy and admission remain authoritative. The operation must
 neither refill nor disguise exhaustion of the durable retry budget; native
 decides whether the existing admission permits this resume. There is no Dart
 manual-start fallback after refusal.
+
+`Future<BuiltinLinuxStatus> completePhoneServerIdleResume({required String
+profileId, required int expectedIdleGeneration})` is the final completion
+acknowledgement. The positive generation remains unchanged across native server
+launch, BA helper readiness and feed reconnection. PhoneServerHealing calls this
+only after the full guarded BA await succeeds and fresh foreground/owner checks.
+Native compares the exact token again, confirms wanted intent and the live owned
+server (and, when recorded previously live, the helper), then completes the
+resume atomically. No recovery-budget or manual-ready counter changes.
+The durable internal generation counter never resets; a stale acknowledgement
+cannot authorize a later run.
+
+When a helper was previously live and restored, completion clears the public
+generation to zero and both stopped markers. When no helper was previously
+live, retain a positive completed generation as an automatic-helper-start gate:
+BA's existing zero-generation requirement prevents later row refresh from
+starting that previously stopped helper. The server is running and no longer
+idle stopped; a subsequent explicit foreground helper start may clear this
+gate, but a background start may not. A future idle stop uses a new durable
+generation. This distinction preserves prior helper intent without asking BA to
+change its current public hooks.
+
+`observePhoneAgentWork({required String profileId, required bool? busy})`
+delivers current tri-state local work truth to native admission. It has no
+credential or output payload. Missing, stale or wrong-owner observations deny
+idle stop. BB repeats current observations with a bounded heartbeat; a cold
+process begins unknown. CPU holds use an independent helper-scoped opaque chat
+lease, never the server-gated OpenCode lease. A known busy run may retain its
+existing capped token while observation becomes unknown; unknown never acquires
+a new CPU hold. Only confirmed idle closes that logical run.
 
 Idle admission uses elapsed realtime while backgrounded. The interval starts
 after confirmed work is idle; foreground return or new work invalidates it.
@@ -135,9 +175,9 @@ opt into manual Start. Exact wording/localization is frontend-owned.
 
 ## Acceptance and current blockers
 
-Safe idle-stop is blocked today by missing BA busy truth for local agent turns,
-missing owner/token guarded helper restoration, and unguarded automatic helper
-starts. BB4's OpenCode ReplyWatch lease does not establish all-agent busy truth.
+BA busy truth and guarded helper restoration are now merged; native wire/admission
+and foreground orchestration remain the current integration gates. BB4's
+OpenCode ReplyWatch lease does not establish all-agent busy truth.
 Do not enable a partial timer that can interrupt a live agent or immediately
 restart a helper after stopping it.
 
