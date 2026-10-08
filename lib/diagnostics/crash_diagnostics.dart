@@ -8,6 +8,40 @@ import 'package:path_provider/path_provider.dart';
 
 import 'app_diagnostics.dart';
 
+/// A validated capture record; arbitrary error values and stacks have no slot.
+@immutable
+final class CrashDiagnosticRecord {
+  const CrashDiagnosticRecord._({
+    required this.source,
+    required this.category,
+    required this.at,
+  });
+
+  final String source;
+  final String category;
+  final DateTime at;
+}
+
+/// An in-memory view of capture consent and validated evidence only.
+@immutable
+final class CrashDiagnosticsSnapshot {
+  CrashDiagnosticsSnapshot._({
+    required this.available,
+    required this.enabled,
+    required this.storageFailed,
+    required this.consentEpoch,
+    required this.revision,
+    required List<CrashDiagnosticRecord> records,
+  }) : records = List.unmodifiable(records);
+
+  final bool available;
+  final bool enabled;
+  final bool storageFailed;
+  final int consentEpoch;
+  final int revision;
+  final List<CrashDiagnosticRecord> records;
+}
+
 /// Explicit opt-in, app-private evidence for global errors and Android ANRs.
 /// Only fixed categories and timestamps are saved. No throwable value or stack
 /// is serialized, even if a credential has not been registered for redaction.
@@ -41,10 +75,50 @@ class CrashDiagnosticsController extends ChangeNotifier {
   bool _storageFailed = false;
   bool _closed = false;
   bool _clearing = false;
+  int _consentEpoch = 0;
+  int _evidenceRevision = 0;
 
   bool get enabled => _enabledSince > 0;
   bool get storageFailed => _storageFailed;
   int get savedCount => _records.length;
+
+  /// Does not read or write storage and cannot expose paths or raw errors.
+  CrashDiagnosticsSnapshot get snapshot {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final records = <CrashDiagnosticRecord>[];
+    if (enabled && !_closed && !_storageFailed) {
+      for (final entry in _records) {
+        final source = entry['source'];
+        final category = entry['category'];
+        final time = entry['time'];
+        if (source is! String ||
+            category is! String ||
+            time is! int ||
+            !_sources.contains(source) ||
+            !_categories.contains(category) ||
+            time <= 0 ||
+            time < _enabledSince ||
+            time > now) {
+          continue;
+        }
+        records.add(
+          CrashDiagnosticRecord._(
+            source: source,
+            category: category,
+            at: DateTime.fromMillisecondsSinceEpoch(time, isUtc: true),
+          ),
+        );
+      }
+    }
+    return CrashDiagnosticsSnapshot._(
+      available: !_closed,
+      enabled: enabled,
+      storageFailed: _storageFailed,
+      consentEpoch: _consentEpoch,
+      revision: _evidenceRevision,
+      records: records,
+    );
+  }
 
   File _file(String name) {
     final file = File('${_directory.path}/$name');
@@ -119,6 +193,7 @@ class CrashDiagnosticsController extends ChangeNotifier {
   }
 
   bool _replaceConsent(bool value) {
+    _consentEpoch++;
     _clearing = true;
     try {
       _enabledSince = 0;
@@ -207,6 +282,7 @@ class CrashDiagnosticsController extends ChangeNotifier {
       }
       _atomicWrite(_recordFileName, jsonEncode(next));
       _records = next;
+      _evidenceRevision++;
       _storageFailed = false;
       _diagnostics.record(
         category,
@@ -277,6 +353,7 @@ class CrashDiagnosticsController extends ChangeNotifier {
 
   void _eraseEvidence() {
     _records = [];
+    _evidenceRevision++;
     for (final name in [
       _recordFileName,
       _pendingFileName,

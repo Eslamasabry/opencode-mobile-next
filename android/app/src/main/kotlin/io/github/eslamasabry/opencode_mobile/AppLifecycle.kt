@@ -55,6 +55,12 @@ object AppLifecycle {
                             "lastCrash" to NativeCrashStore(activity.filesDir).read(),
                         ),
                     )
+                    "exitHistory" -> {
+                        val limit = AppExitHistoryPolicy.limit(
+                            (call.arguments as? Map<*, *>)?.get("limit"),
+                        )
+                        result.success(exitHistory(activity, limit ?: 0))
+                    }
                     "keepAliveInfo" -> result.success(keepAliveInfo(activity))
                     "openKeepAliveSetting" -> result.success(
                         openKeepAliveSetting(activity, call.argument<String>("setting") ?: "", requestBatteryExemption),
@@ -126,6 +132,26 @@ object AppLifecycle {
         Log.i(TAG, "previous process ended: reason=${newest.reason} status=${newest.status}")
         return lastExit
     }
+
+    /** Read-only history: never consumes or advances startup recovery state. */
+    fun exitHistory(context: Context, limit: Int): Map<String, Any?> =
+        AppExitHistoryPolicy.history(Build.VERSION.SDK_INT, context.packageName, limit) { maxNum ->
+            val manager = context.getSystemService(ActivityManager::class.java)
+                ?: error("Activity manager unavailable")
+            manager.getHistoricalProcessExitReasons(context.packageName, 0, maxNum)
+                .asSequence()
+                .filter { it.processName == context.packageName }
+                .map { record ->
+                    AppExitMetadata(
+                        processName = record.processName,
+                        reason = record.reason,
+                        importance = record.importance,
+                        timestamp = record.timestamp,
+                        subReason = AppExitHistoryPolicy.subReason(record),
+                        status = record.status,
+                    )
+                }.asIterable()
+        }
 
     private fun keepAliveInfo(context: Context): Map<String, Any?> {
         val power = context.getSystemService(PowerManager::class.java)

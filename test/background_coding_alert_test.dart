@@ -18,6 +18,16 @@ _backgroundController({bool backgrounded = true}) async {
     preferences: preferences,
     liveStatusDebounce: Duration.zero,
     invoke: (method, [arguments]) async {
+      if (method == 'getBackgroundPause') {
+        return const {
+          'supported': true,
+          'active': false,
+          'paused': false,
+          'reason': 'none',
+          'at': null,
+          'canResume': false,
+        };
+      }
       // Ongoing-notification refreshes ride along with every state change;
       // these tests assert on the alert contract alone.
       if (method == 'updateLiveStatus') return const {'updated': true};

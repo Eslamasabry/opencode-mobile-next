@@ -65,6 +65,16 @@ _harness() async {
     preferences: preferences,
     invoke: (method, [arguments]) async {
       calls.add((method: method, arguments: arguments));
+      if (method == 'getBackgroundPause') {
+        return const {
+          'supported': true,
+          'active': false,
+          'paused': false,
+          'reason': 'none',
+          'at': null,
+          'canResume': false,
+        };
+      }
       if (method == 'showCodingAlert') return const {'shown': true};
       if (method == 'dismissCodingAlert') return const {'dismissed': true};
       return const {
