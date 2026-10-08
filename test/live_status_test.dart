@@ -292,9 +292,10 @@ void main() {
       expect(ConnectionController.toolSentence('bash'), 'Running a command…');
       expect(ConnectionController.toolSentence('Edit'), 'Editing files…');
       expect(ConnectionController.toolSentence('grep'), 'Searching files…');
+      // An id the app has no sentence for is said in words, never as is.
       expect(
         ConnectionController.toolSentence('mcp_thing'),
-        'Running mcp_thing…',
+        'Running mcp thing…',
       );
       expect(ConnectionController.toolSentence(''), 'Working…');
     });

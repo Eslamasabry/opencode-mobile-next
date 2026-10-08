@@ -13,6 +13,7 @@ import '../../kit/kit.dart';
 import '../../permission_presentation.dart';
 import '../../widgets/product_states.dart' show productErrorText;
 import '../../widgets/request_routes.dart';
+import '../../widgets/tool_card.dart' show toolLabel;
 
 AppLocalizations _l10n(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
@@ -209,7 +210,7 @@ KitRequestAlwaysAllowStep? permissionAlwaysStep(
       permission.filePath ??
       (permission.permission.isEmpty
           ? l10n.chatUiAllMatchingRequests
-          : permission.permission);
+          : toolLabel(permission.permission, l10n: l10n));
   return KitRequestAlwaysAllowStep(
     what: what,
     covers: broader.isEmpty ? null : broader.join(', '),

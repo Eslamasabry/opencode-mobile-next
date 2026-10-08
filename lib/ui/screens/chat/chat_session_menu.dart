@@ -78,9 +78,7 @@ extension _ChatSessionMenu on _ChatScreenState {
             '- ${l10n.chatUiAttachment}: ${part.filename ?? part.url ?? l10n.chatUiFile}\n',
           );
         } else if (part.type == 'tool') {
-          put(
-            '### ${l10n.chatUiTool}: ${part.toolName ?? l10n.chatUiTool}\n\n',
-          );
+          put(transcriptToolHeading(part, l10n));
           final output = part.toolState.output?.trim();
           if (output?.isNotEmpty == true) {
             put('```text\n$output\n```\n\n');
@@ -426,3 +424,10 @@ extension _ChatSessionMenu on _ChatScreenState {
     _addReviewPrompt(prompt);
   }
 }
+
+/// A tool call's heading in Copy transcript: the tool in words, as its step
+/// row names it, never its raw id.
+@visibleForTesting
+String transcriptToolHeading(Part part, AppLocalizations l10n) =>
+    '### ${l10n.chatUiTool}: '
+    '${toolLabel(part.toolName ?? '', state: part.toolState, l10n: l10n)}\n\n';

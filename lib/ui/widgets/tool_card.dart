@@ -3,9 +3,8 @@ import 'dart:convert';
 import 'package:flutter/widgets.dart';
 
 import '../../api/models.dart';
-import '../../domain/agent_tools/agent_tool_adapter.dart'
-    show AgentToolAdapters;
 import '../../domain/mobile_tool_view.dart';
+import '../../domain/tool_label.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import '../kit/chat/kit_markdown.dart';
