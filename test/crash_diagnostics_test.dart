@@ -97,6 +97,28 @@ void main() {
     expect(diagnostics.entries.single.source, 'crash.flutter');
   });
 
+  test('records lists saved categories newest first without values', () {
+    capture.setEnabled(true);
+    final anr = DateTime.now();
+    capture.importAndroidAnr(anr.millisecondsSinceEpoch);
+    capture.capture(ArgumentError('private-value'), null, 'widget');
+    final records = capture.records;
+    expect(records, hasLength(2));
+    expect(records.first.source, 'widget');
+    expect(records.first.category, 'Invalid argument');
+    expect(records.last.source, 'anr');
+    expect(
+      records.last.time.millisecondsSinceEpoch,
+      anr.millisecondsSinceEpoch,
+    );
+    expect(records.toString(), isNot(contains('private-value')));
+    // A read-only copy: changing it does not touch the saved records.
+    records.clear();
+    expect(capture.savedCount, 2);
+    capture.clear();
+    expect(capture.records, isEmpty);
+  });
+
   test('reapplying enabled consent preserves saved evidence', () {
     capture.setEnabled(true);
     capture.capture(StateError('private'), null, 'flutter');

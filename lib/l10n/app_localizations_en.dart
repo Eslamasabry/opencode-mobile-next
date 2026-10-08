@@ -27707,4 +27707,132 @@ class AppLocalizationsEn extends AppLocalizations {
   String cardsProblemRemovalFailedFor(String agents) {
     return 'Cards couldn\'t be fully removed from $agents. Try again after a restart.';
   }
+
+  @override
+  String get crashReportsLabel => 'Crash reports';
+
+  @override
+  String get crashReportsSwitch => 'Save crash reports on this phone';
+
+  @override
+  String get crashReportsSwitchBody =>
+      'Kept on this phone. Never sent automatically.';
+
+  @override
+  String get crashReportsUnavailable =>
+      'Crash reports aren\'t available right now. Restart the app and try again.';
+
+  @override
+  String get crashReportsFailed =>
+      'Couldn\'t update crash reports. Restart the app and try again.';
+
+  @override
+  String get crashReportsNone => 'No crash reports yet';
+
+  @override
+  String get crashReportsNoneBody =>
+      'One appears here if the app closes or stops responding.';
+
+  @override
+  String get crashKindError => 'The app hit an unexpected error';
+
+  @override
+  String get crashKindScreen => 'A screen couldn\'t be shown';
+
+  @override
+  String get crashKindClosed => 'The app closed unexpectedly';
+
+  @override
+  String get crashKindNotResponding => 'The app stopped responding';
+
+  @override
+  String get crashReportPreviewBody =>
+      'Kept on this phone only. It\'s sent only if you include saved errors in a problem report yourself.';
+
+  @override
+  String get crashReportDetailSource => 'Source';
+
+  @override
+  String get crashReportDetailCategory => 'Category';
+
+  @override
+  String crashReportsDelete(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Delete $count saved crash reports',
+      one: 'Delete 1 saved crash report',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get crashReportsDeleteTitle => 'Delete saved crash reports?';
+
+  @override
+  String get crashReportsDeleteBody =>
+      'Deletes the saved crash reports. Saving crash reports stays on.';
+
+  @override
+  String get crashReportsDeleteConfirm => 'Delete crash reports';
+
+  @override
+  String get crashReportsNote =>
+      'Only what kind of problem happened and when is kept: no error messages, conversations or passwords. Keeps the latest 20 reports.';
+
+  @override
+  String crashReportsOnClears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Turning this on clears the $count saved errors above.',
+      one: 'Turning this on clears the saved error above.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get crashReportsOffDeletes =>
+      'Turning this off deletes the saved crash reports.';
+
+  @override
+  String crashReportsOffDeletesAndClears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Turning this off deletes the saved crash reports and clears the $count saved errors above.',
+      one:
+          'Turning this off deletes the saved crash reports and clears the saved error above.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String crashReportsOffClears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Turning this off clears the $count saved errors above.',
+      one: 'Turning this off clears the saved error above.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String crashReportsDeleteBodyWithErrors(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Deletes the crash reports and clears the $count saved errors above. Saving crash reports stays on.',
+      one:
+          'Deletes the crash reports and clears the saved error above. Saving crash reports stays on.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get crashReportsClearedToo =>
+      'The saved crash reports are deleted too.';
 }

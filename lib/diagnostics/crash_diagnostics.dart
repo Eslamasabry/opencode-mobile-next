@@ -46,6 +46,17 @@ class CrashDiagnosticsController extends ChangeNotifier {
   bool get storageFailed => _storageFailed;
   int get savedCount => _records.length;
 
+  /// The saved records, newest first: fixed source, category and time only.
+  /// A read-only view for the consent UI; nothing here touches storage.
+  List<CrashRecord> get records => [
+    for (final entry in _records.reversed)
+      CrashRecord(
+        source: entry['source']! as String,
+        category: entry['category']! as String,
+        time: DateTime.fromMillisecondsSinceEpoch(entry['time']! as int),
+      ),
+  ];
+
   File _file(String name) {
     final file = File('${_directory.path}/$name');
     if (FileSystemEntity.typeSync(file.path, followLinks: false) ==
@@ -304,6 +315,32 @@ class CrashDiagnosticsController extends ChangeNotifier {
     _diagnostics.removeListener(_onDiagnostics);
     super.dispose();
   }
+}
+
+/// One saved crash record as the UI reads it. [source] is one of `flutter`,
+/// `platform`, `widget`, `native` or `anr`; [category] is a fixed English
+/// category, never an error message. Both belong under Details.
+@immutable
+class CrashRecord {
+  const CrashRecord({
+    required this.source,
+    required this.category,
+    required this.time,
+  });
+
+  final String source;
+  final String category;
+  final DateTime time;
+
+  @override
+  bool operator ==(Object other) =>
+      other is CrashRecord &&
+      other.source == source &&
+      other.category == category &&
+      other.time == time;
+
+  @override
+  int get hashCode => Object.hash(source, category, time);
 }
 
 /// Tests control elapsed time and deadline delivery independently of host load.

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../diagnostics/app_diagnostics.dart';
+import '../../diagnostics/crash_diagnostics.dart';
 import '../../diagnostics/report_problem.dart';
 import '../../diagnostics/report_problem_startup.dart';
 import '../../feedback/problem_report.dart';
@@ -12,6 +13,7 @@ import '../../state/connection.dart';
 import '../app_theme.dart';
 import '../kit/kit.dart';
 import '../widgets/external_link.dart';
+import 'crash_reports_section.dart';
 import 'perf_trace_section.dart';
 
 /// Opens Report a problem, prefilled with [error] when a failure brought the
@@ -49,6 +51,8 @@ class AppDiagnosticsScreen extends StatefulWidget {
     this.version,
     this.linkLauncher,
     this.share,
+    this.crash,
+    this.crashReady,
   });
 
   final ConnectionController? controller;
@@ -70,6 +74,13 @@ class AppDiagnosticsScreen extends StatefulWidget {
 
   /// Tests: the share sheet; defaults to [ShareOut.text] on Android.
   final Future<bool> Function(String text, String subject)? share;
+
+  /// Tests: the saved crash reports store; defaults to the one opened at
+  /// start-up ([CrashDiagnosticsStartup]).
+  final CrashDiagnosticsController? crash;
+
+  /// Tests: when [crash] is null, the start-up result to wait for.
+  final Future<CrashDiagnosticsController?>? crashReady;
 
   @override
   State<AppDiagnosticsScreen> createState() => _AppDiagnosticsScreenState();
@@ -239,10 +250,15 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
 
   Future<void> _clear(int count) async {
     final copy = _screenCopy(context);
+    // The crash store empties with App diagnostics (BD7 backend): say so
+    // when there are saved crash reports to lose.
+    final crashReports =
+        (widget.crash ?? CrashDiagnosticsStartup.current)?.savedCount ?? 0;
     final confirmed = await showKitConfirm(
       context,
       title: copy.appDiagnosticsClearTitle(count),
       body: copy.appDiagnosticsClearBody(count),
+      consequences: [if (crashReports > 0) copy.crashReportsClearedToo],
       confirmLabel: copy.appDiagnosticsClearConfirm(count),
       icon: AppIconography.delete,
       kind: KitConfirmKind.destructive,
@@ -281,7 +297,11 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
         listenable: Listenable.merge(sources),
         builder: (context, _) {
           final events = _events;
-          final errors = events.where((event) => event.isError).toList();
+          // Crash records show once, in plain words, in their own section
+          // below (CrashReportsSection); the report still carries them.
+          final errors = events
+              .where((event) => event.isError && !_isCrashRecord(event))
+              .toList();
           final error = widget.error;
           return ListView(
             key: const ValueKey('app-diagnostics'),
@@ -446,10 +466,22 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                   ],
                 ),
               ],
+              // Opt-in crash reports (BD7): off until the person turns
+              // them on; their saved rows and delete action live here.
+              CrashReportsSection(
+                crash: widget.crash,
+                ready: widget.crashReady,
+                savedErrors: errors.length,
+              ),
               SizedBox(height: tokens.sectionGap),
               // Timings are for whoever reads the report, not the person
               // filling it in: folded, last, still part of the report.
-              const KitDetailsFold(child: PerfTraceSection()),
+              Padding(
+                padding: EdgeInsetsDirectional.symmetric(
+                  horizontal: tokens.gutter,
+                ),
+                child: const KitDetailsFold(child: PerfTraceSection()),
+              ),
             ],
           );
         },
@@ -457,6 +489,11 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
     );
   }
 }
+
+/// An entry the opt-in crash store recorded (`crash.flutter`, `crash.anr`,
+/// ...): listed by [CrashReportsSection], not in the recent errors.
+bool _isCrashRecord(ProblemReportEvent event) =>
+    event.source.startsWith('crash.');
 
 /// The count on Settings' Report a problem row: errors kept on this phone
 /// (the saved report when it opened, else this run's).
