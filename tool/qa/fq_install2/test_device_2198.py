@@ -1,4 +1,8 @@
 import unittest
+import importlib.util
+import sys
+from pathlib import Path
+from unittest.mock import patch, Mock
 from xml.etree.ElementTree import Element
 from device_2198 import account_mask_boxes, closed_error_code
 
@@ -16,5 +20,19 @@ class Tests(unittest.TestCase):
     def test_unknown_native_error_is_not_exported_as_fixed_code(self):
         self.assertIsNone(closed_error_code(RuntimeError('synthetic_provider_key')))
         self.assertEqual(closed_error_code(RuntimeError('app_install_timeout')), 'app_install_timeout')
+
+class NavigationPrivacyTests(unittest.TestCase):
+    def test_navigation_timeout_uses_configured_masked_capture(self):
+        path=Path(__file__).resolve().parents[1]/'fq_install/device.py'
+        spec=importlib.util.spec_from_file_location('navigation_device_test',path)
+        device=importlib.util.module_from_spec(spec);spec.loader.exec_module(device)
+        capture=Mock()
+        probe=Mock()
+        with patch.dict(sys.modules,{'probe':probe}), patch.object(device,'adb'), \
+             patch.object(device,'ui',return_value=[]), patch.object(device.time,'sleep'), \
+             patch.object(device,'shot',capture):
+            with self.assertRaisesRegex(RuntimeError,'Main app not ready'):
+                device.launch_agents()
+        capture.assert_called_once_with('navigation-not-ready')
 
 if __name__=='__main__':unittest.main()

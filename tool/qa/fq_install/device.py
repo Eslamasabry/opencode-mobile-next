@@ -80,7 +80,7 @@ def launch_agents():
   if 'OpenCode Mobile' in ts:
    adb('shell','am','start','-n',PKG+'/.MainActivity');time.sleep(2)
   time.sleep(1)
- im=Image.open(BytesIO(adb('exec-out','screencap','-p',raw=True))).convert('RGB');im.thumbnail((540,1200));im.save(OUT/'navigation-not-ready.jpg',quality=73)
+ shot('navigation-not-ready')
  raise RuntimeError('Main app not ready')
 if __name__ == '__main__':
  raise SystemExit('Use run.py; this helper has no standalone device entry point')

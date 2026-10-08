@@ -19,3 +19,5 @@ flock -w1800 /home/eslam/Storage/tmp/oc-emulator.lock python3 tool/qa/fq_install
 ```
 
 The driver refuses any pre-existing target installation or target process, measures storage before dispatch, and never invokes legacy manual cleanup or the2196 restore path. App installation timeout must be diagnosed and target absence established before another agent runs. First fx pilot timed out after its bounded240-second native wait; normal2198 was verified afterward. [Closed result](fx-device.json) does not assert install/removal or promote matrix cells. Native/UI observation is queued behind another lane's lock.
+
+Navigation-timeout capture now uses the configured account-masked screenshot hook too. Its regression test failed before the fix and all66 offline driver cases pass afterward. BC's30-minute emulator hold is expected; read-only observation remains queued, with a3600-second retry if the1800-second wait expires. No device install is dispatched while waiting.
