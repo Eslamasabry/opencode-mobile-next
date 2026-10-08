@@ -1,0 +1,35 @@
+{
+  "scope": "offline-driver-validation-only",
+  "branch": "sol/bc-fq9",
+  "baseRevision": "6a75894466151fa2fc45eef1d489fd82d7dee19a",
+  "requiredCandidateBuild": 2197,
+  "deviceRunsCompleted": false,
+  "focusedPythonTests": 88,
+  "testCommand": "OC_TEST_SLOTS=1 tool/qa/machine_lock.sh test -- python3 -m unittest discover -s tool/qa/fq9 -t .",
+  "staticCheck": "ruff check --select F,E9 tool/qa/fq9",
+  "staticCheckPassed": true,
+  "formatCheck": "ruff format --check --target-version py310 tool/qa/fq9",
+  "formatCheckPassed": true,
+  "existingTrackedSourcesUnchanged": true,
+  "localDocumentLinksValid": true,
+  "offlinePlansGenerated": true,
+  "guardRemovalProofs": [
+    "red-signer-fence.txt",
+    "red-newer-prompt-cleanup.txt"
+  ],
+  "guardProofsUsedOnlyFakePorts": true,
+  "deviceGates": [
+    "coordinator-posted-apk-2197",
+    "same-signer-published-stable-candidate",
+    "booked-30-minute-emulator-lock",
+    "separately-provisioned-clean-second-avd"
+  ],
+  "notRun": [
+    "flutter-suite",
+    "flutter-analyzer",
+    "native-build",
+    "apk-build",
+    "signing",
+    "device-runs"
+  ]
+}

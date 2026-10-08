@@ -1,0 +1,101 @@
+{
+  "scope": "offline-plans-only",
+  "deviceRunsCompleted": false,
+  "plans": {
+    "upgrade": {
+      "schema": 1,
+      "state": "plan",
+      "deviceTouched": false,
+      "case": "upgrade",
+      "requiredCandidateBuild": 2197,
+      "package": "io.github.eslamasabry.opencode_mobile",
+      "requirements": [
+        "coordinator_posted_apk_2197",
+        "reviewed_artifact_receipt",
+        "same_signer_before_update",
+        "shared_emulator_lock",
+        "preserve_application_data",
+        "normal_candidate_restoration",
+        "exact_installed_baseline",
+        "seeded_preferences_profiles_and_sign_in",
+        "preservation_history_receipt",
+        "manual_keystore_and_history_check"
+      ]
+    },
+    "stable": {
+      "schema": 1,
+      "state": "plan",
+      "deviceTouched": false,
+      "case": "stable",
+      "requiredCandidateBuild": 2197,
+      "package": "io.github.eslamasabry.opencode_mobile",
+      "requirements": [
+        "coordinator_posted_apk_2197",
+        "reviewed_artifact_receipt",
+        "same_signer_before_update",
+        "shared_emulator_lock",
+        "preserve_application_data",
+        "normal_candidate_restoration",
+        "exact_installed_baseline",
+        "seeded_preferences_profiles_and_sign_in",
+        "preservation_history_receipt",
+        "manual_keystore_and_history_check",
+        "reviewed_published_stable_1_2_0_apk",
+        "second_avd_if_shared_baseline_is_newer"
+      ]
+    },
+    "background": {
+      "schema": 1,
+      "state": "plan",
+      "deviceTouched": false,
+      "case": "background",
+      "requiredCandidateBuild": 2197,
+      "package": "io.github.eslamasabry.opencode_mobile",
+      "requirements": [
+        "coordinator_posted_apk_2197",
+        "reviewed_artifact_receipt",
+        "same_signer_before_update",
+        "shared_emulator_lock",
+        "preserve_application_data",
+        "normal_candidate_restoration",
+        "app_started_owned_oc1_fixture",
+        "sleep_120_tool_transitions",
+        "background_service_and_ongoing_notification",
+        "book_30_minute_lock"
+      ],
+      "checkpointsSeconds": [
+        300,
+        1800
+      ],
+      "engineScope": "opencode_1_18_32_app_managed"
+    },
+    "fresh": {
+      "schema": 1,
+      "state": "plan",
+      "deviceTouched": false,
+      "case": "fresh",
+      "requiredCandidateBuild": 2197,
+      "package": "io.github.eslamasabry.opencode_mobile",
+      "requirements": [
+        "coordinator_posted_apk_2197",
+        "reviewed_artifact_receipt",
+        "same_signer_before_update",
+        "shared_emulator_lock",
+        "preserve_application_data",
+        "normal_candidate_restoration",
+        "separately_provisioned_avd",
+        "no_prior_package_or_data",
+        "first_run_onboarding"
+      ],
+      "freshPlan": {
+        "state": "needs_second_avd",
+        "code": "shared_user_isolation_unqualified",
+        "mutatesUsers": false,
+        "requiresDedicatedAvd": true,
+        "requiresUserZero": true,
+        "requiresPackageAbsent": true,
+        "requiresAppDataAbsent": true
+      }
+    }
+  }
+}

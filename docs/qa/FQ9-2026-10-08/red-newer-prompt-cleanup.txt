@@ -1,0 +1,23 @@
+machine_lock: got test slot 1 after 15s
+test_cleanup_never_aborts_a_newer_prompt_in_our_fixture_row (tool.qa.fq9.test_ports.PortTests.test_cleanup_never_aborts_a_newer_prompt_in_our_fixture_row) ... FAIL
+
+======================================================================
+FAIL: test_cleanup_never_aborts_a_newer_prompt_in_our_fixture_row (tool.qa.fq9.test_ports.PortTests.test_cleanup_never_aborts_a_newer_prompt_in_our_fixture_row)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq9/test_ports.py", line 366, in test_cleanup_never_aborts_a_newer_prompt_in_our_fixture_row
+    self.assertEqual(calls, [])
+AssertionError: Lists differ: [('POST', '/session/ses_1/abort')] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+('POST', '/session/ses_1/abort')
+
+- [('POST', '/session/ses_1/abort')]
++ []
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (failures=1)
+EXPECTED GUARD-REMOVAL FAILURE; source files unchanged; fake ports only.
