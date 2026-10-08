@@ -39,18 +39,36 @@ void main() {
     final fixture = File('${temporary.path}/ProductionRun.kt');
     await fixture.writeAsString('''
 package io.github.eslamasabry.opencode_mobile
+import android.os.SystemClock
 import android.util.Log
 import java.io.File
 import java.util.concurrent.TimeUnit
+enum class InstallerOperation { CHECK, INSTALL }
+enum class InstallerTarget { OPENCODE1, OPENCODE2, PASEO, CLAUDE, LEGACY_CLAUDE }
 class BuiltinLinux(private val process: RunProcess) {
     data class Result(val exitCode: Int, val output: String)
+    private var installerProcess: Process? = null
     fun start(script: String, log: File?, agentUser: Boolean): Process = process
+    fun startInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation,
+                       agentUser: Boolean): Process {
+        installerProcess = process
+        return start(script, null, agentUser)
+    }
+    fun stopInstaller(process: Process) { stopTree(process) }
+    fun finishInstaller(process: Process) { if (installerProcess === process) installerProcess = null }
     $method
     companion object {
         const val TAG = "test"
         const val OUTPUT_CAP = 16384
         fun stopTree(process: Process) { process.destroyForcibly() }
     }
+}
+''');
+    final clock = File('${temporary.path}/SystemClock.kt');
+    await clock.writeAsString('''
+package android.os
+object SystemClock {
+    fun elapsedRealtime(): Long = System.nanoTime() / 1000000L
 }
 ''');
     final log = File('${temporary.path}/Log.kt');
@@ -67,6 +85,7 @@ object Log {
 ''');
     final compiled = await Process.run(compiler, [
       fixture.path,
+      clock.path,
       log.path,
       '$sources/PhoneAgentCheckOutput.kt',
       'test/native/phone_agent_run_harness.kt',
