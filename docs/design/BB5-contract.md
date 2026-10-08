@@ -1,9 +1,12 @@
 # BB5 — idle stop and guarded foreground resume
 
-Status: Dart contract groundwork; BB4 qualified at `30e5d9027` and BA hooks
-merged at `f561c3584`. Native wiring, lifecycle integration and device
-qualification remain pending. The coordinator's 2026-10-08 memory hold prohibits
-Gradle/APK builds and Kotlin Gradle tests until further notice.
+Status: Dart foreground/heartbeat integration verified; BB4 qualified at
+`30e5d9027`, BA hooks merged at `f561c3584`, and integration head `9485f0c7c`
+merged at `7af5b544c`. Native wiring is drafted but not yet compiled or device
+qualified. The coordinator lifted the memory hold with a
+4GB Gradle heap, in-process Kotlin, at most two workers and at least 6GB available
+memory before builds. Native/lifecycle wiring is in progress; supporting-device
+qualification is still required before enabling the feature.
 
 Finish line: after the configured background idle period, the app stops its
 owned phone server and previously running phone-agent helper; foreground return
@@ -23,9 +26,11 @@ MethodChannel names and wire shapes must be frozen before parallel implementatio
 injected foreground, readable-owner and BA restoration callbacks. `running` and
 `failure` expose bounded progress and the fixed `idle_resume_unavailable` code.
 `invalidate()` revokes pending continuations; `dispose()` prevents later state
-publication. This class is not yet wired into `PhoneServerHealing`, and the
-native channel handlers below are not implemented. No idle policy is enabled by
-this groundwork. See [the offline checkpoint](../qa/BB5-2026-10-08/README.md).
+publication. This class is now wired into `PhoneServerHealing`, including BA
+restoration and foreground/owner cancellation. The native channel handlers below
+are drafted and remain uncompiled. Policy defaults to off. See
+[the original groundwork](../qa/BB5-2026-10-08/README.md) and
+[the integration checkpoint](../qa/BB5-integration-2026-10-08/README.md).
 
 Foreground return already reaches `PhoneServerHealing.setForeground(true)` from
 [`main.dart`](../../lib/main.dart). The current notification's content intent
@@ -38,7 +43,7 @@ Never use `BuiltinServerStarter.start()` or `startForLaunch()` for idle resume.
 Their manual path can increment `manualReadyCount`, which recovery treats as a
 request to reset its durable budget. An idle resume has a separate native path.
 
-## Proposed bridge and native contract
+## Bridge and native contract
 
 `BuiltinLinuxStatus` adds the following fields to native `status`:
 
@@ -104,11 +109,23 @@ lease, never the server-gated OpenCode lease. A known busy run may retain its
 existing capped token while observation becomes unknown; unknown never acquires
 a new CPU hold. Only confirmed idle closes that logical run.
 
+The Dart app owner sends work observations every 15 seconds. Native evidence
+expires at 45 seconds; old/wrong readable aliases cannot replace evidence for
+the bound runtime owner. Cold processes begin unknown.
+
 Idle admission uses elapsed realtime while backgrounded. The interval starts
 after confirmed work is idle; foreground return or new work invalidates it.
 Admit only when all chat/setup/sign-in/terminal leases are absent and BA's local
 agent-turn state is known idle. Unknown busy state denies idle admission. Lease
 expiry alone does not prove a long capped agent turn finished.
+
+The native stop-only timer uses one local scheduled check and an inexact
+`setAndAllowWhileIdle` alarm, with a nonexported receiver and a bounded 8-second
+broadcast dispatch. Each delivery rechecks current authority and work evidence.
+Android may delay inexact alarms while asleep; the configured threshold is the
+earliest eligible stop, not an exact wall-clock guarantee in Doze. Missing or
+expired Dart observations deny a stop even when an alarm arrives. See
+[Android AlarmManager documentation](https://developer.android.com/reference/android/app/AlarmManager#setAndAllowWhileIdle(int,long,android.app.PendingIntent)).
 
 Idle stop retains wanted intent and the canonical server recipe, persists its
 separate reason/generation, cancels pending recovery dispatches, and records
@@ -127,7 +144,8 @@ backend and does not cover a cold process. Background row refresh can also call
 `resumeAgentHost()` automatically. These are insufficient authorization for
 idle restoration and can undo an idle stop unless their starts are gated.
 
-Request these exact proposed BA hooks:
+The merged BA prerequisite supplies these hooks; its authoritative details are
+in [BA-idle-hooks-contract.md](BA-idle-hooks-contract.md):
 
 - `bool? localPhoneAgentWorkBusy(String profileId)`: true for any local Paseo,
   Claude or Codex turn; false only when known idle; null when unknown. The
@@ -166,7 +184,7 @@ is part of BB5. A helper that was not live before idle remains stopped.
 | Resume refused/unavailable | “The phone server could not start” | “Open setup or try Start again.” |
 | Helper storage unavailable | “The agents could not reconnect” | “Open agent setup and try again.” |
 
-Proposed sanitized error codes: `idle_policy_invalid`, `idle_policy_unavailable`,
+Sanitized error codes: `idle_policy_invalid`, `idle_policy_unavailable`,
 `idle_resume_stale`, `idle_resume_unavailable`, `agent_idle_resume_unavailable`.
 No raw exception, process output, profile/lease identifier or credential appears
 in user copy. Technical admission reason and budget counts belong under Details.
@@ -175,8 +193,9 @@ opt into manual Start. Exact wording/localization is frontend-owned.
 
 ## Acceptance and current blockers
 
-BA busy truth and guarded helper restoration are now merged; native wire/admission
-and foreground orchestration remain the current integration gates. BB4's
+BA busy truth and guarded helper restoration are merged, and foreground
+orchestration passes focused Dart tests. Native compile/JVM, rollback regressions
+and emulator qualification remain gates. BB4's
 OpenCode ReplyWatch lease does not establish all-agent busy truth.
 Do not enable a partial timer that can interrupt a live agent or immediately
 restart a helper after stopping it.

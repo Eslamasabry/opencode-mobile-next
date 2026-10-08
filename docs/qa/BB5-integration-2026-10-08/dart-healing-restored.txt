@@ -1,0 +1,18 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart
+test/phone_server_healing_test.dart:406:16: Error: The setter 'profile' isn't defined for the type '_Connection'.
+ - '_Connection' is from 'test/phone_server_healing_test.dart'.
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'profile'.
+    connection.profile = phone;
+               ^^^^^^^
+00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart [E]
+  Failed to load "/home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart":
+  Compilation failed for testPath=/home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: test/phone_server_healing_test.dart:406:16: Error: The setter 'profile' isn't defined for the type '_Connection'.
+   - '_Connection' is from 'test/phone_server_healing_test.dart'.
+  Try correcting the name to the name of an existing setter, or defining a setter or field named 'profile'.
+      connection.profile = phone;
+                 ^^^^^^^
+  .
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart

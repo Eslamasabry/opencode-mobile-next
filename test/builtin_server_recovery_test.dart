@@ -17,6 +17,7 @@ class _Store extends ProfileStore {
 }
 
 class _Linux extends BuiltinLinux {
+  BuiltinLinuxStatus? idleStatus;
   bool wanted = true;
   bool running = false;
   bool failStart = false;
@@ -28,13 +29,15 @@ class _Linux extends BuiltinLinux {
   Completer<void>? writeEntered;
 
   @override
-  Future<BuiltinLinuxStatus> status() async => BuiltinLinuxStatus(
-    installed: true,
-    phase: BuiltinLinuxPhase.ready,
-    serverRunning: running,
-    serverRestartWanted: wanted,
-    serverRecoveryGeneration: generation,
-  );
+  Future<BuiltinLinuxStatus> status() async =>
+      idleStatus ??
+      BuiltinLinuxStatus(
+        installed: true,
+        phase: BuiltinLinuxPhase.ready,
+        serverRunning: running,
+        serverRestartWanted: wanted,
+        serverRecoveryGeneration: generation,
+      );
 
   @override
   Future<BuiltinLinuxRunResult> run(
@@ -164,6 +167,64 @@ void main() {
       await recovery.check(phone);
       expect(linux.starts, 1);
       expect(acts, hasLength(1));
+    },
+  );
+
+  test(
+    'idle and malformed supporting receipts cannot dispatch or change budget',
+    () async {
+      const original = '{"version":1,"attempts":2,"pending":false}';
+      for (final status in [
+        const BuiltinLinuxStatus(
+          phase: BuiltinLinuxPhase.ready,
+          installed: true,
+          serverRestartWanted: true,
+          serverRecoveryGeneration: 1,
+          serverIdlePolicySupported: true,
+        ),
+        const BuiltinLinuxStatus(
+          phase: BuiltinLinuxPhase.ready,
+          installed: true,
+          serverRestartWanted: true,
+          serverRecoveryGeneration: 1,
+          serverIdlePolicySupported: true,
+          serverIdleMinutes: 5,
+          serverIdleGeneration: 9,
+          serverIdleStopped: true,
+        ),
+        const BuiltinLinuxStatus(
+          phase: BuiltinLinuxPhase.ready,
+          installed: true,
+          serverRestartWanted: true,
+          serverRecoveryGeneration: 1,
+          serverIdlePolicySupported: true,
+          serverIdleMinutes: 5,
+          serverIdleGeneration: 9,
+          serverRunning: true,
+          serverIdleHelperStopped: true,
+        ),
+        const BuiltinLinuxStatus(
+          phase: BuiltinLinuxPhase.ready,
+          installed: true,
+          serverRestartWanted: true,
+          serverRecoveryGeneration: 1,
+          serverIdlePolicySupported: true,
+          serverIdleMinutes: 5,
+          serverIdleGeneration: 9,
+        ),
+      ]) {
+        await prefs.setString(BuiltinServerRecovery.keyFor(phone.id), original);
+        linux.idleStatus = status;
+        await recovery.check(phone);
+        expect(linux.starts, 0);
+        expect(linux.confirmations, 0);
+        expect(acts, isEmpty);
+        expect(recovery.value.phase, BuiltinRecoveryPhase.stopped);
+        expect(
+          prefs.getString(BuiltinServerRecovery.keyFor(phone.id)),
+          original,
+        );
+      }
     },
   );
 

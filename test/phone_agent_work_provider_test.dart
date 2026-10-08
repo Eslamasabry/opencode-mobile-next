@@ -42,6 +42,15 @@ class _Connection extends ConnectionController {
   _Connection(super.store, this.busy) : super(isIsolated: true);
   bool? busy;
   final queries = <String>[];
+  final resumes = <({String profileId, int generation})>[];
+  @override
+  Future<void> resumePhoneAgentsAfterIdle({
+    required String profileId,
+    required int expectedIdleGeneration,
+  }) async {
+    resumes.add((profileId: profileId, generation: expectedIdleGeneration));
+  }
+
   @override
   bool isProfileReadable(String id) => store.profiles.any((p) => p.id == id);
   @override
@@ -59,6 +68,39 @@ class _Connection extends ConnectionController {
 class _Linux extends BuiltinLinux {
   final calls = <_LeaseCall>[];
   int statusReads = 0;
+  bool idle = false;
+  bool running = false;
+  int generation = 12;
+  int completed = 0;
+  @override
+  Future<BuiltinLinuxStatus> resumeIdleStoppedPhoneServer({
+    required String profileId,
+    required int expectedIdleGeneration,
+  }) async {
+    running = true;
+    return status();
+  }
+
+  @override
+  Future<BuiltinLinuxStatus> completePhoneServerIdleResume({
+    required String profileId,
+    required int expectedIdleGeneration,
+  }) async {
+    completed++;
+    idle = false;
+    generation = 0;
+    return status();
+  }
+
+  final observations = <({String profileId, bool? busy})>[];
+  @override
+  Future<void> observePhoneAgentWork({
+    required String profileId,
+    required bool? busy,
+  }) async {
+    observations.add((profileId: profileId, busy: busy));
+  }
+
   @override
   Future<BuiltinWorkLeaseStatus> setPhoneAgentChatWorkLease({
     required String profileId,
@@ -73,6 +115,20 @@ class _Linux extends BuiltinLinux {
   @override
   Future<BuiltinLinuxStatus> status() async {
     statusReads++;
+    if (idle || completed > 0) {
+      return BuiltinLinuxStatus(
+        installed: true,
+        phase: BuiltinLinuxPhase.ready,
+        serverRunning: running,
+        serverRestartWanted: true,
+        serverIdlePolicySupported: true,
+        serverIdleEnabled: true,
+        serverIdleMinutes: 5,
+        serverIdleGeneration: generation,
+        serverIdleStopped: idle && !running,
+        serverIdleHelperStopped: idle,
+      );
+    }
     return const BuiltinLinuxStatus.absent();
   }
 
@@ -133,6 +189,25 @@ void main() {
   }
 
   providerTest(
+    'real provider wires guarded idle helper restoration for readable alias',
+    null,
+    (tester, container, healing, store, connection, linux) async {
+      await AutomationPolicyController.forProfile(
+        store.prefs,
+        _alias,
+      ).setBehavior(AutomationBehavior.restartPhoneServer, false);
+      linux.idle = true;
+      healing.setForeground(true);
+      final check = healing.check(store.saved.single);
+      await tester.pump();
+      await check;
+      expect(connection.resumes, [(profileId: _alias, generation: 12)]);
+      expect(linux.completed, 1);
+      expect(healing.idleResumeFailure, isNull);
+    },
+  );
+
+  providerTest(
     'real provider queries the readable alias and holds canonical agent work',
     true,
     (tester, container, healing, store, connection, linux) async {
@@ -141,6 +216,7 @@ void main() {
       expect(connection.queries, isNotEmpty);
       expect(connection.queries.every((id) => id == _alias), isTrue);
       expect(linux.calls, hasLength(1));
+      expect(linux.observations.single, (profileId: _alias, busy: true));
       final lease = linux.calls.single;
       expect(lease.profileId, _canonical);
       expect(lease.on, isTrue);
@@ -160,6 +236,13 @@ void main() {
         isTrue,
       );
       expect(linux.statusReads, 0);
+      expect(linux.observations.length, greaterThan(1));
+      expect(
+        linux.observations.every(
+          (c) => c.profileId == _alias && c.busy == true,
+        ),
+        isTrue,
+      );
       connection.observeBusy(false);
       await tester.pump();
       expect(linux.calls.last.on, isFalse);
@@ -174,12 +257,17 @@ void main() {
     (tester, container, healing, store, connection, linux) async {
       expect(connection.queries, isNotEmpty);
       expect(linux.calls, isEmpty);
+      expect(linux.observations.single, (profileId: _alias, busy: null));
+      await tester.pump(const Duration(seconds: 15));
+      expect(linux.observations.last, (profileId: _alias, busy: null));
+      expect(linux.observations, hasLength(2));
       connection.observeBusy(true);
       await tester.pump();
       final lease = linux.calls.single;
       connection.observeBusy(null);
       await tester.pump();
       expect(linux.calls, hasLength(1));
+      expect(linux.observations.last, (profileId: _alias, busy: null));
       store.saved.clear();
       store.updates.notifyListeners();
       await tester.pump();
@@ -199,9 +287,11 @@ void main() {
       expect(linux.calls.last.on, isFalse);
       expect(linux.calls.last.leaseId, lease.leaseId);
       expect(linux.calls.last.profileId, _canonical);
+      final observed = linux.observations.length;
       connection.observeBusy(true);
-      await tester.pump();
+      await tester.pump(const Duration(seconds: 30));
       expect(linux.calls.where((c) => c.on), hasLength(1));
+      expect(linux.observations, hasLength(observed));
     },
   );
 }

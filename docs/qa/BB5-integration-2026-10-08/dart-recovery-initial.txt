@@ -1,0 +1,57 @@
+machine_lock: got test slot 1 after 6s
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart
+test/builtin_server_recovery_test.dart:178:33: Error: Required named parameter 'phase' must be provided.
+        const BuiltinLinuxStatus(
+                                ^
+lib/builtin/builtin_linux.dart:81:9: Context: Found this candidate, but the arguments don't match.
+  const BuiltinLinuxStatus({
+        ^^^^^^^^^^^^^^^^^^
+test/builtin_server_recovery_test.dart:184:33: Error: Required named parameter 'phase' must be provided.
+        const BuiltinLinuxStatus(
+                                ^
+lib/builtin/builtin_linux.dart:81:9: Context: Found this candidate, but the arguments don't match.
+  const BuiltinLinuxStatus({
+        ^^^^^^^^^^^^^^^^^^
+test/builtin_server_recovery_test.dart:193:33: Error: Required named parameter 'phase' must be provided.
+        const BuiltinLinuxStatus(
+                                ^
+lib/builtin/builtin_linux.dart:81:9: Context: Found this candidate, but the arguments don't match.
+  const BuiltinLinuxStatus({
+        ^^^^^^^^^^^^^^^^^^
+test/builtin_server_recovery_test.dart:203:33: Error: Required named parameter 'phase' must be provided.
+        const BuiltinLinuxStatus(
+                                ^
+lib/builtin/builtin_linux.dart:81:9: Context: Found this candidate, but the arguments don't match.
+  const BuiltinLinuxStatus({
+        ^^^^^^^^^^^^^^^^^^
+00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart [E]
+  Failed to load "/home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart":
+  Compilation failed for testPath=/home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: test/builtin_server_recovery_test.dart:178:33: Error: Required named parameter 'phase' must be provided.
+          const BuiltinLinuxStatus(
+                                  ^
+  lib/builtin/builtin_linux.dart:81:9: Context: Found this candidate, but the arguments don't match.
+    const BuiltinLinuxStatus({
+          ^^^^^^^^^^^^^^^^^^
+  test/builtin_server_recovery_test.dart:184:33: Error: Required named parameter 'phase' must be provided.
+          const BuiltinLinuxStatus(
+                                  ^
+  lib/builtin/builtin_linux.dart:81:9: Context: Found this candidate, but the arguments don't match.
+    const BuiltinLinuxStatus({
+          ^^^^^^^^^^^^^^^^^^
+  test/builtin_server_recovery_test.dart:193:33: Error: Required named parameter 'phase' must be provided.
+          const BuiltinLinuxStatus(
+                                  ^
+  lib/builtin/builtin_linux.dart:81:9: Context: Found this candidate, but the arguments don't match.
+    const BuiltinLinuxStatus({
+          ^^^^^^^^^^^^^^^^^^
+  test/builtin_server_recovery_test.dart:203:33: Error: Required named parameter 'phase' must be provided.
+          const BuiltinLinuxStatus(
+                                  ^
+  lib/builtin/builtin_linux.dart:81:9: Context: Found this candidate, but the arguments don't match.
+    const BuiltinLinuxStatus({
+          ^^^^^^^^^^^^^^^^^^
+  .
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart

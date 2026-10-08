@@ -88,6 +88,60 @@ class _Linux extends BuiltinLinux {
   int generation = 0;
   int restarts = 0;
   int starts = 0;
+  Completer<void>? startGate;
+  final startEntered = Completer<void>();
+  bool idleSupported = false;
+  bool idleValid = true;
+  bool idleStopped = false;
+  bool helperStopped = false;
+  int idleGeneration = 0;
+  int idleResumes = 0;
+  int idleCompletes = 0;
+  Completer<void>? idleGate;
+  final idleEntered = Completer<void>();
+  final observations = <({String profileId, bool? busy})>[];
+
+  @override
+  Future<void> observePhoneAgentWork({
+    required String profileId,
+    required bool? busy,
+  }) async {
+    observations.add((profileId: profileId, busy: busy));
+  }
+
+  @override
+  Future<BuiltinLinuxStatus> resumeIdleStoppedPhoneServer({
+    required String profileId,
+    required int expectedIdleGeneration,
+  }) async {
+    idleResumes++;
+    if (!idleEntered.isCompleted) idleEntered.complete();
+    await idleGate?.future;
+    if (!wanted ||
+        profileId != 'phone' ||
+        idleGeneration != expectedIdleGeneration) {
+      throw const BuiltinLinuxException('Unavailable');
+    }
+    running = true;
+    idleStopped = false;
+    return status();
+  }
+
+  @override
+  Future<BuiltinLinuxStatus> completePhoneServerIdleResume({
+    required String profileId,
+    required int expectedIdleGeneration,
+  }) async {
+    if (!wanted ||
+        profileId != 'phone' ||
+        idleGeneration != expectedIdleGeneration) {
+      throw const BuiltinLinuxException('Unavailable');
+    }
+    idleCompletes++;
+    if (helperStopped) idleGeneration = 0;
+    helperStopped = false;
+    return status();
+  }
 
   /// The tracked process's age as native code reports it.
   Duration? uptime;
@@ -118,6 +172,13 @@ class _Linux extends BuiltinLinux {
     serverRestartWanted: wanted,
     serverRecoveryGeneration: generation,
     serverUptime: running ? uptime : null,
+    serverIdlePolicySupported: idleSupported,
+    serverIdleEnabled: idleSupported,
+    serverIdleMinutes: idleSupported ? 5 : null,
+    serverIdleStopped: idleStopped,
+    serverIdleHelperStopped: helperStopped,
+    serverIdleGeneration: idleSupported ? idleGeneration : null,
+    serverIdleReceiptValid: idleValid,
   );
 
   @override
@@ -146,6 +207,8 @@ class _Linux extends BuiltinLinux {
     BuiltinServerRestoreRecipe? restoreRecipe,
   }) async {
     starts++;
+    if (!startEntered.isCompleted) startEntered.complete();
+    await startGate?.future;
     wanted = true;
     running = !dies;
     healthy = answersAfterStart;
@@ -315,18 +378,238 @@ void main() {
     serverProbe = probeServerConnection;
   });
 
-  PhoneServerHealing bind({bool? Function(String)? localAgentWorkBusy}) =>
-      healing = PhoneServerHealing(
-        connection: connection,
-        starter: starter,
-        localAgentWorkBusy: localAgentWorkBusy,
-        createRecovery: (record) => BuiltinServerRecovery(
-          store: store,
-          linux: linux,
-          starter: starter,
-          onRestart: record,
-        ),
+  PhoneServerHealing bind({
+    bool? Function(String)? localAgentWorkBusy,
+    Future<void> Function({
+      required String profileId,
+      required int expectedIdleGeneration,
+    })?
+    resumeAgentsAfterIdle,
+  }) => healing = PhoneServerHealing(
+    connection: connection,
+    starter: starter,
+    localAgentWorkBusy: localAgentWorkBusy,
+    resumeAgentsAfterIdle: resumeAgentsAfterIdle,
+    createRecovery: (record) => BuiltinServerRecovery(
+      store: store,
+      linux: linux,
+      starter: starter,
+      onRestart: record,
+    ),
+  );
+
+  Future<void> idleReceipt({bool helper = true}) async {
+    linux.idleSupported = true;
+    linux.idleStopped = true;
+    linux.helperStopped = helper;
+    linux.idleGeneration = 9;
+    await prefs.setString(
+      BuiltinServerRecovery.keyFor(phone.id),
+      jsonEncode({'version': 1, 'attempts': 3, 'pending': false}),
+    );
+    store.savedActiveId = phone.id;
+  }
+
+  test(
+    'foreground idle resume awaits helper and preserves exhausted budget',
+    () async {
+      await idleReceipt();
+      final helpers = <int>[];
+      final gate = Completer<void>();
+      final owner = bind(
+        resumeAgentsAfterIdle:
+            ({required profileId, required expectedIdleGeneration}) async {
+              expect(profileId, phone.id);
+              expect(linux.running, isTrue);
+              helpers.add(expectedIdleGeneration);
+              await gate.future;
+            },
+      )..setForeground(true);
+      final launch = owner.startForLaunch(phone);
+      await Future<void>.delayed(Duration.zero);
+      expect(helpers, [9]);
+      expect(linux.idleCompletes, 0);
+      expect(linux.starts, 0);
+      expect(linux.restarts, 0);
+      gate.complete();
+      await launch;
+      expect(linux.idleResumes, 1);
+      expect(linux.idleCompletes, 1);
+      expect(linux.starts, 0);
+      expect(linux.restarts, 0);
+      expect(starter.manualReadyCount, 0);
+      expect(
+        jsonDecode(
+          prefs.getString(BuiltinServerRecovery.keyFor(phone.id))!,
+        )['attempts'],
+        3,
       );
+    },
+  );
+
+  test(
+    'idle prior helper absent never calls BA and retains generation',
+    () async {
+      await idleReceipt(helper: false);
+      var helpers = 0;
+      final owner = bind(
+        resumeAgentsAfterIdle:
+            ({required profileId, required expectedIdleGeneration}) async {
+              helpers++;
+            },
+      )..setForeground(true);
+      await owner.startForLaunch(phone);
+      expect(helpers, 0);
+      expect(linux.idleCompletes, 1);
+      expect(linux.idleGeneration, 9);
+      expect(linux.starts, 0);
+    },
+  );
+
+  test(
+    'completed idle generation cannot refill budget through stale launch',
+    () async {
+      await idleReceipt(helper: false);
+      linux.idleStopped = false;
+      linux.running = true;
+      linux.healthy = false;
+      linux.uptime = const Duration(minutes: 5);
+      final owner = bind()..setForeground(true);
+      await owner.startForLaunch(phone);
+      expect(linux.starts, 0);
+      expect(linux.restarts, 0);
+      expect(starter.manualReadyCount, 0);
+      expect(
+        jsonDecode(
+          prefs.getString(BuiltinServerRecovery.keyFor(phone.id))!,
+        )['attempts'],
+        3,
+      );
+    },
+  );
+
+  for (final interruption in [
+    'pause',
+    'pause and resume',
+    'deletion',
+    'transfer',
+  ]) {
+    test(
+      'legacy launch cannot retry or connect after $interruption during its own claim',
+      () async {
+        await prefs.setString(
+          BuiltinServerRecovery.keyFor(phone.id),
+          jsonEncode({'version': 1, 'attempts': 3, 'pending': false}),
+        );
+        linux.dies = true;
+        linux.startGate = Completer<void>();
+        final owner = bind()..setForeground(true);
+        final launching = owner.startForLaunch(phone);
+        await linux.startEntered.future;
+        switch (interruption) {
+          case 'pause':
+            owner.setForeground(false);
+          case 'pause and resume':
+            owner.setForeground(false);
+            owner.setForeground(true);
+          case 'deletion':
+            store.saved.clear();
+            store.updates.notifyListeners();
+          case 'transfer':
+            final other = _phone('other');
+            store.saved.add(other);
+            await AutomationPolicyController.forProfile(
+              prefs,
+              other.id,
+            ).setBehavior(AutomationBehavior.restartPhoneServer, false);
+            await prefs.setString(PhoneServerHealing.ownerKey, other.id);
+            store.updates.notifyListeners();
+        }
+        linux.startGate!.complete();
+        await launching;
+        expect(linux.starts, 1);
+        expect(connection.connections, isEmpty);
+      },
+    );
+  }
+
+  test('malformed native idle receipt cannot reach launch fallback', () async {
+    await idleReceipt();
+    linux.idleValid = false;
+    final owner = bind()..setForeground(true);
+    await owner.startForLaunch(phone);
+    expect(owner.idleResumeFailure, 'idle_resume_unavailable');
+    expect(linux.idleResumes, 0);
+    expect(linux.starts, 0);
+    expect(linux.restarts, 0);
+  });
+
+  test(
+    'failed helper restore keeps idle generation and forbids manual fallback',
+    () async {
+      await idleReceipt();
+      final owner = bind(
+        resumeAgentsAfterIdle:
+            ({required profileId, required expectedIdleGeneration}) async {
+              throw StateError('synthetic private details');
+            },
+      )..setForeground(true);
+      await owner.startForLaunch(phone);
+      expect(owner.idleResumeFailure, 'idle_resume_unavailable');
+      expect(linux.helperStopped, isTrue);
+      expect(linux.idleCompletes, 0);
+      expect(linux.starts, 0);
+      expect(linux.restarts, 0);
+    },
+  );
+
+  for (final interruption in [
+    'pause',
+    'deletion',
+    'transfer',
+    'dispose',
+    'stop',
+  ]) {
+    test(
+      'idle server completion cannot restore helper after $interruption',
+      () async {
+        await idleReceipt();
+        linux.idleGate = Completer<void>();
+        var helpers = 0;
+        final owner = bind(
+          resumeAgentsAfterIdle:
+              ({required profileId, required expectedIdleGeneration}) async {
+                helpers++;
+              },
+        )..setForeground(true);
+        final checking = owner.check(phone);
+        await linux.idleEntered.future;
+        switch (interruption) {
+          case 'pause':
+            owner.setForeground(false);
+          case 'deletion':
+            store.saved.clear();
+            store.updates.notifyListeners();
+          case 'transfer':
+            final second = _phone('second');
+            store.saved.add(second);
+            await prefs.setString(PhoneServerHealing.ownerKey, second.id);
+            store.updates.notifyListeners();
+          case 'dispose':
+            owner.dispose();
+            healing = null;
+          case 'stop':
+            linux.wanted = false;
+        }
+        linux.idleGate!.complete();
+        await checking;
+        expect(helpers, 0);
+        expect(linux.idleCompletes, 0);
+        expect(linux.starts, 0);
+        expect(linux.restarts, 0);
+      },
+    );
+  }
 
   test(
     'local agent truth owns a separate lease across background and unknown',

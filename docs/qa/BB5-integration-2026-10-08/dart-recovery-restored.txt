@@ -1,0 +1,19 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart
+00:00 +0: confirmed crash recovery records one act and retains consumed budget
+00:00 +1: idle and malformed supporting receipts cannot dispatch or change budget
+00:00 +2: explicit stop and background never dispatch a restart
+00:00 +3: shared restart and poll policy each prevent healing
+00:00 +4: three failures exhaust across resume and owner recreation
+00:00 +5: manual confirmed Start resets exhausted budget
+00:00 +6: policy revoked during password write prevents native dispatch
+00:00 +7: explicit stop during password write wins native generation race
+00:00 +8: background during health confirmation cannot record success
+00:00 +9: unhealthy live process is never overlapped with another attempt
+00:00 +10: late healthy answer confirms same attempt without another restart
+00:00 +11: bound phone owner rejects another profile at the same address
+00:00 +12: manual owner persistence failure prevents native launch
+00:00 +13: confirmed receipt logs after recreation even when the server stopped
+00:00 +14: failed healing still exposes installed server and safe failure for cards
+00:00 +15: malformed durable budget fails closed
+00:00 +16: profile deletion during start drains before scoped preference sweep
+00:00 +17: All tests passed!
