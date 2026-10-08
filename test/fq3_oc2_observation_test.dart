@@ -186,6 +186,56 @@ void main() {
     expect(jsonEncode(result), isNot(contains('test-secret')));
   });
 
+  test('retained card input counts identify malformed model arguments', () {
+    final observation = _observation();
+    observation.recordRetainedCardCalls([
+      {
+        'type': 'assistant',
+        'content': [
+          {
+            'type': 'tool',
+            'name': 'oc-ui_show',
+            'state': {
+              'status': 'error',
+              'input': {
+                'v': 1,
+                'id': 'fq3-confirm',
+                'body': [
+                  {
+                    'ask': {'kind': 'confirm'},
+                    'text': 'test-secret',
+                  },
+                ],
+              },
+              'error': {'message': 'Agent card unavailable or invalid.'},
+            },
+          },
+          {
+            'type': 'tool',
+            'name': 'foreign',
+            'state': {
+              'input': {'v': 1},
+            },
+          },
+        ],
+      },
+      {
+        'type': 'user',
+        'content': [
+          {'type': 'tool', 'name': 'oc-ui_show'},
+        ],
+      },
+    ]);
+    final result = observation.snapshot([], sessionID: _session, eventStart: 0);
+    expect(result['retainedShowCallCount'], 1);
+    expect(result['retainedShowVersionValidCount'], 1);
+    expect(result['retainedShowIDValidCount'], 1);
+    expect(result['retainedShowTopLevelConfirmCount'], 0);
+    expect(result['retainedShowNestedAskCount'], 1);
+    expect(result['retainedShowHelperRejectedCount'], 1);
+    expect(jsonEncode(result), isNot(contains('test-secret')));
+  });
+
   test(
     'retry counts accept structured statuses and exact internal status lines only',
     () {

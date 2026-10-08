@@ -671,6 +671,7 @@ class _Oc2Probe {
       'FQ3_CARD_CONFIRMED.',
     );
     checkpoint('await_tool');
+    observation?.recordRetainedCardCalls(messages);
     Map<String, dynamic>? tool;
     for (final message in messages.where(_completedAssistant)) {
       if (!_sameModel(message['model'], _ref(model))) continue;

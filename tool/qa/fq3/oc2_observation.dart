@@ -19,6 +19,68 @@ class Oc2ProbeObservation {
   final String _directory;
   String _stage = 'create';
   String? _model;
+  final _retainedCards = <String, int>{
+    'retainedShowCallCount': 0,
+    'retainedShowVersionValidCount': 0,
+    'retainedShowIDValidCount': 0,
+    'retainedShowTopLevelConfirmCount': 0,
+    'retainedShowNestedAskCount': 0,
+    'retainedShowWrappedArgumentsCount': 0,
+    'retainedShowHelperRejectedCount': 0,
+  };
+
+  /// Caller supplies fresh HTTP messages from its exact owned session.
+  /// Preserve only fixed counts, never card text, IDs or arbitrary error data.
+  void recordRetainedCardCalls(List<Map<String, dynamic>> messages) {
+    void add(String key) {
+      if (_retainedCards[key]! < _countLimit) {
+        _retainedCards[key] = _retainedCards[key]! + 1;
+      }
+    }
+
+    for (final message in messages) {
+      final content = message['content'];
+      if (message['type'] != 'assistant' || content is! List) {
+        continue;
+      }
+      for (final call in content.whereType<Map>()) {
+        final state = call['state'];
+        if (call['type'] != 'tool' ||
+            call['name'] != 'oc-ui_show' ||
+            state is! Map) {
+          continue;
+        }
+        add('retainedShowCallCount');
+        final input = state['input'];
+        if (input is Map) {
+          if (input['v'] == 1) {
+            add('retainedShowVersionValidCount');
+          }
+          if (input['id'] == 'fq3-confirm') {
+            add('retainedShowIDValidCount');
+          }
+          final ask = input['ask'];
+          if (ask is Map && ask['kind'] == 'confirm') {
+            add('retainedShowTopLevelConfirmCount');
+          }
+          final body = input['body'];
+          if (body is List &&
+              body.whereType<Map>().any((node) => node.containsKey('ask'))) {
+            add('retainedShowNestedAskCount');
+          }
+          if (input['arguments'] is Map) {
+            add('retainedShowWrappedArgumentsCount');
+          }
+        }
+        final error = state['error'];
+        if (state['status'] == 'error' &&
+            error is Map &&
+            error['message'] == 'Agent card unavailable or invalid.') {
+          add('retainedShowHelperRejectedCount');
+        }
+      }
+    }
+  }
 
   static const _stages = {
     'create',
@@ -163,7 +225,7 @@ class Oc2ProbeObservation {
         increment('http503Retries');
       }
     }
-    return {'stage': _stage, 'model': ?_model, ...counts};
+    return {'stage': _stage, 'model': ?_model, ...counts, ..._retainedCards};
   }
 
   static bool _isHttp503(Map<dynamic, dynamic> data) {
