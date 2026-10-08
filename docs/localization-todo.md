@@ -1,6 +1,12 @@
 # Localization: TODO
 
-Status: **English only.** The Flutter localization layer exists
+Status (2026-10-08): Arabic is complete; Spanish, Japanese, Brazilian
+Portuguese, Russian and Simplified Chinese carry the first-run screens and the
+chat core (672 messages, `docs/l10n/fg5-key-set.md`, QA record
+`docs/qa/fg5-2026-10-08/README.md`) and read English for the rest. The text
+below is the 2026-09-02 starting point and is kept for its work items.
+
+Status at the start: **English only.** The Flutter localization layer exists
 (`l10n.yaml`, `lib/l10n/app_en.arb`, generated `AppLocalizations`), but only
 about 30 strings go through it. Roughly 700 user-visible literals across
 `lib/ui/**`, `lib/voice/**` and `lib/main.dart` are hardcoded English.

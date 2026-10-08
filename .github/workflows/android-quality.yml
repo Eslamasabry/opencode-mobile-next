@@ -107,6 +107,11 @@ jobs:
           python3 -m unittest discover -s tool/l10n -p 'test_check_completeness.py'
           python3 tool/l10n/check_completeness.py --base-ref "$BASE_COMMIT"
 
+      - name: Verify partly translated locales (es, ja, pt, ru, zh)
+        run: |
+          python3 -m unittest discover -s tool/l10n -p 'test_check_partial_locales.py'
+          python3 tool/l10n/check_partial_locales.py --base-ref "$BASE_COMMIT"
+
       - name: Set up Node for the optional quota collector tests
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
