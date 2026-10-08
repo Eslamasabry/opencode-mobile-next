@@ -28,4 +28,74 @@
     <string name="pause_tile_on">On</string>
     <string name="pause_tile_paused">Paused</string>
     <string name="pause_tile_off">Off in Settings</string>
+    <!-- Native notification copy follows the app's selected language. -->
+    <string name="native_live_channel">Live coding connection</string>
+    <string name="native_live_description">Shown while OpenCode keeps a server session live in the background</string>
+    <string name="native_live_title">OpenCode is connected</string>
+    <string name="native_live_named_title">OpenCode · %1$s</string>
+    <string name="native_live_idle">Connected, nothing running</string>
+    <string name="native_live_counts">%1$s · %2$s</string>
+    <string name="native_pause_background">Pause background</string>
+    <plurals name="native_live_running_sessions">
+        <item quantity="one">%1$d session running</item>
+        <item quantity="other">%1$d sessions running</item>
+    </plurals>
+    <plurals name="native_live_pending_requests">
+        <item quantity="one">%1$d request needs you</item>
+        <item quantity="other">%1$d requests need you</item>
+    </plurals>
+    <plurals name="native_chip_running">
+        <item quantity="one">%1$d running</item>
+        <item quantity="other">%1$d running</item>
+    </plurals>
+    <plurals name="native_chip_pending">
+        <item quantity="one">%1$d needs you</item>
+        <item quantity="other">%1$d need you</item>
+    </plurals>
+    <string name="native_alert_quota_title">Provider usage reached your threshold</string>
+    <string name="native_alert_quota_body">Open to check current usage.</string>
+    <string name="native_alert_permission_title">%1$s needs permission</string>
+    <string name="native_alert_permission_body">Tap to review the pending request.</string>
+    <string name="native_alert_question_title">%1$s needs your input</string>
+    <string name="native_alert_question_body">Tap to answer the pending question.</string>
+    <string name="native_alert_complete_title">%1$s finished</string>
+    <string name="native_alert_complete_body">Tap to review the latest result.</string>
+    <string name="native_alert_error_title">%1$s session needs attention</string>
+    <string name="native_alert_error_body">Tap to review the session error.</string>
+    <string name="native_alert_checkin_title">%1$s is still working</string>
+    <string name="native_alert_checkin_body">Tap to check in on the session.</string>
+    <string name="native_team_decision_title">AI Team needs a decision</string>
+    <string name="native_team_decision_body">Tap to answer it in the app.</string>
+    <string name="native_team_failed_title">A run failed</string>
+    <string name="native_team_failed_body">Tap to see what happened.</string>
+    <string name="native_team_review_title">A run is ready for review</string>
+    <string name="native_team_review_body">Tap to review it.</string>
+    <string name="native_team_completed_title">A run completed</string>
+    <string name="native_team_completed_body">Tap to see the result.</string>
+    <string name="native_team_title">AI Team</string>
+    <string name="native_team_working">Working</string>
+    <string name="native_allow_once">Allow once</string>
+    <string name="native_deny">Deny</string>
+    <string name="native_reply">Reply</string>
+    <string name="native_coding_requests_channel">Coding requests</string>
+    <string name="native_coding_requests_description">Alerts when OpenCode needs permission or input</string>
+    <string name="native_coding_status_channel">Coding session updates</string>
+    <string name="native_coding_status_description">Alerts when a background OpenCode session finishes</string>
+    <string name="native_team_progress_channel">AI Team progress</string>
+    <string name="native_team_progress_description">A quiet line while the AI Team is working</string>
+    <string name="native_voice_setup">Voice setup</string>
+    <string name="native_voice_downloading">Downloading voice pack</string>
+    <string name="native_voice_preparing">Preparing voice input</string>
+    <string name="native_voice_ready">Voice input is ready</string>
+    <string name="native_voice_failed">Voice setup failed. Open the app to try again.</string>
+    <string name="native_setup_channel">Setup</string>
+    <string name="native_phone_server_channel">OpenCode on this phone</string>
+    <string name="native_phone_server_description">Shown while the phone server or project engine runs</string>
+    <string name="native_phone_server_title">OpenCode is running on this phone</string>
+    <string name="native_phone_server_body">Your agent keeps working while you use other apps.</string>
+    <string name="native_stop">Stop</string>
+    <string name="native_widget_now">now</string>
+    <string name="native_widget_minutes">%1$dm</string>
+    <string name="native_widget_hours">%1$dh</string>
+    <string name="native_widget_days">%1$dd</string>
 </resources>

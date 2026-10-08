@@ -22,6 +22,8 @@ void main() {
     'daemon-stop-denied',
     'result-notification-denied',
     'dispatch-denied',
+    'localized-copy-ar',
+    'localized-copy-en',
   ];
 
   setUpAll(() async {
