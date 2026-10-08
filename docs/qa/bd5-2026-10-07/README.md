@@ -143,3 +143,25 @@ publication, or triggered CI run was performed for BD5.
 | UseCheckOrError | 11 |
 
 Root portability verification: `python3 -m unittest tool/qa/test_machine_lock.py` passed. Removing `OC_BUILD_LOCK_FILE` handling made the bounded regression wait on the wrong shared lock; restored, the requested temporary lock was verified held. Existing local default lock is unchanged. Workflow YAML and all shell blocks parsed locally.
+
+
+## BD9 resume static checkpoint (2026-10-08)
+
+Coordinator delegated resolution of the four merged PhoneAgentHost findings.
+The unchanged launch shell was extracted, the1500ms grace interval named,
+the password-pipe write/flush split, and the same IllegalStateException raised
+through Kotlin error(). Existing public methods and behavior remain unchanged.
+A fifth finding in the later BD9 classifier (ReturnCount) was resolved by
+combining its empty/multiple-result guard; authored failure categories remain
+unchanged. No baseline or suppression was added.
+
+Pinned detekt1.23.8 under Temurin17 and the shared build lock: PASS, zero new
+findings across the final Android tree. Temporarily restoring both original
+files reproduced LongMethod, ThrowsCount, MaxLineLength, MagicNumber and
+ReturnCount (exit2). The fixed files were restored in finally, then the same
+gate passed again. Private regression output: build/bd9-detekt-regression.txt.
+
+Affected native host/contract tests:20 PASS through machine_lock, pinned Flutter
+--no-pub --concurrency=1. Full pinned analyzer: no issues (15.9s). The launch
+shell payload equality check and git diff --check also pass. No device proof
+is inferred from static/native-unit checks.

@@ -1,0 +1,8 @@
+{
+  "device": "emulator-5554",
+  "version_code": 2195,
+  "result": "READY",
+  "stage": "prepared",
+  "signer_sha256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C",
+  "apk_sha256": "c72bbe3f93992943539cd55f9116cc27960df314e52f198bc8a2d46ca9af5472"
+}
