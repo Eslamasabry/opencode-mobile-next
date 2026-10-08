@@ -1,0 +1,44 @@
+{
+  "branch": "sol/bd-suite-fix",
+  "base": "aa3847d36",
+  "integration_merge": "ccd4c900216dec017f5250bcb31d27efcee1fdc9",
+  "merge_parents": [
+    "e01237d2f23ec1e154e71e40298ff4a83afa512d",
+    "2b653a10a21b3466ba1e8f18ce5d3e97da9a4f0b"
+  ],
+  "introducing_commits": {
+    "2fe344b570c0e7f093c5e04b145adc7866073cc8": {
+      "first_parent_contains": false,
+      "second_parent_contains": true
+    },
+    "e657025dd93f7352079aa5ac41ba167db5479307": {
+      "first_parent_contains": false,
+      "second_parent_contains": true
+    }
+  },
+  "tests_unchanged_since_first_parent": true,
+  "lifecycle": {
+    "red_exit": 1,
+    "green_exit": 0,
+    "passed": 7
+  },
+  "pollers": {
+    "red_exit": 1,
+    "green_exit": 0,
+    "passed": 5
+  },
+  "reverted_fix_proof": "reverted-fix-summary.json",
+  "source_sha256": {
+    "test/builtin_project_lifecycle_guard_test.dart": "b95deb83acf4b8bd24f9172dc7a61b797ffd990892be0b3b76deee71d174719f",
+    "test/perf_builtin_pollers_test.dart": "efd9d9e7cf898b09138dd655bc4eb35b9602ae8565f2a526d43efbef0fb50aae"
+  },
+  "production_changed": false,
+  "analyzer": {
+    "exit": 0,
+    "result": "No issues found"
+  },
+  "fix_commits": [
+    "c13460a596012b10f606a3e12f261aba4405e52a",
+    "5dbecf7a97bb4905f31db550bd906cf9d8e19ec0"
+  ]
+}

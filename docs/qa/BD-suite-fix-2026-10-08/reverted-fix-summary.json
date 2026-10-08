@@ -1,0 +1,12 @@
+[
+  {
+    "file": "test/builtin_project_lifecycle_guard_test.dart",
+    "reverted_fix_exit": 1,
+    "original_failure_reproduced": true
+  },
+  {
+    "file": "test/perf_builtin_pollers_test.dart",
+    "reverted_fix_exit": 1,
+    "original_failure_reproduced": true
+  }
+]
