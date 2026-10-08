@@ -1,0 +1,20 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart
+00:00 +0: native storage guard includes omp-acp catalog download
+00:00 +0 -1: native storage guard includes omp-acp catalog download [E]
+  Expected: '561073088'
+    Actual: '300000000'
+     Which: is different.
+            Expected: 561073088
+              Actual: 300000000
+                      ^
+             Differ at offset 0
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_agents_host_test.dart 542:9              main.<fn>
+
+00:00 +0 -1: native storage guard includes fx catalog download
+00:00 +1 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: native storage guard includes omp-acp catalog download
