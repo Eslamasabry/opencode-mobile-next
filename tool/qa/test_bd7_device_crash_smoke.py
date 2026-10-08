@@ -3,6 +3,7 @@ import argparse
 import contextlib
 import io
 import json
+import shlex
 from pathlib import Path
 import tempfile
 import unittest
@@ -13,6 +14,79 @@ from tool.qa import bd7_device_crash_smoke as smoke
 
 
 class CrashSmokeTest(unittest.TestCase):
+    def test_cold_launch_waits_for_settings_semantics_before_navigation(self):
+        session = smoke.DeviceSession('adb', Path('.'))
+        session.ui = Mock()
+        ready = [False]
+        def find(_):
+            if session.ui.find.call_count == 1:
+                return None
+            ready[0] = True
+            return ET.Element('node')
+        def navigate():
+            if not ready[0]:
+                raise smoke.Bd7UiFailure('navigation_target_unavailable')
+        session.ui.find.side_effect = find
+        session.ui.navigate_report.side_effect = navigate
+        with patch.object(session, 'execute'), \
+             patch.object(smoke.time, 'monotonic', side_effect=[0, 1, 2]), \
+             patch.object(smoke.time, 'sleep'):
+            session.launch()
+        self.assertTrue(ready[0])
+        session.ui.navigate_report.assert_called_once()
+
+    def test_missing_saved_ring_retains_validated_os_exit_and_fixed_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            session = smoke.DeviceSession('adb', Path(directory))
+            session.ui = Mock()
+            session.ui.text.side_effect = smoke.Bd7Ui.text
+            session.ui.nodes.return_value = [ET.Element('node', {
+                'content-desc': "Crash reports aren't available right now. Restart the app and try again."})]
+            entry = {'pid': 1234, 'reason': 4, 'status': 0, 'exact_main': True}
+            with patch.object(smoke, 'parse_exit_history', return_value=entry), \
+                 patch.object(session, 'root', return_value=b'1'), \
+                 patch.object(session, 'execute', side_effect=[b'private-dump', smoke.DeviceFailure('device_command_failed')]):
+                with self.assertRaisesRegex(smoke.DeviceFailure, '^saved_crash_ring_unavailable$'):
+                    session.proof((1234, 88), 4, 'native', 1001, 'The app closed unexpectedly')
+            receipt = json.loads((Path(directory) / 'native-capture-status.json').read_text())
+            self.assertEqual(receipt['os_exit'], entry)
+            self.assertTrue(receipt['capture_unavailable_visible'])
+            self.assertTrue(receipt['native_category_file_exists'])
+            self.assertNotIn('private-dump', str(receipt))
+
+    def test_anr_waits_through_transient_hung_ui_dump(self):
+        session = smoke.DeviceSession('adb', Path('.'))
+        session.ui = Mock()
+        session.ui.centre.return_value = (10, 20)
+        session.ui.find.side_effect = [smoke.Bd7UiFailure('ui_unavailable'),
+                                       ET.Element('node', {'package': 'android'})]
+        with patch.object(session, 'identity', return_value=(1234, 88)), \
+             patch.object(session, 'execute', side_effect=[b'1001', b'']), \
+             patch.object(session, 'signal'), patch.object(session, 'died'), \
+             patch.object(session, 'resume'), patch.object(session, 'launch'), \
+             patch.object(session, 'proof', return_value={'result': 'PASS'}), \
+             patch.object(smoke.time, 'monotonic', side_effect=[0, 1, 2]), \
+             patch.object(smoke.time, 'sleep'):
+            self.assertEqual(session.anr(), {'result': 'PASS'})
+        session.ui.tap.assert_called_once_with('Close app')
+
+    def test_disabled_consent_refuses_crash_flow_before_tapping(self):
+        session = smoke.DeviceSession('adb', Path('.'))
+        session.ui = Mock()
+        session.ui.scroll_find.return_value = ET.Element('node', {'enabled': 'false'})
+        with patch.object(session, 'consent', side_effect=[0, 1234]):
+            with self.assertRaisesRegex(smoke.DeviceFailure, '^consent_unavailable$'):
+                session.enable_consent()
+        session.ui.tap.assert_not_called()
+
+    def test_private_script_is_one_argument_through_adb_shell(self):
+        session = smoke.DeviceSession('adb', Path('.'))
+        command = 'mkdir /private/safe && test ! -L /private/safe'
+        with patch.object(session, 'execute') as execute:
+            session.root(command)
+        remote = shlex.split(' '.join(execute.call_args.args[0][1:]))
+        self.assertEqual(remote, ['su', '0', 'sh', '-c', command])
+
     def test_missing_candidate_never_starts_a_device_session(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -85,13 +159,14 @@ class CrashSmokeTest(unittest.TestCase):
     def fixture(self, *, fail_at=None, normal_failed=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            args = argparse.Namespace(apk=root / '2197.apk', expected_signer='a' * 64,
+            args = argparse.Namespace(apk=root / '2196.apk', expected_signer='a' * 64,
                                       adb='adb', output=root / 'proof')
             order = []
             session = Mock()
             session.adb = ['adb', '-s', 'emulator-5554']
             session.backup = '/private/fixed-backup'
             session.retain_baseline = False
+            session.storage.return_value = {'available_kib': 1_000_000, 'used_percent': 79}
             session.enable_consent.return_value = (0, 1234)
             session.crash.return_value = {'os_exit': {'reason': 4}}
             session.anr.return_value = {'os_exit': {'reason': 6}}

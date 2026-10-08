@@ -1,18 +1,18 @@
 {
   "base": "f0e33d96d407ff68782b49702e88269d197ae96e",
   "branch": "sol/bd-bd7",
-  "state": "BLOCKED: coordinator APK2197 not posted; host harness ready",
+  "state": "BLOCKED: saved-report capture and preview not qualified on2196",
   "source_sha256": {
-    "tool/qa/bd7_device_crash_smoke.py": "330da3510cdd8685921282abee33b3b2a0422aaf783360bf349835c4ff1fa61b",
-    "tool/qa/bd7_device_ui.py": "33d49a1f4190328b9c5b5c4e80aa8e47a6f106416b0c5c60559191347330acb0",
+    "tool/qa/bd7_device_crash_smoke.py": "09e0fdb94b05df6a4cb43d81fef3c7b601f44c6138eecb5dd7e0bfed6d1fc8c2",
+    "tool/qa/bd7_device_ui.py": "e8b6fe0c1d0531cd975a858eaf181be91404f9b9a6bf7a38cd4afede12b6151d",
     "tool/qa/bd7_exit_proof.py": "ec032e72560e6bba9a8f7ca4879255f67adbbda876bb344d87e8edbee2a7cb63",
-    "tool/qa/test_bd7_device_crash_smoke.py": "57d4371cbd728d4da4b262ec7c2ef493a0a91a570a420f0b990f1d0b03c2da7a",
-    "tool/qa/test_bd7_device_ui.py": "263cb1fd504ade1689e7b02e602d5cdc3d0259f053321d67f71fe31b847ee237",
+    "tool/qa/test_bd7_device_crash_smoke.py": "d9529bb553f6da8fe90e05c48e718c9f306d094c6c0c2c625f4f1bbfeab1f0a6",
+    "tool/qa/test_bd7_device_ui.py": "47b9d0a017c019a2fb7c94fc4400bb6d2050d2c1631f36cb888ffe270b794512",
     "tool/qa/test_bd7_exit_proof.py": "b11a839617b7e90361e7933b04c78257b1b4dc8dcf93ed47a34d9ca5679a3795"
   },
   "offline": {
     "result": "PASS",
-    "tests": 46,
+    "tests": 52,
     "command": "python3 -m unittest tool.qa.test_bd7_exit_proof tool.qa.test_bd7_device_ui tool.qa.test_bd7_device_crash_smoke"
   },
   "failing_controls": [
@@ -36,12 +36,74 @@
     {
       "control": "falsey XML leaf crash dialog title",
       "result": "EXPECTED FAIL (Close app not tapped); explicit None check PASS"
+    },
+    {
+      "control": "unquoted adb shell private script",
+      "result": "EXPECTED FAIL: remote argv split; whole-script quote PASS"
+    },
+    {
+      "control": "disabled consent allowed flow",
+      "result": "EXPECTED FAIL: no DeviceFailure; fixed consent guard PASS"
+    },
+    {
+      "control": "degraded authored hint rejected",
+      "result": "EXPECTED FAIL: unsafe_screenshot; exact authored punctuation envelope PASS; private suffix still refused"
+    },
+    {
+      "control": "ANR transient hung accessibility dump",
+      "result": "EXPECTED FAIL: ui_unavailable; bounded polling tolerates it PASS"
+    },
+    {
+      "control": "missing saved ring loses precise failure and OS proof",
+      "result": "EXPECTED FAIL: generic device failure; fixed failure and validated status retained PASS"
+    },
+    {
+      "control": "cold launch navigating before Settings semantics",
+      "result": "EXPECTED FAIL: navigation_target_unavailable; deterministic readiness poll PASS"
     }
   ],
   "restored_source_and_offline": "PASS",
-  "device_run": false,
+  "device_run": true,
   "flutter_changes": false,
   "native_changes": false,
   "pub_get": "pinned once PASS",
-  "full_suite": "not run; coordinator-owned"
+  "full_suite": "not run; coordinator-owned",
+  "device_artifact": {
+    "version": 2196,
+    "source": "d777082c",
+    "sha256": "78074bc8c8f3244b252ae11f23cb3dc4d748b989c95c33e25111f6c16716af56",
+    "ordering_change_d55ed022_included": false
+  },
+  "device_evidence_sha256": {
+    "attempt1-normal-restore.json": "8fc185de97690a00fa9ee27a979494411f6e54e231b918d404b0b85d0477837a",
+    "attempt1-report.json": "754d5cbccf35d1a6ab69f2bf9cc7f98b70c06e7a8a3e51c60bc018e7c91432d7",
+    "attempt2-normal-restore.json": "8fc185de97690a00fa9ee27a979494411f6e54e231b918d404b0b85d0477837a",
+    "attempt2-report.json": "7ada2b9631552b85305e518f771ba225e0603ef038f9b9330f581e6025dd7de5",
+    "attempt3-normal-restore.json": "8fc185de97690a00fa9ee27a979494411f6e54e231b918d404b0b85d0477837a",
+    "attempt3-report.json": "031732535aaebea8192196464e1030690c2b5207ccfd9641ee9414c3bde890b6",
+    "attempt4-normal-restore.json": "8fc185de97690a00fa9ee27a979494411f6e54e231b918d404b0b85d0477837a",
+    "attempt4-report.json": "ce0e0da16479d9708c8cbfd9b939b03e0af8c715fa1202539a6e80298c05eca5",
+    "attempt5-consent-before.jpg": "fc2f54252fe7a298afe5ab6a901939f36573391589e6afd0a738c7aa4598e261",
+    "attempt5-consent-on.jpg": "e8f39af5953822bc24c5a8af0b2caea8cf8d3a1f6cbce2b1b2354ead48b3af09",
+    "attempt5-normal-restore.json": "8fc185de97690a00fa9ee27a979494411f6e54e231b918d404b0b85d0477837a",
+    "attempt5-report.json": "b313801383518775476be039858bb22f35adbee97e1746c9bea1e2816824c43e",
+    "attempt6-normal-restore.json": "8fc185de97690a00fa9ee27a979494411f6e54e231b918d404b0b85d0477837a",
+    "attempt6-report.json": "73ba6c4b26bcb74448d67b4f3834970c58e7b2e59aef9aa7c6249530d1c32eca",
+    "exit-only-driver.py": "412908cf85b050ab886b28562b8b17a70525062cbe79ede6bf2d1a59c97a431f",
+    "exits-anr-dialog.jpg": "386e451724773be97b932e54a702eb4581890cce1331bad380ed43e0852e77d0",
+    "exits-anr-exit.jpg": "a63b51f868af3b902b284ddd1ef2ce7d735a537b5ac3ec2db4cc1e417f28b617",
+    "exits-native-exit.jpg": "054ec18f975228ece87efc7b3225aa59e88383f1233bbc91fc3c6a6b91368e0f",
+    "exits-normal-restore.json": "8fc185de97690a00fa9ee27a979494411f6e54e231b918d404b0b85d0477837a",
+    "exits-report.json": "2c4e65eb39433aeb09f15f0dbfb66c6ff94cf3499112dd448aa0325f25a263e5",
+    "restart-normal-restore.json": "8fc185de97690a00fa9ee27a979494411f6e54e231b918d404b0b85d0477837a",
+    "restart-report.json": "f8921d98d4ea1b903d2f6bc8949c92e7da00819336d52e237760d9852d8879ff"
+  },
+  "checks": {
+    "python_compile": "PASS",
+    "diff_check": "PASS",
+    "analyzer": "not applicable; no Dart changes",
+    "kotlin_gate": "not applicable; no native changes",
+    "apk_build": "not run; coordinator-provided2196",
+    "full_suite": "not run; coordinator-owned"
+  }
 }

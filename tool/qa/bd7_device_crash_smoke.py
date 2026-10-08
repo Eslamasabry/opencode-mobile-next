@@ -21,7 +21,7 @@ if __package__ in (None, ''):
 
 from tool.qa import bd9_device_smoke as shared
 from tool.qa.bd9_normal_restore import prepare_restore
-from tool.qa.bd7_exit_proof import parse_exit_history, parse_crash_ring
+from tool.qa.bd7_exit_proof import parse_exit_history, parse_crash_ring, ProofFailure
 from tool.qa.bd7_device_ui import Bd7Ui, Bd7UiFailure
 
 PACKAGE = shared.PACKAGE
@@ -48,7 +48,7 @@ def verify_candidate(apk, signer):
         raise DeviceFailure('candidate_signer_mismatch')
     raw = shared.execute([shared.android_tool('aapt'), 'dump', 'badging', str(apk)])
     match = re.search(rb"^package: name='([^']+)' versionCode='([0-9]+)'", raw, re.M)
-    if match is None or match[1] != PACKAGE.encode() or match[2] != b'2197':
+    if match is None or match[1] != PACKAGE.encode() or match[2] != b'2196':
         raise DeviceFailure('candidate_identity_mismatch')
     return hashlib.sha256(apk.read_bytes()).hexdigest()
 
@@ -73,7 +73,20 @@ class DeviceSession:
             raise DeviceFailure('device_command_failed') from None
 
     def root(self, command):
-        return self.execute(['shell', 'su', '0', 'sh', '-c', command])
+        return self.execute(['shell', 'su', '0', 'sh', '-c', shlex.quote(command)])
+
+    def storage(self):
+        raw = self.execute(['shell', 'df', '-k', '/data'])
+        lines = raw.splitlines()
+        if len(lines) != 2:
+            raise DeviceFailure('storage_check_invalid')
+        fields = lines[1].split()
+        if len(fields) != 6 or not fields[3].isdigit() or not fields[4].endswith(b'%'):
+            raise DeviceFailure('storage_check_invalid')
+        available, used = int(fields[3]), int(fields[4][:-1])
+        if available < 256 * 1024 or used >= 95:
+            raise DeviceFailure('storage_insufficient')
+        return {'available_kib': available, 'used_percent': used}
 
     def identity(self):
         raw = self.execute(['shell', 'pidof', PACKAGE]).strip()
@@ -115,6 +128,13 @@ class DeviceSession:
     def launch(self):
         self.execute(['shell', 'input', 'keyevent', '224'])
         self.execute(['shell', 'am', 'start', '-W', '-n', PACKAGE + '/.MainActivity'])
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline:
+            if self.ui.find('Settings') is not None:
+                break
+            time.sleep(.25)
+        else:
+            raise DeviceFailure('app_navigation_not_ready')
         self.ui.navigate_report()
 
     def backup_diagnostics(self):
@@ -158,7 +178,9 @@ class DeviceSession:
         # Keep a private rescue snapshot when restoring enabled consent can
         # import this real OS ANR again on the subsequent normal launch.
         self.retain_baseline = before > 0
-        self.ui.scroll_find('Save crash reports on this phone')
+        switch = self.ui.scroll_find('Save crash reports on this phone')
+        if switch.get('enabled') != 'true':
+            raise DeviceFailure('consent_unavailable')
         self.ui.screenshot(self.output / 'consent-before.jpg', section='Crash reports')
         if before == 0:
             self.ui.tap('Save crash reports on this phone', contains=True)
@@ -182,7 +204,18 @@ class DeviceSession:
     def proof(self, identity, reason, source, after, label):
         raw = self.execute(['shell', 'dumpsys', 'activity', 'exit-info', PACKAGE])
         exit_entry = parse_exit_history(raw, PACKAGE, identity[0], reason)
-        raw = self.execute(['shell', 'su', '0', 'cat', FILES + '/crash-diagnostics.json'])
+        native_exists = self.root('if test -f ' + shlex.quote(FILES + '/native-last-crash.properties') + '; then printf 1; else printf 0; fi').strip()
+        if native_exists not in (b'0', b'1'):
+            raise DeviceFailure('capture_status_invalid')
+        unavailable = any("Crash reports aren't available right now. Restart the app and try again." in self.ui.text(node)
+                          for node in self.ui.nodes())
+        status = {'os_exit': exit_entry, 'native_category_file_exists': native_exists == b'1',
+                  'capture_unavailable_visible': unavailable}
+        (self.output / (source + '-capture-status.json')).write_text(json.dumps(status, indent=2) + '\n')
+        try:
+            raw = self.execute(['shell', 'su', '0', 'cat', FILES + '/crash-diagnostics.json'])
+        except DeviceFailure:
+            raise DeviceFailure('saved_crash_ring_unavailable') from None
         record = parse_crash_ring(raw, source, after)
         self.ui.scroll_find(label)
         self.ui.screenshot(self.output / (source + '-report.jpg'), section='Crash reports')
@@ -228,7 +261,10 @@ class DeviceSession:
         deadline = time.monotonic() + 40
         found = False
         while time.monotonic() < deadline:
-            node = self.ui.find('Close app')
+            try:
+                node = self.ui.find('Close app')
+            except Bd7UiFailure:
+                node = None  # The stopped process can stall accessibility first.
             if node is not None and 'android' in node.get('package', ''):
                 found = True
                 break
@@ -245,7 +281,7 @@ class DeviceSession:
 
 def run(args):
     args.output.mkdir(parents=True, exist_ok=True)
-    report = {'device': shared.SERIAL, 'version_code': 2197, 'result': 'FAIL'}
+    report = {'device': shared.SERIAL, 'version_code': 2196, 'result': 'FAIL'}
     stage = 'apk_preflight'
     session = DeviceSession(args.adb, args.output)
     try:
@@ -256,6 +292,8 @@ def run(args):
             fcntl.flock(lock, fcntl.LOCK_EX)
             session.locked = True
             try:
+                stage = 'storage_check'
+                report['storage_before'] = session.storage()
                 stage = 'private_baseline'
                 session.backup_diagnostics()
                 stage = 'candidate_install'
@@ -290,9 +328,13 @@ def run(args):
                 if not rollback_ok or report['normal_app_restore'] != 'PASS':
                     report['result'] = 'FAIL'
                 session.locked = False
-    except Exception:
+    except Exception as error:
         # Arbitrary OS/UI/private-file exceptions never enter the receipt.
         report.update(result='FAIL', failure_stage=stage)
+        if isinstance(error, (DeviceFailure, Bd7UiFailure, ProofFailure)):
+            code = error.args[0] if error.args else None
+            if isinstance(code, str) and re.fullmatch(r'[a-z_]{1,60}', code):
+                report['failure_code'] = code
     report['stage'] = 'complete' if report['result'] == 'PASS' else stage
     (args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     print('BD7 ' + report['result'] + ' stage=' + report['stage'], flush=True)
@@ -301,7 +343,7 @@ def run(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--apk', type=Path, default=Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2197.apk'))
+    parser.add_argument('--apk', type=Path, default=NORMAL_APK)
     parser.add_argument('--expected-signer', required=True)
     parser.add_argument('--output', type=Path, default=Path('build/bd7-device-proof'))
     parser.add_argument('--adb', default='adb')

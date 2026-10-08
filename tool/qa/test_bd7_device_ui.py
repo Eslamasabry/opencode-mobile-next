@@ -201,6 +201,36 @@ class Bd7UiTest(unittest.TestCase):
             result = Bd7Ui(fixture.execute).screenshot(Path(directory) / 'anr.jpg', section='anr')
             self.assertEqual((result['width'], result['height']), (400, 400))
 
+    def test_exact_degraded_hints_are_safe_but_appended_private_text_is_refused(self):
+        messages = (
+            "Crash reports aren't available right now. Restart the app and try again.",
+            "Couldn't update crash reports. Restart the app and try again.",
+        )
+        for message in messages:
+            for prefix, suffix in (('', ''), (', ', ''), ('', ' ,'), (',', ' '), (' ', ',')):
+                for appended in ('', ' synthetic-private-value'):
+                    fixture = UiFixture(xml(
+                        node('Crash reports', '[10,300][790,350]'),
+                        node('', '[10,400][790,600]', **{
+                            'content-desc': prefix + message + suffix + appended,
+                            'enabled': 'false',
+                        }),
+                    ))
+                    with tempfile.TemporaryDirectory() as directory:
+                        path = Path(directory) / 'degraded.jpg'
+                        captured = StringIO()
+                        with redirect_stdout(captured), redirect_stderr(captured):
+                            if appended:
+                                with self.assertRaisesRegex(Bd7UiFailure, '^unsafe_screenshot$') as failure:
+                                    Bd7Ui(fixture.execute).screenshot(path)
+                                self.assertFalse(path.exists())
+                                self.assertNotIn('synthetic-private-value', str(failure.exception))
+                            else:
+                                result = Bd7Ui(fixture.execute).screenshot(path)
+                                self.assertEqual(result['section'], 'Crash reports')
+                                self.assertTrue(path.exists())
+                        self.assertEqual(captured.getvalue(), '')
+
 
 if __name__ == '__main__':
     unittest.main()

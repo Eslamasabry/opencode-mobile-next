@@ -17,6 +17,10 @@ class Bd7UiFailure(ValueError):
 
 _BIDI = re.compile(r'[\u200e\u200f\u202a-\u202e\u2066-\u2069]')
 _BOUNDS = re.compile(r'^\[([0-9]+),([0-9]+)\]\[([0-9]+),([0-9]+)\]$')
+_DEGRADED_COPY = {
+    "Crash reports aren't available right now. Restart the app and try again.",
+    "Couldn't update crash reports. Restart the app and try again.",
+}
 _FIXED = {
     'Report a problem', 'Crash reports', 'Recent app exits', 'Details', 'Close',
     'Save crash reports on this phone', 'Kept on this phone. Never sent automatically.',
@@ -40,7 +44,7 @@ _FIXED = {
     'Android records each time the app closes. Nothing here is sent automatically.',
     'OpenCode Mobile', "OpenCode Mobile isn't responding", 'OpenCode Mobile isn’t responding',
     'Close app', 'Wait', 'App info',
-}
+} | _DEGRADED_COPY
 _GENERATED = re.compile(
     r'^(?:[0-9]{1,5}|[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}(?::[0-9]{2})?'
     r'|(?:Today|Yesterday) [0-9]{2}:[0-9]{2}'
@@ -66,6 +70,11 @@ def _normalize(value):
 
 def _safe_text(value):
     if value in _FIXED or _GENERATED.fullmatch(value):
+        return True
+    # Android can expose a disabled row's authored hint after an empty label.
+    # Only these exact degraded-state hints qualify; arbitrary suffixes do not.
+    if any(re.fullmatch(r'[, ]*' + re.escape(copy) + r'[, ]*', value)
+           and len(value) <= len(copy) + 4 for copy in _DEGRADED_COPY):
         return True
     match = re.fullmatch(r'(Source|Category|Summary|Reason code|Importance): (.+)', value)
     if match is None:

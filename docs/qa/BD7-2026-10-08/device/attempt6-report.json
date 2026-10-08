@@ -1,0 +1,16 @@
+{
+  "device": "emulator-5554",
+  "version_code": 2196,
+  "result": "FAIL",
+  "apk_sha256": "78074bc8c8f3244b252ae11f23cb3dc4d748b989c95c33e25111f6c16716af56",
+  "storage_before": {
+    "available_kib": 1749040,
+    "used_percent": 79
+  },
+  "diagnostic_baseline_restore": "PASS",
+  "normal_app_restore": "PASS",
+  "private_baseline_retained": true,
+  "failure_stage": "candidate_install",
+  "failure_code": "app_navigation_not_ready",
+  "stage": "candidate_install"
+}
