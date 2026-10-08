@@ -1,4 +1,5 @@
 import '../../domain/agent_catalog.dart';
+import '../setup/component_updates.dart';
 import 'paseo_scripts.dart';
 
 /// Installs catalog pins as Linux user oc. Does not sign in, launch agents, or
@@ -213,9 +214,48 @@ oc_probe_version() {
   static String _versionPattern(String version) =>
       _quote('(^|[^0-9A-Za-z.])${RegExp.escape(version)}([^0-9A-Za-z.]|\$)');
 
+  static const _claudeUpdateProbe = r'''
+oc_claude_probe_active() {
+  oc_probe=$(mktemp -d /home/oc/.local/share/oc-agents/.probe.XXXXXX)
+  oc_output=$(cd "$oc_probe" && timeout 30s env -i HOME="$oc_probe" XDG_CONFIG_HOME="$oc_probe" PATH="$PATH" \
+    "$oc_bin" --version 2>/dev/null) || oc_output=
+  rm -rf "$oc_probe"
+  printf '%s' "$oc_output" | grep -Eq "$oc_version_pattern"
+}
+oc_claude_update_failed() {
+  oc_restore_failed=0
+  oc_update_recover "$oc_final" || oc_restore_failed=1
+  oc_update_recover "$oc_bin" || oc_restore_failed=1
+  if [ "$oc_restore_failed" != 0 ]; then
+    echo '[oc] A component update could not be restored. Run setup again.' >&2
+  else
+    echo '[oc] Claude could not finish updating. Run setup again.' >&2
+  fi
+  exit 1
+}
+''';
+
   static String check(AgentDescriptor agent) {
     final recipe = _recipe(agent);
+    final recovery = agent.id == 'claude' && recipe.executable == 'claude'
+        ? '''$componentUpdatePrelude
+# Checks and installers hold the same lock across recovery and probes.
+# BB owns stale-lock recovery; a successful mkdir proves only our admission.
+oc_check_lock=/home/oc/.local/share/oc-agents/.lock-claude
+mkdir "\$oc_check_lock" 2>/dev/null || {
+  echo '[oc] Another Claude install may still be running. Wait and try again.' >&2
+  exit 1
+}
+trap 'rmdir "\$oc_check_lock" >/dev/null 2>&1 || true' EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+oc_update_recover "\$oc_final"
+oc_update_recover "\$oc_bin"
+'''
+        : '';
     return '''${_selection(agent, recipe)}
+$recovery
 oc_version_pattern=${_versionPattern(recipe.version)}
 $_probe
 [ -f "\$oc_final/.oc-pin" ] && [ ! -L "\$oc_final/.oc-pin" ]
@@ -229,9 +269,53 @@ printf '%s\\n' ${_quote(recipe.version)}
   static String install(AgentDescriptor agent) {
     final recipe = _recipe(agent);
     final version = _quote(recipe.version);
+    final claudeUpdate = agent.id == 'claude' && recipe.executable == 'claude';
+    final updatePrelude = claudeUpdate
+        ? '$componentUpdatePrelude\n$_claudeUpdateProbe'
+        : '';
+    final recoverAfterLock = claudeUpdate
+        ? r'''
+oc_update_recover "$oc_final"
+oc_update_recover "$oc_bin"
+'''
+        : '';
+    final fastLinkUpdate = claudeUpdate
+        ? r'''
+  ln -s "$oc_final/launch" "$oc_link" || oc_claude_update_failed
+  oc_update_activate "$oc_bin" "$oc_link" || oc_claude_update_failed
+  oc_claude_probe_active || oc_claude_update_failed
+  oc_update_commit "$oc_bin" || oc_claude_update_failed
+'''
+        : r'''
+  ln -s "$oc_final/launch" "$oc_link"
+  mv -Tf "$oc_link" "$oc_bin"
+''';
+    final activation = claudeUpdate
+        ? r'''
+ln -s "$oc_final/launch" "$oc_link" || oc_claude_update_failed
+oc_update_activate "$oc_final" "$oc_stage" || oc_claude_update_failed
+oc_update_activate "$oc_bin" "$oc_link" || oc_claude_update_failed
+oc_claude_probe_active || oc_claude_update_failed
+oc_update_commit "$oc_final" || oc_claude_update_failed
+oc_update_commit "$oc_bin" || oc_claude_update_failed
+'''
+        : r'''
+if [ -e "$oc_final" ]; then mv "$oc_final" "$oc_old"; fi
+if ! mv "$oc_stage" "$oc_final"; then
+  [ ! -d "$oc_old" ] || mv "$oc_old" "$oc_final"
+  exit 1
+fi
+if ! ln -s "$oc_final/launch" "$oc_link" || ! mv -Tf "$oc_link" "$oc_bin"; then
+  rm -rf "$oc_final"
+  [ ! -d "$oc_old" ] || mv "$oc_old" "$oc_final"
+  exit 1
+fi
+rm -rf "$oc_old"
+''';
     return '''${_selection(agent, recipe)}
 oc_version_pattern=${_versionPattern(recipe.version)}
 $_probe
+$updatePrelude
 command -v python3 >/dev/null && command -v timeout >/dev/null || {
   echo '[oc] Agent setup needs the Linux tools first' >&2; exit 1
 }
@@ -251,11 +335,11 @@ trap '[ -z "\$oc_probe" ] || rm -rf "\$oc_probe"; rm -rf "\$oc_stage"; rm -f "\$
 trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
+$recoverAfterLock
 [ ! -L "\$oc_final" ] && [ ! -L "\$oc_stage" ] || exit 1
 if [ -f "\$oc_final/.oc-pin" ] && [ ! -L "\$oc_final/.oc-pin" ] &&
    [ "\$(cat "\$oc_final/.oc-pin")" = "\$oc_pin" ] && oc_probe_version "\$oc_final"; then
-  ln -s "\$oc_final/launch" "\$oc_link"
-  mv -Tf "\$oc_link" "\$oc_bin"
+$fastLinkUpdate
   oc_version $version
   exit 0
 fi
@@ -286,17 +370,7 @@ else
   printf '#!/bin/sh\\nexec "%s/payload/%s" "\$@"\\n' "\$oc_final" "\$oc_member" > "\$oc_stage/launch"
 fi
 chmod 700 "\$oc_stage/launch"
-if [ -e "\$oc_final" ]; then mv "\$oc_final" "\$oc_old"; fi
-if ! mv "\$oc_stage" "\$oc_final"; then
-  [ ! -d "\$oc_old" ] || mv "\$oc_old" "\$oc_final"
-  exit 1
-fi
-if ! ln -s "\$oc_final/launch" "\$oc_link" || ! mv -Tf "\$oc_link" "\$oc_bin"; then
-  rm -rf "\$oc_final"
-  [ ! -d "\$oc_old" ] || mv "\$oc_old" "\$oc_final"
-  exit 1
-fi
-rm -rf "\$oc_old"
+$activation
 oc_version $version
 ''';
   }

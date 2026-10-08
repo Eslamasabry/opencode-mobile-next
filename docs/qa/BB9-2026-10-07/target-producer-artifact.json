@@ -1,0 +1,11 @@
+{
+  "sha256": "b6816a21eaee8525c6e55e50cdb4c9adb473aa9176383ba499db1eaf5aef48f1",
+  "versionCode": 2207,
+  "signer": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c",
+  "elapsedSeconds": 259.8,
+  "bytes": 64995303,
+  "privateQaDebuggable": false,
+  "ordinaryAppProducerComponent": true,
+  "unchangedReleaseEngineSha256": "198766f56e1b2020399be76bc5f7991c907cc50d49940e47370d17a11ac374b9",
+  "initSha256": "d0cbd044ef684038394d3b86d1eeba0c4f75bbb2671d60b54a31f06fb5b2be35"
+}

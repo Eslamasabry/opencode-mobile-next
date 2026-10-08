@@ -204,7 +204,27 @@ class BuiltinLinux(private val context: Context) {
 
     /** Runs [script] with /bin/sh inside Ubuntu as root (faked by proot). */
     fun run(script: String, timeoutSeconds: Long = 600, agentUser: Boolean = false): Result {
-        val process = start(script, null, agentUser)
+        val began = SystemClock.elapsedRealtime()
+        val timeoutMillis = TimeUnit.SECONDS.toMillis(timeoutSeconds).coerceAtLeast(0L)
+        val queueDeadline = began + timeoutMillis.coerceAtMost(10000L)
+        var admitted: Process? = null
+        while (admitted == null) {
+            admitted = synchronized(this) {
+                if (installerProcess == null) {
+                    check(SystemClock.elapsedRealtime() - began <= timeoutMillis) {
+                        "Another phone task is running. Wait a moment and try again."
+                    }
+                    startInstaller(script, InstallerTarget.entries.toSet(), InstallerOperation.CHECK, agentUser)
+                } else null
+            }
+            if (admitted == null) {
+                check(SystemClock.elapsedRealtime() < queueDeadline) {
+                    "Another phone task is running. Wait a moment and try again."
+                }
+                Thread.sleep(50)
+            }
+        }
+        val process = admitted
         val output = StringBuilder()
         val readerFailed = java.util.concurrent.atomic.AtomicBoolean()
         var reader: Thread? = null
@@ -230,8 +250,9 @@ class BuiltinLinux(private val context: Context) {
                     readerFailed.set(true)
                 }
             }, "phone-setup-check").apply { isDaemon = true; start() }
-            val finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS)
-            if (!finished) stopTree(process)
+            val remainingMillis = (timeoutMillis - (SystemClock.elapsedRealtime() - began)).coerceAtLeast(0L)
+            val finished = process.waitFor(remainingMillis, TimeUnit.MILLISECONDS)
+            if (!finished) stopInstaller(process)
             reader.join(2000)
             val complete = finished && !reader.isAlive && !readerFailed.get()
             val text = if (complete) synchronized(output) { output.takeLast(OUTPUT_CAP).toString() } else ""
@@ -239,13 +260,14 @@ class BuiltinLinux(private val context: Context) {
         } finally {
             // IO/security failure or Thread.start refusal must not leak a child
             // or replace the original safe channel failure during cleanup.
-            try { if (process.isAlive) stopTree(process) } catch (_: Throwable) { }
+            try { if (process.isAlive) stopInstaller(process) } catch (_: Throwable) { }
             try { process.outputStream.close() } catch (_: Throwable) { }
             try { process.inputStream.close() } catch (_: Throwable) { }
             try { reader?.join(2000) }
             catch (_: InterruptedException) { Thread.currentThread().interrupt() }
             catch (_: Throwable) { }
             synchronized(output) { output.setLength(0) }
+            finishInstaller(process)
         }
     }
 
@@ -271,6 +293,270 @@ class BuiltinLinux(private val context: Context) {
             .start().also { processes.add(it); processConfinement[it] = prootIsConfined }
     }
 
+    private val installerPreferences by lazy { context.getSharedPreferences("builtin_component_writer", Context.MODE_PRIVATE) }
+    private val installerGuard = Any()
+    @Volatile private var installerProcess: Process? = null
+    private var installerLaunchId: String? = null
+    private var componentUpdatesRecovered = false
+    private val componentUpdateFailure = "A component update could not be restored. Run setup again."
+    private val componentRecovery by lazy { NativeComponentUpdateRecovery(context.filesDir, home, rootfs) }
+
+    private fun installerRootfsGeneration(): String {
+        installerPreferences.getString("rootfsGeneration", null)?.let {
+            check(Regex("[0-9a-f]{64}").matches(it)) { componentUpdateFailure }
+            return it
+        }
+        check(!installerPreferences.contains("ticket")) { componentUpdateFailure }
+        val value = ByteArray(32).also { java.security.SecureRandom().nextBytes(it) }
+            .joinToString("") { "%02x".format(it) }
+        check(installerPreferences.edit().putString("rootfsGeneration", value).commit()) { componentUpdateFailure }
+        return value
+    }
+
+    private fun installerTicket(): InstallerTicket? {
+        val raw = installerPreferences.getString("ticket", null) ?: return null
+        check(raw.length <= 131072) { componentUpdateFailure }
+        fun decode(value: Any?, depth: Int = 0): Any? {
+            check(depth <= 16) { componentUpdateFailure }
+            return when (value) {
+                JSONObject.NULL -> null
+                is JSONObject -> value.keys().asSequence().associateWith { decode(value.get(it), depth + 1) }
+                is JSONArray -> (0 until value.length()).map { decode(value.get(it), depth + 1) }
+                else -> value
+            }
+        }
+        @Suppress("UNCHECKED_CAST")
+        return InstallerTicket.read(decode(JSONObject(raw)) as Map<String, Any?>)
+    }
+
+    private fun saveInstaller(ticket: InstallerTicket) {
+        check(installerPreferences.edit().putString("ticket", JSONObject(ticket.map()).toString())
+            .putLong("generation", ticket.ownership.generation).commit()) {
+            componentUpdateFailure
+        }
+    }
+
+    private fun installerPlan(ticket: InstallerTicket): NativeRuntimeOwnership.Drain =
+        NativeInstallerOwnership.drainPlan(ticket, installerRootfsGeneration(), bootIdentity(), sameUidInventory(),
+            registeredRuntimePids(), ::installerAbsenceConfirmed, ::nonceMatches)
+
+    /** Only live completion can admit current native peers; cold ownership is never broadened. */
+    private fun liveInstallerPlan(ticket: InstallerTicket, expectedProcess: Process, launchId: String): NativeRuntimeOwnership.Drain {
+        check(installerProcess === expectedProcess && installerLaunchId == launchId && ticket.id == launchId) {
+            componentUpdateFailure
+        }
+        val peers = knownOtherRuntime(exclude = expectedProcess, includeServer = true)
+        val inventory = sameUidInventory()
+        val live = NativeInstallerOwnership.withCurrentRuntimePeers(ticket, peers, inventory)
+        return NativeInstallerOwnership.drainPlan(live, installerRootfsGeneration(), bootIdentity(), inventory,
+            registeredRuntimePids(), ::installerAbsenceConfirmed, ::nonceMatches)
+    }
+
+    /** Signal zero only checks a recorded PID; missing /proc data is not proof of exit. */
+    private fun installerAbsenceConfirmed(pid: Int): Boolean {
+        check(pid > 1) { componentUpdateFailure }
+        return try {
+            Os.kill(pid, 0)
+            false
+        } catch (error: ErrnoException) {
+            error.errno == OsConstants.ESRCH
+        } catch (_: Throwable) {
+            false
+        }
+    }
+
+    private fun signalInstaller(identity: RuntimeProcessIdentity, signal: Int) {
+        if (identity.sameProcess(kernelIdentity(identity.pid))) {
+            check(processUid(identity.pid) == AndroidProcess.myUid()) { componentUpdateFailure }
+            if (identity.sameProcess(kernelIdentity(identity.pid))) Os.kill(identity.pid, signal)
+        }
+    }
+
+    private fun drainInstaller(ticket: InstallerTicket, expectedProcess: Process? = null, launchId: String? = null) {
+        fun plan(): NativeRuntimeOwnership.Drain = if (expectedProcess == null) installerPlan(ticket) else {
+            liveInstallerPlan(ticket, expectedProcess, launchId ?: error(componentUpdateFailure))
+        }
+        val deadline = SystemClock.elapsedRealtime() + 5000L
+        for (identity in plan().server) signalInstaller(identity, OsConstants.SIGTERM)
+        while (plan().server.isNotEmpty() && SystemClock.elapsedRealtime() < deadline - 2000L) Thread.sleep(50)
+        for (identity in plan().server) signalInstaller(identity, OsConstants.SIGKILL)
+        while (plan().server.isNotEmpty() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(50)
+        check(plan().server.isEmpty()) { componentUpdateFailure }
+    }
+
+    /** One cold admission precedes the first guest command; no live install is rolled back. */
+    @Synchronized
+    private fun recoverColdComponentUpdates() {
+        if (componentUpdatesRecovered) return
+        try {
+            check(installerProcess == null) { componentUpdateFailure }
+            val pending = componentRecovery.hasPending()
+            val ticket = installerTicket()
+            if (ticket != null) {
+                if (ticket.ownership.boot == bootIdentity()) drainInstaller(ticket)
+                else check(sameUidInventory().all { it.pid in registeredRuntimePids() }) { componentUpdateFailure }
+            }
+            if (pending) {
+                // A saved server receipt proves exact children, never that they cannot write.
+                // Drain it before recovery rather than treating old helpers as trusted readers.
+                val profile = recoveryPreferences.getString("restoreOwner", null)
+                if (profile != null) {
+                    val old = ownership(profile)
+                    if (old.boot == bootIdentity()) {
+                        fun oldMembers(): List<RuntimeProcessIdentity> {
+                            val current = sameUidInventory()
+                            NativeInstallerVisibility.requireMissingGone(
+                                listOfNotNull(old.root, old.leader) + old.other, current, ::installerAbsenceConfirmed)
+                            val plan = NativeRuntimeOwnership.plan(old, bootIdentity(), current, registeredRuntimePids(),
+                                requireCompleteInventory = false, nonceMatches = ::nonceMatches)
+                            return (plan.server + current.filter { it.pid in plan.other }).distinctBy { it.pid }
+                        }
+                        val deadline = SystemClock.elapsedRealtime() + 5000L
+                        for (identity in oldMembers()) signalInstaller(identity, OsConstants.SIGTERM)
+                        while (oldMembers().isNotEmpty() && SystemClock.elapsedRealtime() < deadline - 2000L) Thread.sleep(50)
+                        for (identity in oldMembers()) signalInstaller(identity, OsConstants.SIGKILL)
+                        while (oldMembers().isNotEmpty() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(50)
+                        check(oldMembers().isEmpty()) { componentUpdateFailure }
+                    }
+                }
+                componentRecovery.recoverAfterQuiescence {
+                    installerProcess == null && processes.none { it.isAlive } &&
+                        agentProcessProfiles.keys.none { it.isAlive } &&
+                        sameUidInventory().all { it.pid in registeredRuntimePids() }
+                }
+            }
+            if (ticket != null) check(installerPreferences.edit().remove("ticket").commit()) { componentUpdateFailure }
+            componentUpdatesRecovered = true
+        } catch (_: Throwable) { throw IllegalStateException(componentUpdateFailure) }
+    }
+
+    /** Fixed typed scope; script bytes and account/output values never enter the durable ticket. */
+    @Synchronized
+    internal fun startInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation,
+        agentUser: Boolean = false): Process = try {
+        startQualifiedInstaller(script, targets, operation, agentUser)
+    } catch (_: Throwable) { throw IllegalStateException(componentUpdateFailure) }
+
+    private fun startQualifiedInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation,
+        agentUser: Boolean = false): Process {
+        check(installed && installerProcess == null) { componentUpdateFailure }
+        recoverColdComponentUpdates()
+        check(installerTicket() == null) { componentUpdateFailure }
+        val nonce = ByteArray(32).also { java.security.SecureRandom().nextBytes(it) }
+            .joinToString("") { "%02x".format(it) }
+        val others = knownOtherRuntime() + services[SERVER]?.process?.takeIf { it.isAlive }?.let { process ->
+            val pid = pidOf(process) ?: error(componentUpdateFailure)
+            (listOf(pid) + descendants(pid)).map { kernelIdentity(it) ?: error(componentUpdateFailure) }
+        }.orEmpty()
+        val generation = installerPreferences.getLong("generation", 0L) + 1L
+        check(generation > 0L) { componentUpdateFailure }
+        val prepared = InstallerTicket(nonce, installerRootfsGeneration(), targets, operation,
+            NativeRuntimeReceipt(bootIdentity(), nonce, generation, null, null, others.distinctBy { it.pid }))
+        saveInstaller(prepared)
+        val gate = "printf 'OC-INSTALL-1 %s %s\\n' '$nonce' \"\$\$\"\n" +
+            "IFS= read -r permit || exit 78\n[ \"\$permit\" = '$nonce' ] || exit 78\n" +
+            "exec /bin/sh -c '" + script.replace("'", "'\"'\"'") + "'"
+        var process: Process? = null
+        var exactRoot: RuntimeProcessIdentity? = null
+        var committedTicket: InstallerTicket? = null
+        try {
+            val launched = ProcessBuilder(prootCommand(listOf("/usr/bin/env", "OC_RUNTIME_OWNER=$nonce",
+                "/usr/bin/setsid", "/bin/sh", "-c", gate), agentUser)).redirectErrorStream(true).apply {
+                environment().clear(); environment().putAll(prootEnvironment()); environment()["OC_RUNTIME_OWNER"] = nonce
+            }.start()
+            process = launched
+            installerProcess = launched
+            installerLaunchId = nonce
+            processes.add(launched); processConfinement[launched] = prootIsConfined
+            exactRoot = pidOf(launched)?.let { kernelIdentity(it) }
+            check(exactRoot != null && processUid(exactRoot!!.pid) == AndroidProcess.myUid()) { componentUpdateFailure }
+            val read = java.util.concurrent.FutureTask<String> {
+                val bytes = java.io.ByteArrayOutputStream()
+                while (bytes.size() < 128) {
+                    val value = launched.inputStream.read(); check(value >= 0) { componentUpdateFailure }
+                    if (value == 10) return@FutureTask bytes.toString("US-ASCII")
+                    bytes.write(value)
+                }
+                error(componentUpdateFailure)
+            }
+            Thread(read, "phone-installer-gate").apply { isDaemon = true; start() }
+            val header = read.get(5, TimeUnit.SECONDS).split(' ')
+            check(header.size == 3 && header[0] == "OC-INSTALL-1" && header[1] == nonce) { componentUpdateFailure }
+            val pid = pidOf(launched) ?: error(componentUpdateFailure)
+            val root = kernelIdentity(pid) ?: error(componentUpdateFailure)
+            val leader = kernelIdentity(header[2].toInt()) ?: error(componentUpdateFailure)
+            check(processUid(pid) == AndroidProcess.myUid() && processUid(leader.pid) == AndroidProcess.myUid() &&
+                leader.pid in descendants(pid) && nonceMatches(leader.pid, nonce)) { componentUpdateFailure }
+            val committed = NativeInstallerOwnership.committed(prepared, root, leader)
+            committedTicket = committed
+            installerPlan(committed) // No unknown previous writer can pass the workload gate.
+            synchronized(installerGuard) { saveInstaller(committed) }
+            launched.outputStream.write("$nonce\n".toByteArray(Charsets.US_ASCII))
+            launched.outputStream.flush(); launched.outputStream.close()
+            Thread({
+                while (installerProcess === launched) {
+                    try {
+                        synchronized(this@BuiltinLinux) { synchronized(installerGuard) {
+                            if (installerProcess !== launched) return@Thread
+                            val ticket = installerTicket() ?: return@Thread
+                            if (ticket.id != nonce) return@Thread
+                            val observed = liveInstallerPlan(ticket, launched, nonce).server
+                            if (observed != ticket.observed) saveInstaller(ticket.copy(observed = observed))
+                        } }
+                    } catch (_: Throwable) {
+                        synchronized(this@BuiltinLinux) { synchronized(installerGuard) {
+                            if (installerProcess !== launched) return@Thread
+                            try { drainInstaller(committed, launched, nonce) } catch (_: Throwable) { }
+                        } }
+                        return@Thread // Durable receipt remains; completion must still prove the drain.
+                    }
+                    Thread.sleep(100)
+                }
+            }, "phone-installer-ownership").apply { isDaemon = true; start() }
+            return launched
+        } catch (_: Throwable) {
+            try { process?.outputStream?.close() } catch (_: Throwable) { }
+            try {
+                committedTicket?.let { drainInstaller(it) } ?: exactRoot?.let { root ->
+                    // Before permit, capture descendants only while the original root is current.
+                    if (root.sameProcess(kernelIdentity(root.pid))) {
+                        val captured = (descendants(root.pid).mapNotNull { kernelIdentity(it) } + root)
+                            .filter { processUid(it.pid) == AndroidProcess.myUid() }
+                        for (identity in captured) signalInstaller(identity, OsConstants.SIGKILL)
+                    }
+                }
+            } catch (_: Throwable) { }
+            installerProcess = null
+            installerLaunchId = null
+            throw IllegalStateException(componentUpdateFailure)
+        }
+    }
+
+    @Synchronized
+    internal fun stopInstaller(process: Process) {
+        try {
+            check(installerProcess === process) { componentUpdateFailure }
+            synchronized(installerGuard) {
+                drainInstaller(installerTicket() ?: error(componentUpdateFailure), process,
+                    installerLaunchId ?: error(componentUpdateFailure))
+            }
+        } catch (_: Throwable) { throw IllegalStateException(componentUpdateFailure) }
+    }
+
+    @Synchronized
+    internal fun finishInstaller(process: Process) {
+        try {
+            check(installerProcess === process) { componentUpdateFailure }
+            synchronized(installerGuard) {
+                val ticket = installerTicket() ?: error(componentUpdateFailure)
+                drainInstaller(ticket, process, installerLaunchId ?: error(componentUpdateFailure))
+                check(installerPreferences.edit().remove("ticket").commit()) { componentUpdateFailure }
+                installerProcess = null
+                installerLaunchId = null
+            }
+        } catch (_: Throwable) { throw IllegalStateException(componentUpdateFailure) }
+    }
+
     /** proot's own path: the program a terminal session (LocalTerminal.kt) starts. */
     val prootPath: String get() = "$nativeDir/libproot.so"
 
@@ -282,6 +568,7 @@ class BuiltinLinux(private val context: Context) {
     @Synchronized
     fun prootCommand(program: List<String>, agentUser: Boolean = false): List<String> {
         check(!installingRuntime) { "Runtime installation is still running" }
+        recoverColdComponentUpdates()
         projectStorage.prepare()
         val agentRoot = if (agentUser) PhoneAgentPaths.prepare(context.filesDir, "linux/agent-root-view").apply {
             PhoneAgentPaths.prepare(this, "projects")
@@ -1343,10 +1630,10 @@ class BuiltinLinux(private val context: Context) {
     private fun registeredRuntimePids(): Set<Int> = registeredAppProcessIds(
         context.getSystemService(ActivityManager::class.java)?.runningAppProcesses,
         context.packageName, AndroidProcess.myUid()).toSet() + AndroidProcess.myPid()
-    private fun knownOtherRuntime(): List<RuntimeProcessIdentity> {
-        val roots = processes.filter { it.isAlive && it !== services[SERVER]?.process }.map {
+    private fun knownOtherRuntime(exclude: Process? = null, includeServer: Boolean = false): List<RuntimeProcessIdentity> {
+        val roots = processes.filter { it.isAlive && it !== exclude && (includeServer || it !== services[SERVER]?.process) }.map {
             pidOf(it) ?: error("ownershipUnknown")
-        } + services.filterKeys { it != SERVER }.values.filter { it.process.isAlive }.map {
+        } + services.filterKeys { includeServer || it != SERVER }.values.filter { it.process.isAlive && it.process !== exclude }.map {
             pidOf(it.process) ?: error("ownershipUnknown")
         } + LocalTerminal.get(context).list().filter { it.running }.map { it.pid }
         val ids = roots.flatMap { listOf(it) + descendants(it) }.distinct()
@@ -1406,7 +1693,13 @@ class BuiltinLinux(private val context: Context) {
         while (targets().isNotEmpty() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(50)
         check(targets().isEmpty()) { "ownershipUnknown" }
         try {
-            NativeRuntimeOwnership.plan(receipt, bootIdentity(), sameUidInventory(), registeredRuntimePids(),
+            // A normal app start may create new tracked helpers after the old Stop
+            // snapshot. They are peers of this live drain, never cold writer exemptions.
+            // Only the original receipt above selects processes for signals.
+            val current = sameUidInventory()
+            val peers = knownOtherRuntime()
+            val liveReceipt = NativeInstallerOwnership.withCurrentRuntimePeers(receipt, emptyList(), peers, current)
+            NativeRuntimeOwnership.plan(liveReceipt, bootIdentity(), current, registeredRuntimePids(),
                 nonceMatches = ::nonceMatches)
         } catch (error: Throwable) { restoreUnavailable("ownershipUnknown"); throw error }
         check(recoveryPreferences.edit().remove("drainOwner").remove("drainAll").remove(drainKey(profile)).commit()) { "storageUnavailable" }
@@ -1635,6 +1928,8 @@ class BuiltinLinux(private val context: Context) {
                 synchronized(this) {
                     var recipe: NativeServerRecipe? = null
                     var receipt: NativeRuntimeReceipt? = null
+                    // Outside the short recovery admission lock: installer drain can wait.
+                    recoverColdComponentUpdates()
                     withColdRestoreAdmission(worker, profile) {
                         if (readBudget(profile).attempts >= 3) {
                             restoreUnavailable("budgetExhausted"); throw ColdRestoreRevoked()
@@ -2471,6 +2766,8 @@ class BuiltinLinux(private val context: Context) {
         check(!installingRuntime && phase != "installing" && !SetupRunner.get(context).running) {
             "Finish or cancel setup before removing the runtime"
         }
+        check(installerProcess == null) { "Finish or cancel setup before removing the runtime" }
+        recoverColdComponentUpdates()
         // Every service first (OpenCode, AI Team with its store and agents):
         // deleting files under a running program leaves it spinning on
         // nothing.
@@ -2485,6 +2782,9 @@ class BuiltinLinux(private val context: Context) {
         processes.filter { it.isAlive }.forEach { stopTree(it) }
         check(processes.none { it.isAlive }) { "A runtime process is still stopping" }
         processes.clear()
+        check(sameUidInventory().all { it.pid in registeredRuntimePids() }) {
+            "Another phone task is still running. Close it and try again."
+        }
         // Stop removed the active copy; uninstall also sweeps inactive profile copies.
         phoneEngine.eraseAllCredentialCopies()
         // Migration must succeed before any runtime data is removed.
@@ -2705,6 +3005,11 @@ class BuiltinLinux(private val context: Context) {
 
     /** What proot-distro does after unpacking, trimmed to what Ubuntu needs. */
     private fun configure() {
+        componentUpdatesRecovered = false
+        check(installerProcess == null && !installerPreferences.contains("ticket")) { componentUpdateFailure }
+        val generation = ByteArray(32).also { java.security.SecureRandom().nextBytes(it) }
+            .joinToString("") { "%02x".format(it) }
+        check(installerPreferences.edit().putString("rootfsGeneration", generation).commit()) { componentUpdateFailure }
         val etc = File(rootfs, "etc")
         File(etc, "resolv.conf").apply {
             delete()

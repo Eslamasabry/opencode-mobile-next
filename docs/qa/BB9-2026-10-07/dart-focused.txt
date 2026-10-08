@@ -1,0 +1,52 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: Claude check restores interrupted code before probing its link
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: Claude check refuses another installer lock without changing code
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: failed Claude active probe restores the prior pinned executable
+00:00 +2 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: failed Claude active probe restores the prior pinned executable [E]
+  Expected: contains 'Claude could not finish updating. Run setup again.'
+    Actual: '[oc] The agent did not pass its version check\n'
+              ''
+     Which: does not contain 'Claude could not finish updating. Run setup again.'
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_agent_scripts_test.dart 144:7            main.<fn>
+
+00:00 +2 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: every catalog recipe generates valid shell without executing downloads
+00:00 +3 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: oc bootstrap accepts PRoot identity mapping without requiring real chown
+00:00 +4 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: a checksum mismatch never executes the candidate or activates it
+00:00 +5 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: version mismatch never activates and suppresses raw CLI output
+00:00 +6 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: valid executable installs atomically, checks, and repeats idempotently
+00:00 +7 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: root execution and unknown architecture fail before download
+00:00 +8 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: concurrent installer lock does not damage held installation files
+00:00 +9 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: tar path traversal and archive links are refused before extraction execution
+00:00 +10 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: bundled archive retains sibling files and validates entry version
+00:01 +11 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: npm bundle wrapper keeps siblings under the pinned private Node
+00:01 +12 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: check refuses an altered pin marker before executing the CLI
+00:01 +13 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: shell metacharacters in recipe version or archive member fail generation
+00:01 +14 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: zip symlink payload is refused
+00:01 +15 -1: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_component_update_test.dart
+00:01 +15 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_component_update_test.dart: fresh process restores uncommitted activation and replay is safe
+00:01 +16 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_component_update_test.dart: commit retains only the immediately preceding good generation
+00:01 +17 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_component_update_test.dart: first-install recovery removes incomplete activation
+00:01 +18 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_component_update_test.dart: recovery restores launch links without following their targets
+00:01 +19 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_component_update_test.dart: corrupt receipt fails closed and exposes only fixed guidance
+00:01 +20 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_component_update_test.dart: interruption before old move or after restore is replayable
+00:02 +21 -1: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart
+00:02 +21 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: (setUpAll)
+00:07 +21 -2: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: (setUpAll) [E]
+  Bad state: kotlinc failed: test/native/setup_runner_stubs/services.kt:16:40: error: 'public' function exposes its 'internal' parameter type argument 'InstallerTarget'.
+      fun startInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation, agentUser: Boolean = false): Process {
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  test/native/setup_runner_stubs/services.kt:16:71: error: 'public' function exposes its 'internal' parameter type 'InstallerOperation'.
+      fun startInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation, agentUser: Boolean = false): Process {
+                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  test/native/kotlin_jar_cache.dart 42:5  cachedKotlinJar
+
+00:07 +21 -2: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: (tearDownAll)
+00:07 +21 -2: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: failed Claude active probe restores the prior pinned executable
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: (setUpAll)

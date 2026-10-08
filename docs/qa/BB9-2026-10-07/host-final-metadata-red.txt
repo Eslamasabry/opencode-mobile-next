@@ -1,0 +1,12 @@
+Mock-only AST-extracted selective metadata restoration; no device/build/Gradle calls.
+Command: tool/qa/machine_lock.sh test -- python3 tool/qa/test_bb9_final_metadata_restore.py --red
+Mutants run in memory; production source bytes are never changed.
+PASS private_session_and_evidence_mirror_identical
+SHA256 /tmp/oc-bb9-service-normal-restore-session.py 4ff8433a7e1a09740ec33c3618575f3f1ede9b1b9a7eb385bbee40c5c16cd30f
+SHA256 /home/eslam/Storage/Code/oc_app-sol-bb/docs/qa/BB9-2026-10-07/service-normal-restore-session.py 4ff8433a7e1a09740ec33c3618575f3f1ede9b1b9a7eb385bbee40c5c16cd30f
+SHA256 /home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb9_final_metadata_restore.py e73b57803f54fadabff4e4634b6ea50a8347651064655582319ee583bf3feefd
+Exit: 0
+PASS removed_fix_failed selective_write tests=1 failures=0 errors=1
+PASS removed_fix_failed force_stop tests=1 failures=1 errors=0
+PASS removed_fix_failed whole_uid_prewrite tests=1 failures=1 errors=0
+PASS source_restored_without_filesystem_mutation

@@ -1,0 +1,86 @@
+Removed-fix controls compile only a temporary copy. Production source unchanged.
+machine_lock=test; kotlinc-jvm=2.3.20; API=37.0; compiler/test heap=256 MiB
+sourceSha256=f2abca2b345770a410e12143ec9361132ea0ef66a8c07fa992676a4c0a3639a8
+testSha256=2bb4f31d6611d91b40079df660ae5f519741ed3c5b3ba3affbb174eafce7e0f2
+CONTROL removed 'check(isQuiescent())' -> 'Unit'
+CONTROL removed 'check(quiescent())' -> 'Unit'
+CONTROL removed 'check(validateAncestors(directory) && quiescent())' -> 'check(validateAncestors(directory))'
+CONTROL removed '&& before.sameObject(opened)' -> '&& true'
+CONTROL removed 'for (target in code + links) recover(target, isQuiescent)' -> 'for (target in links + code) recover(target, isQuiescent)'
+CONTROL removed 'check(depth <= 64 && --budget[0] >= 0)' -> 'Unit'
+CONTROL removed first parent sync before pending unlink
+EXPECTED_FAILURE quiescenceIsRecheckedImmediatelyBeforeFirstMutation
+EXPECTED_FAILURE revocationAfterDeletePreservesGoodAndPendingForNextRecovery
+EXPECTED_FAILURE directorySyncMustSucceedBeforePendingReceiptIsCleared
+EXPECTED_FAILURE pendingRecoveryCannotWriteWithoutPositiveQuiescenceProof
+EXPECTED_FAILURE recursiveDeletionHasFiniteDepthAndNeverTraversesUnexpectedObjects
+EXPECTED_FAILURE openedReceiptMustMatchLstatDeviceInodeAndType
+EXPECTED_FAILURE emptyLegacyLockIsRemovedOnlyAfterProofAndNoOldPidDirectoryIsAdopted
+EXPECTED_FAILURE excessiveEntriesStopDeletionAndRetainTheRecoveryJournal
+EXPECTED_FAILURE everyCodeGenerationIsRecoveredBeforeAnyCommandLink
+COMMAND ['kotlinc', '-J-Xmx256m', '/home/eslam/Storage/tmp/bb9-component-worker-red.kt', '/home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeComponentUpdateRecoveryTest.kt', '-classpath', '/home/eslam/Android/Sdk/platforms/android-37.0/android.jar:/home/eslam/.gradle/caches/modules-2/files-2.1/junit/junit/4.13.2/8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12/junit-4.13.2.jar', '-d', '/home/eslam/Storage/tmp/bb9-component-worker-red-tests.jar']
+EXIT 0
+COMMAND ['kotlin', '-J-Xmx256m', '-classpath', '/home/eslam/Storage/tmp/bb9-component-worker-red-tests.jar:/home/eslam/Android/Sdk/platforms/android-37.0/android.jar:/home/eslam/.gradle/caches/modules-2/files-2.1/junit/junit/4.13.2/8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12/junit-4.13.2.jar:/home/eslam/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar', 'org.junit.runner.JUnitCore', 'io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest']
+JUnit version 4.13.2
+.E...E.E.E......E....E..E..E.E
+Time: 0.494
+There were 9 failures:
+1) quiescenceIsRecheckedImmediatelyBeforeFirstMutation(io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest)
+java.lang.AssertionError: expected java.lang.IllegalStateException to be thrown, but nothing was thrown
+	at org.junit.Assert.assertThrows(Assert.java:1028)
+	at org.junit.Assert.assertThrows(Assert.java:981)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.fail(NativeComponentUpdateRecoveryTest.kt:21)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.quiescenceIsRecheckedImmediatelyBeforeFirstMutation(NativeComponentUpdateRecoveryTest.kt:54)
+2) revocationAfterDeletePreservesGoodAndPendingForNextRecovery(io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest)
+java.lang.AssertionError: expected java.lang.IllegalStateException to be thrown, but nothing was thrown
+	at org.junit.Assert.assertThrows(Assert.java:1028)
+	at org.junit.Assert.assertThrows(Assert.java:981)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.fail(NativeComponentUpdateRecoveryTest.kt:21)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.revocationAfterDeletePreservesGoodAndPendingForNextRecovery(NativeComponentUpdateRecoveryTest.kt:63)
+3) directorySyncMustSucceedBeforePendingReceiptIsCleared(io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest)
+java.lang.AssertionError
+	at org.junit.Assert.fail(Assert.java:87)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertTrue(Assert.java:53)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.directorySyncMustSucceedBeforePendingReceiptIsCleared(NativeComponentUpdateRecoveryTest.kt:220)
+4) pendingRecoveryCannotWriteWithoutPositiveQuiescenceProof(io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest)
+java.lang.AssertionError: expected java.lang.IllegalStateException to be thrown, but nothing was thrown
+	at org.junit.Assert.assertThrows(Assert.java:1028)
+	at org.junit.Assert.assertThrows(Assert.java:981)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.fail(NativeComponentUpdateRecoveryTest.kt:21)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.pendingRecoveryCannotWriteWithoutPositiveQuiescenceProof(NativeComponentUpdateRecoveryTest.kt:44)
+5) recursiveDeletionHasFiniteDepthAndNeverTraversesUnexpectedObjects(io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest)
+java.lang.AssertionError: expected java.lang.IllegalStateException to be thrown, but nothing was thrown
+	at org.junit.Assert.assertThrows(Assert.java:1028)
+	at org.junit.Assert.assertThrows(Assert.java:981)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.fail(NativeComponentUpdateRecoveryTest.kt:21)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.recursiveDeletionHasFiniteDepthAndNeverTraversesUnexpectedObjects(NativeComponentUpdateRecoveryTest.kt:206)
+6) openedReceiptMustMatchLstatDeviceInodeAndType(io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest)
+java.lang.AssertionError: expected java.lang.IllegalStateException to be thrown, but nothing was thrown
+	at org.junit.Assert.assertThrows(Assert.java:1028)
+	at org.junit.Assert.assertThrows(Assert.java:981)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.fail(NativeComponentUpdateRecoveryTest.kt:21)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.openedReceiptMustMatchLstatDeviceInodeAndType(NativeComponentUpdateRecoveryTest.kt:166)
+7) emptyLegacyLockIsRemovedOnlyAfterProofAndNoOldPidDirectoryIsAdopted(io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest)
+java.lang.AssertionError: expected java.lang.IllegalStateException to be thrown, but nothing was thrown
+	at org.junit.Assert.assertThrows(Assert.java:1028)
+	at org.junit.Assert.assertThrows(Assert.java:981)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.fail(NativeComponentUpdateRecoveryTest.kt:21)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.emptyLegacyLockIsRemovedOnlyAfterProofAndNoOldPidDirectoryIsAdopted(NativeComponentUpdateRecoveryTest.kt:243)
+8) excessiveEntriesStopDeletionAndRetainTheRecoveryJournal(io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest)
+java.lang.AssertionError: expected java.lang.IllegalStateException to be thrown, but nothing was thrown
+	at org.junit.Assert.assertThrows(Assert.java:1028)
+	at org.junit.Assert.assertThrows(Assert.java:981)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.fail(NativeComponentUpdateRecoveryTest.kt:21)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.excessiveEntriesStopDeletionAndRetainTheRecoveryJournal(NativeComponentUpdateRecoveryTest.kt:234)
+9) everyCodeGenerationIsRecoveredBeforeAnyCommandLink(io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest)
+java.lang.AssertionError
+	at org.junit.Assert.fail(Assert.java:87)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertTrue(Assert.java:53)
+	at io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.everyCodeGenerationIsRecoveredBeforeAnyCommandLink(NativeComponentUpdateRecoveryTest.kt:124)
+
+FAILURES!!!
+Tests run: 21,  Failures: 9
+
+EXIT 1

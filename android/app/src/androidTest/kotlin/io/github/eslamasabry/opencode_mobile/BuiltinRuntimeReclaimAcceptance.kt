@@ -81,7 +81,13 @@ internal class BuiltinRuntimeReclaimAcceptance(
 
     private fun capabilities(linux: BuiltinLinux) = synchronized(linux) {
         fun probe(method: String): Pair<Boolean, String> = try {
-            BuiltinLinux::class.java.getDeclaredMethod(method).apply { isAccessible = true }.invoke(linux)
+            val target = try { BuiltinLinux::class.java.getDeclaredMethod(method) }
+                catch (missing: NoSuchMethodException) {
+                    if (method != "knownOtherRuntime") throw missing
+                    BuiltinLinux::class.java.getDeclaredMethod(method, java.lang.Process::class.java,
+                        Boolean::class.javaPrimitiveType)
+                }.apply { isAccessible = true }
+            if (target.parameterCount == 0) target.invoke(linux) else target.invoke(linux, null, false)
             true to "none"
         } catch (failure: Throwable) {
             val error = (failure as? java.lang.reflect.InvocationTargetException)?.targetException ?: failure

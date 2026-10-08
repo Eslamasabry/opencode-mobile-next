@@ -1,0 +1,8 @@
+{
+  "installedVersion": 2195,
+  "ubuntuReadyPresent": true,
+  "rootfsDirectoryPresent": true,
+  "claudeExecutablePresent": false,
+  "fixedClaudePath": "/opt/oc-claude/claude",
+  "mutations": false
+}

@@ -1,5 +1,8 @@
 """Pure host regressions: mocks only, no adb, emulator lock, or subprocess execution."""
 import importlib.util
+import io
+import sys
+import types
 import hashlib
 import json
 import os
@@ -330,5 +333,126 @@ class ReclaimProofTest(unittest.TestCase):
             device.signal({"pid": 1, "startTicks": 123}, "KILL")
 
 
+class RestoreDeathWaitTest(unittest.TestCase):
+    class Finished(Exception):
+        pass
+
+    def original(self):
+        return ET.fromstring('<map><string name="owner">existing</string></map>')
+
+    def replies(self, pids):
+        device=mock.Mock();events=[];remaining=list(pids)
+        def adb(*args, **kwargs):
+            if args[:3] == ('shell','am','force-stop'):
+                events.append('force_stop')
+                return subprocess.CompletedProcess([],0,'','')
+            if args[:2] == ('shell','pidof'):
+                value=remaining.pop(0) if remaining else None
+                events.append('live' if value else 'gone')
+                return subprocess.CompletedProcess([],0 if value else 1,value or '','')
+            return subprocess.CompletedProcess([],0,'','')
+        device.adb.side_effect=adb
+        def native():
+            events.append('native_snapshot')
+            return self.original()
+        device.native.side_effect=native
+        device.app_identity.return_value=None
+        device.run.return_value=subprocess.CompletedProcess([],0,'','')
+        device.ensure_normal_app.side_effect=self.Finished()
+        return device,events
+
+    def test_delayed_death_precedes_snapshot_and_write(self):
+        device,events=self.replies(['42 43\n','42\n',None])
+        with mock.patch.object(acceptance.time,'sleep'), self.assertRaises(self.Finished):
+            acceptance.restore_person(device,self.original(),[])
+        self.assertEqual(events,['force_stop','live','live','gone','native_snapshot'])
+        device.run.assert_called_once()
+        self.assertEqual(device.app_identity.call_count,3)
+        self.assertEqual(device.run.call_args.kwargs['timeout'],5)
+        device.instrument.assert_not_called()
+
+    def test_permanent_app_refuses_in_ten_seconds_without_snapshot_or_write(self):
+        device,events=self.replies(['42\n'])
+        elapsed=[0.0]
+        def adb(*args,**kwargs):
+            if args[:2] == ('shell','pidof'):
+                elapsed[0]+=min(.2,kwargs['timeout'])
+                return subprocess.CompletedProcess([],0,'42\n','')
+            return subprocess.CompletedProcess([],0,'','')
+        device.adb.side_effect=adb
+        def sleep(delay):elapsed[0]+=delay
+        with mock.patch.object(acceptance.time,'monotonic',side_effect=lambda:elapsed[0]),\
+             mock.patch.object(acceptance.time,'sleep',side_effect=sleep),\
+             self.assertRaisesRegex(acceptance.Refused,'restore_app_death_timeout'):
+            acceptance.restore_person(device,self.original(),[])
+        self.assertLessEqual(elapsed[0],10)
+        device.native.assert_not_called();device.run.assert_not_called();device.ensure_normal_app.assert_not_called()
+        device.instrument.assert_not_called()
+
+    def test_respawn_before_snapshot_refuses_without_read_or_write(self):
+        device,_=self.replies([None]);device.app_identity.return_value={'pid':99,'startTicks':123,'state':'S'}
+        with self.assertRaisesRegex(acceptance.Refused,'restore_metadata_writer_active'):
+            acceptance.restore_person(device,self.original(),[])
+        device.native.assert_not_called();device.run.assert_not_called()
+
+    def test_respawn_between_snapshot_and_write_refuses_write(self):
+        device,_=self.replies([None]);device.app_identity.side_effect=[None,{'pid':99,'startTicks':123,'state':'S'}]
+        with self.assertRaisesRegex(acceptance.Refused,'restore_metadata_writer_active'):
+            acceptance.restore_person(device,self.original(),[])
+        device.native.assert_called_once();device.run.assert_not_called()
+
+    def test_respawn_after_write_refuses_success_and_preflight(self):
+        device,_=self.replies([None]);device.app_identity.side_effect=[None,None,{'pid':99,'startTicks':123,'state':'S'}]
+        evidence=[]
+        with self.assertRaisesRegex(acceptance.Refused,'restore_metadata_writer_active'):
+            acceptance.restore_person(device,self.original(),evidence,baseline={})
+        device.run.assert_called_once();device.ensure_normal_app.assert_not_called();device.instrument.assert_not_called()
+        self.assertEqual(evidence,[])
+
+    def test_failed_pidof_never_counts_as_absence(self):
+        device=mock.Mock()
+        device.adb.return_value=subprocess.CompletedProcess([],1,'','private adb error')
+        with self.assertRaisesRegex(acceptance.Refused,'^restore_app_state_unavailable$'):
+            acceptance.wait_for_app_death(device)
+
+    def test_timeout_reads_remain_bounded(self):
+        device=mock.Mock();elapsed=[0.0]
+        def adb(*args,**kwargs):
+            elapsed[0]+=kwargs['timeout']
+            raise subprocess.TimeoutExpired(['private'],kwargs['timeout'])
+        device.adb.side_effect=adb
+        with mock.patch.object(acceptance.time,'monotonic',side_effect=lambda:elapsed[0]),\
+             self.assertRaisesRegex(acceptance.Refused,'restore_app_death_timeout'):
+            acceptance.wait_for_app_death(device)
+        self.assertEqual(elapsed[0],10)
+        self.assertEqual(device.adb.call_count,5)
+
+
+def restore_red_proof():
+    global acceptance
+    restored=acceptance
+    source=Path(__file__).with_name('bb3_runtime_acceptance.py').read_text()
+    mutations=[
+        ('confirmed_death_wait','    wait_for_app_death(device)\n','', 'test_delayed_death_precedes_snapshot_and_write'),
+        ('permanent_death_refusal','    wait_for_app_death(device)\n','', 'test_permanent_app_refuses_in_ten_seconds_without_snapshot_or_write'),
+        ('before_snapshot_absence', '    require(device.app_identity() is None, "restore_metadata_writer_active")\n    merged', '    merged', 'test_respawn_before_snapshot_refuses_without_read_or_write'),
+        ('before_write_absence', '    require(device.app_identity() is None, "restore_metadata_writer_active")\n    result = device.run', '    result = device.run', 'test_respawn_between_snapshot_and_write_refuses_write'),
+        ('after_write_absence', '    require(device.app_identity() is None, "restore_metadata_writer_active")\n    evidence.append', '    evidence.append', 'test_respawn_after_write_refuses_success_and_preflight'),
+    ]
+    for name,before,after,test in mutations:
+        assert before in source
+        module=types.ModuleType('bb3_restore_removed_fix');module.__file__=str(Path(__file__).with_name('bb3_runtime_acceptance.py'))
+        exec(compile(source.replace(before,after),module.__file__,'exec'),module.__dict__)
+        acceptance=module
+        result=unittest.TextTestRunner(stream=io.StringIO()).run(unittest.TestSuite([RestoreDeathWaitTest(test)]))
+        assert not result.wasSuccessful(), 'removed fix unexpectedly green: '+name
+        print('PASS removed_fix_red '+name)
+    acceptance=restored
+    result=unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__]))
+    return 0 if result.wasSuccessful() else 1
+
+
 if __name__ == "__main__":
+    if sys.argv[1:] == ["--restore-red-proof"]:
+        raise SystemExit(restore_red_proof())
     unittest.main()

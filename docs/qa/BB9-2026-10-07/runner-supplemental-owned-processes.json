@@ -1,0 +1,26 @@
+{
+  "owned": [
+    {
+      "pid": 2727406,
+      "startTicks": 90705694,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2727410,
+      "startTicks": 90705695,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2727448,
+      "startTicks": 90705749,
+      "gradleDaemon": true
+    },
+    {
+      "pid": 2727590,
+      "startTicks": 90709914,
+      "gradleDaemon": false
+    }
+  ],
+  "remaining": [],
+  "intermediatesAbsent": true
+}

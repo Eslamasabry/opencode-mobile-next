@@ -1,0 +1,16 @@
+child PID=2693587
+child PID=2693730
+child PID=2693779
+child PID=2693869
+child PID=2693918
+child PID=2694003
+child PID=2694074
+child PID=2694199
+child PID=2694248
+child PID=2694317
+child PID=2694367
+child PID=2694445
+child PID=2694495
+child PID=2694569
+Runner and jar removed; all child processes waited.
+All 14 recorded check wrapper PIDs absent; temporary driver removed. No Gradle/APK/adb.

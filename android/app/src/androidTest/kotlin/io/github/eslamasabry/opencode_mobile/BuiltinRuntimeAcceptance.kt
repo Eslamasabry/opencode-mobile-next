@@ -36,6 +36,11 @@ class BuiltinRuntimeAcceptance : Instrumentation() {
             var passed = false
             var failureCode: String? = null
             try {
+                if (arguments.getString("step")?.startsWith("bb9") == true) {
+                    BuiltinComponentUpdateAcceptance(this, arguments).execute()
+                    passed = true
+                    return@Thread
+                }
                 if (arguments.getString("step")?.startsWith("bb3") == true) {
                     BuiltinRuntimeReclaimAcceptance(this, arguments).execute()
                     passed = true
@@ -67,6 +72,8 @@ class BuiltinRuntimeAcceptance : Instrumentation() {
                     else -> throw Refused("invalid_step")
                 }
                 passed = true
+            } catch (failure: BuiltinComponentUpdateAcceptance.Refused) {
+                failureCode = failure.safeCode
             } catch (failure: BuiltinRuntimeReclaimAcceptance.Refused) {
                 failureCode = failure.safeCode
             } catch (failure: Refused) {

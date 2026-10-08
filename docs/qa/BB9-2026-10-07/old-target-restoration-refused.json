@@ -1,0 +1,14 @@
+{
+  "target": "9cccd8234ea4f22083057d94e5d72d2a4b6a4ae60f01ee5aa3443f924555d0d7",
+  "runner": "272689ff7b5eea7062e41a2011285f58f8232658811dd1be74becb82e2067340",
+  "queueFixtureReached": false,
+  "writerPresent": false,
+  "liveMarkersPresent": false,
+  "nativePreferencesPreserved": true,
+  "connectedRestorationProven": false,
+  "fixturePresent": false,
+  "pendingPresent": false,
+  "savedOriginalGoodPresent": false,
+  "legacyLockPresent": false,
+  "executableSha256": "ed78ed8396c24e321ee457a81c41e25c62fdf2cfc26f098cffc2f6564b4d6fbd"
+}

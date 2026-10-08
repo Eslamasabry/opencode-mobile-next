@@ -513,13 +513,41 @@ class Session:
         self.fixture = None
 
 
+def wait_for_app_death(device):
+    """Observe absence only; never choose or adopt any returned process identity."""
+    deadline = time.monotonic() + 10
+    while True:
+        remaining = deadline - time.monotonic()
+        require(remaining > 0, "restore_app_death_timeout")
+        try:
+            result = device.adb("shell", "pidof", PACKAGE, timeout=min(2, remaining))
+        except subprocess.TimeoutExpired:
+            continue
+        require(len(result.stdout) <= 512 and len(result.stderr) <= 512,
+                "restore_app_state_unavailable")
+        pids = result.stdout.split()
+        require(all(pid.isdecimal() and int(pid) > 1 for pid in pids) and
+                ((result.returncode == 0 and pids) or
+                 (result.returncode == 1 and not pids and not result.stderr.strip())),
+                "restore_app_state_unavailable")
+        if not pids:
+            return
+        remaining = deadline - time.monotonic()
+        require(remaining > 0, "restore_app_death_timeout")
+        time.sleep(min(.1, remaining))
+
+
 def restore_person(device, original, evidence, baseline=None):
     require(device.adb("shell", "am", "force-stop", PACKAGE).returncode == 0, "restore_force_stop_failed")
+    wait_for_app_death(device)
+    require(device.app_identity() is None, "restore_metadata_writer_active")
     merged = merge_person_preferences(original, device.native())
     require(device.adb("shell", "test", "!", "-e", NATIVE + ".bak").returncode == 0, "restore_backup_pending")
+    require(device.app_identity() is None, "restore_metadata_writer_active")
     result = device.run(["adb", "-s", SERIAL, "shell", "sh", "-c", shlex.quote(f"cat > '{NATIVE}'")],
-                        input=ET.tostring(merged, encoding="unicode"), text=True)
+                        input=ET.tostring(merged, encoding="unicode"), text=True, timeout=5)
     require(result.returncode == 0, "restore_preferences_failed")
+    require(device.app_identity() is None, "restore_metadata_writer_active")
     evidence.append("PASS original_native_preferences_preserved")
     device.ensure_normal_app()
     if baseline is not None:

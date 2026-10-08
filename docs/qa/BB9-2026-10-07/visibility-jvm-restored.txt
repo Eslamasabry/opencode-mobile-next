@@ -1,0 +1,8 @@
+BB9 visibility restored focused gate; pure Kotlin/JUnit; machine test lock.
+source=NativeInstallerOwnership.kt originalBytesRestored=true sha256=53012be1788a2b91348b4bcd5ed7f4b4895ff216b18e1c5f080a739ba0b6c36b
+source=NativeInstallerVisibility.kt originalBytesRestored=true sha256=ba0f7e5b4f221bdce87b36993c638b8a1a8fad3a524665502f159a0becb0e4b1
+Restored-only gate; temporary runner class-selection correction; no source mutations.
+classes=NativeInstallerVisibilityTest,NativeInstallerOwnershipTest exit=0 run=48 failures=0
+source=NativeInstallerOwnership.kt originalBytesRestored=true sha256=53012be1788a2b91348b4bcd5ed7f4b4895ff216b18e1c5f080a739ba0b6c36b
+source=NativeInstallerVisibility.kt originalBytesRestored=true sha256=ba0f7e5b4f221bdce87b36993c638b8a1a8fad3a524665502f159a0becb0e4b1
+PASS originalSourceBytes=true focusedClasses=2

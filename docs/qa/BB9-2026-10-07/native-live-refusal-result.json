@@ -1,0 +1,15 @@
+{
+  "source": "locked native-refusal witness session stdout, 2026-10-08",
+  "sessionLog": "host-device-orphan-native-live-refusal-witness.txt",
+  "targetSha256": "d9b50e822873ed64c3b37036ffbfa80fe755fec8677915b59b307ebeedf8f1f7",
+  "runnerSha256": "cbc546269f5fa8bfe22adb2caf83d3c35481c389d9f2f2fc5e89aabca7d53686",
+  "nativeRefusal": "bb9_external_identity_file_unavailable",
+  "rootSameLive": true,
+  "leaderSameLive": true,
+  "originalProtectedArgvUidNonceStillProven": true,
+  "updatePermitted": false,
+  "exactActorDrainAndNativeFixtureCleanupPassed": true,
+  "originalPolicyMetadataAndAuthenticatedConnectedRestorationPassed": true,
+  "orphanDrainageQualified": false,
+  "underlyingAndroidDenialCause": "unknown; no SELinux or mount/cgroup changes attempted"
+}

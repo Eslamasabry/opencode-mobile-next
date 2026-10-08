@@ -1,0 +1,96 @@
+{
+  "owned": [
+    {
+      "pid": 2772152,
+      "startTicks": 91864999,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772156,
+      "startTicks": 91865000,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772181,
+      "startTicks": 91865005,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772190,
+      "startTicks": 91865107,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772224,
+      "startTicks": 91865147,
+      "gradleDaemon": true
+    },
+    {
+      "pid": 2772392,
+      "startTicks": 91868300,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772420,
+      "startTicks": 91868307,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772430,
+      "startTicks": 91868460,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772439,
+      "startTicks": 91868532,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772496,
+      "startTicks": 91872057,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772507,
+      "startTicks": 91872073,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772508,
+      "startTicks": 91872074,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772509,
+      "startTicks": 91872075,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772606,
+      "startTicks": 91877962,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772630,
+      "startTicks": 91878013,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772652,
+      "startTicks": 91878135,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772710,
+      "startTicks": 91881151,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2772896,
+      "startTicks": 91890848,
+      "gradleDaemon": false
+    }
+  ],
+  "remaining": [],
+  "intermediatesAbsent": true
+}

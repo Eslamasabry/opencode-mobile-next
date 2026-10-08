@@ -1,0 +1,16 @@
+[
+  {
+    "name": "io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest",
+    "tests": "21",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "io.github.eslamasabry.opencode_mobile.NativeInstallerOwnershipTest",
+    "tests": "18",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  }
+]

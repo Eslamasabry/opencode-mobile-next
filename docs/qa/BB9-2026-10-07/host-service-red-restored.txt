@@ -1,0 +1,12 @@
+PASS removed_guard_failed commit_required
+PASS removed_guard_failed durable_permit
+PASS removed_guard_failed boot_permit
+PASS removed_guard_failed conservative_handoff
+PASS removed_guard_failed producer_exclusion_proof
+PASS removed_guard_failed root_ancestry
+PASS removed_guard_failed root_last
+PASS removed_guard_failed service_stop
+PASS removed_guard_failed native_reader_ack
+PASS removed_guard_failed reader_inventory_recheck
+PASS removed_guard_failed reader_cgroup_recheck
+PASS source_restored_without_filesystem_mutation

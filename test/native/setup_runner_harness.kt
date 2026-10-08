@@ -76,6 +76,19 @@ fun main(args: Array<String>) {
                 check(!File(dir, "should-not-start").exists()) { "work started with low space" }
                 if (next) check(File(dir, "space-drained").exists()) { "first component never ran" }
             }
+            "installer-routed" -> {
+                runner.start("installer-job", listOf(SetupRunner.Spec("agent-claude",
+                    "printf '::oc version pinned\\n'", false, false, 1.0, false, null, null,
+                    emptyMap(), emptyMap(), agentUser=true)), null,
+                    SetupRunner.Texts("Setup", "Install", "Progress", "Done", "Stopped"))
+                val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
+                while (runner.running && System.nanoTime() < deadline) Thread.sleep(10)
+                check(!runner.running)
+                check(JSONObject(runner.status()!!).getString("state") == "done")
+                check(BuiltinLinux.installerStarts == 1 && BuiltinLinux.installerFinishes == 1) {
+                    "setup did not use durable installer admission/completion"
+                }
+            }
             "ordered-terminal" -> {
                 val file = PausedFile(File(dir, "setup.json").path)
                 field(runner, "file").set(runner, file)

@@ -1,0 +1,11 @@
+Mock-only native-drain guard regression; no adb/device/Gradle/build processes.
+Command: tool/qa/machine_lock.sh test -- python3 tool/qa/test_bb9_service_installer.py
+Mutants run in memory; production source bytes are never modified.
+SHA256 tool/qa/bb9_service_installer.py d886b4d0cf1fe679e6c3842bef9eaa26bf98e8ff399d792deeea16932a4dde0d
+SHA256 tool/qa/test_bb9_service_installer.py e73305ccdea2ce9b54d896165be7869f6989dc745edd1781d181c5126c5b9dc5
+Exit: 0
+..................................................................
+----------------------------------------------------------------------
+Ran 66 tests in 0.158s
+
+OK
