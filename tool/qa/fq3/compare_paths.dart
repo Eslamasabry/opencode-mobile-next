@@ -6,6 +6,7 @@ import '../fq3_certify.dart' as driver;
 import 'common.dart';
 import 'device.dart';
 import 'diagnostics.dart';
+import 'evidence.dart';
 import 'oc1.dart';
 import 'oc2.dart';
 import 'session_ownership.dart';
@@ -25,11 +26,13 @@ Future<void> main(List<String> args) async {
   final source = driver.argument(args, '--source') ?? 'app-managed';
   final shape = driver.argument(args, '--shape') ?? 'app';
   final scenario = driver.argument(args, '--scenario') ?? 'stream';
+  final requestedModel = driver.argument(args, '--model');
   if (!RegExp(r'^fq3-[A-Za-z0-9_-]{1,80}$').hasMatch(runID) ||
       !{'opencode', 'opencode2'}.contains(engine) ||
       !{'app-managed', 'owned'}.contains(source) ||
       !{'app', 'adapter'}.contains(shape) ||
       !{'stream', 'abort'}.contains(scenario) ||
+      (requestedModel != null && !isPublicModelReference(requestedModel)) ||
       (shape == 'app' && (engine != 'opencode2' || scenario != 'stream'))) {
     stderr.writeln('Diagnostic refused: invalid_options');
     exitCode = 1;
