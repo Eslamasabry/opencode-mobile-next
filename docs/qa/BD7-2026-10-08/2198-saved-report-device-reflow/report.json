@@ -1,0 +1,11 @@
+{
+  "device": "emulator-5554",
+  "version_code": 2198,
+  "result": "FAIL",
+  "apk_sha256": "2069cc0ca62554e3fd798f8ba8bfa46f44ae84be4ff82142e87b495cdc8b89a3",
+  "scope": "real_crash_saved_report_share_preview",
+  "external_share_opened": false,
+  "anr_triggered": false,
+  "failure_stage": "candidate_identity",
+  "failure_code": "setup_active_or_unknown"
+}

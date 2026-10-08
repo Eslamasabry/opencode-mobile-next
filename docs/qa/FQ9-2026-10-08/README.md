@@ -25,6 +25,40 @@ tests, Ruff format/F,E9 and diff checks. The current CLI/fresh admission pins
 build 2198 and local signer `1DE5BF08...`.
 [Generated offline proof](2198-background-diagnostics-validation.json).
 
+The2198 reservation began after BA released the lock. Initial admission found
+a durable all-component CHECK ticket; its recorded root and leader were absent,
+which did not justify editing it. Normal2198 was reinstalled with `adb install -r`,
+full hash/build/signer and UID10217 verified. The app subsequently cleared its
+ticket through its normal path. Admission then passed and product Start and
+connect reached app-managed OC1 1.18.32. The first live-readiness attempt retainedGLM because a manual picker tap selected
+the search field rather than the result. It failed with APIError and no real
+tool progress; its exact owned session was aborted/deleted.
+[Separate readiness receipt](2198-background-readiness-attempt1.json).
+
+The fresh unique `fq9-20261009-2198-next2` fixture selected Big Pickle through
+the app; the server reply confirmed `opencode/big-pickle` before admission.
+[2198 continuous run](2198-background-5-30-certified.json): five minutes **PASS**
+at300.712s with2new real tool transitions; the30-minute gate **FAIL** at1179.865s
+(19m40s), category `background_turn_inactive`, stage
+`background_observation_failed`. The retained last good observation at1149.864s
+(19m10s) has live app/server/service/ongoing notification, active owned turn and
+progressCounter7. Resume and exact owned-session cleanup both passed. The
+underlying reason for inactivity was not captured, and the result does not
+qualify30-minute survival. No shortened gate or mixed run was promoted.
+[Final restoration](2198-final-restoration.json) passed: exact2198 `adb install -r`,
+full SHA/build/signer and same UID10217 verified. Original background OFF,
+crash capture OFF and saved ring0 were verified. Both owned sessions were
+aborted/deleted after latest-prompt validation; both empty canonical fixture
+folders were UID-checked and removed with nonrecursive `rmdir`. Own forwards
+closed and the locked shell exited. No BC reservation or waiter remains.
+
+BD7 remained blocked before a real crash by recurring installer admission;
+its detailed receipts and host driver fixes are in the
+[BD7 evidence](../BD7-2026-10-08/README.md). The app's private durable ticket was
+preserved, Claude/account actions were avoided, and no build/uninstall/data
+clear/push occurred. FQ9's full30-minute gate remains unqualified; stable-CI
+upgrade and a separate fresh AVD are still documented prerequisites.
+
 ## Authorized fixture cleanup and clean rerun — 2026-10-09
 
 Finish line: remove only BC's verified empty hidden legacy fixture, exercise
