@@ -28,7 +28,7 @@ build 2198 and local signer `1DE5BF08...`.
 The2198 reservation began after BA released the lock. Initial admission found
 a durable all-component CHECK ticket; its recorded root and leader were absent,
 which did not justify editing it. Normal2198 was reinstalled with `adb install -r`,
-full hash/build/signer and UID10217 verified. The app subsequently cleared its
+full hash/build/signer and UID 10217 verified. The app subsequently cleared its
 ticket through its normal path. Admission then passed and product Start and
 connect reached app-managed OC1 1.18.32. The first live-readiness attempt retainedGLM because a manual picker tap selected
 the search field rather than the result. It failed with APIError and no real
@@ -46,7 +46,7 @@ progressCounter7. Resume and exact owned-session cleanup both passed. The
 underlying reason for inactivity was not captured, and the result does not
 qualify30-minute survival. No shortened gate or mixed run was promoted.
 [Final restoration](2198-final-restoration.json) passed: exact2198 `adb install -r`,
-full SHA/build/signer and same UID10217 verified. Original background OFF,
+full SHA/build/signer and same UID 10217 verified. Original background OFF,
 crash capture OFF and saved ring0 were verified. Both owned sessions were
 aborted/deleted after latest-prompt validation; both empty canonical fixture
 folders were UID-checked and removed with nonrecursive `rmdir`. Own forwards
@@ -386,7 +386,7 @@ terminal/log/capture modules missing before implementation. After integration,
 F/E9 lint and diff checks clean. No native build or app-source changes. Device
 run queues behind BA in one flock-w1800 reservation; BD7 remains parked.
 
-Preparation note: normal2198 and app-managed OC1 are already healthy, while a
+Preparation note: normal 2198 and app-managed OC1 are already healthy, while a
 durable CHECK ticket remains. BD7/crash and engine/installer transitions stay
 parked. The chat-only reservation permits this independent running server to
 execute the fixed no-file-write tool; it does not claim installer quiescence.
@@ -396,22 +396,76 @@ The owned project is created exclusively under canonical files/projects.
 
 First admission, terminal-a, did not begin a timed dwell. The model submitted
 the exact command with a string timeout, received a tool validation error, and
-then started the exact command with integer3000000. The strict one-call
+then started the exact command with integer 3000000. The strict one-call
 fixture refused admission. Capture initially refused that malformed argument;
 its barrier preserved the session. A failing-first projector fix now exports
 invalid tool timeout as null while keeping the error state and timestamps.
 [Retry evidence](2198-terminal-a-capture-retry.json) records busy/running, one
-prior errored tool, the valid running tool and its3000000ms timeout before
+prior errored tool, the valid running tool and its 3,000,000 ms timeout before
 abort/delete. The session was deleted only after this capture succeeded.
 [Initial admission](2198-terminal-a-background.json) and
 [initial blocked capture](2198-terminal-a-before-cleanup.json) are preserved.
 
-The native redirected server.log contained a51-byte startup banner, so the
+The native redirected server.log contained a 51-byte startup banner, so the
 collector now additionally reads OC1
 files/linux/ubuntu/root/.local/share/opencode/log/opencode.log. Its actual
 frozen Effect key=value formatter has source-backed fixed lifecycle
 categories; private IDs, messages, stacks and causes are excluded. Each source
-is a bounded512KiB tail; unknown lines are explicitly omitted. An unparsed
+is a bounded 512 KiB tail; unknown lines are explicitly omitted. An unparsed
 pending tool is zero progress/not ready rather than an invalid executed
 command (failing-first coverage). Revised prompt explicitly requires a JSON
-number.161 focused cases pass serially via machine_lock; no app-source edits.
+number. 161 focused cases pass serially via machine_lock; no app-source edits.
+
+### Fresh 45-minute fixture: 2198 PASS — 2026-10-09
+
+[Timed result](2198-terminal-b-background.json),
+[pre-cleanup state and logs](2198-terminal-b-before-cleanup.json), and
+[window severity check](2198-terminal-b-window-levels.json) are script-generated.
+Candidate driver revision is `6fa5899a0`; approved APK 2198 is unchanged.
+One reservation queued with flock-w1800 after BA; the app composer sent the
+exact one-tool fixture using verified `opencode/big-pickle` on the app-managed
+OC1 1.18.32 server. No other engine/server was started or switched.
+
+- Five-minute checkpoint: 300.740 seconds, 10 new persisted ticks.
+- Thirty-minute checkpoint: 1800.585 seconds, 60 new ticks, counter 61.
+- App out of view, unchanged app identity and managed socket, server/FGS/ongoing
+  notification present, owned turn active and no failed/completed flag throughout.
+- Seven owned terminal snapshots: five spanning 1149.99–1272.84 seconds plus
+  two at 1800.93/1801.03 seconds. All report busy/running, exactly one running
+  tool, zero tool errors, no completed timestamp or final finish reason.
+  Assistant created 1791501259639 ms; tool started 1791501283683 ms; timeout 3000000 ms.
+- Evidence was saved and fsynced BEFORE resume and owned abort/delete. Same
+  conversation resume and exact owned session cleanup succeeded.
+
+Six projected log captures target the configured 19–21 minute window
+and a final read. The active OC1 `opencode.log` uses the verified Effect header;
+last timestamps were 23:45:27–28 UTC, confirming current activity. A separate
+retrospective time-filtered application-log read found zero entries in the
+19–21 minute window; the bounded app-PID logcat buffer also had zero timestamped
+lines in that window. The source tails contain many outside-window or unknown
+lines, whose contents were omitted. This is a statement about retrieved logs,
+not proof that no error could occur. No raw logs, account values, text, stacks,
+private session/message IDs or passwords are retained. After the device run,
+the severity-only projection was integrated into the collector with privacy,
+window and adapter coverage; this offline change does not alter the workload or
+liveness driver. The final focused bundle has 164 tests, all passing serially via
+machine_lock, with formatting/F,E9/diff checks clean. The device result remains
+qualified against revision `6fa5899a0`; the later log-projection integration was
+verified offline, not by another 30-minute device run.
+
+The old approximately 20-minute failures were **not reproduced** with this
+continuous tool. Their final states were deleted by the old driver, so their
+cause remains unproved. This run establishes a 30-minute emulator HOME survival
+result for this exact workload; it does not certify physical-device Doze,
+all inference cycles, OC2 or the six-hour foreground-service cap. BD7 remains
+parked pending BB's stale CHECK-ticket answer.
+
+[Final restoration](2198-terminal-final-restoration.json): exact approved 2198
+APK hash/build/signer and unchanged UID 10217 verified; original background
+preference restored Off and its service stopped; both owned sessions absent and
+both empty canonical fixture directories removed. Own forwards closed, managed
+OC1 healthy. No APK replacement was needed because this reservation never
+changed APK bytes; normal restoration verified the already installed 2198 and
+restored the product setting. No CHECK ticket, Claude/account data, other
+project, installer or crash-report state was changed. The locked shell was
+exited after verification; no device work remains in this reservation.

@@ -1,0 +1,573 @@
+{
+  "schema": 1,
+  "beforeResumeAndCleanup": true,
+  "terminal": [
+    {
+      "elapsedSeconds": 1149.9918950750725,
+      "snapshot": {
+        "schema": 1,
+        "ownedSession": true,
+        "sessionState": "busy",
+        "outcome": "running",
+        "latestUser": {
+          "created": 1791501257442,
+          "completed": null
+        },
+        "latestAssistant": {
+          "created": 1791501259639,
+          "completed": null,
+          "finishReason": "unknown",
+          "errorCategory": null
+        },
+        "retry": null,
+        "tools": {
+          "counts": {
+            "pending": 0,
+            "running": 1,
+            "completed": 0,
+            "error": 0,
+            "unknown": 0
+          },
+          "timings": [
+            {
+              "state": "running",
+              "start": 1791501283683,
+              "end": null,
+              "timeoutMs": 3000000
+            }
+          ]
+        }
+      }
+    },
+    {
+      "elapsedSeconds": 1180.6491641110042,
+      "snapshot": {
+        "schema": 1,
+        "ownedSession": true,
+        "sessionState": "busy",
+        "outcome": "running",
+        "latestUser": {
+          "created": 1791501257442,
+          "completed": null
+        },
+        "latestAssistant": {
+          "created": 1791501259639,
+          "completed": null,
+          "finishReason": "unknown",
+          "errorCategory": null
+        },
+        "retry": null,
+        "tools": {
+          "counts": {
+            "pending": 0,
+            "running": 1,
+            "completed": 0,
+            "error": 0,
+            "unknown": 0
+          },
+          "timings": [
+            {
+              "state": "running",
+              "start": 1791501283683,
+              "end": null,
+              "timeoutMs": 3000000
+            }
+          ]
+        }
+      }
+    },
+    {
+      "elapsedSeconds": 1211.2812707220437,
+      "snapshot": {
+        "schema": 1,
+        "ownedSession": true,
+        "sessionState": "busy",
+        "outcome": "running",
+        "latestUser": {
+          "created": 1791501257442,
+          "completed": null
+        },
+        "latestAssistant": {
+          "created": 1791501259639,
+          "completed": null,
+          "finishReason": "unknown",
+          "errorCategory": null
+        },
+        "retry": null,
+        "tools": {
+          "counts": {
+            "pending": 0,
+            "running": 1,
+            "completed": 0,
+            "error": 0,
+            "unknown": 0
+          },
+          "timings": [
+            {
+              "state": "running",
+              "start": 1791501283683,
+              "end": null,
+              "timeoutMs": 3000000
+            }
+          ]
+        }
+      }
+    },
+    {
+      "elapsedSeconds": 1242.0034222310642,
+      "snapshot": {
+        "schema": 1,
+        "ownedSession": true,
+        "sessionState": "busy",
+        "outcome": "running",
+        "latestUser": {
+          "created": 1791501257442,
+          "completed": null
+        },
+        "latestAssistant": {
+          "created": 1791501259639,
+          "completed": null,
+          "finishReason": "unknown",
+          "errorCategory": null
+        },
+        "retry": null,
+        "tools": {
+          "counts": {
+            "pending": 0,
+            "running": 1,
+            "completed": 0,
+            "error": 0,
+            "unknown": 0
+          },
+          "timings": [
+            {
+              "state": "running",
+              "start": 1791501283683,
+              "end": null,
+              "timeoutMs": 3000000
+            }
+          ]
+        }
+      }
+    },
+    {
+      "elapsedSeconds": 1272.8397923919838,
+      "snapshot": {
+        "schema": 1,
+        "ownedSession": true,
+        "sessionState": "busy",
+        "outcome": "running",
+        "latestUser": {
+          "created": 1791501257442,
+          "completed": null
+        },
+        "latestAssistant": {
+          "created": 1791501259639,
+          "completed": null,
+          "finishReason": "unknown",
+          "errorCategory": null
+        },
+        "retry": null,
+        "tools": {
+          "counts": {
+            "pending": 0,
+            "running": 1,
+            "completed": 0,
+            "error": 0,
+            "unknown": 0
+          },
+          "timings": [
+            {
+              "state": "running",
+              "start": 1791501283683,
+              "end": null,
+              "timeoutMs": 3000000
+            }
+          ]
+        }
+      }
+    },
+    {
+      "elapsedSeconds": 1800.9343950439943,
+      "snapshot": {
+        "schema": 1,
+        "ownedSession": true,
+        "sessionState": "busy",
+        "outcome": "running",
+        "latestUser": {
+          "created": 1791501257442,
+          "completed": null
+        },
+        "latestAssistant": {
+          "created": 1791501259639,
+          "completed": null,
+          "finishReason": "unknown",
+          "errorCategory": null
+        },
+        "retry": null,
+        "tools": {
+          "counts": {
+            "pending": 0,
+            "running": 1,
+            "completed": 0,
+            "error": 0,
+            "unknown": 0
+          },
+          "timings": [
+            {
+              "state": "running",
+              "start": 1791501283683,
+              "end": null,
+              "timeoutMs": 3000000
+            }
+          ]
+        }
+      }
+    },
+    {
+      "elapsedSeconds": 1801.0344213179778,
+      "snapshot": {
+        "schema": 1,
+        "ownedSession": true,
+        "sessionState": "busy",
+        "outcome": "running",
+        "latestUser": {
+          "created": 1791501257442,
+          "completed": null
+        },
+        "latestAssistant": {
+          "created": 1791501259639,
+          "completed": null,
+          "finishReason": "unknown",
+          "errorCategory": null
+        },
+        "retry": null,
+        "tools": {
+          "counts": {
+            "pending": 0,
+            "running": 1,
+            "completed": 0,
+            "error": 0,
+            "unknown": 0
+          },
+          "timings": [
+            {
+              "state": "running",
+              "start": 1791501283683,
+              "end": null,
+              "timeoutMs": 3000000
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "logs": [
+    {
+      "elapsedSeconds": 1149.6997513510287,
+      "snapshots": {
+        "app": {
+          "source": "app",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 253448,
+          "processedBytes": 253448,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 1850,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        },
+        "server": {
+          "source": "server",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 51,
+          "processedBytes": 51,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 1,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        },
+        "serverApplication": {
+          "source": "server",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 524288,
+          "processedBytes": 524288,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 3371,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        }
+      }
+    },
+    {
+      "elapsedSeconds": 1180.3760023229988,
+      "snapshots": {
+        "app": {
+          "source": "app",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 253448,
+          "processedBytes": 253448,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 1850,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        },
+        "server": {
+          "source": "server",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 51,
+          "processedBytes": 51,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 1,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        },
+        "serverApplication": {
+          "source": "server",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 524288,
+          "processedBytes": 524288,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 3371,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        }
+      }
+    },
+    {
+      "elapsedSeconds": 1211.0057763290824,
+      "snapshots": {
+        "app": {
+          "source": "app",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 253448,
+          "processedBytes": 253448,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 1850,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        },
+        "server": {
+          "source": "server",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 51,
+          "processedBytes": 51,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 1,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        },
+        "serverApplication": {
+          "source": "server",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 524288,
+          "processedBytes": 524288,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 3371,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        }
+      }
+    },
+    {
+      "elapsedSeconds": 1241.7308203040157,
+      "snapshots": {
+        "app": {
+          "source": "app",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 253448,
+          "processedBytes": 253448,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 1850,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        },
+        "server": {
+          "source": "server",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 51,
+          "processedBytes": 51,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 1,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        },
+        "serverApplication": {
+          "source": "server",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 524288,
+          "processedBytes": 524288,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 3371,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        }
+      }
+    },
+    {
+      "elapsedSeconds": 1272.4892136420822,
+      "snapshots": {
+        "app": {
+          "source": "app",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 253448,
+          "processedBytes": 253448,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 1850,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        },
+        "server": {
+          "source": "server",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 51,
+          "processedBytes": 51,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 1,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        },
+        "serverApplication": {
+          "source": "server",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 524288,
+          "processedBytes": 524288,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 3371,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        }
+      }
+    },
+    {
+      "elapsedSeconds": 1801.1299160000635,
+      "snapshots": {
+        "app": {
+          "source": "app",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 253448,
+          "processedBytes": 253448,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 1850,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        },
+        "server": {
+          "source": "server",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 51,
+          "processedBytes": 51,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 1,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        },
+        "serverApplication": {
+          "source": "server",
+          "captured": true,
+          "windowStartMs": 1791502460229,
+          "windowEndMs": 1791502580229,
+          "inputBytes": 524288,
+          "processedBytes": 524288,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 3371,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "windowStartMs": 1791502460229,
+  "windowEndMs": 1791502580229,
+  "capturedThroughElapsedSeconds": 1801.4049420070369,
+  "windowReached": true,
+  "windowEndReached": true
+}

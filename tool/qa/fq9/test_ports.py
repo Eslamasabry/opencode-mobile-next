@@ -240,6 +240,21 @@ class PortTests(unittest.TestCase):
             p.diagnostic_logs(1000, 2000)
         self.assertEqual(len(calls), 3)
 
+    def test_unknown_app_error_is_counted_without_retaining_message(self):
+        p = self.port()
+        p.locked = True
+        p._uid = 10217
+        p._app_identity = ("123", "999")
+        p._main_process = lambda: ("123", "999")
+        p._diagnostic_bytes = (
+            lambda script: b"1791502500.001 123 124 E flutter: PRIVATE_PASSWORD\n"
+            if "--pid=" in script
+            else b""
+        )
+        report = p.diagnostic_logs(1791502400000, 1791502600000)
+        self.assertEqual(report["app"]["severity"]["levelCounts"], {"error": 1})
+        self.assertNotIn("PRIVATE", str(report))
+
     def test_private_absence_observation_uses_privileged_emulator_identity(self):
         p = self.port()
         calls = []

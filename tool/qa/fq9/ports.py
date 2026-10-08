@@ -21,6 +21,7 @@ from .common import PACKAGE, SHARED_SERIAL, DriverFailure, digest_file
 from .observations import service_foreground, profile_projection
 from .runtime import AndroidRuntimeMixin
 from .diagnostic_logs import project_log, MAX_BYTES
+from .log_severity import project_severity
 from .terminal import FAIL_CODES as TERMINAL_CODES
 
 BASE = f"/data/user/0/{PACKAGE}"
@@ -336,7 +337,7 @@ class AndroidPorts(AndroidRuntimeMixin):
         )
         if self._main_process() != (pid, birth):
             raise DriverFailure("diagnostic_capture_failed")
-        return {
+        report = {
             "app": project_log(
                 app,
                 source="app",
@@ -351,6 +352,17 @@ class AndroidPorts(AndroidRuntimeMixin):
                 application, source="server", window_start_ms=start, window_end_ms=end
             ),
         }
+        # Preserve warning/error counts even for unrecognized messages. Their
+        # text remains omitted; an empty category list is not a no-error claim.
+        for name, source, raw in (
+            ("app", "app", app),
+            ("server", "server", server),
+            ("serverApplication", "server", application),
+        ):
+            report[name]["severity"] = project_severity(
+                raw, source=source, start_ms=start, end_ms=end
+            )
+        return report
 
     def require_idle_setup(self):
         services = self.services()
