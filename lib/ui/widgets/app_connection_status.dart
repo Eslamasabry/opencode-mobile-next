@@ -6,9 +6,11 @@ import '../../builtin/app_exit_recovery.dart';
 import '../../builtin/builtin_server.dart';
 import '../../builtin/thermal_guard.dart';
 import '../../builtin/thermal_guard_teams.dart';
+import '../../state/background_pause_notice.dart';
 import '../../state/connection.dart';
 import '../kit/kit.dart';
 import 'app_exit_notice.dart';
+import 'background_pause_notice.dart';
 import 'connection_status_banner.dart';
 import 'phone_server_restart.dart';
 import 'runtime_switch_status.dart';
@@ -33,12 +35,19 @@ class AppConnectionStatusScope extends ConsumerWidget {
     final recovery = ref.watch(appExitRecoveryProvider);
     final thermal = ref.watch(thermalGuardSlotProvider);
     final builtin = ref.watch(builtinServerStarterProvider);
+    final pause = ref.watch(backgroundPauseNoticeProvider);
     BuildContext? actionContext() =>
         navigatorKey.currentState?.overlay?.context;
     return ValueListenableBuilder<ThermalGuard?>(
       valueListenable: thermal,
       builder: (context, guard, _) => ListenableBuilder(
-        listenable: Listenable.merge([controller, recovery, builtin, ?guard]),
+        listenable: Listenable.merge([
+          controller,
+          recovery,
+          builtin,
+          pause,
+          ?guard,
+        ]),
         builder: (context, _) {
           final serverBack =
               controller.isConnected &&
@@ -70,10 +79,18 @@ class AppConnectionStatusScope extends ConsumerWidget {
                         ).restart?.call();
                       },
               ),
-              appExitKitStatus(
-                context,
-                recovery,
-                actionContext: actionContext,
+              ...appStoppedLines(
+                exit: appExitKitStatus(
+                  context,
+                  recovery,
+                  actionContext: actionContext,
+                  serverBack: serverBack,
+                ),
+                paused: backgroundPauseKitStatus(
+                  context,
+                  pause,
+                  actionContext: actionContext,
+                ),
                 serverBack: serverBack,
               ),
               thermalKitStatus(context, guard),
@@ -85,6 +102,22 @@ class AppConnectionStatusScope extends ConsumerWidget {
     );
   }
 }
+
+/// The two "Android stopped it" lines, in the order the status slot weighs
+/// them: they share [KitStatusKind.appStopped] and ties keep the first, so
+/// only one shows at a time and the other waits until it is dismissed or
+/// resolves.
+///
+/// The app exit leads while the phone's server is still down ([serverBack]
+/// false): it is the bigger event, usually the cause of the pause, and it
+/// says what is being restarted. Once that server is back the exit line is
+/// only a recap (it folds away by itself shortly after), while the paused
+/// background connection still needs a tap, so the pause goes first.
+List<KitStatus?> appStoppedLines({
+  required KitStatus? exit,
+  required KitStatus? paused,
+  required bool serverBack,
+}) => serverBack ? [paused, exit] : [exit, paused];
 
 /// Merges complete conditions, including changed callbacks and action state.
 /// No equality shortcut may keep an old profile's actions alive.

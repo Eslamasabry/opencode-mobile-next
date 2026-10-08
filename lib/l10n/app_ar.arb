@@ -8356,5 +8356,15 @@
   "diagnosticsReportShareFailed": "تعذّر فتح المشاركة. حاول مرة أخرى.",
   "diagnosticsReportCaptureOff": "حفظ تقارير الأعطال متوقف. شغّله لحفظ أخطاء التطبيق القادمة.",
   "diagnosticsReportEmpty": "لا توجد تقارير أعطال محفوظة للمشاركة.",
-  "diagnosticsUnavailable": "هذه التفاصيل غير متاحة. أعد فتح التطبيق وحاول مرة أخرى."
+  "diagnosticsUnavailable": "هذه التفاصيل غير متاحة. أعد فتح التطبيق وحاول مرة أخرى.",
+  "backgroundPauseTimeLimit": "أُوقف الاتصال في الخلفية مؤقتًا {at} لتوفير البطارية.",
+  "backgroundPauseRestricted": "أُوقف الاتصال في الخلفية مؤقتًا: استخدام البطارية مقيَّد.",
+  "backgroundPauseUserStopped": "توقف الاتصال في الخلفية لأن التطبيق أُغلق {at}.",
+  "backgroundPauseInterrupted": "توقف الاتصال في الخلفية لسبب غير معروف.",
+  "backgroundPauseResume": "استئناف الاتصال في الخلفية",
+  "backgroundPauseResumeShort": "استئناف",
+  "backgroundPauseResuming": "جارٍ استئناف الاتصال في الخلفية…",
+  "backgroundPauseResumeFailed": "تعذّر الاستئناف. افتح إعدادات الاستمرار في العمل.",
+  "backgroundPauseOpenKeepRunning": "فتح إعدادات الاستمرار في العمل",
+  "backgroundPauseResumed": "تم استئناف الاتصال في الخلفية."
 }
