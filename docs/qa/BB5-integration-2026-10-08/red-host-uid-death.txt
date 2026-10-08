@@ -1,0 +1,14 @@
+test_full_uid_death_is_required_even_if_main_app_absent (test_bb5_runtime_acceptance.MetadataRestoreTest.test_full_uid_death_is_required_even_if_main_app_absent) ... FAIL
+
+======================================================================
+FAIL: test_full_uid_death_is_required_even_if_main_app_absent (test_bb5_runtime_acceptance.MetadataRestoreTest.test_full_uid_death_is_required_even_if_main_app_absent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 154, in test_full_uid_death_is_required_even_if_main_app_absent
+    with self.assertRaises(H.Q.Refused):
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

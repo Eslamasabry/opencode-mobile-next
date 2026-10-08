@@ -1,0 +1,17 @@
+test_normal_restore_install_r_never_downgrades_or_uninstalls (test_bb5_runtime_acceptance.NormalArtifactTest.test_normal_restore_install_r_never_downgrades_or_uninstalls) ... FAIL
+
+======================================================================
+FAIL: test_normal_restore_install_r_never_downgrades_or_uninstalls (test_bb5_runtime_acceptance.NormalArtifactTest.test_normal_restore_install_r_never_downgrades_or_uninstalls)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 200, in test_normal_restore_install_r_never_downgrades_or_uninstalls
+    validate.assert_called_once(); restore.assert_called_once(); start.assert_called_once()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 923, in assert_called_once
+    raise AssertionError(msg)
+AssertionError: Expected 'validate_normal' to have been called once. Called 0 times.
+
+----------------------------------------------------------------------
+Ran 1 test in 0.018s
+
+FAILED (failures=1)

@@ -1,0 +1,14 @@
+test_original_policy_restored_without_rolling_back_counter (test_bb5_runtime_acceptance.IdleCounterRestoreTest.test_original_policy_restored_without_rolling_back_counter) ... FAIL
+
+======================================================================
+FAIL: test_original_policy_restored_without_rolling_back_counter (test_bb5_runtime_acceptance.IdleCounterRestoreTest.test_original_policy_restored_without_rolling_back_counter)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 94, in test_original_policy_restored_without_rolling_back_counter
+    self.assertEqual(11, B.idle_state(H.Q.preference_values(result)['idleState'])['counter'])
+AssertionError: 11 != 2
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (failures=1)
