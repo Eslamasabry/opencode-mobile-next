@@ -12,7 +12,10 @@ releases or exact wake-up timing during Doze.
 
 ## Source and focused checks
 
-Integration `9485f0c7c` merged without rebase at `7af5b544c`. BB5 groundwork
+Integration `9485f0c7c` merged without rebase at `7af5b544c`. Verified Dart
+integration committed at `94001aeb9`; host fixture/tests at `61ec2c85b`.
+The native draft remains uncommitted; hashes are in
+[native-draft-manifest.txt](native-draft-manifest.txt). BB5 groundwork
 `89f8937a4` and BA hooks `f561c3584` remain prerequisites.
 
 Pinned Flutter 3.47.1; every check below used
@@ -99,7 +102,9 @@ before a build, with
 `GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx4g -Dkotlin.compiler.execution.strategy=in-process -Dorg.gradle.workers.max=2"`.
 Available memory during this checkpoint remained below the threshold
 (approximately 3.8–5.1 GB), so no native compiler/Gradle/APK job was started.
-No shared process was killed or memory reclaimed from another lane.
+Final [resource reading](resource-gate.txt) remains below the gate. No shared
+process was killed or memory reclaimed from another lane. No new BB APK exists
+for this draft, so the new candidate cannot be device qualified yet.
 
 Future whole device sessions hold `/home/eslam/Storage/tmp/oc-emulator.lock`.
 Normal APK is `/home/eslam/Storage/tmp/oc-apk-share/oc-2197.apk`, verified against
