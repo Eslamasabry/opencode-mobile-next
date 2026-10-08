@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "runID": "fq9-20261009-2198-terminal-b",
+  "candidateBuild": 2198,
+  "sourceRevision": "6fa5899a04ec6c197f17b920ed3a9240542c132e",
+  "oneContinuousReservation": true,
+  "promptSentThroughAppUI": true,
+  "fixtureMinimumSuccessfulDurationSeconds": 2700,
+  "state": "pass",
+  "restorePending": true,
+  "modelChoiceVerified": true,
+  "driver": {
+    "state": "pass",
+    "code": "verified",
+    "checkpoints": [
+      {
+        "seconds": 300,
+        "elapsedSeconds": 300.73977337405086,
+        "background": true,
+        "turnActive": true,
+        "progressDelta": 10
+      },
+      {
+        "seconds": 1800,
+        "elapsedSeconds": 1800.5853206510656,
+        "background": true,
+        "turnActive": true,
+        "progressDelta": 60
+      }
+    ],
+    "dwellSeconds": 1800.5853206510656,
+    "homeAttempted": true,
+    "resumed": true,
+    "cleanupAttempted": true,
+    "cleanupSucceeded": true,
+    "errorCodes": [],
+    "adapterFailure": null,
+    "lastGoodObservation": {
+      "elapsedSeconds": 1800.5853141989792,
+      "snapshot": {
+        "ownedTurn": true,
+        "appManaged": true,
+        "appVisible": false,
+        "appAlive": true,
+        "serverAlive": true,
+        "foregroundService": true,
+        "ongoingNotification": true,
+        "turnActive": true,
+        "completed": false,
+        "failed": false,
+        "progressCounter": 61
+      }
+    },
+    "evidenceCaptured": true,
+    "sessionRetained": false
+  },
+  "ownedForwardClosed": true,
+  "normalIdentityVerified": true
+}

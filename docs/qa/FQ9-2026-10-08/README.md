@@ -28,7 +28,7 @@ build 2198 and local signer `1DE5BF08...`.
 The2198 reservation began after BA released the lock. Initial admission found
 a durable all-component CHECK ticket; its recorded root and leader were absent,
 which did not justify editing it. Normal2198 was reinstalled with `adb install -r`,
-full hash/build/signer and UID10217 verified. The app subsequently cleared its
+full hash/build/signer and UID 10217 verified. The app subsequently cleared its
 ticket through its normal path. Admission then passed and product Start and
 connect reached app-managed OC1 1.18.32. The first live-readiness attempt retainedGLM because a manual picker tap selected
 the search field rather than the result. It failed with APIError and no real
@@ -46,7 +46,7 @@ progressCounter7. Resume and exact owned-session cleanup both passed. The
 underlying reason for inactivity was not captured, and the result does not
 qualify30-minute survival. No shortened gate or mixed run was promoted.
 [Final restoration](2198-final-restoration.json) passed: exact2198 `adb install -r`,
-full SHA/build/signer and same UID10217 verified. Original background OFF,
+full SHA/build/signer and same UID 10217 verified. Original background OFF,
 crash capture OFF and saved ring0 were verified. Both owned sessions were
 aborted/deleted after latest-prompt validation; both empty canonical fixture
 folders were UID-checked and removed with nonrecursive `rmdir`. Own forwards
@@ -329,9 +329,9 @@ For upgrade history preservation, provide `--session-receipt` with `engine` (`op
 
 The background receipt has the same shape but exactly one `{id,title,promptID}` fixture. Title must be `<run-id>-background`; it is unique per run. Create this dedicated conversation and send the following bounded prompt **through the app UI**, in the app-managed OC1 project, using a working selected model:
 
-> FQ9_BACKGROUND_FIXTURE. Run the bash tool with exactly `sleep 120` twenty times sequentially. Use a separate tool call for each sleep. Do not run other commands, tools, parallel calls or file changes. After the twentieth sleep, reply DONE.
+> Use the exact `PROMPT` exported by [live_fixture.py](../../../tool/qa/fq9/live_fixture.py): one foreground 45-minute loop, ninety sequential 30-second sleeps, fixed numeric tool output and explicit 3,000,000 ms timeout. Send through the app composer. No parallel/background process, file writes or other tools.
 
-Existing permission policy remains intact; resolve any existing policy precondition without changing global saved grants in this driver. Enable background working and its notification permission through the app’s existing opt-in, wait for actual persisted first-tool progress, and keep that conversation visible. Twenty sleeps give 40 minutes total, leaving preparation headroom before the 30-minute dwell. The read-only discovery mode below finds the unique title in the exact project and exports only its session/user-message IDs; it does not start or modify a turn. The driver admits OC1 busy inference gaps between verified fixture calls but rejects retry state, unrelated/stale parents, foreign/synthetic parts, non-fixture commands and newer user prompts. Both checkpoints require newer real fixture calls. It sends no HTTP prompt/heartbeat, changes no model/engine and does not wake/relaunch the app during dwell. On return it verifies the same visible title and owned live/final state. Cleanup revalidates latest-prompt ownership before both abort and delete; a new prompt in the fixture is preserved and reported as a cleanup failure. Keep its receipt for manual recovery rather than deleting evidence of remaining work.
+Existing permission policy remains intact; resolve any existing policy precondition without changing global saved grants in this driver. Enable background working and its notification permission through the app’s existing opt-in, wait for actual persisted first-tool progress, and keep that conversation visible. A successfully completed loop requires at least 45 minutes; admission verifies the exact command and timeout and actual persisted ticks. The historical twenty-call fixture could finish when the model stopped scheduling calls and is no longer the device plan. The read-only discovery mode below finds the unique title in the exact project and exports only its session/user-message IDs; it does not start or modify a turn. The driver admits OC1 busy inference gaps between verified fixture calls but rejects retry state, unrelated/stale parents, foreign/synthetic parts, non-fixture commands and newer user prompts. Both checkpoints require newer real fixture calls. It sends no HTTP prompt/heartbeat, changes no model/engine and does not wake/relaunch the app during dwell. On return it verifies the same visible title and owned live/final state. Cleanup revalidates latest-prompt ownership before both abort and delete; a new prompt in the fixture is preserved and reported as a cleanup failure. Keep its receipt for manual recovery rather than deleting evidence of remaining work.
 
 ## Device schedule after APK 2197 is posted
 
@@ -366,3 +366,106 @@ The second-AVD serial/name examples are placeholders, not existing-device invent
 ## Local verification
 
 Generated default plans are in [offline-plans.json](offline-plans.json). Signer-fence and newer-prompt cleanup guard-removal counterexamples are recorded in `red-signer-fence.txt` and `red-newer-prompt-cleanup.txt`; the weakening occurred only in isolated test-process memory, with fake ports and unchanged source files. The final offline candidate passed **88 Python tests** serially under `machine_lock`, with clean formatting and static checks. Existing tracked application/QA sources remain unchanged and local document links passed. Focused results and source-preservation checks are recorded in [host-validation.json](host-validation.json) and `BC-status.md`. Unit fixtures use virtual time and injected ports; they never contact ADB, sleep through a dwell, install an APK or call a provider. No device result is recorded for this slice.
+
+### Retained terminal evidence — 2026-10-09
+
+The two inactive observations at about 20 minutes require terminal-state evidence.
+[Frozen contract](../../design/FQ9-terminal-evidence.md) defines the new fixture,
+closed projections and cleanup barrier. The current CLI always supplies a
+pre-cleanup collector. It captures exact owned message finish/error categories
+and millisecond timestamps, tool timing, and app-PID-filtered epoch logcat plus
+the app-managed server.log tail around 19–21 minutes. Raw data stays bounded
+in memory; reports contain fixed categories only. Omitted lines are counted.
+Capture failure keeps the session and private receipt, skipping resume and
+abort/delete. This distinguishes unknown/retry state from terminal completion
+or abort; an empty log projection does not prove there were no errors.
+
+Offline failing-first proofs: retention callback missing before implementation;
+terminal/log/capture modules missing before implementation. After integration,
+153 focused Python cases pass serially through machine_lock, with formatting,
+F/E9 lint and diff checks clean. No native build or app-source changes. Device
+run queues behind BA in one flock-w1800 reservation; BD7 remains parked.
+
+Preparation note: normal 2198 and app-managed OC1 are already healthy, while a
+durable CHECK ticket remains. BD7/crash and engine/installer transitions stay
+parked. The chat-only reservation permits this independent running server to
+execute the fixed no-file-write tool; it does not claim installer quiescence.
+Only an exact CHECK ticket with no SetupService foreground activity is admitted
+for new dedicated conversation preparation; INSTALL or unknown shape refuses.
+The owned project is created exclusively under canonical files/projects.
+
+First admission, terminal-a, did not begin a timed dwell. The model submitted
+the exact command with a string timeout, received a tool validation error, and
+then started the exact command with integer 3000000. The strict one-call
+fixture refused admission. Capture initially refused that malformed argument;
+its barrier preserved the session. A failing-first projector fix now exports
+invalid tool timeout as null while keeping the error state and timestamps.
+[Retry evidence](2198-terminal-a-capture-retry.json) records busy/running, one
+prior errored tool, the valid running tool and its 3,000,000 ms timeout before
+abort/delete. The session was deleted only after this capture succeeded.
+[Initial admission](2198-terminal-a-background.json) and
+[initial blocked capture](2198-terminal-a-before-cleanup.json) are preserved.
+
+The native redirected server.log contained a 51-byte startup banner, so the
+collector now additionally reads OC1
+files/linux/ubuntu/root/.local/share/opencode/log/opencode.log. Its actual
+frozen Effect key=value formatter has source-backed fixed lifecycle
+categories; private IDs, messages, stacks and causes are excluded. Each source
+is a bounded 512 KiB tail; unknown lines are explicitly omitted. An unparsed
+pending tool is zero progress/not ready rather than an invalid executed
+command (failing-first coverage). Revised prompt explicitly requires a JSON
+number. 161 focused cases pass serially via machine_lock; no app-source edits.
+
+### Fresh 45-minute fixture: 2198 PASS — 2026-10-09
+
+[Timed result](2198-terminal-b-background.json),
+[pre-cleanup state and logs](2198-terminal-b-before-cleanup.json), and
+[window severity check](2198-terminal-b-window-levels.json) are script-generated.
+Candidate driver revision is `6fa5899a0`; approved APK 2198 is unchanged.
+One reservation queued with flock-w1800 after BA; the app composer sent the
+exact one-tool fixture using verified `opencode/big-pickle` on the app-managed
+OC1 1.18.32 server. No other engine/server was started or switched.
+
+- Five-minute checkpoint: 300.740 seconds, 10 new persisted ticks.
+- Thirty-minute checkpoint: 1800.585 seconds, 60 new ticks, counter 61.
+- App out of view, unchanged app identity and managed socket, server/FGS/ongoing
+  notification present, owned turn active and no failed/completed flag throughout.
+- Seven owned terminal snapshots: five spanning 1149.99–1272.84 seconds plus
+  two at 1800.93/1801.03 seconds. All report busy/running, exactly one running
+  tool, zero tool errors, no completed timestamp or final finish reason.
+  Assistant created 1791501259639 ms; tool started 1791501283683 ms; timeout 3000000 ms.
+- Evidence was saved and fsynced BEFORE resume and owned abort/delete. Same
+  conversation resume and exact owned session cleanup succeeded.
+
+Six projected log captures target the configured 19–21 minute window
+and a final read. The active OC1 `opencode.log` uses the verified Effect header;
+last timestamps were 23:45:27–28 UTC, confirming current activity. A separate
+retrospective time-filtered application-log read found zero entries in the
+19–21 minute window; the bounded app-PID logcat buffer also had zero timestamped
+lines in that window. The source tails contain many outside-window or unknown
+lines, whose contents were omitted. This is a statement about retrieved logs,
+not proof that no error could occur. No raw logs, account values, text, stacks,
+private session/message IDs or passwords are retained. After the device run,
+the severity-only projection was integrated into the collector with privacy,
+window and adapter coverage; this offline change does not alter the workload or
+liveness driver. The final focused bundle has 164 tests, all passing serially via
+machine_lock, with formatting/F,E9/diff checks clean. The device result remains
+qualified against revision `6fa5899a0`; the later log-projection integration was
+verified offline, not by another 30-minute device run.
+
+The old approximately 20-minute failures were **not reproduced** with this
+continuous tool. Their final states were deleted by the old driver, so their
+cause remains unproved. This run establishes a 30-minute emulator HOME survival
+result for this exact workload; it does not certify physical-device Doze,
+all inference cycles, OC2 or the six-hour foreground-service cap. BD7 remains
+parked pending BB's stale CHECK-ticket answer.
+
+[Final restoration](2198-terminal-final-restoration.json): exact approved 2198
+APK hash/build/signer and unchanged UID 10217 verified; original background
+preference restored Off and its service stopped; both owned sessions absent and
+both empty canonical fixture directories removed. Own forwards closed, managed
+OC1 healthy. No APK replacement was needed because this reservation never
+changed APK bytes; normal restoration verified the already installed 2198 and
+restored the product setting. No CHECK ticket, Claude/account data, other
+project, installer or crash-report state was changed. The locked shell was
+exited after verification; no device work remains in this reservation.

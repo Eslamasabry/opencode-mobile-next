@@ -13,6 +13,7 @@ import subprocess
 import sys
 
 from . import background, fixture, fresh, ports, upgrade
+from .capture import BackgroundCapture
 from .common import (
     CANDIDATE_BUILD,
     LOCK,
@@ -119,7 +120,8 @@ def plan(args, artifacts=None):
     elif args.case == "background":
         result["requirements"] += [
             "app_started_owned_oc1_fixture",
-            "sleep_120_tool_transitions",
+            "exact_45_minute_foreground_tool_with_real_ticks",
+            "terminal_and_19_21_minute_logs_before_cleanup",
             "background_service_and_ongoing_notification",
             "book_30_minute_lock",
         ]
@@ -219,7 +221,24 @@ def run_locked(args, artifacts, receipt, output, *, port_factory=ports.AndroidPo
                         "code": "fixture_receipt_written",
                     }
                 else:
-                    result["driver"] = background.run_background(device)
+                    capture = BackgroundCapture(
+                        device, output.with_name(output.stem + "-terminal.json")
+                    )
+                    capture.begin()
+                    original_home, original_sleep = device.home, device.sleep
+
+                    def home():
+                        capture.begin()
+                        original_home()
+
+                    def sleep(seconds):
+                        original_sleep(seconds)
+                        capture.observe()
+
+                    device.home, device.sleep = home, sleep
+                    result["driver"] = background.run_background(
+                        device, before_cleanup=capture.finish
+                    )
             # Driver-level failure may be returned (background), not raised.
             result["state"] = result["driver"]["state"]
         except Exception as error:

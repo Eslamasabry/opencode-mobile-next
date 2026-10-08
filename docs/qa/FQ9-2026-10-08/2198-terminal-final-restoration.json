@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "state": "pass",
+  "normalBuild": 2198,
+  "normalRestored": true,
+  "apkInstallAttempted": false,
+  "restoreMethod": "verified_unchanged_approved_apk_and_restored_background_preference",
+  "ownedSessionsAbsent": 2,
+  "ownedEmptyProjectsRemoved": 2,
+  "BD7Attempted": false,
+  "installerQuiescenceClaimed": false,
+  "initialBackgroundEnabled": false,
+  "backgroundPreferenceRestoredOff": true,
+  "backgroundServiceOff": true,
+  "appManagedServerHealthy": true,
+  "runtimeVersion": "1.18.32",
+  "installed": {
+    "build": 2198,
+    "version": "1.2.0",
+    "sha256": "2069cc0ca62554e3fd798f8ba8bfa46f44ae84be4ff82142e87b495cdc8b89a3",
+    "signer": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c",
+    "uid": 10217
+  },
+  "ownedForwardClosed": true
+}
