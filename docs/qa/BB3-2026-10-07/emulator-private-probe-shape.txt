@@ -1,0 +1,6 @@
+route=health exit=0 http=200 bytes=132
+versionString=false healthyTrue=true pidInteger=false urlsList=false
+route=info exit=0 http=200 bytes=3274
+boundedJsonShape=false
+authenticatedHealthy=false
+readOnlyDeviceLocalCredentials=true

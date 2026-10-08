@@ -1,0 +1,92 @@
+[
+  {
+    "pid": 27417,
+    "cmdlineReadable": true,
+    "cmdlineBytes": 99,
+    "prootArgument": false,
+    "privateRootArgument": false,
+    "mapsReadable": true,
+    "mapsBytes": 326519,
+    "managedOptMapping": false
+  },
+  {
+    "pid": 27531,
+    "cmdlineReadable": true,
+    "cmdlineBytes": 3816,
+    "prootArgument": true,
+    "privateRootArgument": true,
+    "mapsReadable": true,
+    "mapsBytes": 16721,
+    "managedOptMapping": false
+  },
+  {
+    "pid": 27534,
+    "cmdlineReadable": true,
+    "cmdlineBytes": 48,
+    "prootArgument": false,
+    "privateRootArgument": false,
+    "mapsReadable": true,
+    "mapsBytes": 579652,
+    "managedOptMapping": true
+  },
+  {
+    "pid": 27618,
+    "cmdlineReadable": true,
+    "cmdlineBytes": 2271,
+    "prootArgument": true,
+    "privateRootArgument": true,
+    "mapsReadable": true,
+    "mapsBytes": 16812,
+    "managedOptMapping": false
+  },
+  {
+    "pid": 27621,
+    "cmdlineReadable": true,
+    "cmdlineBytes": 120,
+    "prootArgument": false,
+    "privateRootArgument": false,
+    "mapsReadable": true,
+    "mapsBytes": 16081,
+    "managedOptMapping": false
+  },
+  {
+    "pid": 27736,
+    "cmdlineReadable": true,
+    "cmdlineBytes": 148,
+    "prootArgument": false,
+    "privateRootArgument": false,
+    "mapsReadable": true,
+    "mapsBytes": 13026,
+    "managedOptMapping": false
+  },
+  {
+    "pid": 27749,
+    "cmdlineReadable": true,
+    "cmdlineBytes": 146,
+    "prootArgument": false,
+    "privateRootArgument": false,
+    "mapsReadable": true,
+    "mapsBytes": 25467,
+    "managedOptMapping": false
+  },
+  {
+    "pid": 27910,
+    "cmdlineReadable": true,
+    "cmdlineBytes": 56,
+    "prootArgument": false,
+    "privateRootArgument": false,
+    "mapsReadable": true,
+    "mapsBytes": 11226,
+    "managedOptMapping": false
+  },
+  {
+    "pid": 27968,
+    "cmdlineReadable": true,
+    "cmdlineBytes": 158,
+    "prootArgument": false,
+    "privateRootArgument": false,
+    "mapsReadable": true,
+    "mapsBytes": 15657,
+    "managedOptMapping": false
+  }
+]

@@ -1,0 +1,11 @@
+QA-only corrected runner; Gradle success in 2m3s; no adb/device actions.
+Runner: /home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/apk/androidTest/release/app-release-androidTest.apk
+Runner SHA256: 5410e36cd25636e451b1206ff86e6eb37b1e9cf10c2c6f77ab0202fdcc20b892
+Signer SHA256: 1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C
+Frozen target: /home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/flutter-apk/app-release.apk
+Frozen target SHA256 unchanged: 2e506ed7c79c05f90a46a96f3057f7ff079819973a7973b590ad9974c6c3f597
+package: name='io.github.eslamasabry.opencode_mobile.test' versionCode='' versionName='' platformBuildVersionName='17' platformBuildVersionCode='37' compileSdkVersion='37' compileSdkVersionCodename='17'
+Exact owned wrapper/client/daemon/children remaining: none. No signals issued.
+Only owned build/app/intermediates removed using scoped Python shutil with root assertion.
+Mock-only host tests: 17 PASS; four exact removed-fix controls fail; restored 17 PASS.
+Actual normal-process detach/reclaim/prepared death/Stop/timeout device checks remain pending.

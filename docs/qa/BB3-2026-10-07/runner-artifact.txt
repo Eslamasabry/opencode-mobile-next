@@ -1,0 +1,4 @@
+Artifact: build/app/outputs/apk/androidTest/release/app-release-androidTest.apk
+package: name='io.github.eslamasabry.opencode_mobile.test' versionCode='' versionName='' platformBuildVersionName='17' platformBuildVersionCode='37' compileSdkVersion='37' compileSdkVersionCodename='17'
+Signer #1 certificate SHA-256 digest: 1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c
+APK SHA256=83c5e1aa994bfed451cc2f3051840679e673ec125541b812c891460f42f1329a

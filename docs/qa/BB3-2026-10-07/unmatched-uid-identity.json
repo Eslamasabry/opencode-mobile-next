@@ -1,0 +1,72 @@
+[
+  {
+    "pid": 346,
+    "uid": 10217,
+    "identity": {
+      "pid": 346,
+      "startTicks": 7838012,
+      "parent": 32752,
+      "group": 32745,
+      "session": 32745,
+      "state": "S"
+    },
+    "managedProot": false,
+    "privateRoot": false
+  },
+  {
+    "pid": 891,
+    "uid": 10217,
+    "identity": {
+      "pid": 891,
+      "startTicks": 7851133,
+      "parent": 1,
+      "group": 889,
+      "session": 889,
+      "state": "S"
+    },
+    "managedProot": true,
+    "privateRoot": true
+  },
+  {
+    "pid": 924,
+    "uid": 10217,
+    "identity": {
+      "pid": 924,
+      "startTicks": 7851143,
+      "parent": 891,
+      "group": 889,
+      "session": 889,
+      "state": "S"
+    },
+    "managedProot": false,
+    "privateRoot": false
+  },
+  {
+    "pid": 30217,
+    "uid": 10217,
+    "identity": {
+      "pid": 30217,
+      "startTicks": 7753528,
+      "parent": 1,
+      "group": 30215,
+      "session": 30215,
+      "state": "S"
+    },
+    "managedProot": true,
+    "privateRoot": true
+  },
+  {
+    "pid": 30221,
+    "uid": 10217,
+    "identity": {
+      "pid": 30221,
+      "startTicks": 7753643,
+      "parent": 30217,
+      "group": 30215,
+      "session": 30215,
+      "state": "S"
+    },
+    "managedProot": false,
+    "privateRoot": false
+  }
+]

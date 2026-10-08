@@ -22,6 +22,60 @@ enum BuiltinLinuxPhase {
   };
 }
 
+/// Native restoration after OS process reclamation; force-stop stays stopped.
+enum BuiltinServerRestorePhase {
+  idle,
+  waiting,
+  restoring,
+  unavailable;
+
+  static BuiltinServerRestorePhase parse(Object? value) => switch (value) {
+    null || 'idle' => idle,
+    'waiting' => waiting,
+    'restoring' => restoring,
+    _ => unavailable,
+  };
+}
+
+/// Fixed reasons only; native process identity and errors stay private.
+enum BuiltinServerRestoreReason {
+  stopped,
+  policyDisabled,
+  budgetExhausted,
+  ownershipUnknown,
+  storageUnavailable,
+  componentRecoveryRequired,
+  systemTimeout;
+
+  static BuiltinServerRestoreReason? parse(Object? value) => switch (value) {
+    null => null,
+    'stopped' => stopped,
+    'policyDisabled' => policyDisabled,
+    'budgetExhausted' => budgetExhausted,
+    'storageUnavailable' => storageUnavailable,
+    'componentRecoveryRequired' => componentRecoveryRequired,
+    'systemTimeout' => systemTimeout,
+    _ => ownershipUnknown,
+  };
+}
+
+/// Selects a canonical native command. Contains no script or account data.
+class BuiltinServerRestoreRecipe {
+  const BuiltinServerRestoreRecipe({
+    required this.profileId,
+    required this.runtime,
+  });
+
+  final String profileId;
+  final TermuxRuntime runtime;
+
+  Map<String, Object> toMap() => {
+    'version': 1,
+    'profileId': profileId,
+    'runtime': runtime.name,
+  };
+}
+
 /// One reading of `status`.
 class BuiltinLinuxStatus {
   const BuiltinLinuxStatus({
@@ -33,6 +87,8 @@ class BuiltinLinuxStatus {
     this.serverRecoveryGeneration,
     this.serverRecoveryAuthority = false,
     this.serverRecoveryScheduled = false,
+    this.restorePhase = BuiltinServerRestorePhase.idle,
+    this.restoreReason,
     this.serverUptime,
     this.serverPort,
     this.abi = '',
@@ -51,6 +107,8 @@ class BuiltinLinuxStatus {
       serverRecoveryGeneration = null,
       serverRecoveryAuthority = false,
       serverRecoveryScheduled = false,
+      restorePhase = BuiltinServerRestorePhase.idle,
+      restoreReason = null,
       serverUptime = null,
       serverPort = null,
       abi = '',
@@ -69,6 +127,8 @@ class BuiltinLinuxStatus {
       serverRecoveryGeneration: asInt(map['serverRecoveryGeneration']),
       serverRecoveryAuthority: map['serverRecoveryAuthority'] == true,
       serverRecoveryScheduled: map['serverRecoveryScheduled'] == true,
+      restorePhase: BuiltinServerRestorePhase.parse(map['restorePhase']),
+      restoreReason: BuiltinServerRestoreReason.parse(map['restoreReason']),
       serverUptime: switch (asInt(map['serverUptimeMs'])) {
         final int ms when ms >= 0 => Duration(milliseconds: ms),
         _ => null,
@@ -99,6 +159,8 @@ class BuiltinLinuxStatus {
   /// Native is the sole durable budget writer once the profile is migrated.
   final bool serverRecoveryAuthority;
   final bool serverRecoveryScheduled;
+  final BuiltinServerRestorePhase restorePhase;
+  final BuiltinServerRestoreReason? restoreReason;
 
   /// How long the app's own tracked OpenCode process has run; null when none
   /// runs, or from an older APK that does not say.
@@ -460,8 +522,26 @@ class BuiltinLinux {
     );
   }
 
-  Future<void> startServer(String script, {int port = serverPort}) =>
-      _invoke<void>('startServer', {'script': script, 'port': port});
+  Future<void> startServer(
+    String script, {
+    int port = serverPort,
+    BuiltinServerRestoreRecipe? restoreRecipe,
+  }) async {
+    final arguments = {
+      'script': script,
+      'port': port,
+      if (restoreRecipe != null) 'restoreRecipe': restoreRecipe.toMap(),
+    };
+    try {
+      await _invoke<void>('startServer', arguments);
+    } on BuiltinLinuxException {
+      if (restoreRecipe == null) rethrow;
+      throw const BuiltinLinuxException(
+        'The phone server could not start. Open setup and try again.',
+        code: 'server_start_unavailable',
+      );
+    }
+  }
 
   /// Restarts only a stopped server whose native intent and admission token
   /// still match, while the Android activity is resumed. Does not opt in.

@@ -1,0 +1,79 @@
+{
+  "numericSameUidKernelIdentities": [
+    {
+      "pid": 29879,
+      "startTicks": 420523,
+      "parent": 373,
+      "group": 373,
+      "session": 0,
+      "state": "S"
+    },
+    {
+      "pid": 30118,
+      "startTicks": 423215,
+      "parent": 29879,
+      "group": 373,
+      "session": 0,
+      "state": "S"
+    },
+    {
+      "pid": 30120,
+      "startTicks": 423216,
+      "parent": 30118,
+      "group": 373,
+      "session": 0,
+      "state": "S"
+    },
+    {
+      "pid": 30218,
+      "startTicks": 423869,
+      "parent": 30120,
+      "group": 30218,
+      "session": 30218,
+      "state": "S"
+    },
+    {
+      "pid": 30240,
+      "startTicks": 423906,
+      "parent": 29879,
+      "group": 373,
+      "session": 0,
+      "state": "S"
+    },
+    {
+      "pid": 30243,
+      "startTicks": 423908,
+      "parent": 30240,
+      "group": 373,
+      "session": 0,
+      "state": "S"
+    },
+    {
+      "pid": 30301,
+      "startTicks": 424140,
+      "parent": 30243,
+      "group": 373,
+      "session": 0,
+      "state": "S"
+    },
+    {
+      "pid": 30330,
+      "startTicks": 424174,
+      "parent": 30301,
+      "group": 373,
+      "session": 0,
+      "state": "S"
+    },
+    {
+      "pid": 30405,
+      "startTicks": 424575,
+      "parent": 30330,
+      "group": 373,
+      "session": 0,
+      "state": "S"
+    }
+  ],
+  "ownershipPrepared": true,
+  "otherRuntimeCount": 0,
+  "authenticatedOpenCode2Healthy": true
+}

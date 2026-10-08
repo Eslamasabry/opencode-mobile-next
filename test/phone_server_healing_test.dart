@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
@@ -127,7 +128,11 @@ class _Linux extends BuiltinLinux {
   }
 
   @override
-  Future<void> startServer(String script, {int port = 4097}) async {
+  Future<void> startServer(
+    String script, {
+    int port = 4097,
+    BuiltinServerRestoreRecipe? restoreRecipe,
+  }) async {
     starts++;
     wanted = true;
     running = !dies;
@@ -206,6 +211,43 @@ class _NativeHealingLinux extends _Linux {
     String profileId, {
     bool delete = false,
   }) async {}
+}
+
+class _DelayedNativeBindingLinux extends _NativeHealingLinux {
+  final bindingGate = Completer<void>();
+  final bindingRequested = Completer<void>();
+  String? boundOwner;
+  bool restorationArmedOnStart = false;
+
+  @override
+  Future<Map<Object?, Object?>> bindServerRecovery({
+    required String profileId,
+    required bool enabled,
+    Map<String, Object?>? legacyBudget,
+  }) async {
+    if (!bindingRequested.isCompleted) bindingRequested.complete();
+    await bindingGate.future;
+    boundOwner = enabled ? profileId : null;
+    return budget;
+  }
+
+  @override
+  Future<void> unbindServerRecovery(
+    String profileId, {
+    bool delete = false,
+  }) async {
+    if (boundOwner == profileId) boundOwner = null;
+  }
+
+  @override
+  Future<void> startServer(
+    String script, {
+    int port = 4097,
+    BuiltinServerRestoreRecipe? restoreRecipe,
+  }) async {
+    restorationArmedOnStart = boundOwner == restoreRecipe?.profileId;
+    await super.startServer(script, port: port, restoreRecipe: restoreRecipe);
+  }
 }
 
 ServerProfile _phone(String id) => ServerProfile(
@@ -337,6 +379,61 @@ void main() {
       expect(connection.connections, [phone.id]);
     },
   );
+
+  test(
+    'explicit Start waits for native owner binding before its launch',
+    () async {
+      final native = _DelayedNativeBindingLinux()..wanted = false;
+      linux = native;
+      starter.dispose();
+      starter = BuiltinServerStarter(
+        linux: native,
+        readyTimeout: Duration.zero,
+        pollInterval: Duration.zero,
+      );
+      bind().setForeground(true);
+      final starting = starter.start(phone);
+      await native.bindingRequested.future;
+      try {
+        expect(native.starts, 0);
+      } finally {
+        native.bindingGate.complete();
+        await starting;
+      }
+      expect(native.restorationArmedOnStart, isTrue);
+      expect(await starting, isNull);
+    },
+  );
+
+  for (final transfer in [false, true]) {
+    test(
+      'late native binding cannot launch after ${transfer ? 'owner transfer' : 'profile deletion'}',
+      () async {
+        final native = _DelayedNativeBindingLinux()..wanted = false;
+        linux = native;
+        starter.dispose();
+        starter = BuiltinServerStarter(
+          linux: native,
+          readyTimeout: Duration.zero,
+          pollInterval: Duration.zero,
+        );
+        bind().setForeground(true);
+        final starting = starter.start(phone);
+        await native.bindingRequested.future;
+        if (transfer) {
+          final other = _phone('other');
+          store.saved.add(other);
+          await prefs.setString(PhoneServerHealing.ownerKey, other.id);
+          store.updates.notifyListeners();
+        } else {
+          connection.blocked.add(phone.id);
+        }
+        native.bindingGate.complete();
+        expect(await starting, isNotNull);
+        expect(native.starts, 0);
+      },
+    );
+  }
 
   test(
     'ambiguous legacy profiles wait for an explicit Start to claim ownership',

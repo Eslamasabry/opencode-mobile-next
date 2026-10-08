@@ -90,6 +90,16 @@ class PhoneServerHealing {
     );
     _ownerStorageFailed = false;
     _syncProfile();
+    // The native launch snapshots its binding once. Drain migration and binding
+    // before sending the recipe, including a check invalidated by this transfer.
+    await recovery.check(profile);
+    if (recovery.value.profileId != profile.id) await recovery.check(profile);
+    if (_disposed ||
+        !connection.isProfileReadable(profile.id) ||
+        !identical(_owner, profile) ||
+        connection.store.prefs.getString(ownerKey) != profile.id) {
+      throw StateError('The server profile is unavailable.');
+    }
   }
 
   void _syncProfile() {

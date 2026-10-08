@@ -1,0 +1,79 @@
+QA lifecycle corrections: exact removed-fix controls; no adb/device execution.
+
+Removed fix: no-restart attach
+Command: python3 -m unittest tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_instrumentation_attach_never_replaces_normal_process -v
+test_instrumentation_attach_never_replaces_normal_process (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_instrumentation_attach_never_replaces_normal_process) ... ERROR
+
+======================================================================
+ERROR: test_instrumentation_attach_never_replaces_normal_process (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_instrumentation_attach_never_replaces_normal_process)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_runtime_acceptance.py", line 29, in test_instrumentation_attach_never_replaces_normal_process
+    device.instrument("bb3Stop", expected_app=dict(current))
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb3_runtime_acceptance.py", line 355, in instrument
+    self.wait_detached(identity)
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb3_runtime_acceptance.py", line 314, in wait_detached
+    require(same_process(identity, self.app_identity()), "instrumentation_replaced_app")
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb3_runtime_acceptance.py", line 60, in require
+    raise Refused(code)
+bb3_acceptance.Refused: instrumentation_replaced_app
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (errors=1)
+Exit code: 1
+
+Removed fix: detached before death
+Command: python3 -m unittest tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_host_never_kills_app_with_active_instrumentation -v
+test_host_never_kills_app_with_active_instrumentation (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_host_never_kills_app_with_active_instrumentation) ... FAIL
+
+======================================================================
+FAIL: test_host_never_kills_app_with_active_instrumentation (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_host_never_kills_app_with_active_instrumentation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_runtime_acceptance.py", line 61, in test_host_never_kills_app_with_active_instrumentation
+    with self.assertRaisesRegex(acceptance.Refused, "instrumentation_active_before_app_death"):
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)
+Exit code: 1
+
+Removed fix: bound default policy
+Command: python3 -m unittest tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_default_policy_requires_enabled_real_binding_and_strict_marker -v
+test_default_policy_requires_enabled_real_binding_and_strict_marker (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_default_policy_requires_enabled_real_binding_and_strict_marker) ... FAIL
+
+======================================================================
+FAIL: test_default_policy_requires_enabled_real_binding_and_strict_marker (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_default_policy_requires_enabled_real_binding_and_strict_marker)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_runtime_acceptance.py", line 102, in test_default_policy_requires_enabled_real_binding_and_strict_marker
+    self.assertTrue(acceptance.baseline_policy_valid(native, flutter))
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (failures=1)
+Exit code: 1
+
+Removed fix: installed byte identity
+Command: python3 -m unittest tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_installed_candidate_requires_exact_bytes_without_installing -v
+test_installed_candidate_requires_exact_bytes_without_installing (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_installed_candidate_requires_exact_bytes_without_installing) ... FAIL
+
+======================================================================
+FAIL: test_installed_candidate_requires_exact_bytes_without_installing (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_installed_candidate_requires_exact_bytes_without_installing)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_runtime_acceptance.py", line 95, in test_installed_candidate_requires_exact_bytes_without_installing
+    with self.assertRaisesRegex(acceptance.Refused, "installed_candidate_hash_mismatch"):
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (failures=1)
+Exit code: 1

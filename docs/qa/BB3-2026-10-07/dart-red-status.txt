@@ -1,0 +1,14 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart
+00:00 +0: bridge restoration status exposes fixed state and timeout reason
+00:00 +0 -1: bridge restoration status exposes fixed state and timeout reason [E]
+  Expected: BuiltinServerRestorePhase:<BuiltinServerRestorePhase.unavailable>
+    Actual: BuiltinServerRestorePhase:<BuiltinServerRestorePhase.idle>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/builtin_linux_test.dart 72:7                   main.<fn>.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge restoration status exposes fixed state and timeout reason

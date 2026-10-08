@@ -1,0 +1,19 @@
+{
+  "manualCleanup": false,
+  "automaticColdAuthorityUnchanged": true,
+  "rootPids": [
+    891,
+    1273,
+    30217,
+    30961,
+    31249,
+    32445,
+    32527,
+    32747
+  ],
+  "exactIdentitiesDrained": 0,
+  "appUidQuiescent": true,
+  "accountFilesUntouched": true,
+  "signalsIssued": 0,
+  "observedPreviouslyCapturedTreesAlreadyExited": true
+}

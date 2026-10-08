@@ -1,0 +1,14 @@
+child PID=2651205 comm=machine_lock.sh
+child PID=2651391 comm=machine_lock.sh
+child PID=2651440 comm=machine_lock.sh
+child PID=2651544 comm=machine_lock.sh
+child PID=2651593 comm=machine_lock.sh
+child PID=2651669 comm=machine_lock.sh
+child PID=2651732 comm=machine_lock.sh
+child PID=2651805 comm=machine_lock.sh
+child PID=2651854 comm=machine_lock.sh
+child PID=2651962 comm=machine_lock.sh
+child PID=2652011 comm=machine_lock.sh
+child PID=2652091 comm=machine_lock.sh
+Temporary runner and jar removed; children waited to completion.
+All 12 recorded check wrapper PIDs absent; temporary driver removed. No Gradle/APK/adb commands run.

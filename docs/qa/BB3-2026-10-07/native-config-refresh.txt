@@ -1,0 +1,22 @@
+Pinned config-only --no-pub exited0 but did not regenerate: flutter_command.dart regeneratePlatformSpecificToolingIfApplicable returns when !shouldRunPub.
+Official supported generator source:
+import 'package:flutter_tools/src/context_runner.dart';
+import 'package:flutter_tools/src/cache.dart';
+import 'package:flutter_tools/src/flutter_plugins.dart';
+import 'package:flutter_tools/src/project.dart';
+import 'package:flutter_tools/src/globals.dart' as globals;
+import 'package:flutter_tools/src/base/template.dart';
+import 'package:flutter_tools/src/isolated/mustache_template.dart';
+Future<void> main() async {
+  Cache.flutterRoot = '/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5';
+  await runInContext(() async {
+    final project = FlutterProject.fromDirectory(globals.fs.directory('/home/eslam/Storage/Code/oc_app-sol-bb'));
+    await injectPlugins(project, releaseMode: true, androidPlatform: true);
+    print('Official Android-only release plugin injection complete; no pub get.');
+  }, overrides: {TemplateRenderer: () => const MustacheTemplateRenderer()});
+}
+
+Command: tool/qa/machine_lock.sh build -- /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/cache/dart-sdk/bin/dart --packages=/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/packages/flutter_tools/.dart_tool/package_config.json /home/eslam/Storage/tmp/oc-bb3-release-plugins.dart
+Exit0: Official Android-only release plugin injection complete; no pub get.
+Registrant integration_test entry absent=true
+Registrant SHA256=df9c6f1d343881f71b8ee0e62a2989c6e42d76c7f8201774b8ef686c52012ea1

@@ -36,6 +36,11 @@ class BuiltinRuntimeAcceptance : Instrumentation() {
             var passed = false
             var failureCode: String? = null
             try {
+                if (arguments.getString("step")?.startsWith("bb3") == true) {
+                    BuiltinRuntimeReclaimAcceptance(this, arguments).execute()
+                    passed = true
+                    return@Thread
+                }
                 val linux = BuiltinLinux.get(targetContext)
                 requireSafe(linux.installed, "ubuntu_not_initialized")
                 when (arguments.getString("step")) {
@@ -62,11 +67,14 @@ class BuiltinRuntimeAcceptance : Instrumentation() {
                     else -> throw Refused("invalid_step")
                 }
                 passed = true
+            } catch (failure: BuiltinRuntimeReclaimAcceptance.Refused) {
+                failureCode = failure.safeCode
             } catch (failure: Refused) {
                 failureCode = failure.safeCode
             } catch (error: Throwable) {
                 // Only fixed phase + exception class: no message or child output.
-                failureCode = "acceptance_failed_${phase}_${error.javaClass.simpleName}"
+                failureCode = if (arguments.getString("step")?.startsWith("bb3") == true) "bb3_acceptance_failed"
+                    else "acceptance_failed_${phase}_${error.javaClass.simpleName}"
             } finally {
                 activity?.let { current ->
                     try { runOnMainSync { current.finish() } } catch (_: Throwable) { }

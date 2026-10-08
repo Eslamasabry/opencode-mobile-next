@@ -1,0 +1,28 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart
+00:00 +0: app-lifetime owner heals only in foreground and reconnects once
+00:00 +1: persisted runtime owner wins over another selected local profile
+00:00 +2: a restart confirmed after its initial timeout still reconnects
+00:00 +3: explicit Start waits for native owner binding before its launch
+00:00 +4: late native binding cannot launch after profile deletion
+00:00 +5: late native binding cannot launch after owner transfer
+00:00 +6: ambiguous legacy profiles wait for an explicit Start to claim ownership
+00:00 +7: the shared restart policy and explicit Stop each prevent healing
+00:00 +8: explicit connect works with automatic reconnect off and shares deduplication
+00:00 +9: profile deletion admission cannot be reopened by a store notification
+00:00 +10: native exhausted budget survives opening and owner recreation
+00:00 +11: opening cannot supersede a scheduled native retry
+00:00 +12: the launch start (QA B1) starts a stopped server past an exhausted crash budget, connects, and gives the budget back once it answers
+00:00 +13: the launch start (QA B1) waits for the first resume before it does anything
+00:00 +14: the launch start (QA B1) leaves an explicitly stopped server stopped
+00:00 +15: the launch start (QA B1) leaves it stopped when restarting the phone server is off
+00:00 +16: the launch start (QA B1) only connects to a server that already runs
+00:00 +17: the launch start (QA B1) tries once more after a fast failure, then leaves the reason
+00:00 +18: the launch start (QA B1) a timeout is not tried again on its own
+00:00 +19: the launch start (QA B1) a failed crash restart counts as the first try
+00:00 +20: a running server that does not answer (QA-03) one that rejects our password is replaced at launch
+00:00 +21: a running server that does not answer (QA-03) one older than the stale age that stays silent is replaced
+00:00 +22: a running server that does not answer (QA-03) a young one that is still booting is waited for, not killed
+00:00 +23: a running server that does not answer (QA-03) a young one that never answers is replaced once it is stale
+00:00 +24: a running server that does not answer (QA-03) a healthy server whose connect failed is connected again by the health poll, once per back-off
+00:00 +25: a running server that does not answer (QA-03) the back-off holds automatic reconnects; Try again does not wait
+00:00 +26: All tests passed!

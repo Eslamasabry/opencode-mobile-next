@@ -1,0 +1,13 @@
+F
+======================================================================
+FAIL: test_inherited_batch_lock_rejects_other_file (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_inherited_batch_lock_rejects_other_file)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_runtime_acceptance.py", line 35, in test_inherited_batch_lock_rejects_other_file
+    self.fail("Different lock admitted")
+AssertionError: Different lock admitted
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

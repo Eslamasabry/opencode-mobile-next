@@ -1,0 +1,5 @@
+pid=2383389 ppid=2383381 comm=machine_lock.sh startTicks=88324793
+pid=2395333 ppid=2383389 comm=gradle startTicks=88357317
+pid=2395458 ppid=2395333 comm=java startTicks=88357519
+pid=2400422 ppid=2395458 comm=aapt2 startTicks=88367393
+pid=2406537 ppid=2395458 comm=ninja startTicks=88381016

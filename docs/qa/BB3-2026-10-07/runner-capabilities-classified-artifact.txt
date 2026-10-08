@@ -1,0 +1,10 @@
+QA-only synchronized fixed-classification capability runner; BUILD SUCCESSFUL in2m21s.
+Runner: /home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/apk/androidTest/release/app-release-androidTest.apk
+Runner SHA256: bf3a2912f87ec59b05ade471b66386d371b6e9e2644077229995eb5350f2fdef
+Signer SHA256: 1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C
+Historical target SHA256 unchanged: 8e0bb3f360a41899ace22a5e91549250df0e66d0b05d4720a3ba9a64cfa2ad66
+Exact owned processes remaining: none; no signals/device actions.
+Owned build/app/intermediates removed with scoped Python root assertion.
+Step bb3Capabilities remains no-restart attached to existing normal PID; classifier expanded only to fixed requested enums.
+No production integration or boot helper wiring. Boot helper9PASS before actual capability superseded its use; no red/restored runs per parent steering.
+Actual classified capability result remains root-owned device gate.

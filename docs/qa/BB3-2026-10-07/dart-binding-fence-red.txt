@@ -1,0 +1,24 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart
+00:00 +0: late native binding cannot launch after profile deletion
+00:00 +0 -1: late native binding cannot launch after profile deletion [E]
+  Expected: not null
+    Actual: <null>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_server_healing_test.dart 432:9           main.<fn>
+
+00:00 +0 -1: late native binding cannot launch after owner transfer
+00:00 +0 -2: late native binding cannot launch after owner transfer [E]
+  Expected: not null
+    Actual: <null>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_server_healing_test.dart 432:9           main.<fn>
+
+00:00 +0 -2: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: late native binding cannot launch after owner transfer
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: late native binding cannot launch after profile deletion

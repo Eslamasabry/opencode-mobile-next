@@ -219,7 +219,14 @@ Future<BuiltinServerStartFailure?> startBuiltinServer({
       runtime: BuiltinLinux.runtimeFor(profile.flavor),
     );
     if (recoveryGeneration == null) {
-      await linux.startServer(script, port: BuiltinLinux.serverPort);
+      await linux.startServer(
+        script,
+        port: BuiltinLinux.serverPort,
+        restoreRecipe: BuiltinServerRestoreRecipe(
+          profileId: profile.id,
+          runtime: BuiltinLinux.runtimeFor(profile.flavor),
+        ),
+      );
     } else {
       await linux.restartServer(
         script,

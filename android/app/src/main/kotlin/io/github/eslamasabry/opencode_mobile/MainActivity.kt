@@ -521,6 +521,8 @@ class MainActivity : FlutterActivity() {
                     "serverRecoveryGeneration" to linux.serverRecoveryGeneration,
                     "serverRecoveryAuthority" to true,
                     "serverRecoveryScheduled" to linux.serverRecoveryScheduled,
+                    "restorePhase" to linux.restorePhase,
+                    "restoreReason" to linux.restoreReason,
                     "serverPort" to linux.port,
                     "serverUptimeMs" to linux.serverUptimeMs,
                     "services" to linux.runningServices(),
@@ -552,7 +554,7 @@ class MainActivity : FlutterActivity() {
                     return
                 }
                 inBackground {
-                    linux.startServer(script, port)
+                    linux.startServer(script, port, call.argument<Map<*, *>>("restoreRecipe"))
                     null
                 }
             }

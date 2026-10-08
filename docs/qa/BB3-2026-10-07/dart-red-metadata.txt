@@ -1,0 +1,19 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart
+00:00 +0: bridge authored start passes only canonical restoration metadata
+00:00 +0 -1: bridge authored start passes only canonical restoration metadata [E]
+  Expected: {
+              'script': 'serve',
+              'port': 4097,
+              'restoreRecipe': {'version': 1, 'profileId': 'phone-profile', 'runtime': 'openCode2'}
+            }
+    Actual: {'script': 'serve', 'port': 4097}
+     Which: has different length and is missing map key 'restoreRecipe'
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/builtin_linux_test.dart 94:7                   main.<fn>.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge authored start passes only canonical restoration metadata

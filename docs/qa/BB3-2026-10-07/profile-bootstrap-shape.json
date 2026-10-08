@@ -1,0 +1,30 @@
+{
+  "profiles": [
+    {
+      "id": "1790839392073695",
+      "flavor": "v1",
+      "managedLoopback": true,
+      "policyRestart": true,
+      "markerV2": false,
+      "nativeBudgetPresent": false
+    },
+    {
+      "id": "1791296358016919",
+      "flavor": "v1",
+      "managedLoopback": false,
+      "policyRestart": null,
+      "markerV2": false,
+      "nativeBudgetPresent": false
+    },
+    {
+      "id": "1791381364862609",
+      "flavor": "v2",
+      "managedLoopback": true,
+      "policyRestart": null,
+      "markerV2": false,
+      "nativeBudgetPresent": true
+    }
+  ],
+  "nativeOwner": "1791381364862609",
+  "nativeEnabled": "true"
+}

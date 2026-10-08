@@ -1,0 +1,6 @@
+Historical target4a37/runner73033, full emulator lock.
+Guarded install and data/account preservation PASS.
+Existing person Start, canonical owner arming/authenticated health/FGS PASS.
+REFUSED app_identity_ambiguous before fixture preparation and app kill.
+Fresh locked read-only query later had one exact normal app; bounded observer retry has old-source failing regression and restored24 host tests PASS.
+No Stop scenario assertion accepted.

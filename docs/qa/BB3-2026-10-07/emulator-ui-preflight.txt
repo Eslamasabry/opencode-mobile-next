@@ -1,0 +1,4 @@
+transport=ok
+uptime=ok
+UI dump15s and screenshot12s timed out; no UI actions/app data changes.
+Temporary UI path previously removed successfully.

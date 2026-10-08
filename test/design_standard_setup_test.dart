@@ -17,6 +17,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/server_probe.dart';
+import 'package:opencode_mobile/builtin/builtin_linux.dart'
+    show BuiltinServerRestoreRecipe;
 import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/state/termux_running_server.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_ready_screen.dart';
@@ -31,7 +33,11 @@ class _HeldLinux extends SceneLinux {
   final gate = Completer<void>();
 
   @override
-  Future<void> startServer(String script, {int port = 4097}) async {
+  Future<void> startServer(
+    String script, {
+    int port = 4097,
+    BuiltinServerRestoreRecipe? restoreRecipe,
+  }) async {
     await gate.future;
     running = true;
   }

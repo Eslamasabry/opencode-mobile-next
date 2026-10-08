@@ -1,0 +1,14 @@
+test_reused_pid_or_zombie_never_counts_as_original_identity (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_reused_pid_or_zombie_never_counts_as_original_identity) ... FAIL
+
+======================================================================
+FAIL: test_reused_pid_or_zombie_never_counts_as_original_identity (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_reused_pid_or_zombie_never_counts_as_original_identity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_runtime_acceptance.py", line 27, in test_reused_pid_or_zombie_never_counts_as_original_identity
+    self.assertFalse(acceptance.same_process(original, {"pid": 42, "startTicks": 124, "state": "S"}))
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (failures=1)

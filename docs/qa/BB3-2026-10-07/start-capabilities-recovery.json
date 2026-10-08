@@ -1,0 +1,13 @@
+{
+  "bb3BootCountAvailable": "true",
+  "bb3BootIdentityFailure": "none",
+  "bb3BootIdentitySucceeded": "true",
+  "bb3BoundOwnerEnabledMatches": "true",
+  "bb3KernelBootIdReadable": "true",
+  "bb3KnownRuntimeFailure": "none",
+  "bb3KnownRuntimeSucceeded": "true",
+  "bb3MemoryRecipePresent": "true",
+  "bb3RestorePhase": "idle",
+  "bb3RestoreReason": "none",
+  "builtinRuntimeResult": "PASS"
+}

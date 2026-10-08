@@ -1,0 +1,10 @@
+existing_native_Stop_action_delivered=true
+authorized_package_force_stop_preserved_data=true
+exact_private_tree_drain_verified=true
+exact_signals_issued=0
+runner_in_place_install=true
+target2202_in_place_install=true
+existing_OpenCode2_profile_selected=1791381364862609
+other_preferences_preserved_policy_unchanged=true
+account_files_untouched_no_logout=true
+QA2202_activity_started=true

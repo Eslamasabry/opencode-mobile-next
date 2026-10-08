@@ -1,0 +1,10 @@
+QA-only app identity JSONObject serialization and fsynced JSON round-trip assertion.
+Runner BUILD SUCCESSFUL in1m53s; no target/prod edits or device actions.
+Runner: /home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/apk/androidTest/release/app-release-androidTest.apk
+Runner SHA256: 73033fa78ca94e71787ab6952e67fbffc177c4cfdd49cde8a5be9ccea537a52f
+Signer SHA256: 1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C
+Frozen target SHA256 unchanged: 4a37d9c88257a5b4be9cf1fbf3cb88cd5837317254efae26ac33811ecab09624
+Exact owned processes remaining: none; no signals issued.
+Only owned build/app/intermediates removed with scoped Python root assertion.
+Round-trip refuses absent/string/nonintegral/mismatched app identity with fixed bb3_app_identity_not_object; no values/error text emitted.
+Old device failure is parent-owned emulator-recovery-harness-initial.txt; revised device qualification remains pending.

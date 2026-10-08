@@ -40,6 +40,22 @@ class RestartBackoffTest {
         assertEquals(2_000L, backoff.exited(uptimeMs = 0L, nowMs = 50_000L))
     }
 
+    @Test fun snapshotRestoresTheSameDeadlineAndNextDelay() {
+        val old = RestartBackoff()
+        old.exited(0, 10000); old.exited(0, 20000)
+        val state = old.snapshot()
+        val restored = RestartBackoff()
+        restored.restore(state.first, state.second)
+        assertEquals(1000L, restored.remainingMs(21000))
+        assertEquals(4000L, restored.exited(0, 23000))
+    }
+
+    @Test fun malformedDurableDelayDoesNotGrantImmediateRetry() {
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) { RestartBackoff().restore(0, 0) }
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) { RestartBackoff().restore(60001, 0) }
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) { RestartBackoff().restore(1000, -1) }
+    }
+
     @Test
     fun explicitResetClearsAnOutstandingDeadlineAndStartsAtOneSecond() {
         val backoff = RestartBackoff()

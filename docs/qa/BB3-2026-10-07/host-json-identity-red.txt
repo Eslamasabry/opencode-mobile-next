@@ -1,0 +1,19 @@
+E
+======================================================================
+ERROR: test_preparation_refuses_stringified_app_identity_before_signaling (tool.qa.test_bb3_runtime_acceptance.ReclaimProofTest.test_preparation_refuses_stringified_app_identity_before_signaling)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb3_runtime_acceptance.py", line 29, in test_preparation_refuses_stringified_app_identity_before_signaling
+    session.prepare()
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb3_runtime_acceptance.py", line 381, in prepare
+    require(same_process(value["app"], app) and same_process(app, self.device.app_identity()) and
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb3_runtime_acceptance.py", line 82, in same_process
+    expected["pid"] == actual["pid"] and expected["startTicks"] == actual["startTicks"])
+    ~~~~~~~~^^^^^^^
+TypeError: string indices must be integers, not 'str'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (errors=1)

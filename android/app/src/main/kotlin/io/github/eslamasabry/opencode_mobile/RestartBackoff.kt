@@ -11,5 +11,10 @@ internal class RestartBackoff {
         return delay
     }
     fun remainingMs(nowMs: Long) = (restartAtMs - nowMs).coerceAtLeast(0L)
+    fun snapshot() = nextDelayMs to restartAtMs
+    fun restore(nextDelay: Long, deadline: Long) {
+        require(nextDelay in 1000L..60000L && deadline >= 0L)
+        nextDelayMs = nextDelay; restartAtMs = deadline
+    }
     fun reset() { nextDelayMs = 1000L; restartAtMs = 0L }
 }

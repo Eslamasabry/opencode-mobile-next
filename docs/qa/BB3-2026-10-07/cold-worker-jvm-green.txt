@@ -1,0 +1,22 @@
+Initial current candidate
+COMMAND ['/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/machine_lock.sh', 'build', '--', '/home/eslam/.sdkman/candidates/kotlin/current/bin/kotlinc', '-J-Xmx256m', '-J-XX:MaxMetaspaceSize=192m', '-cp', '/home/eslam/.gradle/caches/modules-2/files-2.1/junit/junit/4.13.2/8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12/junit-4.13.2.jar', '/home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRuntimeOwnership.kt', '/home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeServerRecipe.kt', '/home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/RestartBackoff.kt', '/home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeRuntimeOwnershipTest.kt', '/home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeServerRecipeTest.kt', '/home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/RestartBackoffTest.kt', '/home/eslam/Storage/tmp/OcBb3ColdWorkerRunner.kt', '-d', '/home/eslam/Storage/tmp/oc-bb3-cold-worker-tests.jar']
+EXIT 0
+COMMAND ['/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/machine_lock.sh', 'build', '--', '/home/eslam/.sdkman/candidates/kotlin/current/bin/kotlin', '-J-Xmx128m', '-cp', '/home/eslam/Storage/tmp/oc-bb3-cold-worker-tests.jar:/home/eslam/.gradle/caches/modules-2/files-2.1/junit/junit/4.13.2/8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12/junit-4.13.2.jar:/home/eslam/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar', 'org.junit.runner.JUnitCore', 'io.github.eslamasabry.opencode_mobile.NativeRuntimeOwnershipTest', 'io.github.eslamasabry.opencode_mobile.NativeServerRecipeTest', 'io.github.eslamasabry.opencode_mobile.RestartBackoffTest']
+JUnit version 4.13.2
+................................................
+Time: 0.057
+
+OK (48 tests)
+
+EXIT 0
+Restored final candidate
+COMMAND ['/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/machine_lock.sh', 'build', '--', '/home/eslam/.sdkman/candidates/kotlin/current/bin/kotlinc', '-J-Xmx256m', '-J-XX:MaxMetaspaceSize=192m', '-cp', '/home/eslam/.gradle/caches/modules-2/files-2.1/junit/junit/4.13.2/8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12/junit-4.13.2.jar', '/home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRuntimeOwnership.kt', '/home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeServerRecipe.kt', '/home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/RestartBackoff.kt', '/home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeRuntimeOwnershipTest.kt', '/home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/NativeServerRecipeTest.kt', '/home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/RestartBackoffTest.kt', '/home/eslam/Storage/tmp/OcBb3ColdWorkerRunner.kt', '-d', '/home/eslam/Storage/tmp/oc-bb3-cold-worker-tests.jar']
+EXIT 0
+COMMAND ['/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/machine_lock.sh', 'build', '--', '/home/eslam/.sdkman/candidates/kotlin/current/bin/kotlin', '-J-Xmx128m', '-cp', '/home/eslam/Storage/tmp/oc-bb3-cold-worker-tests.jar:/home/eslam/.gradle/caches/modules-2/files-2.1/junit/junit/4.13.2/8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12/junit-4.13.2.jar:/home/eslam/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar', 'org.junit.runner.JUnitCore', 'io.github.eslamasabry.opencode_mobile.NativeRuntimeOwnershipTest', 'io.github.eslamasabry.opencode_mobile.NativeServerRecipeTest', 'io.github.eslamasabry.opencode_mobile.RestartBackoffTest']
+JUnit version 4.13.2
+................................................
+Time: 0.055
+
+OK (48 tests)
+
+EXIT 0

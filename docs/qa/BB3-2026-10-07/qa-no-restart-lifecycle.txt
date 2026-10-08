@@ -1,0 +1,19 @@
+QA lifecycle correction, 2026-10-08. No device operations by this worker.
+
+Primary Android 16 framework source reviewed:
+https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android16-release/services/core/java/com/android/server/am/ActivityManagerService.java
+https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android16-release/services/core/java/com/android/server/wm/ActivityTaskManagerService.java
+https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android16-release/cmds/am/src/com/android/commands/am/Instrument.java
+https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android16-release/services/core/java/com/android/server/am/ProcessList.java
+https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android16-release/services/core/java/com/android/server/am/ProcessRecord.java
+https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android16-release/services/core/java/com/android/server/am/ActiveInstrumentation.java
+
+Default instrumentation start and finish force-stop the target process internally. Death of an actively instrumented process finishes instrumentation. This differs from explicit package force-stop's stopped-package flag. The no-restart flag attaches to a running normal process and avoids that replacement on start/finish; preparation must still finish before SIGKILL.
+
+ProcessList's processes dump has the ACTIVITY MANAGER RUNNING PROCESSES header. ProcessRecord exposes non-null mInstr; ActiveInstrumentation.toString uses ActiveInstrumentation{. Host refuses absent/malformed process proof or any active instrumentation marker. Dumps and raw metadata never enter reports.
+
+All phases attach with am instrument --no-restart, verify exact PID/startTicks before and after completion, and wait for AMS detachment. Normal armed preparation returns before host death. Prepared scenario holds only a separate native launch worker; instrumentation returns after validated prepared identity evidence, before native durable identity/recipe commit and stdin release. A 150-second watchdog revokes wanted before throwing a fixed failure, preventing legacy fallback workload dispatch.
+
+Stop/timeout attaches to the same OS-restored normal PID with live service, emits only callback PID/fixed reason/revocation, and finishes without replacing the app. Timeout uses actual live Service and received latest startId. No scenario installs APKs: installed target and runner bytes must match candidate SHA256, alongside signer/version/QA flag and canonical real owner prerequisites. Absent policy is accepted only with existing enabled real owner binding plus strict version-2 native marker; present malformed policy is refused.
+
+These source facts and mock tests qualify QA design only. Actual framework detachment, normal OS restart, live timeout and prepared pre-exec death remain device gates.

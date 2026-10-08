@@ -1,0 +1,325 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge status reads the contract map
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge an unknown phase and missing fields read as idle
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge restoration status exposes fixed state and timeout reason
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge unknown restoration status stays unavailable without raw copy
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge authored start passes only canonical restoration metadata
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge restoration start failures expose safe copy and way forward
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge run sends the script and timeout and reads the result
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge every other method speaks the contract
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge a platform error becomes the human message
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge recovery map errors expose only safe copy and code
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge recovery receipt list errors expose only safe copy and code
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: bridge a build without the channel says so
+00:00 +12: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: server address is its own port, never the Termux-managed one
+00:00 +13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts the install uses the shared setup text at the pinned version
+00:00 +14: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts the server binds 127.0.0.1 only and reads its password file
+00:00 +15: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts the password is quoted and never in the server script
+00:00 +16: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts versions are read the way the Termux manager trims them
+00:00 +17: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts every script parses as shell
+00:00 +18: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts project folders: create makes a git project once, list and exists read them back
+00:00 +19: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts create refuses a relative path
+00:00 +20: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: scripts a profile runs the runtime it was set up with
+00:00 +21: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: shared OpenCode setup script the Termux manager script changes only on purpose
+00:00 +22: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_linux_test.dart: shared OpenCode setup script the Termux manager embeds the shared text in its heredoc
+00:00 +23: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart
+00:01 +23: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: recognising the in-app server needs the address and Ubuntu installed here
+00:01 +24: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: startBuiltinServer writes the password, starts the profile runtime, waits
+00:01 +25: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: startBuiltinServer cancelled confirmation never reports successful startup
+00:01 +26: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: startBuiltinServer cancelled owner never starts the server
+00:01 +27: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: startBuiltinServer a server that exits is reported as such
+00:01 +28: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: BuiltinServerStarter starts a stopped server once, then not again
+00:01 +29: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: BuiltinServerStarter a failed start is kept for the card and not retried
+00:01 +30: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: BuiltinServerStarter leaves a running server alone
+00:01 +31: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: BuiltinServerStarter does nothing when Ubuntu is not installed
+00:01 +32: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: BuiltinProjectFolders create reports whether the folder is new
+00:01 +33: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_test.dart: BuiltinProjectFolders exists reads test -d, and a bridge failure is not "missing"
+00:01 +34: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart
+00:01 +34: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: confirmed crash recovery records one act and retains consumed budget
+00:01 +35: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: explicit stop and background never dispatch a restart
+00:01 +36: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: shared restart and poll policy each prevent healing
+00:01 +37: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: three failures exhaust across resume and owner recreation
+00:01 +38: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: manual confirmed Start resets exhausted budget
+00:01 +39: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: policy revoked during password write prevents native dispatch
+00:01 +40: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: explicit stop during password write wins native generation race
+00:01 +41: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: background during health confirmation cannot record success
+00:01 +42: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: unhealthy live process is never overlapped with another attempt
+00:01 +43: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: late healthy answer confirms same attempt without another restart
+00:01 +44: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: bound phone owner rejects another profile at the same address
+00:01 +45: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: manual owner persistence failure prevents native launch
+00:01 +46: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: confirmed receipt logs after recreation even when the server stopped
+00:01 +47: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: failed healing still exposes installed server and safe failure for cards
+00:01 +48: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: malformed durable budget fails closed
+00:01 +49: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: profile deletion during start drains before scoped preference sweep
+00:01 +50: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart
+00:02 +50: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: spent legacy budget migrates once with marker before activation
+00:02 +51: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: failed native staging keeps legacy spent attempts across retry
+00:02 +52: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: retrying staged migration never overwrites native spent attempts
+00:02 +53: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: valid v2 marker with missing native budget admits no restart
+00:02 +54: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: corrupt migration marker admits no native binding or restart
+00:02 +55: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: malformed native snapshot fails closed
+00:02 +56: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: direct and background reservations share three attempts across owners
+00:02 +57: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: only confirmed manual Start resets native attempts
+00:02 +58: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: healthy manual Start resets budget with automatic restart disabled
+00:02 +59: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: Stop background and scheduled native recovery never dispatch from Dart
+00:02 +60: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: legacy pending confirmation survives migration and records after Stop
+00:02 +61: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: native background pending attempt is confirmed without another dispatch
+00:02 +62: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: historical confirmed receipt survives later crash and records once
+00:02 +63: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: profile deletion drains the active check and native erase before sweep
+00:02 +64: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart
+00:04 +64: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: app-lifetime owner heals only in foreground and reconnects once
+00:04 +65: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: persisted runtime owner wins over another selected local profile
+00:04 +66: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a restart confirmed after its initial timeout still reconnects
+00:04 +67: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: ambiguous legacy profiles wait for an explicit Start to claim ownership
+00:04 +68: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the shared restart policy and explicit Stop each prevent healing
+00:04 +69: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: explicit connect works with automatic reconnect off and shares deduplication
+00:04 +70: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: profile deletion admission cannot be reopened by a store notification
+00:04 +71: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: native exhausted budget survives opening and owner recreation
+00:04 +72: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: opening cannot supersede a scheduled native retry
+00:04 +73: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) starts a stopped server past an exhausted crash budget, connects, and gives the budget back once it answers
+00:04 +74: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) waits for the first resume before it does anything
+00:04 +75: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) leaves an explicitly stopped server stopped
+00:04 +76: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) leaves it stopped when restarting the phone server is off
+00:04 +77: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) only connects to a server that already runs
+00:04 +78: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) tries once more after a fast failure, then leaves the reason
+00:04 +79: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) a timeout is not tried again on its own
+00:04 +80: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) a failed crash restart counts as the first try
+00:04 +81: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) one that rejects our password is replaced at launch
+00:04 +82: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) one older than the stale age that stays silent is replaced
+00:04 +83: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) a young one that is still booting is waited for, not killed
+00:04 +84: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) a young one that never answers is replaced once it is stale
+00:04 +85: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) a healthy server whose connect failed is connected again by the health poll, once per back-off
+00:05 +86: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) the back-off holds automatic reconnects; Try again does not wait
+00:05 +87: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart
+00:15 +87: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: opening after a confirmed in-app crash starts it once, then connects; Start and connect on the card starts it again
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:16 +88: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: explicit Stop intent stays stopped on launch and resume
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:16 +89: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a server that is already running is only connected to
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:17 +90: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a start that fails is tried once more, then the card says why in plain words (QA B1)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:17 +91: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: its Open setup lands on phone setup, not the old in-app page (builtin-server-setup merged into phone-setup-start, P1.3)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:17 +92: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: resume preserves backoff before healing a later crash
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:17 +93: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: every cold launch starts a stopped in-app server, also past the crash-restart budget (QA B1)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:18 +94: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: no stopped or failure page flashes while the launch start is still deciding (QA B7)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:18 +95: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a running in-app server whose first connect failed is not called stopped, and is connected again while it answers (QA-03)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:18 +96: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a running server that rejects our password is replaced at launch, by the app's own start (QA-03)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:18 +97: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart
+00:20 +97: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: exit classification the owner's FORCE STOP by the system is a force stop
+00:20 +98: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: exit classification every Android reason lands on one kind
+00:20 +99: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: exit classification a normal exit and an update say nothing
+00:20 +100: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: exit classification a record without a time is no record
+00:20 +101: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: oc/lifecycle bridge reads the exit and what was running
+00:20 +102: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: oc/lifecycle bridge a missing or failing channel answers safely
+00:20 +103: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: recovery on start delegates to the shared healing owner without duplicate starts or acts
+00:20 +104: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: recovery on start after a force stop with the team running: one notice, and the phone's OpenCode and the team start again
+00:20 +105: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: recovery on start disabled restart policy keeps recovery idle and files no act
+00:20 +106: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: recovery on start revoking policy during status probe prevents restart
+00:20 +107: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: recovery on start failed recovery files no restart act
+00:20 +108: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: recovery on start an already running server is not a confirmed restart
+00:20 +109: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: recovery on start confirmed recovery files the exit episode only once
+00:20 +110: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: recovery on start nothing was running: no notice and nothing started
+00:20 +111: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: recovery on start an update or a normal exit says nothing but still brings the server back
+00:20 +112: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: recovery on start opened on the phone server, the shell starts it: the recovery only tells
+00:20 +113: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: recovery on start runs once per process
+00:20 +114: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: keep-alive advice per maker Build.MANUFACTURER and BRAND map to a maker
+00:20 +115: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: keep-alive advice per maker battery first everywhere; a lock where swiping force-stops
+00:20 +116: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: keep-alive advice per maker each maker gets its own words
+00:20 +117: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: the notice says the app was closed and when, once, with Keep it running
+00:21 +118: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: the notice never says "starting again" when automatic restart is off
+00:21 +119: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: the notice F10: a force stop is not blamed on Android, and once the server is back it says so instead of "starting again"
+00:21 +120: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: the notice F10: once the server is back, a notice with nothing left to offer resolves; one with Keep it running stays, reworded
+00:21 +121: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: the notice once the server is back, the notice folds away by itself instead of staying on every screen
+00:21 +122: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: the notice Keep it running opens the guidance
+00:22 +123: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: the notice an exit on an earlier day names the day
+00:22 +124: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: the notice a crash does not send the person to phone settings
+00:22 +125: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: the notice nothing after a normal exit or an update
+00:22 +126: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: the guidance screen on a RedMagic: the swipe warning, the lock, auto-start
+00:22 +127: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: the guidance screen on a Pixel: no swipe warning, no lock, battery allowed
+00:22 +128: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: the guidance screen a screen this phone lacks says so and never crashes
+00:22 +129: /home/eslam/Storage/Code/oc_app-sol-bb/test/app_exit_recovery_test.dart: the guidance screen without the channel (not Android) it still shows advice
+00:22 +130: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin/setup_finisher_lifetime_test.dart
+00:23 +130: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin/setup_finisher_lifetime_test.dart: the setup finisher still works after the shell that attached it was replaced
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:24 +131: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/design_standard_setup_test.dart
+00:26 +131: /home/eslam/Storage/Code/oc_app-sol-bb/test/design_standard_setup_test.dart: start screen: Open says it is starting, with no button standing in for it (§2)
+00:27 +132: /home/eslam/Storage/Code/oc_app-sol-bb/test/design_standard_setup_test.dart: "This phone": Start shows Starting, with no disabled Start and no extra bar (§2, §4)
+00:27 +133: /home/eslam/Storage/Code/oc_app-sol-bb/test/design_standard_setup_test.dart: progress: a interrupted setup is not titled "Setting up" (§3)
+00:27 +134: /home/eslam/Storage/Code/oc_app-sol-bb/test/design_standard_setup_test.dart: progress: a cancelled setup is not titled "Setting up" (§3)
+00:28 +135: /home/eslam/Storage/Code/oc_app-sol-bb/test/design_standard_setup_test.dart: progress: a stage-only step draws no second bar (§4)
+00:28 +136: /home/eslam/Storage/Code/oc_app-sol-bb/test/design_standard_setup_test.dart: ready: Create stacks full width under the name (§2)
+00:28 +137: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart
+00:30 +137: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: state running: This phone and its version; Stop and Show log in its menu, no buttons under the row
+00:31 +138: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: state an unmeasured or empty size is left out, never "0 B"
+00:31 +139: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: state without a known version it names the OpenCode generation
+00:31 +140: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: state running and not connected: the row connects, and no button repeats it
+00:32 +141: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: state not installed any more: Set up
+00:32 +142: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: state a running setup job shows Setting up and its progress
+00:32 +143: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: state an interrupted job offers Continue setup
+00:32 +144: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: row variant for the Servers list (slice-R14) stopped: Start is the row's trailing button, the state joins the line, and the row draws no panel of its own
+00:32 +145: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: row variant for the Servers list (slice-R14) 320 dp at 2.5x text: Start moves under the line, nothing overflows
+00:32 +146: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: row variant for the Servers list (slice-R14) not set up: Set up is the trailing button; the rest is in the row menu
+00:32 +147: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: row variant for the Servers list (slice-R14) running and connected: no button; Stop lives in the menu
+00:32 +148: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: start and stop Start starts the server, shows Starting, then Running
+00:32 +149: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: start and stop the first start asks once to keep the server running (P6.7)
+00:33 +150: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: start and stop Stop stops the server
+00:33 +151: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: start and stop Show log opens the log in a terminal view
+00:33 +152: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: menu Switch to OpenCode 2 re-runs opencode with its runtime
+00:33 +153: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: menu on OpenCode 2 it offers the way back
+00:33 +154: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: menu Update OpenCode re-runs opencode
+00:33 +155: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: menu Update on OpenCode 2 keeps OpenCode 2
+00:33 +156: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: menu Add tools installs what the sheet chose
+00:34 +157: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: menu Add tools closed without a choice installs nothing
+00:34 +158: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: menu Remove says how much space comes back, then uninstalls
+00:34 +159: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: menu Remove cancelled changes nothing
+00:34 +160: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: menu Terminal opens a shell on this phone with the server stopped
+00:35 +161: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: menu Terminal stays in the menu while a server start does not answer
+00:35 +162: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: menu a host that must close first receives the action instead
+00:35 +163: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: layout 2.5x on 320dp, 48dp targets (en)
+00:35 +164: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: layout 2.5x on 320dp, 48dp targets (ar)
+00:35 +165: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: the in-app server is named This phone everywhere
+00:35 +166: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: OpenCode 1 and 2 both on this phone are told apart only when both exist; stored names are kept
+00:35 +167: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: OpenCode 1 and 2 both on this phone the card says which one it stands for
+00:35 +168: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: OpenCode 1 and 2 both on this phone alone, the card is just This phone
+00:35 +169: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: hosts the switcher shows the card, not the old in-app row
+00:36 +170: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: hosts the switcher lists This phone when another server is on
+00:36 +171: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: hosts Servers lists the card instead of the address row
+00:36 +172: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_card_test.dart: hosts a working server ranks above This phone in the one list
+00:36 +173: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/screen_phone_1_test.dart
+00:38 +173: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/screen_phone_1_test.dart: phone-setup-start Termux there but not allowed says so under Use Termux
+00:40 +174: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/screen_phone_1_test.dart: phone-setup-start in-app and Termux both there: the Termux one is a row
+00:40 +175: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/screen_phone_1_test.dart: phone-setup-start a fresh phone keeps one primary and folds the other ways
+00:40 +176: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/screen_phone_1_test.dart: phone-setup-customize-sheet required tools are locked on with a word, not a dead switch
+00:41 +177: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/screen_phone_1_test.dart: phone-setup-customize-sheet every optional tool installed: nothing to add, and why
+00:41 +178: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/screen_phone_1_test.dart: phone-setup-ready the name is a labelled kit field that says what is wrong
+00:41 +179: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/screen_phone_1_test.dart: phone-setup-ready Close leaves for the app root
+00:41 +180: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/screen_phone_1_test.dart: termux-storage a failed scan says so, and Scan starts it again
+00:42 +181: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/screen_phone_1_test.dart: termux-storage the clean question lists the exact paths under Details
+00:42 +182: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart
+00:44 +182: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: This phone (PhoneServerCard) in use: its menu disconnects from it by name
+00:45 +183: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: This phone (PhoneServerCard) not in use, or no host to leave through: no Disconnect
+00:45 +184: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: This phone (PhoneServerCard) running, not in use: the row connects; no button repeats it, and Stop lives in the menu
+00:45 +185: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: This phone (PhoneServerCard) stopped: Start OpenCode starts it
+00:46 +186: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: This phone (PhoneServerCard) the server log opens in the one log view
+00:46 +187: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: This phone (PhoneServerCard) Remove asks first, names OpenCode, then removes
+00:46 +188: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: Setup output (SetupTerminal) one log panel: control bytes gone, left to right
+00:46 +189: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: Setup output (SetupTerminal) error and warning lines carry their level, the rest is plain
+00:46 +190: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: Setup output (SetupTerminal) running with no output says it is waiting
+00:46 +191: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: Setup output (SetupTerminal) a host report copy is its own named button
+00:46 +192: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: Setup output (SetupTerminal) without its words, the panel Copy all is the one copy
+00:46 +193: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: AI team on this phone (TeamPhoneSection) running: Stop the team asks the one stop question
+00:47 +194: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: AI team on this phone (TeamPhoneSection) killed by Android: says so, Start the team again
+00:47 +195: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: AI team on this phone (TeamPhoneSection) delete: what goes, what stays, the space, then deletes
+00:47 +196: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: AI team on this phone (TeamPhoneSection) not available on this phone: explains, offers nothing
+00:47 +197: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: AI team on this phone (TeamPhoneSection) not installed: the one act opens the phone setup
+00:47 +198: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: AI team on this phone (TeamPhoneSection) Keep it running: the tips and the commands, copyable
+00:47 +199: /home/eslam/Storage/Code/oc_app-sol-bb/test/revamp/shared_phone_1_test.dart: a phone server row (LocalServerRow) a failure is words in text1; long-press opens its menu
+00:47 +200: All tests passed!

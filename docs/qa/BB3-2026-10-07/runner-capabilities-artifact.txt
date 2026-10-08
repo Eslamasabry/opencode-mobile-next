@@ -1,0 +1,10 @@
+QA-only capability runner; Gradle BUILD SUCCESSFUL in 2m12s; no adb/device actions.
+Runner: /home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/apk/androidTest/release/app-release-androidTest.apk
+Runner SHA256: 9c5dd18582d7ef469438dc4703ba7a2b8eae6fc907095779bd26521dca96e21e
+Signer SHA256: 1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C
+Frozen target SHA256 unchanged: 8e0bb3f360a41899ace22a5e91549250df0e66d0b05d4720a3ba9a64cfa2ad66
+Exact owned processes remaining: none; no signals issued.
+Only owned build/app/intermediates removed by scoped Python shutil with root assertion.
+Existing host mock-only checkpoint: 19 PASS. No tests/source other than assigned QA step and SAFE_FIELDS changed by this worker.
+Step: bb3Capabilities, attached through existing Device.instrument --no-restart; fixed booleans/enums only.
+Actual capability results remain pending root-owned locked device probe.

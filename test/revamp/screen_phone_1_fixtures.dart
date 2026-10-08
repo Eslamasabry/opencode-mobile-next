@@ -73,7 +73,11 @@ class PhoneLinux extends BuiltinLinux {
       : const BuiltinLinuxRunResult(exitCode: 1, output: '');
 
   @override
-  Future<void> startServer(String script, {int port = 4097}) async {
+  Future<void> startServer(
+    String script, {
+    int port = 4097,
+    BuiltinServerRestoreRecipe? restoreRecipe,
+  }) async {
     starts++;
     running = true;
   }

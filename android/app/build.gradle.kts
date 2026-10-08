@@ -23,6 +23,9 @@ if (keystorePropertiesFile.isFile) {
 
 android {
     namespace = "io.github.eslamasabry.opencode_mobile"
+    buildFeatures {
+        buildConfig = true
+    }
     // flutter_secure_storage 11 ships AAR metadata that requires API 37;
     // Flutter 3.47 still defaults to 36. Pin explicitly until Flutter's
     // default catches up, then drop this back to flutter.compileSdkVersion.
@@ -41,6 +44,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Native acceptance checkpoint hooks are inactive in normal releases.
+        buildConfigField("boolean", "BUILTIN_RUNTIME_QA", ocBuiltinRuntimeQa.toString())
         testInstrumentationRunner = "io.github.eslamasabry.opencode_mobile." +
             when {
                 ocBuiltinRuntimeQa -> "BuiltinRuntimeAcceptance"
@@ -140,6 +145,9 @@ dependencies {
     // Flutter 3.47 excludes dev plugins from release configurations. The
     // explicit AOT smoke needs the native result bridge in this test build.
     if (ocBd9Smoke) add("releaseImplementation", project(":integration_test"))
+    // All instrumentation sources compile together, including the BD9 runner.
+    // Its bridge stays in the test APK for other QA/production target variants.
+    androidTestImplementation(project(":integration_test"))
     // ShortcutManagerCompat for the pinned-session launcher shortcuts
     // (PinnedSessionShortcuts.kt); same major line the Flutter embedding
     // already pulls in transitively, pinned so the compile classpath is

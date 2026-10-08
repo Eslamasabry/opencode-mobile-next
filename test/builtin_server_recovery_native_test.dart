@@ -200,6 +200,7 @@ class _NativeLinux extends BuiltinLinux {
   Future<void> startServer(
     String script, {
     int port = BuiltinLinux.serverPort,
+    BuiltinServerRestoreRecipe? restoreRecipe,
   }) async {
     generation++;
     wanted = true;
