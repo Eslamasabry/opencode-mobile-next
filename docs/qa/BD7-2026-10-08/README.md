@@ -1,5 +1,27 @@
 # BD7 — real device crash and ANR qualification
 
+## 2198 saved-report follow-up — BC takeover, 2026-10-09
+
+Finish line: capture one real verified-process crash on normal2198, show the
+saved report and share preview through Settings, then delete that owned report,
+restore capture OFF and reinstall normal2198 inside the same emulator lock.
+ANR qualification, external sharing, Claude/account actions and app changes
+are outside this follow-up.
+
+The crash-only driver is [bd7_device_saved_report.py](../../../tool/qa/bd7_device_saved_report.py).
+It reuses BD7's exact PID/UID/start-time and native/OS exit proof, adds the FD2
+share-preview crop, and refuses to replace existing saved errors. All private
+contents stay in memory. Automatic timing/exit observations may be cleared by
+the explicitly authorized consent switch; existing error reports block the run.
+The wrapper pins approved2198 and supports the outer reservation with
+`run_locked`, avoiding a nested lock or the old driver's ANR/rollback path.
+
+Host checks: 66 focused Python checks passed serially through machine_lock;
+the share-preview privacy guard, hostile exception projection and outer-call
+2198 admission each failed before their fixes. Device qualification
+is pending the shared emulator reservation behind BA. Historical2196 findings
+below remain separate from this new proof.
+
 Status: BLOCKED — real exits qualified; saved-report capture and preview remain
 unqualified on APK2196. Do not mark this sequence complete.
 

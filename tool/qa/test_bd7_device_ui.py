@@ -231,6 +231,54 @@ class Bd7UiTest(unittest.TestCase):
                                 self.assertTrue(path.exists())
                         self.assertEqual(captured.getvalue(), '')
 
+    def test_share_preview_crop_accepts_only_category_time_report_and_excludes_background(
+        self,
+    ):
+        lines = [
+            "Preview crash report",
+            "Only error categories and times, no messages or conversations. Nothing leaves this phone until you tap Share report.",
+            "1 report · 221 B",
+            "OpenCode Mobile crash report",
+            "Captured error categories and times only.",
+            "No messages, stacks or conversations are included.",
+            "2026-10-09T12:30:15.123 | native | Native application error",
+            "Share report",
+        ]
+        fixture = UiFixture(
+            xml(
+                node("synthetic-private-account", "[10,20][790,100]"),
+                *(
+                    node(line, f"[10,{200 + i * 70}][790,{250 + i * 70}]")
+                    for i, line in enumerate(lines)
+                ),
+            )
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            result = Bd7Ui(fixture.execute).screenshot(
+                Path(directory) / "share.jpg", section="share"
+            )
+            self.assertEqual(result["section"], "share")
+
+    def test_share_preview_rejects_unknown_source_category_and_appended_private_text(
+        self,
+    ):
+        for line in (
+            "2026-10-09T12:30:15.123 | private | Native application error",
+            "2026-10-09T12:30:15.123 | native | synthetic-private-error",
+            "2026-10-09T12:30:15.123 | native | Native application error synthetic-private-value",
+        ):
+            fixture = UiFixture(
+                xml(
+                    node("Preview crash report", "[10,200][790,250]"),
+                    node(line, "[10,300][790,400]"),
+                )
+            )
+            with tempfile.TemporaryDirectory() as directory:
+                destination = Path(directory) / "share.jpg"
+                with self.assertRaisesRegex(Bd7UiFailure, "^unsafe_screenshot$"):
+                    Bd7Ui(fixture.execute).screenshot(destination, section="share")
+                self.assertFalse(destination.exists())
+
 
 if __name__ == '__main__':
     unittest.main()
