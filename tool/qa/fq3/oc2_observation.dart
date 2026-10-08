@@ -87,6 +87,9 @@ class Oc2ProbeObservation {
       for (final counter in _eventCounters.values) counter: 0,
       'http503Retries': 0,
       'terminalCount': 0,
+      'providerNoRouteCount': 0,
+      'modelUnavailableCount': 0,
+      'providerAuthCount': 0,
     };
     void increment(String counter) {
       final current = counts[counter]!;
@@ -100,8 +103,8 @@ class Oc2ProbeObservation {
       final location = event['location'];
       if (data is! Map ||
           data['sessionID'] != sessionID ||
-          location is! Map ||
-          location['directory'] != _directory) {
+          (event.containsKey('location') &&
+              (location is! Map || location['directory'] != _directory))) {
         continue;
       }
       final type = event['type'];
@@ -117,6 +120,20 @@ class Oc2ProbeObservation {
           type == 'session.execution.failed' ||
           type == 'session.execution.interrupted') {
         increment('terminalCount');
+      }
+      if (type == 'session.execution.failed' ||
+          type == 'session.retry.scheduled') {
+        final error = data['error'];
+        if (error is Map && error['type'] == 'provider.no-route') {
+          increment('providerNoRouteCount');
+          final message = error['message'];
+          if (message is String && message.startsWith('Model unavailable: ')) {
+            increment('modelUnavailableCount');
+          }
+        }
+        if (error is Map && error['type'] == 'provider.auth') {
+          increment('providerAuthCount');
+        }
       }
       if (type == 'session.retry.scheduled' && _isHttp503(data)) {
         increment('http503Retries');

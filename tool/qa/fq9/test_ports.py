@@ -181,6 +181,73 @@ class PortTests(unittest.TestCase):
         p.exists(BASE)
         self.assertIn("su 10217 sh -c", calls[1][1])
 
+    def test_installed_identity_selects_exact_package_among_prefix_variants(self):
+        p = self.port()
+        listing = (
+            f"package:{PACKAGE}.preview uid:10218\n"
+            f"package:{PACKAGE} uid:10217\n"
+            f"package:{PACKAGE}.test uid:10219"
+        )
+        installed_path = "/data/app/fixture/base.apk"
+        calls = []
+
+        def text(*args, **kwargs):
+            calls.append(args)
+            if args == (
+                "shell",
+                "cmd",
+                "package",
+                "list",
+                "packages",
+                "--user",
+                "0",
+                "-U",
+                PACKAGE,
+            ):
+                return listing
+            self.assertEqual(args, ("shell", "pm", "path", "--user", "0", PACKAGE))
+            return "package:" + installed_path
+
+        def adb(*args, **kwargs):
+            self.assertEqual(args[:2], ("pull", installed_path))
+            self.assertEqual(kwargs, {"timeout": 90})
+            Path(args[2]).write_bytes(b"installed-apk-fixture")
+
+        identity = dict(
+            build=2197, version="1.2.0", sha256="a" * 64, signer=LOCAL_SIGNER
+        )
+        p.text = text
+        p.adb = adb
+        with patch("tool.qa.fq9.ports.apk_identity", return_value=identity) as verify:
+            actual = p.installed_identity()
+        self.assertEqual(actual, {**identity, "uid": 10217})
+        self.assertEqual(p._uid, 10217)
+        self.assertEqual(len(calls), 2)
+        verify.assert_called_once()
+
+    def test_installed_identity_refuses_missing_duplicate_or_system_uid_rows(self):
+        for listing in [
+            f"package:{PACKAGE}.preview uid:10218\npackage:{PACKAGE}.test uid:10219",
+            f"package:{PACKAGE} uid:10217\npackage:{PACKAGE} uid:10217",
+            f"package:{PACKAGE} uid:10217\npackage:{PACKAGE} uid:10218",
+            f"package:{PACKAGE}.preview uid:10218\npackage:{PACKAGE} uid:9999",
+        ]:
+            with self.subTest(listing=listing):
+                p = self.port()
+                calls = []
+                p.text = lambda *args, **kwargs: calls.append(args) or listing
+                p.adb = lambda *args, **kwargs: self.fail("APK pull after refusal")
+                with patch(
+                    "tool.qa.fq9.ports.apk_identity",
+                    side_effect=AssertionError("APK verification after refusal"),
+                ):
+                    with self.assertRaisesRegex(
+                        DriverFailure, "^installed_identity_unavailable$"
+                    ):
+                        p.installed_identity()
+                self.assertEqual(len(calls), 1)
+                self.assertIsNone(p._uid)
+
     def test_fresh_install_cannot_act_on_shared_or_used_avd(self):
         artifact = Artifact(
             Path("/unused"),

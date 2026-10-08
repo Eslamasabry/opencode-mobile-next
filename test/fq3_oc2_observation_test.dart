@@ -65,8 +65,70 @@ void main() {
     expect(result['http503Retries'], 1);
     expect(result['toolCalledCount'], 1);
     expect(result['toolSuccessCount'], 1);
-    expect(result['permissionAskedCount'], 1);
+    expect(result['permissionAskedCount'], 2);
     expect(result['permissionRepliedCount'], 1);
+  });
+
+  test('owned global terminals count without accepting foreign scope', () {
+    final result = _observation().snapshot(
+      [
+        {
+          'type': 'session.execution.failed',
+          'data': {'sessionID': _session},
+        },
+        {
+          'type': 'session.execution.failed',
+          'data': {'sessionID': 'ses_other'},
+        },
+        {
+          'type': 'session.execution.failed',
+          'location': null,
+          'data': {'sessionID': _session},
+        },
+        _event('session.execution.failed', directory: '/foreign'),
+      ],
+      sessionID: _session,
+      eventStart: 0,
+    );
+    expect(result['executionFailedCount'], 1);
+    expect(result['terminalCount'], 1);
+  });
+
+  test('failure kinds are fixed counters and never raw provider errors', () {
+    final result = _observation().snapshot(
+      [
+        _event(
+          'session.execution.failed',
+          data: {
+            'error': {
+              'type': 'provider.no-route',
+              'message': 'Model unavailable: test-secret',
+            },
+          },
+        ),
+        _event(
+          'session.execution.failed',
+          data: {
+            'error': {'type': 'provider.auth', 'message': 'test-secret'},
+          },
+        ),
+        _event(
+          'session.execution.failed',
+          data: {
+            'error': {
+              'type': 'provider.no-route',
+              'message': 'untrusted test-secret',
+            },
+          },
+        ),
+      ],
+      sessionID: _session,
+      eventStart: 0,
+    );
+    expect(result['providerNoRouteCount'], 2);
+    expect(result['modelUnavailableCount'], 1);
+    expect(result['providerAuthCount'], 1);
+    expect(jsonEncode(result), isNot(contains('test-secret')));
   });
 
   test(
