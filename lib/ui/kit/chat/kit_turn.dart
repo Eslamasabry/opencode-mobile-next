@@ -165,6 +165,24 @@ class KitTurnLive {
   }
 }
 
+/// A running turn that has gone quiet for long enough to look stuck (the
+/// stall watchdog): one plain line that says why, in the host's words, and
+/// the way forward ([actions]: Stop, Details). Drawn under the live line,
+/// never instead of it: the turn is still running. The host words it and
+/// never puts error, exception or server text in [message]; technical facts
+/// belong behind a Details action.
+@immutable
+class KitTurnStall {
+  const KitTurnStall({required this.message, this.actions = const []});
+
+  /// One sentence: what is going on and what to do ("The model is taking
+  /// longer than usual. Wait, or stop the reply and try again.").
+  final String message;
+
+  /// Tertiary, start-aligned, at most two drawn.
+  final List<KitAction> actions;
+}
+
 /// The one footer of a finished turn (STATE-16).
 @immutable
 class KitTurnFooter {
@@ -230,6 +248,7 @@ class KitTurn extends StatelessWidget {
     this.interruptedAction,
     this.reconnecting = false,
     this.live,
+    this.stall,
     this.segment = KitTurnSegment.whole,
     this.turnKey,
     this.footerKey,
@@ -272,6 +291,10 @@ class KitTurn extends StatelessWidget {
   /// phase line on whichever part the host gives it to, the prompt
   /// included, so a turn with nothing back yet still says it is working.
   final KitTurnLive? live;
+
+  /// With [live]: the running turn has gone quiet and this line says why,
+  /// under the live line ([KitTurnStall]). Ignored without [live].
+  final KitTurnStall? stall;
 
   /// Which part of the turn this widget draws ([KitTurnSegment]). Only
   /// [KitTurnSegment.whole] and [KitTurnSegment.last] draw the phase line
@@ -429,6 +452,10 @@ class _TurnFrameState extends State<_TurnFrame> {
         : null;
     if (phaseLine != null) {
       add(phaseLine, turn.blocks.isEmpty ? tokens.space4 : tokens.space3);
+    }
+
+    if (turn.live != null && turn.stall != null) {
+      add(_KitTurnStallLine(stall: turn.stall!), tokens.space2);
     }
 
     final footer = turn.footer;
@@ -638,6 +665,43 @@ class _BandPainter extends CustomPainter {
   @override
   bool shouldRepaint(_BandPainter old) =>
       old.color != color || old.outset != outset || old.radius != radius;
+}
+
+/// [KitTurnStall] drawn: the host's sentence in the secondary tone, a live
+/// region read once when it appears, and its actions as tertiary words
+/// under it, like the interrupted line's "Send again".
+class _KitTurnStallLine extends StatelessWidget {
+  const _KitTurnStallLine({required this.stall});
+
+  final KitTurnStall stall;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = KitTokens.of(context);
+    return Column(
+      key: const ValueKey('turn-stall'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Semantics(
+          liveRegion: true,
+          child: KitText(
+            stall.message,
+            role: KitTextRole.secondary,
+            tone: KitTextTone.secondary,
+          ),
+        ),
+        if (stall.actions.isNotEmpty)
+          Wrap(
+            spacing: tokens.space2,
+            children: [
+              for (final action in stall.actions.take(2))
+                KitButton.fromAction(action, role: KitButtonRole.tertiary),
+            ],
+          ),
+      ],
+    );
+  }
 }
 
 /// The running turn's one live line: "Thinking · 12 s", with a soft light

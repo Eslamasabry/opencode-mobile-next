@@ -111,6 +111,40 @@ bool _endsTurn(List<MessageWithParts> messages, int index) {
   return (prompt, last, false);
 }
 
+/// The row that ends a turn the person stopped from this phone
+/// ([stoppedPromptID]), which then carries the turn's "You stopped this
+/// reply." line: the row that carries the turn's footer ([owners], see
+/// [_turnActionOwners]), or its prompt when nothing of the reply drew.
+/// Servers differ in what a stop leaves behind: OpenCode 1 marks the last
+/// step "aborted" (that row says it on its own), while Claude Code via Paseo
+/// and OpenCode 2's interrupt just end the turn, and a stop before the first
+/// word leaves no step at all. Null while the turn still runs ([running]) or
+/// when nothing was stopped here.
+int? _stoppedTurnRow(
+  List<MessageWithParts> messages,
+  Set<int> owners, {
+  required String? stoppedPromptID,
+  required bool running,
+}) {
+  if (running || stoppedPromptID == null) return null;
+  var prompt = messages.indexWhere(
+    (message) => message.info.id == stoppedPromptID,
+  );
+  // Stopped while the prompt was still this phone's own copy, which the
+  // server's has since replaced: every send from here clears the stop, so
+  // the newest prompt is that copy.
+  if (prompt < 0 && stoppedPromptID.startsWith('local-')) {
+    prompt = messages.lastIndexWhere(_isPrompt);
+  }
+  if (prompt < 0 || !_isPrompt(messages[prompt])) return null;
+  var row = prompt;
+  for (var index = prompt + 1; index < messages.length; index += 1) {
+    if (_isPrompt(messages[index])) break;
+    if (owners.contains(index)) row = index;
+  }
+  return row;
+}
+
 /// The words of a prompt, when that is all it is: null when it carried
 /// files, which a resend from here could not bring along.
 String? _promptWordsOnly(MessageWithParts prompt) {

@@ -14,6 +14,7 @@ import 'package:opencode_mobile/ui/kit/chat/kit_markdown.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_message.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_turn.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_work_line.dart';
+import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
 import 'package:opencode_mobile/ui/kit/kit_menu.dart';
 import 'package:opencode_mobile/ui/kit/kit_motion.dart';
 import 'package:opencode_mobile/ui/kit/kit_redact.dart';
@@ -424,6 +425,54 @@ void main() {
       );
       expect(find.text('Thinking…'), findsOneWidget);
       expect(find.text('Stop reply'), findsNothing);
+    });
+  });
+
+  group('6c · the stall line of a quiet running turn', () {
+    testWidgets('drawn under the live line with at most two actions; never '
+        'without a live line', (tester) async {
+      var stops = 0;
+      final stall = KitTurnStall(
+        message: 'The model is taking longer than usual.',
+        actions: [
+          KitAction(
+            key: const Key('stall-stop'),
+            label: 'Stop reply',
+            onPressed: () => stops++,
+          ),
+          KitAction(label: 'Details', onPressed: () {}),
+          KitAction(label: 'Third', onPressed: () {}),
+        ],
+      );
+      await _pump(
+        tester,
+        KitTurn(
+          blocks: const [],
+          phase: KitTurnPhase.running,
+          live: KitTurnLive(
+            activity: KitTurnActivity.thinking,
+            since: clock.now(),
+          ),
+          stall: stall,
+        ),
+      );
+      final line = find.byKey(const ValueKey('kit-turn-live-line'));
+      final words = find.text('The model is taking longer than usual.');
+      expect(words, findsOneWidget);
+      expect(
+        tester.getTopLeft(words).dy,
+        greaterThan(tester.getTopLeft(line).dy),
+      );
+      expect(find.text('Details'), findsOneWidget);
+      expect(find.text('Third'), findsNothing);
+      await tester.tap(find.byKey(const Key('stall-stop')));
+      expect(stops, 1);
+
+      await _pump(
+        tester,
+        KitTurn(blocks: const [], phase: KitTurnPhase.finished, stall: stall),
+      );
+      expect(find.byKey(const ValueKey('turn-stall')), findsNothing);
     });
   });
 

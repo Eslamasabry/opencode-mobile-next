@@ -54,6 +54,15 @@ class _MessageView extends StatelessWidget {
   /// that ends what has come back so far (the composer stays idle).
   final KitTurnLive? live;
 
+  /// With [live]: the running turn has gone quiet, and this line says why
+  /// with the way forward (see [_ChatTranscript._turnStallLine]).
+  final KitTurnStall? stall;
+
+  /// This row ends a turn the person stopped from this phone: it carries
+  /// the turn's stopped line even when the server reported no "aborted"
+  /// error (see [_stoppedTurnRow]).
+  final bool stoppedHere;
+
   /// On the prompt of a turn that ended with nothing at all (no words, no
   /// steps, no error): "No reply came back" with Send again.
   final VoidCallback? onSendAgainNoReply;
@@ -88,6 +97,8 @@ class _MessageView extends StatelessWidget {
     this.onResendPrompt,
     this.onSendInterruptedAgain,
     this.live,
+    this.stall,
+    this.stoppedHere = false,
     this.onSendAgainNoReply,
     this.suggestedModel,
     this.onUseSuggestedModel,
@@ -235,10 +246,20 @@ class _MessageView extends StatelessWidget {
             .join('\n');
     final created = m.info.time?.created;
     final noReply = onSendAgainNoReply;
-    return KitTurn(
-      segment: KitTurnSegment.first,
-      phase: KitTurnPhase.finished,
+    final messages = stoppedHere ? _chat(context)?._messages : null;
+    // Stopped before anything of the reply drew: the prompt is the whole
+    // turn, and it ends on the stopped line.
+    final turn = KitTurn(
+      segment: stoppedHere ? KitTurnSegment.whole : KitTurnSegment.first,
+      phase: stoppedHere ? KitTurnPhase.stopped : KitTurnPhase.finished,
       live: live,
+      stall: stall,
+      latest:
+          stoppedHere &&
+          _inLatestTurn(
+            messages,
+            messages?.indexWhere((item) => item.info.id == m.info.id),
+          ),
       highlighted: highlighted,
       prompt: KitMessage.prompt(
         bubbleKey: ValueKey('user-prompt-${m.info.id}'),
@@ -292,6 +313,9 @@ class _MessageView extends StatelessWidget {
           ),
       ],
     );
+    return stoppedHere
+        ? KeyedSubtree(key: const Key('message-stopped'), child: turn)
+        : turn;
   }
 
   /// A sent file under the prompt: a photo as its thumbnail (FC4), any
@@ -385,7 +409,8 @@ class _MessageView extends StatelessWidget {
     if (visibleParts.isEmpty &&
         metaParts.isEmpty &&
         raw == null &&
-        m.info.finish != 'length') {
+        m.info.finish != 'length' &&
+        !stoppedHere) {
       // Nothing written yet: the turn's live line says so.
       return const SizedBox.shrink();
     }
@@ -396,11 +421,15 @@ class _MessageView extends StatelessWidget {
             m.info.errorKind ?? MessageErrorKind.unknown,
             raw,
           );
-    final stopped = errorKind == MessageErrorKind.aborted;
+    // Stopped: the server said so ("aborted"), or the person stopped this
+    // turn from here and it ended without an error of its own.
+    final stopped =
+        errorKind == MessageErrorKind.aborted || (stoppedHere && raw == null);
     final streaming = raw == null && m.info.time?.isDone == false;
     final waiting = streaming && _requestWaits(chat);
     final endsTurn =
         showActions ||
+        stoppedHere ||
         (messages != null &&
             index != null &&
             index >= 0 &&
@@ -511,6 +540,7 @@ class _MessageView extends StatelessWidget {
       // The live line stands for the running turn's end; an interrupted or
       // ended turn says so in its own line instead.
       live: interrupted || stopped || raw != null ? null : live,
+      stall: stall,
       reconnecting: reconnecting,
       interruptedAction:
           connectionLost && !reconnecting && onSendInterruptedAgain != null

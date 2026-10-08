@@ -228,6 +228,41 @@ void main() {
       expect(marks.map((m) => m.state), [KitMarkState.working]);
     });
 
+    // Owner, 2026-10-08: opened while running, the line showed the live
+    // step with a spinner, and the same step ran again in the list with its
+    // own. Opened, the line is a plain collapse control; the running step in
+    // the list keeps the only spinner.
+    testWidgets('running and opened: "Hide steps", no mark, no live words', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await _pump(
+        tester,
+        _line(
+          state: KitWorkState.running,
+          now: 'Editing main.dart',
+          expanded: true,
+        ),
+      );
+      expect(find.byKey(_stepsKey), findsOneWidget);
+      expect(find.text('Hide steps'), findsOneWidget);
+      expect(find.text('Editing main.dart'), findsNothing);
+      expect(find.byType(KitStatusMark), findsNothing);
+      expect(find.bySemanticsLabel('Working, Hide steps'), findsOneWidget);
+      handle.dispose();
+      // Folded again: the live line is back, with its one mark.
+      await _pump(
+        tester,
+        _line(
+          state: KitWorkState.running,
+          now: 'Editing main.dart',
+          expanded: false,
+        ),
+      );
+      expect(find.text('Editing main.dart'), findsOneWidget);
+      expect(find.byType(KitStatusMark), findsOneWidget);
+    });
+
     testWidgets('running without now falls back to the summary', (
       tester,
     ) async {

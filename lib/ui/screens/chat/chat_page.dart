@@ -87,6 +87,14 @@ extension _ChatPage on _ChatScreenState {
       metaAlways: _conn.transcriptTimestampsVisible,
       running: _conn.busySessions.contains(widget.sessionID),
     );
+    _stoppedRow = _conn.isIsolated || _watching
+        ? null
+        : _stoppedTurnRow(
+            _messages,
+            turnActionOwners,
+            stoppedPromptID: _stoppedPromptID,
+            running: busy || _sending || _live != null,
+          );
     final showAttachmentNote = _attachmentNoteVisible();
     var pendingPermissions = _conn.permissionsForSession(widget.sessionID);
     // The request this chat was opened for leads (P4.2a).
