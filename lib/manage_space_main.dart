@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'builtin/project_export.dart';
 import 'builtin/project_export_controller.dart';
 import 'l10n/app_localizations.dart';
+import 'state/app_locale.dart' show resolveAppLocales;
 import 'state/profiles.dart' show AppAppearance, ProfileStore, ThemePackId;
 import 'ui/app_theme.dart';
 import 'ui/screens/manage_space_screen.dart';
@@ -75,6 +76,7 @@ class ManageSpaceApp extends StatelessWidget {
       darkTheme: AppTheme.dark(pack),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      localeListResolutionCallback: resolveAppLocales,
       home: ManageSpaceScreen(controller: controller, onClose: onClose),
     );
   }

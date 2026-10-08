@@ -3,13 +3,16 @@
 /// settings choices. A tap chooses and closes; a refused save keeps the sheet
 /// open with the old choice and says so.
 ///
-/// Arabic is offered honestly (COPY-29, target-ia cross-cutting): its choice
-/// says "Partly translated (N %)", N being [arabicTranslatedPercent].
+/// Every language is offered honestly (COPY-29, target-ia cross-cutting): a
+/// choice that is not fully translated says "Partly translated (N %)", N
+/// being its entry in [languageTranslatedPercent]. Each language shows its
+/// own name, so a person who cannot read the current one can still find it.
 library;
 
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../state/app_locale.dart';
 import '../../state/connection.dart';
 import '../app_iconography.dart';
 import '../app_theme.dart' show AppStatusTone;
@@ -28,6 +31,21 @@ import '../kit/kit_tokens.dart';
 /// from the files and fails when this drifts by more than 3 points; update
 /// the number it prints then.
 const int arabicTranslatedPercent = 100;
+
+/// The same share for every language the picker offers, in whole per cent.
+/// English is the catalogue itself and is not listed. Spanish, Japanese,
+/// Brazilian Portuguese, Russian and Simplified Chinese carry the first-run
+/// screens and the chat core (docs/l10n/fg5-key-set.md); the rest of the app
+/// reads in English there. `test/revamp/shared_settings_1_test.dart` fails
+/// when one of these drifts by more than 3 points.
+const Map<String, int> languageTranslatedPercent = {
+  'ar': arabicTranslatedPercent,
+  'es': 9,
+  'ja': 9,
+  'pt': 9,
+  'ru': 9,
+  'zh': 9,
+};
 
 /// Opens the Language sheet.
 Future<void> showLanguageSheet(
@@ -69,11 +87,29 @@ class LanguageSettingsTile extends StatelessWidget {
 /// '' follows the system; otherwise a language code.
 String _code(Locale? locale) => locale?.languageCode ?? '';
 
-String _localeLabel(AppLocalizations l10n, String code) => switch (code) {
-  'ar' => l10n.e7LocaleUiArabic,
-  'en' => l10n.e7LocaleUiEnglish,
-  _ => l10n.e7LocaleUiSystem,
-};
+String _localeLabel(AppLocalizations l10n, String code) =>
+    languageChoiceLabel(l10n, code);
+
+/// The words for one language choice: its own name, or "Use system
+/// language" for the empty code.
+String languageChoiceLabel(AppLocalizations l10n, String code) =>
+    switch (code) {
+      'ar' => l10n.e7LocaleUiArabic,
+      'en' => l10n.e7LocaleUiEnglish,
+      'es' => l10n.e7LocaleUiSpanish,
+      'ja' => l10n.e7LocaleUiJapanese,
+      'pt' => l10n.e7LocaleUiPortuguese,
+      'ru' => l10n.e7LocaleUiRussian,
+      'zh' => l10n.e7LocaleUiChinese,
+      _ => l10n.e7LocaleUiSystem,
+    };
+
+/// "Partly translated (N %)" under a language that is not complete, or null.
+String? languageChoiceNote(AppLocalizations l10n, String code) {
+  final percent = languageTranslatedPercent[code];
+  if (percent == null || percent >= 100) return null;
+  return l10n.languagePickerPartlyTranslated(percent);
+}
 
 class _LanguageSheet extends StatefulWidget {
   const _LanguageSheet({required this.controller});
@@ -124,7 +160,7 @@ class _LanguageSheetState extends State<_LanguageSheet> {
           KitChoiceList<String>.single(
             semanticsLabel: l10n.e7LocaleUiLanguage,
             choices: [
-              for (final code in const ['', 'en', 'ar'])
+              for (final code in const ['', ...AppLocaleStore.pickerLanguages])
                 KitChoice(
                   value: code,
                   key: ValueKey(
@@ -132,11 +168,7 @@ class _LanguageSheetState extends State<_LanguageSheet> {
                   ),
                   title: _localeLabel(l10n, code),
                   // A complete translation needs no note.
-                  supporting: code == 'ar' && arabicTranslatedPercent < 100
-                      ? l10n.languagePickerPartlyTranslated(
-                          arabicTranslatedPercent,
-                        )
-                      : null,
+                  supporting: languageChoiceNote(l10n, code),
                 ),
             ],
             selected: _code(widget.controller.appLocale.value),

@@ -211,6 +211,7 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
       darkTheme: AppTheme.dark(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      localeListResolutionCallback: resolveAppLocales,
       home: Builder(
         builder: (context) => _Ground(
           child: KitScreen(
