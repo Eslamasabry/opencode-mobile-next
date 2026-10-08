@@ -1,0 +1,25 @@
+E
+======================================================================
+ERROR: test_unarmed_initial_launch_uses_prior_receipt_and_requires_armed_live_server (test_bb4_runtime_acceptance.StartupAdmissionTest.test_unarmed_initial_launch_uses_prior_receipt_and_requires_armed_live_server)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb4_runtime_acceptance.py", line 60, in test_unarmed_initial_launch_uses_prior_receipt_and_requires_armed_live_server
+    host.real_start(device,'owner',[]);restore.assert_called_once();self.assertIs(original,restore.call_args.args[1])
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "tool/qa/bb4_runtime_acceptance.py", line 29, in stable_start
+    try:return base_start(device,owner,evidence,require_explicit)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1193, in _execute_mock_call
+    raise effect
+bb3_runtime_acceptance.Refused: normal_connected_restore_unproven
+
+----------------------------------------------------------------------
+Ran 1 test in 0.003s
+
+FAILED (errors=1)

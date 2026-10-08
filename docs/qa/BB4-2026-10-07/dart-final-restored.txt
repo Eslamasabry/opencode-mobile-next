@@ -1,0 +1,36 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: times prompt → first output → end, by the app and the server
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: a reply that fails before any output says so
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: a reply on another server is timed but is not the in-app one
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: a user message seen again after the reply does not time a new one
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: keeps the phone awake while an in-app reply runs, then lets go
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: never keeps the phone awake past the ceiling in one stretch
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: only replies on the in-app server keep the phone awake
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: idle before queued acquire skips obsolete on
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: late acquire after idle drains without reporting held
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: late acquire after disposal drains without notification
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: rapid idle and busy preserves the required off boundary
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: native cap stops renewals without reopening a busy lease
+00:00 +12: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: native cap during renewal reports loss of the chat hold
+00:00 +13: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: rejected renewal closes only its lease and stops renewing
+00:00 +14: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: acquire exception drains partial lease and leaves chain usable
+00:00 +15: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: release exception cannot poison later cleanup or acquisition
+00:00 +16: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: two watches use distinct IDs and cleanup preserves other work
+00:00 +17: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: local ceiling shortens requested TTL before releasing its lease
+00:00 +18: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: leaving the in-app server releases chat without clearing other work
+00:00 +19: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart
+00:01 +19: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: named chat acquisition uses the frozen channel contract
+00:01 +20: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: named chat release retains its ID and requested duration
+00:01 +21: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: native exhausted lease reports capped without reporting held
+00:01 +22: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: other work holding the lock does not claim this chat lease
+00:01 +23: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: absent and malformed replies never fabricate admission
+00:01 +24: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: invalid opaque IDs are refused before native handoff
+00:01 +25: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: maximum length opaque ID reaches native unchanged
+00:01 +26: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: unsupported platforms return no admission without native handoff
+00:01 +27: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: legacy timed hold keeps its bool return and original arguments
+00:01 +28: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/this_phone_speed_test.dart
+00:09 +28: /home/eslam/Storage/Code/oc_app-sol-bb/test/this_phone_speed_test.dart: no provider signed in: the free, slower model is named, with the way to sign in
+00:10 +29: /home/eslam/Storage/Code/oc_app-sol-bb/test/this_phone_speed_test.dart: a provider signed in: no free-model notice
+00:10 +30: /home/eslam/Storage/Code/oc_app-sol-bb/test/this_phone_speed_test.dart: not connected to it: no free-model notice
+00:10 +31: /home/eslam/Storage/Code/oc_app-sol-bb/test/this_phone_speed_test.dart: the last reply's speed in plain words; the technical side under Details
+00:10 +32: All tests passed!

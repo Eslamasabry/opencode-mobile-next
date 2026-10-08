@@ -638,6 +638,12 @@ class MainActivity : FlutterActivity() {
                 val forMs = call.argument<Number>("forMs")?.toLong() ?: 0L
                 inBackground { linux.holdAwakeForWork(on, forMs) }
             }
+            "setChatWorkLease" -> {
+                val leaseId = call.argument<String>("leaseId") ?: ""
+                val on = call.argument<Boolean>("on") == true
+                val forMs = call.argument<Number>("forMs")?.toLong() ?: 0L
+                inBackground { linux.setChatWorkLease(leaseId, on, forMs) }
+            }
             "performance" -> inBackground { linux.performance() }
             // Named long-running services beside the OpenCode server (the AI
             // Team supervisor); the server itself is the service "server".

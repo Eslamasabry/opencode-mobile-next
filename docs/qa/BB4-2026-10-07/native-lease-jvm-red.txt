@@ -1,0 +1,4 @@
+BB4 focused removed-fix controls; pure JVM; caller-held machine build lock and source freeze required.
+toolchain=Temurin17.0.20.1+1 Kotlin2.3.20 AndroidAPI37.0 JUnit4.13.2 compilerHeapMiB=256 testHeapMiB=128
+NoDeviceNoGradleNoApk=true assertionFailuresRequired=true
+PASS controls=0 expectedSingleAssertionFailures=0 restoredGatePassed=true

@@ -1,0 +1,20 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart
+00:00 +0: (setUpAll)
+00:06 +0 -1: (setUpAll) [E]
+  Bad state: kotlinc failed: test/native/setup_runner_stubs/services.kt:17:9: error: 'public' function exposes its 'internal' return type containing declaration 'SetupWorkScopes'.
+      fun prepareSetupWork() = workScopes.prepare()
+          ^^^^^^^^^^^^^^^^
+  test/native/setup_runner_stubs/services.kt:18:24: error: 'public' function exposes its 'internal' parameter type containing declaration 'SetupWorkScopes'.
+      fun closeSetupWork(scope: SetupWorkScopes.Scope) = workScopes.close(scope)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  test/native/setup_runner_stubs/services.kt:19:27: error: 'public' function exposes its 'internal' parameter type containing declaration 'SetupWorkScopes'.
+      fun <T> withSetupWork(scope: SetupWorkScopes.Scope, work: () -> T): T = workScopes.run(scope, work)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  test/native/kotlin_jar_cache.dart 42:5  cachedKotlinJar
+
+00:06 +0 -1: (tearDownAll)
+00:06 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: (setUpAll)

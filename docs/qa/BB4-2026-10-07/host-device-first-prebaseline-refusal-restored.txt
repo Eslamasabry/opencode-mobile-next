@@ -1,0 +1,27 @@
+PASS bounded_exact_payload_bootstrap_same_signer_in_place_data_preserved
+PASS original_native_preferences_preserved
+phase=instrument_bb3Capabilities outcome=before
+phase=instrument_bb3Capabilities_identity_check outcome=before
+phase=instrument_bb3Capabilities_identity_check outcome=after
+phase=instrument_bb3Capabilities_pre_detach outcome=before
+phase=instrument_bb3Capabilities_pre_detach outcome=after
+phase=instrument_bb3Capabilities_invoke outcome=before
+phase=instrument_bb3Capabilities_invoke outcome=after
+phase=instrument_bb3Capabilities_post_detach outcome=before
+phase=instrument_bb3Capabilities_post_detach outcome=after
+phase=instrument_bb3Capabilities outcome=after
+native_capabilities_after_refusal={"bb3BootCountAvailable": "true", "bb3BootIdentityFailure": "none", "bb3BootIdentitySucceeded": "true", "bb3BoundOwnerEnabledMatches": "true", "bb3KernelBootIdReadable": "true", "bb3KnownRuntimeFailure": "none", "bb3KnownRuntimeSucceeded": "true", "bb3MemoryRecipePresent": "false", "bb3RestorePhase": "idle", "bb3RestoreReason": "none"}
+writer_after_refusal={"present": false, "sameFixture": false, "operation": null}
+phase=person_restore outcome=before
+PASS original_native_preferences_preserved
+PASS explicit_person_Start_rearmed_fresh_kernel_ownership
+PASS shared_owner_authenticated_OpenCode2_and_connected_UI_restored
+phase=person_restore outcome=after
+PASS original_policy_marker_metadata_and_same_installed_app_preserved
+FAIL host_acceptance_unavailable
+PASS original_owner_typed_policy_and_marker_metadata_restored_while_entire_uid_dead
+PASS original_active_profile_pointer_restored_while_app_dead
+PASS original_owner_typed_policy_and_marker_metadata_restored_while_entire_uid_dead
+PASS original_active_profile_pointer_restored_while_app_dead
+PASS normal_2195_same_signer_in_place_restore_inside_same_emulator_lock
+FAIL normal_2195_restore_unproven

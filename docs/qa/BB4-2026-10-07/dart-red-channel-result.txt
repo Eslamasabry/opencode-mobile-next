@@ -1,0 +1,14 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart
+00:00 +0: named chat acquisition uses the frozen channel contract
+00:00 +0 -1: named chat acquisition uses the frozen channel contract [E]
+  Expected: true
+    Actual: <false>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/builtin_work_leases_test.dart 39:5             main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: named chat acquisition uses the frozen channel contract

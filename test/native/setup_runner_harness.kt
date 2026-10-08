@@ -76,7 +76,9 @@ fun main(args: Array<String>) {
                 check(!File(dir, "should-not-start").exists()) { "work started with low space" }
                 if (next) check(File(dir, "space-drained").exists()) { "first component never ran" }
             }
-            "installer-routed" -> {
+            "installer-routed", "setup-work-owned", "setup-work-revoked-before-worker" -> {
+                val revoked = args.single() == "setup-work-revoked-before-worker"
+                SetupService.revokeWorkOnStart = revoked
                 runner.start("installer-job", listOf(SetupRunner.Spec("agent-claude",
                     "printf '::oc version pinned\\n'", false, false, 1.0, false, null, null,
                     emptyMap(), emptyMap(), agentUser=true)), null,
@@ -87,6 +89,16 @@ fun main(args: Array<String>) {
                 check(JSONObject(runner.status()!!).getString("state") == "done")
                 check(BuiltinLinux.installerStarts == 1 && BuiltinLinux.installerFinishes == 1) {
                     "setup did not use durable installer admission/completion"
+                }
+                if (args.single() == "setup-work-owned") {
+                    check(BuiltinLinux.setupWorkAcquires == 1 && BuiltinLinux.setupWorkFinishes == 1 && !BuiltinLinux.setupWorkHeld) {
+                        "setup job did not release its CPU work after completion"
+                    }
+                    check(SetupService.finishSawSetupWork) { "setup CPU work ended before terminal persistence/notification" }
+                }
+                if (revoked) {
+                    check(BuiltinLinux.setupWorkAcquires == 1 && BuiltinLinux.setupWorkFinishes == 1 && !BuiltinLinux.setupWorkHeld) { "delayed setup worker readmitted CPU after service loss" }
+                    check(!SetupService.finishSawSetupWork) { "delayed setup worker readmitted CPU after service loss" }
                 }
             }
             "ordered-terminal" -> {

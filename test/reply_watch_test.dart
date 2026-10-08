@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart' show EventEnvelope;
+import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/builtin/reply_watch.dart';
 import 'package:opencode_mobile/diagnostics/perf_trace.dart';
 
@@ -78,9 +79,9 @@ void main() {
   late List<(bool, Duration)> holds;
 
   ReplyWatch watch({bool held = true}) => ReplyWatch(
-    holdAwake: (on, hold) async {
+    setChatLease: (_, on, hold) async {
       holds.add((on, hold));
-      return on && held;
+      return BuiltinWorkLeaseStatus(held: on && held);
     },
     nowMicros: () => micros,
   );
@@ -270,4 +271,332 @@ void main() {
     replies.dispose();
     await source.close();
   });
+
+  testWidgets('idle before queued acquire skips obsolete on', (tester) async {
+    final source = _Source();
+    final replies = watch()..attach(source);
+    source.busy('s1', true);
+    source.busy('s1', false);
+    await tester.pump();
+    expect(holds.map((call) => call.$1), [false]);
+    expect(replies.holdingAwake, isFalse);
+    replies.dispose();
+    await tester.pump();
+    await source.close();
+  });
+
+  testWidgets('late acquire after idle drains without reporting held', (
+    tester,
+  ) async {
+    final source = _Source();
+    final pending = Completer<BuiltinWorkLeaseStatus>();
+    final calls = <(String, bool)>[];
+    final active = <String>{};
+    final reported = <bool>[];
+    final replies = ReplyWatch(
+      leaseId: 'chat.delayed',
+      setChatLease: (id, on, _) async {
+        calls.add((id, on));
+        if (on) {
+          final result = await pending.future;
+          if (result.held) active.add(id);
+          return result;
+        }
+        active.remove(id);
+        return const BuiltinWorkLeaseStatus();
+      },
+    )..attach(source);
+    replies.addListener(() => reported.add(replies.holdingAwake));
+    source.busy('s1', true);
+    await tester.pump();
+    source.busy('s1', false);
+    pending.complete(const BuiltinWorkLeaseStatus(held: true));
+    await tester.pump();
+    expect(active, isEmpty);
+    expect(calls.first, ('chat.delayed', true));
+    expect(
+      calls.skip(1).every((call) => call == ('chat.delayed', false)),
+      isTrue,
+    );
+    expect(reported, isNot(contains(true)));
+    expect(replies.holdingAwake, isFalse);
+    replies.dispose();
+    await tester.pump();
+    await source.close();
+  });
+
+  testWidgets('late acquire after disposal drains without notification', (
+    tester,
+  ) async {
+    final source = _Source();
+    final pending = Completer<BuiltinWorkLeaseStatus>();
+    final calls = <(String, bool)>[];
+    final active = <String>{};
+    var notified = 0;
+    final replies = ReplyWatch(
+      leaseId: 'chat.disposed',
+      setChatLease: (id, on, _) async {
+        calls.add((id, on));
+        if (on) {
+          final result = await pending.future;
+          if (result.held) active.add(id);
+          return result;
+        }
+        active.remove(id);
+        return const BuiltinWorkLeaseStatus();
+      },
+    )..attach(source);
+    replies.addListener(() => notified++);
+    source.busy('s1', true);
+    await tester.pump();
+    replies.dispose();
+    pending.complete(const BuiltinWorkLeaseStatus(held: true));
+    await tester.pump();
+    expect(active, isEmpty);
+    expect(calls.last, ('chat.disposed', false));
+    expect(notified, 0);
+    expect(tester.takeException(), isNull);
+    await source.close();
+  });
+
+  testWidgets('rapid idle and busy preserves the required off boundary', (
+    tester,
+  ) async {
+    final source = _Source();
+    final replies = watch()..attach(source);
+    source.busy('s1', true);
+    await tester.pump();
+    source.busy('s1', false);
+    source.busy('s2', true);
+    await tester.pump();
+    expect(holds.map((call) => call.$1), [true, false, true]);
+    expect(replies.holdingAwake, isTrue);
+    replies.dispose();
+    await tester.pump();
+    await source.close();
+  });
+
+  testWidgets('native cap stops renewals without reopening a busy lease', (
+    tester,
+  ) async {
+    final source = _Source();
+    final calls = <bool>[];
+    final replies = ReplyWatch(
+      setChatLease: (_, on, _) async {
+        calls.add(on);
+        return on
+            ? const BuiltinWorkLeaseStatus(capped: true)
+            : const BuiltinWorkLeaseStatus();
+      },
+    )..attach(source);
+    source.busy('s1', true);
+    await tester.pump();
+    expect(replies.awakeCapped, isTrue);
+    expect(replies.holdingAwake, isFalse);
+    source.busy('s2', true);
+    await tester.pump(const Duration(hours: 7));
+    expect(calls, [true]);
+    source.busy('s1', false);
+    source.busy('s2', false);
+    await tester.pump();
+    expect(calls, [true, false]);
+    replies.dispose();
+    await tester.pump();
+    await source.close();
+  });
+
+  testWidgets('native cap during renewal reports loss of the chat hold', (
+    tester,
+  ) async {
+    final source = _Source();
+    var acquisitions = 0;
+    final calls = <bool>[];
+    final replies = ReplyWatch(
+      setChatLease: (_, on, _) async {
+        calls.add(on);
+        return BuiltinWorkLeaseStatus(
+          held: on && ++acquisitions == 1,
+          capped: on && acquisitions > 1,
+        );
+      },
+    )..attach(source);
+    source.busy('s1', true);
+    await tester.pump();
+    expect(replies.holdingAwake, isTrue);
+    await tester.pump(const Duration(minutes: 5));
+    expect(replies.holdingAwake, isFalse);
+    expect(replies.awakeCapped, isTrue);
+    await tester.pump(const Duration(hours: 7));
+    expect(calls, [true, true]);
+    replies.dispose();
+    await tester.pump();
+    await source.close();
+  });
+
+  testWidgets('rejected renewal closes only its lease and stops renewing', (
+    tester,
+  ) async {
+    final source = _Source();
+    final leases = _Leases()..rejectOn = 2;
+    final replies = ReplyWatch(setChatLease: leases.update)..attach(source);
+    source.busy('s1', true);
+    await tester.pump();
+    await tester.pump(const Duration(minutes: 5));
+    expect(replies.holdingAwake, isFalse);
+    expect(replies.awakeCapped, isFalse);
+    expect(leases.active, _Leases.otherWork);
+    final count = leases.calls.length;
+    await tester.pump(const Duration(hours: 1));
+    expect(leases.calls, hasLength(count));
+    source.busy('s1', false);
+    source.busy('s2', true);
+    await tester.pump();
+    expect(replies.holdingAwake, isTrue);
+    replies.dispose();
+    await tester.pump();
+    expect(leases.active, _Leases.otherWork);
+    await source.close();
+  });
+
+  testWidgets(
+    'acquire exception drains partial lease and leaves chain usable',
+    (tester) async {
+      final source = _Source();
+      final leases = _Leases()..throwOn = 1;
+      final replies = ReplyWatch(setChatLease: leases.update)..attach(source);
+      source.busy('s1', true);
+      await tester.pump();
+      expect(leases.active, _Leases.otherWork);
+      expect(replies.holdingAwake, isFalse);
+      source.busy('s1', false);
+      source.busy('s2', true);
+      await tester.pump();
+      expect(replies.holdingAwake, isTrue);
+      replies.dispose();
+      await tester.pump();
+      expect(leases.active, _Leases.otherWork);
+      expect(tester.takeException(), isNull);
+      await source.close();
+    },
+  );
+
+  testWidgets('release exception cannot poison later cleanup or acquisition', (
+    tester,
+  ) async {
+    final source = _Source();
+    final leases = _Leases()..throwOff = 1;
+    final replies = ReplyWatch(setChatLease: leases.update)..attach(source);
+    source.busy('s1', true);
+    await tester.pump();
+    source.busy('s1', false);
+    await tester.pump();
+    expect(replies.holdingAwake, isFalse);
+    source.busy('s2', true);
+    await tester.pump();
+    expect(replies.holdingAwake, isTrue);
+    replies.dispose();
+    await tester.pump();
+    expect(leases.active, _Leases.otherWork);
+    expect(tester.takeException(), isNull);
+    await source.close();
+  });
+
+  testWidgets('two watches use distinct IDs and cleanup preserves other work', (
+    tester,
+  ) async {
+    final source1 = _Source();
+    final source2 = _Source();
+    final leases = _Leases();
+    final first = ReplyWatch(setChatLease: leases.update)..attach(source1);
+    final second = ReplyWatch(setChatLease: leases.update)..attach(source2);
+    source1.busy('s1', true);
+    source2.busy('s2', true);
+    await tester.pump();
+    final chatIds = leases.active.difference(_Leases.otherWork);
+    expect(chatIds, hasLength(2));
+    expect(
+      chatIds.every((id) => RegExp(r'^[A-Za-z0-9_.-]{1,80}$').hasMatch(id)),
+      isTrue,
+    );
+    first.dispose();
+    await tester.pump();
+    expect(leases.active.difference(_Leases.otherWork), hasLength(1));
+    expect(second.holdingAwake, isTrue);
+    second.dispose();
+    await tester.pump();
+    expect(leases.active, _Leases.otherWork);
+    await source1.close();
+    await source2.close();
+  });
+
+  testWidgets(
+    'local ceiling shortens requested TTL before releasing its lease',
+    (tester) async {
+      final source = _Source();
+      final leases = _Leases();
+      final replies = ReplyWatch(
+        setChatLease: leases.update,
+        ceiling: const Duration(minutes: 7),
+      )..attach(source);
+      source.busy('s1', true);
+      await tester.pump();
+      expect(leases.calls.single.$3, const Duration(minutes: 7));
+      await tester.pump(const Duration(minutes: 5));
+      expect(leases.calls.last.$3, const Duration(minutes: 2));
+      await tester.pump(const Duration(minutes: 5));
+      expect(replies.awakeCapped, isTrue);
+      expect(replies.holdingAwake, isFalse);
+      expect(leases.active, _Leases.otherWork);
+      replies.dispose();
+      await tester.pump();
+      await source.close();
+    },
+  );
+
+  testWidgets(
+    'leaving the in-app server releases chat without clearing other work',
+    (tester) async {
+      final source = _Source();
+      final leases = _Leases();
+      final replies = ReplyWatch(setChatLease: leases.update)..attach(source);
+      source.busy('s1', true);
+      await tester.pump();
+      source.onInAppServer = false;
+      source.notifyListeners();
+      await tester.pump();
+      expect(replies.holdingAwake, isFalse);
+      expect(leases.active, _Leases.otherWork);
+      replies.dispose();
+      await tester.pump();
+      await source.close();
+    },
+  );
+}
+
+class _Leases {
+  static const otherWork = {'setup.job', 'sign-in.run', 'terminal.session'};
+  final active = <String>{...otherWork};
+  final calls = <(String, bool, Duration)>[];
+  int rejectOn = -1;
+  int throwOn = -1;
+  int throwOff = -1;
+  int _on = 0;
+  int _off = 0;
+
+  Future<BuiltinWorkLeaseStatus> update(
+    String id,
+    bool on,
+    Duration hold,
+  ) async {
+    calls.add((id, on, hold));
+    if (!on) {
+      if (++_off == throwOff) throw StateError('synthetic release failure');
+      active.remove(id);
+      return const BuiltinWorkLeaseStatus();
+    }
+    _on++;
+    active.add(id);
+    if (_on == throwOn) throw StateError('synthetic acquire failure');
+    return BuiltinWorkLeaseStatus(held: _on != rejectOn);
+  }
 }

@@ -36,6 +36,11 @@ class BuiltinRuntimeAcceptance : Instrumentation() {
             var passed = false
             var failureCode: String? = null
             try {
+                if (arguments.getString("step") == "bb4WorkLeases") {
+                    BuiltinWorkLeaseAcceptance(this).execute()
+                    passed = true
+                    return@Thread
+                }
                 if (arguments.getString("step")?.startsWith("bb9") == true) {
                     BuiltinComponentUpdateAcceptance(this, arguments).execute()
                     passed = true

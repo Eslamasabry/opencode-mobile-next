@@ -70,7 +70,17 @@ class SetupService : Service() {
         return START_NOT_STICKY
     }
 
+    override fun onTimeout(startId: Int, fgsType: Int) {
+        try { BuiltinLinux.get(applicationContext).revokeSetupWork() } catch (_: Throwable) { }
+        try { stopForeground(STOP_FOREGROUND_REMOVE) } catch (_: Throwable) { }
+        try { stopSelf(startId) } catch (_: Throwable) { }
+        Thread({
+            try { SetupRunner.get(applicationContext).cancel() } catch (_: Throwable) { }
+        }, "oc-setup-timeout").apply { isDaemon = true; start() }
+    }
+
     override fun onDestroy() {
+        try { BuiltinLinux.get(applicationContext).revokeSetupWork() } catch (_: Throwable) { }
         // A destroyed service owes Android nothing; the next start decides.
         foregroundShown = false
         stopPending = false

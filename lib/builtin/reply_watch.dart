@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -129,7 +130,13 @@ class ConnectionReplySource implements ReplySource {
 ///   / [last] for This phone's reply speed.
 class ReplyWatch extends ChangeNotifier {
   ReplyWatch({
-    required Future<bool> Function(bool on, Duration hold) holdAwake,
+    required Future<BuiltinWorkLeaseStatus> Function(
+      String leaseId,
+      bool on,
+      Duration hold,
+    )
+    setChatLease,
+    String? leaseId,
     int Function()? nowMicros,
     DateTime Function()? now,
     this.hold = const Duration(minutes: 10),
@@ -137,7 +144,8 @@ class ReplyWatch extends ChangeNotifier {
     this.ceiling = const Duration(hours: 6),
     Future<String?> Function()? loadLast,
     Future<void> Function(String json)? saveLast,
-  }) : _holdAwake = holdAwake,
+  }) : _setChatLease = setChatLease,
+       _leaseId = leaseId ?? _newLeaseId(),
        _saveLast = saveLast,
        _nowMicros = nowMicros ?? (() => PerfTrace.nowMicros),
        _now = now ?? DateTime.now {
@@ -147,7 +155,8 @@ class ReplyWatch extends ChangeNotifier {
   /// The watch that holds the in-app server's wake lock through [linux];
   /// its last in-app reply timing survives a relaunch.
   factory ReplyWatch.forLinux(BuiltinLinux linux) => ReplyWatch(
-    holdAwake: (on, hold) => linux.holdAwakeForWork(on, hold: hold),
+    setChatLease: (leaseId, on, hold) =>
+        linux.setChatWorkLease(leaseId: leaseId, on: on, hold: hold),
     loadLast: () async {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(replySpeedPreferenceKey);
@@ -173,7 +182,18 @@ class ReplyWatch extends ChangeNotifier {
     }
   }
 
-  final Future<bool> Function(bool on, Duration hold) _holdAwake;
+  static String _newLeaseId() {
+    final random = math.Random.secure();
+    return 'chat.${List.generate(16, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join()}';
+  }
+
+  final Future<BuiltinWorkLeaseStatus> Function(
+    String leaseId,
+    bool on,
+    Duration hold,
+  )
+  _setChatLease;
+  final String _leaseId;
   final int Function() _nowMicros;
   final DateTime Function() _now;
   final Duration hold;
@@ -193,6 +213,7 @@ class ReplyWatch extends ChangeNotifier {
   /// Renewals in this stretch: the stretch's length in [renewEvery] steps,
   /// counted on the timer so a changed wall clock cannot stretch it.
   int _renewals = 0;
+  int _leaseGeneration = 0;
   Timer? _renew;
   Future<void> _holdChain = Future.value();
 
@@ -234,6 +255,7 @@ class ReplyWatch extends ChangeNotifier {
     final want = source.onInAppServer && source.busySessions.isNotEmpty;
     if (want == _wantAwake) return;
     _wantAwake = want;
+    _leaseGeneration++;
     _renew?.cancel();
     _renew = null;
     if (want) {
@@ -247,12 +269,13 @@ class ReplyWatch extends ChangeNotifier {
   }
 
   void _renewHold() {
-    if (!_wantAwake) return;
-    _renewals++;
+    if (!_wantAwake || _disposed || _capped) return;
+    _renewals = _renew?.tick ?? _renewals + 1;
     if (renewEvery * _renewals >= ceiling) {
       _renew?.cancel();
       _renew = null;
       _capped = true;
+      _leaseGeneration++;
       PerfTrace.mark('reply.awake_capped');
       _setHold(false);
       return;
@@ -260,21 +283,77 @@ class ReplyWatch extends ChangeNotifier {
     _setHold(true);
   }
 
-  /// Serialised, so an off never overtakes the on before it.
+  /// Serialized: every logical off survives newer intents, so an old stretch
+  /// cannot renew a replacement stretch or clear another owner's work.
   void _setHold(bool on) {
+    final generation = _leaseGeneration;
     _holdChain = _holdChain.then((_) async {
-      bool held;
-      try {
-        held = await _holdAwake(on, hold);
-      } catch (_) {
-        // No channel (another platform) or a refusal: the reply still runs,
-        // only the phone may sleep.
-        held = false;
+      if (!on) {
+        await _releaseLease();
+        return;
       }
-      if (held == _holding) return;
-      _holding = held;
-      if (!_disposed) notifyListeners();
+      if (!_currentLeaseIntent(generation)) return;
+      final remaining = ceiling - renewEvery * _renewals;
+      if (remaining <= Duration.zero) return;
+      BuiltinWorkLeaseStatus status;
+      try {
+        status = await _setChatLease(
+          _leaseId,
+          true,
+          hold < remaining ? hold : remaining,
+        );
+      } catch (_) {
+        // A partial channel handoff may have acquired the lease. Drain only
+        // this ID and keep later off/disposal work runnable after exceptions.
+        await _releaseLease();
+        if (_currentLeaseIntent(generation)) _stopRenewing();
+        return;
+      }
+      if (!_currentLeaseIntent(generation)) {
+        // Late acquisition after idle/disposal must never become visible or
+        // survive just because the next queued off has not run yet.
+        await _releaseLease();
+        return;
+      }
+      if (status.capped) {
+        _capped = true;
+        _stopRenewing();
+        PerfTrace.mark('reply.awake_capped');
+        // Retain the native capped logical key until actual idle/disposal.
+        // Releasing and reacquiring it here would reset its lifetime boundary.
+        if (!_disposed) notifyListeners();
+      } else if (!status.held) {
+        await _releaseLease();
+        if (_currentLeaseIntent(generation)) _stopRenewing();
+      } else {
+        _publishHeld(true);
+      }
     });
+  }
+
+  bool _currentLeaseIntent(int generation) =>
+      !_disposed && _wantAwake && !_capped && generation == _leaseGeneration;
+
+  void _stopRenewing() {
+    _renew?.cancel();
+    _renew = null;
+    _leaseGeneration++;
+    _publishHeld(false);
+  }
+
+  void _publishHeld(bool held) {
+    if (_holding == held) return;
+    _holding = held;
+    if (!_disposed) notifyListeners();
+  }
+
+  Future<void> _releaseLease() async {
+    try {
+      await _setChatLease(_leaseId, false, hold);
+    } catch (_) {
+      // Native expiration still bounds this lease if its release is unavailable.
+    }
+    _publishHeld(false);
   }
 
   void _onEvent(EventEnvelope event) {
@@ -439,14 +518,15 @@ class ReplyWatch extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_disposed) return;
     _disposed = true;
+    _wantAwake = false;
+    _leaseGeneration++;
     _renew?.cancel();
     _source?.removeListener(_sourceChanged);
     unawaited(_events?.cancel());
-    if (_wantAwake || _holding) {
-      _wantAwake = false;
-      _setHold(false);
-    }
+    // Always close this logical ID, including an acquisition still in flight.
+    _setHold(false);
     super.dispose();
   }
 }

@@ -252,6 +252,29 @@ class BuiltinServiceDiagnostics {
   final BuiltinServiceExitReason exitReason;
 }
 
+/// Admission of one named chat lease, independent of other work's wake lock.
+class BuiltinWorkLeaseStatus {
+  const BuiltinWorkLeaseStatus({this.held = false, this.capped = false});
+
+  factory BuiltinWorkLeaseStatus.fromMap(Map<Object?, Object?> map) {
+    if (map['held'] is! bool ||
+        map['capped'] is! bool ||
+        map['held'] == true && map['capped'] == true) {
+      return const BuiltinWorkLeaseStatus();
+    }
+    return BuiltinWorkLeaseStatus(
+      held: map['held'] == true,
+      capped: map['capped'] == true,
+    );
+  }
+
+  /// This lease has an admitted CPU hold; never the aggregate work-lock state.
+  final bool held;
+
+  /// Native monotonic lifetime expired or exhausted this logical chat lease.
+  final bool capped;
+}
+
 /// One reading of `performance`: what the Performance details show.
 class BuiltinPerformance {
   const BuiltinPerformance({
@@ -769,6 +792,33 @@ class BuiltinLinux {
       }) ??
       false;
 
+  /// Acquire or renew one opaque chat lease; off releases only [leaseId].
+  /// Native lifetime limits remain authoritative. A capped logical lease cannot
+  /// be renewed until it is explicitly closed; never release/reacquire to renew.
+  /// Setup, sign-in and terminal leases are owned independently in native code.
+  Future<BuiltinWorkLeaseStatus> setChatWorkLease({
+    required String leaseId,
+    required bool on,
+    Duration hold = const Duration(minutes: 10),
+  }) async {
+    if (!supported) return const BuiltinWorkLeaseStatus();
+    if (RegExp(r'^[A-Za-z0-9_.-]{1,80}$').firstMatch(leaseId)?.end !=
+        leaseId.length) {
+      throw const BuiltinLinuxException(
+        'This chat could not keep the phone awake. Try again.',
+        code: 'work_lease_invalid',
+      );
+    }
+    final raw = await _invoke<Object?>('setChatWorkLease', {
+      'leaseId': leaseId,
+      'on': on,
+      'forMs': hold.inMilliseconds,
+    });
+    return raw is Map<Object?, Object?>
+        ? BuiltinWorkLeaseStatus.fromMap(raw)
+        : const BuiltinWorkLeaseStatus();
+  }
+
   /// How proot runs the server now and whether the phone is kept awake.
   Future<BuiltinPerformance> performance() async {
     if (!supported) return const BuiltinPerformance();
@@ -931,6 +981,7 @@ class BuiltinLinux {
             'setupStatus',
             'status',
             'holdAwakeForWork',
+            'setChatWorkLease',
             'performance',
           }.contains(method)
           ? 50

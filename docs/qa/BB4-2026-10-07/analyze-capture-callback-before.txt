@@ -1,0 +1,6 @@
+Analyzing oc_app-sol-bb...
+
+  error • The named parameter 'setChatLease' is required, but there's no corresponding argument. Try adding the required argument • tool/capture/builtin_speed_capture_test.dart:137:23 • missing_required_argument
+  error • The named parameter 'holdAwake' isn't defined. Try correcting the name to an existing named parameter's name, or defining a named parameter with the name 'holdAwake' • tool/capture/builtin_speed_capture_test.dart:138:9 • undefined_named_parameter
+
+2 issues found. (ran in 18.8s)

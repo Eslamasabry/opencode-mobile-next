@@ -491,6 +491,7 @@ class BuiltinLinux(private val context: Context) {
             committedTicket = committed
             installerPlan(committed) // No unknown previous writer can pass the workload gate.
             synchronized(installerGuard) { saveInstaller(committed) }
+            if (setupWorkScopes.childNeedsLease()) trackWork(launched, WorkLeases.Kind.SETUP)
             launched.outputStream.write("$nonce\n".toByteArray(Charsets.US_ASCII))
             launched.outputStream.flush(); launched.outputStream.close()
             Thread({
@@ -545,6 +546,7 @@ class BuiltinLinux(private val context: Context) {
 
     @Synchronized
     internal fun finishInstaller(process: Process) {
+        workLeases.release(process)
         try {
             check(installerProcess === process) { componentUpdateFailure }
             synchronized(installerGuard) {
@@ -605,6 +607,7 @@ class BuiltinLinux(private val context: Context) {
             "TERM=xterm-256color",
             "TMPDIR=/tmp",
         ) + program
+        workLeases.observeTerminalsSoon()
         return if (prootIsConfined && protectionTier() != "proot") protectedCommand(command) else command
     }
 
@@ -670,6 +673,14 @@ class BuiltinLinux(private val context: Context) {
     /** Private agent process: fixed uid, private host home, no transcript/log. */
     @Synchronized
     fun startAgentProcess(profileId: String, argv: List<String>, foreground: Boolean = false): Process {
+        return startPrivateAgentProcess(profileId, argv, foreground, null)
+    }
+
+    @Synchronized
+    internal fun startSignInProcess(profileId: String, argv: List<String>, foreground: Boolean): Process =
+        startPrivateAgentProcess(profileId, argv, foreground, WorkLeases.Kind.SIGN_IN)
+
+    private fun startPrivateAgentProcess(profileId: String, argv: List<String>, foreground: Boolean, workKind: WorkLeases.Kind?): Process {
         check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId)) { "The agent host is unavailable." }
         check(installed && argv.isNotEmpty() && profileId !in blockedAgentProfiles) { "The agent host is unavailable." }
         val profileHome = PhoneAgentPaths.prepare(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId")
@@ -688,6 +699,7 @@ class BuiltinLinux(private val context: Context) {
         processConfinement[process] = prootIsConfined
         try {
             if (foreground) trackPrivateAgentService("agent-auth.$profileId", process, null)
+            workKind?.let { trackWork(process, it) }
             return process
         } catch (_: Throwable) {
             try { stopAgentProcess(process) } catch (_: Throwable) { }
@@ -2569,8 +2581,8 @@ class BuiltinLinux(private val context: Context) {
         recordRunning()
         // A reply cannot run on a server that is gone: never keep the phone
         // awake for it.
-        if (!serverRunning) releaseWork()
-        val running = services.values.any { it.process.isAlive }
+        if (!serverRunning) workLeases.serverGone()
+        val running = services.values.any { it.process.isAlive } || workLeases.foregroundHeld
         val holdsRecovery = try {
             val profile = synchronized(recoveryLock) { supervisionProfile }
             profile != null && NativeRecoveryBudget.keepsForeground(false,
@@ -2631,59 +2643,38 @@ class BuiltinLinux(private val context: Context) {
         }
     }
 
-    // ---- a reply in flight ---------------------------------------------------
+    // ---- bounded independent CPU work ownership -----------------------------
 
-    /**
-     * Keeps the CPU running while the in-app server works on a reply, as
-     * Termux's wake lock does for a server there. The foreground service
-     * keeps the process alive, but without a wake lock the phone still
-     * sleeps with the screen off, and a reply (or a tool it runs) stalls
-     * until something wakes it.
-     *
-     * Never unbounded: every hold ends by itself after at most
-     * [MAX_WORK_HOLD_MS]; the app renews it while a reply is still running
-     * and releases it as soon as none is. It is held only while the server
-     * runs, and a server that stops releases it (serviceSetChanged).
-     */
-    private val workLock: PowerManager.WakeLock? by lazy {
-        context.getSystemService(PowerManager::class.java)
-            ?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "OpenCode:reply")
-            ?.apply { setReferenceCounted(false) }
+    private val workLeases by lazy {
+        NativeWorkLeaseHost(context,
+            terminalWork = { LocalTerminal.get(context).list().filter { it.running }
+                .associate { it.id to (it.toMap()["signIn"] == true) } },
+            protectTerminal = {
+                if (synchronized(recoveryLock) { activityResumed }) {
+                    BuiltinServerService.start(context, "Terminal is working on this phone")
+                    true
+                } else BuiltinServerService.isForegroundRunning
+            },
+            changed = { synchronized(this@BuiltinLinux) { serviceSetChanged() } })
     }
-
-    /** Whether the phone is kept awake for a reply now. */
-    val workHeld: Boolean get() = synchronized(workLockGuard) { workLock?.isHeld == true }
-
-    private val workLockGuard = Any()
-
-    /**
-     * [on]: hold (or renew) the wake lock for [forMs], capped; off releases
-     * it. Returns whether it is held afterwards.
-     */
-    fun holdAwakeForWork(on: Boolean, forMs: Long): Boolean {
-        if (!on || !serverRunning) {
-            releaseWork()
-            return false
-        }
-        val lock = workLock ?: return false
-        synchronized(workLockGuard) {
-            // Not reference-counted: acquiring again only moves the timeout.
-            lock.acquire(forMs.coerceIn(1_000L, MAX_WORK_HOLD_MS))
-        }
-        return true
+    val workHeld: Boolean get() = workLeases.held
+    fun setChatWorkLease(name: String, on: Boolean, forMs: Long): Map<String, Boolean> =
+        workLeases.chat(name, on, forMs, serverRunning)
+    fun holdAwakeForWork(on: Boolean, forMs: Long): Boolean =
+        setChatWorkLease("legacy.reply", on, forMs)["held"] == true
+    internal fun revokeForegroundWork() = workLeases.revokeForegroundWork()
+    internal fun revokeSetupWork() = workLeases.revokeSetupWork()
+    private val setupWorkScopes by lazy {
+        SetupWorkScopes({ owner, alive -> workLeases.adopt(owner, WorkLeases.Kind.SETUP, alive) }, workLeases::release)
     }
-
-    private fun releaseWork() {
-        synchronized(workLockGuard) {
-            val lock = workLock ?: return
-            if (lock.isHeld) {
-                try {
-                    lock.release()
-                } catch (_: RuntimeException) {
-                    // Its timeout released it a moment ago.
-                }
-            }
-        }
+    internal fun prepareSetupWork(): SetupWorkScopes.Scope = setupWorkScopes.prepare()
+    internal fun closeSetupWork(scope: SetupWorkScopes.Scope) = setupWorkScopes.close(scope)
+    internal fun <T> withSetupWork(scope: SetupWorkScopes.Scope, work: () -> T): T = setupWorkScopes.run(scope, work)
+    internal fun <T> withSetupWork(work: () -> T): T {
+        return withSetupWork(prepareSetupWork(), work)
+    }
+    private fun trackWork(process: Process, kind: WorkLeases.Kind) {
+        workLeases.adopt(process, kind) { process.isAlive }
     }
 
     /**
@@ -2714,6 +2705,7 @@ class BuiltinLinux(private val context: Context) {
             "prootFilters" to prootFilters,
             "serverFilters" to serverFilters,
             "workHeld" to workHeld,
+            "workLeases" to workLeases.diagnostics(),
             "services" to serviceDiagnostics(),
         )
     }
