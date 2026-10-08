@@ -1,12 +1,8 @@
 {
   "suppressionComments": {
     "lib/api/opencode_api.dart": 1,
-    "lib/l10n/app_localizations.dart": 1,
-    "lib/l10n/app_localizations_ar.dart": 2,
-    "lib/l10n/app_localizations_en.dart": 2,
     "test/chat_states_standard_test.dart": 1,
     "test/goldens/chat_states_golden_test.dart": 1,
-    "test/kit_ratchet_test.dart": 2,
     "test/l10n_coverage_test.dart": 2,
     "test/search_index_test.dart": 1,
     "tool/capture/capture_test.dart": 1,
@@ -30,26 +26,11 @@
     "lib/api/opencode_api.dart": [
       "ignore:deprecated_member_use"
     ],
-    "lib/l10n/app_localizations.dart": [
-      "ignore_for_file:type=lint"
-    ],
-    "lib/l10n/app_localizations_ar.dart": [
-      "ignore:unused_import",
-      "ignore_for_file:type=lint"
-    ],
-    "lib/l10n/app_localizations_en.dart": [
-      "ignore:unused_import",
-      "ignore_for_file:type=lint"
-    ],
     "test/chat_states_standard_test.dart": [
       "ignore_for_file:invalid_use_of_protected_member"
     ],
     "test/goldens/chat_states_golden_test.dart": [
       "ignore_for_file:invalid_use_of_protected_member"
-    ],
-    "test/kit_ratchet_test.dart": [
-      "ignore:avoid_print",
-      "ignore:avoid_print"
     ],
     "test/l10n_coverage_test.dart": [
       "ignore:avoid_print",
