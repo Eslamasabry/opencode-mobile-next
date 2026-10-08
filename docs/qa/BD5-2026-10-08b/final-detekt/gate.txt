@@ -1,0 +1,3 @@
+Checking detekt 1.23.8: zero new findings against /home/eslam/Storage/Code/oc_app-sol-bd/android/config/detekt/baseline.xml
+Successfully generated Checkstyle XML report at file:///home/eslam/Storage/Code/oc_app-sol-bd/docs/qa/BD5-2026-10-08b/final-detekt/detekt.xml
+Successfully generated plain text report at file:///home/eslam/Storage/Code/oc_app-sol-bd/docs/qa/BD5-2026-10-08b/final-detekt/detekt.txt

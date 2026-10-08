@@ -1,0 +1,9 @@
+android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRecoveryBudget.kt:46:23: warning: no cast needed.
+                event as String?, generation, confirmed, revision)
+                      ^^^^^^^^^^
+JUnit version 4.13.2
+.................................................................................................................................................
+Time: 0.667
+
+OK (145 tests)
+

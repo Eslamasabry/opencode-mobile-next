@@ -1,0 +1,14 @@
+{
+  "owned_gradle_daemons": [
+    {
+      "pid": 2949501,
+      "running": false
+    },
+    {
+      "pid": 2946833,
+      "running": false
+    }
+  ],
+  "intermediates_removed": true,
+  "apk_built": false
+}

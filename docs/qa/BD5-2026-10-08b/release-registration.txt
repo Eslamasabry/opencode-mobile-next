@@ -1,0 +1,9 @@
+import 'package:flutter_tools/src/base/template.dart';
+import 'package:flutter_tools/src/isolated/mustache_template.dart';
+import 'package:flutter_tools/src/context_runner.dart';
+import 'package:flutter_tools/src/flutter_plugins.dart';
+import 'package:flutter_tools/src/project.dart';
+
+Future<void> main() => runInContext(() async {
+  await injectPlugins(FlutterProject.current(), releaseMode: true, androidPlatform: true);
+}, overrides: {TemplateRenderer: () => const MustacheTemplateRenderer()});
