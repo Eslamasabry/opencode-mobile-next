@@ -1,0 +1,15 @@
+test_remove_rejects_ambiguous_confirmation (test_run.Tests.test_remove_rejects_ambiguous_confirmation) ... ok
+test_remove_uses_ba10_public_confirmation (test_run.Tests.test_remove_uses_ba10_public_confirmation) ... FAIL
+
+======================================================================
+FAIL: test_remove_uses_ba10_public_confirmation (test_run.Tests.test_remove_uses_ba10_public_confirmation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/test_run.py", line 21, in test_remove_uses_ba10_public_confirmation
+    self.assertTrue(ports.app_remove('fx','fx'))
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.001s
+
+FAILED (failures=1)

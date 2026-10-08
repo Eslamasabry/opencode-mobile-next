@@ -6,6 +6,18 @@ const phoneAgentInstallPrefix = 'oc.agentInstall.';
 
 enum AgentSetupPhase { idle, installing, done, interrupted, failed }
 
+/// Observed payload removal, excluding retained accounts and shared tools.
+final class AgentRemovalResult {
+  const AgentRemovalResult({
+    required this.agentId,
+    required this.freedBytes,
+    required this.alreadyAbsent,
+  });
+  final String agentId;
+  final int freedBytes;
+  final bool alreadyAbsent;
+}
+
 enum AgentHostFailure {
   unavailable,
   storage,
@@ -33,11 +45,15 @@ final class AgentSetupProgress {
     required this.phase,
     this.fraction,
     this.componentId,
+    this.failure,
   });
   final String agentId;
   final AgentSetupPhase phase;
   final double? fraction;
   final String? componentId;
+
+  /// Closed failure projection. Native/provider error text never reaches UI.
+  final AgentHostFailure? failure;
 }
 
 enum AgentPhoneCheckStep { install, version, daemon, hello }

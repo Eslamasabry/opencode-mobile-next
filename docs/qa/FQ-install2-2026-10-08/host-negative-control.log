@@ -1,0 +1,90 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart
+00:00 +0: removal uses fixed agent view and preserves account and gate metadata
+00:00 +0 -1: removal uses fixed agent view and preserves account and gate metadata [E]
+  AgentHostException(unavailable)
+  package:opencode_mobile/builtin/agents/phone_agents_host.dart 111:5  BuiltinPhoneAgents.removeAgent
+  test/phone_agents_removal_host_test.dart 94:18                       main.<fn>
+
+00:00 +0 -1: Claude removal is never dispatched
+00:00 +1 -1: running foreign native setup prevents removal
+00:00 +1 -2: running foreign native setup prevents removal [E]
+  Expected: throws <Instance of 'AgentHostException'> with `reason`: AgentHostFailure:<AgentHostFailure.busy>
+    Actual: <Instance of 'Future<void>'>
+     Which: threw AgentHostException:<AgentHostException(unavailable)>
+            stack package:opencode_mobile/builtin/agents/phone_agents_host.dart 111:5  BuiltinPhoneAgents.removeAgent
+                  test/phone_agents_removal_host_test.dart 122:12                      main.<fn>
+                  ===== asynchronous gap ===========================
+                  package:matcher                                                      expectLater
+                  package:flutter_test/src/widget_tester.dart 507:8                    expectLater
+                  test/phone_agents_removal_host_test.dart 121:11                      main.<fn>
+
+            which has `reason` with value AgentHostFailure:<AgentHostFailure.unavailable>
+
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/phone_agents_removal_host_test.dart 121:11    main.<fn>
+
+00:00 +1 -2: unknown native setup prevents removal
+00:00 +2 -2: live target refusal is busy without leaking child output
+00:00 +2 -3: live target refusal is busy without leaking child output [E]
+  Expected: throws <Instance of 'AgentHostException'> with `reason`: AgentHostFailure:<AgentHostFailure.busy>
+    Actual: <Instance of 'Future<void>'>
+     Which: threw AgentHostException:<AgentHostException(unavailable)>
+            stack package:opencode_mobile/builtin/agents/phone_agents_host.dart 111:5  BuiltinPhoneAgents.removeAgent
+                  test/phone_agents_removal_host_test.dart 144:12                      main.<fn>
+                  ===== asynchronous gap ===========================
+                  package:matcher                                                      expectLater
+                  package:flutter_test/src/widget_tester.dart 507:8                    expectLater
+                  test/phone_agents_removal_host_test.dart 143:11                      main.<fn>
+
+            which has `reason` with value AgentHostFailure:<AgentHostFailure.unavailable>
+
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/phone_agents_removal_host_test.dart 143:11    main.<fn>
+
+00:00 +2 -3: removal serializes installs and releases exclusion after completion
+00:00 +2 -4: removal serializes installs and releases exclusion after completion [E]
+  AgentHostException(unavailable)
+  package:opencode_mobile/builtin/agents/phone_agents_host.dart 111:5  BuiltinPhoneAgents.removeAgent
+  test/phone_agents_removal_host_test.dart 158:28                      main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                           Future._asyncCompleteError
+  test/phone_agents_removal_host_test.dart 158:28                      main.<fn>
+
+  TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts
+  dart:isolate  _RawReceivePort._handleMessage
+
+  Expected: throws <Instance of 'AgentHostException'> with `reason`: AgentHostFailure:<AgentHostFailure.busy>
+    Actual: <Instance of 'Future<void>'>
+     Which: emitted <null>
+
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/phone_agents_removal_host_test.dart 160:13    main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                         _CustomZone.registerUnaryCallback
+  test/phone_agents_removal_host_test.dart 159:7     main.<fn>
+
+00:30 +2 -4: QA requirement reaches the native target only
+00:30 +2 -5: QA requirement reaches the native target only [E]
+  Expected: '8589934592'
+    Actual: '300000000'
+     Which: is different.
+            Expected: 8589934592 ...
+              Actual: 300000000
+                      ^
+             Differ at offset 0
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_agents_removal_host_test.dart 191:5      main.<fn>
+
+00:30 +2 -5: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: QA requirement reaches the native target only
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: live target refusal is busy without leaking child output
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: removal serializes installs and releases exclusion after completion
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: removal uses fixed agent view and preserves account and gate metadata
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: running foreign native setup prevents removal

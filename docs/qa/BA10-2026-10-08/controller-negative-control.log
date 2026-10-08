@@ -1,0 +1,48 @@
+Command before controller/source fixes, with new regression tests and result-returning host port:
+tool/qa/machine_lock.sh test -- /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter test --no-pub --concurrency=1 test/phone_agents_controller_test.dart --plain-name removal
+
+Captured output excerpts, exit code 1 (1 passed, 9 failed):
+
+00:00 +0 -1: removal removes only target rows and keeps Claude chats and account [E]
+  Expected: same instance as <Instance of 'AgentRemovalResult'>
+    Actual: <null>
+
+00:00 +0 -2: removal excludes new phone chats and a second removal [E]
+  Expected: <false>
+    Actual: <true>
+
+00:00 +0 -3: removal returns plain busy guidance and preserves ready row [E]
+  Expected: throws <Instance of 'ProductException'> with `message`: 'This agent is in use. Finish its work and try again.'
+    Actual: <Instance of 'Future<void>'>
+     Which: threw ProductException:<This agent is still in use. Finish its setup or conversation and try again.>
+
+00:00 +0 -4: older hosts and Claude removal fail closed before dispatch [E]
+  Expected: throws <Instance of 'ProductException'> with `message`: 'This agent can\'t be removed here.'
+    Actual: <Instance of 'Future<void>'>
+     Which: threw ProductException:<Removal is not available on this phone yet. Update the app and try again.>
+
+00:00 +0 -5: removal forwards an already-absent result without estimating bytes [E]
+  Expected: same instance as <Instance of 'AgentRemovalResult'>
+    Actual: <null>
+
+00:00 +1 -5: removal remains available while an installed agent account is unknown
+00:00 +1 -6: removal remains available while an installed agent account is unknown [E]
+  Expected: <true>
+    Actual: <false>
+
+00:00 +1 -7: removal is available for a failed or interrupted partial target install [E]
+  Expected: <true>
+    Actual: <false>
+  codex AgentSetupPhase.failed
+
+00:00 +1 -8: removal hides arbitrary host failures behind fixed confirmation guidance [E]
+  Expected: throws <Instance of 'ProductException'> with `message`: 'Couldn\'t confirm this agent was removed. Check this phone and try again.'
+    Actual: <Instance of 'Future<void>'>
+     Which: threw ProductException:<The agent could not be removed. Refresh Agents and try again.>
+
+00:00 +1 -9: removal from a replaced owner cannot clear the new removal or its rows [E]
+  Expected: null
+    Actual: 'fx'
+
+00:00 +1 -9: (tearDownAll)
+00:00 +1 -9: Some tests failed.

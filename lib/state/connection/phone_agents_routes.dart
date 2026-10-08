@@ -2,6 +2,122 @@ part of '../connection.dart';
 
 // Opening and replacing feed rows retains their captured source and directory.
 extension _PhoneAgentRoutes on _ConnectionControllerPhoneAgents {
+  static const _removableAgents = {
+    'codex',
+    'gemini',
+    'qwen',
+    'goose',
+    'omp-acp',
+    'fx',
+  };
+  static const _removalBusy = ProductException(
+    'This agent is in use. Finish its work and try again.',
+  );
+  static const _removalUnsupported = ProductException(
+    "This agent can't be removed here.",
+  );
+  static const _removalUnconfirmed = ProductException(
+    "Couldn't confirm this agent was removed. Check this phone and try again.",
+  );
+
+  bool _paCanRemoveAgent(String id) {
+    if (_self._disposed ||
+        !phoneAgentsAvailable ||
+        _paHost is! PhoneAgentRemovalPort ||
+        _paRemovingAgent != null ||
+        !_removableAgents.contains(id)) {
+      return false;
+    }
+    final row = _paRowFor(id);
+    if (row == null || !row.setupVisible) return false;
+    if ({
+      PhoneAgentStatus.stoppedInBackground,
+      PhoneAgentStatus.signedOut,
+      PhoneAgentStatus.limitReached,
+      PhoneAgentStatus.ready,
+      PhoneAgentStatus.needsQualification,
+    }.contains(row.status)) {
+      return true;
+    }
+    // These unavailable rows still describe a known installed payload.
+    if (row.status == PhoneAgentStatus.unavailable &&
+        {
+          PhoneAgentHiddenReason.hostUnavailable,
+          PhoneAgentHiddenReason.runtimeUnknown,
+          PhoneAgentHiddenReason.signedOut,
+        }.contains(row.hiddenReason)) {
+      return true;
+    }
+    final progress = agentSetupProgress;
+    return progress.agentId == id &&
+        {
+          AgentSetupPhase.failed,
+          AgentSetupPhase.interrupted,
+        }.contains(progress.phase);
+  }
+
+  Future<void> _paInstallAgent(String id) async {
+    if (_paRemovingAgent != null) throw _removalBusy;
+    final host = _paEnsureHost();
+    await host.install(id);
+    if (!_self._disposed) _self._notifyListeners();
+  }
+
+  Future<AgentRemovalResult> _paRemoveAgent(String id) async {
+    if (_self._disposed ||
+        !_removableAgents.contains(id) ||
+        !phoneAgentsAvailable) {
+      throw _removalUnsupported;
+    }
+    if (_paRemovingAgent != null) throw _removalBusy;
+    final PhoneAgentHostPort host;
+    try {
+      host = _paEnsureHost();
+    } catch (_) {
+      throw _removalUnconfirmed;
+    }
+    if (host is! PhoneAgentRemovalPort) throw _removalUnsupported;
+    final owner = _paHostProfile;
+    final token = Object();
+    bool current() =>
+        !_self._disposed &&
+        _paHost == host &&
+        _paHostProfile == owner &&
+        _paProfile?.id == owner &&
+        identical(_paRemovalToken, token);
+    _paRemovalToken = token;
+    _paRemovingAgent = id;
+    _self._notifyListeners();
+    try {
+      final result = await (host as PhoneAgentRemovalPort).removeAgent(id);
+      if (!current() ||
+          result.agentId != id ||
+          result.freedBytes < 0 ||
+          (result.alreadyAbsent && result.freedBytes != 0)) {
+        throw _removalUnconfirmed;
+      }
+      // Drain an inspection that began before deletion, then read new truth.
+      // Keep the target's accounts, chats and phone-check proof unchanged.
+      await _paRefreshingRows;
+      if (!current()) throw _removalUnconfirmed;
+      await refreshAgentRows();
+      if (!current()) throw _removalUnconfirmed;
+      return result;
+    } on AgentHostException catch (error) {
+      throw error.reason == AgentHostFailure.busy
+          ? _removalBusy
+          : _removalUnconfirmed;
+    } catch (_) {
+      throw _removalUnconfirmed;
+    } finally {
+      if (identical(_paRemovalToken, token)) {
+        _paRemovalToken = null;
+        _paRemovingAgent = null;
+        if (!_self._disposed) _self._notifyListeners();
+      }
+    }
+  }
+
   Future<ChatFeedRoute> _paOpenChatFeedItem(ChatFeedItem item) async {
     // A saved row whose folder has not been read yet opens on the agent's
     // backend directly; it starts the helper when needed.
