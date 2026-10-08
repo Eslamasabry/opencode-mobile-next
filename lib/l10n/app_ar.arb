@@ -8387,5 +8387,16 @@
   "diagnosticsExitShowAll": "{count, plural, =1{عرض الكل (1)} other{عرض الكل ({count})}}",
   "diagnosticsExitUnknown": "أُغلق لسبب غير معروف",
   "diagnosticsExitToday": "اليوم {time}",
-  "diagnosticsExitYesterday": "أمس {time}"
+  "diagnosticsExitYesterday": "أمس {time}",
+  "liveToolCommand": "جارٍ تشغيل أمر…",
+  "liveToolEdit": "جارٍ تعديل الملفات…",
+  "liveToolRead": "جارٍ قراءة الملفات…",
+  "liveToolSearch": "جارٍ البحث في الملفات…",
+  "liveToolWeb": "جارٍ تصفح الويب…",
+  "liveToolSubagent": "جارٍ تشغيل وكيل فرعي…",
+  "liveToolPlan": "جارٍ التخطيط…",
+  "liveToolWorking": "جارٍ العمل…",
+  "liveToolCard": "جارٍ عرض بطاقة…",
+  "liveToolBackgroundTask": "جارٍ فحص مهمة في الخلفية…",
+  "liveToolOther": "جارٍ تشغيل {tool}…"
 }

@@ -1,35 +1,56 @@
 # Localization: TODO
 
-Status: **English only.** The Flutter localization layer exists
-(`l10n.yaml`, `lib/l10n/app_en.arb`, generated `AppLocalizations`), but only
-about 30 strings go through it. Roughly 700 user-visible literals across
-`lib/ui/**`, `lib/voice/**` and `lib/main.dart` are hardcoded English.
+Status (2026-10-08): **English and Arabic.** `lib/l10n/app_en.arb` and
+`app_ar.arb` carry about 7,370 English messages, each with an Arabic one;
+`tool/l10n/check_completeness.py` reports none missing (new English must ship
+with Arabic in the same change), and there is a language picker in Settings
+(`lib/ui/widgets/language_picker.dart`). The hardcoded-literal ratchet
+(`test/l10n_coverage_test.dart`) has an empty baseline: no `Text('...')` or
+named label literal is left under `lib/ui/**`, `lib/voice/**` or
+`lib/main.dart`. It does not see other kinds of literal (the sections below),
+and it says nothing about translation quality.
 
-Decision (2026-09-02): ship the UI/UX refresh in English and do the
-externalisation as its own change, so translators can start from a complete
-ARB file rather than a moving target.
+## Done
 
-## Work items
+- [x] Externalise every `Text('...')` and named label literal under
+      `lib/ui/**`, `lib/voice/**` and `lib/main.dart` (the coverage test).
+- [x] Add `test/l10n_coverage_test.dart` as a per-file ratchet. Baseline now
+      empty.
+- [x] Add the first non-English locale (Arabic, right to left) and a locale
+      picker in Settings that follows the system locale by default.
+- [x] Surfaces written without a widget tree resolve their words from the
+      app's language (`ConnectionController._shellStrings`): launcher shortcut
+      labels, the AI Team notifications and ongoing progress line, the thermal
+      notice, the phone setup notification, and, since 2026-10-08, the live
+      "what is running" line of the ongoing background notification
+      (`ConnectionController.toolSentence`, keys `liveTool*`) and the
+      home-screen widget's untitled-conversation fallback.
 
-- [ ] Externalise every user-visible string in `lib/ui/**` into
-      `app_en.arb`, grouped by screen, with `@` descriptions for translators.
-      Keep the English values byte-identical so the existing widget tests
-      that match on text keep passing.
+## Still open
+
+- [ ] Notifications composed on the Android side. The Dart side now sends only
+      localized words, ids and counts, but Kotlin builds the rest in English
+      (`android/app/src/main/kotlin/.../`): the coding-alert titles and bodies
+      and the action labels ("Allow once", "Pause background", "Stop") in
+      `BackgroundConnectionService.kt`, its channel names and descriptions,
+      "OpenCode is connected", and the phone server notification in
+      `BuiltinServerService.kt`. `res/values-ar/strings.xml` exists (17
+      strings) but does not cover them; `VoiceDownloadNotifications.kt`
+      switches on an `arabic` flag instead. Moving these to string resources
+      is a native change (a new release, not a Shorebird patch).
+- [ ] Words the app maps from a server into the transcript
+      ("Compacting conversation…" in `lib/paseo/mappers.dart` and
+      `lib/api2/gateway_mappers.dart`).
 - [ ] Give static helpers and sheets that lack a `BuildContext` a way to
-      resolve strings (pass `AppLocalizations` in, or restructure).
-- [x] Add a `test/l10n_coverage_test.dart` that fails when a `Text('...')`
-      literal with letters appears under `lib/ui/**`, with an allowlist for
-      identifiers (model ids, paths, shortcuts). Landed as a per-file ratchet:
-      751 literals in 67 files on 2026-09-03; the baseline only goes down.
+      resolve strings (pass `AppLocalizations` in, as `toolSentence` now does,
+      or restructure).
 - [ ] Plurals and dates through `intl` rather than string concatenation
       (`'$n files'`, relative times, cost formatting).
-- [ ] Add the first non-English locale. Arabic is the natural candidate
-      (maintainer's locale) and exercises RTL: verify the composer, diff
-      gutters, the chevron glyph in the icon, and `Directionality` in the
-      review canvas.
-- [ ] Locale picker in Settings → Appearance, defaulting to the system
-      locale.
-- [ ] Golden tests for the theme gallery in the new locale.
+- [ ] Golden tests for the theme gallery in the new locale (the kit gallery
+      and several screens have Arabic goldens; the full gallery does not).
+- [ ] Translation quality: the completeness gate checks that a message
+      exists, not that it reads well. The voice packs and the copy of several
+      newer pages are English-first.
 
 ## Non-goals for now
 
