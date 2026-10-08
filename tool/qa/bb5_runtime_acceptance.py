@@ -13,9 +13,12 @@ import argparse
 import copy
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
+import selectors
 import shlex
+import subprocess
 import time
 from types import SimpleNamespace
 import xml.etree.ElementTree as ET
@@ -25,8 +28,154 @@ import bb9_component_update_acceptance as H
 IDLE_FIXTURE = H.PRIVATE + '/files/bb5-runtime-qa.json'
 IDLE_FIELDS = {'bb5IdlePassed', 'bb5RealIdlePassed', 'bb5ExactDrainPassed',
                'bb5StoppedIntentPassed', 'bb5ForegroundResumePassed',
-               'bb5HelperAcknowledgementPassed', 'bb5BudgetPreserved', 'bb5ExplicitStopPassed'}
+               'bb5HelperAcknowledgementPassed', 'bb5BudgetPreserved', 'bb5ExplicitStopPassed',
+               'bb5IdleNotificationPassed', 'bb5NotificationTapPassed'}
 VERSION = 2197
+IDLE_BODIES = {
+    'Phone server paused while idle. Tap to open OpenCode.',
+    'خادم الهاتف متوقف مؤقتًا لعدم وجود نشاط. اضغط لفتح OpenCode.',
+}
+NOTIFICATION_MARKER = b'INSTRUMENTATION_STATUS: bb5AwaitNotificationTap=true'
+UI_BYTES = 262144
+INSTRUMENT_BYTES = 131072
+
+
+class _BoundedProcess:
+    """Private stream capture; never retain unbounded native or notification text."""
+    def __init__(self, command, maximum):
+        self.maximum = maximum
+        self.stdout = bytearray(); self.stderr = bytearray()
+        self.child = subprocess.Popen(command, stdin=subprocess.DEVNULL,
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.selector = selectors.DefaultSelector()
+        try:
+            for pipe, target in [(self.child.stdout, self.stdout), (self.child.stderr, self.stderr)]:
+                os.set_blocking(pipe.fileno(), False)
+                self.selector.register(pipe, selectors.EVENT_READ, target)
+        except BaseException:
+            self.close()
+            raise
+
+    @property
+    def finished(self):
+        return not self.selector.get_map() and self.child.poll() is not None
+
+    def pump(self, timeout):
+        for key, _ in self.selector.select(timeout):
+            try:
+                chunk = os.read(key.fileobj.fileno(), 4096)
+            except BlockingIOError:
+                continue
+            if not chunk:
+                self.selector.unregister(key.fileobj)
+            else:
+                key.data.extend(chunk)
+                H.require(len(self.stdout) + len(self.stderr) <= self.maximum, 'bb5_private_output_overflow')
+
+    def result(self, command):
+        H.require(self.finished, 'bb5_private_process_not_drained')
+        return subprocess.CompletedProcess(command, self.child.returncode,
+                bytes(self.stdout).decode('utf-8', errors='replace'),
+                bytes(self.stderr).decode('utf-8', errors='replace'))
+
+    def close(self):
+        try:
+            if self.child.poll() is None:
+                self.child.terminate()  # Only our captured local adb child, never a process pattern.
+                try:
+                    self.child.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    self.child.kill()
+            self.child.wait(timeout=2)
+        finally:
+            self.selector.close()
+            self.child.stdout.close(); self.child.stderr.close()
+
+
+def _bounded_adb(arguments, deadline, maximum=16384, cap=5):
+    H.require(H.SERIAL == 'emulator-5554', 'bb5_notification_device_invalid')
+    remaining = deadline - time.monotonic()
+    H.require(remaining > 0, 'bb5_notification_tap_timeout')
+    command = ['adb', '-s', H.SERIAL, *arguments]
+    process = _BoundedProcess(command, maximum)
+    until = min(deadline, time.monotonic() + min(cap, remaining))
+    try:
+        while not process.finished:
+            H.require(time.monotonic() < until, 'bb5_notification_command_timeout')
+            process.pump(min(.1, max(0, until-time.monotonic())))
+        return process.result(command)
+    finally:
+        process.close()
+
+
+def idle_notification_bounds(raw):
+    """Only a unique actual SystemUI body qualifies; XML remains in memory."""
+    H.require(isinstance(raw, str) and len(raw.encode('utf-8')) <= UI_BYTES and
+              '<!DOCTYPE' not in raw and '<!ENTITY' not in raw, 'bb5_notification_xml_invalid')
+    begin, end = raw.find('<?xml'), raw.find('</hierarchy>')
+    H.require(begin >= 0 and end >= begin, 'bb5_notification_xml_invalid')
+    try:
+        tree = ET.fromstring(raw[begin:end+len('</hierarchy>')])
+    except ET.ParseError:
+        raise H.Q.Refused('bb5_notification_xml_invalid') from None
+    nodes = list(tree.iter('node'))
+    H.require(tree.tag == 'hierarchy' and len(nodes) <= 4096, 'bb5_notification_xml_invalid')
+    matches = [node for node in nodes if node.get('package') == 'com.android.systemui' and
+               any(value.strip() in IDLE_BODIES for key in ['text', 'content-desc']
+                   for value in node.get(key, '').splitlines())]
+    H.require(len(matches) <= 1, 'bb5_notification_target_ambiguous')
+    if not matches:
+        return None
+    node = matches[0]
+    bounds = re.fullmatch(r'\[(\d{1,5}),(\d{1,5})\]\[(\d{1,5}),(\d{1,5})\]', node.get('bounds', ''))
+    H.require(node.get('enabled') == 'true' and bounds is not None, 'bb5_notification_bounds_invalid')
+    left, top, right, bottom = map(int, bounds.groups())
+    H.require(0 <= left < right <= 10000 and 0 <= top < bottom <= 10000,
+              'bb5_notification_bounds_invalid')
+    return ((left+right)//2, (top+bottom)//2)
+
+
+def tap_idle_notification(deadline):
+    expanded = _bounded_adb(['shell', 'cmd', 'statusbar', 'expand-notifications'], deadline)
+    H.require(expanded.returncode == 0, 'bb5_notification_shade_unavailable')
+    while time.monotonic() < deadline:
+        # Write to uiautomator's own stdout descriptor, not an on-device XML file.
+        result = _bounded_adb(['exec-out', 'uiautomator', 'dump', '--compressed', '/proc/self/fd/1'],
+                              deadline, maximum=UI_BYTES, cap=8)
+        H.require(result.returncode == 0, 'bb5_notification_ui_unavailable')
+        bounds = idle_notification_bounds(result.stdout)
+        if bounds is not None:
+            tapped = _bounded_adb(['shell', 'input', 'tap', str(bounds[0]), str(bounds[1])], deadline)
+            H.require(tapped.returncode == 0, 'bb5_notification_input_failed')
+            return
+        time.sleep(min(.2, max(0, deadline-time.monotonic())))
+    raise H.Q.Refused('bb5_notification_tap_timeout')
+
+
+def run_idle_instrumentation(arguments, timeout):
+    """Keep H.Device's identity/detachment/result guards around the live channel."""
+    H.require(H.SERIAL == 'emulator-5554' and 0 < timeout <= 180 and
+              arguments[:3] == ('shell', 'am', 'instrument') and
+              '--no-restart' in arguments and 'bb5Idle' in arguments,
+              'bb5_notification_instrument_invalid')
+    H.inherited_lock()
+    command = ['adb', '-s', H.SERIAL, *arguments]
+    process = _BoundedProcess(command, INSTRUMENT_BYTES)
+    deadline = time.monotonic() + timeout
+    tapped = False
+    try:
+        while not process.finished:
+            H.require(time.monotonic() < deadline, 'bb5_idle_instrument_timeout')
+            process.pump(min(.1, max(0, deadline-time.monotonic())))
+            # Complete native STATUS line only, never a substring or final result.
+            complete_lines = [line.rstrip(b'\r') for line in bytes(process.stdout).split(b'\n')[:-1]]
+            if not tapped and NOTIFICATION_MARKER in complete_lines:
+                tap_idle_notification(min(deadline, time.monotonic()+20))
+                tapped = True
+        H.require(tapped, 'bb5_systemui_notification_tap_not_observed')
+        return process.result(command)
+    finally:
+        process.close()
 
 
 def inspect_server_only_before_bootstrap(device, original_flutter, evidence):
@@ -146,7 +295,7 @@ def preserve_idle_highwater(original, current, merger):
 
 def configure(host=H):
     host.STEPS.update({'bb5Idle': 'bb5IdlePassed', 'bb5Cleanup': 'bb5CleanupComplete'})
-    host.FIELDS |= IDLE_FIELDS | {'bb5CleanupComplete'}
+    host.FIELDS |= IDLE_FIELDS | {'bb5CleanupComplete', 'bb5AwaitNotificationTap'}
     host.PHASE_NAMES |= {'instrument_' + step + suffix for step in ['bb5Idle', 'bb5Cleanup']
                        for suffix in ['', '_identity_check', '_pre_detach', '_invoke', '_post_detach']}
 
@@ -160,6 +309,7 @@ def configure(host=H):
             host.require(all(fields.get(k) == 'true' for k in IDLE_FIELDS), 'bb5_native_idle_scenario_unproven')
             self.evidence += ['PASS actual_minute_background_idle_exact_server_and_stand_in_helper_drain',
                              'PASS actual_foreground_same_generation_resume_helper_ack_budget_and_explicit_Stop',
+                             'PASS actual_SystemUI_idle_notification_body_tap_and_native_MainActivity_resume',
                              'SCOPE canonical_server_uses_existing_OC2_projects_data_config_empty_helper_only_isolated',
                              'LIMIT no_real_agent_auth_account_Paseo_readiness_Dart_manual_count_or_cold_idle_marker_certification']
 
@@ -184,7 +334,7 @@ class Device(H.Device):
     def adb(self, *args, timeout=8):
         # Only this fixed real-minute native step gets the larger bounded budget.
         if args[:3] == ('shell', 'am', 'instrument') and 'bb5Idle' in args:
-            timeout = 180
+            return run_idle_instrumentation(args, 180)
         return super().adb(*args, timeout=timeout)
 
 

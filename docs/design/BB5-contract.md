@@ -39,6 +39,33 @@ notification service action is required. The healing owner must serialize resume
 with recovery/profile binding and recheck foreground, disposal and owner after
 every await. Duplicate lifecycle callbacks share one in-flight operation.
 
+### Idle notification and tap
+
+An idle stop posts a normal, non-ongoing, auto-cancel notification with ID `4098`
+on the existing phone-server channel. It reuses `native_phone_server_title` and
+uses `native_phone_server_idle_body`: “Phone server paused while idle. Tap to
+open OpenCode.” The Arabic resource is “خادم الهاتف متوقف مؤقتًا لعدم وجود نشاط.
+اضغط لفتح OpenCode.”
+
+Post only for the durable current idle-stopped generation: wanted intent remains
+true, explicit Stop has not won, the owner is known and current, the generation
+is positive, the app is backgrounded, and the server is not running. Deduplicate
+by owner and generation. Cancel on foreground return, manual Stop, Android
+timeout, owner transfer or deletion. Denied notification permission leaves the
+existing foreground-return path available.
+
+Its immutable content `PendingIntent` opens MainActivity. A real SystemUI tap
+must reach the normal Activity lifecycle and the same guarded foreground resume;
+an `am start` command alone does not qualify notification-tap behavior. The idle
+notification has no Stop service action, starts no foreground service or helper,
+and holds no CPU lease or wake lock. Android dataSync timeout handling remains
+unchanged; the notification grants no extra background lifetime.
+
+Each new post resolves `NativeStrings` in the current locale. This resource
+requires no `NativeNotificationLocale` change: foreground return cancels the idle
+notification before an in-app Settings locale change, and a later post resolves
+the new locale.
+
 Never use `BuiltinServerStarter.start()` or `startForLaunch()` for idle resume.
 Their manual path can increment `manualReadyCount`, which recovery treats as a
 request to reset its durable budget. An idle resume has a separate native path.

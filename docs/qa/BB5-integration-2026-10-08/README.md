@@ -14,8 +14,9 @@ releases or exact wake-up timing during Doze.
 
 Integration `9485f0c7c` merged without rebase at `7af5b544c`. Verified Dart
 integration committed at `94001aeb9`; host fixture/tests at `61ec2c85b`.
-The native draft remains uncommitted; hashes are in
-[native-draft-manifest.txt](native-draft-manifest.txt). BB5 groundwork
+The native draft remains uncommitted. The
+[native-draft-manifest.txt](native-draft-manifest.txt) now captures the source,
+notification resources and host candidate. Those hashes imply no compile pass. BB5 groundwork
 `89f8937a4` and BA hooks `f561c3584` remain prerequisites.
 
 Pinned Flutter 3.47.1; every check below used
@@ -68,10 +69,17 @@ only the work generation captured before drain/launch; it cannot reopen a Stop
 or timeout revision revoked during the launch. Both fixes still need native
 removed-fix and restored tests.
 
-87 affected JVM tests are authored (IdleStopPolicy16, NativeIdleState29,
-NativeIdleHeartbeat17, NativeIdleTimer17, receiver dispatch8). These have not
+123 affected JVM tests are authored (IdleStopPolicy16, NativeIdleState29,
+NativeIdleHeartbeat17, NativeIdleTimer17, receiver dispatch8, helper admission22,
+idle notification14). These have not
 been run on this integration candidate. The historical pre-hold IdleStopPolicy16
 pass is not a substitute for the new candidate's native gate.
+
+The [native regression driver](../../../tool/qa/bb5_native_regression.py) plans
+20 removed-fix controls. Compiler-free `--validate-only` passed for all 20
+control selections. This validates the source mutations and selected fixtures;
+it is not an executed JVM behavioral red/restored pass. Actual native compilation,
+JVM controls, Android compilation and device checks remain pending.
 
 The host refuses non-server/unknown/installer/sign-in/terminal payloads before
 its initial setup mutation. The native scenario independently requires known
@@ -89,6 +97,14 @@ all-agent turns or Dart manualReadyCount on device. The server uses the existing
 canonical OpenCode2 runtime data/config; no server namespace isolation is
 claimed. A real MainActivity and owner checks remain required.
 
+The draft now includes a plain idle return notice: normal non-ongoing,
+auto-cancel notification `4098` on the existing phone-server channel, with an
+immutable MainActivity content intent. It says “Phone server paused while idle.
+Tap to open OpenCode.” Posting requires current durable idle intent and it is
+cancelled on foreground return or revocation; it starts no service and holds no
+CPU lease. The actual-SystemUI-tap fixture is authored but unqualified. A direct
+Activity launch does not establish notification-tap behavior.
+
 Additional pending device cases: actual local-agent/chat/setup/sign-in/terminal
 busy work blocks idle; late Stop/timeout during resume; notification tap; cold
 idle marker persistence. The busy receiver/lease unit fixtures do not prove
@@ -100,8 +116,10 @@ emulator session or app/account/data change occurred at this checkpoint.
 Coordinator lifted the build hold conditionally: at least 6 GB available memory
 before a build, with
 `GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx4g -Dkotlin.compiler.execution.strategy=in-process -Dorg.gradle.workers.max=2"`.
-Available memory during this checkpoint remained below the threshold
-(approximately 3.8–5.1 GB), so no native compiler/Gradle/APK job was started.
+Available memory during this checkpoint remained below the threshold, so no
+native compiler/Gradle/APK job was started. The new watch's first reading was
+2762 MiB at `2026-10-08T20:59:50Z`; the latest recorded reading is 2743 MiB at
+`21:01:50Z` in [memory-watch.txt](memory-watch.txt).
 Final [resource reading](resource-gate.txt) remains below the gate. No shared
 process was killed or memory reclaimed from another lane. No new BB APK exists
 for this draft, so the new candidate cannot be device qualified yet.
@@ -121,3 +139,25 @@ blocks stopping. [Android AlarmManager reference](https://developer.android.com/
 
 BB7 is skipped pending BB5 qualification. BB6 remains skipped for its account
 prerequisite, and BB8 belongs to BD2.
+
+## Resumed after FQ9 artifact diagnosis
+
+Coordinator confirmed BC's seeder created the hidden legacy fixture outside the
+product path. BB dropped its broad uncommitted project-recovery draft; strict
+existing guards are unchanged. Diagnosis/evidence only are committed at
+`b910abfc1` and `3cbf486a5`. No FQ9 production recovery shipped, and no FQ9 native
+compile/build or app-data cleanup was performed; BC owns fixture cleanup and
+rerun. The owned BB5 stash was restored cleanly.
+
+The watch resumed at `20:34 UTC`, then exact watcher PID `3171435` was paused
+before any compilation while the notification-tap gap changed the draft.
+All worker ownership has returned; the updated candidate is recorded in the manifest. Replacement watcher PID `3187182`, session
+`42075`, started at `2026-10-08T20:59:50Z`; it polls every two minutes for at most
+60 minutes. The `>=6144 MiB` gate is rechecked inside the shared build lock
+before focused Gradle/JVM work. No build has started. The source manifest is
+refreshed; compiler-free validation passed 20 planned controls,
+while actual native/JVM/Android/device qualification remains pending.
+
+## Notification host verification checkpoint
+
+The updated host fixture has28 passing Python tests, including actual shade/XML/body-bounds input command selection and fragmented/missing native-marker refusal. [Focused pass](python-notification-final.txt). Removing the native readiness-marker requirement makes its named test fail by assertion even when the mocked native result says PASS; source bytes restored exactly and all28 pass again. [Behavioral red](red-host-notification-marker.txt), [restored pass](python-notification-restored.txt). These are mocked host checks, not adb/SystemUI/device qualification. No APK or native compiler was invoked. Compiler-free20 native-control validation remains a source check only.

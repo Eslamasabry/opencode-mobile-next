@@ -1,0 +1,14 @@
+test_missing_ready_marker_cannot_accept_native_pass (test_bb5_runtime_acceptance.NotificationTapTest.test_missing_ready_marker_cannot_accept_native_pass) ... FAIL
+
+======================================================================
+FAIL: test_missing_ready_marker_cannot_accept_native_pass (test_bb5_runtime_acceptance.NotificationTapTest.test_missing_ready_marker_cannot_accept_native_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 151, in test_missing_ready_marker_cannot_accept_native_pass
+    with patch.object(B, 'tap_idle_notification') as tapped, self.assertRaises(H.Q.Refused):
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

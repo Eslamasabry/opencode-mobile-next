@@ -65,11 +65,98 @@ class AdapterTest(unittest.TestCase):
 
     def test_bounded_timeout_only_for_real_minute_step(self):
         device = B.Device()
-        with patch.object(H.Device, 'adb', return_value=object()) as adb:
+        with patch.object(H.Device, 'adb', return_value=object()) as adb, \
+             patch.object(B, 'run_idle_instrumentation', return_value=object()) as idle:
             device.adb('shell', 'am', 'instrument', '-e', 'step', 'bb5Idle', timeout=90)
-            self.assertEqual(180, adb.call_args.kwargs['timeout'])
+            self.assertEqual(180, idle.call_args.args[1]); adb.assert_not_called()
             device.adb('shell', 'am', 'instrument', '-e', 'step', 'bb5Cleanup', timeout=90)
             self.assertEqual(90, adb.call_args.kwargs['timeout'])
+
+
+class NotificationTapTest(unittest.TestCase):
+    def xml(self, body=None, package='com.android.systemui', bounds='[20,80][220,180]'):
+        root = ET.Element('hierarchy')
+        ET.SubElement(root, 'node', {'package': package, 'text': body or next(iter(B.IDLE_BODIES)),
+                      'enabled': 'true', 'bounds': bounds})
+        return ET.tostring(root, encoding='unicode', xml_declaration=True)
+
+    def test_fixed_english_and_arabic_actual_systemui_bounds(self):
+        for body in B.IDLE_BODIES:
+            self.assertEqual((120, 130), B.idle_notification_bounds(self.xml(body)))
+
+    def test_application_text_or_partial_copy_is_not_tap_proof(self):
+        self.assertIsNone(B.idle_notification_bounds(self.xml(package=H.PACKAGE)))
+        self.assertIsNone(B.idle_notification_bounds(self.xml(body='Phone server paused')))
+
+    def test_ambiguous_or_malformed_or_oversized_notification_refuses(self):
+        duplicate = self.xml().replace('</hierarchy>', self.xml().split('?>', 1)[1]
+                                      .removeprefix('<hierarchy>').removesuffix('</hierarchy>') + '</hierarchy>')
+        for raw in [duplicate, self.xml(bounds='[220,180][20,80]'), 'x'*(B.UI_BYTES+1),
+                    '<?xml version="1.0"?><!DOCTYPE hierarchy><hierarchy></hierarchy>']:
+            with self.assertRaises(H.Q.Refused):
+                B.idle_notification_bounds(raw)
+
+    def test_real_shade_xml_and_bounds_input_are_required_without_activity_shortcut(self):
+        result = SimpleNamespace(returncode=0, stdout=self.xml(), stderr='')
+        with patch.object(B, '_bounded_adb', return_value=result) as adb:
+            B.tap_idle_notification(B.time.monotonic()+20)
+        commands = [call.args[0] for call in adb.call_args_list]
+        self.assertEqual([
+            ['shell', 'cmd', 'statusbar', 'expand-notifications'],
+            ['exec-out', 'uiautomator', 'dump', '--compressed', '/proc/self/fd/1'],
+            ['shell', 'input', 'tap', '120', '130']], commands)
+        self.assertEqual(B.UI_BYTES, adb.call_args_list[1].kwargs['maximum'])
+        self.assertFalse(any('am' in command or 'start' in command for command in commands))
+
+    def test_failed_real_input_cannot_be_reported_as_tap(self):
+        results = [SimpleNamespace(returncode=0, stdout=''),
+                   SimpleNamespace(returncode=0, stdout=self.xml()), SimpleNamespace(returncode=1, stdout='')]
+        with patch.object(B, '_bounded_adb', side_effect=results), self.assertRaises(H.Q.Refused):
+            B.tap_idle_notification(B.time.monotonic()+20)
+
+    def process(self, chunks):
+        value = SimpleNamespace(stdout=bytearray(), chunks=list(chunks), closed=False)
+        class Fake:
+            @property
+            def stdout(self): return value.stdout
+            @property
+            def finished(self): return not value.chunks
+            def pump(self, timeout): value.stdout.extend(value.chunks.pop(0))
+            def result(self, command):
+                return SimpleNamespace(returncode=0, stdout=bytes(value.stdout).decode(), stderr='')
+            def close(self): value.closed=True
+        return Fake(), value
+
+    def invoke(self, process):
+        with patch.object(B, '_BoundedProcess', return_value=process), patch.object(H, 'inherited_lock'):
+            return B.run_idle_instrumentation(('shell', 'am', 'instrument', '--no-restart', '-w',
+                                              '-e', 'step', 'bb5Idle', H.Q.RUNNER), 180)
+
+    def test_partial_marker_waits_for_complete_status_line_and_taps_exactly_once(self):
+        fake, observed = self.process([B.NOTIFICATION_MARKER, b'\n', b'INSTRUMENTATION_CODE: -1\n'])
+        def tap(deadline):
+            self.assertTrue(observed.stdout.endswith(b'\n'))
+            self.assertLessEqual(deadline-B.time.monotonic(), 20)
+        with patch.object(B, 'tap_idle_notification', side_effect=tap) as tapped:
+            result = self.invoke(fake)
+        tapped.assert_called_once(); self.assertEqual(0, result.returncode); self.assertTrue(observed.closed)
+
+    def test_missing_ready_marker_cannot_accept_native_pass(self):
+        # Removed-fix control: delete the final H.require(tapped, ...) in the
+        # production driver. This assertion must fail despite native PASS.
+        for marker in [b'', b'INSTRUMENTATION_RESULT: bb5AwaitNotificationTap=true\n',
+                       b'prefix '+B.NOTIFICATION_MARKER+b'\n', B.NOTIFICATION_MARKER]:
+            fake, observed = self.process([marker, b'\nINSTRUMENTATION_RESULT: builtinRuntimeResult=PASS\n'
+                                          if marker != B.NOTIFICATION_MARKER else b''])
+            with patch.object(B, 'tap_idle_notification') as tapped, self.assertRaises(H.Q.Refused):
+                self.invoke(fake)
+            tapped.assert_not_called(); self.assertTrue(observed.closed)
+
+    def test_tap_failure_closes_owned_channel_and_propagates_refusal(self):
+        fake, observed = self.process([B.NOTIFICATION_MARKER+b'\n', b'INSTRUMENTATION_CODE: -1\n'])
+        with patch.object(B, 'tap_idle_notification', side_effect=H.Q.Refused('bb5_notification_input_failed')):
+            with self.assertRaises(H.Q.Refused): self.invoke(fake)
+        self.assertTrue(observed.closed)
 
 
 class IdleCounterRestoreTest(unittest.TestCase):
