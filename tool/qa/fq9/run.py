@@ -1,6 +1,6 @@
 """FQ9 checklist CLI. Default is an offline plan; --execute is device-only.
 
-Device runs wait for coordinator-posted APK 2197. No builds, downloads, user
+Device runs use coordinator-posted APK 2198. No builds, downloads, user
 creation, uninstall, clearing, credential output or network uploads.
 """
 
@@ -82,7 +82,7 @@ def plan(args, artifacts=None):
         "requiredCandidateBuild": CANDIDATE_BUILD,
         "package": PACKAGE,
         "requirements": [
-            "coordinator_posted_apk_2197",
+            "coordinator_posted_apk_2198",
             "reviewed_artifact_receipt",
             "same_signer_before_update",
             "shared_emulator_lock",

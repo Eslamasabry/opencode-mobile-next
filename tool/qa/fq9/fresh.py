@@ -17,9 +17,9 @@ those paths; user lifecycle operations remain excluded by the FQ9 contract.
 """
 
 try:
-    from .common import Artifact, DriverFailure
+    from .common import Artifact, CANDIDATE_BUILD, DriverFailure
 except ImportError:
-    from common import Artifact, DriverFailure
+    from common import Artifact, CANDIDATE_BUILD, DriverFailure
 
 
 _PLAN_FIELDS = frozenset(
@@ -144,7 +144,7 @@ def run_fresh(ports, candidate):
     if (
         not isinstance(candidate, Artifact)
         or type(candidate.build) is not int
-        or candidate.build != 2197
+        or candidate.build != CANDIDATE_BUILD
         or candidate.origin != "coordinator-approved"
     ):
         _fail("fresh_candidate_invalid")

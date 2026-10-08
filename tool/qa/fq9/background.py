@@ -9,8 +9,12 @@ import math
 
 try:
     from .common import DriverFailure
+    from .ports import FAIL_CODES as ADAPTER_FAIL_CODES
+    from .runtime import ProtocolHTTPFailure
 except ImportError:
-    from common import DriverFailure
+    from tool.qa.fq9.common import DriverFailure
+    from tool.qa.fq9.ports import FAIL_CODES as ADAPTER_FAIL_CODES
+    from tool.qa.fq9.runtime import ProtocolHTTPFailure
 
 
 _BOOLS = (
@@ -121,6 +125,8 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
         "cleanupAttempted": False,
         "cleanupSucceeded": False,
         "errorCodes": [],
+        "adapterFailure": None,
+        "lastGoodObservation": None,
     }
     if not isinstance(checkpoints, (tuple, list)) or not checkpoints:
         result["errorCodes"] = ["background_plan_invalid"]
@@ -137,6 +143,35 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
     cleanup_allowed = False
     previous_time = None
     stage = "background_setup_failed"
+
+    def diagnose(error, failed_stage):
+        # Capture only the first failure. Restoration must not erase the
+        # reason qualification stopped, and exception text is never evidence.
+        if result["adapterFailure"] is not None:
+            return
+        category = "unexpected_exception"
+        if (
+            isinstance(error, DriverFailure)
+            and type(error.code) is str
+            and error.code in (ADAPTER_FAIL_CODES | FAIL_CODES)
+        ):
+            category = error.code
+        detail = {"stage": failed_stage, "code": category}
+        if (
+            isinstance(error, ProtocolHTTPFailure)
+            and type(error.status) is int
+            and 100 <= error.status <= 599
+        ):
+            detail["httpStatus"] = error.status
+        result["adapterFailure"] = detail
+
+    def remember(snapshot, elapsed):
+        # Retain only validated live observations, detached from mutable port
+        # data. Resumed/final snapshots are restoration, not background proof.
+        result["lastGoodObservation"] = {
+            "elapsedSeconds": elapsed,
+            "snapshot": _snapshot(snapshot),
+        }
 
     def clock():
         nonlocal previous_time
@@ -161,6 +196,7 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
         )
         initial = _snapshot(raw)
         _check_live(initial, initial=True)
+        remember(initial, 0)
         baseline = initial["progressCounter"]
         previous_count = baseline
         checkpoint_count = baseline
@@ -174,6 +210,7 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
         if current["progressCounter"] < previous_count:
             raise DriverFailure("background_progress_regressed")
         previous_count = current["progressCounter"]
+        remember(current, clock() - began)
         for checkpoint in checkpoints:
             while True:
                 elapsed = clock() - began
@@ -193,6 +230,7 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
                 if current["progressCounter"] < previous_count:
                     raise DriverFailure("background_progress_regressed")
                 previous_count = current["progressCounter"]
+                remember(current, clock() - began)
             # A slow adapter read must not make a pre-deadline snapshot count as
             # proof at the checkpoint. Re-observe at or after its deadline.
             current = _snapshot(ports.live_snapshot())
@@ -200,6 +238,7 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
             if current["progressCounter"] < previous_count:
                 raise DriverFailure("background_progress_regressed")
             previous_count = current["progressCounter"]
+            remember(current, clock() - began)
             if previous_count <= checkpoint_count:
                 raise DriverFailure("background_checkpoint_progress_missing")
             checkpoint_count = previous_count
@@ -219,9 +258,15 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
     except DriverFailure as error:
         # Only driver-authored codes escape. A port may also throw DriverFailure
         # carrying an arbitrary server/command detail, which is never exported.
-        result["code"] = error.code if error.code in FAIL_CODES else stage
-    except Exception:
+        result["code"] = (
+            error.code
+            if type(error.code) is str and error.code in FAIL_CODES
+            else stage
+        )
+        diagnose(error, stage)
+    except Exception as error:
         result["code"] = stage
+        diagnose(error, stage)
     finally:
         if result["state"] == "fail":
             result["errorCodes"].append(result["code"])
@@ -241,15 +286,17 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
                 ):
                     raise DriverFailure("background_resume_failed")
                 result["resumed"] = True
-            except Exception:
+            except Exception as error:
                 result["errorCodes"].append("background_resume_failed")
+                diagnose(error, "background_resume_failed")
         if cleanup_allowed:
             result["cleanupAttempted"] = True
             try:
                 ports.cleanup_turn()
                 result["cleanupSucceeded"] = True
-            except Exception:
+            except Exception as error:
                 result["errorCodes"].append("background_cleanup_failed")
+                diagnose(error, "background_cleanup_failed")
         if result["errorCodes"]:
             result["state"] = "fail"
             result["code"] = result["errorCodes"][0]

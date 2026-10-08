@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from .common import (
     DriverFailure,
+    CANDIDATE_BUILD,
     LOCAL_SIGNER,
     STABLE_SIGNER,
     load_manifest,
@@ -18,7 +19,7 @@ class CommonTests(unittest.TestCase):
         self.path = Path(self.tmp.name) / "input.json"
         self.artifact = dict(
             apk="/unused/candidate.apk",
-            build=2197,
+            build=CANDIDATE_BUILD,
             version="1.2.0",
             sha256="a" * 64,
             signer=LOCAL_SIGNER,
@@ -51,7 +52,7 @@ class CommonTests(unittest.TestCase):
         self.assertEqual(parsed["stable"].version, "1.2.0")
         self.assertNotEqual(parsed["stable"].signer, parsed["candidate"].signer)
 
-    def test_candidate_and_normal_must_be_identical_2197(self):
+    def test_candidate_and_normal_must_be_identical_current_build(self):
         for field, value in [
             ("build", 2196),
             ("sha256", "b" * 64),

@@ -1,5 +1,30 @@
 # FQ9 pre-release device checklist
 
+## 2198 follow-up — `sol/bc-next`
+
+Finish line: retain the exact safe adapter category and last good observation
+when qualification fails, then run the full 30-minute background gate on normal
+2198 after BA releases the emulator, with exact fixture cleanup and normal-app
+restoration inside one reservation. Non-goals: changing live-turn admission,
+retrying through failed checkpoints, Claude/account changes, builds or native
+product changes. Historical 2197 proofs remain historical.
+
+Ownership: background.py/test_background.py (diagnostic worker), BD7 saved-report
+driver/UI guard tests (BD7 worker), current candidate pin/integration/docs/device
+execution (BC root). Read-only protocol/BD7 planning slices launch no checks or
+device jobs. Result additions are `adapterFailure` (fixed stage, allowlisted
+code, optional bounded HTTP status) and `lastGoodObservation` (elapsed seconds
+and strictly projected booleans/progress count). Raw exceptions, transcripts,
+credentials and restored snapshots do not replace failed-dwell diagnostics.
+
+The diagnostic regression failed first for a command-category failure and HTTP
+503; the integrated candidate then passed **111** serial machine-locked driver
+tests, Ruff format/F,E9 and diff checks. The current CLI/fresh admission pins
+2198. Its posted host artifact was independently checked against SHA256
+`2069cc0ca62554e3fd798f8ba8bfa46f44ae84be4ff82142e87b495cdc8b89a3`,
+build 2198 and local signer `1DE5BF08...`.
+[Generated offline proof](2198-background-diagnostics-validation.json).
+
 ## Authorized fixture cleanup and clean rerun — 2026-10-09
 
 Finish line: remove only BC's verified empty hidden legacy fixture, exercise

@@ -5,6 +5,7 @@ import unittest
 
 from .background import FAIL_CODES, run_background
 from .common import DriverFailure
+from .runtime import ProtocolHTTPFailure
 
 
 class FakePorts:
@@ -86,6 +87,132 @@ class FakePorts:
 
 
 class BackgroundTests(unittest.TestCase):
+    def failing_observation(self, failure):
+        ports = FakePorts()
+        original = ports.live_snapshot
+
+        def observe():
+            if ports.now >= 60 and not ports.resumed:
+                raise failure
+            return original()
+
+        ports.live_snapshot = observe
+        return ports
+
+    def test_exact_adapter_category_and_last_good_observation_survive_resume(self):
+        for failure, category, status in [
+            (
+                DriverFailure("live_fixture_command_invalid"),
+                "live_fixture_command_invalid",
+                None,
+            ),
+            (ProtocolHTTPFailure(503), "protocol_response_invalid", 503),
+        ]:
+            with self.subTest(category=category):
+                ports = self.failing_observation(failure)
+                result = run_background(ports)
+                self.assert_safe_failure(result, "background_observation_failed")
+                expected = {"stage": "background_observation_failed", "code": category}
+                if status is not None:
+                    expected["httpStatus"] = status
+                self.assertEqual(result["adapterFailure"], expected)
+                last = result["lastGoodObservation"]
+                self.assertEqual(last["elapsedSeconds"], 30)
+                self.assertFalse(last["snapshot"]["appVisible"])
+                self.assertEqual(last["snapshot"]["progressCounter"], 1)
+                self.assertEqual(len(last["snapshot"]), 11)
+                self.assertTrue(result["resumed"])
+                self.assertTrue(result["cleanupSucceeded"])
+
+    def test_adapter_diagnostics_reject_hostile_codes_and_unbounded_http_status(self):
+        for failure in [
+            DriverFailure("private token sk-unlogged"),
+            DriverFailure(["private token sk-unlogged"]),
+            RuntimeError("private response body sk-unlogged"),
+        ]:
+            with self.subTest(kind=type(failure).__name__):
+                result = run_background(self.failing_observation(failure))
+                self.assert_safe_failure(result, "background_observation_failed")
+                self.assertEqual(
+                    result["adapterFailure"],
+                    {
+                        "stage": "background_observation_failed",
+                        "code": "unexpected_exception",
+                    },
+                )
+        for status in [True, "503", 99, 600, 10**1000]:
+            with self.subTest(status_type=type(status).__name__):
+                result = run_background(
+                    self.failing_observation(ProtocolHTTPFailure(status))
+                )
+                self.assertEqual(
+                    result["adapterFailure"],
+                    {
+                        "stage": "background_observation_failed",
+                        "code": "protocol_response_invalid",
+                    },
+                )
+
+    def test_original_diagnostics_are_not_overwritten_by_restoration_failures(self):
+        ports = self.failing_observation(ProtocolHTTPFailure(503))
+
+        def fail_resume():
+            raise DriverFailure("app_launch_failed")
+
+        def fail_cleanup():
+            raise DriverFailure("owned_turn_cleanup_failed")
+
+        ports.resume = fail_resume
+        ports.cleanup_turn = fail_cleanup
+        result = run_background(ports)
+        self.assertEqual(
+            result["adapterFailure"],
+            {
+                "stage": "background_observation_failed",
+                "code": "protocol_response_invalid",
+                "httpStatus": 503,
+            },
+        )
+        self.assertEqual(result["lastGoodObservation"]["elapsedSeconds"], 30)
+        self.assertEqual(
+            result["errorCodes"],
+            [
+                "background_observation_failed",
+                "background_resume_failed",
+                "background_cleanup_failed",
+            ],
+        )
+
+    def test_first_restoration_failure_has_diagnostics_without_replacing_last_live_snapshot(
+        self,
+    ):
+        ports = FakePorts()
+
+        def fail_resume():
+            raise DriverFailure("app_launch_failed")
+
+        ports.resume = fail_resume
+        result = run_background(ports)
+        self.assertEqual(
+            result["adapterFailure"],
+            {"stage": "background_resume_failed", "code": "app_launch_failed"},
+        )
+        self.assertEqual(result["lastGoodObservation"]["elapsedSeconds"], 1800)
+        self.assertFalse(result["lastGoodObservation"]["snapshot"]["appVisible"])
+
+    def test_no_good_snapshot_on_setup_failure_and_no_adapter_failure_on_success(self):
+        ports = FakePorts()
+        ports.fail_stage = "setup"
+        result = run_background(ports)
+        self.assertIsNone(result["lastGoodObservation"])
+        self.assertEqual(
+            result["adapterFailure"],
+            {"stage": "background_setup_failed", "code": "unexpected_exception"},
+        )
+        result = run_background(FakePorts())
+        self.assertIsNone(result["adapterFailure"])
+        self.assertEqual(result["lastGoodObservation"]["elapsedSeconds"], 1800)
+
     def assert_safe_failure(self, result, code):
         self.assertEqual(result["state"], "fail")
         self.assertEqual(result["code"], code)
