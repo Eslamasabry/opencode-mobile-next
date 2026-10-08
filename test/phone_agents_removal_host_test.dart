@@ -28,6 +28,8 @@ void main() {
   final calls = <MethodCall>[];
   String? nativeJob;
   var removalExit = 0;
+  var receiptOutput = '8192 0\n';
+  var receiptExit = 0;
   Completer<void>? held;
   Completer<void>? holdArchitecture;
   Map? capturedParams;
@@ -47,6 +49,8 @@ void main() {
     specs.clear();
     nativeJob = null;
     removalExit = 0;
+    receiptOutput = '8192 0\n';
+    receiptExit = 0;
     held = null;
     holdArchitecture = null;
     capturedParams = null;
@@ -70,6 +74,9 @@ void main() {
           return {'installed': true, 'phase': 'ready'};
         case 'run':
           if (held != null) await held!.future;
+          if ((call.arguments as Map)['agentUser'] != true) {
+            return {'exitCode': receiptExit, 'output': receiptOutput};
+          }
           return {
             'exitCode': removalExit,
             'output': 'private output must not escape',
@@ -111,9 +118,12 @@ void main() {
     'removal uses fixed agent view and preserves account and gate metadata',
     () async {
       final before = {for (final key in prefs.getKeys()) key: prefs.get(key)};
-      await host.removeAgent('fx');
+      final result = await host.removeAgent('fx');
+      expect(result.agentId, 'fx');
+      expect(result.freedBytes, 8192);
+      expect(result.alreadyAbsent, false);
       final run =
-          calls.singleWhere((call) => call.method == 'run').arguments as Map;
+          calls.firstWhere((call) => call.method == 'run').arguments as Map;
       expect(run['agentUser'], true);
       expect(run['timeoutSeconds'], 30);
       expect(run['script'], contains('agent-fx'));
@@ -122,6 +132,76 @@ void main() {
         isNot(contains('stopAgentHost')),
       );
       expect({for (final key in prefs.getKeys()) key: prefs.get(key)}, before);
+    },
+  );
+  test(
+    'removal reads a private numeric measurement receipt after deletion',
+    () async {
+      await host.removeAgent('fx');
+      final runs = calls.where((call) => call.method == 'run').toList();
+      expect(runs, hasLength(2));
+      expect((runs.first.arguments as Map)['agentUser'], true);
+      expect((runs.last.arguments as Map)['agentUser'], isNot(true));
+      expect(
+        (runs.last.arguments as Map)['script'],
+        contains('oc-agent-removal-'),
+      );
+    },
+  );
+  test('absent removal reports zero measured bytes', () async {
+    receiptOutput = '0 1\n';
+    final result = await host.removeAgent('fx');
+    expect(result.freedBytes, 0);
+    expect(result.alreadyAbsent, true);
+  });
+  test('disposed host never reports a late removal result', () async {
+    held = Completer<void>();
+    final removal = host.removeAgent('fx');
+    final failure = expectLater(
+      removal,
+      throwsA(
+        isA<AgentHostException>().having(
+          (e) => e.reason,
+          'reason',
+          AgentHostFailure.stale,
+        ),
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    await host.dispose();
+    held!.complete();
+    await failure;
+    expect(calls.where((call) => call.method == 'run'), hasLength(2));
+  });
+  test(
+    'unconfirmed measurement never becomes a successful removal result',
+    () async {
+      for (final output in [
+        'private native text',
+        '-1 0\n',
+        '10 1\n',
+        '9223372036854775808 0\n',
+        '10 0\nextra',
+        '10 0\n\n',
+      ]) {
+        receiptOutput = output;
+        await expectLater(
+          host.removeAgent('fx'),
+          throwsA(
+            isA<AgentHostException>().having(
+              (e) => e.reason,
+              'reason',
+              AgentHostFailure.unavailable,
+            ),
+          ),
+        );
+      }
+      receiptOutput = '8192 0\n';
+      receiptExit = 1;
+      await expectLater(
+        host.removeAgent('fx'),
+        throwsA(isA<AgentHostException>()),
+      );
     },
   );
   test('Claude removal is never dispatched', () async {

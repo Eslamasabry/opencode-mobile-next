@@ -1,0 +1,15 @@
+test_existing_target_preflight_refuses_before_restore (test_proof.ProofTests.test_existing_target_preflight_refuses_before_restore) ... ok
+test_low_real_storage_refuses_before_artifact_restore_or_install (test_proof.ProofTests.test_low_real_storage_refuses_before_artifact_restore_or_install) ... ok
+test_missing_public_action_remains_partial_without_shell_fallback (test_proof.ProofTests.test_missing_public_action_remains_partial_without_shell_fallback) ... ok
+test_no_claude_target_or_unapproved_guard_artifact (test_proof.ProofTests.test_no_claude_target_or_unapproved_guard_artifact) ... ok
+test_orphan_process_prevents_pass_with_bounded_wait (test_proof.ProofTests.test_orphan_process_prevents_pass_with_bounded_wait) ... ok
+test_restore_failure_records_and_releases_lock_before_raising (test_proof.ProofTests.test_restore_failure_records_and_releases_lock_before_raising) ... ok
+test_retained_claude_change_invalidates_success (test_proof.ProofTests.test_retained_claude_change_invalidates_success) ... ok
+test_six_targets_use_public_remove_and_retain_claude (test_proof.ProofTests.test_six_targets_use_public_remove_and_retain_claude) ... ok
+test_wrong_confirmation_never_confirms (test_proof.ProofTests.test_wrong_confirmation_never_confirms) ... ok
+test_wrong_emulator_or_lock_refuses_before_device_access (test_proof.ProofTests.test_wrong_emulator_or_lock_refuses_before_device_access) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.004s
+
+OK

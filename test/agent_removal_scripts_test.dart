@@ -21,6 +21,10 @@ class _Guest {
   String get link => '$bin/codex';
   String get lock => '$parent/.lock-codex';
   String get proc => '${temp.path}/proc';
+  String get receiptId => 'a' * 32;
+  String get receiptPath => '$home/.local/share/oc-agent-removal-$receiptId';
+  int? freedBytes;
+  bool? alreadyAbsent;
 
   Future<void> prepare() async {
     await Directory('$base/$version/payload').create(recursive: true);
@@ -45,18 +49,43 @@ class _Guest {
     AgentDescriptor? descriptor,
     String? uid,
     String? environmentHome,
+    bool drainReceipt = true,
   }) async {
-    var script = AgentRemovalScripts.remove(descriptor ?? agent)
-        .replaceAll('/home/oc', home)
-        .replaceAll("pathlib.Path('/proc')", "pathlib.Path('$proc')");
+    var script =
+        AgentRemovalScripts.remove(descriptor ?? agent, receiptId: receiptId)
+            .replaceAll('/home/oc', home)
+            .replaceAll("pathlib.Path('/proc')", "pathlib.Path('$proc')");
     if (uid != null) script = script.replaceAll('os.getuid()', uid);
-    return Process.run(
+    final result = await Process.run(
       'sh',
       ['-c', script],
       environment: {'HOME': environmentHome ?? home, 'PATH': '/usr/bin:/bin'},
       workingDirectory: temp.path,
     ).timeout(const Duration(seconds: 10));
+    if (result.exitCode == 0 && drainReceipt) {
+      final read = await readReceipt();
+      expect(read.exitCode, 0);
+      expect(read.stderr, isEmpty);
+      final values = (read.stdout as String).trim().split(' ');
+      expect(values, hasLength(2));
+      freedBytes = int.parse(values[0]);
+      alreadyAbsent = values[1] == '1';
+      expect(await File(receiptPath).exists(), isFalse);
+    }
+    return result;
   }
+
+  Future<ProcessResult> readReceipt({String uid = '0'}) => Process.run(
+    'sh',
+    [
+      '-c',
+      AgentRemovalScripts.readReceipt(
+        receiptId,
+      ).replaceAll('/home/oc', home).replaceAll('os.getuid()', uid),
+    ],
+    environment: {'HOME': '/root', 'PATH': '/usr/bin:/bin'},
+    workingDirectory: temp.path,
+  ).timeout(const Duration(seconds: 10));
 
   Future<void> expectKept() async {
     for (final path in [
@@ -68,6 +97,18 @@ class _Guest {
     ]) {
       expect(await File(path).readAsString(), 'keep', reason: path);
     }
+  }
+
+  Future<int> allocated(List<String> paths) async {
+    final measured = await Process.run('du', ['-s', '-B1', ...paths]);
+    expect(measured.exitCode, 0);
+    return (measured.stdout as String)
+        .trim()
+        .split('\n')
+        .fold<int>(
+          0,
+          (sum, line) => sum + int.parse(line.split(RegExp(r'\s+')).first),
+        );
   }
 }
 
@@ -98,6 +139,7 @@ void main() {
       for (final id in _ids) {
         final script = AgentRemovalScripts.remove(
           AgentCatalog.builtIn.byId(id)!,
+          receiptId: guest.receiptId,
         );
         final file = await File('${temp.path}/remove.sh').writeAsString(script);
         expect(
@@ -109,12 +151,17 @@ void main() {
         expect(script, isNot(contains('signOut')));
       }
       expect(
-        () => AgentRemovalScripts.remove(AgentCatalog.builtIn.byId('claude')!),
+        () => AgentRemovalScripts.remove(
+          AgentCatalog.builtIn.byId('claude')!,
+          receiptId: guest.receiptId,
+        ),
         throwsArgumentError,
       );
       expect(
-        () =>
-            AgentRemovalScripts.remove(AgentCatalog.builtIn.byId('opencode')!),
+        () => AgentRemovalScripts.remove(
+          AgentCatalog.builtIn.byId('opencode')!,
+          receiptId: guest.receiptId,
+        ),
         throwsArgumentError,
       );
     },
@@ -164,9 +211,229 @@ void main() {
     await Directory(guest.base).delete(recursive: true);
     await Link(guest.link).delete();
     await Directory(guest.lock).create();
+    await File('${guest.lock}/foreign-owner').writeAsString('keep');
     _receipt(await guest.run(), 16);
     expect(await Directory(guest.lock).exists(), isTrue);
   });
+
+  test(
+    'empty abandoned install lock is removed with partial staging',
+    () async {
+      await Directory(guest.lock).create();
+      await Directory('${guest.base}/${guest.version}.new').create();
+      await File(
+        '${guest.base}/${guest.version}.new/partial',
+      ).writeAsString('partial');
+      final expected = await guest.allocated([
+        guest.base,
+        guest.link,
+        guest.lock,
+      ]);
+      _receipt(await guest.run(), 0);
+      expect(guest.freedBytes, expected);
+      expect(guest.alreadyAbsent, isFalse);
+      expect(await Directory(guest.base).exists(), isFalse);
+      expect(await Directory(guest.lock).exists(), isFalse);
+      await guest.expectKept();
+    },
+  );
+
+  test(
+    'absent empty abandoned lock returns its allocated bytes and not absent',
+    () async {
+      await Directory(guest.base).delete(recursive: true);
+      await Link(guest.link).delete();
+      await Directory(guest.lock).create();
+      final expected = await guest.allocated([guest.lock]);
+      _receipt(await guest.run(), 0);
+      expect(guest.freedBytes, expected);
+      expect(guest.alreadyAbsent, isFalse);
+      expect(await Directory(guest.lock).exists(), isFalse);
+      _receipt(await guest.run(), 0);
+      expect(guest.freedBytes, 0);
+      expect(guest.alreadyAbsent, isTrue);
+    },
+  );
+
+  test('live authored bash installer preserves empty lock and target', () async {
+    await Directory(guest.lock).create();
+    await Directory('${guest.proc}/126').create();
+    await File('${guest.proc}/126/cmdline').writeAsString(
+      '/bin/bash\u0000-c\u0000set -eu\noc_lock=${guest.lock}\nmkdir "\$oc_lock"\n\u0000',
+    );
+    _receipt(await guest.run(), 16);
+    expect(await File(guest.launch).exists(), isTrue);
+    expect(await Directory(guest.lock).exists(), isTrue);
+    expect(await File(guest.receiptPath).exists(), isFalse);
+  });
+
+  test(
+    'unsafe lock links and non-directories refuse before deleting target',
+    () async {
+      await Link(guest.lock).create('${guest.home}/.oc-profiles/owner');
+      _receipt(await guest.run(), 17);
+      await Link(guest.lock).delete();
+      await File(guest.lock).writeAsString('foreign lock');
+      _receipt(await guest.run(), 17);
+      expect(await File(guest.launch).exists(), isTrue);
+      await guest.expectKept();
+    },
+  );
+
+  test(
+    'allocated bytes deduplicate payload hardlinks and exclude retained inode',
+    () async {
+      final payload = '${guest.base}/${guest.version}/payload';
+      final outside = await File(
+        '${temp.path}/retained',
+      ).writeAsBytes(List.filled(65536, 7));
+      expect(
+        (await Process.run('ln', [
+          '$payload/codex',
+          '$payload/internal-copy',
+        ])).exitCode,
+        0,
+      );
+      expect(
+        (await Process.run('ln', [
+          outside.path,
+          '$payload/retained-link',
+        ])).exitCode,
+        0,
+      );
+      final retainedBytes = await guest.allocated([outside.path]);
+      final expected =
+          await guest.allocated([guest.base, guest.link]) - retainedBytes;
+      _receipt(await guest.run(), 0);
+      expect(guest.freedBytes, expected);
+      expect(guest.alreadyAbsent, isFalse);
+      expect(await outside.length(), 65536);
+      await guest.expectKept();
+    },
+  );
+
+  test(
+    'nonce receipt is private, numeric only, and reader deletes it',
+    () async {
+      final expected = await guest.allocated([guest.base, guest.link]);
+      _receipt(await guest.run(drainReceipt: false), 0);
+      final file = File(guest.receiptPath);
+      final body = await file.readAsString();
+      expect(body, '{"bytes":$expected,"absent":0}');
+      expect(
+        (await Process.run('stat', ['-c', '%a', file.path])).stdout,
+        '600\n',
+      );
+      final read = await guest.readReceipt();
+      expect(read.exitCode, 0);
+      expect(read.stdout, '$expected 0\n');
+      expect(read.stderr, isEmpty);
+      expect(await file.exists(), isFalse);
+      final repeat = await guest.readReceipt();
+      expect(repeat.exitCode, 18);
+      expect(repeat.stdout, isEmpty);
+    },
+  );
+
+  test(
+    'existing nonce file prevents removal rather than overwriting a receipt',
+    () async {
+      await File(guest.receiptPath).writeAsString('keep existing');
+      _receipt(await guest.run(), 17);
+      expect(await File(guest.receiptPath).readAsString(), 'keep existing');
+      expect(await File(guest.launch).exists(), isTrue);
+    },
+  );
+
+  test(
+    'reader rejects and cleans malformed bounded private receipts silently',
+    () async {
+      for (final value in [
+        '',
+        'x' * 97,
+        '{"bytes":true,"absent":0}',
+        '{"bytes":-1,"absent":0}',
+        '{"bytes":9223372036854775808,"absent":0}',
+        '{"bytes":1,"absent":1}',
+        '{"bytes":0,"absent":2}',
+        '{"bytes":0,"bytes":1,"absent":0}',
+        '{"bytes":0,"absent":0,"extra":"synthetic-private"}',
+      ]) {
+        await File(guest.receiptPath).writeAsString(value);
+        await Process.run('chmod', ['600', guest.receiptPath]);
+        final read = await guest.readReceipt();
+        expect(read.exitCode, 18);
+        expect(read.stdout, isEmpty);
+        expect(read.stderr, isEmpty);
+        expect(await File(guest.receiptPath).exists(), isFalse);
+      }
+    },
+  );
+
+  test(
+    'reader never follows receipt links or deletes their retained target',
+    () async {
+      final outside = await File(
+        '${temp.path}/retained-receipt',
+      ).writeAsString('{"bytes":0,"absent":1}');
+      await Link(guest.receiptPath).create(outside.path);
+      final read = await guest.readReceipt();
+      expect(read.exitCode, 18);
+      expect(read.stdout, isEmpty);
+      expect(await outside.readAsString(), '{"bytes":0,"absent":1}');
+      expect(await Link(guest.receiptPath).exists(), isTrue);
+    },
+  );
+
+  test(
+    'reader requires root view and bounded signed integer projection',
+    () async {
+      await File(
+        guest.receiptPath,
+      ).writeAsString('{"bytes":9223372036854775807,"absent":0}');
+      await Process.run('chmod', ['600', guest.receiptPath]);
+      final denied = await guest.readReceipt(uid: '1000');
+      expect(denied.exitCode, 18);
+      expect(denied.stdout, isEmpty);
+      expect(await File(guest.receiptPath).exists(), isTrue);
+      final read = await guest.readReceipt();
+      expect(read.exitCode, 0);
+      expect(read.stdout, '9223372036854775807 0\n');
+      expect(await File(guest.receiptPath).exists(), isFalse);
+    },
+  );
+
+  test('unsafe nonce values are rejected before becoming authored shell', () {
+    for (final id in [
+      'a' * 31,
+      'A' * 32,
+      '../escape',
+      "'; touch /tmp/escaped",
+    ]) {
+      expect(
+        () => AgentRemovalScripts.remove(guest.agent, receiptId: id),
+        throwsArgumentError,
+      );
+      expect(() => AgentRemovalScripts.readReceipt(id), throwsArgumentError);
+    }
+  });
+
+  test(
+    'prior pinned-version authored launcher is removed within the same target',
+    () async {
+      final old = '${guest.base}/0.159.0/launch';
+      await File(old).create(recursive: true);
+      await File(old).writeAsString('older authored launcher');
+      await Link(guest.link).delete();
+      await Link(guest.link).create(old);
+      await Link('${guest.link}.new.123').create(old);
+      _receipt(await guest.run(), 0);
+      expect(await Directory(guest.base).exists(), isFalse);
+      expect(await Link(guest.link).exists(), isFalse);
+      expect(await Link('${guest.link}.new.123').exists(), isFalse);
+      await guest.expectKept();
+    },
+  );
 
   test('absent payload with a surviving target PID remains busy', () async {
     await Directory(guest.base).delete(recursive: true);
@@ -326,17 +593,24 @@ void main() {
             ),
           );
       expect(
-        () => AgentRemovalScripts.remove(descriptor('claude', guest.version)),
+        () => AgentRemovalScripts.remove(
+          descriptor('claude', guest.version),
+          receiptId: guest.receiptId,
+        ),
         throwsArgumentError,
       );
       expect(
         () => AgentRemovalScripts.remove(
           descriptor('codex', "v'; touch /tmp/escaped"),
+          receiptId: guest.receiptId,
         ),
         throwsArgumentError,
       );
       expect(
-        () => AgentRemovalScripts.remove(descriptor('codex', '../owner')),
+        () => AgentRemovalScripts.remove(
+          descriptor('codex', '../owner'),
+          receiptId: guest.receiptId,
+        ),
         throwsArgumentError,
       );
     },

@@ -7,6 +7,11 @@ Non-goal: signing in, logging out Claude, fabricating readiness or filling disk.
 
 ## Payload removal for Claude's frontend
 
+This preliminary removal section is superseded by
+[BA10-contract.md](BA10-contract.md). Use BA10's `AgentRemovalResult`, fixed copy,
+abandoned-lock cleanup and byte measurement for all new frontend integration.
+The remaining installation/storage sections still apply.
+
 The domain source can optionally implement `PhoneAgentRemovalSource`:
 
 - `canRemoveAgent(String agentId) -> bool`: true for installed supported targets

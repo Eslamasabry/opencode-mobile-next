@@ -6,6 +6,18 @@ const phoneAgentInstallPrefix = 'oc.agentInstall.';
 
 enum AgentSetupPhase { idle, installing, done, interrupted, failed }
 
+/// Observed payload removal, excluding retained accounts and shared tools.
+final class AgentRemovalResult {
+  const AgentRemovalResult({
+    required this.agentId,
+    required this.freedBytes,
+    required this.alreadyAbsent,
+  });
+  final String agentId;
+  final int freedBytes;
+  final bool alreadyAbsent;
+}
+
 enum AgentHostFailure {
   unavailable,
   storage,

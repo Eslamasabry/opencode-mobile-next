@@ -1,0 +1,218 @@
+Resolving dependencies...
+Downloading packages...
+  android_file_picker 1.1.0 (2.0.1 available)
+  clock 1.1.2 (1.1.3 available)
+  code_assets 2.0.0 (2.1.0 available)
+  cross_file 0.3.5+5 (0.4.0 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  dbus 0.7.15 (0.8.0 available)
+  dio_web_adapter 2.2.1 (2.2.2 available)
+  dynamic_color 1.9.0 (2.1.0 available)
+  equatable 2.0.7 (3.0.0 available)
+  file_picker 12.2.0 (13.1.0 available)
+  file_picker_darwin 1.1.0 (2.1.2 available)
+  file_picker_linux 1.1.0 (2.0.2 available)
+  file_picker_platform_interface 3.3.0 (4.0.0 available)
+  file_picker_web 3.1.0 (4.0.1 available)
+  flutter_secure_storage_darwin 0.4.0 (0.4.3 available)
+  flutter_secure_storage_linux 3.0.2 (3.0.3 available)
+  flutter_timezone 5.1.0 (5.1.1 available)
+  image_picker 1.2.3 (1.2.4 available)
+  image_picker_android 0.8.13+22 (0.8.13+25 available)
+  image_picker_ios 0.8.13+7 (0.8.13+9 available)
+  image_picker_platform_interface 2.11.1 (2.11.2 available)
+  jni 1.0.3 (1.1.0 available)
+  jni_flutter 1.0.2 (1.0.4+1 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  mime 2.0.0 (2.1.0 available)
+  objective_c 9.6.0 (9.6.2 available)
+  package_config 2.2.0 (3.0.0 available)
+  package_info_plus 10.2.1 (10.2.2 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  pub_semver 2.2.0 (2.2.1 available)
+  qr 3.0.2 (4.0.0 available)
+  record_android 2.1.2 (2.2.0 available)
+  record_linux 2.1.1 (2.1.2 available)
+  record_web 2.1.2 (2.1.3 available)
+  record_windows 2.2.3 (2.3.0 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.27 (2.4.28 available)
+  shared_preferences_foundation 2.5.6 (2.5.7 available)
+  sherpa_onnx 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_arm64 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_armeabi 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_x86 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_x86_64 1.13.7 (1.13.8 available)
+  sherpa_onnx_ios 1.13.7 (1.13.8 available)
+  sherpa_onnx_linux 1.13.7 (1.13.8 available)
+  sherpa_onnx_macos 1.13.7 (1.13.8 available)
+  sherpa_onnx_web 1.13.7 (1.13.8 available)
+  sherpa_onnx_windows 1.13.7 (1.13.8 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  test_api 0.7.12 (0.7.14 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  url_launcher_android 6.3.32 (6.3.33 available)
+  url_launcher_ios 6.4.1 (6.4.2 available)
+  url_launcher_linux 3.2.2 (3.2.3 available)
+  url_launcher_macos 3.2.5 (3.2.6 available)
+  url_launcher_windows 3.1.5 (3.1.6 available)
+  vector_math 2.4.2 (2.4.3 available)
+  windows_file_picker 1.2.0 (2.0.1 available)
+  xml 7.0.1 (7.1.0 available)
+  yaml 3.1.3 (3.1.4 available)
+Got dependencies!
+61 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: all six authored recipes are valid shell; Claude is excluded
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: removes payload and partial staging, preserves accounts and shared tools
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: absent payload is idempotent and leaves shared directories alone
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: existing install lock is busy and never removed
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: absent payload never clears a foreign install lock
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: empty abandoned install lock is removed with partial staging
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: absent empty abandoned lock returns its allocated bytes and not absent
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: live authored bash installer preserves empty lock and target
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: unsafe lock links and non-directories refuse before deleting target
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: allocated bytes deduplicate payload hardlinks and exclude retained inode
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: nonce receipt is private, numeric only, and reader deletes it
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: existing nonce file prevents removal rather than overwriting a receipt
+00:01 +12: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: reader rejects and cleans malformed bounded private receipts silently
+00:01 +13: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: reader never follows receipt links or deletes their retained target
+00:01 +14: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: reader requires root view and bounded signed integer projection
+00:01 +15: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: unsafe nonce values are rejected before becoming authored shell
+00:01 +16: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: prior pinned-version authored launcher is removed within the same target
+00:01 +17: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: absent payload with a surviving target PID remains busy
+00:01 +18: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: unrelated executable link refuses before any mutation
+00:01 +19: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: regular executable refuses before any mutation
+00:01 +20: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: staging symlink is unlinked without following its account target
+00:01 +21: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: payload links are removed without following internal or external targets
+00:01 +22: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: symlinked target root refuses before any mutation
+00:01 +23: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: symlinked bin ancestor refuses before any mutation
+00:01 +24: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: foreign staging launcher refuses all cleanup
+00:01 +25: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: non-PID staging launcher refuses all cleanup
+00:01 +26: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: exact target PID is busy without signalling or deleting anything
+00:01 +27: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: host-rootfs executable identity also blocks removal
+00:02 +28: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: other agent processes never block or get removed
+00:02 +29: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: wrong UID or HOME refuses before any mutation
+00:02 +30: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_removal_scripts_test.dart: unsafe catalog version and executable mapping cannot become shell input
+00:02 +31: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart
+00:04 +31: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: removal uses fixed agent view and preserves account and gate metadata
+00:04 +32: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: removal reads a private numeric measurement receipt after deletion
+00:04 +33: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: absent removal reports zero measured bytes
+00:04 +34: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: disposed host never reports a late removal result
+00:04 +35: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: unconfirmed measurement never becomes a successful removal result
+00:04 +36: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: Claude removal is never dispatched
+00:04 +37: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: running foreign native setup prevents removal
+00:04 +38: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: unknown native setup prevents removal
+00:04 +39: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: live target refusal is busy without leaking child output
+00:04 +40: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: removal serializes installs and releases exclusion after completion
+00:04 +41: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: QA requirement reaches the native target only
+00:04 +42: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: normal build dispatch has no QA declaration
+00:04 +43: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: removing fx retains unrelated Claude auth probes
+00:04 +44: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: existing gateway draft cannot dispatch while payload is removed
+00:04 +45: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: pending installation preparation excludes removal
+00:04 +46: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: only the exact storage failure becomes a safe progress reason
+00:04 +47: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart
+00:06 +47: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: BA1 probe uses the stable private home and returns only narrow account facts
+00:06 +48: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: BA1 missing private bridge stays unavailable and never uses setup output
+00:06 +49: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: shared engine installs as oc with Python and conditional host Node
+00:06 +50: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: the native host launches Paseo 0.9.2 without removed launch flags
+00:06 +51: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: ARM64 gate requires install version daemon and exact Paseo hello
+00:06 +52: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: x64 pass cannot qualify ARM64 and changed architecture invalidates gate
+00:06 +53: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: legacy fx check still qualifies after owner migration and never after failed retry
+00:06 +54: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: failed retry clears prior proof and never starts daemon after wrong version
+00:06 +55: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: stopped self-test cannot start a daemon after a late version check
+00:06 +56: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: restore and cancel cannot operate another profile setup job
+00:06 +57: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: cancel after handoff still stops an exactly owned setup job
+00:06 +58: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: cancel during local checks never hands an install to native
+00:06 +59: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: cancel retires an install awaiting architecture
+00:06 +60: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: cancel retires an install awaiting preparation
+00:06 +61: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: native storage guard includes omp-acp catalog download
+00:06 +62: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: native storage guard includes fx catalog download
+00:06 +63: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: running installation requires continue instead of a second install
+00:06 +64: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: background loss exposes resume and reuses the Keystore slot
+00:06 +65: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: restore resumes same persisted component selection with safe progress
+00:06 +66: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: profile removal drains native account home before deleting password
+00:06 +67: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: failed native drain preserves profile and secure slot for retry
+00:06 +68: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: saved-sign-in reset includes orphan agent slots and preserves unrelated secrets
+00:06 +69: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_payload_use_test.dart
+00:07 +69: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_payload_use_test.dart: denied acquisition prevents draft create and does not release
+00:07 +70: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_payload_use_test.dart: acquires before first create await and holds until RPC acknowledgement
+00:07 +71: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_payload_use_test.dart: held acquisition blocks all draft RPC work until admitted
+00:07 +72: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_payload_use_test.dart: resume acquires before fetching and releases after daemon request
+00:07 +73: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_payload_use_test.dart: correlated existing-session prompt also leases actual send
+00:07 +74: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_payload_use_test.dart: denied existing send and resume dispatch no RPC and never release
+00:07 +75: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_payload_use_test.dart: RPC failure releases without replacing its fixed error
+00:07 +76: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_payload_use_test.dart: scope changed during admission releases and dispatches no RPC
+00:07 +77: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_payload_use_test.dart: gateway closed during admission releases and dispatches no RPC
+00:07 +78: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_payload_use_test.dart: default callbacks keep ordinary create resume and send paths working
+00:07 +79: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart
+00:08 +79: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: endpoint policy cleartext is limited to this device and Tailscale
+00:08 +80: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: endpoint policy profile validators agree and an empty password is allowed
+00:08 +81: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: endpoint policy a paseo profile round-trips without its password
+00:08 +82: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a rejected password is an authentication failure
+00:08 +83: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: hello claims only what the client implements
+00:08 +84: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: the agent's own commands are listed without its plumbing
+00:08 +85: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: an update keeps the conversation's model and mode
+00:08 +86: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: sessions are this folder's unarchived agents
+00:08 +87: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: ready runtimes become providers; modes become agents
+00:08 +88: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a daemon still listing its models is waited for, not believed
+00:08 +89: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a new conversation stays local until its first prompt names the runtime
+00:08 +90: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a new conversation keeps its app id while the daemon uses its own
+00:08 +91: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a new conversation replays events that raced ahead of the create answer
+00:08 +92: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a new conversation a spawn-time idle snapshot does not end the run
+00:08 +93: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming a finished turn finishes its replies
+00:08 +94: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming assistant text is announced once, then streamed as deltas
+00:08 +95: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming a replayed sequence number is ignored
+00:08 +96: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming reasoning deltas share one message until another item
+00:08 +97: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming a tool call is one message updated by snapshots
+00:08 +98: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming a failed turn surfaces safe fixed copy
+00:08 +99: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming events for another folder's agent are dropped
+00:08 +100: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permissions a write request becomes an edit card with its file
+00:08 +101: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permissions once allows; always also applies the provider's rule
+00:08 +102: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permissions reject denies with the reason; cancel also interrupts
+00:08 +103: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permissions an answered request does not return from a stale snapshot
+00:08 +104: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permissions a request answered elsewhere is retired by the next snapshot
+00:08 +105: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: history maps the merged timeline and primes the live stream
+00:08 +106: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: delete archives, and an archive elsewhere removes the session
+00:08 +107: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a refused request is a fixed failure, never the daemon's text
+00:08 +108: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a dropped socket reconnects and re-reads the agent list
+00:10 +109: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: sub-agents a sub-agent is its conversation's child, and its card opens it
+00:10 +110: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: sub-agents its steps stream into its own conversation
+00:10 +111: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: sub-agents its history is read from the helper; it takes no replies
+00:10 +112: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: sub-agents an old conversation's cards link to the sub-agents the helper still knows
+00:10 +113: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: probe bad input never opens a socket
+00:10 +114: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: probe a verified daemon names its ready runtimes
+00:10 +115: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permission mapping covers shell and unknown tools
+00:10 +116: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart
+00:11 +116: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: ordinary first prompt retains the original create path
+00:11 +117: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: browser first prompt creates cold, maps, reserves then sends once
+00:11 +118: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: failed browser reserve sends nothing until explicitly turned off
+00:11 +119: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: reserve precedes direct modes models and scoped command discovery
+00:11 +120: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: abort and delete revoke before daemon mutation
+00:11 +121: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: resume retires old generation, maps new ID and reserves before send
+00:11 +122: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: explicit new chat replacement revokes old authority
+00:11 +123: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: late reservation after session deletion is revoked and never sends
+00:11 +124: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: profile revoke fences in-flight reservation without blocking cleanup
+00:11 +125: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: close retires authority before closing the transport
+00:11 +126: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: cleanup quarantine preserves intent and refuses an ordinary fallback
+00:11 +127: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: cancel or delete while cold creation is pending never resurrects a turn
+00:11 +128: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: enabling browser while provider discovery waits prevents ordinary create
+00:11 +129: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: shared request suppresses draft commands before local inventory loads
+00:11 +130: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: trusted folder rebinding uses new source and retains old source intent
+00:11 +131: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_correlated_send_test.dart
+00:11 +131 -1: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_correlated_send_test.dart [E]
+  Failed to load "/home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_correlated_send_test.dart": Does not exist.
+00:11 +131 -1: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_install_guard_test.dart
+00:13 +131 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_install_guard_test.dart: normal and negative QA floor preserve every pinned estimate
+00:13 +132 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_install_guard_test.dart: raised QA floor applies to six targets and excludes real Claude
+00:13 +133 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_install_guard_test.dart: small QA floor never reduces catalog requirement and odd floor rounds up
+00:13 +134 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_install_guard_test.dart: maximum QA floor saturates native admission rather than wrapping
+00:13 +135 -1: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart
+00:14 +135 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: no lib file grows past its line budget
+00:14 +136 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: the baseline only lists files over the limit
+00:14 +137 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_correlated_send_test.dart: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_correlated_send_test.dart

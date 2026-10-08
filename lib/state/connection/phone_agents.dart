@@ -65,6 +65,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   final _paLive = <String>{};
   bool _paNeedRestart = false;
   String? _paRemovingAgent;
+  Object? _paRemovalToken;
   Future<void>? _paRefreshingRows;
   final _paSources =
       <String, ({PaseoGateway gateway, PaseoChatFeedSource source})>{};
@@ -621,18 +622,15 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   AgentPhoneCheckResult? agentPhoneCheck(String agentId) => _paChecks[agentId];
 
   @override
-  Future<void> installAgent(String agentId) async {
-    final host = _paEnsureHost();
-    await host.install(agentId);
-    if (!_self._disposed) _self._notifyListeners();
-  }
+  Future<void> installAgent(String agentId) => _paInstallAgent(agentId);
 
   @override
   String? get removingAgentId => _paRemovingAgent;
   @override
   bool canRemoveAgent(String agentId) => _paCanRemoveAgent(agentId);
   @override
-  Future<void> removeAgent(String agentId) => _paRemoveAgent(agentId);
+  Future<AgentRemovalResult> removeAgent(String agentId) =>
+      _paRemoveAgent(agentId);
 
   @override
   Future<void> cancelAgentInstall() async {
@@ -1284,9 +1282,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     }
     if (!phoneAgentsAvailable) throw _notReady;
     if (_paRemovingAgent != null) {
-      throw const ProductException(
-        'An agent is being removed. Wait for it to finish and try again.',
-      );
+      throw _PhoneAgentRoutes._removalBusy;
     }
     if (_paRows.isEmpty) await refreshAgentRows();
     final row = _paRowFor(agentId);
@@ -1393,6 +1389,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// Closes everything this profile's phone agents own, in the order the
   /// deletion contract requires: auth, owned setup, host, then feeds.
   Future<void> _paCloseAll({required bool stopHost}) async {
+    _paRemovalToken = null;
+    _paRemovingAgent = null;
     final owner = _paHostProfile ?? _paProfile?.id;
     if (owner != null) {
       await _self._browserLaunches.revokeProfile(profileId: owner);
@@ -1464,6 +1462,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// Controller disposal: stop listening; the host keeps running for the
   /// Android service owner.
   void _paShutdown() {
+    _paRemovalToken = null;
+    _paRemovingAgent = null;
     final owner = _paHostProfile ?? _paProfile?.id;
     if (owner != null) {
       unawaited(_self._browserLaunches.revokeProfile(profileId: owner));

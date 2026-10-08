@@ -22,7 +22,7 @@ import 'phone_agents.dart';
 abstract interface class PhoneAgentRemovalSource {
   bool canRemoveAgent(String agentId);
   String? get removingAgentId;
-  Future<void> removeAgent(String agentId);
+  Future<AgentRemovalResult> removeAgent(String agentId);
 }
 
 /// Stable id of OpenCode in [ChatAgentChoice.agentId] (the chat feed's

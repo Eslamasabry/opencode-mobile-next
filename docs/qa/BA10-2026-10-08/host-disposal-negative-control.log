@@ -1,0 +1,281 @@
+Resolving dependencies...
+Downloading packages...
+  android_file_picker 1.1.0 (2.0.1 available)
+  clock 1.1.2 (1.1.3 available)
+  code_assets 2.0.0 (2.1.0 available)
+  cross_file 0.3.5+5 (0.4.0 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  dbus 0.7.15 (0.8.0 available)
+  dio_web_adapter 2.2.1 (2.2.2 available)
+  dynamic_color 1.9.0 (2.1.0 available)
+  equatable 2.0.7 (3.0.0 available)
+  file_picker 12.2.0 (13.1.0 available)
+  file_picker_darwin 1.1.0 (2.1.2 available)
+  file_picker_linux 1.1.0 (2.0.2 available)
+  file_picker_platform_interface 3.3.0 (4.0.0 available)
+  file_picker_web 3.1.0 (4.0.1 available)
+  flutter_secure_storage_darwin 0.4.0 (0.4.3 available)
+  flutter_secure_storage_linux 3.0.2 (3.0.3 available)
+  flutter_timezone 5.1.0 (5.1.1 available)
+  image_picker 1.2.3 (1.2.4 available)
+  image_picker_android 0.8.13+22 (0.8.13+25 available)
+  image_picker_ios 0.8.13+7 (0.8.13+9 available)
+  image_picker_platform_interface 2.11.1 (2.11.2 available)
+  jni 1.0.3 (1.1.0 available)
+  jni_flutter 1.0.2 (1.0.4+1 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  mime 2.0.0 (2.1.0 available)
+  objective_c 9.6.0 (9.6.2 available)
+  package_config 2.2.0 (3.0.0 available)
+  package_info_plus 10.2.1 (10.2.2 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  pub_semver 2.2.0 (2.2.1 available)
+  qr 3.0.2 (4.0.0 available)
+  record_android 2.1.2 (2.2.0 available)
+  record_linux 2.1.1 (2.1.2 available)
+  record_web 2.1.2 (2.1.3 available)
+  record_windows 2.2.3 (2.3.0 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.27 (2.4.28 available)
+  shared_preferences_foundation 2.5.6 (2.5.7 available)
+  sherpa_onnx 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_arm64 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_armeabi 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_x86 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_x86_64 1.13.7 (1.13.8 available)
+  sherpa_onnx_ios 1.13.7 (1.13.8 available)
+  sherpa_onnx_linux 1.13.7 (1.13.8 available)
+  sherpa_onnx_macos 1.13.7 (1.13.8 available)
+  sherpa_onnx_web 1.13.7 (1.13.8 available)
+  sherpa_onnx_windows 1.13.7 (1.13.8 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  test_api 0.7.12 (0.7.14 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  url_launcher_android 6.3.32 (6.3.33 available)
+  url_launcher_ios 6.4.1 (6.4.2 available)
+  url_launcher_linux 3.2.2 (3.2.3 available)
+  url_launcher_macos 3.2.5 (3.2.6 available)
+  url_launcher_windows 3.1.5 (3.1.6 available)
+  vector_math 2.4.2 (2.4.3 available)
+  windows_file_picker 1.2.0 (2.0.1 available)
+  xml 7.0.1 (7.1.0 available)
+  yaml 3.1.3 (3.1.4 available)
+Got dependencies!
+61 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart
+00:00 +0: disposed host never reports a late removal result
+00:00 +0 -1: disposed host never reports a late removal result [E]
+  Expected: an object with length of <2>
+    Actual: WhereIterable<MethodCall>:[
+              MethodCall:MethodCall(run, {script: set -u  
+            printf '%s\n' '::oc-check-begin agent-fx'  
+            oc_result=18  
+            if command -v python3 >/dev/null 2>&1; then  
+              python3 - 'fx' 'fx' '0.0.12' '05b34b20a74f875b318ba2ff856c0bae' 2>/dev/null <<'OC_AGENT_REMOVE'  
+            import json, os, pathlib, re, shutil, stat, sys  
+            agent, executable, version, receipt_id = sys.argv[1:]  
+            allowed = {'codex': 'codex', 'gemini': 'gemini', 'qwen': 'qwen',  
+                       'goose': 'goose', 'omp-acp': 'omp', 'fx': 'fx'}  
+            if (allowed.get(agent) != executable or  
+                not re.fullmatch(r'[0-9A-Za-z][0-9A-Za-z._+-]{0,79}', version) or  
+                not re.fullmatch(r'[a-f0-9]{32}', receipt_id) or  
+                os.getuid() != 1000 or os.environ.get('HOME') != '/home/oc'):  
+                sys.exit(17)  
+            root = pathlib.Path('/home/oc')  
+            parent = root / '.local/share/oc-agents'  
+            base = parent / agent  
+            bin_dir = root / '.local/bin'  
+            link = bin_dir / executable  
+            lock = parent / ('.lock-' + executable)  
+            receipt = root / '.local/share' / ('oc-agent-removal-' + receipt_id)  
+            proc = pathlib.Path('/proc')  
+            class Refused(Exception):  
+                def __init__(self, code): self.code = code  
+            def info(path):  
+                try: return path.lstat()  
+                except FileNotFoundError: return None  
+            def ancestors():  
+                for path in (root.parent, root, root / '.local', root / '.local/share', parent, bin_dir):  
+                    entry = info(path)  
+                    if entry is not None and not stat.S_ISDIR(entry.st_mode): raise Refused(17)  
+            def tree(path):  
+                entry = info(path)  
+                if entry is None: return  
+                if not stat.S_ISDIR(entry.st_mode): raise Refused(17)  
+                for directory, dirs, files in os.walk(path, followlinks=False):  
+                    for name in dirs + files:  
+                        entry = (pathlib.Path(directory) / name).lstat()  
+                        # Packaged node_modules may contain links. Neither this walk nor  
+                        # fd-based rmtree follows them; only their directory entries go.  
+                        if not (stat.S_ISDIR(entry.st_mode) or stat.S_ISREG(entry.st_mode) or  
+                                stat.S_ISLNK(entry.st_mode)):  
+                            raise Refused(17)  
+            def targets():  
+                tree(base)  
+                entry = info(link)  
+                if entry is not None and (not stat.S_ISLNK(entry.st_mode) or not authored(os.readlink(link))):  
+                    raise Refused(17)  
+                transient = list(bin_dir.glob(executable + '.new.*'))  
+                for path in transient:  
+                    # Install only authors decimal-PID temporary launcher links.  
+                    suffix = path.name[len(executable + '.new.'):]  
+                    entry = path.lstat()  
+                    if (not suffix.isdecimal() or not stat.S_ISLNK(entry.st_mode) or  
+                        not authored(os.readlink(path))): raise Refused(17)  
+                return transient  
+            def authored(target):  
+                # Older installed pins are still this catalog target, never another agent.  
+                prefix = str(base) + '/'  
+                if not target.startswith(prefix): return False  
+                suffix = target[len(prefix):].split('/')  
+                return (len(suffix) == 2 and suffix[1] == 'launch' and  
+                        re.fullmatch(r'[0-9A-Za-z][0-9A-Za-z._+-]{0,79}', suffix[0]) is not None)  
+            def live_target():  
+                guest_base = str(base).encode() + b'/'  
+                guest_link = str(link).encode()  
+                # Linux exe links may show the host rootfs prefix rather than guest paths.  
+                native_suffix = '/home/oc/.local/share/oc-agents/' + agent + '/'  
+                installer = re.compile(rb'(?m)^oc_lock=' + re.escape(str(lock).encode()) + rb'(?:\r?\n|;|$)')  
+                for path in proc.iterdir():  
+                    if not path.name.isdecimal() or int(path.name) == os.getpid(): continue  
+                    try:  
+                        args = (path / 'cmdline').read_bytes().split(b'\0')  
+                        if any(arg == guest_link or arg.startswith(guest_base) for arg in args): return True  
+                        # The authored installer may hold an empty lock before its first  
+                        # target path reaches curl/Node argv. Never steal that live lock.  
+                        for index in range(len(args) - 2):  
+                            if (args[index].rsplit(b'/', 1)[-1] in (b'sh', b'bash') and  
+                                args[index + 1] == b'-c' and installer.search(args[index + 2])):  
+                                return True  
+                        try: actual = os.readlink(path / 'exe')  
+                        except OSError: actual = ''  
+                        if native_suffix in actual: return True  
+                    except (FileNotFoundError, ProcessLookupError, PermissionError):  
+                        # Android hides other app UIDs; agents in our rootfs use this UID.  
+                        continue  
+                return False  
+            def lock_entry():  
+                entry = info(lock)  
+                if entry is None: return None  
+                if not stat.S_ISDIR(entry.st_mode): raise Refused(17)  
+                if any(lock.iterdir()): raise Refused(16)  
+                return entry  
+            def allocated(paths):  
+                found = {}  
+                def add(path):  
+                    entry = path.lstat()  
+                    key = (entry.st_dev, entry.st_ino)  
+                    if key not in found: found[key] = [entry, 0]  
+                    found[key][1] += 1  
+                for path in paths:  
+                    entry = info(path)  
+                    if entry is None: continue  
+                    add(path)  
+                    if stat.S_ISDIR(entry.st_mode):  
+                        for directory, dirs, files in os.walk(path, followlinks=False):  
+                            for name in dirs + files: add(pathlib.Path(directory) / name)  
+                total = 0  
+                for entry, links_removed in found.values():  
+                    # A file hard-linked outside the removed set stays allocated there.  
+                    if not stat.S_ISDIR(entry.st_mode) and entry.st_nlink > links_removed: continue  
+                    total += entry.st_blocks * 512  
+                if not 0 <= total <= 9223372036854775807: raise Refused(18)  
+                return total  
+            def write_receipt(size, absent):  
+                ancestors()  
+                fd = os.open(receipt, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)  
+                try:  
+                    entry = os.fstat(fd)  
+                    if (not stat.S_ISREG(entry.st_mode) or entry.st_uid != 1000 or  
+                        stat.S_IMODE(entry.st_mode) != 0o600 or entry.st_nlink != 1):  
+                        raise Refused(18)  
+                    data = json.dumps({'bytes': size, 'absent': int(absent)}, separators=(',', ':')).encode('ascii')  
+                    while data:  
+                        written = os.write(fd, data)  
+                        if written <= 0: raise Refused(18)  
+                        data = data[written:]  
+                    os.fsync(fd)  
+                finally:  
+                    os.close(fd)  
+            owned_lock = False  
+            owned_identity = None  
+            result = 18  
+            size = 0  
+            absent = False  
+            os.umask(0o077)  
+            try:  
+                ancestors()  
+                transient = targets()  
+                if info(receipt) is not None: raise Refused(17)  
+                stale = lock_entry()  
+                if live_target(): raise Refused(16)  
+                absent = info(base) is None and info(link) is None and not transient and stale is None  
+                if absent:  
+                    result = 0  
+                else:  
+                    if info(parent) is None: raise Refused(17)  
+                    # The host also requires a terminal native setup job. Recover only a  
+                    # proven empty real directory with no target or authored installer PID.  
+                    stale_bytes = allocated([lock]) if stale is not None else 0  
+                    if stale is not None:  
+                        current = lock_entry()  
+                        if current is None or (current.st_dev, current.st_ino) != (stale.st_dev, stale.st_ino):  
+                            raise Refused(16)  
+                        lock.rmdir()  
+                    try: lock.mkdir(mode=0o700)  
+                    except FileExistsError: raise Refused(16)  
+                    owned_lock = True  
+                    held = lock.lstat()  
+                    owned_identity = (held.st_dev, held.st_ino)  
+                    # Recheck after acquiring the installer lock and before any deletion.  
+                    ancestors()  
+                    transient = targets()  
+                    if live_target(): raise Refused(16)  
+                    if not shutil.rmtree.avoids_symlink_attacks: raise Refused(18)  
+                    size = allocated([base, link] + transient) + stale_bytes  
+                    if info(link) is not None: link.unlink()  
+                    for path in transient: path.unlink()  
+                    if info(base) is not None: shutil.rmtree(base)  
+                    if info(base) is not None or info(link) is not None or targets():  
+                        raise Refused(18)  
+                    if live_target(): raise Refused(18)  
+                    result = 0  
+            except Refused as refusal:  
+                result = refusal.code  
+            except Exception:  
+                result = 18  
+            finally:  
+                if owned_lock:  
+                    try:  
+                        held = lock.lstat()  
+                        if not stat.S_ISDIR(held.st_mode) or (held.st_dev, held.st_ino) != owned_identity:  
+                            raise Refused(18)  
+                        lock.rmdir()  
+                    except Exception: result = 18  
+            if result == 0:  
+                try:  
+                    write_receipt(size, absent)  
+                except Exception:  
+                    result = 18  
+            sys.exit(result)  
+              
+            OC_AGENT_REMOVE  
+              oc_result=$?  
+            fi  
+            case "$oc_result" in 0|16|17|18) ;; *) oc_result=18 ;; esac  
+            printf '::oc-check-end agent-fx %s\n' "$oc_result"  
+            exit "$oc_result"  
+            , timeoutSeconds: 30, agentUser: true})
+            ]
+     Which: has length of <1>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_agents_removal_host_test.dart 174:5      main.<fn>
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: disposed host never reports a late removal result

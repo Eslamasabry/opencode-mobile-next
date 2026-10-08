@@ -113,7 +113,7 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
   }
 
   /// Removes only an authored agent payload; accounts and chats are retained.
-  Future<void> removeAgent(String agentId) async {
+  Future<AgentRemovalResult> removeAgent(String agentId) async {
     final agent = _agent(agentId);
     if (!AgentInstallGuard.agentIds.contains(agentId)) {
       throw const AgentHostException(AgentHostFailure.unavailable);
@@ -132,6 +132,11 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
     _removingAgent = agentId;
     final generation = _generation;
     try {
+      final random = Random.secure();
+      final receiptId = List.generate(
+        16,
+        (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+      ).join();
       final snapshot = await _linux.setupStatus();
       _checkGeneration(generation);
       if (snapshot != null) {
@@ -147,17 +152,41 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
         }
       }
       final result = await _linux.runAgentSetupCheck(
-        AgentRemovalScripts.remove(agent),
+        AgentRemovalScripts.remove(agent, receiptId: receiptId),
         timeout: const Duration(seconds: 30),
       );
-      _checkGeneration(generation);
       if (result.exitCode != 0) {
+        _checkGeneration(generation);
         throw AgentHostException(
           result.exitCode == 16
               ? AgentHostFailure.busy
               : AgentHostFailure.unavailable,
         );
       }
+      // The fixed oc setup channel deliberately filters arbitrary output.
+      // Read and clean our exclusive numeric receipt even if the owner was
+      // disposed during deletion. Only then apply the generation fence; no
+      // stale result reaches callers and no private receipt is left behind.
+      final receipt = await _linux.run(
+        AgentRemovalScripts.readReceipt(receiptId),
+        timeout: const Duration(seconds: 10),
+      );
+      _checkGeneration(generation);
+      final value = RegExp(
+        r'^([0-9]{1,19}) ([01])\n?$',
+      ).firstMatch(receipt.output);
+      final bytes = value == null ? null : int.tryParse(value[1]!);
+      if (!receipt.ok ||
+          bytes == null ||
+          bytes < 0 ||
+          (value![2] == '1' && bytes != 0)) {
+        throw const AgentHostException(AgentHostFailure.unavailable);
+      }
+      final removal = AgentRemovalResult(
+        agentId: agentId,
+        freedBytes: bytes,
+        alreadyAbsent: value[2] == '1',
+      );
       if (_installAgent == agentId) {
         _detachEngine();
         _installAgent = null;
@@ -167,6 +196,7 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
         );
         _changes.add(_progress);
       }
+      return removal;
     } on AgentHostException {
       rethrow;
     } catch (_) {
