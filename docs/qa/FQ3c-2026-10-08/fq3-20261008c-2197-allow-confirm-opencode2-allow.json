@@ -1,0 +1,76 @@
+{
+  "runID": "fq3-20261008c-2197-allow-confirm",
+  "sourceRevision": "6dc4e516486def7020281338eeaa75cf3e1a6d8e",
+  "attemptID": "attempt-2197-allow-confirm",
+  "cleanupCode": null,
+  "engine": "opencode2",
+  "case": "allow",
+  "cliVersion": "2.0.10",
+  "observedVersion": "2.0.10",
+  "appUID": 10217,
+  "appBuild": 2197,
+  "serverKind": "app-managed",
+  "testedModel": "opencode/big-pickle",
+  "results": {
+    "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "healthy": true,
+        "asserted": true
+      }
+    },
+    "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "created": true,
+        "asserted": true
+      }
+    },
+    "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "enabledModels": 11,
+        "selectedModelAvailable": true,
+        "asserted": true
+      }
+    },
+    "permissionAllow": {
+      "state": "fail",
+      "code": "permission_command_output_missing",
+      "facts": {}
+    }
+  },
+  "ownedSessions": [
+    "ses_ee316c6e6ffeacHS5A2KGrcInM",
+    "ses_ee316c518ffeOISz8vsXb6H0ep"
+  ],
+  "observations": {
+    "permissionAllow": {
+      "stage": "verify_outcome",
+      "model": "opencode/big-pickle",
+      "retryCount": 0,
+      "modelSelectedCount": 0,
+      "executionStartedCount": 1,
+      "executionSucceededCount": 1,
+      "executionFailedCount": 0,
+      "executionInterruptedCount": 0,
+      "toolCalledCount": 1,
+      "toolProgressCount": 1,
+      "toolSuccessCount": 1,
+      "toolFailedCount": 0,
+      "permissionAskedCount": 1,
+      "permissionRepliedCount": 1,
+      "idleCount": 0,
+      "textDeltaCount": 2,
+      "http503Retries": 0,
+      "terminalCount": 1,
+      "providerNoRouteCount": 0,
+      "modelUnavailableCount": 0,
+      "providerAuthCount": 0,
+      "eventWindowMayBeTruncated": false
+    }
+  }
+}

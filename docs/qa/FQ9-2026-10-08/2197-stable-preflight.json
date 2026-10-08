@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "state": "blocked",
+  "deviceQualified": false,
+  "code": "baseline_artifact_required",
+  "case": "stable",
+  "candidateBuild": 2197,
+  "deviceTouched": false,
+  "cliExit": 1
+}

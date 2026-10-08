@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "state": "blocked",
+  "deviceQualified": false,
+  "code": "dedicated_avd_required",
+  "case": "fresh",
+  "candidateBuild": 2197,
+  "deviceTouched": false,
+  "cliExit": 1
+}
