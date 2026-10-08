@@ -31,6 +31,16 @@ def account_mask_boxes(nodes):
     return boxes
 
 
+def closed_error_code(error):
+    allowed = {'unsupported_agent', 'insufficient_real_storage', 'target_not_absent',
+               'pin_not_verified', 'removal_not_qualified', 'app_install_timeout',
+               'app_install_failed', 'target_install_action_missing', 'phone_check_did_not_drain',
+               'target_partial_or_in_use', 'artifact_hash_mismatch', 'artifact_signer_mismatch',
+               'artifact_changed', 'app_restore_failed', 'app_build_mismatch',
+               'installed_app_hash_mismatch', 'account_mask_bounds_unavailable'}
+    return str(error) if isinstance(error, RuntimeError) and str(error) in allowed else None
+
+
 def configure_device(d, output):
     d.configure(output)
     original = d.adb
@@ -115,7 +125,7 @@ def run_case(agent_id):
                     self.freed_display = value
             return super().target_not_installed_visible(target)
     ports = Ports(d, p, a, metadata, agent_id)
-    artifact = {'apk': str(NORMAL), 'build': 2198, 'sha256': Path(str(NORMAL) + '.sha256').read_text().split()[0],
+    artifact = {'apk': str(NORMAL), 'build': 2198, 'sha256': '2069cc0ca62554e3fd798f8ba8bfa46f44ae84be4ff82142e87b495cdc8b89a3',
                 'sourceRevision': SOURCE, 'dartDefines': {}}
     result = {'agentId': agent_id, 'appBuild': 2198, 'sourceRevision': SOURCE, 'normalRestored': False}
     restore = False
@@ -161,8 +171,14 @@ print(json.dumps({'exactVersion':match}))
             raise RuntimeError('removal_not_qualified')
     except Exception as error:
         result['errorType'] = type(error).__name__
-        if isinstance(error, RuntimeError) and re.fullmatch('[a-z][a-z0-9_]{0,63}', str(error)):
-            result['errorCode'] = str(error)
+        code = closed_error_code(error)
+        if code is not None:
+            result['errorCode'] = code
+        try:
+            result['terminalSetup'] = ports.setup_snapshot()
+            result['terminalInventory'] = ports.target_inventory(agent_id)
+        except Exception:
+            result['terminalObservationUnavailable'] = True
     finally:
         try:
             if restore:
