@@ -27689,8 +27689,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String cardsProblemNotQualifiedFor(String agents) {
-    return '$agents hasn\'t been checked to work with cards yet.';
+  String cardsProblemNotQualifiedFor(int count, String agents) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$agents haven\'t been checked to work with cards yet.',
+      one: '$agents hasn\'t been checked to work with cards yet.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -27866,4 +27872,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kitWorkHideSteps => 'Hide steps';
+
+  @override
+  String connectionSwitchingTo(String target) {
+    return 'Switching to $target…';
+  }
+
+  @override
+  String get shellServerSwitching => 'Switching…';
+
+  @override
+  String get agentsStateNotCertified => 'Not certified on this version yet';
+
+  @override
+  String get agentsChipSignIn => 'Sign in';
+
+  @override
+  String get agentsChipResume => 'Resume';
+
+  @override
+  String get agentsChipCheck => 'Check';
+
+  @override
+  String agentNamesPair(String first, String second) {
+    return '$first and $second';
+  }
 }
