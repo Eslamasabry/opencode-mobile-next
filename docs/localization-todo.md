@@ -10,6 +10,13 @@ named label literal is left under `lib/ui/**`, `lib/voice/**` or
 `lib/main.dart`. It does not see other kinds of literal (the sections below),
 and it says nothing about translation quality.
 
+Since 2026-10-08 Spanish, Japanese, Brazilian Portuguese, Russian and
+Simplified Chinese also carry the first-run screens and the chat core (672
+messages, `docs/l10n/fg5-key-set.md`, QA record
+`docs/qa/fg5-2026-10-08/README.md`) and read English for the rest; the
+picker marks them "Partly translated". `tool/l10n/check_partial_locales.py`
+keeps their core keys complete.
+
 ## Done
 
 - [x] Externalise every `Text('...')` and named label literal under

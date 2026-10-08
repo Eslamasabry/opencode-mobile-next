@@ -28189,4 +28189,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String liveToolOther(String tool) {
     return 'Running $tool…';
   }
+
+  @override
+  String get e7LocaleUiJapanese => '日本語';
+
+  @override
+  String get e7LocaleUiChinese => '简体中文';
+
+  @override
+  String get e7LocaleUiSpanish => 'Español';
+
+  @override
+  String get e7LocaleUiPortuguese => 'Português (Brasil)';
+
+  @override
+  String get e7LocaleUiRussian => 'Русский';
 }

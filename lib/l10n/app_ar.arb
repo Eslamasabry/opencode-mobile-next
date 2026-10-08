@@ -8398,5 +8398,10 @@
   "liveToolWorking": "جارٍ العمل…",
   "liveToolCard": "جارٍ عرض بطاقة…",
   "liveToolBackgroundTask": "جارٍ فحص مهمة في الخلفية…",
-  "liveToolOther": "جارٍ تشغيل {tool}…"
+  "liveToolOther": "جارٍ تشغيل {tool}…",
+  "e7LocaleUiJapanese": "日本語",
+  "e7LocaleUiChinese": "简体中文",
+  "e7LocaleUiSpanish": "Español",
+  "e7LocaleUiPortuguese": "Português (Brasil)",
+  "e7LocaleUiRussian": "Русский"
 }

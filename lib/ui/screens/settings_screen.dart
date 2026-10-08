@@ -15,6 +15,7 @@ import '../../diagnostics/report_problem_startup.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/interaction_defaults.dart' show DefaultReason;
+import '../../state/app_locale.dart' show AppLocaleStore;
 import '../../state/connection.dart';
 import '../../state/offline_queue.dart';
 import '../../state/profile_monitor.dart';
@@ -27,6 +28,8 @@ import '../kit/kit.dart';
 import '../theme_packs.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/default_notices.dart' show modelDefaultOf;
+import '../widgets/language_picker.dart'
+    show languageChoiceLabel, languageChoiceNote;
 import '../widgets/phone_server_card.dart' show serverDisplayName;
 import '../widgets/product_states.dart';
 import '../widgets/safety_confirms.dart';

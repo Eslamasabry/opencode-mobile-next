@@ -1,4 +1,5 @@
-// shared-settings-1 (wave 2a): the Language sheet's honest Arabic offer, the
+// shared-settings-1 (wave 2a): the Language sheet's honest offer of every
+// language (Arabic and the five FG5 languages), the
 // theme preview sheet's "In use now" line and Undo after Apply.
 import 'dart:convert';
 import 'dart:io';
@@ -7,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
+import 'package:opencode_mobile/state/app_locale.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
@@ -53,21 +55,29 @@ void main() {
   });
 
   group('language sheet', () {
-    test('the Arabic share is the real coverage, within 3 points', () {
+    test('every language share is the real coverage, within 3 points', () {
       bool message(String key) => !key.startsWith('@');
       final en = _arb('lib/l10n/app_en.arb').keys.where(message).toSet();
-      final ar = _arb(
-        'lib/l10n/app_ar.arb',
-      ).keys.where(message).where(en.contains).length;
       final hardcoded = scan().values.fold<int>(0, (a, b) => a + b);
-      final percent = ar * 100 ~/ (en.length + hardcoded);
+      for (final entry in languageTranslatedPercent.entries) {
+        final translated = _arb(
+          'lib/l10n/app_${entry.key}.arb',
+        ).keys.where(message).where(en.contains).length;
+        final percent = translated * 100 ~/ (en.length + hardcoded);
+        expect(
+          (percent - entry.value).abs(),
+          lessThanOrEqualTo(3),
+          reason:
+              '${entry.key} covers $percent % ($translated of ${en.length} '
+              'catalogue strings + $hardcoded in code); set '
+              "languageTranslatedPercent['${entry.key}'] in "
+              'lib/ui/widgets/language_picker.dart to $percent.',
+        );
+      }
       expect(
-        (percent - arabicTranslatedPercent).abs(),
-        lessThanOrEqualTo(3),
-        reason:
-            'Arabic covers $percent % ($ar of ${en.length} catalogue '
-            'strings + $hardcoded in code); set arabicTranslatedPercent in '
-            'lib/ui/widgets/language_picker.dart to $percent.',
+        languageTranslatedPercent['ar'],
+        arabicTranslatedPercent,
+        reason: 'Arabic keeps its own constant',
       );
     });
 
@@ -102,6 +112,31 @@ void main() {
             ),
             findsOneWidget,
           );
+        }
+        // The partly-translated languages say so, each with its own share and
+        // its own name; English carries no note.
+        for (final code in AppLocaleStore.pickerLanguages) {
+          final choice = find.byKey(ValueKey('language-choice-$code'));
+          expect(choice, findsOneWidget, reason: code);
+          expect(
+            find.descendant(
+              of: choice,
+              matching: find.text(languageChoiceLabel(_l10n, code)),
+            ),
+            findsOneWidget,
+            reason: '$code shows its own name',
+          );
+          final percent = languageTranslatedPercent[code];
+          final note = percent == null || percent >= 100
+              ? null
+              : _l10n.languagePickerPartlyTranslated(percent);
+          if (note != null) {
+            expect(
+              find.descendant(of: choice, matching: find.text(note)),
+              findsOneWidget,
+              reason: '$code is partly translated',
+            );
+          }
         }
         // Choosing the language in use just closes the sheet.
         await tester.tap(find.text(_l10n.e7LocaleUiSystem).last);

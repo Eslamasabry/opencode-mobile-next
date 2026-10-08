@@ -1,5 +1,6 @@
 import 'dart:ui' show Locale;
 
+import 'package:flutter/widgets.dart' show basicLocaleListResolution;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Device-wide preference, deliberately outside profile deletion. A null
@@ -8,7 +9,16 @@ class AppLocaleStore {
   AppLocaleStore(this._preferences);
 
   static const preferenceKey = 'oc.appLocale';
-  static const supportedLanguages = {'en', 'ar'};
+
+  /// Every language the app ships, by the code the choice is saved under.
+  /// Brazilian Portuguese is `pt` and Simplified Chinese is `zh`: one ARB
+  /// per language, matched by language code only (docs/l10n/fg5-key-set.md).
+  static const supportedLanguages = {'en', 'ar', 'es', 'ja', 'pt', 'ru', 'zh'};
+
+  /// The order of the language choices (after "Use system language"):
+  /// English first, then by code. Each shows its own name.
+  static const pickerLanguages = ['en', 'ar', 'es', 'ja', 'pt', 'ru', 'zh'];
+
   final SharedPreferences _preferences;
   Future<void>? _pending;
 
@@ -48,3 +58,13 @@ class AppLocaleStore {
 class AppLocaleSaveException implements Exception {
   const AppLocaleSaveException();
 }
+
+/// Picks the app's language from the device's language list. Flutter's own
+/// rule falls back to the *first* supported locale, which is Arabic (the
+/// generated list is alphabetical); a device in a language the app does not
+/// ship must read English instead, so English leads the list it searches.
+Locale resolveAppLocales(List<Locale>? preferred, Iterable<Locale> supported) =>
+    basicLocaleListResolution(preferred, [
+      const Locale('en'),
+      ...supported.where((locale) => locale.languageCode != 'en'),
+    ]);

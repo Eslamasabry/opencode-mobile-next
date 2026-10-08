@@ -7,6 +7,11 @@ import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_ar.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+import 'app_localizations_ja.dart';
+import 'app_localizations_pt.dart';
+import 'app_localizations_ru.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -96,6 +101,11 @@ abstract class AppLocalizations {
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
     Locale('en'),
+    Locale('es'),
+    Locale('ja'),
+    Locale('pt'),
+    Locale('ru'),
+    Locale('zh'),
   ];
 
   /// No description provided for @servicesTitle.
@@ -44376,6 +44386,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Running {tool}…'**
   String liveToolOther(String tool);
+
+  /// Language sheet: the language's own name (Japanese), written in that language and never translated, like the Arabic and English rows.
+  ///
+  /// In en, this message translates to:
+  /// **'日本語'**
+  String get e7LocaleUiJapanese;
+
+  /// Language sheet: the language's own name (Chinese), written in that language and never translated, like the Arabic and English rows.
+  ///
+  /// In en, this message translates to:
+  /// **'简体中文'**
+  String get e7LocaleUiChinese;
+
+  /// Language sheet: the language's own name (Spanish), written in that language and never translated, like the Arabic and English rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Español'**
+  String get e7LocaleUiSpanish;
+
+  /// Language sheet: the language's own name (Portuguese), written in that language and never translated, like the Arabic and English rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Português (Brasil)'**
+  String get e7LocaleUiPortuguese;
+
+  /// Language sheet: the language's own name (Russian), written in that language and never translated, like the Arabic and English rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Русский'**
+  String get e7LocaleUiRussian;
 }
 
 class _AppLocalizationsDelegate
@@ -44388,8 +44428,15 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['ar', 'en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>[
+    'ar',
+    'en',
+    'es',
+    'ja',
+    'pt',
+    'ru',
+    'zh',
+  ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -44402,6 +44449,16 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsAr();
     case 'en':
       return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
+    case 'ja':
+      return AppLocalizationsJa();
+    case 'pt':
+      return AppLocalizationsPt();
+    case 'ru':
+      return AppLocalizationsRu();
+    case 'zh':
+      return AppLocalizationsZh();
   }
 
   throw FlutterError(
