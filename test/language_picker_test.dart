@@ -57,6 +57,19 @@ void main() {
   late ConnectionController controller;
   late SharedPreferences prefs;
   setUp(() async {
+    // Saving a language also asks Android to rebuild its notification copy
+    // (oc/background refreshNativeLocale); an unanswered channel would leave
+    // the sheet on "Saving language..." for good.
+    const background = MethodChannel('oc/background');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          background,
+          (call) async => <String, dynamic>{},
+        );
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(background, null),
+    );
     SharedPreferences.setMockInitialValues({});
     prefs = await SharedPreferences.getInstance();
     controller = ConnectionController(
