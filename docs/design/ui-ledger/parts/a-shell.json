@@ -2002,13 +2002,13 @@
     },
     {
       "id": "capabilities",
-      "title": "Commands & tools",
+      "title": "Tools",
       "kind": "screen",
       "file": "lib/ui/screens/capabilities_screen.dart",
       "widget": "CapabilitiesScreen",
       "presentedBy": [],
       "line": 11,
-      "purpose": "Tabbed home for the server capability catalogs; each tab embeds another screen with embedded: true.",
+      "purpose": "Settings › Tools (target-ia §1.3 row 7, FG6): the one page for what the agent can use besides the model. Tabs MCP, Commands, Tools, Skills, References and External agents; each embeds another screen with embedded: true and is built on first visit. Without a shared catalog (Codex, Paseo, no saved server) only External agents shows, with one muted line and a Why.",
       "reachedFrom": [
         {
           "page": "?",
@@ -2021,16 +2021,33 @@
       "gates": [],
       "elements": [
         {
+          "id": "capabilities-tab-mcp",
+          "type": "tab",
+          "label": "MCP",
+          "key": "capabilities-tab-MCP",
+          "line": 56,
+          "action": "other",
+          "target": "integrations",
+          "targetWidget": "IntegrationsScreen",
+          "effect": "Tab, first and the default -> IntegrationsScreen(controller, mode: mcp, embedded: true); Add MCP server is a button at the head of the list.",
+          "gates": [
+            "capabilities.serverCatalog"
+          ],
+          "destructive": false
+        },
+        {
           "id": "capabilities-tab-commands",
           "type": "tab",
           "label": "Commands",
           "key": "capabilities-tab-Commands",
           "line": 56,
           "action": "other",
-          "target": "capabilities-commands-tab",
+          "target": "commands",
           "targetWidget": "CommandsScreen",
           "effect": "TabBar tab -> CommandsScreen(controller, embedded: true).",
-          "gates": [],
+          "gates": [
+            "capabilities.serverCatalog"
+          ],
           "destructive": false
         },
         {
@@ -2040,11 +2057,11 @@
           "key": "capabilities-tab-Tools",
           "line": 56,
           "action": "other",
-          "target": "capabilities-tools-tab",
+          "target": "tools",
           "targetWidget": "ToolsScreen",
-          "effect": "TabBar tab -> ToolsScreen(controller, embedded: true).",
+          "effect": "Tab -> ToolsScreen(controller, embedded: true); where the server does not list its tools it explains instead (capabilities.toolInventory).",
           "gates": [
-            "controller.capabilities.toolInventory"
+            "capabilities.serverCatalog"
           ],
           "destructive": false
         },
@@ -2055,10 +2072,12 @@
           "key": "capabilities-tab-Skills",
           "line": 56,
           "action": "other",
-          "target": "capabilities-skills-tab",
+          "target": "skills",
           "targetWidget": "SkillsScreen",
           "effect": "TabBar tab -> SkillsScreen(controller, embedded: true).",
-          "gates": [],
+          "gates": [
+            "capabilities.serverCatalog"
+          ],
           "destructive": false
         },
         {
@@ -2068,10 +2087,40 @@
           "key": "capabilities-tab-References",
           "line": 56,
           "action": "other",
-          "target": "capabilities-references-tab",
+          "target": "references",
           "targetWidget": "ReferencesScreen",
           "effect": "TabBar tab -> ReferencesScreen(controller, embedded: true).",
+          "gates": [
+            "capabilities.serverCatalog"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "capabilities-tab-external-agents",
+          "type": "tab",
+          "label": "External agents",
+          "key": "capabilities-tab-External agents",
+          "line": 56,
+          "action": "other",
+          "target": "external-agents",
+          "targetWidget": "ExternalAgentsScreen",
+          "effect": "Tab -> ExternalAgentsScreen(store, embedded: true); the store is made when the tab is first opened and disposed with the page. The only tab without a shared catalog.",
           "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "capabilities-unavailable-why",
+          "type": "link",
+          "label": "Why",
+          "key": "tools-unavailable-why",
+          "line": 175,
+          "action": "navigate",
+          "target": "server-capabilities",
+          "targetWidget": "ServerCapabilitiesScreen",
+          "effect": "Opens Available on this server.",
+          "gates": [
+            "the server shares no catalog and hides MCP and Commands & tools"
+          ],
           "destructive": false
         }
       ]

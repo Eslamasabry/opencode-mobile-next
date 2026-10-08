@@ -15,7 +15,6 @@ import 'package:opencode_mobile/ui/widgets/tool_card.dart';
 import 'package:opencode_mobile/voice/controller.dart';
 import 'package:opencode_mobile/voice/model_download.dart';
 import 'package:opencode_mobile/voice/model_manager.dart';
-import 'package:opencode_mobile/voice/notices.dart';
 import 'package:opencode_mobile/voice/voice_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -340,24 +339,14 @@ final dChatSheetsArea = CensusArea(
   'd-chat-sheets',
   shots: [
     // -- permissions ---------------------------------------------------------
-    CensusShot(
-      'permission-sheet',
-      state: 'command',
-      (kit) async {
-        await _openPermissionSheet(kit, samplePermission());
-        kit.expectText(checkoutCommand);
-      },
-      note: 'Opened from the chat card Review; a v1 shell command request.',
-    ),
-    CensusShot(
-      'permission-sheet',
-      state: 'edit-diff',
-      (kit) async {
-        await _openPermissionSheet(kit, _editPermission());
-        kit.expectVisible(find.byKey(const Key('permission-see-full-diff')));
-      },
-      note: 'An edit request with the diff preview the server attached.',
-    ),
+    CensusShot('permission-sheet', state: 'command', (kit) async {
+      await _openPermissionSheet(kit, samplePermission());
+      kit.expectText(checkoutCommand);
+    }, note: 'Opened from the chat card Review; a v1 shell command request.'),
+    CensusShot('permission-sheet', state: 'edit-diff', (kit) async {
+      await _openPermissionSheet(kit, _editPermission());
+      kit.expectVisible(find.byKey(const Key('permission-see-full-diff')));
+    }, note: 'An edit request with the diff preview the server attached.'),
     CensusShot(
       'permission-sheet',
       state: 'reject-with-message',
@@ -422,102 +411,78 @@ final dChatSheetsArea = CensusArea(
           'separator in "Settings ▯ Saved permissions" draws as a missing '
           'glyph with the capture fonts.',
     ),
-    CensusShot(
-      'embedded-permission-attention-card',
-      state: 'command',
-      (kit) async {
-        await _chat(
-          kit,
-          transcript: sampleTranscript(awaitingPermission: true),
-          busy: true,
-          before: (c) =>
-              c.permissions = {samplePermission().id: samplePermission()},
-        );
-        kit.expectVisible(find.byKey(const Key('permission-card-review')));
-      },
-      note: 'Host: the chat, above the composer, while the shell call waits.',
-    ),
-    CensusShot(
-      'embedded-permission-attention-card',
-      state: 'edit',
-      (kit) async {
-        await _chat(
-          kit,
-          transcript: sampleTranscript(awaitingPermission: true),
-          busy: true,
-          before: (c) =>
-              c.permissions = {_editPermission().id: _editPermission()},
-        );
-        kit.expectVisible(find.byKey(const Key('permission-card-review')));
-      },
-      note: 'Host: the chat; an edit request.',
-    ),
+    CensusShot('embedded-permission-attention-card', state: 'command', (
+      kit,
+    ) async {
+      await _chat(
+        kit,
+        transcript: sampleTranscript(awaitingPermission: true),
+        busy: true,
+        before: (c) =>
+            c.permissions = {samplePermission().id: samplePermission()},
+      );
+      kit.expectVisible(find.byKey(const Key('permission-card-review')));
+    }, note: 'Host: the chat, above the composer, while the shell call waits.'),
+    CensusShot('embedded-permission-attention-card', state: 'edit', (
+      kit,
+    ) async {
+      await _chat(
+        kit,
+        transcript: sampleTranscript(awaitingPermission: true),
+        busy: true,
+        before: (c) =>
+            c.permissions = {_editPermission().id: _editPermission()},
+      );
+      kit.expectVisible(find.byKey(const Key('permission-card-review')));
+    }, note: 'Host: the chat; an edit request.'),
 
     // -- approvals -----------------------------------------------------------
-    CensusShot(
-      'session-approvals-sheet',
-      state: 'ask',
-      (kit) async {
-        await _chat(kit);
-        await kit.tapKey('session-actions-button');
-        await kit.tap(find.text('Conversation actions').last);
-        await kit.tap(find.text('Approvals').last);
-        kit.expectVisible(find.byKey(const Key('session-approvals-sheet')));
-      },
-      note: 'Conversation menu › Conversation actions › Approvals; default.',
-    ),
-    CensusShot(
-      'session-approvals-sheet',
-      state: 'auto',
-      (kit) async {
-        await _chat(
-          kit,
-          beforeAsync: (c) => c.setSessionAutoApproval(
-            checkoutSessionID,
-            const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
-          ),
-        );
-        await kit.tapKey('auto-approval-indicator');
-        kit.expectVisible(find.byKey(const Key('session-approvals-sheet')));
-      },
-      note: 'Opened from the auto-approval indicator while it is on.',
-    ),
-    CensusShot(
-      'embedded-auto-approval-indicator',
-      state: 'on',
-      (kit) async {
-        await _chat(
-          kit,
-          busy: true,
-          beforeAsync: (c) => c.setSessionAutoApproval(
-            checkoutSessionID,
-            const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
-          ),
-        );
-        kit.expectVisible(find.byKey(const Key('auto-approval-indicator')));
-      },
-      note: 'Host: the chat, strip above the composer; a turn is running.',
-    ),
-    CensusShot(
-      'embedded-auto-approval-indicator',
-      state: 'paused',
-      (kit) async {
-        final controller = await _chat(
-          kit,
-          beforeAsync: (c) => c.setSessionAutoApproval(
-            checkoutSessionID,
-            const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
-          ),
-        );
-        controller
-          ..status = StreamStatus.disconnected
-          ..lastError = 'Cannot reach http://192.168.1.20:4096';
-        controller.notifyListeners();
-        await kit.settle();
-        kit.expectVisible(find.byKey(const Key('auto-approval-indicator')));
-      },
-      note: 'Host: the chat after the connection dropped.',
-    ),
+    CensusShot('session-approvals-sheet', state: 'ask', (kit) async {
+      await _chat(kit);
+      await kit.tapKey('session-actions-button');
+      await kit.tap(find.text('Conversation actions').last);
+      await kit.tap(find.text('Approvals').last);
+      kit.expectVisible(find.byKey(const Key('session-approvals-sheet')));
+    }, note: 'Conversation menu › Conversation actions › Approvals; default.'),
+    CensusShot('session-approvals-sheet', state: 'auto', (kit) async {
+      await _chat(
+        kit,
+        beforeAsync: (c) => c.setSessionAutoApproval(
+          checkoutSessionID,
+          const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
+        ),
+      );
+      await kit.tapKey('auto-approval-indicator');
+      kit.expectVisible(find.byKey(const Key('session-approvals-sheet')));
+    }, note: 'Opened from the auto-approval indicator while it is on.'),
+    CensusShot('embedded-auto-approval-indicator', state: 'on', (kit) async {
+      await _chat(
+        kit,
+        busy: true,
+        beforeAsync: (c) => c.setSessionAutoApproval(
+          checkoutSessionID,
+          const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
+        ),
+      );
+      kit.expectVisible(find.byKey(const Key('auto-approval-indicator')));
+    }, note: 'Host: the chat, strip above the composer; a turn is running.'),
+    CensusShot('embedded-auto-approval-indicator', state: 'paused', (
+      kit,
+    ) async {
+      final controller = await _chat(
+        kit,
+        beforeAsync: (c) => c.setSessionAutoApproval(
+          checkoutSessionID,
+          const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
+        ),
+      );
+      controller
+        ..status = StreamStatus.disconnected
+        ..lastError = 'Cannot reach http://192.168.1.20:4096';
+      controller.notifyListeners();
+      await kit.settle();
+      kit.expectVisible(find.byKey(const Key('auto-approval-indicator')));
+    }, note: 'Host: the chat after the connection dropped.'),
 
     // -- timeline and todos --------------------------------------------------
     CensusShot('timeline-sheet', state: 'loaded', (kit) async {
@@ -531,33 +496,28 @@ final dChatSheetsArea = CensusArea(
       await kit.enterText(find.byKey(const Key('timeline-search')), 'coupon');
       kit.expectVisible(find.byKey(const Key('timeline-search')));
     }, note: 'Searching the timeline for "coupon".'),
-    CensusShot(
-      'timeline-sheet',
-      state: 'fork',
-      (kit) async {
-        await _chat(kit, transcript: dLongTranscript());
-        await _openTools(kit);
-        await kit.tapKey('composer-tool-commands');
-        await kit.enterText(
-          find.byKey(const Key('command-launcher-search')),
-          'fork',
-        );
-        await kit.tapKey('command-mobile-fork');
-        // Fork mode: prompts only, each row forks (no separate fork button).
-        kit.expectVisible(find.byKey(const ValueKey('timeline-row-msg_u4')));
-        if (find
-                .byKey(const ValueKey('timeline-fork-msg_u4'))
-                .evaluate()
-                .isNotEmpty ||
-            find
-                .byKey(const ValueKey('timeline-row-msg_a4'))
-                .evaluate()
-                .isNotEmpty) {
-          throw CensusMismatch('the timeline is not in fork mode');
-        }
-      },
-      note: 'Command launcher › Fork from prompt: pick a prompt to fork.',
-    ),
+    CensusShot('timeline-sheet', state: 'fork', (kit) async {
+      await _chat(kit, transcript: dLongTranscript());
+      await _openTools(kit);
+      await kit.tapKey('composer-tool-commands');
+      await kit.enterText(
+        find.byKey(const Key('command-launcher-search')),
+        'fork',
+      );
+      await kit.tapKey('command-mobile-fork');
+      // Fork mode: prompts only, each row forks (no separate fork button).
+      kit.expectVisible(find.byKey(const ValueKey('timeline-row-msg_u4')));
+      if (find
+              .byKey(const ValueKey('timeline-fork-msg_u4'))
+              .evaluate()
+              .isNotEmpty ||
+          find
+              .byKey(const ValueKey('timeline-row-msg_a4'))
+              .evaluate()
+              .isNotEmpty) {
+        throw CensusMismatch('the timeline is not in fork mode');
+      }
+    }, note: 'Command launcher › Fork from prompt: pick a prompt to fork.'),
     CensusShot('todos-sheet', state: 'loaded', (kit) async {
       await _chat(
         kit,
@@ -577,30 +537,22 @@ final dChatSheetsArea = CensusArea(
       await _sessionMenu(kit, 'Todos');
       kit.expectText('Run the full suite');
     }, note: 'Conversation menu › Todos.'),
-    CensusShot(
-      'todos-sheet',
-      state: 'empty',
-      (kit) async {
-        await _chat(kit);
-        await _sessionMenu(kit, 'Todos');
-        kit.expectTextContaining('todo');
-      },
-      note: 'Conversation menu › Todos with none planned.',
-    ),
+    CensusShot('todos-sheet', state: 'empty', (kit) async {
+      await _chat(kit);
+      await _sessionMenu(kit, 'Todos');
+      kit.expectTextContaining('todo');
+    }, note: 'Conversation menu › Todos with none planned.'),
 
     // -- questions -----------------------------------------------------------
-    CensusShot(
-      'embedded-question-attention-card',
-      state: 'inline',
-      (kit) async {
-        await _chat(
-          kit,
-          before: (c) => c.questions = {_scopeQuestion.id: _scopeQuestion},
-        );
-        kit.expectVisible(find.byKey(const Key('question-card-more')));
-      },
-      note: 'Host: the chat; one prompt answered by a tap.',
-    ),
+    CensusShot('embedded-question-attention-card', state: 'inline', (
+      kit,
+    ) async {
+      await _chat(
+        kit,
+        before: (c) => c.questions = {_scopeQuestion.id: _scopeQuestion},
+      );
+      kit.expectVisible(find.byKey(const Key('question-card-more')));
+    }, note: 'Host: the chat; one prompt answered by a tap.'),
     CensusShot(
       'embedded-question-attention-card',
       state: 'summary',
@@ -615,39 +567,31 @@ final dChatSheetsArea = CensusArea(
           'Host: the chat; three prompts, so the card summarises and Answer '
           'opens the full sheet.',
     ),
-    CensusShot(
-      'embedded-question-options',
-      state: 'multi-select',
-      (kit) async {
-        await _chat(
-          kit,
-          before: (c) => c.questions = {_checksQuestion.id: _checksQuestion},
-        );
-        await kit.tapKey('question-option-Unit tests');
-        await kit.tapKey('question-option-Static analysis');
-        kit.expectVisible(find.byKey(const Key('question-card-send')));
-      },
-      note: 'Host: the chat question card; two of three checks chosen.',
-    ),
-    CensusShot(
-      'embedded-question-options',
-      state: 'custom-answer',
-      (kit) async {
-        await _chat(
-          kit,
-          before: (c) => c.questions = {_scopeQuestion.id: _scopeQuestion},
-        );
-        await kit.enterText(
-          find.descendant(
-            of: find.byKey(const ValueKey('question-card-custom-0')),
-            matching: find.byType(TextField),
-          ),
-          'Only the checkout and cart tests',
-        );
-        kit.expectVisible(find.byKey(const Key('question-card-send')));
-      },
-      note: 'Host: the chat question card with a free-text answer typed.',
-    ),
+    CensusShot('embedded-question-options', state: 'multi-select', (kit) async {
+      await _chat(
+        kit,
+        before: (c) => c.questions = {_checksQuestion.id: _checksQuestion},
+      );
+      await kit.tapKey('question-option-Unit tests');
+      await kit.tapKey('question-option-Static analysis');
+      kit.expectVisible(find.byKey(const Key('question-card-send')));
+    }, note: 'Host: the chat question card; two of three checks chosen.'),
+    CensusShot('embedded-question-options', state: 'custom-answer', (
+      kit,
+    ) async {
+      await _chat(
+        kit,
+        before: (c) => c.questions = {_scopeQuestion.id: _scopeQuestion},
+      );
+      await kit.enterText(
+        find.descendant(
+          of: find.byKey(const ValueKey('question-card-custom-0')),
+          matching: find.byType(TextField),
+        ),
+        'Only the checkout and cart tests',
+      );
+      kit.expectVisible(find.byKey(const Key('question-card-send')));
+    }, note: 'Host: the chat question card with a free-text answer typed.'),
 
     // -- voice ---------------------------------------------------------------
     CensusShot(
@@ -670,64 +614,36 @@ final dChatSheetsArea = CensusArea(
       ),
       note: 'Download in progress (frozen at 38%).',
     ),
-    CensusShot(
-      'voice-model-setup-sheet',
-      state: 'installed',
-      (kit) async {
-        final prefs = await kit.prefs();
-        final models = DVoiceModels(prefs);
-        kit.onDispose(models.dispose);
-        await _chat(kit);
-        await kit.present(
-          (context) => showVoiceModelSetupSheet(context, models),
-        );
-        kit.expectText('Local voice input');
-        kit.expectVisible(find.byKey(const Key('voice-delete-base')));
-      },
-      note: 'The balanced pack installed (as from Settings › Voice).',
-    ),
-    CensusShot(
-      'voice-model-setup-sheet-delete-dialog',
-      (kit) async {
-        final prefs = await kit.prefs();
-        final models = DVoiceModels(prefs);
-        kit.onDispose(models.dispose);
-        await _chat(kit);
-        await kit.present(
-          (context) => showVoiceModelSetupSheet(context, models),
-        );
-        await kit.tapKey('voice-delete-base');
-        kit.expectText('Keep Balanced');
-      },
-      note: 'Delete on the installed pack.',
-    ),
-    CensusShot(
-      'voice-composer-sheet',
-      state: 'listening',
-      (kit) async {
-        await _openVoice(kit, _voice());
-        kit.expectVisible(find.byKey(const Key('stop-voice-recording')));
-      },
-      note: 'Composer tools › Voice input, recording (fake recorder, 0:07).',
-    ),
-    CensusShot(
-      'voice-composer-sheet',
-      state: 'draft',
-      (kit) async {
-        await _openVoice(kit, _voice(outcome: DVoiceOutcome.draft));
-        kit.expectVisible(find.byKey(const Key('insert-voice-draft')));
-      },
-      note: 'Transcript ready for review (fake recognizer).',
-    ),
-    CensusShot(
-      'voice-composer-sheet',
-      state: 'mic-denied',
-      (kit) async {
-        await _openVoice(kit, _voice(outcome: DVoiceOutcome.micDenied));
-        kit.expectText('Open app settings');
-      },
-      note: 'Microphone permission permanently denied.',
-    ),
+    CensusShot('voice-model-setup-sheet', state: 'installed', (kit) async {
+      final prefs = await kit.prefs();
+      final models = DVoiceModels(prefs);
+      kit.onDispose(models.dispose);
+      await _chat(kit);
+      await kit.present((context) => showVoiceModelSetupSheet(context, models));
+      kit.expectText('Local voice input');
+      kit.expectVisible(find.byKey(const Key('voice-delete-base')));
+    }, note: 'The balanced pack installed (as from Settings › Voice).'),
+    CensusShot('voice-model-setup-sheet-delete-dialog', (kit) async {
+      final prefs = await kit.prefs();
+      final models = DVoiceModels(prefs);
+      kit.onDispose(models.dispose);
+      await _chat(kit);
+      await kit.present((context) => showVoiceModelSetupSheet(context, models));
+      await kit.tapKey('voice-delete-base');
+      kit.expectText('Keep Balanced');
+    }, note: 'Delete on the installed pack.'),
+    CensusShot('voice-composer-sheet', state: 'listening', (kit) async {
+      await _openVoice(kit, _voice());
+      kit.expectVisible(find.byKey(const Key('stop-voice-recording')));
+    }, note: 'Composer tools › Voice input, recording (fake recorder, 0:07).'),
+    CensusShot('voice-composer-sheet', state: 'draft', (kit) async {
+      await _openVoice(kit, _voice(outcome: DVoiceOutcome.draft));
+      kit.expectVisible(find.byKey(const Key('insert-voice-draft')));
+    }, note: 'Transcript ready for review (fake recognizer).'),
+    CensusShot('voice-composer-sheet', state: 'mic-denied', (kit) async {
+      await _openVoice(kit, _voice(outcome: DVoiceOutcome.micDenied));
+      kit.expectText('Open app settings');
+    }, note: 'Microphone permission permanently denied.'),
     CensusShot(
       'voice-composer-sheet',
       state: 'conversation-ready',
@@ -739,28 +655,11 @@ final dChatSheetsArea = CensusArea(
           'Composer tools › Voice conversation: the sheet waits for Start '
           'listening.',
     ),
-    CensusShot(
-      'embedded-voice-conversation-controls',
-      (kit) async {
-        await _startConversation(kit);
-        await kit.tapKey('voice-composer-cancel');
-        kit.expectVisible(find.byKey(const Key('voice-speak-replies')));
-      },
-      note: 'Host: the chat in voice conversation mode, sheet closed.',
-    ),
-    CensusShot(
-      'voice-notices',
-      (kit) async {
-        await _chat(kit);
-        await kit.push(const VoiceNoticesPage());
-        await kit.realWait(const Duration(seconds: 1));
-        kit.expectText('Voice licenses');
-        kit.expectTextContaining('ONNX Runtime');
-      },
-      note:
-          'Full-screen notices (reached from Settings › Voice). Review: raw '
-          'Markdown (#, **, backticks) with the file\'s hard line breaks.',
-    ),
+    CensusShot('embedded-voice-conversation-controls', (kit) async {
+      await _startConversation(kit);
+      await kit.tapKey('voice-composer-cancel');
+      kit.expectVisible(find.byKey(const Key('voice-speak-replies')));
+    }, note: 'Host: the chat in voice conversation mode, sheet closed.'),
 
     // -- transcript parts ------------------------------------------------------
     CensusShot(
@@ -786,15 +685,10 @@ final dChatSheetsArea = CensusArea(
           'inline (no 13-line cap, no See all) and pushes the card header off '
           'screen; the edit card does cap with See all.',
     ),
-    CensusShot(
-      'embedded-tool-card',
-      state: 'edit',
-      (kit) async {
-        await _chat(kit, transcript: dToolTranscript(editPart()));
-        await _expandTool(kit);
-      },
-      note: 'Host: the chat; the edit call expanded with its diff.',
-    ),
+    CensusShot('embedded-tool-card', state: 'edit', (kit) async {
+      await _chat(kit, transcript: dToolTranscript(editPart()));
+      await _expandTool(kit);
+    }, note: 'Host: the chat; the edit call expanded with its diff.'),
     CensusShot(
       'embedded-tool-card',
       state: 'subagent',
@@ -817,18 +711,14 @@ final dChatSheetsArea = CensusArea(
           'Host: the chat; heading, list, link, path chip, table, code '
           'block and choices.',
     ),
-    CensusShot(
-      'markdown-code-reader',
-      (kit) async {
-        await _chat(kit, transcript: dMarkdownTranscript());
-        final options = find.byTooltip('Code options');
-        await kit.scrollTo(options);
-        await kit.tap(options.first);
-        await kit.tap(find.text('Full screen').last);
-        kit.expectText('Code reader');
-      },
-      note: 'Code options › Full screen on the reply code block.',
-    ),
+    CensusShot('markdown-code-reader', (kit) async {
+      await _chat(kit, transcript: dMarkdownTranscript());
+      final options = find.byTooltip('Code options');
+      await kit.scrollTo(options);
+      await kit.tap(options.first);
+      await kit.tap(find.text('Full screen').last);
+      kit.expectText('Code reader');
+    }, note: 'Code options › Full screen on the reply code block.'),
 
     // -- forms ---------------------------------------------------------------
     CensusShot(
@@ -846,29 +736,21 @@ final dChatSheetsArea = CensusArea(
           '"pinned" Send answers bar floats mid-screen under the last field '
           'with black bands, instead of sitting at the bottom.',
     ),
-    CensusShot(
-      'form-sheet-dismiss-confirm-sheet',
-      (kit) async {
-        await _formSheet(kit);
-        await kit.tapKey('form-cancel');
-        kit.expectVisible(find.byKey(const Key('form-dismiss-confirm')));
-      },
-      note: 'Dismiss tapped on the form sheet.',
-    ),
-    CensusShot(
-      'form-sheet-date-picker',
-      (kit) async {
-        await _formSheet(kit);
-        await kit.tap(
-          find.descendant(
-            of: find.byKey(const Key('form-field-date')),
-            matching: find.byType(TextField),
-          ),
-        );
-        kit.expectVisible(find.byType(DatePickerDialog));
-      },
-      note: 'The deploy date field tapped (stock Material date picker).',
-    ),
+    CensusShot('form-sheet-dismiss-confirm-sheet', (kit) async {
+      await _formSheet(kit);
+      await kit.tapKey('form-cancel');
+      kit.expectVisible(find.byKey(const Key('form-dismiss-confirm')));
+    }, note: 'Dismiss tapped on the form sheet.'),
+    CensusShot('form-sheet-date-picker', (kit) async {
+      await _formSheet(kit);
+      await kit.tap(
+        find.descendant(
+          of: find.byKey(const Key('form-field-date')),
+          matching: find.byType(TextField),
+        ),
+      );
+      kit.expectVisible(find.byType(DatePickerDialog));
+    }, note: 'The deploy date field tapped (stock Material date picker).'),
   ],
   notRendered: {
     'embedded-return-brief-panel':

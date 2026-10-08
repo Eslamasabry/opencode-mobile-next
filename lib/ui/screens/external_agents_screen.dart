@@ -126,10 +126,15 @@ Widget _gap(BuildContext context) =>
 class ExternalAgentsScreen extends StatefulWidget {
   final ExternalAgentStore store;
   final ExternalAgentGateway Function()? gatewayFactory;
+
+  /// Body only, for the External agents tab of Settings › Tools: no top bar
+  /// of its own, and Add is a button at the head of the list.
+  final bool embedded;
   const ExternalAgentsScreen({
     super.key,
     required this.store,
     this.gatewayFactory,
+    this.embedded = false,
   });
   @override
   State<ExternalAgentsScreen> createState() => _ExternalAgentsScreenState();
@@ -225,13 +230,28 @@ class _ExternalAgentsScreenState extends State<ExternalAgentsScreen> {
     return KitScreen(
       width: KitScreenWidth.list,
       loading: _busy,
-      topBar: KitTopBar(
-        title: l.a2aTitle,
-        actions: [if (profiles.isNotEmpty) add],
-      ),
+      topBar: widget.embedded
+          ? null
+          : KitTopBar(
+              title: l.a2aTitle,
+              actions: [if (profiles.isNotEmpty) add],
+            ),
       body: ListView(
         padding: KitScreen.padding(context),
         children: [
+          // In a Tools tab, Add is a visible button at the head of the list
+          // (the empty state carries its own).
+          if (widget.embedded && profiles.isNotEmpty) ...[
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: KitButton.fromAction(
+                add,
+                role: KitButtonRole.secondary,
+                expand: false,
+              ),
+            ),
+            _gap(context),
+          ],
           if (issue != null) ...[_issueNotice(context, issue), _gap(context)],
           if (profiles.isEmpty)
             KitStateView(

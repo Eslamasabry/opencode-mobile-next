@@ -279,9 +279,10 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(references);
       await tester.pumpAndSettle();
+      // MCP · Commands · Tools · Skills · References · External agents.
       expect(
         tester.widget<KitTabSwitcher>(find.byType(KitTabSwitcher)).index,
-        3,
+        4,
       );
       expect(tester.takeException(), isNull);
     });

@@ -329,9 +329,9 @@
           "key": null,
           "line": 951,
           "action": "navigate",
-          "target": "external-agents",
-          "targetWidget": "ExternalAgentsScreen",
-          "effect": "_externalAgents(): builds an ExternalAgentStore(prefs, secure) and pushes ExternalAgentsScreen(store); disposes the store when the route returns.",
+          "target": "capabilities",
+          "targetWidget": "CapabilitiesScreen",
+          "effect": "_externalAgents(): openExternalAgents(context, connProvider) pushes Tools on its External agents tab.",
           "gates": [
             "inside More setup options expansion",
             "disabled while _busy"
@@ -1824,12 +1824,12 @@
     {
       "id": "external-agents",
       "title": "External agents",
-      "kind": "screen",
+      "kind": "tab",
       "file": "lib/ui/screens/external_agents_screen.dart",
       "widget": "ExternalAgentsScreen",
       "presentedBy": [],
       "line": 72,
-      "purpose": "Lists saved A2A external agent identities and lets the user add, open or finish deleting one.",
+      "purpose": "The External agents tab of Settings › Tools (FG6): lists saved A2A external agent identities and lets the user add, open or finish deleting one. Standalone only in tests; the app opens it through openExternalAgents (Tools on this tab).",
       "reachedFrom": [
         {
           "page": "servers",

@@ -7,6 +7,7 @@ import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/ui/screens/capabilities_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/tools_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -353,7 +354,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // One door (P3.10 Settings IA, 2bec3ed3): Settings › Tools, in the
-    // Agent group, holds Commands & tools.
+    // Agent group, is the one Tools page, with a tab for the model's tools.
     final tools = find.byKey(const ValueKey('settings-tools'));
     expect(
       find.descendant(
@@ -368,13 +369,7 @@ void main() {
     await tester.tap(tools);
     await tester.pumpAndSettle();
 
-    final row = find.byKey(const ValueKey('settings-commands-tools'));
-    expect(
-      find.descendant(of: row, matching: find.text('Commands & tools')),
-      findsOneWidget,
-    );
-    await tester.tap(row);
-    await tester.pumpAndSettle();
+    expect(find.byType(CapabilitiesScreen), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('capabilities-tab-Tools')));
     await tester.pumpAndSettle();

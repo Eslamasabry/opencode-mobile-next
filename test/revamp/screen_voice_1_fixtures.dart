@@ -12,6 +12,7 @@ import 'package:opencode_mobile/voice/controller.dart';
 import 'package:opencode_mobile/voice/model_download.dart';
 import 'package:opencode_mobile/voice/model_manager.dart';
 import 'package:opencode_mobile/voice/model_manifest.dart';
+import 'package:opencode_mobile/voice/notices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../tool/capture/fixtures.dart' show captureTheme;
@@ -183,6 +184,12 @@ Widget voiceHost({
     ),
     home: home,
   ),
+);
+
+/// The Voice licenses group as Settings › About shows it, on a bare page (the
+/// group has no page of its own since FG6).
+const noticesHost = Scaffold(
+  body: SafeArea(child: SingleChildScrollView(child: VoiceNoticesView())),
 );
 
 /// A page with one button that runs [open] with its context.

@@ -22,7 +22,7 @@ import 'package:opencode_mobile/ui/screens/about_screen.dart';
 import 'package:opencode_mobile/ui/screens/guide_screen.dart';
 import 'package:opencode_mobile/ui/screens/server_capabilities_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
-import 'package:opencode_mobile/ui/screens/tools_hub_screen.dart';
+import 'package:opencode_mobile/ui/screens/capabilities_screen.dart';
 import 'package:opencode_mobile/ui/search/search_index.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -975,7 +975,7 @@ void main() {
       expect(find.byType(KitGroupNote), findsNothing);
     });
 
-    testWidgets('Tools holds MCP, the catalog and external agents', (
+    testWidgets('Tools is one page: MCP, the catalog and external agents', (
       tester,
     ) async {
       final controller = await _controller();
@@ -986,11 +986,25 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(_row('settings-tools'));
       await tester.pumpAndSettle();
-      expect(find.byType(ToolsHubScreen), findsOneWidget);
-      for (final key in ToolsHubScreen.rows) {
-        expect(_row(key), findsOneWidget, reason: key);
+      expect(find.byType(CapabilitiesScreen), findsOneWidget);
+      for (final label in [
+        _en.libraryMcpTitle,
+        _en.runResultsCommandsTitle,
+        _en.e7SettingsDetailUi25,
+        _en.e7SettingsDetailUi26,
+        _en.e7SettingsDetailUi27,
+        _en.a2aTitle,
+      ]) {
+        expect(_row('capabilities-tab-$label'), findsOneWidget, reason: label);
       }
-      expect(_row('tools-hub-unavailable'), findsNothing);
+      expect(_row('tools-unavailable'), findsNothing);
+      // The first tab is MCP; External agents is one tap away, on the same
+      // page.
+      expect(_row('tools-section-mcp'), findsOneWidget);
+      await tester.tap(_row('capabilities-tab-${_en.a2aTitle}'));
+      await tester.pumpAndSettle();
+      expect(_row('tools-section-externalAgents'), findsOneWidget);
+      expect(_row('external-agents-empty'), findsOneWidget);
     });
 
     testWidgets('Codex Tools keeps external agents, says why', (tester) async {
@@ -1002,16 +1016,16 @@ void main() {
         MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: ToolsHubScreen(controller: controller),
+          home: CapabilitiesScreen(controller: controller),
         ),
       );
       await tester.pumpAndSettle();
-      expect(_row('settings-mcp'), findsNothing);
-      expect(_row('settings-commands-tools'), findsNothing);
+      expect(_row('capabilities-tab-${_en.libraryMcpTitle}'), findsNothing);
+      expect(_row('tools-section-mcp'), findsNothing);
       expect(_row('settings-category-plugins'), findsNothing);
-      expect(_row('settings-external-agents'), findsOneWidget);
+      expect(_row('tools-section-externalAgents'), findsOneWidget);
       expect(find.text(_en.settingsHubUnavailableCount(2)), findsOneWidget);
-      await tester.tap(_row('tools-hub-unavailable-why'));
+      await tester.tap(_row('tools-unavailable-why'));
       await tester.pumpAndSettle();
       expect(find.byType(ServerCapabilitiesScreen), findsOneWidget);
     });
@@ -1070,13 +1084,24 @@ void main() {
       await tester.tap(_row('settings-about-notices'));
       await tester.pumpAndSettle();
       expect(find.byType(AboutScreen), findsOneWidget);
-      expect(
-        find.descendant(
-          of: _row('about-open-source'),
-          matching: _row('settings-voice-notices'),
-        ),
-        findsOneWidget,
-      );
+      // The four parts are rows of About itself, below Open source: the
+      // Voice licenses page is gone.
+      for (final part in const [
+        'whisper',
+        'sherpa-onnx',
+        'onnx-runtime',
+        'record',
+      ]) {
+        expect(
+          find.descendant(
+            of: _row('about-voice-licences'),
+            matching: _row('voice-notice-$part'),
+          ),
+          findsOneWidget,
+          reason: part,
+        );
+      }
+      expect(find.text(_en.voiceNoticesTitle), findsOneWidget);
       expect(_row('about-tabs'), findsNothing);
       expect(_row('settings-show-tips-again'), findsOneWidget);
     });

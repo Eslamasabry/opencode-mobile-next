@@ -320,19 +320,17 @@ class _AboutScreenState extends State<AboutScreen> {
                     trailing: const KitChevron(),
                     onTap: () => _openNotices(l10n),
                   ),
-                  // The voice models' licences, where they can run.
-                  if (platformCapabilities.supportsVoice)
-                    KitRow(
-                      key: const ValueKey('settings-voice-notices'),
-                      leading: KitRow.icon(context, AppIconography.policy),
-                      title: l10n.e7SettingsUi94,
-                      supporting: TextSpan(text: l10n.e7SettingsUi95),
-                      supportingMaxLines: 2,
-                      trailing: const KitChevron(),
-                      onTap: () => unawaited(showVoiceNotices(context)),
-                    ),
                 ],
               ),
+              // The voice models' licences, where they can run: part of Open
+              // source, listed here instead of on a page of their own.
+              if (platformCapabilities.supportsVoice) ...[
+                SizedBox(height: tokens.sectionGap),
+                KitArrival(
+                  id: 'settings-voice-notices',
+                  child: const VoiceNoticesView(),
+                ),
+              ],
             ],
           );
         },

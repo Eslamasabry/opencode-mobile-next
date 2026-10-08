@@ -228,8 +228,8 @@ extension _ChatCommandActions on _ChatScreenState {
           );
         }
         return;
-      // "/connect" and "/mcps" land on the same screens as Settings › Agent
-      // setup › Providers and › MCP, so each has one home.
+      // "/connect" lands on Settings › Providers and "/mcps" on the MCP tab
+      // of Settings › Tools, so each has one home.
       case _ChatCommandAction.integrations:
         if (mounted) {
           await Navigator.of(context).push(
@@ -246,9 +246,9 @@ extension _ChatCommandActions on _ChatScreenState {
         if (mounted) {
           await Navigator.of(context).push(
             KitPageRoute<void>(
-              builder: (_) => IntegrationsScreen(
+              builder: (_) => CapabilitiesScreen(
                 controller: _conn,
-                mode: IntegrationsMode.mcp,
+                initialSection: ToolsSection.mcp,
               ),
             ),
           );
@@ -279,14 +279,14 @@ extension _ChatCommandActions on _ChatScreenState {
         }
         return;
       case _ChatCommandAction.tools:
-        // Same destination as Settings › Agent setup › Commands & tools,
-        // opened on its Tools tab (index 1 whenever the inventory exists,
-        // which is also the gate for this command).
+        // Same destination as Settings › Tools, opened on its Tools tab.
         if (mounted) {
           await Navigator.of(context).push(
             KitPageRoute<void>(
-              builder: (_) =>
-                  CapabilitiesScreen(controller: _conn, initialTab: 1),
+              builder: (_) => CapabilitiesScreen(
+                controller: _conn,
+                initialSection: ToolsSection.tools,
+              ),
             ),
           );
         }
