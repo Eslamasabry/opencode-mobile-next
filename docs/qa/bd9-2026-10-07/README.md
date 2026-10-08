@@ -315,3 +315,159 @@ Code-only follow-up checks during the renewed hold:
 - Changed Dart files were formatted with the pinned Dart and language3.10.
   The new native phase markers are source-only until go; the previous full
   analyzer checkpoint predates these last Dart additions.
+
+
+## Separate build GO and emulator authorization (2026-10-08)
+
+The coordinator lifted the build hold and delegated resume steps 2–5. The
+former normal-main2201 restore-first step is superseded: Claude owns the
+initial normal restoration using APK2195 from feat/genui-fe e2b3fe16, saved
+at /home/eslam/Storage/tmp/oc-apk-share/oc-2195.apk. Builds and checks use
+machine_lock; device sessions still await a separate EMULATOR GO.
+
+Every subsequent local QA run must retain one emulator flock through install,
+instrumentation, evidence and restoration. The restoration callback preflights
+the supplied owner APK's package/version2195/local signer/hash before any QA
+session, then installs it with adb -s emulator-5554 install -r -d inside the
+same flock. No normal release build or APK copy is needed. Normal launch must
+be proved after restoration; a failed restore keeps the overall receipt FAIL.
+
+This owner-authorized downgrade replaces the prior no-downgrade plan solely
+for restoration to the approved2195 APK. Never uninstall or change the signer.
+The strict seven-native/one-Flutter PASS parser remains unchanged. No device
+work or passing screenshot is claimed by this authorization update.
+
+Full pinned analyzer: no issues (15.9s). Focused host-native/contract tests:
+20 PASS serially through machine_lock. Fixture and fixed phase-reporting tests:
+6 PASS serially through machine_lock. Existing command/receipt Python tests:
+28 PASS. Detekt and the updated QA build follow once the shared build lock
+is available. No full-suite claim or CI execution.
+
+
+The native static checkpoint is now green (40cbde67): zero new findings with
+Temurin17, detekt1.23.8 and the unchanged baseline. Reverting the five corrected
+findings causes the real gate to fail; restored source passes again.
+
+Reusable owner restoration: tool/qa/bd9_normal_restore.py exposes
+prepare_restore(apk, expected_signer, receipt_path). It performs APK-only
+preflight before QA and returns a callback for run_device's existing same-flock
+finally path. The callback rejects changed hashes/wrong device prefixes,
+requires install -r -d Success, verifies installed version2195 and a live
+resumed MainActivity plus its first-frame marker within a bounded poll, and
+writes only categorical receipts. Synthetic image cleanup occurs after
+installation and cannot prevent restoration. Raw command output stays in
+memory. No builds or APK copies happen in this helper.
+
+Offline restoration tests:16 PASS; combined with command/receipt tests:44 PASS.
+Removing the authorized -d flag fails its regression (exit1), finally restored
+helper passes again. Existing callback tests already prove the emulator flock
+is held through restoration on both smoke success and failure.
+The helper is implemented/unit-verified; actual owner APK and device launch
+qualification still require the coordinator's file and EMULATOR GO.
+
+
+## Updated candidate built; EMULATOR GO pending
+
+Candidate9fb9a9dc built both release artifacts with pinned Flutter and isolated
+Temurin17: QA AOT app in292.5s (100.4MB), matching release androidTest in156s.
+Both exact APKs pass local certificate/package/version2201/native-runner
+verification. Source/APK hashes, exact commands and JDK identity are recorded
+in [build-ready.json](build-ready.json). Native compilation and packaging pass.
+This supersedes earlier build receipts for the current source candidate; it
+does not supersede the earlier failed device evidence with a passing claim.
+
+The owner2195 normal APK now exists and passes local package/version/signer/hash
+preflight, recorded as READY in [normal-apk-preflight.json](normal-apk-preflight.json).
+Preparation performs no adb operation. This does not claim its installation
+or device launch. The local driver is ready to use the callback under the
+existing whole-session emulator flock after separate EMULATOR GO.
+
+Temporary android/key.properties and build/app/intermediates are absent.
+Gradle settings match the committed file; the exact owned daemon2247394 was
+stopped. The duplicate Gradle app APK was byte-verified against the newest
+Flutter APK and deleted; newest QA app plus matching test APK retained. No
+APK copy, uninstall, device session, CI invocation or publication occurred.
+
+Current stop condition: EMULATOR GO has not arrived. After authorization, run
+python3 /tmp/bd9-qualify-and-restore.py to execute the exact committed host smoke,
+record seven native/one Flutter PASS and bounded JPG, and restore owner2195
+inside the same flock on every outcome. If Flutter fails, use its fixed phase
+category to fix the actual smoke and repeat with a newly recorded candidate.
+BD9 remains blocked; no passing device smoke or normal-restoration receipt
+is claimed yet.
+
+
+## First authorized device run and conversation finder correction
+
+After explicit EMULATOR GO, the exact committed driver installed QA2201 and
+ran instrumentation while retaining the shared emulator flock. All seven
+native predicates passed. Flutter failed with the fixed conversation phase;
+no raw diagnostic text was written. Receipts: conversation-phase-attempt1.json
+and conversation-phase-build-attempt1.json. Before releasing the SAME flock,
+approved owner2195 was installed with-r-d, then installed-version/live-process/
+resumed-MainActivity/first-frame checks passed. The normal app was left
+installed and launchable; see normal-2195-restore-attempt1.json.
+
+The UI trace establishes a QA finder bug: KitFeedItem renders KitBidi.auto(title)
+with FSI/PDI isolation, so exact raw title matching cannot succeed. The shared
+QA finder now matches the rendered kit text; the real KitFeedItem regression
+finds and taps its visible row. Reverting to raw matching fails (exit1), finally
+restored matcher passes. No UI or production gateway/controller edit.
+
+The initial global-inventory refresh depends on an event arriving after the
+Chats reader is mounted. The smoke now exercises the actual list's normal
+pull-to-refresh gesture, then awaits health/global-inventory read evidence
+before asserting. A real KitRefresh widget test verifies that gesture invokes
+refresh exactly once; removing the gesture fails (exit1), then restored source
+passes. The underlying startup refresh timing is a separate frontend/state
+observation for Claude; no automatic-refresh qualification is claimed by this
+manual-refresh smoke. Strict read-only and global-read assertions remain.
+
+All eight focused finder/gesture/fixture/reporter tests PASS serially through
+machine_lock. Full pinned analyzer clean10.8s after removing one unnecessary
+import. All44 offline command/receipt/restoration tests PASS. The dispatch-only
+workflow now runs those affected checks; YAML/Bash dry checks PASS. No CI run.
+Updated QA build and a passing device JPG remain required for BD9 completion.
+
+
+## Final local qualification — PASS (2026-10-08)
+
+Source candidate a690e166 built QA release2201 with pinned Flutter/Temurin17:
+AOT app500.3s, matching release androidTest361s. Exact commands and hashes are
+in [verified-build-summary.json](verified-build-summary.json) and
+[verified-build.json](verified-build.json). Native compile and ELF packaging pass.
+
+The second authorized whole-flock device run passed all seven ordered native
+predicates, exactly one Flutter launch→server→conversation-list/refresh test,
+and terminal instrumentation code-1. The unchanged strict checker accepted
+the complete proof; see [verified-report.json](verified-report.json).
+The smoke uses a loopback read-only fixture, not a provider/model request.
+Its visible kit title matches the directional-isolation contract, the user
+refresh produces the global inventory read, and write attempts remain empty.
+
+[conversations.jpg](conversations.jpg) is26,008 bytes (480px wide) and was
+visually checked: connected BD9 local fixture, Conversations page and synthetic
+BD9 project/title. It captures the brief refresh transition; no actual account
+or provider values appear. This is device evidence, not a mock golden.
+
+Before releasing that SAME emulator flock, the driver installed the approved
+normal2195 APK with adb -s emulator-5554 install-r-d. Installed version, live
+process, resumed MainActivity and first-frame checks ALL PASS. See
+[verified-normal-restore.json](verified-normal-restore.json). The emulator was
+left with normal app2195 installed and launchable, preserving data/signer.
+No uninstall, clear-data or other-device operation.
+
+Temporary signing/intermediates are absent; Gradle settings restored; exact
+owned daemon2321836 stopped and no longer exists. Duplicate app output removed
+after hash equality; only newest QA app and matching test APK remain. No APK
+copied. All8 affected Flutter tests,44 Python tests, full analyzer and committed
+zero-new-finding Kotlin gate passed at the relevant source checkpoints. No full
+suite claimed by Sol; Claude owns it. Workflow remains workflow_dispatch-only;
+CI, push, publication and Shorebird release/patch were not invoked.
+
+BD9 is locally verified and complete for its assigned dispatch-only contract.
+Remaining independent frontend/state observation: automatic initial global
+inventory refresh is event/reader-order dependent; this smoke explicitly proves
+the user refresh path. See the finder correction above; no foreign controller
+or UI ownership was changed. BD1/BD7/BD8 owner-device qualification remains
+delegated to Claude and is not established by this BD9 evidence.

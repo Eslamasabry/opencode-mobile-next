@@ -27767,8 +27767,15 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String cardsProblemNotQualifiedFor(String agents) {
-    return 'لم يُتحقق بعد من أن $agents يعمل مع البطاقات.';
+  String cardsProblemNotQualifiedFor(int count, String agents) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'لم يُتحقق بعد من أن $agents تعمل مع البطاقات.',
+      two: 'لم يُتحقق بعد من أن $agents يعملان مع البطاقات.',
+      one: 'لم يُتحقق بعد من أن $agents يعمل مع البطاقات.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -27921,4 +27928,60 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get crashReportsClearedToo => 'تُحذف تقارير الأعطال المحفوظة أيضًا.';
+
+  @override
+  String get chatUiToolBackgroundTaskFinished => 'انتهت مهمة في الخلفية';
+
+  @override
+  String get chatUiToolBackgroundTaskFailed => 'فشلت مهمة في الخلفية';
+
+  @override
+  String get chatUiToolBackgroundTaskStopped => 'أُوقفت مهمة في الخلفية';
+
+  @override
+  String get chatUiToolShowCard => 'عرض بطاقة';
+
+  @override
+  String get chatStallModelSlow =>
+      'يستغرق النموذج وقتًا أطول من المعتاد. انتظر، أو أوقف الرد وحاول مرة أخرى.';
+
+  @override
+  String get chatStallHelperDown =>
+      'توقف مساعد الوكيل على هذا الهاتف. أوقف الرد وحاول مرة أخرى.';
+
+  @override
+  String get chatStallConnectionLost =>
+      'انقطع الاتصال بالوكيل. أوقف الرد وحاول مرة أخرى عند عودته.';
+
+  @override
+  String get chatStallConnectionUnchecked =>
+      'لم يصل أي جديد منذ مدة، وتعذّر التحقق من الاتصال. انتظر، أو أوقف الرد وحاول مرة أخرى.';
+
+  @override
+  String get kitWorkHideSteps => 'إخفاء الخطوات';
+
+  @override
+  String connectionSwitchingTo(String target) {
+    return 'جارٍ التبديل إلى $target…';
+  }
+
+  @override
+  String get shellServerSwitching => 'جارٍ التبديل…';
+
+  @override
+  String get agentsStateNotCertified => 'لم يُعتمد على هذا الإصدار بعد';
+
+  @override
+  String get agentsChipSignIn => 'تسجيل الدخول';
+
+  @override
+  String get agentsChipResume => 'استئناف';
+
+  @override
+  String get agentsChipCheck => 'فحص';
+
+  @override
+  String agentNamesPair(String first, String second) {
+    return '$first و $second';
+  }
 }

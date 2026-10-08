@@ -63,6 +63,7 @@ class KitTurn extends StatelessWidget {
     this.latest = false,  // the newest turn: the footer shows its meta words
     this.highlighted = false, // the find-in-conversation current match
     this.live,            // KitTurnLive: the running turn's live line (below)
+    this.stall,           // KitTurnStall: with live, why a quiet turn looks stuck (below)
     this.turnKey,
     this.footerKey,
     this.copyKey,         // today's ValueKey('message-copy-<id>')
@@ -95,6 +96,8 @@ class KitTurn extends StatelessWidget {
 - **Kit-only.** `blocks` is `List<Widget>` so the turn needs no import of every block type; G16 keeps the call site kit-only. The doc comment lists the allowed parts.
 
 **Kit copy** (ARB, `kit` prefix, en + ar): `kitTurnStarting` "Starting the model…", `kitTurnStillStarting` "Still waiting for the model · {seconds} s", `kitTurnStopped` "You stopped this reply.", `kitTurnInterrupted` "The connection dropped before this reply finished.", `kitTurnCopy` "Copy reply", `kitTurnMore` "More for this reply", `kitTurnActions` "Reply actions" (the menu's name).
+
+- **Stall line** (`stall: KitTurnStall?`, 2026-10-08, FC3). With `live` only: the running turn has gone quiet long enough for the host's stall watchdog to explain it. Drawn under the live line (never instead of it; the turn still runs): the host's one sentence in the secondary tone, a live region read once, and at most two `actions` as tertiary words under it (the chat gives Stop reply and Details). The host never puts error, exception or server text in `message`; technical facts belong behind Details.
 
 ## States
 

@@ -13,6 +13,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'bd9_device_smoke_fixture.dart';
+import 'bd9_conversation_finder.dart';
 import 'bd9_smoke_reporting.dart';
 
 /// Only fixture profiles are exposed. No secure-storage method is called.
@@ -85,7 +86,7 @@ void main() {
       );
       phase = Bd9SmokePhase.conversation;
       final deadline = DateTime.now().add(const Duration(seconds: 45));
-      final conversation = find.text(Bd9DeviceSmokeFixture.title);
+      final conversation = bd9ConversationFinder();
       while (conversation.evaluate().isEmpty &&
           DateTime.now().isBefore(deadline)) {
         await tester.pump(const Duration(milliseconds: 150));
@@ -95,6 +96,12 @@ void main() {
         findsOneWidget,
         reason: 'fixture_conversation_not_visible',
       );
+      await bd9RefreshConversations(tester);
+      while ((!server.reads.contains('/global/health') ||
+              !server.reads.contains('/experimental/session')) &&
+          DateTime.now().isBefore(deadline)) {
+        await tester.pump(const Duration(milliseconds: 150));
+      }
       expect(server.reads, contains('/global/health'));
       expect(server.reads, contains('/experimental/session'));
       expect(

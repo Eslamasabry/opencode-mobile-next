@@ -147,17 +147,14 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
                     leading: KitRow.icon(context, agentIcon(row.iconKey)),
                     supporting: TextSpan(text: agentRowLine(l10n, row)),
                     supportingMaxLines: 2,
-                    action: row.fixAction == null
-                        ? null
-                        : KitAction(
-                            key: ValueKey('agents-fix-${row.id}'),
-                            label: agentFixLabel(
-                              l10n,
-                              row.fixAction!,
-                              KitBidi.auto(row.name),
-                            ),
-                            onPressed: () => unawaited(_fix(row)),
-                          ),
+                    // The title names the agent: the chip says only the act,
+                    // and every chip starts at one edge (owner, 2026-10-08).
+                    chip: agentFixChip(
+                      l10n,
+                      row,
+                      key: ValueKey('agents-fix-${row.id}'),
+                      onPressed: () => unawaited(_fix(row)),
+                    ),
                     // A ready agent opens its sign-in step: who it is
                     // signed in as, and Sign in again when that has expired.
                     trailing: row.fixAction == null && row.chatSelectable

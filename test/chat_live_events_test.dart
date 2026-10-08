@@ -2757,7 +2757,8 @@ void main() {
     expect(find.byKey(const Key('reasoning-toggle')), findsNothing);
     expect(find.text('why this works'), findsOneWidget);
     expect(find.text('**why this works**'), findsNothing);
-    expect(find.textContaining('search'), findsOneWidget);
+    // An id the app has no words for reads as words ("search" → "Search").
+    expect(find.textContaining('Search'), findsOneWidget);
     await tester.tap(find.text('why this works'));
     await _pumpEvent(tester);
     expect(

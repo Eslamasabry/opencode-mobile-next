@@ -5,13 +5,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/sse.dart';
-import '../../builtin/builtin_server.dart' show builtinLinuxProvider;
+import '../../builtin/builtin_server.dart'
+    show
+        BuiltinServerStarter,
+        builtinLinuxProvider,
+        builtinServerStarterProvider;
 import '../../domain/chat_feed.dart' show ChatFeedFilter;
 import '../../domain/server_gateway.dart' show ServerCapabilities;
 import '../../domain/connection_status.dart';
 import '../../state/connection.dart';
 import '../../state/first_run.dart';
 import '../../state/phone_host.dart' show PhoneHostKind;
+import '../../state/profiles.dart' show ServerProfile;
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
 import '../desktop/shortcuts.dart';
@@ -30,6 +35,7 @@ import '../kit/kit_top_bar.dart';
 import '../kit/motion/kit_reveal.dart';
 import '../kit/motion/kit_tab_switcher.dart';
 import '../widgets/phone_server_card.dart';
+import '../widgets/runtime_switch_status.dart';
 import '../widgets/server_switcher_sheet.dart';
 import 'chats/chats_home_screen.dart';
 import 'servers_screen.dart' show ServersRouteRequest;
@@ -96,6 +102,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   DateTime? _lastBackAt;
   Timer? _backExitHint;
 
+  /// The in-app server starter: while it brings up the other OpenCode
+  /// version of this phone, the server pill names that version.
+  late final BuiltinServerStarter _starter;
+
   @override
   void initState() {
     super.initState();
@@ -112,6 +122,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       unawaited(firstRun.markReturning());
     }
     conn.addListener(_onConnChanged);
+    _starter = ref.read(builtinServerStarterProvider)
+      ..addListener(_onStarterChanged);
     // If the SSE stream cannot connect at all, fall back to polling.
     if (conn.status == StreamStatus.disconnected) {
       conn.enablePollingFallback();
@@ -231,17 +243,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     try {
       ref.read(connProvider).removeListener(_onConnChanged);
     } catch (_) {}
+    _starter.removeListener(_onStarterChanged);
     _backExitHint?.cancel();
     _findInFiles.dispose();
     _openFiles.dispose();
     super.dispose();
   }
 
+  void _onStarterChanged() {
+    if (mounted) setState(() {});
+  }
+
   /// The server new conversations start on, with how many other
   /// connections the Conversations list also shows ("In-app Ubuntu +2").
-  String _serverName(ConnectionController conn) {
+  String _serverName(ConnectionController conn, {ServerProfile? switchingTo}) {
     final name = serverDisplayName(
-      conn.profile,
+      switchingTo ?? conn.profile,
       _l10n(context),
       among: conn.store.profiles,
     );
@@ -314,12 +331,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final selected = destinations.indexWhere((entry) => entry.id == activeTab);
 
     final perform = AppShortcutScope.performOf(context);
-    final (statusWord, statusTone) = _serverStatus(
-      conn.connectionStatus.phase,
-      l10n,
-    );
+    // A switch between this phone's OpenCode versions names where it goes,
+    // as progress, never the version being left as offline.
+    final switchingTo = phoneRuntimeSwitchTarget(conn, _starter);
+    final phase = conn.connectionStatus.phase;
+    final (statusWord, statusTone) = switchingTo != null
+        ? (l10n.shellServerSwitching, AppStatusTone.progress)
+        : _serverStatus(phase, l10n);
+    // One indicator (owner, 2026-10-08): while the pill already shows
+    // progress (a switch, connecting, reconnecting), the status line under
+    // it would say the same thing with a second spinner. The line comes back
+    // for what needs the person: not answering, a refused password.
+    final pillSaysConnection =
+        switchingTo != null ||
+        phase == ConnectionStatusPhase.connecting ||
+        phase == ConnectionStatusPhase.reconnecting;
     final controls = KitShellControls(
-      server: _serverName(conn),
+      server: _serverName(conn, switchingTo: switchingTo),
       serverStatus: statusWord,
       serverTone: statusTone,
       onServer: () => unawaited(_openServerSwitcher(conn)),
@@ -342,6 +370,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       // Desktop.png), never a title repeating the sidebar (slice-R14).
       topBar: sidebar ? null : KitTopBar.shell(controls: controls),
       page: sidebar,
+      bodySays: pillSaysConnection
+          ? const {KitStatusKind.connection}
+          : const <KitStatusKind>{},
       status: _backExitHint == null
           ? null
           : KitStatus(

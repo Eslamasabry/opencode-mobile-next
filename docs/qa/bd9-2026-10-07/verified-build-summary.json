@@ -1,0 +1,44 @@
+{
+  "result": "PASS",
+  "stage": "local_build_and_verified_device_candidate",
+  "candidate_commit": "a690e1660e04718283def53cd092a1d0449e17c4",
+  "version_code": 2201,
+  "signer_sha256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C",
+  "app_sha256": "c53e0d1f0b43b92f5e8443b756375f422d115a237b444fa0dd282be6451ca7da",
+  "app_bytes": 100405721,
+  "test_apk_sha256": "fc6cb885b119c747aa2488aff3d84c06005ec4b48ab879bbc41f1c543e4b4831",
+  "test_apk_bytes": 46708,
+  "flutter_release_seconds": 500.3,
+  "android_test_build_seconds": 361,
+  "commands": [
+    [
+      "/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter",
+      "build",
+      "apk",
+      "--release",
+      "--build-number",
+      "2201",
+      "--target",
+      "integration_test/bd9_device_smoke_test.dart",
+      "--android-project-arg=ocBd9Smoke=true"
+    ],
+    [
+      "/home/eslam/Storage/Code/oc_app-sol-bd/android/gradlew",
+      "-p",
+      "/home/eslam/Storage/Code/oc_app-sol-bd/android",
+      ":app:assembleReleaseAndroidTest",
+      "--no-daemon",
+      "-PocBd9Smoke=true",
+      "-Ptarget=/home/eslam/Storage/Code/oc_app-sol-bd/integration_test/bd9_device_smoke_test.dart",
+      "-PflutterVersionCode=2201"
+    ]
+  ],
+  "temporary_signing_deleted": true,
+  "intermediates_deleted": true,
+  "gradle_settings_restored": true,
+  "owned_daemon_stopped_pid": 2321836,
+  "screenshot_bytes": 26008,
+  "screenshot_sha256": "559bd1f5c4d9ef22a384018b68967eca96cf19278eae35b73f48b98ec43b8fd9",
+  "device_smoke": "PASS",
+  "normal_2195_restoration": "PASS"
+}

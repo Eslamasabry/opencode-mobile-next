@@ -19,14 +19,25 @@ final genUiControllerProvider = Provider<GenUiController?>((ref) {
 });
 
 /// The names of the agents a status covers, once each, in the app's words.
-String _agentNames(AppLocalizations l10n, List<GenUiAgent> agents) {
+List<String> _uniqueNames(List<GenUiAgent> agents) {
   final names = <String>[];
   for (final agent in agents) {
     // Product names come from each agent's adapter (one per agent).
     final name = agent.displayName;
     if (!names.contains(name)) names.add(name);
   }
-  return names.join(l10n.localeName == 'ar' ? '، ' : ', ');
+  return names;
+}
+
+/// [_uniqueNames] as a natural list: "Claude Code", "Claude Code and
+/// OpenCode 2", "Claude Code, OpenCode 1 and OpenCode 2".
+String _agentNames(AppLocalizations l10n, List<GenUiAgent> agents) {
+  final names = _uniqueNames(agents);
+  if (names.length < 2) return names.join();
+  final rest = names
+      .sublist(0, names.length - 1)
+      .join(l10n.localeName == 'ar' ? '، ' : ', ');
+  return l10n.agentNamesPair(rest, names.last);
 }
 
 /// Why a setup step stopped, in plain words (never a command or a path).
@@ -37,13 +48,14 @@ String genUiProblemText(
   List<GenUiAgent> affected = const [],
 }) {
   final names = affected.isEmpty ? null : _agentNames(l10n, affected);
+  final count = _uniqueNames(affected).length;
   return switch (problem) {
     GenUiSetupProblem.unsupportedHost => l10n.cardsProblemUnsupportedHost,
     GenUiSetupProblem.runtimeMissing => l10n.cardsProblemRuntimeMissing,
     GenUiSetupProblem.notQualified =>
       names == null
           ? l10n.cardsProblemNotQualified
-          : l10n.cardsProblemNotQualifiedFor(names),
+          : l10n.cardsProblemNotQualifiedFor(count, names),
     GenUiSetupProblem.permissionDenied => l10n.cardsProblemPermissionDenied,
     GenUiSetupProblem.conflict => l10n.cardsProblemConflict,
     GenUiSetupProblem.installationFailed => l10n.cardsProblemInstallationFailed,

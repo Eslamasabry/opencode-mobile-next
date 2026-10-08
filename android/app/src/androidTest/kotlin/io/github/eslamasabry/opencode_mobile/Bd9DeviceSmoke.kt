@@ -73,8 +73,9 @@ class Bd9DeviceSmoke : Instrumentation() {
 
     private fun failureStage(results: Map<String, String>): String {
         // Inspect known markers only in memory; never emit raw failure details.
-        if (results.isEmpty()) return "flutter_no_tests"
-        if (results.size != 1) return "flutter_multiple_tests"
+        if (results.size != 1) {
+            return if (results.isEmpty()) "flutter_no_tests" else "flutter_multiple_tests"
+        }
         val markers = listOf(
             "bd9_phase_initializing:" to "flutter_initializing",
             "bd9_phase_fixture:" to "flutter_fixture",

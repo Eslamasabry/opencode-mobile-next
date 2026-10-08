@@ -746,7 +746,7 @@ void main() {
           agents: const [GenUiAgent.openCode1, GenUiAgent.openCode2],
           reason: GenUiSetupProblem.notQualified,
         ): _en.cardsStatusPartial(
-          'OpenCode 1, OpenCode 2',
+          'OpenCode 1 and OpenCode 2',
           _en.cardsProblemNotQualified,
         ),
         GenUiSetupRestartRequired(agents: const [GenUiAgent.claude]): _en
@@ -772,8 +772,8 @@ void main() {
           agents: const [GenUiAgent.claude],
           reason: GenUiSetupProblem.notQualified,
           affected: const [GenUiAgent.openCode1, GenUiAgent.openCode2],
-        ): 'On for Claude Code. OpenCode 1, OpenCode 2 hasn\'t been checked to work with '
-            'cards yet.',
+        ): 'On for Claude Code. OpenCode 1 and OpenCode 2 haven\'t been checked '
+            'to work with cards yet.',
         const GenUiSetupUnavailable(
           reason: GenUiSetupProblem.notQualified,
           affected: [GenUiAgent.openCode2],
@@ -796,6 +796,43 @@ void main() {
         expect(find.text(entry.value), findsOneWidget, reason: entry.value);
         expect(find.textContaining('This agent'), findsNothing);
       }
+    });
+
+    test('names agree with their verb and read as a list, in both '
+        'languages', () {
+      final ar = lookupAppLocalizations(const Locale('ar'));
+      String notQualified(AppLocalizations l10n, List<GenUiAgent> agents) =>
+          genUiProblemText(
+            l10n,
+            GenUiSetupProblem.notQualified,
+            affected: agents,
+          );
+      expect(
+        notQualified(_en, const [GenUiAgent.openCode2]),
+        "OpenCode 2 hasn't been checked to work with cards yet.",
+      );
+      expect(
+        notQualified(_en, const [GenUiAgent.claude, GenUiAgent.openCode2]),
+        "Claude Code and OpenCode 2 haven't been checked to work with cards "
+        'yet.',
+      );
+      expect(
+        notQualified(_en, const [
+          GenUiAgent.claude,
+          GenUiAgent.openCode1,
+          GenUiAgent.openCode2,
+        ]),
+        "Claude Code, OpenCode 1 and OpenCode 2 haven't been checked to work "
+        'with cards yet.',
+      );
+      expect(
+        notQualified(ar, const [GenUiAgent.openCode2]),
+        'لم يُتحقق بعد من أن OpenCode 2 يعمل مع البطاقات.',
+      );
+      expect(
+        notQualified(ar, const [GenUiAgent.claude, GenUiAgent.openCode2]),
+        'لم يُتحقق بعد من أن Claude Code و OpenCode 2 يعملان مع البطاقات.',
+      );
     });
 
     testWidgets('a failed change says so without the error text', (

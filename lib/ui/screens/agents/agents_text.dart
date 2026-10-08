@@ -2,12 +2,15 @@ import 'package:flutter/widgets.dart';
 
 import '../../../domain/agent_catalog.dart';
 import '../../../domain/agent_sign_in.dart';
+import '../../../domain/agent_tools/agent_certification.dart';
 import '../../../domain/phone_agent_host.dart';
 import '../../../domain/product_failure.dart';
 import '../../../domain/phone_agents.dart';
 import '../../../domain/phone_agents_source.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
+import '../../kit/kit_bidi.dart';
+import '../../kit/kit_row.dart' show KitRowChip;
 import '../../kit/kit_time.dart';
 
 /// The words and glyphs of the agent surfaces, in one place so the sheet,
@@ -108,6 +111,48 @@ String agentFixLabel(
   PhoneAgentFixAction.resume => l10n.agentsResumeAction(agent),
   PhoneAgentFixAction.runPhoneCheck => l10n.agentsCheckAction(agent),
 };
+
+/// The act alone, for a row's chip whose title already names the agent
+/// ("Install", "Sign in"); [agentFixLabel] is what screen readers hear.
+String agentFixChipLabel(AppLocalizations l10n, PhoneAgentFixAction action) =>
+    switch (action) {
+      PhoneAgentFixAction.install => l10n.agentsInstallHint,
+      PhoneAgentFixAction.signIn => l10n.agentsChipSignIn,
+      PhoneAgentFixAction.resume => l10n.agentsChipResume,
+      PhoneAgentFixAction.runPhoneCheck => l10n.agentsChipCheck,
+    };
+
+/// [row]'s one fix action as a row chip: the short act on the chip, the act
+/// with its target for screen readers. Null when the row needs none.
+KitRowChip? agentFixChip(
+  AppLocalizations l10n,
+  AgentRow row, {
+  required Key key,
+  required VoidCallback onPressed,
+}) {
+  final action = row.fixAction;
+  if (action == null) return null;
+  return KitRowChip(
+    key: key,
+    label: agentFixChipLabel(l10n, action),
+    semanticsLabel: agentFixLabel(l10n, action, KitBidi.auto(row.name)),
+    onPressed: onPressed,
+  );
+}
+
+/// Ready on this phone and certified on the version this app installs
+/// (docs/verification/agent-certification-matrix.json, bundled): the agent
+/// picker lets the person choose it.
+bool agentChoosable(AgentRow row) =>
+    row.chatSelectable &&
+    AgentCertificationMatrix.bundled.certifiedForChat(row.id);
+
+/// Where a row stands in the agent picker: [agentRowLine], except that a
+/// ready agent whose version is not certified says so.
+String agentPickerLine(AppLocalizations l10n, AgentRow row) =>
+    row.chatSelectable && !agentChoosable(row)
+    ? l10n.agentsStateNotCertified
+    : agentRowLine(l10n, row);
 
 /// A status line's words.
 String agentStatusLineText(
