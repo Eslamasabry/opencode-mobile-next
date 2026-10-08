@@ -157,6 +157,7 @@ part 'connection/prompt_shelf.dart';
 part 'connection/worktrees.dart';
 part 'connection/chat_feed.dart';
 part 'connection/phone_agents.dart';
+part 'connection/phone_agents_check.dart';
 part 'connection/phone_agents_cache.dart';
 part 'connection/phone_agents_backend.dart';
 part 'connection/phone_agents_routes.dart';

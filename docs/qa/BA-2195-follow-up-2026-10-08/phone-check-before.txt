@@ -1,0 +1,17 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: finished phone check publishes fresh qualification before the next agent
+00:00 +0 -1: finished phone check publishes fresh qualification before the next agent [E]
+  Expected: PhoneAgentStatus:<PhoneAgentStatus.ready>
+    Actual: PhoneAgentStatus:<PhoneAgentStatus.needsQualification>
+
+  package:matcher                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18           expect
+  test/support/phone_agents_check_publication_tests.dart 52:7  _phoneCheckPublicationTests.<fn>
+
+00:00 +0 -1: failed phone recheck never borrows the earlier ready result
+00:00 +1 -1: (tearDownAll)
+00:00 +1 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: finished phone check publishes fresh qualification before the next agent

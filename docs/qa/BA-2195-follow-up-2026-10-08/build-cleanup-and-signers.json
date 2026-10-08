@@ -1,0 +1,16 @@
+[
+  {
+    "pid": 2374583,
+    "alreadyExited": true
+  },
+  {
+    "artifact": "candidate",
+    "sha256": "3c9de78242b9880f53f646c778f30779596ad6eae3326fc2820330b55e94a7ce",
+    "signerSha256": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c"
+  },
+  {
+    "artifact": "original",
+    "sha256": "c72bbe3f93992943539cd55f9116cc27960df314e52f198bc8a2d46ca9af5472",
+    "signerSha256": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c"
+  }
+]

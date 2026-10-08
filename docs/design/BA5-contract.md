@@ -50,3 +50,12 @@ Receipts are retained with the shared owner when its protocol profile is deleted
 and removed when the final alias is deleted. Remote and Termux profiles cannot
 contribute checks. Legacy homes, account files and donor maps stay untouched.
 The existing Phone check needed / Sign in needed copy remains sufficient.
+
+## APK 2195 phone-check publication follow-up (2026-10-08)
+
+A phone check drains any inventory scan started by installation's early done
+event, then reads the final persisted gate in a fresh scan before publishing its
+result and returning. A completed agent stays ready while later agents are
+checked. Failed rechecks still remove readiness; no passed receipt overrides
+fingerprint/ABI qualification. Results from a retired host are not published.
+Cards verification retry does not change the completed phone-check result.

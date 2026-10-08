@@ -52,6 +52,7 @@ part 'support/phone_agents_list_permission_tests.dart';
 part 'support/phone_agents_reopen_tests.dart';
 part 'support/phone_agents_photo_card_tests.dart';
 part 'support/phone_agents_stall_tests.dart';
+part 'support/phone_agents_check_publication_tests.dart';
 
 const _project = '/root/projects/app';
 const _stamp = '2026-10-03T08:00:00Z';
@@ -261,6 +262,7 @@ class _BrowserPort implements BrowserClaudeLaunchPort {
 }
 
 class _HostState {
+  Future<AgentPhoneCheckResult> Function(String)? selfTestHandler;
   Future<AgentAuthProbeResult> Function(String)? probeHandler;
   final auth = <String, AgentAuthProbeResult>{};
   AgentAuthProbeResult logoutResult = const AgentAuthProbeResult(
@@ -337,6 +339,7 @@ class _FakeHost implements PhoneAgentHostPort, PhoneAgentAuthPort {
   Future<void> stop() async => events.log.add('host.stop');
   @override
   Future<AgentPhoneCheckResult> selfTest(String agentId) async =>
+      await state.selfTestHandler?.call(agentId) ??
       check ??
       AgentPhoneCheckResult(
         agentId: agentId,
@@ -701,6 +704,7 @@ void main() {
   _reopenAgentTests();
   _photoCardAliasTests();
   _turnStallControllerTests();
+  _phoneCheckPublicationTests();
 
   const dir = _project;
 

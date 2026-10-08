@@ -646,13 +646,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   }
 
   @override
-  Future<AgentPhoneCheckResult> runAgentPhoneCheck(String agentId) async {
-    final host = _paEnsureHost();
-    final result = await host.selfTest(agentId);
-    _paChecks[agentId] = result;
-    await refreshAgentRows();
-    return result;
-  }
+  Future<AgentPhoneCheckResult> runAgentPhoneCheck(String agentId) =>
+      _self._runAgentPhoneCheck(agentId);
 
   @override
   Future<void> resumeAgentHost() async {
