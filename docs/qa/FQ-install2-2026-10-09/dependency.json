@@ -1,0 +1,15 @@
+{
+  "state": "blocked",
+  "appBuild": 2198,
+  "nativeAdmissionDependency": "BB CHECK-ticket recovery",
+  "localEvidence": "docs/qa/FQ-install2-2026-10-09/fx-direct-dispatch.json",
+  "nativeTicketEdited": false,
+  "otherLaneProcessSignalled": false,
+  "isolatedRetryCancelledBeforeDeviceStart": true,
+  "observationModeDeviceQualified": false,
+  "raisedFloorArtifactAvailable": false,
+  "matrixChanged": false,
+  "normal2198VerifiedAfterExecutedRetry": true,
+  "laterClaudeSignedInConfirmed": false,
+  "accountActionTaken": false
+}
