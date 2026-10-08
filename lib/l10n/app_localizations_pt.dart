@@ -27261,6 +27261,10 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get agentsSignInStopFailed =>
+      'Sign-in could not be stopped. Keep the app open and try again.';
+
+  @override
   String get agentsSignInChecking => 'Checking sign-in…';
 
   @override

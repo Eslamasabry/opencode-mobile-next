@@ -32411,6 +32411,10 @@
       }
     }
   },
+  "agentsSignInStopFailed": "Sign-in could not be stopped. Keep the app open and try again.",
+  "@agentsSignInStopFailed": {
+    "description": "Sign-in terminal: ending the previous sign-in failed, so a new one cannot start yet"
+  },
   "agentsSignInChecking": "Checking sign-in…",
   "@agentsSignInChecking": {
     "description": "Sign-in step: first read"

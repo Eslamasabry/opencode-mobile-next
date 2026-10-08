@@ -42995,6 +42995,12 @@ abstract class AppLocalizations {
   /// **'{agent} isn\'t signed in yet. Start the sign-in again when you\'re ready.'**
   String agentsSignInTerminalNotYet(String agent);
 
+  /// Sign-in terminal: ending the previous sign-in failed, so a new one cannot start yet
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in could not be stopped. Keep the app open and try again.'**
+  String get agentsSignInStopFailed;
+
   /// Sign-in step: first read
   ///
   /// In en, this message translates to:

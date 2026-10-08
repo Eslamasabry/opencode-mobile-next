@@ -27281,6 +27281,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get agentsSignInStopFailed =>
+      'تعذّر إيقاف تسجيل الدخول. أبقِ التطبيق مفتوحًا وحاول مرة أخرى.';
+
+  @override
   String get agentsSignInChecking => 'جارٍ التحقق من تسجيل الدخول…';
 
   @override

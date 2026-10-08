@@ -9,6 +9,7 @@ import 'package:xterm/xterm.dart' as xterm;
 import '../../../builtin/local_terminal.dart';
 import '../../../domain/agent_catalog.dart';
 import '../../../domain/agent_sign_in.dart';
+import '../../../domain/agent_sign_in_foreground.dart';
 import '../../../domain/agent_sign_in_output.dart';
 import '../../../domain/phone_agents_source.dart';
 import '../../../l10n/app_localizations.dart';
@@ -62,6 +63,10 @@ class _AgentSignInTerminalScreenState
   LocalShell? _shell;
   bool _checking = false;
   bool _notYet = false;
+
+  /// Ending the previous sign-in failed: the old shell is kept and the next
+  /// try ends it again before a new sign-in starts.
+  bool _stopFailed = false;
   AgentSignInOutput _found = const AgentSignInOutput();
 
   AppLocalizations get _l10n =>
@@ -188,9 +193,20 @@ class _AgentSignInTerminalScreenState
     if (shell != null) {
       shell.removeListener(_shellChanged);
       shell.terminal.removeListener(_outputChanged);
-      await _sessions.endSignIn(shell);
+      try {
+        await _sessions.endSignIn(shell);
+      } on AgentSignInForegroundException {
+        // Keep the old shell; a new sign-in starts only after it has ended.
+        if (!mounted) return;
+        shell.addListener(_shellChanged);
+        shell.terminal.addListener(_outputChanged);
+        setState(() => _stopFailed = true);
+        return;
+      }
     }
-    if (mounted) _start();
+    if (!mounted) return;
+    _stopFailed = false;
+    _start();
   }
 
   Future<void> _paste() async {
@@ -208,7 +224,9 @@ class _AgentSignInTerminalScreenState
     if (shell != null) {
       shell.removeListener(_shellChanged);
       shell.terminal.removeListener(_outputChanged);
-      unawaited(_sessions.endSignIn(shell));
+      // A failed cleanup stays registered and is retried later; nothing to
+      // show once the screen is gone.
+      unawaited(_sessions.endSignIn(shell).catchError((Object _) {}));
     }
     _focus.dispose();
     _selection.dispose();
@@ -264,6 +282,19 @@ class _AgentSignInTerminalScreenState
 
   Widget _body(LocalShell shell, String name) {
     final l10n = _l10n;
+    if (_stopFailed) {
+      return KitStateView(
+        key: const ValueKey('agents-sign-in-terminal-stop-failed'),
+        icon: AppIconography.error,
+        tone: AppStatusTone.failure,
+        title: l10n.agentsSignInStopFailed,
+        primary: KitAction(
+          key: const ValueKey('agents-sign-in-terminal-again'),
+          label: l10n.commonRetry,
+          onPressed: () => unawaited(_again()),
+        ),
+      );
+    }
     if (shell.state == LocalShellState.failed) {
       return KitStateView(
         key: const ValueKey('agents-sign-in-terminal-failed'),

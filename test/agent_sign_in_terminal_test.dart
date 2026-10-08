@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/local_terminal.dart';
+import 'package:opencode_mobile/domain/agent_sign_in_foreground.dart';
 import 'package:opencode_mobile/ui/screens/agents/agent_sign_in_terminal.dart';
 
 import '../tool/capture/fixtures.dart' show loadCaptureFonts;
@@ -26,7 +29,11 @@ class _Run {
   }
 }
 
-Future<_Run> _pump(WidgetTester tester, String agentId) async {
+Future<_Run> _pump(
+  WidgetTester tester,
+  String agentId, {
+  AgentSignInForegroundPort? foreground,
+}) async {
   tester.view.physicalSize = const Size(412, 915);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -46,7 +53,7 @@ Future<_Run> _pump(WidgetTester tester, String agentId) async {
         agentName: agentId,
         sessions: LocalTerminalSessions(
           backend: backend,
-          signInForeground: FakeSignInForeground(),
+          signInForeground: foreground ?? FakeSignInForeground(),
         ),
         openPage: (context, url) async => opened.add(url),
       ),
@@ -63,6 +70,47 @@ Future<void> _print(WidgetTester tester, _Run run, String text) async {
   await tester.pump();
   // The shell's output is acknowledged on the next turn.
   await tester.pump(const Duration(milliseconds: 1));
+}
+
+/// Admits every sign-in; the first [failReleases] releases fail the way a
+/// native drain that could not finish does.
+class _StubbornForeground implements AgentSignInForegroundPort {
+  _StubbornForeground(this.failReleases);
+  int failReleases;
+  int releases = 0;
+
+  @override
+  AgentSignInForegroundLease reserveAgentSignInForeground() =>
+      _StubbornLease(this);
+}
+
+class _StubbornLease implements AgentSignInForegroundLease {
+  _StubbornLease(this.owner);
+  final _StubbornForeground owner;
+  // As in FakeSignInForeground: an explicit asynchronous onCancel keeps the
+  // subscription's cancel future inside the widget test's zone.
+  final _lost = StreamController<void>(
+    sync: true,
+    onCancel: () => Future<void>.value(),
+  );
+
+  @override
+  Future<void> get ready => Future<void>.value();
+
+  @override
+  bool get active => true;
+
+  @override
+  Stream<void> get lost => _lost.stream;
+
+  @override
+  Future<void> release() async {
+    owner.releases++;
+    if (owner.failReleases > 0) {
+      owner.failReleases--;
+      throw StateError('drain failed');
+    }
+  }
 }
 
 /// Everything "Copy code" puts on the clipboard.
@@ -217,4 +265,50 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(_open), findsNothing);
   });
+
+  testWidgets(
+    'a sign-in that cannot be stopped says so in plain words and retries '
+    'ending it before a new one starts',
+    (tester) async {
+      final foreground = _StubbornForeground(1);
+      final run = await _pump(tester, 'fx', foreground: foreground);
+      run.backend.exit(1, 1);
+      await tester.pumpAndSettle();
+      // fx is still signed out: the screen offers to start again.
+      final again = find.byKey(const ValueKey('agents-sign-in-terminal-again'));
+      expect(again, findsOneWidget);
+      final starts = run.backend.calls.where((c) => c.startsWith('sign-in'));
+      expect(starts, hasLength(1));
+
+      await tester.tap(again);
+      await tester.pumpAndSettle();
+      expect(
+        find.text(
+          'Sign-in could not be stopped. Keep the app open and try again.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('drain failed'), findsNothing);
+      expect(
+        run.backend.calls.where((c) => c.startsWith('sign-in')),
+        hasLength(1),
+        reason: 'no new sign-in while the old one is still running',
+      );
+
+      await tester.tap(again);
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(foreground.releases, 2);
+      expect(
+        find.text(
+          'Sign-in could not be stopped. Keep the app open and try again.',
+        ),
+        findsNothing,
+      );
+      expect(
+        run.backend.calls.where((c) => c.startsWith('sign-in')),
+        hasLength(2),
+      );
+    },
+  );
 }
