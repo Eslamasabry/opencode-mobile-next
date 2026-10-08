@@ -36,6 +36,10 @@ void main() {
     expect(begin, greaterThanOrEqualTo(0));
     expect(end, greaterThan(begin));
     final method = linux.substring(begin, end);
+    final runConstants = RegExp(
+      r'private const val (?:RUN_ADMISSION_WINDOW_MS|PROCESS_POLL_MS) = [^\n]+',
+    ).allMatches(linux).map((match) => match.group(0)!).join('\n');
+    expect(runConstants.split('\n'), hasLength(2));
     final fixture = File('${temporary.path}/ProductionRun.kt');
     await fixture.writeAsString('''
 package io.github.eslamasabry.opencode_mobile
@@ -60,6 +64,7 @@ class BuiltinLinux(private val process: RunProcess) {
     companion object {
         const val TAG = "test"
         const val OUTPUT_CAP = 16384
+        $runConstants
         fun stopTree(process: Process) { process.destroyForcibly() }
     }
 }
