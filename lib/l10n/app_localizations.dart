@@ -43663,11 +43663,11 @@ abstract class AppLocalizations {
   /// **'Copy code {code}'**
   String agentsSignInCopyCode(String code);
 
-  /// Cards setting: the named agents are not qualified for cards; {agents} is one or more product names
+  /// Cards setting: the named agents are not qualified for cards; {agents} is one or more product names already joined as a list, {count} how many
   ///
   /// In en, this message translates to:
-  /// **'{agents} hasn\'t been checked to work with cards yet.'**
-  String cardsProblemNotQualifiedFor(String agents);
+  /// **'{count, plural, =1{{agents} hasn\'t been checked to work with cards yet.} other{{agents} haven\'t been checked to work with cards yet.}}'**
+  String cardsProblemNotQualifiedFor(int count, String agents);
 
   /// Cards setting: registering cards with the named agents failed
   ///
@@ -43878,6 +43878,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Something went wrong'**
   String get recentErrorGeneric;
+
+  /// Chat journey: step title for the agent's notice that a background task it started has finished (Claude Code task_notification)
+  ///
+  /// In en, this message translates to:
+  /// **'Background task finished'**
+  String get chatUiToolBackgroundTaskFinished;
+
+  /// Chat journey: step title for the agent's notice that a background task it started failed
+  ///
+  /// In en, this message translates to:
+  /// **'Background task failed'**
+  String get chatUiToolBackgroundTaskFailed;
+
+  /// Chat journey: step title for the agent's notice that a background task it started was stopped
+  ///
+  /// In en, this message translates to:
+  /// **'Background task stopped'**
+  String get chatUiToolBackgroundTaskStopped;
+
+  /// Chat journey: tool row title for the agent card tool (oc-ui show) before or instead of its card; the card's own title follows it
+  ///
+  /// In en, this message translates to:
+  /// **'Show card'**
+  String get chatUiToolShowCard;
+
+  /// Chat journey: line under a running turn that has been silent for a while while the server still answers (the model is slow)
+  ///
+  /// In en, this message translates to:
+  /// **'The model is taking longer than usual. Wait, or stop the reply and try again.'**
+  String get chatStallModelSlow;
+
+  /// Chat journey: line under a silent running turn when the agent's helper process on this phone is not running
+  ///
+  /// In en, this message translates to:
+  /// **'The agent\'s helper on this phone stopped. Stop the reply and try again.'**
+  String get chatStallHelperDown;
+
+  /// Chat journey: line under a silent running turn when the live connection or the server is down
+  ///
+  /// In en, this message translates to:
+  /// **'The connection to the agent was lost. Stop the reply and try again once it is back.'**
+  String get chatStallConnectionLost;
+
+  /// Chat journey: line under a silent running turn when the connection could not be checked
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has come back for a while and the connection could not be checked. Wait, or stop the reply and try again.'**
+  String get chatStallConnectionUnchecked;
+
+  /// KitWorkLine: the work chip's words while its steps are open and a step runs; the running step in the list shows the progress
+  ///
+  /// In en, this message translates to:
+  /// **'Hide steps'**
+  String get kitWorkHideSteps;
+
+  /// Status line while the app switches this phone's own server to another OpenCode version; names the version being switched to, never the one being left
+  ///
+  /// In en, this message translates to:
+  /// **'Switching to {target}…'**
+  String connectionSwitchingTo(String target);
+
+  /// The status word beside the server name in the shell's server pill while this phone switches OpenCode versions
+  ///
+  /// In en, this message translates to:
+  /// **'Switching…'**
+  String get shellServerSwitching;
+
+  /// Agent picker: a ready agent whose installed version has not passed the app's certification checks, so it cannot be chosen yet
+  ///
+  /// In en, this message translates to:
+  /// **'Not certified on this version yet'**
+  String get agentsStateNotCertified;
+
+  /// Agent rows: the short Sign in chip; the row title names the agent and screen readers hear agentsSignInAction
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get agentsChipSignIn;
+
+  /// Agent rows: the short Resume chip; the row title names the agent and screen readers hear agentsResumeAction
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get agentsChipResume;
+
+  /// Agent rows: the short phone-check chip; the row title names the agent and screen readers hear agentsCheckAction
+  ///
+  /// In en, this message translates to:
+  /// **'Check'**
+  String get agentsChipCheck;
+
+  /// Joins the last two agent names of a list: 'Claude Code and OpenCode 2'; {first} may itself be a comma list
+  ///
+  /// In en, this message translates to:
+  /// **'{first} and {second}'**
+  String agentNamesPair(String first, String second);
 }
 
 class _AppLocalizationsDelegate

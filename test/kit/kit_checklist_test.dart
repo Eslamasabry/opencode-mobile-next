@@ -242,6 +242,36 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('4b. a slow step counts the wait it shows, the live region '
+      'stays one change', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await _show(
+      tester,
+      KitChecklist(
+        since: clock.now(),
+        steps: [
+          _step('Start OpenCode', KitMarkState.working),
+          _step('Connect', KitMarkState.waiting),
+        ],
+      ),
+    );
+    await tester.pump(const Duration(seconds: 8));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Still waiting after 8 s'), findsOneWidget);
+    const summary = ValueKey('kit-checklist-summary');
+    final slow = _label(tester, find.byKey(summary));
+    // A counter that stood at "8 s" for twenty seconds read as stuck.
+    await tester.pump(const Duration(seconds: 12));
+    expect(find.text('Still waiting after 20 s'), findsOneWidget);
+    expect(find.text('Still waiting after 8 s'), findsNothing);
+    // Past a minute it says minutes, not a count of seconds.
+    await tester.pump(const Duration(seconds: 45));
+    expect(find.text('Waiting 1 min'), findsOneWidget);
+    // Screen readers heard the escalation once; the count is not announced.
+    expect(_label(tester, find.byKey(summary)), slow);
+    semantics.dispose();
+  });
+
   group('5. done haptic', () {
     List<KitStep> steps(KitMarkState last) => [
       _step('One', KitMarkState.done),

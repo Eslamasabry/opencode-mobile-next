@@ -316,36 +316,47 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
   Widget _listFrame(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final agents = _agents;
-    final choices = agents.chatAgentChoices;
+    // OpenCode and the agents that are ready and certified on the version
+    // this app installs come first and can be chosen. Every other agent
+    // stays in the list (owner rule: never hide one), dimmed, with one
+    // plain reason and its way forward where there is one.
+    final choices = [
+      for (final choice in agents.chatAgentChoices)
+        if (choice.row == null || agentChoosable(choice.row!)) choice,
+    ];
     final shown = {for (final choice in choices) choice.agentId};
     final rest = [
       for (final row in agents.agentRows)
-        if (row.setupVisible && !shown.contains(row.id)) row,
+        if ((row.setupVisible || row.chatVisible) && !shown.contains(row.id))
+          row,
     ];
-    Widget tile(
-      String id,
-      String name,
-      String iconKey,
-      String line,
-      bool selected,
-      AgentRow? row,
-    ) => KitRow(
-      key: ValueKey('agents-choice-$id'),
-      title: KitBidi.auto(name),
-      leading: KitRowIcon(agentIcon(iconKey), current: selected),
-      supporting: TextSpan(text: line),
+    Widget choosable(ChatAgentChoice choice) => KitRow(
+      key: ValueKey('agents-choice-${choice.agentId}'),
+      title: KitBidi.auto(choice.name),
+      leading: KitRowIcon(agentIcon(choice.iconKey), current: choice.selected),
+      supporting: TextSpan(
+        text: choice.row == null
+            ? l10n.agentsStateReady
+            : agentRowLine(l10n, choice.row!),
+      ),
       supportingMaxLines: 2,
-      selected: selected,
-      trailing: selected
+      selected: choice.selected,
+      trailing: choice.selected
           ? const KitIcon(AppIconography.check, size: KitIconSize.small)
-          : row?.fixAction == PhoneAgentFixAction.install
-          ? KitText(
-              l10n.agentsInstallHint,
-              role: KitTextRole.caption,
-              tone: KitTextTone.tertiary,
-            )
           : null,
-      onTap: () => unawaited(_pick(id, row)),
+      onTap: () => unawaited(_pick(choice.agentId, choice.row)),
+    );
+    Widget notYet(AgentRow row) => KitRow.unavailable(
+      key: ValueKey('agents-choice-${row.id}'),
+      title: KitBidi.auto(row.name),
+      leading: KitRowIcon(agentIcon(row.iconKey)),
+      reason: agentPickerLine(l10n, row),
+      chip: agentFixChip(
+        l10n,
+        row,
+        key: ValueKey('agents-choice-fix-${row.id}'),
+        onPressed: () => unawaited(_pick(row.id, row)),
+      ),
     );
     return KitSheet(
       handle: false,
@@ -359,26 +370,8 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
           KitRowGroup(
             margin: EdgeInsets.zero,
             children: [
-              for (final choice in choices)
-                tile(
-                  choice.agentId,
-                  choice.name,
-                  choice.iconKey,
-                  choice.row == null
-                      ? l10n.agentsStateReady
-                      : agentRowLine(l10n, choice.row!),
-                  choice.selected,
-                  choice.row,
-                ),
-              for (final row in rest)
-                tile(
-                  row.id,
-                  row.name,
-                  row.iconKey,
-                  agentRowLine(l10n, row),
-                  false,
-                  row,
-                ),
+              for (final choice in choices) choosable(choice),
+              for (final row in rest) notYet(row),
             ],
           ),
           _noticeLine(context),

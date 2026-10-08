@@ -34,7 +34,11 @@ enum _Scene {
   homeResume('agents_home_resume'),
   settingsAgents('agents_settings_agents'),
   settingsCheck('agents_settings_check'),
-  settingsBuiltIn('agents_settings_builtin');
+  settingsBuiltIn('agents_settings_builtin'),
+  // Every kind of row at once: a certified ready agent, a ready one whose
+  // version is not certified, signed out and not installed ones.
+  sheetMixed('agents_sheet_mixed'),
+  settingsMany('agents_settings_many');
 
   const _Scene(this.name);
   final String name;
@@ -50,18 +54,34 @@ Future<void> _mount(
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
+  final many = scene == _Scene.sheetMixed || scene == _Scene.settingsMany;
   final agents = FakePhoneAgentsSource(
     available: scene != _Scene.settingsBuiltIn,
-    rows: [
-      agentRowFor('claude', switch (scene) {
-        _Scene.sheetList ||
-        _Scene.sheetInstall ||
-        _Scene.sheetError => FakeAgentStage.notInstalled,
-        _Scene.sheetSignIn => FakeAgentStage.signedOut,
-        _ => FakeAgentStage.ready,
-      }),
-      agentRowFor('gemini', FakeAgentStage.notInstalled),
-    ],
+    rows: many
+        ? [
+            agentRowFor('claude', FakeAgentStage.ready),
+            agentRowFor(
+              'codex',
+              scene == _Scene.sheetMixed
+                  ? FakeAgentStage.ready
+                  : FakeAgentStage.notInstalled,
+            ),
+            agentRowFor('gemini', FakeAgentStage.notInstalled),
+            agentRowFor('qwen', FakeAgentStage.notInstalled),
+            agentRowFor('goose', FakeAgentStage.notInstalled),
+            agentRowFor('omp-acp', FakeAgentStage.notInstalled),
+            agentRowFor('fx', FakeAgentStage.signedOut),
+          ]
+        : [
+            agentRowFor('claude', switch (scene) {
+              _Scene.sheetList ||
+              _Scene.sheetInstall ||
+              _Scene.sheetError => FakeAgentStage.notInstalled,
+              _Scene.sheetSignIn => FakeAgentStage.signedOut,
+              _ => FakeAgentStage.ready,
+            }),
+            agentRowFor('gemini', FakeAgentStage.notInstalled),
+          ],
   );
   final items = [
     chat(
@@ -131,6 +151,7 @@ Future<void> _mount(
     _Scene.sheetList ||
     _Scene.sheetInstall ||
     _Scene.sheetError ||
+    _Scene.sheetMixed ||
     _Scene.sheetSignIn => const NewChatScreen(),
     _Scene.homeStatus || _Scene.homeResume => const ChatsHomeScreen(),
     _Scene.settingsBuiltIn => const AgentsScreen(),
@@ -151,7 +172,7 @@ Future<void> _mount(
   );
   await tester.pumpAndSettle();
   switch (scene) {
-    case _Scene.sheetList:
+    case _Scene.sheetList || _Scene.sheetMixed:
       await tester.tap(find.byKey(const ValueKey('chats-new-agent')));
     case _Scene.sheetInstall:
       await tester.tap(find.byKey(const ValueKey('chats-new-agent')));
@@ -178,7 +199,10 @@ Future<void> _mount(
       await tester.tap(find.text(KitBidi.auto('Review the diff')));
     case _Scene.settingsCheck:
       await tester.tap(find.byKey(const ValueKey('agents-check-phone')));
-    case _Scene.homeStatus || _Scene.settingsAgents || _Scene.settingsBuiltIn:
+    case _Scene.homeStatus ||
+        _Scene.settingsAgents ||
+        _Scene.settingsBuiltIn ||
+        _Scene.settingsMany:
       break;
   }
   await tester.pumpAndSettle();

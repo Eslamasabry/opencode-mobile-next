@@ -110,6 +110,76 @@ void _shellTests() {
     expect(_text('mcp__'), findsNothing);
   });
 
+  // Claude Code's background-task notice (owner phone, 2026-10-08) read
+  // "task_notification" under a wrench.
+  for (final (status, words) in [
+    ('completed', 'Background task finished'),
+    ('failed', 'Background task failed'),
+    ('killed', 'Background task stopped'),
+  ]) {
+    testWidgets('a background-task notice reads "$words"', (tester) async {
+      await _pumpTool(
+        tester,
+        name: 'task_notification',
+        state: ToolState.fromJson({
+          'status': 'completed',
+          'input': {'status': status, 'summary': 'Release build'},
+          'output': 'done',
+          'metadata': <String, Object?>{},
+        }, toolName: 'task_notification'),
+      );
+      expect(_text(words), findsOneWidget);
+      expect(_text('Release build'), findsOneWidget);
+      expect(_text('task_notification'), findsNothing);
+    });
+  }
+
+  testWidgets('an unknown tool id reads as words, not snake_case', (
+    tester,
+  ) async {
+    for (final (name, words) in [
+      ('render_mermaid_diagram', 'Render mermaid diagram'),
+      ('ExitWorktree', 'Exit worktree'),
+    ]) {
+      await _pumpTool(
+        tester,
+        name: name,
+        state: ToolState.fromJson({
+          'status': 'completed',
+          'title': name,
+          'input': <String, Object?>{},
+          'output': 'ok',
+          'metadata': <String, Object?>{},
+        }, toolName: name),
+      );
+      expect(_text(words), findsOneWidget);
+      expect(_text(name), findsNothing);
+    }
+  });
+
+  // The agent card tool before (or instead of) its card: a running call, or
+  // one the connection draws no card for. Its server sets the raw name as the
+  // call's title, which must not win either.
+  for (final name in ['oc-ui_show', 'mcp__oc-ui__show']) {
+    testWidgets('the agent card tool reads "Show card", never "$name"', (
+      tester,
+    ) async {
+      await _pumpTool(
+        tester,
+        name: name,
+        state: ToolState.fromJson({
+          'status': 'running',
+          'title': name,
+          'input': {'id': 'plan', 'title': 'Pick a plan', 'body': []},
+          'metadata': <String, Object?>{},
+        }, toolName: name),
+      );
+      expect(_text('Show card'), findsOneWidget);
+      expect(_text('Pick a plan'), findsOneWidget);
+      expect(_text('oc-ui'), findsNothing);
+    });
+  }
+
   testWidgets('a passing command says so in words, not "exit 0"', (
     tester,
   ) async {

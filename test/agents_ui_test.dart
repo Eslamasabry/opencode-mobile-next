@@ -164,6 +164,66 @@ void main() {
       expect(_name('Claude Code'), findsOneWidget);
     });
 
+    testWidgets('certified ready agents come first; the rest are dimmed and '
+        'say why, with a way forward where there is one', (tester) async {
+      final semantics = tester.ensureSemantics();
+      final agents = FakePhoneAgentsSource(
+        rows: [
+          // Ready, but this version has no certification evidence.
+          agentRowFor('gemini', FakeAgentStage.ready),
+          agentRowFor('codex', FakeAgentStage.signedOut),
+          // Ready and certified on the pinned version (the matrix).
+          agentRowFor('claude', FakeAgentStage.ready),
+          agentRowFor('goose', FakeAgentStage.notInstalled),
+        ],
+      );
+      await _newChat(tester, _host(agents: agents));
+      await _openSheet(tester);
+      Finder row(String id) => find.byKey(ValueKey('agents-choice-$id'));
+      double top(String id) => tester.getTopLeft(row(id)).dy;
+      bool enabled(String id) => tester.widget<KitRow>(row(id)).enabled;
+
+      expect(top('opencode'), lessThan(top('claude')));
+      for (final other in ['gemini', 'codex', 'goose']) {
+        expect(top('claude'), lessThan(top(other)), reason: other);
+        expect(enabled(other), isFalse, reason: other);
+      }
+      expect(enabled('opencode'), isTrue);
+      expect(enabled('claude'), isTrue);
+      // One plain reason each.
+      expect(find.text('Not certified on this version yet'), findsOneWidget);
+      expect(find.text('Sign in needed'), findsOneWidget);
+      expect(find.textContaining('Not installed'), findsOneWidget);
+      // The way forward is a short chip; its target is in what it says to
+      // screen readers. An uncertified version has none.
+      Finder chipIn(String id, String act) =>
+          find.descendant(of: row(id), matching: find.text(act));
+      expect(chipIn('codex', 'Sign in'), findsOneWidget);
+      expect(chipIn('goose', 'Install'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Sign in to ${KitBidi.auto('Codex')}'),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: row('gemini'), matching: find.byType(KitChip)),
+        findsNothing,
+      );
+
+      // Tapping the uncertified agent chooses nothing and keeps the list.
+      await tester.tap(row('gemini'));
+      await tester.pumpAndSettle();
+      expect(agents.calls.where((call) => call.startsWith('select:')), isEmpty);
+      expect(find.text('Choose an agent'), findsOneWidget);
+      // The signed-out one goes straight to its sign-in.
+      await tester.tap(find.byKey(const ValueKey('agents-choice-fix-codex')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('agents-sign-in-words')),
+        findsOneWidget,
+      );
+      semantics.dispose();
+    });
+
     testWidgets('an agent that is not installed shows its state', (
       tester,
     ) async {
@@ -298,12 +358,16 @@ void main() {
   });
 
   group('the agent sheet as a shortcut to install', () {
-    testWidgets('a not-installed row shows its size and an Install hint', (
+    testWidgets('a not-installed row shows its size and an Install chip', (
       tester,
     ) async {
       await _newChat(tester, _host(agents: FakePhoneAgentsSource()));
       await _openSheet(tester);
       expect(find.textContaining('Not installed · '), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('agents-choice-fix-claude')),
+        findsOneWidget,
+      );
       expect(find.text('Install'), findsOneWidget);
     });
 
@@ -798,13 +862,62 @@ void main() {
     });
 
     testWidgets('lists each agent with the act it needs', (tester) async {
+      final semantics = tester.ensureSemantics();
       await pumpSection(tester, FakePhoneAgentsSource());
       expect(find.text('Agents'), findsOneWidget);
       expect(find.textContaining('Not installed'), findsOneWidget);
+      // The row's title names the agent; the chip says only the act, and
+      // screen readers still hear its target.
+      expect(find.text('Install'), findsOneWidget);
       expect(
-        find.text('Install ${KitBidi.auto('Claude Code')}'),
+        find.bySemanticsLabel('Install ${KitBidi.auto('Claude Code')}'),
         findsOneWidget,
       );
+      semantics.dispose();
+    });
+
+    testWidgets('each act is a short chip, all starting at one edge', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await pumpSection(
+        tester,
+        FakePhoneAgentsSource(
+          rows: [
+            agentRowFor('claude', FakeAgentStage.ready),
+            agentRowFor('codex', FakeAgentStage.notInstalled),
+            agentRowFor('gemini', FakeAgentStage.notInstalled),
+            agentRowFor('omp-acp', FakeAgentStage.notInstalled),
+            agentRowFor('fx', FakeAgentStage.signedOut),
+          ],
+        ),
+      );
+      // No "Install Gemini CLI" or "Sign in to fx" of ragged widths.
+      expect(find.text('Install'), findsNWidgets(3));
+      expect(find.text('Sign in'), findsOneWidget);
+      expect(find.textContaining('Install '), findsNothing);
+      expect(find.textContaining('Sign in to'), findsNothing);
+      for (final (id, act) in [
+        ('codex', 'Install ${KitBidi.auto('Codex')}'),
+        ('gemini', 'Install ${KitBidi.auto('Gemini CLI')}'),
+        ('omp-acp', 'Install ${KitBidi.auto('Oh My Pi')}'),
+        ('fx', 'Sign in to ${KitBidi.auto('fx')}'),
+      ]) {
+        expect(find.bySemanticsLabel(act), findsOneWidget, reason: id);
+      }
+      final starts = {
+        for (final id in ['codex', 'gemini', 'omp-acp', 'fx'])
+          tester.getTopLeft(find.byKey(ValueKey('agents-fix-$id'))).dx,
+      };
+      expect(starts, hasLength(1), reason: '$starts');
+      // A tap still runs the act for its own agent.
+      await tester.tap(find.byKey(const ValueKey('agents-fix-fx')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('agents-sign-in-words')),
+        findsOneWidget,
+      );
+      semantics.dispose();
     });
 
     testWidgets('Check this phone shows each step in plain words', (

@@ -8,6 +8,15 @@ import 'package:opencode_mobile/background/live_background.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+const _unpaused = <String, Object?>{
+  'supported': true,
+  'active': false,
+  'paused': false,
+  'reason': 'none',
+  'at': null,
+  'canResume': false,
+};
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -85,6 +94,9 @@ void main() {
       preferences: preferences,
       invoke: (method, [arguments]) async {
         restored = method == 'enable';
+        if (method == 'getBackgroundPause') {
+          return Map<String, dynamic>.from(_unpaused);
+        }
         return const {
           'enabled': true,
           'active': true,
@@ -184,6 +196,9 @@ void main() {
           preferences: preferences,
           invoke: (method, [arguments]) async {
             calls.add(method);
+            if (method == 'getBackgroundPause') {
+              return Map<String, dynamic>.from(_unpaused);
+            }
             return const {
               'enabled': true,
               'active': true,
@@ -212,7 +227,7 @@ void main() {
         expect(controller.notificationGranted, isFalse);
         expect(controller.batteryOptimizationIgnored, isFalse);
         expect(changes, 1);
-        expect(calls, ['enable']);
+        expect(calls, ['getBackgroundPause', 'enable']);
         await preferences.reload();
         expect(
           preferences.getBool(BackgroundLiveController.preferenceKey),
@@ -225,6 +240,9 @@ void main() {
           preferences: preferences,
           invoke: (method, [arguments]) async {
             calls.add(method);
+            if (method == 'getBackgroundPause') {
+              return Map<String, dynamic>.from(_unpaused);
+            }
             return const {'enabled': true, 'active': true};
           },
         );
@@ -232,7 +250,12 @@ void main() {
         await recreated.restore();
         expect(recreated.enabled, isTrue);
         expect(recreated.active, isTrue);
-        expect(calls, ['enable', 'enable']);
+        expect(calls, [
+          'getBackgroundPause',
+          'enable',
+          'getBackgroundPause',
+          'enable',
+        ]);
       },
     );
   }
@@ -354,6 +377,9 @@ void main() {
       preferences: preferences,
       invoke: (method, [arguments]) async {
         calls.add((method, arguments));
+        if (method == 'getBackgroundPause') {
+          return Map<String, dynamic>.from(_unpaused);
+        }
         if (method == 'showCodingAlert') return const {'shown': true};
         if (method == 'dismissCodingAlert') return const {'dismissed': true};
         return const {
@@ -377,16 +403,16 @@ void main() {
     );
     expect(await controller.dismissCodingAlert('input:session-1'), isTrue);
 
-    expect(calls[1].$1, 'showCodingAlert');
-    expect(calls[1].$2, {
+    expect(calls[2].$1, 'showCodingAlert');
+    expect(calls[2].$2, {
       'kind': 'question',
       'sessionID': 'session-1',
       'key': 'input:session-1',
       'quickReply': false,
       'requestID': '',
     });
-    expect(calls[2].$1, 'dismissCodingAlert');
-    expect(calls[2].$2, {'key': 'input:session-1'});
+    expect(calls[3].$1, 'dismissCodingAlert');
+    expect(calls[3].$2, {'key': 'input:session-1'});
   });
 
   test('disabled live mode never posts a coding alert', () async {
@@ -506,12 +532,14 @@ void main() {
     final preferences = await SharedPreferences.getInstance();
     final controller = BackgroundLiveController(
       preferences: preferences,
-      invoke: (method, [arguments]) async => {
-        'enabled': true,
-        'active': true,
-        'notificationGranted': true,
-        'batteryOptimizationIgnored': false,
-      },
+      invoke: (method, [arguments]) async => method == 'getBackgroundPause'
+          ? Map<String, dynamic>.from(_unpaused)
+          : {
+              'enabled': true,
+              'active': true,
+              'notificationGranted': true,
+              'batteryOptimizationIgnored': false,
+            },
     );
     addTearDown(controller.dispose);
     await controller.restore();

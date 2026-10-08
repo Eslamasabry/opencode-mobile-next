@@ -10,6 +10,7 @@ import '../app_theme.dart';
 import '../kit/kit.dart';
 import 'connection_failure.dart';
 import 'phone_server_card.dart' show serverDisplayName;
+import 'runtime_switch_status.dart';
 import 'work_status_line.dart' show confirmPhoneServerRestart;
 
 /// The single presentation of the controller's connection snapshot. The
@@ -22,10 +23,26 @@ KitStatus? connectionKitStatus(
   bool serverOnThisPhone = false,
   Future<void> Function()? onRestartServer,
   BuildContext? Function()? actionContext,
+  ServerProfile? switchingTo,
 }) {
   final snapshot = controller.connectionStatus;
-  if (!snapshot.visible) return null;
   final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+  // A deliberate switch between this phone's OpenCode versions
+  // ([phoneRuntimeSwitchTarget]): the server being left stops, refuses its
+  // old password and stops answering on purpose. One calm progress line
+  // names where the switch goes, whatever phase the old connection is in.
+  if (switchingTo != null) {
+    return KitStatus(
+      kind: KitStatusKind.connection,
+      id: 'connection:${snapshot.profileId}',
+      key: const ValueKey('connection-status-banner'),
+      icon: AppIconography.sync,
+      tone: AppStatusTone.progress,
+      message: l10n.connectionSwitchingTo(phoneRuntimeName(l10n, switchingTo)),
+      supporting: note,
+    );
+  }
+  if (!snapshot.visible) return null;
   BuildContext? target() => actionContext == null ? context : actionContext();
   void editServer() {
     final current = target();

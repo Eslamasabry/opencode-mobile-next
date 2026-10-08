@@ -80,6 +80,7 @@ class KitRow extends StatelessWidget {
     this.disabledReason,       // String?: why it cannot run now; shown as the supporting line
     this.selected = false,     // the row shown in the detail pane (twoPane)
     this.action,               // KitAction?: the row's own one action ("Turn on"); takes the trailing slot (slice-team-g17)
+    this.chip,                 // KitRowChip?: the one act as a short chip ("Install") in a shared trailing column (2026-10-08)
   }) : capability = null,
        enable = null;
   // build() asserts: onLongPress == null || menu.isEmpty ("long-press opens
@@ -96,6 +97,7 @@ class KitRow extends StatelessWidget {
     required this.title,
     required String reason,    // one sentence: "Voice needs a model on this phone."
     this.enable,               // KitAction?: "Download voice model"
+    this.chip,                 // KitRowChip?: the way forward as a short chip instead of [enable]; a tap on the row runs it
     this.capability,           // String?: the capabilities.json id ("voice.model")
     this.leading,
     this.server,
@@ -377,3 +379,33 @@ These are notes for the builder and the coordinator; none needs the owner.
 1. **`GatedRow` and `GatedRowTile`.** They live in `lib/ui/widgets/product_states.dart`, owned by shared-system-1 (C24 correction). This freeze requires only that `KitRow.unavailable(title:, reason:, enable:)` covers what they draw. If shared-system-1 finds a case it does not cover (a gated row with a trailing value), it reports a contract problem (PROC-20) and does not add a local variant.
 2. **Strict asserts (coordinator).** The disabled-without-reason assert uses the `KitAsserts.strict` seam (KitAction.md, Open question 1; `_new-tokens.md`). Until that seam exists, the row ships the reason rendering without the assert.
 3. **G4 galleries for `KitRowGroup`, `KitRowValue` and `KitSwipeAction`: settled.** README.md's convention is one gallery file per unit with a group per public widget, and the G4 manifest (kit-gates-manifest) maps each export to its unit's file. `kit_row_golden_test.dart` covers KitRow, KitRowGroup, KitRowValue and KitSwipeAction (58 PNGs).
+
+## Chip (2026-10-08, owner)
+
+A list of rows that each offer one act ("Install", "Sign in") shows it as a
+`KitChip.action` in one trailing column, `KitRow.chipColumnWidth` (112 dp)
+wide with the chip at its start, so every chip of the list starts at the same
+edge. The row's title already names the target, so the chip says only the
+act; `KitRowChip.semanticsLabel` keeps the full target for screen readers
+("Install Codex"). From 1.3× text the chip moves under the supporting line,
+like `action`. A row passes one of `chip`, `action` or `trailing`; on
+`KitRow.unavailable`, `chip` replaces `enable` and a tap anywhere on the row
+runs it.
+
+```dart
+@immutable
+class KitRowChip {
+  const KitRowChip({
+    required this.label,          // "Install"
+    required this.semanticsLabel, // "Install Codex"
+    required this.onPressed,
+    this.key,
+  });
+}
+```
+
+- **Tests:** `test/kit/kit_row_test.dart` group `chip` (one start edge,
+  semantics name the target, the unavailable row runs it, 1.3× moves it under).
+- **Used by:** Settings › Agents (`agents_section.dart`) and the agent picker
+  (`agent_sheet.dart`).
+

@@ -154,8 +154,10 @@ class KitWorkLine extends StatefulWidget {
   /// steps), oldest first.
   final List<Widget> steps;
 
-  /// While running: the live step's words ("Editing lib/main.dart"); the
-  /// chip's label. Null falls back to [summaryOf].
+  /// While running and folded: the live step's words ("Editing
+  /// lib/main.dart"); the chip's label, beside the working mark. Null falls
+  /// back to [summaryOf]. Opened, the chip reads "Hide steps" with no mark:
+  /// the running step in the list shows the progress.
   final String? now;
 
   /// Non-null: controlled (the host's expansion store survives recycling).
@@ -320,6 +322,14 @@ class _KitWorkLineState extends State<KitWorkLine>
     final expanded = _expanded;
 
     final (String label, String spoken, Widget? mark) = switch (widget.state) {
+      // Opened while a step runs: the running step in the list carries the
+      // progress and its words, so the chip is only the way to fold them
+      // again. One spinner, the step named once (owner, 2026-10-08).
+      KitWorkState.running when expanded => (
+        l10n.kitWorkHideSteps,
+        '${l10n.kitWorkWorking}, ${l10n.kitWorkHideSteps}',
+        null,
+      ),
       KitWorkState.running => (
         widget.now ?? summary,
         '${l10n.kitWorkWorking}, ${widget.now ?? summary}',
