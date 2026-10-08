@@ -88,7 +88,7 @@ Verification on 2026-10-07: **180 focused tests passed**, serial under
 - `test/phone_agents_controller_test.dart` (28 controller/routing tests)
 - `test/paseo_gateway_test.dart`
 - `test/paseo_chat_feed_source_test.dart`
-- `test/connection_v2_test.dart`
+- `test/connection_v2_*_test.dart`
 - `test/chat_question_card_test.dart`
 - `test/kit_ratchet_test.dart`
 
