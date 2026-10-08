@@ -1,0 +1,19 @@
+Guard removal: model-scope
+Expected nonzero test exit; actual exit: 1
+Source restored immediately after execution.
+
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_evidence_test.dart
+00:00 +0: base model scope is public, bounded and matches the CLI expectation
+00:00 +0 -1: base model scope is public, bounded and matches the CLI expectation [E]
+  Expected: throws <Instance of 'ProbeFailure'> with `fixed failure code`: 'phase_model_mismatch'
+    Actual: <Closure: () => int>
+     Which: returned <10123>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/fq3_evidence_test.dart 190:7                   main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_evidence_test.dart: base model scope is public, bounded and matches the CLI expectation

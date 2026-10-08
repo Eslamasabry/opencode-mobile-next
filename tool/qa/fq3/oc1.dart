@@ -251,7 +251,7 @@ class _Oc1 {
         'POST',
         '/session',
         body: {
-          'title': '${run.options.title}-oc1-$purpose-$nonce',
+          'title': '${run.options.title}-session-${run.sessionIDs.length + 1}',
           'permission': ?rules,
         },
       ),
@@ -263,6 +263,7 @@ class _Oc1 {
     );
     run.require(!run.sessionIDs.contains(id), 'oc1_session_id_reused');
     run.sessionIDs.add(id);
+    await run.options.onSessionCreated?.call(id);
     final retained = _map(await request('GET', '/session/$id'));
     run.require(
       retained['id'] == id && retained['title'] == result['title'],
@@ -525,6 +526,37 @@ class _Oc1 {
     return {'refetched': true, 'messages': after.length};
   }
 
+  String abortReplyText(_Turn turn, String session) {
+    final replies = turn.assistants.where(completed).toList()
+      ..sort(
+        (a, b) => (_map(_map(a['info'])['time'])['completed'] as num).compareTo(
+          _map(_map(b['info'])['time'])['completed'] as num,
+        ),
+      );
+    run.require(replies.isNotEmpty, 'oc1_after_abort_no_reply');
+    final reply = replies.last;
+    final info = _map(reply['info']);
+    final selectedModel = model();
+    run.require(
+      info['providerID'] == selectedModel.provider &&
+          info['modelID'] == selectedModel.id,
+      'oc1_after_abort_model_mismatch',
+    );
+    final parts = (reply['parts'] as List)
+        .map(_map)
+        .where((part) => part['type'] == 'text' && part['synthetic'] != true)
+        .toList();
+    run.require(parts.isNotEmpty, 'oc1_after_abort_no_reply');
+    run.require(
+      parts.every(
+        (part) =>
+            part['sessionID'] == session && part['messageID'] == info['id'],
+      ),
+      'oc1_after_abort_stale_parts',
+    );
+    return parts.map((part) => _string(part['text'])).join('\n');
+  }
+
   Future<Map<String, Object?>> abort() async {
     await events();
     final session = await create('abort');
@@ -576,7 +608,10 @@ class _Oc1 {
     run.require(interrupted, 'oc1_abort_not_observed');
     final answer = token('after_abort');
     final next = await turn(session, 'Reply with exactly this token: $answer');
-    run.require(next.text.contains(answer), 'oc1_after_abort_reply_mismatch');
+    run.require(
+      abortReplyText(next, session).contains(answer),
+      'oc1_after_abort_reply_mismatch',
+    );
     return {'interrupted': true, 'usableAfterAbort': true};
   }
 

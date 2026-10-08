@@ -340,6 +340,165 @@ Future<void> _permissionVerify(
   timeout: const Duration(milliseconds: 10),
 );
 
+class _AbortWire extends _StreamWire {
+  final String response;
+  final titles = <String>[];
+  bool interrupted = false;
+  String originalPrompt = '';
+  String followPrompt = '';
+  String followText = '';
+  String answer = '';
+  Map<String, dynamic> followModel = {};
+  _AbortWire(this.response) : super('abort');
+
+  Map<String, dynamic> textPart(String messageID, String text) => {
+    'type': 'text',
+    'sessionID': session,
+    'messageID': messageID,
+    'text': text,
+  };
+
+  Map<String, dynamic> assistant(
+    String id,
+    String parent,
+    List<Map<String, dynamic>> parts, {
+    int completed = 4,
+    String finish = 'stop',
+    String modelID = 'model',
+  }) => {
+    'info': {
+      'id': id,
+      'sessionID': session,
+      'role': 'assistant',
+      'parentID': parent,
+      'providerID': 'provider',
+      'modelID': modelID,
+      'time': {'created': completed - 1, 'completed': completed},
+      'finish': finish,
+    },
+    'parts': parts,
+  };
+
+  @override
+  Future<dynamic> request(
+    String method,
+    String path, {
+    Object? body,
+    Map<String, String>? query,
+  }) async {
+    if (path == '/session' && method == 'POST') {
+      titles.add((body as Map)['title'] as String);
+      return super.request(method, path, body: body, query: query);
+    }
+    if (path == '/session/$session/prompt_async') {
+      final value = body as Map;
+      final id = value['messageID'] as String;
+      final sentText =
+          ((value['parts'] as List).first as Map)['text'] as String;
+      if (originalPrompt.isEmpty) {
+        originalPrompt = id;
+        events.add({
+          'type': 'message.part.delta',
+          'properties': {
+            'sessionID': session,
+            'messageID': 'msg_aborted',
+            'field': 'text',
+            'delta': '1\n2\n',
+          },
+        });
+      } else {
+        followPrompt = id;
+        followText = sentText;
+        answer = sentText.split(': ').last;
+        followModel = Map<String, dynamic>.from(value['model'] as Map);
+      }
+      return null;
+    }
+    if (path == '/session/status') {
+      return interrupted
+          ? {}
+          : {
+              session: {'type': 'busy'},
+            };
+    }
+    if (path == '/session/$session/abort') {
+      interrupted = true;
+      return true;
+    }
+    if (path == '/session/$session/message') {
+      return [
+        {
+          'info': {'id': originalPrompt, 'sessionID': session, 'role': 'user'},
+          'parts': [textPart(originalPrompt, 'Write numbers.')],
+        },
+        {
+          'info': {
+            'id': 'msg_aborted',
+            'sessionID': session,
+            'role': 'assistant',
+            'parentID': originalPrompt,
+            'providerID': 'provider',
+            'modelID': 'model',
+            'time': {'created': 1, if (interrupted) 'completed': 2},
+            if (interrupted) 'error': {'name': 'MessageAbortedError'},
+          },
+          'parts': [
+            textPart(
+              'msg_aborted',
+              response == 'old_parent_only' ? answer : '1\n2',
+            ),
+          ],
+        },
+        if (followPrompt.isNotEmpty) ...[
+          {
+            'info': {'id': followPrompt, 'sessionID': session, 'role': 'user'},
+            'parts': [textPart(followPrompt, followText)],
+          },
+          if (response == 'pre_final')
+            assistant(
+              'msg_prefinal',
+              followPrompt,
+              [textPart('msg_prefinal', answer)],
+              completed: 3,
+              finish: 'tool-calls',
+            ),
+          assistant('msg_follow', followPrompt, [
+            textPart(
+              'msg_follow',
+              const [
+                    'noncompliant',
+                    'foreign_part',
+                    'pre_final',
+                    'old_parent_only',
+                  ].contains(response)
+                  ? 'The task is stopped.'
+                  : answer,
+            ),
+            if (response == 'foreign_part') textPart('msg_aborted', answer),
+          ], modelID: response == 'wrong_model' ? 'other-model' : 'model'),
+        ],
+      ];
+    }
+    return super.request(method, path, body: body, query: query);
+  }
+}
+
+class _LedgerWire extends _DiscoveryWire {
+  @override
+  Future<dynamic> request(
+    String method,
+    String path, {
+    Object? body,
+    Map<String, String>? query,
+  }) async {
+    if (path == '/session/ses_owned') {
+      calls.add('$method $path');
+      throw const ProbeFailure('fixture_retained_read_failed');
+    }
+    return super.request(method, path, body: body, query: query);
+  }
+}
+
 void main() {
   test(
     'OC1 delta witness rejects foreign sessions and nontext or empty data',
@@ -428,7 +587,7 @@ void main() {
         'GET /provider',
         'GET /config',
       ]);
-      expect(wire.title, startsWith('fq3-owned-oc1-create-'));
+      expect(wire.title, 'fq3-owned-session-1');
     },
   );
 
@@ -655,4 +814,84 @@ void main() {
       },
     );
   }
+
+  for (final response in [
+    'valid',
+    'foreign_part',
+    'pre_final',
+    'wrong_model',
+    'noncompliant',
+    'old_parent_only',
+  ]) {
+    test(
+      'OC1 abort follow-up uses only final owned selected-model reply: $response',
+      () async {
+        final wire = _AbortWire(response);
+        addTearDown(wire.close);
+        final run = await runProtocol1(
+          wire,
+          const ProbeOptions(
+            directory: '/owned',
+            title: 'fq3-run-opencode-abort',
+            capabilities: {'abort'},
+          ),
+        );
+        expect(wire.originalPrompt, isNot(wire.followPrompt));
+        expect(wire.followModel, {
+          'providerID': 'provider',
+          'modelID': 'model',
+        });
+        final result = run.results['abort']!;
+        if (response == 'valid') {
+          expect(result['state'], 'pass');
+          expect(result['facts'], {
+            'interrupted': true,
+            'usableAfterAbort': true,
+            'asserted': true,
+          });
+        } else {
+          expect(result['state'], 'fail');
+          expect(
+            result['code'],
+            response == 'foreign_part'
+                ? 'oc1_after_abort_stale_parts'
+                : response == 'wrong_model'
+                ? 'oc1_after_abort_model_mismatch'
+                : 'oc1_after_abort_reply_mismatch',
+          );
+        }
+        expect(wire.titles, [
+          'fq3-run-opencode-abort-session-1',
+          'fq3-run-opencode-abort-session-2',
+        ]);
+      },
+    );
+  }
+
+  test(
+    'OC1 records validated owned session before retained-session read can fail',
+    () async {
+      final wire = _LedgerWire();
+      addTearDown(wire.close);
+      final ledger = <String>[];
+      final callbackStages = <String>[];
+      final run = await runProtocol1(
+        wire,
+        ProbeOptions(
+          directory: '/owned',
+          title: 'fq3-run-opencode-create',
+          capabilities: const {},
+          onSessionCreated: (id) async {
+            ledger.add(id);
+            callbackStages.add(wire.calls.last);
+          },
+        ),
+      );
+      expect(ledger, ['ses_owned']);
+      expect(run.sessionIDs, ledger);
+      expect(callbackStages, ['POST /session']);
+      expect(run.results['create']!['code'], 'fixture_retained_read_failed');
+      expect(wire.title, 'fq3-run-opencode-create-session-1');
+    },
+  );
 }

@@ -1,0 +1,18 @@
+Independent Python cleanup guard removed; expected nonzero, actual exit:1. Source restored.
+
+test_schema_two_cleanup_acknowledgment_gates_every_pass (tool.qa.fq3.test_update_matrix.EvidenceValidationTest.test_schema_two_cleanup_acknowledgment_gates_every_pass) ... FAIL
+
+======================================================================
+FAIL: test_schema_two_cleanup_acknowledgment_gates_every_pass (tool.qa.fq3.test_update_matrix.EvidenceValidationTest.test_schema_two_cleanup_acknowledgment_gates_every_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq3/test_update_matrix.py", line 228, in test_schema_two_cleanup_acknowledgment_gates_every_pass
+    self.assert_rejected(run)
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq3/test_update_matrix.py", line 117, in assert_rejected
+    with self.assertRaises(updater.InvalidEvidence):
+AssertionError: InvalidEvidence not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

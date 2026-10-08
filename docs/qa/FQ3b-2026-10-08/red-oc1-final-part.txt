@@ -1,0 +1,27 @@
+Guard removal: oc1-final-part
+Expected nonzero test exit; actual exit: 1
+Source restored immediately after execution.
+
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_oc1_test.dart
+00:00 +0: OC1 abort follow-up uses only final owned selected-model reply: foreign_part
+Shell: version: pass (verified)
+Shell: create: pass (verified)
+Shell: models: pass (verified)
+Shell: abort: pass (verified)
+00:00 +0 -1: OC1 abort follow-up uses only final owned selected-model reply: foreign_part [E]
+  Expected: 'fail'
+    Actual: 'pass'
+     Which: is different.
+            Expected: fail
+              Actual: pass
+                      ^
+             Differ at offset 0
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/fq3_oc1_test.dart 853:11                       main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_oc1_test.dart: OC1 abort follow-up uses only final owned selected-model reply: foreign_part

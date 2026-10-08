@@ -272,7 +272,8 @@ class _Oc2Probe {
           'POST',
           '/api/session',
           body: {
-            'title': run.options.title,
+            'title':
+                '${run.options.title}-session-${run.sessionIDs.length + 1}',
             'location': {'directory': run.options.directory},
             if (model != null) 'model': _ref(model),
             'permissions': ?permissions,
@@ -286,6 +287,7 @@ class _Oc2Probe {
       'invalid_owned_session',
     );
     run.sessionIDs.add(id as String);
+    await run.options.onSessionCreated?.call(id);
     return id;
   }
 

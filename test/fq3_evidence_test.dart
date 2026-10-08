@@ -14,10 +14,12 @@ Map<String, dynamic> _phase({String engine = 'opencode'}) => {
   'engine': engine,
   'case': 'stream',
   'appUID': 10123,
-  'appBuild': 2195,
+  'appBuild': 2196,
   'cliVersion': engine == 'opencode' ? '1.18.32' : '2.0.10',
   'observedVersion': engine == 'opencode' ? '1.18.32' : '2.0.10',
   'cleanupCode': null,
+  'serverKind': 'owned',
+  'testedModel': 'server-default',
   'results': {
     'stream': {
       'state': 'pass',
@@ -32,16 +34,20 @@ Map<String, dynamic> _phase({String engine = 'opencode'}) => {
   'ownedSessions': ['ses_fixture'],
 };
 
-int _validate(Map<String, dynamic> evidence, {int? expectedAppUID}) =>
-    validatePhaseEvidence(
-      evidence,
-      runID: _runID,
-      sourceRevision: _revision,
-      attemptID: _attemptID,
-      engine: evidence['engine'] == 'opencode2' ? 'opencode2' : 'opencode',
-      caseName: 'stream',
-      expectedAppUID: expectedAppUID,
-    );
+int _validate(
+  Map<String, dynamic> evidence, {
+  int? expectedAppUID,
+  String? expectedTestedModel,
+}) => validatePhaseEvidence(
+  evidence,
+  runID: _runID,
+  sourceRevision: _revision,
+  attemptID: _attemptID,
+  engine: evidence['engine'] == 'opencode2' ? 'opencode2' : 'opencode',
+  caseName: 'stream',
+  expectedAppUID: expectedAppUID,
+  expectedTestedModel: expectedTestedModel,
+);
 
 Matcher _failure(String code) => throwsA(
   isA<ProbeFailure>().having(
@@ -76,6 +82,8 @@ void main() {
       'cliVersion',
       'observedVersion',
       'cleanupCode',
+      'serverKind',
+      'testedModel',
     ]) {
       final evidence = _phase()..remove(key);
       expect(() => _validate(evidence), _failure('phase_metadata_missing'));
@@ -112,7 +120,7 @@ void main() {
       final evidence = _phase()..['appUID'] = value;
       expect(() => _validate(evidence), _failure('phase_uid_invalid'));
     }
-    for (final value in [null, 2194, 2195.0, '2195', true]) {
+    for (final value in [null, 2194, 2195, 2196.0, '2196', true]) {
       final evidence = _phase()..['appBuild'] = value;
       expect(() => _validate(evidence), _failure('phase_build_mismatch'));
     }
@@ -135,6 +143,125 @@ void main() {
       expect(() => _validate(evidence), _failure('phase_cleanup_failed'));
     }
   });
+
+  test('phase provenance is required and limited to fixed runtime kinds', () {
+    for (final kind in ['app-managed', 'owned']) {
+      expect(_validate(_phase()..['serverKind'] = kind), 10123);
+    }
+    for (final kind in [null, 'unit-server', 'provider-secret', true]) {
+      expect(
+        () => _validate(_phase()..['serverKind'] = kind),
+        _failure('phase_server_kind_invalid'),
+      );
+    }
+  });
+
+  test(
+    'base model scope is public, bounded and matches the CLI expectation',
+    () {
+      for (final model in [
+        'server-default',
+        'opencode/big-pickle',
+        'zai-coding-plan/glm-5.3',
+      ]) {
+        expect(
+          _validate(
+            _phase()..['testedModel'] = model,
+            expectedTestedModel: model,
+          ),
+          10123,
+        );
+      }
+      for (final model in [
+        null,
+        '',
+        'https://server/model',
+        'Bearer secret',
+        '/root/token',
+        'provider/model/extra',
+        'provider/model\n',
+        'provider/${List.filled(129, 'm').join()}',
+      ]) {
+        expect(
+          () => _validate(_phase()..['testedModel'] = model),
+          _failure('phase_model_invalid'),
+        );
+      }
+      expect(
+        () => _validate(
+          _phase()..['testedModel'] = 'opencode/big-pickle',
+          expectedTestedModel: 'server-default',
+        ),
+        _failure('phase_model_mismatch'),
+      );
+      expect(modelSelectionFor(null), {
+        'source': 'server-default',
+        'requested': null,
+      });
+      expect(modelSelectionFor('opencode/big-pickle'), {
+        'source': 'explicit',
+        'requested': 'opencode/big-pickle',
+      });
+      expect(
+        () => modelSelectionFor('Bearer secret'),
+        _failure('phase_model_invalid'),
+      );
+    },
+  );
+
+  test(
+    'late cleanup failure replaces every pass before matrix qualification',
+    () {
+      final report = <String, dynamic>{
+        'schemaVersion': 2,
+        'attestation': {'cleanupCompleted': false},
+        'engines': {
+          for (final engine in ['opencode', 'opencode2'])
+            engine: {
+              'modelSelection': {
+                'source': 'explicit',
+                'requested': 'opencode/big-pickle',
+              },
+              'results': {
+                for (final key in capabilityKeys)
+                  key: {
+                    'state': 'pass',
+                    'code': 'verified',
+                    'facts': {'asserted': true},
+                  },
+              },
+            },
+        },
+        'protocolSwitch': {
+          'state': 'pass',
+          'code': 'verified',
+          'facts': {'asserted': true},
+        },
+      };
+      final succeeded = reportAfterCleanup(report, cleanupCompleted: true);
+      expect(succeeded['engines'], report['engines']);
+      expect(succeeded['attestation']['cleanupCompleted'], isTrue);
+      final failed = reportAfterCleanup(report, cleanupCompleted: false);
+      for (final engine in (failed['engines'] as Map).values) {
+        expect((engine['results'] as Map).keys.toSet(), capabilityKeys.toSet());
+        for (final result in (engine['results'] as Map).values) {
+          expect(result, {
+            'state': 'fail',
+            'code': 'owned_session_cleanup_failed',
+            'facts': {},
+          });
+        }
+        expect(engine['modelSelection'], {
+          'source': 'explicit',
+          'requested': 'opencode/big-pickle',
+        });
+      }
+      expect(failed['protocolSwitch']['state'], 'fail');
+      expect(failed['attestation']['cleanupCompleted'], isFalse);
+      expect(report['attestation']['cleanupCompleted'], isFalse);
+      expect(report['protocolSwitch']['state'], 'pass');
+    },
+  );
 
   test('one UID is retained across engines and conflicts cannot merge', () {
     int? uid;

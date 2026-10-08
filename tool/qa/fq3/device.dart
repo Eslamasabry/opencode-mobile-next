@@ -17,6 +17,7 @@ class PhoneRuntime {
   final String password;
   final int appBuild;
   final List<int> _forwards = [];
+  String? lastServerKind;
   Process? _server;
   int? _serverPID;
   String? _serverStart;
@@ -48,6 +49,59 @@ class PhoneRuntime {
     return value.stdout.toString().trim();
   }
 
+  /// Restore only the approved normal APK, retaining all application data.
+  /// Caller holds the same shared emulator lock as the device operation.
+  static Future<void> restoreNormalApp() async {
+    Future<int?> installed() async {
+      final info = await output(['shell', 'dumpsys', 'package', package]);
+      return int.tryParse(
+        RegExp(r'versionCode=(\d+)').firstMatch(info)?.group(1) ?? '',
+      );
+    }
+
+    if (await installed() == 2196) return;
+    const apk = '/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk';
+    if (!File(apk).existsSync() || FileSystemEntity.isLinkSync(apk)) {
+      throw const ProbeFailure('normal_apk_unavailable');
+    }
+    try {
+      final manifest = await Process.run(
+        '/home/eslam/Android/Sdk/build-tools/36.1.0/aapt',
+        ['dump', 'badging', apk],
+      ).timeout(const Duration(seconds: 30));
+      if (manifest.exitCode != 0 ||
+          !manifest.stdout.toString().contains(
+            "package: name='$package' versionCode='2196'",
+          )) {
+        throw const ProbeFailure('normal_apk_build_mismatch');
+      }
+      final certificate = await Process.run(
+        '/home/eslam/Android/Sdk/build-tools/36.1.0/apksigner',
+        ['verify', '--print-certs', apk],
+      ).timeout(const Duration(seconds: 30));
+      if (certificate.exitCode != 0 ||
+          !certificate.stdout.toString().toLowerCase().contains(
+            'certificate sha-256 digest: '
+            '1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c',
+          )) {
+        throw const ProbeFailure('normal_apk_signer_mismatch');
+      }
+      final update = await adb([
+        'install',
+        '-r',
+        '-d',
+        apk,
+      ], timeout: const Duration(seconds: 180));
+      if (update.exitCode != 0 || await installed() != 2196) {
+        throw const ProbeFailure('normal_apk_restore_failed');
+      }
+    } on ProbeFailure {
+      rethrow;
+    } catch (_) {
+      throw const ProbeFailure('normal_apk_restore_failed');
+    }
+  }
+
   static Future<PhoneRuntime> inspect(String runID) async {
     if (!RegExp(r'^fq3-[a-zA-Z0-9_-]{1,80}$').hasMatch(runID)) {
       throw const ProbeFailure('invalid_run_id');
@@ -59,7 +113,7 @@ class PhoneRuntime {
     final build = int.tryParse(
       RegExp(r'versionCode=(\d+)').firstMatch(packageInfo)?.group(1) ?? '',
     );
-    if (build != 2195) throw const ProbeFailure('installed_build_changed');
+    if (build != 2196) throw const ProbeFailure('installed_build_changed');
     final listing = await output([
       'shell',
       'cmd',
@@ -158,13 +212,21 @@ class PhoneRuntime {
         : null;
   }
 
-  Future<String> start(bool oc2) async {
+  Future<String> start(
+    bool oc2, {
+    bool appManagedOnly = false,
+    bool forceOwned = false,
+  }) async {
+    if (appManagedOnly && forceOwned) {
+      throw const ProbeFailure('invalid_server_selection');
+    }
     await stop();
+    lastServerKind = null;
     // Reuse the app-managed service when it already runs this exact dialect.
     final activePort = int.tryParse(
       await output(['forward', 'tcp:0', 'tcp:4097']),
     );
-    if (activePort != null) {
+    if (activePort != null && !forceOwned) {
       final endpoint = 'http://127.0.0.1:$activePort';
       final active = Fq3Wire(baseUrl: endpoint, password: password);
       try {
@@ -174,6 +236,7 @@ class PhoneRuntime {
         if (health is Map &&
             health['version'] == (oc2 ? '2.0.10' : '1.18.32')) {
           _forwards.add(activePort);
+          lastServerKind = 'app-managed';
           return endpoint;
         }
       } catch (_) {
@@ -182,7 +245,13 @@ class PhoneRuntime {
         await active.close();
       }
       await adb(['forward', '--remove', 'tcp:$activePort']);
+    } else if (activePort != null) {
+      await adb(['forward', '--remove', 'tcp:$activePort']);
     }
+    if (appManagedOnly) {
+      throw const ProbeFailure('app_managed_engine_unavailable');
+    }
+    lastServerKind = 'owned';
     await asApp('rm -f ${quote('$scratch/pid')}');
     final socket = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
     final devicePort = socket.port;

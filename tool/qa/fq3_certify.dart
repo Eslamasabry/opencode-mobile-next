@@ -6,10 +6,12 @@ import 'fq3/common.dart';
 import 'fq3/device.dart';
 import 'fq3/evidence.dart';
 import 'fq3/history.dart';
+import 'fq3/history_manifest.dart';
 import 'fq3/oc1.dart';
 import 'fq3/oc2.dart';
+import 'fq3/session_ownership.dart';
 
-const evidenceDirectory = 'docs/qa/FQ3-2026-10-08';
+const evidenceDirectory = 'docs/qa/FQ3b-2026-10-08';
 const lock = '/home/eslam/Storage/tmp/oc-emulator.lock';
 const phases = <String, Set<String>>{
   'stream': {'stream'},
@@ -53,6 +55,12 @@ Future<void> main(List<String> args) async {
     await phase(args, runID);
   } else if (args.contains('--histories')) {
     await histories(args, runID);
+  } else if (args.contains('--cleanup-only')) {
+    await cleanupOwnedSessions(
+      runID,
+      includeArchived: args.contains('--archived'),
+      allOwned: args.contains('--all-owned'),
+    );
   } else {
     await orchestrate(args, runID);
   }
@@ -61,26 +69,64 @@ Future<void> main(List<String> args) async {
 Future<void> phase(List<String> args, String runID) async {
   final engine = argument(args, '--engine');
   final caseName = argument(args, '--case');
-  if (!['opencode', 'opencode2'].contains(engine) ||
+  if (engine == null ||
+      caseName == null ||
+      !['opencode', 'opencode2'].contains(engine) ||
       !phases.containsKey(caseName)) {
     throw const ProbeFailure('invalid_phase');
   }
+  final revision =
+      argument(args, '--revision') ??
+      (await Process.run('git', [
+        'rev-parse',
+        'HEAD',
+      ])).stdout.toString().trim();
+  final attempt =
+      argument(args, '--attempt') ??
+      'attempt-${DateTime.now().microsecondsSinceEpoch}-$pid';
   PhoneRuntime? runtime;
   Fq3Wire? wire;
   ProbeRun? run;
   String? cliVersion;
   var preflightCode = 'runtime_unavailable';
   String? cleanupCode;
+  SessionOwnership? ownership;
+  String? serverKind;
+  final requestedModel = argument(args, '--model');
+  final testedModel = requestedModel == null
+      ? 'server-default'
+      : isPublicModelReference(requestedModel)
+      ? requestedModel
+      : null;
   try {
+    if (testedModel == null) throw const ProbeFailure('phase_model_invalid');
     runtime = await PhoneRuntime.inspect(runID);
+    ownership = SessionOwnership.create(
+      File(
+        '$evidenceDirectory/${SessionOwnership.filename(runID, engine, caseName, attempt)}',
+      ),
+      runID: runID,
+      sourceRevision: revision,
+      attemptID: attempt,
+      engine: engine,
+      caseName: caseName,
+      appUID: runtime.uid,
+      appBuild: runtime.appBuild,
+    );
     cliVersion = await runtime.version(engine == 'opencode2');
-    final endpoint = await runtime.start(engine == 'opencode2');
+    final endpoint = await runtime.start(
+      engine == 'opencode2',
+      appManagedOnly: args.contains('--app-managed-only'),
+      forceOwned: args.contains('--force-owned'),
+    );
+    serverKind = runtime.lastServerKind;
     wire = Fq3Wire(baseUrl: endpoint, password: runtime.password);
     final options = ProbeOptions(
       directory: runtime.directory,
-      title: runID,
-      model: argument(args, '--model'),
+      title: '$runID-$engine-$caseName',
+      model: requestedModel,
       capabilities: phases[caseName],
+      onSessionCreated: ownership.recordCreated,
     );
     run = engine == 'opencode2'
         ? await runProtocol2(wire, options)
@@ -110,19 +156,40 @@ Future<void> phase(List<String> args, String runID) async {
         }
       }
     }
+    if (wire != null &&
+        ownership != null &&
+        !args.contains('--retain-history')) {
+      try {
+        await cleanupLedger(wire, ownership);
+      } catch (_) {
+        cleanupCode = 'owned_session_cleanup_failed';
+      }
+    }
     try {
-      await wire?.close();
-      await runtime?.close();
+      try {
+        await wire?.close();
+      } finally {
+        await runtime?.close();
+      }
     } on ProbeFailure catch (error) {
       cleanupCode = error.code;
     } catch (_) {
       cleanupCode = 'cleanup_failed';
     }
+    try {
+      await PhoneRuntime.restoreNormalApp();
+    } catch (_) {
+      cleanupCode = 'app_restore_failed';
+    }
+    if (!args.contains('--retain-history') &&
+        !await cleanupOwnedSessions(runID)) {
+      cleanupCode = 'owned_session_cleanup_failed';
+    }
   }
   final output = <String, Object?>{
     'runID': runID,
-    'sourceRevision': argument(args, '--revision'),
-    'attemptID': argument(args, '--attempt'),
+    'sourceRevision': revision,
+    'attemptID': attempt,
     'cleanupCode': cleanupCode,
     'engine': engine,
     'case': caseName,
@@ -130,6 +197,8 @@ Future<void> phase(List<String> args, String runID) async {
     'observedVersion': run?.observedVersion,
     'appUID': runtime?.uid,
     'appBuild': runtime?.appBuild,
+    'serverKind': serverKind,
+    'testedModel': testedModel,
     'results':
         run?.results ??
         {
@@ -162,6 +231,236 @@ Future<int> lockedChild(List<String> arguments) async {
 }
 
 Future<void> orchestrate(List<String> args, String runID) async {
+  var cleaned = false;
+  try {
+    // Recovery drains prior attempts of this run before any new sessions exist.
+    final recovered = await lockedChild([
+      '--cleanup-only',
+      '--run-id',
+      runID,
+      '--all-owned',
+    ]);
+    if (recovered != 0) {
+      throw const ProbeFailure('owned_session_cleanup_failed');
+    }
+    await _orchestrate(args, runID);
+  } finally {
+    try {
+      cleaned = await lockedChild(['--cleanup-only', '--run-id', runID]) == 0;
+    } catch (_) {
+      cleaned = false;
+    }
+    if (!cleaned) {
+      stderr.writeln('FQ3 cleanup failed; durable ownership intent retained');
+      exitCode = 1;
+    }
+  }
+  final evidence = '$evidenceDirectory/$runID.json';
+  final report = reportAfterCleanup(
+    map(jsonDecode(File(evidence).readAsStringSync())),
+    cleanupCompleted: cleaned,
+  );
+  final staged = File('$evidence.pending')
+    ..writeAsStringSync(
+      '${const JsonEncoder.withIndent('  ').convert(report)}\n',
+      flush: true,
+    );
+  staged.renameSync(evidence);
+  final generated = await Process.run('python3', [
+    'tool/qa/fq3/update_matrix.py',
+    '--run',
+    evidence,
+  ]);
+  if (generated.exitCode != 0) {
+    stdout.writeln('Matrix generation rejected evidence; report retained');
+    exitCode = 1;
+  } else {
+    stdout.writeln(
+      'Generated protocol certification matrix after final cleanup',
+    );
+  }
+}
+
+/// Exact-directory/title recovery closes the gap before an ID callback commits.
+Future<void> cleanupLedger(Fq3Wire wire, SessionOwnership ownership) async {
+  final oc2 = ownership.engine == 'opencode2';
+  final prefix = oc2 ? '/api' : '';
+  final query = oc2
+      ? {'location[directory]': ownership.directory}
+      : {'directory': ownership.directory};
+  await wire.request('GET', oc2 ? '/api/health' : '/global/health');
+  if (!ownership.legacy) {
+    final rawCandidates = await wire.request(
+      'GET',
+      '$prefix/session',
+      query: {'directory': ownership.directory, 'limit': '200'},
+    );
+    if (rawCandidates is! List &&
+        !(rawCandidates is Map && rawCandidates['data'] is List)) {
+      throw const ProbeFailure('ownership_discovery_invalid');
+    }
+    final items = rawCandidates is List
+        ? rawCandidates
+        : (rawCandidates as Map)['data'] as List;
+    if (items.any(
+      (item) =>
+          item is! Map ||
+          !ownedSessionID(item['id']) ||
+          item['title'] is! String,
+    )) {
+      throw const ProbeFailure('ownership_discovery_invalid');
+    }
+    final candidates = list(rawCandidates);
+    if (items.length >= 200) {
+      throw const ProbeFailure('ownership_discovery_incomplete');
+    }
+    for (final session in candidates) {
+      if (!ownedSessionID(session['id']) ||
+          !ownership.matchesTitle(session['title'])) {
+        continue;
+      }
+      final raw = await wire.request(
+        'GET',
+        '$prefix/session/${session['id']}',
+        query: query,
+      );
+      final envelope = map(raw);
+      final detail = envelope['data'] is Map ? map(envelope['data']) : envelope;
+      if (detail['id'] != session['id'] || !ownership.matchesSession(detail)) {
+        throw const ProbeFailure('ownership_session_scope_mismatch');
+      }
+      await ownership.recordCreated(detail['id'] as String);
+    }
+  }
+  for (final id in ownership.sessionIDs) {
+    try {
+      final raw = await wire.request(
+        'GET',
+        '$prefix/session/$id',
+        query: query,
+      );
+      final envelope = map(raw);
+      final session = envelope['data'] is Map
+          ? map(envelope['data'])
+          : envelope;
+      if (session['id'] != id || !ownership.matchesSession(session)) {
+        throw const ProbeFailure('ownership_session_scope_mismatch');
+      }
+      try {
+        await wire
+            .request(
+              'POST',
+              '$prefix/session/$id/${oc2 ? 'interrupt' : 'abort'}',
+              query: query,
+            )
+            .timeout(const Duration(seconds: 5));
+      } catch (_) {
+        // DELETE is the final session fence; no arbitrary response is emitted.
+      }
+      await wire
+          .request('DELETE', '$prefix/session/$id', query: query)
+          .timeout(const Duration(seconds: 15));
+      await ownership.markDeleted(id);
+    } on ProbeFailure catch (error) {
+      if (error.code != 'http_404') rethrow;
+      await ownership.markDeleted(id);
+    }
+  }
+  ownership.removeIfEmpty();
+}
+
+/// Called under the emulator lock, including after fenced/failed parent runs.
+Future<bool> cleanupOwnedSessions(
+  String runID, {
+  bool includeArchived = false,
+  bool allOwned = false,
+}) async {
+  var failed = false;
+  try {
+    if (includeArchived) {
+      const archive = 'docs/qa/FQ3-2026-10-08';
+      for (final engine in ['opencode', 'opencode2']) {
+        for (final caseName in phases.keys) {
+          final archived = File('$archive/$runID-$engine-$caseName.json');
+          if (!archived.existsSync()) continue;
+          if (FileSystemEntity.isLinkSync(archived.path) ||
+              archived.lengthSync() > 64 * 1024) {
+            throw const ProbeFailure('ownership_evidence_invalid');
+          }
+          final phase = map(jsonDecode(archived.readAsStringSync()));
+          final ids = phase['ownedSessions'];
+          if (ids is! List || ids.isEmpty) continue;
+          if (phase['runID'] != runID ||
+              phase['engine'] != engine ||
+              phase['case'] != caseName ||
+              !ids.every(ownedSessionID)) {
+            throw const ProbeFailure('ownership_evidence_invalid');
+          }
+          SessionOwnership.create(
+            File(
+              '$evidenceDirectory/${SessionOwnership.filename(runID, engine, caseName, 'archived-recorded-ids')}',
+            ),
+            runID: runID,
+            sourceRevision: phase['sourceRevision'] as String,
+            attemptID: 'archived-recorded-ids',
+            engine: engine,
+            caseName: caseName,
+            appUID: phase['appUID'] as int,
+            appBuild: phase['appBuild'] as int,
+            legacy: true,
+            sessionIDs: ids.cast<String>(),
+          );
+        }
+      }
+    }
+    final files =
+        Directory(evidenceDirectory)
+            .listSync(followLinks: false)
+            .where((entry) => entry.path.endsWith('-ownership.json'))
+            .toList()
+          ..sort((a, b) => a.path.compareTo(b.path));
+    for (final file in files) {
+      PhoneRuntime? runtime;
+      Fq3Wire? wire;
+      try {
+        final ownership = SessionOwnership.read(File(file.path));
+        if (!allOwned && ownership.runID != runID) continue;
+        runtime = await PhoneRuntime.inspect(ownership.runID);
+        requireConsistentAppUID(ownership.appUID, runtime.uid);
+        wire = Fq3Wire(
+          baseUrl: await runtime.start(ownership.engine == 'opencode2'),
+          password: runtime.password,
+        );
+        await cleanupLedger(wire, ownership);
+      } catch (_) {
+        failed = true;
+      } finally {
+        try {
+          await wire?.close();
+          await runtime?.close();
+        } catch (_) {
+          failed = true;
+        }
+      }
+    }
+  } catch (_) {
+    failed = true;
+  }
+  try {
+    await PhoneRuntime.restoreNormalApp();
+  } catch (_) {
+    failed = true;
+  }
+  if (failed) {
+    stderr.writeln('FQ3 owned cleanup incomplete; intent retained');
+    exitCode = 1;
+  } else {
+    stdout.writeln('FQ3 owned cleanup complete');
+  }
+  return !failed;
+}
+
+Future<void> _orchestrate(List<String> args, String runID) async {
   final started = DateTime.now().toUtc().toIso8601String();
   final revision = (await Process.run('git', [
     'rev-parse',
@@ -172,6 +471,11 @@ Future<void> orchestrate(List<String> args, String runID) async {
   int? uid;
   String? fence;
   for (final engine in ['opencode', 'opencode2']) {
+    final model = argument(
+      args,
+      engine == 'opencode2' ? '--oc2-model' : '--oc1-model',
+    );
+    final selection = modelSelectionFor(model);
     final results = <String, Object?>{};
     String? observed;
     for (final entry in phases.entries) {
@@ -186,6 +490,7 @@ Future<void> orchestrate(List<String> args, String runID) async {
       );
       final command = [
         '--phase',
+        '--retain-history',
         '--run-id',
         runID,
         '--revision',
@@ -197,10 +502,10 @@ Future<void> orchestrate(List<String> args, String runID) async {
         '--case',
         entry.key,
       ];
-      final model = argument(
-        args,
-        engine == 'opencode2' ? '--oc2-model' : '--oc1-model',
-      );
+      if (argument(args, '--app-managed-engine') == engine) {
+        command.add('--app-managed-only');
+      }
+      if (args.contains('--force-owned')) command.add('--force-owned');
       if (model != null) command.addAll(['--model', model]);
       final code = await lockedChild(command);
       final file = File('$evidenceDirectory/$runID-$engine-${entry.key}.json');
@@ -234,6 +539,7 @@ Future<void> orchestrate(List<String> args, String runID) async {
           engine: engine,
           caseName: entry.key,
           expectedAppUID: uid,
+          expectedTestedModel: model ?? 'server-default',
         );
         observed = data['observedVersion'] as String;
         for (final item in map(data['results']).entries) {
@@ -269,6 +575,7 @@ Future<void> orchestrate(List<String> args, String runID) async {
       'expectedVersion': engine == 'opencode2' ? '2.0.10' : '1.18.32',
       'observedVersion': observed,
       'results': results,
+      'modelSelection': selection,
     };
   }
   Map<String, Object?> switchResult = fail(
@@ -286,6 +593,13 @@ Future<void> orchestrate(List<String> args, String runID) async {
       attempt,
       '--uid',
       '${uid ?? 0}',
+      if (argument(args, '--app-managed-engine') != null) ...[
+        '--app-managed-engine',
+        argument(args, '--app-managed-engine')!,
+      ],
+      if (args.contains('--force-owned')) '--force-owned',
+      for (final flag in ['--oc1-model', '--oc2-model'])
+        if (argument(args, flag) != null) ...[flag, argument(args, flag)!],
     ]);
     try {
       final data = map(
@@ -298,9 +612,51 @@ Future<void> orchestrate(List<String> args, String runID) async {
           data['sourceRevision'] != revision ||
           data['attemptID'] != attempt ||
           data['appUID'] != uid ||
-          data['appBuild'] != 2195) {
+          data['appBuild'] != currentCertificationBuild) {
         throw const ProbeFailure('invalid_history_evidence');
       }
+      final admitted = <Map<String, dynamic>>[];
+      final owned = <String, Set<String>>{'opencode': {}, 'opencode2': {}};
+      for (final engine in ['opencode', 'opencode2']) {
+        for (final scenario in phases.keys) {
+          final phaseData = map(
+            jsonDecode(
+              File(
+                '$evidenceDirectory/$runID-$engine-$scenario.json',
+              ).readAsStringSync(),
+            ),
+          );
+          validatePhaseEvidence(
+            phaseData,
+            runID: runID,
+            sourceRevision: revision,
+            attemptID: attempt,
+            engine: engine,
+            caseName: scenario,
+            expectedAppUID: uid,
+            expectedTestedModel:
+                argument(
+                  args,
+                  engine == 'opencode2' ? '--oc2-model' : '--oc1-model',
+                ) ??
+                'server-default',
+          );
+          admitted.add(phaseData);
+          owned[engine]!.addAll(
+            (phaseData['ownedSessions'] as List).cast<String>(),
+          );
+        }
+      }
+      validateHistoryBinding(
+        data,
+        runID: runID,
+        sourceRevision: revision,
+        attemptID: attempt,
+        phaseManifest: phaseSessionManifest(admitted),
+        appUID: uid!,
+        oc1Sessions: owned['opencode']!.length,
+        oc2Sessions: owned['opencode2']!.length,
+      );
       switchResult = map(data['result']);
     } on ProbeFailure catch (error) {
       switchResult = fail(error.code);
@@ -315,10 +671,10 @@ Future<void> orchestrate(List<String> args, String runID) async {
   }
   final evidence = '$evidenceDirectory/$runID.json';
   final report = <String, Object?>{
-    'schemaVersion': 1,
+    'schemaVersion': 2,
     'runID': runID,
     'device': serial,
-    'appBuild': 2195,
+    'appBuild': currentCertificationBuild,
     'sourceRevision': revision,
     'startedAt': started,
     'scope': 'phone-runtime',
@@ -330,6 +686,7 @@ Future<void> orchestrate(List<String> args, String runID) async {
       'versionProbeUID': uid ?? 0,
       'buildVerified': uid != null,
       'credentialSource': 'runtime-launch-config',
+      'cleanupCompleted': false,
     },
     'engines': engines,
     'protocolSwitch': switchResult,
@@ -338,43 +695,52 @@ Future<void> orchestrate(List<String> args, String runID) async {
   File(evidence).writeAsStringSync(
     '${const JsonEncoder.withIndent('  ').convert(report)}\n',
   );
-  final generated = await Process.run('python3', [
-    'tool/qa/fq3/update_matrix.py',
-    '--run',
-    evidence,
-  ]);
-  if (generated.exitCode != 0) {
-    stdout.writeln('Matrix generation rejected evidence; report retained');
-    exitCode = 1;
-  } else {
-    stdout.writeln('Generated protocol certification matrix from $evidence');
-  }
 }
 
 Future<void> histories(List<String> args, String runID) async {
   PhoneRuntime? runtime;
   var result = fail('history_probe_failed');
   final ids = <String, List<String>>{};
-  for (final engine in ['opencode', 'opencode2']) {
-    ids[engine] = [];
-    for (final caseName in phases.keys) {
-      final file = File('$evidenceDirectory/$runID-$engine-$caseName.json');
-      if (file.existsSync()) {
-        final phaseData = map(jsonDecode(file.readAsStringSync()));
-        if (phaseData['runID'] != runID ||
-            phaseData['attemptID'] != argument(args, '--attempt') ||
-            phaseData['sourceRevision'] != argument(args, '--revision')) {
-          continue;
-        }
-        ids[engine]!.addAll(
-          (phaseData['ownedSessions'] as List).cast<String>(),
-        );
-      }
-    }
-  }
+  final admitted = <Map<String, dynamic>>[];
+  String? manifest;
+  var cleanupCompleted = false;
   final baseline = <String, Map<String, String>>{};
   final nonempty = <String, bool>{};
   try {
+    for (final engine in ['opencode', 'opencode2']) {
+      ids[engine] = [];
+      for (final caseName in phases.keys) {
+        final file = File('$evidenceDirectory/$runID-$engine-$caseName.json');
+        if (file.existsSync()) {
+          final phaseData = map(jsonDecode(file.readAsStringSync()));
+          if (phaseData['runID'] != runID ||
+              phaseData['attemptID'] != argument(args, '--attempt') ||
+              phaseData['sourceRevision'] != argument(args, '--revision')) {
+            continue;
+          }
+          validatePhaseEvidence(
+            phaseData,
+            runID: runID,
+            sourceRevision: argument(args, '--revision') ?? '',
+            attemptID: argument(args, '--attempt') ?? '',
+            engine: engine,
+            caseName: caseName,
+            expectedAppUID: int.tryParse(argument(args, '--uid') ?? ''),
+            expectedTestedModel:
+                argument(
+                  args,
+                  engine == 'opencode2' ? '--oc2-model' : '--oc1-model',
+                ) ??
+                'server-default',
+          );
+          admitted.add(phaseData);
+          ids[engine]!.addAll(
+            (phaseData['ownedSessions'] as List).cast<String>(),
+          );
+        }
+      }
+    }
+    manifest = phaseSessionManifest(admitted);
     runtime = await PhoneRuntime.inspect(runID);
     requireConsistentAppUID(
       int.tryParse(argument(args, '--uid') ?? ''),
@@ -389,7 +755,11 @@ Future<void> histories(List<String> args, String runID) async {
       if (cliVersion != (oc2 ? '2.0.10' : '1.18.32')) {
         throw const ProbeFailure('runtime_version_mismatch');
       }
-      final endpoint = await runtime.start(oc2);
+      final endpoint = await runtime.start(
+        oc2,
+        appManagedOnly: argument(args, '--app-managed-engine') == engine,
+        forceOwned: args.contains('--force-owned'),
+      );
       final wire = Fq3Wire(baseUrl: endpoint, password: runtime.password);
       try {
         final health = map(
@@ -457,43 +827,26 @@ Future<void> histories(List<String> args, String runID) async {
   } catch (_) {
     result = fail('history_probe_failed');
   } finally {
-    if (runtime != null) {
-      try {
-        // Delete only exact session IDs created by this run, under their dialect.
-        for (final engine in ['opencode', 'opencode2']) {
-          if (ids[engine]!.isEmpty) continue;
-          final oc2 = engine == 'opencode2';
-          final wire = Fq3Wire(
-            baseUrl: await runtime.start(oc2),
-            password: runtime.password,
-          );
-          try {
-            for (final id in ids[engine]!.toSet()) {
-              await wire.request(
-                'DELETE',
-                '${oc2 ? '/api' : ''}/session/$id',
-                query: oc2
-                    ? {'location[directory]': runtime.directory}
-                    : {'directory': runtime.directory},
-              );
-            }
-          } finally {
-            await wire.close();
-          }
-        }
-      } catch (_) {
-        result = fail('owned_session_cleanup_failed');
-      }
-    }
     try {
       await runtime?.close();
     } catch (_) {
       result = fail('cleanup_failed');
       exitCode = 1;
     }
+    try {
+      await PhoneRuntime.restoreNormalApp();
+    } catch (_) {
+      result = fail('app_restore_failed');
+      exitCode = 1;
+    }
+    cleanupCompleted = await cleanupOwnedSessions(runID);
+    if (!cleanupCompleted) {
+      result = fail('owned_session_cleanup_failed');
+      exitCode = 1;
+    }
   }
   File('$evidenceDirectory/$runID-histories.json').writeAsStringSync(
-    '${jsonEncode({'runID': runID, 'sourceRevision': argument(args, '--revision'), 'attemptID': argument(args, '--attempt'), 'appUID': runtime?.uid, 'appBuild': runtime?.appBuild, 'result': result})}\n',
+    '${jsonEncode({'runID': runID, 'sourceRevision': argument(args, '--revision'), 'attemptID': argument(args, '--attempt'), 'phaseManifest': manifest, 'appUID': runtime?.uid, 'appBuild': runtime?.appBuild, 'cleanupCompleted': cleanupCompleted, 'result': result})}\n',
   );
   stdout.writeln('protocolSwitch: ${result['state']} (${result['code']})');
 }

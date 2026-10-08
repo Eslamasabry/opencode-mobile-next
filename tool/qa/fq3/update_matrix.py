@@ -14,6 +14,9 @@ import tempfile
 
 REPO = Path(__file__).resolve().parents[3]
 EVIDENCE_DIRECTORY = "docs/qa/FQ3-2026-10-08"
+CURRENT_EVIDENCE_DIRECTORY = "docs/qa/FQ3b-2026-10-08"
+EVIDENCE_DIRECTORIES = (EVIDENCE_DIRECTORY, CURRENT_EVIDENCE_DIRECTORY)
+CERTIFIED_BUILDS = (2195, 2196)
 MATRIX_PATH = "docs/verification/agent-certification-matrix.json"
 MARKDOWN_PATH = "docs/verification/agent-certification-matrix.md"
 PROTOCOL_SCOPE = "in-app Ubuntu protocol; no UI/restart/install qualification"
@@ -35,6 +38,7 @@ PASS_FACTS = {
     "protocolSwitch": ("bothHistoriesPreserved", "freshClients"),
 }
 MAX_RUN_BYTES = 64 * 1024
+MODEL_REFERENCE = r"[A-Za-z0-9][A-Za-z0-9._-]{0,95}/[A-Za-z0-9][A-Za-z0-9._-]{0,127}"
 
 
 class InvalidEvidence(ValueError):
@@ -84,14 +88,18 @@ def validate_run(run):
         "startedAt", "scope", "engines", "protocolSwitch", "evidence",
         "attestation",
     ))
-    require(type(run["schemaVersion"]) is int and run["schemaVersion"] == 1,
+    require(type(run["schemaVersion"]) is int and run["schemaVersion"] in (1, 2),
             "Unsupported FQ3 evidence version.")
     require(type(run["runID"]) is str and
             re.fullmatch(r"fq3-[A-Za-z0-9_-]{1,96}", run["runID"]),
             "Invalid FQ3 run identifier.")
     require(run["device"] == "emulator-5554", "Evidence is from another device.")
-    require(type(run["appBuild"]) is int and run["appBuild"] == 2195,
+    require(type(run["appBuild"]) is int and run["appBuild"] in CERTIFIED_BUILDS,
             "Evidence is from another app build.")
+    if run["schemaVersion"] == 2:
+        require(run["appBuild"] == 2196 and
+                run["evidence"] == f'{CURRENT_EVIDENCE_DIRECTORY}/{run["runID"]}.json',
+                "New model-scoped evidence requires the current build and directory.")
     require(run["scope"] == "phone-runtime", "Live phone-runtime evidence is required.")
     require(type(run["sourceRevision"]) is str and
             re.fullmatch(r"[0-9a-f]{40}", run["sourceRevision"]),
@@ -103,13 +111,21 @@ def validate_run(run):
         datetime.fromisoformat(run["startedAt"].replace("Z", "+00:00"))
     except ValueError:
         raise InvalidEvidence("Invalid UTC run time.") from None
-    require(run["evidence"] == f'{EVIDENCE_DIRECTORY}/{run["runID"]}.json',
+    require(run["evidence"] in (
+        f'{directory}/{run["runID"]}.json' for directory in EVIDENCE_DIRECTORIES
+    ),
             "Evidence must use its fixed run path.")
     attestation = run["attestation"]
-    exact_keys(attestation, (
+    attestation_keys = (
         "runtime", "transport", "live", "appUID", "versionProbeUID",
         "buildVerified", "credentialSource",
-    ))
+    )
+    if run["schemaVersion"] == 2:
+        attestation_keys += ("cleanupCompleted",)
+    exact_keys(attestation, attestation_keys)
+    if run["schemaVersion"] == 2:
+        require(type(attestation["cleanupCompleted"]) is bool,
+                "New evidence requires an explicit cleanup acknowledgment.")
     require(attestation["runtime"] == "in-app-ubuntu" and
             attestation["transport"] == "adb-forward" and
             attestation["live"] is True and attestation["buildVerified"] is True and
@@ -125,7 +141,20 @@ def validate_run(run):
     exact_keys(run["engines"], VERSIONS)
     for engine_id, expected in VERSIONS.items():
         engine = run["engines"][engine_id]
-        exact_keys(engine, ("expectedVersion", "observedVersion", "results"))
+        engine_keys = ("expectedVersion", "observedVersion", "results")
+        if run["schemaVersion"] == 2:
+            engine_keys += ("modelSelection",)
+        exact_keys(engine, engine_keys)
+        if run["schemaVersion"] == 2:
+            selection = engine["modelSelection"]
+            exact_keys(selection, ("source", "requested"))
+            require(selection["source"] in ("explicit", "server-default"),
+                    "Invalid base model selection source.")
+            requested = selection["requested"]
+            require((selection["source"] == "server-default" and requested is None) or
+                    (selection["source"] == "explicit" and type(requested) is str and
+                     re.fullmatch(MODEL_REFERENCE, requested)),
+                    "Invalid public base model reference.")
         require(engine["expectedVersion"] == expected, "Unexpected engine pin.")
         observed = engine["observedVersion"]
         require(observed is None or (type(observed) is str and
@@ -137,6 +166,11 @@ def validate_run(run):
         require(engine["results"]["version"]["state"] != "pass" or observed == expected,
                 "Version pass does not match the expected pin.")
     validate_result(run["protocolSwitch"], "protocolSwitch")
+    if run["schemaVersion"] == 2 and not attestation["cleanupCompleted"]:
+        require(run["protocolSwitch"]["state"] == "fail" and all(
+            result["state"] == "fail" for engine in run["engines"].values()
+            for result in engine["results"].values()
+        ), "Unacknowledged cleanup cannot qualify a capability pass.")
     return copy.deepcopy(run)
 
 
@@ -162,6 +196,9 @@ def apply_run(matrix, run):
                 "protocolSwitch": copy.deepcopy(run["protocolSwitch"]),
             },
         }
+        if run["schemaVersion"] == 2:
+            matches[0]["protocolCertification"]["modelSelection"] = copy.deepcopy(
+                engine["modelSelection"])
     return updated
 
 
@@ -226,17 +263,24 @@ def render_markdown(matrix):
     rows = []
     for agent in certified:
         protocol = agent["protocolCertification"]
+        selection = protocol.get("modelSelection")
+        base_model = ("historical: not recorded" if selection is None else
+                      "server-default" if selection["source"] == "server-default" else
+                      "explicit: " + selection["requested"])
         rows.append([
             agent["name"], protocol["expectedVersion"],
             protocol["observedVersion"] or "not observed", protocol["deviceBuild"],
-            protocol["runID"],
+            protocol["runID"], base_model,
             *(state_symbol(protocol["capabilities"][key]["state"]) for key in ALL_CAPABILITIES),
         ])
-    lines += table(["Agent", "Expected", "Observed", "Build", "Run", *ALL_CAPABILITIES], rows)
+    lines += table(["Agent", "Expected", "Observed", "Build", "Run", "Base model scope", *ALL_CAPABILITIES], rows)
+    lines += ["", "Model-dependent passes apply to the recorded base model selection. "
+              "An explicit selection does not qualify server-default inference or other base models."]
     lines += ["", "FQ3 legend: ✅ protocol assertion passed · ❌ assertion failed or prerequisite missing.", ""]
     for agent in certified:
         protocol = agent["protocolCertification"]
-        lines += [f'**{agent["name"]}** — [{protocol["runID"]}](../qa/FQ3-2026-10-08/{protocol["runID"]}.json)', ""]
+        evidence_link = "../" + protocol["evidence"].removeprefix("docs/")
+        lines += [f'**{agent["name"]}** — [{protocol["runID"]}]({evidence_link})', ""]
         for capability, result in protocol["capabilities"].items():
             facts = json.dumps(result["facts"], sort_keys=True, separators=(",", ":"))
             lines.append(f'- {capability}: {result["state"]} — `{result["code"]}`; facts `{facts}`')
