@@ -3,6 +3,7 @@ import '../api/server_probe.dart' show ServerFlavor;
 import '../domain/server_gateway.dart' show CatalogProvider;
 import '../domain/session_handoff.dart' show SessionResumeCli;
 import 'connection.dart';
+import 'profiles.dart' show ServerProfile;
 
 /// What screens say about the connected server that depends on its protocol
 /// or its provider catalog, resolved here so lib/ui never reads lib/api
@@ -22,4 +23,11 @@ extension ServerPresentation on ConnectionController {
     providerID,
     catalog?.providers ?? const <CatalogProvider>[],
   );
+}
+
+/// What screens say about a saved profile that depends on its protocol, for
+/// the same reason as [ServerPresentation]. Copy only.
+extension ProfilePresentation on ServerProfile {
+  /// Whether this profile runs OpenCode 2, for naming its runtime.
+  bool get runsOpenCode2 => flavor == ServerFlavor.v2;
 }
