@@ -17,7 +17,7 @@ Map<String, dynamic> _phase({
   'engine': engine,
   'case': 'stream',
   'appUID': 10123,
-  'appBuild': 2196,
+  'appBuild': 2197,
   'cliVersion': engine == 'opencode' ? '1.18.32' : '2.0.10',
   'observedVersion': engine == 'opencode' ? '1.18.32' : '2.0.10',
   'testedModel': 'server-default',
@@ -35,7 +35,7 @@ Map<String, dynamic> _history(String manifest) => {
   'attemptID': _attemptID,
   'phaseManifest': manifest,
   'appUID': 10123,
-  'appBuild': 2196,
+  'appBuild': 2197,
   'cleanupCompleted': true,
   'result': {
     'state': 'pass',
@@ -212,11 +212,13 @@ void main() {
           _failure('history_binding_mismatch'),
         );
       }
-      final historical = _history(manifest)..['appBuild'] = 2195;
-      expect(
-        () => _validate(historical, manifest),
-        _failure('history_binding_mismatch'),
-      );
+      for (final build in [2195, 2196]) {
+        final historical = _history(manifest)..['appBuild'] = build;
+        expect(
+          () => _validate(historical, manifest),
+          _failure('history_binding_mismatch'),
+        );
+      }
     },
   );
 

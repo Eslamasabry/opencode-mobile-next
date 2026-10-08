@@ -1,0 +1,18 @@
+E
+======================================================================
+ERROR: test_fq3c_build_2197_requires_its_exact_schema_two_evidence_directory (tool.qa.fq3.test_update_matrix.EvidenceValidationTest.test_fq3c_build_2197_requires_its_exact_schema_two_evidence_directory)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq3/test_update_matrix.py", line 125, in test_fq3c_build_2197_requires_its_exact_schema_two_evidence_directory
+    self.assertEqual(updater.validate_run(run), original)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq3/update_matrix.py", line 97, in validate_run
+    require(type(run["appBuild"]) is int and run["appBuild"] in CERTIFIED_BUILDS,
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq3/update_matrix.py", line 50, in require
+    raise InvalidEvidence(message)
+fq3_update_matrix.InvalidEvidence: Evidence is from another app build.
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (errors=1)
