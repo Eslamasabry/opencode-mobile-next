@@ -1,0 +1,9 @@
+{
+  "agentId": "fx",
+  "appBuild": 2198,
+  "sourceRevision": "064a43a3687773626dc5ce37853446c29be41e0c",
+  "normalRestored": true,
+  "availableBeforeBytes": 1806884864,
+  "errorType": "RuntimeError",
+  "errorCode": "app_install_timeout"
+}
