@@ -128,6 +128,25 @@ void main() {
       await shot(tester, 'crash_reports_off', light: light);
     });
 
+    testWidgets('crash reports off with saved errors above ($theme)', (
+      tester,
+    ) async {
+      diagnostics
+        ..record(
+          StateError('Render failed while laying out the list'),
+          null,
+          source: 'flutter',
+          at: DateTime(2026, 10, 7, 9, 41, 5),
+        )
+        ..record(
+          StateError('Event stream closed before the reply'),
+          null,
+          source: 'sse',
+          at: DateTime(2026, 10, 7, 9, 44, 9),
+        );
+      await shot(tester, 'crash_reports_off_with_errors', light: light);
+    });
+
     testWidgets('crash reports on with saved reports ($theme)', (tester) async {
       seed();
       await shot(tester, 'crash_reports_on', light: light);

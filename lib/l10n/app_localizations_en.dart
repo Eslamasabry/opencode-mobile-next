@@ -27771,12 +27771,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get crashReportsDeleteBody =>
-      'Deletes the crash reports and the saved errors on this page. Saving crash reports stays on.';
+      'Deletes the saved crash reports. Saving crash reports stays on.';
 
   @override
   String get crashReportsDeleteConfirm => 'Delete crash reports';
 
   @override
   String get crashReportsNote =>
-      'Only what kind of problem happened and when is kept: no error messages, conversations or passwords. Keeps the latest 20 reports. Switching this on or off also clears the saved errors on this page.';
+      'Only what kind of problem happened and when is kept: no error messages, conversations or passwords. Keeps the latest 20 reports.';
+
+  @override
+  String crashReportsOnClears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Turning this on clears the $count saved errors above.',
+      one: 'Turning this on clears the saved error above.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get crashReportsOffDeletes =>
+      'Turning this off deletes the saved crash reports.';
+
+  @override
+  String crashReportsOffDeletesAndClears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Turning this off deletes the saved crash reports and clears the $count saved errors above.',
+      one:
+          'Turning this off deletes the saved crash reports and clears the saved error above.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String crashReportsOffClears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Turning this off clears the $count saved errors above.',
+      one: 'Turning this off clears the saved error above.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String crashReportsDeleteBodyWithErrors(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Deletes the crash reports and clears the $count saved errors above. Saving crash reports stays on.',
+      one:
+          'Deletes the crash reports and clears the saved error above. Saving crash reports stays on.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get crashReportsClearedToo =>
+      'The saved crash reports are deleted too.';
 }

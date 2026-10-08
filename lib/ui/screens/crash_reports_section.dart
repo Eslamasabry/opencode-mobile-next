@@ -25,11 +25,22 @@ import '../kit/kit.dart';
 /// at start-up ([CrashDiagnosticsStartup]). While start-up is still opening
 /// it (at most 300 ms after the first frame) the section draws nothing;
 /// when the store could not open it says so on a disabled switch.
+///
+/// The backend clears App diagnostics whenever the choice changes or the
+/// reports are deleted. [savedErrors] is how many other errors the page
+/// lists above; only when there are some (or saved reports) does a line
+/// under the switch, and the delete question, say what goes with it.
 class CrashReportsSection extends StatefulWidget {
-  const CrashReportsSection({super.key, this.crash, this.ready});
+  const CrashReportsSection({
+    super.key,
+    this.crash,
+    this.ready,
+    this.savedErrors = 0,
+  });
 
   final CrashDiagnosticsController? crash;
   final Future<CrashDiagnosticsController?>? ready;
+  final int savedErrors;
 
   @override
   State<CrashReportsSection> createState() => _CrashReportsSectionState();
@@ -70,7 +81,9 @@ class _CrashReportsSectionState extends State<CrashReportsSection> {
     final confirmed = await showKitConfirm(
       context,
       title: copy.crashReportsDeleteTitle,
-      body: copy.crashReportsDeleteBody,
+      body: widget.savedErrors > 0
+          ? copy.crashReportsDeleteBodyWithErrors(widget.savedErrors)
+          : copy.crashReportsDeleteBody,
       confirmLabel: copy.crashReportsDeleteConfirm,
       icon: AppIconography.delete,
       kind: KitConfirmKind.destructive,
@@ -116,6 +129,14 @@ class _CrashReportsSectionState extends State<CrashReportsSection> {
     );
   }
 
+  String? _effect(AppLocalizations copy, bool enabled, int reports) =>
+      _effectFor(
+        copy,
+        enabled: enabled,
+        reports: reports,
+        errors: widget.savedErrors,
+      );
+
   @override
   Widget build(BuildContext context) {
     if (!_resolved) return const SizedBox.shrink();
@@ -144,6 +165,7 @@ class _CrashReportsSectionState extends State<CrashReportsSection> {
         final records = enabled ? crash.records : const <CrashRecord>[];
         final failed = _actionFailed || crash.storageFailed;
         final tokens = KitTokens.of(context);
+        final effect = _effect(copy, enabled, records.length);
         return Column(
           key: const ValueKey('crash-reports'),
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -157,19 +179,34 @@ class _CrashReportsSectionState extends State<CrashReportsSection> {
                   supporting: copy.crashReportsSwitchBody,
                   value: enabled,
                   onChanged: (value) => _setEnabled(crash, value),
-                  below: failed
-                      ? KitNotice(
-                          key: const ValueKey('crash-reports-failed'),
-                          tone: AppStatusTone.failure,
-                          icon: AppIconography.error,
-                          message: copy.crashReportsFailed,
-                        )
-                      : null,
+                  below: effect == null && !failed
+                      ? null
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (effect != null)
+                              KitText(
+                                effect,
+                                key: const ValueKey('crash-reports-effect'),
+                                role: KitTextRole.secondary,
+                              ),
+                            if (failed) ...[
+                              if (effect != null)
+                                SizedBox(height: tokens.space2),
+                              KitNotice(
+                                key: const ValueKey('crash-reports-failed'),
+                                tone: AppStatusTone.failure,
+                                icon: AppIconography.error,
+                                message: copy.crashReportsFailed,
+                              ),
+                            ],
+                          ],
+                        ),
                 ),
               ],
             ),
-            // What is kept, how much, and what switching clears: in full,
-            // never cut to the row's two supporting lines.
+            // What is kept and how much: in full, never cut to the row's
+            // two supporting lines.
             KitGroupNote(message: copy.crashReportsNote),
             if (enabled) ...[
               SizedBox(height: tokens.space3),
@@ -209,6 +246,23 @@ class _CrashReportsSectionState extends State<CrashReportsSection> {
       },
     );
   }
+}
+
+/// What flipping the switch takes with it, said only when something would
+/// go: null when nothing is saved.
+String? _effectFor(
+  AppLocalizations copy, {
+  required bool enabled,
+  required int reports,
+  required int errors,
+}) {
+  if (!enabled) return errors > 0 ? copy.crashReportsOnClears(errors) : null;
+  if (reports > 0) {
+    return errors > 0
+        ? copy.crashReportsOffDeletesAndClears(errors)
+        : copy.crashReportsOffDeletes;
+  }
+  return errors > 0 ? copy.crashReportsOffClears(errors) : null;
 }
 
 /// The plain words for a record: what the person noticed, not the category.

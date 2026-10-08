@@ -250,10 +250,15 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
 
   Future<void> _clear(int count) async {
     final copy = _screenCopy(context);
+    // The crash store empties with App diagnostics (BD7 backend): say so
+    // when there are saved crash reports to lose.
+    final crashReports =
+        (widget.crash ?? CrashDiagnosticsStartup.current)?.savedCount ?? 0;
     final confirmed = await showKitConfirm(
       context,
       title: copy.appDiagnosticsClearTitle(count),
       body: copy.appDiagnosticsClearBody(count),
+      consequences: [if (crashReports > 0) copy.crashReportsClearedToo],
       confirmLabel: copy.appDiagnosticsClearConfirm(count),
       icon: AppIconography.delete,
       kind: KitConfirmKind.destructive,
@@ -292,7 +297,11 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
         listenable: Listenable.merge(sources),
         builder: (context, _) {
           final events = _events;
-          final errors = events.where((event) => event.isError).toList();
+          // Crash records show once, in plain words, in their own section
+          // below (CrashReportsSection); the report still carries them.
+          final errors = events
+              .where((event) => event.isError && !_isCrashRecord(event))
+              .toList();
           final error = widget.error;
           return ListView(
             key: const ValueKey('app-diagnostics'),
@@ -462,11 +471,17 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
               CrashReportsSection(
                 crash: widget.crash,
                 ready: widget.crashReady,
+                savedErrors: errors.length,
               ),
               SizedBox(height: tokens.sectionGap),
               // Timings are for whoever reads the report, not the person
               // filling it in: folded, last, still part of the report.
-              const KitDetailsFold(child: PerfTraceSection()),
+              Padding(
+                padding: EdgeInsetsDirectional.symmetric(
+                  horizontal: tokens.gutter,
+                ),
+                child: const KitDetailsFold(child: PerfTraceSection()),
+              ),
             ],
           );
         },
@@ -474,6 +489,11 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
     );
   }
 }
+
+/// An entry the opt-in crash store recorded (`crash.flutter`, `crash.anr`,
+/// ...): listed by [CrashReportsSection], not in the recent errors.
+bool _isCrashRecord(ProblemReportEvent event) =>
+    event.source.startsWith('crash.');
 
 /// The count on Settings' Report a problem row: errors kept on this phone
 /// (the saved report when it opened, else this run's).

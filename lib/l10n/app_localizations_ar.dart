@@ -27811,12 +27811,73 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get crashReportsDeleteBody =>
-      'يحذف تقارير الأعطال والأخطاء المحفوظة في هذه الصفحة. يبقى حفظ تقارير الأعطال مفعّلًا.';
+      'يحذف تقارير الأعطال المحفوظة. يبقى حفظ تقارير الأعطال مفعّلًا.';
 
   @override
   String get crashReportsDeleteConfirm => 'حذف تقارير الأعطال';
 
   @override
   String get crashReportsNote =>
-      'يُحفظ نوع المشكلة ووقت حدوثها فقط، دون رسائل الأخطاء أو المحادثات أو كلمات المرور. يحتفظ بآخر 20 تقريرًا. تشغيل هذا الخيار أو إيقافه يمسح أيضًا الأخطاء المحفوظة في هذه الصفحة.';
+      'يُحفظ نوع المشكلة ووقت حدوثها فقط، دون رسائل الأخطاء أو المحادثات أو كلمات المرور. يحتفظ بآخر 20 تقريرًا.';
+
+  @override
+  String crashReportsOnClears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تشغيل هذا الخيار يمسح الأخطاء المحفوظة أعلاه وعددها $count.',
+      two: 'تشغيل هذا الخيار يمسح الخطأين المحفوظين أعلاه.',
+      one: 'تشغيل هذا الخيار يمسح الخطأ المحفوظ أعلاه.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get crashReportsOffDeletes =>
+      'إيقاف هذا الخيار يحذف تقارير الأعطال المحفوظة.';
+
+  @override
+  String crashReportsOffDeletesAndClears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'إيقاف هذا الخيار يحذف تقارير الأعطال المحفوظة ويمسح الأخطاء المحفوظة أعلاه وعددها $count.',
+      two:
+          'إيقاف هذا الخيار يحذف تقارير الأعطال المحفوظة ويمسح الخطأين المحفوظين أعلاه.',
+      one:
+          'إيقاف هذا الخيار يحذف تقارير الأعطال المحفوظة ويمسح الخطأ المحفوظ أعلاه.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String crashReportsOffClears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'إيقاف هذا الخيار يمسح الأخطاء المحفوظة أعلاه وعددها $count.',
+      two: 'إيقاف هذا الخيار يمسح الخطأين المحفوظين أعلاه.',
+      one: 'إيقاف هذا الخيار يمسح الخطأ المحفوظ أعلاه.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String crashReportsDeleteBodyWithErrors(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'يحذف تقارير الأعطال ويمسح الأخطاء المحفوظة أعلاه وعددها $count. يبقى حفظ تقارير الأعطال مفعّلًا.',
+      two:
+          'يحذف تقارير الأعطال ويمسح الخطأين المحفوظين أعلاه. يبقى حفظ تقارير الأعطال مفعّلًا.',
+      one:
+          'يحذف تقارير الأعطال ويمسح الخطأ المحفوظ أعلاه. يبقى حفظ تقارير الأعطال مفعّلًا.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get crashReportsClearedToo => 'تُحذف تقارير الأعطال المحفوظة أيضًا.';
 }

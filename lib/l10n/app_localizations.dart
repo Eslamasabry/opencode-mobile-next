@@ -43786,7 +43786,7 @@ abstract class AppLocalizations {
   /// crash-consent (BD7): Confirmation body before deleting crash reports.
   ///
   /// In en, this message translates to:
-  /// **'Deletes the crash reports and the saved errors on this page. Saving crash reports stays on.'**
+  /// **'Deletes the saved crash reports. Saving crash reports stays on.'**
   String get crashReportsDeleteBody;
 
   /// crash-consent (BD7): Confirm button that deletes the saved crash reports.
@@ -43795,11 +43795,47 @@ abstract class AppLocalizations {
   /// **'Delete crash reports'**
   String get crashReportsDeleteConfirm;
 
-  /// crash-consent (BD7): Muted note under the crash reports group: what is kept, how much, and that toggling clears saved errors.
+  /// crash-consent (BD7): Muted note under the crash reports group: what is kept and how much.
   ///
   /// In en, this message translates to:
-  /// **'Only what kind of problem happened and when is kept: no error messages, conversations or passwords. Keeps the latest 20 reports. Switching this on or off also clears the saved errors on this page.'**
+  /// **'Only what kind of problem happened and when is kept: no error messages, conversations or passwords. Keeps the latest 20 reports.'**
   String get crashReportsNote;
+
+  /// crash-consent (BD7): Line under the switch while off, only when saved errors exist: turning on clears them.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Turning this on clears the saved error above.} other{Turning this on clears the {count} saved errors above.}}'**
+  String crashReportsOnClears(int count);
+
+  /// crash-consent (BD7): Line under the switch while on, when crash reports are saved and no other errors are.
+  ///
+  /// In en, this message translates to:
+  /// **'Turning this off deletes the saved crash reports.'**
+  String get crashReportsOffDeletes;
+
+  /// crash-consent (BD7): Line under the switch while on, when crash reports and other saved errors exist.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Turning this off deletes the saved crash reports and clears the saved error above.} other{Turning this off deletes the saved crash reports and clears the {count} saved errors above.}}'**
+  String crashReportsOffDeletesAndClears(int count);
+
+  /// crash-consent (BD7): Line under the switch while on, when no crash reports but other saved errors exist.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Turning this off clears the saved error above.} other{Turning this off clears the {count} saved errors above.}}'**
+  String crashReportsOffClears(int count);
+
+  /// crash-consent (BD7): Confirmation body before deleting crash reports, when other saved errors are cleared too.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Deletes the crash reports and clears the saved error above. Saving crash reports stays on.} other{Deletes the crash reports and clears the {count} saved errors above. Saving crash reports stays on.}}'**
+  String crashReportsDeleteBodyWithErrors(int count);
+
+  /// crash-consent (BD7): Consequence line on the Clear errors confirmation when crash reports are saved.
+  ///
+  /// In en, this message translates to:
+  /// **'The saved crash reports are deleted too.'**
+  String get crashReportsClearedToo;
 }
 
 class _AppLocalizationsDelegate

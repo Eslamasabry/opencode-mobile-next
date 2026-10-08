@@ -126,9 +126,20 @@ void main() {
       _inSection(find.text('The app hit an unexpected error')),
       findsOneWidget,
     );
-    expect(_inSection(find.textContaining('Invalid state')), findsNothing);
     expect(_inSection(find.textContaining('private-value')), findsNothing);
     expect(find.text('Delete 2 saved crash reports'), findsOneWidget);
+    // Each crash shows once: not again in the recent errors, and no raw
+    // category or source id is row text anywhere on the page.
+    expect(_key('clear-app-diagnostics'), findsNothing);
+    expect(find.textContaining('recent error'), findsNothing);
+    expect(find.textContaining('Invalid state'), findsNothing);
+    expect(find.textContaining('Android reported'), findsNothing);
+    expect(find.textContaining('crash.'), findsNothing);
+    // Only saved reports to lose: the switch says just that.
+    expect(
+      find.text('Turning this off deletes the saved crash reports.'),
+      findsOneWidget,
+    );
 
     await _tapKey(tester, 'crash-report-1');
 
@@ -256,6 +267,85 @@ void main() {
     opening.complete(crash);
     await tester.pumpAndSettle();
     expect(_key('crash-reports-switch'), findsOneWidget);
+  });
+
+  testWidgets('the switch says what it clears only when something would '
+      'go', (tester) async {
+    await pump(tester, controller: crash);
+    await tester.ensureVisible(_key('crash-reports-switch'));
+    await tester.pumpAndSettle();
+    // Nothing saved: no warning line, and the note does not mention it.
+    expect(_key('crash-reports-effect'), findsNothing);
+    expect(find.textContaining('clears'), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+
+    diagnostics.record(StateError('handled'), null, source: 'flutter');
+    await pump(tester, controller: crash);
+    await tester.ensureVisible(_key('crash-reports-switch'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 recent error'), findsOneWidget);
+    expect(
+      find.text('Turning this on clears the saved error above.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('with other saved errors, turning off and Delete name them', (
+    tester,
+  ) async {
+    seedReports();
+    diagnostics
+      ..record(StateError('one'), null, source: 'flutter')
+      ..record(ArgumentError('two'), null, source: 'widget');
+    await pump(tester, controller: crash);
+
+    // The two handled errors are listed; the two crashes are not.
+    expect(find.text('2 recent errors'), findsOneWidget);
+    await tester.ensureVisible(_key('crash-reports-delete'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        'Turning this off deletes the saved crash reports and clears the 2 '
+        'saved errors above.',
+      ),
+      findsOneWidget,
+    );
+
+    await _tapKey(tester, 'crash-reports-delete');
+    expect(
+      find.text(
+        'Deletes the crash reports and clears the 2 saved errors above. '
+        'Saving crash reports stays on.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('Clear errors says the saved crash reports go too', (
+    tester,
+  ) async {
+    seedReports();
+    diagnostics.record(StateError('one'), null, source: 'flutter');
+    await pump(tester, controller: crash);
+
+    await _tapKey(tester, 'clear-app-diagnostics');
+    expect(
+      find.text('The saved crash reports are deleted too.'),
+      findsOneWidget,
+    );
+    await _tapKey(tester, 'clear-app-diagnostics-confirm');
+    expect(crash.savedCount, 0);
+  });
+
+  testWidgets('the page Details fold sits on the screen gutter', (
+    tester,
+  ) async {
+    await pump(tester, controller: crash);
+    final toggle = find.byKey(const ValueKey('kit-details-toggle'));
+    await tester.ensureVisible(toggle);
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(toggle).dx, 16);
+    expect(tester.getTopRight(toggle).dx, 412 - 16);
   });
 
   testWidgets('Arabic copy', (tester) async {
