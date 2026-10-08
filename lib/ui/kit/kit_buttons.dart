@@ -35,6 +35,7 @@ class KitAction {
     this.shortcut,
     this.calm = false,
     this.neutral = false,
+    this.semanticsLabel,
   }) : copyText = null,
        redact = true;
 
@@ -56,7 +57,8 @@ class KitAction {
        working = false,
        disabledReason = null,
        calm = false,
-       neutral = false;
+       neutral = false,
+       semanticsLabel = null;
 
   /// A verb naming what happens (COPY-8): "Delete conversation".
   final String label;
@@ -95,6 +97,12 @@ class KitAction {
   /// A control that is not the sheet's main act (Stop): drawn as a neutral
   /// secondary button even in the primary slot, never filled with the accent.
   final bool neutral;
+
+  /// What a screen reader says instead of [label], when a compact label
+  /// leans on the words around it: "Resume" on a line about the background
+  /// connection is read as "Resume background connection" (COPY-8: the
+  /// action still names its target).
+  final String? semanticsLabel;
 
   /// Set only by [KitAction.copy].
   final String Function()? copyText;
@@ -147,7 +155,8 @@ class KitButton extends StatelessWidget {
        calm = false,
        disabledReason = null,
        copied = false,
-       redact = true;
+       redact = true,
+       semanticsLabel = null;
 
   const KitButton.primary({
     super.key,
@@ -164,7 +173,8 @@ class KitButton extends StatelessWidget {
        copyText = null,
        disabledReason = null,
        copied = false,
-       redact = true;
+       redact = true,
+       semanticsLabel = null;
 
   const KitButton.secondary({
     super.key,
@@ -181,7 +191,8 @@ class KitButton extends StatelessWidget {
        copyText = null,
        disabledReason = null,
        copied = false,
-       redact = true;
+       redact = true,
+       semanticsLabel = null;
 
   const KitButton.tertiary({
     super.key,
@@ -198,7 +209,8 @@ class KitButton extends StatelessWidget {
        copyText = null,
        disabledReason = null,
        copied = false,
-       redact = true;
+       redact = true,
+       semanticsLabel = null;
 
   /// Used only by [fromAction] to carry what a plain [KitAction] cannot
   /// name as a public constructor parameter without widening the four
@@ -220,6 +232,7 @@ class KitButton extends StatelessWidget {
     this.copied = false,
     this.redact = true,
     this.calm = false,
+    this.semanticsLabel,
   });
 
   factory KitButton.fromAction(
@@ -242,6 +255,7 @@ class KitButton extends StatelessWidget {
     copyText: action.copyText,
     disabledReason: action.disabledReason,
     redact: action.redact,
+    semanticsLabel: action.semanticsLabel,
   );
 
   /// A tertiary button's side padding; blocks pull the row back by it so
@@ -270,6 +284,9 @@ class KitButton extends StatelessWidget {
 
   /// Set only through [fromAction] from [KitAction.redact].
   final bool redact;
+
+  /// Set only through [fromAction] from [KitAction.semanticsLabel].
+  final String? semanticsLabel;
 
   /// Set only by [_KitCopyButton]: keys the check icon `kit-action-copied`
   /// instead of `kit-button-icon` while a copy button shows it.
@@ -311,12 +328,16 @@ class KitButton extends StatelessWidget {
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;
     final still = KitMotion.reduced(context);
-    final Widget labelWidget = _KitButtonLabel(
+    final spoken = semanticsLabel;
+    final Widget shownLabel = _KitButtonLabel(
       label: label,
       shortcut: shortcut,
       role: role,
       maxLines: maxLines,
     );
+    final Widget labelWidget = spoken == null
+        ? shownLabel
+        : Semantics(label: spoken, excludeSemantics: true, child: shownLabel);
     Widget? leading;
     Widget child = labelWidget;
     if (role != KitButtonRole.tertiary && icon != null) {
@@ -529,7 +550,7 @@ class KitButton extends StatelessWidget {
       container: inFlight,
       button: inFlight ? true : null,
       enabled: inFlight ? false : null,
-      label: inFlight ? label : null,
+      label: inFlight ? (semanticsLabel ?? label) : null,
       excludeSemantics: inFlight,
       child: result,
     );

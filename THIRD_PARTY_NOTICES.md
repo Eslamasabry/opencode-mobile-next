@@ -332,6 +332,7 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `petitparser` | 7.0.2 | MIT | Copyright (c) 2006-2024 Lukas Renggli | runtime |
 | `platform` | 3.1.6 | BSD-3-Clause | Copyright 2017, the Dart project authors. All rights reserved | runtime |
 | `plugin_platform_interface` | 2.1.8 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
+| `process` | 5.0.6 | BSD-3-Clause | Copyright 2013, the Dart project authors | test-only |
 | `pub_semver` | 2.2.0 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
 | `qr` | 3.0.2 | BSD-3-Clause | Copyright 2014, the Dart QR project authors. All rights reserved | runtime |
 | `quiver` | 3.2.2 | Apache-2.0 | — | runtime |
@@ -374,6 +375,7 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `state_notifier` | 1.0.0 | MIT | Copyright (c) 2020 Remi Rousselet | runtime |
 | `stream_channel` | 2.1.4 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
 | `string_scanner` | 1.4.1 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
+| `sync_http` | 0.3.1 | BSD-3-Clause | Copyright 2017, the Dart project authors | test-only |
 | `term_glyph` | 1.2.2 | BSD-3-Clause | Copyright 2017, the Dart project authors | runtime |
 | `test_api` | 0.7.12 | BSD-3-Clause | Copyright 2018, the Dart project authors | runtime |
 | `typed_data` | 1.4.0 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
@@ -393,6 +395,7 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `vector_math` | 2.4.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
 | `vm_service` | 15.3.0 | BSD-3-Clause | Copyright 2015, the Dart project authors | test-only |
 | `web` | 1.1.1 | BSD-3-Clause | Copyright 2023, the Dart project authors | runtime |
+| `webdriver` | 3.2.0 | Apache-2.0 | — | test-only |
 | `win32` | 6.4.0 | BSD-3-Clause | Copyright (c) 2024, Halil Durmus | runtime |
 | `window_manager` | 0.5.2 | MIT | Copyright (c) 2022-present LiJianying <lijy91@foxmail.com> | runtime |
 | `windows_file_picker` | 1.2.0 | MIT | Copyright (c) 2018 Miguel Ruivo | runtime |

@@ -1,0 +1,5 @@
+Analyzing 12 items...                                           
+
+   info • Unnecessary use of multiple underscores. Try using '_' • lib/background/signin_foreground.dart:308:71 • unnecessary_underscores
+
+1 issue found. (ran in 8.6s)

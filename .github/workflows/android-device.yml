@@ -72,8 +72,10 @@ jobs:
 
       - name: Test bounded fixture and result validation
         run: |
-          python3 -m unittest tool.qa.test_bd9_device_smoke
-          tool/qa/machine_lock.sh test -- flutter test --no-pub --concurrency=1 tool/qa/bd9_device_smoke_fixture_test.dart
+          python3 -m unittest tool.qa.test_bd9_device_smoke tool.qa.test_bd9_release_build tool.qa.test_bd9_normal_restore
+          tool/qa/machine_lock.sh test -- flutter test --no-pub --concurrency=1 \
+            tool/qa/bd9_device_smoke_fixture_test.dart tool/qa/bd9_smoke_reporting_test.dart \
+            tool/qa/bd9_conversation_finder_test.dart
 
       - name: Generate ignored Gradle wrapper
         run: >-

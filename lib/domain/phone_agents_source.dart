@@ -18,6 +18,13 @@ import 'merged_chat_feed.dart';
 import 'phone_agent_host.dart';
 import 'phone_agents.dart';
 
+/// Optional payload removal. Never signs out, deletes chats or stops Claude.
+abstract interface class PhoneAgentRemovalSource {
+  bool canRemoveAgent(String agentId);
+  String? get removingAgentId;
+  Future<AgentRemovalResult> removeAgent(String agentId);
+}
+
 /// Stable id of OpenCode in [ChatAgentChoice.agentId] (the chat feed's
 /// [defaultChatAgentId]).
 const openCodeChatAgentId = defaultChatAgentId;

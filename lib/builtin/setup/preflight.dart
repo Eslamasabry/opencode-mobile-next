@@ -33,18 +33,30 @@ const minimumSetupMemoryMb = 1800;
 /// which report a little under their label.
 const comfortableSetupMemoryMb = 3072;
 
-/// Bytes required on disk beyond a selection's own download size:
-/// unpacking, apt/npm scratch space and the Ubuntu base itself take real
-/// disk beyond what gets downloaded. Mirrors the order of magnitude the
-/// Termux install script already asks for (`bridge.dart`'s
-/// `INSTALL_REQUIRED_MB=2048` against "about 1 GB installed").
-int requiredSetupFreeBytes(int downloadBytes) {
+/// Free space needed before a download starts. A known extracted payload
+/// coexists with its retained archive during installation, plus 64 MiB of
+/// scratch space. Unknown payload sizes retain the existing 300 MB/2x policy;
+/// estimates here never become download-consent evidence.
+int requiredSetupFreeBytes(int downloadBytes, {int? installedBytes}) {
   const maximumBytes = 0x7fffffffffffffff;
+  const scratchBytes = 64 * 1024 * 1024;
   final nonnegative = math.max(downloadBytes, 0);
   final doubled = nonnegative > maximumBytes ~/ 2
       ? maximumBytes
       : nonnegative * 2;
-  return math.max(doubled, 300 * 1000 * 1000);
+  final legacy = math.max(doubled, 300 * 1000 * 1000);
+  if (installedBytes == null || installedBytes <= 0) return legacy;
+  final retainedAndExtracted = _saturatedSetupBytes(
+    nonnegative,
+    installedBytes,
+  );
+  final peak = _saturatedSetupBytes(retainedAndExtracted, scratchBytes);
+  return math.max(legacy, peak);
+}
+
+int _saturatedSetupBytes(int first, int second) {
+  const maximumBytes = 0x7fffffffffffffff;
+  return first >= maximumBytes - second ? maximumBytes : first + second;
 }
 
 enum SetupPreflightIssue { unsupportedAbi, lowMemory, lowSpace }
@@ -102,9 +114,13 @@ class SetupPreflightResult {
 SetupPreflightResult checkSetupStoragePreflight(
   int? availableBytes, {
   required int downloadBytes,
+  int? installedBytes,
 }) {
   if (availableBytes == null) return const SetupPreflightResult.ok();
-  final required = requiredSetupFreeBytes(downloadBytes);
+  final required = requiredSetupFreeBytes(
+    downloadBytes,
+    installedBytes: installedBytes,
+  );
   if (availableBytes < required) {
     return SetupPreflightResult.lowSpace(required - availableBytes);
   }
@@ -121,6 +137,7 @@ SetupPreflightResult checkSetupStoragePreflight(
 SetupPreflightResult checkSetupPreflight(
   VoiceDeviceInfo device, {
   required int downloadBytes,
+  int? installedBytes,
 }) {
   final abis = device.supportedAbis;
   if (abis.isNotEmpty && !abis.any(supportedSetupAbis.contains)) {
@@ -133,6 +150,7 @@ SetupPreflightResult checkSetupPreflight(
   final storage = checkSetupStoragePreflight(
     device.availableStorageBytes,
     downloadBytes: downloadBytes,
+    installedBytes: installedBytes,
   );
   if (!storage.supported) return storage;
   if (memory != null && memory < comfortableSetupMemoryMb) {

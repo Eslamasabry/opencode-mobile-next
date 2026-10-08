@@ -1143,11 +1143,20 @@ void main() {
       ),
     );
     await tester.pump();
-    // The shared line reports reconnection immediately, then escalates after
-    // the controller's eight-second grace period without adding another slot.
+    // The server pill reports reconnection at once, and alone: no second
+    // line saying the same thing under it (one indicator). After the
+    // controller's eight-second grace period the shared line appears with
+    // its way forward.
     final line = find.byKey(const ValueKey('connection-status-banner'));
-    expect(line, findsOneWidget);
-    expect(find.text('Reconnecting to This device (Termux)…'), findsOneWidget);
+    expect(line, findsNothing);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('server-switcher-button')),
+        matching: find.textContaining('Reconnecting'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Reconnecting to This device (Termux)…'), findsNothing);
     expect(find.text("This device (Termux) isn't answering"), findsNothing);
     await tester.pump(const Duration(seconds: 8));
     await tester.pump(const Duration(milliseconds: 300));

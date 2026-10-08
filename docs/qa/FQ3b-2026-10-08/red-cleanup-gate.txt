@@ -1,0 +1,19 @@
+Guard removal: cleanup-gate
+Expected nonzero test exit; actual exit: 1
+Source restored immediately after execution.
+
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_evidence_test.dart
+00:00 +0: late cleanup failure replaces every pass before matrix qualification
+00:00 +0 -1: late cleanup failure replaces every pass before matrix qualification [E]
+  Expected: {'state': 'fail', 'code': 'owned_session_cleanup_failed', 'facts': {}}
+    Actual: {'state': 'pass', 'code': 'verified', 'facts': {'asserted': true}}
+     Which: at location ['state'] is 'pass' instead of 'fail'
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/fq3_evidence_test.dart 248:11                  main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_evidence_test.dart: late cleanup failure replaces every pass before matrix qualification

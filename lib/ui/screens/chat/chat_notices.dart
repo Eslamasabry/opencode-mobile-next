@@ -133,7 +133,12 @@ extension _ChatNotices on _ChatScreenState {
       return;
     }
     await Navigator.of(context).push(
-      KitPageRoute<void>(builder: (_) => IntegrationsScreen(controller: _conn)),
+      KitPageRoute<void>(
+        builder: (_) => IntegrationsScreen(
+          controller: _conn,
+          mode: IntegrationsMode.providers,
+        ),
+      ),
     );
   }
 

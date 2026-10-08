@@ -1,0 +1,58 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: no lib file grows past its line budget
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: the baseline only lists files over the limit
+00:00 +2: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart
+00:01 +2: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: endpoint policy cleartext is limited to this device and Tailscale
+00:01 +3: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: endpoint policy profile validators agree and an empty password is allowed
+00:01 +4: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: endpoint policy a paseo profile round-trips without its password
+00:01 +5: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a rejected password is an authentication failure
+00:01 +6: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: hello claims only what the client implements
+00:01 +7: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: the agent's own commands are listed without its plumbing
+00:01 +8: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: an update keeps the conversation's model and mode
+00:01 +9: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: sessions are this folder's unarchived agents
+00:01 +10: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: ready runtimes become providers; modes become agents
+00:01 +11: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a daemon still listing its models is waited for, not believed
+00:01 +12: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a new conversation stays local until its first prompt names the runtime
+00:01 +13: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a new conversation keeps its app id while the daemon uses its own
+00:01 +14: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a new conversation replays events that raced ahead of the create answer
+00:01 +15: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a new conversation a spawn-time idle snapshot does not end the run
+00:01 +16: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming a finished turn finishes its replies
+00:01 +17: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming assistant text is announced once, then streamed as deltas
+00:01 +18: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming a replayed sequence number is ignored
+00:01 +19: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming reasoning deltas share one message until another item
+00:01 +20: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming a tool call is one message updated by snapshots
+00:01 +21: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming a failed turn surfaces safe fixed copy
+00:01 +22: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming events for another folder's agent are dropped
+00:01 +23: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permissions a write request becomes an edit card with its file
+00:01 +24: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permissions once allows; always also applies the provider's rule
+00:01 +25: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permissions reject denies with the reason; cancel also interrupts
+00:01 +26: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permissions an answered request does not return from a stale snapshot
+00:01 +27: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permissions a request answered elsewhere is retired by the next snapshot
+00:01 +28: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: history maps the merged timeline and primes the live stream
+00:01 +29: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: delete archives, and an archive elsewhere removes the session
+00:01 +30: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a refused request is a fixed failure, never the daemon's text
+00:01 +31: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a dropped socket reconnects and re-reads the agent list
+00:02 +32: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: sub-agents a sub-agent is its conversation's child, and its card opens it
+00:02 +33: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: sub-agents its steps stream into its own conversation
+00:02 +34: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: sub-agents its history is read from the helper; it takes no replies
+00:02 +35: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: sub-agents an old conversation's cards link to the sub-agents the helper still knows
+00:02 +36: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: probe bad input never opens a socket
+00:02 +37: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: probe a verified daemon names its ready runtimes
+00:02 +38: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permission mapping covers shell and unknown tools
+00:02 +39: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart
+00:03 +39: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: ordinary first prompt retains the original create path
+00:03 +40: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: browser first prompt creates cold, maps, reserves then sends once
+00:03 +41: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: failed browser reserve sends nothing until explicitly turned off
+00:03 +42: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: reserve precedes direct modes models and scoped command discovery
+00:03 +43: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: abort and delete revoke before daemon mutation
+00:03 +44: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: resume retires old generation, maps new ID and reserves before send
+00:03 +45: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: explicit new chat replacement revokes old authority
+00:03 +46: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: late reservation after session deletion is revoked and never sends
+00:03 +47: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: profile revoke fences in-flight reservation without blocking cleanup
+00:03 +48: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: close retires authority before closing the transport
+00:03 +49: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: cleanup quarantine preserves intent and refuses an ordinary fallback
+00:03 +50: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: cancel or delete while cold creation is pending never resurrects a turn
+00:03 +51: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: enabling browser while provider discovery waits prevents ordinary create
+00:03 +52: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: shared request suppresses draft commands before local inventory loads
+00:03 +53: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_browser_launch_test.dart: trusted folder rebinding uses new source and retains old source intent
+00:03 +54: All tests passed!

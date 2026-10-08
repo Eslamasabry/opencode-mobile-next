@@ -1,0 +1,7 @@
+{
+  "device": "emulator-5554",
+  "version_code": 2204,
+  "result": "FAIL",
+  "stage": "apk_verification",
+  "error": "apk_runner_mismatch"
+}

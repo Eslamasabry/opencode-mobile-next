@@ -337,18 +337,24 @@ void main() {
       expect(app.installs, 0);
     });
 
-    test('chosen, it is checked by the app (not in Linux) and runs as a '
-        'step after the start that the native job waits longer for', () async {
-      await engine.run({'voice'});
-      expect(jobIds().last, 'voice');
-      expect(jobIds().indexOf('start'), jobIds().length - 2);
-      expect(app.checks, 1);
-      expect(linux.runs.single, isNot(contains('voice')));
-      final step = spec(linux, 'voice');
-      expect(step['step'], isTrue);
-      expect(step['script'], isNull);
-      expect(step['data'], {'waitMinutes': '$appStepWaitMinutes'});
-    });
+    test(
+      'chosen, it is checked by the app (not in Linux) and runs after '
+      'the start with storage admission and a bounded download wait',
+      () async {
+        await engine.run({'voice'});
+        expect(jobIds().last, 'voice');
+        expect(jobIds().indexOf('start'), jobIds().length - 2);
+        expect(app.checks, 1);
+        expect(linux.runs.single, isNot(contains('voice')));
+        final step = spec(linux, 'voice');
+        expect(step['step'], isTrue);
+        expect(step['script'], isNull);
+        expect(step['data'], {
+          'requiredFreeBytes': '320000000',
+          'waitMinutes': '$appStepWaitMinutes',
+        });
+      },
+    );
 
     test('already installed, it is skipped', () async {
       app.installed = true;

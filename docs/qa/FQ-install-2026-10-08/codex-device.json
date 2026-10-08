@@ -1,0 +1,283 @@
+[
+  {
+    "phase": "restore-normal-before-session",
+    "at": 893771.74,
+    "success": true
+  },
+  {
+    "phase": "space-before",
+    "at": 893771.79,
+    "availableBytes": 1785810944
+  },
+  {
+    "phase": "inventory-before",
+    "at": 893792.11,
+    "allocatedBytes": 0,
+    "pinMatches": false,
+    "linkMatches": false,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": false,
+    "staging": [],
+    "lockPresent": false
+  },
+  {
+    "phase": "space-before-cancel",
+    "at": 893792.35,
+    "availableBytes": 1884884992
+  },
+  {
+    "phase": "install-dispatched",
+    "at": 893797.82
+  },
+  {
+    "phase": "mid-download",
+    "at": 893805.69,
+    "component": {
+      "state": "running",
+      "stage": "Installing agent",
+      "done": 4288512,
+      "total": 109304578,
+      "version": null
+    }
+  },
+  {
+    "phase": "cancel-tapped",
+    "at": 893806.12
+  },
+  {
+    "phase": "native-terminal",
+    "at": 893806.18,
+    "state": "cancelled",
+    "component": {
+      "state": "pending",
+      "stage": "Installing agent",
+      "done": 4288512,
+      "total": 109304578,
+      "version": null
+    }
+  },
+  {
+    "phase": "cancel-result",
+    "at": 893806.51,
+    "cancelled": true,
+    "allocatedBytes": 8192,
+    "pinMatches": false,
+    "linkMatches": false,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": true,
+    "staging": [],
+    "lockPresent": false
+  },
+  {
+    "phase": "retry-dispatched",
+    "at": 893817.41,
+    "availableBytes": 1884868608
+  },
+  {
+    "phase": "native-terminal",
+    "at": 893835.45,
+    "state": "done",
+    "component": {
+      "state": "done",
+      "stage": "Installing agent",
+      "done": 109304578,
+      "total": 109304578,
+      "version": null
+    }
+  },
+  {
+    "phase": "retry-result",
+    "at": 893835.45,
+    "state": "done",
+    "component": {
+      "state": "done",
+      "stage": "Installing agent",
+      "done": 109304578,
+      "total": 109304578,
+      "version": null
+    }
+  },
+  {
+    "phase": "fresh-phone-check-ui",
+    "at": 894004.77,
+    "passed": true,
+    "texts": [
+      "Back",
+      "Agents",
+      "Agents\nClaude Code\nReady\nClaude Code is ready on this phone.\nCodex is ready on this phone.\nChecking fx\u2026",
+      "Codex\nSign in needed",
+      "Sign in to Codex",
+      "Gemini CLI\nNot installed \u00b7 21 MB",
+      "Install Gemini CLI",
+      "Qwen Code\nNot installed \u00b7 31 MB",
+      "Install Qwen Code",
+      "Goose\nNot installed \u00b7 95 MB",
+      "Install Goose",
+      "Oh My Pi\nNot installed \u00b7 230 MB",
+      "Install Oh My Pi",
+      "fx\nSign in needed",
+      "Sign in to fx",
+      "Check this phone\nCheck this phone, Check this phone",
+      "Done\nInstalled",
+      "Done\nVersion",
+      "Done\nConnection",
+      "Done\nReady"
+    ]
+  },
+  {
+    "phase": "phone-check",
+    "at": 894004.83,
+    "gates": [
+      {
+        "profile": "1790839392073695",
+        "matches": true,
+        "architecture": "x64"
+      }
+    ]
+  },
+  {
+    "phase": "account-free-app-state",
+    "at": 894007.19,
+    "texts": [
+      "Back",
+      "Agents",
+      "Agents\nClaude Code\nReady\nClaude Code is ready on this phone.\nCodex is ready on this phone.\nChecking fx\u2026",
+      "Codex\nSign in needed",
+      "Sign in to Codex",
+      "Gemini CLI\nNot installed \u00b7 21 MB",
+      "Install Gemini CLI",
+      "Qwen Code\nNot installed \u00b7 31 MB",
+      "Install Qwen Code",
+      "Goose\nNot installed \u00b7 95 MB",
+      "Install Goose",
+      "Oh My Pi\nNot installed \u00b7 230 MB",
+      "Install Oh My Pi",
+      "fx\nSign in needed",
+      "Sign in to fx",
+      "Check this phone\nCheck this phone, Check this phone",
+      "Done\nInstalled",
+      "Done\nVersion",
+      "Done\nConnection",
+      "Done\nReady"
+    ]
+  },
+  {
+    "phase": "installed-inventory",
+    "at": 894008.77,
+    "allocatedBytes": 289153024,
+    "pinMatches": true,
+    "linkMatches": true,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": true,
+    "staging": [],
+    "lockPresent": false
+  },
+  {
+    "phase": "version-probe",
+    "at": 894009.18,
+    "exitCode": 0,
+    "versionMatches": true
+  },
+  {
+    "phase": "auth-probe",
+    "at": 894009.59,
+    "state": "error",
+    "error": "probeUnsupported"
+  },
+  {
+    "phase": "account-free-cli-launch",
+    "at": 894012.62,
+    "agent": "codex",
+    "state": "signed_out",
+    "sentPrompt": false,
+    "sentLogin": false,
+    "initialize": {
+      "state": "response"
+    },
+    "accountRead": {
+      "state": "response"
+    },
+    "requiresSignIn": true,
+    "processExitCode": 0,
+    "invalidStdoutLines": 0,
+    "clientRequestsRefused": 0,
+    "notifications": 2,
+    "rawBytes": {
+      "stdout": 847,
+      "stderr": 509
+    },
+    "stderrClass": "runtime_error",
+    "leftoverOwnedPids": [],
+    "elapsedSeconds": 2.63
+  },
+  {
+    "phase": "cleanup-before",
+    "at": 894012.86,
+    "availableBytes": 1659863040,
+    "allocatedBytes": 289153024,
+    "pinMatches": true,
+    "linkMatches": true,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": true,
+    "staging": [],
+    "lockPresent": false
+  },
+  {
+    "phase": "manual-cleanup",
+    "at": 894013.14,
+    "allocatedBytes": 289153024,
+    "pinMatches": true,
+    "linkMatches": true,
+    "targetPids": [],
+    "removed": true,
+    "leftovers": false,
+    "staging": [],
+    "lockPresent": false
+  },
+  {
+    "phase": "cleanup-after",
+    "at": 894013.4,
+    "availableBytes": 1948995584,
+    "allocatedBytes": 0,
+    "pinMatches": false,
+    "linkMatches": false,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": false,
+    "staging": [],
+    "lockPresent": false
+  },
+  {
+    "phase": "cleanup-ui",
+    "at": 894030.47,
+    "texts": [
+      "Back",
+      "Agents",
+      "Agents",
+      "Claude Code\nReady",
+      "Codex\nNot installed \u00b7 102 MB",
+      "Install Codex",
+      "Gemini CLI\nNot installed \u00b7 21 MB",
+      "Install Gemini CLI",
+      "Qwen Code\nNot installed \u00b7 31 MB",
+      "Install Qwen Code",
+      "Goose\nNot installed \u00b7 95 MB",
+      "Install Goose",
+      "Oh My Pi\nNot installed \u00b7 230 MB",
+      "Install Oh My Pi",
+      "fx\nSign in needed",
+      "Sign in to fx",
+      "Check this phone",
+      "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code"
+    ]
+  },
+  {
+    "phase": "normal-app-final",
+    "at": 894030.63,
+    "version2196": true
+  }
+]

@@ -24,6 +24,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/models.dart';
 import '../domain/session_history.dart';
+import '../domain/tool_label.dart';
 import '../domain/session_stop.dart';
 import '../codex/gateway.dart';
 import '../codex/transport.dart' show CodexFailure, CodexFailureKind;
@@ -156,6 +157,7 @@ part 'connection/prompt_shelf.dart';
 part 'connection/worktrees.dart';
 part 'connection/chat_feed.dart';
 part 'connection/phone_agents.dart';
+part 'connection/phone_agents_check.dart';
 part 'connection/phone_agents_cache.dart';
 part 'connection/phone_agents_backend.dart';
 part 'connection/phone_agents_routes.dart';
@@ -735,6 +737,7 @@ class ConnectionController extends ChangeNotifier
         busySessions: busySessions,
         connected: status == StreamStatus.connected,
         profileID: _connectedProfile?.id ?? store.activeId ?? '',
+        untitledLabel: _shellStrings().launchUiPinnedUntitled,
       );
       _pendingWidgetSnapshotWrite = write;
       unawaited(write);
@@ -745,37 +748,49 @@ class ConnectionController extends ChangeNotifier
 
   /// Names what a tool is doing without repeating its input: no command,
   /// path, query, or URL reaches the notification shade.
-  static String toolSentence(String tool) {
+  ///
+  /// [l10n] says it in the person's language (the live notification is
+  /// built without a widget tree); English where nobody passes it.
+  static String toolSentence(String tool, [AppLocalizations? l10n]) {
+    final words = l10n ?? lookupAppLocalizations(const Locale('en'));
     switch (tool.toLowerCase()) {
       case 'bash':
       case 'shell':
-        return 'Running a command…';
+        return words.liveToolCommand;
       case 'edit':
       case 'write':
       case 'patch':
       case 'multiedit':
       case 'apply_patch':
-        return 'Editing files…';
+        return words.liveToolEdit;
       case 'read':
-        return 'Reading files…';
+        return words.liveToolRead;
       case 'grep':
       case 'glob':
       case 'list':
       case 'ls':
-        return 'Searching files…';
+        return words.liveToolSearch;
       case 'webfetch':
       case 'websearch':
-        return 'Browsing the web…';
+        return words.liveToolWeb;
       case 'task':
       case 'subagent':
-        return 'Running a subagent…';
+        return words.liveToolSubagent;
       case 'todowrite':
       case 'todoread':
-        return 'Planning…';
+        return words.liveToolPlan;
       case '':
-        return 'Working…';
+        return words.liveToolWorking;
+      case _ when isAgentCardTool(tool):
+        return words.liveToolCard;
+      case _ when isBackgroundTaskNotice(tool):
+        return words.liveToolBackgroundTask;
       default:
-        return 'Running $tool…';
+        // Never the raw id (`render_mermaid_diagram`): its words.
+        final toolWords = toolIdWords(tool);
+        return toolWords.isEmpty
+            ? words.liveToolWorking
+            : words.liveToolOther(toolWords);
     }
   }
 

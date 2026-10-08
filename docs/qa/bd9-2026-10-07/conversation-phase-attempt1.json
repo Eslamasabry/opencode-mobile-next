@@ -1,0 +1,18 @@
+{
+  "device": "emulator-5554",
+  "version_code": 2201,
+  "result": "FAIL",
+  "native_checks": [
+    "auth_pipe_before_http",
+    "private_failure_frames",
+    "qa_password_file",
+    "authenticated_health_tiers",
+    "registered_pdf_identity",
+    "receipt_before_protection",
+    "stop_callback_order"
+  ],
+  "failure_code": "flutter_conversation",
+  "normal_app_restore": "PASS",
+  "stage": "instrumentation",
+  "error": "flutter_result_invalid"
+}

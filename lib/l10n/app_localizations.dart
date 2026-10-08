@@ -7,6 +7,11 @@ import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_ar.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+import 'app_localizations_ja.dart';
+import 'app_localizations_pt.dart';
+import 'app_localizations_ru.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -96,6 +101,11 @@ abstract class AppLocalizations {
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
     Locale('en'),
+    Locale('es'),
+    Locale('ja'),
+    Locale('pt'),
+    Locale('ru'),
+    Locale('zh'),
   ];
 
   /// No description provided for @servicesTitle.
@@ -14496,7 +14506,7 @@ abstract class AppLocalizations {
   /// **'Read-only'**
   String get teamUiAccessReadOnly;
 
-  /// Hint inside the host address field of the manual add form
+  /// Field example: Hint inside the host address field of the manual add form
   ///
   /// In en, this message translates to:
   /// **'http://100.x.x.x:8373'**
@@ -42985,6 +42995,12 @@ abstract class AppLocalizations {
   /// **'{agent} isn\'t signed in yet. Start the sign-in again when you\'re ready.'**
   String agentsSignInTerminalNotYet(String agent);
 
+  /// Sign-in terminal: ending the previous sign-in failed, so a new one cannot start yet
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in could not be stopped. Keep the app open and try again.'**
+  String get agentsSignInStopFailed;
+
   /// Sign-in step: first read
   ///
   /// In en, this message translates to:
@@ -43014,6 +43030,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use {agent}'**
   String agentsSignInDone(String agent);
+
+  /// Settings > Agents row: the agent's own status check confirmed a sign-in and gave the account's name (the account is shown as given, never stored)
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {account}'**
+  String agentsSignedInAs(String account);
+
+  /// Agent sheet, signed in: the action that signs the agent out of its account on this phone; also the confirm button
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out of {agent}'**
+  String agentsSignOutAction(String agent);
+
+  /// Agent sign-out question: the title
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out of {agent}?'**
+  String agentsSignOutTitle(String agent);
+
+  /// Agent sign-out question: what signing out changes
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} can\'t start new conversations until you sign in again.'**
+  String agentsSignOutBody(String agent);
+
+  /// Agent sign-out question: what is kept (marked as kept)
+  ///
+  /// In en, this message translates to:
+  /// **'Your conversations with {agent} stay.'**
+  String agentsSignOutKept(String agent);
+
+  /// Agent sheet: the agent's own sign-out did not end with a confirmed signed-out status; the Sign out action is still there
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t confirm that {agent} signed out. Try again.'**
+  String agentsSignOutFailed(String agent);
+
+  /// Agent sheet, installed agent: the quiet destructive action that removes the installed agent from this phone (BA10)
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {agent}'**
+  String agentsRemoveAction(String agent);
+
+  /// Agent removal question: the title
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {agent}?'**
+  String agentsRemoveTitle(String agent);
+
+  /// Agent removal question: what removing does and keeps
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the installed agent from this phone. Your accounts and conversations stay, and you can install it again.'**
+  String get agentsRemoveBody;
+
+  /// Agent removal: progress while the host deletes the installed agent
+  ///
+  /// In en, this message translates to:
+  /// **'Removing {agent}…'**
+  String agentsRemoving(String agent);
+
+  /// Agent removal done: the measured size freed (the size is a left-to-right isolate)
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} removed. Freed {size}.'**
+  String agentsRemoved(String agent, String size);
+
+  /// Agent removal done: nothing was installed
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} is already removed.'**
+  String agentsAlreadyRemoved(String agent);
+
+  /// Agent removal failure: unsupported agent
+  ///
+  /// In en, this message translates to:
+  /// **'This agent can\'t be removed here.'**
+  String get agentsRemoveUnsupported;
+
+  /// Agent removal failure: the agent is running or another setup is in progress
+  ///
+  /// In en, this message translates to:
+  /// **'This agent is in use. Finish its work and try again.'**
+  String get agentsRemoveBusy;
+
+  /// Agent removal failure: unavailable, unsafe or unconfirmed removal
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t confirm this agent was removed. Check this phone and try again.'**
+  String get agentsRemoveUnconfirmed;
+
+  /// Agent sheet: closes a finished step
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get agentsDone;
 
   /// Agent model sheet title on New conversation (Claude Code and other phone agents).
   ///
@@ -43663,11 +43775,11 @@ abstract class AppLocalizations {
   /// **'Copy code {code}'**
   String agentsSignInCopyCode(String code);
 
-  /// Cards setting: the named agents are not qualified for cards; {agents} is one or more product names
+  /// Cards setting: the named agents are not qualified for cards; {agents} is one or more product names already joined as a list, {count} how many
   ///
   /// In en, this message translates to:
-  /// **'{agents} hasn\'t been checked to work with cards yet.'**
-  String cardsProblemNotQualifiedFor(String agents);
+  /// **'{count, plural, =1{{agents} hasn\'t been checked to work with cards yet.} other{{agents} haven\'t been checked to work with cards yet.}}'**
+  String cardsProblemNotQualifiedFor(int count, String agents);
 
   /// Cards setting: registering cards with the named agents failed
   ///
@@ -43686,6 +43798,630 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cards couldn\'t be fully removed from {agents}. Try again after a restart.'**
   String cardsProblemRemovalFailedFor(String agents);
+
+  /// crash-consent (BD7): Header of the crash reports group on Report a problem.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash reports'**
+  String get crashReportsLabel;
+
+  /// crash-consent (BD7): Switch that opts in to saving crash and not-responding reports locally.
+  ///
+  /// In en, this message translates to:
+  /// **'Save crash reports on this phone'**
+  String get crashReportsSwitch;
+
+  /// crash-consent (BD7): Supporting line under the switch: where reports stay.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept on this phone. Never sent automatically.'**
+  String get crashReportsSwitchBody;
+
+  /// crash-consent (BD7): Disabled reason when the private crash store could not open.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash reports aren\'t available right now. Restart the app and try again.'**
+  String get crashReportsUnavailable;
+
+  /// crash-consent (BD7): Shown when saving the choice or deleting reports failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update crash reports. Restart the app and try again.'**
+  String get crashReportsFailed;
+
+  /// crash-consent (BD7): Row while saving is on and nothing was captured.
+  ///
+  /// In en, this message translates to:
+  /// **'No crash reports yet'**
+  String get crashReportsNone;
+
+  /// crash-consent (BD7): Supporting line of the empty row.
+  ///
+  /// In en, this message translates to:
+  /// **'One appears here if the app closes or stops responding.'**
+  String get crashReportsNoneBody;
+
+  /// crash-consent (BD7): Plain title of a saved Flutter or platform error report.
+  ///
+  /// In en, this message translates to:
+  /// **'The app hit an unexpected error'**
+  String get crashKindError;
+
+  /// crash-consent (BD7): Plain title of a saved widget build error report.
+  ///
+  /// In en, this message translates to:
+  /// **'A screen couldn\'t be shown'**
+  String get crashKindScreen;
+
+  /// crash-consent (BD7): Plain title of a saved native crash report.
+  ///
+  /// In en, this message translates to:
+  /// **'The app closed unexpectedly'**
+  String get crashKindClosed;
+
+  /// crash-consent (BD7): Plain title of an Android not-responding report.
+  ///
+  /// In en, this message translates to:
+  /// **'The app stopped responding'**
+  String get crashKindNotResponding;
+
+  /// crash-consent (BD7): Body of the crash report preview sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept on this phone only. It\'s sent only if you include saved errors in a problem report yourself.'**
+  String get crashReportPreviewBody;
+
+  /// crash-consent (BD7): Details label: where the report came from (technical).
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get crashReportDetailSource;
+
+  /// crash-consent (BD7): Details label: fixed error category (technical).
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get crashReportDetailCategory;
+
+  /// crash-consent (BD7): Destructive row that deletes the saved crash reports; names its count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Delete 1 saved crash report} other{Delete {count} saved crash reports}}'**
+  String crashReportsDelete(int count);
+
+  /// crash-consent (BD7): Confirmation title before deleting crash reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete saved crash reports?'**
+  String get crashReportsDeleteTitle;
+
+  /// crash-consent (BD7): Confirmation body before deleting crash reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes the saved crash reports. Saving crash reports stays on.'**
+  String get crashReportsDeleteBody;
+
+  /// crash-consent (BD7): Confirm button that deletes the saved crash reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete crash reports'**
+  String get crashReportsDeleteConfirm;
+
+  /// crash-consent (BD7): Muted note under the crash reports group: what is kept and how much.
+  ///
+  /// In en, this message translates to:
+  /// **'Only what kind of problem happened and when is kept: no error messages, conversations or passwords. Keeps the latest 20 reports.'**
+  String get crashReportsNote;
+
+  /// crash-consent (BD7): Line under the switch while off, only when saved errors exist: turning on clears them.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Turning this on clears the saved error above.} other{Turning this on clears the {count} saved errors above.}}'**
+  String crashReportsOnClears(int count);
+
+  /// crash-consent (BD7): Line under the switch while on, when crash reports are saved and no other errors are.
+  ///
+  /// In en, this message translates to:
+  /// **'Turning this off deletes the saved crash reports.'**
+  String get crashReportsOffDeletes;
+
+  /// crash-consent (BD7): Line under the switch while on, when crash reports and other saved errors exist.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Turning this off deletes the saved crash reports and clears the saved error above.} other{Turning this off deletes the saved crash reports and clears the {count} saved errors above.}}'**
+  String crashReportsOffDeletesAndClears(int count);
+
+  /// crash-consent (BD7): Line under the switch while on, when no crash reports but other saved errors exist.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Turning this off clears the saved error above.} other{Turning this off clears the {count} saved errors above.}}'**
+  String crashReportsOffClears(int count);
+
+  /// crash-consent (BD7): Confirmation body before deleting crash reports, when other saved errors are cleared too.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Deletes the crash reports and clears the saved error above. Saving crash reports stays on.} other{Deletes the crash reports and clears the {count} saved errors above. Saving crash reports stays on.}}'**
+  String crashReportsDeleteBodyWithErrors(int count);
+
+  /// crash-consent (BD7): Consequence line on the Clear errors confirmation when crash reports are saved.
+  ///
+  /// In en, this message translates to:
+  /// **'The saved crash reports are deleted too.'**
+  String get crashReportsClearedToo;
+
+  /// plain-recent-errors: Plain title of a recent error from drawing a screen (Flutter framework).
+  ///
+  /// In en, this message translates to:
+  /// **'A screen couldn\'t be drawn'**
+  String get recentErrorScreen;
+
+  /// plain-recent-errors: Plain title of a recent error from the server's live event stream.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost the live connection to the server'**
+  String get recentErrorConnection;
+
+  /// plain-recent-errors: Plain title of a recent entry recording that Android ended the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Android closed the app'**
+  String get recentErrorAndroidExit;
+
+  /// plain-recent-errors: Plain title of a recent entry from the phone temperature guard.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone temperature changed'**
+  String get recentErrorTemperature;
+
+  /// plain-recent-errors: Plain title of a recent error recorded while the app was starting.
+  ///
+  /// In en, this message translates to:
+  /// **'The app had trouble starting'**
+  String get recentErrorStartup;
+
+  /// plain-recent-errors: Plain title of a recent error when the saved problem report store could not open.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open saved problem reports'**
+  String get recentErrorReportStore;
+
+  /// plain-recent-errors: Plain title of any other recent error.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get recentErrorGeneric;
+
+  /// Chat journey: step title for the agent's notice that a background task it started has finished (Claude Code task_notification)
+  ///
+  /// In en, this message translates to:
+  /// **'Background task finished'**
+  String get chatUiToolBackgroundTaskFinished;
+
+  /// Chat journey: step title for the agent's notice that a background task it started failed
+  ///
+  /// In en, this message translates to:
+  /// **'Background task failed'**
+  String get chatUiToolBackgroundTaskFailed;
+
+  /// Chat journey: step title for the agent's notice that a background task it started was stopped
+  ///
+  /// In en, this message translates to:
+  /// **'Background task stopped'**
+  String get chatUiToolBackgroundTaskStopped;
+
+  /// Chat journey: tool row title for the agent card tool (oc-ui show) before or instead of its card; the card's own title follows it
+  ///
+  /// In en, this message translates to:
+  /// **'Show card'**
+  String get chatUiToolShowCard;
+
+  /// Chat journey: line under a running turn that has been silent for a while while the server still answers (the model is slow)
+  ///
+  /// In en, this message translates to:
+  /// **'The model is taking longer than usual. Wait, or stop the reply and try again.'**
+  String get chatStallModelSlow;
+
+  /// Chat journey: line under a silent running turn when the agent's helper process on this phone is not running
+  ///
+  /// In en, this message translates to:
+  /// **'The agent\'s helper on this phone stopped. Stop the reply and try again.'**
+  String get chatStallHelperDown;
+
+  /// Chat journey: line under a silent running turn when the live connection or the server is down
+  ///
+  /// In en, this message translates to:
+  /// **'The connection to the agent was lost. Stop the reply and try again once it is back.'**
+  String get chatStallConnectionLost;
+
+  /// Chat journey: line under a silent running turn when the connection could not be checked
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has come back for a while and the connection could not be checked. Wait, or stop the reply and try again.'**
+  String get chatStallConnectionUnchecked;
+
+  /// KitWorkLine: the work chip's words while its steps are open and a step runs; the running step in the list shows the progress
+  ///
+  /// In en, this message translates to:
+  /// **'Hide steps'**
+  String get kitWorkHideSteps;
+
+  /// Status line while the app switches this phone's own server to another OpenCode version; names the version being switched to, never the one being left
+  ///
+  /// In en, this message translates to:
+  /// **'Switching to {target}…'**
+  String connectionSwitchingTo(String target);
+
+  /// The status word beside the server name in the shell's server pill while this phone switches OpenCode versions
+  ///
+  /// In en, this message translates to:
+  /// **'Switching…'**
+  String get shellServerSwitching;
+
+  /// Agent picker: a ready agent whose installed version has not passed the app's certification checks, so it cannot be chosen yet
+  ///
+  /// In en, this message translates to:
+  /// **'Not certified on this version yet'**
+  String get agentsStateNotCertified;
+
+  /// Agent rows: the short Sign in chip; the row title names the agent and screen readers hear agentsSignInAction
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get agentsChipSignIn;
+
+  /// Agent rows: the short Resume chip; the row title names the agent and screen readers hear agentsResumeAction
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get agentsChipResume;
+
+  /// Agent rows: the short phone-check chip; the row title names the agent and screen readers hear agentsCheckAction
+  ///
+  /// In en, this message translates to:
+  /// **'Check'**
+  String get agentsChipCheck;
+
+  /// Joins the last two agent names of a list: 'Claude Code and OpenCode 2'; {first} may itself be a comma list
+  ///
+  /// In en, this message translates to:
+  /// **'{first} and {second}'**
+  String agentNamesPair(String first, String second);
+
+  /// fd-diagnostics: Header of the exit history group on Report a problem.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent app exits'**
+  String get diagnosticsExitHistoryTitle;
+
+  /// fd-diagnostics: Muted note under the exit history group.
+  ///
+  /// In en, this message translates to:
+  /// **'Android records each time the app closes. Nothing here is sent automatically.'**
+  String get diagnosticsExitHistoryNote;
+
+  /// fd-diagnostics: Row title when the phone cannot report exit history.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available on this phone'**
+  String get diagnosticsExitHistoryUnsupported;
+
+  /// fd-diagnostics: Supporting line when exit history is not supported.
+  ///
+  /// In en, this message translates to:
+  /// **'Android 11 and later keep this record.'**
+  String get diagnosticsExitHistoryUnsupportedBody;
+
+  /// fd-diagnostics: Notice when reading exit history failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read recent app exits. Try again, or reopen the app.'**
+  String get diagnosticsExitHistoryFailed;
+
+  /// fd-diagnostics: Exit category: normal close.
+  ///
+  /// In en, this message translates to:
+  /// **'App closed'**
+  String get diagnosticsExitNormal;
+
+  /// fd-diagnostics: Exit category: app update.
+  ///
+  /// In en, this message translates to:
+  /// **'App updated'**
+  String get diagnosticsExitUpdate;
+
+  /// fd-diagnostics: Exit category: force stop.
+  ///
+  /// In en, this message translates to:
+  /// **'App stopped'**
+  String get diagnosticsExitForceStop;
+
+  /// fd-diagnostics: Exit category: low memory.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone needed memory'**
+  String get diagnosticsExitLowMemory;
+
+  /// fd-diagnostics: Exit category: crash.
+  ///
+  /// In en, this message translates to:
+  /// **'App stopped unexpectedly'**
+  String get diagnosticsExitCrash;
+
+  /// fd-diagnostics: Exit category: killed by the system.
+  ///
+  /// In en, this message translates to:
+  /// **'Android ended the app'**
+  String get diagnosticsExitKilled;
+
+  /// fd-diagnostics: Details label: Android's numeric exit reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason code'**
+  String get diagnosticsExitReasonCode;
+
+  /// fd-diagnostics: Details label: Android's numeric process importance.
+  ///
+  /// In en, this message translates to:
+  /// **'Importance'**
+  String get diagnosticsExitImportance;
+
+  /// fd-diagnostics: Details label: the fixed safe summary of the exit.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get diagnosticsExitSummary;
+
+  /// fd-diagnostics: Row that opens the crash report preview before sharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Share saved crash reports'**
+  String get diagnosticsReportOpen;
+
+  /// fd-diagnostics: Title of the crash report preview sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview crash report'**
+  String get diagnosticsReportTitle;
+
+  /// fd-diagnostics: Subtitle of the preview sheet: what is in the report and when it leaves.
+  ///
+  /// In en, this message translates to:
+  /// **'Only error categories and times, no messages or conversations. Nothing leaves this phone until you tap Share report.'**
+  String get diagnosticsReportPrivacy;
+
+  /// fd-diagnostics: Line above the preview text: how many records and how large.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 report · {size}} other{{count} reports · {size}}}'**
+  String diagnosticsReportSize(int count, String size);
+
+  /// fd-diagnostics: Primary action of the preview sheet: opens the system share sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Share report'**
+  String get diagnosticsReportShare;
+
+  /// fd-diagnostics: Notice when the preview went stale and was rebuilt.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved details changed. Check the new report before sharing.'**
+  String get diagnosticsReportStale;
+
+  /// fd-diagnostics: Notice when the share sheet could not open.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open sharing. Try again.'**
+  String get diagnosticsReportShareFailed;
+
+  /// fd-diagnostics: Notice when a report cannot be built because saving is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved crash reports are off. Turn them on to save future app errors.'**
+  String get diagnosticsReportCaptureOff;
+
+  /// fd-diagnostics: Notice when there is nothing to put in a report.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved crash reports to share.'**
+  String get diagnosticsReportEmpty;
+
+  /// fd-diagnostics: Notice when the diagnostics store is unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'These details are unavailable. Reopen the app and try again.'**
+  String get diagnosticsUnavailable;
+
+  /// battery-pause (FD3): App-wide notice when Android's daily background limit stopped the background connection. {at} is 'at 3:10 PM' or 'on Sep 25 at 8:19 PM'.
+  ///
+  /// In en, this message translates to:
+  /// **'Background connection paused {at} to save battery.'**
+  String backgroundPauseTimeLimit(String at);
+
+  /// battery-pause (FD3): App-wide notice when Android's battery restriction stopped the background connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Background connection paused: battery use is restricted.'**
+  String get backgroundPauseRestricted;
+
+  /// battery-pause (FD3): App-wide notice when the app was closed (Recents, Settings or the phone maker) while the background connection ran. {at} is 'at 3:10 PM' or 'on Sep 25 at 8:19 PM'.
+  ///
+  /// In en, this message translates to:
+  /// **'Background connection stopped when the app closed {at}.'**
+  String backgroundPauseUserStopped(String at);
+
+  /// battery-pause (FD3): App-wide notice when the background connection stopped for an unknown reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Background connection stopped for an unknown reason.'**
+  String get backgroundPauseInterrupted;
+
+  /// battery-pause (FD3): Notice action that starts the background connection again.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume background connection'**
+  String get backgroundPauseResume;
+
+  /// battery-pause (FD3): Compact inline action on the pause line; a screen reader hears backgroundPauseResume instead.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get backgroundPauseResumeShort;
+
+  /// battery-pause (FD3): Notice line while Android confirms the background connection started.
+  ///
+  /// In en, this message translates to:
+  /// **'Resuming background connection…'**
+  String get backgroundPauseResuming;
+
+  /// battery-pause (FD3): Notice line when Android did not confirm the start; the pause stays.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t resume. Open Keep running settings.'**
+  String get backgroundPauseResumeFailed;
+
+  /// battery-pause (FD3): Notice action that opens the Keep running in the background settings (Notifications and background page).
+  ///
+  /// In en, this message translates to:
+  /// **'Open Keep running settings'**
+  String get backgroundPauseOpenKeepRunning;
+
+  /// battery-pause (FD3): Screen-reader announcement after Android confirmed the background connection runs again.
+  ///
+  /// In en, this message translates to:
+  /// **'Background connection resumed.'**
+  String get backgroundPauseResumed;
+
+  /// exit-list-focus: Line under Recent app exits when no exit was a problem.
+  ///
+  /// In en, this message translates to:
+  /// **'No unexpected closes recently.'**
+  String get diagnosticsExitNoProblems;
+
+  /// exit-list-focus: Quiet row that folds the routine exits (updates, the person closing the app).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 routine close (updates, you closed it)} other{{count} routine closes (updates, you closed it)}}'**
+  String diagnosticsExitRoutine(int count);
+
+  /// exit-list-focus: Row that shows every problem exit beyond the first five.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Show all 1} other{Show all {count}}}'**
+  String diagnosticsExitShowAll(int count);
+
+  /// exit-list-focus: Exit category: Android gave no reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed for an unknown reason'**
+  String get diagnosticsExitUnknown;
+
+  /// exit-list-focus: Time of an exit earlier today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today {time}'**
+  String diagnosticsExitToday(String time);
+
+  /// exit-list-focus: Time of an exit yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday {time}'**
+  String diagnosticsExitYesterday(String time);
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Running a command…'**
+  String get liveToolCommand;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Editing files…'**
+  String get liveToolEdit;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Reading files…'**
+  String get liveToolRead;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Searching files…'**
+  String get liveToolSearch;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Browsing the web…'**
+  String get liveToolWeb;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Running a subagent…'**
+  String get liveToolSubagent;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Planning…'**
+  String get liveToolPlan;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Working…'**
+  String get liveToolWorking;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Showing a card…'**
+  String get liveToolCard;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Checking a background task…'**
+  String get liveToolBackgroundTask;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Running {tool}…'**
+  String liveToolOther(String tool);
+
+  /// Language sheet: the language's own name (Japanese), written in that language and never translated, like the Arabic and English rows.
+  ///
+  /// In en, this message translates to:
+  /// **'日本語'**
+  String get e7LocaleUiJapanese;
+
+  /// Language sheet: the language's own name (Chinese), written in that language and never translated, like the Arabic and English rows.
+  ///
+  /// In en, this message translates to:
+  /// **'简体中文'**
+  String get e7LocaleUiChinese;
+
+  /// Language sheet: the language's own name (Spanish), written in that language and never translated, like the Arabic and English rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Español'**
+  String get e7LocaleUiSpanish;
+
+  /// Language sheet: the language's own name (Portuguese), written in that language and never translated, like the Arabic and English rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Português (Brasil)'**
+  String get e7LocaleUiPortuguese;
+
+  /// Language sheet: the language's own name (Russian), written in that language and never translated, like the Arabic and English rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Русский'**
+  String get e7LocaleUiRussian;
 }
 
 class _AppLocalizationsDelegate
@@ -43698,8 +44434,15 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['ar', 'en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>[
+    'ar',
+    'en',
+    'es',
+    'ja',
+    'pt',
+    'ru',
+    'zh',
+  ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -43712,6 +44455,16 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsAr();
     case 'en':
       return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
+    case 'ja':
+      return AppLocalizationsJa();
+    case 'pt':
+      return AppLocalizationsPt();
+    case 'ru':
+      return AppLocalizationsRu();
+    case 'zh':
+      return AppLocalizationsZh();
   }
 
   throw FlutterError(

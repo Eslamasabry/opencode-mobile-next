@@ -1,0 +1,43 @@
+{
+  "engine": "opencode",
+  "case": "deny",
+  "cliVersion": "1.18.32",
+  "observedVersion": "1.18.32",
+  "appUID": 10217,
+  "appBuild": 2195,
+  "results": {
+    "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "healthy": true,
+        "asserted": true
+      }
+    },
+    "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "retained": true,
+        "asserted": true
+      }
+    },
+    "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "connectedModels": 18,
+        "asserted": true
+      }
+    },
+    "permissionDeny": {
+      "state": "fail",
+      "code": "oc1_completion_timeout",
+      "facts": {}
+    }
+  },
+  "ownedSessions": [
+    "ses_ee65cad9cffemNuvcizRi2nT8E",
+    "ses_ee65c2bb6ffeIon6jlNKEEjSP1"
+  ]
+}

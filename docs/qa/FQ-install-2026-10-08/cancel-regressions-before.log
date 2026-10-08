@@ -1,0 +1,60 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart
+00:00 +0: restore and cancel cannot operate another profile setup job
+00:00 +1: cancel during local checks never hands an install to native
+setup: start failed StateError: Bad state: Unexpected native handoff
+#0      _HeldAgentChecks.startSetup (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart:624:5)
+#1      _SetupEngineStart._start (package:opencode_mobile/builtin/setup/setup_engine/start.dart:75:20)
+<asynchronous suspension>
+#2      ChannelSetupEngine.run (package:opencode_mobile/builtin/setup/setup_engine.dart:264:9)
+<asynchronous suspension>
+#3      BuiltinPhoneAgents.install (package:opencode_mobile/builtin/agents/phone_agents_host.dart:239:5)
+<asynchronous suspension>
+#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart:426:5)
+<asynchronous suspension>
+#5      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#6      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#7      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:00 +1 -1: cancel during local checks never hands an install to native [E]
+  Expected: AgentSetupPhase:<AgentSetupPhase.interrupted>
+    Actual: AgentSetupPhase:<AgentSetupPhase.failed>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_agents_host_test.dart 427:5              main.<fn>
+
+00:00 +1 -1: cancel retires an install awaiting architecture
+00:00 +1 -2: cancel retires an install awaiting architecture [E]
+  Expected: throws <Instance of 'AgentHostException'> with `reason`: AgentHostFailure:<AgentHostFailure.stale>
+    Actual: <Instance of 'Future<void>'>
+     Which: emitted <null>
+
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/phone_agents_host_test.dart 438:11            main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                         _CustomZone.registerUnaryCallback
+  test/phone_agents_host_test.dart 435:5             main.<fn>
+
+00:00 +1 -2: cancel retires an install awaiting preparation
+00:00 +1 -3: cancel retires an install awaiting preparation [E]
+  Expected: throws <Instance of 'AgentHostException'> with `reason`: AgentHostFailure:<AgentHostFailure.stale>
+    Actual: <Instance of 'Future<void>'>
+     Which: emitted <null>
+
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/phone_agents_host_test.dart 469:11            main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                         _CustomZone.registerUnaryCallback
+  test/phone_agents_host_test.dart 452:5             main.<fn>
+
+00:00 +1 -3: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: cancel during local checks never hands an install to native
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: cancel retires an install awaiting architecture
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: cancel retires an install awaiting preparation

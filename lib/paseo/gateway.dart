@@ -28,6 +28,7 @@ part 'gateway/capabilities.dart';
 part 'gateway/sessions.dart';
 part 'gateway/prompts.dart';
 part 'gateway/browser_launch.dart';
+part 'gateway/commands.dart';
 part 'gateway/permissions.dart';
 part 'gateway/questions.dart';
 part 'gateway/providers.dart';
@@ -35,6 +36,7 @@ part 'gateway/events.dart';
 part 'gateway/lifecycle.dart';
 part 'gateway/subagents.dart';
 part 'gateway/gen_ui_history.dart';
+part 'gateway/payload_use.dart';
 
 class PaseoGateway
     implements
@@ -46,6 +48,8 @@ class PaseoGateway
         GenUiHistoryGateway,
         CorrelatedPromptGateway {
   final PaseoTransport transport;
+  final Future<void> Function()? _beforePayloadUse;
+  final void Function()? _afterPayloadUse;
   BrowserClaudeLaunchRegistry? _browserLaunches;
   String? _browserProfileId, _browserSourceId;
   String Function(String directory)? _browserSourceForDirectory;
@@ -266,7 +270,11 @@ class PaseoGateway
     required this.transport,
     String? directory,
     Map<String, String> defaultProviderModes = const {},
+    Future<void> Function()? beforePayloadUse,
+    void Function()? afterPayloadUse,
   }) : defaultProviderModes = Map.unmodifiable(defaultProviderModes),
+       _beforePayloadUse = beforePayloadUse,
+       _afterPayloadUse = afterPayloadUse,
        _directory = directory {
     _daemonEvents = transport.events.listen(_onEvent);
     _daemonDisconnects = transport.disconnects.listen((_) {
@@ -809,7 +817,7 @@ class PaseoGateway
     List<PromptAttachment> attachments = const [],
     List<PromptAgentMention> agentMentions = const [],
     PromptDelivery? delivery,
-  }) async {
+  }) => _withPayloadUse(() async {
     // A card observed by another gateway carries the daemon ID; local state
     // stays keyed by the original app ID when this gateway created the chat.
     sessionID = _app(sessionID);
@@ -898,7 +906,7 @@ class PaseoGateway
       }
       rethrow;
     }
-  }
+  });
 
   @override
   Future<void> abort(String sessionID) async {
@@ -1122,59 +1130,61 @@ class PaseoGateway
   /// `resume_agent_request` with the agent's persistence handle. Returns the
   /// id the conversation opens by. Throws when the daemon or the runtime
   /// refuses, so the caller can offer a new conversation instead.
-  Future<String> resumeHostAgentChat(String sessionId) async {
-    final scope = _scope;
-    final epoch = _locationEpoch;
-    if (!_agents.containsKey(sessionId)) await _fetchAgent(sessionId);
-    _checkLocation(scope, epoch);
-    final agent = _agents[sessionId];
-    final handle = agent?['persistence'];
-    if (agent == null ||
-        handle is! Map ||
-        handle['sessionId'] is! String ||
-        handle['provider'] != agent['provider']) {
-      throw PaseoFailure(PaseoFailureKind.unavailable);
-    }
-    final browserRequested = _browserRequestedFor(sessionId);
-    await _revokeBrowserSession(sessionId);
-    final browserRevision = _browserRevision(sessionId);
-    _checkLocation(scope, epoch);
-    final result = await transport.request(
-      'resume_agent_request',
-      {'handle': handle},
-      mutation: true,
-      timeout: const Duration(seconds: 90),
-    );
-    _checkLocation(scope, epoch);
-    if (browserRequested && _browserRevision(sessionId) != browserRevision) {
-      throw _browserUnavailable;
-    }
-    final resumed = {...paseoObject(result['agent'])};
-    // A resumed record may come back without the title it had.
-    final title = resumed['title'];
-    if ((title is! String || title.trim().isEmpty) &&
-        agent['title'] is String) {
-      resumed['title'] = agent['title'];
-    }
-    final realID = paseoString(resumed['id'], max: 256);
-    // The resumed agent may be a new record: the row the person tapped
-    // opens it.
-    if (realID != _real(sessionId)) {
-      _moveBrowserRequest(_real(sessionId), realID);
-      _realIDs[sessionId] = realID;
-      _appIDs[realID] = sessionId;
-    }
-    if (_remember(resumed) == null) {
-      throw PaseoFailure(PaseoFailureKind.scopeMismatch);
-    }
-    if (browserRequested) {
-      if (resumed['provider'] != 'claude') throw _browserUnavailable;
-      await _beforeBrowserLaunch(sessionId, requiredBrowser: true);
+  Future<String> resumeHostAgentChat(String sessionId) => _withPayloadUse(
+    () async {
+      final scope = _scope;
+      final epoch = _locationEpoch;
+      if (!_agents.containsKey(sessionId)) await _fetchAgent(sessionId);
       _checkLocation(scope, epoch);
-    }
-    _liveAgentSessions.add(sessionId);
-    return realID;
-  }
+      final agent = _agents[sessionId];
+      final handle = agent?['persistence'];
+      if (agent == null ||
+          handle is! Map ||
+          handle['sessionId'] is! String ||
+          handle['provider'] != agent['provider']) {
+        throw PaseoFailure(PaseoFailureKind.unavailable);
+      }
+      final browserRequested = _browserRequestedFor(sessionId);
+      await _revokeBrowserSession(sessionId);
+      final browserRevision = _browserRevision(sessionId);
+      _checkLocation(scope, epoch);
+      final result = await transport.request(
+        'resume_agent_request',
+        {'handle': handle},
+        mutation: true,
+        timeout: const Duration(seconds: 90),
+      );
+      _checkLocation(scope, epoch);
+      if (browserRequested && _browserRevision(sessionId) != browserRevision) {
+        throw _browserUnavailable;
+      }
+      final resumed = {...paseoObject(result['agent'])};
+      // A resumed record may come back without the title it had.
+      final title = resumed['title'];
+      if ((title is! String || title.trim().isEmpty) &&
+          agent['title'] is String) {
+        resumed['title'] = agent['title'];
+      }
+      final realID = paseoString(resumed['id'], max: 256);
+      // The resumed agent may be a new record: the row the person tapped
+      // opens it.
+      if (realID != _real(sessionId)) {
+        _moveBrowserRequest(_real(sessionId), realID);
+        _realIDs[sessionId] = realID;
+        _appIDs[realID] = sessionId;
+      }
+      if (_remember(resumed) == null) {
+        throw PaseoFailure(PaseoFailureKind.scopeMismatch);
+      }
+      if (browserRequested) {
+        if (resumed['provider'] != 'claude') throw _browserUnavailable;
+        await _beforeBrowserLaunch(sessionId, requiredBrowser: true);
+        _checkLocation(scope, epoch);
+      }
+      _liveAgentSessions.add(sessionId);
+      return realID;
+    },
+  );
 
   @override
   Future<String> startNewHostAgentChat(
@@ -1329,70 +1339,13 @@ class PaseoGateway
   /// a project's commands), read as a draft for this folder: listing them
   /// through a stored agent would load that agent's runtime first.
   @override
-  Future<List<CommandInfo>> listCommands() async {
-    // Folder-wide draft discovery has no trusted conversation/daemon mapping.
-    if (_browserHasRequestedSource) return const [];
-    final scope = _scope;
-    final epoch = _locationEpoch;
-    // The daemon lists a draft's commands only for a named model.
-    final runtimes = await providers();
-    _checkLocation(scope, epoch);
-    final runtime = runtimes.providers
-        .where((entry) => entry.id == paseoDefaultProvider)
-        .firstOrNull;
-    final model =
-        runtime?.modelIDs
-            .where((id) => runtime.modelData[id]?['isDefault'] == true)
-            .firstOrNull ??
-        runtime?.modelIDs.where((id) => id != paseoDefaultModel).firstOrNull;
-    if (model == null) return const [];
-    final result = await transport.request(
-      'list_commands_request',
-      {
-        'agentId': '',
-        'draftConfig': {
-          'provider': paseoDefaultProvider,
-          'cwd': scope,
-          'model': model,
-        },
-      },
-      timeout: const Duration(seconds: 45),
-      beforeSend: () {
-        _checkLocation(scope, epoch);
-        if (_browserHasRequestedSource) {
-          throw _browserUnavailable;
-        }
-      },
-    );
-    _checkLocation(scope, epoch);
-    return _browserCommandInfos(result);
-  }
+  Future<List<CommandInfo>> listCommands() => _listCommands();
 
   /// Discovery for a mapped conversation; the folder-wide draft path is off
   /// for browser requests because it has no daemon identity to reserve.
   Future<List<CommandInfo>> listBrowserCommandsForSession(
     String sessionID,
   ) async => _listBrowserCommands(sessionID);
-
-  List<CommandInfo> _browserCommandInfos(Map<String, dynamic> result) {
-    final raw = result['commands'];
-    return [
-      for (final command in raw is List ? raw.take(300) : const [])
-        if (command is Map &&
-            command['name'] is String &&
-            (command['name'] as String).isNotEmpty &&
-            (command['name'] as String).length <= 128 &&
-            // `__name` commands are the agent's own plumbing, not for people.
-            !(command['name'] as String).replaceFirst('/', '').startsWith('__'))
-          CommandInfo(
-            name: (command['name'] as String).replaceFirst(RegExp('^/'), ''),
-            description: command['description'] is String
-                ? command['description'] as String
-                : null,
-            subtask: false,
-          ),
-    ];
-  }
 
   /// A runtime command runs as the message `/name arguments`: the runtime
   /// reads its own commands from the prompt.

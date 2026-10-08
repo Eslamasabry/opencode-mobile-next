@@ -1,0 +1,76 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: (setUpAll)
+00:05 +0: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: setup-main-denied
+00:05 +1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: daemon-main-denied
+00:05 +2: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: setup-channel-denied
+00:05 +3: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: daemon-timeout-denied
+00:05 +4: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: daemon-stop-denied
+00:05 +5: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: result-notification-denied
+00:05 +6: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: dispatch-denied
+00:05 +7: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: armed-null-sticky
+00:05 +8: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: unarmed-null-rejected
+00:05 +9: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: restoration-disarmed-not-sticky
+00:06 +10: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: explicit-unarmed-not-sticky
+00:06 +11: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: daemon-timeout-async-revocation
+00:06 +12: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: daemon-stop-async-revocation
+00:06 +13: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: daemon-request-threw-after-revocation
+00:06 +14: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: setup-timeout-async-revocation
+00:06 +15: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: native agent service callback: destroy-revokes-kind
+00:06 +16: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart: (tearDownAll)
+00:06 +16: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_run_native_test.dart
+00:06 +16: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_run_native_test.dart: (setUpAll)
+00:11 +16: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_run_native_test.dart: native agent setup run: receipts
+00:11 +17: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_run_native_test.dart: native agent setup run: reader-failure
+00:11 +18: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_run_native_test.dart: native agent setup run: stdin-failure
+00:11 +19: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_run_native_test.dart: native agent setup run: wait-failure
+00:11 +20: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_run_native_test.dart: native agent setup run: log-failure
+00:11 +21: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_run_native_test.dart: native agent setup run: timeout
+00:12 +22: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_run_native_test.dart: (tearDownAll)
+00:12 +22: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart
+00:12 +22: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: (setUpAll)
+00:12 +22: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: ordered-terminal
+00:13 +23: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: installer-routed
+00:13 +24: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: setup-work-owned
+00:13 +25: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: setup-work-revoked-before-worker
+00:13 +26: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: typed-write-failure
+00:13 +27: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: failed-start-status
+00:13 +28: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: service-start-denied
+00:13 +29: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: service-finish-denied
+00:13 +30: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: service-update-denied
+00:13 +31: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: agent-output-private
+00:13 +32: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: low-space-first
+00:13 +33: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: low-space-next
+00:13 +34: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: paseo-checksum-failed
+00:13 +35: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: native setup persistence: paseo-launch-failed
+00:13 +36: /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart: (tearDownAll)
+00:13 +36: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart
+00:16 +36: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: times prompt → first output → end, by the app and the server
+00:16 +37: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: a reply that fails before any output says so
+00:16 +38: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: a reply on another server is timed but is not the in-app one
+00:16 +39: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: a user message seen again after the reply does not time a new one
+00:16 +40: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: keeps the phone awake while an in-app reply runs, then lets go
+00:16 +41: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: never keeps the phone awake past the ceiling in one stretch
+00:16 +42: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: only replies on the in-app server keep the phone awake
+00:16 +43: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: idle before queued acquire skips obsolete on
+00:16 +44: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: late acquire after idle drains without reporting held
+00:16 +45: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: late acquire after disposal drains without notification
+00:16 +46: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: rapid idle and busy preserves the required off boundary
+00:16 +47: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: native cap stops renewals without reopening a busy lease
+00:16 +48: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: native cap during renewal reports loss of the chat hold
+00:16 +49: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: rejected renewal closes only its lease and stops renewing
+00:16 +50: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: acquire exception drains partial lease and leaves chain usable
+00:16 +51: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: release exception cannot poison later cleanup or acquisition
+00:16 +52: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: two watches use distinct IDs and cleanup preserves other work
+00:16 +53: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: local ceiling shortens requested TTL before releasing its lease
+00:16 +54: /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: leaving the in-app server releases chat without clearing other work
+00:16 +55: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart
+00:17 +55: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: named chat acquisition uses the frozen channel contract
+00:17 +56: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: named chat release retains its ID and requested duration
+00:17 +57: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: native exhausted lease reports capped without reporting held
+00:17 +58: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: other work holding the lock does not claim this chat lease
+00:17 +59: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: absent and malformed replies never fabricate admission
+00:17 +60: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: invalid opaque IDs are refused before native handoff
+00:17 +61: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: maximum length opaque ID reaches native unchanged
+00:17 +62: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: unsupported platforms return no admission without native handoff
+00:17 +63: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: legacy timed hold keeps its bool return and original arguments
+00:17 +64: All tests passed!

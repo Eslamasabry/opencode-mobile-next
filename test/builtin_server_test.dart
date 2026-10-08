@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/server_probe.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
@@ -197,6 +198,28 @@ void main() {
       expect(await starter.autoStartIfStopped(_inApp()), isFalse);
       expect(linux.started, isEmpty);
       expect(starter.recognises(_inApp()), isFalse);
+    });
+
+    test('names the server it brings up while starting and for a short '
+        'handover after a confirmed start', () async {
+      final target = _inApp(flavor: ServerFlavor.v2);
+      var now = DateTime(2026, 10, 8, 12);
+      await withClock(Clock(() => now), () async {
+        expect(starter.bringingUp, isNull);
+        final start = starter.start(target);
+        expect(starter.startingProfile, same(target));
+        expect(starter.bringingUp, same(target));
+        expect(await start, isNull);
+        expect(starter.startingProfile, isNull);
+        // Answered; the app connects to it within moments.
+        expect(starter.bringingUp, same(target));
+        now = now.add(BuiltinServerStarter.handover);
+        expect(starter.bringingUp, isNull);
+        // An automatic start (the app reopening) is no handover.
+        linux.serverRunning = false;
+        expect(await starter.autoStartIfStopped(_inApp()), isTrue);
+        expect(starter.bringingUp, isNull);
+      });
     });
   });
 

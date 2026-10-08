@@ -93,6 +93,20 @@ String? _subagentState(ToolState state, {required bool nativeSubagent}) {
   return _taskOutputState(state.output, nativeSubagent: nativeSubagent);
 }
 
+/// The one name a person sees for a tool call: the step row's title
+/// ("Read", "Show card", "Background task finished", a sub-agent's name, or
+/// an unknown id as words). Every surface that names a tool (the timeline,
+/// find, Copy transcript, permission titles, a team agent's last step) uses
+/// this, never the raw id ([toolIdWords] has the rules). [state] adds what
+/// the call says about itself (a card's title is not part of the name); an
+/// id alone (a permission request) passes none.
+String toolLabel(String rawName, {ToolState? state, AppLocalizations? l10n}) =>
+    _ToolContract.from(
+      rawName,
+      state ?? ToolState(status: 'completed'),
+      l10n: l10n,
+    ).title;
+
 /// Compact "Title · subtitle" line for the tool currently executing, used by
 /// the chat tool-group header as a live ticker while a run is active.
 String runningToolTicker(
@@ -330,6 +344,18 @@ class _ToolContract {
         title = strings.activeContextSkill;
         subtitle = _valueString(input['name']);
         break;
+      case _ when isBackgroundTaskNotice(name):
+        // Claude Code's notice that a background task it started ended.
+        kind = _ToolKind.generic;
+        title = switch (backgroundTaskEnd(input)) {
+          BackgroundTaskEnd.failed => strings.chatUiToolBackgroundTaskFailed,
+          BackgroundTaskEnd.stopped => strings.chatUiToolBackgroundTaskStopped,
+          BackgroundTaskEnd.finished =>
+            strings.chatUiToolBackgroundTaskFinished,
+        };
+        subtitle =
+            _valueString(input['summary']) ??
+            _valueString(input['description']);
       case 'toolsearch':
         // Claude Code looking up which of its tools to load.
         kind = _ToolKind.generic;
@@ -337,10 +363,22 @@ class _ToolContract {
         subtitle = null;
       default:
         kind = _ToolKind.generic;
-        title = state.title?.trim().isNotEmpty == true
-            ? state.title!
-            : _mcpTitle(rawName, strings) ?? rawName;
-        subtitle = null;
+        if (isAgentCardTool(rawName)) {
+          // The agent card tool, before its card is drawn (still running) or
+          // where the connection draws none: in words, with the card's own
+          // title. Its server sets the raw name as the call's title, so
+          // that never wins here.
+          title = strings.chatUiToolShowCard;
+          subtitle = _valueString(input['title']);
+        } else {
+          // The server's own title for the call, unless it only repeats
+          // the tool's id; an id is never shown as it is.
+          final own = state.title?.trim();
+          title = own != null && own.isNotEmpty && own != rawName.trim()
+              ? own
+              : _mcpTitle(rawName, strings) ?? _toolWords(rawName, strings);
+          subtitle = null;
+        }
     }
     if (metadata['truncated'] == true &&
         !details.contains(strings.chatUiTruncated)) {
@@ -369,6 +407,14 @@ class _ToolContract {
       KitBidi.auto(words(match.group(2)!)),
       KitBidi.auto(words(match.group(1)!)),
     );
+  }
+
+  /// "render_mermaid_diagram" → "Render mermaid diagram", "ExitWorktree"
+  /// → "Exit worktree": a tool id the app has no words for, as words
+  /// ([toolIdWords]); "Tool" when the id has none.
+  static String _toolWords(String name, AppLocalizations strings) {
+    final words = toolIdWords(name);
+    return words.isEmpty ? strings.chatUiTool : KitText.sentenceCase(words);
   }
 
   static int? _positive(dynamic raw) {

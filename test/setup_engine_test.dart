@@ -188,6 +188,34 @@ void main() {
 
   tearDown(() => engine.dispose());
 
+  test(
+    'startSetup receives retained download plus known extracted payload peak',
+    () async {
+      engine.dispose();
+      engine = ChannelSetupEngine(
+        linux: linux,
+        strings: () => en,
+        components: (_, _) => const [
+          SetupComponent(
+            id: 'fixture',
+            title: 'Fixture',
+            shortTitle: 'Fixture',
+            checkScript: 'false',
+            installScript: ':',
+            downloadBytes: 120000000,
+            installedBytes: 350000000,
+          ),
+        ],
+        pollInterval: const Duration(milliseconds: 5),
+      );
+      await engine.run({'fixture'});
+      expect(linux.started, hasLength(1));
+      expect(spec(linux, 'fixture')['data'], {
+        'requiredFreeBytes': '${120000000 + 350000000 + 64 * 1024 * 1024}',
+      });
+    },
+  );
+
   group('resume rule', () {
     test('components whose checks pass are skipped with their version, '
         'the rest get the prelude and their install script', () async {

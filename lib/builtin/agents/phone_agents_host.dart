@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/agent_catalog.dart';
 import '../../domain/phone_agent_host.dart';
 import '../../domain/phone_agents.dart';
+import '../../domain/server_gateway.dart';
 import '../../domain/agent_sign_in.dart';
 import '../../domain/agent_auth_probe.dart';
 import 'agent_scripts.dart';
@@ -19,6 +20,8 @@ import '../builtin_linux.dart';
 import '../setup/setup_engine.dart';
 import '../setup/setup_contract.dart';
 import 'agent_components.dart';
+import 'agent_install_guard.dart';
+import 'agent_removal_scripts.dart';
 import 'paseo_scripts.dart';
 
 /// Built-in implementation. UI consumes PhoneAgentHost and safe domain rows;
@@ -34,6 +37,7 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
     Future<String> Function()? loadLock,
     PaseoSocketFactory? socketFactory,
     SetupEngine Function(AgentDescriptor, String)? engineFactory,
+    AgentInstallGuard? installGuard,
   }) : secure = secure ?? const FlutterSecureStorage(),
        _linux = linux ?? BuiltinLinux(),
        _channel = channel ?? const MethodChannel(BuiltinLinux.channelName),
@@ -42,7 +46,8 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
            loadLock ??
            (() => rootBundle.loadString(PaseoPhoneScripts.packageLockAsset)),
        _socketFactory = socketFactory ?? connectPaseoSocket,
-       _engineFactory = engineFactory {
+       _engineFactory = engineFactory,
+       _installGuard = installGuard ?? const AgentInstallGuard() {
     if (!RegExp(r'^[A-Za-z0-9_-]{1,80}$').hasMatch(profileId)) {
       throw ArgumentError('Invalid profile');
     }
@@ -57,10 +62,16 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
   final Future<String> Function() _loadLock;
   final PaseoSocketFactory _socketFactory;
   final SetupEngine Function(AgentDescriptor, String)? _engineFactory;
+  final AgentInstallGuard _installGuard;
   final _changes = StreamController<AgentSetupProgress>.broadcast(sync: true);
   SetupEngine? _engine;
   void Function()? _engineListener;
   String? _installAgent;
+  bool _installRunPending = false;
+  bool _installPreparing = false;
+  bool _removeInFlight = false;
+  String? _removingAgent;
+  int _payloadUses = 0;
   bool _disposed = false;
   int _generation = 0;
   bool _startInFlight = false;
@@ -101,11 +112,117 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
     return value is bool ? value : null;
   }
 
+  /// Removes only an authored agent payload; accounts and chats are retained.
+  Future<AgentRemovalResult> removeAgent(String agentId) async {
+    final agent = _agent(agentId);
+    if (!AgentInstallGuard.agentIds.contains(agentId)) {
+      throw const AgentHostException(AgentHostFailure.unavailable);
+    }
+    if (_disposed) throw const AgentHostException(AgentHostFailure.stale);
+    if (_removeInFlight ||
+        _installPreparing ||
+        _installRunPending ||
+        _checkInFlight ||
+        _startInFlight ||
+        _payloadUses > 0 ||
+        _engine?.progress.value.state == SetupState.running) {
+      throw const AgentHostException(AgentHostFailure.busy);
+    }
+    _removeInFlight = true;
+    _removingAgent = agentId;
+    final generation = _generation;
+    try {
+      final random = Random.secure();
+      final receiptId = List.generate(
+        16,
+        (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+      ).join();
+      final snapshot = await _linux.setupStatus();
+      _checkGeneration(generation);
+      if (snapshot != null) {
+        final job = jsonDecode(snapshot);
+        if (job is! Map ||
+            !{
+              'done',
+              'failed',
+              'cancelled',
+              'interrupted',
+            }.contains(job['state'])) {
+          throw const AgentHostException(AgentHostFailure.busy);
+        }
+      }
+      final result = await _linux.runAgentSetupCheck(
+        AgentRemovalScripts.remove(agent, receiptId: receiptId),
+        timeout: const Duration(seconds: 30),
+      );
+      if (result.exitCode != 0) {
+        _checkGeneration(generation);
+        throw AgentHostException(
+          result.exitCode == 16
+              ? AgentHostFailure.busy
+              : AgentHostFailure.unavailable,
+        );
+      }
+      // The fixed oc setup channel deliberately filters arbitrary output.
+      // Read and clean our exclusive numeric receipt even if the owner was
+      // disposed during deletion. Only then apply the generation fence; no
+      // stale result reaches callers and no private receipt is left behind.
+      final receipt = await _linux.run(
+        AgentRemovalScripts.readReceipt(receiptId),
+        timeout: const Duration(seconds: 10),
+      );
+      _checkGeneration(generation);
+      final value = RegExp(
+        r'^([0-9]{1,19}) ([01])\n?$',
+      ).firstMatch(receipt.output);
+      final bytes = value == null ? null : int.tryParse(value[1]!);
+      if (!receipt.ok ||
+          bytes == null ||
+          bytes < 0 ||
+          (value![2] == '1' && bytes != 0)) {
+        throw const AgentHostException(AgentHostFailure.unavailable);
+      }
+      final removal = AgentRemovalResult(
+        agentId: agentId,
+        freedBytes: bytes,
+        alreadyAbsent: value[2] == '1',
+      );
+      if (_installAgent == agentId) {
+        _detachEngine();
+        _installAgent = null;
+        _progress = const AgentSetupProgress(
+          agentId: '',
+          phase: AgentSetupPhase.idle,
+        );
+        _changes.add(_progress);
+      }
+      return removal;
+    } on AgentHostException {
+      rethrow;
+    } catch (_) {
+      throw const AgentHostException(AgentHostFailure.unavailable);
+    } finally {
+      _removeInFlight = false;
+      _removingAgent = null;
+    }
+  }
+
+  Future<void> _beginPayloadUse() async {
+    if (_disposed || _removeInFlight) {
+      throw const ProductException(
+        'An agent is being removed. Wait for it to finish and try again.',
+      );
+    }
+    _payloadUses++;
+  }
+
+  void _endPayloadUse() => _payloadUses--;
+
   Future<AgentAuthProbeResult> _authCommand(
     String agentId, {
     required bool logout,
   }) async {
-    if (_disposed) {
+    if (_disposed || _removingAgent == agentId) {
       return const AgentAuthProbeResult.failed(
         AgentAuthProbeError.hostUnavailable,
       );
@@ -189,11 +306,32 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
     final agent = _agent(id);
     final lock = await _loadLock();
     if (_disposed) throw const AgentHostException(AgentHostFailure.stale);
+    // Keep restore independent of another native ABI read. Admission uses
+    // the largest known authored download (with the QA floor) and payload
+    // independently across supported architectures, without changing
+    // download/consent metadata.
+    final downloadBytes = _installGuard.downloadBytesFor(agent);
+    int? installedBytes;
+    for (final artifact in agent.recipe!.artifacts.values) {
+      final payloadBytes = artifact.installedBytes;
+      if (payloadBytes != null &&
+          (installedBytes == null || payloadBytes > installedBytes)) {
+        installedBytes = payloadBytes;
+      }
+    }
     _engine =
         _engineFactory?.call(agent, lock) ??
         ChannelSetupEngine(
           linux: _linux,
-          components: (l10n, _) => phoneAgentComponents(l10n, agent, lock),
+          components: (l10n, _) => [
+            for (final component in phoneAgentComponents(l10n, agent, lock))
+              if (component.id == 'agent-${agent.id}')
+                component
+                    .withDownloadBytes(downloadBytes)
+                    .withInstalledBytes(installedBytes)
+              else
+                component,
+          ],
         );
     _installAgent = id;
     _engineListener = () {
@@ -214,6 +352,12 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
         componentId: _engine!.registry.any((c) => c.id == value.current)
             ? value.current
             : null,
+        failure:
+            value.state == SetupState.failed &&
+                value.error ==
+                    'There is not enough free space on this phone. Free some storage and try again.'
+            ? AgentHostFailure.storage
+            : null,
       );
       if (!_changes.isClosed) _changes.add(_progress);
     };
@@ -223,25 +367,52 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
 
   @override
   Future<void> install(String agentId) async {
-    if (_engine?.progress.value.state == SetupState.running) {
+    if (_removeInFlight ||
+        _installPreparing ||
+        _installRunPending ||
+        _engine?.progress.value.state == SetupState.running) {
       throw const AgentHostException(AgentHostFailure.busy);
     }
-    final arch = await architecture();
-    final agent = _agent(agentId);
-    if (arch == null || !agent.installableOn(arch)) {
-      throw const AgentHostException(AgentHostFailure.wrongArchitecture);
+    _installPreparing = true;
+    try {
+      final generation = _generation;
+      final arch = await architecture();
+      _checkGeneration(generation);
+      final agent = _agent(agentId);
+      if (arch == null || !agent.installableOn(arch)) {
+        throw const AgentHostException(AgentHostFailure.wrongArchitecture);
+      }
+      await _password();
+      _checkGeneration(generation);
+      final engine = await _prepareEngine(agentId);
+      _checkGeneration(generation);
+      if (!await prefs.setString(
+        '$phoneAgentInstallPrefix$profileId',
+        agentId,
+      )) {
+        throw const AgentHostException(AgentHostFailure.storage);
+      }
+      _checkGeneration(generation);
+      _installRunPending = true;
+      try {
+        await engine.run(
+          {'agent-$agentId'},
+          params: {
+            'phoneAgentOwner': {'profileId': profileId, 'agentId': agentId},
+            if (_installGuard.minimumFreeBytes > 0 &&
+                AgentInstallGuard.agentIds.contains(agentId))
+              'agentInstallGuard': {
+                'agentId': agentId,
+                'minimumFreeBytes': '${_installGuard.minimumFreeBytes}',
+              },
+          },
+        );
+      } finally {
+        _installRunPending = false;
+      }
+    } finally {
+      _installPreparing = false;
     }
-    await _password();
-    final engine = await _prepareEngine(agentId);
-    if (!await prefs.setString('$phoneAgentInstallPrefix$profileId', agentId)) {
-      throw const AgentHostException(AgentHostFailure.storage);
-    }
-    await engine.run(
-      {'agent-$agentId'},
-      params: {
-        'phoneAgentOwner': {'profileId': profileId, 'agentId': agentId},
-      },
-    );
   }
 
   @override
@@ -255,7 +426,11 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
   @override
   Future<void> cancelInstall() async {
     _generation++;
-    if (_installAgent != null && await _ownsSetupJob(_installAgent!)) {
+    // run() includes local checks before native ownership exists. During
+    // that handoff the engine's local cancellation flag prevents dispatch.
+    // Once run() returns, only our exact durable owner may stop a native job.
+    if (_installRunPending ||
+        (_installAgent != null && await _ownsSetupJob(_installAgent!))) {
       await _engine?.cancel();
     }
   }
@@ -342,7 +517,9 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
   /// Install gate can bootstrap the daemon. Chat still uses separate resume proof.
   @override
   Future<void> start() async {
-    if (_startInFlight) throw const AgentHostException(AgentHostFailure.busy);
+    if (_removeInFlight || _startInFlight) {
+      throw const AgentHostException(AgentHostFailure.busy);
+    }
     _startInFlight = true;
     final generation = _generation;
     try {
@@ -430,6 +607,8 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
       transport: transport,
       directory: directory,
       defaultProviderModes: const {'claude': 'default'},
+      beforePayloadUse: _beginPayloadUse,
+      afterPayloadUse: _endPayloadUse,
     );
   }
 
@@ -448,6 +627,8 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
       transport: _transport(password),
       directory: directory,
       defaultProviderModes: const {'claude': 'default'},
+      beforePayloadUse: _beginPayloadUse,
+      afterPayloadUse: _endPayloadUse,
     );
   }
 
@@ -460,7 +641,9 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
 
   @override
   Future<AgentPhoneCheckResult> selfTest(String agentId) async {
-    if (_checkInFlight) throw const AgentHostException(AgentHostFailure.busy);
+    if (_removeInFlight || _checkInFlight) {
+      throw const AgentHostException(AgentHostFailure.busy);
+    }
     _checkInFlight = true;
     final generation = _generation;
     final completed = <AgentPhoneCheckStep>[];

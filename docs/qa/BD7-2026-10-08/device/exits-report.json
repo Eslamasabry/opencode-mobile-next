@@ -1,0 +1,38 @@
+{
+  "result": "PARTIAL",
+  "version_code": 2196,
+  "saved_report_qualified": false,
+  "storage_before": {
+    "available_kib": 1750548,
+    "used_percent": 79
+  },
+  "consent_enabled_before": false,
+  "consent_unavailable_visible": true,
+  "consent_screen_crop": "FAIL",
+  "native_crash": {
+    "os_exit": {
+      "pid": 8544,
+      "reason": 4,
+      "status": 0,
+      "exact_main": true
+    },
+    "visible_recent_exit": true,
+    "saved_report_qualified": false,
+    "visible_reason_code": 4,
+    "screenshot": "PASS"
+  },
+  "anr": {
+    "os_exit": {
+      "pid": 9244,
+      "reason": 6,
+      "status": 0,
+      "exact_main": true
+    },
+    "visible_recent_exit": true,
+    "saved_report_qualified": false,
+    "visible_reason_code": 6,
+    "screenshot": "PASS"
+  },
+  "diagnostic_baseline_restore": "PASS",
+  "normal_app_restore": "PASS"
+}

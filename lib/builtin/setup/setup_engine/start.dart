@@ -161,7 +161,7 @@ extension _SetupEngineStart on ChannelSetupEngine {
   }) {
     final data = <String, String>{
       'requiredFreeBytes':
-          '${requiredSetupFreeBytes(component.downloadBytes ?? 0)}',
+          '${requiredSetupFreeBytes(component.downloadBytes ?? 0, installedBytes: component.installedBytes)}',
     };
     final base = <String, Object?>{
       'id': component.id,

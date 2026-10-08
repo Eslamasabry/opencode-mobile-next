@@ -32,7 +32,7 @@ class LivePauseReceiver : BroadcastReceiver() {
             context.getSharedPreferences(NATIVE_PREFERENCES, Context.MODE_PRIVATE)
                 .edit()
                 .putBoolean(KEY_PAUSED, paused)
-                .apply()
+                .commit()
         }
 
         /** Whether background mode is switched on in the app's settings. */
@@ -43,7 +43,8 @@ class LivePauseReceiver : BroadcastReceiver() {
 
         /** The notification's Pause action, shared with the tile. */
         fun pause(context: Context) {
-            BackgroundConnectionService.stop(context)
+            // This intentional pause is not an OS interruption or a timeout.
+            runCatching { BackgroundPauseStore(context).clear() }
             setPausedByUser(context, true)
             // Flip the persisted Dart preference here as well: when no engine
             // is alive to hear the push, the next launch would otherwise
@@ -51,7 +52,8 @@ class LivePauseReceiver : BroadcastReceiver() {
             context.getSharedPreferences(FLUTTER_PREFERENCES, Context.MODE_PRIVATE)
                 .edit()
                 .putBoolean(FLUTTER_PREFERENCE_KEEP_LIVE, false)
-                .apply()
+                .commit()
+            BackgroundConnectionService.stop(context)
             BackgroundConnectionService.notifyDartStopped(
                 BackgroundConnectionService.REASON_USER_PAUSE
             )
@@ -59,11 +61,8 @@ class LivePauseReceiver : BroadcastReceiver() {
 
         /** Resume what [pause] stopped: preference back on, service started. */
         fun resume(context: Context) {
-            context.getSharedPreferences(FLUTTER_PREFERENCES, Context.MODE_PRIVATE)
-                .edit()
-                .putBoolean(FLUTTER_PREFERENCE_KEEP_LIVE, true)
-                .apply()
-            setPausedByUser(context, false)
+            // onStartCommand confirms foreground activation before restoring
+            // the preference or clearing either kind of pause.
             BackgroundConnectionService.start(context)
         }
     }

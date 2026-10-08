@@ -1,0 +1,68 @@
+{
+  "branch": "sol/bd-bd7",
+  "base": "2b9ede02a44d4ef14e01b233b8528c83faa8493e",
+  "state": "implemented and host-verified; saved-report device qualification pending coordinator2197",
+  "source_sha256": {
+    "lib/diagnostics/crash_diagnostics.dart": "dc4e5f249b9172d8ce2b6444e9e2232c73598e6a6e7becbd82fb4faf14b61f9f",
+    "test/crash_diagnostics_startup_test.dart": "0f4639508e629948624e430baf76659c73cfd616582e8cc1ceb1521cebf28fbc",
+    "tool/qa/bd7_device_crash_smoke.py": "868240f0a9f25561e64962ae9975f73d55061e19b47222986b929517ba6bb81c",
+    "tool/qa/test_bd7_device_crash_smoke.py": "5705bb293a6263d3d4c7bd3912379efe2b5ae7f2b8d0e2a0a223da5a5c97fedb",
+    "docs/design/bd7-contract.md": "1663083efe92f9eff49312faa26d3987f52db4efeef20d9d170e9fa8511e5534",
+    "docs/design/bd7-late-open-contract.md": "4a60be60e480b3595658f5f1f33b1afa6c9f720ebe32fab8c08dbcc6cfe4c242",
+    "docs/privacy/bd7-crash-diagnostics.md": "bcc6c91ee00a5b3c1539ef2ab46352ddaadf5672abd4c3c930c4e62ce0f89a7b"
+  },
+  "finish_line": "300ms launch wait returns without cancelling real background readiness; late controller attaches, restored records replay once, reset drops stale results",
+  "flutter": {
+    "result": "PASS",
+    "tests": 39,
+    "startup_tests": 13,
+    "command": "tool/qa/machine_lock.sh test -- /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter test --concurrency=1 test/crash_diagnostics_startup_test.dart test/crash_diagnostics_test.dart test/crash_reports_section_test.dart"
+  },
+  "analyzer": {
+    "result": "PASS",
+    "findings": 0,
+    "seconds": 11.3,
+    "command": "tool/qa/machine_lock.sh analyze -- /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter analyze"
+  },
+  "python": {
+    "result": "PASS",
+    "tests": 53,
+    "command": "python3 -m unittest tool.qa.test_bd7_exit_proof tool.qa.test_bd7_device_ui tool.qa.test_bd7_device_crash_smoke"
+  },
+  "failing_controls": [
+    {
+      "control": "slow open before fix",
+      "result": "EXPECTED FAIL: ready yielded null controller"
+    },
+    {
+      "control": "slow open with fix reverted",
+      "result": "EXPECTED FAIL: ready yielded null controller; exact source restored"
+    },
+    {
+      "control": "removed generation guard",
+      "result": "EXPECTED FAIL: stale open yielded a controller; exact source restored"
+    },
+    {
+      "control": "reset during restored replay before per-record guard",
+      "result": "EXPECTED FAIL: stale crash.anr notification followed reset; guarded replay PASS"
+    },
+    {
+      "control": "2197 preflight before candidate metadata update",
+      "result": "EXPECTED FAIL: candidate_identity_mismatch; updated candidate guard PASS"
+    }
+  ],
+  "ui": {
+    "changed": false,
+    "contract": "docs/design/bd7-late-open-contract.md",
+    "observer": "existing ready.then already follows late result"
+  },
+  "native_changed": false,
+  "apk_build": "not run; coordinator-owned",
+  "device_run": false,
+  "candidate": "/home/eslam/Storage/tmp/oc-apk-share/oc-2197.apk",
+  "candidate_present": false,
+  "normal_restore": "/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk",
+  "full_suite": "not run; coordinator-owned",
+  "pub_get": "already completed once in this worktree",
+  "push": false
+}

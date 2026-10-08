@@ -76,6 +76,26 @@ void main() {
     },
   );
 
+  test(
+    'the untitled fallback is the caller\'s words, English if none',
+    () async {
+      final (snapshot, prefs, _) = await harness();
+      await snapshot.update(
+        sessions: [_session('s1', updated: 50)],
+        busySessions: const {},
+        connected: true,
+        untitledLabel: 'محادثة بلا عنوان',
+      );
+      final decoded =
+          jsonDecode(prefs.getString(WidgetSessionSnapshot.prefsKey)!)
+              as Map<String, dynamic>;
+      expect(
+        ((decoded['sessions'] as List).single as Map)['title'],
+        'محادثة بلا عنوان',
+      );
+    },
+  );
+
   test('unchanged payloads neither rewrite nor redraw', () async {
     final (snapshot, _, refreshes) = await harness();
     final sessions = [_session('s1', title: 'Fix auth', updated: 50)];

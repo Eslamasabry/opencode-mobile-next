@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "runID": "fq3-20261008-settled",
+  "device": "emulator-5554",
+  "appBuild": 2195,
+  "sourceRevision": "d0c007fb6a275da18798f747cf804813a106664d",
+  "startedAt": "2026-10-08T04:17:21.100417Z",
+  "scope": "phone-runtime",
+  "attestation": {
+    "runtime": "in-app-ubuntu",
+    "transport": "adb-forward",
+    "live": true,
+    "appUID": 10217,
+    "versionProbeUID": 10217,
+    "buildVerified": true,
+    "credentialSource": "runtime-launch-config"
+  },
+  "engines": {
+    "opencode": {
+      "expectedVersion": "1.18.32",
+      "observedVersion": "1.18.32",
+      "results": {
+        "version": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "healthy": true,
+            "asserted": true
+          }
+        },
+        "create": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "retained": true,
+            "asserted": true
+          }
+        },
+        "models": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "connectedModels": 18,
+            "asserted": true
+          }
+        },
+        "stream": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "streamedDelta": true,
+            "completedReply": true,
+            "asserted": true
+          }
+        },
+        "reconnect": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "refetched": true,
+            "messages": 2,
+            "asserted": true
+          }
+        },
+        "modelSwitch": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "selectionObserved": true,
+            "asserted": true
+          }
+        },
+        "abort": {
+          "state": "fail",
+          "code": "oc1_after_abort_reply_mismatch",
+          "facts": {}
+        },
+        "permissionAllow": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "requestObserved": true,
+            "replyObserved": true,
+            "asserted": true
+          }
+        },
+        "permissionDeny": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "requestObserved": true,
+            "replyObserved": true,
+            "asserted": true
+          }
+        },
+        "image": {
+          "state": "fail",
+          "code": "oc1_image_content_unverified",
+          "facts": {}
+        },
+        "cards": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "cardsToolCall": true,
+            "answerReceipt": true,
+            "asserted": true
+          }
+        }
+      }
+    },
+    "opencode2": {
+      "expectedVersion": "2.0.10",
+      "observedVersion": "2.0.10",
+      "results": {
+        "version": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "healthy": true,
+            "asserted": true
+          }
+        },
+        "create": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "created": true,
+            "asserted": true
+          }
+        },
+        "models": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "enabledModels": 84,
+            "selectedModelAvailable": true,
+            "asserted": true
+          }
+        },
+        "stream": {
+          "state": "fail",
+          "code": "timeout",
+          "facts": {}
+        },
+        "reconnect": {
+          "state": "fail",
+          "code": "timeout",
+          "facts": {}
+        },
+        "modelSwitch": {
+          "state": "fail",
+          "code": "inference_execution_failed",
+          "facts": {}
+        },
+        "abort": {
+          "state": "fail",
+          "code": "timeout",
+          "facts": {}
+        },
+        "permissionAllow": {
+          "state": "fail",
+          "code": "timeout",
+          "facts": {}
+        },
+        "permissionDeny": {
+          "state": "fail",
+          "code": "timeout",
+          "facts": {}
+        },
+        "image": {
+          "state": "fail",
+          "code": "inference_execution_failed",
+          "facts": {}
+        },
+        "cards": {
+          "state": "fail",
+          "code": "inference_execution_failed",
+          "facts": {}
+        }
+      }
+    }
+  },
+  "protocolSwitch": {
+    "state": "pass",
+    "code": "verified",
+    "facts": {
+      "asserted": true,
+      "bothHistoriesPreserved": true,
+      "freshClients": true,
+      "oc1Sessions": 16,
+      "oc2Sessions": 16
+    }
+  },
+  "evidence": "docs/qa/FQ3-2026-10-08/fq3-20261008-settled.json"
+}

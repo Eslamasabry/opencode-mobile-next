@@ -29,7 +29,7 @@ import 'screens/settings_screen.dart' show NotificationsSettingsScreen;
 import 'screens/tailscale_setup_screen.dart';
 import 'screens/team/team_page.dart';
 import 'screens/this_phone_screen.dart';
-import 'screens/tools_hub_screen.dart';
+import 'screens/capabilities_screen.dart';
 import 'screens/usage_hub_screen.dart';
 import 'widgets/pickers.dart';
 import 'widgets/product_states.dart';
@@ -82,13 +82,8 @@ Map<String, KitEnableFlowHandler> capabilityFlowHandlers(
         if (context.mounted) await editTeamAddress(context, controller);
       },
     ),
-    KitEnableFlows.mcpAdd: (context, _) => pushKitPage<void>(
-      context,
-      (_) => IntegrationsScreen(
-        controller: controller,
-        mode: IntegrationsMode.mcp,
-      ),
-    ),
+    KitEnableFlows.mcpAdd: (context, _) =>
+        openTools(context, controller, section: ToolsSection.mcp),
     KitEnableFlows.projectChoose: (context, _) => pushKitPage<bool>(
       context,
       (_) => ProjectsScreen(controller: controller, selectedProjectID: null),

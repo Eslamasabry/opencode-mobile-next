@@ -2,19 +2,23 @@ package android.app
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
+import io.github.eslamasabry.opencode_mobile.ServiceEvents
 open class Service : Context() {
-    var stopped = false
+    @Volatile var stopped = false
+    @Volatile var foreground = false
     open fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = 0
     open fun onTimeout(startId: Int, fgsType: Int) {}
     open fun onBind(intent: Intent?): IBinder? = null
     open fun onDestroy() {}
     fun startForeground(id: Int, notification: Notification, type: Int = 0) {
         if (denyForeground) throw SecurityException("policy")
+        foreground = true
+        ServiceEvents.add("foreground.start")
     }
-    fun stopForeground(flags: Int) {}
-    fun stopSelf() { stopped = true }
-    fun stopSelf(id: Int) { stopped = true }
-    companion object { const val START_NOT_STICKY = 2; const val STOP_FOREGROUND_REMOVE = 1; var denyForeground = false }
+    fun stopForeground(flags: Int) { foreground = false; ServiceEvents.add("foreground.stop") }
+    fun stopSelf() { stopped = true; ServiceEvents.add("service.stop") }
+    fun stopSelf(id: Int) { stopSelf() }
+    companion object { const val START_STICKY = 1; const val START_NOT_STICKY = 2; const val STOP_FOREGROUND_REMOVE = 1; var denyForeground = false }
 }
 class Notification {
     class Builder {

@@ -26,6 +26,69 @@ void main() {
         sha256.convert(utf8.encode(fixturePayload)).toString(),
       );
 
+  // GNU sync -f flushes the containing filesystem, so the real command makes
+  // these tiny fixtures wait for unrelated host writes during parallel runs.
+  // Keep the journal barriers observable without pretending to qualify disk
+  // durability: accept only the install's exact paths and record each receipt.
+  String fixtureSync() {
+    final directory = isolated(PaseoPhoneScripts.installDirectory);
+    final parent = Directory(directory).parent.path;
+    final launcher = '${temp.path}/oc/.local/bin/paseo';
+    final launcherParent = Directory(launcher).parent.path;
+    return '''
+sync() {
+  [ "\$#" = 2 ] && [ "\$1" = -f ] || return 90
+  case "\$2" in
+    '$directory.oc-pending.new'|'$launcher.oc-pending.new')
+      [ -f "\$2" ] && [ ! -L "\$2" ] || return 91
+      fixture_sync_receipt="\$2" ;;
+    '$parent'|'$launcherParent')
+      [ -d "\$2" ] && [ ! -L "\$2" ] || return 92
+      case "\$2" in
+        '$parent') fixture_sync_receipt='$directory.oc-pending' ;;
+        *) fixture_sync_receipt='$launcher.oc-pending' ;;
+      esac ;;
+    '$directory'|'$launcher')
+      [ -e "\$2" ] || [ -L "\$2" ] || return 93
+      fixture_sync_receipt="\$2.oc-pending" ;;
+    *) return 94 ;;
+  esac
+  fixture_sync_state=none
+  if [ -e "\$fixture_sync_receipt" ] || [ -L "\$fixture_sync_receipt" ]; then
+    [ -f "\$fixture_sync_receipt" ] && [ ! -L "\$fixture_sync_receipt" ] || return 95
+    fixture_sync_state=\$(cat "\$fixture_sync_receipt") || return 96
+    case "\$fixture_sync_state" in new|existing) ;; *) return 97 ;; esac
+  fi
+  printf '%s\\t%s\\n' "\$2" "\$fixture_sync_state" >> '${temp.path}/sync-calls'
+}
+''';
+  }
+
+  List<String> recordedSyncCalls() =>
+      File('${temp.path}/sync-calls').readAsLinesSync();
+
+  List<String> expectedSyncCalls({
+    String receipt = 'new',
+    bool rollback = false,
+  }) {
+    final directory = isolated(PaseoPhoneScripts.installDirectory);
+    final parent = Directory(directory).parent.path;
+    final launcher = '${temp.path}/oc/.local/bin/paseo';
+    final launcherParent = Directory(launcher).parent.path;
+    return [
+      '$directory.oc-pending.new\t$receipt',
+      '$parent\t$receipt',
+      '$launcher.oc-pending.new\t$receipt',
+      '$launcherParent\t$receipt',
+      if (!rollback) '$directory\t$receipt',
+      '$parent\t$receipt',
+      '$parent\tnone',
+      if (!rollback) '$launcher\t$receipt',
+      '$launcherParent\t$receipt',
+      '$launcherParent\tnone',
+    ];
+  }
+
   Future<ProcessResult> runInstall({
     bool failNpm = false,
     bool tamperCli = false,
@@ -90,6 +153,7 @@ id() { echo 1000; }
 uname() { echo aarch64; }
 oc_stage() { printf '::oc stage %s\\n' "\$1"; }
 oc_version() { printf '%s\\n' "\$1"; }
+${fixtureSync()}
 ${fixtureScript(PaseoPhoneScripts.install(packageLock: lock))}
 ''',
       ],
@@ -100,8 +164,10 @@ ${fixtureScript(PaseoPhoneScripts.install(packageLock: lock))}
     );
   }
 
-  Future<ProcessResult> runCheck() =>
-      Process.run('/bin/sh', ['-c', fixtureScript(PaseoPhoneScripts.check)]);
+  Future<ProcessResult> runCheck() => Process.run('/bin/sh', [
+    '-c',
+    '${fixtureSync()}\n${fixtureScript(PaseoPhoneScripts.check)}',
+  ]);
 
   test('shipped lock freezes every HTTPS tarball with SRI', () {
     expect(
@@ -197,6 +263,7 @@ ${fixtureScript(PaseoPhoneScripts.install(packageLock: lock))}
     );
     expect(marker.readAsStringSync(), PaseoPhoneScripts.packageLockSha256);
     expect(Link('${temp.path}/oc/.local/bin/paseo').existsSync(), isTrue);
+    expect(recordedSyncCalls(), expectedSyncCalls());
   });
 
   for (final failure in ['entrypoint', 'payload', 'launcher']) {
@@ -312,6 +379,7 @@ ${fixtureScript(PaseoPhoneScripts.install(packageLock: lock))}
         final previousCode = cli.readAsStringSync();
         final launcher = Link('${temp.path}/oc/.local/bin/paseo');
         final previousLink = launcher.targetSync();
+        File('${temp.path}/sync-calls').deleteSync();
         final result = await runInstall(activeFails: activeFails);
         if (activeFails) {
           expect(result.exitCode, isNot(0));
@@ -333,6 +401,10 @@ ${fixtureScript(PaseoPhoneScripts.install(packageLock: lock))}
         expect(launcher.targetSync(), previousLink);
         expect(File('$directory.oc-pending').existsSync(), isFalse);
         expect(File('${launcher.path}.oc-pending').existsSync(), isFalse);
+        expect(
+          recordedSyncCalls(),
+          expectedSyncCalls(receipt: 'existing', rollback: activeFails),
+        );
       },
     );
   }

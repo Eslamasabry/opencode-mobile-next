@@ -1,8 +1,11 @@
+import 'dart:ui' show Locale;
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/background/live_background.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
+import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,6 +26,16 @@ Future<BackgroundLiveController> _live({
     preferences: preferences,
     liveStatusDebounce: _debounce,
     invoke: (method, [arguments]) async {
+      if (method == 'getBackgroundPause') {
+        return const {
+          'supported': true,
+          'active': false,
+          'paused': false,
+          'reason': 'none',
+          'at': null,
+          'canResume': false,
+        };
+      }
       calls.add((method, arguments));
       if (method == 'updateLiveStatus' && failWith != null) {
         throw failWith()!;
@@ -288,13 +301,48 @@ void main() {
       expect(controller.liveStatus().detail, isNull);
     });
 
+    test('the running sentence follows the app language', () async {
+      final live = await _live(calls: []);
+      final controller = await controllerWith(live);
+      addTearDown(controller.dispose);
+      await controller.setAppLocale(const Locale('ar'));
+      controller.handleEventForTesting(
+        EventEnvelope(
+          type: 'message.part.updated',
+          properties: {
+            'part': {
+              'type': 'tool',
+              'sessionID': 'new',
+              'tool': 'edit',
+              'state': {'status': 'running'},
+            },
+          },
+        ),
+      );
+      expect(controller.liveStatus().detail, 'جارٍ تعديل الملفات…');
+      // Every sentence has Arabic words, and an unknown id is said in them.
+      final ar = lookupAppLocalizations(const Locale('ar'));
+      for (final tool in ['bash', 'read', 'grep', 'webfetch', 'task', '']) {
+        expect(
+          ConnectionController.toolSentence(tool, ar),
+          matches(RegExp('[\u0600-\u06FF]')),
+          reason: tool,
+        );
+      }
+      expect(
+        ConnectionController.toolSentence('mcp_thing', ar),
+        'جارٍ تشغيل mcp thing…',
+      );
+    });
+
     test('tool sentences never repeat the tool input', () {
       expect(ConnectionController.toolSentence('bash'), 'Running a command…');
       expect(ConnectionController.toolSentence('Edit'), 'Editing files…');
       expect(ConnectionController.toolSentence('grep'), 'Searching files…');
+      // An id the app has no sentence for is said in words, never as is.
       expect(
         ConnectionController.toolSentence('mcp_thing'),
-        'Running mcp_thing…',
+        'Running mcp thing…',
       );
       expect(ConnectionController.toolSentence(''), 'Working…');
     });

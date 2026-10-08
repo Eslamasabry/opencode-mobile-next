@@ -40,8 +40,12 @@ retain their separate behavior. Device restart/crash/ANR qualification and the
 complete consent journey are still unverified; focused local evidence is in
 `docs/qa/bd7-2026-10-07/README.md`.
 
-Crash storage opens after the first frame, with a 300 ms readiness budget.
-Native-channel or background-file delays leave the Flutter crash store unavailable
-for this run; late results cannot attach capture. Existing consent is retained
-for a later restart. The native fatal handler independently follows that saved
-consent; a Flutter startup timeout does not revoke it.
+Crash storage opens after the first frame. The launch wait returns within 300 ms;
+native-channel and background-file work can continue after that wait. Actual
+readiness remains pending until opening succeeds or fails, and a successful late
+open attaches the controller without changing consent. Capture remains OFF until
+explicit opt-in; opening completion does not replay errors captured before opt-in
+into saved crash records. Reset/generation changes discard stale opening results.
+Restored evidence reaches App diagnostics once after readiness settles. The native
+fatal handler independently follows saved consent; expiry of the launch wait
+does not revoke it.

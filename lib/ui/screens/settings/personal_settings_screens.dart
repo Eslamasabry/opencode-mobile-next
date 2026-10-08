@@ -55,11 +55,7 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
   }
 
   static String _localeLabel(AppLocalizations l10n, String code) =>
-      switch (code) {
-        'ar' => l10n.e7LocaleUiArabic,
-        'en' => l10n.e7LocaleUiEnglish,
-        _ => l10n.e7LocaleUiSystem,
-      };
+      languageChoiceLabel(l10n, code);
 
   Widget _display(BuildContext context) {
     final controller = widget.controller;
@@ -133,10 +129,14 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
                     title: copy.e7LocaleUiLanguage,
                     valueLabel: _localeLabel(copy, locale),
                     choices: [
-                      for (final code in const ['', 'en', 'ar'])
+                      for (final code in const [
+                        '',
+                        ...AppLocaleStore.pickerLanguages,
+                      ])
                         KitChoice(
                           value: code,
                           title: _localeLabel(copy, code),
+                          supporting: languageChoiceNote(copy, code),
                           key: ValueKey('appearance-language-$code'),
                         ),
                     ],

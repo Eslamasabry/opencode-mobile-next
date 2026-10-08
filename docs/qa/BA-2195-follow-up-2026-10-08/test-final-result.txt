@@ -1,0 +1,208 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: runtime switch rechecks cards for the shared owner
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: All projects rechecks Cards after a runtime switch
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: retirement preserves a queued Cards disable setting
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: retired runtime cannot publish its pending cards qualification
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: effective capability defaults false despite gateway capability
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: fallback names only phone agents and connected v1
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: fallback names only phone agents and connected v2
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: shared installation status follows runtime switches without naming the other OpenCode generation
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: opposite runtime readiness never qualifies this connection
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: an opposite-only partial result remains unavailable without applicable ready agents
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: applicable failures keep their reason and exclude the other runtime from affected agents
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: generic setup problems survive connection projection
+00:00 +12: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: restart status names only agents belonging to this connection
+00:00 +13: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: unmanaged profiles reject setup and never call installer
+00:00 +14: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: explicit setup runs once and enables only the qualified runtime
+00:00 +15: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: controller stages all managed agents while installer gates readiness
+00:00 +16: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: review 3 pure deltas do not invalidate cards or notify the app
+00:00 +17: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: review 6 profile deletion continues after registration cleanup fails
+00:00 +18: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: review 6 profile deletion continues after registration cleanup throws
+00:00 +19: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: automatic setup is coalesced across transcript observations
+00:00 +20: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: pending enable cannot reactivate after a newer disable request
+00:00 +21: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: disable blocks card actions before removal completes
+00:00 +22: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: waiting cards project into feed and typed reply clears attention
+00:00 +23: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: profile deletion removes owned card keys and retains other owner
+00:00 +24: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: remote main routes card state and Undo to built-in side owner
+00:00 +25: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_controller_test.dart: failed setup keeps desired setting separate from effective capability
+00:00 +26: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:09 +26: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: (setUpAll)
+00:09 +26: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list card answer refreshes activity and completion without opening chat
+00:09 +27: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: native questions hydrate the chat controller and answer as choices
+00:09 +28: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: question identity includes native optionality
+00:09 +29: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question answers claude without opening a backend
+00:09 +30: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question answers pi without opening a backend
+00:09 +31: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question rejects on the feed source
+00:09 +32: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question fences changed revision and disconnected source
+00:09 +33: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question source identity isolates colliding IDs
+00:09 +34: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question cannot reuse an identity after source replacement
+00:09 +35: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question equivalent refresh keeps identity but resolution retires it
+00:09 +36: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question routes the selected OpenCode source without waking it
+00:09 +37: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a Pi question shows under its row with no chat opened and is answered from the sheet
+00:11 +38: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list permission captures revision and never sends a changed held command
+00:11 +39: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list permission source identities isolate colliding wire IDs
+00:11 +40: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list permission disappears on resolution and disconnect fences old replies
+00:11 +41: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list permission profile deletion fences held approval
+00:11 +42: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list permission for a newly created conversation routes draft ID to daemon ID
+00:11 +43: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list permission shows and answers with Undo after disposed chat=false
+00:11 +44: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list permission shows and answers with Undo after disposed chat=true
+00:11 +45: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: new Claude saved row retains the daemon ID across source loss
+00:11 +46: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: reopen newly created running Claude with disposed chat=false
+00:11 +47: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: reopen newly created running Claude with disposed chat=true
+00:11 +48: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: reopen newly created idle Claude with disposed chat=false
+00:11 +49: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: reopen newly created idle Claude with disposed chat=true
+00:11 +50: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: live photo receipt settles while running using messageId
+00:12 +51: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: live photo receipt settles while running using clientMessageId
+00:13 +52: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: live photo receipt rejects correlation without authoritative history
+00:14 +53: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: live photo receipt rejects card without authoritative history
+00:15 +54: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: live photo receipt rejects call without authoritative history
+00:16 +55: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: live photo receipt rejects assistant without authoritative history
+00:16 +56: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: live photo receipt rejects missing ID without authoritative history
+00:17 +57: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: photo card on a new Claude chat sends bytes through the real gateway
+00:18 +58: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: photo card chat and list aliases share identity and Undo
+00:18 +59: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: photo card unconfirmed send cannot retry through the list alias
+00:19 +60: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: photo card keeps a legacy local-ID dispatch marker fail closed
+00:19 +61: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: photo card archive clears both chat and list session aliases
+00:19 +62: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: photo card explicit delete clears both aliases without an event
+00:20 +63: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 busy snapshots without an owned transport have no watchdog wakeups
+00:20 +64: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 idle cancels a pending probe deadline
+00:20 +65: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 deleted cancels a pending probe deadline
+00:20 +66: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 error cancels a pending probe deadline
+00:20 +67: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 dispose cancels a pending probe deadline
+00:20 +68: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 disconnect cancels a pending probe deadline
+00:20 +69: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 suspend cancels a pending probe deadline
+00:20 +70: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 silent turn diagnoses modelSlow within sixty seconds
+00:20 +71: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 silent turn diagnoses helperDown within sixty seconds
+00:20 +72: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 silent turn diagnoses network within sixty seconds
+00:20 +73: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 waiting for permission pauses diagnosis and late probes cannot revive idle turn
+00:20 +74: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: finished phone check publishes fresh qualification before the next agent
+00:20 +75: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone check retries a failed live cards verification
+00:20 +76: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone checks leave Cards explicitly off
+00:20 +77: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone check completion cannot republish a retired host result
+00:20 +78: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: failed phone recheck never borrows the earlier ready result
+00:20 +79: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA9 uses host owner scope and revokes before native host stop
+00:20 +80: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA4 gives arm64 Claude the connected helper certification
+00:20 +81: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: qualified cards skip asks in feed and active chat, disable revokes
+00:20 +82: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: off the phone profile there is no agent surface
+00:20 +83: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: rows, chip choices and a persisted, revalidated selection
+00:20 +84: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: merged feed keeps both sources; rows open by identity
+00:20 +85: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: old phone-agent chats need an explicit new chat
+00:20 +86: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: the list paints once when agents had conversations before
+00:20 +87: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: saved agent rows paint at once and give way to live ones
+00:20 +88: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a helper still starting is read again once it answers
+00:20 +89: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a helper slower than half a minute still gets its rows read
+00:20 +90: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a pull to refresh reaches a helper the retries gave up on
+00:20 +91: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a helper that never answers stops being called loading
+00:20 +92: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: approval choices made before carry over to the agent backend
+00:20 +93: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: the agent backend follows the app into the background and back
+00:20 +94: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: an old conversation with its session handle reopens by resuming it on the helper
+00:20 +95: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a refused resume says so, and the next tap offers a new conversation
+00:20 +96: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA1 agent sign-in comes from CLI even when helper disagrees
+00:21 +97: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA3 terminal completion requires signed-in probe and BA8 verifies logout
+00:21 +98: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA3 a late older probe cannot complete a newer signed-out attempt
+00:21 +99: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA1 missing multi-agent bridge preserves direct Claude status only
+00:21 +100: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: issue #95: a sign-in check always ends a provider the helper does not list says it could not check, on the first read
+00:21 +101: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a resumed session is one row, with the title it had
+00:21 +102: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: at app start the helper is checked beside the server, only where agents had conversations
+00:21 +103: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: without earlier agent conversations the list never waits
+00:21 +104: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a chat the host still runs reopens after an app restart
+00:21 +105: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: starting chats routes to OpenCode or the phone host
+00:21 +106: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a stopped helper is started again when a chat needs it
+00:21 +107: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: limit and stopped rows surface as status lines
+00:21 +108: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA5 protocol switch keeps host account and conversation rows
+00:21 +109: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: deletion closes auth, setup, host and feeds before ProfileStore
+00:21 +110: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: clearing saved sign-ins closes clients and asks for a restart
+00:21 +111: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: (tearDownAll)
+00:21 +111: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart
+00:22 +111: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: stages all tools and only verifies evidence-backed transports
+00:22 +112: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: review 1 failed verifier reports verification failure not restart
+00:22 +113: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: review 1 missing verifier reports unqualified not restart
+00:22 +114: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: registration never claims a ready runtime
+00:22 +115: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: OpenCode collision reports partial while Claude remains ready
+00:22 +116: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: OpenCode 2 registration cannot become ready through a permissive verifier
+00:22 +117: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: BA6 qualified OC1 registration still needs live verification
+00:22 +118: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: BA6 builtin verifier runs OC1 as root and Claude in the agent view
+00:22 +119: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: verified Claude registration becomes ready
+00:22 +120: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: verified Claude remains ready when OpenCode runtime is missing
+00:22 +121: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: missing installation disables successfully without verification
+00:22 +122: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: reject invalid profile before invoking setup
+00:22 +123: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: serialize across installer instances
+00:22 +124: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 schema-only JSONC receives the effective registration
+00:22 +125: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC preserves string-array separator with trailing comma false
+00:22 +126: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC preserves string-array separator with trailing comma true
+00:22 +127: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC merges owned entry without changing user content
+00:23 +128: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 disable preserves JSONC and later user edits
+00:23 +129: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC refuses a genuine collision in opencode.jsonc
+00:23 +130: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC refuses a genuine collision in opencode.json
+00:23 +131: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 current JSON refuses flat null collision
+00:23 +132: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 current JSON refuses nested compatibility collision
+00:23 +133: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC refuses a nonobject MCP override null
+00:23 +134: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC refuses a nonobject MCP override []
+00:23 +135: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC refuses a nonobject MCP override false
+00:23 +136: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay config.json {"mcp":{"oc-ui":null}}
+00:23 +137: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay opencode.jsonc {"mcp":{"oc-ui":null}}
+00:24 +138: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay config.json {"mcp":{"servers":{"oc-ui":null}}}
+00:24 +139: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay opencode.jsonc {"mcp":{"servers":{"oc-ui":null}}}
+00:24 +140: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay config.json {"mcp":{"oc-ui":null},"mcp":{}}
+00:24 +141: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay opencode.jsonc {"mcp":{"oc-ui":null},"mcp":{}}
+00:24 +142: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay opencode.jsonc {"mcp":{"other":{},"other":{}}}
+00:24 +143: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay opencode.jsonc {"mcp": {/* unfinished
+00:24 +144: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay config model = "user-model"
+
+00:24 +145: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses symlinked JSONC without touching its target
+00:24 +146: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC self-check rollback preserves user settings
+00:24 +147: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode uses existing root-owned pinned Node without a system alias
+00:25 +148: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode retains and removes a legacy system Node registration after runtime removal
+00:25 +149: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode unsafe preferred runtime never falls back to another candidate
+00:25 +150: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode refuses writable or foreign-owned helper ancestors
+00:25 +151: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 2 persists direct tools in isolated mcp servers config
+00:25 +152: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction BA6 OC1 readiness requires pinned live connected server and owned helper
+00:26 +153: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction two owners install idempotently and last disable removes only own entry
+00:27 +154: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude CLI uses profile environment and user scope for add/remove
+00:27 +155: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow is exact, idempotent and removed on disable
+00:27 +156: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow preserves user-owned exact permission
+00:27 +157: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow verifies and repairs missing permission
+00:28 +158: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow rejects malformed or symlinked settings
+00:28 +159: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow rolls back its rule on self-check failure
+00:28 +160: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow migrates an existing owned registration
+00:28 +161: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow resets ownership after disable
+00:29 +162: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude readiness checks pinned CLI and discovery in owned profile
+00:29 +163: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction disable absent runtime does not create directories or invoke runtime
+00:29 +164: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction review 5 unchanged enable keeps marker throughout verification
+00:29 +165: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction review 6 repairs owned helper and marker corruption
+00:30 +166: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction review 6 modified owned helper cannot block disable
+00:30 +167: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction review 6 recovers exact helper orphan from interrupted first install
+00:30 +168: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction review 6 unknown orphan remains an unowned collision
+00:30 +169: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction unowned entry collision preserves existing config
+00:30 +170: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction symlinked managed directory refuses writes
+00:30 +171: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction edited owned entry is never removed
+00:30 +172: /home/eslam/Storage/Code/oc_app-sol-ba/test/gen_ui_install_test.dart: isolated persistent ownership transaction failed self-check rolls back only newly managed writes
+00:31 +173: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart
+00:32 +173: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: BA1 probe uses the stable private home and returns only narrow account facts
+00:32 +174: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: BA1 missing private bridge stays unavailable and never uses setup output
+00:32 +175: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: shared engine installs as oc with Python and conditional host Node
+00:32 +176: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: the native host launches Paseo 0.9.2 without removed launch flags
+00:32 +177: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: ARM64 gate requires install version daemon and exact Paseo hello
+00:32 +178: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: x64 pass cannot qualify ARM64 and changed architecture invalidates gate
+00:32 +179: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: legacy fx check still qualifies after owner migration and never after failed retry
+00:32 +180: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: failed retry clears prior proof and never starts daemon after wrong version
+00:32 +181: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: stopped self-test cannot start a daemon after a late version check
+00:32 +182: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: restore and cancel cannot operate another profile setup job
+00:32 +183: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: running installation requires continue instead of a second install
+00:32 +184: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: background loss exposes resume and reuses the Keystore slot
+00:32 +185: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: restore resumes same persisted component selection with safe progress
+00:32 +186: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: profile removal drains native account home before deleting password
+00:32 +187: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: failed native drain preserves profile and secure slot for retry
+00:32 +188: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: saved-sign-in reset includes orphan agent slots and preserves unrelated secrets
+00:32 +189: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart
+00:33 +189: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: (setUpAll)
+00:33 +189: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: on the built-in server Settings has an Agents row that opens the section with Check this phone
+setup: status read took over 10 s
+00:35 +190: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: on a remote server the row stays, says why, and offers no switch without a built-in server
+00:36 +191: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: with a built-in server saved, the page offers the switch
+00:36 +192: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: off a phone, with no agents, there is no Agents row
+00:36 +193: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: (tearDownAll)
+00:36 +193: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart
+00:37 +193: /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: no lib file grows past its line budget
+00:38 +194: /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: the baseline only lists files over the limit
+00:38 +195: All tests passed!

@@ -21,6 +21,16 @@ class _Native {
     String method, [
     Map<String, dynamic>? arguments,
   ]) async {
+    if (method == 'getBackgroundPause') {
+      return const {
+        'supported': true,
+        'active': false,
+        'paused': false,
+        'reason': 'none',
+        'at': null,
+        'canResume': false,
+      };
+    }
     calls.add(method);
     return {'enabled': false, 'active': false};
   }

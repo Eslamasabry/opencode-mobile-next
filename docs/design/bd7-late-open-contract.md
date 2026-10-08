@@ -1,0 +1,3 @@
+`CrashDiagnosticsStartup.start()` keeps its 300 ms launch bound; background opening continues and `ready` resolves only with the actual controller or opening failure.
+Claude: `CrashReportsSection` already follows `ready.then` and reacts to late completion; update its obsolete “at most 300 ms” comment and `main.dart:126-127`'s comment saying late replies leave capture off for the run, without changing the hooks.
+Consent stays OFF until explicit opt-in; late completion does not replay pre-consent errors, reset/generation drops stale results, and restored evidence is replayed once after readiness settles.

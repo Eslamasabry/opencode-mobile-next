@@ -26,6 +26,7 @@ import 'package:opencode_mobile/domain/genui/gen_ui.dart';
 import 'package:opencode_mobile/domain/genui/gen_ui_history.dart';
 import 'package:opencode_mobile/builtin/agents/gen_ui_install.dart';
 import 'package:opencode_mobile/domain/agent_sign_in.dart';
+import 'package:opencode_mobile/domain/agent_sign_in_foreground.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/domain/phone_agent_host.dart';
 import 'package:opencode_mobile/domain/phone_agents.dart';
@@ -52,6 +53,9 @@ part 'support/phone_agents_list_permission_tests.dart';
 part 'support/phone_agents_reopen_tests.dart';
 part 'support/phone_agents_photo_card_tests.dart';
 part 'support/phone_agents_stall_tests.dart';
+part 'support/phone_agents_check_publication_tests.dart';
+part 'support/phone_agents_capability_refresh_tests.dart';
+part 'support/phone_agents_removal_tests.dart';
 
 const _project = '/root/projects/app';
 const _stamp = '2026-10-03T08:00:00Z';
@@ -261,6 +265,7 @@ class _BrowserPort implements BrowserClaudeLaunchPort {
 }
 
 class _HostState {
+  Future<AgentPhoneCheckResult> Function(String)? selfTestHandler;
   Future<AgentAuthProbeResult> Function(String)? probeHandler;
   final auth = <String, AgentAuthProbeResult>{};
   AgentAuthProbeResult logoutResult = const AgentAuthProbeResult(
@@ -269,6 +274,10 @@ class _HostState {
   PaseoGateway Function(PaseoTransport, String)? gatewayFactory;
   void Function(FakePaseoSocket)? configureSocket;
   bool freshPrivateSockets = false;
+  bool connectOnOpen = false;
+  bool projectCapabilities = false;
+  FakePaseoSocket Function()? socketFactory;
+  final capabilityReads = <AgentCapabilities>[];
   final inspectedCapabilities = <String, AgentCapabilities>{};
   Map<String, PhoneAgentRuntime> runtimes = {};
   List<Map<String, dynamic>> agents = [];
@@ -337,6 +346,7 @@ class _FakeHost implements PhoneAgentHostPort, PhoneAgentAuthPort {
   Future<void> stop() async => events.log.add('host.stop');
   @override
   Future<AgentPhoneCheckResult> selfTest(String agentId) async =>
+      await state.selfTestHandler?.call(agentId) ??
       check ??
       AgentPhoneCheckResult(
         agentId: agentId,
@@ -353,13 +363,16 @@ class _FakeHost implements PhoneAgentHostPort, PhoneAgentAuthPort {
     AgentCapabilities capabilities = const AgentCapabilities(),
   }) async {
     state.inspectedCapabilities[agentId] = capabilities;
+    if (agentId == 'claude') state.capabilityReads.add(capabilities);
     final base = runtimes[agentId] ?? PhoneAgentRuntime(agentId: agentId);
     return PhoneAgentRuntime(
       agentId: agentId,
       installed: base.installed,
       hostAvailable: base.hostAvailable,
       architectureQualified: base.architectureQualified,
-      capabilities: base.capabilities,
+      capabilities: state.projectCapabilities
+          ? capabilities
+          : base.capabilities,
       signInPhase:
           base.signInPhase ??
           (signIn?.inspected == true ? signIn!.phase : null),
@@ -377,12 +390,14 @@ class _FakeHost implements PhoneAgentHostPort, PhoneAgentAuthPort {
       failOpens--;
       throw const AgentHostException(AgentHostFailure.hello);
     }
-    return newGatewaySync(directory);
+    final gateway = newGatewaySync(directory);
+    if (state.connectOnOpen) await gateway.transport.connect();
+    return gateway;
   }
 
   @override
   PaseoGateway newGatewaySync(String directory) {
-    final socket = FakePaseoSocket();
+    final socket = state.socketFactory?.call() ?? FakePaseoSocket();
     sockets.add(socket);
     socket.handlers['get_providers_snapshot_request'] = (request) => (
       'get_providers_snapshot_response',
@@ -618,6 +633,7 @@ Future<_World> _world(
   FlutterSecureStorage? secure,
   GenUiInstaller? genUiInstaller,
   BrowserClaudeLaunchRegistry? browserClaudeLaunchRegistry,
+  bool removalSupported = false,
 }) async {
   final profileJson = {
     'id': 'local',
@@ -665,7 +681,9 @@ Future<_World> _world(
     localWakeLockEnsurer: () async {},
     phoneEngineBridge: _NoEngineBridge(),
     phoneAgentHostFactory: (profile) {
-      final host = _FakeHost(events, profile.id, state);
+      final host = removalSupported
+          ? _RemovableHost(events, profile.id, state)
+          : _FakeHost(events, profile.id, state);
       hosts.add(host);
       return host;
     },
@@ -701,6 +719,9 @@ void main() {
   _reopenAgentTests();
   _photoCardAliasTests();
   _turnStallControllerTests();
+  _phoneCheckPublicationTests();
+  _phoneCapabilityRefreshTests();
+  _phoneRemovalTests();
 
   const dir = _project;
 

@@ -1,0 +1,15 @@
+{
+  "app_sha256": "c53e0d1f0b43b92f5e8443b756375f422d115a237b444fa0dd282be6451ca7da",
+  "test_apk_sha256": "fc6cb885b119c747aa2488aff3d84c06005ec4b48ab879bbc41f1c543e4b4831",
+  "native_runner_sha256": "40331f2b4d21f9973fcd9ca13fb13cdfabd0d263eef2237bf0d3bd30189b6c93",
+  "dart_smoke_sha256": "4246b9820af0fa56b32e77ca39dcbbacc79f1cc52fb9b894bed8d289191a0f61",
+  "dart_finder_sha256": "29cf6bf95d4355cfbbf3bcbd2b1f9baec05f8de6b206ac5b9827e77d67646a81",
+  "candidate_base_commit": "a690e1660e04718283def53cd092a1d0449e17c4",
+  "java_asset": {
+    "checksum": "3808d1d15e3ec6bd5b84057fb5d84c33d8a1536a258146bcea2e603fc726e08e",
+    "version": "17.0.20+101",
+    "java_home": "/tmp/oc-bd9-temurin17/jdk-17.0.20.1+1"
+  },
+  "normal_owner_base_commit": "e2b3fe16",
+  "normal_owner_version_code": 2195
+}

@@ -11,3 +11,16 @@
 -keep class io.flutter.embedding.engine.FlutterEngine { *; }
 -keep class io.flutter.embedding.engine.plugins.** { *; }
 -keep interface io.flutter.embedding.engine.plugins.** { *; }
+# BB8 readiness is installed by the separate test APK before any auth probe.
+# Preserve only this channel ABI in the explicit QA configuration.
+-keep class io.flutter.embedding.engine.dart.DartExecutor {
+    public io.flutter.plugin.common.BinaryMessenger getBinaryMessenger();
+}
+-keep interface io.flutter.plugin.common.BinaryMessenger { *; }
+-keep class io.flutter.plugin.common.BinaryMessenger$* { *; }
+-keep class io.flutter.plugin.common.MethodChannel {
+    public <init>(io.flutter.plugin.common.BinaryMessenger, java.lang.String);
+    public void setMethodCallHandler(io.flutter.plugin.common.MethodChannel$MethodCallHandler);
+}
+-keep class io.flutter.plugin.common.MethodChannel$* { *; }
+-keep class io.flutter.plugin.common.MethodCall { *; }

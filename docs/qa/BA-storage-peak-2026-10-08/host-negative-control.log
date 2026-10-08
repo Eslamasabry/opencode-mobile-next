@@ -1,0 +1,34 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart
+00:00 +0: native storage guard includes codex catalog install peak
+00:00 +0 -1: native storage guard includes codex catalog install peak [E]
+  Expected: '465514826'
+    Actual: '300000000'
+     Which: is different.
+            Expected: 465514826
+              Actual: 300000000
+                      ^
+             Differ at offset 0
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_agents_host_test.dart 544:9              main.<fn>
+  
+00:00 +0 -1: native storage guard includes goose catalog install peak
+00:00 +0 -2: native storage guard includes goose catalog install peak [E]
+  Expected: '460456104'
+    Actual: '300000000'
+     Which: is different.
+            Expected: 460456104
+              Actual: 300000000
+                      ^
+             Differ at offset 0
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_agents_host_test.dart 544:9              main.<fn>
+  
+00:00 +0 -2: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: native storage guard includes codex catalog install peak
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: native storage guard includes goose catalog install peak

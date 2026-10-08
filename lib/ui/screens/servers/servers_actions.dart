@@ -551,21 +551,9 @@ extension _ServersActions on _ServersScreenState {
     );
   }
 
-  Future<void> _externalAgents() async {
-    final bootstrap = ref.read(bootstrapProvider);
-    final store = ExternalAgentStore(
-      bootstrap.store.prefs,
-      bootstrap.store.secure,
-    );
-    try {
-      await pushKitPage<void>(
-        context,
-        (_) => ExternalAgentsScreen(store: store),
-      );
-    } finally {
-      store.dispose();
-    }
-  }
+  /// External agents live on the Tools page; this opens it on that tab.
+  Future<void> _externalAgents() =>
+      openExternalAgents(context, ref.read(connProvider));
 
   void _demo() =>
       unawaited(pushKitPage<void>(context, (_) => const DemoScreen()));

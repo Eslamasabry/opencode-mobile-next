@@ -178,7 +178,122 @@ const agentCertificationBundledJson = r'''{
      "evidence": null
     }
    },
-   "agentVersion": "1.18.32"
+   "agentVersion": "1.18.32",
+   "protocolCertification": {
+    "scope": "in-app Ubuntu protocol; no UI/restart/install qualification",
+    "expectedVersion": "1.18.32",
+    "observedVersion": "1.18.32",
+    "deviceBuild": 2196,
+    "runID": "fq3-20261008b-cert",
+    "evidence": "docs/qa/FQ3b-2026-10-08/fq3-20261008b-cert.json",
+    "capabilities": {
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "healthy": true,
+       "asserted": true
+      }
+     },
+     "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "retained": true,
+       "asserted": true
+      }
+     },
+     "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "connectedModels": 18,
+       "asserted": true
+      }
+     },
+     "stream": {
+      "state": "fail",
+      "code": "oc1_prompt_error",
+      "facts": {}
+     },
+     "reconnect": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "refetched": true,
+       "messages": 2,
+       "asserted": true
+      }
+     },
+     "modelSwitch": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "selectionObserved": true,
+       "asserted": true
+      }
+     },
+     "abort": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "interrupted": true,
+       "usableAfterAbort": true,
+       "asserted": true
+      }
+     },
+     "permissionAllow": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "requestObserved": true,
+       "replyObserved": true,
+       "asserted": true
+      }
+     },
+     "permissionDeny": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "requestObserved": true,
+       "replyObserved": true,
+       "asserted": true
+      }
+     },
+     "image": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "imageAnswerVerified": true,
+       "asserted": true
+      }
+     },
+     "cards": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "cardsToolCall": true,
+       "answerReceipt": true,
+       "asserted": true
+      }
+     },
+     "protocolSwitch": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "bothHistoriesPreserved": true,
+       "freshClients": true,
+       "oc1Sessions": 16,
+       "oc2Sessions": 16
+      }
+     }
+    },
+    "modelSelection": {
+     "source": "explicit",
+     "requested": "zai-coding-plan/glm-5.3"
+    }
+   }
   },
   {
    "id": "opencode2",
@@ -237,6 +352,109 @@ const agentCertificationBundledJson = r'''{
      "state": "untested",
      "evidence": null
     }
+   },
+   "protocolCertification": {
+    "scope": "in-app Ubuntu protocol; no UI/restart/install qualification",
+    "expectedVersion": "2.0.10",
+    "observedVersion": "2.0.10",
+    "deviceBuild": 2196,
+    "runID": "fq3-20261008b-cert",
+    "evidence": "docs/qa/FQ3b-2026-10-08/fq3-20261008b-cert.json",
+    "capabilities": {
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "healthy": true,
+       "asserted": true
+      }
+     },
+     "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "created": true,
+       "asserted": true
+      }
+     },
+     "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "enabledModels": 11,
+       "selectedModelAvailable": true,
+       "asserted": true
+      }
+     },
+     "stream": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "streamedDelta": true,
+       "completedReply": true,
+       "asserted": true
+      }
+     },
+     "reconnect": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "refetched": true,
+       "retainedMessages": 3,
+       "asserted": true
+      }
+     },
+     "modelSwitch": {
+      "state": "fail",
+      "code": "timeout",
+      "facts": {}
+     },
+     "abort": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "interrupted": true,
+       "usableAfterAbort": true,
+       "midStreamObserved": true,
+       "asserted": true
+      }
+     },
+     "permissionAllow": {
+      "state": "fail",
+      "code": "timeout",
+      "facts": {}
+     },
+     "permissionDeny": {
+      "state": "fail",
+      "code": "timeout",
+      "facts": {}
+     },
+     "image": {
+      "state": "fail",
+      "code": "timeout",
+      "facts": {}
+     },
+     "cards": {
+      "state": "fail",
+      "code": "cards_tool_call_missing",
+      "facts": {}
+     },
+     "protocolSwitch": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "bothHistoriesPreserved": true,
+       "freshClients": true,
+       "oc1Sessions": 16,
+       "oc2Sessions": 16
+      }
+     }
+    },
+    "modelSelection": {
+     "source": "explicit",
+     "requested": "opencode/big-pickle"
+    }
    }
   },
   {
@@ -246,15 +464,15 @@ const agentCertificationBundledJson = r'''{
    "cells": {
     "install": {
      "state": "pass",
-     "evidence": "#95 run, APK 2187"
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#fx"
     },
     "version": {
-     "state": "untested",
-     "evidence": null
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#fx"
     },
     "signedOut": {
      "state": "pass",
-     "evidence": "#95 run, APK 2187"
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#fx"
     },
     "signIn": {
      "state": "partial",
@@ -298,7 +516,96 @@ const agentCertificationBundledJson = r'''{
     }
    },
    "agentVersion": "0.0.12",
-   "helperVersion": "0.9.2"
+   "helperVersion": "0.9.2",
+   "architecture": "x64",
+   "installCertification": {
+    "scope": "App installation on x64 emulator; signed-out, no account qualification",
+    "runID": "fq-install-fx-2196-20261008",
+    "device": "emulator-5554",
+    "appBuild": 2196,
+    "sourceRevision": "d777082c37d41a16d92634c2f8f2360475247249",
+    "architecture": "x64",
+    "expectedVersion": "0.0.12",
+    "observedVersion": "0.0.12",
+    "helperVersion": "0.9.2",
+    "evidence": "docs/qa/FQ-install-2026-10-08/README.md#fx",
+    "results": {
+     "install": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "installedViaApp": true,
+       "checksumVerified": true
+      }
+     },
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true
+      }
+     },
+     "signedOut": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "namedSignedOut": true
+      }
+     },
+     "phoneCheck": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "completed": true
+      }
+     },
+     "launchNoAccount": {
+      "state": "partial",
+      "code": "cli_only_app_route_unavailable",
+      "facts": {
+       "asserted": false,
+       "noHang": true,
+       "emptyHome": true,
+       "sentLogin": false,
+       "sentPrompt": false,
+       "noOrphans": true
+      }
+     },
+     "cancelRetry": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "cancelObserved": true,
+       "retryCompleted": true
+      }
+     },
+     "lowStorage": {
+      "state": "partial",
+      "code": "policy_harness_only",
+      "facts": {
+       "asserted": false,
+       "guardPolicyVerified": true,
+       "appThresholdOverride": false,
+       "deviceFilled": false
+      }
+     },
+     "uninstall": {
+      "state": "partial",
+      "code": "no_app_removal_path",
+      "facts": {
+       "asserted": false,
+       "removedViaApp": false,
+       "bytesFreed": 11952128,
+       "leftoversRemoved": true,
+       "noOrphans": true
+      }
+     }
+    }
+   }
   },
   {
    "id": "codex",
@@ -306,16 +613,16 @@ const agentCertificationBundledJson = r'''{
    "route": "Paseo native",
    "cells": {
     "install": {
-     "state": "untested",
-     "evidence": null
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#codex"
     },
     "version": {
-     "state": "untested",
-     "evidence": null
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#codex"
     },
     "signedOut": {
-     "state": "untested",
-     "evidence": null
+     "state": "fail",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#codex"
     },
     "signIn": {
      "state": "blocked:OW1",
@@ -356,6 +663,97 @@ const agentCertificationBundledJson = r'''{
     "images": {
      "state": "blocked:OW1",
      "evidence": null
+    }
+   },
+   "agentVersion": "0.160.0",
+   "architecture": "x64",
+   "helperVersion": "0.9.2",
+   "installCertification": {
+    "scope": "App installation on x64 emulator; signed-out, no account qualification",
+    "runID": "fq-install-codex-2196-20261008",
+    "device": "emulator-5554",
+    "appBuild": 2196,
+    "sourceRevision": "d777082c37d41a16d92634c2f8f2360475247249",
+    "architecture": "x64",
+    "expectedVersion": "0.160.0",
+    "observedVersion": "0.160.0",
+    "helperVersion": "0.9.2",
+    "evidence": "docs/qa/FQ-install-2026-10-08/README.md#codex",
+    "results": {
+     "install": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "installedViaApp": true,
+       "checksumVerified": true
+      }
+     },
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true
+      }
+     },
+     "signedOut": {
+      "state": "fail",
+      "code": "probe_unsupported",
+      "facts": {
+       "asserted": false,
+       "namedSignedOut": false
+      }
+     },
+     "phoneCheck": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "completed": true
+      }
+     },
+     "launchNoAccount": {
+      "state": "partial",
+      "code": "cli_only_app_route_unavailable",
+      "facts": {
+       "asserted": false,
+       "noHang": true,
+       "emptyHome": true,
+       "sentLogin": false,
+       "sentPrompt": false,
+       "noOrphans": true
+      }
+     },
+     "cancelRetry": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "cancelObserved": true,
+       "retryCompleted": true
+      }
+     },
+     "lowStorage": {
+      "state": "partial",
+      "code": "policy_harness_only",
+      "facts": {
+       "asserted": false,
+       "guardPolicyVerified": true,
+       "appThresholdOverride": false,
+       "deviceFilled": false
+      }
+     },
+     "uninstall": {
+      "state": "partial",
+      "code": "no_app_removal_path",
+      "facts": {
+       "asserted": false,
+       "removedViaApp": false,
+       "bytesFreed": 289132544,
+       "leftoversRemoved": true,
+       "noOrphans": true
+      }
+     }
     }
    }
   },
@@ -365,16 +763,16 @@ const agentCertificationBundledJson = r'''{
    "route": "ACP via Paseo",
    "cells": {
     "install": {
-     "state": "untested",
-     "evidence": null
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#gemini"
     },
     "version": {
-     "state": "untested",
-     "evidence": null
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#gemini"
     },
     "signedOut": {
-     "state": "untested",
-     "evidence": null
+     "state": "fail",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#gemini"
     },
     "signIn": {
      "state": "blocked:OW1",
@@ -415,6 +813,97 @@ const agentCertificationBundledJson = r'''{
     "images": {
      "state": "blocked:OW1",
      "evidence": null
+    }
+   },
+   "agentVersion": "0.62.0",
+   "architecture": "x64",
+   "helperVersion": "0.9.2",
+   "installCertification": {
+    "scope": "App installation on x64 emulator; signed-out, no account qualification",
+    "runID": "fq-install-gemini-2196-20261008",
+    "device": "emulator-5554",
+    "appBuild": 2196,
+    "sourceRevision": "d777082c37d41a16d92634c2f8f2360475247249",
+    "architecture": "x64",
+    "expectedVersion": "0.62.0",
+    "observedVersion": "0.62.0",
+    "helperVersion": "0.9.2",
+    "evidence": "docs/qa/FQ-install-2026-10-08/README.md#gemini",
+    "results": {
+     "install": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "installedViaApp": true,
+       "checksumVerified": true
+      }
+     },
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true
+      }
+     },
+     "signedOut": {
+      "state": "fail",
+      "code": "probe_unsupported",
+      "facts": {
+       "asserted": false,
+       "namedSignedOut": false
+      }
+     },
+     "phoneCheck": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "completed": true
+      }
+     },
+     "launchNoAccount": {
+      "state": "partial",
+      "code": "cli_only_app_route_unavailable",
+      "facts": {
+       "asserted": false,
+       "noHang": true,
+       "emptyHome": true,
+       "sentLogin": false,
+       "sentPrompt": false,
+       "noOrphans": true
+      }
+     },
+     "cancelRetry": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "cancelObserved": true,
+       "retryCompleted": true
+      }
+     },
+     "lowStorage": {
+      "state": "partial",
+      "code": "policy_harness_only",
+      "facts": {
+       "asserted": false,
+       "guardPolicyVerified": true,
+       "appThresholdOverride": false,
+       "deviceFilled": false
+      }
+     },
+     "uninstall": {
+      "state": "partial",
+      "code": "no_app_removal_path",
+      "facts": {
+       "asserted": false,
+       "removedViaApp": false,
+       "bytesFreed": 99860480,
+       "leftoversRemoved": true,
+       "noOrphans": true
+      }
+     }
     }
    }
   },
@@ -424,16 +913,16 @@ const agentCertificationBundledJson = r'''{
    "route": "ACP via Paseo",
    "cells": {
     "install": {
-     "state": "untested",
-     "evidence": null
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#qwen"
     },
     "version": {
-     "state": "untested",
-     "evidence": null
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#qwen"
     },
     "signedOut": {
-     "state": "untested",
-     "evidence": null
+     "state": "fail",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#qwen"
     },
     "signIn": {
      "state": "blocked:OW1",
@@ -474,6 +963,97 @@ const agentCertificationBundledJson = r'''{
     "images": {
      "state": "blocked:OW1",
      "evidence": null
+    }
+   },
+   "agentVersion": "0.24.7",
+   "architecture": "x64",
+   "helperVersion": "0.9.2",
+   "installCertification": {
+    "scope": "App installation on x64 emulator; signed-out, no account qualification",
+    "runID": "fq-install-qwen-2196-20261008",
+    "device": "emulator-5554",
+    "appBuild": 2196,
+    "sourceRevision": "d777082c37d41a16d92634c2f8f2360475247249",
+    "architecture": "x64",
+    "expectedVersion": "0.24.7",
+    "observedVersion": "0.24.7",
+    "helperVersion": "0.9.2",
+    "evidence": "docs/qa/FQ-install-2026-10-08/README.md#qwen",
+    "results": {
+     "install": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "installedViaApp": true,
+       "checksumVerified": true
+      }
+     },
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true
+      }
+     },
+     "signedOut": {
+      "state": "fail",
+      "code": "probe_unsupported",
+      "facts": {
+       "asserted": false,
+       "namedSignedOut": false
+      }
+     },
+     "phoneCheck": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "completed": true
+      }
+     },
+     "launchNoAccount": {
+      "state": "partial",
+      "code": "cli_only_app_route_unavailable",
+      "facts": {
+       "asserted": false,
+       "noHang": true,
+       "emptyHome": true,
+       "sentLogin": false,
+       "sentPrompt": false,
+       "noOrphans": true
+      }
+     },
+     "cancelRetry": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "cancelObserved": true,
+       "retryCompleted": true
+      }
+     },
+     "lowStorage": {
+      "state": "partial",
+      "code": "policy_harness_only",
+      "facts": {
+       "asserted": false,
+       "guardPolicyVerified": true,
+       "appThresholdOverride": false,
+       "deviceFilled": false
+      }
+     },
+     "uninstall": {
+      "state": "partial",
+      "code": "no_app_removal_path",
+      "facts": {
+       "asserted": false,
+       "removedViaApp": false,
+       "bytesFreed": 112664576,
+       "leftoversRemoved": true,
+       "noOrphans": true
+      }
+     }
     }
    }
   },
@@ -483,16 +1063,16 @@ const agentCertificationBundledJson = r'''{
    "route": "ACP via Paseo",
    "cells": {
     "install": {
-     "state": "untested",
-     "evidence": null
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#goose"
     },
     "version": {
-     "state": "untested",
-     "evidence": null
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#goose"
     },
     "signedOut": {
-     "state": "untested",
-     "evidence": null
+     "state": "fail",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#goose"
     },
     "signIn": {
      "state": "blocked:OW1",
@@ -534,6 +1114,97 @@ const agentCertificationBundledJson = r'''{
      "state": "blocked:OW1",
      "evidence": null
     }
+   },
+   "agentVersion": "1.53.0",
+   "architecture": "x64",
+   "helperVersion": "0.9.2",
+   "installCertification": {
+    "scope": "App installation on x64 emulator; signed-out, no account qualification",
+    "runID": "fq-install-goose-2196-20261008",
+    "device": "emulator-5554",
+    "appBuild": 2196,
+    "sourceRevision": "d777082c37d41a16d92634c2f8f2360475247249",
+    "architecture": "x64",
+    "expectedVersion": "1.53.0",
+    "observedVersion": "1.53.0",
+    "helperVersion": "0.9.2",
+    "evidence": "docs/qa/FQ-install-2026-10-08/README.md#goose",
+    "results": {
+     "install": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "installedViaApp": true,
+       "checksumVerified": true
+      }
+     },
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true
+      }
+     },
+     "signedOut": {
+      "state": "fail",
+      "code": "probe_unsupported",
+      "facts": {
+       "asserted": false,
+       "namedSignedOut": false
+      }
+     },
+     "phoneCheck": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "completed": true
+      }
+     },
+     "launchNoAccount": {
+      "state": "partial",
+      "code": "cli_only_app_route_unavailable",
+      "facts": {
+       "asserted": false,
+       "noHang": true,
+       "emptyHome": true,
+       "sentLogin": false,
+       "sentPrompt": false,
+       "noOrphans": true
+      }
+     },
+     "cancelRetry": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "cancelObserved": true,
+       "retryCompleted": true
+      }
+     },
+     "lowStorage": {
+      "state": "partial",
+      "code": "policy_harness_only",
+      "facts": {
+       "asserted": false,
+       "guardPolicyVerified": true,
+       "appThresholdOverride": false,
+       "deviceFilled": false
+      }
+     },
+     "uninstall": {
+      "state": "partial",
+      "code": "no_app_removal_path",
+      "facts": {
+       "asserted": false,
+       "removedViaApp": false,
+       "bytesFreed": 298692608,
+       "leftoversRemoved": true,
+       "noOrphans": true
+      }
+     }
+    }
    }
   },
   {
@@ -542,16 +1213,16 @@ const agentCertificationBundledJson = r'''{
    "route": "ACP via Paseo",
    "cells": {
     "install": {
-     "state": "untested",
-     "evidence": null
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#omp-acp"
     },
     "version": {
-     "state": "untested",
-     "evidence": null
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#omp-acp"
     },
     "signedOut": {
-     "state": "untested",
-     "evidence": null
+     "state": "fail",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#omp-acp"
     },
     "signIn": {
      "state": "blocked:OW1",
@@ -592,6 +1263,97 @@ const agentCertificationBundledJson = r'''{
     "images": {
      "state": "blocked:OW1",
      "evidence": null
+    }
+   },
+   "agentVersion": "18.5.1",
+   "architecture": "x64",
+   "helperVersion": "0.9.2",
+   "installCertification": {
+    "scope": "App installation on x64 emulator; signed-out, no account qualification",
+    "runID": "fq-install-omp-acp-2196-20261008",
+    "device": "emulator-5554",
+    "appBuild": 2196,
+    "sourceRevision": "d777082c37d41a16d92634c2f8f2360475247249",
+    "architecture": "x64",
+    "expectedVersion": "18.5.1",
+    "observedVersion": "18.5.1",
+    "helperVersion": "0.9.2",
+    "evidence": "docs/qa/FQ-install-2026-10-08/README.md#omp-acp",
+    "results": {
+     "install": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "installedViaApp": true,
+       "checksumVerified": true
+      }
+     },
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true
+      }
+     },
+     "signedOut": {
+      "state": "fail",
+      "code": "probe_unsupported",
+      "facts": {
+       "asserted": false,
+       "namedSignedOut": false
+      }
+     },
+     "phoneCheck": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "completed": true
+      }
+     },
+     "launchNoAccount": {
+      "state": "partial",
+      "code": "cli_only_app_route_unavailable",
+      "facts": {
+       "asserted": false,
+       "noHang": true,
+       "emptyHome": true,
+       "sentLogin": false,
+       "sentPrompt": false,
+       "noOrphans": true
+      }
+     },
+     "cancelRetry": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "cancelObserved": true,
+       "retryCompleted": true
+      }
+     },
+     "lowStorage": {
+      "state": "partial",
+      "code": "policy_harness_only",
+      "facts": {
+       "asserted": false,
+       "guardPolicyVerified": true,
+       "appThresholdOverride": false,
+       "deviceFilled": false
+      }
+     },
+     "uninstall": {
+      "state": "partial",
+      "code": "no_app_removal_path",
+      "facts": {
+       "asserted": false,
+       "removedViaApp": false,
+       "bytesFreed": 280174592,
+       "leftoversRemoved": true,
+       "noOrphans": true
+      }
+     }
     }
    }
   }

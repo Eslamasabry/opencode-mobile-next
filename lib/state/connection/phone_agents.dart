@@ -39,7 +39,11 @@ final class _OpenCodeFeed implements ChatFeedSource {
 
 /// [ConnectionController]'s [PhoneAgentsSource] and [AgentChatFeedSource].
 mixin _ConnectionControllerPhoneAgents on ChangeNotifier
-    implements PhoneAgentsSource, AgentChatFeedSource, PhoneAgentAccountSource {
+    implements
+        PhoneAgentsSource,
+        AgentChatFeedSource,
+        PhoneAgentAccountSource,
+        PhoneAgentRemovalSource {
   ConnectionController get _self;
 
   static const _notReady = ProductException(
@@ -52,6 +56,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   PhoneAgentHostPort? _paHost;
   String? _paHostProfile;
+  AgentSignInForegroundBinding? _paForegroundBinding;
+  final _paClosingOwners = <String, _PhoneAgentCloseScope>{};
   StreamSubscription<AgentSetupProgress>? _paSetupSub;
   final _paSignIns = <String, AgentSignInSession>{};
   final _paSignInSubs = <String, StreamSubscription<AgentSignInState>>{};
@@ -60,6 +66,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   final _paChecks = <String, AgentPhoneCheckResult>{};
   final _paLive = <String>{};
   bool _paNeedRestart = false;
+  String? _paRemovingAgent;
+  Object? _paRemovalToken;
   Future<void>? _paRefreshingRows;
   final _paSources =
       <String, ({PaseoGateway gateway, PaseoChatFeedSource source})>{};
@@ -172,9 +180,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   PhoneAgentHostPort _paEnsureHost() {
     final profile = _paProfile;
     if (!phoneAgentsAvailable || profile == null) throw _notReady;
+    if (_paClosingOwners.containsKey(profile.id)) {
+      throw _PhoneAgentRoutes._signInStopFailed;
+    }
     final existing = _paHost;
     if (existing != null && _paHostProfile == profile.id) return existing;
-    if (existing != null) unawaited(_paCloseAll(stopHost: false));
+    if (existing != null) {
+      unawaited(_paCloseAll(stopHost: false).catchError((Object _) {}));
+    }
     final factory = _self._phoneAgentHostFactory;
     final host = factory != null
         ? factory(profile)
@@ -183,8 +196,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
           );
     _paHost = host;
     _paHostProfile = profile.id;
+    if (!_self._isSecondary) {
+      _paForegroundBinding = AgentSignInForegroundRegistry.bind(
+        profile.id,
+        _self.backgroundLive,
+      );
+    }
     _paSetupSub = host.setupChanges.listen((progress) {
-      if (_self._disposed) return;
+      if (_self._disposed || !identical(_paHost, host)) return;
       _self._notifyListeners();
       if (progress.phase == AgentSetupPhase.done) {
         unawaited(refreshAgentRows());
@@ -197,9 +216,9 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     final descriptor = _paCatalog.byId(agentId);
     final profile = _paProfile;
     if (descriptor == null || profile == null) throw _notReady;
+    _paEnsureHost();
     final existing = _paSignIns[agentId];
     if (existing != null) return existing;
-    _paEnsureHost();
     final session = AgentSignInSession(
       host: (_self._agentSignInHostFactory ?? ChannelAgentSignInHost.new)(),
       profileId: profile.id,
@@ -213,7 +232,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   void _paListen(String agentId, AgentSignInSession session) {
     _paSignInSubs[agentId] = session.changes.listen((state) {
-      if (_self._disposed) return;
+      if (_self._disposed || !identical(_paSignIns[agentId], session)) return;
       _self._notifyListeners();
       if (state.phase == AgentSignInPhase.signedIn ||
           state.phase == AgentSignInPhase.limitReached) {
@@ -390,7 +409,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         _paRefreshingRows = null;
       });
 
-  Future<void> _paRefreshRows() async {
+  Future<void> _paRefreshRows({bool syncSources = true}) async {
     if (!phoneAgentsAvailable) {
       if (_paRows.isNotEmpty) {
         _paRows = const [];
@@ -416,6 +435,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     } catch (_) {
       arch = null;
     }
+    final helperVersion = _self._paObservedHelperVersion;
     final rows = <AgentRow>[];
     var running = false;
     for (final descriptor in _paCatalog.agents) {
@@ -425,7 +445,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
           runtime = await host.inspect(
             descriptor.id,
             signIn: _paSignIns[descriptor.id]?.state,
-            capabilities: _paHostCapabilities(descriptor, arch),
+            capabilities: _self._paHostCapabilities(descriptor, arch),
           );
           if (runtime.installed &&
               descriptor.signInMethod != AgentSignInMethod.none &&
@@ -470,15 +490,23 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         rows.any((row) => row.status == PhoneAgentStatus.stoppedInBackground) &&
         (_paAutoResumedAt == null ||
             now.difference(_paAutoResumedAt!) > const Duration(minutes: 1));
-    // The helper is started again right away: "stopped" isn't said for the
-    // second that takes (at every app start after Android closed it).
-    if (autoResume) _paAutoResuming = true;
     _paRows = List.unmodifiable(rows);
     _paHostRunning = running;
     _paScheduleSignInRecheck(rows);
-    try {
-      await _paSyncSources();
-    } catch (_) {}
+    if (syncSources) {
+      try {
+        await _paSyncSources();
+      } catch (_) {}
+      if (_self._disposed || _paHost != host || _paHostProfile != owner) return;
+      // The first handshake may supply the exact version missing above.
+      // The second scan reads fresh gates and skips source synchronization.
+      if (_self._paObservedHelperVersion != helperVersion) {
+        await _paRefreshRows(syncSources: false);
+        return;
+      }
+    }
+    // Mark the auto-resume only for the final, freshly inspected rows.
+    if (autoResume) _paAutoResuming = true;
     if (!_self._disposed) _self._notifyListeners();
     // Rows are read when the person opens an agent screen or sheet: an
     // installed agent whose helper Android stopped is started again here
@@ -499,30 +527,6 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   /// The helper is being started again by the app itself.
   bool _paAutoResuming = false;
-
-  /// Exact matrix proof, checked against the observed connected helper and
-  /// processor. Unknown or stale evidence never inherits catalog capabilities.
-  AgentCapabilities _paHostCapabilities(
-    AgentDescriptor descriptor,
-    AgentArchitecture? architecture,
-  ) {
-    final observed = _paSources.values
-        .map((source) => source.gateway.transport)
-        .where((transport) => transport.connected)
-        .map((transport) => transport.serverVersion)
-        .whereType<String>()
-        .toSet();
-    final gateway = _paBackend?.api;
-    if (gateway is PaseoGateway && gateway.transport.connected) {
-      final version = gateway.transport.serverVersion;
-      if (version != null) observed.add(version);
-    }
-    return AgentCertificationMatrix.bundled.capabilitiesFor(
-      descriptor: descriptor,
-      architecture: architecture,
-      helperVersion: observed.length == 1 ? observed.single : null,
-    );
-  }
 
   static const _paSignInReadLimit = Duration(seconds: 10);
   final _paAuthResults = <String, AgentAuthProbeResult>{};
@@ -631,11 +635,15 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   AgentPhoneCheckResult? agentPhoneCheck(String agentId) => _paChecks[agentId];
 
   @override
-  Future<void> installAgent(String agentId) async {
-    final host = _paEnsureHost();
-    await host.install(agentId);
-    if (!_self._disposed) _self._notifyListeners();
-  }
+  Future<void> installAgent(String agentId) => _paInstallAgent(agentId);
+
+  @override
+  String? get removingAgentId => _paRemovingAgent;
+  @override
+  bool canRemoveAgent(String agentId) => _paCanRemoveAgent(agentId);
+  @override
+  Future<AgentRemovalResult> removeAgent(String agentId) =>
+      _paRemoveAgent(agentId);
 
   @override
   Future<void> cancelAgentInstall() async {
@@ -646,13 +654,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   }
 
   @override
-  Future<AgentPhoneCheckResult> runAgentPhoneCheck(String agentId) async {
-    final host = _paEnsureHost();
-    final result = await host.selfTest(agentId);
-    _paChecks[agentId] = result;
-    await refreshAgentRows();
-    return result;
-  }
+  Future<AgentPhoneCheckResult> runAgentPhoneCheck(String agentId) =>
+      _self._runAgentPhoneCheck(agentId);
 
   @override
   Future<void> resumeAgentHost() async {
@@ -794,6 +797,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     final host = _paHost;
     final profile = _paProfile;
     if (host == null || profile == null) return;
+    final helperVersion = _self._paObservedHelperVersion;
     final wanted = _paHostRunning || assumeRunning
         ? _paDesiredDirectories().take(_maxPaseoSources).toList()
         : const <String>[];
@@ -835,6 +839,13 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       });
     } else if (!missed) {
       _paSyncRetries = 0;
+    }
+    // Retry syncs run without a row scan. Publish newly observed proof too.
+    if (!_self._disposed &&
+        _paHost == host &&
+        _paRefreshingRows == null &&
+        _self._paObservedHelperVersion != helperVersion) {
+      await refreshAgentRows();
     }
   }
 
@@ -1283,6 +1294,9 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       return _self._ocStartChatIn(directory, firstPrompt: firstPrompt);
     }
     if (!phoneAgentsAvailable) throw _notReady;
+    if (_paRemovingAgent != null) {
+      throw _PhoneAgentRoutes._removalBusy;
+    }
     if (_paRows.isEmpty) await refreshAgentRows();
     final row = _paRowFor(agentId);
     final descriptor = row == null ? null : _paCatalog.byId(row.id);
@@ -1385,56 +1399,10 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   // ---- closing ------------------------------------------------------------
 
-  /// Closes everything this profile's phone agents own, in the order the
-  /// deletion contract requires: auth, owned setup, host, then feeds.
-  Future<void> _paCloseAll({required bool stopHost}) async {
-    final owner = _paHostProfile ?? _paProfile?.id;
-    if (owner != null) {
-      await _self._browserLaunches.revokeProfile(profileId: owner);
-    }
-    _paDisposeBackend();
-    for (final entry in _paSignIns.entries.toList()) {
-      await _paSignInSubs.remove(entry.key)?.cancel();
-      try {
-        await entry.value.close();
-      } catch (_) {
-        // Native cleanup drains this profile's processes again on removal.
-      }
-    }
-    _paSignIns.clear();
-    final host = _paHost;
-    _paHost = null;
-    _paHostProfile = null;
-    await _paSetupSub?.cancel();
-    _paSetupSub = null;
-    if (host != null) {
-      try {
-        await host.cancelInstall();
-      } catch (_) {}
-      if (stopHost) {
-        try {
-          await host.stop();
-        } catch (_) {}
-      }
-      try {
-        await host.dispose();
-      } catch (_) {}
-    }
-    final merged = _paMerged;
-    _paMerged = null;
-    await _paMergedSub?.cancel();
-    _paMergedSub = null;
-    if (merged != null) await merged.dispose();
-    for (final directory in _paSources.keys.toList()) {
-      await _paDropSource(directory);
-    }
-    _paLive.clear();
-    _paAuthResults.clear();
-    _paAuthRevisions.clear();
-    _paChecks.clear();
-    _paRows = const [];
-    _paHostRunning = false;
-  }
+  Future<void> _paCloseAll({required bool stopHost}) => _paCloseOwned(
+    _paHostProfile ?? _paForegroundBinding?.profileId ?? _paProfile?.id,
+    stopHost: stopHost,
+  );
 
   /// Deletion hook: runs before ProfileStore removes the profile.
   Future<void> _paCloseForDeletion(String profileId) async {
@@ -1442,10 +1410,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     profileId = _self.store.phoneAgentOwnerId(profileId);
     if (_paHostProfile != profileId &&
         _paProfile?.id != profileId &&
-        _paSignIns.isEmpty) {
+        _paSignIns.isEmpty &&
+        !_paClosingOwners.containsKey(profileId)) {
       return;
     }
-    await _paCloseAll(stopHost: true);
+    await _paCloseOwned(profileId, stopHost: true);
     if (!_self._disposed) _self._notifyListeners();
   }
 
@@ -1456,36 +1425,6 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (!_self._disposed) _self._notifyListeners();
   }
 
-  /// Controller disposal: stop listening; the host keeps running for the
-  /// Android service owner.
-  void _paShutdown() {
-    final owner = _paHostProfile ?? _paProfile?.id;
-    if (owner != null) {
-      unawaited(_self._browserLaunches.revokeProfile(profileId: owner));
-    }
-    if (_self._ownsBrowserLaunches) unawaited(_self._browserLaunches.close());
-    _paDisposeBackend();
-    _paHoldTimer?.cancel();
-    _paHoldTimer = null;
-    _paReadingTimer?.cancel();
-    _paReadingTimer = null;
-    _paSyncTimer?.cancel();
-    _paSignInRecheck?.cancel();
-    _paSignInRecheck = null;
-    unawaited(_paSetupSub?.cancel());
-    unawaited(_paMergedSub?.cancel());
-    for (final sub in _paSignInSubs.values) {
-      unawaited(sub.cancel());
-    }
-    unawaited(_paMerged?.dispose());
-    for (final entry in _paSources.values) {
-      unawaited(entry.source.dispose());
-      entry.gateway.close();
-    }
-    _paSources.clear();
-    for (final session in _paSignIns.values) {
-      unawaited(session.close().catchError((Object _) {}));
-    }
-    _paSignIns.clear();
-  }
+  /// Disposal drains captured terminals; the Android service owns the host.
+  void _paShutdown() => _paShutdownOwned();
 }

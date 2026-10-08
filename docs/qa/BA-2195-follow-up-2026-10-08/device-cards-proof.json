@@ -1,0 +1,549 @@
+[
+  {
+    "initialVersionCode": 2195,
+    "candidateSha256": "3c9de78242b9880f53f646c778f30779596ad6eae3326fc2820330b55e94a7ce"
+  },
+  {
+    "phase": "server-ready-before-proof",
+    "texts": [
+      "In-app Ubuntu · OpenCode 2 +2, Connected, Switch server",
+      "All projects",
+      "All connections"
+    ]
+  },
+  {
+    "phase": "phone-runtime-before-switch",
+    "texts": [
+      "Back",
+      "In-app Ubuntu",
+      "OpenCode 2\nConnected · 2.0.10 · In the app\nRunning",
+      "Stop the server",
+      "Using OpenCode's free model — it's slower. Add an API key from your provider to use your own.",
+      "Add an API key",
+      "Up to date · 2.0.10",
+      "Switch to OpenCode 1",
+      "Add tools\nPython, AI Team, voice typing and more",
+      "Installed\nLinux base, Git and SSH, Node.js and OpenCode",
+      "Storage",
+      "Reply speed\nLast reply: first words after ⁦6.9 s, finished after ⁦7.8 s",
+      "Export projects\nSave them as a zip file, to keep or move",
+      "Keep running in the background\nWhat to allow so your phone doesn't close the app"
+    ]
+  },
+  {
+    "phase": "switch-OpenCode 1-0",
+    "texts": [
+      "Back",
+      "In-app Ubuntu",
+      "Working\nOpenCode 2\nConnected · 2.0.10 · In the app\nSetting up",
+      "Show progress",
+      "Using OpenCode's free model — it's slower. Add an API key from your provider to use your own.",
+      "Add an API key",
+      "Up to date · 2.0.10",
+      "Switch to OpenCode 1\nWait for the current step to finish, Wait for the current step to finish",
+      "Add tools\nWait for the current step to finish, Wait for the current step to finish",
+      "Installed\nLinux base, Git and SSH, Python, Node.js and OpenCode",
+      "Storage\n3.3 GB",
+      "Reply speed\nLast reply: first words after ⁦6.9 s, finished after ⁦7.8 s",
+      "Export projects\nSave them as a zip file, to keep or move",
+      "Keep running in the background\nWhat to allow so your phone doesn't close the app"
+    ]
+  },
+  {
+    "phase": "switch-OpenCode 1-1",
+    "texts": [
+      "Back",
+      "In-app Ubuntu",
+      "Working\nOpenCode 2\nConnected · 2.0.10 · In the app\nSetting up",
+      "Show progress",
+      "Using OpenCode's free model — it's slower. Add an API key from your provider to use your own.",
+      "Add an API key",
+      "Up to date · 2.0.10",
+      "Switch to OpenCode 1\nWait for the current step to finish, Wait for the current step to finish",
+      "Add tools\nWait for the current step to finish, Wait for the current step to finish",
+      "Installed\nLinux base, Git and SSH, Python, Node.js and OpenCode",
+      "Storage\n3.3 GB",
+      "Reply speed\nLast reply: first words after ⁦6.9 s, finished after ⁦7.8 s",
+      "Export projects\nSave them as a zip file, to keep or move",
+      "Keep running in the background\nWhat to allow so your phone doesn't close the app"
+    ]
+  },
+  {
+    "phase": "switch-OpenCode 1-2",
+    "texts": [
+      "Back",
+      "In-app Ubuntu",
+      "Working\nOpenCode 2\nConnected · 2.0.10 · In the app\nSetting up",
+      "Show progress",
+      "Using OpenCode's free model — it's slower. Add an API key from your provider to use your own.",
+      "Add an API key",
+      "Up to date · 2.0.10",
+      "Switch to OpenCode 1\nWait for the current step to finish, Wait for the current step to finish",
+      "Add tools\nWait for the current step to finish, Wait for the current step to finish",
+      "Installed\nLinux base, Git and SSH, Python, Node.js and OpenCode",
+      "Storage\n3.3 GB",
+      "Reply speed\nLast reply: first words after ⁦6.9 s, finished after ⁦7.8 s",
+      "Export projects\nSave them as a zip file, to keep or move",
+      "Keep running in the background\nWhat to allow so your phone doesn't close the app"
+    ]
+  },
+  {
+    "phase": "switch-OpenCode 1-3",
+    "texts": [
+      "Back",
+      "In-app Ubuntu",
+      "Working\nOpenCode 2\nConnected · 2.0.10 · In the app\nSetting up",
+      "Show progress",
+      "Using OpenCode's free model — it's slower. Add an API key from your provider to use your own.",
+      "Add an API key",
+      "Up to date · 2.0.10",
+      "Switch to OpenCode 1\nWait for the current step to finish, Wait for the current step to finish",
+      "Add tools\nWait for the current step to finish, Wait for the current step to finish",
+      "Installed\nLinux base, Git and SSH, Python, Node.js and OpenCode",
+      "Storage\n3.3 GB",
+      "Reply speed\nLast reply: first words after ⁦6.9 s, finished after ⁦7.8 s",
+      "Export projects\nSave them as a zip file, to keep or move",
+      "Keep running in the background\nWhat to allow so your phone doesn't close the app"
+    ]
+  },
+  {
+    "phase": "switch-OpenCode 1-4",
+    "texts": [
+      "Back",
+      "On this phone",
+      "Reconnecting to In-app Ubuntu · OpenCode 2…",
+      "More",
+      "Setting up OpenCode on this phone\nYou can leave the app. We'll notify you when it's ready.\nDetails",
+      "96, Setup progress, Getting started…",
+      "Step 5 of 5, Start OpenCode, Working",
+      "Step 1 of 5, Linux base, Done, 24.04.5",
+      "Step 2 of 5, Git and SSH, Done, 2.43.0",
+      "Step 3 of 5, Node.js, Done, 24.21.0",
+      "Step 4 of 5, OpenCode, Done, 1.18.32",
+      "Step 5 of 5, Start OpenCode, Working, Starting OpenCode",
+      "Stop setup"
+    ]
+  },
+  {
+    "phase": "switch-OpenCode 1-5",
+    "texts": [
+      "Back",
+      "On this phone",
+      "Reconnecting to In-app Ubuntu · OpenCode 2…",
+      "More",
+      "Setting up OpenCode on this phone\nYou can leave the app. We'll notify you when it's ready.\nDetails",
+      "96, Setup progress, Getting started…",
+      "Step 5 of 5, Start OpenCode, Working",
+      "Step 1 of 5, Linux base, Done, 24.04.5",
+      "Step 2 of 5, Git and SSH, Done, 2.43.0",
+      "Step 3 of 5, Node.js, Done, 24.21.0",
+      "Step 4 of 5, OpenCode, Done, 1.18.32",
+      "Step 5 of 5, Start OpenCode, Working, Starting OpenCode",
+      "Stop setup"
+    ]
+  },
+  {
+    "phase": "switch-OpenCode 1-6",
+    "texts": [
+      "Back",
+      "On this phone",
+      "OpenCode on this phone isn't answering",
+      "More",
+      "Setting up OpenCode on this phone\nYou can leave the app. We'll notify you when it's ready.\nDetails",
+      "96, Setup progress, Getting started…",
+      "Step 5 of 5, Start OpenCode, Working, Still waiting after 8 s",
+      "Step 1 of 5, Linux base, Done, 24.04.5",
+      "Step 2 of 5, Git and SSH, Done, 2.43.0",
+      "Step 3 of 5, Node.js, Done, 24.21.0",
+      "Step 4 of 5, OpenCode, Done, 1.18.32",
+      "Step 5 of 5, Start OpenCode, Working, Still waiting after 8 s",
+      "Stop setup"
+    ]
+  },
+  {
+    "phase": "switch-OpenCode 1-7",
+    "texts": [
+      "Back",
+      "On this phone",
+      "OpenCode on this phone isn't answering",
+      "More",
+      "Setting up OpenCode on this phone\nYou can leave the app. We'll notify you when it's ready.\nDetails",
+      "96, Setup progress, Less than a minute",
+      "Step 5 of 5, Start OpenCode, Working, Still waiting after 8 s",
+      "Step 1 of 5, Linux base, Done, 24.04.5",
+      "Step 2 of 5, Git and SSH, Done, 2.43.0",
+      "Step 3 of 5, Node.js, Done, 24.21.0",
+      "Step 4 of 5, OpenCode, Done, 1.18.32",
+      "Step 5 of 5, Start OpenCode, Working, Still waiting after 8 s",
+      "Stop setup"
+    ]
+  },
+  {
+    "phase": "switch-OpenCode 1-8",
+    "texts": [
+      "Back",
+      "On this phone",
+      "Server password changed — reconnect.",
+      "More",
+      "Setting up OpenCode on this phone\nYou can leave the app. We'll notify you when it's ready.\nDetails",
+      "96, Setup progress, Less than a minute",
+      "Step 5 of 5, Start OpenCode, Working, Still waiting after 8 s",
+      "Step 1 of 5, Linux base, Done, 24.04.5",
+      "Step 2 of 5, Git and SSH, Done, 2.43.0",
+      "Step 3 of 5, Node.js, Done, 24.21.0",
+      "Step 4 of 5, OpenCode, Done, 1.18.32",
+      "Step 5 of 5, Start OpenCode, Working, Still waiting after 8 s",
+      "Stop setup"
+    ]
+  },
+  {
+    "phase": "switch-OpenCode 1-9",
+    "texts": [
+      "Back",
+      "On this phone",
+      "Setting up OpenCode on this phone\nYou can leave the app. We'll notify you when it's ready.\nDetails",
+      "96, Setup progress, Less than a minute",
+      "Step 5 of 5, Start OpenCode, Working, Still waiting after 8 s",
+      "Step 1 of 5, Linux base, Done, 24.04.5",
+      "Step 2 of 5, Git and SSH, Done, 2.43.0",
+      "Step 3 of 5, Node.js, Done, 24.21.0",
+      "Step 4 of 5, OpenCode, Done, 1.18.32",
+      "Step 5 of 5, Start OpenCode, Working, Still waiting after 8 s",
+      "Stop setup"
+    ]
+  },
+  {
+    "phase": "switch-OpenCode 1-10",
+    "texts": [
+      "Back",
+      "On this phone",
+      "Setting up OpenCode on this phone\nYou can leave the app. We'll notify you when it's ready.\nDetails",
+      "96, Setup progress, Less than a minute",
+      "Step 5 of 5, Start OpenCode, Working, Still waiting after 8 s",
+      "Step 1 of 5, Linux base, Done, 24.04.5",
+      "Step 2 of 5, Git and SSH, Done, 2.43.0",
+      "Step 3 of 5, Node.js, Done, 24.21.0",
+      "Step 4 of 5, OpenCode, Done, 1.18.32",
+      "Step 5 of 5, Start OpenCode, Working, Still waiting after 8 s",
+      "Stop setup"
+    ]
+  },
+  {
+    "phase": "switch-OpenCode 1-11",
+    "texts": [
+      "Back",
+      "On this phone",
+      "Setting up OpenCode on this phone\nYou can leave the app. We'll notify you when it's ready.\nDetails",
+      "96, Setup progress, Less than a minute",
+      "Step 5 of 5, Start OpenCode, Working, Still waiting after 8 s",
+      "Step 1 of 5, Linux base, Done, 24.04.5",
+      "Step 2 of 5, Git and SSH, Done, 2.43.0",
+      "Step 3 of 5, Node.js, Done, 24.21.0",
+      "Step 4 of 5, OpenCode, Done, 1.18.32",
+      "Step 5 of 5, Start OpenCode, Working, Still waiting after 8 s",
+      "Stop setup"
+    ]
+  },
+  {
+    "phase": "switch-OpenCode 1-12",
+    "texts": [
+      "Back",
+      "In-app Ubuntu",
+      "OpenCode 1\nConnected · 1.18.32 · In the app\nRunning",
+      "Stop the server",
+      "Up to date · 1.18.32",
+      "Switch to OpenCode 2",
+      "Add tools\nPython, AI Team, voice typing and more",
+      "Installed\nLinux base, Git and SSH, Python, Node.js and OpenCode",
+      "Storage\n3.3 GB",
+      "Reply speed\nLast reply: first words after ⁦6.9 s, finished after ⁦7.8 s",
+      "Export projects\nSave them as a zip file, to keep or move",
+      "Keep running in the background\nWhat to allow so your phone doesn't close the app",
+      "Open a terminal",
+      "Remove Python\nDeletes pip and venv. Python and your projects stay."
+    ]
+  },
+  {
+    "phase": "cards-after-switch-0",
+    "texts": [
+      "Back",
+      "Agents",
+      "Agents",
+      "Claude Code\nReady",
+      "Codex\nNot installed · 102 MB",
+      "Install Codex",
+      "Gemini CLI\nNot installed · 21 MB",
+      "Install Gemini CLI",
+      "Qwen Code\nNot installed · 31 MB",
+      "Install Qwen Code",
+      "Goose\nNot installed · 95 MB",
+      "Install Goose",
+      "Oh My Pi\nNot installed · 230 MB",
+      "Install Oh My Pi",
+      "fx\nSign in needed",
+      "Sign in to fx",
+      "Check this phone",
+      "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"
+    ]
+  },
+  {
+    "phase": "cards-after-switch-1",
+    "texts": [
+      "Back",
+      "Agents",
+      "Agents",
+      "Claude Code\nReady",
+      "Codex\nNot installed · 102 MB",
+      "Install Codex",
+      "Gemini CLI\nNot installed · 21 MB",
+      "Install Gemini CLI",
+      "Qwen Code\nNot installed · 31 MB",
+      "Install Qwen Code",
+      "Goose\nNot installed · 95 MB",
+      "Install Goose",
+      "Oh My Pi\nNot installed · 230 MB",
+      "Install Oh My Pi",
+      "fx\nSign in needed",
+      "Sign in to fx",
+      "Check this phone",
+      "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"
+    ]
+  },
+  {
+    "phase": "cards-after-switch-2",
+    "texts": [
+      "Back",
+      "Agents",
+      "Agents",
+      "Claude Code\nReady",
+      "Codex\nNot installed · 102 MB",
+      "Install Codex",
+      "Gemini CLI\nNot installed · 21 MB",
+      "Install Gemini CLI",
+      "Qwen Code\nNot installed · 31 MB",
+      "Install Qwen Code",
+      "Goose\nNot installed · 95 MB",
+      "Install Goose",
+      "Oh My Pi\nNot installed · 230 MB",
+      "Install Oh My Pi",
+      "fx\nSign in needed",
+      "Sign in to fx",
+      "Check this phone",
+      "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"
+    ]
+  },
+  {
+    "phase": "cards-after-switch-3",
+    "texts": [
+      "Back",
+      "Agents",
+      "Agents",
+      "Claude Code\nReady",
+      "Codex\nNot installed · 102 MB",
+      "Install Codex",
+      "Gemini CLI\nNot installed · 21 MB",
+      "Install Gemini CLI",
+      "Qwen Code\nNot installed · 31 MB",
+      "Install Qwen Code",
+      "Goose\nNot installed · 95 MB",
+      "Install Goose",
+      "Oh My Pi\nNot installed · 230 MB",
+      "Install Oh My Pi",
+      "fx\nSign in needed",
+      "Sign in to fx",
+      "Check this phone",
+      "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"
+    ]
+  },
+  {
+    "phase": "cards-after-switch-4",
+    "texts": [
+      "Back",
+      "Agents",
+      "Agents",
+      "Claude Code\nReady",
+      "Codex\nNot installed · 102 MB",
+      "Install Codex",
+      "Gemini CLI\nNot installed · 21 MB",
+      "Install Gemini CLI",
+      "Qwen Code\nNot installed · 31 MB",
+      "Install Qwen Code",
+      "Goose\nNot installed · 95 MB",
+      "Install Goose",
+      "Oh My Pi\nNot installed · 230 MB",
+      "Install Oh My Pi",
+      "fx\nSign in needed",
+      "Sign in to fx",
+      "Check this phone",
+      "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"
+    ]
+  },
+  {
+    "phase": "cards-after-switch-5",
+    "texts": [
+      "Back",
+      "Agents",
+      "Agents",
+      "Claude Code\nReady",
+      "Codex\nNot installed · 102 MB",
+      "Install Codex",
+      "Gemini CLI\nNot installed · 21 MB",
+      "Install Gemini CLI",
+      "Qwen Code\nNot installed · 31 MB",
+      "Install Qwen Code",
+      "Goose\nNot installed · 95 MB",
+      "Install Goose",
+      "Oh My Pi\nNot installed · 230 MB",
+      "Install Oh My Pi",
+      "fx\nSign in needed",
+      "Sign in to fx",
+      "Check this phone",
+      "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"
+    ]
+  },
+  {
+    "phase": "cards-after-switch-6",
+    "texts": [
+      "Back",
+      "Agents",
+      "Agents",
+      "Claude Code\nReady",
+      "Codex\nNot installed · 102 MB",
+      "Install Codex",
+      "Gemini CLI\nNot installed · 21 MB",
+      "Install Gemini CLI",
+      "Qwen Code\nNot installed · 31 MB",
+      "Install Qwen Code",
+      "Goose\nNot installed · 95 MB",
+      "Install Goose",
+      "Oh My Pi\nNot installed · 230 MB",
+      "Install Oh My Pi",
+      "fx\nSign in needed",
+      "Sign in to fx",
+      "Check this phone",
+      "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"
+    ]
+  },
+  {
+    "phase": "cards-after-switch-7",
+    "texts": [
+      "Back",
+      "Agents",
+      "Agents",
+      "Claude Code\nReady",
+      "Codex\nNot installed · 102 MB",
+      "Install Codex",
+      "Gemini CLI\nNot installed · 21 MB",
+      "Install Gemini CLI",
+      "Qwen Code\nNot installed · 31 MB",
+      "Install Qwen Code",
+      "Goose\nNot installed · 95 MB",
+      "Install Goose",
+      "Oh My Pi\nNot installed · 230 MB",
+      "Install Oh My Pi",
+      "fx\nSign in needed",
+      "Sign in to fx",
+      "Check this phone",
+      "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"
+    ]
+  },
+  {
+    "phase": "cards-after-switch-8",
+    "texts": [
+      "Back",
+      "Agents",
+      "Agents",
+      "Claude Code\nReady",
+      "Codex\nNot installed · 102 MB",
+      "Install Codex",
+      "Gemini CLI\nNot installed · 21 MB",
+      "Install Gemini CLI",
+      "Qwen Code\nNot installed · 31 MB",
+      "Install Qwen Code",
+      "Goose\nNot installed · 95 MB",
+      "Install Goose",
+      "Oh My Pi\nNot installed · 230 MB",
+      "Install Oh My Pi",
+      "fx\nSign in needed",
+      "Sign in to fx",
+      "Check this phone",
+      "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"
+    ]
+  },
+  {
+    "phase": "cards-after-switch-9",
+    "texts": [
+      "Back",
+      "Agents",
+      "Agents",
+      "Claude Code\nReady",
+      "Codex\nNot installed · 102 MB",
+      "Install Codex",
+      "Gemini CLI\nNot installed · 21 MB",
+      "Install Gemini CLI",
+      "Qwen Code\nNot installed · 31 MB",
+      "Install Qwen Code",
+      "Goose\nNot installed · 95 MB",
+      "Install Goose",
+      "Oh My Pi\nNot installed · 230 MB",
+      "Install Oh My Pi",
+      "fx\nSign in needed",
+      "Sign in to fx",
+      "Check this phone",
+      "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"
+    ]
+  },
+  {
+    "phase": "cards-after-switch-10",
+    "texts": [
+      "Back",
+      "Agents",
+      "Agents",
+      "Claude Code\nReady",
+      "Codex\nNot installed · 102 MB",
+      "Install Codex",
+      "Gemini CLI\nNot installed · 21 MB",
+      "Install Gemini CLI",
+      "Qwen Code\nNot installed · 31 MB",
+      "Install Qwen Code",
+      "Goose\nNot installed · 95 MB",
+      "Install Goose",
+      "Oh My Pi\nNot installed · 230 MB",
+      "Install Oh My Pi",
+      "fx\nSign in needed",
+      "Sign in to fx",
+      "Check this phone",
+      "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"
+    ]
+  },
+  {
+    "phase": "cards-after-switch-11",
+    "texts": [
+      "Back",
+      "Agents",
+      "Agents",
+      "Claude Code\nReady",
+      "Codex\nNot installed · 102 MB",
+      "Install Codex",
+      "Gemini CLI\nNot installed · 21 MB",
+      "Install Gemini CLI",
+      "Qwen Code\nNot installed · 31 MB",
+      "Install Qwen Code",
+      "Goose\nNot installed · 95 MB",
+      "Install Goose",
+      "Oh My Pi\nNot installed · 230 MB",
+      "Install Oh My Pi",
+      "fx\nSign in needed",
+      "Sign in to fx",
+      "Check this phone",
+      "Cards from agents\nAgents can show you choices, forms and reports as cards, and ask for a photo.\nOn for Claude Code, OpenCode 1"
+    ]
+  },
+  {
+    "error": "OC1 Cards did not reach qualified status after switch"
+  },
+  {
+    "restoredOriginalApk2195": true,
+    "originalSha256": "c72bbe3f93992943539cd55f9116cc27960df314e52f198bc8a2d46ca9af5472"
+  }
+]

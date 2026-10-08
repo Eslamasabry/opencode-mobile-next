@@ -6,9 +6,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/termux/bridge.dart';
 
 /// Every shell script the bridge embeds, rendered the way the app sends it.
-/// The SHA-256 of each is pinned in test/fixtures/termux_script_hashes.json,
-/// computed from lib/termux/bridge.dart at f4308b6e before the scripts moved
-/// into lib/termux/scripts/. A moved or edited script fails here.
+/// The SHA-256 of each is pinned in test/fixtures/termux_script_hashes.json.
+/// The original snapshot at f4308b6e guarded the extraction into scripts/.
+/// The six aiteamVerbScript snapshots also include the reviewed BC1 package
+/// repair checks (77b77fd5) and BC4 update journal helpers (6c84e33d):
+/// aiteamVerbScript embeds aiteamScript, whose packages part uses
+/// withSetupPrelude. BC2 storage admission and BC3 Paseo checks do not change
+/// these Termux payloads. Unrelated script hashes retain the original snapshot.
+/// Refresh only after reviewing intentional changes, including shared helpers;
+/// byte drift otherwise fails here, even when the bridge itself is unchanged.
 Map<String, String> _scripts() => {
   'setupBaseScript': TermuxBridge.setupBaseScript,
   'managerScript': TermuxBridge.managerScriptForTesting(),
@@ -87,7 +93,7 @@ String _sha(String text) => sha256.convert(utf8.encode(text)).toString();
 void main() {
   const fixture = 'test/fixtures/termux_script_hashes.json';
 
-  test('every embedded script renders byte-for-byte as at f4308b6e', () {
+  test('every embedded script matches its reviewed byte snapshot', () {
     final hashes = {
       for (final entry in _scripts().entries) entry.key: _sha(entry.value),
     };

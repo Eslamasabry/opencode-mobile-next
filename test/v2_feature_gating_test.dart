@@ -279,9 +279,10 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(references);
       await tester.pumpAndSettle();
+      // MCP · Commands · Tools · Skills · References · External agents.
       expect(
         tester.widget<KitTabSwitcher>(find.byType(KitTabSwitcher)).index,
-        3,
+        4,
       );
       expect(tester.takeException(), isNull);
     });
@@ -588,6 +589,8 @@ void main() {
       addTearDown(controller.dispose);
       controller.handleEventForTesting(_formCreated());
       expect(controller.forms, isNotEmpty);
+      // Connecting schedules one debounced inventory refresh; let it run.
+      await tester.pump(const Duration(seconds: 3));
     });
 
     testWidgets('the same form stays hidden on a v1 connection', (
@@ -598,6 +601,8 @@ void main() {
       controller.handleEventForTesting(_formCreated());
       expect(controller.forms, isEmpty);
       expect(controller.unifiedAttentionCount, 0);
+      // Connecting schedules one debounced inventory refresh; let it run.
+      await tester.pump(const Duration(seconds: 3));
     });
   });
 }

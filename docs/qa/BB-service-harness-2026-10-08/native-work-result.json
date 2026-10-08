@@ -1,0 +1,27 @@
+{
+  "suites": [
+    {
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "class": "WorkLeasesTest"
+    },
+    {
+      "tests": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "class": "NativeWorkLeaseHostTest"
+    },
+    {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "class": "SetupWorkScopesTest"
+    }
+  ],
+  "tests": 46,
+  "compile": "merged production Kotlin and release Flutter compiled"
+}

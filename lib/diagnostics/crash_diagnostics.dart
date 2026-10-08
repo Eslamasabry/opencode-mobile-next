@@ -8,6 +8,40 @@ import 'package:path_provider/path_provider.dart';
 
 import 'app_diagnostics.dart';
 
+/// A validated capture record; arbitrary error values and stacks have no slot.
+@immutable
+final class CrashDiagnosticRecord {
+  const CrashDiagnosticRecord._({
+    required this.source,
+    required this.category,
+    required this.at,
+  });
+
+  final String source;
+  final String category;
+  final DateTime at;
+}
+
+/// An in-memory view of capture consent and validated evidence only.
+@immutable
+final class CrashDiagnosticsSnapshot {
+  CrashDiagnosticsSnapshot._({
+    required this.available,
+    required this.enabled,
+    required this.storageFailed,
+    required this.consentEpoch,
+    required this.revision,
+    required List<CrashDiagnosticRecord> records,
+  }) : records = List.unmodifiable(records);
+
+  final bool available;
+  final bool enabled;
+  final bool storageFailed;
+  final int consentEpoch;
+  final int revision;
+  final List<CrashDiagnosticRecord> records;
+}
+
 /// Explicit opt-in, app-private evidence for global errors and Android ANRs.
 /// Only fixed categories and timestamps are saved. No throwable value or stack
 /// is serialized, even if a credential has not been registered for redaction.
@@ -41,10 +75,61 @@ class CrashDiagnosticsController extends ChangeNotifier {
   bool _storageFailed = false;
   bool _closed = false;
   bool _clearing = false;
+  int _consentEpoch = 0;
+  int _evidenceRevision = 0;
 
   bool get enabled => _enabledSince > 0;
   bool get storageFailed => _storageFailed;
   int get savedCount => _records.length;
+
+  /// The saved records, newest first: fixed source, category and time only.
+  /// A read-only view for the consent UI; nothing here touches storage.
+  List<CrashRecord> get records => [
+    for (final entry in _records.reversed)
+      CrashRecord(
+        source: entry['source']! as String,
+        category: entry['category']! as String,
+        time: DateTime.fromMillisecondsSinceEpoch(entry['time']! as int),
+      ),
+  ];
+
+  /// Does not read or write storage and cannot expose paths or raw errors.
+  CrashDiagnosticsSnapshot get snapshot {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final records = <CrashDiagnosticRecord>[];
+    if (enabled && !_closed && !_storageFailed) {
+      for (final entry in _records) {
+        final source = entry['source'];
+        final category = entry['category'];
+        final time = entry['time'];
+        if (source is! String ||
+            category is! String ||
+            time is! int ||
+            !_sources.contains(source) ||
+            !_categories.contains(category) ||
+            time <= 0 ||
+            time < _enabledSince ||
+            time > now) {
+          continue;
+        }
+        records.add(
+          CrashDiagnosticRecord._(
+            source: source,
+            category: category,
+            at: DateTime.fromMillisecondsSinceEpoch(time, isUtc: true),
+          ),
+        );
+      }
+    }
+    return CrashDiagnosticsSnapshot._(
+      available: !_closed,
+      enabled: enabled,
+      storageFailed: _storageFailed,
+      consentEpoch: _consentEpoch,
+      revision: _evidenceRevision,
+      records: records,
+    );
+  }
 
   File _file(String name) {
     final file = File('${_directory.path}/$name');
@@ -119,6 +204,7 @@ class CrashDiagnosticsController extends ChangeNotifier {
   }
 
   bool _replaceConsent(bool value) {
+    _consentEpoch++;
     _clearing = true;
     try {
       _enabledSince = 0;
@@ -207,6 +293,7 @@ class CrashDiagnosticsController extends ChangeNotifier {
       }
       _atomicWrite(_recordFileName, jsonEncode(next));
       _records = next;
+      _evidenceRevision++;
       _storageFailed = false;
       _diagnostics.record(
         category,
@@ -277,6 +364,7 @@ class CrashDiagnosticsController extends ChangeNotifier {
 
   void _eraseEvidence() {
     _records = [];
+    _evidenceRevision++;
     for (final name in [
       _recordFileName,
       _pendingFileName,
@@ -306,6 +394,58 @@ class CrashDiagnosticsController extends ChangeNotifier {
   }
 }
 
+/// One saved crash record as the UI reads it. [source] is one of `flutter`,
+/// `platform`, `widget`, `native` or `anr`; [category] is a fixed English
+/// category, never an error message. Both belong under Details.
+@immutable
+class CrashRecord {
+  const CrashRecord({
+    required this.source,
+    required this.category,
+    required this.time,
+  });
+
+  final String source;
+  final String category;
+  final DateTime time;
+
+  @override
+  bool operator ==(Object other) =>
+      other is CrashRecord &&
+      other.source == source &&
+      other.category == category &&
+      other.time == time;
+
+  @override
+  int get hashCode => Object.hash(source, category, time);
+}
+
+/// Tests control elapsed time and deadline delivery independently of host load.
+@visibleForTesting
+abstract interface class CrashDiagnosticsStartupTiming {
+  Duration get elapsed;
+
+  Future<CrashDiagnosticsController?> timeout(
+    Future<CrashDiagnosticsController?> pending,
+    Duration budget, {
+    required CrashDiagnosticsController? Function() onTimeout,
+  });
+}
+
+class _MonotonicStartupTiming implements CrashDiagnosticsStartupTiming {
+  final _stopwatch = Stopwatch()..start();
+
+  @override
+  Duration get elapsed => _stopwatch.elapsed;
+
+  @override
+  Future<CrashDiagnosticsController?> timeout(
+    Future<CrashDiagnosticsController?> pending,
+    Duration budget, {
+    required CrashDiagnosticsController? Function() onTimeout,
+  }) => pending.timeout(budget, onTimeout: onTimeout);
+}
+
 class CrashDiagnosticsStartup {
   static const launchBudget = Duration(milliseconds: 300);
   static const _channel = MethodChannel('oc/crash_diagnostics');
@@ -313,6 +453,9 @@ class CrashDiagnosticsStartup {
   static Future<CrashDiagnosticsController?>? _opening;
   static int _generation = 0;
   static Completer<CrashDiagnosticsController?> _readiness = Completer();
+
+  /// Actual store readiness, independent of the bounded launch wait.
+  /// A slow open keeps this pending; failure or reset resolves to null.
   static Future<CrashDiagnosticsController?> get ready => _readiness.future;
 
   static void capture(
@@ -332,26 +475,28 @@ class CrashDiagnosticsStartup {
   static Future<CrashDiagnosticsController?> start(
     AppDiagnosticsController diagnostics, {
     @visibleForTesting MethodChannel? nativeChannel,
+    @visibleForTesting CrashDiagnosticsStartupTiming? timing,
   }) {
     if (_opening != null) return _opening!;
-    final readiness = _readiness;
-    return _opening = _startBounded(diagnostics, nativeChannel).then((
-      controller,
-    ) {
-      if (!readiness.isCompleted) readiness.complete(controller);
-      return controller;
-    });
+    return _opening = _startBounded(
+      diagnostics,
+      nativeChannel,
+      timing,
+      _readiness,
+    );
   }
 
   static Future<CrashDiagnosticsController?> _startBounded(
     AppDiagnosticsController diagnostics,
     MethodChannel? nativeChannel,
+    CrashDiagnosticsStartupTiming? timing,
+    Completer<CrashDiagnosticsController?> readiness,
   ) {
-    var expired = false;
     final generation = _generation;
-    final elapsed = Stopwatch()..start();
-    bool canOpen() =>
-        !expired && elapsed.elapsed < launchBudget && generation == _generation;
+    final clock = timing ?? _MonotonicStartupTiming();
+    // The budget bounds only the launch caller. Opening stays off the UI
+    // isolate and may publish later, unless this generation was reset.
+    bool canOpen() => generation == _generation;
     final pending = _open(diagnostics, nativeChannel, canOpen).then((
       controller,
     ) {
@@ -363,10 +508,13 @@ class CrashDiagnosticsStartup {
           ? <Map<String, Object>>[]
           : List<Map<String, Object>>.of(controller._records);
       current = controller;
+      if (!readiness.isCompleted) readiness.complete(controller);
       // Settle readiness before notifying legacy synchronous report writers.
       Timer.run(() {
-        if (controller == null || controller._closed) return;
+        if (!canOpen() || controller == null || controller._closed) return;
         for (final entry in restored) {
+          // A synchronous diagnostic listener may reset startup mid-replay.
+          if (!canOpen() || controller._closed) break;
           if (!controller._records.contains(entry)) continue;
           diagnostics.record(
             entry['category']!,
@@ -378,13 +526,7 @@ class CrashDiagnosticsStartup {
       });
       return controller;
     });
-    return pending.timeout(
-      launchBudget,
-      onTimeout: () {
-        expired = true;
-        return null;
-      },
-    );
+    return clock.timeout(pending, launchBudget, onTimeout: () => null);
   }
 
   @visibleForTesting
@@ -409,7 +551,7 @@ class CrashDiagnosticsStartup {
       if (channel != null) {
         native = await channel.invokeMapMethod<Object?, Object?>('open');
       }
-      // A late channel reply must not attach capture or touch consent/evidence.
+      // A reply from a reset generation must not attach or touch evidence.
       if (!canOpen()) return null;
       final path = native?['directory'];
       final directory = path is String

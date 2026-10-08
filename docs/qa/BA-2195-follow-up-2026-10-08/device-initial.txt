@@ -1,0 +1,6 @@
+{"passwordPresent": true, "passwordContainsNewline": false}
+{"path": "/global/health", "httpStatus": 200, "size": 36, "healthy": true, "version": "1.18.32", "ocUiStatus": null, "ocUiError": "absent"}
+{"path": "/mcp", "httpStatus": 200, "size": 32, "healthy": null, "version": null, "ocUiStatus": "connected", "ocUiError": "absent"}
+{"path": "/root/.oc-genui/openCode1", "exists": true, "symlink": false, "uid": 0}
+{"path": "/root/.config/opencode/opencode.json", "exists": true, "symlink": false, "uid": 0}
+{"path": "/usr/bin/node", "exists": false, "symlink": false, "uid": null}

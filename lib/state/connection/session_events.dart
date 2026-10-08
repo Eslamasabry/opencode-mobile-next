@@ -213,6 +213,7 @@ extension _ConnectionControllerSessionEventsImpl on ConnectionController {
             if (toolStatus == 'running') {
               _runningToolDetail[sid] = ConnectionController.toolSentence(
                 part['tool']?.toString() ?? '',
+                _shellStrings(),
               );
             } else if (toolStatus == 'completed' || toolStatus == 'error') {
               _runningToolDetail.remove(sid);

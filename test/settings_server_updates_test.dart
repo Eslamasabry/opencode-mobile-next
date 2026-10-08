@@ -124,11 +124,23 @@ Future<BackgroundLiveController> _liveController(
 }) async {
   final controller = BackgroundLiveController(
     preferences: preferences,
-    invoke: (method, [arguments]) async => {
-      'enabled': enabled,
-      'active': enabled,
-      'notificationGranted': true,
-      'batteryOptimizationIgnored': true,
+    invoke: (method, [arguments]) async {
+      if (method == 'getBackgroundPause') {
+        return const {
+          'supported': true,
+          'active': false,
+          'paused': false,
+          'reason': 'none',
+          'at': null,
+          'canResume': false,
+        };
+      }
+      return {
+        'enabled': enabled,
+        'active': enabled,
+        'notificationGranted': true,
+        'batteryOptimizationIgnored': true,
+      };
     },
   );
   await controller.restore();

@@ -385,7 +385,10 @@ void main() {
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: CapabilitiesScreen(controller: conn),
+            home: CapabilitiesScreen(
+              controller: conn,
+              initialSection: ToolsSection.commands,
+            ),
           ),
         ),
       );

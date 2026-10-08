@@ -1169,6 +1169,16 @@ void main() {
         preferences: prefs,
         liveStatusDebounce: Duration.zero,
         invoke: (method, [arguments]) async {
+          if (method == 'getBackgroundPause') {
+            return const {
+              'supported': true,
+              'active': false,
+              'paused': false,
+              'reason': 'none',
+              'at': null,
+              'canResume': false,
+            };
+          }
           if (method == 'updateLiveStatus') return const {'updated': true};
           calls.add((method: method, arguments: arguments));
           if (method == 'showCodingAlert') return const {'shown': true};
@@ -1360,6 +1370,16 @@ void main() {
         preferences: prefs,
         liveStatusDebounce: Duration.zero,
         invoke: (method, [arguments]) async {
+          if (method == 'getBackgroundPause') {
+            return const {
+              'supported': true,
+              'active': false,
+              'paused': false,
+              'reason': 'none',
+              'at': null,
+              'canResume': false,
+            };
+          }
           if (method == 'consumeCodingAlertOpen' && !consumed) {
             consumed = true;
             return {

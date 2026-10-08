@@ -40,6 +40,7 @@ import 'platform/share_intent.dart';
 import 'domain/session_handoff.dart';
 import 'domain/while_away.dart' show AutomaticActKind;
 import 'domain/team_link.dart';
+import 'state/app_locale.dart' show resolveAppLocales;
 import 'state/connection.dart';
 import 'state/automation_policy.dart';
 import 'state/local_server_controls.dart';
@@ -123,8 +124,9 @@ Future<void> main() async {
   runApp(AppBootstrapGate(diagnostics: diagnostics));
   WidgetsBinding.instance.addPostFrameCallback((_) {
     PerfTrace.markOnce('app.first_frame');
-    // Crash storage cannot delay the opening frame. Readiness is bounded;
-    // a late/hung channel leaves persistent Flutter crash capture off this run.
+    // Crash storage cannot delay the opening frame. Launch waits at most the
+    // launch budget; a slow store keeps opening in the background and capture
+    // starts when it arrives (a hung channel leaves it off this run).
     unawaited(CrashDiagnosticsStartup.start(diagnostics));
     // Disk-backed diagnostics are not needed to paint the opening state.
     // Capture imports buffered errors/timings when the store attaches, so
@@ -437,6 +439,7 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
             onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
+            localeListResolutionCallback: resolveAppLocales,
             locale: _controller.appLocale.value,
             debugShowCheckedModeBanner: false,
             themeMode: switch (appearance) {

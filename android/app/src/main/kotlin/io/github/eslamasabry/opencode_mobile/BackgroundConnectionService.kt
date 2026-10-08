@@ -18,8 +18,6 @@ import android.os.Looper
 class BackgroundConnectionService : Service() {
     override fun onCreate() {
         super.onCreate()
-        active = true
-        LivePauseReceiver.setPausedByUser(this, false)
         createLiveNotificationChannel()
     }
 
@@ -34,6 +32,15 @@ class BackgroundConnectionService : Service() {
         } else {
             startForeground(NOTIFICATION_ID, notification)
         }
+        // Accepted start requests/onCreate are not evidence of a foreground
+        // service. Clear the durable pause only after startForeground succeeds.
+        if (!runCatching { BackgroundPauseStore(this).confirmedStarted() }.getOrDefault(false)) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf(startId)
+            return START_NOT_STICKY
+        }
+        active = true
+        LivePauseReceiver.setPausedByUser(this, false)
         return START_NOT_STICKY
     }
 
@@ -42,6 +49,11 @@ class BackgroundConnectionService : Service() {
     override fun onDestroy() {
         active = false
         super.onDestroy()
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        runCatching { BackgroundPauseStore(this).recordTaskRemoved() }
+        super.onTaskRemoved(rootIntent)
     }
 
     /**
@@ -56,12 +68,19 @@ class BackgroundConnectionService : Service() {
      * the session it claims is live.
      */
     override fun onTimeout(startId: Int, fgsType: Int) {
+        // commit before stopping: neither Flutter nor onDestroy is guaranteed
+        // to be alive afterward. An old enabled preference must not restart it.
+        runCatching { BackgroundPauseStore(this).timeout() }
+        active = false
         stopForeground(STOP_FOREGROUND_REMOVE)
         notifyDartOfTimeout()
         stopSelf(startId)
     }
 
-    private fun notifyDartOfTimeout() = notifyDartStopped(REASON_SYSTEM_TIMEOUT)
+    private fun notifyDartOfTimeout() = notifyDartStopped(
+        REASON_SYSTEM_TIMEOUT,
+        runCatching { BackgroundPauseStore(this).status(false) }.getOrNull(),
+    )
 
     private fun createLiveNotificationChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
@@ -147,7 +166,7 @@ class BackgroundConnectionService : Service() {
 
         /** Tells Dart the service stopped so the persisted preference and the
          *  settings switch follow the service rather than outliving it. */
-        fun notifyDartStopped(reason: String) {
+        fun notifyDartStopped(reason: String, pause: Map<String, Any?>? = null) {
             val channel = MainActivity.backgroundChannel ?: return
             // invokeMethod is main-thread only; onTimeout and broadcasts are
             // not guaranteed to arrive there.
@@ -157,7 +176,8 @@ class BackgroundConnectionService : Service() {
                     mapOf(
                         "enabled" to false,
                         "active" to false,
-                        "reason" to reason
+                        "reason" to reason,
+                        "backgroundPause" to pause,
                     )
                 )
             }
@@ -248,6 +268,7 @@ class BackgroundConnectionService : Service() {
         }
 
         fun stop(context: Context) {
+            active = false
             context.stopService(Intent(context, BackgroundConnectionService::class.java))
         }
 

@@ -367,7 +367,8 @@ test_strict_arguments() {
   new_fixture
   run_release
   assert_status 64
-  assert_output_contains 'Usage: ./scripts/release.sh <release|sideload|patch|github> [--publish]'
+  # BD1 added the read-only patch-plan mode to the documented command list.
+  assert_output_contains 'Usage: ./scripts/release.sh <release|sideload|patch|github|patch-plan> [--publish]'
   assert_log_line_count 0 'shorebird '
 
   run_release ship
@@ -381,6 +382,25 @@ test_strict_arguments() {
   run_release release --publish extra
   assert_status 64
   assert_log_line_count 0 'shorebird '
+}
+
+test_patch_plan_never_executes_release_commands() {
+  new_fixture
+  # Plans remain available without a releasable worktree or signing files.
+  rm "$FIXTURE/android/key.properties" "$KEYSTORE_PATH"
+  MOCK_BRANCH='feature/plan-only' MOCK_GIT_STATUS=' M lib/main.dart' run_release patch-plan
+  assert_status 0
+  assert_output_contains 'Patch canary plan for 1.0.12+13'
+  assert_output_contains '--track staging --dry-run'
+  assert_output_contains 'On the owner phone'
+  assert_output_contains 'Rollback (separate owner approval)'
+  assert_output_contains 'shorebird patches rollback --release-version "1.0.12+13"'
+  [[ ! -s "$FIXTURE/commands.log" ]] || fail_test 'patch-plan executed a release tool'
+
+  run_release patch-plan --publish
+  assert_status 1
+  assert_output_contains 'patch-plan is instructions only; --publish is unavailable'
+  [[ ! -s "$FIXTURE/commands.log" ]] || fail_test 'rejected patch-plan publication executed a release tool'
 }
 
 test_git_gates() {
@@ -718,7 +738,8 @@ test_alpha_publish_verifies_the_body_github_stored() {
 # subshell (its own fixture numbers, so its own directories), side by side.
 group_index=0
 pids=()
-for group in test_strict_arguments test_git_gates test_flutter_toolchain_gate \
+for group in test_strict_arguments test_patch_plan_never_executes_release_commands \
+  test_git_gates test_flutter_toolchain_gate \
   test_release_signing_blocker test_release_is_dry_run_by_default_and_builds_aab \
   test_sideload_requires_public_lineage_and_verifies_apk \
   test_quality_gate_failure_prevents_shorebird \

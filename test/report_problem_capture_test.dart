@@ -210,12 +210,14 @@ void main() {
   });
 
   test(
-    'Flutter error callbacks receive redacted details and retain metadata',
+    'Flutter error callbacks receive categories without caller metadata',
     () {
       const secret = 'fake-forwarded-credential';
       KitRedact.registerKnownSecret(secret);
       final previous = FlutterError.onError;
       FlutterErrorDetails? forwarded;
+      var collected = 0;
+      var filtered = 0;
       FlutterError.onError = (details) => forwarded = details;
       final errors = installAppErrorCapture(diagnostics);
       addTearDown(() {
@@ -228,24 +230,33 @@ void main() {
           stack: StackTrace.fromString(secret),
           library: secret,
           context: ErrorDescription(secret),
-          informationCollector: () => [ErrorDescription(secret)],
-          stackFilter: (_) => [secret],
+          informationCollector: () {
+            collected++;
+            return [ErrorDescription(secret)];
+          },
+          stackFilter: (_) {
+            filtered++;
+            return [secret];
+          },
           silent: true,
         ),
       );
       expect(forwarded, isNotNull);
       final details = forwarded!;
       expect(details.silent, isTrue);
-      for (final value in [
-        details.exception.toString(),
-        details.stack.toString(),
-        details.library!,
-        details.context!.toDescription(),
-        details.informationCollector!().single.toDescription(),
-        details.stackFilter!([]).single,
-      ]) {
-        expect(value, isNot(contains(secret)));
-      }
+      // Pattern redaction cannot prove arbitrary throwable-controlled metadata
+      // safe. Global callbacks now deliberately forward fixed categories only.
+      expect(details.exception, 'Invalid state');
+      expect(details.library, 'Flutter framework');
+      expect(details.stack, isNull);
+      expect(details.context, isNull);
+      expect(details.informationCollector, isNull);
+      expect(details.stackFilter, isNull);
+      expect(collected, 0);
+      expect(filtered, 0);
+      expect(diagnostics.entries.single.message, 'Invalid state');
+      expect(diagnostics.entries.single.source, 'flutter');
+      expect(diagnostics.entries.single.stack, isEmpty);
     },
   );
 

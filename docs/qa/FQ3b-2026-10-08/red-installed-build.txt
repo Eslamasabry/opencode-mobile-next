@@ -1,0 +1,20 @@
+Observed shared-device pin refusal before preflight restoration was added.
+Locked batch exit1; no owned DELETE admitted; journals retained.
+
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup inspect: installed_build_changed
+FQ3 owned cleanup incomplete; intent retained

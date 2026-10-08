@@ -73,66 +73,54 @@ void main() {
         ),
       );
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
-    testWidgets(
-      'disabled $mode',
-      (tester) async {
-        await kitGalleryPart(
-          tester,
-          name: kitGalleryName(
-            'kit_digest_disabled',
-            const Size(412, 915),
-            light: light,
-          ),
-          size: const Size(412, 915),
+    testWidgets('disabled $mode', (tester) async {
+      await kitGalleryPart(
+        tester,
+        name: kitGalleryName(
+          'kit_digest_disabled',
+          const Size(412, 915),
           light: light,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: teamSample('kit_digest', state: KitTeamState.stale),
-          ),
-        );
-      },
-      variant: TargetPlatformVariant.only(TargetPlatform.android),
-    );
-    testWidgets(
-      'answered $mode',
-      (tester) async {
-        await kitGalleryPart(
-          tester,
-          name: kitGalleryName(
-            'kit_digest_answered',
-            const Size(412, 915),
-            light: light,
-          ),
-          size: const Size(412, 915),
+        ),
+        size: const Size(412, 915),
+        light: light,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: teamSample('kit_digest', state: KitTeamState.stale),
+        ),
+      );
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+    testWidgets('answered $mode', (tester) async {
+      await kitGalleryPart(
+        tester,
+        name: kitGalleryName(
+          'kit_digest_answered',
+          const Size(412, 915),
           light: light,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: teamSample('kit_digest', state: KitTeamState.done),
-          ),
-        );
-      },
-      variant: TargetPlatformVariant.only(TargetPlatform.android),
-    );
-    testWidgets(
-      'needs_you $mode',
-      (tester) async {
-        await kitGalleryPart(
-          tester,
-          name: kitGalleryName(
-            'kit_digest_needs_you',
-            const Size(412, 915),
-            light: light,
-          ),
-          size: const Size(412, 915),
+        ),
+        size: const Size(412, 915),
+        light: light,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: teamSample('kit_digest', state: KitTeamState.done),
+        ),
+      );
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+    testWidgets('needs_you $mode', (tester) async {
+      await kitGalleryPart(
+        tester,
+        name: kitGalleryName(
+          'kit_digest_needs_you',
+          const Size(412, 915),
           light: light,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: teamSample('kit_digest', state: KitTeamState.needsYou),
-          ),
-        );
-      },
-      variant: TargetPlatformVariant.only(TargetPlatform.android),
-    );
+        ),
+        size: const Size(412, 915),
+        light: light,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: teamSample('kit_digest', state: KitTeamState.needsYou),
+        ),
+      );
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
     testWidgets('stalled $mode', (tester) async {
       await kitGalleryPart(
         tester,
@@ -166,27 +154,19 @@ void main() {
       );
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
     for (final size in [const Size(412, 915), const Size(1280, 800)]) {
-      testWidgets(
-        'text2 $size $mode',
-        (tester) async {
-          await kitGalleryPart(
-            tester,
-            name: kitGalleryName(
-              'kit_digest_summary_text2',
-              size,
-              light: light,
-            ),
-            size: size,
-            light: light,
-            textScale: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: teamSample('kit_digest'),
-            ),
-          );
-        },
-        variant: TargetPlatformVariant.only(TargetPlatform.android),
-      );
+      testWidgets('text2 $size $mode', (tester) async {
+        await kitGalleryPart(
+          tester,
+          name: kitGalleryName('kit_digest_summary_text2', size, light: light),
+          size: size,
+          light: light,
+          textScale: 2,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: teamSample('kit_digest'),
+          ),
+        );
+      }, variant: TargetPlatformVariant.only(TargetPlatform.android));
     }
   }
 }

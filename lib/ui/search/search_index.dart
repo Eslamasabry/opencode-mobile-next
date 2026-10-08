@@ -14,7 +14,6 @@ import '../../state/connection.dart';
 import '../../state/phone_host.dart' show PhoneHostKind;
 import '../../termux/bridge.dart' show TermuxBridge;
 import '../../voice/model_manager.dart';
-import '../../voice/notices.dart';
 import '../../voice/voice_ui.dart';
 import '../app_iconography.dart';
 import '../desktop/desktop_interaction.dart';
@@ -39,7 +38,6 @@ import '../screens/settings/ai_setup_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/servers_screen.dart' show ServersRouteRequest;
 import '../screens/tailscale_setup_screen.dart';
-import '../screens/tools_hub_screen.dart';
 import '../screens/team/team_agents_screen.dart';
 import '../screens/team/team_page.dart';
 import '../screens/team/project_demo_screen.dart';
@@ -335,12 +333,6 @@ bool _hasProjectTool(SearchScope scope, ProjectTool tool) =>
     ProjectHub.toolsFor(scope.capabilities).contains(tool);
 
 bool _catalog(SearchScope scope) => scope.capabilities.serverCatalog;
-
-/// The tab a catalog sits on depends on whether Tools is there at all.
-int _capabilitiesTab(SearchScope scope, int withTools) =>
-    scope.capabilities.toolInventory || withTools < 1
-    ? withTools
-    : withTools - 1;
 
 /// OpenCode is saved on this phone, in the app or in Termux.
 bool _phoneSetUp(SearchScope scope) => scope.controller.store.profiles.any(

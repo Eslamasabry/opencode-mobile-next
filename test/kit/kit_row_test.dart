@@ -865,4 +865,66 @@ void main() {
       expect(tester.binding.hasScheduledFrame, isFalse);
     });
   });
+
+  group('chip', () {
+    List<Widget> rows(List<String> taps) => [
+      for (final (title, act) in [
+        ('Codex', 'Install'),
+        ('Gemini CLI', 'Install'),
+        ('fx', 'Sign in'),
+      ])
+        KitRow(
+          title: title,
+          supporting: const TextSpan(text: 'Not installed'),
+          chip: KitRowChip(
+            key: ValueKey('chip-$title'),
+            label: act,
+            semanticsLabel: '$act $title',
+            onPressed: () => taps.add(title),
+          ),
+        ),
+      KitRow.unavailable(
+        key: const ValueKey('unavailable'),
+        title: 'Goose',
+        reason: 'Not installed',
+        chip: KitRowChip(
+          key: const ValueKey('chip-Goose'),
+          label: 'Install',
+          semanticsLabel: 'Install Goose',
+          onPressed: () => taps.add('Goose'),
+        ),
+      ),
+    ];
+
+    testWidgets('chips start at one edge and name their target', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      final taps = <String>[];
+      await _pump(tester, KitRowGroup(children: rows(taps)));
+      final starts = {
+        for (final title in ['Codex', 'Gemini CLI', 'fx', 'Goose'])
+          tester.getTopLeft(find.byKey(ValueKey('chip-$title'))).dx,
+      };
+      expect(starts, hasLength(1), reason: '$starts');
+      expect(find.text('Install'), findsNWidgets(3));
+      expect(find.bySemanticsLabel('Install Gemini CLI'), findsOneWidget);
+      expect(find.bySemanticsLabel('Sign in fx'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('chip-fx')));
+      // A dimmed row's chip is its way forward; the whole row runs it.
+      await tester.tap(find.text('Goose'));
+      expect(taps, ['fx', 'Goose']);
+      semantics.dispose();
+    });
+
+    testWidgets('from 1.3x text the chip moves under the words', (
+      tester,
+    ) async {
+      await _pump(tester, KitRowGroup(children: rows([])), textScale: 1.3);
+      final chip = tester.getRect(find.byKey(const ValueKey('chip-Codex')));
+      final words = tester.getRect(find.text('Not installed').first);
+      expect(chip.top, greaterThanOrEqualTo(words.bottom));
+      expect(tester.takeException(), isNull);
+    });
+  });
 }

@@ -1,7 +1,8 @@
 // Golden renders of slice-P3.10 (Settings IA, target-ia §1.3): the whole
 // Settings hub at phone width (dark, light and 200 % text), one wide window,
 // the hub on a server that hides rows (Paseo: the one muted line per group),
-// the new Tools page (OpenCode 1 and Codex), About without tabs and Privacy
+// the one Tools page (OpenCode 1 and Codex; since FG6 it holds MCP, the
+// catalogs and External agents as tabs), About without tabs and Privacy
 // and data with the policy row. Real fonts at DPR 1; the phone shots are
 // tall so every group is in the picture.
 //
@@ -20,8 +21,8 @@ import 'package:opencode_mobile/paseo/gateway.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/about_screen.dart';
+import 'package:opencode_mobile/ui/screens/capabilities_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
-import 'package:opencode_mobile/ui/screens/tools_hub_screen.dart';
 
 import '../../tool/capture/fixtures.dart';
 import '../support/setup_capture_preferences.dart';
@@ -227,7 +228,7 @@ void main() {
     );
   });
 
-  // ---- after only: the new Tools page ----------------------------------
+  // ---- the Tools page (the hub rows became tabs in FG6) -------------------
   for (final light in [false, true]) {
     final mode = light ? 'light' : 'dark';
     testWidgets('Tools · $mode', (tester) async {
@@ -235,7 +236,7 @@ void main() {
         tester,
         'p310_tools_loaded_$mode',
         light: light,
-        home: (controller) => ToolsHubScreen(controller: controller),
+        home: (controller) => CapabilitiesScreen(controller: controller),
       );
     });
   }
@@ -245,7 +246,7 @@ void main() {
       tester,
       'p310_tools_codex_dark',
       light: false,
-      home: (controller) => ToolsHubScreen(controller: controller),
+      home: (controller) => CapabilitiesScreen(controller: controller),
       capabilities: codexServerCapabilities,
     );
   });

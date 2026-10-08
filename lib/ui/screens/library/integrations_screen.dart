@@ -16,6 +16,10 @@ class IntegrationsScreen extends StatefulWidget {
   final Future<bool> Function(Uri destination)? authorizationLauncher;
   final IntegrationsMode mode;
 
+  /// Body only, for a tab of Settings › Tools: no top bar of its own, and the
+  /// MCP "Add" is a button at the top of the list instead of a top-bar action.
+  final bool embedded;
+
   /// Opens the connect flow of this provider as soon as the list loads, and
   /// goes back to the caller (the model picker) once a key was saved or the
   /// person cancelled. A browser sign-in stays on this page: it has steps
@@ -27,6 +31,7 @@ class IntegrationsScreen extends StatefulWidget {
     required this.controller,
     this.authorizationLauncher,
     this.mode = IntegrationsMode.all,
+    this.embedded = false,
     this.connectProviderID,
   });
 

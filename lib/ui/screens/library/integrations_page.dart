@@ -7,24 +7,34 @@ extension _IntegrationsPage on _IntegrationsScreenState {
     final tokens = KitTokens.of(context);
     final rails = EdgeInsets.symmetric(horizontal: tokens.gutter);
     final notice = _notice;
+    // In a Tools tab the Add is a visible button at the head of the list
+    // (obvious options first), not a top-bar action; the empty state has its
+    // own, so the head button waits until there are servers to add to.
+    final addInList =
+        widget.embedded &&
+        _showMcp &&
+        _catalogAvailable &&
+        !(_servers != null && _servers!.isEmpty);
     return KitScreen(
       width: KitScreenWidth.list,
-      topBar: KitTopBar(
-        title: switch (widget.mode) {
-          IntegrationsMode.providers => l10n.usageProviders,
-          IntegrationsMode.mcp => l10n.integrationsMcpTitle,
-          IntegrationsMode.all => l10n.e7LibraryMCPAndIntegrations,
-        },
-        actions: [
-          if (_showMcp && _catalogAvailable)
-            KitAction(
-              key: const ValueKey('add-mcp-server'),
-              label: l10n.mcpAdd,
-              icon: AppIconography.add,
-              onPressed: _openMcpAdd,
+      topBar: widget.embedded
+          ? null
+          : KitTopBar(
+              title: switch (widget.mode) {
+                IntegrationsMode.providers => l10n.usageProviders,
+                IntegrationsMode.mcp => l10n.integrationsMcpTitle,
+                IntegrationsMode.all => l10n.e7LibraryMCPAndIntegrations,
+              },
+              actions: [
+                if (_showMcp && _catalogAvailable)
+                  KitAction(
+                    key: const ValueKey('add-mcp-server'),
+                    label: l10n.mcpAdd,
+                    icon: AppIconography.add,
+                    onPressed: _openMcpAdd,
+                  ),
+              ],
             ),
-        ],
-      ),
       body: KitRefresh(
         onRefresh: _load,
         child: ListView(
@@ -47,6 +57,24 @@ extension _IntegrationsPage on _IntegrationsScreenState {
                 ),
               )
             else ...[
+              if (addInList)
+                Padding(
+                  padding: EdgeInsetsDirectional.only(
+                    start: tokens.gutter,
+                    end: tokens.gutter,
+                    top: tokens.space3,
+                  ),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: KitButton.secondary(
+                      key: const ValueKey('add-mcp-server'),
+                      label: l10n.mcpAdd,
+                      icon: AppIconography.add,
+                      expand: false,
+                      onPressed: _openMcpAdd,
+                    ),
+                  ),
+                ),
               if (notice != null)
                 Padding(
                   padding: rails.add(

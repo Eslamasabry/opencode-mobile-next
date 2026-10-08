@@ -49,6 +49,13 @@ class TranscriptMatch {
 /// Binary attachments, synthetic prompts and redacted protocol rows stay out.
 /// Per-message caching avoids rescanning unchanged replies during streaming.
 class TranscriptSearchIndex {
+  TranscriptSearchIndex({this.toolLabel});
+
+  /// The words the person sees for a tool call (the UI's `toolLabel`):
+  /// searched and shown in an excerpt in place of the raw tool id, which is
+  /// never copy. Null keeps the id (callers with no wording).
+  final String Function(Part part)? toolLabel;
+
   String _query = '';
   final _cache =
       <String, ({List<String?> texts, List<TranscriptMatch> hits})>{};
@@ -69,7 +76,8 @@ class TranscriptSearchIndex {
       final id = message.info.id;
       ids.add(id);
       final texts = [
-        for (final part in message.parts) searchablePartText(part),
+        for (final part in message.parts)
+          searchablePartText(part, toolLabel: toolLabel),
       ];
       final previous = _cache[id];
       if (previous != null && _same(texts, previous.texts)) {
@@ -108,15 +116,21 @@ class TranscriptSearchIndex {
     return true;
   }
 
-  static String? searchablePartText(Part part) {
+  static String? searchablePartText(
+    Part part, {
+    String Function(Part part)? toolLabel,
+  }) {
     if (part.synthetic) return null;
     if (part.type == 'text' || part.type == 'reasoning') return part.text;
     if (part.type == 'file') return part.filename;
     if (part.type != 'tool') return null;
     final state = part.toolState;
+    final label = toolLabel?.call(part);
     return [
-      part.toolName,
-      state.title,
+      label ?? part.toolName,
+      // A server title that only repeats the tool's id says nothing more.
+      if (label == null || state.title?.trim() != part.toolName?.trim())
+        state.title,
       state.inputJson ??
           (state.input.isEmpty
               ? null

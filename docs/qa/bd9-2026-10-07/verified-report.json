@@ -1,0 +1,21 @@
+{
+  "device": "emulator-5554",
+  "version_code": 2201,
+  "result": "PASS",
+  "native_checks": [
+    "auth_pipe_before_http",
+    "private_failure_frames",
+    "qa_password_file",
+    "authenticated_health_tiers",
+    "registered_pdf_identity",
+    "receipt_before_protection",
+    "stop_callback_order"
+  ],
+  "phone_engine": "PASS",
+  "flutter_tests": 1,
+  "flutter": "PASS",
+  "apk_sha256": "c53e0d1f0b43b92f5e8443b756375f422d115a237b444fa0dd282be6451ca7da",
+  "signer_sha256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C",
+  "stage": "complete",
+  "normal_app_restore": "PASS"
+}

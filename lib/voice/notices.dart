@@ -152,9 +152,11 @@ Future<void> showVoiceNoticeLicense(
   );
 }
 
-/// The voice licenses list (voice-notices): one row per open-source part
-/// with its maker and license. A row opens the license text; the page
-/// itself loads nothing, so it has no loading or error state of its own.
+/// The voice licenses group of Settings › About (the Voice licenses page it
+/// used to be is gone, FG6): one row per open-source part with its maker and
+/// license, under a "Voice licenses" label, and one line saying what the rows
+/// are. A row opens the license text; the group itself loads nothing, so it
+/// has no loading or error state of its own.
 class VoiceNoticesView extends StatelessWidget {
   const VoiceNoticesView({super.key});
 
@@ -162,24 +164,12 @@ class VoiceNoticesView extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = voiceStrings(context);
     final tokens = KitTokens.of(context);
-    return ListView(
-      padding: EdgeInsetsDirectional.only(
-        top: tokens.space2,
-        bottom: tokens.space6,
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: EdgeInsetsDirectional.symmetric(
-            horizontal: tokens.gutter,
-            vertical: tokens.space2,
-          ),
-          child: KitText(
-            strings.voiceNoticesIntro,
-            role: KitTextRole.secondary,
-            tone: KitTextTone.secondary,
-          ),
-        ),
         KitRowGroup(
+          key: const ValueKey('about-voice-licences'),
+          label: strings.voiceNoticesTitle,
           leadingIcons: false,
           children: [
             for (final component in voiceNoticeComponents)
@@ -198,21 +188,19 @@ class VoiceNoticesView extends StatelessWidget {
               ),
           ],
         ),
+        Padding(
+          padding: EdgeInsetsDirectional.only(
+            start: tokens.gutter + tokens.space1,
+            end: tokens.gutter + tokens.space1,
+            top: tokens.labelGap,
+          ),
+          child: KitText(
+            strings.voiceNoticesIntro,
+            role: KitTextRole.caption,
+            tone: KitTextTone.secondary,
+          ),
+        ),
       ],
     );
   }
 }
-
-class VoiceNoticesPage extends StatelessWidget {
-  const VoiceNoticesPage({super.key});
-
-  @override
-  Widget build(BuildContext context) => KitScreen(
-    topBar: KitTopBar(title: voiceStrings(context).voiceNoticesTitle),
-    body: const VoiceNoticesView(),
-  );
-}
-
-Future<void> showVoiceNotices(BuildContext context) => Navigator.of(
-  context,
-).push(KitPageRoute<void>(builder: (_) => const VoiceNoticesPage()));

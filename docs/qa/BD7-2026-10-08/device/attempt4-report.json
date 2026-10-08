@@ -1,0 +1,15 @@
+{
+  "device": "emulator-5554",
+  "version_code": 2196,
+  "result": "FAIL",
+  "apk_sha256": "78074bc8c8f3244b252ae11f23cb3dc4d748b989c95c33e25111f6c16716af56",
+  "storage_before": {
+    "available_kib": 1749948,
+    "used_percent": 79
+  },
+  "diagnostic_baseline_restore": "PASS",
+  "normal_app_restore": "PASS",
+  "failure_stage": "consent",
+  "failure_code": "unsafe_screenshot",
+  "stage": "consent"
+}

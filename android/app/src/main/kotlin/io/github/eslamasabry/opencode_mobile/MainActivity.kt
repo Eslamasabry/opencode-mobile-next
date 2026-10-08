@@ -32,6 +32,8 @@ class MainActivity : FlutterActivity() {
     private var runCommandAccessResult: MethodChannel.Result? = null
     private var microphonePermissionResult: MethodChannel.Result? = null
     private var backgroundPermissionResult: MethodChannel.Result? = null
+    private var backgroundStartResult: MethodChannel.Result? = null
+    private var backgroundStartCallback: Runnable? = null
     private var cameraPermissionResult: MethodChannel.Result? = null
     private var pendingCodingAlertOpen: Map<String, String>? = null
     private var pendingSharedText: String? = null
@@ -54,6 +56,7 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        cancelBackgroundRequests()
         crashDiagnostics?.dispose()
         crashDiagnostics = CrashDiagnosticsBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         nativeReplies?.detach()
@@ -245,8 +248,10 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "getStatus" -> result.success(backgroundStatus())
+                    "getBackgroundPause" -> result.success(backgroundPauseStatus())
                     "enable" -> enableBackgroundConnection(result)
                     "disable" -> {
+                        runCatching { BackgroundPauseStore(this).clear() }
                         BackgroundConnectionService.stop(this)
                         // Turned off in Settings: nothing left to resume from the tile.
                         LivePauseReceiver.setPausedByUser(this, false)
@@ -362,6 +367,7 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        cancelBackgroundRequests()
         nativeReplies?.detach()
         nativeReplies = null
         permissionResult = null
@@ -455,6 +461,9 @@ class MainActivity : FlutterActivity() {
             }.start()
         }
         when (call.method) {
+            "agentAuthProbe" -> inBackground {
+                linux.agentAuthProbe(call.arguments as? Map<*, *> ?: emptyMap<Any, Any>())
+            }
             "startAgentHost", "agentHostStatus", "stopAgentHost", "deleteAgentHost", "agentHostVersion", "agentHostWorkspace" -> inBackground {
                 val profile = call.argument<String>("profileId") ?: error("Agent unavailable")
                 when (call.method) {
@@ -1039,36 +1048,69 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun enableBackgroundConnection(result: MethodChannel.Result) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+        if (backgroundStartResult != null) {
+            result.error("permission_in_progress", "A live connection start is already pending.", null)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
         ) {
             if (backgroundPermissionResult != null) {
                 result.error("permission_in_progress", "A notification permission request is open.", null)
-                return
+            } else {
+                backgroundPermissionResult = result
+                requestPermissions(
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    BACKGROUND_NOTIFICATION_PERMISSION_REQUEST
+                )
             }
-            backgroundPermissionResult = result
-            requestPermissions(
-                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                BACKGROUND_NOTIFICATION_PERMISSION_REQUEST
-            )
-            return
+        } else {
+            startBackgroundConnection(result)
         }
-        startBackgroundConnection(result)
     }
 
     private fun startBackgroundConnection(result: MethodChannel.Result) {
+        backgroundStartResult = result
         try {
             BackgroundConnectionService.start(this)
-            result.success(backgroundStatus(enabled = true))
-        } catch (error: Exception) {
+            awaitBackgroundStart(result, android.os.SystemClock.uptimeMillis() + BACKGROUND_START_ACK_MS)
+        } catch (_: Exception) {
+            backgroundStartResult = null
             result.error(
                 "foreground_service_failed",
-                error.message ?: "Android could not start the live connection.",
+                "Android could not start the live connection.",
                 null
             )
         }
     }
+
+    /** Bounded acknowledgment only: never retries a service start. */
+    private fun awaitBackgroundStart(result: MethodChannel.Result, deadline: Long) {
+        if (backgroundStartResult !== result) return
+        if (BackgroundConnectionService.active || android.os.SystemClock.uptimeMillis() >= deadline) {
+            backgroundStartResult = null
+            backgroundStartCallback = null
+            result.success(backgroundStatus())
+            return
+        }
+        val callback = Runnable { awaitBackgroundStart(result, deadline) }
+        backgroundStartCallback = callback
+        handler.postDelayed(callback, BACKGROUND_START_POLL_MS)
+    }
+
+    private fun cancelBackgroundRequests() {
+        backgroundStartCallback?.let { handler.removeCallbacks(it) }
+        backgroundStartCallback = null
+        val starting = backgroundStartResult
+        val permission = backgroundPermissionResult
+        backgroundStartResult = null
+        backgroundPermissionResult = null
+        starting?.error("foreground_service_failed", "The live connection start was interrupted.", null)
+        permission?.error("foreground_service_failed", "The live connection start was interrupted.", null)
+    }
+
+    private fun backgroundPauseStatus(): Map<String, Any?> = runCatching {
+        BackgroundPauseStore(this).status(BackgroundConnectionService.active)
+    }.getOrElse { mapOf("supported" to false) }
 
     private fun backgroundStatus(enabled: Boolean = BackgroundConnectionService.active): Map<String, Any> {
         val notifications = getSystemService(NotificationManager::class.java)
@@ -1078,6 +1120,7 @@ class MainActivity : FlutterActivity() {
         return mapOf(
             "enabled" to enabled,
             "active" to BackgroundConnectionService.active,
+            "backgroundPause" to backgroundPauseStatus(),
             "notificationGranted" to notificationGranted,
             "batteryOptimizationIgnored" to power.isIgnoringBatteryOptimizations(packageName)
         )
@@ -1454,6 +1497,8 @@ class MainActivity : FlutterActivity() {
             "io.github.eslamasabry.opencode_mobile/builtin_linux"
         private const val CAMERA_CHANNEL_NAME = "oc/camera"
         private const val BACKGROUND_CHANNEL_NAME = "oc/background"
+        private const val BACKGROUND_START_ACK_MS = 2000L
+        private const val BACKGROUND_START_POLL_MS = 50L
         private const val SHARE_CHANNEL_NAME = "oc/share"
         private const val SHORTCUT_CHANNEL_NAME = "oc/shortcut"
         private const val LINK_CHANNEL_NAME = "oc/link"

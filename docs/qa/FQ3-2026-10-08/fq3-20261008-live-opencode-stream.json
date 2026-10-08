@@ -1,0 +1,49 @@
+{
+  "engine": "opencode",
+  "case": "stream",
+  "cliVersion": "1.18.32",
+  "observedVersion": "1.18.32",
+  "appUID": 10217,
+  "appBuild": 2195,
+  "results": {
+    "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "healthy": true,
+        "asserted": true
+      }
+    },
+    "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "retained": true,
+        "asserted": true
+      }
+    },
+    "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "connectedModels": 18,
+        "asserted": true
+      }
+    },
+    "stream": {
+      "state": "fail",
+      "code": "oc1_completion_timeout",
+      "facts": {}
+    },
+    "reconnect": {
+      "state": "fail",
+      "code": "oc1_completion_timeout",
+      "facts": {}
+    }
+  },
+  "ownedSessions": [
+    "ses_ee6795e20ffeKQjuS07KkkujEy",
+    "ses_ee679449bffeqpBgu6cebrunYN",
+    "ses_ee67843ecffeG9xfGS03iuiiKW"
+  ]
+}

@@ -1,0 +1,175 @@
+Resolving dependencies...
+Downloading packages...
+  android_file_picker 1.1.0 (2.0.1 available)
+  clock 1.1.2 (1.1.3 available)
+  code_assets 2.0.0 (2.1.0 available)
+  cross_file 0.3.5+5 (0.4.0 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  dbus 0.7.15 (0.8.0 available)
+  dio_web_adapter 2.2.1 (2.2.2 available)
+  dynamic_color 1.9.0 (2.1.0 available)
+  equatable 2.0.7 (3.0.0 available)
+  file_picker 12.2.0 (13.1.0 available)
+  file_picker_darwin 1.1.0 (2.1.2 available)
+  file_picker_linux 1.1.0 (2.0.2 available)
+  file_picker_platform_interface 3.3.0 (4.0.0 available)
+  file_picker_web 3.1.0 (4.0.1 available)
+  flutter_secure_storage_darwin 0.4.0 (0.4.3 available)
+  flutter_secure_storage_linux 3.0.2 (3.0.3 available)
+  flutter_timezone 5.1.0 (5.1.1 available)
+  image_picker 1.2.3 (1.2.4 available)
+  image_picker_android 0.8.13+22 (0.8.13+25 available)
+  image_picker_ios 0.8.13+7 (0.8.13+9 available)
+  image_picker_platform_interface 2.11.1 (2.11.2 available)
+  jni 1.0.3 (1.1.0 available)
+  jni_flutter 1.0.2 (1.0.4+1 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  mime 2.0.0 (2.1.0 available)
+  objective_c 9.6.0 (9.6.2 available)
+  package_config 2.2.0 (3.0.0 available)
+  package_info_plus 10.2.1 (10.2.2 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  pub_semver 2.2.0 (2.2.1 available)
+  qr 3.0.2 (4.0.0 available)
+  record_android 2.1.2 (2.2.0 available)
+  record_linux 2.1.1 (2.1.2 available)
+  record_web 2.1.2 (2.1.3 available)
+  record_windows 2.2.3 (2.3.0 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.27 (2.4.28 available)
+  shared_preferences_foundation 2.5.6 (2.5.7 available)
+  sherpa_onnx 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_arm64 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_armeabi 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_x86 1.13.7 (1.13.8 available)
+  sherpa_onnx_android_x86_64 1.13.7 (1.13.8 available)
+  sherpa_onnx_ios 1.13.7 (1.13.8 available)
+  sherpa_onnx_linux 1.13.7 (1.13.8 available)
+  sherpa_onnx_macos 1.13.7 (1.13.8 available)
+  sherpa_onnx_web 1.13.7 (1.13.8 available)
+  sherpa_onnx_windows 1.13.7 (1.13.8 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  test_api 0.7.12 (0.7.14 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  url_launcher_android 6.3.32 (6.3.33 available)
+  url_launcher_ios 6.4.1 (6.4.2 available)
+  url_launcher_linux 3.2.2 (3.2.3 available)
+  url_launcher_macos 3.2.5 (3.2.6 available)
+  url_launcher_windows 3.1.5 (3.1.6 available)
+  vector_math 2.4.2 (2.4.3 available)
+  windows_file_picker 1.2.0 (2.0.1 available)
+  xml 7.0.1 (7.1.0 available)
+  yaml 3.1.3 (3.1.4 available)
+Got dependencies!
+61 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: list card answer refreshes activity and completion without opening chat
+00:00 +1: native questions hydrate the chat controller and answer as choices
+00:00 +2: question identity includes native optionality
+00:00 +3: list question answers claude without opening a backend
+00:00 +4: list question answers pi without opening a backend
+00:00 +5: list question rejects on the feed source
+00:00 +6: list question fences changed revision and disconnected source
+00:00 +7: list question source identity isolates colliding IDs
+00:00 +8: list question cannot reuse an identity after source replacement
+00:00 +9: list question equivalent refresh keeps identity but resolution retires it
+00:00 +10: list question routes the selected OpenCode source without waking it
+00:00 +11: a Pi question shows under its row with no chat opened and is answered from the sheet
+00:01 +12: list permission captures revision and never sends a changed held command
+00:01 +13: list permission source identities isolate colliding wire IDs
+00:01 +14: list permission disappears on resolution and disconnect fences old replies
+00:01 +15: list permission profile deletion fences held approval
+00:01 +16: list permission for a newly created conversation routes draft ID to daemon ID
+00:01 +17: list permission shows and answers with Undo after disposed chat=false
+00:01 +18: list permission shows and answers with Undo after disposed chat=true
+00:01 +19: new Claude saved row retains the daemon ID across source loss
+00:01 +20: reopen newly created running Claude with disposed chat=false
+00:01 +21: reopen newly created running Claude with disposed chat=true
+00:01 +22: reopen newly created idle Claude with disposed chat=false
+00:01 +23: reopen newly created idle Claude with disposed chat=true
+00:01 +24: live photo receipt settles while running using messageId
+00:02 +25: live photo receipt settles while running using clientMessageId
+00:03 +26: live photo receipt rejects correlation without authoritative history
+00:04 +27: live photo receipt rejects card without authoritative history
+00:05 +28: live photo receipt rejects call without authoritative history
+00:06 +29: live photo receipt rejects assistant without authoritative history
+00:07 +30: live photo receipt rejects missing ID without authoritative history
+00:08 +31: photo card on a new Claude chat sends bytes through the real gateway
+00:08 +32: photo card chat and list aliases share identity and Undo
+00:09 +33: photo card unconfirmed send cannot retry through the list alias
+00:09 +34: photo card keeps a legacy local-ID dispatch marker fail closed
+00:10 +35: photo card archive clears both chat and list session aliases
+00:10 +36: photo card explicit delete clears both aliases without an event
+00:11 +37: BA7 busy snapshots without an owned transport have no watchdog wakeups
+00:11 +38: BA7 idle cancels a pending probe deadline
+00:11 +39: BA7 deleted cancels a pending probe deadline
+00:11 +40: BA7 error cancels a pending probe deadline
+00:11 +41: BA7 dispose cancels a pending probe deadline
+00:11 +42: BA7 disconnect cancels a pending probe deadline
+00:11 +43: BA7 suspend cancels a pending probe deadline
+00:11 +44: BA7 silent turn diagnoses modelSlow within sixty seconds
+00:11 +45: BA7 silent turn diagnoses helperDown within sixty seconds
+00:11 +46: BA7 silent turn diagnoses network within sixty seconds
+00:11 +47: BA7 waiting for permission pauses diagnosis and late probes cannot revive idle turn
+00:11 +48: finished phone check publishes fresh qualification before the next agent
+00:11 +49: phone check retries a failed live cards verification
+00:11 +50: phone checks leave Cards explicitly off
+00:11 +51: phone check completion cannot republish a retired host result
+00:11 +52: failed phone recheck never borrows the earlier ready result
+00:11 +53: first helper 0.9.2 refreshes arm64 Claude capability rows
+00:11 +54: first helper null refreshes arm64 Claude capability rows
+00:11 +55: first helper 0.9.3 refreshes arm64 Claude capability rows
+00:11 +56: first helper capability scan rechecks the actual phone gate
+00:11 +57: first helper retry publishes resume without another screen read
+00:11 +58: BB6 main foreground binding exists before a terminal request
+00:11 +59: BB6 owner deletion waits for registered terminal cleanup
+00:11 +60: BB6 protocol alias retains the canonical foreground owner
+00:11 +61: BB6 failed terminal drain blocks deletion and remains retryable
+00:11 +62: BB6 old foreground drain cannot dispose replacement host or unbind newer generation
+00:11 +63: removal removes only target rows and keeps Claude chats and account
+00:11 +64: removal excludes new phone chats and a second removal
+00:11 +65: removal returns plain busy guidance and preserves ready row
+00:11 +66: older hosts and Claude removal fail closed before dispatch
+00:11 +67: removal forwards an already-absent result without estimating bytes
+00:11 +68: removal is available for all installed supported agents
+00:11 +69: removal remains available while an installed agent account is unknown
+00:11 +70: removal is available for a failed or interrupted partial target install
+00:11 +71: removal hides arbitrary host failures behind fixed confirmation guidance
+00:11 +72: removal from a replaced owner cannot clear the new removal or its rows
+00:11 +73: BA9 uses host owner scope and revokes before native host stop
+00:11 +74: BA4 gives arm64 Claude the connected helper certification
+00:11 +75: qualified cards skip asks in feed and active chat, disable revokes
+00:11 +76: off the phone profile there is no agent surface
+00:11 +77: rows, chip choices and a persisted, revalidated selection
+00:11 +78: merged feed keeps both sources; rows open by identity
+00:11 +79: old phone-agent chats need an explicit new chat
+00:11 +80: the list paints once when agents had conversations before
+00:11 +81: saved agent rows paint at once and give way to live ones
+00:11 +82: a helper still starting is read again once it answers
+00:11 +83: a helper slower than half a minute still gets its rows read
+00:11 +84: a pull to refresh reaches a helper the retries gave up on
+00:11 +85: a helper that never answers stops being called loading
+00:11 +86: approval choices made before carry over to the agent backend
+00:11 +87: the agent backend follows the app into the background and back
+00:11 +88: an old conversation with its session handle reopens by resuming it on the helper
+00:11 +89: a refused resume says so, and the next tap offers a new conversation
+00:11 +90: BA1 agent sign-in comes from CLI even when helper disagrees
+00:11 +91: BA3 terminal completion requires signed-in probe and BA8 verifies logout
+00:11 +92: BA3 a late older probe cannot complete a newer signed-out attempt
+00:11 +93: BA1 missing multi-agent bridge preserves direct Claude status only
+00:11 +94: issue #95: a sign-in check always ends a provider the helper does not list says it could not check, on the first read
+00:11 +95: a resumed session is one row, with the title it had
+00:11 +96: at app start the helper is checked beside the server, only where agents had conversations
+00:11 +97: without earlier agent conversations the list never waits
+00:11 +98: a chat the host still runs reopens after an app restart
+00:11 +99: starting chats routes to OpenCode or the phone host
+00:11 +100: a stopped helper is started again when a chat needs it
+00:11 +101: limit and stopped rows surface as status lines
+00:11 +102: BA5 protocol switch keeps host account and conversation rows
+00:11 +103: deletion closes auth, setup, host and feeds before ProfileStore
+00:11 +104: clearing saved sign-ins closes clients and asks for a restart
+00:11 +105: (tearDownAll)
+00:11 +105: All tests passed!

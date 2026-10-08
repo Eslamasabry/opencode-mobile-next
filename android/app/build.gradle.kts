@@ -13,8 +13,11 @@ val ocPreview = (project.findProperty("ocPreview") as String?) == "true"
 val ocStableEngineQa = (project.findProperty("ocStableEngineQa") as String?) == "true"
 // Test-only release AOT smoke entry point and separate instrumentation runner.
 val ocBd9Smoke = (project.findProperty("ocBd9Smoke") as String?) == "true"
+val ocBb8Smoke = (project.findProperty("ocBb8Smoke") as String?) == "true"
 val ocBuiltinRuntimeQa = (project.findProperty("ocBuiltinRuntimeQa") as String?) == "true"
-require(!(ocBd9Smoke && ocBuiltinRuntimeQa)) { "Choose one instrumentation runner per QA build." }
+require(listOf(ocBd9Smoke, ocBb8Smoke, ocBuiltinRuntimeQa).count { it } <= 1) {
+    "Choose one instrumentation runner per QA build."
+}
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.isFile) {
@@ -49,6 +52,7 @@ android {
         testInstrumentationRunner = "io.github.eslamasabry.opencode_mobile." +
             when {
                 ocBuiltinRuntimeQa -> "BuiltinRuntimeAcceptance"
+                ocBb8Smoke -> "Bb8DeviceSmoke"
                 ocBd9Smoke -> "Bd9DeviceSmoke"
                 else -> "PhoneEngineAcceptance"
             }

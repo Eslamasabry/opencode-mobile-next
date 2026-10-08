@@ -27244,6 +27244,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get agentsSignInStopFailed =>
+      'Sign-in could not be stopped. Keep the app open and try again.';
+
+  @override
   String get agentsSignInChecking => 'Checking sign-in…';
 
   @override
@@ -27263,6 +27267,79 @@ class AppLocalizationsEn extends AppLocalizations {
   String agentsSignInDone(String agent) {
     return 'Use $agent';
   }
+
+  @override
+  String agentsSignedInAs(String account) {
+    return 'Signed in as $account';
+  }
+
+  @override
+  String agentsSignOutAction(String agent) {
+    return 'Sign out of $agent';
+  }
+
+  @override
+  String agentsSignOutTitle(String agent) {
+    return 'Sign out of $agent?';
+  }
+
+  @override
+  String agentsSignOutBody(String agent) {
+    return '$agent can\'t start new conversations until you sign in again.';
+  }
+
+  @override
+  String agentsSignOutKept(String agent) {
+    return 'Your conversations with $agent stay.';
+  }
+
+  @override
+  String agentsSignOutFailed(String agent) {
+    return 'Couldn\'t confirm that $agent signed out. Try again.';
+  }
+
+  @override
+  String agentsRemoveAction(String agent) {
+    return 'Remove $agent';
+  }
+
+  @override
+  String agentsRemoveTitle(String agent) {
+    return 'Remove $agent?';
+  }
+
+  @override
+  String get agentsRemoveBody =>
+      'This removes the installed agent from this phone. Your accounts and conversations stay, and you can install it again.';
+
+  @override
+  String agentsRemoving(String agent) {
+    return 'Removing $agent…';
+  }
+
+  @override
+  String agentsRemoved(String agent, String size) {
+    return '$agent removed. Freed $size.';
+  }
+
+  @override
+  String agentsAlreadyRemoved(String agent) {
+    return '$agent is already removed.';
+  }
+
+  @override
+  String get agentsRemoveUnsupported => 'This agent can\'t be removed here.';
+
+  @override
+  String get agentsRemoveBusy =>
+      'This agent is in use. Finish its work and try again.';
+
+  @override
+  String get agentsRemoveUnconfirmed =>
+      'Couldn\'t confirm this agent was removed. Check this phone and try again.';
+
+  @override
+  String get agentsDone => 'Done';
 
   @override
   String get agentsModelTitle => 'Choose a model';
@@ -27689,8 +27766,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String cardsProblemNotQualifiedFor(String agents) {
-    return '$agents hasn\'t been checked to work with cards yet.';
+  String cardsProblemNotQualifiedFor(int count, String agents) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$agents haven\'t been checked to work with cards yet.',
+      one: '$agents hasn\'t been checked to work with cards yet.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -27707,4 +27790,422 @@ class AppLocalizationsEn extends AppLocalizations {
   String cardsProblemRemovalFailedFor(String agents) {
     return 'Cards couldn\'t be fully removed from $agents. Try again after a restart.';
   }
+
+  @override
+  String get crashReportsLabel => 'Crash reports';
+
+  @override
+  String get crashReportsSwitch => 'Save crash reports on this phone';
+
+  @override
+  String get crashReportsSwitchBody =>
+      'Kept on this phone. Never sent automatically.';
+
+  @override
+  String get crashReportsUnavailable =>
+      'Crash reports aren\'t available right now. Restart the app and try again.';
+
+  @override
+  String get crashReportsFailed =>
+      'Couldn\'t update crash reports. Restart the app and try again.';
+
+  @override
+  String get crashReportsNone => 'No crash reports yet';
+
+  @override
+  String get crashReportsNoneBody =>
+      'One appears here if the app closes or stops responding.';
+
+  @override
+  String get crashKindError => 'The app hit an unexpected error';
+
+  @override
+  String get crashKindScreen => 'A screen couldn\'t be shown';
+
+  @override
+  String get crashKindClosed => 'The app closed unexpectedly';
+
+  @override
+  String get crashKindNotResponding => 'The app stopped responding';
+
+  @override
+  String get crashReportPreviewBody =>
+      'Kept on this phone only. It\'s sent only if you include saved errors in a problem report yourself.';
+
+  @override
+  String get crashReportDetailSource => 'Source';
+
+  @override
+  String get crashReportDetailCategory => 'Category';
+
+  @override
+  String crashReportsDelete(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Delete $count saved crash reports',
+      one: 'Delete 1 saved crash report',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get crashReportsDeleteTitle => 'Delete saved crash reports?';
+
+  @override
+  String get crashReportsDeleteBody =>
+      'Deletes the saved crash reports. Saving crash reports stays on.';
+
+  @override
+  String get crashReportsDeleteConfirm => 'Delete crash reports';
+
+  @override
+  String get crashReportsNote =>
+      'Only what kind of problem happened and when is kept: no error messages, conversations or passwords. Keeps the latest 20 reports.';
+
+  @override
+  String crashReportsOnClears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Turning this on clears the $count saved errors above.',
+      one: 'Turning this on clears the saved error above.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get crashReportsOffDeletes =>
+      'Turning this off deletes the saved crash reports.';
+
+  @override
+  String crashReportsOffDeletesAndClears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Turning this off deletes the saved crash reports and clears the $count saved errors above.',
+      one:
+          'Turning this off deletes the saved crash reports and clears the saved error above.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String crashReportsOffClears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Turning this off clears the $count saved errors above.',
+      one: 'Turning this off clears the saved error above.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String crashReportsDeleteBodyWithErrors(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Deletes the crash reports and clears the $count saved errors above. Saving crash reports stays on.',
+      one:
+          'Deletes the crash reports and clears the saved error above. Saving crash reports stays on.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get crashReportsClearedToo =>
+      'The saved crash reports are deleted too.';
+
+  @override
+  String get recentErrorScreen => 'A screen couldn\'t be drawn';
+
+  @override
+  String get recentErrorConnection => 'Lost the live connection to the server';
+
+  @override
+  String get recentErrorAndroidExit => 'Android closed the app';
+
+  @override
+  String get recentErrorTemperature => 'Phone temperature changed';
+
+  @override
+  String get recentErrorStartup => 'The app had trouble starting';
+
+  @override
+  String get recentErrorReportStore => 'Couldn\'t open saved problem reports';
+
+  @override
+  String get recentErrorGeneric => 'Something went wrong';
+
+  @override
+  String get chatUiToolBackgroundTaskFinished => 'Background task finished';
+
+  @override
+  String get chatUiToolBackgroundTaskFailed => 'Background task failed';
+
+  @override
+  String get chatUiToolBackgroundTaskStopped => 'Background task stopped';
+
+  @override
+  String get chatUiToolShowCard => 'Show card';
+
+  @override
+  String get chatStallModelSlow =>
+      'The model is taking longer than usual. Wait, or stop the reply and try again.';
+
+  @override
+  String get chatStallHelperDown =>
+      'The agent\'s helper on this phone stopped. Stop the reply and try again.';
+
+  @override
+  String get chatStallConnectionLost =>
+      'The connection to the agent was lost. Stop the reply and try again once it is back.';
+
+  @override
+  String get chatStallConnectionUnchecked =>
+      'Nothing has come back for a while and the connection could not be checked. Wait, or stop the reply and try again.';
+
+  @override
+  String get kitWorkHideSteps => 'Hide steps';
+
+  @override
+  String connectionSwitchingTo(String target) {
+    return 'Switching to $target…';
+  }
+
+  @override
+  String get shellServerSwitching => 'Switching…';
+
+  @override
+  String get agentsStateNotCertified => 'Not certified on this version yet';
+
+  @override
+  String get agentsChipSignIn => 'Sign in';
+
+  @override
+  String get agentsChipResume => 'Resume';
+
+  @override
+  String get agentsChipCheck => 'Check';
+
+  @override
+  String agentNamesPair(String first, String second) {
+    return '$first and $second';
+  }
+
+  @override
+  String get diagnosticsExitHistoryTitle => 'Recent app exits';
+
+  @override
+  String get diagnosticsExitHistoryNote =>
+      'Android records each time the app closes. Nothing here is sent automatically.';
+
+  @override
+  String get diagnosticsExitHistoryUnsupported => 'Not available on this phone';
+
+  @override
+  String get diagnosticsExitHistoryUnsupportedBody =>
+      'Android 11 and later keep this record.';
+
+  @override
+  String get diagnosticsExitHistoryFailed =>
+      'Couldn\'t read recent app exits. Try again, or reopen the app.';
+
+  @override
+  String get diagnosticsExitNormal => 'App closed';
+
+  @override
+  String get diagnosticsExitUpdate => 'App updated';
+
+  @override
+  String get diagnosticsExitForceStop => 'App stopped';
+
+  @override
+  String get diagnosticsExitLowMemory => 'Phone needed memory';
+
+  @override
+  String get diagnosticsExitCrash => 'App stopped unexpectedly';
+
+  @override
+  String get diagnosticsExitKilled => 'Android ended the app';
+
+  @override
+  String get diagnosticsExitReasonCode => 'Reason code';
+
+  @override
+  String get diagnosticsExitImportance => 'Importance';
+
+  @override
+  String get diagnosticsExitSummary => 'Summary';
+
+  @override
+  String get diagnosticsReportOpen => 'Share saved crash reports';
+
+  @override
+  String get diagnosticsReportTitle => 'Preview crash report';
+
+  @override
+  String get diagnosticsReportPrivacy =>
+      'Only error categories and times, no messages or conversations. Nothing leaves this phone until you tap Share report.';
+
+  @override
+  String diagnosticsReportSize(int count, String size) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reports · $size',
+      one: '1 report · $size',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get diagnosticsReportShare => 'Share report';
+
+  @override
+  String get diagnosticsReportStale =>
+      'Saved details changed. Check the new report before sharing.';
+
+  @override
+  String get diagnosticsReportShareFailed =>
+      'Couldn\'t open sharing. Try again.';
+
+  @override
+  String get diagnosticsReportCaptureOff =>
+      'Saved crash reports are off. Turn them on to save future app errors.';
+
+  @override
+  String get diagnosticsReportEmpty => 'No saved crash reports to share.';
+
+  @override
+  String get diagnosticsUnavailable =>
+      'These details are unavailable. Reopen the app and try again.';
+
+  @override
+  String backgroundPauseTimeLimit(String at) {
+    return 'Background connection paused $at to save battery.';
+  }
+
+  @override
+  String get backgroundPauseRestricted =>
+      'Background connection paused: battery use is restricted.';
+
+  @override
+  String backgroundPauseUserStopped(String at) {
+    return 'Background connection stopped when the app closed $at.';
+  }
+
+  @override
+  String get backgroundPauseInterrupted =>
+      'Background connection stopped for an unknown reason.';
+
+  @override
+  String get backgroundPauseResume => 'Resume background connection';
+
+  @override
+  String get backgroundPauseResumeShort => 'Resume';
+
+  @override
+  String get backgroundPauseResuming => 'Resuming background connection…';
+
+  @override
+  String get backgroundPauseResumeFailed =>
+      'Couldn\'t resume. Open Keep running settings.';
+
+  @override
+  String get backgroundPauseOpenKeepRunning => 'Open Keep running settings';
+
+  @override
+  String get backgroundPauseResumed => 'Background connection resumed.';
+
+  @override
+  String get diagnosticsExitNoProblems => 'No unexpected closes recently.';
+
+  @override
+  String diagnosticsExitRoutine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count routine closes (updates, you closed it)',
+      one: '1 routine close (updates, you closed it)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String diagnosticsExitShowAll(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Show all $count',
+      one: 'Show all 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get diagnosticsExitUnknown => 'Closed for an unknown reason';
+
+  @override
+  String diagnosticsExitToday(String time) {
+    return 'Today $time';
+  }
+
+  @override
+  String diagnosticsExitYesterday(String time) {
+    return 'Yesterday $time';
+  }
+
+  @override
+  String get liveToolCommand => 'Running a command…';
+
+  @override
+  String get liveToolEdit => 'Editing files…';
+
+  @override
+  String get liveToolRead => 'Reading files…';
+
+  @override
+  String get liveToolSearch => 'Searching files…';
+
+  @override
+  String get liveToolWeb => 'Browsing the web…';
+
+  @override
+  String get liveToolSubagent => 'Running a subagent…';
+
+  @override
+  String get liveToolPlan => 'Planning…';
+
+  @override
+  String get liveToolWorking => 'Working…';
+
+  @override
+  String get liveToolCard => 'Showing a card…';
+
+  @override
+  String get liveToolBackgroundTask => 'Checking a background task…';
+
+  @override
+  String liveToolOther(String tool) {
+    return 'Running $tool…';
+  }
+
+  @override
+  String get e7LocaleUiJapanese => '日本語';
+
+  @override
+  String get e7LocaleUiChinese => '简体中文';
+
+  @override
+  String get e7LocaleUiSpanish => 'Español';
+
+  @override
+  String get e7LocaleUiPortuguese => 'Português (Brasil)';
+
+  @override
+  String get e7LocaleUiRussian => 'Русский';
 }

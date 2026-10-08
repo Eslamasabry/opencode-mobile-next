@@ -108,7 +108,7 @@ Widget _host(Widget page) => _app(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('Commands & tools', () {
+  group('Tools', () {
     testWidgets('keeps the Tools tab and says why on a server without it', (
       tester,
     ) async {
@@ -117,7 +117,14 @@ void main() {
       await tester.pumpWidget(_app(CapabilitiesScreen(controller: controller)));
       await tester.pumpAndSettle();
 
-      for (final tab in const ['Commands', 'Tools', 'Skills', 'References']) {
+      for (final tab in const [
+        'MCP',
+        'Commands',
+        'Tools',
+        'Skills',
+        'References',
+        'External agents',
+      ]) {
         expect(find.byKey(ValueKey('capabilities-tab-$tab')), findsOneWidget);
       }
       await tester.tap(find.byKey(const ValueKey('capabilities-tab-Tools')));
@@ -140,13 +147,49 @@ void main() {
         _app(CapabilitiesScreen(controller: controller, initialTab: 1)),
       );
       await tester.pumpAndSettle();
+      // MCP · Commands · Tools · Skills: Skills is the fourth tab.
       expect(
         tester.widget<KitTabSwitcher>(find.byType(KitTabSwitcher)).index,
-        2,
+        3,
       );
     });
 
-    testWidgets('a server without a catalog explains the whole page', (
+    testWidgets('a section can be asked for by name', (tester) async {
+      final controller = await _controller(ServerCapabilities.allV1);
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        _app(
+          CapabilitiesScreen(
+            controller: controller,
+            initialSection: ToolsSection.references,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<KitTabSwitcher>(find.byType(KitTabSwitcher)).index,
+        4,
+      );
+      // Only the opened tab is built; the others wait for a first visit.
+      expect(
+        find.byKey(const ValueKey('tools-section-references')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('tools-section-mcp')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('capabilities-tab-MCP')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('tools-section-mcp')), findsOneWidget);
+      // A visited tab is kept.
+      expect(
+        find.byKey(
+          const ValueKey('tools-section-references'),
+          skipOffstage: false,
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a server without a catalog keeps External agents, says why', (
       tester,
     ) async {
       final controller = await _controller(
@@ -155,11 +198,16 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(_app(CapabilitiesScreen(controller: controller)));
       await tester.pumpAndSettle();
+      expect(find.byType(KitTabSwitcher), findsNothing);
       expect(
-        find.byKey(const ValueKey('capabilities-unavailable')),
+        find.byKey(const ValueKey('tools-section-externalAgents')),
         findsOneWidget,
       );
-      expect(find.byType(KitTabSwitcher), findsNothing);
+      expect(find.byKey(const ValueKey('tools-unavailable')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('capabilities-unavailable')),
+        findsNothing,
+      );
     });
   });
 

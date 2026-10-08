@@ -133,6 +133,17 @@ Future<ConnectionController> _controllerFor(
     // Fake time never advances past the debounce; send status at once.
     liveStatusDebounce: Duration.zero,
     invoke: (method, [arguments]) async {
+      if (method == 'getBackgroundPause') {
+        return const {
+          'supported': true,
+          'active': false,
+          'paused': false,
+          'reason': 'none',
+          'at': null,
+          'canResume': false,
+        };
+      }
+
       if (method == 'consumeCodingAlertOpen' && !consumed) {
         consumed = true;
         return {

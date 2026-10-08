@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../api/models.dart';
 import '../../domain/mobile_tool_view.dart';
+import '../../domain/tool_label.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import '../kit/chat/kit_markdown.dart';

@@ -5,6 +5,10 @@ import java.util.concurrent.TimeUnit
 
 /** No provider output, passwords or OAuth data enter ordinary service logs. */
 class PhoneAgentHost(private val linux: BuiltinLinux) {
+    private companion object {
+        const val STARTUP_GRACE_MILLIS = 1500L
+    }
+
     private val children = mutableMapOf<String, Process>()
     private val generations = mutableMapOf<String, Long>()
     private val deleted = mutableSetOf<String>()
@@ -27,9 +31,7 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
             if (children[profile]?.isAlive == true) return status(profile)
             check(children.values.none { it.isAlive }) { "The agent host is unavailable." }
             check(starting.isEmpty()) { "The agent host is still starting. Wait a moment and try again." }
-            SetupDiskSpace.error(linux.home, SetupDiskSpace.MIN_LAUNCH_BYTES)?.let {
-                throw IllegalStateException(it)
-            }
+            SetupDiskSpace.error(linux.home, SetupDiskSpace.MIN_LAUNCH_BYTES)?.let { error(it) }
             starting.add(profile)
             (generations[profile] ?: 0L).also { generations[profile] = it }
         }
@@ -67,25 +69,32 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
             val started = linux.startAgentProcess(profile, listOf("/bin/sh", "-c", script))
             child = started
             outputReader = drain(started)
-            started.outputStream.use { output -> output.write((password + "\n").toByteArray(Charsets.US_ASCII)); output.flush() }
+            started.outputStream.use { output ->
+                output.write((password + "\n").toByteArray(Charsets.US_ASCII))
+                output.flush()
+            }
             // Catch rejected launch flags and startup crashes before registering
             // the daemon. Its output is discarded even when it exits here.
-            if (started.waitFor(1500, TimeUnit.MILLISECONDS)) {
+            if (started.waitFor(STARTUP_GRACE_MILLIS, TimeUnit.MILLISECONDS)) {
                 failureMessage = "The agent host stopped as soon as it started. Run its setup check and try again."
-                throw IllegalStateException(failureMessage)
+                error(failureMessage)
             }
-            synchronized(this) {
-                check(profile !in deleted && generations[profile] == generation && children[profile]?.isAlive != true)
-                children[profile] = started
-                linux.trackPrivateAgentService("agent-host.$profile", started, port)
-            }
+            registerStartedHost(profile, generation, started, port)
             return status(profile)
         } catch (_: Throwable) {
             synchronized(this) { if (children[profile] === child) children.remove(profile) }
             child?.let { cleanup(it, outputReader) }
-            throw IllegalStateException(failureMessage)
+            error(failureMessage)
         } finally {
             synchronized(this) { starting.remove(profile) }
+        }
+    }
+
+    private fun registerStartedHost(profile: String, generation: Long, child: Process, port: Int) {
+        synchronized(this) {
+            check(profile !in deleted && generations[profile] == generation && children[profile]?.isAlive != true)
+            children[profile] = child
+            linux.trackPrivateAgentService("agent-host.$profile", child, port)
         }
     }
 

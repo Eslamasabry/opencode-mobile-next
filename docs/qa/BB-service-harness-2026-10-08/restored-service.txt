@@ -1,0 +1,23 @@
+Waiting for another flutter command to release the startup lock...
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: native agent service callback: setup-main-denied
+00:00 +1: native agent service callback: daemon-main-denied
+00:00 +2: native agent service callback: setup-channel-denied
+00:00 +3: native agent service callback: daemon-timeout-denied
+00:00 +4: native agent service callback: daemon-stop-denied
+00:00 +5: native agent service callback: result-notification-denied
+00:00 +6: native agent service callback: dispatch-denied
+00:00 +7: native agent service callback: armed-null-sticky
+00:00 +8: native agent service callback: unarmed-null-rejected
+00:00 +9: native agent service callback: restoration-disarmed-not-sticky
+00:00 +10: native agent service callback: explicit-unarmed-not-sticky
+00:00 +11: native agent service callback: daemon-timeout-async-revocation
+00:00 +12: native agent service callback: daemon-stop-async-revocation
+00:00 +13: native agent service callback: daemon-request-threw-after-revocation
+00:00 +14: native agent service callback: setup-timeout-async-revocation
+00:00 +15: native agent service callback: destroy-revokes-kind
+00:01 +16: (tearDownAll)
+00:01 +16: All tests passed!
+
+PROCESS_EXIT=0

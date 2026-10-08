@@ -1,0 +1,8 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: removal removes only target rows and keeps Claude chats and account
+00:00 +1: removal excludes new phone chats and a second removal
+00:00 +2: removal returns plain busy guidance and preserves ready row
+00:00 +3: older hosts and Claude removal fail closed before dispatch
+00:00 +4: (tearDownAll)
+00:00 +4: All tests passed!

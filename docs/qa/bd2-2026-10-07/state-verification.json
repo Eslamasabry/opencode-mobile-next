@@ -1,0 +1,65 @@
+{
+  "base_commit": "4fd44e0482b7037ae84d2cdf6aa52e8b73a0cd86",
+  "flutter": "3.47.1 / 91f8bd75076e9c740aa13cf67eb9ec1a093f68f5",
+  "new_regressions": 13,
+  "focused_flutter_tests": 195,
+  "focused_test_files": [
+    "test/chat_feed_initial_load_test.dart",
+    "test/chat_feed_test.dart",
+    "test/connection_sse_test.dart",
+    "test/connection_v2_gateway_test.dart",
+    "test/phone_agents_controller_test.dart",
+    "test/side_connections_test.dart",
+    "tool/qa/bd9_device_smoke_fixture_test.dart",
+    "tool/qa/bd9_conversation_finder_test.dart"
+  ],
+  "restored_regressions": 13,
+  "analyzer": "PASS: no issues found (17.4s)",
+  "offline_python_tests": 44,
+  "mutations": [
+    {
+      "mutation": "original_state",
+      "exit_code": 1,
+      "expected_failure": "missing inventory request"
+    },
+    {
+      "mutation": "no_location_reconnect",
+      "exit_code": 1,
+      "expected_failure": "missing inventory request"
+    },
+    {
+      "mutation": "lost_inventory_invalidation",
+      "exit_code": 1,
+      "expected_failure": "missing inventory request"
+    },
+    {
+      "mutation": "merged_refresh_dependency",
+      "exit_code": 1,
+      "expected_failure": "missing inventory request"
+    },
+    {
+      "mutation": "sliding_debounce",
+      "exit_code": 1,
+      "expected_failure": "postponed fetch"
+    },
+    {
+      "mutation": "folder_local_row_masks_inventory",
+      "exit_code": 1,
+      "expected_failure": "folder-local inventory must be empty"
+    }
+  ],
+  "native_changes": false,
+  "full_suite": "Coordinator-owned; not run",
+  "device": "PASS: automatic global-only conversation, no input; same-lock normal2195 restoration",
+  "restored_state_and_fixture_tests": 16,
+  "final_source_sha256": {
+    "lib/state/connection/chat_feed.dart": "b9e2ca65a23a96af96bb9948a0d4b053bafcc6e9135af0b46d19a27c693aedf5",
+    "lib/state/connection/events.dart": "41d16b8b22e6d3ea4ae5efc03a8375740bf140097e0f801793549a0e557a1572",
+    "lib/state/connection/lifecycle.dart": "8c626303f23a4bf67d6cf512c822d01af4a2bc71f845ce539efcd7cef3570575",
+    "test/chat_feed_initial_load_test.dart": "2dd2be1e8a83cadb2dc552cac6b1cabecbb8f1d4e77e2e0f72882881d2f3f5f1",
+    "integration_test/bd9_device_smoke_fixture.dart": "4b3396bbb694dcc6a2f27fe0814f75503b0c04bb90bc35686433d43f75bfa33a",
+    "integration_test/bd9_device_smoke_test.dart": "b54b96829c7b4d1abd617bf9656330cdeccd56fc4f15cdc558ae5cbff186bfe5"
+  },
+  "app_source_commit": "fe7052de0eeee9109eab0f1528ee5900e8e4c2cd",
+  "g33": "FAIL: immutable ddd23e17 lacks body and author trailer; subsequent source commit passes"
+}

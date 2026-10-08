@@ -1,0 +1,17 @@
+{
+  "sourceRevision": "13d00fbb7649672491aa8458b7cd4cd807b188af",
+  "recordedArchivedIDs": {
+    "fq3-20261008-qualified": {
+      "opencode": 16,
+      "opencode2": 8
+    },
+    "fq3-20261008-settled": {
+      "opencode2": 16,
+      "opencode": 16
+    }
+  },
+  "batchExit": 0,
+  "scope": "exact archived IDs plus current durable intents",
+  "remainingOwnershipJournals": 0,
+  "result": "verified"
+}

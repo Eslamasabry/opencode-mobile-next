@@ -1,0 +1,8 @@
+{
+  "initialRuntime": "OpenCode 2",
+  "connectedRuntimeAfterSwitch": "OpenCode 1",
+  "qualifiedCardsFrames": 12,
+  "status": "On for Claude Code, OpenCode 1",
+  "restoredOriginalApk2195": true,
+  "captureAssertionCorrection": "Actual fully qualified copy has no trailing period; semantic validation uses the recorded agent names and rejects verification failure."
+}

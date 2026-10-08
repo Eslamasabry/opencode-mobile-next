@@ -1,0 +1,40 @@
+Offline authored removal script qualification, 2026-10-08.
+No emulator, accounts, native files, UI edits or process signals were used.
+Production has fixed /home/oc and /proc; tests rewrite those constants only
+inside an isolated temporary guest and execute the actual shell/Python script.
+
+Pinned formatter:
+dart format --language-version=3.10 lib/builtin/agents/agent_removal_scripts.dart test/agent_removal_scripts_test.dart
+
+Failing regression before fixing the absent-payload shortcut:
+tool/qa/machine_lock.sh test -- <pinned-flutter> test --no-pub --concurrency=1 --reporter expanded test/agent_removal_scripts_test.dart --plain-name 'absent payload with a surviving target PID remains busy'
+Expected: 16 (busy)
+Actual: 0 (success)
+Process exit: 1; 0 passed, 1 failed.
+The fixture retained an exact target PID after the payload and launcher were
+already absent. The fix scans target processes before reporting idempotent
+success, without signalling the PID.
+
+After fix:
+tool/qa/machine_lock.sh test -- <pinned-flutter> test --no-pub --concurrency=1 --reporter expanded test/agent_removal_scripts_test.dart
+Process exit: 0; all 18 tests passed.
+Covered six catalog recipes/Claude exclusion, partial staging cleanup, repeat
+absence, foreign install lock preservation (present and absent payload), live
+target PID preservation (present and absent payload), native-rootfs executable
+identity, unrelated processes, wrong UID/HOME, regular/foreign launchers,
+staging symlinks, target/ancestor symlinks, foreign/non-PID transient links,
+catalog injection rejection, and preservation of account homes, Claude, Node
+and Paseo.
+
+Pinned Flutter:
+/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter
+This proves offline script behavior, not app-side uninstall/device integration.
+
+
+Payload-link follow-up (same offline authored script):
+Before fix: payload links are removed without following internal or external targets
+Expected: 0; Actual: 17 (unsafe); one regression failed.
+After fix: child symlinks accepted for unlink-only fd-safe rmtree; all 19 tests passed.
+Root/ancestor symlinks and foreign launcher links remain refused.
+Account-directory and external-file targets were preserved by the actual fixture run.
+The affected integration log includes the final 19 cases.

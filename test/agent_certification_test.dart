@@ -77,16 +77,18 @@ void main() {
     }
   });
 
-  test('bundled fx and other agents remain unverified on arm64', () {
+  test('bundled other agents remain unverified on arm64 and x64', () {
     for (final descriptor in AgentCatalog.builtIn.agents) {
       if (descriptor.id == 'claude') continue;
-      expectClosed(
-        AgentCertificationMatrix.bundled.capabilitiesFor(
-          descriptor: descriptor,
-          architecture: AgentArchitecture.arm64,
-          helperVersion: '0.9.2',
-        ),
-      );
+      for (final architecture in AgentArchitecture.values) {
+        expectClosed(
+          AgentCertificationMatrix.bundled.capabilitiesFor(
+            descriptor: descriptor,
+            architecture: architecture,
+            helperVersion: '0.9.2',
+          ),
+        );
+      }
     }
   });
 
@@ -360,5 +362,59 @@ void main() {
     );
     expect(claude.resumeLabel, "Can't reopen old chats");
     expect(claude.resumeNote, 'Starts a new chat');
+  });
+
+  group('certified for chat (the agent picker\'s gate)', () {
+    Map<String, dynamic> chatRow({
+      String id = 'claude',
+      String? agentVersion,
+      Map<String, String> states = const {'install': 'pass', 'smoke': 'pass'},
+    }) => {
+      'id': id,
+      'agentVersion':
+          agentVersion ?? AgentCatalog.builtIn.byId(id)!.recipe!.version,
+      'helperVersion': '0.9.2',
+      'cells': {
+        for (final MapEntry(:key, :value) in states.entries)
+          key: {'state': value, 'evidence': 'docs/qa/example/README.md'},
+      },
+    };
+
+    bool certified(Map<String, dynamic> row, [String id = 'claude']) =>
+        AgentCertificationMatrix.fromJson({
+          'agents': [row],
+        }).certifiedForChat(id);
+
+    test('the bundled matrix certifies Claude Code and nothing else yet', () {
+      final bundled = AgentCertificationMatrix.bundled;
+      expect(bundled.certifiedForChat('claude'), isTrue);
+      for (final id in [
+        'codex',
+        'gemini',
+        'qwen',
+        'goose',
+        'omp-acp',
+        'fx',
+        'unknown',
+      ]) {
+        expect(bundled.certifiedForChat(id), isFalse, reason: id);
+      }
+    });
+
+    test('needs the pinned version with install and smoke passed', () {
+      expect(certified(chatRow()), isTrue);
+      expect(certified(chatRow(agentVersion: '2.1.282')), isFalse);
+      expect(
+        certified(chatRow(states: {'install': 'pass', 'smoke': 'untested'})),
+        isFalse,
+      );
+      expect(
+        certified(chatRow(states: {'install': 'pass', 'smoke': 'blocked:OW1'})),
+        isFalse,
+      );
+      expect(certified(chatRow(states: {'smoke': 'pass'})), isFalse);
+      // A row for another agent certifies nothing here.
+      expect(certified(chatRow(id: 'fx'), 'claude'), isFalse);
+    });
   });
 }
