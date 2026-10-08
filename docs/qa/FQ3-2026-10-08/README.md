@@ -27,7 +27,7 @@ Local verification: the focused adapters, real loopback HTTP/SSE/auth/dialect/re
 
 Exploratory findings: stock catalog selection picked a different model from the app's configured GLM use; the reproduction command selects the observed connected `zai-coding-plan/glm-5.3`. On this shared emulator a completed owned reply appeared after the initial 65-second deadline. The final runner allows 100 seconds for a reply and keeps a scenario budget; such waits remain failed if the deadline expires. Native launch uses exported loader variables, matching the app's ProcessBuilder environment; Android's extra outer `env` layer failed before PRoot.
 
-Final run and outcomes are appended after execution. None of the exploratory or controlled fixture results are imported as live certification.
+None of the exploratory or controlled fixture results are imported as live certification.
 
 Exploratory cleanup correction: TERM alone left owned PRoot descendants running. The earlier Android shell UID could not reliably inspect their process metadata, and the guest cwd view did not identify them. Root-side kernel metadata plus the exact generated `--rootfs`/`--cwd` argv identified 18 owned processes, which were removed by exact PID/start-time checks; no process-name pattern kill was used. Android restarted during this memory-pressure episode; app build 2195 and its private data remained installed. The final driver captures descendants, uses TERM then KILL only for matching owned identities, verifies they are gone, and never stops the app-managed port. Root adb was restored after Android's restart. These exploratory attempts are not certification results.
 
@@ -42,3 +42,28 @@ The bounded startup investigation (`oc2-model-prerequisite.json`) observed zero 
 Another lane installed build 2202 after the first run. The existing shared `oc-2195.apk` was verified as build2195 with the known local signer SHA256 `1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C` and restored under the shared lock with `adb install -r -d`; Android accepted the matching-signature update. App private data was retained; no uninstall or clear-data operation was used.
 
 Final harness checkpoint: all 94 focused Flutter tests passed serially under machine_lock, plus 19 Python validator tests and generated-snapshot parity. `red-deny-narration.txt` shows that requiring final narration wrongly fails a genuinely blocked tool; the corrected outcome assertion is restored. Startup polling also has its guard-removal red proof.
+
+Interrupted-run recovery: the settled run kept the adapter/device candidate at `d0c007fb6a275da18798f747cf804813a106664d`. Another lane replaced build2195 with2202 before OC2 Deny/Image/Cards and history ran. Those unexecuted phases were resumed under the same run ID, revision and attempt token after restoring the existing signed2195 APK. Completed scenarios, including genuine failures, were retained. `fq3-20261008-settled-before-resume.json` archives the interrupted report; it is not the final matrix input.
+
+A subsequent restore initially failed for insufficient Android storage. Inspection found an inactive September28 QA fixture outside app private data at `/data/local/tmp/p16a-installer-fix`. Only its disposable apt package-cache binaries and downloaded apt-list metadata were backed up to `/home/eslam/Storage/tmp/fq3-20261008-stale-apt-cache.tar.gz` (private mode0600, gzip verified), then reclaimed; installed packages and app data were preserved. The matching-signature2195 update then succeeded. This host backup is not a repository artifact.
+
+Resumption tooling admits all16 phases only when build2195, UID, both version witnesses, revision, run ID, attempt token and cleanup match. A SHA256 manifest binds the fresh history envelope to ordered public phase identity and exact owned session IDs; it contains no transcript or transcript digest. Dirty adapter/device source or a changed HEAD is refused. The canonical report is validated before replacement. After running only the interrupted phases with the original driver, capture new history under the shared lock and then regenerate the matrix:
+
+```sh
+flock /home/eslam/Storage/tmp/oc-emulator.lock \
+  /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart \
+  tool/qa/fq3/reconcile_run.dart --capture-history fq3-20261008-settled
+/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart \
+  tool/qa/fq3/reconcile_run.dart fq3-20261008-settled
+python3 tool/agents/generate_certification.py
+```
+
+These resumption commands require the original candidate HEAD; a new candidate uses a new full driver run. The nine manifest/history-binding regressions pass. `red-history-manifest.txt` records a failing stale-history regression with the manifest equality guard temporarily removed and subsequently restored.
+
+Final recorded run: `fq3-20261008-settled`, protocol candidate `d0c007fb6a275da18798f747cf804813a106664d`, app2195/UID10217, CLI and HTTP pins OC1 1.18.32 / OC2 2.0.10. All16 scenario phases executed with successful owned-process cleanup; the final matrix imports this report. OC1 passed9/11 engine checks: version, create, models, model switch with inference, streamed reply, reconnect refetch, both real permission outcomes and actual cards/receipt round trip. Abort's follow-up reply mismatched (`oc1_after_abort_reply_mismatch`), and image content was unverified (`oc1_image_content_unverified`). OC2 passed3/11: version, create and settled enabled model discovery. Stream, abort, reconnect and both permission scenarios timed out; model switch, image and cards failed `inference_execution_failed`. These are unqualified capabilities, not waived checks.
+
+Fresh OC1 → OC2 → OC1 → OC2 history switching passed: ordered durable content of16 owned sessions in each dialect survived fresh connections. All32 exact owned session IDs were then deleted. `final-device-state.json` records build2195 installed, zero owned QA processes and zero device forwards at the final locked check. App data was retained. Shared-device state can subsequently change under other lanes.
+
+The OC2 bounded diagnostic (`oc2-inference-diagnostics.json`) observed no completed assistant reply for the failing stream/reconnect/model scenarios; it records counts only. Enabled catalog entries do not demonstrate successful inference. The run does not establish why inference failed and performs no credential enrollment or cross-dialect credential copying. Both engines remain partially qualified.
+
+Final local validation:103 distinct focused Flutter tests passed serially under machine_lock (the94 earlier adapter/wire/device/history/evidence/parser checks plus9 new manifest checks); existing12 certification parser tests passed again against the regenerated snapshot;19 Python evidence-validator tests passed; full pinned analyzer clean; generated snapshot parity passed; five controlled guard-removal red proofs failed as expected with guards restored. Full repository suite, native/APK build, physical-device proof, UI certification, push, CI, signing and release were not performed.

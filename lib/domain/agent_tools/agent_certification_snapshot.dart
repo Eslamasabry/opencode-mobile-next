@@ -184,8 +184,8 @@ const agentCertificationBundledJson = r'''{
     "expectedVersion": "1.18.32",
     "observedVersion": "1.18.32",
     "deviceBuild": 2195,
-    "runID": "fq3-20261008-qualified",
-    "evidence": "docs/qa/FQ3-2026-10-08/fq3-20261008-qualified.json",
+    "runID": "fq3-20261008-settled",
+    "evidence": "docs/qa/FQ3-2026-10-08/fq3-20261008-settled.json",
     "capabilities": {
      "version": {
       "state": "pass",
@@ -238,13 +238,9 @@ const agentCertificationBundledJson = r'''{
       }
      },
      "abort": {
-      "state": "pass",
-      "code": "verified",
-      "facts": {
-       "interrupted": true,
-       "usableAfterAbort": true,
-       "asserted": true
-      }
+      "state": "fail",
+      "code": "oc1_after_abort_reply_mismatch",
+      "facts": {}
      },
      "permissionAllow": {
       "state": "pass",
@@ -256,9 +252,13 @@ const agentCertificationBundledJson = r'''{
       }
      },
      "permissionDeny": {
-      "state": "fail",
-      "code": "oc1_completion_timeout",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "requestObserved": true,
+       "replyObserved": true,
+       "asserted": true
+      }
      },
      "image": {
       "state": "fail",
@@ -275,9 +275,15 @@ const agentCertificationBundledJson = r'''{
       }
      },
      "protocolSwitch": {
-      "state": "fail",
-      "code": "nonempty_histories_missing",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "bothHistoriesPreserved": true,
+       "freshClients": true,
+       "oc1Sessions": 16,
+       "oc2Sessions": 16
+      }
      }
     }
    }
@@ -345,8 +351,8 @@ const agentCertificationBundledJson = r'''{
     "expectedVersion": "2.0.10",
     "observedVersion": "2.0.10",
     "deviceBuild": 2195,
-    "runID": "fq3-20261008-qualified",
-    "evidence": "docs/qa/FQ3-2026-10-08/fq3-20261008-qualified.json",
+    "runID": "fq3-20261008-settled",
+    "evidence": "docs/qa/FQ3-2026-10-08/fq3-20261008-settled.json",
     "capabilities": {
      "version": {
       "state": "pass",
@@ -365,54 +371,64 @@ const agentCertificationBundledJson = r'''{
       }
      },
      "models": {
-      "state": "fail",
-      "code": "enabled_model_missing",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "enabledModels": 84,
+       "selectedModelAvailable": true,
+       "asserted": true
+      }
      },
      "stream": {
       "state": "fail",
-      "code": "model_prerequisite_missing",
+      "code": "timeout",
       "facts": {}
      },
      "reconnect": {
       "state": "fail",
-      "code": "model_prerequisite_missing",
+      "code": "timeout",
       "facts": {}
      },
      "modelSwitch": {
       "state": "fail",
-      "code": "model_prerequisite_missing",
+      "code": "inference_execution_failed",
       "facts": {}
      },
      "abort": {
       "state": "fail",
-      "code": "model_prerequisite_missing",
+      "code": "timeout",
       "facts": {}
      },
      "permissionAllow": {
       "state": "fail",
-      "code": "model_prerequisite_missing",
+      "code": "timeout",
       "facts": {}
      },
      "permissionDeny": {
       "state": "fail",
-      "code": "model_prerequisite_missing",
+      "code": "timeout",
       "facts": {}
      },
      "image": {
       "state": "fail",
-      "code": "model_prerequisite_missing",
+      "code": "inference_execution_failed",
       "facts": {}
      },
      "cards": {
       "state": "fail",
-      "code": "model_prerequisite_missing",
+      "code": "inference_execution_failed",
       "facts": {}
      },
      "protocolSwitch": {
-      "state": "fail",
-      "code": "nonempty_histories_missing",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "bothHistoriesPreserved": true,
+       "freshClients": true,
+       "oc1Sessions": 16,
+       "oc2Sessions": 16
+      }
      }
     }
    }

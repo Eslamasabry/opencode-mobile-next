@@ -1,0 +1,51 @@
+{
+  "runID": "fq3-20261008-settled",
+  "sourceRevision": "d0c007fb6a275da18798f747cf804813a106664d",
+  "attemptID": "attempt-1791433041135064-2528674",
+  "cleanupCode": null,
+  "engine": "opencode",
+  "case": "reconnect",
+  "cliVersion": "1.18.32",
+  "observedVersion": "1.18.32",
+  "appUID": 10217,
+  "appBuild": 2195,
+  "results": {
+    "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "healthy": true,
+        "asserted": true
+      }
+    },
+    "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "retained": true,
+        "asserted": true
+      }
+    },
+    "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "connectedModels": 18,
+        "asserted": true
+      }
+    },
+    "reconnect": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "refetched": true,
+        "messages": 2,
+        "asserted": true
+      }
+    }
+  },
+  "ownedSessions": [
+    "ses_ee644c872ffeHDHkNg710uvkrS",
+    "ses_ee644bf97ffeoLP3mrMkV27k42"
+  ]
+}

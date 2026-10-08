@@ -100,12 +100,12 @@ These results apply only to the recorded emulator build and in-app runtime. They
 
 | Agent | Expected | Observed | Build | Run | version | create | models | modelSwitch | stream | abort | reconnect | permissionAllow | permissionDeny | image | cards | protocolSwitch |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| OpenCode 1 | 1.18.32 | 1.18.32 | 2195 | fq3-20261008-qualified | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
-| OpenCode 2 | 2.0.10 | 2.0.10 | 2195 | fq3-20261008-qualified | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| OpenCode 1 | 1.18.32 | 1.18.32 | 2195 | fq3-20261008-settled | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| OpenCode 2 | 2.0.10 | 2.0.10 | 2195 | fq3-20261008-settled | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 FQ3 legend: ✅ protocol assertion passed · ❌ assertion failed or prerequisite missing.
 
-**OpenCode 1** — [fq3-20261008-qualified](../qa/FQ3-2026-10-08/fq3-20261008-qualified.json)
+**OpenCode 1** — [fq3-20261008-settled](../qa/FQ3-2026-10-08/fq3-20261008-settled.json)
 
 - version: pass — `verified`; facts `{"asserted":true,"healthy":true}`
 - create: pass — `verified`; facts `{"asserted":true,"retained":true}`
@@ -113,24 +113,24 @@ FQ3 legend: ✅ protocol assertion passed · ❌ assertion failed or prerequisit
 - stream: pass — `verified`; facts `{"asserted":true,"completedReply":true,"streamedDelta":true}`
 - reconnect: pass — `verified`; facts `{"asserted":true,"messages":2,"refetched":true}`
 - modelSwitch: pass — `verified`; facts `{"asserted":true,"selectionObserved":true}`
-- abort: pass — `verified`; facts `{"asserted":true,"interrupted":true,"usableAfterAbort":true}`
+- abort: fail — `oc1_after_abort_reply_mismatch`; facts `{}`
 - permissionAllow: pass — `verified`; facts `{"asserted":true,"replyObserved":true,"requestObserved":true}`
-- permissionDeny: fail — `oc1_completion_timeout`; facts `{}`
+- permissionDeny: pass — `verified`; facts `{"asserted":true,"replyObserved":true,"requestObserved":true}`
 - image: fail — `oc1_image_content_unverified`; facts `{}`
 - cards: pass — `verified`; facts `{"answerReceipt":true,"asserted":true,"cardsToolCall":true}`
-- protocolSwitch: fail — `nonempty_histories_missing`; facts `{}`
+- protocolSwitch: pass — `verified`; facts `{"asserted":true,"bothHistoriesPreserved":true,"freshClients":true,"oc1Sessions":16,"oc2Sessions":16}`
 
-**OpenCode 2** — [fq3-20261008-qualified](../qa/FQ3-2026-10-08/fq3-20261008-qualified.json)
+**OpenCode 2** — [fq3-20261008-settled](../qa/FQ3-2026-10-08/fq3-20261008-settled.json)
 
 - version: pass — `verified`; facts `{"asserted":true,"healthy":true}`
 - create: pass — `verified`; facts `{"asserted":true,"created":true}`
-- models: fail — `enabled_model_missing`; facts `{}`
-- stream: fail — `model_prerequisite_missing`; facts `{}`
-- reconnect: fail — `model_prerequisite_missing`; facts `{}`
-- modelSwitch: fail — `model_prerequisite_missing`; facts `{}`
-- abort: fail — `model_prerequisite_missing`; facts `{}`
-- permissionAllow: fail — `model_prerequisite_missing`; facts `{}`
-- permissionDeny: fail — `model_prerequisite_missing`; facts `{}`
-- image: fail — `model_prerequisite_missing`; facts `{}`
-- cards: fail — `model_prerequisite_missing`; facts `{}`
-- protocolSwitch: fail — `nonempty_histories_missing`; facts `{}`
+- models: pass — `verified`; facts `{"asserted":true,"enabledModels":84,"selectedModelAvailable":true}`
+- stream: fail — `timeout`; facts `{}`
+- reconnect: fail — `timeout`; facts `{}`
+- modelSwitch: fail — `inference_execution_failed`; facts `{}`
+- abort: fail — `timeout`; facts `{}`
+- permissionAllow: fail — `timeout`; facts `{}`
+- permissionDeny: fail — `timeout`; facts `{}`
+- image: fail — `inference_execution_failed`; facts `{}`
+- cards: fail — `inference_execution_failed`; facts `{}`
+- protocolSwitch: pass — `verified`; facts `{"asserted":true,"bothHistoriesPreserved":true,"freshClients":true,"oc1Sessions":16,"oc2Sessions":16}`
