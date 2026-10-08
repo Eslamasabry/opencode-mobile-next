@@ -1,0 +1,14 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart
+00:00 +0: removal uses fixed agent view and preserves account and gate metadata
+00:00 +1: Claude removal is never dispatched
+00:00 +2: running foreign native setup prevents removal
+00:00 +3: unknown native setup prevents removal
+00:00 +4: live target refusal is busy without leaking child output
+00:00 +5: removal serializes installs and releases exclusion after completion
+00:00 +6: QA requirement reaches the native target only
+00:00 +7: normal build dispatch has no QA declaration
+00:00 +8: removing fx retains unrelated Claude auth probes
+00:00 +9: existing gateway draft cannot dispatch while payload is removed
+00:00 +10: pending installation preparation excludes removal
+00:00 +11: only the exact storage failure becomes a safe progress reason
+00:00 +12: All tests passed!
