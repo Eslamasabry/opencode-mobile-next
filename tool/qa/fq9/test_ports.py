@@ -46,6 +46,27 @@ class ObservationTests(unittest.TestCase):
         )
         self.assertFalse(ongoing_notification(mixed))
 
+    def test_android_named_flags_ignore_pending_intent_hex_flags(self):
+        named = (
+            f"\n\n  NotificationRecord(a: pkg={PACKAGE} id=4747 "
+            "Notification(channel=opencode_live_connection "
+            "flags=ONGOING_EVENT|ONLY_ALERT_ONCE|NO_CLEAR|FOREGROUND_SERVICE))\n"
+            "    contentIntent=PendingIntent(flags=0x800)\n"
+        )
+        self.assertTrue(ongoing_notification(named))
+        self.assertFalse(ongoing_notification(named.replace("ONGOING_EVENT|", "")))
+        self.assertFalse(ongoing_notification(named.replace(PACKAGE, "foreign")))
+        self.assertFalse(ongoing_notification(named.replace("4747", "4748")))
+        self.assertFalse(
+            ongoing_notification(named.replace("opencode_live_connection", "foreign"))
+        )
+        # An unrelated intent's hex flag cannot supply the ongoing bit.
+        self.assertFalse(
+            ongoing_notification(
+                named.replace("ONGOING_EVENT|", "").replace("0x800", "0x2")
+            )
+        )
+
     def test_socket_requires_single_loopback_listener_owned_by_app_uid(self):
         line = "  0: 0100007F:1001 00000000:0000 0A 0:0 0:0 0 10217 0 123456 1\n"
         self.assertEqual(socket_identity(line, 10217), "123456")

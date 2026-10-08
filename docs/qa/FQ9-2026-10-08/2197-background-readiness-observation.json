@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "snapshot": {
+    "ownedTurn": true,
+    "appManaged": true,
+    "appVisible": true,
+    "appAlive": true,
+    "serverAlive": true,
+    "foregroundService": true,
+    "ongoingNotification": true,
+    "turnActive": true,
+    "progressCounter": 3,
+    "completed": false,
+    "failed": false
+  },
+  "latestPromptErrors": [],
+  "backgroundDwellStarted": false
+}

@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "normalBuild": 2197,
+  "normalIdentityVerified": true,
+  "privateReceiptMatched": true,
+  "exactLegacyPath": "files/linux/ubuntu/root/projects/fq9-fixture",
+  "directoryOwnerVerified": true,
+  "symlinksRejected": true,
+  "emptyBeforeRemoval": true,
+  "removalMethod": "rmdir_exact_empty_entry",
+  "onlyOwnedLegacyFixtureRemoved": true,
+  "productStartPending": true
+}

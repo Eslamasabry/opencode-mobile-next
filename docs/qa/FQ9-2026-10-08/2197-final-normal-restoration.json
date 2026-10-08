@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "normalBuild": 2197,
+  "normalRestored": true,
+  "state": "pass",
+  "restoreMethod": "adb install -r exact approved 2197",
+  "backgroundRestoredOffViaProduct": true,
+  "installed": {
+    "build": 2197,
+    "version": "1.2.0",
+    "sha256": "03ae604a6a1ed06739091d75770a30a04cbc7436e9313f5d37a19f20fdff0eea",
+    "signer": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c",
+    "uid": 10217
+  },
+  "legacyFixtureAbsent": true,
+  "backgroundServiceOff": true,
+  "appManagedServerHealthy": true,
+  "runtimeVersion": "1.18.32",
+  "managedTurnsIdle": true,
+  "ownedForwardClosed": true
+}
