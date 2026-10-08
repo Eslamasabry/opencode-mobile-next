@@ -52,6 +52,7 @@ Future<void> main(List<String> args) async {
   final observations = <String, Object?>{};
   String? cleanupCode;
   try {
+    await PhoneRuntime.restoreNormalApp();
     runtime = await PhoneRuntime.inspect(runID);
     ownership = SessionOwnership.create(
       File(

@@ -1,6 +1,6 @@
 # FQ3b diagnosis and repeatable certification
 
-Normal app: **2196**, emulator-5554, application UID10217. All device work takes `/home/eslam/Storage/tmp/oc-emulator.lock`. The runner restores the approved same-signer2196 APK inside that lock when needed, preserving application data. An already installed2196 is retained so the app-managed server is not restarted unnecessarily.
+Normal app: **2196**, emulator-5554, application UID10217. All device work takes `/home/eslam/Storage/tmp/oc-emulator.lock`. The runner restores the approved same-signer2196 APK before and after locked device work when needed, preserving application data. A restoration restarts the normal app because APK updates terminate its process; its stored engine/model choice is retained. An already installed2196 is retained so the app-managed server is not restarted unnecessarily.
 
 ## OC2: default model versus app-selected model
 
@@ -25,7 +25,7 @@ The old `oc1_after_abort_reply_mismatch` means a completed assistant did not con
 
 ## Ownership and interruption recovery
 
-Each title includes run, engine, scenario and session ordinal. A durable intent is written before creating a session; every returned ID is immediately journaled. Cleanup checks exact project directory plus owned title/ID before deleting, and removes only this harness's rows. Interrupted creation can be recovered by bounded discovery within the recorded run/scenario scope. Archived cleanup requires explicitly recorded IDs plus exact legacy directory/title, never a blanket title search. Failed cleanup retains its journal and invalidates all current-run passes before matrix generation. Schema2 adds a required final cleanup acknowledgment, which the independent Python validator enforces.
+Each title includes run, engine, scenario and session ordinal. A durable intent is written before creating a session; every returned ID is immediately journaled. Cleanup checks exact project directory plus owned title/ID before deleting, and removes only this harness's rows. Interrupted creation can be recovered by bounded discovery within the recorded run/scenario scope. Archived cleanup requires explicitly recorded IDs plus exact legacy directory/title, never a blanket title search. Failed cleanup retains its journal and invalidates all current-run passes before matrix generation. Shared-device handoffs initially left another installed build: the batch correctly refused it with `installed_build_changed`. The runner now prepares the approved2196 before inspecting the runtime, as well as restoring it afterward; wrong UID/engine/scope still refuse. Schema2 adds a required final cleanup acknowledgment, which the independent Python validator enforces.
 
 ## Repeat the final run
 

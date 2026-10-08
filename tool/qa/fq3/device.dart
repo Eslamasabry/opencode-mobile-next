@@ -95,6 +95,18 @@ class PhoneRuntime {
       if (update.exitCode != 0 || await installed() != 2196) {
         throw const ProbeFailure('normal_apk_restore_failed');
       }
+      // Updating kills the app process. Restart its own runtime, preserving the
+      // stored engine/model choice; managed-only probes still verify that engine.
+      final launched = await adb([
+        'shell',
+        'am',
+        'start',
+        '-n',
+        '$package/.MainActivity',
+      ]);
+      if (launched.exitCode != 0) {
+        throw const ProbeFailure('normal_app_start_failed');
+      }
     } on ProbeFailure {
       rethrow;
     } catch (_) {

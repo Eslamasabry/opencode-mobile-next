@@ -100,6 +100,7 @@ Future<void> phase(List<String> args, String runID) async {
       : null;
   try {
     if (testedModel == null) throw const ProbeFailure('phase_model_invalid');
+    await PhoneRuntime.restoreNormalApp();
     runtime = await PhoneRuntime.inspect(runID);
     ownership = SessionOwnership.create(
       File(
@@ -377,6 +378,7 @@ Future<bool> cleanupOwnedSessions(
 }) async {
   var failed = false;
   try {
+    await PhoneRuntime.restoreNormalApp();
     if (includeArchived) {
       const archive = 'docs/qa/FQ3-2026-10-08';
       for (final engine in ['opencode', 'opencode2']) {
@@ -751,6 +753,7 @@ Future<void> histories(List<String> args, String runID) async {
       }
     }
     manifest = phaseSessionManifest(admitted);
+    await PhoneRuntime.restoreNormalApp();
     runtime = await PhoneRuntime.inspect(runID);
     requireConsistentAppUID(
       int.tryParse(argument(args, '--uid') ?? ''),
