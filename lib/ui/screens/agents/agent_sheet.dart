@@ -10,6 +10,7 @@ import '../../../domain/phone_agents.dart';
 import '../../../domain/phone_agents_source.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
+import '../../app_theme.dart' show AppStatusTone;
 import '../../kit/kit.dart';
 import '../chats/chats_host.dart';
 import 'agent_error_notice.dart';
@@ -66,7 +67,28 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
   AgentAuthProbeResult? _heldAccount;
   Timer? _closeSoon;
 
+  // Removing the installed agent from this phone (BA10): pending while the
+  // host deletes it, then the measured result in place of the frame.
+  bool _removalPending = false;
+  AgentRemovalResult? _removed;
+
   PhoneAgentsSource get _agents => ref.read(chatsHostProvider).agents!;
+
+  /// Present only when the source can remove an installed agent.
+  PhoneAgentRemovalSource? get _removals {
+    final agents = _agents;
+    return agents is PhoneAgentRemovalSource
+        ? agents as PhoneAgentRemovalSource
+        : null;
+  }
+
+  /// Remove is offered only where the source says it can (never for Claude
+  /// Code, whose install and account this app does not manage).
+  bool _canRemove(String id) =>
+      id != 'claude' && (_removals?.canRemoveAgent(id) ?? false);
+
+  bool _isRemoving(String id) =>
+      _removalPending || _removals?.removingAgentId == id;
 
   /// Present only when the source has qualified status checks and logout.
   PhoneAgentAccountSource? get _accounts {
@@ -179,7 +201,52 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     try {
       await _agents.installAgent(id);
     } catch (error) {
+      // An install is refused while a removal runs: say that, not "failed".
+      if (_removals?.removingAgentId != null && mounted) {
+        setState(
+          () => _notice = AgentFailure(
+            AppLocalizations.of(context).agentsRemoveBusy,
+          ),
+        );
+        return;
+      }
       _fail(error);
+    }
+  }
+
+  /// Asks first, then removes the installed agent from this phone. Accounts
+  /// and conversations stay. The sheet shows the progress in place, then what
+  /// was freed; a failure is one of the three fixed sentences.
+  Future<void> _remove(String id) async {
+    final removals = _removals;
+    if (removals == null || _removalPending || !_canRemove(id)) return;
+    final l10n = AppLocalizations.of(context);
+    final name = KitBidi.auto(_name(id));
+    final confirmed = await showKitConfirm(
+      context,
+      title: l10n.agentsRemoveTitle(name),
+      body: l10n.agentsRemoveBody,
+      confirmLabel: l10n.agentsRemoveAction(name),
+      kind: KitConfirmKind.destructive,
+      sheetKey: const ValueKey('agents-remove-sheet'),
+      confirmKey: const ValueKey('agents-remove-confirm'),
+    );
+    if (!confirmed || !mounted) return;
+    setState(() {
+      _removalPending = true;
+      _notice = null;
+    });
+    try {
+      final result = await removals.removeAgent(id);
+      if (mounted) setState(() => _removed = result);
+    } catch (error) {
+      if (mounted) {
+        setState(
+          () => _notice = AgentFailure(agentRemovalFailureText(l10n, error)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _removalPending = false);
     }
   }
 
@@ -359,11 +426,18 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
         top: false,
         child: ListenableBuilder(
           listenable: host.listenable ?? _never,
-          builder: (context, _) => switch (_step) {
-            AgentSheetStep.list => _listFrame(context),
-            AgentSheetStep.setup => _setupFrame(context),
-            AgentSheetStep.check => _checkFrame(context),
-            AgentSheetStep.signIn => _signInFrame(context),
+          builder: (context, _) {
+            final id = _agentId;
+            if (_removed != null) return _removedFrame(context);
+            if (id != null && _step != AgentSheetStep.list && _isRemoving(id)) {
+              return _removingFrame(context, id);
+            }
+            return switch (_step) {
+              AgentSheetStep.list => _listFrame(context),
+              AgentSheetStep.setup => _setupFrame(context),
+              AgentSheetStep.check => _checkFrame(context),
+              AgentSheetStep.signIn => _signInFrame(context),
+            };
           },
         ),
       ),
@@ -452,6 +526,63 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     );
   }
 
+  // ---- remove -------------------------------------------------------------
+
+  /// Remove, as the quiet destructive action at the bottom of a frame: only
+  /// where the agent can be removed now.
+  List<KitAction> _removeAction(String id) => [
+    if (_canRemove(id))
+      KitAction(
+        key: const ValueKey('agents-remove'),
+        label: AppLocalizations.of(
+          context,
+        ).agentsRemoveAction(KitBidi.auto(_name(id))),
+        destructive: true,
+        onPressed: () => unawaited(_remove(id)),
+      ),
+  ];
+
+  /// Removing, in place: nothing else can be done for this agent until the
+  /// host has deleted it (the sheet cannot be closed meanwhile).
+  Widget _removingFrame(BuildContext context, String id) {
+    final l10n = AppLocalizations.of(context);
+    final name = KitBidi.auto(_name(id));
+    return KitSheet(
+      handle: false,
+      step: 'removing',
+      title: name,
+      child: KitProgressView(
+        progress: KitProgress.waiting(
+          key: const ValueKey('agents-removing'),
+          caption: l10n.agentsRemoving(name),
+        ),
+      ),
+    );
+  }
+
+  /// What the removal ended with: what was freed, or that nothing was there.
+  Widget _removedFrame(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final name = _name(_agentId);
+    return KitSheet(
+      handle: false,
+      step: 'removed',
+      title: KitBidi.auto(name),
+      onClose: () => unawaited(_close()),
+      primary: KitAction(
+        key: const ValueKey('agents-removed-done'),
+        label: l10n.agentsDone,
+        onPressed: () => unawaited(_close()),
+      ),
+      child: KitNotice(
+        key: const ValueKey('agents-removed-words'),
+        icon: AppIconography.checkCircle,
+        tone: AppStatusTone.ok,
+        message: agentRemovalResultText(l10n, name, _removed!),
+      ),
+    );
+  }
+
   // ---- install ------------------------------------------------------------
 
   Widget _setupFrame(BuildContext context) {
@@ -490,8 +621,15 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
               key: const ValueKey('agents-install'),
               label: l10n.agentsInstallAction(KitBidi.auto(name)),
               icon: AppIconography.download,
-              onPressed: () => unawaited(_install(id)),
+              // A new install waits for a removal that is running.
+              onPressed: _removals?.removingAgentId != null
+                  ? null
+                  : () => unawaited(_install(id)),
+              disabledReason: _removals?.removingAgentId != null
+                  ? l10n.agentsRemoveBusy
+                  : null,
             ),
+      tertiary: installing ? const [] : _removeAction(id),
       secondary: installing
           ? KitAction(
               key: const ValueKey('agents-cancel-setup'),
@@ -562,7 +700,15 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
               onPressed: () => unawaited(_runCheck()),
             )
           : null,
-      child: AgentPhoneCheckView(agent: name, result: _check),
+      tertiary: _checking ? const [] : _removeAction(_agentId ?? ''),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AgentPhoneCheckView(agent: name, result: _check),
+          _noticeLine(context),
+        ],
+      ),
     );
   }
 
@@ -578,7 +724,10 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     final checking = state == null || !state.inspected;
     final signedIn = phase == AgentSignInPhase.signedIn || _signingOut;
     final hostKey = state?.hostOnlyApiKey ?? false;
-    final limit = phase == AgentSignInPhase.limitReached;
+    // A signed-in agent at its plan limit reads signed in; its row says limit.
+    final limit =
+        phase == AgentSignInPhase.limitReached ||
+        _row(id)?.status == PhoneAgentStatus.limitReached;
     // Sign out is offered only where the agent's own logout is qualified and
     // its status check confirmed the sign-in.
     final accounts = _accounts;
@@ -596,7 +745,7 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
             accounts.canSignOutAgent(id));
 
     KitAction? primary;
-    if (signedIn) {
+    if (signedIn && !limit) {
       primary = KitAction(
         key: const ValueKey('agents-sign-in-done'),
         label: l10n.agentsSignInDone(name),
@@ -611,10 +760,10 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     }
 
     final String body;
-    if (signedIn) {
-      body = l10n.agentsSignedInBody(name);
-    } else if (limit) {
+    if (limit) {
       body = l10n.agentsSignInLimit(name);
+    } else if (signedIn) {
+      body = l10n.agentsSignedInBody(name);
     } else if (hostKey) {
       body = l10n.agentsSignInUnavailable;
     } else if (checking) {
@@ -649,6 +798,7 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
             label: l10n.agentsSignOutAction(name),
             onPressed: _signingOut ? null : () => unawaited(_signOut(id)),
           ),
+        if (!_signingOut) ..._removeAction(id),
       ],
       child: Column(
         mainAxisSize: MainAxisSize.min,

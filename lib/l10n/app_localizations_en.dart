@@ -27295,6 +27295,49 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String agentsRemoveAction(String agent) {
+    return 'Remove $agent';
+  }
+
+  @override
+  String agentsRemoveTitle(String agent) {
+    return 'Remove $agent?';
+  }
+
+  @override
+  String get agentsRemoveBody =>
+      'This removes the installed agent from this phone. Your accounts and conversations stay, and you can install it again.';
+
+  @override
+  String agentsRemoving(String agent) {
+    return 'Removing $agent…';
+  }
+
+  @override
+  String agentsRemoved(String agent, String size) {
+    return '$agent removed. Freed $size.';
+  }
+
+  @override
+  String agentsAlreadyRemoved(String agent) {
+    return '$agent is already removed.';
+  }
+
+  @override
+  String get agentsRemoveUnsupported => 'This agent can\'t be removed here.';
+
+  @override
+  String get agentsRemoveBusy =>
+      'This agent is in use. Finish its work and try again.';
+
+  @override
+  String get agentsRemoveUnconfirmed =>
+      'Couldn\'t confirm this agent was removed. Check this phone and try again.';
+
+  @override
+  String get agentsDone => 'Done';
+
+  @override
   String get agentsModelTitle => 'Choose a model';
 
   @override
