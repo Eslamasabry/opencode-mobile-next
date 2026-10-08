@@ -17,7 +17,7 @@ Machine-readable copy: [agent-certification-matrix.json](agent-certification-mat
 | Codex | 0.160.0 | Paseo native | ✅ | ✅ | ❌ | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
 | Gemini CLI | 0.62.0 | ACP via Paseo | ✅ | ✅ | ❌ | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
 | Qwen Code | 0.24.7 | ACP via Paseo | ✅ | ✅ | ❌ | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
-| Goose |  | ACP via Paseo | · | · | · | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
+| Goose | 1.53.0 | ACP via Paseo | ✅ | ✅ | ❌ | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
 | Oh My Pi |  | ACP via Paseo | · | · | · | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
 
 ## What each column means
@@ -91,6 +91,9 @@ Machine-readable copy: [agent-certification-matrix.json](agent-certification-mat
 
 **Goose**
 
+- install: pass — docs/qa/FQ-install-2026-10-08/README.md#goose
+- version: pass — docs/qa/FQ-install-2026-10-08/README.md#goose
+- signedOut: fail — docs/qa/FQ-install-2026-10-08/README.md#goose
 - cards: n/a — no cards adapter yet
 
 **Oh My Pi**
@@ -155,6 +158,7 @@ These cells qualify installation only. Phone check means the check completed; a 
 | Codex | 0.160.0 | 0.160.0 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
 | Gemini CLI | 0.62.0 | 0.62.0 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
 | Qwen Code | 0.24.7 | 0.24.7 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
+| Goose | 1.53.0 | 1.53.0 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
 
 **Codex** — fq-install-codex-2196-20261008; docs/qa/FQ-install-2026-10-08/README.md#codex
 
@@ -188,3 +192,14 @@ These cells qualify installation only. Phone check means the check completed; a 
 - cancelRetry: pass — `verified`; facts `{"asserted":true,"cancelObserved":true,"retryCompleted":true}`
 - lowStorage: partial — `policy_harness_only`; facts `{"appThresholdOverride":false,"asserted":false,"deviceFilled":false,"guardPolicyVerified":true}`
 - uninstall: partial — `no_app_removal_path`; facts `{"asserted":false,"bytesFreed":112664576,"leftoversRemoved":true,"noOrphans":true,"removedViaApp":false}`
+
+**Goose** — fq-install-goose-2196-20261008; docs/qa/FQ-install-2026-10-08/README.md#goose
+
+- install: pass — `verified`; facts `{"asserted":true,"checksumVerified":true,"installedViaApp":true}`
+- version: pass — `verified`; facts `{"asserted":true}`
+- signedOut: fail — `probe_unsupported`; facts `{"asserted":false,"namedSignedOut":false}`
+- phoneCheck: pass — `verified`; facts `{"asserted":true,"completed":true}`
+- launchNoAccount: partial — `cli_only_app_route_unavailable`; facts `{"asserted":false,"emptyHome":true,"noHang":true,"noOrphans":true,"sentLogin":false,"sentPrompt":false}`
+- cancelRetry: pass — `verified`; facts `{"asserted":true,"cancelObserved":true,"retryCompleted":true}`
+- lowStorage: partial — `policy_harness_only`; facts `{"appThresholdOverride":false,"asserted":false,"deviceFilled":false,"guardPolicyVerified":true}`
+- uninstall: partial — `no_app_removal_path`; facts `{"asserted":false,"bytesFreed":298692608,"leftoversRemoved":true,"noOrphans":true,"removedViaApp":false}`

@@ -124,3 +124,23 @@ partial. Manual cleanup reclaimed **112,664,576 bytes**, with no owned target
 leftovers. App uninstall and injected app low-space coverage retain the shared
 limits. A stale startup sheet in the early driver was corrected before this
 fresh phone check; it was a navigation issue, not an install failure.
+
+
+## Goose
+
+[Device observations](goose-device.json), [validated report](goose-report.json),
+[cancel screenshot](goose-cancelled.jpg), [phone check](goose-after-install-check.jpg),
+[after cleanup](goose-after-cleanup.jpg).
+
+Goose **1.53.0** installed via the app and passed exact receipt/link/CLI version
+and a fresh public phone check. Free space before install was 1,919,569,920 bytes.
+Cancel at 5,926,912 / 94,629,008 download bytes stopped the job; a distinct retry
+completed. Stage/lock cleanup passed. The app auth probe returned
+`probeUnsupported`. Empty-home ACP initialize succeeded, but session/new
+returned an internal RPC error (-32603) in 0.22 s. This is bounded rejection,
+not proven signed-out or authenticated operation; raw technical output was not
+exported. No prompt, login or orphan PID. App launch remains partial. Manual
+cleanup increased free space by **298,692,608 bytes** and left no target payload,
+link, stage, lock or PID. App uninstall and injected low-space limitations remain.
+The reusable locked driver completed this replay, including waiting for
+automatic and later phone checks before cleanup.
