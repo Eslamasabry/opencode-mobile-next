@@ -1,0 +1,36 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/perf_builtin_pollers_test.dart
+00:00 +0: setup engine a page that watches a finished setup reads it once a minute, not twice a second
+00:00 +1: setup engine a watched idle engine reads nothing in the background
+00:00 +2: setup engine a running job is still followed every 500 ms, and a watcher that arrives brings the read forward
+00:00 +3: built-in server recovery a healthy server is checked every 45 s in the foreground, at once on resume, and never in the background
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: a value less than or equal to <30>
+  Actual: <42>
+   Which: is not a value less than or equal to <30>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bd/test/perf_builtin_pollers_test.dart:204:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-bd/test/perf_builtin_pollers_test.dart line 204
+The test description was:
+  a healthy server is checked every 45 s in the foreground, at once on resume, and never in the
+  background
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +3 -1: built-in server recovery a healthy server is checked every 45 s in the foreground, at once on resume, and never in the background [E]
+  Test failed. See exception logs above.
+  The test description was: a healthy server is checked every 45 s in the foreground, at once on resume, and never in the background
+  
+00:00 +3 -1: built-in server recovery a server that went down is rechecked every 5 s
+00:00 +4 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/perf_builtin_pollers_test.dart: built-in server recovery a healthy server is checked every 45 s in the foreground, at once on resume, and never in the background
