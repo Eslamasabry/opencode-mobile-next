@@ -43836,6 +43836,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The saved crash reports are deleted too.'**
   String get crashReportsClearedToo;
+
+  /// Chat journey: step title for the agent's notice that a background task it started has finished (Claude Code task_notification)
+  ///
+  /// In en, this message translates to:
+  /// **'Background task finished'**
+  String get chatUiToolBackgroundTaskFinished;
+
+  /// Chat journey: step title for the agent's notice that a background task it started failed
+  ///
+  /// In en, this message translates to:
+  /// **'Background task failed'**
+  String get chatUiToolBackgroundTaskFailed;
+
+  /// Chat journey: step title for the agent's notice that a background task it started was stopped
+  ///
+  /// In en, this message translates to:
+  /// **'Background task stopped'**
+  String get chatUiToolBackgroundTaskStopped;
+
+  /// Chat journey: tool row title for the agent card tool (oc-ui show) before or instead of its card; the card's own title follows it
+  ///
+  /// In en, this message translates to:
+  /// **'Show card'**
+  String get chatUiToolShowCard;
+
+  /// Chat journey: line under a running turn that has been silent for a while while the server still answers (the model is slow)
+  ///
+  /// In en, this message translates to:
+  /// **'The model is taking longer than usual. Wait, or stop the reply and try again.'**
+  String get chatStallModelSlow;
+
+  /// Chat journey: line under a silent running turn when the agent's helper process on this phone is not running
+  ///
+  /// In en, this message translates to:
+  /// **'The agent\'s helper on this phone stopped. Stop the reply and try again.'**
+  String get chatStallHelperDown;
+
+  /// Chat journey: line under a silent running turn when the live connection or the server is down
+  ///
+  /// In en, this message translates to:
+  /// **'The connection to the agent was lost. Stop the reply and try again once it is back.'**
+  String get chatStallConnectionLost;
+
+  /// Chat journey: line under a silent running turn when the connection could not be checked
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has come back for a while and the connection could not be checked. Wait, or stop the reply and try again.'**
+  String get chatStallConnectionUnchecked;
+
+  /// KitWorkLine: the work chip's words while its steps are open and a step runs; the running step in the list shows the progress
+  ///
+  /// In en, this message translates to:
+  /// **'Hide steps'**
+  String get kitWorkHideSteps;
 }
 
 class _AppLocalizationsDelegate

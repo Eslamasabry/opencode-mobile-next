@@ -27880,4 +27880,35 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get crashReportsClearedToo => 'تُحذف تقارير الأعطال المحفوظة أيضًا.';
+
+  @override
+  String get chatUiToolBackgroundTaskFinished => 'انتهت مهمة في الخلفية';
+
+  @override
+  String get chatUiToolBackgroundTaskFailed => 'فشلت مهمة في الخلفية';
+
+  @override
+  String get chatUiToolBackgroundTaskStopped => 'أُوقفت مهمة في الخلفية';
+
+  @override
+  String get chatUiToolShowCard => 'عرض بطاقة';
+
+  @override
+  String get chatStallModelSlow =>
+      'يستغرق النموذج وقتًا أطول من المعتاد. انتظر، أو أوقف الرد وحاول مرة أخرى.';
+
+  @override
+  String get chatStallHelperDown =>
+      'توقف مساعد الوكيل على هذا الهاتف. أوقف الرد وحاول مرة أخرى.';
+
+  @override
+  String get chatStallConnectionLost =>
+      'انقطع الاتصال بالوكيل. أوقف الرد وحاول مرة أخرى عند عودته.';
+
+  @override
+  String get chatStallConnectionUnchecked =>
+      'لم يصل أي جديد منذ مدة، وتعذّر التحقق من الاتصال. انتظر، أو أوقف الرد وحاول مرة أخرى.';
+
+  @override
+  String get kitWorkHideSteps => 'إخفاء الخطوات';
 }
