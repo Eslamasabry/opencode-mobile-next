@@ -21,7 +21,12 @@ Future<void> main(List<String> args) async {
       'rev-parse',
       'HEAD',
     ])).stdout.toString().trim();
-    if (report['runID'] != runID || report['sourceRevision'] != revision) {
+    if (report['runID'] != runID ||
+        report['schemaVersion'] is! int ||
+        report['schemaVersion'] != 2 ||
+        report['sourceRevision'] != revision ||
+        report['appBuild'] is! int ||
+        report['appBuild'] != currentCertificationBuild) {
       throw const ProbeFailure('candidate_changed');
     }
     const frozen = [
@@ -32,6 +37,8 @@ Future<void> main(List<String> args) async {
       'tool/qa/fq3/oc2.dart',
       'tool/qa/fq3/history.dart',
       'tool/qa/fq3/evidence.dart',
+      'tool/qa/fq3/history_manifest.dart',
+      'tool/qa/fq3/session_ownership.dart',
       'lib/api2/dialect.dart',
     ];
     final diff = await Process.run('git', [
@@ -46,6 +53,10 @@ Future<void> main(List<String> args) async {
     }
     final uid = driver.map(report['attestation'])['appUID'];
     if (uid is! int) throw const ProbeFailure('phase_uid_invalid');
+    if (!capture &&
+        driver.map(report['attestation'])['cleanupCompleted'] != true) {
+      throw const ProbeFailure('owned_session_cleanup_failed');
+    }
     final anchor = readEvidence(
       '${driver.evidenceDirectory}/$runID-opencode-stream.json',
     );
@@ -57,6 +68,26 @@ Future<void> main(List<String> args) async {
     for (final engine in ['opencode', 'opencode2']) {
       final record = driver.map(engines[engine]);
       final results = driver.map(record['results']);
+      final selection = driver.map(record['modelSelection']);
+      if (selection.length != 2 ||
+          !selection.containsKey('source') ||
+          !selection.containsKey('requested')) {
+        throw const ProbeFailure('phase_model_invalid');
+      }
+      final requested = selection['requested'];
+      final String expectedModel;
+      if (selection.length == 2 &&
+          selection['source'] == 'server-default' &&
+          requested == null) {
+        expectedModel = 'server-default';
+      } else if (selection.length == 2 &&
+          selection['source'] == 'explicit' &&
+          isPublicModelReference(requested)) {
+        expectedModel = requested as String;
+      } else {
+        throw const ProbeFailure('phase_model_invalid');
+      }
+      String? testedModel;
       for (final entry in driver.phases.entries) {
         final phase = readEvidence(
           '${driver.evidenceDirectory}/$runID-$engine-${entry.key}.json',
@@ -69,7 +100,9 @@ Future<void> main(List<String> args) async {
           engine: engine,
           caseName: entry.key,
           expectedAppUID: uid,
+          expectedTestedModel: expectedModel,
         );
+        testedModel = phase['testedModel'] as String;
         admitted.add(phase);
         sessions[engine]!.addAll(
           (phase['ownedSessions'] as List).cast<String>(),
@@ -83,6 +116,9 @@ Future<void> main(List<String> args) async {
         }
       }
       record['results'] = results;
+      record['modelSelection'] = modelSelectionFor(
+        testedModel == 'server-default' ? null : testedModel,
+      );
       engines[engine] = record;
     }
     final manifest = phaseSessionManifest(admitted);
@@ -98,6 +134,17 @@ Future<void> main(List<String> args) async {
         attempt,
         '--uid',
         '$uid',
+        for (final engine in ['opencode', 'opencode2'])
+          if (driver.map(
+                driver.map(engines[engine])['modelSelection'],
+              )['source'] ==
+              'explicit') ...[
+            engine == 'opencode2' ? '--oc2-model' : '--oc1-model',
+            driver.map(
+                  driver.map(engines[engine])['modelSelection'],
+                )['requested']
+                as String,
+          ],
       ], runID);
       if (exitCode != 0) throw const ProbeFailure('history_process_failed');
       final after = <Map<String, dynamic>>[];
@@ -114,7 +161,27 @@ Future<void> main(List<String> args) async {
         throw const ProbeFailure('phase_manifest_changed');
       }
       final captured = readEvidence(historyPath)..['phaseManifest'] = manifest;
+      if (captured['cleanupCompleted'] != true ||
+          !await driver.cleanupOwnedSessions(runID)) {
+        throw const ProbeFailure('owned_session_cleanup_failed');
+      }
+      validateHistoryBinding(
+        captured,
+        runID: runID,
+        sourceRevision: revision,
+        attemptID: attempt,
+        phaseManifest: manifest,
+        appUID: uid,
+        oc1Sessions: sessions['opencode']!.length,
+        oc2Sessions: sessions['opencode2']!.length,
+      );
       File(historyPath).writeAsStringSync('${jsonEncode(captured)}\n');
+      final attestation = driver.map(report['attestation'])
+        ..['cleanupCompleted'] = true;
+      report['attestation'] = attestation;
+      final staged = File('$path.cleanup.tmp')
+        ..writeAsStringSync('${jsonEncode(report)}\n', flush: true);
+      staged.renameSync(path);
       stdout.writeln(
         'Captured fresh history against frozen phase/session manifest',
       );

@@ -1,0 +1,3 @@
+# Durable live cleanup intents are local journals, not completed evidence.
+*-ownership.json
+*.pending

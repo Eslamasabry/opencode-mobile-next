@@ -6,7 +6,12 @@ import '../tool/qa/fq3/common.dart';
 import '../tool/qa/fq3/oc2.dart';
 
 void main() {
-  Future<ProbeRun> probe(_Wire wire, Set<String> capabilities) async {
+  Future<ProbeRun> probe(
+    _Wire wire,
+    Set<String> capabilities, {
+    Future<void> Function(String id)? onSessionCreated,
+    String? model,
+  }) async {
     addTearDown(wire.close);
     return runProtocol2(
       wire,
@@ -14,6 +19,8 @@ void main() {
         directory: '/fq3/disposable',
         title: 'FQ3 owned',
         capabilities: capabilities,
+        onSessionCreated: onSessionCreated,
+        model: model,
       ),
     );
   }
@@ -102,6 +109,103 @@ void main() {
     expect(result.results.containsKey('abort'), isFalse);
     expect(result.historyCounts.values, contains(2));
   });
+
+  test(
+    'explicit enabled UI model overrides a retrying backend default',
+    () async {
+      final wire = _Wire()..uiSelectionFixture = true;
+      final result = await probe(wire, {
+        'stream',
+      }, model: 'opencode/big-pickle');
+      expect(result.results['models']?['state'], 'pass');
+      expect(result.results['stream']?['state'], 'pass');
+      expect(wire.createBodies.last['model'], {
+        'id': 'big-pickle',
+        'providerID': 'opencode',
+      });
+      final assistant = wire.transcripts['ses_2']!.singleWhere(
+        (message) => message['type'] == 'assistant',
+      );
+      expect(assistant['model'], wire.createBodies.last['model']);
+      expect(
+        wire.events.where((e) => e['type'] == 'session.retry.scheduled'),
+        isEmpty,
+      );
+    },
+  );
+
+  test(
+    'enabled backend default retrying HTTP 503 remains unqualified',
+    () async {
+      final wire = _Wire()..uiSelectionFixture = true;
+      final result = await probe(wire, {'stream'});
+      expect(result.results['models']?['state'], 'pass');
+      expect(result.results['stream']?['code'], 'timeout');
+      expect(wire.createBodies.last['model'], _Wire.backendDefault);
+      expect(
+        wire.events.where((e) => e['type'] == 'session.retry.scheduled'),
+        hasLength(10),
+      );
+      expect(
+        wire.events.where((e) => e['type'] == 'session.text.delta'),
+        isEmpty,
+      );
+      expect(wire.active, contains('ses_2'));
+    },
+  );
+
+  test(
+    'explicit working model admission still requires actual inference',
+    () async {
+      final wire = _Wire()
+        ..uiSelectionFixture = true
+        ..omitAssistant = true;
+      final result = await probe(wire, {
+        'stream',
+      }, model: 'opencode/big-pickle');
+      expect(result.results['stream']?['code'], 'completed_assistant_missing');
+    },
+  );
+
+  test(
+    'owned session titles preserve phase title and add unique ordinals',
+    () async {
+      final wire = _Wire();
+      final ledger = <String>[];
+      final result = await probe(wire, {
+        'stream',
+        'modelSwitch',
+      }, onSessionCreated: (id) async => ledger.add(id));
+      expect(result.results['stream']?['state'], 'pass');
+      expect(result.results['modelSwitch']?['state'], 'pass');
+      expect(wire.createBodies.map((body) => body['title']), [
+        'FQ3 owned-session-1',
+        'FQ3 owned-session-2',
+        'FQ3 owned-session-3',
+      ]);
+      expect(ledger, result.sessionIDs);
+    },
+  );
+
+  test(
+    'session ledger failure retains owned ID and fails before prompt',
+    () async {
+      final wire = _Wire();
+      final ledger = <String>[];
+      final result = await probe(
+        wire,
+        {},
+        onSessionCreated: (id) async {
+          ledger.add(id);
+          throw const ProbeFailure('session_ledger_failed');
+        },
+      );
+      expect(result.results['create']?['code'], 'session_ledger_failed');
+      expect(result.sessionIDs, ['ses_1']);
+      expect(ledger, result.sessionIDs);
+      expect(wire.paths.where((path) => path.endsWith('/prompt')), isEmpty);
+    },
+  );
 
   test(
     'prompt admission and delta cannot substitute for assistant inference',
@@ -311,6 +415,7 @@ class _Wire extends Fq3Wire {
   bool omitAbortDelta = false;
   bool foreignCatalogFirst = false;
   bool primaryImage = true;
+  bool uiSelectionFixture = false;
   int emptyCatalogReads = 0;
   int disableSecondaryReads = 0;
   int catalogReads = 0;
@@ -332,6 +437,12 @@ class _Wire extends Fq3Wire {
   int messageNumber = 0;
   static const primary = {'id': 'one', 'providerID': 'test'};
   static const secondary = {'id': 'two', 'providerID': 'test'};
+  static const backendDefault = {'id': 'exo-free', 'providerID': 'opencode'};
+  static const uiModel = {
+    'id': 'opencode/big-pickle',
+    'modelID': 'big-pickle',
+    'providerID': 'opencode',
+  };
 
   @override
   bool get isStableOc2 => stable;
@@ -393,9 +504,15 @@ class _Wire extends Fq3Wire {
       return {
         'data': [
           for (final model in [
-            if (foreignCatalogFirst) {'id': 'external', 'providerID': 'other'},
-            primary,
-            secondary,
+            if (uiSelectionFixture) ...[
+              backendDefault,
+              uiModel,
+            ] else ...[
+              if (foreignCatalogFirst)
+                {'id': 'external', 'providerID': 'other'},
+              primary,
+              secondary,
+            ],
           ])
             {
               ...model,
@@ -411,7 +528,9 @@ class _Wire extends Fq3Wire {
         ],
       };
     }
-    if (path == '/api/model/default') return {'data': primary};
+    if (path == '/api/model/default') {
+      return {'data': uiSelectionFixture ? backendDefault : primary};
+    }
     if (path == '/api/session/active') {
       return {
         'data': {
@@ -425,7 +544,8 @@ class _Wire extends Fq3Wire {
       final id = 'ses_${sessions.length + 1}';
       final info = {
         'id': id,
-        'model': data['model'] ?? primary,
+        'model':
+            data['model'] ?? (uiSelectionFixture ? backendDefault : primary),
         'location': data['location'],
       };
       sessions[id] = info;
@@ -481,6 +601,22 @@ class _Wire extends Fq3Wire {
     }
     emit('session.execution.started', id);
     active.add(id);
+    if (uiSelectionFixture &&
+        (sessions[id]!['model'] as Map)['id'] == 'exo-free') {
+      final unfinished = assistant(id, '');
+      (unfinished['time'] as Map).remove('completed');
+      unfinished.remove('finish');
+      transcripts[id]!.add(unfinished);
+      for (var attempt = 1; attempt <= 10; attempt++) {
+        emit('session.retry.scheduled', id, {
+          'attempt': attempt,
+          'error': {'statusCode': 503},
+        });
+      }
+      return {
+        'data': {'id': 'inbox'},
+      };
+    }
     if (text.contains('10000')) {
       if (!omitAbortDelta) emit('session.text.delta', id, {'delta': '1\n'});
       if (idleAbort) active.remove(id);

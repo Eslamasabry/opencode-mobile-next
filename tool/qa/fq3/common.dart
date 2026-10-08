@@ -30,11 +30,13 @@ class ProbeOptions {
   final String title;
   final String? model;
   final Set<String>? capabilities;
+  final Future<void> Function(String id)? onSessionCreated;
   const ProbeOptions({
     required this.directory,
     required this.title,
     this.model,
     this.capabilities,
+    this.onSessionCreated,
   });
 }
 

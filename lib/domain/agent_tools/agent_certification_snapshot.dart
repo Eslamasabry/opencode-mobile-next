@@ -183,9 +183,9 @@ const agentCertificationBundledJson = r'''{
     "scope": "in-app Ubuntu protocol; no UI/restart/install qualification",
     "expectedVersion": "1.18.32",
     "observedVersion": "1.18.32",
-    "deviceBuild": 2195,
-    "runID": "fq3-20261008-settled",
-    "evidence": "docs/qa/FQ3-2026-10-08/fq3-20261008-settled.json",
+    "deviceBuild": 2196,
+    "runID": "fq3-20261008b-cert",
+    "evidence": "docs/qa/FQ3b-2026-10-08/fq3-20261008b-cert.json",
     "capabilities": {
      "version": {
       "state": "pass",
@@ -212,13 +212,9 @@ const agentCertificationBundledJson = r'''{
       }
      },
      "stream": {
-      "state": "pass",
-      "code": "verified",
-      "facts": {
-       "streamedDelta": true,
-       "completedReply": true,
-       "asserted": true
-      }
+      "state": "fail",
+      "code": "oc1_prompt_error",
+      "facts": {}
      },
      "reconnect": {
       "state": "pass",
@@ -238,9 +234,13 @@ const agentCertificationBundledJson = r'''{
       }
      },
      "abort": {
-      "state": "fail",
-      "code": "oc1_after_abort_reply_mismatch",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "interrupted": true,
+       "usableAfterAbort": true,
+       "asserted": true
+      }
      },
      "permissionAllow": {
       "state": "pass",
@@ -261,9 +261,12 @@ const agentCertificationBundledJson = r'''{
       }
      },
      "image": {
-      "state": "fail",
-      "code": "oc1_image_content_unverified",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "imageAnswerVerified": true,
+       "asserted": true
+      }
      },
      "cards": {
       "state": "pass",
@@ -285,6 +288,10 @@ const agentCertificationBundledJson = r'''{
        "oc2Sessions": 16
       }
      }
+    },
+    "modelSelection": {
+     "source": "explicit",
+     "requested": "zai-coding-plan/glm-5.3"
     }
    }
   },
@@ -350,9 +357,9 @@ const agentCertificationBundledJson = r'''{
     "scope": "in-app Ubuntu protocol; no UI/restart/install qualification",
     "expectedVersion": "2.0.10",
     "observedVersion": "2.0.10",
-    "deviceBuild": 2195,
-    "runID": "fq3-20261008-settled",
-    "evidence": "docs/qa/FQ3-2026-10-08/fq3-20261008-settled.json",
+    "deviceBuild": 2196,
+    "runID": "fq3-20261008b-cert",
+    "evidence": "docs/qa/FQ3b-2026-10-08/fq3-20261008b-cert.json",
     "capabilities": {
      "version": {
       "state": "pass",
@@ -374,30 +381,43 @@ const agentCertificationBundledJson = r'''{
       "state": "pass",
       "code": "verified",
       "facts": {
-       "enabledModels": 84,
+       "enabledModels": 11,
        "selectedModelAvailable": true,
        "asserted": true
       }
      },
      "stream": {
-      "state": "fail",
-      "code": "timeout",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "streamedDelta": true,
+       "completedReply": true,
+       "asserted": true
+      }
      },
      "reconnect": {
-      "state": "fail",
-      "code": "timeout",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "refetched": true,
+       "retainedMessages": 3,
+       "asserted": true
+      }
      },
      "modelSwitch": {
       "state": "fail",
-      "code": "inference_execution_failed",
+      "code": "timeout",
       "facts": {}
      },
      "abort": {
-      "state": "fail",
-      "code": "timeout",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "interrupted": true,
+       "usableAfterAbort": true,
+       "midStreamObserved": true,
+       "asserted": true
+      }
      },
      "permissionAllow": {
       "state": "fail",
@@ -411,12 +431,12 @@ const agentCertificationBundledJson = r'''{
      },
      "image": {
       "state": "fail",
-      "code": "inference_execution_failed",
+      "code": "timeout",
       "facts": {}
      },
      "cards": {
       "state": "fail",
-      "code": "inference_execution_failed",
+      "code": "cards_tool_call_missing",
       "facts": {}
      },
      "protocolSwitch": {
@@ -430,6 +450,10 @@ const agentCertificationBundledJson = r'''{
        "oc2Sessions": 16
       }
      }
+    },
+    "modelSelection": {
+     "source": "explicit",
+     "requested": "opencode/big-pickle"
     }
    }
   },

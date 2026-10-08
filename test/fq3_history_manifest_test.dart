@@ -17,9 +17,10 @@ Map<String, dynamic> _phase({
   'engine': engine,
   'case': 'stream',
   'appUID': 10123,
-  'appBuild': 2195,
+  'appBuild': 2196,
   'cliVersion': engine == 'opencode' ? '1.18.32' : '2.0.10',
   'observedVersion': engine == 'opencode' ? '1.18.32' : '2.0.10',
+  'testedModel': 'server-default',
   'ownedSessions': [session],
 };
 
@@ -34,7 +35,8 @@ Map<String, dynamic> _history(String manifest) => {
   'attemptID': _attemptID,
   'phaseManifest': manifest,
   'appUID': 10123,
-  'appBuild': 2195,
+  'appBuild': 2196,
+  'cleanupCompleted': true,
   'result': {
     'state': 'pass',
     'code': 'verified',
@@ -118,6 +120,7 @@ void main() {
         'appBuild': 2194,
         'cliVersion': '1.18.31',
         'observedVersion': '1.18.31',
+        'testedModel': 'opencode/big-pickle',
       };
       for (final entry in replacements.entries) {
         final changed = _phases();
@@ -160,6 +163,23 @@ void main() {
     );
   });
 
+  test('history binding changes when only the tested base model changes', () {
+    final previous = phaseSessionManifest(_phases());
+    final current = _phases();
+    current.first['testedModel'] = 'opencode/big-pickle';
+    final changed = phaseSessionManifest(current);
+    expect(changed, isNot(previous));
+    expect(
+      () => _validate(_history(previous), changed),
+      _failure('history_binding_mismatch'),
+    );
+    current.first['testedModel'] = 'Bearer secret';
+    expect(
+      () => phaseSessionManifest(current),
+      _failure('history_manifest_invalid'),
+    );
+  });
+
   test(
     'history metadata must match the candidate and integer runtime values',
     () {
@@ -192,11 +212,28 @@ void main() {
           _failure('history_binding_mismatch'),
         );
       }
+      final historical = _history(manifest)..['appBuild'] = 2195;
+      expect(
+        () => _validate(historical, manifest),
+        _failure('history_binding_mismatch'),
+      );
     },
   );
 
   test('cleanup failures cannot be admitted as history evidence', () {
     final manifest = phaseSessionManifest(_phases());
+    for (final stamp in [null, false, 1, 'true']) {
+      final history = _history(manifest);
+      if (stamp == null) {
+        history.remove('cleanupCompleted');
+      } else {
+        history['cleanupCompleted'] = stamp;
+      }
+      expect(
+        () => _validate(history, manifest),
+        _failure('history_cleanup_failed'),
+      );
+    }
     for (final code in [
       'cleanup_failed',
       'owned_process_cleanup_failed',

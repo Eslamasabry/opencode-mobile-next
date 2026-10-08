@@ -1,0 +1,43 @@
+{
+  "runID": "fq3-20261008b-oc1-abort-owned",
+  "sourceRevision": "75ac5ae766e06c54227606cc02712ec3aa0439cd",
+  "workingTreeDirty": true,
+  "scope": "development-diagnostic",
+  "engine": "opencode",
+  "requestedSource": "owned",
+  "serverKind": "owned",
+  "promptShape": "adapter",
+  "scenario": "abort",
+  "appBuild": 2196,
+  "appUID": 10217,
+  "result": {
+    "state": "pass",
+    "code": "verified",
+    "facts": {
+      "interrupted": true,
+      "usableAfterAbort": true,
+      "asserted": true
+    }
+  },
+  "observations": {
+    "cliVersionMatched": true,
+    "messages": 4,
+    "completedFreshAssistants": 1,
+    "ownedFinalTextParts": 1,
+    "foreignFinalTextParts": 0,
+    "requestedModelMatches": 2,
+    "expectedTokenInOwnedFinal": true,
+    "expectedTokenInOtherParts": false,
+    "expectedTokenIgnoringCase": true,
+    "followUpNumericLines": 0,
+    "followUpTextLength": 32,
+    "session_execution_started": 0,
+    "session_execution_succeeded": 0,
+    "session_execution_failed": 0,
+    "session_execution_interrupted": 0,
+    "session_text_delta": 0,
+    "session_retry_scheduled": 0,
+    "session_step_failed": 0
+  },
+  "cleanupCode": null
+}

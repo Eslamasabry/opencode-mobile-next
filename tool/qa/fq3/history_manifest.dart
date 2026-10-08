@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
 import 'common.dart';
+import 'evidence.dart';
 
 const _publicMetadata = [
   'runID',
@@ -14,6 +15,7 @@ const _publicMetadata = [
   'appBuild',
   'cliVersion',
   'observedVersion',
+  'testedModel',
 ];
 
 /// Binds history proof to the ordered, already validated phase/session set.
@@ -31,6 +33,10 @@ String phaseSessionManifest(List<Map<String, dynamic>> phases) {
       final value = phase[key];
       if (key == 'appUID' || key == 'appBuild') {
         if (value is! int) {
+          throw const ProbeFailure('history_manifest_invalid');
+        }
+      } else if (key == 'testedModel') {
+        if (value != 'server-default' && !isPublicModelReference(value)) {
           throw const ProbeFailure('history_manifest_invalid');
         }
       } else if (value is! String || value.isEmpty || value.length > 160) {
@@ -80,8 +86,12 @@ void validateHistoryBinding(
       history['appUID'] is! int ||
       history['appUID'] != appUID ||
       history['appBuild'] is! int ||
-      history['appBuild'] != 2195) {
+      history['appBuild'] != currentCertificationBuild) {
     throw const ProbeFailure('history_binding_mismatch');
+  }
+  if (history['cleanupCompleted'] is! bool ||
+      history['cleanupCompleted'] != true) {
+    throw const ProbeFailure('history_cleanup_failed');
   }
   final result = history['result'];
   if (result is! Map ||

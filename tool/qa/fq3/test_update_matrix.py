@@ -61,6 +61,17 @@ def live_run():
     }
 
 
+def model_scoped_run():
+    run = live_run()
+    run["schemaVersion"] = 2
+    run["attestation"]["cleanupCompleted"] = True
+    run["appBuild"] = 2196
+    run["evidence"] = f'{updater.CURRENT_EVIDENCE_DIRECTORY}/{run["runID"]}.json'
+    for engine in run["engines"].values():
+        engine["modelSelection"] = {"source": "explicit", "requested": "opencode/big-pickle"}
+    return run
+
+
 def existing_matrix():
     """Distinct existing cells and an unrelated agent catch accidental promotion."""
     return {
@@ -139,6 +150,101 @@ class EvidenceValidationTest(unittest.TestCase):
             run = live_run()
             run["engines"][engine]["expectedVersion"] = "9.9.9"
             self.assert_rejected(run)
+
+    def test_current_build_and_directory_preserve_historical_evidence_support(self):
+        historical = live_run()
+        self.assertEqual(updater.validate_run(historical), historical)
+        current = live_run()
+        current["appBuild"] = 2196
+        current["evidence"] = f'{updater.CURRENT_EVIDENCE_DIRECTORY}/{current["runID"]}.json'
+        self.assertEqual(updater.validate_run(current), current)
+        updated = updater.apply_run(existing_matrix(), current)
+        self.assertEqual(updated["agents"][0]["protocolCertification"]["deviceBuild"], 2196)
+        self.assertIn("../qa/FQ3b-2026-10-08/fq3-test-001.json",
+                      updater.render_markdown(updated))
+        self.assertEqual(historical["appBuild"], 2195)
+        self.assertEqual(historical["evidence"],
+                         f'{updater.EVIDENCE_DIRECTORY}/fq3-test-001.json')
+        for unsafe in ("docs/qa/FQ3b-2026-10-09/fq3-test-001.json",
+                       "docs/qa/FQ3b-2026-10-08/../fq3-test-001.json",
+                       "docs/qa/FQ3b-2026-10-08/other-run.json"):
+            rejected = copy.deepcopy(current)
+            rejected["evidence"] = unsafe
+            self.assert_rejected(rejected)
+
+    def test_schema_two_scopes_passes_to_recorded_base_model(self):
+        run = model_scoped_run()
+        self.assertEqual(updater.validate_run(run), run)
+        updated = updater.apply_run(existing_matrix(), run)
+        for agent in updated["agents"][:2]:
+            self.assertEqual(agent["protocolCertification"]["modelSelection"],
+                             {"source": "explicit", "requested": "opencode/big-pickle"})
+        markdown = updater.render_markdown(updated)
+        self.assertIn("Base model scope", markdown)
+        self.assertIn("explicit: opencode/big-pickle", markdown)
+        self.assertIn("does not qualify server-default inference", markdown)
+        self.assertIn("historical: not recorded", updater.render_markdown(
+            updater.apply_run(existing_matrix(), live_run())))
+        run["engines"]["opencode"]["modelSelection"] = {
+            "source": "explicit", "requested": "zai-coding-plan/glm-5.3",
+        }
+        run["engines"]["opencode2"]["modelSelection"] = {
+            "source": "server-default", "requested": None,
+        }
+        self.assertEqual(updater.validate_run(run), run)
+
+    def test_schema_two_requires_safe_exact_model_metadata_for_both_engines(self):
+        for engine in updater.VERSIONS:
+            run = model_scoped_run()
+            del run["engines"][engine]["modelSelection"]
+            self.assert_rejected(run)
+            for selection in (
+                {"source": "server-default", "requested": "opencode/big-pickle"},
+                {"source": "explicit", "requested": None},
+                {"source": "unit-test", "requested": "opencode/big-pickle"},
+                {"source": "explicit", "requested": "Bearer provider-secret"},
+                {"source": "explicit", "requested": "https://server.invalid/model"},
+                {"source": "explicit", "requested": "/root/token"},
+                {"source": "explicit", "requested": "provider/model/extra"},
+                {"source": "explicit", "requested": "provider/" + "m" * 129},
+                {"source": "explicit", "requested": "provider/model\n"},
+                {"source": "explicit", "requested": "provider/model", "token": "secret"},
+            ):
+                with self.subTest(engine=engine, selection=selection):
+                    run = model_scoped_run()
+                    run["engines"][engine]["modelSelection"] = selection
+                    self.assert_rejected(run)
+        run = model_scoped_run()
+        run["appBuild"] = 2195
+        self.assert_rejected(run)
+
+    def test_schema_two_cleanup_acknowledgment_gates_every_pass(self):
+        for value in (None, False, 1, "true"):
+            run = model_scoped_run()
+            if value is None:
+                del run["attestation"]["cleanupCompleted"]
+            else:
+                run["attestation"]["cleanupCompleted"] = value
+            self.assert_rejected(run)
+        run = model_scoped_run()
+        run["attestation"]["cleanupCompleted"] = False
+        failure = {"state": "fail", "code": "owned_session_cleanup_failed", "facts": {}}
+        for engine in run["engines"].values():
+            engine["results"] = {key: copy.deepcopy(failure) for key in updater.CAPABILITIES}
+        run["protocolSwitch"] = copy.deepcopy(failure)
+        self.assertEqual(updater.validate_run(run), run)
+        for key in updater.ALL_CAPABILITIES:
+            rejected = copy.deepcopy(run)
+            if key == "protocolSwitch":
+                rejected[key] = passed(key)
+            else:
+                rejected["engines"]["opencode"]["results"][key] = passed(key)
+            self.assert_rejected(rejected)
+        run = live_run()
+        run["engines"]["opencode"]["modelSelection"] = {
+            "source": "explicit", "requested": "provider/model",
+        }
+        self.assert_rejected(run)
 
     def test_version_failure_can_record_mismatch_without_promoting_existing_cells(self):
         run = live_run()
