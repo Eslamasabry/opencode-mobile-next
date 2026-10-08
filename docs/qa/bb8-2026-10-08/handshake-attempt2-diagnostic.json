@@ -1,0 +1,14 @@
+{
+  "instrumentation_seconds": 130.1,
+  "candidate_process_alive": true,
+  "ready_failure": false,
+  "claude_failure": false,
+  "fx_failure": false,
+  "logout_failure": false,
+  "post_logout_failure": false,
+  "test_success": false,
+  "integration_plugin_missing": true,
+  "test_started": true,
+  "fatal_exception": false,
+  "native_ready_timeout": false
+}

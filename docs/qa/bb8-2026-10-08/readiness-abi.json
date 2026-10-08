@@ -1,0 +1,36 @@
+{
+  "result": "PASS",
+  "scope": "explicit QA-only shared app/test readiness ABI",
+  "mapping_checks": {
+    "io.flutter.embedding.engine.dart.DartExecutor": {
+      "class_identity": true,
+      "explicit_method_mapping": [
+        "1:3:io.flutter.plugin.common.BinaryMessenger getBinaryMessenger():200:200 -> getBinaryMessenger"
+      ]
+    },
+    "io.flutter.plugin.common.BinaryMessenger": {
+      "class_identity": true,
+      "explicit_method_mapping": []
+    },
+    "io.flutter.plugin.common.MethodCall": {
+      "class_identity": true,
+      "explicit_method_mapping": []
+    },
+    "io.flutter.plugin.common.MethodChannel": {
+      "class_identity": true,
+      "explicit_method_mapping": [
+        "5:10:void setMethodCallHandler(io.flutter.plugin.common.MethodChannel$MethodCallHandler):147:147 -> setMethodCallHandler",
+        "11:18:void setMethodCallHandler(io.flutter.plugin.common.MethodChannel$MethodCallHandler):146:146 -> setMethodCallHandler"
+      ]
+    },
+    "io.flutter.plugin.common.MethodChannel$MethodCallHandler": {
+      "class_identity": true,
+      "explicit_method_mapping": []
+    },
+    "io.flutter.plugin.common.MethodChannel$Result": {
+      "class_identity": true,
+      "explicit_method_mapping": []
+    }
+  },
+  "note": "R8 mapping omits unchanged abstract methods and fields; these are retained by the QA keep rules."
+}

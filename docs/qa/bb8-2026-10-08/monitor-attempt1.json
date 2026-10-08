@@ -1,0 +1,10 @@
+{
+  "device": "emulator-5554",
+  "version_code": 2204,
+  "result": "FAIL",
+  "auth_owner_confirmed": "PASS",
+  "failure_code": "register_plugin",
+  "normal_app_restore": "PASS",
+  "stage": "instrumentation",
+  "error": "auth_proof_invalid"
+}

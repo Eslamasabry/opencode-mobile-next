@@ -1,0 +1,61 @@
+{
+  "jdk": "/tmp/oc-bd9-temurin17/jdk-17.0.20.1+1",
+  "builds": [
+    {
+      "command": [
+        "/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter",
+        "build",
+        "apk",
+        "--release",
+        "--build-number=2204",
+        "--target",
+        "integration_test/bb8_agent_auth_device_test.dart",
+        "--dart-define=BB8_PROFILE_ID=1790839392073695",
+        "--android-project-arg=ocBd9Smoke=true",
+        "--android-project-arg=ocBb8Smoke=true"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 192.6,
+      "owned_daemon_pids_stopped": [],
+      "intermediates_deleted": true
+    },
+    {
+      "command": [
+        "/home/eslam/Storage/Code/oc_app-sol-bd/android/gradlew",
+        "-p",
+        "/home/eslam/Storage/Code/oc_app-sol-bd/android",
+        ":app:assembleReleaseAndroidTest",
+        "--no-daemon",
+        "-PocBd9Smoke=true",
+        "-PocBb8Smoke=true",
+        "-Ptarget=/home/eslam/Storage/Code/oc_app-sol-bd/integration_test/bb8_agent_auth_device_test.dart",
+        "-PflutterVersionCode=2204",
+        "-Pdart-defines=QkI4X1BST0ZJTEVfSUQ9MTc5MDgzOTM5MjA3MzY5NQ=="
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 132.2,
+      "owned_daemon_pids_stopped": [
+        2675363
+      ],
+      "intermediates_deleted": true
+    }
+  ],
+  "signing_deleted": true,
+  "gradle_settings_restored": true,
+  "artifacts": {
+    "build/app/outputs/flutter-apk/app-release.apk": {
+      "sha256": "63d6e9a3fd38f4ea8ccf0fe894e2bbc345f8bc0be1607a333173d0b77cc9adc2",
+      "bytes": 70492345
+    },
+    "build/app/outputs/apk/androidTest/release/app-release-androidTest.apk": {
+      "sha256": "6d551d81f383689b7851ad76941bffa2e268db3f57140e7ae4dc283f10631f67",
+      "bytes": 50536
+    }
+  },
+  "signer_sha256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C",
+  "duplicate_app_output_deleted": true,
+  "daemon_pids_absent": true,
+  "native_packaging_attestation": "PASS phone_engine_packaging in final release build",
+  "generated_own_kotlin_session_cache_deleted": true,
+  "app_build_note": "Final matched app and instrumentation builds include QA-only readiness channel ABI keep rules; production auth/Dart scripts unchanged."
+}

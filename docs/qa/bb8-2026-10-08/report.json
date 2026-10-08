@@ -1,0 +1,17 @@
+{
+  "device": "emulator-5554",
+  "version_code": 2204,
+  "result": "PASS",
+  "auth_owner_confirmed": "PASS",
+  "claude": "signedIn",
+  "claude_account_label": "present",
+  "fx": "signedOut",
+  "fx_logout": "signedOut",
+  "fx_after_logout": "signedOut",
+  "flutter_tests": 1,
+  "flutter": "PASS",
+  "apk_sha256": "63d6e9a3fd38f4ea8ccf0fe894e2bbc345f8bc0be1607a333173d0b77cc9adc2",
+  "signer_sha256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C",
+  "stage": "complete",
+  "normal_app_restore": "PASS"
+}
