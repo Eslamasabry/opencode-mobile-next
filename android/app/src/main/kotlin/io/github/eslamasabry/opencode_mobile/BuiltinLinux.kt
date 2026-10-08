@@ -380,7 +380,8 @@ class BuiltinLinux(private val context: Context) {
 
     /** Private agent process: fixed uid, private host home, no transcript/log. */
     @Synchronized
-    fun startAgentProcess(profileId: String, argv: List<String>, foreground: Boolean = false): Process {
+    fun startAgentProcess(profileId: String, argv: List<String>, foreground: Boolean = false,
+        privateOutput: Boolean = false): Process {
         check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId)) { "The agent host is unavailable." }
         check(installed && argv.isNotEmpty() && profileId !in blockedAgentProfiles) { "The agent host is unavailable." }
         val profileHome = PhoneAgentPaths.prepare(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId")
@@ -391,7 +392,7 @@ class BuiltinLinux(private val context: Context) {
         val process = ProcessBuilder(prootCommand(command, agentUser = true)).apply {
             environment().clear()
             environment().putAll(prootEnvironment())
-            redirectErrorStream(true)
+            if (privateOutput) redirectError(File("/dev/null")) else redirectErrorStream(true)
         }.start()
         processes.add(process)
         agentProcessProfiles.entries.removeAll { !it.key.isAlive }
@@ -462,6 +463,17 @@ class BuiltinLinux(private val context: Context) {
             throw IllegalStateException("The agent did not stop.")
     }
 
+    private val privateAgentAuth by lazy {
+        PhoneAgentAuthRuntime(context,
+            { profile, argv -> startAgentProcess(profile, argv, privateOutput = true) },
+            { profile, quiet -> synchronized(this) {
+                if (quiet()) PhoneAgentAuthLock.clear(context.filesDir, profile)
+            } })
+    }
+
+    /** Private auth output bypasses neither the generic receipt filter nor owner checks. */
+    fun agentAuthProbe(arguments: Map<*, *>): Map<String, Any?> = privateAgentAuth.run(arguments)
+
     val agentSignIn by lazy { PhoneAgentSignIn(this) }
     val agentHost by lazy { PhoneAgentHost(this) }
 
@@ -471,6 +483,7 @@ class BuiltinLinux(private val context: Context) {
             blockedAgentProfiles.add(profileId)
             agentProcessProfiles.filterValues { it == profileId }.keys.toList()
         }
+        check(privateAgentAuth.blockProfile(profileId)) { "The agent did not stop." }
         targets.forEach { stopAgentProcess(it) }
     }
 

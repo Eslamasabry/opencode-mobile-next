@@ -456,6 +456,9 @@ class MainActivity : FlutterActivity() {
             }.start()
         }
         when (call.method) {
+            "agentAuthProbe" -> inBackground {
+                linux.agentAuthProbe(call.arguments as? Map<*, *> ?: emptyMap<Any, Any>())
+            }
             "startAgentHost", "agentHostStatus", "stopAgentHost", "deleteAgentHost", "agentHostVersion", "agentHostWorkspace" -> inBackground {
                 val profile = call.argument<String>("profileId") ?: error("Agent unavailable")
                 when (call.method) {
