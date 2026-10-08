@@ -1,5 +1,6 @@
 // Golden renders of shared-settings-1's pages (wave 2a), rebuilt from kit
-// parts: the Language sheet (Arabic "Partly translated (N %)"), the theme
+// parts: the Language sheet (seven choices, each in its own name, with
+// "Partly translated (N %)" under the five FG5 languages), the theme
 // preview sheet (another theme with Apply, the theme in use, Material You
 // unavailable). Phone 412x915 and one wide
 // window (1280x800), dark and light (owner decision 2026-09-27: no Arabic),
@@ -26,9 +27,14 @@ import 'package:opencode_mobile/ui/widgets/language_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../tool/capture/fixtures.dart' show captureTheme, loadCaptureFonts;
+import '../support/fg5_locale_screens.dart' show loadFg5CjkFonts;
 
 const _phone = Size(412, 915);
 const _arabicFallback = 'Noto Sans Arabic';
+// The Japanese and Chinese names in the sheet fall back, as on Android, to a
+// Noto Sans CJK face; the test engine has none, so these fixture subsets
+// stand in (test/fixtures/fonts, SIL OFL).
+const _cjkFallback = ['Fg5NotoSansCjkJp', 'Fg5NotoSansCjkSc'];
 const _wide = Size(1280, 800);
 
 String _name(String shot, Size size, bool light) => [
@@ -75,6 +81,7 @@ Future<void> _shot(
         arabic.addFont(Future.value(ByteData.sublistView(bytes)));
       }
       await arabic.load();
+      await loadFg5CjkFonts();
     });
     final theme = captureTheme(light: light);
     final boundary = GlobalKey();
@@ -85,7 +92,7 @@ Future<void> _shot(
           debugShowCheckedModeBanner: false,
           theme: theme.copyWith(
             textTheme: theme.textTheme.apply(
-              fontFamilyFallback: const [_arabicFallback],
+              fontFamilyFallback: const [_arabicFallback, ..._cjkFallback],
             ),
           ),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
