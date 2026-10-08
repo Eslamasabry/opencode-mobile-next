@@ -353,6 +353,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   }
 
   int _beginGeneration({bool preserveConnectionAttempt = false}) {
+    _genUiRetireQualification();
     _resetTurnStalls();
     _invalidatePhoneChatStatus();
     if (!preserveConnectionAttempt) connectionAttemptRevision++;

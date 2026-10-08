@@ -72,3 +72,16 @@ the Flutter card render, a user answer receipt, list interaction or restart
 recovery. Current BA6 evidence and outstanding device steps are in
 [BA6 QA](../qa/BA6-2026-10-07/README.md). Keep the complete item blocked until
 those steps are recorded against the candidate APK.
+
+## APK 2195 runtime-switch follow-up (2026-10-08)
+
+Qualification belongs to a connection generation as well as the shared phone
+owner. Retiring a transport drops cached setup/attempt state; the connected
+runtime is checked again after the new transport becomes ready. Late results
+from the retired generation cannot publish readiness. Explicit enable/disable
+writes still drain, so changing connections cannot lose a queued disable.
+Runtime qualification also runs in All projects, without a selected directory;
+only directory-specific Cards source registration needs a project folder.
+A phone check retries a current Cards verification failure when Cards is on and
+the connection is ready. It never turns Cards on when the owner turned it off.
+The strict production verifier and its runtime/file/auth guards are unchanged.

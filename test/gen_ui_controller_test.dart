@@ -65,6 +65,19 @@ class _Api extends OpenCodeApi {
   Future<bool> genUiSessionIdle(String sessionID) async => true;
 }
 
+class _PendingInstaller extends _Installer {
+  final results = <Completer<GenUiSetupStatus>>[];
+  @override
+  Future<GenUiSetupStatus> setEnabled({
+    required String profileId,
+    required Set<GenUiAgent> agents,
+    required bool enabled,
+  }) {
+    calls.add((profile: profileId, agents: Set.of(agents), enabled: enabled));
+    return results.removeAt(0).future;
+  }
+}
+
 MessageWithParts _cardMessage() => MessageWithParts(
   info: MessageInfo(id: 'assistant', sessionID: 'session', role: 'assistant'),
   parts: [
@@ -140,6 +153,122 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(secure, null);
   });
+
+  test('runtime switch rechecks cards for the shared owner', () async {
+    final installer = _Installer()
+      ..on = GenUiSetupPartial(
+        agents: [GenUiAgent.claude],
+        affected: [GenUiAgent.openCode1],
+        reason: GenUiSetupProblem.verificationFailed,
+      );
+    final h = await _harness(installer);
+    h.controller.adoptConnectedProfileForTesting(
+      ServerProfile(
+        id: 'phone',
+        name: 'Phone',
+        baseUrl: BuiltinLinux.serverUrl,
+        flavor: ServerFlavor.v2,
+      ),
+    );
+    await h.controller.setGenUiEnabled(true);
+    await h.controller.disconnect();
+    h.controller
+      ..api = h.api
+      ..repository = SdkProductRepository(h.api.sdkClient)
+      ..directory = '/work/project'
+      ..status = StreamStatus.connected;
+    h.controller.adoptConnectedProfileForTesting(
+      h.controller.store.profiles.first,
+    );
+    installer.on = GenUiSetupOn(
+      agents: [GenUiAgent.claude, GenUiAgent.openCode1],
+    );
+    await h.controller.loadSessionTail('session');
+    await _settle();
+    expect(installer.calls, hasLength(2));
+    expect(h.controller.genUiStatus.agents, contains(GenUiAgent.openCode1));
+    expect(h.controller.capabilities.genUi, isTrue);
+  });
+
+  test('All projects rechecks Cards after a runtime switch', () async {
+    final installer = _Installer()
+      ..on = GenUiSetupPartial(
+        agents: [GenUiAgent.claude],
+        affected: [GenUiAgent.openCode1],
+        reason: GenUiSetupProblem.verificationFailed,
+      );
+    final h = await _harness(installer);
+    await h.controller.setGenUiEnabled(true);
+    await h.controller.disconnect();
+    h.controller
+      ..api = h.api
+      ..repository = SdkProductRepository(h.api.sdkClient)
+      ..directory = null
+      ..status = StreamStatus.connected;
+    h.controller.adoptConnectedProfileForTesting(
+      h.controller.store.profiles.first,
+    );
+    installer.on = GenUiSetupOn(
+      agents: [GenUiAgent.claude, GenUiAgent.openCode1],
+    );
+    await h.controller.loadSessionTail('session');
+    await _settle();
+    expect(installer.calls, hasLength(2));
+    expect(h.controller.genUiStatus.agents, contains(GenUiAgent.openCode1));
+    expect(h.controller.directory, isNull);
+  });
+
+  test('retirement preserves a queued Cards disable setting', () async {
+    final installer = _Installer()..pause = Completer<void>();
+    final h = await _harness(installer);
+    final enabling = h.controller.setGenUiEnabled(true);
+    await _settle();
+    final disabling = h.controller.setGenUiEnabled(false);
+    await h.controller.disconnect();
+    installer.pause!.complete();
+    await enabling;
+    await disabling;
+    expect(h.prefs.getBool('oc.genui.enabled.phone'), isFalse);
+    expect(installer.calls.last.enabled, isFalse);
+    expect(h.controller.genUiEnabled, isFalse);
+  });
+
+  test(
+    'retired runtime cannot publish its pending cards qualification',
+    () async {
+      final old = Completer<GenUiSetupStatus>();
+      final fresh = Completer<GenUiSetupStatus>();
+      final installer = _PendingInstaller()..results.addAll([old, fresh]);
+      final h = await _harness(installer);
+      final pending = h.controller.setGenUiEnabled(true);
+      await _settle();
+      await h.controller.disconnect();
+      h.controller
+        ..api = h.api
+        ..repository = SdkProductRepository(h.api.sdkClient)
+        ..directory = '/work/project'
+        ..status = StreamStatus.connected;
+      h.controller.adoptConnectedProfileForTesting(
+        h.controller.store.profiles.first,
+      );
+      await h.controller.loadSessionTail('session');
+      old.complete(GenUiSetupOn(agents: [GenUiAgent.openCode1]));
+      await pending;
+      await _settle();
+      expect(installer.calls, hasLength(2));
+      expect(h.controller.capabilities.genUi, isFalse);
+      expect(h.controller.genUiStatus, isA<GenUiSetupInstalling>());
+      fresh.complete(
+        GenUiSetupPartial(
+          agents: [GenUiAgent.claude],
+          reason: GenUiSetupProblem.verificationFailed,
+          affected: [GenUiAgent.openCode1],
+        ),
+      );
+      await _settle();
+      expect(h.controller.capabilities.genUi, isFalse);
+    },
+  );
 
   test(
     'effective capability defaults false despite gateway capability',

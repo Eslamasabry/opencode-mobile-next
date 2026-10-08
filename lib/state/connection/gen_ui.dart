@@ -310,6 +310,7 @@ extension _ConnectionGenUiImpl on ConnectionController {
     }
     _genUiAttempted.add(id);
     _genUiDesired[id] = on;
+    final connectionGeneration = _generation;
     final settingGeneration = (_genUiSettingGeneration[id] ?? 0) + 1;
     _genUiSettingGeneration[id] = settingGeneration;
     final prior = _genUiChanges[id] ?? Future.value();
@@ -363,6 +364,7 @@ extension _ConnectionGenUiImpl on ConnectionController {
           if (_disposed ||
               _deletingReadProfiles.contains(id) ||
               _genUiOwnerID != id ||
+              _generation != connectionGeneration ||
               _genUiSettingGeneration[id] != settingGeneration) {
             return;
           }
@@ -410,6 +412,19 @@ extension _ConnectionGenUiImpl on ConnectionController {
     final scope = _genUiScope,
         gateway = api,
         owner = _connectedProfile ?? profile;
+    final ownerID = _genUiOwnerID;
+    // Runtime qualification is phone-owner state, including All projects.
+    // Only source registration needs a selected project directory.
+    if (!_disposed &&
+        _genUiParent == null &&
+        gateway != null &&
+        owner != null &&
+        ownerID != null &&
+        status == StreamStatus.connected &&
+        genUiEnabled &&
+        _genUiAttempted.add(ownerID)) {
+      unawaited(setGenUiEnabled(true).catchError((Object _) {}));
+    }
     if (scope == null || gateway == null || owner == null) return;
     final last = _genUiLastScope;
     if (last != null && last != scope) _genUiState.forgetSource(last);
@@ -435,11 +450,6 @@ extension _ConnectionGenUiImpl on ConnectionController {
           !_deletingReadProfiles.contains(scope.profileID),
       ready: genUiStatus.agents.contains(agent),
     );
-    if (_genUiParent == null &&
-        genUiEnabled &&
-        _genUiAttempted.add(scope.profileID)) {
-      unawaited(setGenUiEnabled(true).catchError((Object _) {}));
-    }
   }
 
   bool get _genUiEffective {
@@ -821,6 +831,32 @@ extension _ConnectionGenUiImpl on ConnectionController {
     _genUiAttempted.remove(id);
     _genUiDesired.remove(id);
     _genUiSettingGeneration.remove(id);
+  }
+
+  void _genUiRetireQualification() {
+    if (_genUiParent != null) return;
+    final id = _genUiOwnerID;
+    if (id == null) return;
+    _genUiAttempted.remove(id);
+    _genUiSetup.remove(id);
+  }
+
+  Future<void> _genUiRetryFailedVerification() async {
+    final parent = _genUiParent;
+    if (parent != null) return parent._genUiRetryFailedVerification();
+    if (_disposed || !genUiEnabled || status != StreamStatus.connected) return;
+    final retry = switch (genUiStatus) {
+      GenUiSetupPartial(:final reason) || GenUiSetupFailed(:final reason) =>
+        reason == GenUiSetupProblem.verificationFailed,
+      _ => false,
+    };
+    if (retry) {
+      try {
+        await _self._setGenUiEnabled(true);
+      } catch (_) {
+        // The Cards status retains its failure; the phone result stays valid.
+      }
+    }
   }
 
   void _genUiReset() {
