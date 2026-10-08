@@ -177,6 +177,9 @@ class SavedReportSession(DeviceSession):
         return super().enable_consent()
 
     def crash(self):
+        # Consent/navigation can outlive the outer setup preflight. Never
+        # interrupt a newly admitted installer or its durable restoration ticket.
+        self.ports.require_idle_setup()
         identity = self.identity()
         after = int(self.execute(["shell", "date", "+%s%3N"]).strip())
         if not self.still_owned(identity):

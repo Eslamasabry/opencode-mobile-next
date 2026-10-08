@@ -112,7 +112,7 @@ class SavedReportTest(unittest.TestCase):
         device.device_ready.assert_not_called()
 
     def test_reused_pid_starttime_never_receives_am_crash(self):
-        session = proof.SavedReportSession("adb", Path("."))
+        session = proof.SavedReportSession("adb", Path("."), ports=Mock())
         with (
             patch.object(session, "identity", return_value=(1234, 88)),
             patch.object(session, "still_owned", return_value=False),
@@ -197,6 +197,20 @@ class SavedReportTest(unittest.TestCase):
             "Save crash reports on this phone", contains=True
         )
         self.assertFalse(session.consent_owned)
+
+    def test_new_installer_ticket_refuses_crash_before_reading_or_signalling_pid(self):
+        ports = Mock()
+        ports.require_idle_setup.side_effect = DriverFailure("setup_active_or_unknown")
+        session = proof.SavedReportSession("adb", Path("."), ports=ports)
+        with (
+            patch.object(session, "identity") as identity,
+            patch.object(session, "execute") as command,
+        ):
+            with self.assertRaisesRegex(DriverFailure, "^setup_active_or_unknown$"):
+                session.crash()
+        ports.require_idle_setup.assert_called_once()
+        identity.assert_not_called()
+        command.assert_not_called()
 
     def test_unhashable_hostile_failure_code_is_fixed(self):
         error = Exception("synthetic-private-message")
