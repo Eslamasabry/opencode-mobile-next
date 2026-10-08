@@ -1,0 +1,53 @@
+               total        used        free      shared  buff/cache   available
+Mem:           15763        8395        1570          51        7174        7367
+Swap:          19858       16392        3465
+
+GRADLE_OPTS=-Dorg.gradle.jvmargs=-Xmx4g -Dkotlin.compiler.execution.strategy=in-process -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon=false
+Running Gradle task 'assembleRelease'...
+WARNING: Your app uses the following plugins that apply Kotlin Gradle Plugin (KGP): desktop_drop, flutter_timezone
+Future versions of Flutter will fail to build if your app uses plugins that apply KGP.
+
+Please check the changelogs of these plugins and upgrade to a version that supports Built-in Kotlin.
+If no such version exists, report the issue to the plugin. If necessary, here is a guide on filing
+an issue against a plugin: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers#report-incompatible-kotlin-gradle-plugin-usage-to-plugin-authors
+
+If you are a plugin author, please migrate your plugin to Built-in Kotlin using this guide: https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors
+"es": 6707 untranslated message(s).
+"ja": 6707 untranslated message(s).
+"pt": 6707 untranslated message(s).
+"ru": 6707 untranslated message(s).
+"zh": 6707 untranslated message(s).
+To see a detailed report, use the untranslated-messages-file
+option in the l10n.yaml file:
+untranslated-messages-file: desiredFileName.txt
+<other option>: <other selection>
+
+
+This will generate a JSON format file containing all messages that
+need to be translated.
+Font asset "Phosphor.ttf" was tree-shaken, reducing it from 488636 to 42280 bytes (91.3% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Font asset "Phosphor-Duotone.ttf" was tree-shaken, reducing it from 567808 to 1184 bytes (99.8% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 5000 bytes (99.7% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Font asset "Phosphor-Fill.ttf" was tree-shaken, reducing it from 449252 to 1152 bytes (99.7% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+/home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java:54: error: package dev.flutter.plugins.integration_test does not exist
+      flutterEngine.getPlugins().add(new dev.flutter.plugins.integration_test.IntegrationTestPlugin());
+                                                                             ^
+1 error
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileReleaseJavaWithJavac' (registered by plugin 'com.android.internal.application').
+> Compilation failed; see the compiler output below.
+  /home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java:54: error: package dev.flutter.plugins.integration_test does not exist
+        flutterEngine.getPlugins().add(new dev.flutter.plugins.integration_test.IntegrationTestPlugin());
+                                                                               ^
+  1 error
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+BUILD FAILED in 3m 18s
+Running Gradle task 'assembleRelease'...                          199.0s
+Gradle task assembleRelease failed with exit code 1

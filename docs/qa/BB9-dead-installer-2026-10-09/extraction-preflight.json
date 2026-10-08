@@ -1,0 +1,9 @@
+{
+  "checkedAtUtc": "2026-10-08T23:03:29.952885+00:00",
+  "scope": "Compiler-free source extraction preflight only; no Kotlin/JVM/runtime/red proof.",
+  "junitAuthored": 18,
+  "fixtureScenariosAuthored": 19,
+  "extractionMarkersResolved": true,
+  "combinedFixtureSha256": "ab0bd3e8b4817a1ae8cecaaa43621d3dbc3de319baf92560720d1b750cb17158",
+  "reclaimHasNoSignalOrDrainCall": true
+}

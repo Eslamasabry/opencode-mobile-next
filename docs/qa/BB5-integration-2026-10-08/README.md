@@ -197,7 +197,7 @@ adb/SystemUI/device behavior; the actual tap fixture remains unqualified.
 
 ## Merged-candidate resource watch
 
-The current watcher is exact owned PID `3222150`, session `17930`, started
+The automatic watcher was exact owned PID `3222150`, session `17930`, started
 `2026-10-08T21:48:53Z`. It checks available memory every two minutes, for at
 most 60 minutes, and rechecks the 6144 MiB threshold inside the shared build
 lock. Its pending focused JVM command uses only `ocBuiltinRuntimeQa=true`,
@@ -219,3 +219,31 @@ Android/device pass. Native/host manifest hashes remained unchanged.
 The local normal2198 artifact also passed hash-sidecar, version/package and full
 certificate checks ([receipt](normal-2198-artifact.json)); this read-only check
 proves no installed-device state.
+
+## Exclusive build-window hold
+
+At `22:43 UTC`, the coordinator directed this lane to wait for the explicit
+`BB BUILD WINDOW OPEN` message before any Gradle/JVM/APK job. The automatic
+watcher was stopped by exact owned PID `3222150`, after confirming its exact
+script identity and absence of a child job. It exited143; no merged native job
+had started. Read-only memory checks continue only through the original
+`22:48:53 UTC` deadline, with no automatic build admission.
+
+After BA/BC device runs the coordinator will stop the emulator and provide the
+exclusive build window. This lane must run capped native/JVM/QA target/runner
+work back to back, clean only its exact owned daemons/intermediates, and report
+`BB BUILD WINDOW DONE` so the coordinator can restart the emulator. BB device
+qualification follows that restart under the whole-session emulator lock,
+restoring normal2198. No request for another decision is pending.
+
+Stale duplicate active log names were removed after verifying normalized
+content against their archived premerge JVM and failed APK logs. This prevents
+an old pass from being mistaken for a merged-candidate result. The archived
+failure produced no new APK; the narrow runtimeQA plugin fix remains uncompiled.
+
+The read-only remainder exited0 at `22:48:53 UTC`; the original60-minute window
+is closed. No merged native job started. The coordinator then assigned the
+[offline BB9 dead-ticket follow-up](../BB9-dead-installer-2026-10-09/README.md).
+Its uncompiled production draft changes BuiltinLinux, so the older native
+manifest is a historical BB5-only snapshot; the new follow-up manifest records
+the combined candidate. Native/APK work still requires BB BUILD WINDOW OPEN.
