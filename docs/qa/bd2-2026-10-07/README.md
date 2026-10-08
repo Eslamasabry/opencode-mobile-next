@@ -109,8 +109,8 @@ and matching test APK in place; do not copy APKs.
 | Reconnect without list gesture | PASS: deterministic regression |
 | Debounce and outstanding-fetch coalescing | PASS: deterministic regression |
 | Profile isolation, stale completion and retirement | PASS: focused regressions |
-| Focused state and smoke tests | PASS: 193 Flutter tests, 44 offline Python tests |
-| Pinned analyzer | PASS: no issues found (33.2s) |
+| Focused state and smoke tests | PASS: 195 Flutter tests, 44 offline Python tests |
+| Pinned analyzer | PASS: no issues found (17.4s) |
 | Kotlin gate | Not required unless native source changes |
 | Release app and matching instrumentation build | Pending |
 | Automatic first-load device result and small JPG | Pending |
@@ -143,13 +143,43 @@ trailing refresh; retirement cancels pending timers. No UI hook, new storage,
 migration, user copy or native change is required. Existing feed accessors and
 loading/completeness states remain Claude's frontend contract.
 
-The 11 new tests use WidgetTester's fake clock and explicitly driven streams and
+The 13 new tests use WidgetTester's fake clock and explicitly driven streams and
 Completers; no sleeps. They cover both reader orders, both protocol gateway paths,
 OpenCode 1→2→1 with a held retired read, reconnect, bursts, outstanding reads,
 explicit-refresh coalescing, disconnect, disposal and merged-helper independence.
 The original state produces missing-fetch failures; removing location reconnect,
 inventory invalidation retention or helper independence separately fails the
-corresponding test. Restoring the final source passes all 11.
+corresponding test. Restoring the final source passes all 13.
 [Structured state verification](state-verification.json) records the focused
-manifest and four expected-failure mutations. Kotlin gate is N/A because native
+manifest and six expected-failure mutations. Kotlin gate is N/A because native
 source is untouched; release builds will compile the existing native harness.
+
+### Final edge-case checkpoint
+
+A sliding debounce postponed the first fetch when session events kept arriving
+within two seconds. Before the correction, both protocol tests observed zero
+requests at the first deadline. The controller now retains the first trigger's
+deadline: events share a bounded two-second window. Sustained startup and
+reconnect events cannot defer the inventory forever. Quiet bursts still produce
+one read; slow reads retain a single trailing reconciliation.
+
+The loopback fixture now returns no folder-local sessions. Its visible title can
+only come from `/experimental/session`; the smoke never pulls or sends input.
+The real SDK fixture test fails if the folder-local row is restored, so a local
+conversation cannot hide a missing global inventory in the device proof.
+
+The final source passes all 195 affected Flutter tests plus the clean analyzer
+(17.4s). Removing either bounded scheduling or the global-only fixture produces
+the expected failures. All six state/fixture mutations fail as expected; exact
+source restoration passes 13 state regressions and all 3 fixture tests.
+These results supersede the earlier 193-test checkpoint. No full-suite pass is
+claimed. The native harness is unchanged: the first QA app and test build pass
+(724.8s and 173.5s); the final Dart-only follow-up rebuilds the app and retains
+the same version2201/signer-qualified instrumentation APK. Device qualification
+is still pending the final app artifact.
+
+Commit metadata exception: immutable source commit `ddd23e17` has `[skip ci]`
+but lacks G33's body and author trailer. The local range check reports those
+two violations. No commit was amended or rewritten; the coordinator must
+account for this when importing the patch. Subsequent commits carry complete
+messages. This is not a passing G33 range or a merge-ready full-gate claim.

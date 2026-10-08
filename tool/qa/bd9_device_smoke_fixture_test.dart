@@ -24,7 +24,8 @@ void main() {
       addTearDown(api.close);
       expect((await api.health()).healthy, isTrue);
       final sessions = await api.sessions();
-      expect(sessions.single.title, Bd9DeviceSmokeFixture.title);
+      // A folder-local row must not mask a missing global-inventory fetch.
+      expect(sessions, isEmpty);
       final repository = SdkProductRepository(api.sdkClient);
       final global = await repository.listGlobalSessions();
       expect(global.items.single.session.id, Bd9DeviceSmokeFixture.sessionID);

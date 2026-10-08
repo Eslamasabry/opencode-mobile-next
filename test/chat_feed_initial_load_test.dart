@@ -500,4 +500,44 @@ void main() {
       }
     },
   );
+  for (final v2 in [false, true]) {
+    testWidgets(
+      '${v2 ? 'v2' : 'v1'} startup and reconnect fetch despite sustained events',
+      (tester) async {
+        final h = _Harness(await _store());
+        try {
+          await h.connect(v2: v2);
+          for (final channel in h.channels) {
+            channel.onStatus(StreamStatus.connected);
+          }
+          await tester.pump(const Duration(seconds: 1));
+          h.channels.last.onEvent(
+            EventEnvelope(
+              type: 'session.updated',
+              directory: '/work/other',
+              properties: {},
+            ),
+          );
+          await tester.pump(const Duration(seconds: 1));
+          expect(h.script.globalCalls, 1);
+          h.channels.first.onStatus(StreamStatus.reconnecting);
+          h.channels.first.onStatus(StreamStatus.connected);
+          await tester.pump(const Duration(seconds: 1));
+          h.channels.last.onEvent(
+            EventEnvelope(
+              type: 'session.updated',
+              directory: '/work/other',
+              properties: {},
+            ),
+          );
+          await tester.pump(const Duration(seconds: 1));
+          expect(h.script.globalCalls, 2);
+          await tester.pump(const Duration(seconds: 2));
+          expect(h.script.globalCalls, 2);
+        } finally {
+          h.controller.dispose();
+        }
+      },
+    );
+  }
 }

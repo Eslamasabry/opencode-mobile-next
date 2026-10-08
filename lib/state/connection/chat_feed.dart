@@ -74,7 +74,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
   }
 
   /// Startup and (re)connect reconcile even before Home reads the feed.
-  /// Session events share the same 2-second debounce; volatile OpenCode 2
+  /// Session events share a bounded 2-second debounce; volatile OpenCode 2
   /// events are reconciled by refetch, never by replay.
   void _feedScheduleRefresh() {
     if (_self._disposed || _self.api == null || _self.repository == null) {
@@ -82,7 +82,9 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
     }
     final generation = _self._generation;
     _feedRequestRevision++;
-    _feedDebounce?.cancel();
+    // A busy stream must not postpone the first load or reconnect forever.
+    // Keep the first trigger's deadline while coalescing subsequent events.
+    if (_feedDebounce?.isActive ?? false) return;
     _feedDebounce = Timer(const Duration(seconds: 2), () {
       _feedDebounce = null;
       if (!_self._disposed && generation == _self._generation) {
