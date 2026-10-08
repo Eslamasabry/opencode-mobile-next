@@ -428,3 +428,46 @@ machine_lock. Full pinned analyzer clean10.8s after removing one unnecessary
 import. All44 offline command/receipt/restoration tests PASS. The dispatch-only
 workflow now runs those affected checks; YAML/Bash dry checks PASS. No CI run.
 Updated QA build and a passing device JPG remain required for BD9 completion.
+
+
+## Final local qualification — PASS (2026-10-08)
+
+Source candidate a690e166 built QA release2201 with pinned Flutter/Temurin17:
+AOT app500.3s, matching release androidTest361s. Exact commands and hashes are
+in [verified-build-summary.json](verified-build-summary.json) and
+[verified-build.json](verified-build.json). Native compile and ELF packaging pass.
+
+The second authorized whole-flock device run passed all seven ordered native
+predicates, exactly one Flutter launch→server→conversation-list/refresh test,
+and terminal instrumentation code-1. The unchanged strict checker accepted
+the complete proof; see [verified-report.json](verified-report.json).
+The smoke uses a loopback read-only fixture, not a provider/model request.
+Its visible kit title matches the directional-isolation contract, the user
+refresh produces the global inventory read, and write attempts remain empty.
+
+[conversations.jpg](conversations.jpg) is26,008 bytes (480px wide) and was
+visually checked: connected BD9 local fixture, Conversations page and synthetic
+BD9 project/title. It captures the brief refresh transition; no actual account
+or provider values appear. This is device evidence, not a mock golden.
+
+Before releasing that SAME emulator flock, the driver installed the approved
+normal2195 APK with adb -s emulator-5554 install-r-d. Installed version, live
+process, resumed MainActivity and first-frame checks ALL PASS. See
+[verified-normal-restore.json](verified-normal-restore.json). The emulator was
+left with normal app2195 installed and launchable, preserving data/signer.
+No uninstall, clear-data or other-device operation.
+
+Temporary signing/intermediates are absent; Gradle settings restored; exact
+owned daemon2321836 stopped and no longer exists. Duplicate app output removed
+after hash equality; only newest QA app and matching test APK remain. No APK
+copied. All8 affected Flutter tests,44 Python tests, full analyzer and committed
+zero-new-finding Kotlin gate passed at the relevant source checkpoints. No full
+suite claimed by Sol; Claude owns it. Workflow remains workflow_dispatch-only;
+CI, push, publication and Shorebird release/patch were not invoked.
+
+BD9 is locally verified and complete for its assigned dispatch-only contract.
+Remaining independent frontend/state observation: automatic initial global
+inventory refresh is event/reader-order dependent; this smoke explicitly proves
+the user refresh path. See the finder correction above; no foreign controller
+or UI ownership was changed. BD1/BD7/BD8 owner-device qualification remains
+delegated to Claude and is not established by this BD9 evidence.
