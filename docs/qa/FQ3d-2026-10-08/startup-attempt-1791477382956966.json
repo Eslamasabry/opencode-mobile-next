@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "run": "1791477382956966",
+  "platform": "PC Linux; no emulator",
+  "expectedVersion": "2.0.10",
+  "client": "lib/api2/Api2Client",
+  "cases": {},
+  "binarySha256": "c2fe3b18be9e67222d136c818512e3a07213d86ffd5d9176919965d08ac9b9db",
+  "ownedServerPID": 2911799,
+  "stoppedAt": "startup",
+  "stopReason": "bounded_wait_timeout",
+  "serverExitCode": -9,
+  "ownedServerExited": true,
+  "ownedSessionCount": 0,
+  "cleanupOK": true
+}

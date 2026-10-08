@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "run": "1791478616805121",
+  "platform": "PC Linux; no emulator",
+  "expectedVersion": "2.0.10",
+  "client": "lib/api2/Api2Client",
+  "cases": {
+    "modelA": {
+      "requestedModel": "opencode/big-pickle",
+      "stage": "inference",
+      "selectionRetained": true,
+      "receiptObserved": true,
+      "elapsedMs": 79793,
+      "retryCount": 0,
+      "retryOrErrorStatuses": [],
+      "executionSucceeded": false,
+      "executionFailed": false,
+      "providerAuthFailed": false,
+      "assistantCompleted": true,
+      "answeredModel": "opencode/big-pickle",
+      "requestedTokenMatched": true,
+      "answerVerified": false,
+      "result": "inference_timeout",
+      "interruptCompleted": true
+    }
+  },
+  "ownedServerPID": 2940080,
+  "binarySha256": "ed78ed8396c24e321ee457a81c41e25c62fdf2cfc26f098cffc2f6564b4d6fbd",
+  "observedVersion": "2.0.10",
+  "publicModels": [
+    {
+      "model": "opencode/nemotron-3.5-lightning-free",
+      "enabled": true,
+      "vision": false
+    },
+    {
+      "model": "opencode/ling-3.0-tiny-free",
+      "enabled": true,
+      "vision": false
+    },
+    {
+      "model": "opencode/deepseek-v4-flash-free",
+      "enabled": true,
+      "vision": false
+    },
+    {
+      "model": "opencode/laguna-s-2.1-free",
+      "enabled": true,
+      "vision": false
+    },
+    {
+      "model": "opencode/hy3-free",
+      "enabled": true,
+      "vision": false
+    },
+    {
+      "model": "opencode/longcat-2.0-free",
+      "enabled": true,
+      "vision": false
+    },
+    {
+      "model": "opencode/nemotron-3-ultra-free",
+      "enabled": true,
+      "vision": false
+    },
+    {
+      "model": "opencode/mimo-v2.5-free",
+      "enabled": true,
+      "vision": true
+    },
+    {
+      "model": "opencode/big-pickle",
+      "enabled": true,
+      "vision": false
+    }
+  ],
+  "recordedExoFreeInCatalog": false,
+  "streamDiagnostics": {
+    "envelopes": 21,
+    "execution": 1,
+    "ownedSessionExecution": 1,
+    "ownedDirectoryExecution": 0
+  },
+  "stoppedAt": "model_a",
+  "stopReason": "model_a_inference_failed",
+  "ownedSessionCount": 1,
+  "cleanupOK": true,
+  "configurationContext": "isolated XDG; no copied credentials",
+  "startupPasswordParsed": true,
+  "startupListeningLineSeen": true,
+  "ownedServerExited": true,
+  "serverExitCode": 130
+}
