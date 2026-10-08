@@ -1,0 +1,19 @@
+{
+  "scope": "host-only-pre-device-validation",
+  "baseRevision": "f0e33d96d407ff68782b49702e88269d197ae96e",
+  "branch": "sol/bc-fq3c",
+  "requiredDeviceBuild": 2197,
+  "deviceRunCompleted": false,
+  "deviceGate": "awaiting-coordinator-apk-2197-post",
+  "focusedDartTests": 185,
+  "pythonValidatorTests": 26,
+  "priorEvidenceUnchanged": true,
+  "priorMatrixSnapshotUnchanged": true,
+  "applicationSourceUnchanged": true,
+  "localDocumentLinksValid": true,
+  "remainingOwnershipJournals": 0,
+  "fullPinnedAnalyzerClean": true,
+  "generatedCertificationSnapshotCheckPassed": true,
+  "historicalEvidenceSchemasValid": true,
+  "diffCheckPassed": true
+}

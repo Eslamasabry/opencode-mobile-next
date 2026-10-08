@@ -243,6 +243,7 @@ class ProbeRun {
   final Fq3Wire wire;
   final ProbeOptions options;
   final results = <String, Map<String, Object?>>{};
+  final observations = <String, Map<String, Object?>>{};
   final sessionIDs = <String>[];
   final historyCounts = <String, int>{};
   String? observedVersion;

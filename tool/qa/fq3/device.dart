@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'common.dart';
+import 'evidence.dart' show currentCertificationBuild;
 
 const package = 'io.github.eslamasabry.opencode_mobile';
 const serial = 'emulator-5554';
@@ -59,8 +60,8 @@ class PhoneRuntime {
       );
     }
 
-    if (await installed() == 2196) return;
-    const apk = '/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk';
+    if (await installed() == currentCertificationBuild) return;
+    const apk = '/home/eslam/Storage/tmp/oc-apk-share/oc-2197.apk';
     if (!File(apk).existsSync() || FileSystemEntity.isLinkSync(apk)) {
       throw const ProbeFailure('normal_apk_unavailable');
     }
@@ -71,7 +72,7 @@ class PhoneRuntime {
       ).timeout(const Duration(seconds: 30));
       if (manifest.exitCode != 0 ||
           !manifest.stdout.toString().contains(
-            "package: name='$package' versionCode='2196'",
+            "package: name='$package' versionCode='$currentCertificationBuild'",
           )) {
         throw const ProbeFailure('normal_apk_build_mismatch');
       }
@@ -92,7 +93,8 @@ class PhoneRuntime {
         '-d',
         apk,
       ], timeout: const Duration(seconds: 180));
-      if (update.exitCode != 0 || await installed() != 2196) {
+      if (update.exitCode != 0 ||
+          await installed() != currentCertificationBuild) {
         throw const ProbeFailure('normal_apk_restore_failed');
       }
       // Updating kills the app process. Restart its own runtime, preserving the
@@ -125,7 +127,9 @@ class PhoneRuntime {
     final build = int.tryParse(
       RegExp(r'versionCode=(\d+)').firstMatch(packageInfo)?.group(1) ?? '',
     );
-    if (build != 2196) throw const ProbeFailure('installed_build_changed');
+    if (build != currentCertificationBuild) {
+      throw const ProbeFailure('installed_build_changed');
+    }
     final listing = await output([
       'shell',
       'cmd',
