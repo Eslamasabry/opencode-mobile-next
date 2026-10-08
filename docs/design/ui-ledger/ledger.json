@@ -1,5 +1,5 @@
 {
- "generatedFrom": "647880b6e180140a08b085a6c19d62428512bc02",
+ "generatedFrom": "6d88220738e516e1ae3cddbf32357b7c57e23fba",
  "pages": [
   {
    "id": "system",
@@ -1351,31 +1351,46 @@
   },
   {
    "id": "capabilities",
-   "title": "Commands & tools",
+   "title": "Tools",
    "kind": "screen",
    "area": "shell",
    "file": "lib/ui/screens/capabilities_screen.dart",
    "widget": "CapabilitiesScreen",
    "presentedBy": [],
    "line": 11,
-   "purpose": "Tabbed home for the server capability catalogs; each tab embeds another screen with embedded: true.",
+   "purpose": "Settings › Tools (target-ia §1.3 row 7, FG6): the one page for what the agent can use besides the model. Tabs MCP, Commands, Tools, Skills, References and External agents; each embeds another screen with embedded: true and is built on first visit. Without a shared catalog (Codex, Paseo, no saved server) only External agents shows, with one muted line and a Why.",
    "reachedFrom": [
-    {
-     "page": "settings",
-     "element": null,
-     "evidence": "lib/ui/screens/library_screen.dart:138"
-    },
     {
      "page": "command-launcher-sheet",
      "element": "chat-command-tools"
     },
     {
-     "page": "tools-hub",
-     "element": "tools-hub-commands-tools"
+     "page": "servers",
+     "element": "servers-external-agents"
+    },
+    {
+     "page": "settings",
+     "element": "settings-tools"
     }
    ],
    "gates": [],
    "elements": [
+    {
+     "id": "capabilities-tab-mcp",
+     "type": "tab",
+     "label": "MCP",
+     "key": "capabilities-tab-MCP",
+     "file": "lib/ui/screens/capabilities_screen.dart",
+     "line": 56,
+     "action": "other",
+     "target": "integrations",
+     "targetWidget": "IntegrationsScreen",
+     "effect": "Tab, first and the default -> IntegrationsScreen(controller, mode: mcp, embedded: true); Add MCP server is a button at the head of the list.",
+     "gates": [
+      "capabilities.serverCatalog"
+     ],
+     "destructive": false
+    },
     {
      "id": "capabilities-tab-commands",
      "type": "tab",
@@ -1387,7 +1402,9 @@
      "target": "commands",
      "targetWidget": "CommandsScreen",
      "effect": "TabBar tab -> CommandsScreen(controller, embedded: true).",
-     "gates": [],
+     "gates": [
+      "capabilities.serverCatalog"
+     ],
      "destructive": false
     },
     {
@@ -1400,9 +1417,9 @@
      "action": "other",
      "target": "tools",
      "targetWidget": "ToolsScreen",
-     "effect": "TabBar tab -> ToolsScreen(controller, embedded: true).",
+     "effect": "Tab -> ToolsScreen(controller, embedded: true); where the server does not list its tools it explains instead (capabilities.toolInventory).",
      "gates": [
-      "controller.capabilities.toolInventory"
+      "capabilities.serverCatalog"
      ],
      "destructive": false
     },
@@ -1417,7 +1434,9 @@
      "target": "skills",
      "targetWidget": "SkillsScreen",
      "effect": "TabBar tab -> SkillsScreen(controller, embedded: true).",
-     "gates": [],
+     "gates": [
+      "capabilities.serverCatalog"
+     ],
      "destructive": false
     },
     {
@@ -1431,7 +1450,39 @@
      "target": "references",
      "targetWidget": "ReferencesScreen",
      "effect": "TabBar tab -> ReferencesScreen(controller, embedded: true).",
+     "gates": [
+      "capabilities.serverCatalog"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "capabilities-tab-external-agents",
+     "type": "tab",
+     "label": "External agents",
+     "key": "capabilities-tab-External agents",
+     "file": "lib/ui/screens/capabilities_screen.dart",
+     "line": 56,
+     "action": "other",
+     "target": "external-agents",
+     "targetWidget": "ExternalAgentsScreen",
+     "effect": "Tab -> ExternalAgentsScreen(store, embedded: true); the store is made when the tab is first opened and disposed with the page. The only tab without a shared catalog.",
      "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "capabilities-unavailable-why",
+     "type": "link",
+     "label": "Why",
+     "key": "tools-unavailable-why",
+     "file": "lib/ui/screens/capabilities_screen.dart",
+     "line": 175,
+     "action": "navigate",
+     "target": "server-capabilities",
+     "targetWidget": "ServerCapabilitiesScreen",
+     "effect": "Opens Available on this server.",
+     "gates": [
+      "the server shares no catalog and hides MCP and Commands & tools"
+     ],
      "destructive": false
     }
    ]
@@ -17636,21 +17687,21 @@
   {
    "id": "external-agents",
    "title": "External agents",
-   "kind": "screen",
+   "kind": "tab",
    "area": "servers",
    "file": "lib/ui/screens/external_agents_screen.dart",
    "widget": "ExternalAgentsScreen",
    "presentedBy": [],
    "line": 72,
-   "purpose": "Lists saved A2A external agent identities and lets the user add, open or finish deleting one.",
+   "purpose": "The External agents tab of Settings › Tools (FG6): lists saved A2A external agent identities and lets the user add, open or finish deleting one. Standalone only in tests; the app opens it through openExternalAgents (Tools on this tab).",
    "reachedFrom": [
     {
      "page": "servers",
      "element": "servers-external-agents"
     },
     {
-     "page": "tools-hub",
-     "element": "tools-hub-external-agents"
+     "page": "capabilities",
+     "element": "capabilities-tab-external-agents"
     }
    ],
    "gates": [],
@@ -19220,9 +19271,9 @@
      "file": "lib/ui/screens/servers_screen.dart",
      "line": 951,
      "action": "navigate",
-     "target": "external-agents",
-     "targetWidget": "ExternalAgentsScreen",
-     "effect": "_externalAgents(): builds an ExternalAgentStore(prefs, secure) and pushes ExternalAgentsScreen(store); disposes the store when the route returns.",
+     "target": "capabilities",
+     "targetWidget": "CapabilitiesScreen",
+     "effect": "_externalAgents(): openExternalAgents(context, connProvider) pushes Tools on its External agents tab.",
      "gates": [
       "inside More setup options expansion",
       "disabled while _busy"
@@ -27466,10 +27517,6 @@
     {
      "page": "team-intro",
      "element": "team-intro-set-up"
-    },
-    {
-     "page": "tools-hub",
-     "element": "tools-hub-plugins"
     }
    ],
    "gates": [
@@ -30084,6 +30131,10 @@
    "purpose": "Provider connections (connect via API key / OAuth / server command, disconnect, manage accounts, recover pending sign-ins) and MCP servers (connect, disconnect, authenticate, remove, add) plus MCP resources; mode selects providers, mcp or both.",
    "reachedFrom": [
     {
+     "page": "capabilities",
+     "element": "capabilities-tab-mcp"
+    },
+    {
      "page": "chat",
      "element": "chat-message-error-open-providers"
     },
@@ -30102,10 +30153,6 @@
     {
      "page": "settings",
      "element": "settings-providers"
-    },
-    {
-     "page": "tools-hub",
-     "element": "tools-hub-mcp"
     }
    ],
    "gates": [
@@ -31940,12 +31987,12 @@
      "element": "settings-server-capabilities"
     },
     {
-     "page": "settings",
-     "element": "settings-unavailable-why"
+     "page": "capabilities",
+     "element": "capabilities-unavailable-why"
     },
     {
-     "page": "tools-hub",
-     "element": "tools-hub-unavailable-why"
+     "page": "settings",
+     "element": "settings-unavailable-why"
     }
    ],
    "gates": [
@@ -32706,9 +32753,9 @@
      "file": "lib/ui/screens/settings_screen.dart",
      "line": 300,
      "action": "navigate",
-     "target": "tools-hub",
+     "target": "capabilities",
      "targetWidget": null,
-     "effect": "Opens Settings › Tools: MCP, Commands & tools, Plugins, External agents.",
+     "effect": "Opens Settings › Tools: one page with MCP, Commands, Tools, Skills, References and External agents tabs.",
      "gates": [],
      "destructive": false
     },
@@ -33013,104 +33060,6 @@
     }
    ],
    "sheetKey": "disconnect-confirm-sheet"
-  },
-  {
-   "id": "tools-hub",
-   "title": "Tools",
-   "kind": "screen",
-   "area": "settings",
-   "file": "lib/ui/screens/tools_hub_screen.dart",
-   "widget": "ToolsHubScreen",
-   "presentedBy": [],
-   "line": 22,
-   "purpose": "Settings › Tools (target-ia §1.3 row 7, slice-P3.10): one row each for MCP, the server's commands, skills, tools and references (capabilities), Plugins and External agents. Rows the server cannot serve are absent and one muted line counts them with a Why.",
-   "reachedFrom": [
-    {
-     "page": "settings",
-     "element": "settings-tools"
-    }
-   ],
-   "gates": [],
-   "elements": [
-    {
-     "id": "tools-hub-mcp",
-     "type": "list-tile",
-     "label": "MCP",
-     "key": "settings-mcp",
-     "file": "lib/ui/screens/tools_hub_screen.dart",
-     "line": 84,
-     "action": "navigate",
-     "target": "integrations",
-     "targetWidget": null,
-     "effect": "Opens IntegrationsScreen in MCP mode.",
-     "gates": [
-      "capabilities.serverCatalog"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "tools-hub-commands-tools",
-     "type": "list-tile",
-     "label": "Commands & tools",
-     "key": "settings-commands-tools",
-     "file": "lib/ui/screens/tools_hub_screen.dart",
-     "line": 84,
-     "action": "navigate",
-     "target": "capabilities",
-     "targetWidget": null,
-     "effect": "Opens CapabilitiesScreen (Commands, Tools, Skills, References tabs).",
-     "gates": [
-      "capabilities.serverCatalog"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "tools-hub-plugins",
-     "type": "list-tile",
-     "label": "Plugins",
-     "key": "settings-category-plugins",
-     "file": "lib/ui/screens/tools_hub_screen.dart",
-     "line": 84,
-     "action": "navigate",
-     "target": "team-intro",
-     "targetWidget": null,
-     "effect": "Opens PluginsSettingsScreen.",
-     "gates": [
-      "profile != null || capabilities.pluginInventory"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "tools-hub-external-agents",
-     "type": "list-tile",
-     "label": "External agents",
-     "key": "settings-external-agents",
-     "file": "lib/ui/screens/tools_hub_screen.dart",
-     "line": 84,
-     "action": "navigate",
-     "target": "external-agents",
-     "targetWidget": null,
-     "effect": "openExternalAgents(context, controller): ExternalAgentsScreen with its own store.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "tools-hub-unavailable-why",
-     "type": "link",
-     "label": "Why",
-     "key": "tools-hub-unavailable-why",
-     "file": "lib/ui/screens/tools_hub_screen.dart",
-     "line": 100,
-     "action": "navigate",
-     "target": "server-capabilities",
-     "targetWidget": null,
-     "effect": "Opens Available on this server.",
-     "gates": [
-      "a Tools row is hidden by the connected server"
-     ],
-     "destructive": false
-    }
-   ]
   },
   {
    "id": "tools",
@@ -35413,6 +35362,11 @@
    },
    {
     "from": "capabilities",
+    "element": "capabilities-tab-mcp",
+    "to": "integrations"
+   },
+   {
+    "from": "capabilities",
     "element": "capabilities-tab-commands",
     "to": "commands"
    },
@@ -35430,6 +35384,16 @@
     "from": "capabilities",
     "element": "capabilities-tab-references",
     "to": "references"
+   },
+   {
+    "from": "capabilities",
+    "element": "capabilities-tab-external-agents",
+    "to": "external-agents"
+   },
+   {
+    "from": "capabilities",
+    "element": "capabilities-unavailable-why",
+    "to": "server-capabilities"
    },
    {
     "from": "chat",
@@ -36524,7 +36488,7 @@
    {
     "from": "servers",
     "element": "servers-external-agents",
-    "to": "external-agents"
+    "to": "capabilities"
    },
    {
     "from": "servers-welcome",
@@ -37474,7 +37438,7 @@
    {
     "from": "settings",
     "element": "settings-tools",
-    "to": "tools-hub"
+    "to": "capabilities"
    },
    {
     "from": "settings",
@@ -37529,31 +37493,6 @@
    {
     "from": "settings",
     "element": "settings-unavailable-why",
-    "to": "server-capabilities"
-   },
-   {
-    "from": "tools-hub",
-    "element": "tools-hub-mcp",
-    "to": "integrations"
-   },
-   {
-    "from": "tools-hub",
-    "element": "tools-hub-commands-tools",
-    "to": "capabilities"
-   },
-   {
-    "from": "tools-hub",
-    "element": "tools-hub-plugins",
-    "to": "team-intro"
-   },
-   {
-    "from": "tools-hub",
-    "element": "tools-hub-external-agents",
-    "to": "external-agents"
-   },
-   {
-    "from": "tools-hub",
-    "element": "tools-hub-unavailable-why",
     "to": "server-capabilities"
    },
    {
@@ -37886,6 +37825,12 @@
     "secondary": true
    },
    {
+    "from": "servers",
+    "element": "servers-external-agents",
+    "to": "external-agents",
+    "secondary": true
+   },
+   {
     "from": "external-agent-detail-input-dialog",
     "element": "external-agent-detail-input-dialog-submit",
     "to": "external-task",
@@ -38186,11 +38131,6 @@
     "element": null,
     "to": "embedded-product-states",
     "via": "embedded"
-   },
-   {
-    "from": "settings",
-    "element": null,
-    "to": "capabilities"
    },
    {
     "from": "profile-monitor-switch-server-dialog",

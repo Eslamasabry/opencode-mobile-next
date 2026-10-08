@@ -139,13 +139,16 @@ void _commandAndTimelineTests() {
       (widget) =>
           (widget as IntegrationsScreen).mode == IntegrationsMode.providers,
     ),
+    // MCP and the model's tools are tabs of the one Tools page.
     'mcps': (
-      IntegrationsScreen,
-      (widget) => (widget as IntegrationsScreen).mode == IntegrationsMode.mcp,
+      CapabilitiesScreen,
+      (widget) =>
+          (widget as CapabilitiesScreen).initialSection == ToolsSection.mcp,
     ),
     'tools': (
       CapabilitiesScreen,
-      (widget) => (widget as CapabilitiesScreen).initialTab == 1,
+      (widget) =>
+          (widget as CapabilitiesScreen).initialSection == ToolsSection.tools,
     ),
   }.entries) {
     testWidgets('${entry.key} command opens its Settings hub destination', (

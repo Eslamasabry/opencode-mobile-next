@@ -20,7 +20,6 @@ import '../../state/pairing.dart';
 import '../../state/phone_host.dart' show PhoneHostKind;
 import '../../state/profiles.dart';
 import '../../state/queued_prompt_removal.dart';
-import '../../state/external_agents.dart';
 import '../../state/first_run.dart';
 import '../../termux/bridge.dart';
 import '../app_theme.dart';
@@ -48,7 +47,7 @@ import 'pairing_scanner_screen.dart';
 import 'tailscale_setup_screen.dart';
 import 'this_phone_screen.dart' show openThisPhone;
 import '../../state/tailscale_address.dart';
-import 'external_agents_screen.dart';
+import 'capabilities_screen.dart' show openExternalAgents;
 
 part 'servers/servers_state.dart';
 part 'servers/servers_actions.dart';

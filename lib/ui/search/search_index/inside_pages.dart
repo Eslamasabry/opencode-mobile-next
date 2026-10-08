@@ -303,7 +303,10 @@ extension _IndexInsidePages on _IndexBuild {
         pages: const ['commands'],
         gate: _catalog,
         open: _screen(
-          (scope) => CapabilitiesScreen(controller: scope.controller),
+          (scope) => CapabilitiesScreen(
+            controller: scope.controller,
+            initialSection: ToolsSection.commands,
+          ),
         ),
       ),
       SearchEntry(
@@ -317,8 +320,10 @@ extension _IndexInsidePages on _IndexBuild {
         pages: const ['tools'],
         gate: (scope) => _catalog(scope) && scope.capabilities.toolInventory,
         open: _screen(
-          (scope) =>
-              CapabilitiesScreen(controller: scope.controller, initialTab: 1),
+          (scope) => CapabilitiesScreen(
+            controller: scope.controller,
+            initialSection: ToolsSection.tools,
+          ),
         ),
       ),
       SearchEntry(
@@ -333,7 +338,7 @@ extension _IndexInsidePages on _IndexBuild {
         open: _screen(
           (scope) => CapabilitiesScreen(
             controller: scope.controller,
-            initialTab: _capabilitiesTab(scope, 2),
+            initialSection: ToolsSection.skills,
           ),
         ),
       ),
@@ -349,7 +354,7 @@ extension _IndexInsidePages on _IndexBuild {
         open: _screen(
           (scope) => CapabilitiesScreen(
             controller: scope.controller,
-            initialTab: _capabilitiesTab(scope, 3),
+            initialSection: ToolsSection.references,
           ),
         ),
       ),

@@ -124,9 +124,11 @@ extension _IndexHubRows on _IndexBuild {
         keywords:
             '${l10n.settingsHubSearchToolsAliases} ${l10n.libraryMcpTitle} '
             '$commandsAndTools ${l10n.teamUiPluginsTitle} ${l10n.a2aTitle}',
-        pages: const ['tools-hub'],
-        // External agents live in this app, so Tools always has a row.
-        open: _screen((scope) => ToolsHubScreen(controller: scope.controller)),
+        pages: const ['capabilities'],
+        // External agents live in this app, so Tools always has a tab.
+        open: _screen(
+          (scope) => CapabilitiesScreen(controller: scope.controller),
+        ),
       ),
       // The AI Team as a place of its own in Settings, not only a plugin
       // (docs/qa/team-discover-2026-09-25): the one team page (P3.4), on or
@@ -429,10 +431,11 @@ extension _IndexHubRows on _IndexBuild {
         pages: const ['integrations', 'mcp-setup', 'mcp-catalog'],
         gate: _catalog,
         serverGate: _catalog,
+        // The MCP tab of Tools (Add is its first button).
         open: _screen(
-          (scope) => IntegrationsScreen(
+          (scope) => CapabilitiesScreen(
             controller: scope.controller,
-            mode: IntegrationsMode.mcp,
+            initialSection: ToolsSection.mcp,
           ),
         ),
       ),
@@ -447,7 +450,10 @@ extension _IndexHubRows on _IndexBuild {
         gate: _catalog,
         serverGate: _catalog,
         open: _screen(
-          (scope) => CapabilitiesScreen(controller: scope.controller),
+          (scope) => CapabilitiesScreen(
+            controller: scope.controller,
+            initialSection: ToolsSection.commands,
+          ),
         ),
       ),
       // The server's own plugins: a section of Settings > This server (the

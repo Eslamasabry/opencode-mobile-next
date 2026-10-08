@@ -1,40 +1,35 @@
-// Golden renders of slice-P3.10 (Settings IA, target-ia §1.3): the whole
-// Settings hub at phone width (dark, light and 200 % text), one wide window,
-// the hub on a server that hides rows (Paseo: the one muted line per group),
-// the one Tools page (OpenCode 1 and Codex; since FG6 it holds MCP, the
-// catalogs and External agents as tabs), About without tabs and Privacy
-// and data with the policy row. Real fonts at DPR 1; the phone shots are
-// tall so every group is in the picture.
+// Golden renders of FG6 (Settings and Library with fewer pages): the Settings
+// hub and the pages the merges produce, phone 412x915, dark and light, with
+// the app's real fonts at DPR 1. The "before" images of the pages these
+// replace are in docs/qa/fg6-2026-10-08/before/.
 //
 // Regenerate deliberately:
-//   flutter test --update-goldens test/revamp/slice_p310_settings_ia_golden_test.dart
+//   flutter test --update-goldens test/revamp/fg6_fewer_pages_golden_test.dart
 // and look at every changed image before committing it.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/codex/gateway.dart';
-import 'package:opencode_mobile/paseo/gateway.dart';
 import 'package:opencode_mobile/state/connection.dart';
+import 'package:opencode_mobile/state/external_agents.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/ui/screens/about_screen.dart';
 import 'package:opencode_mobile/ui/screens/capabilities_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 
 import '../../tool/capture/fixtures.dart';
+import '../external_agent_state_test.dart' show agentCard;
 import '../support/setup_capture_preferences.dart';
 
 class _Api extends CaptureApi {
   _Api(this._capabilities);
-
   final ServerCapabilities _capabilities;
-
   @override
   ServerCapabilities get capabilities => _capabilities;
-
   @override
   Future<Health> health() async => Health(healthy: true, version: '1.18.25');
 }
@@ -43,6 +38,50 @@ class _Repository extends CaptureRepository {
   @override
   Future<TerminalShellSettings> loadTerminalShellSettings() async =>
       const TerminalShellSettings(selected: '', options: []);
+  @override
+  Future<List<McpServerInfo>> listMcpServers() async => const [
+    McpServerInfo(name: 'playwright', status: 'connected'),
+    McpServerInfo(name: 'github', status: 'needs_auth'),
+    McpServerInfo(name: 'postgres', status: 'failed'),
+  ];
+  @override
+  Future<List<McpResourceInfo>> listMcpResources() async => const [
+    McpResourceInfo(
+      name: 'Schema',
+      server: 'postgres',
+      uri: 'postgres://db/schema',
+    ),
+  ];
+  @override
+  Future<List<CommandInfo>> listCommands() async => const [
+    CommandInfo(
+      name: 'review',
+      description: 'Review the staged changes',
+      subtask: false,
+    ),
+    CommandInfo(
+      name: 'init',
+      description: 'Create or update AGENTS.md',
+      subtask: false,
+    ),
+    CommandInfo(
+      name: 'test',
+      description: 'Run the test suite and fix failures',
+      subtask: true,
+    ),
+  ];
+  @override
+  Future<List<SkillInfo>> listSkills() async => const [];
+  @override
+  Future<List<CodingToolInfo>> listCodingTools({
+    required String providerID,
+    required String modelID,
+  }) async => const [];
+  @override
+  Future<List<String>> listCodingToolIDs() async => const [];
+  @override
+  Future<ExperimentalServerCapabilities> loadExperimentalCapabilities() async =>
+      const ExperimentalServerCapabilities(backgroundSubagents: false);
 }
 
 void _mockPlatform(WidgetTester tester) {
@@ -78,9 +117,9 @@ Future<void> _shot(
   required bool light,
   required Widget Function(ConnectionController controller) home,
   Size size = const Size(412, 915),
-  double textScale = 1,
   ServerCapabilities capabilities = ServerCapabilities.allV1,
   bool asset = false,
+  Future<void> Function()? act,
 }) async {
   _mockPlatform(tester);
   tester.view.physicalSize = size;
@@ -118,14 +157,7 @@ Future<void> _shot(
   try {
     await tester.pumpWidget(
       captureApp(
-        home: Builder(
-          builder: (context) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: TextScaler.linear(textScale)),
-            child: home(controller),
-          ),
-        ),
+        home: home(controller),
         boundaryKey: boundary,
         controller: controller,
         light: light,
@@ -135,7 +167,6 @@ Future<void> _shot(
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     if (asset) {
-      // The notices come from the asset bundle, off the fake clock.
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 300)),
       );
@@ -143,10 +174,14 @@ Future<void> _shot(
       await tester.pump(const Duration(milliseconds: 300));
     }
     await tester.pumpAndSettle();
+    if (act != null) {
+      await act();
+      await tester.pumpAndSettle();
+    }
     expect(tester.takeException(), isNull);
     await expectLater(
       find.byKey(boundary),
-      matchesGoldenFile('goldens/$name.png'),
+      matchesGoldenFile('goldens/fg6_$name.png'),
     );
   } finally {
     await tester.pumpWidget(const SizedBox.shrink());
@@ -160,94 +195,61 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(loadCaptureFonts);
 
-  Widget hub(ConnectionController controller) =>
-      SettingsScreen(controller: controller);
-
   for (final light in [false, true]) {
     final mode = light ? 'light' : 'dark';
-    testWidgets('hub, every group · $mode', (tester) async {
+    testWidgets('hub · $mode', (tester) async {
       await _shot(
         tester,
-        'p310_settings_hub_full_$mode',
+        'settings_hub_$mode',
         light: light,
-        home: hub,
+        home: (c) => SettingsScreen(controller: c),
         size: const Size(412, 2300),
       );
     });
-  }
-
-  testWidgets('hub at 200 % text · dark', (tester) async {
-    await _shot(
-      tester,
-      'p310_settings_hub_text200_dark',
-      light: false,
-      home: hub,
-      size: const Size(412, 4400),
-      textScale: 2,
-    );
-  });
-
-  testWidgets('hub, two panes · dark', (tester) async {
-    await _shot(
-      tester,
-      'p310_settings_hub_1280x800_dark',
-      light: false,
-      home: hub,
-      size: const Size(1280, 800),
-    );
-  });
-
-  testWidgets('hub on a server that hides rows (Paseo) · dark', (tester) async {
-    await _shot(
-      tester,
-      'p310_settings_hub_paseo_dark',
-      light: false,
-      home: hub,
-      size: const Size(412, 2300),
-      capabilities: paseoServerCapabilities,
-    );
-  });
-
-  testWidgets('About · dark', (tester) async {
-    await _shot(
-      tester,
-      'p310_about_loaded_dark',
-      light: false,
-      home: (controller) => AboutScreen(controller: controller),
-      size: const Size(412, 1600),
-      asset: true,
-    );
-  });
-
-  testWidgets('Privacy and data · dark', (tester) async {
-    await _shot(
-      tester,
-      'p310_privacy_loaded_dark',
-      light: false,
-      home: (controller) => PrivacySettingsScreen(controller: controller),
-    );
-  });
-
-  // ---- the Tools page (the hub rows became tabs in FG6) -------------------
-  for (final light in [false, true]) {
-    final mode = light ? 'light' : 'dark';
-    testWidgets('Tools · $mode', (tester) async {
+    testWidgets('Tools, MCP tab · $mode', (tester) async {
       await _shot(
         tester,
-        'p310_tools_loaded_$mode',
+        'tools_mcp_$mode',
         light: light,
-        home: (controller) => CapabilitiesScreen(controller: controller),
+        home: (c) => CapabilitiesScreen(controller: c),
+      );
+    });
+    testWidgets('Tools, Commands tab · $mode', (tester) async {
+      await _shot(
+        tester,
+        'tools_commands_$mode',
+        light: light,
+        home: (c) => CapabilitiesScreen(
+          controller: c,
+          initialSection: ToolsSection.commands,
+        ),
+      );
+    });
+    testWidgets('Tools, External agents tab · $mode', (tester) async {
+      final prefs = await setupCapturePreferences();
+      final agents = ExternalAgentStore(prefs, const FlutterSecureStorage());
+      addTearDown(agents.dispose);
+      _mockPlatform(tester);
+      await agents.add(agentCard, 'fixture-token');
+      await _shot(
+        tester,
+        'tools_external_agents_$mode',
+        light: light,
+        home: (c) => CapabilitiesScreen(
+          controller: c,
+          initialSection: ToolsSection.externalAgents,
+          externalAgentStore: agents,
+        ),
+      );
+    });
+    testWidgets('Tools on Codex · $mode', (tester) async {
+      await _shot(
+        tester,
+        'tools_codex_$mode',
+        light: light,
+        home: (c) => CapabilitiesScreen(controller: c),
+        capabilities: codexServerCapabilities,
       );
     });
   }
-
-  testWidgets('Tools on Codex · dark', (tester) async {
-    await _shot(
-      tester,
-      'p310_tools_codex_dark',
-      light: false,
-      home: (controller) => CapabilitiesScreen(controller: controller),
-      capabilities: codexServerCapabilities,
-    );
-  });
 }

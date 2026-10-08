@@ -69,12 +69,12 @@ Work, Project) are listed in section 5 and not touched.
 
 | Current page | Target home (target-ia) | Decision |
 |---|---|---|
-| tools-hub | `capabilities` renamed Tools (§1.3 row 7: "MCP, Commands, Skills, Plugins, Outside agents, Tools and references") | **Merged into Tools** (M1) |
+| tools-hub | `capabilities` renamed Tools (§1.3 row 7: "MCP, Commands, Skills, Plugins, Outside agents, Tools and references"; the app's word for Outside agents is External agents) | **Merged into Tools** (M1) |
 | integrations (MCP mode) | Tools › MCP (§1.3 row 7; "integrations keeps only Providers") | **Merged into Tools** as the MCP tab (M1) |
-| external-agents | Tools › Outside agents (§1.4: "external-agents goes to Tools") | **Merged into Tools** as a tab (M1) |
+| external-agents | Tools › External agents tab (§1.4: "external-agents goes to Tools") | **Merged into Tools** as a tab (M1) |
 | capabilities (Commands & tools) | Tools | **Stays**, becomes the Tools page with 6 tabs (M1) |
 | voice-notices | `about-open-source-tab` (§1.4: "voice-notices merged into about-open-source-tab"; §1.3 row 22 "Open source including the voice licences") | **Merged into About** (M2) |
-| add-agent, external-agent-detail, external-task | stay (§1.4 survivors) | stays, reached from the Outside agents tab |
+| add-agent, external-agent-detail, external-task | stay (§1.4 survivors) | stays, reached from the External agents tab |
 | mcp-catalog, mcp-setup | stay (§1.4 survivors) | stays, reached from MCP › Add |
 | all other rows in section 2 | survivors in §1.4 | stays |
 
@@ -82,9 +82,9 @@ Merges built in phase 2, one commit each:
 
 - **M1 Tools is one page.** Settings › Tools opens the former Commands & tools
   page, now titled Tools, with tabs **MCP · Commands · Tools · Skills ·
-  References · Outside agents** (the strip scrolls, up to 8 tabs; tabs are
+  References · External agents** (the strip scrolls, up to 8 tabs; tabs are
   built on first visit). Where the server shares no catalog (Codex, Paseo, no
-  saved server) the five catalog tabs are absent and only Outside agents
+  saved server) the five catalog tabs are absent and only External agents
   shows, with the hub's one muted line "N settings aren't available on this
   server · Why". The Tools hub page is deleted. `/mcps`, the `mcpAdd` and
   `addExternalAgent` enable-flows, the Servers door to External agents and the
@@ -108,8 +108,8 @@ taps) to hub › Tools › tab (2 taps).
 | MCP servers, resources | Settings › Tools › MCP servers (page) | Settings › Tools › MCP tab |
 | Add an MCP server | MCP page › Add (top bar) | Tools › MCP tab › Add MCP server (button at the top of the tab) |
 | Commands, Tools, Skills, References | Settings › Tools › Commands & tools › tab | Settings › Tools › the same tab |
-| External agents (A2A) list | Settings › Tools › External agents (page) | Settings › Tools › Outside agents tab |
-| Add / open an external agent | External agents page › Add / row | Outside agents tab › Add agent / row (the detail and task pages are unchanged) |
+| External agents (A2A) list | Settings › Tools › External agents (page) | Settings › Tools › External agents tab |
+| Add / open an external agent | External agents page › Add / row | External agents tab › Add agent / row (the detail and task pages are unchanged) |
 | Voice model licences | Settings › About › Voice licences (page) | Settings › About › Open source › the four voice rows |
 
 Search entry ids do not change (`settings-mcp`, `settings-commands-tools`,
@@ -137,7 +137,11 @@ Search entry ids do not change (`settings-mcp`, `settings-commands-tools`,
    still wanted.
 6. **Host management** (`host-management`, This server). Survives in the
    target under Servers and This phone; not Settings/Library.
-7. **Hub row count.** 20 rows against the target's 22: the two missing are
+7. **One word: Outside or External agents.** target-ia writes "Outside
+   agents"; the tab, the page, search and the settings aliases say "External
+   agents", while the empty state already says "outside agent". Which word
+   wins is a copy decision across both languages. Kept as External agents.
+8. **Hub row count.** 20 rows against the target's 22: the two missing are
    "Ask the setup assistant" (a feature) and the separate "What runs by itself"
    row (see 5). Neither is a page merge.
 
@@ -165,7 +169,7 @@ Team pages, Work, Project.
 - **Top-bar actions.** The MCP "Add" and the agents "Add agent" lived in the
   top bar; in a tab they become a visible button at the top of the tab
   (obvious options first), not an overflow item.
-- **Codex / Paseo / no server.** Outside agents must still work with no
+- **Codex / Paseo / no server.** External agents must still work with no
   catalog, as the Tools hub did; the muted "N settings aren't available" line
   keeps its Why.
 - **UI ledger.** `test/ui_ledger_coverage_test.dart` fails if a deleted screen
