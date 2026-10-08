@@ -53,6 +53,7 @@ part 'support/phone_agents_reopen_tests.dart';
 part 'support/phone_agents_photo_card_tests.dart';
 part 'support/phone_agents_stall_tests.dart';
 part 'support/phone_agents_check_publication_tests.dart';
+part 'support/phone_agents_capability_refresh_tests.dart';
 
 const _project = '/root/projects/app';
 const _stamp = '2026-10-03T08:00:00Z';
@@ -271,6 +272,10 @@ class _HostState {
   PaseoGateway Function(PaseoTransport, String)? gatewayFactory;
   void Function(FakePaseoSocket)? configureSocket;
   bool freshPrivateSockets = false;
+  bool connectOnOpen = false;
+  bool projectCapabilities = false;
+  FakePaseoSocket Function()? socketFactory;
+  final capabilityReads = <AgentCapabilities>[];
   final inspectedCapabilities = <String, AgentCapabilities>{};
   Map<String, PhoneAgentRuntime> runtimes = {};
   List<Map<String, dynamic>> agents = [];
@@ -356,13 +361,16 @@ class _FakeHost implements PhoneAgentHostPort, PhoneAgentAuthPort {
     AgentCapabilities capabilities = const AgentCapabilities(),
   }) async {
     state.inspectedCapabilities[agentId] = capabilities;
+    if (agentId == 'claude') state.capabilityReads.add(capabilities);
     final base = runtimes[agentId] ?? PhoneAgentRuntime(agentId: agentId);
     return PhoneAgentRuntime(
       agentId: agentId,
       installed: base.installed,
       hostAvailable: base.hostAvailable,
       architectureQualified: base.architectureQualified,
-      capabilities: base.capabilities,
+      capabilities: state.projectCapabilities
+          ? capabilities
+          : base.capabilities,
       signInPhase:
           base.signInPhase ??
           (signIn?.inspected == true ? signIn!.phase : null),
@@ -380,12 +388,14 @@ class _FakeHost implements PhoneAgentHostPort, PhoneAgentAuthPort {
       failOpens--;
       throw const AgentHostException(AgentHostFailure.hello);
     }
-    return newGatewaySync(directory);
+    final gateway = newGatewaySync(directory);
+    if (state.connectOnOpen) await gateway.transport.connect();
+    return gateway;
   }
 
   @override
   PaseoGateway newGatewaySync(String directory) {
-    final socket = FakePaseoSocket();
+    final socket = state.socketFactory?.call() ?? FakePaseoSocket();
     sockets.add(socket);
     socket.handlers['get_providers_snapshot_request'] = (request) => (
       'get_providers_snapshot_response',
@@ -705,6 +715,7 @@ void main() {
   _photoCardAliasTests();
   _turnStallControllerTests();
   _phoneCheckPublicationTests();
+  _phoneCapabilityRefreshTests();
 
   const dir = _project;
 

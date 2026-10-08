@@ -1,0 +1,63 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: first helper 0.9.2 refreshes arm64 Claude capability rows
+00:00 +0 -1: first helper 0.9.2 refreshes arm64 Claude capability rows [E]
+  Expected: <true>
+    Actual: <false>
+
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test/support/phone_agents_capability_refresh_tests.dart 45:9  _phoneCapabilityRefreshTests.<fn>
+
+00:00 +0 -1: first helper null refreshes arm64 Claude capability rows
+00:00 +1 -1: first helper 0.9.3 refreshes arm64 Claude capability rows
+00:00 +1 -2: first helper 0.9.3 refreshes arm64 Claude capability rows [E]
+  Expected: <2>
+    Actual: <1>
+
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test/support/phone_agents_capability_refresh_tests.dart 53:9  _phoneCapabilityRefreshTests.<fn>
+
+00:00 +1 -2: first helper capability scan rechecks the actual phone gate
+00:00 +1 -3: first helper capability scan rechecks the actual phone gate [E]
+  Expected: PhoneAgentStatus:<PhoneAgentStatus.needsQualification>
+    Actual: PhoneAgentStatus:<PhoneAgentStatus.ready>
+
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test/support/phone_agents_capability_refresh_tests.dart 78:5  _phoneCapabilityRefreshTests.<fn>
+
+00:00 +1 -3: first helper retry publishes resume without another screen read
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: true
+  Actual: <false>
+
+When the exception was thrown, this was the stack:
+#4      _phoneCapabilityRefreshTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_capability_refresh_tests.dart:110:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_capability_refresh_tests.dart line 110
+The test description was:
+  first helper retry publishes resume without another screen read
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +1 -4: first helper retry publishes resume without another screen read [E]
+  Test failed. See exception logs above.
+  The test description was: first helper retry publishes resume without another screen read
+
+00:00 +1 -4: (tearDownAll)
+00:00 +1 -4: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper 0.9.2 refreshes arm64 Claude capability rows
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper 0.9.3 refreshes arm64 Claude capability rows
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper capability scan rechecks the actual phone gate
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper retry publishes resume without another screen read
