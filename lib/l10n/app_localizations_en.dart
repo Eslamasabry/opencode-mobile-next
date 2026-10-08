@@ -28009,4 +28009,41 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get diagnosticsUnavailable =>
       'These details are unavailable. Reopen the app and try again.';
+
+  @override
+  String backgroundPauseTimeLimit(String at) {
+    return 'Background connection paused $at to save battery.';
+  }
+
+  @override
+  String get backgroundPauseRestricted =>
+      'Background connection paused: battery use is restricted.';
+
+  @override
+  String backgroundPauseUserStopped(String at) {
+    return 'Background connection stopped when the app closed $at.';
+  }
+
+  @override
+  String get backgroundPauseInterrupted =>
+      'Background connection stopped for an unknown reason.';
+
+  @override
+  String get backgroundPauseResume => 'Resume background connection';
+
+  @override
+  String get backgroundPauseResumeShort => 'Resume';
+
+  @override
+  String get backgroundPauseResuming => 'Resuming background connection…';
+
+  @override
+  String get backgroundPauseResumeFailed =>
+      'Couldn\'t resume. Open Keep running settings.';
+
+  @override
+  String get backgroundPauseOpenKeepRunning => 'Open Keep running settings';
+
+  @override
+  String get backgroundPauseResumed => 'Background connection resumed.';
 }

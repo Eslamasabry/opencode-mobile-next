@@ -28058,4 +28058,41 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get diagnosticsUnavailable =>
       'هذه التفاصيل غير متاحة. أعد فتح التطبيق وحاول مرة أخرى.';
+
+  @override
+  String backgroundPauseTimeLimit(String at) {
+    return 'أُوقف الاتصال في الخلفية مؤقتًا $at لتوفير البطارية.';
+  }
+
+  @override
+  String get backgroundPauseRestricted =>
+      'أُوقف الاتصال في الخلفية مؤقتًا: استخدام البطارية مقيَّد.';
+
+  @override
+  String backgroundPauseUserStopped(String at) {
+    return 'توقف الاتصال في الخلفية لأن التطبيق أُغلق $at.';
+  }
+
+  @override
+  String get backgroundPauseInterrupted =>
+      'توقف الاتصال في الخلفية لسبب غير معروف.';
+
+  @override
+  String get backgroundPauseResume => 'استئناف الاتصال في الخلفية';
+
+  @override
+  String get backgroundPauseResumeShort => 'استئناف';
+
+  @override
+  String get backgroundPauseResuming => 'جارٍ استئناف الاتصال في الخلفية…';
+
+  @override
+  String get backgroundPauseResumeFailed =>
+      'تعذّر الاستئناف. افتح إعدادات الاستمرار في العمل.';
+
+  @override
+  String get backgroundPauseOpenKeepRunning => 'فتح إعدادات الاستمرار في العمل';
+
+  @override
+  String get backgroundPauseResumed => 'تم استئناف الاتصال في الخلفية.';
 }

@@ -44124,6 +44124,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'These details are unavailable. Reopen the app and try again.'**
   String get diagnosticsUnavailable;
+
+  /// battery-pause (FD3): App-wide notice when Android's daily background limit stopped the background connection. {at} is 'at 3:10 PM' or 'on Sep 25 at 8:19 PM'.
+  ///
+  /// In en, this message translates to:
+  /// **'Background connection paused {at} to save battery.'**
+  String backgroundPauseTimeLimit(String at);
+
+  /// battery-pause (FD3): App-wide notice when Android's battery restriction stopped the background connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Background connection paused: battery use is restricted.'**
+  String get backgroundPauseRestricted;
+
+  /// battery-pause (FD3): App-wide notice when the app was closed (Recents, Settings or the phone maker) while the background connection ran. {at} is 'at 3:10 PM' or 'on Sep 25 at 8:19 PM'.
+  ///
+  /// In en, this message translates to:
+  /// **'Background connection stopped when the app closed {at}.'**
+  String backgroundPauseUserStopped(String at);
+
+  /// battery-pause (FD3): App-wide notice when the background connection stopped for an unknown reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Background connection stopped for an unknown reason.'**
+  String get backgroundPauseInterrupted;
+
+  /// battery-pause (FD3): Notice action that starts the background connection again.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume background connection'**
+  String get backgroundPauseResume;
+
+  /// battery-pause (FD3): Compact inline action on the pause line; a screen reader hears backgroundPauseResume instead.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get backgroundPauseResumeShort;
+
+  /// battery-pause (FD3): Notice line while Android confirms the background connection started.
+  ///
+  /// In en, this message translates to:
+  /// **'Resuming background connection…'**
+  String get backgroundPauseResuming;
+
+  /// battery-pause (FD3): Notice line when Android did not confirm the start; the pause stays.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t resume. Open Keep running settings.'**
+  String get backgroundPauseResumeFailed;
+
+  /// battery-pause (FD3): Notice action that opens the Keep running in the background settings (Notifications and background page).
+  ///
+  /// In en, this message translates to:
+  /// **'Open Keep running settings'**
+  String get backgroundPauseOpenKeepRunning;
+
+  /// battery-pause (FD3): Screen-reader announcement after Android confirmed the background connection runs again.
+  ///
+  /// In en, this message translates to:
+  /// **'Background connection resumed.'**
+  String get backgroundPauseResumed;
 }
 
 class _AppLocalizationsDelegate
