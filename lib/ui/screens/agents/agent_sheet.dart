@@ -347,6 +347,15 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     );
   }
 
+  /// Starts the phone's agent host again (the row's own Resume act).
+  Future<void> _resume() async {
+    try {
+      await _agents.resumeAgentHost();
+    } catch (error) {
+      _fail(error);
+    }
+  }
+
   /// Asks first, then runs the agent's own logout. Conversations are not
   /// touched. The status check, not the logout's exit code, decides whether
   /// the agent is signed out: if it cannot confirm that, the sheet says so
@@ -744,8 +753,18 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
             accounts.agentAccount(id)?.state == AgentAuthProbeState.signedIn &&
             accounts.canSignOutAgent(id));
 
+    // A stopped agent (its row offers only Resume) still opens this page so
+    // Sign out and Remove stay reachable; Resume is its one main act.
+    final stopped = _row(id)?.fixAction == PhoneAgentFixAction.resume;
+
     KitAction? primary;
-    if (signedIn && !limit) {
+    if (stopped) {
+      primary = KitAction(
+        key: const ValueKey('agents-resume'),
+        label: l10n.agentsResumeAction(name),
+        onPressed: _signingOut ? null : () => unawaited(_resume()),
+      );
+    } else if (signedIn && !limit) {
       primary = KitAction(
         key: const ValueKey('agents-sign-in-done'),
         label: l10n.agentsSignInDone(name),
@@ -760,7 +779,9 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     }
 
     final String body;
-    if (limit) {
+    if (stopped) {
+      body = l10n.agentsStateStopped;
+    } else if (limit) {
       body = l10n.agentsSignInLimit(name);
     } else if (signedIn) {
       body = l10n.agentsSignedInBody(name);

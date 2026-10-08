@@ -472,6 +472,72 @@ void main() {
     });
   });
 
+  group('a row that only offers Resume still opens the sheet', () {
+    FakeRemovableAgentsSource stopped(String id) {
+      final agents = _agents(ids: [id])..signOutCapable.add(id);
+      // Stopped in the background: the row's one act is Resume, the last
+      // sign-in answer is kept.
+      agents.rows = [agentRowFor(id, FakeAgentStage.stopped)];
+      return agents;
+    }
+
+    testWidgets('tapping the row opens the sheet; the chip still resumes', (
+      tester,
+    ) async {
+      final agents = stopped('codex');
+      await _pump(tester, agents);
+      final chip = find.byKey(const ValueKey('agents-fix-codex'));
+      expect(
+        find.descendant(of: chip, matching: find.text('Resume')),
+        findsOneWidget,
+      );
+      // The chip's own tap resumes and opens nothing.
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      expect(agents.calls, contains('resume'));
+      expect(find.byKey(const ValueKey('agents-sheet')), findsNothing);
+      // The row body opens the sheet.
+      await _open(tester, 'codex');
+      expect(find.byKey(const ValueKey('agents-sheet')), findsOneWidget);
+      expect(find.text('Stopped in the background'), findsWidgets);
+      expect(_remove, findsOneWidget);
+    });
+
+    testWidgets('the sheet resumes, and offers no Use while stopped', (
+      tester,
+    ) async {
+      final agents = stopped('codex');
+      await _pump(tester, agents);
+      await _open(tester, 'codex');
+      expect(find.byKey(const ValueKey('agents-sign-in-done')), findsNothing);
+      expect(find.text('Resume ${_n('Codex')}'), findsOneWidget);
+      agents.calls.clear();
+      await tester.tap(find.byKey(const ValueKey('agents-resume')));
+      await tester.pumpAndSettle();
+      expect(agents.calls, contains('resume'));
+    });
+
+    testWidgets('Sign out stays reachable for a stopped Claude Code', (
+      tester,
+    ) async {
+      final agents = stopped('claude');
+      await _pump(tester, agents);
+      await _open(tester, 'claude');
+      expect(find.byKey(const ValueKey('agents-sign-out')), findsOneWidget);
+      expect(_remove, findsNothing);
+    });
+
+    testWidgets('a stopped agent can still be removed', (tester) async {
+      final agents = stopped('codex');
+      await _pump(tester, agents);
+      await _open(tester, 'codex');
+      await _askAndConfirm(tester);
+      await tester.pumpAndSettle();
+      expect(agents.calls, contains('remove:codex'));
+      expect(find.textContaining('removed. Freed'), findsOneWidget);
+    });
+  });
+
   group('the check step', () {
     testWidgets('a failed phone check can still remove the agent', (
       tester,
