@@ -79,13 +79,14 @@ def wait_terminal(max_seconds=150, ignore_job_id=None):
    emit('native-terminal',state=j['state'],component=c);return j,c
   time.sleep(.4)
  raise RuntimeError('Target install exceeded bounded wait')
-def run(agent_id, catalog):
+def run(agent_id, catalog, slow_download=False):
  global AGENT, C, NAME, EXE, PIN, BASE, records
  AGENT = agent_id
  C = catalog[AGENT]
  NAME, EXE, PIN = C['name'], C['executable'], C['version']
  BASE = '/home/oc/.local/share/oc-agents/' + AGENT
  records = []
+ network_restore=None
  try:
   p.require_idle_setup()
   meta=d.adb('shell','dumpsys','package',d.PKG)
@@ -105,6 +106,16 @@ def run(agent_id, catalog):
    emit('manual-preclean',**inventory(True))
    d.adb('shell','input','keyevent','4');d.launch_agents();time.sleep(1)
   emit('space-before-cancel',availableBytes=space())
+  if slow_download:
+   status=d.adb('emu','network','status')
+   download=re.search(r'download speed:\s*([0-9.]+)\s*bits/s',status)
+   upload=re.search(r'upload speed:\s*([0-9.]+)\s*bits/s',status)
+   if not download or not upload or float(download[1])!=0 or float(upload[1])!=0:
+    raise RuntimeError('Network rates are not the expected unlimited baseline; unchanged')
+   network_restore='full'
+   if 'OK' not in d.adb('emu','network','speed','1024'):
+    raise RuntimeError('Network speed simulation failed')
+   emit('network-download-limit',kilobitsPerSecond=1024,originalUploadBits=0,originalDownloadBits=0)
   previous_job=p.setup()['jobId']
   require_headroom()
   d.tap('Install '+NAME);d.tap('Install '+NAME);emit('install-dispatched')
@@ -132,6 +143,11 @@ def run(agent_id, catalog):
    emit('cancel-window-missed');j,c=wait_terminal(ignore_job_id=previous_job)
    # Still record the real first installation; retry follows scoped cleanup.
    close_sheet();emit('manual-reset-after-missed-window',**inventory(True));d.adb('shell','input','keyevent','4');d.launch_agents()
+  if network_restore:
+   if 'OK' not in d.adb('emu','network','speed',network_restore):
+    raise RuntimeError('Network speed restoration failed')
+   network_restore=None
+   emit('network-restored-before-retry',unlimited=True)
   close_sheet()
   # Interrupted setup may remain a sheet; enter the target's setup frame again.
   ns=d.ui(); labels=[d.text(n) for n in ns]
@@ -198,6 +214,9 @@ def run(agent_id, catalog):
  except Exception as e:
   emit('error',code=type(e).__name__);raise
  finally:
+  if network_restore:
+   if 'OK' not in d.adb('emu','network','speed',network_restore):raise RuntimeError('Network restoration failed')
+   emit('network-restored-after-error',unlimited=True)
   try:
    # Never reinstall/restart while setup is active or unknown.
    final_meta=d.adb('shell','dumpsys','package',d.PKG)

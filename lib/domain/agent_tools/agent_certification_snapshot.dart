@@ -440,15 +440,15 @@ const agentCertificationBundledJson = r'''{
    "cells": {
     "install": {
      "state": "pass",
-     "evidence": "#95 run, APK 2187"
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#fx"
     },
     "version": {
-     "state": "untested",
-     "evidence": null
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#fx"
     },
     "signedOut": {
      "state": "pass",
-     "evidence": "#95 run, APK 2187"
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#fx"
     },
     "signIn": {
      "state": "partial",
@@ -492,7 +492,96 @@ const agentCertificationBundledJson = r'''{
     }
    },
    "agentVersion": "0.0.12",
-   "helperVersion": "0.9.2"
+   "helperVersion": "0.9.2",
+   "architecture": "x64",
+   "installCertification": {
+    "scope": "App installation on x64 emulator; signed-out, no account qualification",
+    "runID": "fq-install-fx-2196-20261008",
+    "device": "emulator-5554",
+    "appBuild": 2196,
+    "sourceRevision": "d777082c37d41a16d92634c2f8f2360475247249",
+    "architecture": "x64",
+    "expectedVersion": "0.0.12",
+    "observedVersion": "0.0.12",
+    "helperVersion": "0.9.2",
+    "evidence": "docs/qa/FQ-install-2026-10-08/README.md#fx",
+    "results": {
+     "install": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "installedViaApp": true,
+       "checksumVerified": true
+      }
+     },
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true
+      }
+     },
+     "signedOut": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "namedSignedOut": true
+      }
+     },
+     "phoneCheck": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "completed": true
+      }
+     },
+     "launchNoAccount": {
+      "state": "partial",
+      "code": "cli_only_app_route_unavailable",
+      "facts": {
+       "asserted": false,
+       "noHang": true,
+       "emptyHome": true,
+       "sentLogin": false,
+       "sentPrompt": false,
+       "noOrphans": true
+      }
+     },
+     "cancelRetry": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "cancelObserved": true,
+       "retryCompleted": true
+      }
+     },
+     "lowStorage": {
+      "state": "partial",
+      "code": "policy_harness_only",
+      "facts": {
+       "asserted": false,
+       "guardPolicyVerified": true,
+       "appThresholdOverride": false,
+       "deviceFilled": false
+      }
+     },
+     "uninstall": {
+      "state": "partial",
+      "code": "no_app_removal_path",
+      "facts": {
+       "asserted": false,
+       "removedViaApp": false,
+       "bytesFreed": 11952128,
+       "leftoversRemoved": true,
+       "noOrphans": true
+      }
+     }
+    }
+   }
   },
   {
    "id": "codex",

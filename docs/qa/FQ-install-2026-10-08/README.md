@@ -15,7 +15,7 @@ Each device session uses `/home/eslam/Storage/tmp/oc-emulator.lock`.
 
 Individual-agent removal has no public API or UI action. Cleanup certification
 will distinguish bounded manual cleanup from an unavailable app uninstall path.
-Only Claude and fx have supported auth probes; unsupported probes cannot qualify
+Only Claude and fx have supported production auth-probe scripts; unsupported probes cannot qualify
 signed-out cells. Phone checks cover pinned installation, shared workspace and
 Paseo hello, rather than target-agent inference.
 
@@ -53,8 +53,13 @@ These prove the policy, rather than an app installation with injected low space.
 There is no individual-agent removal action. Each target's owned installation,
 launch link, staging files and lock are manually removed only after setup is
 terminal and no exact target PIDs remain. Shared Node/Paseo, Claude, account
-homes and conversations remain in place. This is cleanup proof; uninstall stays
+homes, cached phone-gate metadata and conversations remain in place. This is cleanup proof; uninstall stays
 partial until the product has a removal path.
+
+Auth observations below execute the exact production `AgentPhoneScripts.authProbe`
+as Ubuntu UID1000 in the matching saved phone-owner profile HOME; only state/error
+are projected. They do not qualify the private MethodChannel bridge or a sign-in
+journey. The UI's “Sign in needed” line alone does not prove a known auth state.
 
 Account-free CLI probes use an isolated empty HOME and authored clean environment,
 never authenticate, log in or send prompts. Raw stdout/stderr stay private and
@@ -73,8 +78,8 @@ On APK2196, app installation and fresh public phone check passed; the catalog
 receipt and CLI both reported **0.160.0**. Free space before install was
 1,884,884,992 bytes. Cancel at 4,288,512 / 109,304,578 download bytes produced a
 cancelled native job; staging/lock vanished, leaving only an empty target parent.
-A distinct retry job completed. The app auth probe returned `probeUnsupported`,
-so the signed-out app cell fails rather than inheriting a guess from the UI's
+A distinct retry job completed. The production auth-probe script returned `probeUnsupported`,
+so the signed-out cell fails rather than inheriting a guess from the UI's
 “Sign in needed” line. Empty-home app-server initialize and account/read returned
 signed out, requires sign-in, in 2.63 s; no prompt/login or orphan process.
 App launch qualification remains partial because the app cannot route this
@@ -98,7 +103,7 @@ The pinned receipt/link and CLI version matched. Free space before installation
 was 1,885,786,112 bytes. Cancellation at 10,784,768 / 20,787,241 pinned download
 bytes stopped the job and removed stage/lock; native total was temporarily zero
 for the chunked response, so the catalog's known length bounds this observation.
-A distinct retry completed. App auth returned `probeUnsupported`; its signed-out
+A distinct retry completed. The production auth-probe script returned `probeUnsupported`; its signed-out
 cell fails. Empty-home ACP initialize succeeded and session/new returned
 `authentication_required` (-32000) in 2.28 s, with no login, prompt or orphan PID.
 Full app launch remains partial. Manual cleanup reclaimed **99,860,480 bytes**;
@@ -117,7 +122,7 @@ Qwen Code **0.24.7** installed through the app. Receipt/link, CLI version and
 fresh public phone check passed. Before install, free space was 1,856,380,928
 bytes. Cancel at 7,647,232 / 31,240,308 catalog download bytes (chunked native
 total temporarily zero) stopped the job; staging/lock disappeared. A distinct
-retry completed. The auth bridge returned `probeUnsupported`. Empty-home ACP
+retry completed. The production auth-probe script returned `probeUnsupported`. Empty-home ACP
 initialize succeeded, and session/new returned authentication-required (-32000)
 in 4.60 s; no prompt, login or orphan process. The app launch cell remains
 partial. Manual cleanup reclaimed **112,664,576 bytes**, with no owned target
@@ -135,7 +140,7 @@ fresh phone check; it was a navigation issue, not an install failure.
 Goose **1.53.0** installed via the app and passed exact receipt/link/CLI version
 and a fresh public phone check. Free space before install was 1,919,569,920 bytes.
 Cancel at 5,926,912 / 94,629,008 download bytes stopped the job; a distinct retry
-completed. Stage/lock cleanup passed. The app auth probe returned
+completed. Stage/lock cleanup passed. The production auth-probe script returned
 `probeUnsupported`. Empty-home ACP initialize succeeded, but session/new
 returned an internal RPC error (-32603) in 0.22 s. This is bounded rejection,
 not proven signed-out or authenticated operation; raw technical output was not
@@ -155,7 +160,7 @@ Oh My Pi: [device observations](omp-acp-device.json),
 The app installed **18.5.1**; receipt/link, CLI version and fresh public phone
 check passed. Free space before install was 1,825,345,536 bytes. Cancel at
 10,485,760 / 280,536,544 download bytes stopped the job and cleaned stage/lock.
-A distinct retry completed. App auth returned `probeUnsupported`. Empty-home
+A distinct retry completed. The production auth-probe script returned `probeUnsupported`. Empty-home
 ACP initialized and created a session without a prompt in 10.53 s; this does
 not prove inference or signed-out status. No login, prompt or orphan PID.
 App launch qualification remains partial. Scoped cleanup increased free space
@@ -164,3 +169,62 @@ App uninstall and injected app low-space cases retain the shared limitations.
 The earlier explicit check missed an oversized merged control, so the final run
 was repeated with the corrected action bounds and all public check summaries
 completed before cleanup.
+
+
+## fx
+
+[Device observations](fx-device.json), [validated report](fx-report.json),
+[cancel screenshot](fx-cancelled.jpg), [phone check](fx-after-install-check.jpg),
+[after cleanup](fx-after-cleanup.jpg).
+
+The app installed **0.0.12**; receipt/link, CLI version and fresh public phone
+check passed. Free space before install was 1,901,670,400 bytes. Its supported
+production auth-probe script returned named `signedOut` in the saved app-owner
+profile context. Empty-home ACP initialize returned authentication-required
+(-32600) in 0.14 s; no login, prompt or orphan PID. This is not sign-in or bridge
+qualification. Full app conversation launch remains partial.
+
+An unlimited-speed pilot completed before the cancel tap. The final cancellation
+case required the observed unlimited network baseline, then temporarily limited
+the emulator to 1024 kbps under its lock. Cancel at **4,096 / 5,482,652 bytes**
+stopped the job and removed stage/lock. Unlimited rates were restored before
+the distinct successful retry, with error-path restoration too. Latency was
+unchanged; no storage was filled. The emulator version was 36.2.12.0. Scoped
+cleanup increased free space by **11,952,128 bytes**, with no target payload,
+link, stage, lock or PID. App uninstall and injected app low-space limits remain.
+
+## Batch outcome
+
+All six targets pass actual app install, exact pinned version, fresh public
+phone check and observed partial-download cancel/retry. The signed-out script
+cell passes for fx; the other five fail with explicit `probeUnsupported`.
+Account-free protocol starts were bounded without login or prompt, but full
+app launch remains partial. Uninstall stays partial because the app has no
+removal action; measured scoped payload cleanup passed. Low-space stays partial
+because only the production policy harness can safely inject the threshold.
+No authenticated/model/chat capability was enabled. Claude's reviewed runtime
+cells are preserved; both arm64 and x64 capability tests keep the six targets
+closed. Source fixes were tested with failing-before controls; no candidate APK
+was built, so their device activation awaits the coordinator's integration.
+
+
+## Final verification and device restoration
+
+[Focused integration tests](final-focused-tests.log): **110 passed** across
+`agent_certification_test.dart`, `phone_agents_controller_test.dart`,
+`agents_settings_placement_test.dart` and `file_size_ratchet_test.dart`, serially
+through machine_lock. [Final analyzer](final-analyzer.log): clean (53.0 s).
+[Generator tests](generator-final-tests.log): 14 passed. All six report projections
+and the bundled snapshot pass their generator `--check` modes. Pinned Dart
+language-version 3.10 formatting and Python syntax checks passed. No full suite
+was run. Claude/OpenCode runtime rows are unchanged from branch base 75ac5ae7.
+
+[Final device state](final-device-state.json) and [Agents screenshot](final-agents.jpg)
+confirm installed APK2196 equals the original SHA-256
+`78074bc8c8f3244b252ae11f23cb3dc4d748b989c95c33e25111f6c16716af56`.
+All six owned target inventories have zero allocated bytes, no payload/link/stage/
+lock and no target PID. Unlimited upload/download rates are restored, available
+space is 1,901,592,576 bytes, and Claude remains Ready. Its screenshot still
+shows “Can't reopen old conversations”; this batch does not claim a deployed
+resume-capability fix. No app uninstall, data clearing, account change, signing
+change, push or publication occurred.

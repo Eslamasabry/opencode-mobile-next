@@ -36,9 +36,12 @@ def catalog():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('agent', choices=IDS)
+    parser.add_argument('--slow-download', action='store_true', help='For fx only: temporarily limit the cancellation download to 1024 kbps')
     parser.add_argument('--wait', action='store_true', help='Queue behind another lane in the shared emulator lock')
     parser.add_argument('--output', type=Path, default=REPO / 'docs/qa/FQ-install-2026-10-08')
     args = parser.parse_args()
+    if args.slow_download and args.agent != 'fx':
+        parser.error('--slow-download is reserved for the tiny fx cancellation case')
     metadata = catalog()
     # fcntl is the same Linux flock API as the coordinator's shell command.
     # Default refuses contention; --wait explicitly queues without using the device.
@@ -54,7 +57,7 @@ def main():
             if device.adb('shell', 'getprop', 'ro.product.cpu.abi').strip() != 'x86_64':
                 raise RuntimeError('This pinned catalog probe requires the x64 dev emulator')
             probe.require_idle_setup()
-            agent.run(args.agent, metadata)
+            agent.run(args.agent, metadata, slow_download=args.slow_download)
         except Exception as error:
             # Driver/bridge exception messages may contain private paths/output.
             raise SystemExit('Certification run stopped: ' + type(error).__name__)

@@ -13,7 +13,7 @@ Machine-readable copy: [agent-certification-matrix.json](agent-certification-mat
 | Claude Code | 2.1.283 | Paseo native | ✅ | ✅ | · | · | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | ✅ |
 | OpenCode 1 | 1.18.32 | OpenCode 1 server | · | · | · | · | · | ✅ | · | · | · | · | · | · | ✅ |
 | OpenCode 2 |  | OpenCode 2 server | · | · | · | · | · | · | · | ✅ | · | · | · | · | ⛔ |
-| fx | 0.0.12 | ACP via Paseo | ✅ | · | ✅ | 🟡 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
+| fx | 0.0.12 | ACP via Paseo | ✅ | ✅ | ✅ | 🟡 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
 | Codex | 0.160.0 | Paseo native | ✅ | ✅ | ❌ | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
 | Gemini CLI | 0.62.0 | ACP via Paseo | ✅ | ✅ | ❌ | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
 | Qwen Code | 0.24.7 | ACP via Paseo | ✅ | ✅ | ❌ | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | — |
@@ -63,8 +63,9 @@ Machine-readable copy: [agent-certification-matrix.json](agent-certification-mat
 
 **fx**
 
-- install: pass — #95 run, APK 2187
-- signedOut: pass — #95 run, APK 2187
+- install: pass — docs/qa/FQ-install-2026-10-08/README.md#fx
+- version: pass — docs/qa/FQ-install-2026-10-08/README.md#fx
+- signedOut: pass — docs/qa/FQ-install-2026-10-08/README.md#fx
 - signIn: partial — reaches the Vercel device page; account needed (OW1)
 - cards: n/a — no cards adapter yet
 
@@ -158,11 +159,23 @@ These cells qualify installation only. Phone check means the check completed; a 
 
 | Agent | Expected | Observed | Build | install | version | signedOut | phoneCheck | launchNoAccount | cancelRetry | lowStorage | uninstall |
 |---|---|---|---|---|---|---|---|---|---|---|---|
+| fx | 0.0.12 | 0.0.12 | 2196 | ✅ | ✅ | ✅ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
 | Codex | 0.160.0 | 0.160.0 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
 | Gemini CLI | 0.62.0 | 0.62.0 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
 | Qwen Code | 0.24.7 | 0.24.7 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
 | Goose | 1.53.0 | 1.53.0 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
 | Oh My Pi | 18.5.1 | 18.5.1 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
+
+**fx** — fq-install-fx-2196-20261008; docs/qa/FQ-install-2026-10-08/README.md#fx
+
+- install: pass — `verified`; facts `{"asserted":true,"checksumVerified":true,"installedViaApp":true}`
+- version: pass — `verified`; facts `{"asserted":true}`
+- signedOut: pass — `verified`; facts `{"asserted":true,"namedSignedOut":true}`
+- phoneCheck: pass — `verified`; facts `{"asserted":true,"completed":true}`
+- launchNoAccount: partial — `cli_only_app_route_unavailable`; facts `{"asserted":false,"emptyHome":true,"noHang":true,"noOrphans":true,"sentLogin":false,"sentPrompt":false}`
+- cancelRetry: pass — `verified`; facts `{"asserted":true,"cancelObserved":true,"retryCompleted":true}`
+- lowStorage: partial — `policy_harness_only`; facts `{"appThresholdOverride":false,"asserted":false,"deviceFilled":false,"guardPolicyVerified":true}`
+- uninstall: partial — `no_app_removal_path`; facts `{"asserted":false,"bytesFreed":11952128,"leftoversRemoved":true,"noOrphans":true,"removedViaApp":false}`
 
 **Codex** — fq-install-codex-2196-20261008; docs/qa/FQ-install-2026-10-08/README.md#codex
 

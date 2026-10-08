@@ -67,7 +67,11 @@ before committing them.
   target captures a screenshot and stops; do not certify from the driver alone.
 - Tiny fx downloads may complete before the Cancel tap. The driver records
   `cancel-window-missed` and resets the target before retrying; this is **not**
-  a cancellation pass. No emulator network throttling is implemented.
+  a cancellation pass. For that case only, rerun with `fx --wait --slow-download`. It requires the
+  observed unlimited network baseline, limits the cancellation download to
+  1024 kbps, and restores unlimited speed before retry and in error cleanup.
+  Latency is untouched. This uses the [official emulator console](https://developer.android.com/studio/run/emulator-console)
+  on the shared lock; no account or disk-filling simulation is involved.
 - Native download totals can briefly be zero for chunked responses. A cancel
   attempt requires `0 < done < (reported total or pinned catalog bytes)` and
   records the catalog fallback.
