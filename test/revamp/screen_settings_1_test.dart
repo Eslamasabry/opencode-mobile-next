@@ -42,11 +42,23 @@ Future<ConnectionController> _notifyController({int servers = 0}) async {
   final live = BackgroundLiveController(
     preferences: preferences,
     liveStatusDebounce: Duration.zero,
-    invoke: (method, [arguments]) async => {
-      'enabled': method != 'disable',
-      'active': method != 'disable',
-      'notificationGranted': true,
-      'batteryOptimizationIgnored': false,
+    invoke: (method, [arguments]) async {
+      if (method == 'getBackgroundPause') {
+        return const {
+          'supported': true,
+          'active': false,
+          'paused': false,
+          'reason': 'none',
+          'at': null,
+          'canResume': false,
+        };
+      }
+      return {
+        'enabled': method != 'disable',
+        'active': method != 'disable',
+        'notificationGranted': true,
+        'batteryOptimizationIgnored': false,
+      };
     },
   );
   await live.restore();

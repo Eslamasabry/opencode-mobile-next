@@ -1,11 +1,13 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/models.dart';
 import '../platform/platform_capabilities.dart';
 import '../domain/session_title_text.dart';
+import '../l10n/app_localizations.dart';
 
 /// Persists a compact recent-sessions snapshot for the Android home-screen
 /// widget and asks native to redraw it.
@@ -62,15 +64,21 @@ class WidgetSessionSnapshot {
     required Set<String> busySessions,
     required bool connected,
     String profileID = '',
+    String? untitledLabel,
   }) async {
     if (!_isAndroid) return;
+    // The widget has no widget tree: its caller says the fallback in the
+    // person's language; English only where nobody did.
+    final untitled =
+        untitledLabel ??
+        lookupAppLocalizations(const Locale('en')).launchUiPinnedUntitled;
     final entries = [
       for (final session in sessions.take(maxSessions))
         {
           'id': session.id,
           'title': displaySessionTitleText(session.title).isNotEmpty
               ? displaySessionTitleText(session.title)
-              : 'Untitled conversation',
+              : untitled,
           'busy': busySessions.contains(session.id),
           'updatedAt': session.time?.updated ?? session.time?.created ?? 0,
         },

@@ -28207,4 +28207,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String diagnosticsExitYesterday(String time) {
     return 'أمس $time';
   }
+
+  @override
+  String get liveToolCommand => 'جارٍ تشغيل أمر…';
+
+  @override
+  String get liveToolEdit => 'جارٍ تعديل الملفات…';
+
+  @override
+  String get liveToolRead => 'جارٍ قراءة الملفات…';
+
+  @override
+  String get liveToolSearch => 'جارٍ البحث في الملفات…';
+
+  @override
+  String get liveToolWeb => 'جارٍ تصفح الويب…';
+
+  @override
+  String get liveToolSubagent => 'جارٍ تشغيل وكيل فرعي…';
+
+  @override
+  String get liveToolPlan => 'جارٍ التخطيط…';
+
+  @override
+  String get liveToolWorking => 'جارٍ العمل…';
+
+  @override
+  String get liveToolCard => 'جارٍ عرض بطاقة…';
+
+  @override
+  String get liveToolBackgroundTask => 'جارٍ فحص مهمة في الخلفية…';
+
+  @override
+  String liveToolOther(String tool) {
+    return 'جارٍ تشغيل $tool…';
+  }
 }

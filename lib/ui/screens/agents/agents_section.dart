@@ -110,10 +110,14 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
   }
 
   /// A signed-in agent opens its sheet: who it is signed in as, Sign in
-  /// again, Sign out and Remove. That includes one at its plan limit.
+  /// again, Sign out and Remove. That includes one at its plan limit, and one
+  /// that only offers Resume (stopped in the background): the chip resumes,
+  /// the row opens the sheet.
   bool _opensSheet(AgentRow row) =>
-      row.fixAction == null &&
-      (row.chatSelectable || row.status == PhoneAgentStatus.limitReached);
+      (row.fixAction == null &&
+          (row.chatSelectable ||
+              row.status == PhoneAgentStatus.limitReached)) ||
+      row.fixAction == PhoneAgentFixAction.resume;
 
   Widget _agentRow(
     BuildContext context,
@@ -142,7 +146,8 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
               key: ValueKey('agents-fix-${row.id}'),
               onPressed: () => unawaited(_fix(row)),
             ),
-      trailing: opens ? const KitChevron() : null,
+      // A row with a chip has no trailing slot for a chevron.
+      trailing: opens && row.fixAction == null ? const KitChevron() : null,
       onTap: opens
           ? () => unawaited(
               showAgentSheet(

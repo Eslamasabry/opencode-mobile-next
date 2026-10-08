@@ -44310,6 +44310,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yesterday {time}'**
   String diagnosticsExitYesterday(String time);
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Running a command…'**
+  String get liveToolCommand;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Editing files…'**
+  String get liveToolEdit;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Reading files…'**
+  String get liveToolRead;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Searching files…'**
+  String get liveToolSearch;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Browsing the web…'**
+  String get liveToolWeb;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Running a subagent…'**
+  String get liveToolSubagent;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Planning…'**
+  String get liveToolPlan;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Working…'**
+  String get liveToolWorking;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Showing a card…'**
+  String get liveToolCard;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Checking a background task…'**
+  String get liveToolBackgroundTask;
+
+  /// Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail
+  ///
+  /// In en, this message translates to:
+  /// **'Running {tool}…'**
+  String liveToolOther(String tool);
 }
 
 class _AppLocalizationsDelegate

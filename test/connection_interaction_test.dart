@@ -471,6 +471,17 @@ void main() {
       final live = BackgroundLiveController(
         preferences: prefs,
         invoke: (method, [arguments]) async {
+          if (method == 'getBackgroundPause') {
+            return const {
+              'supported': true,
+              'active': false,
+              'paused': false,
+              'reason': 'none',
+              'at': null,
+              'canResume': false,
+            };
+          }
+
           if (method == 'showCodingAlert') return const {'shown': true};
           if (method == 'dismissCodingAlert') return const {'dismissed': true};
           return const {

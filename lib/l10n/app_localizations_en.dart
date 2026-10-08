@@ -28154,4 +28154,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String diagnosticsExitYesterday(String time) {
     return 'Yesterday $time';
   }
+
+  @override
+  String get liveToolCommand => 'Running a command…';
+
+  @override
+  String get liveToolEdit => 'Editing files…';
+
+  @override
+  String get liveToolRead => 'Reading files…';
+
+  @override
+  String get liveToolSearch => 'Searching files…';
+
+  @override
+  String get liveToolWeb => 'Browsing the web…';
+
+  @override
+  String get liveToolSubagent => 'Running a subagent…';
+
+  @override
+  String get liveToolPlan => 'Planning…';
+
+  @override
+  String get liveToolWorking => 'Working…';
+
+  @override
+  String get liveToolCard => 'Showing a card…';
+
+  @override
+  String get liveToolBackgroundTask => 'Checking a background task…';
+
+  @override
+  String liveToolOther(String tool) {
+    return 'Running $tool…';
+  }
 }

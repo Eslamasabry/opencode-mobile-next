@@ -1648,11 +1648,23 @@ void main() {
       final store = ProfileStore(prefs: await SharedPreferences.getInstance());
       final backgroundLive = BackgroundLiveController(
         preferences: store.prefs,
-        invoke: (method, [arguments]) async => const {
-          'enabled': true,
-          'active': true,
-          'notificationGranted': true,
-          'batteryOptimizationIgnored': false,
+        invoke: (method, [arguments]) async {
+          if (method == 'getBackgroundPause') {
+            return const {
+              'supported': true,
+              'active': false,
+              'paused': false,
+              'reason': 'none',
+              'at': null,
+              'canResume': false,
+            };
+          }
+          return const {
+            'enabled': true,
+            'active': true,
+            'notificationGranted': true,
+            'batteryOptimizationIgnored': false,
+          };
         },
       );
       final apis = <_ControlledApi>[];
@@ -1705,11 +1717,23 @@ void main() {
     final store = ProfileStore(prefs: await SharedPreferences.getInstance());
     final backgroundLive = BackgroundLiveController(
       preferences: store.prefs,
-      invoke: (method, [arguments]) async => const {
-        'enabled': true,
-        'active': true,
-        'notificationGranted': true,
-        'batteryOptimizationIgnored': false,
+      invoke: (method, [arguments]) async {
+        if (method == 'getBackgroundPause') {
+          return const {
+            'supported': true,
+            'active': false,
+            'paused': false,
+            'reason': 'none',
+            'at': null,
+            'canResume': false,
+          };
+        }
+        return const {
+          'enabled': true,
+          'active': true,
+          'notificationGranted': true,
+          'batteryOptimizationIgnored': false,
+        };
       },
     );
     final apis = <_ControlledApi>[];
@@ -1759,11 +1783,23 @@ void main() {
     final store = ProfileStore(prefs: await SharedPreferences.getInstance());
     final backgroundLive = BackgroundLiveController(
       preferences: store.prefs,
-      invoke: (method, [arguments]) async => const {
-        'enabled': true,
-        'active': true,
-        'notificationGranted': true,
-        'batteryOptimizationIgnored': false,
+      invoke: (method, [arguments]) async {
+        if (method == 'getBackgroundPause') {
+          return const {
+            'supported': true,
+            'active': false,
+            'paused': false,
+            'reason': 'none',
+            'at': null,
+            'canResume': false,
+          };
+        }
+        return const {
+          'enabled': true,
+          'active': true,
+          'notificationGranted': true,
+          'batteryOptimizationIgnored': false,
+        };
       },
     );
     final apis = <_ControlledApi>[];
@@ -1815,11 +1851,23 @@ void main() {
     final store = ProfileStore(prefs: await SharedPreferences.getInstance());
     final backgroundLive = BackgroundLiveController(
       preferences: store.prefs,
-      invoke: (method, [arguments]) async => const {
-        'enabled': true,
-        'active': true,
-        'notificationGranted': true,
-        'batteryOptimizationIgnored': false,
+      invoke: (method, [arguments]) async {
+        if (method == 'getBackgroundPause') {
+          return const {
+            'supported': true,
+            'active': false,
+            'paused': false,
+            'reason': 'none',
+            'at': null,
+            'canResume': false,
+          };
+        }
+        return const {
+          'enabled': true,
+          'active': true,
+          'notificationGranted': true,
+          'batteryOptimizationIgnored': false,
+        };
       },
     );
     final apis = <_ControlledApi>[];
@@ -2057,11 +2105,23 @@ void main() {
     final store = ProfileStore(prefs: await SharedPreferences.getInstance());
     final backgroundLive = BackgroundLiveController(
       preferences: store.prefs,
-      invoke: (method, [arguments]) async => const {
-        'enabled': true,
-        'active': true,
-        'notificationGranted': true,
-        'batteryOptimizationIgnored': false,
+      invoke: (method, [arguments]) async {
+        if (method == 'getBackgroundPause') {
+          return const {
+            'supported': true,
+            'active': false,
+            'paused': false,
+            'reason': 'none',
+            'at': null,
+            'canResume': false,
+          };
+        }
+        return const {
+          'enabled': true,
+          'active': true,
+          'notificationGranted': true,
+          'batteryOptimizationIgnored': false,
+        };
       },
     );
     final api = _ControlledApi('remote');

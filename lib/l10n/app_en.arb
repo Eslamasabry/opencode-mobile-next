@@ -33650,5 +33650,54 @@
         "example": "08:37"
       }
     }
+  },
+  "liveToolCommand": "Running a command…",
+  "@liveToolCommand": {
+    "description": "Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail"
+  },
+  "liveToolEdit": "Editing files…",
+  "@liveToolEdit": {
+    "description": "Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail"
+  },
+  "liveToolRead": "Reading files…",
+  "@liveToolRead": {
+    "description": "Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail"
+  },
+  "liveToolSearch": "Searching files…",
+  "@liveToolSearch": {
+    "description": "Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail"
+  },
+  "liveToolWeb": "Browsing the web…",
+  "@liveToolWeb": {
+    "description": "Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail"
+  },
+  "liveToolSubagent": "Running a subagent…",
+  "@liveToolSubagent": {
+    "description": "Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail"
+  },
+  "liveToolPlan": "Planning…",
+  "@liveToolPlan": {
+    "description": "Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail"
+  },
+  "liveToolWorking": "Working…",
+  "@liveToolWorking": {
+    "description": "Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail"
+  },
+  "liveToolCard": "Showing a card…",
+  "@liveToolCard": {
+    "description": "Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail"
+  },
+  "liveToolBackgroundTask": "Checking a background task…",
+  "@liveToolBackgroundTask": {
+    "description": "Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail"
+  },
+  "liveToolOther": "Running {tool}…",
+  "@liveToolOther": {
+    "description": "Ongoing background notification: the one line saying what the running tool is doing (no command, path or query ever travels); sent to Android as the notification's detail",
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -45,11 +45,23 @@ Future<_Controller> _controller({required bool enabled}) async {
   final live = BackgroundLiveController(
     preferences: preferences,
     liveStatusDebounce: Duration.zero,
-    invoke: (method, [arguments]) async => {
-      'enabled': method != 'disable' && (enabled || method == 'enable'),
-      'active': method != 'disable' && (enabled || method == 'enable'),
-      'notificationGranted': true,
-      'batteryOptimizationIgnored': true,
+    invoke: (method, [arguments]) async {
+      if (method == 'getBackgroundPause') {
+        return const {
+          'supported': true,
+          'active': false,
+          'paused': false,
+          'reason': 'none',
+          'at': null,
+          'canResume': false,
+        };
+      }
+      return {
+        'enabled': method != 'disable' && (enabled || method == 'enable'),
+        'active': method != 'disable' && (enabled || method == 'enable'),
+        'notificationGranted': true,
+        'batteryOptimizationIgnored': true,
+      };
     },
   );
   await live.restore();
