@@ -334,9 +334,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // A switch between this phone's OpenCode versions names where it goes,
     // as progress, never the version being left as offline.
     final switchingTo = phoneRuntimeSwitchTarget(conn, _starter);
+    final phase = conn.connectionStatus.phase;
     final (statusWord, statusTone) = switchingTo != null
         ? (l10n.shellServerSwitching, AppStatusTone.progress)
-        : _serverStatus(conn.connectionStatus.phase, l10n);
+        : _serverStatus(phase, l10n);
+    // One indicator (owner, 2026-10-08): while the pill already shows
+    // progress (a switch, connecting, reconnecting), the status line under
+    // it would say the same thing with a second spinner. The line comes back
+    // for what needs the person: not answering, a refused password.
+    final pillSaysConnection =
+        switchingTo != null ||
+        phase == ConnectionStatusPhase.connecting ||
+        phase == ConnectionStatusPhase.reconnecting;
     final controls = KitShellControls(
       server: _serverName(conn, switchingTo: switchingTo),
       serverStatus: statusWord,
@@ -361,6 +370,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       // Desktop.png), never a title repeating the sidebar (slice-R14).
       topBar: sidebar ? null : KitTopBar.shell(controls: controls),
       page: sidebar,
+      bodySays: pillSaysConnection
+          ? const {KitStatusKind.connection}
+          : const <KitStatusKind>{},
       status: _backExitHint == null
           ? null
           : KitStatus(

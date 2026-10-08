@@ -150,8 +150,10 @@ class RuntimeSwitchShell {
   final BuiltinServerStarter starter;
   final SwitchController controller;
 
+  /// The app's navigator, for pushing a page without the shell's pill.
+  final navigator = GlobalKey<NavigatorState>();
+
   Widget app({required ThemeData theme, Key? boundaryKey}) {
-    final navigator = GlobalKey<NavigatorState>();
     return RepaintBoundary(
       key: boundaryKey,
       child: ProviderScope(
@@ -165,11 +167,13 @@ class RuntimeSwitchShell {
           theme: theme,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: AppConnectionStatusScope(
+          // Above the navigator, as main.dart hosts it: every page reads it.
+          builder: (context, child) => AppConnectionStatusScope(
             controller: controller,
             navigatorKey: navigator,
-            child: const HomeScreen(),
+            child: child!,
           ),
+          home: const HomeScreen(),
         ),
       ),
     );
