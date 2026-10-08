@@ -556,7 +556,7 @@ place rather than funneled, because funneling them needs real redesign:
 - **SSE construction stays on the v1 factory seam.** `ConnectionController`
   still builds `EventStream` (lib/api/sse.dart) through its injected
   `EventStreamFactory`, which is typed on `OpenCodeApi` — that typedef is the
-  test-injection seam (test/connection_sse_test.dart and friends fake it).
+  test-injection seam (test/connection_sse_*_test.dart and friends fake it).
   The interface funnel exists — `EventGateway.openEventChannel` /
   `openGlobalEventChannel` on `ServerGateway` return a `LiveEventChannel` of
   parsed `EventEnvelope` objects — so a v2 gateway can supply its own channel,

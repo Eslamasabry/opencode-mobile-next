@@ -95,7 +95,7 @@ a hostile server on a shared network can answer with anything.
     in `test/kit_ratchet_baseline.json`, key `G2`, `launchUrl(`).
   - Oversized or truncated SSE frames are dropped without corrupting the next
     ones (`lib/api/sse.dart`, `lib/api2/sse2.dart`; tests in
-    `test/api2_sse_test.dart`, `test/connection_sse_test.dart`).
+    `test/api2_sse_test.dart`, `test/connection_sse_*_test.dart`).
   - Credentials the server returns are masked before display, copy or logs
     (`lib/ui/kit/kit_redact.dart`, see scenario 8).
   - Redirects are not followed on clients that carry credentials
