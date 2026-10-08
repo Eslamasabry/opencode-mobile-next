@@ -61,6 +61,9 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
   // its signed-in layout until it ends, so a failed attempt never flashes the
   // sign-in layout.
   bool _signingOut = false;
+  // The account the status check named before the sign-out started; the
+  // frame keeps showing it while the logout runs.
+  AgentAuthProbeResult? _heldAccount;
   Timer? _closeSoon;
 
   PhoneAgentsSource get _agents => ref.read(chatsHostProvider).agents!;
@@ -291,6 +294,10 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
       title: l10n.agentsSignOutTitle(name),
       body: l10n.agentsSignOutBody(name),
       confirmLabel: l10n.agentsSignOutAction(name),
+      // Signing out removes the agent's login from this phone: the danger
+      // fill, with a neutral Cancel.
+      kind: KitConfirmKind.destructive,
+      icon: AppIconography.personRemove,
       consequenceItems: [
         KitConsequence(
           l10n.agentsSignOutKept(name),
@@ -302,6 +309,7 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     );
     if (!confirmed || !mounted) return;
     setState(() {
+      _heldAccount = accounts.agentAccount(id);
       _signingOut = true;
       _notice = null;
     });
@@ -574,6 +582,12 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     // Sign out is offered only where the agent's own logout is qualified and
     // its status check confirmed the sign-in.
     final accounts = _accounts;
+    // Who the agent is signed in as, when its status check said.
+    final account = _signingOut ? _heldAccount : accounts?.agentAccount(id);
+    final accountName =
+        signedIn && account?.state == AgentAuthProbeState.signedIn
+        ? account?.accountDisplayName?.trim()
+        : null;
     final canSignOut =
         _signingOut ||
         (phase == AgentSignInPhase.signedIn &&
@@ -646,6 +660,14 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
             key: const ValueKey('agents-sign-in-words'),
             tone: KitTextTone.secondary,
           ),
+          if (accountName != null && accountName.isNotEmpty)
+            KitText(
+              agentSignedInLine(l10n, account!),
+              key: const ValueKey('agents-sign-in-account'),
+              tone: KitTextTone.secondary,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           _noticeLine(context),
         ],
       ),

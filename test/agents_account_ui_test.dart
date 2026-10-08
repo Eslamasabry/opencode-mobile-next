@@ -7,6 +7,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/local_terminal.dart';
 import 'package:opencode_mobile/domain/agent_auth_probe.dart';
@@ -223,6 +224,23 @@ void main() {
       expect(find.text('Sign out of ${_n('Claude Code')}'), findsOneWidget);
     });
 
+    testWidgets('the sign-out question uses the danger fill and a neutral '
+        'Cancel', (tester) async {
+      await _pump(tester, _claude());
+      await _openClaudeSheet(tester);
+      await tester.tap(_signOut);
+      await tester.pumpAndSettle();
+      final confirm = tester.widget<KitButton>(
+        find.byKey(const ValueKey('agents-sign-out-confirm')),
+      );
+      final cancel = tester.widget<KitButton>(
+        find.byKey(const ValueKey('kit-confirm-cancel')),
+      );
+      expect(confirm.destructive, isTrue);
+      expect(cancel.destructive, isFalse);
+      expect(find.text('Cancel'), findsOneWidget);
+    });
+
     testWidgets('it asks first: names the agent, says conversations stay, '
         'and Cancel changes nothing', (tester) async {
       final agents = _claude();
@@ -422,6 +440,73 @@ void main() {
         findsOneWidget,
       );
       expect(_signOut, findsNothing);
+    });
+  });
+
+  group('the Signed in page names the account', () {
+    final accountLine = find.byKey(const ValueKey('agents-sign-in-account'));
+
+    testWidgets('as its own line under the body, when the check gave one', (
+      tester,
+    ) async {
+      await _pump(tester, _claude(result: _named(_account)));
+      await _openClaudeSheet(tester);
+      expect(
+        find.text('${_n('Claude Code')} is ready for new conversations.'),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: accountLine,
+          matching: find.text('Signed in as ${_n(_account)}'),
+        ),
+        findsOneWidget,
+      );
+      final body = find.byKey(const ValueKey('agents-sign-in-words'));
+      expect(
+        tester.getTopLeft(accountLine).dy,
+        greaterThan(tester.getBottomLeft(body).dy - 1),
+      );
+    });
+
+    testWidgets('without an account the page is unchanged', (tester) async {
+      await _pump(tester, _claude());
+      await _openClaudeSheet(tester);
+      expect(accountLine, findsNothing);
+      expect(
+        find.text('${_n('Claude Code')} is ready for new conversations.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a long name stays on one line and is cut with an ellipsis', (
+      tester,
+    ) async {
+      await _pump(tester, _claude(result: _named('a' * 150)));
+      await _openClaudeSheet(tester);
+      expect(tester.takeException(), isNull);
+      final paragraph = tester.renderObject<RenderParagraph>(
+        find.descendant(of: accountLine, matching: find.byType(RichText)),
+      );
+      expect(paragraph.didExceedMaxLines, isTrue);
+      expect(paragraph.maxLines, 1);
+    });
+
+    testWidgets('it stays while the sign-out runs', (tester) async {
+      final agents = _claude(result: _named(_account))
+        ..signOutGate = Completer<void>();
+      await _pump(tester, agents);
+      await _openClaudeSheet(tester);
+      await tester.tap(_signOut);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('agents-sign-out-confirm')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(accountLine, findsOneWidget);
+      agents.signOutGate!.complete();
+      await tester.pumpAndSettle();
+      // Signed out: no account to name.
+      expect(accountLine, findsNothing);
     });
   });
 
