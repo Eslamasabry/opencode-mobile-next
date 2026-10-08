@@ -1,0 +1,1 @@
+{"fixed_projection": {"ROOTPROC": "readable", "SELFTASK": "readable", "CHILDREN": "unreadable", "EXCEPTION": "State", "METHOD": "m0", "LINE": "21", "STATE": "error", "ERROR": "hostUnavailable"}, "stages": ["launchUnavailable"]}

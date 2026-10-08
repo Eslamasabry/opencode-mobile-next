@@ -1,0 +1,1 @@
+{"app_context": "u:r:untrusted_app:s0:c217,c256,c512,c768", "selinux": "Enforcing", "runcon_available": false, "su_context_flag": false}

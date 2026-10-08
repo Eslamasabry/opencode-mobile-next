@@ -12,9 +12,13 @@ internal class PhoneAgentAuthProcessTree(
     private val signal: (Int, Int) -> Unit,
     private val nano: () -> Long = { System.nanoTime() },
     private val pause: (Long) -> Unit = { Thread.sleep(it) },
+    private val outsideOwners: () -> Set<Pair<Int, String>> = { emptySet() },
 ) {
     private class Entry(val root: Int?, var before: Set<Pair<Int, String>>?) {
         val tokens = mutableMapOf<Int, String>()
+        // Once observed under an exact registered root, an outside child keeps its
+        // birth identity even if the helper exits and the child is reparented.
+        val outside = mutableMapOf<Int, String>()
     }
     private val owned = IdentityHashMap<Process, Entry>()
 
@@ -26,26 +30,46 @@ internal class PhoneAgentAuthProcessTree(
             if (entry.before == null) entry.before = entries.map { it.pid to it.start }.toSet()
             val root = entries.firstOrNull { it.pid == entry.root }
             if (root != null) entry.tokens[root.pid] = root.start
-            collect(entry.tokens, entries)
+            observe(entry, entries)
             root != null
         } catch (_: Exception) { false }
     }
 
     fun capture(process: Process) = synchronized(owned) {
-        val tokens = checkNotNull(owned[process]).tokens
-        check(tokens.isNotEmpty())
-        collect(tokens, inventory())
+        val entry = checkNotNull(owned[process])
+        check(entry.tokens.isNotEmpty())
+        observe(entry, inventory())
     }
 
-    private fun collect(tokens: MutableMap<Int, String>, entries: List<PhoneAgentAuthProcessIdentity>) {
-        var frontier = entries.filter { tokens[it.pid] == it.start }.map { it.pid }.toSet()
+    private fun collect(
+        tokens: MutableMap<Int, String>,
+        entries: List<PhoneAgentAuthProcessIdentity>,
+        excluded: Set<Pair<Int, String>> = emptySet(),
+    ) {
+        var frontier = entries.filter { tokens[it.pid] == it.start && (it.pid to it.start) !in excluded }
+            .map { it.pid }.toSet()
         val visited = tokens.keys.toMutableSet()
         while (frontier.isNotEmpty()) {
-            val children = entries.filter { it.parent in frontier && it.pid !in visited }
+            val children = entries.filter { it.parent in frontier && it.pid !in visited &&
+                (it.pid to it.start) !in excluded }
             children.forEach { tokens[it.pid] = it.start }
             frontier = children.map { it.pid }.toSet()
             visited.addAll(frontier)
         }
+    }
+
+    private fun privateIdentities() = owned.values.flatMap {
+        it.tokens.entries.map { token -> token.key to token.value }
+    }.toSet()
+
+    private fun observe(entry: Entry, entries: List<PhoneAgentAuthProcessIdentity>) {
+        collect(entry.tokens, entries)
+        val capturedPrivate = privateIdentities()
+        val registered = outsideOwners()
+        entry.outside.entries.removeAll { (it.key to it.value) in capturedPrivate }
+        entries.filter { (it.pid to it.start) in registered && (it.pid to it.start) !in capturedPrivate }
+            .forEach { entry.outside[it.pid] = it.start }
+        collect(entry.outside, entries, capturedPrivate)
     }
 
     fun stop(process: Process, budgetNanos: Long = TimeUnit.SECONDS.toNanos(2)): Boolean = synchronized(owned) {
@@ -53,12 +77,12 @@ internal class PhoneAgentAuthProcessTree(
         if (entry.root == null || entry.before == null) return false
         try {
             val deadline = nano() + budgetNanos
-            collect(entry.tokens, inventory())
+            observe(entry, inventory())
             signalOwned(entry.tokens, STOP)
-            collect(entry.tokens, inventory())
+            observe(entry, inventory())
             signalOwned(entry.tokens, KILL)
             while (!drained(entry) && nano() < deadline) {
-                collect(entry.tokens, inventory())
+                observe(entry, inventory())
                 signalOwned(entry.tokens, KILL)
                 pause(POLL_MILLIS)
             }
@@ -80,9 +104,11 @@ internal class PhoneAgentAuthProcessTree(
 
     private fun drained(entry: Entry): Boolean {
         val entries = inventory()
-        val known = owned.values.flatMap { it.tokens.entries.map { token -> token.key to token.value } }.toSet()
+        observe(entry, entries)
+        val known = privateIdentities()
+        val outside = entry.outside.entries.map { it.key to it.value }.toSet()
         val unknown = entries.any { running(it) && (it.pid to it.start) !in checkNotNull(entry.before) &&
-            (it.pid to it.start) !in known }
+            (it.pid to it.start) !in known && (it.pid to it.start) !in outside }
         return live(entry.tokens, entries).isEmpty() && !unknown
     }
 
