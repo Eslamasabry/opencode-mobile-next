@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../diagnostics/app_diagnostics.dart';
+import '../../diagnostics/crash_diagnostics.dart';
 import '../../diagnostics/report_problem.dart';
 import '../../diagnostics/report_problem_startup.dart';
 import '../../feedback/problem_report.dart';
@@ -12,6 +13,7 @@ import '../../state/connection.dart';
 import '../app_theme.dart';
 import '../kit/kit.dart';
 import '../widgets/external_link.dart';
+import 'crash_reports_section.dart';
 import 'perf_trace_section.dart';
 
 /// Opens Report a problem, prefilled with [error] when a failure brought the
@@ -49,6 +51,8 @@ class AppDiagnosticsScreen extends StatefulWidget {
     this.version,
     this.linkLauncher,
     this.share,
+    this.crash,
+    this.crashReady,
   });
 
   final ConnectionController? controller;
@@ -70,6 +74,13 @@ class AppDiagnosticsScreen extends StatefulWidget {
 
   /// Tests: the share sheet; defaults to [ShareOut.text] on Android.
   final Future<bool> Function(String text, String subject)? share;
+
+  /// Tests: the saved crash reports store; defaults to the one opened at
+  /// start-up ([CrashDiagnosticsStartup]).
+  final CrashDiagnosticsController? crash;
+
+  /// Tests: when [crash] is null, the start-up result to wait for.
+  final Future<CrashDiagnosticsController?>? crashReady;
 
   @override
   State<AppDiagnosticsScreen> createState() => _AppDiagnosticsScreenState();
@@ -446,6 +457,12 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                   ],
                 ),
               ],
+              // Opt-in crash reports (BD7): off until the person turns
+              // them on; their saved rows and delete action live here.
+              CrashReportsSection(
+                crash: widget.crash,
+                ready: widget.crashReady,
+              ),
               SizedBox(height: tokens.sectionGap),
               // Timings are for whoever reads the report, not the person
               // filling it in: folded, last, still part of the report.

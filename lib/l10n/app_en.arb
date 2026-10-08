@@ -33081,5 +33081,87 @@
         "example": "OpenCode"
       }
     }
+  },
+  "crashReportsLabel": "Crash reports",
+  "@crashReportsLabel": {
+    "description": "crash-consent (BD7): Header of the crash reports group on Report a problem."
+  },
+  "crashReportsSwitch": "Save crash reports on this phone",
+  "@crashReportsSwitch": {
+    "description": "crash-consent (BD7): Switch that opts in to saving crash and not-responding reports locally."
+  },
+  "crashReportsSwitchBody": "Kept on this phone. Never sent automatically.",
+  "@crashReportsSwitchBody": {
+    "description": "crash-consent (BD7): Supporting line under the switch: where reports stay."
+  },
+  "crashReportsUnavailable": "Crash reports aren't available right now. Restart the app and try again.",
+  "@crashReportsUnavailable": {
+    "description": "crash-consent (BD7): Disabled reason when the private crash store could not open."
+  },
+  "crashReportsFailed": "Couldn't update crash reports. Restart the app and try again.",
+  "@crashReportsFailed": {
+    "description": "crash-consent (BD7): Shown when saving the choice or deleting reports failed."
+  },
+  "crashReportsNone": "No crash reports yet",
+  "@crashReportsNone": {
+    "description": "crash-consent (BD7): Row while saving is on and nothing was captured."
+  },
+  "crashReportsNoneBody": "One appears here if the app closes or stops responding.",
+  "@crashReportsNoneBody": {
+    "description": "crash-consent (BD7): Supporting line of the empty row."
+  },
+  "crashKindError": "The app hit an unexpected error",
+  "@crashKindError": {
+    "description": "crash-consent (BD7): Plain title of a saved Flutter or platform error report."
+  },
+  "crashKindScreen": "A screen couldn't be shown",
+  "@crashKindScreen": {
+    "description": "crash-consent (BD7): Plain title of a saved widget build error report."
+  },
+  "crashKindClosed": "The app closed unexpectedly",
+  "@crashKindClosed": {
+    "description": "crash-consent (BD7): Plain title of a saved native crash report."
+  },
+  "crashKindNotResponding": "The app stopped responding",
+  "@crashKindNotResponding": {
+    "description": "crash-consent (BD7): Plain title of an Android not-responding report."
+  },
+  "crashReportPreviewBody": "Kept on this phone only. It's sent only if you include saved errors in a problem report yourself.",
+  "@crashReportPreviewBody": {
+    "description": "crash-consent (BD7): Body of the crash report preview sheet."
+  },
+  "crashReportDetailSource": "Source",
+  "@crashReportDetailSource": {
+    "description": "crash-consent (BD7): Details label: where the report came from (technical)."
+  },
+  "crashReportDetailCategory": "Category",
+  "@crashReportDetailCategory": {
+    "description": "crash-consent (BD7): Details label: fixed error category (technical)."
+  },
+  "crashReportsDelete": "{count, plural, =1{Delete 1 saved crash report} other{Delete {count} saved crash reports}}",
+  "@crashReportsDelete": {
+    "description": "crash-consent (BD7): Destructive row that deletes the saved crash reports; names its count.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "crashReportsDeleteTitle": "Delete saved crash reports?",
+  "@crashReportsDeleteTitle": {
+    "description": "crash-consent (BD7): Confirmation title before deleting crash reports."
+  },
+  "crashReportsDeleteBody": "Deletes the crash reports and the saved errors on this page. Saving crash reports stays on.",
+  "@crashReportsDeleteBody": {
+    "description": "crash-consent (BD7): Confirmation body before deleting crash reports."
+  },
+  "crashReportsDeleteConfirm": "Delete crash reports",
+  "@crashReportsDeleteConfirm": {
+    "description": "crash-consent (BD7): Confirm button that deletes the saved crash reports."
+  },
+  "crashReportsNote": "Only what kind of problem happened and when is kept: no error messages, conversations or passwords. Keeps the latest 20 reports. Switching this on or off also clears the saved errors on this page.",
+  "@crashReportsNote": {
+    "description": "crash-consent (BD7): Muted note under the crash reports group: what is kept, how much, and that toggling clears saved errors."
   }
 }
