@@ -37,6 +37,7 @@ part 'gateway/lifecycle.dart';
 part 'gateway/subagents.dart';
 part 'gateway/gen_ui_history.dart';
 part 'gateway/payload_use.dart';
+part 'gateway/idle_work.dart';
 
 class PaseoGateway
     implements
@@ -114,6 +115,15 @@ class PaseoGateway
   final _agents = <String, Map<String, dynamic>>{};
   final _sessions = <String, Session>{};
   final _statuses = <String, String>{};
+
+  /// Helper-wide work truth. Unknown never authorizes idle admission.
+  bool? get localWorkBusy => _readLocalWorkBusy();
+
+  /// Changes to helper-wide work truth, independent of visible project rows.
+  Stream<void> get localWorkChanges => _localWork.changes.stream;
+  final _localWork = _PaseoWorkInventory();
+  final bool _trackLocalWork;
+  int _pendingPayloadWork = 0;
   final _drafts = <String>{};
   final _draftProviders = <String, String>{};
 
@@ -268,16 +278,19 @@ class PaseoGateway
 
   PaseoGateway({
     required this.transport,
+    bool trackLocalWork = false,
     String? directory,
     Map<String, String> defaultProviderModes = const {},
     Future<void> Function()? beforePayloadUse,
     void Function()? afterPayloadUse,
-  }) : defaultProviderModes = Map.unmodifiable(defaultProviderModes),
+  }) : _trackLocalWork = trackLocalWork,
+       defaultProviderModes = Map.unmodifiable(defaultProviderModes),
        _beforePayloadUse = beforePayloadUse,
        _afterPayloadUse = afterPayloadUse,
        _directory = directory {
     _daemonEvents = transport.events.listen(_onEvent);
     _daemonDisconnects = transport.disconnects.listen((_) {
+      _localWork.invalidate();
       unawaited(_revokeBrowserSource(clearRequests: false));
       _liveAgentSessions.clear();
       _providerEntries = null;
@@ -446,6 +459,7 @@ class PaseoGateway
   }) async {
     final scope = _scope;
     final epoch = _locationEpoch;
+    final workRevision = _localWork.revision;
     final result = await transport.request('fetch_agents_request', {
       'sort': [
         {'key': 'updated_at', 'direction': 'desc'},
@@ -457,6 +471,7 @@ class PaseoGateway
       // One fixed id keeps repeated list reads on a single subscription.
       'subscribe': {'subscriptionId': 'opencode-mobile'},
     });
+    await _observeWorkPage(result, cursor, workRevision);
     _checkLocation(scope, epoch);
     final items = <Session>[];
     for (final raw in paseoList(result['entries'], max: 200)) {
@@ -735,6 +750,7 @@ class PaseoGateway
     final end = result['endCursor'];
     if (end is Map && end['seq'] is int) live.lastSeq = end['seq'] as int;
     _uncertain.remove(id);
+    _localWork.changed();
     final linked = _linkMessages(id, messages);
     // Its sub-agents (an old conversation's too), read beside the history:
     // their cards link to them when the list arrives.
@@ -1436,6 +1452,8 @@ class PaseoGateway
     _browserRequested.clear();
     _browserRevisions.clear();
     _closed = true;
+    _localWork.invalidate();
+    unawaited(_localWork.changes.close());
     _listening = false;
     _locationEpoch++;
     _providerRevision++;

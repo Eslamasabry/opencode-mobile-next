@@ -1,0 +1,70 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: BA idle known stopped helper is idle; cold and unknown owner are unknown
+00:00 +0 -1: BA idle known stopped helper is idle; cold and unknown owner are unknown [E]
+  Expected: false
+    Actual: <null>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/support/phone_agents_idle_tests.dart 61:7      _phoneIdleTests.<fn>
+
+00:00 +0 -1: BA idle cold helper restoration coalesces without existing backend
+00:00 +0 -2: BA idle cold helper restoration coalesces without existing backend [E]
+  Expected: true
+    Actual: <false>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/support/phone_agents_idle_tests.dart 84:7      _phoneIdleTests.<fn>
+
+  The agents could not reconnect. Open agent setup and try again.
+  package:opencode_mobile/state/connection/phone_agents.dart 185:5  _ConnectionControllerPhoneAgents.resumePhoneAgentsAfterIdle
+  test/support/phone_agents_idle_tests.dart 76:23                   _phoneIdleTests.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                        Future._asyncCompleteError
+  test/support/phone_agents_idle_tests.dart 76:23                   _phoneIdleTests.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                        _CustomZone.registerUnaryCallback
+  test/support/phone_agents_idle_tests.dart 70:17                   _phoneIdleTests.<fn>
+
+  The agents could not reconnect. Open agent setup and try again.
+  package:opencode_mobile/state/connection/phone_agents.dart 185:5  _ConnectionControllerPhoneAgents.resumePhoneAgentsAfterIdle
+  test/support/phone_agents_idle_tests.dart 80:24                   _phoneIdleTests.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                        Future._asyncCompleteError
+  test/support/phone_agents_idle_tests.dart 80:24                   _phoneIdleTests.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                        _CustomZone.registerUnaryCallback
+  test/support/phone_agents_idle_tests.dart 70:17                   _phoneIdleTests.<fn>
+
+00:00 +0 -2: BA idle background rows and explicit helper resume cannot bypass idle
+00:00 +0 -3: BA idle background rows and explicit helper resume cannot bypass idle [E]
+  Expected: not contains 'host.start'
+    Actual: ['host.start']
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/support/phone_agents_idle_tests.dart 112:7     _phoneIdleTests.<fn>
+
+00:00 +0 -3: BA idle foreground ordinary resume cannot consume idle generation
+00:00 +0 -4: BA idle foreground ordinary resume cannot consume idle generation [E]
+  Expected: throws <Instance of 'ProductException'>
+    Actual: <Instance of 'Future<void>'>
+     Which: emitted <null>
+
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/support/phone_agents_idle_tests.dart 125:13   _phoneIdleTests.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                         _CustomZone.registerUnaryCallback
+  test/support/phone_agents_idle_tests.dart 121:17   _phoneIdleTests.<fn>
+
+00:00 +0 -4: (tearDownAll)
+00:00 +0 -4: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle background rows and explicit helper resume cannot bypass idle
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle cold helper restoration coalesces without existing backend
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle foreground ordinary resume cannot consume idle generation
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle known stopped helper is idle; cold and unknown owner are unknown

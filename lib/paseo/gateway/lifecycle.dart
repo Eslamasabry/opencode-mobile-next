@@ -46,7 +46,13 @@ extension _PaseoLifecycle on PaseoGateway {
       _turnActive.clear();
       // Listing re-establishes the agent subscription on the new socket and
       // refreshes statuses and pending permissions missed while away.
-      if (_directory != null) await sessionPage(limit: 200);
+      if (_directory != null) {
+        if (_trackLocalWork) {
+          await sessions();
+        } else {
+          await sessionPage(limit: 200);
+        }
+      }
       if (_closed || !_listening) return;
       _recoveryDegraded = false;
       _retryAttempt = 0;

@@ -8,6 +8,8 @@ extension _PaseoPayloadUse on PaseoGateway {
     final scope = _directory;
     final epoch = _locationEpoch;
     var acquired = false;
+    _pendingPayloadWork++;
+    _localWork.changed();
     try {
       try {
         final acquire = _beforePayloadUse;
@@ -23,6 +25,8 @@ extension _PaseoPayloadUse on PaseoGateway {
       }
       return await operation();
     } finally {
+      _pendingPayloadWork--;
+      _localWork.changed();
       if (acquired) {
         try {
           _afterPayloadUse?.call();
