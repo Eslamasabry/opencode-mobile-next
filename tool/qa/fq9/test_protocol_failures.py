@@ -10,7 +10,12 @@ import urllib.error
 
 from . import run
 from .common import Artifact, CANDIDATE_BUILD, DriverFailure, LOCAL_SIGNER
-from .runtime import AndroidRuntimeMixin, safe_protocol_failure
+from .runtime import (
+    AndroidRuntimeMixin,
+    ProtocolHTTPFailure,
+    ProtocolResponseFailure,
+    safe_protocol_failure,
+)
 
 
 class ProtocolFailureTests(unittest.TestCase):
@@ -83,6 +88,74 @@ class ProtocolFailureTests(unittest.TestCase):
         ):
             self.assertIsNone(safe_protocol_failure(value))
 
+    def test_oc1_invalid_json_or_404_detects_oc2_without_switching(self):
+        for failure in (
+            ProtocolResponseFailure("invalid_json", "oc1_health", 200),
+            ProtocolHTTPFailure(404, "oc1_health"),
+        ):
+            port = self.port()
+            port._protocol_failure_facts = failure.safe_facts
+            port.protocol = Mock(side_effect=[failure, {"version": "2.0.10"}])
+            with self.assertRaisesRegex(
+                DriverFailure, "app_managed_engine_unavailable"
+            ):
+                port._connect("opencode")
+            self.assertEqual(port.protocol.call_args_list[1].args, ("GET", "/api/info"))
+            self.assertEqual(port.protocol.call_count, 2)
+            self.assertEqual(port._protocol_failure_facts, failure.safe_facts)
+            self.assertEqual(
+                port._runtime_mismatch,
+                {"expected": "opencode1", "observed": "opencode2"},
+            )
+            self.assertFalse(hasattr(port, "_runtime_version"))
+
+    def test_inconclusive_generation_probe_preserves_original_failure(self):
+        for response in (
+            {},
+            {"version": "1.18.32"},
+            {"version": "2.invalid"},
+            {"version": 2},
+            ["2.0.10"],
+            DriverFailure("protocol_response_invalid"),
+        ):
+            port = self.port()
+            failure = ProtocolHTTPFailure(404, "oc1_health")
+            original = failure.safe_facts
+            port._protocol_failure_facts = original
+
+            def protocol(method, path):
+                if path == "/global/health":
+                    raise failure
+                port._protocol_failure_facts = {
+                    "stage": "oc2_info",
+                    "kind": "transport",
+                }
+                if isinstance(response, Exception):
+                    raise response
+                return response
+
+            port.protocol = protocol
+            with self.assertRaises(ProtocolHTTPFailure) as caught:
+                port._connect("opencode")
+            self.assertIs(caught.exception, failure)
+            self.assertEqual(port._protocol_failure_facts, original)
+            self.assertIsNone(port._runtime_mismatch)
+
+    def test_auth_and_transport_failures_never_probe_another_generation(self):
+        for failure in (
+            ProtocolHTTPFailure(401, "oc1_health"),
+            ProtocolHTTPFailure(403, "oc1_health"),
+            ProtocolHTTPFailure(503, "oc1_health"),
+            ProtocolResponseFailure("transport", "oc1_health"),
+        ):
+            port = self.port()
+            port.protocol = Mock(side_effect=failure)
+            with self.assertRaises(DriverFailure) as caught:
+                port._connect("opencode")
+            self.assertIs(caught.exception, failure)
+            port.protocol.assert_called_once_with("GET", "/global/health")
+            self.assertIsNone(port._runtime_mismatch)
+
     def test_run_exports_only_safe_failure_facts_without_changing_failure(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -108,6 +181,10 @@ class ProtocolFailureTests(unittest.TestCase):
                         side_effect=DriverFailure("protocol_response_invalid")
                     ),
                     close_protocol=Mock(),
+                    _runtime_mismatch={
+                        "expected": "opencode1",
+                        "observed": "opencode2",
+                    },
                 )
                 args = argparse.Namespace(
                     case="upgrade",
@@ -125,6 +202,10 @@ class ProtocolFailureTests(unittest.TestCase):
                     )
                 self.assertEqual(result["code"], "protocol_response_invalid")
                 self.assertFalse(result["automatedChecksPassed"])
+                self.assertEqual(
+                    result["runtimeMismatch"],
+                    {"expected": "opencode1", "observed": "opencode2"},
+                )
                 if number == 0:
                     self.assertEqual(result["protocolFailure"], facts)
                 else:

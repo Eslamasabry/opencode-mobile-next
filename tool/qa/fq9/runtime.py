@@ -175,6 +175,7 @@ class AndroidRuntimeMixin:
         return receipt
 
     def _connect(self, engine):
+        self._runtime_mismatch = None
         if self._forward is None:
             socket = socket_identity(
                 self.text("shell", "cat", "/proc/net/tcp", "/proc/net/tcp6"), self._uid
@@ -203,8 +204,42 @@ class AndroidRuntimeMixin:
             health = self.protocol(
                 "GET", "/api/health" if engine == "opencode2" else "/global/health"
             )
-        except ProtocolHTTPFailure as failure:
-            if engine != "opencode2" or failure.status != 404:
+        except ProtocolResponseFailure as failure:
+            if engine == "opencode" and (
+                (failure.safe_facts or {}).get("kind") == "invalid_json"
+                or isinstance(failure, ProtocolHTTPFailure)
+                and failure.status == 404
+            ):
+                original_facts = getattr(
+                    self, "_protocol_failure_facts", failure.safe_facts
+                )
+                info = None
+                try:
+                    # Diagnose the other generation; never switch or seed it.
+                    info = self.protocol("GET", "/api/info")
+                except Exception:
+                    pass
+                finally:
+                    self._protocol_failure_facts = original_facts
+                if (
+                    type(info) is dict
+                    and type(info.get("version")) is str
+                    and re.fullmatch(
+                        r"2\.[0-9]{1,5}\.[0-9]{1,5}(?:[-+][A-Za-z0-9.-]{1,40})?",
+                        info["version"],
+                    )
+                ):
+                    self._runtime_mismatch = {
+                        "expected": "opencode1",
+                        "observed": "opencode2",
+                    }
+                    raise DriverFailure("app_managed_engine_unavailable") from None
+                raise
+            if (
+                engine != "opencode2"
+                or not isinstance(failure, ProtocolHTTPFailure)
+                or failure.status != 404
+            ):
                 raise
             info = self.protocol("GET", "/api/info")
             health = {"healthy": True, **info} if type(info) is dict else None

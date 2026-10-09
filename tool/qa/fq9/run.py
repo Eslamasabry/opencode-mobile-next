@@ -253,6 +253,15 @@ def run_locked(args, artifacts, receipt, output, *, port_factory=ports.AndroidPo
             )
             if facts is not None:
                 result["protocolFailure"] = facts
+            mismatch = getattr(device, "_runtime_mismatch", None)
+            if type(mismatch) is dict and mismatch == {
+                "expected": "opencode1",
+                "observed": "opencode2",
+            }:
+                result["runtimeMismatch"] = {
+                    "expected": "opencode1",
+                    "observed": "opencode2",
+                }
         finally:
             try:
                 device.close_protocol()
