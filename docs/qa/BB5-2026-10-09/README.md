@@ -109,3 +109,15 @@ Gradle/APK build or emulator session was started. Android Kotlin integration and
 the private runner rebuild are pending the memory/build gate. The actual device
 primary cause remains unproven until a corrected runner is exercised after BC's
 turn. BB5 remains default-off and device-unqualified; BB7 remains deferred.
+
+## Additional offline narrowing
+
+[Original primary analysis](original-primary-analysis.md) traces the retained
+recipe to the native gate's durable commit and demonstrates a foreground owner
+collision: the actual Dart recovery controller rebinds the saved phone profile
+after the private fixture switches native ownership.15 affected Dart tests pass,
+the removed real bind fails at an assertion, exact source restoration is checked,
+and focused analysis is clean ([analyzer](owner-rebind-analyze.txt)). This remains
+a candidate mechanism, not the uniquely recovered device primary. No new
+emulator session, native build or product behavior change occurred. The next
+build awaits the coordinator's window after BC and BA.
