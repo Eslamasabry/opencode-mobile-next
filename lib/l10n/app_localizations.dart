@@ -28748,11 +28748,11 @@ abstract class AppLocalizations {
   /// **'Delete the hidden messages'**
   String get reviewRevertKeepTitle;
 
-  /// Review the undo page: title of the question before the hidden messages are deleted.
+  /// Review the undo page: title of the question before the hidden messages are deleted; names the conversation.
   ///
   /// In en, this message translates to:
-  /// **'Delete hidden messages forever?'**
-  String get reviewRevertKeepConfirmTitle;
+  /// **'Delete messages in “{title}”?'**
+  String reviewRevertKeepConfirmTitle(String title);
 
   /// Review the undo page: body of the delete-hidden-messages question.
   ///
@@ -28778,11 +28778,11 @@ abstract class AppLocalizations {
   /// **'Files stay as they are now'**
   String get reviewRevertKeepConsequenceFiles;
 
-  /// Confirmation before clearing the staged undo.
+  /// Confirmation before clearing the staged undo; names the conversation.
   ///
   /// In en, this message translates to:
-  /// **'Put everything back?'**
-  String get reviewRevertRestoreConfirmTitle;
+  /// **'Restore “{title}”?'**
+  String reviewRevertRestoreConfirmTitle(String title);
 
   /// Confirmation before clearing the staged undo: what happens and that another undo is possible.
   ///
