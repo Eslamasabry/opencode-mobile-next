@@ -33821,7 +33821,7 @@
   "@connectorCardFinishSignIn": {
     "description": "Suggested-connector card: sends the pasted return to finish sign-in."
   },
-  "connectorCardCheckStatus": "Check status",
+  "connectorCardCheckStatus": "Refresh",
   "@connectorCardCheckStatus": {
     "description": "Suggested-connector card: reads the connector status again."
   },
@@ -33862,7 +33862,7 @@
   "@connectorCardConnectedUnconfirmed": {
     "description": "Suggested-connector card: connected, but this server cannot confirm the tools are ready."
   },
-  "connectorCardFailureUnavailable": "Connecting tools from chat is not available for this agent.",
+  "connectorCardFailureUnavailable": "This agent cannot connect tools from a conversation.",
   "@connectorCardFailureUnavailable": {
     "description": "Suggested-connector card: this agent cannot connect connectors from chat."
   },
@@ -33890,7 +33890,7 @@
   "@connectorCardFailureAuthenticationFailed": {
     "description": "Suggested-connector card: the sign-in had no confirmed result."
   },
-  "connectorCardFailureOauthUnavailable": "Sign-in for this connector is not available in this chat.",
+  "connectorCardFailureOauthUnavailable": "This connector cannot sign in from a conversation.",
   "@connectorCardFailureOauthUnavailable": {
     "description": "Suggested-connector card: this server cannot finish sign-in from chat."
   },

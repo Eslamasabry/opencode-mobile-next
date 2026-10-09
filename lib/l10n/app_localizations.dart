@@ -44552,7 +44552,7 @@ abstract class AppLocalizations {
   /// Suggested-connector card: reads the connector status again.
   ///
   /// In en, this message translates to:
-  /// **'Check status'**
+  /// **'Refresh'**
   String get connectorCardCheckStatus;
 
   /// Suggested-connector card: stops waiting for the browser sign-in.
@@ -44606,7 +44606,7 @@ abstract class AppLocalizations {
   /// Suggested-connector card: this agent cannot connect connectors from chat.
   ///
   /// In en, this message translates to:
-  /// **'Connecting tools from chat is not available for this agent.'**
+  /// **'This agent cannot connect tools from a conversation.'**
   String get connectorCardFailureUnavailable;
 
   /// Suggested-connector card: the suggestion cannot be used.
@@ -44648,7 +44648,7 @@ abstract class AppLocalizations {
   /// Suggested-connector card: this server cannot finish sign-in from chat.
   ///
   /// In en, this message translates to:
-  /// **'Sign-in for this connector is not available in this chat.'**
+  /// **'This connector cannot sign in from a conversation.'**
   String get connectorCardFailureOauthUnavailable;
 
   /// Suggested-connector card: the status read says it is not connected.
