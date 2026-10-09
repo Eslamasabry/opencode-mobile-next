@@ -1,6 +1,8 @@
 """One sheet of the opened coverage cases (build/coverage/<prefix>*.png).
 
-    python3 tool/coverage/contact_sheet.py out.png [--cols N] prefix [prefix ...]
+    python3 tool/coverage/contact_sheet.py out.png [--cols N] [--dir D] prefix [prefix ...]
+
+--dir D reads D/<prefix>*.png instead of build/coverage (for a "before" folder).
 
 Prefixes: paseo_ (tool steps), items_ (timeline items), perm_ (permission and
 question requests). Each cell is cropped to what was drawn and captioned with
@@ -18,9 +20,14 @@ if "--cols" in args:
     i = args.index("--cols")
     cols = int(args[i + 1])
     del args[i : i + 2]
+base = "build/coverage"
+if "--dir" in args:
+    i = args.index("--dir")
+    base = args[i + 1]
+    del args[i : i + 2]
 files = []
 for prefix in args:
-    files += sorted(glob.glob(f"build/coverage/{prefix}*.png"))
+    files += sorted(glob.glob(f"{base}/{prefix}*.png"))
 cell_w = 412
 images = []
 for path in files:

@@ -95,6 +95,16 @@ extension _EditorFields on _ProfileEditorScreenState {
         message: result.ok
             ? copy.codexConnectionVerified
             : setupUiMessage(copy, result.message),
+        // What the check found out, in words: the daemon's version and
+        // which agents it can run right now.
+        notes: [
+          if (result.ok && (result.version?.trim().isNotEmpty ?? false))
+            copy.e7SettingsVersion(result.version!.trim()),
+          if (result.ok && result.runtimes != null)
+            result.runtimes!.isEmpty
+                ? copy.paseoCheckNoneReady
+                : copy.paseoCheckReady(result.runtimes!.join(', ')),
+        ],
         actions: [if (!result.ok && _verdictFromSave) _saveAnywayAction(copy)],
       ),
     );

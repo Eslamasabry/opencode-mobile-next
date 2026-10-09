@@ -1,0 +1,438 @@
+{
+  "source": "lib/state/profiles/models.dart ServerProfile.toJson",
+  "schema": {
+    "profile": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "baseUrl",
+        "kind": "string"
+      },
+      {
+        "path": "backend",
+        "kind": "enum"
+      },
+      {
+        "path": "username",
+        "kind": "string"
+      },
+      {
+        "path": "codexDirectory",
+        "kind": "string"
+      },
+      {
+        "path": "flavor",
+        "kind": "enum"
+      },
+      {
+        "path": "serverVersion",
+        "kind": "string"
+      },
+      {
+        "path": "orchestration",
+        "kind": "any"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "profile_opencode1",
+      "kind": "profile",
+      "payload": {
+        "id": "srv_oc1",
+        "name": "Studio OpenCode",
+        "baseUrl": "https://studio.example.net:4096",
+        "backend": "openCode",
+        "username": "devuser",
+        "flavor": "v1",
+        "serverVersion": "1.14.52"
+      },
+      "fields": [
+        {
+          "key": "profile.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "profile.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Studio OpenCode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.baseUrl",
+          "path": "baseUrl",
+          "kind": "string",
+          "probes": [
+            "studio.example.net:4096"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.backend",
+          "path": "backend",
+          "kind": "enum",
+          "probes": [
+            "OpenCode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.username",
+          "path": "username",
+          "kind": "string",
+          "probes": [
+            "devuser"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.flavor",
+          "path": "flavor",
+          "kind": "enum",
+          "probes": [
+            "OpenCode 1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.serverVersion",
+          "path": "serverVersion",
+          "kind": "string",
+          "probes": [
+            "1.14.52"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "profile_opencode2",
+      "kind": "profile",
+      "payload": {
+        "id": "srv_oc2",
+        "name": "Lab OpenCode",
+        "baseUrl": "https://lab.example.net:4097",
+        "backend": "openCode",
+        "username": "opencode",
+        "flavor": "v2",
+        "serverVersion": "2.0.10"
+      },
+      "fields": [
+        {
+          "key": "profile.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "profile.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Lab OpenCode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.baseUrl",
+          "path": "baseUrl",
+          "kind": "string",
+          "probes": [
+            "lab.example.net:4097"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.backend",
+          "path": "backend",
+          "kind": "enum",
+          "probes": [
+            "OpenCode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.username",
+          "path": "username",
+          "kind": "string",
+          "probes": [
+            "opencode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.flavor",
+          "path": "flavor",
+          "kind": "enum",
+          "probes": [
+            "OpenCode 2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.serverVersion",
+          "path": "serverVersion",
+          "kind": "string",
+          "probes": [
+            "2.0.10"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "profile_paseo",
+      "kind": "profile",
+      "payload": {
+        "id": "srv_paseo",
+        "name": "Build box",
+        "baseUrl": "ws://build.example.net:6767",
+        "backend": "paseo",
+        "username": "",
+        "codexDirectory": "/home/dev/work/shop",
+        "flavor": "v1",
+        "serverVersion": "Paseo daemon 0.8.0 (experimental)"
+      },
+      "fields": [
+        {
+          "key": "profile.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "profile.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Build box"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.baseUrl",
+          "path": "baseUrl",
+          "kind": "string",
+          "probes": [
+            "build.example.net:6767"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.backend",
+          "path": "backend",
+          "kind": "enum",
+          "probes": [
+            "Claude Code or Pi"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.username",
+          "path": "username",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "profile.codexDirectory",
+          "path": "codexDirectory",
+          "kind": "string",
+          "probes": [
+            "/home/dev/work/shop"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.flavor",
+          "path": "flavor",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "profile.serverVersion",
+          "path": "serverVersion",
+          "kind": "string",
+          "probes": [
+            "0.8.0"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "profile_codex",
+      "kind": "profile",
+      "payload": {
+        "id": "srv_codex",
+        "name": "Codex desk",
+        "baseUrl": "wss://codex.example.net",
+        "backend": "codex",
+        "codexDirectory": "/home/dev/work/api",
+        "username": "",
+        "flavor": "v1"
+      },
+      "fields": [
+        {
+          "key": "profile.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "profile.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Codex desk"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.baseUrl",
+          "path": "baseUrl",
+          "kind": "string",
+          "probes": [
+            "codex.example.net"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.backend",
+          "path": "backend",
+          "kind": "enum",
+          "probes": [
+            "Codex"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.codexDirectory",
+          "path": "codexDirectory",
+          "kind": "string",
+          "probes": [
+            "/home/dev/work/api"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.username",
+          "path": "username",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "profile.flavor",
+          "path": "flavor",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "profile_team",
+      "kind": "profile",
+      "payload": {
+        "id": "srv_team",
+        "name": "Team host",
+        "baseUrl": "https://team.example.net:4096",
+        "backend": "openCode",
+        "username": "devuser",
+        "flavor": "v1",
+        "serverVersion": "1.14.52",
+        "orchestration": {
+          "enabled": true
+        }
+      },
+      "fields": [
+        {
+          "key": "profile.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "profile.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Team host"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.baseUrl",
+          "path": "baseUrl",
+          "kind": "string",
+          "probes": [
+            "team.example.net:4096"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.backend",
+          "path": "backend",
+          "kind": "enum",
+          "probes": [
+            "OpenCode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.username",
+          "path": "username",
+          "kind": "string",
+          "probes": [
+            "devuser"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.flavor",
+          "path": "flavor",
+          "kind": "enum",
+          "probes": [
+            "OpenCode 1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.serverVersion",
+          "path": "serverVersion",
+          "kind": "string",
+          "probes": [
+            "1.14.52"
+          ],
+          "primary": false
+        },
+        {
+          "key": "profile.orchestration",
+          "path": "orchestration",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

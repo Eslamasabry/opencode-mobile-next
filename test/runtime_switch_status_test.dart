@@ -70,7 +70,10 @@ void main() {
       expect(pill('OpenCode 2'), findsNothing, reason: '$phase');
       expect(line(), findsNothing, reason: '$phase');
       expect(find.textContaining('Switching to'), findsNothing);
-      expect(find.text('Server password changed — reconnect.'), findsNothing);
+      expect(
+        find.textContaining('changed. Update it to reconnect.'),
+        findsNothing,
+      );
       expect(find.textContaining("isn't answering"), findsNothing);
       expect(find.textContaining('Reconnecting to'), findsNothing);
     }
@@ -128,7 +131,10 @@ void main() {
     );
     shell.controller.show(ConnectionStatusPhase.credentialsRequired);
     await settle(tester);
-    expect(find.text('Server password changed — reconnect.'), findsOneWidget);
+    expect(
+      find.textContaining('changed. Update it to reconnect.'),
+      findsOneWidget,
+    );
     await tearDownShell(tester);
   });
 }

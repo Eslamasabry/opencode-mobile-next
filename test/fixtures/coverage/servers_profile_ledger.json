@@ -1,0 +1,11 @@
+{
+  "profile.backend": "shown",
+  "profile.baseUrl": "shown",
+  "profile.codexDirectory": "shown",
+  "profile.flavor": "shown",
+  "profile.id": "ignored: an internal id the app uses to match records; nothing a person reads",
+  "profile.name": "shown",
+  "profile.orchestration": "ignored: AI Team settings are shown on the AI Team pages, not on the server row",
+  "profile.serverVersion": "shown",
+  "profile.username": "shown"
+}

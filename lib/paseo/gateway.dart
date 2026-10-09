@@ -432,13 +432,9 @@ class PaseoGateway
   @override
   Future<Health> health() async {
     await transport.connect();
-    final version = transport.serverVersion;
-    return Health(
-      healthy: true,
-      version: version == null
-          ? 'Paseo daemon (experimental)'
-          : 'Paseo daemon $version (experimental)',
-    );
+    // The daemon's own number: server pages say "Version 0.9.2", never an
+    // internal label.
+    return Health(healthy: true, version: transport.serverVersion);
   }
 
   // ---- sessions ----------------------------------------------------------

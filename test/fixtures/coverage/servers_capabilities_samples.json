@@ -1,0 +1,317 @@
+{
+  "source": "lib/domain/server_gateway/capabilities.dart ServerCapabilities",
+  "schema": {
+    "capability": [
+      {
+        "path": "genUi",
+        "kind": "boolean"
+      },
+      {
+        "path": "sessionAddressHandoff",
+        "kind": "boolean"
+      },
+      {
+        "path": "setupConfigRead",
+        "kind": "boolean"
+      },
+      {
+        "path": "setupConfigWrite",
+        "kind": "boolean"
+      },
+      {
+        "path": "setupMcpInventory",
+        "kind": "boolean"
+      },
+      {
+        "path": "setupAssistantSession",
+        "kind": "boolean"
+      },
+      {
+        "path": "clientPromptMessageID",
+        "kind": "boolean"
+      },
+      {
+        "path": "commandReceipts",
+        "kind": "boolean"
+      },
+      {
+        "path": "agentAccount",
+        "kind": "boolean"
+      },
+      {
+        "path": "hostAgentProviders",
+        "kind": "boolean"
+      },
+      {
+        "path": "hostAgentPermissionActions",
+        "kind": "boolean"
+      },
+      {
+        "path": "promptAttachments",
+        "kind": "boolean"
+      },
+      {
+        "path": "promptImagesOnly",
+        "kind": "boolean"
+      },
+      {
+        "path": "promptEchoTextOnly",
+        "kind": "boolean"
+      },
+      {
+        "path": "subagentReplies",
+        "kind": "boolean"
+      },
+      {
+        "path": "subagentSessions",
+        "kind": "boolean"
+      },
+      {
+        "path": "promptAgentMentions",
+        "kind": "boolean"
+      },
+      {
+        "path": "offlinePromptQueue",
+        "kind": "boolean"
+      },
+      {
+        "path": "fileBrowsing",
+        "kind": "boolean"
+      },
+      {
+        "path": "terminal",
+        "kind": "boolean"
+      },
+      {
+        "path": "projectManagement",
+        "kind": "boolean"
+      },
+      {
+        "path": "globalSessionSearch",
+        "kind": "boolean"
+      },
+      {
+        "path": "sessionDiff",
+        "kind": "boolean"
+      },
+      {
+        "path": "sessionFork",
+        "kind": "boolean"
+      },
+      {
+        "path": "sessionCompact",
+        "kind": "boolean"
+      },
+      {
+        "path": "persistentPermissionGrants",
+        "kind": "boolean"
+      },
+      {
+        "path": "permissionRequests",
+        "kind": "boolean"
+      },
+      {
+        "path": "savedPermissionList",
+        "kind": "boolean"
+      },
+      {
+        "path": "messageCompletionEndsRun",
+        "kind": "boolean"
+      },
+      {
+        "path": "sessionRevert",
+        "kind": "boolean"
+      },
+      {
+        "path": "sessionImportExport",
+        "kind": "boolean"
+      },
+      {
+        "path": "sessionNotes",
+        "kind": "boolean"
+      },
+      {
+        "path": "serverCatalog",
+        "kind": "boolean"
+      },
+      {
+        "path": "sessionModelProviderSwitching",
+        "kind": "boolean"
+      },
+      {
+        "path": "agentSelection",
+        "kind": "boolean"
+      },
+      {
+        "path": "slashCommands",
+        "kind": "boolean"
+      },
+      {
+        "path": "profileAttentionPolling",
+        "kind": "boolean"
+      },
+      {
+        "path": "managedWorkspaces",
+        "kind": "boolean"
+      },
+      {
+        "path": "workspaceWarp",
+        "kind": "boolean"
+      },
+      {
+        "path": "sessionSteal",
+        "kind": "boolean"
+      },
+      {
+        "path": "consoleOrganizations",
+        "kind": "boolean"
+      },
+      {
+        "path": "mcpOAuth",
+        "kind": "boolean"
+      },
+      {
+        "path": "mcpChatConnect",
+        "kind": "boolean"
+      },
+      {
+        "path": "mcpChatOAuth",
+        "kind": "boolean"
+      },
+      {
+        "path": "mcpChatToolRefresh",
+        "kind": "boolean"
+      },
+      {
+        "path": "mcpConfigWrites",
+        "kind": "boolean"
+      },
+      {
+        "path": "mcpRuntimeAdds",
+        "kind": "boolean"
+      },
+      {
+        "path": "mcpRuntimeRemovals",
+        "kind": "boolean"
+      },
+      {
+        "path": "integrationCredentials",
+        "kind": "boolean"
+      },
+      {
+        "path": "integrationCommandAuth",
+        "kind": "boolean"
+      },
+      {
+        "path": "pluginInventory",
+        "kind": "boolean"
+      },
+      {
+        "path": "webSearch",
+        "kind": "boolean"
+      },
+      {
+        "path": "sessionShare",
+        "kind": "boolean"
+      },
+      {
+        "path": "sessionArchive",
+        "kind": "boolean"
+      },
+      {
+        "path": "sessionTodos",
+        "kind": "boolean"
+      },
+      {
+        "path": "messageDelete",
+        "kind": "boolean"
+      },
+      {
+        "path": "workspaceSymbols",
+        "kind": "boolean"
+      },
+      {
+        "path": "textSearch",
+        "kind": "boolean"
+      },
+      {
+        "path": "languageServiceStatus",
+        "kind": "boolean"
+      },
+      {
+        "path": "formatterStatus",
+        "kind": "boolean"
+      },
+      {
+        "path": "toolInventory",
+        "kind": "boolean"
+      },
+      {
+        "path": "experimentalCapabilities",
+        "kind": "boolean"
+      },
+      {
+        "path": "shellSettings",
+        "kind": "boolean"
+      },
+      {
+        "path": "developmentServices",
+        "kind": "boolean"
+      },
+      {
+        "path": "remoteUpgrade",
+        "kind": "boolean"
+      },
+      {
+        "path": "clientDiagnostics",
+        "kind": "boolean"
+      },
+      {
+        "path": "gitInit",
+        "kind": "boolean"
+      },
+      {
+        "path": "providerRuntimeRefresh",
+        "kind": "boolean"
+      },
+      {
+        "path": "configuredProviderFallback",
+        "kind": "boolean"
+      },
+      {
+        "path": "globalEventStream",
+        "kind": "boolean"
+      },
+      {
+        "path": "worktreeReset",
+        "kind": "boolean"
+      },
+      {
+        "path": "worktreeCreate",
+        "kind": "boolean"
+      },
+      {
+        "path": "legacyQuestionRequests",
+        "kind": "boolean"
+      },
+      {
+        "path": "forms",
+        "kind": "boolean"
+      },
+      {
+        "path": "inbox",
+        "kind": "boolean"
+      },
+      {
+        "path": "cliSessionResume",
+        "kind": "boolean"
+      },
+      {
+        "path": "projectsAreGitRepositories",
+        "kind": "boolean"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": []
+}

@@ -1,0 +1,1189 @@
+{
+  "source": "lib/domain/connection_status.dart, lib/domain/profile_monitor.dart",
+  "schema": {
+    "connection": [
+      {
+        "path": "phase",
+        "kind": "enum"
+      },
+      {
+        "path": "profileId",
+        "kind": "string"
+      },
+      {
+        "path": "serverName",
+        "kind": "string"
+      },
+      {
+        "path": "since",
+        "kind": "string"
+      },
+      {
+        "path": "usesToken",
+        "kind": "boolean"
+      },
+      {
+        "path": "retrying",
+        "kind": "boolean"
+      },
+      {
+        "path": "quiet",
+        "kind": "boolean"
+      },
+      {
+        "path": "attemptRevision",
+        "kind": "number"
+      }
+    ],
+    "attention": [
+      {
+        "path": "profileID",
+        "kind": "string"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      },
+      {
+        "path": "checkedAt",
+        "kind": "string"
+      },
+      {
+        "path": "nextCheckAt",
+        "kind": "string"
+      },
+      {
+        "path": "directory",
+        "kind": "string"
+      },
+      {
+        "path": "workspace",
+        "kind": "string"
+      },
+      {
+        "path": "requests[].id",
+        "kind": "string"
+      },
+      {
+        "path": "requests[].sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "requests[].kind",
+        "kind": "enum"
+      },
+      {
+        "path": "requests[].title",
+        "kind": "string"
+      },
+      {
+        "path": "requests[].directory",
+        "kind": "string"
+      },
+      {
+        "path": "requests[].workspace",
+        "kind": "string"
+      },
+      {
+        "path": "attention",
+        "kind": "any"
+      },
+      {
+        "path": "attentionComplete",
+        "kind": "boolean"
+      },
+      {
+        "path": "busyIntervals[].sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "busyIntervals[].firstObservedBusyAt",
+        "kind": "string"
+      },
+      {
+        "path": "busyIntervals[].lastObservedBusyAt",
+        "kind": "string"
+      },
+      {
+        "path": "busyIntervals[].title",
+        "kind": "string"
+      },
+      {
+        "path": "busyIntervals[].directory",
+        "kind": "string"
+      },
+      {
+        "path": "busyIntervals[].workspace",
+        "kind": "string"
+      },
+      {
+        "path": "busyIntervals[].reminderClaimed",
+        "kind": "boolean"
+      },
+      {
+        "path": "runningCount",
+        "kind": "number"
+      },
+      {
+        "path": "complete",
+        "kind": "boolean"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "connection_reconnecting",
+      "kind": "connection",
+      "payload": {
+        "profileId": "srv_unlisted",
+        "serverName": "Studio OpenCode",
+        "since": "2026-10-09T09:00:00.000Z",
+        "usesToken": false,
+        "retrying": false,
+        "quiet": false,
+        "attemptRevision": 3,
+        "phase": "reconnecting"
+      },
+      "fields": [
+        {
+          "key": "connection.profileId",
+          "path": "profileId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.serverName",
+          "path": "serverName",
+          "kind": "string",
+          "probes": [
+            "Studio OpenCode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "connection.since",
+          "path": "since",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.usesToken",
+          "path": "usesToken",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.retrying",
+          "path": "retrying",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.quiet",
+          "path": "quiet",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.attemptRevision",
+          "path": "attemptRevision",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "Reconnecting to Studio OpenCode"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "connection_connecting",
+      "kind": "connection",
+      "payload": {
+        "profileId": "srv_unlisted",
+        "serverName": "Studio OpenCode",
+        "since": "2026-10-09T09:00:00.000Z",
+        "usesToken": false,
+        "retrying": false,
+        "quiet": false,
+        "attemptRevision": 3,
+        "phase": "connecting"
+      },
+      "fields": [
+        {
+          "key": "connection.profileId",
+          "path": "profileId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.serverName",
+          "path": "serverName",
+          "kind": "string",
+          "probes": [
+            "Studio OpenCode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "connection.since",
+          "path": "since",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.usesToken",
+          "path": "usesToken",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.retrying",
+          "path": "retrying",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.quiet",
+          "path": "quiet",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.attemptRevision",
+          "path": "attemptRevision",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "Connecting to Studio OpenCode"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "connection_token_rejected",
+      "kind": "connection",
+      "payload": {
+        "profileId": "srv_unlisted",
+        "serverName": "Studio OpenCode",
+        "since": "2026-10-09T09:00:00.000Z",
+        "usesToken": true,
+        "retrying": false,
+        "quiet": false,
+        "attemptRevision": 3,
+        "phase": "credentialsRequired"
+      },
+      "fields": [
+        {
+          "key": "connection.profileId",
+          "path": "profileId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.serverName",
+          "path": "serverName",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.since",
+          "path": "since",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.usesToken",
+          "path": "usesToken",
+          "kind": "boolean",
+          "probes": [
+            "Update token"
+          ],
+          "primary": false
+        },
+        {
+          "key": "connection.retrying",
+          "path": "retrying",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.quiet",
+          "path": "quiet",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.attemptRevision",
+          "path": "attemptRevision",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "rejected the connection token"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "connection_password_unreadable",
+      "kind": "connection",
+      "payload": {
+        "profileId": "srv_unlisted",
+        "serverName": "Studio OpenCode",
+        "since": "2026-10-09T09:00:00.000Z",
+        "usesToken": false,
+        "retrying": false,
+        "quiet": false,
+        "attemptRevision": 3,
+        "phase": "credentialsUnreadable"
+      },
+      "fields": [
+        {
+          "key": "connection.profileId",
+          "path": "profileId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.serverName",
+          "path": "serverName",
+          "kind": "string",
+          "probes": [
+            "Studio OpenCode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "connection.since",
+          "path": "since",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.usesToken",
+          "path": "usesToken",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.retrying",
+          "path": "retrying",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.quiet",
+          "path": "quiet",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.attemptRevision",
+          "path": "attemptRevision",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "Can't read the saved password for Studio OpenCode"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "connection_not_answering",
+      "kind": "connection",
+      "payload": {
+        "profileId": "srv_unlisted",
+        "serverName": "Studio OpenCode",
+        "since": "2026-10-09T09:00:00.000Z",
+        "usesToken": false,
+        "retrying": true,
+        "quiet": false,
+        "attemptRevision": 3,
+        "phase": "notAnswering"
+      },
+      "fields": [
+        {
+          "key": "connection.profileId",
+          "path": "profileId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.serverName",
+          "path": "serverName",
+          "kind": "string",
+          "probes": [
+            "Studio OpenCode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "connection.since",
+          "path": "since",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.usesToken",
+          "path": "usesToken",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.retrying",
+          "path": "retrying",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.quiet",
+          "path": "quiet",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.attemptRevision",
+          "path": "attemptRevision",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "Studio OpenCode isn't answering"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "connection_quiet",
+      "kind": "connection",
+      "payload": {
+        "profileId": "srv_unlisted",
+        "serverName": "Studio OpenCode",
+        "since": "2026-10-09T09:00:00.000Z",
+        "usesToken": false,
+        "retrying": false,
+        "quiet": true,
+        "attemptRevision": 3,
+        "phase": "hidden"
+      },
+      "fields": [
+        {
+          "key": "connection.profileId",
+          "path": "profileId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.serverName",
+          "path": "serverName",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.since",
+          "path": "since",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.usesToken",
+          "path": "usesToken",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.retrying",
+          "path": "retrying",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.quiet",
+          "path": "quiet",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.attemptRevision",
+          "path": "attemptRevision",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "connection_connected",
+      "kind": "connection",
+      "payload": {
+        "profileId": "srv_unlisted",
+        "serverName": "Studio OpenCode",
+        "since": "2026-10-09T09:00:00.000Z",
+        "usesToken": false,
+        "retrying": false,
+        "quiet": false,
+        "attemptRevision": 3,
+        "phase": "connected"
+      },
+      "fields": [
+        {
+          "key": "connection.profileId",
+          "path": "profileId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.serverName",
+          "path": "serverName",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.since",
+          "path": "since",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.usesToken",
+          "path": "usesToken",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.retrying",
+          "path": "retrying",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.quiet",
+          "path": "quiet",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.attemptRevision",
+          "path": "attemptRevision",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "connection.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "attention_waiting_and_working",
+      "kind": "attention",
+      "payload": {
+        "status": "current",
+        "checkedAt": "2026-10-09T09:30:00.000Z",
+        "nextCheckAt": "2026-10-09T09:31:00.000Z",
+        "directory": "/work/shop",
+        "attentionComplete": true,
+        "complete": true,
+        "profileID": "srv_oc2",
+        "workspace": "wrk_main",
+        "runningCount": 2,
+        "requests": [
+          {
+            "id": "per_up1",
+            "sessionID": "ses_up1",
+            "kind": "permission",
+            "title": "Fix the upload retry",
+            "directory": "/work/shop",
+            "workspace": "wrk_main"
+          }
+        ],
+        "attention": [],
+        "busyIntervals": []
+      },
+      "fields": [
+        {
+          "key": "attention.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.checkedAt",
+          "path": "checkedAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.nextCheckAt",
+          "path": "nextCheckAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.directory",
+          "path": "directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.attentionComplete",
+          "path": "attentionComplete",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.complete",
+          "path": "complete",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.profileID",
+          "path": "profileID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.workspace",
+          "path": "workspace",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.runningCount",
+          "path": "runningCount",
+          "kind": "number",
+          "probes": [
+            "2 working"
+          ],
+          "primary": false
+        },
+        {
+          "key": "attention.requests[].id",
+          "path": "requests[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.requests[].sessionID",
+          "path": "requests[].sessionID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.requests[].kind",
+          "path": "requests[].kind",
+          "kind": "enum",
+          "probes": [
+            "Needs your OK"
+          ],
+          "primary": false
+        },
+        {
+          "key": "attention.requests[].title",
+          "path": "requests[].title",
+          "kind": "string",
+          "probes": [
+            "Fix the upload retry"
+          ],
+          "primary": false
+        },
+        {
+          "key": "attention.requests[].directory",
+          "path": "requests[].directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.requests[].workspace",
+          "path": "requests[].workspace",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.attention",
+          "path": "attention",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "attention_question_and_form",
+      "kind": "attention",
+      "payload": {
+        "status": "current",
+        "checkedAt": "2026-10-09T09:30:00.000Z",
+        "nextCheckAt": "2026-10-09T09:31:00.000Z",
+        "directory": "/work/shop",
+        "attentionComplete": true,
+        "complete": true,
+        "profileID": "srv_oc2",
+        "runningCount": 0,
+        "requests": [
+          {
+            "id": "que_up2",
+            "sessionID": "ses_up2",
+            "kind": "question",
+            "title": "Pick the retry limit",
+            "directory": "/work/shop"
+          },
+          {
+            "id": "frm_up3",
+            "sessionID": "ses_up3",
+            "kind": "form",
+            "title": "Connect Sentry",
+            "directory": "/work/shop"
+          }
+        ],
+        "attention": [],
+        "busyIntervals": []
+      },
+      "fields": [
+        {
+          "key": "attention.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.checkedAt",
+          "path": "checkedAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.nextCheckAt",
+          "path": "nextCheckAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.directory",
+          "path": "directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.attentionComplete",
+          "path": "attentionComplete",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.complete",
+          "path": "complete",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.profileID",
+          "path": "profileID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.runningCount",
+          "path": "runningCount",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.requests[].id",
+          "path": "requests[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.requests[].sessionID",
+          "path": "requests[].sessionID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.requests[].kind",
+          "path": "requests[].kind",
+          "kind": "enum",
+          "probes": [
+            "Needs your decision"
+          ],
+          "primary": false
+        },
+        {
+          "key": "attention.requests[].title",
+          "path": "requests[].title",
+          "kind": "string",
+          "probes": [
+            "Pick the retry limit",
+            "Connect Sentry"
+          ],
+          "primary": false
+        },
+        {
+          "key": "attention.requests[].directory",
+          "path": "requests[].directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.attention",
+          "path": "attention",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "attention_check_in",
+      "kind": "attention",
+      "payload": {
+        "status": "current",
+        "checkedAt": "2026-10-09T09:30:00.000Z",
+        "nextCheckAt": "2026-10-09T09:31:00.000Z",
+        "directory": "/work/shop",
+        "attentionComplete": true,
+        "complete": true,
+        "profileID": "srv_oc2",
+        "runningCount": 1,
+        "requests": [],
+        "attention": [],
+        "busyIntervals": [
+          {
+            "sessionID": "ses_long",
+            "firstObservedBusyAt": "2026-10-09T08:40:00.000Z",
+            "lastObservedBusyAt": "2026-10-09T09:29:00.000Z",
+            "title": "Migrate the billing tables",
+            "directory": "/work/billing",
+            "workspace": "wrk_bill",
+            "reminderClaimed": false
+          }
+        ]
+      },
+      "fields": [
+        {
+          "key": "attention.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.checkedAt",
+          "path": "checkedAt",
+          "kind": "string",
+          "probes": [
+            "Last checked"
+          ],
+          "primary": false
+        },
+        {
+          "key": "attention.nextCheckAt",
+          "path": "nextCheckAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.directory",
+          "path": "directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.attentionComplete",
+          "path": "attentionComplete",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.complete",
+          "path": "complete",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.profileID",
+          "path": "profileID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.runningCount",
+          "path": "runningCount",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.attention",
+          "path": "attention",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.busyIntervals[].sessionID",
+          "path": "busyIntervals[].sessionID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.busyIntervals[].firstObservedBusyAt",
+          "path": "busyIntervals[].firstObservedBusyAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.busyIntervals[].lastObservedBusyAt",
+          "path": "busyIntervals[].lastObservedBusyAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.busyIntervals[].title",
+          "path": "busyIntervals[].title",
+          "kind": "string",
+          "probes": [
+            "Migrate the billing tables"
+          ],
+          "primary": false
+        },
+        {
+          "key": "attention.busyIntervals[].directory",
+          "path": "busyIntervals[].directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.busyIntervals[].workspace",
+          "path": "busyIntervals[].workspace",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.busyIntervals[].reminderClaimed",
+          "path": "busyIntervals[].reminderClaimed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "attention_waiting_to_check",
+      "kind": "attention",
+      "payload": {
+        "profileID": "srv_oc2",
+        "status": "waiting",
+        "requests": [],
+        "attention": [],
+        "busyIntervals": [],
+        "attentionComplete": false,
+        "complete": false
+      },
+      "fields": [
+        {
+          "key": "attention.profileID",
+          "path": "profileID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.attention",
+          "path": "attention",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.attentionComplete",
+          "path": "attentionComplete",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.complete",
+          "path": "complete",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "attention_unavailable",
+      "kind": "attention",
+      "payload": {
+        "profileID": "srv_oc2",
+        "status": "unavailable",
+        "requests": [],
+        "attention": [],
+        "busyIntervals": [],
+        "attentionComplete": false,
+        "complete": false
+      },
+      "fields": [
+        {
+          "key": "attention.profileID",
+          "path": "profileID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.attention",
+          "path": "attention",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.attentionComplete",
+          "path": "attentionComplete",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "attention.complete",
+          "path": "complete",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

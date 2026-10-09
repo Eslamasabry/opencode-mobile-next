@@ -34091,5 +34091,108 @@
   "kitRequestShowLess": "Show less",
   "@kitRequestShowLess": {
     "description": "Request card: Show less"
+  },
+  "paseoCheckReady": "Ready on that computer: {agents}.",
+  "@paseoCheckReady": {
+    "description": "Add server: the agents a checked Paseo daemon can run right now",
+    "placeholders": {
+      "agents": {
+        "type": "String"
+      }
+    }
+  },
+  "paseoCheckNoneReady": "No agent is ready on that computer yet.",
+  "@paseoCheckNoneReady": {
+    "description": "Add server: a checked Paseo daemon reports no agent ready"
+  },
+  "serverRowDetailsVersion": "Version",
+  "@serverRowDetailsVersion": {
+    "description": "Server details sheet: the version the server last reported"
+  },
+  "capabilityDevServices": "Dev servers",
+  "@capabilityDevServices": {
+    "description": "Capabilities page: running a project's dev server"
+  },
+  "capabilityDevServicesDetail": "Start a project's server or preview, and stop it again",
+  "@capabilityDevServicesDetail": {
+    "description": "Capabilities page: dev servers detail"
+  },
+  "capabilityWebSearch": "Web search",
+  "@capabilityWebSearch": {
+    "description": "Capabilities page: web search"
+  },
+  "capabilityWebSearchDetail": "Let the agent look things up on the web",
+  "@capabilityWebSearchDetail": {
+    "description": "Capabilities page: web search detail"
+  },
+  "capabilityDeleteMessage": "Delete a message",
+  "@capabilityDeleteMessage": {
+    "description": "Capabilities page: deleting a message"
+  },
+  "capabilityDeleteMessageDetail": "Remove a message from a conversation",
+  "@capabilityDeleteMessageDetail": {
+    "description": "Capabilities page: delete message detail"
+  },
+  "capabilitySavedPermissions": "Saved approvals",
+  "@capabilitySavedPermissions": {
+    "description": "Capabilities page: the list of always-allowed actions"
+  },
+  "capabilitySavedPermissionsDetail": "See and remove the actions you always allowed",
+  "@capabilitySavedPermissionsDetail": {
+    "description": "Capabilities page: saved approvals detail"
+  },
+  "capabilityMcpAdd": "Add MCP servers",
+  "@capabilityMcpAdd": {
+    "description": "Capabilities page: adding MCP servers"
+  },
+  "capabilityMcpAddDetail": "Add an MCP server or change its settings from the app",
+  "@capabilityMcpAddDetail": {
+    "description": "Capabilities page: add MCP detail"
+  },
+  "capabilityApprovals": "Ask before acting",
+  "@capabilityApprovals": {
+    "description": "Capabilities page: approval prompts"
+  },
+  "capabilityApprovalsDetail": "Choose whether the agent asks for approval or acts on its own",
+  "@capabilityApprovalsDetail": {
+    "description": "Capabilities page: approvals detail"
+  },
+  "capabilitySteer": "Send while it works",
+  "@capabilitySteer": {
+    "description": "Capabilities page: sending a message while the agent is busy"
+  },
+  "capabilitySteerDetail": "Add a message while the agent is busy: steer it or queue it",
+  "@capabilitySteerDetail": {
+    "description": "Capabilities page: send while busy detail"
+  },
+  "serverSettingsAuthPasswordSaved": "Password saved on this phone",
+  "@serverSettingsAuthPasswordSaved": {
+    "description": "Server settings: the sign-in row of a Claude Code or Pi server with a password saved"
+  },
+  "serverSettingsAuthTokenSaved": "Connection token saved on this phone",
+  "@serverSettingsAuthTokenSaved": {
+    "description": "Server settings: the sign-in row of a Codex server with its token saved"
+  },
+  "serverSettingsAuthTokenMissing": "No connection token saved",
+  "@serverSettingsAuthTokenMissing": {
+    "description": "Server settings: the sign-in row of a Codex server with no token saved"
+  },
+  "connectionPasswordRejectedFor": "The password for {server} changed. Update it to reconnect.",
+  "@connectionPasswordRejectedFor": {
+    "description": "Status line: the saved password was rejected; names the server",
+    "placeholders": {
+      "server": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionTokenRejectedFor": "{server} rejected the connection token. Update it to reconnect.",
+  "@connectionTokenRejectedFor": {
+    "description": "Status line: the saved connection token was rejected; names the server",
+    "placeholders": {
+      "server": {
+        "type": "String"
+      }
+    }
   }
 }

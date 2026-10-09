@@ -176,7 +176,10 @@ void main() {
       connection.connectionStatus.phase,
       ConnectionStatusPhase.credentialsRequired,
     );
-    expect(find.text('Server password changed — reconnect.'), findsOneWidget);
+    expect(
+      find.textContaining('changed. Update it to reconnect.'),
+      findsOneWidget,
+    );
     expect(find.text('Update password'), findsOneWidget);
     expect(find.textContaining("Can't read the saved password"), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
