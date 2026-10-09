@@ -1,0 +1,4154 @@
+{
+  "source": "contracts/gascity-supervisor-openapi-v0-3648ca2d499a.json",
+  "schema": {
+    "AgentResponse": [
+      {
+        "path": "active_bead",
+        "kind": "string"
+      },
+      {
+        "path": "activity",
+        "kind": "string"
+      },
+      {
+        "path": "available",
+        "kind": "boolean"
+      },
+      {
+        "path": "context_pct",
+        "kind": "number"
+      },
+      {
+        "path": "context_window",
+        "kind": "number"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "display_name",
+        "kind": "string"
+      },
+      {
+        "path": "last_output",
+        "kind": "string"
+      },
+      {
+        "path": "model",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "pack",
+        "kind": "string"
+      },
+      {
+        "path": "pack_derived",
+        "kind": "boolean"
+      },
+      {
+        "path": "pool",
+        "kind": "string"
+      },
+      {
+        "path": "provider",
+        "kind": "string"
+      },
+      {
+        "path": "rig",
+        "kind": "string"
+      },
+      {
+        "path": "running",
+        "kind": "boolean"
+      },
+      {
+        "path": "session.attached",
+        "kind": "boolean"
+      },
+      {
+        "path": "session.last_activity",
+        "kind": "string"
+      },
+      {
+        "path": "session.name",
+        "kind": "string"
+      },
+      {
+        "path": "state",
+        "kind": "string"
+      },
+      {
+        "path": "suspended",
+        "kind": "boolean"
+      },
+      {
+        "path": "unavailable_reason",
+        "kind": "string"
+      }
+    ],
+    "SessionResponse": [
+      {
+        "path": "active_bead",
+        "kind": "string"
+      },
+      {
+        "path": "activity",
+        "kind": "string"
+      },
+      {
+        "path": "agent_kind",
+        "kind": "string"
+      },
+      {
+        "path": "alias",
+        "kind": "string"
+      },
+      {
+        "path": "attached",
+        "kind": "boolean"
+      },
+      {
+        "path": "configured_named_session",
+        "kind": "boolean"
+      },
+      {
+        "path": "context_pct",
+        "kind": "number"
+      },
+      {
+        "path": "context_window",
+        "kind": "number"
+      },
+      {
+        "path": "created_at",
+        "kind": "string"
+      },
+      {
+        "path": "display_name",
+        "kind": "string"
+      },
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "kind",
+        "kind": "string"
+      },
+      {
+        "path": "last_active",
+        "kind": "string"
+      },
+      {
+        "path": "last_nudge_delivered_at",
+        "kind": "string"
+      },
+      {
+        "path": "last_output",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "model",
+        "kind": "string"
+      },
+      {
+        "path": "options",
+        "kind": "any"
+      },
+      {
+        "path": "pool",
+        "kind": "string"
+      },
+      {
+        "path": "provider",
+        "kind": "string"
+      },
+      {
+        "path": "reason",
+        "kind": "string"
+      },
+      {
+        "path": "rig",
+        "kind": "string"
+      },
+      {
+        "path": "running",
+        "kind": "boolean"
+      },
+      {
+        "path": "session_name",
+        "kind": "string"
+      },
+      {
+        "path": "state",
+        "kind": "string"
+      },
+      {
+        "path": "submission_capabilities.supports_follow_up",
+        "kind": "boolean"
+      },
+      {
+        "path": "submission_capabilities.supports_interrupt_now",
+        "kind": "boolean"
+      },
+      {
+        "path": "template",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "work_dir",
+        "kind": "string"
+      }
+    ],
+    "Bead": [
+      {
+        "path": "assignee",
+        "kind": "string"
+      },
+      {
+        "path": "created_at",
+        "kind": "string"
+      },
+      {
+        "path": "defer_until",
+        "kind": "string"
+      },
+      {
+        "path": "dependencies",
+        "kind": "any"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "ephemeral",
+        "kind": "boolean"
+      },
+      {
+        "path": "from",
+        "kind": "string"
+      },
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "is_blocked",
+        "kind": "boolean"
+      },
+      {
+        "path": "issue_type",
+        "kind": "string"
+      },
+      {
+        "path": "labels",
+        "kind": "any"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "needs",
+        "kind": "any"
+      },
+      {
+        "path": "no_history",
+        "kind": "boolean"
+      },
+      {
+        "path": "parent",
+        "kind": "string"
+      },
+      {
+        "path": "priority",
+        "kind": "number"
+      },
+      {
+        "path": "ref",
+        "kind": "string"
+      },
+      {
+        "path": "status",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "updated_at",
+        "kind": "string"
+      }
+    ],
+    "Run": [
+      {
+        "path": "formula",
+        "kind": "string"
+      },
+      {
+        "path": "last_error.code",
+        "kind": "string"
+      },
+      {
+        "path": "last_error.message",
+        "kind": "string"
+      },
+      {
+        "path": "run_id",
+        "kind": "string"
+      },
+      {
+        "path": "scope.kind",
+        "kind": "string"
+      },
+      {
+        "path": "scope.ref",
+        "kind": "string"
+      },
+      {
+        "path": "started_at",
+        "kind": "string"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      },
+      {
+        "path": "target",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "updated_at",
+        "kind": "string"
+      }
+    ],
+    "RunStatusCounts": [
+      {
+        "path": "active",
+        "kind": "number"
+      },
+      {
+        "path": "canceled",
+        "kind": "number"
+      },
+      {
+        "path": "canceling",
+        "kind": "number"
+      },
+      {
+        "path": "completed",
+        "kind": "number"
+      },
+      {
+        "path": "failed",
+        "kind": "number"
+      },
+      {
+        "path": "pending",
+        "kind": "number"
+      },
+      {
+        "path": "skipped",
+        "kind": "number"
+      },
+      {
+        "path": "waiting",
+        "kind": "number"
+      }
+    ],
+    "CityPendingEntry": [
+      {
+        "path": "kind",
+        "kind": "string"
+      },
+      {
+        "path": "request_id",
+        "kind": "string"
+      },
+      {
+        "path": "session_id",
+        "kind": "string"
+      }
+    ],
+    "PendingInteraction": [
+      {
+        "path": "kind",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "options",
+        "kind": "any"
+      },
+      {
+        "path": "prompt",
+        "kind": "string"
+      },
+      {
+        "path": "request_id",
+        "kind": "string"
+      }
+    ],
+    "WaitView": [
+      {
+        "path": "created_at",
+        "kind": "string"
+      },
+      {
+        "path": "delivery_attempt",
+        "kind": "string"
+      },
+      {
+        "path": "dep_ids",
+        "kind": "any"
+      },
+      {
+        "path": "dep_mode",
+        "kind": "string"
+      },
+      {
+        "path": "expires_at",
+        "kind": "string"
+      },
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "kind",
+        "kind": "string"
+      },
+      {
+        "path": "labels",
+        "kind": "any"
+      },
+      {
+        "path": "note",
+        "kind": "string"
+      },
+      {
+        "path": "nudge_id",
+        "kind": "string"
+      },
+      {
+        "path": "registered_epoch",
+        "kind": "string"
+      },
+      {
+        "path": "session_id",
+        "kind": "string"
+      },
+      {
+        "path": "session_name",
+        "kind": "string"
+      },
+      {
+        "path": "state",
+        "kind": "string"
+      },
+      {
+        "path": "status",
+        "kind": "string"
+      }
+    ],
+    "UsageBody": [
+      {
+        "path": "available",
+        "kind": "boolean"
+      },
+      {
+        "path": "observed_from",
+        "kind": "string"
+      },
+      {
+        "path": "partial",
+        "kind": "boolean"
+      },
+      {
+        "path": "partial_reasons",
+        "kind": "any"
+      },
+      {
+        "path": "recent.cache_creation_tokens",
+        "kind": "number"
+      },
+      {
+        "path": "recent.cache_read_tokens",
+        "kind": "number"
+      },
+      {
+        "path": "recent.compute_facts",
+        "kind": "number"
+      },
+      {
+        "path": "recent.cost_usd_estimate",
+        "kind": "number"
+      },
+      {
+        "path": "recent.input_tokens",
+        "kind": "number"
+      },
+      {
+        "path": "recent.invocations",
+        "kind": "number"
+      },
+      {
+        "path": "recent.output_tokens",
+        "kind": "number"
+      },
+      {
+        "path": "recent.unpriced",
+        "kind": "number"
+      },
+      {
+        "path": "recent.wall_seconds",
+        "kind": "number"
+      },
+      {
+        "path": "recent_by_session",
+        "kind": "any"
+      },
+      {
+        "path": "recent_window_secs",
+        "kind": "number"
+      },
+      {
+        "path": "recording",
+        "kind": "boolean"
+      },
+      {
+        "path": "source",
+        "kind": "enum"
+      },
+      {
+        "path": "today.cache_creation_tokens",
+        "kind": "number"
+      },
+      {
+        "path": "today.cache_read_tokens",
+        "kind": "number"
+      },
+      {
+        "path": "today.compute_facts",
+        "kind": "number"
+      },
+      {
+        "path": "today.cost_usd_estimate",
+        "kind": "number"
+      },
+      {
+        "path": "today.input_tokens",
+        "kind": "number"
+      },
+      {
+        "path": "today.invocations",
+        "kind": "number"
+      },
+      {
+        "path": "today.output_tokens",
+        "kind": "number"
+      },
+      {
+        "path": "today.unpriced",
+        "kind": "number"
+      },
+      {
+        "path": "today.wall_seconds",
+        "kind": "number"
+      },
+      {
+        "path": "updated_at",
+        "kind": "string"
+      }
+    ],
+    "UsageSessionRecent": [
+      {
+        "path": "cache_creation_tokens",
+        "kind": "number"
+      },
+      {
+        "path": "cache_read_tokens",
+        "kind": "number"
+      },
+      {
+        "path": "cost_usd_estimate",
+        "kind": "number"
+      },
+      {
+        "path": "input_tokens",
+        "kind": "number"
+      },
+      {
+        "path": "output_tokens",
+        "kind": "number"
+      },
+      {
+        "path": "session",
+        "kind": "string"
+      },
+      {
+        "path": "session_id",
+        "kind": "string"
+      },
+      {
+        "path": "unpriced",
+        "kind": "number"
+      }
+    ],
+    "StatusBody": [
+      {
+        "path": "agent_count",
+        "kind": "number"
+      },
+      {
+        "path": "agent_details",
+        "kind": "any"
+      },
+      {
+        "path": "agents.quarantined",
+        "kind": "number"
+      },
+      {
+        "path": "agents.running",
+        "kind": "number"
+      },
+      {
+        "path": "agents.suspended",
+        "kind": "number"
+      },
+      {
+        "path": "agents.total",
+        "kind": "number"
+      },
+      {
+        "path": "beads.beads_store",
+        "kind": "string"
+      },
+      {
+        "path": "beads.native_store_eligible",
+        "kind": "boolean"
+      },
+      {
+        "path": "beads.preflight_gate",
+        "kind": "string"
+      },
+      {
+        "path": "beads.preflight_reason",
+        "kind": "string"
+      },
+      {
+        "path": "beads_version",
+        "kind": "string"
+      },
+      {
+        "path": "conditional_writes.effective",
+        "kind": "enum"
+      },
+      {
+        "path": "conditional_writes.mode",
+        "kind": "enum"
+      },
+      {
+        "path": "conditional_writes.notices",
+        "kind": "any"
+      },
+      {
+        "path": "conditional_writes.origin",
+        "kind": "enum"
+      },
+      {
+        "path": "conditional_writes.stores",
+        "kind": "any"
+      },
+      {
+        "path": "dolt_version",
+        "kind": "string"
+      },
+      {
+        "path": "mail.total",
+        "kind": "number"
+      },
+      {
+        "path": "mail.unread",
+        "kind": "number"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "named_session_details",
+        "kind": "any"
+      },
+      {
+        "path": "partial",
+        "kind": "boolean"
+      },
+      {
+        "path": "partial_errors",
+        "kind": "any"
+      },
+      {
+        "path": "path",
+        "kind": "string"
+      },
+      {
+        "path": "rig_count",
+        "kind": "number"
+      },
+      {
+        "path": "rig_details",
+        "kind": "any"
+      },
+      {
+        "path": "rigs.suspended",
+        "kind": "number"
+      },
+      {
+        "path": "rigs.total",
+        "kind": "number"
+      },
+      {
+        "path": "running",
+        "kind": "number"
+      },
+      {
+        "path": "session_counts_detail.active",
+        "kind": "number"
+      },
+      {
+        "path": "session_counts_detail.suspended",
+        "kind": "number"
+      },
+      {
+        "path": "store_health.last_gc_at",
+        "kind": "string"
+      },
+      {
+        "path": "store_health.last_gc_status",
+        "kind": "string"
+      },
+      {
+        "path": "store_health.live_rows",
+        "kind": "number"
+      },
+      {
+        "path": "store_health.path",
+        "kind": "string"
+      },
+      {
+        "path": "store_health.ratio_mb_per_row",
+        "kind": "number"
+      },
+      {
+        "path": "store_health.size_bytes",
+        "kind": "number"
+      },
+      {
+        "path": "store_health.threshold_mb_per_row",
+        "kind": "number"
+      },
+      {
+        "path": "store_health.warning",
+        "kind": "boolean"
+      },
+      {
+        "path": "suspended",
+        "kind": "boolean"
+      },
+      {
+        "path": "uptime_sec",
+        "kind": "number"
+      },
+      {
+        "path": "version",
+        "kind": "string"
+      },
+      {
+        "path": "work.in_progress",
+        "kind": "number"
+      },
+      {
+        "path": "work.open",
+        "kind": "number"
+      },
+      {
+        "path": "work.ready",
+        "kind": "number"
+      }
+    ],
+    "StatusRigDetail": [
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "path",
+        "kind": "string"
+      },
+      {
+        "path": "suspended",
+        "kind": "boolean"
+      }
+    ],
+    "StatusAgentDetail": [
+      {
+        "path": "draining",
+        "kind": "boolean"
+      },
+      {
+        "path": "expanded",
+        "kind": "boolean"
+      },
+      {
+        "path": "group_name",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "qualified_name",
+        "kind": "string"
+      },
+      {
+        "path": "running",
+        "kind": "boolean"
+      },
+      {
+        "path": "scale_label",
+        "kind": "string"
+      },
+      {
+        "path": "scope",
+        "kind": "string"
+      },
+      {
+        "path": "session_name",
+        "kind": "string"
+      },
+      {
+        "path": "suspended",
+        "kind": "boolean"
+      }
+    ],
+    "HealthOutputBody": [
+      {
+        "path": "city",
+        "kind": "string"
+      },
+      {
+        "path": "status",
+        "kind": "string"
+      },
+      {
+        "path": "uptime_sec",
+        "kind": "number"
+      },
+      {
+        "path": "version",
+        "kind": "string"
+      }
+    ],
+    "SupervisorHealthOutputBody": [
+      {
+        "path": "build_id",
+        "kind": "string"
+      },
+      {
+        "path": "cities_running",
+        "kind": "number"
+      },
+      {
+        "path": "cities_total",
+        "kind": "number"
+      },
+      {
+        "path": "packs_lock_sha256",
+        "kind": "string"
+      },
+      {
+        "path": "startup.phase",
+        "kind": "string"
+      },
+      {
+        "path": "startup.phases_completed",
+        "kind": "any"
+      },
+      {
+        "path": "startup.ready",
+        "kind": "boolean"
+      },
+      {
+        "path": "status",
+        "kind": "string"
+      },
+      {
+        "path": "uptime_sec",
+        "kind": "number"
+      },
+      {
+        "path": "version",
+        "kind": "string"
+      }
+    ],
+    "CityInfo": [
+      {
+        "path": "error",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "path",
+        "kind": "string"
+      },
+      {
+        "path": "phases_completed",
+        "kind": "any"
+      },
+      {
+        "path": "running",
+        "kind": "boolean"
+      },
+      {
+        "path": "status",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "city_at_work",
+      "payload": {
+        "supervisor": {
+          "status": "ok",
+          "version": "1.4.1",
+          "build_id": "abc1234",
+          "uptime_sec": 86400,
+          "cities_total": 1,
+          "cities_running": 1,
+          "packs_lock_sha256": "deadbeef",
+          "startup": {
+            "phase": "ready",
+            "ready": true,
+            "phases_completed": [
+              "config",
+              "cities"
+            ]
+          }
+        },
+        "cities": [
+          {
+            "name": "phone",
+            "path": "/home/user/city",
+            "running": true,
+            "status": "running",
+            "error": "Last restart was slow",
+            "phases_completed": [
+              "bootstrap-config",
+              "bootstrap-rigs"
+            ]
+          }
+        ],
+        "agents": [
+          {
+            "name": "shopfront/gastown.furiosa",
+            "state": "active",
+            "running": true,
+            "suspended": false,
+            "available": true,
+            "display_name": "OpenCode",
+            "provider": "opencode",
+            "model": "gpt-6-sol",
+            "pack": "gastown",
+            "pack_derived": true,
+            "pool": "gastown.polecat",
+            "rig": "shopfront",
+            "session": {
+              "name": "shopfront--polecat--furiosa",
+              "last_activity": "2026-10-09T09:55:00Z",
+              "attached": true
+            },
+            "active_bead": "sf-12",
+            "activity": "Editing checkout_form.dart",
+            "last_output": "Wrote three files for the checkout form",
+            "context_pct": 63,
+            "context_window": 200000,
+            "description": "Builds one task at a time"
+          },
+          {
+            "name": "gastown.mayor",
+            "state": "idle",
+            "running": true,
+            "suspended": false,
+            "available": true,
+            "display_name": "Claude Code",
+            "provider": "claude",
+            "model": "opus-5-5",
+            "pack": "gastown",
+            "rig": "shopfront",
+            "session": {
+              "name": "shopfront--mayor",
+              "last_activity": "2026-10-09T09:30:00Z",
+              "attached": false
+            }
+          },
+          {
+            "name": "gastown.witness",
+            "state": "stopped",
+            "running": false,
+            "suspended": true,
+            "available": false,
+            "unavailable_reason": "No model is signed in for this agent",
+            "display_name": "Claude Code",
+            "provider": "claude",
+            "pack": "gastown"
+          }
+        ],
+        "sessions": [
+          {
+            "id": "sf-s1",
+            "kind": "agent",
+            "template": "shopfront/gastown.polecat",
+            "state": "active",
+            "title": "Checkout form",
+            "alias": "furiosa",
+            "provider": "opencode",
+            "display_name": "OpenCode",
+            "model": "gpt-6-sol",
+            "session_name": "shopfront--polecat--furiosa",
+            "work_dir": "/work/shopfront/.gc/worktrees/furiosa",
+            "created_at": "2026-10-09T08:00:00Z",
+            "last_active": "2026-10-09T09:55:00Z",
+            "last_nudge_delivered_at": "2026-10-09T09:30:00Z",
+            "attached": true,
+            "rig": "shopfront",
+            "pool": "gastown.polecat",
+            "agent_kind": "polecat",
+            "running": true,
+            "reason": "Waiting for the checkout form to compile",
+            "active_bead": "sf-12",
+            "activity": "Editing checkout_form.dart",
+            "last_output": "Wrote three files for the checkout form",
+            "context_pct": 63,
+            "context_window": 200000,
+            "configured_named_session": false,
+            "metadata": {
+              "branch": "polecat/sf-12"
+            },
+            "options": {
+              "effort": "high"
+            },
+            "submission_capabilities": {
+              "supports_follow_up": true,
+              "supports_interrupt_now": false
+            }
+          },
+          {
+            "id": "sf-s2",
+            "kind": "agent",
+            "template": "gastown.mayor",
+            "state": "active",
+            "session_name": "shopfront--mayor",
+            "provider": "claude",
+            "display_name": "Claude Code",
+            "model": "opus-5-5",
+            "running": true,
+            "rig": "shopfront",
+            "created_at": "2026-10-09T08:00:00Z",
+            "last_active": "2026-10-09T09:30:00Z",
+            "attached": false,
+            "configured_named_session": true
+          }
+        ],
+        "beads": [
+          {
+            "id": "sf-12",
+            "title": "Build the checkout form",
+            "description": "A form with card, address and a Pay button",
+            "status": "in_progress",
+            "issue_type": "task",
+            "priority": 1,
+            "assignee": "shopfront/gastown.furiosa",
+            "parent": "sf-c1",
+            "ref": "sf-12",
+            "from": "sf-c1",
+            "labels": [
+              "opencode-mobile",
+              "ui"
+            ],
+            "is_blocked": false,
+            "ephemeral": false,
+            "no_history": false,
+            "needs": [
+              "sf-11"
+            ],
+            "dependencies": [
+              {
+                "issue_id": "sf-12",
+                "depends_on_id": "sf-11",
+                "type": "blocks"
+              }
+            ],
+            "metadata": {
+              "gc.session_id": "sf-s1",
+              "branch": "polecat/sf-12",
+              "gc.routed_to": "shopfront/gastown.polecat"
+            },
+            "created_at": "2026-10-09T08:00:00Z",
+            "updated_at": "2026-10-09T09:55:00Z",
+            "defer_until": "2026-10-10T08:00:00Z"
+          },
+          {
+            "id": "sf-13",
+            "title": "Wire the payment provider",
+            "status": "open",
+            "issue_type": "task",
+            "priority": 2,
+            "is_blocked": true,
+            "labels": [],
+            "created_at": "2026-10-09T08:00:00Z",
+            "updated_at": "2026-10-09T09:30:00Z",
+            "dependencies": [
+              {
+                "issue_id": "sf-13",
+                "depends_on_id": "sf-12",
+                "type": "blocks"
+              }
+            ]
+          }
+        ],
+        "convoys": [
+          {
+            "id": "sf-c1",
+            "title": "Checkout flow",
+            "status": "open",
+            "issue_type": "convoy",
+            "priority": 2,
+            "labels": [],
+            "created_at": "2026-10-09T08:00:00Z",
+            "updated_at": "2026-10-09T09:55:00Z",
+            "dependencies": [
+              {
+                "issue_id": "sf-c1",
+                "depends_on_id": "sf-12",
+                "type": "tracks"
+              },
+              {
+                "issue_id": "sf-c1",
+                "depends_on_id": "sf-13",
+                "type": "tracks"
+              }
+            ]
+          }
+        ],
+        "runs": {
+          "runs": [
+            {
+              "run_id": "run-formula-1",
+              "title": "Nightly check",
+              "formula": "nightly-check",
+              "target": "shopfront/gastown.refinery",
+              "status": "active",
+              "scope": {
+                "kind": "rig",
+                "ref": "shopfront"
+              },
+              "started_at": "2026-10-09T08:00:00Z",
+              "updated_at": "2026-10-09T09:55:00Z",
+              "last_error": {
+                "code": "tests_failed",
+                "message": "Two tests failed in checkout_test.dart"
+              }
+            }
+          ],
+          "status_counts": {
+            "pending": 0,
+            "active": 1,
+            "waiting": 0,
+            "canceling": 0,
+            "completed": 3,
+            "failed": 1,
+            "canceled": 0,
+            "skipped": 0
+          }
+        },
+        "pending": [
+          {
+            "kind": "tool-approval",
+            "request_id": "req-1",
+            "session_id": "sf-s1"
+          },
+          {
+            "kind": "choice",
+            "request_id": "req-2",
+            "session_id": "sf-s2"
+          }
+        ],
+        "pendingDetail": {
+          "sf-s1": {
+            "request_id": "req-1",
+            "kind": "tool-approval",
+            "prompt": "Allow git push to origin?",
+            "options": [
+              "Allow",
+              "Deny"
+            ],
+            "metadata": {
+              "tool": "bash"
+            }
+          },
+          "sf-s2": {
+            "request_id": "req-2",
+            "kind": "choice",
+            "prompt": "Replace the old checkout or keep both?",
+            "options": [
+              "Replace",
+              "Keep both"
+            ],
+            "metadata": {
+              "rig": "shopfront"
+            }
+          }
+        },
+        "waits": [
+          {
+            "id": "wait-1",
+            "kind": "nudge",
+            "session_id": "sf-s1",
+            "session_name": "shopfront--polecat--furiosa",
+            "state": "waiting",
+            "status": "pending",
+            "note": "Waiting for the reviewer",
+            "dep_ids": [
+              "sf-11"
+            ],
+            "dep_mode": "all",
+            "labels": [
+              "review"
+            ],
+            "nudge_id": "nudge-1",
+            "delivery_attempt": "1",
+            "registered_epoch": "4",
+            "created_at": "2026-10-09T09:30:00Z",
+            "expires_at": "2026-10-09T12:00:00Z"
+          }
+        ],
+        "usage": {
+          "available": true,
+          "recording": true,
+          "source": "local_estimate",
+          "observed_from": "2026-10-09T08:00:00Z",
+          "updated_at": "2026-10-09T09:55:00Z",
+          "partial": false,
+          "partial_reasons": [
+            "History before Tuesday was trimmed"
+          ],
+          "recent_window_secs": 3600,
+          "recent": {
+            "invocations": 7919,
+            "compute_facts": 6007,
+            "input_tokens": 61000,
+            "output_tokens": 3100,
+            "cache_read_tokens": 21000,
+            "cache_creation_tokens": 1900,
+            "wall_seconds": 410,
+            "cost_usd_estimate": 0.7733,
+            "unpriced": 4177
+          },
+          "today": {
+            "invocations": 7921,
+            "compute_facts": 6011,
+            "input_tokens": 120000,
+            "output_tokens": 8000,
+            "cache_read_tokens": 50000,
+            "cache_creation_tokens": 4000,
+            "wall_seconds": 900,
+            "cost_usd_estimate": 1.25,
+            "unpriced": 2
+          },
+          "recent_by_session": [
+            {
+              "session": "shopfront--polecat--furiosa",
+              "session_id": "sf-s1",
+              "input_tokens": 90000,
+              "output_tokens": 6000,
+              "cache_read_tokens": 40000,
+              "cache_creation_tokens": 3000,
+              "cost_usd_estimate": 0.9,
+              "unpriced": 1
+            }
+          ]
+        },
+        "status": {
+          "name": "phone",
+          "path": "/home/user/city",
+          "version": "1.4.1",
+          "uptime_sec": 7200,
+          "suspended": false,
+          "agent_count": 2,
+          "running": 1,
+          "agents": {
+            "total": 2,
+            "running": 1,
+            "suspended": 1,
+            "quarantined": 0
+          },
+          "rig_count": 1,
+          "rigs": {
+            "total": 1,
+            "suspended": 0
+          },
+          "rig_details": [
+            {
+              "name": "shopfront",
+              "path": "/work/shopfront",
+              "suspended": false
+            }
+          ],
+          "agent_details": [
+            {
+              "name": "furiosa",
+              "qualified_name": "shopfront/gastown.furiosa",
+              "running": true,
+              "suspended": false,
+              "draining": false,
+              "expanded": true,
+              "group_name": "polecats",
+              "scale_label": "1 of 3",
+              "scope": "rig",
+              "session_name": "shopfront--polecat--furiosa"
+            }
+          ],
+          "work": {
+            "in_progress": 1,
+            "open": 2,
+            "ready": 1
+          },
+          "mail": {
+            "total": 4,
+            "unread": 1
+          },
+          "session_counts_detail": {
+            "active": 1,
+            "suspended": 1
+          },
+          "partial": false,
+          "partial_errors": [
+            "One rig did not answer"
+          ],
+          "beads_version": "1.0.2",
+          "dolt_version": "1.50",
+          "beads": {
+            "beads_store": "dolt",
+            "native_store_eligible": true,
+            "preflight_gate": "ok",
+            "preflight_reason": "ready"
+          },
+          "conditional_writes": {
+            "effective": "active",
+            "mode": "auto",
+            "origin": "builtin",
+            "notices": [
+              "Restart to finish switching stores"
+            ],
+            "stores": [
+              {
+                "kind": "bd",
+                "capable": true
+              }
+            ]
+          },
+          "named_session_details": [
+            {
+              "identity": "mayor",
+              "mode": "always",
+              "status": "running"
+            }
+          ],
+          "store_health": {
+            "last_gc_at": "2026-10-09T08:00:00Z",
+            "last_gc_status": "ok",
+            "live_rows": 1200,
+            "path": "/home/user/city/.beads",
+            "ratio_mb_per_row": 0.01,
+            "size_bytes": 12000000,
+            "threshold_mb_per_row": 0.5,
+            "warning": false
+          }
+        },
+        "_rigDetail": {
+          "name": "shopfront",
+          "path": "/work/shopfront",
+          "suspended": false
+        },
+        "_agentDetail": {
+          "name": "furiosa",
+          "qualified_name": "shopfront/gastown.furiosa",
+          "running": true,
+          "suspended": false,
+          "draining": false,
+          "expanded": true,
+          "group_name": "polecats",
+          "scale_label": "1 of 3",
+          "scope": "rig",
+          "session_name": "shopfront--polecat--furiosa"
+        },
+        "_sessionRecent": {
+          "session": "shopfront--polecat--furiosa",
+          "session_id": "sf-s1",
+          "input_tokens": 90000,
+          "output_tokens": 6000,
+          "cache_read_tokens": 40000,
+          "cache_creation_tokens": 3000,
+          "cost_usd_estimate": 0.9,
+          "unpriced": 1
+        },
+        "health": {
+          "status": "ok",
+          "city": "phone",
+          "uptime_sec": 7200,
+          "version": "1.4.1"
+        }
+      },
+      "kind": "city",
+      "fields": [
+        {
+          "key": "SupervisorHealthOutputBody.status",
+          "path": "status",
+          "kind": "string",
+          "probes": [
+            "ok"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SupervisorHealthOutputBody.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [
+            "1.4.1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SupervisorHealthOutputBody.build_id",
+          "path": "build_id",
+          "kind": "string",
+          "probes": [
+            "abc1234"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SupervisorHealthOutputBody.uptime_sec",
+          "path": "uptime_sec",
+          "kind": "number",
+          "probes": [
+            "86400"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SupervisorHealthOutputBody.cities_total",
+          "path": "cities_total",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SupervisorHealthOutputBody.cities_running",
+          "path": "cities_running",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SupervisorHealthOutputBody.packs_lock_sha256",
+          "path": "packs_lock_sha256",
+          "kind": "string",
+          "probes": [
+            "deadbeef"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SupervisorHealthOutputBody.startup.phase",
+          "path": "startup.phase",
+          "kind": "string",
+          "probes": [
+            "ready"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SupervisorHealthOutputBody.startup.ready",
+          "path": "startup.ready",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SupervisorHealthOutputBody.startup.phases_completed",
+          "path": "startup.phases_completed",
+          "kind": "any",
+          "probes": [
+            "config",
+            "cities"
+          ],
+          "primary": false
+        },
+        {
+          "key": "CityInfo.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "phone"
+          ],
+          "primary": false
+        },
+        {
+          "key": "CityInfo.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [
+            "/home/user/city"
+          ],
+          "primary": false
+        },
+        {
+          "key": "CityInfo.running",
+          "path": "running",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "CityInfo.status",
+          "path": "status",
+          "kind": "string",
+          "probes": [
+            "running"
+          ],
+          "primary": false
+        },
+        {
+          "key": "CityInfo.error",
+          "path": "error",
+          "kind": "string",
+          "probes": [
+            "Last restart was slow"
+          ],
+          "primary": false
+        },
+        {
+          "key": "CityInfo.phases_completed",
+          "path": "phases_completed",
+          "kind": "any",
+          "probes": [
+            "bootstrap-config",
+            "bootstrap-rigs"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "shopfront/gastown.furiosa"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.state",
+          "path": "state",
+          "kind": "string",
+          "probes": [
+            "active"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.running",
+          "path": "running",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.suspended",
+          "path": "suspended",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.available",
+          "path": "available",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.display_name",
+          "path": "display_name",
+          "kind": "string",
+          "probes": [
+            "OpenCode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "opencode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.model",
+          "path": "model",
+          "kind": "string",
+          "probes": [
+            "gpt-6-sol"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.pack",
+          "path": "pack",
+          "kind": "string",
+          "probes": [
+            "gastown"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.pack_derived",
+          "path": "pack_derived",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.pool",
+          "path": "pool",
+          "kind": "string",
+          "probes": [
+            "gastown.polecat"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.rig",
+          "path": "rig",
+          "kind": "string",
+          "probes": [
+            "shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.session.name",
+          "path": "session.name",
+          "kind": "string",
+          "probes": [
+            "shopfront--polecat--furiosa"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.session.last_activity",
+          "path": "session.last_activity",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T09:55:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.session.attached",
+          "path": "session.attached",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.active_bead",
+          "path": "active_bead",
+          "kind": "string",
+          "probes": [
+            "sf-12"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.activity",
+          "path": "activity",
+          "kind": "string",
+          "probes": [
+            "Editing checkout_form.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.last_output",
+          "path": "last_output",
+          "kind": "string",
+          "probes": [
+            "Wrote three files for the checkout form"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.context_pct",
+          "path": "context_pct",
+          "kind": "number",
+          "probes": [
+            "63"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.context_window",
+          "path": "context_window",
+          "kind": "number",
+          "probes": [
+            "200000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Builds one task at a time"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "gastown.mayor"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.state",
+          "path": "state",
+          "kind": "string",
+          "probes": [
+            "idle"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.running",
+          "path": "running",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.suspended",
+          "path": "suspended",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.available",
+          "path": "available",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.display_name",
+          "path": "display_name",
+          "kind": "string",
+          "probes": [
+            "Claude Code"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.model",
+          "path": "model",
+          "kind": "string",
+          "probes": [
+            "opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.pack",
+          "path": "pack",
+          "kind": "string",
+          "probes": [
+            "gastown"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.rig",
+          "path": "rig",
+          "kind": "string",
+          "probes": [
+            "shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.session.name",
+          "path": "session.name",
+          "kind": "string",
+          "probes": [
+            "shopfront--mayor"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.session.last_activity",
+          "path": "session.last_activity",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T09:30:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.session.attached",
+          "path": "session.attached",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "gastown.witness"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.state",
+          "path": "state",
+          "kind": "string",
+          "probes": [
+            "Crashed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.running",
+          "path": "running",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.suspended",
+          "path": "suspended",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.available",
+          "path": "available",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.unavailable_reason",
+          "path": "unavailable_reason",
+          "kind": "string",
+          "probes": [
+            "No model is signed in for this agent"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.display_name",
+          "path": "display_name",
+          "kind": "string",
+          "probes": [
+            "Claude Code"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "AgentResponse.pack",
+          "path": "pack",
+          "kind": "string",
+          "probes": [
+            "gastown"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "sf-s1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.kind",
+          "path": "kind",
+          "kind": "string",
+          "probes": [
+            "agent"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.template",
+          "path": "template",
+          "kind": "string",
+          "probes": [
+            "shopfront/gastown.polecat"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.state",
+          "path": "state",
+          "kind": "string",
+          "probes": [
+            "active"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Checkout form"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.alias",
+          "path": "alias",
+          "kind": "string",
+          "probes": [
+            "furiosa"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "opencode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.display_name",
+          "path": "display_name",
+          "kind": "string",
+          "probes": [
+            "OpenCode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.model",
+          "path": "model",
+          "kind": "string",
+          "probes": [
+            "gpt-6-sol"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.session_name",
+          "path": "session_name",
+          "kind": "string",
+          "probes": [
+            "shopfront--polecat--furiosa"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.work_dir",
+          "path": "work_dir",
+          "kind": "string",
+          "probes": [
+            "/work/shopfront/.gc/worktrees/furiosa"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.created_at",
+          "path": "created_at",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T08:00:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.last_active",
+          "path": "last_active",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T09:55:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.last_nudge_delivered_at",
+          "path": "last_nudge_delivered_at",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T09:30:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.attached",
+          "path": "attached",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.rig",
+          "path": "rig",
+          "kind": "string",
+          "probes": [
+            "shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.pool",
+          "path": "pool",
+          "kind": "string",
+          "probes": [
+            "gastown.polecat"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.agent_kind",
+          "path": "agent_kind",
+          "kind": "string",
+          "probes": [
+            "polecat"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.running",
+          "path": "running",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.reason",
+          "path": "reason",
+          "kind": "string",
+          "probes": [
+            "Waiting for the checkout form to compile"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.active_bead",
+          "path": "active_bead",
+          "kind": "string",
+          "probes": [
+            "sf-12"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.activity",
+          "path": "activity",
+          "kind": "string",
+          "probes": [
+            "Editing checkout_form.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.last_output",
+          "path": "last_output",
+          "kind": "string",
+          "probes": [
+            "Wrote three files for the checkout form"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.context_pct",
+          "path": "context_pct",
+          "kind": "number",
+          "probes": [
+            "63"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.context_window",
+          "path": "context_window",
+          "kind": "number",
+          "probes": [
+            "200000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.configured_named_session",
+          "path": "configured_named_session",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [
+            "polecat/sf-12"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.options",
+          "path": "options",
+          "kind": "any",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.submission_capabilities.supports_follow_up",
+          "path": "submission_capabilities.supports_follow_up",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.submission_capabilities.supports_interrupt_now",
+          "path": "submission_capabilities.supports_interrupt_now",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.kind",
+          "path": "kind",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.template",
+          "path": "template",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.state",
+          "path": "state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.session_name",
+          "path": "session_name",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.display_name",
+          "path": "display_name",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.model",
+          "path": "model",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.running",
+          "path": "running",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.rig",
+          "path": "rig",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.created_at",
+          "path": "created_at",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.last_active",
+          "path": "last_active",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.attached",
+          "path": "attached",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionResponse.configured_named_session",
+          "path": "configured_named_session",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Bead.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "sf-12"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Build the checkout form"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "A form with card, address and a Pay button"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.status",
+          "path": "status",
+          "kind": "string",
+          "probes": [
+            "in_progress"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.issue_type",
+          "path": "issue_type",
+          "kind": "string",
+          "probes": [
+            "task"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.priority",
+          "path": "priority",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.assignee",
+          "path": "assignee",
+          "kind": "string",
+          "probes": [
+            "shopfront/gastown.furiosa"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.parent",
+          "path": "parent",
+          "kind": "string",
+          "probes": [
+            "sf-c1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.ref",
+          "path": "ref",
+          "kind": "string",
+          "probes": [
+            "sf-12"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.from",
+          "path": "from",
+          "kind": "string",
+          "probes": [
+            "sf-c1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.labels",
+          "path": "labels",
+          "kind": "any",
+          "probes": [
+            "opencode-mobile",
+            "ui"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.is_blocked",
+          "path": "is_blocked",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Bead.ephemeral",
+          "path": "ephemeral",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Bead.no_history",
+          "path": "no_history",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Bead.needs",
+          "path": "needs",
+          "kind": "any",
+          "probes": [
+            "sf-11"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.dependencies",
+          "path": "dependencies",
+          "kind": "any",
+          "probes": [
+            "sf-11"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [
+            "sf-s1",
+            "polecat/sf-12",
+            "shopfront/gastown.polecat"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.created_at",
+          "path": "created_at",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T08:00:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.updated_at",
+          "path": "updated_at",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T09:55:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.defer_until",
+          "path": "defer_until",
+          "kind": "string",
+          "probes": [
+            "2026-10-10T08:00:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "sf-13"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Wire the payment provider"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.status",
+          "path": "status",
+          "kind": "string",
+          "probes": [
+            "open"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.issue_type",
+          "path": "issue_type",
+          "kind": "string",
+          "probes": [
+            "task"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.priority",
+          "path": "priority",
+          "kind": "number",
+          "probes": [
+            "2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.is_blocked",
+          "path": "is_blocked",
+          "kind": "boolean",
+          "probes": [
+            "Blocked"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.labels",
+          "path": "labels",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Bead.created_at",
+          "path": "created_at",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T08:00:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.updated_at",
+          "path": "updated_at",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T09:30:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.dependencies",
+          "path": "dependencies",
+          "kind": "any",
+          "probes": [
+            "sf-12"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "sf-c1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Checkout flow"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.status",
+          "path": "status",
+          "kind": "string",
+          "probes": [
+            "open"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.issue_type",
+          "path": "issue_type",
+          "kind": "string",
+          "probes": [
+            "convoy"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.priority",
+          "path": "priority",
+          "kind": "number",
+          "probes": [
+            "2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.labels",
+          "path": "labels",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Bead.created_at",
+          "path": "created_at",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T08:00:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.updated_at",
+          "path": "updated_at",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T09:55:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Bead.dependencies",
+          "path": "dependencies",
+          "kind": "any",
+          "probes": [
+            "sf-12",
+            "sf-13"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Run.run_id",
+          "path": "run_id",
+          "kind": "string",
+          "probes": [
+            "run-formula-1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Run.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Nightly check"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Run.formula",
+          "path": "formula",
+          "kind": "string",
+          "probes": [
+            "nightly-check"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Run.target",
+          "path": "target",
+          "kind": "string",
+          "probes": [
+            "shopfront/gastown.refinery"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Run.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Working"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Run.scope.kind",
+          "path": "scope.kind",
+          "kind": "string",
+          "probes": [
+            "rig"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Run.scope.ref",
+          "path": "scope.ref",
+          "kind": "string",
+          "probes": [
+            "shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Run.started_at",
+          "path": "started_at",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T08:00:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Run.updated_at",
+          "path": "updated_at",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T09:55:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Run.last_error.code",
+          "path": "last_error.code",
+          "kind": "string",
+          "probes": [
+            "tests_failed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Run.last_error.message",
+          "path": "last_error.message",
+          "kind": "string",
+          "probes": [
+            "Two tests failed in checkout_test.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "RunStatusCounts.pending",
+          "path": "pending",
+          "kind": "number",
+          "probes": [
+            "0"
+          ],
+          "primary": false
+        },
+        {
+          "key": "RunStatusCounts.active",
+          "path": "active",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "RunStatusCounts.waiting",
+          "path": "waiting",
+          "kind": "number",
+          "probes": [
+            "0"
+          ],
+          "primary": false
+        },
+        {
+          "key": "RunStatusCounts.canceling",
+          "path": "canceling",
+          "kind": "number",
+          "probes": [
+            "0"
+          ],
+          "primary": false
+        },
+        {
+          "key": "RunStatusCounts.completed",
+          "path": "completed",
+          "kind": "number",
+          "probes": [
+            "3"
+          ],
+          "primary": false
+        },
+        {
+          "key": "RunStatusCounts.failed",
+          "path": "failed",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "RunStatusCounts.canceled",
+          "path": "canceled",
+          "kind": "number",
+          "probes": [
+            "0"
+          ],
+          "primary": false
+        },
+        {
+          "key": "RunStatusCounts.skipped",
+          "path": "skipped",
+          "kind": "number",
+          "probes": [
+            "0"
+          ],
+          "primary": false
+        },
+        {
+          "key": "CityPendingEntry.kind",
+          "path": "kind",
+          "kind": "string",
+          "probes": [
+            "tool-approval"
+          ],
+          "primary": false
+        },
+        {
+          "key": "CityPendingEntry.request_id",
+          "path": "request_id",
+          "kind": "string",
+          "probes": [
+            "req-1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "CityPendingEntry.session_id",
+          "path": "session_id",
+          "kind": "string",
+          "probes": [
+            "sf-s1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "CityPendingEntry.kind",
+          "path": "kind",
+          "kind": "string",
+          "probes": [
+            "choice"
+          ],
+          "primary": false
+        },
+        {
+          "key": "CityPendingEntry.request_id",
+          "path": "request_id",
+          "kind": "string",
+          "probes": [
+            "req-2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "CityPendingEntry.session_id",
+          "path": "session_id",
+          "kind": "string",
+          "probes": [
+            "sf-s2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PendingInteraction.request_id",
+          "path": "request_id",
+          "kind": "string",
+          "probes": [
+            "req-1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PendingInteraction.kind",
+          "path": "kind",
+          "kind": "string",
+          "probes": [
+            "tool-approval"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PendingInteraction.prompt",
+          "path": "prompt",
+          "kind": "string",
+          "probes": [
+            "Allow git push to origin?"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PendingInteraction.options",
+          "path": "options",
+          "kind": "any",
+          "probes": [
+            "Allow",
+            "Deny"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PendingInteraction.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [
+            "bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PendingInteraction.request_id",
+          "path": "request_id",
+          "kind": "string",
+          "probes": [
+            "req-2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PendingInteraction.kind",
+          "path": "kind",
+          "kind": "string",
+          "probes": [
+            "choice"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PendingInteraction.prompt",
+          "path": "prompt",
+          "kind": "string",
+          "probes": [
+            "Replace the old checkout or keep both?"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PendingInteraction.options",
+          "path": "options",
+          "kind": "any",
+          "probes": [
+            "Replace",
+            "Keep both"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PendingInteraction.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [
+            "shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "WaitView.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "wait-1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "WaitView.kind",
+          "path": "kind",
+          "kind": "string",
+          "probes": [
+            "nudge"
+          ],
+          "primary": false
+        },
+        {
+          "key": "WaitView.session_id",
+          "path": "session_id",
+          "kind": "string",
+          "probes": [
+            "sf-s1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "WaitView.session_name",
+          "path": "session_name",
+          "kind": "string",
+          "probes": [
+            "shopfront--polecat--furiosa"
+          ],
+          "primary": false
+        },
+        {
+          "key": "WaitView.state",
+          "path": "state",
+          "kind": "string",
+          "probes": [
+            "waiting"
+          ],
+          "primary": false
+        },
+        {
+          "key": "WaitView.status",
+          "path": "status",
+          "kind": "string",
+          "probes": [
+            "pending"
+          ],
+          "primary": false
+        },
+        {
+          "key": "WaitView.note",
+          "path": "note",
+          "kind": "string",
+          "probes": [
+            "Waiting for the reviewer"
+          ],
+          "primary": false
+        },
+        {
+          "key": "WaitView.dep_ids",
+          "path": "dep_ids",
+          "kind": "any",
+          "probes": [
+            "sf-11"
+          ],
+          "primary": false
+        },
+        {
+          "key": "WaitView.dep_mode",
+          "path": "dep_mode",
+          "kind": "string",
+          "probes": [
+            "all"
+          ],
+          "primary": false
+        },
+        {
+          "key": "WaitView.labels",
+          "path": "labels",
+          "kind": "any",
+          "probes": [
+            "review"
+          ],
+          "primary": false
+        },
+        {
+          "key": "WaitView.nudge_id",
+          "path": "nudge_id",
+          "kind": "string",
+          "probes": [
+            "nudge-1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "WaitView.delivery_attempt",
+          "path": "delivery_attempt",
+          "kind": "string",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "WaitView.registered_epoch",
+          "path": "registered_epoch",
+          "kind": "string",
+          "probes": [
+            "4"
+          ],
+          "primary": false
+        },
+        {
+          "key": "WaitView.created_at",
+          "path": "created_at",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T09:30:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "WaitView.expires_at",
+          "path": "expires_at",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T12:00:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.available",
+          "path": "available",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recording",
+          "path": "recording",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.source",
+          "path": "source",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.observed_from",
+          "path": "observed_from",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T08:00:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.updated_at",
+          "path": "updated_at",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T09:55:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.partial",
+          "path": "partial",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.partial_reasons",
+          "path": "partial_reasons",
+          "kind": "any",
+          "probes": [
+            "History before Tuesday was trimmed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent_window_secs",
+          "path": "recent_window_secs",
+          "kind": "number",
+          "probes": [
+            "3600"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent.invocations",
+          "path": "recent.invocations",
+          "kind": "number",
+          "probes": [
+            "7919"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent.compute_facts",
+          "path": "recent.compute_facts",
+          "kind": "number",
+          "probes": [
+            "6007"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent.input_tokens",
+          "path": "recent.input_tokens",
+          "kind": "number",
+          "probes": [
+            "61000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent.output_tokens",
+          "path": "recent.output_tokens",
+          "kind": "number",
+          "probes": [
+            "3100"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent.cache_read_tokens",
+          "path": "recent.cache_read_tokens",
+          "kind": "number",
+          "probes": [
+            "21000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent.cache_creation_tokens",
+          "path": "recent.cache_creation_tokens",
+          "kind": "number",
+          "probes": [
+            "1900"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent.wall_seconds",
+          "path": "recent.wall_seconds",
+          "kind": "number",
+          "probes": [
+            "410"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent.cost_usd_estimate",
+          "path": "recent.cost_usd_estimate",
+          "kind": "number",
+          "probes": [
+            "0.7733"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent.unpriced",
+          "path": "recent.unpriced",
+          "kind": "number",
+          "probes": [
+            "4177"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.today.invocations",
+          "path": "today.invocations",
+          "kind": "number",
+          "probes": [
+            "7921"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.today.compute_facts",
+          "path": "today.compute_facts",
+          "kind": "number",
+          "probes": [
+            "6011"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.today.input_tokens",
+          "path": "today.input_tokens",
+          "kind": "number",
+          "probes": [
+            "128.0k tokens"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.today.output_tokens",
+          "path": "today.output_tokens",
+          "kind": "number",
+          "probes": [
+            "128.0k tokens"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.today.cache_read_tokens",
+          "path": "today.cache_read_tokens",
+          "kind": "number",
+          "probes": [
+            "50000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.today.cache_creation_tokens",
+          "path": "today.cache_creation_tokens",
+          "kind": "number",
+          "probes": [
+            "4000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.today.wall_seconds",
+          "path": "today.wall_seconds",
+          "kind": "number",
+          "probes": [
+            "900"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.today.cost_usd_estimate",
+          "path": "today.cost_usd_estimate",
+          "kind": "number",
+          "probes": [
+            "$1.25"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.today.unpriced",
+          "path": "today.unpriced",
+          "kind": "number",
+          "probes": [
+            "has no price yet"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent_by_session",
+          "path": "recent_by_session",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "phone"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [
+            "/home/user/city"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [
+            "1.4.1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.uptime_sec",
+          "path": "uptime_sec",
+          "kind": "number",
+          "probes": [
+            "7200"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.suspended",
+          "path": "suspended",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.agent_count",
+          "path": "agent_count",
+          "kind": "number",
+          "probes": [
+            "2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.running",
+          "path": "running",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.agents.total",
+          "path": "agents.total",
+          "kind": "number",
+          "probes": [
+            "2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.agents.running",
+          "path": "agents.running",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.agents.suspended",
+          "path": "agents.suspended",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.agents.quarantined",
+          "path": "agents.quarantined",
+          "kind": "number",
+          "probes": [
+            "0"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.rig_count",
+          "path": "rig_count",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.rigs.total",
+          "path": "rigs.total",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.rigs.suspended",
+          "path": "rigs.suspended",
+          "kind": "number",
+          "probes": [
+            "0"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.rig_details",
+          "path": "rig_details",
+          "kind": "any",
+          "probes": [
+            "shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.agent_details",
+          "path": "agent_details",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.work.in_progress",
+          "path": "work.in_progress",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.work.open",
+          "path": "work.open",
+          "kind": "number",
+          "probes": [
+            "2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.work.ready",
+          "path": "work.ready",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.mail.total",
+          "path": "mail.total",
+          "kind": "number",
+          "probes": [
+            "4"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.mail.unread",
+          "path": "mail.unread",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.session_counts_detail.active",
+          "path": "session_counts_detail.active",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.session_counts_detail.suspended",
+          "path": "session_counts_detail.suspended",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.partial",
+          "path": "partial",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.partial_errors",
+          "path": "partial_errors",
+          "kind": "any",
+          "probes": [
+            "One rig did not answer"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.beads_version",
+          "path": "beads_version",
+          "kind": "string",
+          "probes": [
+            "1.0.2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.dolt_version",
+          "path": "dolt_version",
+          "kind": "string",
+          "probes": [
+            "1.50"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.beads.beads_store",
+          "path": "beads.beads_store",
+          "kind": "string",
+          "probes": [
+            "dolt"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.beads.native_store_eligible",
+          "path": "beads.native_store_eligible",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.beads.preflight_gate",
+          "path": "beads.preflight_gate",
+          "kind": "string",
+          "probes": [
+            "ok"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.beads.preflight_reason",
+          "path": "beads.preflight_reason",
+          "kind": "string",
+          "probes": [
+            "ready"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.conditional_writes.effective",
+          "path": "conditional_writes.effective",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.conditional_writes.mode",
+          "path": "conditional_writes.mode",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.conditional_writes.origin",
+          "path": "conditional_writes.origin",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.conditional_writes.notices",
+          "path": "conditional_writes.notices",
+          "kind": "any",
+          "probes": [
+            "Restart to finish switching stores"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.conditional_writes.stores",
+          "path": "conditional_writes.stores",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.named_session_details",
+          "path": "named_session_details",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.store_health.last_gc_at",
+          "path": "store_health.last_gc_at",
+          "kind": "string",
+          "probes": [
+            "2026-10-09T08:00:00Z"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.store_health.last_gc_status",
+          "path": "store_health.last_gc_status",
+          "kind": "string",
+          "probes": [
+            "ok"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.store_health.live_rows",
+          "path": "store_health.live_rows",
+          "kind": "number",
+          "probes": [
+            "1200"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.store_health.path",
+          "path": "store_health.path",
+          "kind": "string",
+          "probes": [
+            "/home/user/city/.beads"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.store_health.ratio_mb_per_row",
+          "path": "store_health.ratio_mb_per_row",
+          "kind": "number",
+          "probes": [
+            "0.01"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.store_health.size_bytes",
+          "path": "store_health.size_bytes",
+          "kind": "number",
+          "probes": [
+            "12000000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.store_health.threshold_mb_per_row",
+          "path": "store_health.threshold_mb_per_row",
+          "kind": "number",
+          "probes": [
+            "0.5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusBody.store_health.warning",
+          "path": "store_health.warning",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusRigDetail.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusRigDetail.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [
+            "/work/shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusRigDetail.suspended",
+          "path": "suspended",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusAgentDetail.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "furiosa"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusAgentDetail.qualified_name",
+          "path": "qualified_name",
+          "kind": "string",
+          "probes": [
+            "shopfront/gastown.furiosa"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusAgentDetail.running",
+          "path": "running",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusAgentDetail.suspended",
+          "path": "suspended",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusAgentDetail.draining",
+          "path": "draining",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusAgentDetail.expanded",
+          "path": "expanded",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "StatusAgentDetail.group_name",
+          "path": "group_name",
+          "kind": "string",
+          "probes": [
+            "polecats"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusAgentDetail.scale_label",
+          "path": "scale_label",
+          "kind": "string",
+          "probes": [
+            "1 of 3"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusAgentDetail.scope",
+          "path": "scope",
+          "kind": "string",
+          "probes": [
+            "rig"
+          ],
+          "primary": false
+        },
+        {
+          "key": "StatusAgentDetail.session_name",
+          "path": "session_name",
+          "kind": "string",
+          "probes": [
+            "shopfront--polecat--furiosa"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageSessionRecent.session",
+          "path": "session",
+          "kind": "string",
+          "probes": [
+            "shopfront--polecat--furiosa"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageSessionRecent.session_id",
+          "path": "session_id",
+          "kind": "string",
+          "probes": [
+            "sf-s1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageSessionRecent.input_tokens",
+          "path": "input_tokens",
+          "kind": "number",
+          "probes": [
+            "90000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageSessionRecent.output_tokens",
+          "path": "output_tokens",
+          "kind": "number",
+          "probes": [
+            "6000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageSessionRecent.cache_read_tokens",
+          "path": "cache_read_tokens",
+          "kind": "number",
+          "probes": [
+            "40000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageSessionRecent.cache_creation_tokens",
+          "path": "cache_creation_tokens",
+          "kind": "number",
+          "probes": [
+            "3000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageSessionRecent.cost_usd_estimate",
+          "path": "cost_usd_estimate",
+          "kind": "number",
+          "probes": [
+            "0.9"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageSessionRecent.unpriced",
+          "path": "unpriced",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "HealthOutputBody.status",
+          "path": "status",
+          "kind": "string",
+          "probes": [
+            "ok"
+          ],
+          "primary": false
+        },
+        {
+          "key": "HealthOutputBody.city",
+          "path": "city",
+          "kind": "string",
+          "probes": [
+            "phone"
+          ],
+          "primary": false
+        },
+        {
+          "key": "HealthOutputBody.uptime_sec",
+          "path": "uptime_sec",
+          "kind": "number",
+          "probes": [
+            "7200"
+          ],
+          "primary": false
+        },
+        {
+          "key": "HealthOutputBody.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [
+            "1.4.1"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "city_quiet",
+      "payload": {
+        "supervisor": {
+          "status": "ok",
+          "version": "1.4.1"
+        },
+        "cities": [
+          {
+            "name": "phone",
+            "running": true
+          }
+        ],
+        "agents": [],
+        "sessions": [],
+        "beads": [],
+        "convoys": [],
+        "pending": [],
+        "pendingDetail": {},
+        "waits": [],
+        "runs": {
+          "runs": [],
+          "status_counts": {
+            "pending": 0,
+            "active": 0,
+            "waiting": 0,
+            "canceling": 0,
+            "completed": 0,
+            "failed": 0,
+            "canceled": 0,
+            "skipped": 0
+          }
+        },
+        "usage": {
+          "available": true,
+          "recording": false,
+          "source": "local_estimate",
+          "observed_from": "2026-10-09T08:00:00Z",
+          "updated_at": "2026-10-09T09:55:00Z",
+          "partial": true,
+          "partial_reasons": [
+            "History before Tuesday was trimmed"
+          ],
+          "recent_window_secs": 3600,
+          "recent": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "cost_usd_estimate": 0.1,
+            "unpriced": 0
+          },
+          "today": {
+            "input_tokens": 1000,
+            "output_tokens": 500,
+            "cost_usd_estimate": 0.2,
+            "unpriced": 0
+          },
+          "recent_by_session": []
+        },
+        "status": {
+          "name": "phone",
+          "version": "1.4.1",
+          "rig_details": [
+            {
+              "name": "shopfront",
+              "path": "/work/shopfront"
+            }
+          ],
+          "agents": {
+            "total": 0,
+            "running": 0
+          },
+          "work": {
+            "in_progress": 0,
+            "open": 0,
+            "ready": 0
+          }
+        },
+        "health": {
+          "status": "ok",
+          "city": "phone",
+          "version": "1.4.1",
+          "uptime_sec": 60
+        }
+      },
+      "kind": "city",
+      "fields": [
+        {
+          "key": "UsageBody.available",
+          "path": "available",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recording",
+          "path": "recording",
+          "kind": "boolean",
+          "probes": [
+            "isn’t counting new use"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.source",
+          "path": "source",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.observed_from",
+          "path": "observed_from",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.updated_at",
+          "path": "updated_at",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.partial",
+          "path": "partial",
+          "kind": "boolean",
+          "probes": [
+            "Part of today’s history is missing"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.partial_reasons",
+          "path": "partial_reasons",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent_window_secs",
+          "path": "recent_window_secs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent.input_tokens",
+          "path": "recent.input_tokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent.output_tokens",
+          "path": "recent.output_tokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent.cost_usd_estimate",
+          "path": "recent.cost_usd_estimate",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent.unpriced",
+          "path": "recent.unpriced",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.today.input_tokens",
+          "path": "today.input_tokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.today.output_tokens",
+          "path": "today.output_tokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.today.cost_usd_estimate",
+          "path": "today.cost_usd_estimate",
+          "kind": "number",
+          "probes": [
+            "$0.20"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.today.unpriced",
+          "path": "today.unpriced",
+          "kind": "number",
+          "probes": [
+            "0"
+          ],
+          "primary": false
+        },
+        {
+          "key": "UsageBody.recent_by_session",
+          "path": "recent_by_session",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

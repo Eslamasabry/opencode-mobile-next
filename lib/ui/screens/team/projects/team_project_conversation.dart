@@ -296,10 +296,16 @@ class _TeamProjectConversationState extends State<TeamProjectConversation> {
   }
 
   Future<void> _stop(TeamProject p) async {
+    final name = p.tasks
+        .where((t) => t.id == widget.taskId)
+        .map((t) => t.title.trim())
+        .firstOrNull;
     final yes = await showKitConfirm(
       context,
       title: l.teamProjectTaskStopConfirmTitle,
-      body: l.teamProjectTaskStopBody,
+      body: name == null || name.isEmpty
+          ? l.teamProjectTaskStopBody
+          : l.teamProjectTaskStopNamedBody(name),
       confirmLabel: l.teamProjectTaskStop,
       kind: KitConfirmKind.stop,
     );

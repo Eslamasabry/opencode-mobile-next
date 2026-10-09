@@ -509,10 +509,44 @@ class GasCityGateway
     );
     final snapshot = results[1] as _RunsSnapshot;
     return mapGates(
-      pending: pending.items,
+      pending: await _withQuestions(pending.items),
       beads: snapshot.work.beads,
       runs: snapshot.runs,
     );
+  }
+
+  /// `GET /pending` names only the kind, the request and the session; the
+  /// question and its options are on `GET /session/{id}/pending`. Each entry
+  /// that has no question is read there, once per session; a session the host
+  /// does not answer for keeps the bare entry.
+  Future<List<GcPendingInteraction>> _withQuestions(
+    List<GcPendingInteraction> items,
+  ) async {
+    final bySession = <String, Future<Map<String, Object?>>>{};
+    final out = <GcPendingInteraction>[];
+    for (final item in items) {
+      final session = item.sessionId;
+      if (item.prompt != null || session == null || session.isEmpty) {
+        out.add(item);
+        continue;
+      }
+      final detail = await (bySession[session] ??= _optional(
+        '/session/${Uri.encodeComponent(session)}/pending',
+      ));
+      final pending = detail['pending'];
+      if (pending is! Map || pending['request_id'] != item.requestId) {
+        out.add(item);
+        continue;
+      }
+      out.add(
+        GcPendingInteraction.fromJson({
+          ...item.raw,
+          ...pending.cast<String, Object?>(),
+          'session_id': session,
+        }),
+      );
+    }
+    return out;
   }
 
   @override

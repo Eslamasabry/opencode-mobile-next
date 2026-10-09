@@ -129,6 +129,8 @@ void main() {
     test('gate kinds map from provider interaction kinds', () {
       expect(GateKind.fromProvider('select'), GateKind.choice);
       expect(GateKind.fromProvider('confirm'), GateKind.confirmation);
+      // The supervisor's own example kind: answered with allow or deny.
+      expect(GateKind.fromProvider('tool-approval'), GateKind.confirmation);
       expect(GateKind.fromProvider('free_text'), GateKind.freeText);
       expect(GateKind.fromProvider('text'), GateKind.freeText);
       expect(GateKind.fromProvider('gate'), GateKind.gateBead);

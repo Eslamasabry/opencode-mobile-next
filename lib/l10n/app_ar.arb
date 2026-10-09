@@ -8534,5 +8534,8 @@
   "monitorUnreachableDetail": "ستظهر أسئلته هنا عند عودته.",
   "monitorUnreachableCheck": "تحقق من {server} مجددا",
   "agentsStateLimitReset": "تم بلوغ حد الخطة · يُعاد ضبطه {time}",
-  "exportMarkdownUnredacted": "النص المحفوظ غير منقّح. يحتوي بالضبط على ما تراه، بما في ذلك أي أسرار أو مسارات خاصة في المحادثة."
+  "exportMarkdownUnredacted": "النص المحفوظ غير منقّح. يحتوي بالضبط على ما تراه، بما في ذلك أي أسرار أو مسارات خاصة في المحادثة.",
+  "teamUiGateAnswerConfirmCancelNamedBody": "تتوقف «{task}». ويبقى عملها المفتوح كما هو.",
+  "teamProjectStopNamedBody": "يتوقف «{project}». تتوقف مهامه الجارية ويبقى عملها وسجله.",
+  "teamProjectTaskStopNamedBody": "تتوقف «{task}». وتبقى محادثتها وتغييراتها للمراجعة."
 }
