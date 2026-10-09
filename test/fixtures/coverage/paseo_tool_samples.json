@@ -1,0 +1,457 @@
+{
+  "source": "/home/eslam/node_modules/@getpaseo/protocol/dist/messages.js",
+  "variants": [
+    {
+      "type": "worktree_setup",
+      "detail": {
+        "type": "worktree_setup",
+        "worktreePath": "MK7001",
+        "branchName": "MK7002",
+        "log": "MK7003",
+        "commands": [
+          {
+            "index": 7004,
+            "command": "MK7005",
+            "cwd": "MK7006",
+            "log": "MK7007",
+            "status": "failed",
+            "exitCode": 7008,
+            "durationMs": 7009
+          }
+        ],
+        "truncated": true
+      },
+      "fields": [
+        {
+          "path": "worktreePath",
+          "kind": "string",
+          "marker": "MK7001"
+        },
+        {
+          "path": "branchName",
+          "kind": "string",
+          "marker": "MK7002"
+        },
+        {
+          "path": "log",
+          "kind": "string",
+          "marker": "MK7003"
+        },
+        {
+          "path": "commands[].index",
+          "kind": "number",
+          "marker": "7004"
+        },
+        {
+          "path": "commands[].command",
+          "kind": "string",
+          "marker": "MK7005"
+        },
+        {
+          "path": "commands[].cwd",
+          "kind": "string",
+          "marker": "MK7006"
+        },
+        {
+          "path": "commands[].log",
+          "kind": "string",
+          "marker": "MK7007"
+        },
+        {
+          "path": "commands[].status",
+          "kind": "enum",
+          "marker": "failed"
+        },
+        {
+          "path": "commands[].exitCode",
+          "kind": "number",
+          "marker": "7008"
+        },
+        {
+          "path": "commands[].durationMs",
+          "kind": "number",
+          "marker": "7009"
+        },
+        {
+          "path": "truncated",
+          "kind": "boolean",
+          "marker": null
+        }
+      ]
+    },
+    {
+      "type": "shell",
+      "detail": {
+        "type": "shell",
+        "command": "MK7010",
+        "cwd": "MK7011",
+        "output": "MK7012",
+        "exitCode": 7013
+      },
+      "fields": [
+        {
+          "path": "command",
+          "kind": "string",
+          "marker": "MK7010"
+        },
+        {
+          "path": "cwd",
+          "kind": "string",
+          "marker": "MK7011"
+        },
+        {
+          "path": "output",
+          "kind": "string",
+          "marker": "MK7012"
+        },
+        {
+          "path": "exitCode",
+          "kind": "number",
+          "marker": "7013"
+        }
+      ]
+    },
+    {
+      "type": "read",
+      "detail": {
+        "type": "read",
+        "filePath": "MK7014",
+        "content": "MK7015",
+        "offset": 7016,
+        "limit": 7017
+      },
+      "fields": [
+        {
+          "path": "filePath",
+          "kind": "string",
+          "marker": "MK7014"
+        },
+        {
+          "path": "content",
+          "kind": "string",
+          "marker": "MK7015"
+        },
+        {
+          "path": "offset",
+          "kind": "number",
+          "marker": "7016"
+        },
+        {
+          "path": "limit",
+          "kind": "number",
+          "marker": "7017"
+        }
+      ]
+    },
+    {
+      "type": "edit",
+      "detail": {
+        "type": "edit",
+        "filePath": "MK7018",
+        "oldString": "MK7019",
+        "newString": "MK7020",
+        "unifiedDiff": "MK7021"
+      },
+      "fields": [
+        {
+          "path": "filePath",
+          "kind": "string",
+          "marker": "MK7018"
+        },
+        {
+          "path": "oldString",
+          "kind": "string",
+          "marker": "MK7019"
+        },
+        {
+          "path": "newString",
+          "kind": "string",
+          "marker": "MK7020"
+        },
+        {
+          "path": "unifiedDiff",
+          "kind": "string",
+          "marker": "MK7021"
+        }
+      ]
+    },
+    {
+      "type": "write",
+      "detail": {
+        "type": "write",
+        "filePath": "MK7022",
+        "content": "MK7023"
+      },
+      "fields": [
+        {
+          "path": "filePath",
+          "kind": "string",
+          "marker": "MK7022"
+        },
+        {
+          "path": "content",
+          "kind": "string",
+          "marker": "MK7023"
+        }
+      ]
+    },
+    {
+      "type": "search",
+      "detail": {
+        "type": "search",
+        "query": "MK7024",
+        "toolName": "web_search",
+        "content": "MK7025",
+        "filePaths": [
+          "MK7026"
+        ],
+        "webResults": [
+          {
+            "title": "MK7027",
+            "url": "MK7028"
+          }
+        ],
+        "annotations": [
+          "MK7029"
+        ],
+        "numFiles": 7030,
+        "numMatches": 7031,
+        "durationMs": 7032,
+        "durationSeconds": 7033,
+        "truncated": true,
+        "mode": "count"
+      },
+      "fields": [
+        {
+          "path": "query",
+          "kind": "string",
+          "marker": "MK7024"
+        },
+        {
+          "path": "toolName",
+          "kind": "enum",
+          "marker": "web_search"
+        },
+        {
+          "path": "content",
+          "kind": "string",
+          "marker": "MK7025"
+        },
+        {
+          "path": "filePaths[]",
+          "kind": "string",
+          "marker": "MK7026"
+        },
+        {
+          "path": "webResults[].title",
+          "kind": "string",
+          "marker": "MK7027"
+        },
+        {
+          "path": "webResults[].url",
+          "kind": "string",
+          "marker": "MK7028"
+        },
+        {
+          "path": "annotations[]",
+          "kind": "string",
+          "marker": "MK7029"
+        },
+        {
+          "path": "numFiles",
+          "kind": "number",
+          "marker": "7030"
+        },
+        {
+          "path": "numMatches",
+          "kind": "number",
+          "marker": "7031"
+        },
+        {
+          "path": "durationMs",
+          "kind": "number",
+          "marker": "7032"
+        },
+        {
+          "path": "durationSeconds",
+          "kind": "number",
+          "marker": "7033"
+        },
+        {
+          "path": "truncated",
+          "kind": "boolean",
+          "marker": null
+        },
+        {
+          "path": "mode",
+          "kind": "enum",
+          "marker": "count"
+        }
+      ]
+    },
+    {
+      "type": "fetch",
+      "detail": {
+        "type": "fetch",
+        "url": "MK7034",
+        "prompt": "MK7035",
+        "result": "MK7036",
+        "code": 7037,
+        "codeText": "MK7038",
+        "bytes": 7039,
+        "durationMs": 7040
+      },
+      "fields": [
+        {
+          "path": "url",
+          "kind": "string",
+          "marker": "MK7034"
+        },
+        {
+          "path": "prompt",
+          "kind": "string",
+          "marker": "MK7035"
+        },
+        {
+          "path": "result",
+          "kind": "string",
+          "marker": "MK7036"
+        },
+        {
+          "path": "code",
+          "kind": "number",
+          "marker": "7037"
+        },
+        {
+          "path": "codeText",
+          "kind": "string",
+          "marker": "MK7038"
+        },
+        {
+          "path": "bytes",
+          "kind": "number",
+          "marker": "7039"
+        },
+        {
+          "path": "durationMs",
+          "kind": "number",
+          "marker": "7040"
+        }
+      ]
+    },
+    {
+      "type": "sub_agent",
+      "detail": {
+        "type": "sub_agent",
+        "subAgentType": "MK7041",
+        "description": "MK7042",
+        "childSessionId": "MK7043",
+        "log": "MK7044",
+        "actions": [
+          {
+            "index": 7045,
+            "toolName": "MK7046",
+            "summary": "MK7047"
+          }
+        ]
+      },
+      "fields": [
+        {
+          "path": "subAgentType",
+          "kind": "string",
+          "marker": "MK7041"
+        },
+        {
+          "path": "description",
+          "kind": "string",
+          "marker": "MK7042"
+        },
+        {
+          "path": "childSessionId",
+          "kind": "string",
+          "marker": "MK7043"
+        },
+        {
+          "path": "log",
+          "kind": "string",
+          "marker": "MK7044"
+        },
+        {
+          "path": "actions[].index",
+          "kind": "number",
+          "marker": "7045"
+        },
+        {
+          "path": "actions[].toolName",
+          "kind": "string",
+          "marker": "MK7046"
+        },
+        {
+          "path": "actions[].summary",
+          "kind": "string",
+          "marker": "MK7047"
+        }
+      ]
+    },
+    {
+      "type": "plain_text",
+      "detail": {
+        "type": "plain_text",
+        "label": "MK7048",
+        "text": "MK7049",
+        "icon": "mic_vocal"
+      },
+      "fields": [
+        {
+          "path": "label",
+          "kind": "string",
+          "marker": "MK7048"
+        },
+        {
+          "path": "text",
+          "kind": "string",
+          "marker": "MK7049"
+        },
+        {
+          "path": "icon",
+          "kind": "enum",
+          "marker": "mic_vocal"
+        }
+      ]
+    },
+    {
+      "type": "plan",
+      "detail": {
+        "type": "plan",
+        "text": "MK7050"
+      },
+      "fields": [
+        {
+          "path": "text",
+          "kind": "string",
+          "marker": "MK7050"
+        }
+      ]
+    },
+    {
+      "type": "unknown",
+      "detail": {
+        "type": "unknown",
+        "input": "MK7051",
+        "output": "MK7052"
+      },
+      "fields": [
+        {
+          "path": "input",
+          "kind": "string",
+          "marker": "MK7051"
+        },
+        {
+          "path": "output",
+          "kind": "string",
+          "marker": "MK7052"
+        }
+      ]
+    }
+  ]
+}
