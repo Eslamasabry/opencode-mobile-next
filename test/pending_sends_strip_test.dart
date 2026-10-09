@@ -289,9 +289,11 @@ void main() {
     testWidgets('offline there is no Try again: it waits for the reconnect', (
       tester,
     ) async {
-      await pump(tester, connected: false);
+      final (_, controller) = await pump(tester, connected: false);
       expect(find.text('run the migration'), findsOneWidget);
       expect(find.byKey(const ValueKey('queued-bubble-retry')), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+      controller.dispose();
     });
   });
 

@@ -1,0 +1,272 @@
+[
+  {
+    "file": "test/chat_live_events_test.dart",
+    "test": "offline chat keeps its transcript and shows recovery actions",
+    "decision": "intended timing",
+    "change": "Check sustained-outage UI after 15-second grace; preserve live reachability and existing golden."
+  },
+  {
+    "file": "test/chat_reference_send_test.dart",
+    "test": "composing offline queues the prompt with its references",
+    "decision": "fixture lifecycle",
+    "change": "End controller work inside the fake-clock test or advance the tested grace timer."
+  },
+  {
+    "file": "test/chat_states_standard_test.dart",
+    "test": "one status line: a lost connection outranks a prompt error, which comes back when the connection does",
+    "decision": "intended timing",
+    "change": "Check sustained-outage UI after 15-second grace; preserve live reachability and existing golden."
+  },
+  {
+    "file": "test/chat_states_standard_test.dart",
+    "test": "reconnecting: progress at once, \"isn't answering\" after 8 s, and no stale progress once connected",
+    "decision": "intended timing",
+    "change": "Check sustained-outage UI after 15-second grace; preserve live reachability and existing golden."
+  },
+  {
+    "file": "test/e7_session_approvals_layout_test.dart",
+    "test": "disconnecting pauses the indicator without hiding it",
+    "decision": "fixture lifecycle",
+    "change": "End controller work inside the fake-clock test or advance the tested grace timer."
+  },
+  {
+    "file": "test/goldens/agents_ui_golden_test.dart",
+    "test": "agents_sheet_error_1280x800 \u00b7 dark",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/agents_ui_golden_test.dart",
+    "test": "agents_sheet_error_1280x800 \u00b7 light",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/agents_ui_golden_test.dart",
+    "test": "agents_sheet_install_1280x800 \u00b7 dark",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/agents_ui_golden_test.dart",
+    "test": "agents_sheet_install_1280x800 \u00b7 light",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/agents_ui_golden_test.dart",
+    "test": "agents_sheet_list_1280x800 \u00b7 dark",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/agents_ui_golden_test.dart",
+    "test": "agents_sheet_list_1280x800 \u00b7 light",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/agents_ui_golden_test.dart",
+    "test": "agents_sheet_mixed_1280x800 \u00b7 dark",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/agents_ui_golden_test.dart",
+    "test": "agents_sheet_mixed_1280x800 \u00b7 light",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/agents_ui_golden_test.dart",
+    "test": "agents_sheet_signin_1280x800 \u00b7 dark",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/agents_ui_golden_test.dart",
+    "test": "agents_sheet_signin_1280x800 \u00b7 light",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/chats_home_golden_test.dart",
+    "test": "chats_new_choose_1280x800 \u00b7 dark",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/chats_home_golden_test.dart",
+    "test": "chats_new_choose_1280x800 \u00b7 light",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/chats_home_golden_test.dart",
+    "test": "chats_new_choose \u00b7 dark",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/chats_home_golden_test.dart",
+    "test": "chats_new_choose \u00b7 light",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/chats_home_golden_test.dart",
+    "test": "chats_new_copy_1280x800 \u00b7 dark",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/chats_home_golden_test.dart",
+    "test": "chats_new_copy_1280x800 \u00b7 light",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/chats_home_golden_test.dart",
+    "test": "chats_new_copy \u00b7 dark",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/chats_home_golden_test.dart",
+    "test": "chats_new_copy \u00b7 light",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/chats_home_golden_test.dart",
+    "test": "chats_new_project_1280x800 \u00b7 dark",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/chats_home_golden_test.dart",
+    "test": "chats_new_project_1280x800 \u00b7 light",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/chats_home_golden_test.dart",
+    "test": "chats_new_project \u00b7 dark",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/chats_home_golden_test.dart",
+    "test": "chats_new_project \u00b7 light",
+    "decision": "production regression",
+    "change": "Restore lone model chip trailing alignment; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/chat_states_golden_test.dart",
+    "test": "chat \u00b7 disconnected \u00b7 dark",
+    "decision": "intended timing",
+    "change": "Check sustained-outage UI after 15-second grace; preserve live reachability and existing golden."
+  },
+  {
+    "file": "test/goldens/chat_states_golden_test.dart",
+    "test": "chat \u00b7 disconnected \u00b7 light",
+    "decision": "intended timing",
+    "change": "Check sustained-outage UI after 15-second grace; preserve live reachability and existing golden."
+  },
+  {
+    "file": "test/goldens/runtime_switch_golden_test.dart",
+    "test": "the shell during a password of this phone's server, dark",
+    "decision": "fixture lifecycle",
+    "change": "Disable unrelated native phone-agent probes in server-only fake; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/runtime_switch_golden_test.dart",
+    "test": "the shell during a password of this phone's server, light",
+    "decision": "fixture lifecycle",
+    "change": "Disable unrelated native phone-agent probes in server-only fake; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/runtime_switch_golden_test.dart",
+    "test": "the shell during a reconnecting of this phone's server, dark",
+    "decision": "fixture lifecycle",
+    "change": "Disable unrelated native phone-agent probes in server-only fake; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/runtime_switch_golden_test.dart",
+    "test": "the shell during a reconnecting of this phone's server, light",
+    "decision": "fixture lifecycle",
+    "change": "Disable unrelated native phone-agent probes in server-only fake; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/runtime_switch_golden_test.dart",
+    "test": "the shell during a restart of this phone's server, dark",
+    "decision": "fixture lifecycle",
+    "change": "Disable unrelated native phone-agent probes in server-only fake; preserve existing golden."
+  },
+  {
+    "file": "test/goldens/runtime_switch_golden_test.dart",
+    "test": "the shell during a restart of this phone's server, light",
+    "decision": "fixture lifecycle",
+    "change": "Disable unrelated native phone-agent probes in server-only fake; preserve existing golden."
+  },
+  {
+    "file": "test/home_navigation_test.dart",
+    "test": "automatic SSE reconnect still offers a manual retry",
+    "decision": "intended timing",
+    "change": "Check sustained-outage UI after 15-second grace; preserve live reachability and existing golden."
+  },
+  {
+    "file": "test/pending_sends_strip_test.dart",
+    "test": "a queued message the server refused offline there is no Try again: it waits for the reconnect",
+    "decision": "fixture lifecycle",
+    "change": "End controller work inside the fake-clock test or advance the tested grace timer."
+  },
+  {
+    "file": "test/plugins_screen_test.dart",
+    "test": "plugin events and reconnect refetch current inventory",
+    "decision": "fixture lifecycle",
+    "change": "End controller work inside the fake-clock test or advance the tested grace timer."
+  },
+  {
+    "file": "test/release_blockers_test.dart",
+    "test": "offline banner states that displayed data may be stale",
+    "decision": "intended timing",
+    "change": "Check sustained-outage UI after 15-second grace; preserve live reachability and existing golden."
+  },
+  {
+    "file": "test/revamp/chat_3_test.dart",
+    "test": "offline, Send says it will send when back online",
+    "decision": "fixture lifecycle",
+    "change": "End controller work inside the fake-clock test or advance the tested grace timer."
+  },
+  {
+    "file": "test/revamp/queued_prompt_move_test.dart",
+    "test": "controller profile isolation: no move to the source itself, to an unconnected server, or of another server's prompts",
+    "decision": "fixture lifecycle",
+    "change": "End controller work inside the fake-clock test or advance the tested grace timer."
+  },
+  {
+    "file": "test/revamp/slice_aisetup_review_test.dart",
+    "test": "states offline before any read",
+    "decision": "fixture lifecycle",
+    "change": "End controller work inside the fake-clock test or advance the tested grace timer."
+  },
+  {
+    "file": "test/revamp/slice_aisetup_review_test.dart",
+    "test": "states offline keeps the last read, reconnecting reads again",
+    "decision": "fixture lifecycle",
+    "change": "End controller work inside the fake-clock test or advance the tested grace timer."
+  },
+  {
+    "file": "test/server_switcher_test.dart",
+    "test": "the current server status follows the connection",
+    "decision": "fixture lifecycle",
+    "change": "End controller work inside the fake-clock test or advance the tested grace timer."
+  },
+  {
+    "file": "test/session_draft_test.dart",
+    "test": "failed save keeps the route and text until Retry succeeds",
+    "decision": "production regression",
+    "change": "Bound and scroll the full draft-recovery row; retain Copy/Retry and semantics."
+  }
+]

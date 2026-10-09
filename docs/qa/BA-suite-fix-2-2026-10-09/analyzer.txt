@@ -1,0 +1,4 @@
+OC_TEST_SLOTS=2 tool/qa/machine_lock.sh test -- /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter analyze --no-pub lib/ui/kit/chat/kit_composer_status_strip.dart lib/ui/screens/chat_screen.dart test/chat_reference_send_test.dart test/chat_states_standard_test.dart test/e7_session_approvals_layout_test.dart test/goldens/chat_states_golden_test.dart test/home_navigation_test.dart test/kit/kit_composer_status_strip_test.dart test/pending_sends_strip_test.dart test/plugins_screen_test.dart test/release_blockers_test.dart test/revamp/chat_3_test.dart test/revamp/queued_prompt_move_test.dart test/revamp/slice_aisetup_review_test.dart test/server_switcher_test.dart test/support/runtime_switch_shell.dart test/chat_live_events_test.dart
+Analyzing 17 items...
+
+No issues found! (ran in 6.0s)

@@ -1,0 +1,58 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/kit/kit_composer_status_strip_test.dart
+00:00 +0: a lone model stays at the trailing edge · rtl
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: a value less than or equal to <16>
+  Actual: <129.0>
+   Which: is not a value less than or equal to <16>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/kit/kit_composer_status_strip_test.dart:69:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/kit/kit_composer_status_strip_test.dart line 69
+The test description was:
+  a lone model stays at the trailing edge · rtl
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: a lone model stays at the trailing edge · rtl [E]
+  Test failed. See exception logs above.
+  The test description was: a lone model stays at the trailing edge · rtl
+
+00:00 +0 -1: a lone model stays at the trailing edge · ltr
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: a value less than or equal to <16>
+  Actual: <129.0>
+   Which: is not a value less than or equal to <16>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/kit/kit_composer_status_strip_test.dart:69:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/kit/kit_composer_status_strip_test.dart line 69
+The test description was:
+  a lone model stays at the trailing edge · ltr
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -2: a lone model stays at the trailing edge · ltr [E]
+  Test failed. See exception logs above.
+  The test description was: a lone model stays at the trailing edge · ltr
+
+00:00 +0 -2: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/kit/kit_composer_status_strip_test.dart: a lone model stays at the trailing edge · ltr
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/kit/kit_composer_status_strip_test.dart: a lone model stays at the trailing edge · rtl

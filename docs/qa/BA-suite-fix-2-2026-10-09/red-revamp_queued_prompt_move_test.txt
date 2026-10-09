@@ -1,0 +1,59 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/revamp/queued_prompt_move_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: behaviour the row says how many wait and its menu names the move
+00:01 +1: behaviour choose a conversation, confirm, and the picked prompts move there while the rest stay
+00:01 +2: behaviour a new conversation is the default; unpicking a prompt keeps it waiting
+00:01 +3: behaviour Undo puts the prompts back exactly as they were
+00:02 +4: behaviour Cancel moves nothing and starts no conversation
+00:02 +5: behaviour a failure keeps the sheet open in plain words, with the technical text only under Details
+00:02 +6: behaviour with no connected server there is nowhere to move to
+00:02 +7: controller a picked prompt no longer waiting is counted, not moved
+00:02 +8: controller Undo leaves a prompt that already started sending
+00:02 +9: controller profile isolation: no move to the source itself, to an unconnected server, or of another server's prompts
+Pending timers:
+Timer (duration: 0:00:15.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#5      _QuietReconnect._observeQuietReconnect (package:opencode_mobile/state/connection/quiet_reconnect.dart:20:28)
+#6      ConnectionController.status= (package:opencode_mobile/state/connection.dart:620:5)
+#7      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/revamp/queued_prompt_move_test.dart:552:9)
+<asynchronous suspension>
+#8      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#9      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  profile isolation: no move to the source itself, to an unconnected server, or of another server's
+  prompts
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +9 -1: controller profile isolation: no move to the source itself, to an unconnected server, or of another server's prompts [E]
+  Test failed. See exception logs above.
+  The test description was: profile isolation: no move to the source itself, to an unconnected server, or of another server's prompts
+
+00:02 +9 -1: controller a model or agent the destination lacks is not kept
+00:02 +10 -1: goldens server row menu
+00:02 +11 -1: goldens move sheet
+00:02 +12 -1: goldens server row menu wide
+00:02 +13 -1: goldens move sheet wide
+00:03 +14 -1: (tearDownAll)
+00:03 +14 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/revamp/queued_prompt_move_test.dart: controller profile isolation: no move to the source itself, to an unconnected server, or of another server's prompts

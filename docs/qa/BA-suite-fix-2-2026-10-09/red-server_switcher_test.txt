@@ -1,0 +1,58 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/server_switcher_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: the app bar server name opens the switcher; no overflow menu
+00:01 +1: a renamed profile shows at once renamed in place and saved, as setup does
+00:01 +2: a renamed profile shows at once replaced by an edited copy, as the editor does
+00:01 +3: a renamed profile shows at once a save that changes nothing shown does not rebuild the shell
+00:01 +4: the current server status follows the connection
+Pending timers:
+Timer (duration: 0:00:15.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#5      _QuietReconnect._observeQuietReconnect (package:opencode_mobile/state/connection/quiet_reconnect.dart:20:28)
+#6      ConnectionController.status= (package:opencode_mobile/state/connection.dart:620:5)
+#7      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/server_switcher_test.dart:393:16)
+<asynchronous suspension>
+#8      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#9      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  the current server status follows the connection
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +4 -1: the current server status follows the connection [E]
+  Test failed. See exception logs above.
+  The test description was: the current server status follows the connection
+
+00:01 +4 -1: tapping a saved server runs the Servers connect flow
+00:02 +5 -1: a server that needs its password again opens its editor
+00:02 +6 -1: Add server opens the editor; Manage servers opens Servers
+00:03 +7 -1: Disconnect confirms: cancel stays connected, confirm leaves
+00:03 +8 -1: the server on this phone its row follows the one server list and connects in place
+00:03 +9 -1: the server on this phone connected through it: its menu disconnects after confirming
+00:04 +10 -1: the server on this phone connected through it: the card offers no Open, and the connection is left as it is
+00:04 +11 -1: the server on this phone Manage setup opens the phone setup
+00:04 +12 -1: the app bar and the sheet fit 320 dp at 2.5x in en
+00:04 +13 -1: the app bar and the sheet fit 320 dp at 2.5x in ar
+00:04 +14 -1: (tearDownAll)
+00:04 +14 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/server_switcher_test.dart: the current server status follows the connection

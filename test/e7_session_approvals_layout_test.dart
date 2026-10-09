@@ -393,10 +393,9 @@ void main() {
     // is a pre-existing layout limit unrelated to this slice.)
     expect(api.replies, isEmpty);
 
-    // Past the controller's eight-second connection grace period (3d64653c,
-    // one controller-owned connection status) the indicator still stays,
-    // paused.
-    await tester.pump(const Duration(seconds: 8));
+    // After the 15-second quiet reconnect window the indicator still stays
+    // paused: automatic approval remains gated on real reachability.
+    await tester.pump(const Duration(seconds: 16));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const Key('auto-approval-indicator')), findsOneWidget);
     expect(find.text('Auto-approve paused'), findsOneWidget);

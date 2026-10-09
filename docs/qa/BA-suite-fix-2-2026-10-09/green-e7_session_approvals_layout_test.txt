@@ -1,0 +1,9 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/e7_session_approvals_layout_test.dart
+00:00 +0: 320dp 2.5x TextDirection.rtl approvals sheet, indicator and auto-approval record
+00:02 +1: 320dp 2.5x TextDirection.rtl child session shows inheritance and can override
+00:03 +2: 320dp 2.5x TextDirection.ltr approvals sheet, indicator and auto-approval record
+00:03 +3: 320dp 2.5x TextDirection.ltr child session shows inheritance and can override
+00:04 +4: disconnecting pauses the indicator without hiding it
+00:04 +5: a failed automatic reply shows the request with the reason
+00:04 +6: approve everything is confirmed, saved, and can be declined
+00:04 +7: All tests passed!

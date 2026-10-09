@@ -1,0 +1,11 @@
+{
+  "assigned_failures": 45,
+  "classification": {
+    "production_regression": 23,
+    "intended_timing": 7,
+    "fixture_lifecycle": 15
+  },
+  "test_files": 22,
+  "passed_tests": 464,
+  "golden_baselines_changed": 0
+}

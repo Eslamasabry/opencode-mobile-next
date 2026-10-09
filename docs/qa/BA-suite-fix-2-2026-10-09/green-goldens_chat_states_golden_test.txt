@@ -1,0 +1,28 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chat_states_golden_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: chat · empty · dark
+00:01 +1: chat · loading · dark
+00:01 +2: chat · could not load · dark
+00:01 +3: chat · send error · dark
+00:02 +4: chat · model error in a reply · dark
+00:02 +5: chat · transcript · dark
+00:02 +6: chat · transcript · 1280x800 · dark
+00:02 +7: chat · permission request · dark
+00:02 +8: chat · permission sheet · dark
+00:03 +9: chat · disconnected · dark
+00:03 +10: chat · find · dark
+00:03 +11: chat · notify me · dark
+00:03 +12: chat · empty · light
+00:04 +13: chat · loading · light
+00:04 +14: chat · could not load · light
+00:04 +15: chat · send error · light
+00:04 +16: chat · model error in a reply · light
+00:04 +17: chat · transcript · light
+00:04 +18: chat · transcript · 1280x800 · light
+00:04 +19: chat · permission request · light
+00:04 +20: chat · permission sheet · light
+00:05 +21: chat · disconnected · light
+00:05 +22: chat · find · light
+00:05 +23: chat · notify me · light
+00:05 +24: (tearDownAll)
+00:05 +24: All tests passed!

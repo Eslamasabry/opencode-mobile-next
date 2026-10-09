@@ -1,0 +1,40 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: chats_home_mixed · dark
+00:00 +1: chats_home_needs · dark
+00:01 +2: chats_home_sheet · dark
+00:01 +3: chats_home_empty · dark
+00:01 +4: chats_home_nomatch · dark
+00:01 +5: chats_new_project · dark
+00:01 +6: chats_new_choose · dark
+00:01 +7: chats_home_leftover · dark
+00:01 +8: chats_new_copy · dark
+00:02 +9: chats_home_mixed_1280x800 · dark
+00:02 +10: chats_home_needs_1280x800 · dark
+00:02 +11: chats_home_sheet_1280x800 · dark
+00:02 +12: chats_home_empty_1280x800 · dark
+00:02 +13: chats_home_nomatch_1280x800 · dark
+00:02 +14: chats_new_project_1280x800 · dark
+00:02 +15: chats_new_choose_1280x800 · dark
+00:02 +16: chats_home_leftover_1280x800 · dark
+00:02 +17: chats_new_copy_1280x800 · dark
+00:02 +18: chats_home_mixed · light
+00:03 +19: chats_home_needs · light
+00:03 +20: chats_home_sheet · light
+00:03 +21: chats_home_empty · light
+00:03 +22: chats_home_nomatch · light
+00:03 +23: chats_new_project · light
+00:03 +24: chats_new_choose · light
+00:03 +25: chats_home_leftover · light
+00:03 +26: chats_new_copy · light
+00:03 +27: chats_home_mixed_1280x800 · light
+00:03 +28: chats_home_needs_1280x800 · light
+00:03 +29: chats_home_sheet_1280x800 · light
+00:03 +30: chats_home_empty_1280x800 · light
+00:03 +31: chats_home_nomatch_1280x800 · light
+00:04 +32: chats_new_project_1280x800 · light
+00:04 +33: chats_new_choose_1280x800 · light
+00:04 +34: chats_home_leftover_1280x800 · light
+00:04 +35: chats_new_copy_1280x800 · light
+00:04 +36: (tearDownAll)
+00:04 +36: All tests passed!

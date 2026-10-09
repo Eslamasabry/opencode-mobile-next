@@ -1,0 +1,203 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/runtime_switch_golden_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: the shell during a reconnecting of this phone's server, dark
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      _PhoneAgentIdle._paObserveHelper (package:opencode_mobile/state/connection/phone_agents_idle.dart:85:14)
+#7      _ConnectionControllerPhoneAgents._paRefreshRows (package:opencode_mobile/state/connection/phone_agents.dart:483:11)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 4 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  the shell during a reconnecting of this phone's server, dark
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -1: the shell during a reconnecting of this phone's server, dark [E]
+  Test failed. See exception logs above.
+  The test description was: the shell during a reconnecting of this phone's server, dark
+
+00:01 +0 -1: the shell during a password of this phone's server, dark
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      _PhoneAgentIdle._paObserveHelper (package:opencode_mobile/state/connection/phone_agents_idle.dart:85:14)
+#7      _ConnectionControllerPhoneAgents._paRefreshRows (package:opencode_mobile/state/connection/phone_agents.dart:483:11)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 4 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  the shell during a password of this phone's server, dark
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -2: the shell during a password of this phone's server, dark [E]
+  Test failed. See exception logs above.
+  The test description was: the shell during a password of this phone's server, dark
+
+00:01 +0 -2: the shell during a restart of this phone's server, dark
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      _PhoneAgentIdle._paObserveHelper (package:opencode_mobile/state/connection/phone_agents_idle.dart:85:14)
+#7      _ConnectionControllerPhoneAgents._paRefreshRows (package:opencode_mobile/state/connection/phone_agents.dart:483:11)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 4 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  the shell during a restart of this phone's server, dark
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -3: the shell during a restart of this phone's server, dark [E]
+  Test failed. See exception logs above.
+  The test description was: the shell during a restart of this phone's server, dark
+
+00:01 +0 -3: the shell during a reconnecting of this phone's server, light
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      _PhoneAgentIdle._paObserveHelper (package:opencode_mobile/state/connection/phone_agents_idle.dart:85:14)
+#7      _ConnectionControllerPhoneAgents._paRefreshRows (package:opencode_mobile/state/connection/phone_agents.dart:483:11)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 4 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  the shell during a reconnecting of this phone's server, light
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -4: the shell during a reconnecting of this phone's server, light [E]
+  Test failed. See exception logs above.
+  The test description was: the shell during a reconnecting of this phone's server, light
+
+00:01 +0 -4: the shell during a password of this phone's server, light
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      _PhoneAgentIdle._paObserveHelper (package:opencode_mobile/state/connection/phone_agents_idle.dart:85:14)
+#7      _ConnectionControllerPhoneAgents._paRefreshRows (package:opencode_mobile/state/connection/phone_agents.dart:483:11)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 4 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  the shell during a password of this phone's server, light
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -5: the shell during a password of this phone's server, light [E]
+  Test failed. See exception logs above.
+  The test description was: the shell during a password of this phone's server, light
+
+00:01 +0 -5: the shell during a restart of this phone's server, light
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      _PhoneAgentIdle._paObserveHelper (package:opencode_mobile/state/connection/phone_agents_idle.dart:85:14)
+#7      _ConnectionControllerPhoneAgents._paRefreshRows (package:opencode_mobile/state/connection/phone_agents.dart:483:11)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 4 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  the shell during a restart of this phone's server, light
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +0 -6: the shell during a restart of this phone's server, light [E]
+  Test failed. See exception logs above.
+  The test description was: the shell during a restart of this phone's server, light
+
+00:02 +0 -6: (tearDownAll)
+00:02 +0 -6: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/runtime_switch_golden_test.dart: the shell during a password of this phone's server, dark
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/runtime_switch_golden_test.dart: the shell during a password of this phone's server, light
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/runtime_switch_golden_test.dart: the shell during a reconnecting of this phone's server, dark
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/runtime_switch_golden_test.dart: the shell during a reconnecting of this phone's server, light
+  ... and 2 more

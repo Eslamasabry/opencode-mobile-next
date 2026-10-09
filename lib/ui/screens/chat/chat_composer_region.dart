@@ -284,47 +284,60 @@ extension _ChatComposerRegion on _ChatScreenState {
               ),
             ),
         if (_draftSaveFailure case final failure?)
-          Padding(
-            key: const ValueKey('draft-save-error'),
-            padding: EdgeInsetsDirectional.fromSTEB(
-              tokens.gutter,
-              tokens.space2,
-              tokens.gutter,
-              tokens.space1,
-            ),
-            child: Row(
+          Flexible(
+            child: ListView(
+              primary: false,
+              shrinkWrap: true,
+              padding: EdgeInsets.zero,
               children: [
-                Expanded(
-                  child: Semantics(
-                    container: true,
-                    liveRegion: true,
-                    label: _draftFailureText(failure),
-                    excludeSemantics: true,
-                    child: KitText(
-                      compactComposer
-                          ? l10n.draftUnsaved
-                          : _draftFailureText(failure),
-                      role: KitTextRole.secondary,
-                      tone: KitTextTone.danger,
-                    ),
+                Padding(
+                  key: const ValueKey('draft-save-error'),
+                  padding: EdgeInsetsDirectional.fromSTEB(
+                    tokens.gutter,
+                    tokens.space2,
+                    tokens.gutter,
+                    tokens.space1,
                   ),
-                ),
-                KitIconButton(
-                  icon: AppIconography.copy,
-                  tooltip: l10n.chatDraftCopy,
-                  // The person's own words, copied as written.
-                  onPressed: _composer.text.isEmpty
-                      ? null
-                      : () => unawaited(
-                          KitCopy.copy(context, _composer.text, redact: false),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Semantics(
+                          container: true,
+                          liveRegion: true,
+                          label: _draftFailureText(failure),
+                          excludeSemantics: true,
+                          child: KitText(
+                            compactComposer
+                                ? l10n.draftUnsaved
+                                : _draftFailureText(failure),
+                            role: KitTextRole.secondary,
+                            tone: KitTextTone.danger,
+                          ),
                         ),
-                ),
-                KitIconButton(
-                  icon: AppIconography.retry,
-                  tooltip: l10n.draftRetrySave,
-                  onPressed: _restoringDraftAttachments
-                      ? null
-                      : _retryDraftPersistence,
+                      ),
+                      KitIconButton(
+                        icon: AppIconography.copy,
+                        tooltip: l10n.chatDraftCopy,
+                        // The person's own words, copied as written.
+                        onPressed: _composer.text.isEmpty
+                            ? null
+                            : () => unawaited(
+                                KitCopy.copy(
+                                  context,
+                                  _composer.text,
+                                  redact: false,
+                                ),
+                              ),
+                      ),
+                      KitIconButton(
+                        icon: AppIconography.retry,
+                        tooltip: l10n.draftRetrySave,
+                        onPressed: _restoringDraftAttachments
+                            ? null
+                            : _retryDraftPersistence,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

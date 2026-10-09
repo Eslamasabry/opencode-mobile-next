@@ -1,0 +1,15 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/revamp/slice_aisetup_review_test.dart
+00:00 +0: entry the server settings page opens AI setup
+00:01 +1: entry a server without setup sharing gets no entry
+00:01 +2: no credential in the configuration ever renders
+00:01 +3: OpenCode 1: settings in effect, tools by urgency, suggestions, and nothing that changes the server
+00:01 +4: OpenCode 2: ordered sources as reported, never merged
+00:01 +5: states loading
+00:01 +6: states empty
+00:01 +7: states unsupported
+00:01 +8: states needs sign-in offers this server's sign-in
+00:01 +9: states error: plain words, reason only under Details, Try again
+00:01 +10: states offline before any read
+00:01 +11: states offline keeps the last read, reconnecting reads again
+00:01 +12: a location change recreates the setup owner and reads again
+00:02 +13: All tests passed!

@@ -1,0 +1,21 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/pending_sends_strip_test.dart
+00:00 +0: the strip shows offline drafts and server inbox items in one list
+00:01 +1: a queued message the server refused says why in plain words and offers Try again, which sends it
+00:01 +2: a queued message the server refused its menu has Try again first, then Edit and Discard
+00:01 +3: a queued message the server refused offline there is no Try again: it waits for the reconnect
+00:02 +4: cancelling an inbox item returns its text to the draft, and Undo sends it again the same way
+00:02 +5: the bubble offers only the inline flip that changes the mode
+00:02 +6: a 409 flip toasts Already delivered and drops the bubble
+00:02 +7: non-user inbox items are informational only
+00:03 +8: a prompt waiting in the inbox is shown once, not twice
+00:03 +9: the server's own copy of a waiting prompt is not repeated either
+00:03 +10: steering several times in a row waiting steers are taken back and sent as one message
+00:03 +11: steering several times in a row one the agent already took goes out on its own
+00:04 +12: steering several times in a row a message for after the run merges nothing
+00:04 +13: while busy on v2 Send is Stop and the mic stays; the toggle queues
+00:04 +14: v1 keeps Send live while busy and queues after the run
+00:05 +15: the delivery control is absent until a run is active and something is typed
+00:05 +16: choosing Queue in the visible control sends with queue delivery
+00:05 +17: the busy v2 composer with the delivery control survives 2.5x text on a 360dp phone
+00:05 +18: the toggle is the only control and remembers its choice
+00:06 +19: All tests passed!

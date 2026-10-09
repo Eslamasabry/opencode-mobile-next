@@ -1104,10 +1104,14 @@ void _historyAndNavigationTests() {
     expect(find.text('Retained response'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('connection-status-banner')),
+      findsNothing,
+    );
+    await tester.pump(const Duration(seconds: 16));
+    expect(
+      find.byKey(const ValueKey('connection-status-banner')),
       findsOneWidget,
     );
-    // The Work tab's words (design standard §5): the last attempt failed,
-    // so the line says so at once.
+    // A sustained outage offers recovery after the quiet reconnect window.
     expect(find.text("Synthetic isn't answering"), findsOneWidget);
     expect(find.text('Reconnect to Synthetic'), findsOneWidget);
     // The raw error and the secondary action live behind Details, in the

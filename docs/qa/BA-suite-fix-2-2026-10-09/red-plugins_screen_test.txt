@@ -1,0 +1,49 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/plugins_screen_test.dart
+00:00 +0: a plugin row opens its details; nothing offers command links (slice-P3.1: plugins-mapping-dialog and its clear sheet are gone)
+00:00 +1: the server section carries its own label and plugin group
+00:01 +2: unsupported servers make no plugin request
+00:01 +3: empty, failure and retry states are distinct and hide raw errors
+00:01 +4: late previous-location inventory is discarded
+00:01 +5: late inventory after disposal is ignored
+00:01 +6: plugin events and reconnect refetch current inventory
+Pending timers:
+Timer (duration: 0:00:15.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#5      _QuietReconnect._observeQuietReconnect (package:opencode_mobile/state/connection/quiet_reconnect.dart:20:28)
+#6      ConnectionController.status= (package:opencode_mobile/state/connection.dart:620:5)
+#7      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/plugins_screen_test.dart:245:16)
+<asynchronous suspension>
+#8      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#9      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  plugin events and reconnect refetch current inventory
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +6 -1: plugin events and reconnect refetch current inventory [E]
+  Test failed. See exception logs above.
+  The test description was: plugin events and reconnect refetch current inventory
+
+00:01 +6 -1: flat plugin rows fit a narrow phone with large text
+00:01 +7 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/plugins_screen_test.dart: plugin events and reconnect refetch current inventory

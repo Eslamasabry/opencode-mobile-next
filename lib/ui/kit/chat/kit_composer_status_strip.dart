@@ -54,6 +54,13 @@ class KitComposerStatusStrip extends StatelessWidget {
         child: Padding(padding: pad, child: chipRow()),
       );
     }
+    if (chips.isEmpty) {
+      return Padding(
+        key: stripKey,
+        padding: pad,
+        child: Align(alignment: AlignmentDirectional.centerEnd, child: model),
+      );
+    }
     // Never two chips on one another: the chips and the model chip share the
     // line while both fit (the model at the end); when they do not, the
     // model chip drops to a line of its own. Each chip is held to the

@@ -290,6 +290,9 @@ void main() {
     expect(queued.text, contains('+new request'));
     expect(handoff.referencesFor('session-1'), isEmpty);
     expect(_composerText(tester), isEmpty);
+    // Dispose while still inside the fake clock, including reconnect grace.
+    await tester.pumpWidget(const SizedBox.shrink());
+    controller.dispose();
   });
 
   testWidgets('a transport failure queues the reference text for retry', (

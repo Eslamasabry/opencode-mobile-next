@@ -1,0 +1,56 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart
+00:00 +0: G1: modal and toast entry points live in the kit (absolute)
+00:00 +1: G15: no width literals outside the kit (absolute)
+00:00 +2: G16: every UI component comes from the kit (absolute)
+00:00 +2 -1: G16: every UI component comes from the kit (absolute) [E]
+  Expected: empty
+    Actual: [
+              'G16: lib/ui/screens/chat/chat_composer_region.dart uses "SingleChildScrollView" x1 — use a ListView/CustomScrollView (allowed), a KitScreen body or a showKitSheet body (the frame scrolls it) (docs/ux-system/kit-v2.md §9.2).',
+              'Outside lib/ui/kit/, a file only arranges kit parts with the layout, scrolling, builder, semantics and focus widgets of docs/ux-system/kit-v2.md §9.1 (`_g16Allowlist`). If no kit part fits, add one to lib/ui/kit/ (exported from kit.dart with a row in its table, a spec in docs/ux-system/kit-api/, a test in test/kit/ and a gallery in test/goldens/kit/; test/kit/kit_manifest_test.dart lists what is missing), even if one screen uses it. Never build it on the screen. These gates are absolute: there is no baseline to regenerate and no allowlist to extend.'
+            ]
+  G16: lib/ui/screens/chat/chat_composer_region.dart uses "SingleChildScrollView" x1 — use a ListView/CustomScrollView (allowed), a KitScreen body or a showKitSheet body (the frame scrolls it) (docs/ux-system/kit-v2.md §9.2).
+  Outside lib/ui/kit/, a file only arranges kit parts with the layout, scrolling, builder, semantics and focus widgets of docs/ux-system/kit-v2.md §9.1 (`_g16Allowlist`). If no kit part fits, add one to lib/ui/kit/ (exported from kit.dart with a row in its table, a spec in docs/ux-system/kit-api/, a test in test/kit/ and a gallery in test/goldens/kit/; test/kit/kit_manifest_test.dart lists what is missing), even if one screen uses it. Never build it on the screen. These gates are absolute: there is no baseline to regenerate and no allowlist to extend.
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/kit_ratchet_test.dart 1705:7                   main.<fn>
+
+00:00 +2 -1: G1/G15/G16 have no baseline: the committed file holds none of them
+00:00 +3 -1: G2: copy, haptics, links and motion go through the kit
+00:00 +4 -1: G7: layout is directional and bidi marks come from KitBidi
+00:00 +5 -1: G15 inside the kit: only kit_layout.dart owns widths
+00:00 +6 -1: G17 colour: every colour comes from a ThemeRoles role
+00:00 +7 -1: G21 look and motion: numbers and effects come from the kit
+00:00 +8 -1: G48 drafts: multiline input in a kit sheet keeps a draft
+00:00 +9 -1: G17/G21 inside the kit: only deferred files keep a baseline, and each deferral still needs it
+00:00 +10 -1: allowlists never grow (KIT-5)
+00:00 +11 -1: allowlist keys are exact paths or folders under lib/
+00:00 +12 -1: every G2/G7/G15x/G17/G21/G48 row is named once and has a reason
+00:00 +13 -1: every allowlist entry gives a real reason
+00:00 +14 -1: the Flutter widget catalogue exists and is non-trivial
+00:00 +15 -1: counters on fixture strings (proves the regexes, not just files) G1 matches showDialog<T>( but not showKitDialog( or a comment
+00:00 +16 -1: counters on fixture strings (proves the regexes, not just files) SnackBar( does not count showSnackBar( or KitSnackBar(
+00:00 +17 -1: counters on fixture strings (proves the regexes, not just files) G16 counts real widget constructions, not static members or app classes
+00:00 +18 -1: counters on fixture strings (proves the regexes, not just files) KIT-7: MaterialPageRoute( and PageRouteBuilder( fail G16, in lib/ui and in UI code elsewhere under lib/, with no baseline to lean on
+00:00 +19 -1: counters on fixture strings (proves the regexes, not just files) G1/G15/G16 failures name the kit part and the way forward
+00:00 +20 -1: counters on fixture strings (proves the regexes, not just files) G17 is absolute: every colour row fails on any hit, with a fix that names what to use
+00:00 +21 -1: counters on fixture strings (proves the regexes, not just files) Scrollbar has no home outside the kit any more (KIT-6)
+00:00 +22 -1: counters on fixture strings (proves the regexes, not just files) G15 counts a width compared to a literal, not BoxConstraints(maxWidth: n)
+00:00 +23 -1: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts uses of an old API, not its declaration
+00:00 +24 -1: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts motion literals and seams, not KitMotion names
+00:00 +25 -1: G2/G7/G15x/G17/G21/G48 rows on fixture strings SEC-1: launchUrl in the kit is absolute with no allowlist
+00:00 +26 -1: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 counts left/right layout, not the directional forms
+00:00 +27 -1: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 is absolute in the kit, forced-LTR parts may align left
+00:00 +28 -1: G2/G7/G15x/G17/G21/G48 rows on fixture strings G15x counts breakpoints and layout widths, not guards or gaps
+00:00 +29 -1: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 counts literal colours and theme reads, not transparent
+00:00 +30 -1: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 counts look literals the way the rulebook writes them
+00:00 +31 -1: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 LOOK-21 in the kit: every stroke width comes from KitTokens
+00:00 +32 -1: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 metal/chrome reads identifiers and file names
+00:00 +33 -1: G2/G7/G15x/G17/G21/G48 rows on fixture strings G48 flags a sheet with a multiline field and no draft
+00:00 +34 -1: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 and G21 also scan Flutter UI code outside lib/ui/
+00:00 +35 -1: G2/G7/G15x/G17/G21/G48 rows on fixture strings theme files, allowlist keys and scopes resolve as documented
+00:00 +36 -1: G2/G7/G15x/G17/G21/G48 rows on fixture strings KIT-5: an allowlist key the committed set lacks fails
+00:00 +37 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G16: every UI component comes from the kit (absolute)

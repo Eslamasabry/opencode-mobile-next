@@ -1,0 +1,365 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/agents_ui_golden_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: agents_sheet_list · dark
+00:01 +1: agents_sheet_install · dark
+00:01 +2: agents_sheet_signin · dark
+00:01 +3: agents_sheet_error · dark
+00:01 +4: agents_home_status · dark
+00:02 +5: agents_home_resume · dark
+00:02 +6: agents_settings_agents · dark
+00:02 +7: agents_settings_check · dark
+00:02 +8: agents_settings_builtin · dark
+00:02 +9: agents_sheet_mixed · dark
+00:02 +10: agents_settings_many · dark
+00:02 +11: agents_sheet_list_1280x800 · dark
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "agents_sheet_list_1280x800_dark.png": Pixel test failed, 1.00%, 10197px diff detected.
+Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+
+When the exception was thrown, this was the stack:
+#0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/agents_ui_golden_test.dart:235:11)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:03 +11 -1: agents_sheet_list_1280x800 · dark [E]
+  Test failed. See exception logs above.
+  The test description was: agents_sheet_list_1280x800 · dark
+
+00:03 +11 -1: agents_sheet_install_1280x800 · dark
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "agents_sheet_install_1280x800_dark.png": Pixel test failed, 1.00%, 10197px diff detected.
+Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+
+When the exception was thrown, this was the stack:
+#0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/agents_ui_golden_test.dart:235:11)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:03 +11 -2: agents_sheet_install_1280x800 · dark [E]
+  Test failed. See exception logs above.
+  The test description was: agents_sheet_install_1280x800 · dark
+
+00:03 +11 -2: agents_sheet_signin_1280x800 · dark
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "agents_sheet_signin_1280x800_dark.png": Pixel test failed, 1.00%, 10197px diff detected.
+Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+
+When the exception was thrown, this was the stack:
+#0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/agents_ui_golden_test.dart:235:11)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:03 +11 -3: agents_sheet_signin_1280x800 · dark [E]
+  Test failed. See exception logs above.
+  The test description was: agents_sheet_signin_1280x800 · dark
+
+00:03 +11 -3: agents_sheet_error_1280x800 · dark
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "agents_sheet_error_1280x800_dark.png": Pixel test failed, 1.00%, 10197px diff detected.
+Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+
+When the exception was thrown, this was the stack:
+#0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/agents_ui_golden_test.dart:235:11)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:04 +11 -4: agents_sheet_error_1280x800 · dark [E]
+  Test failed. See exception logs above.
+  The test description was: agents_sheet_error_1280x800 · dark
+
+00:04 +11 -4: agents_home_status_1280x800 · dark
+00:04 +12 -4: agents_home_resume_1280x800 · dark
+00:04 +13 -4: agents_settings_agents_1280x800 · dark
+00:04 +14 -4: agents_settings_check_1280x800 · dark
+00:04 +15 -4: agents_settings_builtin_1280x800 · dark
+00:04 +16 -4: agents_sheet_mixed_1280x800 · dark
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "agents_sheet_mixed_1280x800_dark.png": Pixel test failed, 1.00%, 10197px diff detected.
+Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+
+When the exception was thrown, this was the stack:
+#0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/agents_ui_golden_test.dart:235:11)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:05 +16 -5: agents_sheet_mixed_1280x800 · dark [E]
+  Test failed. See exception logs above.
+  The test description was: agents_sheet_mixed_1280x800 · dark
+
+00:05 +16 -5: agents_settings_many_1280x800 · dark
+00:05 +17 -5: agents_sheet_list · light
+00:05 +18 -5: agents_sheet_install · light
+00:05 +19 -5: agents_sheet_signin · light
+00:05 +20 -5: agents_sheet_error · light
+00:05 +21 -5: agents_home_status · light
+00:05 +22 -5: agents_home_resume · light
+00:05 +23 -5: agents_settings_agents · light
+00:05 +24 -5: agents_settings_check · light
+00:05 +25 -5: agents_settings_builtin · light
+00:06 +26 -5: agents_sheet_mixed · light
+00:06 +27 -5: agents_settings_many · light
+00:06 +28 -5: agents_sheet_list_1280x800 · light
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "agents_sheet_list_1280x800_light.png": Pixel test failed, 0.99%, 10159px diff detected.
+Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+
+When the exception was thrown, this was the stack:
+#0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/agents_ui_golden_test.dart:235:11)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:06 +28 -6: agents_sheet_list_1280x800 · light [E]
+  Test failed. See exception logs above.
+  The test description was: agents_sheet_list_1280x800 · light
+
+00:06 +28 -6: agents_sheet_install_1280x800 · light
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "agents_sheet_install_1280x800_light.png": Pixel test failed, 0.99%, 10159px diff detected.
+Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+
+When the exception was thrown, this was the stack:
+#0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/agents_ui_golden_test.dart:235:11)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:06 +28 -7: agents_sheet_install_1280x800 · light [E]
+  Test failed. See exception logs above.
+  The test description was: agents_sheet_install_1280x800 · light
+
+00:06 +28 -7: agents_sheet_signin_1280x800 · light
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "agents_sheet_signin_1280x800_light.png": Pixel test failed, 0.99%, 10159px diff detected.
+Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+
+When the exception was thrown, this was the stack:
+#0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/agents_ui_golden_test.dart:235:11)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:07 +28 -8: agents_sheet_signin_1280x800 · light [E]
+  Test failed. See exception logs above.
+  The test description was: agents_sheet_signin_1280x800 · light
+
+00:07 +28 -8: agents_sheet_error_1280x800 · light
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "agents_sheet_error_1280x800_light.png": Pixel test failed, 0.99%, 10159px diff detected.
+Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+
+When the exception was thrown, this was the stack:
+#0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/agents_ui_golden_test.dart:235:11)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:07 +28 -9: agents_sheet_error_1280x800 · light [E]
+  Test failed. See exception logs above.
+  The test description was: agents_sheet_error_1280x800 · light
+
+00:07 +28 -9: agents_home_status_1280x800 · light
+00:07 +29 -9: agents_home_resume_1280x800 · light
+00:07 +30 -9: agents_settings_agents_1280x800 · light
+00:07 +31 -9: agents_settings_check_1280x800 · light
+00:07 +32 -9: agents_settings_builtin_1280x800 · light
+00:08 +33 -9: agents_sheet_mixed_1280x800 · light
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "agents_sheet_mixed_1280x800_light.png": Pixel test failed, 0.99%, 10159px diff detected.
+Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+
+When the exception was thrown, this was the stack:
+#0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/agents_ui_golden_test.dart:235:11)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:08 +33 -10: agents_sheet_mixed_1280x800 · light [E]
+  Test failed. See exception logs above.
+  The test description was: agents_sheet_mixed_1280x800 · light
+
+00:08 +33 -10: agents_settings_many_1280x800 · light
+00:08 +34 -10: (tearDownAll)
+00:08 +34 -10: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/agents_ui_golden_test.dart: agents_sheet_error_1280x800 · dark
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/agents_ui_golden_test.dart: agents_sheet_error_1280x800 · light
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/agents_ui_golden_test.dart: agents_sheet_install_1280x800 · dark
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/agents_ui_golden_test.dart: agents_sheet_install_1280x800 · light
+  ... and 6 more

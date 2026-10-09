@@ -1,0 +1,40 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart
+00:00 +0: G1: modal and toast entry points live in the kit (absolute)
+00:00 +1: G15: no width literals outside the kit (absolute)
+00:00 +2: G16: every UI component comes from the kit (absolute)
+00:00 +3: G1/G15/G16 have no baseline: the committed file holds none of them
+00:00 +4: G2: copy, haptics, links and motion go through the kit
+00:00 +5: G7: layout is directional and bidi marks come from KitBidi
+00:00 +6: G15 inside the kit: only kit_layout.dart owns widths
+00:00 +7: G17 colour: every colour comes from a ThemeRoles role
+00:00 +8: G21 look and motion: numbers and effects come from the kit
+00:00 +9: G48 drafts: multiline input in a kit sheet keeps a draft
+00:00 +10: G17/G21 inside the kit: only deferred files keep a baseline, and each deferral still needs it
+00:00 +11: allowlists never grow (KIT-5)
+00:00 +12: allowlist keys are exact paths or folders under lib/
+00:00 +13: every G2/G7/G15x/G17/G21/G48 row is named once and has a reason
+00:00 +14: every allowlist entry gives a real reason
+00:00 +15: the Flutter widget catalogue exists and is non-trivial
+00:00 +16: counters on fixture strings (proves the regexes, not just files) G1 matches showDialog<T>( but not showKitDialog( or a comment
+00:00 +17: counters on fixture strings (proves the regexes, not just files) SnackBar( does not count showSnackBar( or KitSnackBar(
+00:00 +18: counters on fixture strings (proves the regexes, not just files) G16 counts real widget constructions, not static members or app classes
+00:00 +19: counters on fixture strings (proves the regexes, not just files) KIT-7: MaterialPageRoute( and PageRouteBuilder( fail G16, in lib/ui and in UI code elsewhere under lib/, with no baseline to lean on
+00:00 +20: counters on fixture strings (proves the regexes, not just files) G1/G15/G16 failures name the kit part and the way forward
+00:00 +21: counters on fixture strings (proves the regexes, not just files) G17 is absolute: every colour row fails on any hit, with a fix that names what to use
+00:00 +22: counters on fixture strings (proves the regexes, not just files) Scrollbar has no home outside the kit any more (KIT-6)
+00:00 +23: counters on fixture strings (proves the regexes, not just files) G15 counts a width compared to a literal, not BoxConstraints(maxWidth: n)
+00:00 +24: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts uses of an old API, not its declaration
+00:00 +25: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts motion literals and seams, not KitMotion names
+00:00 +26: G2/G7/G15x/G17/G21/G48 rows on fixture strings SEC-1: launchUrl in the kit is absolute with no allowlist
+00:00 +27: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 counts left/right layout, not the directional forms
+00:00 +28: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 is absolute in the kit, forced-LTR parts may align left
+00:00 +29: G2/G7/G15x/G17/G21/G48 rows on fixture strings G15x counts breakpoints and layout widths, not guards or gaps
+00:00 +30: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 counts literal colours and theme reads, not transparent
+00:00 +31: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 counts look literals the way the rulebook writes them
+00:00 +32: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 LOOK-21 in the kit: every stroke width comes from KitTokens
+00:00 +33: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 metal/chrome reads identifiers and file names
+00:00 +34: G2/G7/G15x/G17/G21/G48 rows on fixture strings G48 flags a sheet with a multiline field and no draft
+00:00 +35: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 and G21 also scan Flutter UI code outside lib/ui/
+00:00 +36: G2/G7/G15x/G17/G21/G48 rows on fixture strings theme files, allowlist keys and scopes resolve as documented
+00:00 +37: G2/G7/G15x/G17/G21/G48 rows on fixture strings KIT-5: an allowlist key the committed set lacks fails
+00:00 +38: All tests passed!

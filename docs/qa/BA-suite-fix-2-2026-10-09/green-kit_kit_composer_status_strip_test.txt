@@ -1,0 +1,12 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/kit/kit_composer_status_strip_test.dart
+00:00 +0: a lone model stays at the trailing edge · rtl
+00:00 +1: chips never overlap · 412 dp · 1.0 x text · rtl
+00:00 +2: chips never overlap · 360 dp · 1.0 x text · rtl
+00:00 +3: chips never overlap · 320 dp · 1.0 x text · rtl
+00:00 +4: chips never overlap · 320 dp · 2.0 x text · rtl
+00:00 +5: a lone model stays at the trailing edge · ltr
+00:00 +6: chips never overlap · 412 dp · 1.0 x text · ltr
+00:00 +7: chips never overlap · 360 dp · 1.0 x text · ltr
+00:01 +8: chips never overlap · 320 dp · 1.0 x text · ltr
+00:01 +9: chips never overlap · 320 dp · 2.0 x text · ltr
+00:01 +10: All tests passed!

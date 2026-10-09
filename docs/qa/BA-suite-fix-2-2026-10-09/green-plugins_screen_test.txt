@@ -1,0 +1,10 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/plugins_screen_test.dart
+00:00 +0: a plugin row opens its details; nothing offers command links (slice-P3.1: plugins-mapping-dialog and its clear sheet are gone)
+00:01 +1: the server section carries its own label and plugin group
+00:01 +2: unsupported servers make no plugin request
+00:01 +3: empty, failure and retry states are distinct and hide raw errors
+00:01 +4: late previous-location inventory is discarded
+00:01 +5: late inventory after disposal is ignored
+00:01 +6: plugin events and reconnect refetch current inventory
+00:01 +7: flat plugin rows fit a narrow phone with large text
+00:01 +8: All tests passed!

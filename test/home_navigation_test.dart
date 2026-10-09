@@ -1145,7 +1145,7 @@ void main() {
     await tester.pump();
     // The server pill reports reconnection at once, and alone: no second
     // line saying the same thing under it (one indicator). After the
-    // controller's eight-second grace period the shared line appears with
+    // controller's 15-second quiet window the shared line appears with
     // its way forward.
     final line = find.byKey(const ValueKey('connection-status-banner'));
     expect(line, findsNothing);
@@ -1158,7 +1158,7 @@ void main() {
     );
     expect(find.text('Reconnecting to This device (Termux)…'), findsNothing);
     expect(find.text("This device (Termux) isn't answering"), findsNothing);
-    await tester.pump(const Duration(seconds: 8));
+    await tester.pump(const Duration(seconds: 16));
     await tester.pump(const Duration(milliseconds: 300));
     expect(line, findsOneWidget);
     expect(find.text("This device (Termux) isn't answering"), findsOneWidget);

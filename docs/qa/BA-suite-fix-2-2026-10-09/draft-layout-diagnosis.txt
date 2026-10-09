@@ -1,0 +1,44 @@
+Waiting for another flutter command to release the startup lock...
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/session_draft_test.dart
+00:00 +0: failed save keeps the route and text until Retry succeeds
+══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞══════════════════════
+The following assertion was thrown during layout:
+A RenderFlex overflowed by 29 pixels on the bottom.
+
+The relevant error-causing widget was:
+  Column
+  Column:file:///home/eslam/Storage/Code/oc_app-sol-ba/lib/ui/screens/chat/chat_composer_region.dart:130:12
+
+The overflowing RenderFlex has an orientation of Axis.vertical.
+The edge of the RenderFlex that is overflowing has been marked in
+the rendering with a yellow and black striped pattern. This is
+usually caused by the contents being too big for the RenderFlex.
+Consider applying a flex factor (e.g. using an Expanded widget)
+to force the children of the RenderFlex to fit within the
+available space instead of being sized to their natural size.
+This is considered an error condition because it indicates that
+there is content that cannot be seen. If the content is
+legitimately bigger than the available space, consider clipping
+it with a ClipRect widget before putting it in the flex, or using
+a scrollable container rather than a Flex, like a ListView.
+The specific RenderFlex in question is: RenderFlex#2840a relayoutBoundary=up9 OVERFLOWING:
+  needs compositing
+  parentData: <none> (can use size)
+  constraints: BoxConstraints(0.0<=w<=320.0, 0.0<=h<=339.0)
+  size: Size(320.0, 339.0)
+  direction: vertical
+  mainAxisAlignment: start
+  mainAxisSize: min
+  crossAxisAlignment: stretch
+  verticalDirection: down
+  spacing: 0.0
+◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+═════════════════════════════════════════════════════════════════
+
+RenderFlex#2840a relayoutBoundary=up9 OVERFLOWING
+
+Recovery-row measurement:
+ │ │ size: Size(320.0, 250.0)
+ │   │ size: Size(288.0, 238.0)
+
+Full render-tree dump omitted; the diagnostic hook was temporary and the test was restored byte-for-byte.

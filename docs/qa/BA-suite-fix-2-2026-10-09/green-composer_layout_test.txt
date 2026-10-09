@@ -1,0 +1,22 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/composer_layout_test.dart
+00:00 +0: typing saves the latest draft before leaving the chat
+00:01 +1: typing updates Send and slash suggestions without a server event
+00:01 +2: /terminal stays a typed door after Terminal left the menus
+00:01 +3: local image attachments show a thumbnail with independent removal
+00:01 +4: clearing text can be undone without losing newer typing or attachments
+00:02 +5: prompt reuse searches deduplicated history and preserves the draft
+00:02 +6: finishing a run preserves the editor state and selection
+00:03 +7: prompt history stays usable with large text and the keyboard open
+00:03 +8: background capability is cached and refreshed after reconnect
+00:03 +9: touch background action handles a no-op without claiming success
+00:03 +10: the prompt field stays dominant on a 360dp phone at 2.5x text
+00:03 +11: the compact composer keeps a full-width typing area
+00:03 +12: composer grows with the draft and returns to idle at 1.0x
+00:04 +13: composer grows with the draft and returns to idle at 2.5x
+00:04 +14: keyboard resizing preserves the editor and draft selection
+00:04 +15: every collapsed tool stays reachable from the tools sheet
+00:04 +16: photo actions persist the draft and launch the selected source
+00:04 +17: the tools sheet keeps Voice and Attach open while a run is active: both fill the send that waits for the reply
+00:05 +18: a busy run writes its status in the turn; the composer is idle and its Send becomes the one Stop
+00:05 +19: reduced motion settles while busy
+00:05 +20: All tests passed!

@@ -407,6 +407,8 @@ void main() {
       ),
       findsOneWidget,
     );
+    await tester.pumpWidget(const SizedBox.shrink());
+    connection.dispose();
   });
 
   testWidgets('tapping a saved server runs the Servers connect flow', (

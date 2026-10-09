@@ -486,9 +486,11 @@ void main() {
     });
 
     testWidgets('offline before any read', (tester) async {
-      final (_, gateway, _) = await open(tester, connected: false);
+      final (connection, gateway, _) = await open(tester, connected: false);
       expect(find.text("You're offline"), findsOneWidget);
       expect(gateway.reads, 0);
+      await tester.pumpWidget(const SizedBox.shrink());
+      connection.dispose();
     });
 
     testWidgets('offline keeps the last read, reconnecting reads again', (
@@ -514,6 +516,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('example/newer'), findsOneWidget);
       expect(gateway.reads, 2);
+      await tester.pumpWidget(const SizedBox.shrink());
+      connection.dispose();
     });
   });
 
