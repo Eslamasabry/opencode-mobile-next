@@ -138,6 +138,7 @@ part 'connection/lifecycle.dart';
 part 'connection/revert.dart';
 part 'connection/models.dart';
 part 'connection/status.dart';
+part 'connection/quiet_reconnect.dart';
 part 'connection/queue.dart';
 part 'connection/drafts.dart';
 part 'connection/locations.dart';
@@ -615,6 +616,7 @@ class ConnectionController extends ChangeNotifier
 
   StreamStatus get status => _status;
   set status(StreamStatus value) {
+    _observeQuietReconnect(value);
     if (_status != value && value != StreamStatus.connected) {
       _attentionTransportRevision++;
     }
@@ -840,6 +842,7 @@ class ConnectionController extends ChangeNotifier
     _connectorSearchDispose();
     _genUiDispose();
     _resetConnectionStatusClock();
+    _resetQuietReconnect();
     _feedDispose();
     _paShutdown();
     _sideShutdown();

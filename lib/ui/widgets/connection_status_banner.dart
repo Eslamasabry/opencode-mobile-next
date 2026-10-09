@@ -299,11 +299,22 @@ Future<void> showConnectionDetailsSheet(
   BuildContext context,
   ConnectionController controller, {
   bool showChangeServer = true,
-}) {
+}) async {
+  final revision = controller.connectionRevision;
+  final helper = await controller.readConnectionHelperExit();
+  if (!context.mounted || revision != controller.connectionRevision) return;
   final snapshot = controller.connectionStatus;
   final manualRetry = snapshot.retrying;
   final reconnecting = snapshot.waiting;
   final error = controller.connectionError?.trim();
+  final details = [
+    if (error != null && error.isNotEmpty) error,
+    if (helper?.lastExitAt != null) ...[
+      'helper.lastExitAt: ${helper!.lastExitAt!.toUtc().toIso8601String()}',
+      'helper.lastExitCode: ${helper.lastExitCode ?? "unknown"}',
+      'helper.possibleCause: ${helper.possibleResourceKill ? "memory_or_phantom_kill (possible)" : "unknown"}',
+    ],
+  ].join('\n');
   final l10n = lookupAppLocalizations(Localizations.localeOf(context));
   final navigator = Navigator.of(context);
   final profile = controller.profile;
@@ -363,11 +374,11 @@ Future<void> showConnectionDetailsSheet(
             for (final check in failure.checks)
               KitText('\u2022 $check', tone: KitTextTone.secondary),
           ],
-          if (error != null && error.isNotEmpty) ...[
+          if (details.isNotEmpty) ...[
             gap,
             // The plain diagnosis above is read first; the raw error waits
             // folded, one tap away, with its copy action (tinkerer).
-            KitDetailsFold(text: error),
+            KitDetailsFold(text: details),
           ],
         ],
       );

@@ -57,6 +57,52 @@ void main() {
   });
   tearDown(() => controller.dispose());
 
+  testWidgets(
+    'established link gets a bounded quiet window without reachability',
+    (tester) async {
+      controller.api = OpenCodeApi(baseUrl: 'http://example.invalid');
+      controller.status = StreamStatus.connected;
+      controller.busySessions.add('working');
+      controller.status = StreamStatus.reconnecting;
+      expect(controller.connectionStatus.reachable, isFalse);
+      expect(controller.connectionStatus.visible, isFalse);
+      expect(controller.connectionStatus.waiting, isFalse);
+      await tester.pump(const Duration(seconds: 8));
+      controller.status = StreamStatus.disconnected;
+      controller.status = StreamStatus.reconnecting;
+      await tester.pump(const Duration(milliseconds: 6999));
+      expect(controller.connectionStatus.visible, isFalse);
+      expect(controller.busySessions, contains('working'));
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(controller.connectionStatus.visible, isTrue);
+      controller.dispose();
+    },
+  );
+
+  testWidgets('a fresh connect stays visible after an established connection', (
+    tester,
+  ) async {
+    controller.api = OpenCodeApi(baseUrl: 'http://example.invalid');
+    controller.status = StreamStatus.connected;
+    controller.status = StreamStatus.connecting;
+    expect(controller.connectionStatus.visible, isTrue);
+    expect(controller.connectionStatus.waiting, isTrue);
+    controller.dispose();
+  });
+
+  testWidgets('credentials bypass the quiet reconnect window', (tester) async {
+    controller.api = OpenCodeApi(baseUrl: 'http://example.invalid');
+    controller.status = StreamStatus.connected;
+    controller.status = StreamStatus.reconnecting;
+    controller.passwordRejected = true;
+    expect(
+      controller.connectionStatus.phase,
+      ConnectionStatusPhase.credentialsRequired,
+    );
+    expect(controller.connectionStatus.visible, isTrue);
+    controller.dispose();
+  });
+
   testWidgets('one grace period survives reads and transport reconnect churn', (
     tester,
   ) async {

@@ -1,0 +1,129 @@
+machine_lock: got test slot 1 after 21s
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart
+00:00 +0: fresh agent snapshot restores busy after cached idle
+00:00 +1: hydrating a running agent publishes status without a turn event
+00:00 +2: drop mid-reply then reconnect running restores chat and composer
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: KitTurnPhase:<KitTurnPhase.running>
+  Actual: KitTurnPhase:<KitTurnPhase.interrupted>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:211:11)
+<asynchronous suspension>
+#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:132:5)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:184:9)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 211
+The test description was:
+  drop mid-reply then reconnect running restores chat and composer
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +2 -1: drop mid-reply then reconnect running restores chat and composer [E]
+  Test failed. See exception logs above.
+  The test description was: drop mid-reply then reconnect running restores chat and composer
+
+00:01 +2 -1: drop mid-reply then reconnect idle restores chat and composer
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: KitTurnPhase:<KitTurnPhase.running>
+  Actual: KitTurnPhase:<KitTurnPhase.interrupted>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:211:11)
+<asynchronous suspension>
+#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:132:5)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:184:9)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 211
+The test description was:
+  drop mid-reply then reconnect idle restores chat and composer
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +2 -2: drop mid-reply then reconnect idle restores chat and composer [E]
+  Test failed. See exception logs above.
+  The test description was: drop mid-reply then reconnect idle restores chat and composer
+
+00:01 +2 -2: 3 second link drop preserves work until grace expires
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: false
+  Actual: <true>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:290:13)
+<asynchronous suspension>
+#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:132:5)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:266:7)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 290
+The test description was:
+  3 second link drop preserves work until grace expires
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +2 -3: 3 second link drop preserves work until grace expires [E]
+  Test failed. See exception logs above.
+  The test description was: 3 second link drop preserves work until grace expires
+
+00:01 +2 -3: 30 second link drop preserves work until grace expires
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: false
+  Actual: <true>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:290:13)
+<asynchronous suspension>
+#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:132:5)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:266:7)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 290
+The test description was:
+  30 second link drop preserves work until grace expires
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +2 -4: 30 second link drop preserves work until grace expires [E]
+  Test failed. See exception logs above.
+  The test description was: 30 second link drop preserves work until grace expires
+
+00:01 +2 -4: idle snapshot completes a streamed reply without a terminal event
+00:01 +3 -4: subagent running and completed events reach controller busy state
+00:01 +4 -4: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: 3 second link drop preserves work until grace expires
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: 30 second link drop preserves work until grace expires
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: drop mid-reply then reconnect idle restores chat and composer
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: drop mid-reply then reconnect running restores chat and composer

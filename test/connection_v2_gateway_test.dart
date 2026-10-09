@@ -100,6 +100,7 @@ class _SelectionV2Gateway extends _FakeV2Gateway
   final String model;
   final String agent;
   final String variant;
+  String runStatus = 'idle';
 
   @override
   Future<ServerPage<Session>> sessionPage({
@@ -118,7 +119,7 @@ class _SelectionV2Gateway extends _FakeV2Gateway
     ],
   );
   @override
-  Future<Map<String, String>> sessionStatuses() async => {};
+  Future<Map<String, String>> sessionStatuses() async => {'chat': runStatus};
 }
 
 class _FakeV1Repository implements ProductRepository {
@@ -180,6 +181,42 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   tearDown(() => serverProbe = probeServerConnection);
+
+  for (final resumedStatus in ['busy', 'idle']) {
+    testWidgets('v2 quietly reconciles a 3s drop to $resumedStatus', (
+      tester,
+    ) async {
+      final gateway = _SelectionV2Gateway('model', 'build', '')
+        ..runStatus = 'busy';
+      final controller = ConnectionController(
+        await _store(),
+        v2GatewayFactory: (_) =>
+            (gateway: gateway, operations: _FakeV2Operations()),
+      );
+      try {
+        await controller.connect(_v2Profile());
+        gateway.streamStatus!(StreamStatus.connected);
+        await tester.pump();
+        expect(controller.busySessions, contains('chat'));
+        gateway.streamStatus!(StreamStatus.reconnecting);
+        await tester.pump(const Duration(seconds: 3));
+        expect(controller.isConnected, isFalse);
+        expect(controller.connectionStatus.visible, isFalse);
+        expect(controller.defersTurnInterruption, isTrue);
+        expect(controller.busySessions, contains('chat'));
+        gateway.runStatus = resumedStatus;
+        gateway.streamStatus!(StreamStatus.connected);
+        await tester.pump();
+        expect(
+          controller.busySessions.contains('chat'),
+          resumedStatus == 'busy',
+        );
+        expect(controller.defersTurnInterruption, isFalse);
+      } finally {
+        controller.dispose();
+      }
+    });
+  }
 
   testWidgets(
     'reconnect replaces cached selection with current v2 session truth',

@@ -32,6 +32,7 @@ class _Daemon extends FakeDaemon {
 
 class _World {
   String remoteStatus = 'idle';
+  bool online = true;
   final sockets = <FakeDaemon>[];
   late final PaseoGateway gateway;
   late final ConnectionController controller;
@@ -45,6 +46,9 @@ class _World {
       transport: PaseoTransport(
         endpoint: 'ws://127.0.0.1:6767',
         socketFactory: (_, _) async {
+          if (!online) {
+            throw PaseoFailure(PaseoFailureKind.disconnected);
+          }
           final socket = _Daemon();
           socket.handlers['fetch_agents_request'] = (_) => (
             'fetch_agents_response',
@@ -206,13 +210,13 @@ void main() {
           expect(world.controller.status, StreamStatus.reconnecting);
           expect(
             tester.widget<KitTurn>(find.byType(KitTurn).last).phase,
-            KitTurnPhase.interrupted,
+            KitTurnPhase.running,
           );
           expect(
             find.text(
               'Connection lost. Reconnecting to get the rest of this reply.',
             ),
-            findsOneWidget,
+            findsNothing,
           );
           // Reproduce the reported lost local busy hint. Only the new
           // transport's authoritative snapshot may restore it.
@@ -250,6 +254,77 @@ void main() {
                 );
             await _drain(tester);
           }
+        }, status: 'running');
+      },
+    );
+  }
+
+  for (final seconds in [3, 30]) {
+    testWidgets(
+      '$seconds second link drop preserves work until grace expires',
+      (tester) async {
+        await _withWorld(tester, (world) async {
+          await tester.pumpWidget(
+            ProviderScope(
+              overrides: [connProvider.overrideWithValue(world.controller)],
+              child: const MaterialApp(
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: ChatScreen(sessionID: _id),
+              ),
+            ),
+          );
+          await _drain(tester);
+          world.online = false;
+          await world.sockets.first.close();
+          await _drain(tester);
+          for (
+            var second = 0;
+            second < seconds - (seconds == 3 ? 1 : 0);
+            second++
+          ) {
+            await tester.pump(const Duration(seconds: 1));
+            await _drain(tester);
+            expect(world.controller.isConnected, isFalse);
+            expect(
+              tester.widget<KitComposer>(find.byType(KitComposer)).busy,
+              isTrue,
+            );
+            if (second < 14) {
+              expect(world.controller.connectionStatus.visible, isFalse);
+              expect(
+                tester.widget<KitTurn>(find.byType(KitTurn).last).phase,
+                KitTurnPhase.running,
+              );
+              expect(find.textContaining('Connection lost.'), findsNothing);
+              expect(
+                find.textContaining('The connection dropped'),
+                findsNothing,
+              );
+            }
+          }
+          if (seconds == 30) {
+            expect(world.controller.connectionStatus.visible, isTrue);
+            expect(
+              tester.widget<KitTurn>(find.byType(KitTurn).last).phase,
+              KitTurnPhase.interrupted,
+            );
+            expect(find.textContaining('Connection lost.'), findsOneWidget);
+          }
+          world.online = true;
+          // The exponential retry is scheduled at 1, 3, 7, 15, 31 seconds.
+          await tester.pump(const Duration(seconds: 1));
+          await _drain(tester);
+          await tester.pump(const Duration(milliseconds: 200));
+          expect(world.controller.isConnected, isTrue);
+          expect(world.controller.busySessions, contains(_id));
+          expect(world.controller.connectionStatus.visible, isFalse);
+          expect(
+            tester.widget<KitTurn>(find.byType(KitTurn).last).phase,
+            KitTurnPhase.running,
+          );
+          expect(find.textContaining('Connection lost.'), findsNothing);
+          expect(find.textContaining('The connection dropped'), findsNothing);
         }, status: 'running');
       },
     );

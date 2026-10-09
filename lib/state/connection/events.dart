@@ -100,7 +100,7 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
         if (previousStatus == StreamStatus.reconnecting ||
             previousStatus == StreamStatus.disconnected) {
           _markDataRefreshReady(generation, currentApi);
-          unawaited(refreshSessions());
+          unawaited(_refreshAfterReconnect(generation, currentApi));
         }
         // The stream lost the server and found it again by itself: an
         // automatic act, filed for While you were away (P6.2). A first

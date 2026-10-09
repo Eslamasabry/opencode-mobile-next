@@ -198,6 +198,8 @@ void main() {
         reason: 'no duplicated text after the refetch',
       );
       expect(find.textContaining('The answer is'), findsOneWidget);
+      // Cancel controller clocks before the widget timer invariant runs.
+      controller.dispose();
     });
 
     testWidgets('a delta arriving after the refetch extends the refetched '
@@ -219,6 +221,8 @@ void main() {
       await tester.pump();
       expect(find.text('Part one, part two, part three'), findsOneWidget);
       expect(find.textContaining('Part one'), findsOneWidget);
+      // Cancel controller clocks before the widget timer invariant runs.
+      controller.dispose();
     });
   });
 
@@ -241,6 +245,8 @@ void main() {
       expect(find.text('Done: all 12 files updated.'), findsOneWidget);
       expect(find.text('Working on it'), findsNothing);
       expect(find.text('Ask'), findsOneWidget);
+      // Cancel controller clocks before the widget timer invariant runs.
+      controller.dispose();
     });
   });
 

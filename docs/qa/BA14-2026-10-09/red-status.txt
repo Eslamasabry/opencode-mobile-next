@@ -1,0 +1,66 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: established link gets a bounded quiet window without reachability
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: false
+  Actual: <true>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart:68:5)
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart line 68
+The test description was:
+  established link gets a bounded quiet window without reachability
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: established link gets a bounded quiet window without reachability [E]
+  Test failed. See exception logs above.
+  The test description was: established link gets a bounded quiet window without reachability
+
+00:00 +0 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: credentials bypass the quiet reconnect window
+00:00 +1 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: one grace period survives reads and transport reconnect churn
+00:00 +2 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: a new attempt resets grace; success cancels the old deadline
+00:00 +3 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: real retry publishes pending state and resets an expired attempt
+00:00 +4 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: failure and credentials cannot look reachable
+00:00 +5 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: switching profiles gives the new owner a fresh grace period
+00:00 +6 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: isolated work has no shared server status or deadline
+00:00 +7 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: disposal cancels the deadline without a late notification
+00:00 +8 -1: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart
+00:01 +8 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart: Details retains BD13 unexpected helper exit after recovery
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following StateError was thrown running a test:
+Bad state: No element
+
+When the exception was thrown, this was the stack:
+#0      Iterable.single (dart:core/iterable.dart:694:25)
+#1      WidgetController.widget (package:flutter_test/src/controller.dart:828:30)
+#2      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart:83:25)
+<asynchronous suspension>
+#3      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#4      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  Details retains BD13 unexpected helper exit after recovery
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +8 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart: Details retains BD13 unexpected helper exit after recovery [E]
+  Test failed. See exception logs above.
+  The test description was: Details retains BD13 unexpected helper exit after recovery
+
+00:02 +8 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart: all routes share one connection phase and reveal lower notices in order
+00:02 +9 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart: same words still replace retry action state
+00:02 +10 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart: local chat-style status preserves its controls in the slot
+00:02 +11 -2: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart: Details retains BD13 unexpected helper exit after recovery
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: established link gets a bounded quiet window without reachability

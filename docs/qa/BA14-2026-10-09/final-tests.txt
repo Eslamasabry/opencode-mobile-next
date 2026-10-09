@@ -1,0 +1,373 @@
+machine_lock: got test slot 1 after 6s
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: fresh agent snapshot restores busy after cached idle
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: hydrating a running agent publishes status without a turn event
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: drop mid-reply then reconnect running restores chat and composer
+00:01 +3: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: drop mid-reply then reconnect idle restores chat and composer
+00:01 +4: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: 3 second link drop preserves work until grace expires
+00:01 +5: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: 30 second link drop preserves work until grace expires
+00:02 +6: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: idle snapshot completes a streamed reply without a terminal event
+00:02 +7: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: subagent running and completed events reach controller busy state
+00:02 +8: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart
+00:03 +8: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: established link gets a bounded quiet window without reachability
+00:03 +9: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: credentials bypass the quiet reconnect window
+00:03 +10: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: one grace period survives reads and transport reconnect churn
+00:03 +11: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: a new attempt resets grace; success cancels the old deadline
+00:03 +12: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: real retry publishes pending state and resets an expired attempt
+00:03 +13: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: failure and credentials cannot look reachable
+00:03 +14: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: switching profiles gives the new owner a fresh grace period
+00:03 +15: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: isolated work has no shared server status or deadline
+00:03 +16: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: disposal cancels the deadline without a late notification
+00:03 +17: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart
+00:04 +17: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart: Details retains BD13 unexpected helper exit after recovery
+00:05 +18: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart: all routes share one connection phase and reveal lower notices in order
+00:05 +19: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart: same words still replace retry action state
+00:05 +20: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart: local chat-style status preserves its controls in the slot
+00:05 +21: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:06 +21: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: (setUpAll)
+00:06 +21: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BD13 helper evidence is read-only and rejects late disposed results
+00:07 +22: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA14 child backend keeps scoped BD13 exit evidence after recovery
+00:07 +23: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list card answer refreshes activity and completion without opening chat
+00:07 +24: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: native questions hydrate the chat controller and answer as choices
+00:07 +25: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: question identity includes native optionality
+00:07 +26: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question answers claude without opening a backend
+00:07 +27: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question answers pi without opening a backend
+00:07 +28: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question rejects on the feed source
+00:07 +29: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question fences changed revision and disconnected source
+00:07 +30: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question source identity isolates colliding IDs
+00:07 +31: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question cannot reuse an identity after source replacement
+00:07 +32: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question equivalent refresh keeps identity but resolution retires it
+00:07 +33: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list question routes the selected OpenCode source without waking it
+00:07 +34: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a Pi question shows under its row with no chat opened and is answered from the sheet
+00:08 +35: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list permission captures revision and never sends a changed held command
+00:08 +36: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list permission source identities isolate colliding wire IDs
+00:08 +37: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list permission disappears on resolution and disconnect fences old replies
+00:08 +38: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list permission profile deletion fences held approval
+00:08 +39: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list permission for a newly created conversation routes draft ID to daemon ID
+00:08 +40: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list permission shows and answers with Undo after disposed chat=false
+00:08 +41: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: list permission shows and answers with Undo after disposed chat=true
+00:08 +42: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: new Claude saved row retains the daemon ID across source loss
+00:08 +43: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: reopen newly created running Claude with disposed chat=false
+00:08 +44: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: reopen newly created running Claude with disposed chat=true
+00:08 +45: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: reopen newly created idle Claude with disposed chat=false
+00:08 +46: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: reopen newly created idle Claude with disposed chat=true
+00:08 +47: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: live photo receipt settles while running using messageId
+00:09 +48: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: live photo receipt settles while running using clientMessageId
+00:10 +49: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: live photo receipt rejects correlation without authoritative history
+00:11 +50: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: live photo receipt rejects card without authoritative history
+00:12 +51: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: live photo receipt rejects call without authoritative history
+00:13 +52: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: live photo receipt rejects assistant without authoritative history
+00:14 +53: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: live photo receipt rejects missing ID without authoritative history
+00:15 +54: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: photo card on a new Claude chat sends bytes through the real gateway
+00:15 +55: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: photo card chat and list aliases share identity and Undo
+00:16 +56: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: photo card unconfirmed send cannot retry through the list alias
+00:16 +57: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: photo card keeps a legacy local-ID dispatch marker fail closed
+00:17 +58: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: photo card archive clears both chat and list session aliases
+00:17 +59: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: photo card explicit delete clears both aliases without an event
+00:18 +60: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 busy snapshots without an owned transport have no watchdog wakeups
+00:18 +61: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 idle cancels a pending probe deadline
+00:18 +62: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 deleted cancels a pending probe deadline
+00:18 +63: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 error cancels a pending probe deadline
+00:18 +64: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 dispose cancels a pending probe deadline
+00:18 +65: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 disconnect cancels a pending probe deadline
+00:18 +66: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 suspend cancels a pending probe deadline
+00:18 +67: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 silent turn diagnoses modelSlow within sixty seconds
+00:18 +68: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 silent turn diagnoses helperDown within sixty seconds
+00:18 +69: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 silent turn diagnoses network within sixty seconds
+00:18 +70: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA7 waiting for permission pauses diagnosis and late probes cannot revive idle turn
+00:18 +71: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: finished phone check publishes fresh qualification before the next agent
+00:18 +72: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone check retries a failed live cards verification
+00:18 +73: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone checks leave Cards explicitly off
+00:18 +74: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: phone check completion cannot republish a retired host result
+00:18 +75: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: failed phone recheck never borrows the earlier ready result
+00:18 +76: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper 0.9.2 refreshes arm64 Claude capability rows
+00:18 +77: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper null refreshes arm64 Claude capability rows
+00:18 +78: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper 0.9.3 refreshes arm64 Claude capability rows
+00:18 +79: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper capability scan rechecks the actual phone gate
+00:18 +80: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper retry publishes resume without another screen read
+00:18 +81: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BB6 main foreground binding exists before a terminal request
+00:18 +82: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BB6 owner deletion waits for registered terminal cleanup
+00:18 +83: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BB6 protocol alias retains the canonical foreground owner
+00:18 +84: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BB6 failed terminal drain blocks deletion and remains retryable
+00:18 +85: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BB6 old foreground drain cannot dispose replacement host or unbind newer generation
+00:18 +86: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: removal removes only target rows and keeps Claude chats and account
+00:18 +87: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: removal excludes new phone chats and a second removal
+00:18 +88: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: removal returns plain busy guidance and preserves ready row
+00:18 +89: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: older hosts and Claude removal fail closed before dispatch
+00:18 +90: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: removal forwards an already-absent result without estimating bytes
+00:18 +91: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: removal is available for all installed supported agents
+00:18 +92: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: removal remains available while an installed agent account is unknown
+00:18 +93: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: removal is available for a failed or interrupted partial target install
+00:18 +94: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: removal hides arbitrary host failures behind fixed confirmation guidance
+00:18 +95: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: removal from a replaced owner cannot clear the new removal or its rows
+00:18 +96: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle known stopped helper is idle; cold and unknown owner are unknown
+00:18 +97: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle cold helper restoration coalesces without existing backend
+00:18 +98: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle background rows and explicit helper resume cannot bypass idle
+00:18 +99: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle foreground ordinary resume cannot consume idle generation
+00:18 +100: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle helper not recorded live remains stopped
+00:18 +101: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle foreground loss during receipt read prevents dispatch
+00:18 +102: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle mismatched token refuses without helper launch
+00:18 +103: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle connected unknown inventory overrides stale helper stop
+00:18 +104: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle controller propagates all-folder busy changes and loss
+00:18 +105: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle disposal during receipt read prevents launch
+00:18 +106: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle deletion during receipt read prevents launch
+00:18 +107: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle native generation revoked during feed cannot report restored
+00:18 +108: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA idle hooks share the canonical owner across protocol aliases
+00:18 +109: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA9 uses host owner scope and revokes before native host stop
+00:18 +110: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA4 gives arm64 Claude the connected helper certification
+00:18 +111: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: qualified cards skip asks in feed and active chat, disable revokes
+00:18 +112: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: off the phone profile there is no agent surface
+00:18 +113: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: rows, chip choices and a persisted, revalidated selection
+00:18 +114: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: merged feed keeps both sources; rows open by identity
+00:18 +115: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: old phone-agent chats need an explicit new chat
+00:18 +116: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: the list paints once when agents had conversations before
+00:18 +117: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: saved agent rows paint at once and give way to live ones
+00:18 +118: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a helper still starting is read again once it answers
+00:18 +119: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a helper slower than half a minute still gets its rows read
+00:18 +120: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a pull to refresh reaches a helper the retries gave up on
+00:18 +121: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a helper that never answers stops being called loading
+00:18 +122: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: approval choices made before carry over to the agent backend
+00:18 +123: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: the agent backend follows the app into the background and back
+00:18 +124: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: an old conversation with its session handle reopens by resuming it on the helper
+00:18 +125: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a refused resume says so, and the next tap offers a new conversation
+00:18 +126: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA1 agent sign-in comes from CLI even when helper disagrees
+00:18 +127: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA3 terminal completion requires signed-in probe and BA8 verifies logout
+00:18 +128: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA3 a late older probe cannot complete a newer signed-out attempt
+00:18 +129: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA1 missing multi-agent bridge preserves direct Claude status only
+00:18 +130: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: issue #95: a sign-in check always ends a provider the helper does not list says it could not check, on the first read
+00:18 +131: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a resumed session is one row, with the title it had
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: 'Fix the login page'
+  Actual: <null>
+   Which: not an <Instance of 'String'>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1647:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart line 1647
+The test description was:
+  a resumed session is one row, with the title it had
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:18 +131 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a resumed session is one row, with the title it had [E]
+  Test failed. See exception logs above.
+  The test description was: a resumed session is one row, with the title it had
+
+00:18 +131 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: at app start the helper is checked beside the server, only where agents had conversations
+00:18 +132 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: without earlier agent conversations the list never waits
+00:18 +133 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a chat the host still runs reopens after an app restart
+00:18 +134 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: starting chats routes to OpenCode or the phone host
+00:18 +135 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a stopped helper is started again when a chat needs it
+00:18 +136 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: limit and stopped rows surface as status lines
+00:18 +137 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA5 protocol switch keeps host account and conversation rows
+00:18 +138 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: deletion closes auth, setup, host and feeds before ProfileStore
+00:48 +138 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: deletion closes auth, setup, host and feeds before ProfileStore [E]
+  TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts
+  dart:isolate  _RawReceivePort._handleMessage
+
+00:48 +138 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: clearing saved sign-ins closes clients and asks for a restart
+01:18 +138 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: clearing saved sign-ins closes clients and asks for a restart [E]
+  TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts
+  dart:isolate  _RawReceivePort._handleMessage
+
+01:18 +138 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: (tearDownAll)
+01:18 +138 -3: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart
+01:19 +138 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart: v2 quietly reconciles a 3s drop to busy
+01:20 +139 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart: v2 quietly reconciles a 3s drop to idle
+01:20 +140 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart: reconnect replaces cached selection with current v2 session truth
+01:20 +141 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart: a v2 profile builds the v2 pair and gateway event channels
+01:20 +142 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart: a mid-session 401 sets passwordRejected until recovery
+01:20 +143 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart: a wrong cached flavor re-probes once and retries as v2
+01:20 +144 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart: an unhealthy v1 server fails closed without a re-probe
+01:20 +145 -3: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart
+01:20 +145 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: request replies cannot cross scope while waking
+01:21 +146 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: request replies cannot cross contents while waking
+01:21 +147 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: request replies cannot cross resolved then reused while waking
+01:21 +148 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: question answer and reject share a write slot before transport wake
+01:21 +149 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: late question failure after remote resolution does not surface an error
+01:21 +150 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: V2 HTTP hydration envelopes and session-scoped mutations
+01:21 +151 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: loose successful V2 request envelopes remain compatible
+01:21 +152 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: generated V2 request errors retain OpenCode identity
+01:21 +153 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: V2 hydration rejects mismatched and malformed envelopes
+01:21 +154 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: V2-only hydration routes mutations and blocks stale resurrection
+01:21 +155 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: permission and question replies wait for wake transport
+01:21 +156 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: partial V2 hydration failure preserves V2 reply provenance
+01:21 +157 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: QuestionNotFoundError resolves V2 and legacy requests locally
+01:21 +158 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: SSE reconnect refreshes pending questions
+01:21 +159 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: question hydration merges an independent concurrent SSE request
+01:21 +160 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: session snapshots merge around newer per-session events
+01:21 +161 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: connected stream reconciles a missed idle event
+01:21 +162 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: a run missing from one status read, between two steps, stays running
+01:21 +163 -3: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart
+01:22 +163 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: mid-stream drop the partial answer stays on screen while the stream is down and the refetch completes it once
+Pending timers:
+Timer (duration: 0:00:15.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#5      _QuietReconnect._observeQuietReconnect (package:opencode_mobile/state/connection/quiet_reconnect.dart:18:28)
+#6      ConnectionController.status= (package:opencode_mobile/state/connection.dart:619:5)
+#7      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart:179:11)
+<asynchronous suspension>
+#8      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#9      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  the partial answer stays on screen while the stream is down and the refetch completes it once
+════════════════════════════════════════════════════════════════════════════════════════════════════
+01:23 +163 -4: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: mid-stream drop the partial answer stays on screen while the stream is down and the refetch completes it once [E]
+  Test failed. See exception logs above.
+  The test description was: the partial answer stays on screen while the stream is down and the refetch completes it once
+
+01:23 +163 -4: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: mid-stream drop a delta arriving after the refetch extends the refetched text exactly once
+Pending timers:
+Timer (duration: 0:00:15.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#5      _QuietReconnect._observeQuietReconnect (package:opencode_mobile/state/connection/quiet_reconnect.dart:18:28)
+#6      ConnectionController.status= (package:opencode_mobile/state/connection.dart:619:5)
+#7      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart:209:18)
+<asynchronous suspension>
+#8      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#9      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  a delta arriving after the refetch extends the refetched text exactly once
+════════════════════════════════════════════════════════════════════════════════════════════════════
+01:23 +163 -5: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: mid-stream drop a delta arriving after the refetch extends the refetched text exactly once [E]
+  Test failed. See exception logs above.
+  The test description was: a delta arriving after the refetch extends the refetched text exactly once
+
+01:23 +163 -5: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: long sleep and resume resuming after a sleep reconciles to the server transcript and shows the finished answer once
+Pending timers:
+Timer (duration: 0:00:15.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#5      _QuietReconnect._observeQuietReconnect (package:opencode_mobile/state/connection/quiet_reconnect.dart:18:28)
+#6      ConnectionController.status= (package:opencode_mobile/state/connection.dart:619:5)
+#7      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart:234:18)
+<asynchronous suspension>
+#8      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#9      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  resuming after a sleep reconciles to the server transcript and shows the finished answer once
+════════════════════════════════════════════════════════════════════════════════════════════════════
+01:24 +163 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: long sleep and resume resuming after a sleep reconciles to the server transcript and shows the finished answer once [E]
+  Test failed. See exception logs above.
+  The test description was: resuming after a sleep reconciles to the server transcript and shows the finished answer once
+
+01:24 +163 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: network switch a Wi-Fi to LTE flap with a prompt on the wire sends nothing twice
+01:24 +164 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: network switch the queue flushes once after the network returns, in order
+01:24 +165 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: network switch a prompt whose send was cut by the switch is held for review, not resent on the new network
+01:24 +166 -6: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart
+01:24 +166 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: no lib file grows past its line budget
+01:24 +167 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: the baseline only lists files over the limit
+01:24 +168 -6: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart
+01:27 +168 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G1: modal and toast entry points live in the kit (absolute)
+01:27 +169 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G15: no width literals outside the kit (absolute)
+01:27 +170 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G16: every UI component comes from the kit (absolute)
+01:27 +171 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G1/G15/G16 have no baseline: the committed file holds none of them
+01:27 +172 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2: copy, haptics, links and motion go through the kit
+01:27 +173 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G7: layout is directional and bidi marks come from KitBidi
+01:27 +174 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G15 inside the kit: only kit_layout.dart owns widths
+01:27 +175 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G17 colour: every colour comes from a ThemeRoles role
+01:27 +176 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G21 look and motion: numbers and effects come from the kit
+01:27 +177 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G48 drafts: multiline input in a kit sheet keeps a draft
+01:27 +178 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G17/G21 inside the kit: only deferred files keep a baseline, and each deferral still needs it
+01:27 +179 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: allowlists never grow (KIT-5)
+01:27 +180 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: allowlist keys are exact paths or folders under lib/
+01:27 +181 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: every G2/G7/G15x/G17/G21/G48 row is named once and has a reason
+01:27 +182 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: every allowlist entry gives a real reason
+01:27 +183 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: the Flutter widget catalogue exists and is non-trivial
+01:27 +184 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G1 matches showDialog<T>( but not showKitDialog( or a comment
+01:27 +185 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) SnackBar( does not count showSnackBar( or KitSnackBar(
+01:27 +186 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G16 counts real widget constructions, not static members or app classes
+01:27 +187 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) KIT-7: MaterialPageRoute( and PageRouteBuilder( fail G16, in lib/ui and in UI code elsewhere under lib/, with no baseline to lean on
+01:27 +188 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G1/G15/G16 failures name the kit part and the way forward
+01:27 +189 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G17 is absolute: every colour row fails on any hit, with a fix that names what to use
+01:27 +190 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) Scrollbar has no home outside the kit any more (KIT-6)
+01:27 +191 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G15 counts a width compared to a literal, not BoxConstraints(maxWidth: n)
+01:27 +192 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts uses of an old API, not its declaration
+01:27 +193 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts motion literals and seams, not KitMotion names
+01:27 +194 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings SEC-1: launchUrl in the kit is absolute with no allowlist
+01:27 +195 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 counts left/right layout, not the directional forms
+01:27 +196 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 is absolute in the kit, forced-LTR parts may align left
+01:27 +197 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G15x counts breakpoints and layout widths, not guards or gaps
+01:27 +198 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 counts literal colours and theme reads, not transparent
+01:27 +199 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 counts look literals the way the rulebook writes them
+01:27 +200 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 LOOK-21 in the kit: every stroke width comes from KitTokens
+01:27 +201 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 metal/chrome reads identifiers and file names
+01:27 +202 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G48 flags a sheet with a multiline field and no draft
+01:27 +203 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 and G21 also scan Flutter UI code outside lib/ui/
+01:27 +204 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings theme files, allowlist keys and scopes resolve as documented
+01:27 +205 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings KIT-5: an allowlist key the committed set lacks fails
+01:27 +206 -6: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a resumed session is one row, with the title it had
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: clearing saved sign-ins closes clients and asks for a restart
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: deletion closes auth, setup, host and feeds before ProfileStore
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: long sleep and resume resuming after a sleep reconciles to the server transcript and shows the finished answer once
+  ... and 2 more

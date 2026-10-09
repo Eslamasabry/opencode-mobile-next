@@ -8,6 +8,28 @@ mixin _ConnectionControllerStatus on ChangeNotifier {
 
   StreamStatus _status = StreamStatus.disconnected;
 
+  Timer? _quietReconnectTimer;
+  Object? _quietReconnectToken;
+  String? _quietReconnectOwner;
+  int? _quietReconnectAttempt;
+  AgentHelperStatus? _lastConnectionHelperExit;
+  String? _lastConnectionHelperOwner;
+
+  /// A bounded presentation grace, never a claim that the link is reachable.
+  bool get defersTurnInterruption =>
+      _quietReconnectToken != null &&
+      _quietReconnectOwner == (_self._connectedProfile ?? profile)?.id &&
+      _quietReconnectAttempt == connectionAttemptRevision &&
+      !passwordRejected &&
+      !((_self._connectedProfile ?? profile)?.requiresPasswordReentry ??
+          false) &&
+      !((_self._connectedProfile ?? profile)?.requiresCodexTokenReentry ??
+          false);
+
+  /// Read-only BD13 evidence, retained across recovery within this profile.
+  Future<AgentHelperStatus?> readConnectionHelperExit() =>
+      _self._readConnectionHelperExit();
+
   Timer? _connectionStatusTimer;
   String? _connectionStatusOwner;
   int? _connectionStatusAttempt;
@@ -157,6 +179,7 @@ extension _ConnectionControllerStatusImpl on ConnectionController {
         : ConnectionStatusPhase.reconnecting;
     return ConnectionStatusSnapshot(
       phase: phase,
+      quiet: defersTurnInterruption,
       profileId: owner?.id,
       serverName: owner?.name ?? '',
       since: _connectionStatusSince,

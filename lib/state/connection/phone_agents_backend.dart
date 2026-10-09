@@ -40,6 +40,10 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
         draftAttachmentVault: _self._draftAttachmentVault,
         promptPhotoStore: _self._promptPhotoStore,
       ).._agentBackendRecover = recoverPhoneAgentBackend;
+      backend._agentHelperStatusReader = () async {
+        if (!identical(host, _paHost) || _self._disposed) return null;
+        return phoneAgentHelperStatus();
+      };
       _paBackend = backend;
       final watched = backend;
       backend._turnStallProbe = () async {

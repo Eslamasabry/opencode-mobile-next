@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/connection_status.dart';
+import 'package:opencode_mobile/domain/agent_helper_status.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
@@ -18,6 +19,9 @@ class _Controller extends ConnectionController {
     serverName: 'Laptop',
   );
   int retries = 0;
+  AgentHelperStatus? helperStatus;
+  @override
+  Future<AgentHelperStatus?> readConnectionHelperExit() async => helperStatus;
   @override
   ConnectionStatusSnapshot get connectionStatus => snapshot;
   @override
@@ -55,6 +59,41 @@ void main() {
     addTearDown(value.dispose);
     return value;
   }
+
+  testWidgets('Details retains BD13 unexpected helper exit after recovery', (
+    tester,
+  ) async {
+    final c = await controller();
+    c.helperStatus = AgentHelperStatus(
+      running: true,
+      lastExitAt: DateTime.utc(2026, 10, 9),
+      lastExitCode: 137,
+      lastStopRequested: false,
+      possibleResourceKill: true,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => KitScreen(
+            body: KitButton.primary(
+              label: 'Open details',
+              onPressed: () => showConnectionDetailsSheet(context, c),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open details'));
+    await _settle(tester);
+    final fold = tester.widget<KitDetailsFold>(find.byType(KitDetailsFold));
+    expect(fold.text, contains('2026-10-09T00:00:00.000Z'));
+    expect(fold.text, contains('137'));
+    expect(fold.text, contains('memory_or_phantom_kill (possible)'));
+    await tester.pumpWidget(const SizedBox());
+  });
 
   testWidgets(
     'all routes share one connection phase and reveal lower notices in order',
