@@ -1,0 +1,61 @@
+{
+  "total": 131,
+  "suites": [
+    {
+      "name": "io.github.eslamasabry.opencode_mobile.IdleStopPolicyTest",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "io.github.eslamasabry.opencode_mobile.NativeIdleReturnNotificationTest",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "io.github.eslamasabry.opencode_mobile.NativeIdleHeartbeatTest",
+      "tests": "17",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "io.github.eslamasabry.opencode_mobile.NativeAgentHostAdmissionTest",
+      "tests": "22",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "io.github.eslamasabry.opencode_mobile.NativeIdleStateTest",
+      "tests": "29",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "io.github.eslamasabry.opencode_mobile.ServiceDiagnosticsTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "io.github.eslamasabry.opencode_mobile.NativeIdleReceiverDispatchTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "io.github.eslamasabry.opencode_mobile.NativeIdleTimerTest",
+      "tests": "17",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ]
+}

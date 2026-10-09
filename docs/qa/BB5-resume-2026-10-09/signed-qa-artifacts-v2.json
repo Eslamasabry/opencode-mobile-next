@@ -1,0 +1,29 @@
+{
+  "artifacts": [
+    {
+      "kind": "target",
+      "path": "/home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/flutter-apk/app-release.apk",
+      "sha256": "d91dfac6c36a47037cc320cec97fa91bc5df220a68808cf35a64de11f1889224",
+      "bytes": 65639629,
+      "package": "io.github.eslamasabry.opencode_mobile",
+      "versionCode": "2198",
+      "versionName": "1.2.0",
+      "certificateSHA256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
+    },
+    {
+      "kind": "runner",
+      "path": "/home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/apk/androidTest/release/app-release-androidTest.apk",
+      "sha256": "e3d7bb833f204bd1f2372453b6adbb69f2bc865fd0ccd83df38915158d172984",
+      "bytes": 194114,
+      "package": "io.github.eslamasabry.opencode_mobile.test",
+      "certificateSHA256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
+    }
+  ],
+  "installed": false,
+  "deviceQualified": false,
+  "fixtureVersion": 2,
+  "fixtureSources": {
+    "android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinIdleAcceptance.kt": "8e0474ba08f76625e08bb7514237cbda6722946583744d9f045e323e11d6fd15",
+    "android/app/src/androidTest/java/io/github/eslamasabry/opencode_mobile/RuntimeQaGuard.java": "7f979b4a336a1140f72da29730bc57844919b60e07a4774d7e171d680780d7ee"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "normalVersion": 2202,
+  "normalHashVerified": true,
+  "healthy": true,
+  "fixtureAbsent": true,
+  "idleDefaultOff": true,
+  "deviceResult": "PASS",
+  "observedDartResume": true,
+  "nativeFallbackUsed": false
+}

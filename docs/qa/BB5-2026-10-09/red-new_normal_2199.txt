@@ -1,0 +1,27 @@
+test_normal_hash_sidecar_and_signer_are_all_checked_before_mutation (test_bb5_runtime_acceptance.NormalArtifactTest.test_normal_hash_sidecar_and_signer_are_all_checked_before_mutation) ... FAIL
+
+======================================================================
+FAIL: test_normal_hash_sidecar_and_signer_are_all_checked_before_mutation (test_bb5_runtime_acceptance.NormalArtifactTest.test_normal_hash_sidecar_and_signer_are_all_checked_before_mutation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 300, in test_normal_hash_sidecar_and_signer_are_all_checked_before_mutation
+    try: B.validate_normal(device, args)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb5_runtime_acceptance.py", line 348, in validate_normal
+    H.require(args.version == VERSION and args.normal_version == NORMAL_VERSION, 'bb5_known_versions_restore_required')
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb3_runtime_acceptance.py", line 65, in require
+    raise Refused(code)
+bb3_runtime_acceptance.Refused: bb5_known_versions_restore_required
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 301, in test_normal_hash_sidecar_and_signer_are_all_checked_before_mutation
+    except H.Q.Refused: self.fail('Verified normal2199 unexpectedly refused')
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Verified normal2199 unexpectedly refused
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

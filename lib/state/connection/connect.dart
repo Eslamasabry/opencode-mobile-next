@@ -233,6 +233,14 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     if (isIsolated) {
       throw StateError('An isolated session cannot connect to a server.');
     }
+    final previousProfile = _connectedProfile ?? this.profile;
+    if (previousProfile != null &&
+        store.phoneAgentOwnerId(previousProfile.id) !=
+            store.phoneAgentOwnerId(profile.id)) {
+      // Even a switch away and back revokes the old helper restoration.
+      // Reconnecting the same owner (including a protocol alias) does not.
+      ++_paIdleLifecycleEpoch;
+    }
     _syncProfileServices();
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;
@@ -566,6 +574,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     bool keepActive = false,
     bool silent = false,
   }) async {
+    ++_paIdleLifecycleEpoch;
     _resetTurnStalls();
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;

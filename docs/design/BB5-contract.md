@@ -1,12 +1,18 @@
 # BB5 — idle stop and guarded foreground resume
 
-Status: Dart foreground/heartbeat integration verified; BB4 qualified at
-`30e5d9027`, BA hooks merged at `f561c3584`, and integration head `9485f0c7c`
-merged at `7af5b544c`. Native wiring is drafted but not yet compiled or device
-qualified. The coordinator lifted the memory hold with a
-4GB Gradle heap, in-process Kotlin, at most two workers and at least 6GB available
-memory before builds. Native/lifecycle wiring is in progress; supporting-device
-qualification is still required before enabling the feature.
+Status (2026-10-09): implemented and device-qualified on the shared emulator at
+local source commit `001c85274` plus app fix `7efee4661`. The final unchanged V4
+runner retry passed the real one-minute idle stop, exact server/stand-in helper
+child drain, actual SystemUI notification tap, observed Dart foreground resume,
+helper acknowledgement, preserved recovery budget and explicit Stop refusal.
+Normal2202 was restored with its exact hash, healthy connection, default-off idle
+policy and absent QA fixture before the emulator lock was released. See
+[final device evidence](../qa/BB5-resume-2026-10-09/device-session-v4-retry.txt).
+An earlier V4 setup attempt failed its strict app-identity guard; its failure is
+retained separately and is not counted as proof. The current app passed22 idle
+controller tests and clean analysis; three unrelated controller failures also
+reproduce without the fix. No full-suite, physical-phone, real-agent auth,
+release or deployment qualification is claimed.
 
 Finish line: after the configured background idle period, the app stops its
 owned phone server and previously running phone-agent helper; foreground return
@@ -28,7 +34,7 @@ injected foreground, readable-owner and BA restoration callbacks. `running` and
 `invalidate()` revokes pending continuations; `dispose()` prevents later state
 publication. This class is now wired into `PhoneServerHealing`, including BA
 restoration and foreground/owner cancellation. The native channel handlers below
-are drafted and remain uncompiled. Policy defaults to off. See
+are implemented and compiled. Policy defaults to off. See
 [the original groundwork](../qa/BB5-2026-10-08/README.md) and
 [the integration checkpoint](../qa/BB5-integration-2026-10-08/README.md).
 
@@ -60,6 +66,11 @@ an `am start` command alone does not qualify notification-tap behavior. The idle
 notification has no Stop service action, starts no foreground service or helper,
 and holds no CPU lease or wake lock. Android dataSync timeout handling remains
 unchanged; the notification grants no extra background lifetime.
+
+Private QA reports exactly one of `bb5ObservedDartResume` or
+`bb5NativeFallbackResume`. A guarded native fallback qualifies only the native
+resume path and is never reported as observed Dart automatic restoration. The
+fixture does not delete personal recovery records, preferences or helper homes.
 
 Each new post resolves `NativeStrings` in the current locale. This resource
 requires no `NativeNotificationLocale` change: foreground return cancels the idle

@@ -365,6 +365,37 @@ void main() {
   );
 
   test(
+    'healthy foreground check rebinds the saved profile after a private QA owner switch',
+    () async {
+      await prefs.setString(
+        BuiltinServerRecovery.keyFor(phone.id),
+        jsonEncode({'version': 2, 'nativeAuthority': true}),
+      );
+      linux.budget = _budget(attempts: 1, revision: 2);
+      linux.running = true;
+      linux.boundProfile = phone.id;
+      linux.enabled = true;
+      await recovery.check(phone);
+      expect(linux.boundProfile, phone.id);
+      expect(recovery.value.phase, BuiltinRecoveryPhase.ready);
+
+      // The instrumentation fixture changes native ownership while the actual
+      // Flutter foreground controller still owns the saved phone profile.
+      linux.boundProfile = 'qa_bb5_idle';
+      linux.calls.clear();
+      final before = Map.of(linux.budget!);
+      await recovery.check(phone);
+
+      expect(linux.boundProfile, phone.id);
+      expect(linux.calls, contains('bind'));
+      expect(recovery.value.phase, BuiltinRecoveryPhase.ready);
+      expect(linux.budget, before);
+      expect(linux.directStarts, 0);
+      expect(linux.manualResets, 0);
+    },
+  );
+
+  test(
     'failed native staging keeps legacy spent attempts across retry',
     () async {
       await prefs.setString(

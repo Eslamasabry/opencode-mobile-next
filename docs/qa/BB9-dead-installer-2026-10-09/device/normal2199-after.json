@@ -1,0 +1,17 @@
+{
+  "normalVersion": 2199,
+  "app": {
+    "pid": 2805,
+    "startTicks": 4867,
+    "parent": 378,
+    "group": 378,
+    "session": 0,
+    "state": "S"
+  },
+  "sameApp": true,
+  "ticketAbsent": true,
+  "trigger": "actual In-app Ubuntu UI opened; component probes ran",
+  "ticketEdits": false,
+  "processSignals": false,
+  "appRestart": false
+}

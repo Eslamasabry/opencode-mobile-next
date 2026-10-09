@@ -1,0 +1,45 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_controller_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: a resumed session is one row, with the title it had
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: 'Fix the login page'
+  Actual: <null>
+   Which: not an <Instance of 'String'>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_controller_test.dart:1647:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_controller_test.dart line 1647
+The test description was:
+  a resumed session is one row, with the title it had
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: a resumed session is one row, with the title it had [E]
+  Test failed. See exception logs above.
+  The test description was: a resumed session is one row, with the title it had
+  
+00:00 +0 -1: deletion closes auth, setup, host and feeds before ProfileStore
+00:30 +0 -2: deletion closes auth, setup, host and feeds before ProfileStore [E]
+  TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts
+  dart:isolate  _RawReceivePort._handleMessage
+  
+00:30 +0 -2: clearing saved sign-ins closes clients and asks for a restart
+01:00 +0 -3: clearing saved sign-ins closes clients and asks for a restart [E]
+  TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts
+  dart:isolate  _RawReceivePort._handleMessage
+  
+01:00 +0 -3: (tearDownAll)
+01:00 +0 -3: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_controller_test.dart: a resumed session is one row, with the title it had
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_controller_test.dart: clearing saved sign-ins closes clients and asks for a restart
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_controller_test.dart: deletion closes auth, setup, host and feeds before ProfileStore

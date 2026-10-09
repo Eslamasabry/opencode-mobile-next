@@ -1,0 +1,10 @@
+test_fallback_refuses_stale_tokens_and_existing_or_in_flight_helpers (test_bb5_native_guard.NativeGuardTest.test_fallback_refuses_stale_tokens_and_existing_or_in_flight_helpers) ... ok
+test_fixture_retains_saved_owner_and_canonical_helper_mapping (test_bb5_native_guard.NativeGuardTest.test_fixture_retains_saved_owner_and_canonical_helper_mapping) ... ok
+test_runner_cannot_delete_or_rebind_personal_recovery_and_home (test_bb5_native_guard.NativeGuardTest.test_runner_cannot_delete_or_rebind_personal_recovery_and_home) ... ok
+test_startup_failure_is_preserved_even_when_cleanup_and_reporting_fail (test_bb5_native_guard.NativeGuardTest.test_startup_failure_is_preserved_even_when_cleanup_and_reporting_fail) ... ok
+test_trusted_android_app_alias_works_without_admitting_fixture_symlinks (test_bb5_native_guard.NativeGuardTest.test_trusted_android_app_alias_works_without_admitting_fixture_symlinks) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.588s
+
+OK

@@ -1,4 +1,6 @@
 import copy
+import io
+from contextlib import redirect_stdout
 import json
 from pathlib import Path
 import tempfile
@@ -35,6 +37,33 @@ class AdapterTest(unittest.TestCase):
         H.ConcurrentSession = self.session; H.STEPS = self.steps; H.FIELDS = self.fields
         H.PHASE_NAMES = self.phases; H.Q.merge_person_preferences = self.merge
 
+    def test_native_idle_fixed_reason_is_not_replaced_by_generic_failure(self):
+        device = H.Device(); app = dict(pid=111, startTicks=12, state="S")
+        payload = 'INSTRUMENTATION_RESULT: builtinRuntimeResult=FAIL\n' + \
+                  'INSTRUMENTATION_RESULT: builtinRuntimeFailure=bb5_cleanup_fixture_invalid\n'
+        with patch.object(device, 'app_identity', return_value=app), \
+             patch.object(device, 'wait_detached'), \
+             patch.object(device, 'adb', return_value=SimpleNamespace(returncode=0,stdout=payload,stderr='')):
+            with self.assertRaisesRegex(H.Q.Refused, '^bb5_cleanup_fixture_invalid$'):
+                device._instrument('bb5Idle', (), None, None)
+
+    def test_failed_startup_reports_primary_secondary_and_unentered_timer_safely(self):
+        device = H.Device(); app = dict(pid=111, startTicks=12, state="S")
+        payload = ('INSTRUMENTATION_STATUS: bb5CleanupFailure=bb5_cleanup_fixture_path_invalid\n'
+                   'INSTRUMENTATION_RESULT: builtinRuntimeResult=FAIL\n'
+                   'INSTRUMENTATION_RESULT: builtinRuntimeFailure=bb5_fixture_owner_changed\n'
+                   'INSTRUMENTATION_STATUS: secret=provider_key\n')
+        output = io.StringIO()
+        with patch.object(device, 'app_identity', return_value=app), \
+             patch.object(device, 'wait_detached'), redirect_stdout(output), \
+             patch.object(device, 'adb', return_value=SimpleNamespace(returncode=0,stdout=payload,stderr='')):
+            with self.assertRaisesRegex(H.Q.Refused, '^bb5_fixture_owner_changed$'):
+                device._instrument('bb5Idle', (), None, None)
+        self.assertIn('native_qa_bb5IdleWaitEntered=unproven', output.getvalue())
+        self.assertIn('native_qa_bb5RuntimePrepared=unproven', output.getvalue())
+        self.assertIn('native_qa_cleanup_refusal=bb5_cleanup_fixture_path_invalid', output.getvalue())
+        self.assertNotIn('provider_key', output.getvalue())
+
     def test_every_native_flag_is_required(self):
         for missing in B.IDLE_FIELDS:
             self.device.instrument.return_value = {key: 'true' for key in B.IDLE_FIELDS - {missing}}
@@ -43,12 +72,35 @@ class AdapterTest(unittest.TestCase):
             self.assertEqual([], self.evidence)
 
     def test_real_complete_case_is_labeled_as_stand_in_not_agent_certification(self):
-        self.device.instrument.return_value = {key: 'true' for key in B.IDLE_FIELDS}
+        self.device.instrument.return_value = dict(
+            {key: 'true' for key in B.IDLE_FIELDS}, bb5NativeFallbackResume='true')
         H.ConcurrentSession(self.device, None, self.evidence).run()
         self.device.instrument.assert_called_once_with('bb5Idle')
         self.assertIn('stand_in_helper', self.evidence[0])
         self.assertIn('existing_OC2_projects_data_config', self.evidence[-2])
         self.assertTrue(self.evidence[-1].startswith('LIMIT '))
+
+    def test_resume_requires_exactly_one_honest_mode(self):
+        for modes in [{}, {'bb5ObservedDartResume': 'false'},
+                      {'bb5ObservedDartResume': 'true', 'bb5NativeFallbackResume': 'true'},
+                      {'bb5ObservedDartResume': 'unknown', 'bb5NativeFallbackResume': 'true'}]:
+            with self.subTest(modes=modes):
+                self.device.instrument.return_value = dict(
+                    {key: 'true' for key in B.IDLE_FIELDS}, **modes)
+                with self.assertRaisesRegex(H.Q.Refused, '^bb5_resume_mode_unproven$'):
+                    H.ConcurrentSession(self.device, None, self.evidence).run()
+                self.assertEqual([], self.evidence)
+
+    def test_resume_evidence_distinguishes_dart_from_native_fallback(self):
+        for mode, label in [('bb5ObservedDartResume', 'observed_Dart_foreground_resume'),
+                            ('bb5NativeFallbackResume', 'native_fallback_not_Dart_resume_proof')]:
+            with self.subTest(mode=mode):
+                self.evidence.clear()
+                self.device.instrument.return_value = dict(
+                    {key: 'true' for key in B.IDLE_FIELDS}, **{mode: 'true'})
+                H.ConcurrentSession(self.device, None, self.evidence).run()
+                self.assertIn('PASS ' + label, self.evidence)
+                self.assertIn(mode, H.FIELDS)
 
     def test_retained_fixture_requires_exact_cleanup_step_and_absence(self):
         self.device.cat.side_effect = ['present', 'present']
@@ -66,11 +118,32 @@ class AdapterTest(unittest.TestCase):
     def test_bounded_timeout_only_for_real_minute_step(self):
         device = B.Device()
         with patch.object(H.Device, 'adb', return_value=object()) as adb, \
-             patch.object(B, 'run_idle_instrumentation', return_value=object()) as idle:
+             patch.object(B, 'run_idle_instrumentation', return_value=SimpleNamespace(stdout='')) as idle:
             device.adb('shell', 'am', 'instrument', '-e', 'step', 'bb5Idle', timeout=90)
-            self.assertEqual(180, idle.call_args.args[1]); adb.assert_not_called()
+            self.assertEqual(300, idle.call_args.args[1]); adb.assert_not_called()
             device.adb('shell', 'am', 'instrument', '-e', 'step', 'bb5Cleanup', timeout=90)
             self.assertEqual(90, adb.call_args.kwargs['timeout'])
+
+    def test_failed_native_step_retains_only_fixed_boolean_observations(self):
+        device = B.Device()
+        payload = ('INSTRUMENTATION_STATUS: bb5ExactDrainPassed=true\n'
+                   'INSTRUMENTATION_STATUS: bb5ReturnTokenPending=true\n'
+                   'INSTRUMENTATION_STATUS: bb5ReturnHelperTracked=false\n'
+                   'INSTRUMENTATION_STATUS: bb5ReturnOwnerCurrent=provider_key\n'
+                   'INSTRUMENTATION_STATUS: secret=provider_key\n'
+                   'INSTRUMENTATION_RESULT: builtinRuntimeResult=FAIL\n')
+        with patch.object(B, 'run_idle_instrumentation',
+                          return_value=SimpleNamespace(stdout=payload)):
+            device.adb('shell', 'am', 'instrument', '-e', 'step', 'bb5Idle')
+        observations = device.idle_observations
+        self.assertEqual('true', observations['bb5ExactDrainPassed'])
+        self.assertEqual('true', observations['bb5ReturnTokenPending'])
+        self.assertEqual('unproven', observations['bb5ReturnHelperTracked'])
+        self.assertEqual('unproven', observations['bb5ReturnOwnerCurrent'])
+        self.assertNotIn('provider_key', json.dumps(observations))
+        self.assertNotIn('secret', observations)
+        self.assertEqual({}, B.Device().idle_observations)
+
 
 
 class NotificationTapTest(unittest.TestCase):
@@ -79,6 +152,20 @@ class NotificationTapTest(unittest.TestCase):
         ET.SubElement(root, 'node', {'package': package, 'text': body or next(iter(B.IDLE_BODIES)),
                       'enabled': 'true', 'bounds': bounds})
         return ET.tostring(root, encoding='unicode', xml_declaration=True)
+
+    def test_native_failure_before_notice_keeps_its_fixed_reason(self):
+        payload = 'INSTRUMENTATION_RESULT: builtinRuntimeResult=FAIL\n' + \
+                  'INSTRUMENTATION_RESULT: builtinRuntimeFailure=bb5_cleanup_fixture_invalid\n'
+        process = Mock(); process.finished = True
+        returned = SimpleNamespace(returncode=0, stdout=payload, stderr='')
+        process.result.return_value = returned
+        with patch.object(H, 'inherited_lock'), patch.object(B, '_BoundedProcess', return_value=process):
+            try:
+                result = B.run_idle_instrumentation(('shell', 'am', 'instrument', '--no-restart', '-e', 'step', 'bb5Idle'), 180)
+            except H.Q.Refused:
+                self.fail('Native refusal was replaced with a missing-tap error')
+        self.assertIs(returned, result)
+        process.close.assert_called_once()
 
     def test_fixed_english_and_arabic_actual_systemui_bounds(self):
         for body in B.IDLE_BODIES:
@@ -251,6 +338,18 @@ class MetadataRestoreTest(unittest.TestCase):
 
 
 class NormalArtifactTest(unittest.TestCase):
+    def test_older_normal_refuses_before_any_device_command(self):
+        device = Mock()
+        with self.assertRaises(H.Q.Refused):
+            B.validate_normal(device, SimpleNamespace(version=2198, normal_version=2198))
+        device.run.assert_not_called()
+
+    def test_previous_normal_refuses_without_any_device_command(self):
+        device = Mock()
+        with self.assertRaisesRegex(H.Q.Refused, 'bb5_known_versions_restore_required'):
+            B.validate_normal(device, SimpleNamespace(version=2198, normal_version=2199, normal_sha='invalid'))
+        device.run.assert_not_called()
+
     def test_wrong_version_refuses_without_any_device_command(self):
         device = Mock()
         with self.assertRaises(H.Q.Refused):
@@ -267,7 +366,8 @@ class NormalArtifactTest(unittest.TestCase):
             device = Mock()
             device.run.side_effect = [SimpleNamespace(returncode=0, stdout='Signer #1 certificate SHA-256 digest: ' + H.Q.CERT),
                 SimpleNamespace(returncode=0, stdout="package: name='" + H.PACKAGE + "' versionCode='2202'")]
-            B.validate_normal(device, args)
+            try: B.validate_normal(device, args)
+            except H.Q.Refused: self.fail('Verified normal2202 unexpectedly refused')
             device.adb.assert_not_called(); device.write_dead.assert_not_called()
             sidecar.write_text('0'*64)
             with self.assertRaises(H.Q.Refused):
@@ -285,6 +385,19 @@ class NormalArtifactTest(unittest.TestCase):
         self.assertIn(('install', '-r', 'normal.apk'), commands)
         self.assertTrue(all('-d' not in command and 'uninstall' not in command for command in commands))
         validate.assert_called_once(); restore.assert_called_once(); start.assert_called_once()
+
+    def test_stale_installed_normal_cannot_claim_restoration(self):
+        device = Mock(); device.cat.return_value = None
+        device.adb.return_value = SimpleNamespace(returncode=0, stdout='versionCode=2199', stderr='')
+        device.installed_hash.return_value = 'a'*64
+        evidence = []
+        args = SimpleNamespace(normal_apk=Path('normal.apk'), normal_sha='a'*64)
+        with patch.object(B, 'validate_normal'), patch.object(B, 'restore_metadata'), \
+             patch.object(H, 'real_start') as start, patch.object(H, 'selected_profile', return_value='owner'):
+            with self.assertRaises(H.Q.Refused):
+                B.restore_normal(device, args, 'private', evidence)
+        start.assert_not_called()
+        self.assertEqual([], evidence)
 
     def test_storage_failure_preserves_installed_app_data_and_never_claims_restore(self):
         device = Mock(); device.cat.return_value = None
@@ -306,7 +419,8 @@ class NormalArtifactTest(unittest.TestCase):
 
 
 class InitialKernelAdmissionTest(unittest.TestCase):
-    def fixture(self, other=False, unknown=False, writer=False):
+    def fixture(self, other=False, unknown=False, writer=False, genui=False, genui_parent=101, duplicate=False,
+                script_sha=None, path_safe=True, mapped_inode=55, genui_argv=None, changed=False, file_changed=False):
         def identity(pid, parent, group, session):
             return dict(pid=pid, startTicks=pid*100, parent=parent, group=group, session=session)
         app = identity(90, 1, 90, 0); root = identity(100, 90, 90, 0)
@@ -323,12 +437,20 @@ class InitialKernelAdmissionTest(unittest.TestCase):
         original = '<map><string name="flutter.oc.profiles">' + json.dumps([
             {'id': 'owner', 'baseUrl': 'http://127.0.0.1:4097', 'flavor': 'v2'}]) + '</string></map>'
         records = [app, root, leader] + ([identity(200, 90, 90, 0)] if unknown else [])
+        if genui:
+            records.append(identity(102, genui_parent, 101, 101))
+            if duplicate: records.append(identity(103, 101, 101, 101))
         paths = {H.NATIVE: ET.tostring(prefs, encoding='unicode'),
                  H.WRITER: '<map><string name="ticket">present</string></map>',
                  '/proc/90/cmdline': H.PACKAGE+'\x00\x00',
                  '/proc/100/cmdline': '/data/app/private/lib/x86_64/libproot.so\x00--rootfs='+H.UBUNTU+'\x00',
                  '/proc/101/cmdline': 'opencode2\x00serve\x00',
                  '/proc/101/maps': '1-2 r-xp 0 00:01 2 '+H.UBUNTU+'/opt/opencode2/bin/opencode2\n'}
+        if genui:
+            for pid in [102, 103] if duplicate else [102]:
+                paths['/proc/'+str(pid)+'/cmdline'] = genui_argv or '/opt/node/bin/node\x00/root/.oc-genui/openCode2/server.cjs\x00'
+                paths['/proc/'+str(pid)+'/maps'] = '1-2 r-xp 0 08:01 '+str(mapped_inode)+' '+H.UBUNTU+'/opt/node/bin/node\n'
+        reads = {}
         for value in records:
             fields = ['S', str(value['parent']), str(value['group']), str(value['session'])] + ['1']*15 + [str(value['startTicks'])]
             paths['/proc/'+str(value['pid'])+'/stat'] = str(value['pid'])+' (oc) '+' '.join(fields)
@@ -336,8 +458,23 @@ class InitialKernelAdmissionTest(unittest.TestCase):
         def adb(*args, **kwargs):
             if args[:3] == ('shell', 'sh', '-c'):
                 command = B.shlex.split(args[3])[0]
-                path = B.shlex.split(command)[3]
-                return SimpleNamespace(returncode=0, stdout=paths[path])
+                if command.startswith('head -c '):
+                    path = B.shlex.split(command)[3]
+                    reads[path] = reads.get(path, 0) + 1
+                    value = paths[path]
+                    if changed and path == '/proc/102/stat' and reads[path] > 1:
+                        value = value.replace('10200', '10201')
+                    return SimpleNamespace(returncode=0, stdout=value)
+                if not path_safe: return SimpleNamespace(returncode=1, stdout='')
+                if 'sha256sum' in command:
+                    reads['script'] = reads.get('script', 0) + 1
+                    digest = 'b'*64 if file_changed and reads['script'] > 1 else (script_sha or 'a'*64)
+                    return SimpleNamespace(returncode=0, stdout=H.UBUNTU+'/root/.oc-genui/openCode2/server.cjs\n2049:56:18204:81a4\n'+digest+'  script\n')
+                if 'stat' in command:
+                    return SimpleNamespace(returncode=0, stdout=H.UBUNTU+'/opt/node/bin/node\n2049:55:1234:81ed\n')
+                raise AssertionError('Unexpected shell command')
+            if args[:3] == ('shell', 'readlink', '-f'):
+                return SimpleNamespace(returncode=0, stdout=H.UBUNTU+'\n')
             if args[:3] == ('shell', 'test', '!'):
                 return SimpleNamespace(returncode=1 if writer else 0, stdout='')
             if args[:3] == ('shell', 'cmd', 'package'):
@@ -350,6 +487,53 @@ class InitialKernelAdmissionTest(unittest.TestCase):
             raise AssertionError('Unexpected command')
         device.adb.side_effect = adb
         return device, original
+
+    def test_exact_source_proven_genui_child_is_read_only_setup_admission(self):
+        device, original = self.fixture(genui=True)
+        evidence = []
+        with patch.object(B, 'genui_source_proofs', create=True, return_value={'a'*64: 'current'}):
+            B.inspect_server_only_before_bootstrap(device, original, evidence)
+        self.assertTrue(any('GenUI' in line for line in evidence))
+        self.assertTrue(evidence[-1].startswith('LIMIT '))
+        device.write_dead.assert_not_called()
+        self.assertTrue(all('install' not in c.args and 'force-stop' not in c.args for c in device.adb.call_args_list))
+
+    def test_unrelated_duplicate_unstable_or_unproven_genui_children_refuse(self):
+        cases = [
+            {'genui_parent': 100}, {'duplicate': True}, {'script_sha': 'b'*64},
+            {'path_safe': False}, {'mapped_inode': 99}, {'changed': True}, {'file_changed': True},
+            {'genui_argv': '/opt/node/bin/node\x00/root/arbitrary-mcp.cjs\x00'},
+            {'genui_argv': '/opt/node/bin/node\x00/root/.oc-genui/openCode2/server.cjs\x00--eval\x00'},
+            {'genui_argv': '/usr/local/bin/node\x00/root/.oc-genui/openCode2/server.cjs\x00'},
+        ]
+        for arguments in cases:
+            with self.subTest(arguments=arguments):
+                device, original = self.fixture(genui=True, **arguments)
+                with patch.object(B, 'genui_source_proofs', return_value={'a'*64: 'current'}):
+                    with self.assertRaises(H.Q.Refused):
+                        B.inspect_server_only_before_bootstrap(device, original, [])
+                device.write_dead.assert_not_called()
+                self.assertTrue(all('install' not in c.args and 'force-stop' not in c.args for c in device.adb.call_args_list))
+
+    def test_retained_source_requires_exact_known_normal_artifact(self):
+        for normal in [None, '0'*64, B.GENUI_NORMAL_APK_SHA]:
+            with self.subTest(normal=normal):
+                device, original = self.fixture(genui=True, script_sha=B.GENUI_NORMAL_SHA)
+                evidence = []
+                with patch.object(B, 'genui_source_proofs', return_value={B.GENUI_NORMAL_SHA: 'normal2202_source'}):
+                    if normal == B.GENUI_NORMAL_APK_SHA:
+                        B.inspect_server_only_before_bootstrap(device, original, evidence, normal_sha=normal)
+                        self.assertTrue(any('normal2202_source' in line for line in evidence))
+                    else:
+                        with self.assertRaisesRegex(H.Q.Refused, 'bb5_genui_retained_normal_unproven'):
+                            B.inspect_server_only_before_bootstrap(device, original, evidence, normal_sha=normal)
+                device.write_dead.assert_not_called()
+
+    def test_current_and_immutable_retained_scripts_generate_from_pure_dart(self):
+        proofs = B.genui_source_proofs()
+        self.assertEqual('normal2202_' + B.GENUI_NORMAL_REVISION, proofs[B.GENUI_NORMAL_SHA])
+        self.assertIn('current', proofs.values())
+        self.assertTrue(all(B.re.fullmatch('[a-f0-9]{64}', digest) for digest in proofs))
 
     def test_existing_current_server_only_is_read_only_setup_admission_not_logical_idle(self):
         device, original = self.fixture()
@@ -383,3 +567,31 @@ class InitialKernelAdmissionTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class QaDowngradeAdmissionTest(unittest.TestCase):
+    def candidate(self, installed_hash, authorized=True):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / 'target.apk'; target.write_bytes(b'qa-target')
+            runner = Path(directory) / 'runner.apk'; runner.write_bytes(b'qa-runner')
+            args = SimpleNamespace(version=2198, normal_version=2202, normal_sha='a'*64,
+                qa_normal_downgrade=authorized, apk=target, runner_apk=runner,
+                target_sha=B.hashlib.sha256(target.read_bytes()).hexdigest(),
+                runner_sha=B.hashlib.sha256(runner.read_bytes()).hexdigest(),
+                apksigner=Path('apksigner'), aapt=Path('aapt'))
+            device = Mock(); device.installed_hash.return_value = installed_hash
+            device.run.side_effect = [
+                SimpleNamespace(returncode=0, stdout='Signer #1 certificate SHA-256 digest: '+H.Q.CERT),
+                SimpleNamespace(returncode=0, stdout="package: name='"+H.PACKAGE+"' versionCode='2198'"),
+                SimpleNamespace(returncode=0, stdout='Signer #1 certificate SHA-256 digest: '+H.Q.CERT),
+                SimpleNamespace(returncode=0, stdout="package: name='"+H.PACKAGE+".test' versionCode=''"),
+            ]
+            device.adb.return_value = SimpleNamespace(returncode=0, stdout='versionCode=2202')
+            H.validate_candidates(device, args)
+            self.assertEqual([('shell','dumpsys','package',H.PACKAGE)], [c.args for c in device.adb.call_args_list])
+    def test_exact_known_normal_permits_private_qa_downgrade(self):
+        self.candidate('a'*64)
+    def test_other_installed_bytes_refuse_even_when_version_matches(self):
+        with self.assertRaises(H.Q.Refused): self.candidate('b'*64)
+    def test_version_alone_cannot_authorize_qa_downgrade(self):
+        with self.assertRaises(H.Q.Refused): self.candidate('a'*64, authorized=False)

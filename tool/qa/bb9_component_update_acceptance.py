@@ -173,7 +173,13 @@ class Device(Q.Device):
                        self.adb('shell', 'am', 'instrument', '--no-restart', '-w', '-e', 'step', step, *extra, Q.RUNNER, timeout=90))
         fields = parse_status(result.stdout)
         fixed_reason = fields.get('builtinRuntimeFailure')
-        if fields.get('builtinRuntimeResult') != 'PASS' and isinstance(fixed_reason, str) and re.fullmatch(r'bb9_[a-z_]{1,80}', fixed_reason):
+        if step == 'bb5Idle' and fields.get('builtinRuntimeResult') == 'FAIL':
+            for key in ['bb5RuntimePrepared', 'bb5IdleWaitEntered']:
+                print('native_qa_' + key + '=' + ('true' if fields.get(key) == 'true' else 'unproven'), flush=True)
+            cleanup_reason = fields.get('bb5CleanupFailure')
+            if isinstance(cleanup_reason, str) and re.fullmatch(r'bb5_[a-z_]{1,80}', cleanup_reason):
+                print('native_qa_cleanup_refusal=' + cleanup_reason, flush=True)
+        if fields.get('builtinRuntimeResult') != 'PASS' and isinstance(fixed_reason, str) and re.fullmatch(r'(?:bb5|bb9)_[a-z_]{1,80}', fixed_reason):
             print('native_qa_refusal=' + fixed_reason, flush=True)
         if expected_failure is not None:
             require(step in {'bb9SerializedChecks', 'bb9LivePeers'} and expected_failure ==
@@ -184,6 +190,9 @@ class Device(Q.Device):
                     'expected_native_failure_unproven')
             traced(self, 'instrument_' + step + '_post_detach', lambda: self.wait_detached(app))
             return fields
+        if fields.get('builtinRuntimeResult') == 'FAIL' and isinstance(fixed_reason, str) and re.fullmatch(
+                r'bb5_[a-z_]{1,80}', fixed_reason):
+            raise Q.Refused(fixed_reason)
         require(result.returncode == 0 and fields.get('builtinRuntimeResult') == 'PASS' and
                 'INSTRUMENTATION_CODE: -1' in result.stdout, 'instrument_failed')
         traced(self, 'instrument_' + step + '_post_detach', lambda: self.wait_detached(app))
@@ -357,7 +366,8 @@ def bootstrap(device, args, evidence):
         time.sleep(.2)
     require(not uid_inventory(device, uid), 'bootstrap_uid_not_quiescent')
     for apk in [args.runner_apk, args.apk]:
-        result = device.adb('install', '-r', str(apk.resolve()), timeout=60)
+        flags = ['-r', '-d'] if apk == args.apk and getattr(args, 'qa_normal_downgrade', False) is True else ['-r']
+        result = device.adb('install', *flags, str(apk.resolve()), timeout=60)
         require(result.returncode == 0 and 'Success' in result.stdout, 'bootstrap_in_place_install_failed')
     evidence.append('PASS bounded_exact_payload_bootstrap_same_signer_in_place_data_preserved')
 
@@ -377,7 +387,13 @@ def validate_candidates(device, args):
         require(badging.returncode == 0 and match and match[1] == package and (match[2] == str(args.version) if package == PACKAGE else (match[2] == '' or int(match[2]) > 0)), 'candidate_metadata_mismatch')
     installed = device.adb('shell', 'dumpsys', 'package', PACKAGE)
     codes = re.findall(r'\bversionCode=(\d+)', installed.stdout)
-    require(installed.returncode == 0 and codes and len(set(codes)) == 1 and int(codes[0]) <= args.version, 'candidate_downgrade_refused')
+    require(installed.returncode == 0 and codes and len(set(codes)) == 1, 'candidate_version_unavailable')
+    if int(codes[0]) > args.version:
+        require(getattr(args, 'qa_normal_downgrade', False) is True and
+                type(getattr(args, 'normal_version', None)) is int and int(codes[0]) == args.normal_version and
+                re.fullmatch('[a-f0-9]{64}', getattr(args, 'normal_sha', '')) and
+                device.installed_hash(PACKAGE) == args.normal_sha,
+                'candidate_downgrade_refused')
 
 
 class Session:

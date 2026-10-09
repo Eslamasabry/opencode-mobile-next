@@ -19,6 +19,7 @@ class _IdleHost extends _FakeHost
   Completer<void>? readGate;
   Completer<void>? readEntered;
   Completer<void>? resumeGate;
+  Completer<void>? resumeEntered;
 
   @override
   Future<bool?> helperRunning() async => running;
@@ -43,6 +44,7 @@ class _IdleHost extends _FakeHost
     if (receipt.helperStopped != true) return;
     resumes++;
     events.log.add('idle.start.$expectedIdleGeneration');
+    resumeEntered?.complete();
     await resumeGate?.future;
     if (!stillCurrent()) throw const AgentHostException(AgentHostFailure.stale);
     running = true;
@@ -94,6 +96,136 @@ void _phoneIdleTests() {
       expect(w.events.log, isNot(contains('host.start')));
     },
   );
+
+  for (final reconnect in ['retry', 'connect']) {
+    test(
+      'BA idle same-owner $reconnect preserves helper restoration',
+      () async {
+        final w = await _world(null, idleSupported: true);
+        final c = w.controller;
+        addTearDown(c.dispose);
+        await c.refreshAgentRows();
+        final host = w.host as _IdleHost;
+        host.resumeGate = Completer<void>();
+        host.resumeEntered = Completer<void>();
+        final revision = c.connectionRevision;
+        final restored = expectLater(
+          c.resumePhoneAgentsAfterIdle(
+            profileId: 'local',
+            expectedIdleGeneration: 7,
+          ),
+          completes,
+        );
+        await host.resumeEntered!.future;
+        if (reconnect == 'retry') {
+          await c.retryConnection();
+        } else {
+          await c.connect(c.store.profiles.single);
+        }
+        expect(c.connectionRevision, greaterThan(revision));
+        host.resumeGate!.complete();
+        await restored;
+        expect(host.resumes, 1);
+        expect(host.running, isTrue);
+        expect(w.events.log, isNot(contains('host.start')));
+      },
+    );
+  }
+
+  test(
+    'BA idle same-owner protocol switch preserves helper restoration',
+    () async {
+      final w = await _world(null, idleSupported: true);
+      final c = w.controller;
+      addTearDown(c.dispose);
+      final original = c.store.profiles.single;
+      final alias = ServerProfile(
+        id: 'two',
+        name: 'OpenCode 2',
+        baseUrl: original.baseUrl,
+        flavor: ServerFlavor.v2,
+      );
+      await c.store.upsert(alias);
+      expect(c.store.phoneAgentOwnerId(alias.id), original.id);
+      await c.refreshAgentRows();
+      final host = w.host as _IdleHost;
+      host.resumeGate = Completer<void>();
+      host.resumeEntered = Completer<void>();
+      final restored = expectLater(
+        c.resumePhoneAgentsAfterIdle(
+          profileId: original.id,
+          expectedIdleGeneration: 7,
+        ),
+        completes,
+      );
+      await host.resumeEntered!.future;
+      await c.connect(alias);
+      host.resumeGate!.complete();
+      await restored;
+      expect(host.resumes, 1);
+      expect(host.running, isTrue);
+      expect(w.host, same(host));
+    },
+  );
+
+  for (final revocation in [
+    'background and return',
+    'owner switch and return',
+    'disconnect and return',
+    'deletion',
+    'disposal',
+  ]) {
+    test('BA idle $revocation revokes pending helper restoration', () async {
+      final w = await _world(null, idleSupported: true);
+      final c = w.controller;
+      addTearDown(c.dispose);
+      final original = c.store.profiles.single;
+      await c.refreshAgentRows();
+      final host = w.host as _IdleHost;
+      host.resumeGate = Completer<void>();
+      host.resumeEntered = Completer<void>();
+      final rejected = expectLater(
+        c.resumePhoneAgentsAfterIdle(
+          profileId: original.id,
+          expectedIdleGeneration: 7,
+        ),
+        throwsA(
+          isA<ProductException>().having(
+            (error) => error.cause,
+            'cause',
+            'idle_resume_stale',
+          ),
+        ),
+      );
+      await host.resumeEntered!.future;
+      switch (revocation) {
+        case 'background and return':
+          c.suspendForLifecycle();
+          await c.retryConnection();
+        case 'owner switch and return':
+          final remote = ServerProfile(
+            id: 'remote',
+            name: 'Other server',
+            baseUrl: 'http://127.0.0.1:4123',
+          );
+          await c.store.upsert(remote);
+          await c.connect(remote);
+          await c.connect(original);
+        case 'disconnect and return':
+          await c.disconnect();
+          await c.connect(original);
+        case 'deletion':
+          await c.deleteProfileAndLocalData(original.id);
+        case 'disposal':
+          c.dispose();
+      }
+      host.resumeGate!.complete();
+      await rejected;
+      expect(host.resumes, 1);
+      expect(host.running, isFalse);
+      expect(w.events.log, isNot(contains('host.start')));
+    });
+  }
 
   test(
     'BA idle background rows and explicit helper resume cannot bypass idle',
@@ -315,42 +447,53 @@ void _phoneIdleTests() {
     );
   }
 
-  test(
-    'BA idle native generation revoked during feed cannot report restored',
-    () async {
-      final w = await _world(null, idleSupported: true);
-      final c = w.controller;
-      addTearDown(c.dispose);
-      await c.refreshAgentRows();
-      final host = w.host as _IdleHost;
-      await c.rememberLastUsedProject(_project);
-      var revoked = false;
-      w.state.configureSocket = (socket) {
-        final fetch = socket.handlers['fetch_agents_request']!;
-        socket.handlers['fetch_agents_request'] = (request) {
-          host.receipt = _idleReceipt(helper: false, token: 8);
-          revoked = true;
-          return fetch(request);
+  for (final stop in [false, true]) {
+    test(
+      'BA idle native ${stop ? 'Stop' : 'generation'} revoked during feed cannot report restored',
+      () async {
+        final w = await _world(null, idleSupported: true);
+        final c = w.controller;
+        addTearDown(c.dispose);
+        await c.refreshAgentRows();
+        final host = w.host as _IdleHost;
+        await c.rememberLastUsedProject(_project);
+        var revoked = false;
+        w.state.configureSocket = (socket) {
+          final fetch = socket.handlers['fetch_agents_request']!;
+          socket.handlers['fetch_agents_request'] = (request) {
+            host.receipt = stop
+                ? const PhoneAgentIdleState(
+                    supported: true,
+                    idleStopped: false,
+                    helperStopped: false,
+                    generation: 7,
+                    serverRestartWanted: false,
+                    serverRunning: true,
+                  )
+                : _idleReceipt(helper: false, token: 8);
+            revoked = true;
+            return fetch(request);
+          };
         };
-      };
-      await expectLater(
-        c.resumePhoneAgentsAfterIdle(
-          profileId: 'local',
-          expectedIdleGeneration: 7,
-        ),
-        throwsA(
-          isA<ProductException>().having(
-            (error) => error.cause,
-            'cause',
-            'idle_resume_stale',
+        await expectLater(
+          c.resumePhoneAgentsAfterIdle(
+            profileId: 'local',
+            expectedIdleGeneration: 7,
           ),
-        ),
-      );
-      expect(revoked, isTrue);
-      expect(host.resumes, 1);
-      expect(w.events.log, isNot(contains('host.start')));
-    },
-  );
+          throwsA(
+            isA<ProductException>().having(
+              (error) => error.cause,
+              'cause',
+              'idle_resume_stale',
+            ),
+          ),
+        );
+        expect(revoked, isTrue);
+        expect(host.resumes, 1);
+        expect(w.events.log, isNot(contains('host.start')));
+      },
+    );
+  }
 
   test(
     'BA idle hooks share the canonical owner across protocol aliases',

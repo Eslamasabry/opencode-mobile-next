@@ -1,0 +1,12 @@
+{
+  "normalVersion": 2202,
+  "normalHashVerified": true,
+  "healthy": true,
+  "originalPolicyRestored": true,
+  "idleDefaultOff": true,
+  "qaKeysAbsent": true,
+  "fixtureAbsent": true,
+  "sameSignerInstallR": true,
+  "noCredentialsChanged": true,
+  "elapsedSeconds": 195
+}

@@ -1,0 +1,19 @@
+Original host implementation, new exact app-owned child positive case: expected bb5_initial_non_server_payload_refused.
+
+test_exact_source_proven_genui_child_is_read_only_setup_admission (test_bb5_runtime_acceptance.InitialKernelAdmissionTest.test_exact_source_proven_genui_child_is_read_only_setup_admission) ... ERROR
+
+======================================================================
+ERROR: test_exact_source_proven_genui_child_is_read_only_setup_admission (test_bb5_runtime_acceptance.InitialKernelAdmissionTest.test_exact_source_proven_genui_child_is_read_only_setup_admission)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 495, in test_exact_source_proven_genui_child_is_read_only_setup_admission
+    B.inspect_server_only_before_bootstrap(device, original, evidence)
+  File "old_bb5_runtime_acceptance.py", line 253, in inspect_server_only_before_bootstrap
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb3_runtime_acceptance.py", line 65, in require
+    raise Refused(code)
+bb3_runtime_acceptance.Refused: bb5_initial_non_server_payload_refused
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+FAILED (errors=1)

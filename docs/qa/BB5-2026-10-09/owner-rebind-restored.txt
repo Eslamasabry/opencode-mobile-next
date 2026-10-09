@@ -1,0 +1,17 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart
+00:00 +0: spent legacy budget migrates once with marker before activation
+00:00 +1: healthy foreground check rebinds the saved profile after a private QA owner switch
+00:00 +2: failed native staging keeps legacy spent attempts across retry
+00:00 +3: retrying staged migration never overwrites native spent attempts
+00:00 +4: valid v2 marker with missing native budget admits no restart
+00:00 +5: corrupt migration marker admits no native binding or restart
+00:00 +6: malformed native snapshot fails closed
+00:00 +7: direct and background reservations share three attempts across owners
+00:00 +8: only confirmed manual Start resets native attempts
+00:00 +9: healthy manual Start resets budget with automatic restart disabled
+00:00 +10: Stop background and scheduled native recovery never dispatch from Dart
+00:00 +11: legacy pending confirmation survives migration and records after Stop
+00:00 +12: native background pending attempt is confirmed without another dispatch
+00:00 +13: historical confirmed receipt survives later crash and records once
+00:00 +14: profile deletion drains the active check and native erase before sweep
+00:00 +15: All tests passed!

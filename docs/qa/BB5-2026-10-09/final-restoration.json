@@ -1,0 +1,14 @@
+{
+  "normalVersion": 2199,
+  "installedSHA": "be1bf7b80a5901a4041fbe8b7a2e754631f05ed04486b70c9e33c0ac1e12061a",
+  "normalSHAMatches": true,
+  "actualConnectedOC2Verified": true,
+  "health": true,
+  "claudeSignedIn": true,
+  "claudeSignInNeeded": false,
+  "qaFixtureAbsent": true,
+  "durationSeconds": 1011,
+  "dataWiped": false,
+  "uninstalled": false,
+  "credentialsChanged": false
+}

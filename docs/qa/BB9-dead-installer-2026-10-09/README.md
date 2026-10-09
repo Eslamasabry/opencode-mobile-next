@@ -3,8 +3,8 @@
 State: implemented; actual app release Kotlin/Java compile, 18 new JUnit cases,
 19 production-method fixture scenarios and 6 existing run cases pass. Both
 production hook removals and four independent safety guard removals fail at
-behavioral assertions. Source restored exactly. Device proof remains pending
-the coordinator's emulator restart; this is not device qualification.
+behavioral assertions. Source restored exactly. A warm product-path observation on normal2199 is now recorded below;
+it does not certify every ticket/identity case on device.
 
 Finish line: a later product check/install/remove can reclaim a dead warm writer
 only after complete exact ownership proves it quiescent, preserving pending
@@ -151,3 +151,28 @@ and128MiB test heaps. Every heavy step passes the shared build lock and a fresh
 No device ticket, account or data was changed. BC's exact observed ticket creator
 and complete quiescence remain unproven. This fix addresses the independently
 reproduced warm admission defect; it does not claim to clear an unsafe BC ticket.
+
+
+## Normal2199 warm CHECK observation — 2026-10-09
+
+Coordinator integration f0443a349/candidate2199 was installed at session entry,
+and artifact hash/signature were independently verified. Before any app/package
+change, a pre-existing all-component CHECK ticket had recorded root3593/leader3596
+absent from /proc, kill-zero denied, observed list empty. App PID2805/startTicks4867
+and complete same-UID inventory were captured. No ticket or process was edited.
+[Before](device/normal2199-before.json).
+
+Opening the actual Settings→In-app Ubuntu product page ran its component probes.
+The ticket became absent with the same app PID/startTicks, before the subsequent
+runtime switch confirmation. No force-stop, reinstall, signals or synthetic ticket
+created this result. [After](device/normal2199-after.json). This establishes useful
+warm clearance on the shipped integration, consistent with the new admission
+hook and existing exact-quiescence classifier. The ticket's precise creation
+failure and private cached Process pointer were not available from the normal
+app; no claim is made for unknown/orphan/reused identities from this observation.
+Those refusals remain covered by18 exact policy tests and production fixtures.
+
+The shared whole-session emulator lock was held until normal2199 restoration
+after the separate BB5 failed QA run. OpenCode2 Connected/health and Claude Code
+signed-in badge were verified, credentials unchanged. Restoration receipt and
+small screenshot are in [BB5 checkpoint](../BB5-2026-10-09/README.md).

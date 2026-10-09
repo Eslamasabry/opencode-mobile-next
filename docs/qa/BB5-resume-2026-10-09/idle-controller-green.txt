@@ -1,0 +1,26 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_controller_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: BA idle known stopped helper is idle; cold and unknown owner are unknown
+00:00 +1: BA idle cold helper restoration coalesces without existing backend
+00:00 +2: BA idle same-owner retry preserves helper restoration
+00:00 +3: BA idle same-owner connect preserves helper restoration
+00:00 +4: BA idle same-owner protocol switch preserves helper restoration
+00:00 +5: BA idle background and return revokes pending helper restoration
+00:00 +6: BA idle owner switch and return revokes pending helper restoration
+00:00 +7: BA idle disconnect and return revokes pending helper restoration
+00:00 +8: BA idle deletion revokes pending helper restoration
+00:00 +9: BA idle disposal revokes pending helper restoration
+00:00 +10: BA idle background rows and explicit helper resume cannot bypass idle
+00:00 +11: BA idle foreground ordinary resume cannot consume idle generation
+00:00 +12: BA idle helper not recorded live remains stopped
+00:00 +13: BA idle foreground loss during receipt read prevents dispatch
+00:00 +14: BA idle mismatched token refuses without helper launch
+00:00 +15: BA idle connected unknown inventory overrides stale helper stop
+00:00 +16: BA idle controller propagates all-folder busy changes and loss
+00:00 +17: BA idle disposal during receipt read prevents launch
+00:00 +18: BA idle deletion during receipt read prevents launch
+00:00 +19: BA idle native generation revoked during feed cannot report restored
+00:00 +20: BA idle native Stop revoked during feed cannot report restored
+00:00 +21: BA idle hooks share the canonical owner across protocol aliases
+00:00 +22: (tearDownAll)
+00:00 +22: All tests passed!
