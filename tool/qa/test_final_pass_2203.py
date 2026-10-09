@@ -73,6 +73,64 @@ class LivePreparationTests(unittest.TestCase):
             self.assertFalse(value.get("data", {}).get("safe_to_continue") is False)
 
 
+class BackgroundIdentityOrderTest(unittest.TestCase):
+    def test_app_uid_is_resolved_before_idle_setup_check(self):
+        import tempfile
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+        from tool.qa import final_pass_live as live
+        from tool.qa.fq9.common import DriverFailure
+
+        order = Mock()
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.object(live, "AndroidPorts") as factory,
+            patch.object(live, "device_ui", return_value=(None, None)),
+        ):
+            port = factory.return_value
+            order.attach_mock(port.device_ready, "ready")
+            order.attach_mock(port.installed_identity, "identity")
+            order.attach_mock(port.require_idle_setup, "idle")
+            port.require_idle_setup.side_effect = DriverFailure("stop_here")
+            live.background(
+                SimpleNamespace(output=Path(directory)),
+                {"session_receipt": str(Path(directory) / "r.json")},
+            )
+        self.assertEqual(
+            [c[0] for c in order.mock_calls], ["ready", "identity", "idle"]
+        )
+
+
+class BackgroundRuntimeSelectionTest(unittest.TestCase):
+    def test_opencode1_is_selected_before_connect_and_restored_after_refusal(self):
+        import tempfile
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+        from tool.qa import final_pass_live as live
+        from tool.qa.fq9.common import DriverFailure
+
+        events = Mock()
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.object(live, "AndroidPorts") as factory,
+            patch.object(live, "RuntimeTransaction") as transaction,
+            patch.object(live, "device_ui", return_value=(None, None)),
+        ):
+            port = factory.return_value
+            events.attach_mock(transaction.return_value.begin, "begin")
+            events.attach_mock(port._connect, "connect")
+            events.attach_mock(transaction.return_value.restore, "restore")
+            port._connect.side_effect = DriverFailure("another_live_turn")
+            value = live.background(
+                SimpleNamespace(output=Path(directory)),
+                {"session_receipt": str(Path(directory) / "r.json")},
+            )
+        self.assertEqual(
+            [c[0] for c in events.mock_calls], ["begin", "connect", "restore"]
+        )
+        self.assertEqual(value["reason"], "another_live_turn")
+
+
 class FreshRerunLocationTest(unittest.TestCase):
     def test_new_run_does_not_reuse_previous_avd_directory(self):
         from types import SimpleNamespace

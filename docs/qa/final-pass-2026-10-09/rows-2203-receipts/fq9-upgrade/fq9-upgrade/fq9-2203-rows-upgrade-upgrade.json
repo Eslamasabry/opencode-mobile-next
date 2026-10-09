@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "case": "upgrade",
+  "runID": "fq9-2203-rows-upgrade",
+  "candidateBuild": 2203,
+  "candidateSha256": "82877732e8bb362722f49e3193b8ffe2a91aacbaf37954769e244a1de37462c7",
+  "signerSha256": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c",
+  "device": "emulator-5554",
+  "state": "pass",
+  "deviceTouched": true,
+  "normalRestored": true,
+  "deviceQualified": false,
+  "automatedChecksPassed": true,
+  "manualChecksPending": true,
+  "sourceRevision": null,
+  "historySeeded": true,
+  "fixtureUsesAppProjectBacking": true,
+  "driver": {
+    "state": "pass",
+    "code": "verified",
+    "facts": {
+      "sentinel": true,
+      "profiles": true,
+      "preferences": true,
+      "secureStorage": true,
+      "histories": true,
+      "uidRetained": true,
+      "publishedBaseline": false,
+      "keystoreSignInVerified": false,
+      "semanticHistoryVerified": false
+    }
+  },
+  "runtimeTransaction": {
+    "prior": "opencode",
+    "selected": "opencode",
+    "restored": true
+  }
+}
