@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Crash-only saved-report and share-preview proof on approved APK 2199.
+"""Crash-only saved-report and share-preview proof on approved APK 2202.
 
 The standalone command waits at most 3600 seconds for the shared emulator lock.
 An outer lock owner may instead call run_locked. No ANR, provider interaction,
@@ -8,6 +8,7 @@ external share, synthetic report, private diagnostics write or baseline erase.
 
 import argparse
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -30,7 +31,7 @@ from tool.qa.fq9.common import (
 )
 from tool.qa.fq9.ports import AndroidPorts, apk_identity, verify_artifact, FAIL_CODES
 
-NORMAL_APK = Path("/home/eslam/Storage/tmp/oc-apk-share/oc-2199.apk")
+NORMAL_APK = Path("/home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk")
 SAVED_CODES = (
     frozenset(
         {
@@ -39,6 +40,7 @@ SAVED_CODES = (
             "diagnostic_baseline_not_empty",
             "diagnostic_baseline_invalid",
             "crash_identity_changed",
+            "crash_already_attempted",
             "saved_report_count_mismatch",
             "consent_invalid",
             "consent_unavailable",
@@ -93,11 +95,11 @@ def load_artifact(apk):
     except (OSError, ValueError, IndexError):
         raise DriverFailure("artifact_checksum_unavailable") from None
     identity = apk_identity(apk)
-    if identity["build"] != 2199 or identity["signer"] != LOCAL_SIGNER:
+    if identity["build"] != 2202 or identity["signer"] != LOCAL_SIGNER:
         raise DriverFailure("candidate_identity_mismatch")
     artifact = Artifact(
         apk,
-        2199,
+        2202,
         identity["version"],
         checksum.lower(),
         LOCAL_SIGNER,
@@ -235,12 +237,36 @@ class SavedReportSession(DeviceSession):
     def crash(self):
         # Consent/navigation can outlive the outer setup preflight. Never
         # interrupt a newly admitted installer or its durable restoration ticket.
+        checkpoint = self.output / "crash-trigger.json"
+        if checkpoint.exists():
+            raise DeviceFailure("crash_already_attempted")
         self.ports.require_idle_setup()
         identity = self.identity()
         after = int(self.execute(["shell", "date", "+%s%3N"]).strip())
         if not self.still_owned(identity):
             raise DeviceFailure("crash_identity_changed")
+        trigger = {
+            "pid": identity[0],
+            "start_ticks": identity[1],
+            "after_millis": after,
+            "command_returned": False,
+        }
+        # Persist intent before the only signal, even if ADB or later navigation
+        # fails. An existing receipt forbids a second trigger in this run.
+        with checkpoint.open("x") as stream:
+            json.dump(trigger, stream, indent=2)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
         self.execute(["shell", "am", "crash", "--user", "0", str(identity[0])])
+        trigger["command_returned"] = True
+        temporary = self.output / "crash-trigger.tmp"
+        with temporary.open("x") as stream:
+            json.dump(trigger, stream, indent=2)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        temporary.replace(checkpoint)
         self.died(identity)
         try:
             close = self.ui.find("Close app")
@@ -262,7 +288,7 @@ class SavedReportSession(DeviceSession):
         return proof
 
     def share_preview(self):
-        # 2199's recent-exit details expand inline on the report page. Back
+        # 2202's recent-exit details expand inline on the report page. Back
         # here would leave that page rather than dismiss a details sheet.
         self.ui.scroll("up")
         self.ui.scroll_find("Share saved crash reports")
@@ -286,48 +312,40 @@ class SavedReportSession(DeviceSession):
         self.execute(["shell", "input", "keyevent", "4"])
         self.execute(["shell", "input", "keyevent", "4"])
         self.launch()
-        deletion_failure = None
-        try:
-            count = len(self.ring())
-            if count > 1:
-                raise DeviceFailure("saved_report_count_mismatch")
-            if count:
-                self.ui.scroll_find("Delete 1 saved crash report")
-                self.ui.tap("Delete 1 saved crash report")
-                if self.ui.find("Delete saved crash reports?") is None:
-                    raise DeviceFailure("report_delete_failed")
-                self.ui.tap("Delete crash reports")
-                deadline = time.monotonic() + 10
-                while self.ring():
-                    if time.monotonic() >= deadline:
-                        raise DeviceFailure("report_delete_failed")
-                    time.sleep(0.25)
-                self.ui.scroll_find("No crash reports yet")
-                self.ui.screenshot(self.output / "saved-report-deleted.jpg")
-        except Exception as error:
-            deletion_failure = error
-            # An incomplete delete dialog must not prevent restoring OFF.
-            self.execute(["shell", "input", "keyevent", "4"])
+        count = len(self.ring())
+        if count > 1:
+            raise DeviceFailure("saved_report_count_mismatch")
         self.ui.scroll("up")
         self.ui.scroll_find("Save crash reports on this phone")
         if self.consent() > 0:
+            # The production OFF action synchronously erases saved native and
+            # Flutter evidence. The Delete row then disappears by design.
             self.ui.tap("Save crash reports on this phone", contains=True)
         deadline = time.monotonic() + 10
-        while self.consent() != 0:
+        while self.consent() != 0 or self.ring():
             if time.monotonic() >= deadline:
                 raise DeviceFailure("consent_not_disabled")
             time.sleep(0.25)
-        if self.ring() or self.ui.find("The app closed unexpectedly") is not None:
+        if self.ui.find("The app closed unexpectedly") is not None:
             raise DeviceFailure("report_delete_failed")
         self.ui.screenshot(self.output / "consent-off-after.jpg")
+        (self.output / "cleanup.json").write_text(
+            json.dumps(
+                {
+                    "captureOff": True,
+                    "savedCount": 0,
+                    "ownedReportDeletedByConsentOff": count == 1,
+                },
+                indent=2,
+            )
+            + "\n"
+        )
         self.consent_owned = False
-        if deletion_failure is not None:
-            raise deletion_failure
 
 
 def run_locked(artifact, output, *, device=None, session=None):
     """Caller holds one emulator reservation; no nested flock or old driver run."""
-    if artifact.build != 2199 or artifact.signer != LOCAL_SIGNER:
+    if artifact.build != 2202 or artifact.signer != LOCAL_SIGNER:
         raise DriverFailure("candidate_identity_mismatch")
     device = device or AndroidPorts(SHARED_SERIAL, "bd7-saved-" + str(time.time_ns()))
     if not device.locked:
@@ -388,7 +406,7 @@ def run_locked(artifact, output, *, device=None, session=None):
                 actual = device.installed_identity()
                 if actual["signer"] != artifact.signer or actual["uid"] != uid:
                     raise DriverFailure("normal_restore_identity_mismatch")
-                # User requested installation of normal2199 after every run.
+                # User requested installation of normal2202 after every run.
                 device.adb("install", "-r", str(artifact.apk), timeout=180)
                 actual = device.installed_identity()
                 if not same_artifact(actual, artifact) or actual["uid"] != uid:

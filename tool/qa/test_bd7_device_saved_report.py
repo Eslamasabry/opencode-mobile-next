@@ -16,8 +16,8 @@ from tool.qa.fq9.common import Artifact, DriverFailure, LOCAL_SIGNER
 class SavedReportTest(unittest.TestCase):
     def artifact(self):
         return Artifact(
-            Path("/approved/2199.apk"),
-            2199,
+            Path("/approved/2202.apk"),
+            2202,
             "1.2.0",
             "a" * 64,
             LOCAL_SIGNER,
@@ -29,7 +29,7 @@ class SavedReportTest(unittest.TestCase):
         device, session = Mock(), Mock()
         device.locked = session.locked = True
         device.installed_identity.return_value = dict(
-            build=2199, version="1.2.0", sha256="a" * 64, signer=LOCAL_SIGNER, uid=10217
+            build=2202, version="1.2.0", sha256="a" * 64, signer=LOCAL_SIGNER, uid=10217
         )
         session.require_clean_baseline.return_value = {
             "consent_enabled": False,
@@ -409,30 +409,70 @@ class SavedReportTest(unittest.TestCase):
                         session.require_clean_baseline()
                     self.assertNotIn("synthetic-private-value", str(failed.exception))
 
-    def test_failed_named_delete_still_turns_owned_switch_off(self):
-        session = proof.SavedReportSession("adb", Path("."))
+    def test_switch_off_erases_report_before_cleanup_is_accepted(self):
+        session = proof.SavedReportSession("adb", Path(self.addCleanupDirectory()))
         session.consent_owned = True
         session.ui = Mock()
         session.ui.find.return_value = None
-        session.ui.tap.side_effect = lambda label, **_: (
-            (_ for _ in ()).throw(proof.Bd7UiFailure("navigation_target_unavailable"))
-            if label == "Delete 1 saved crash report"
-            else None
-        )
+        state = {"enabled": True}
+
+        def tap(label, **_):
+            self.assertEqual(label, "Save crash reports on this phone")
+            state["enabled"] = False
+
+        session.ui.tap.side_effect = tap
         with (
             patch.object(session, "launch"),
             patch.object(session, "execute"),
-            patch.object(session, "ring", side_effect=[[{}], []]),
-            patch.object(session, "consent", side_effect=[1, 0]),
+            patch.object(
+                session, "ring", side_effect=lambda: [{}] if state["enabled"] else []
+            ),
+            patch.object(session, "consent", side_effect=lambda: int(state["enabled"])),
         ):
-            with self.assertRaisesRegex(
-                proof.Bd7UiFailure, "^navigation_target_unavailable$"
-            ):
-                session.cleanup_owned_reports()
-        session.ui.tap.assert_any_call(
+            session.cleanup_owned_reports()
+        self.assertFalse(session.consent_owned)
+        session.ui.tap.assert_called_once_with(
             "Save crash reports on this phone", contains=True
         )
-        self.assertFalse(session.consent_owned)
+        self.assertTrue((session.output / "cleanup.json").is_file())
+
+    def test_crash_checkpoint_survives_reopen_failure_and_refuses_second_trigger(self):
+        session = proof.SavedReportSession(
+            "adb", Path(self.addCleanupDirectory()), ports=Mock()
+        )
+        session.ui = Mock()
+        session.ui.find.return_value = None
+        with (
+            patch.object(session, "identity", return_value=(1234, 88)),
+            patch.object(session, "still_owned", return_value=True),
+            patch.object(session, "execute", return_value=b"1001") as command,
+            patch.object(session, "died"),
+            patch.object(
+                session,
+                "launch",
+                side_effect=proof.DeviceFailure("app_navigation_not_ready"),
+            ),
+        ):
+            with self.assertRaisesRegex(
+                proof.DeviceFailure, "app_navigation_not_ready"
+            ):
+                session.crash()
+            checkpoint = proof.json.loads(
+                (session.output / "crash-trigger.json").read_text()
+            )
+            self.assertEqual(
+                checkpoint,
+                {
+                    "pid": 1234,
+                    "start_ticks": 88,
+                    "after_millis": 1001,
+                    "command_returned": True,
+                },
+            )
+            with self.assertRaisesRegex(proof.DeviceFailure, "crash_already_attempted"):
+                session.crash()
+        calls = [c for c in command.call_args_list if "crash" in c.args[0]]
+        self.assertEqual(len(calls), 1)
 
     def test_new_installer_ticket_refuses_crash_before_reading_or_signalling_pid(self):
         ports = Mock()
@@ -454,7 +494,7 @@ class SavedReportTest(unittest.TestCase):
         self.assertEqual(proof.failure_code(error), "device_failure")
 
     def test_outer_lock_caller_rejects_wrong_build_or_signer_before_device(self):
-        for build, signer in ((2198, LOCAL_SIGNER), (2199, "b" * 64)):
+        for build, signer in ((2198, LOCAL_SIGNER), (2202, "b" * 64)):
             artifact = Artifact(
                 Path("/approved/candidate.apk"),
                 build,
@@ -487,7 +527,7 @@ class SavedReportTest(unittest.TestCase):
 
     def test_bad_artifact_host_preflight_never_acquires_lock(self):
         output = Path(self.addCleanupDirectory())
-        args = argparse.Namespace(apk=Path("/missing/2199.apk"), output=output)
+        args = argparse.Namespace(apk=Path("/missing/2202.apk"), output=output)
         with (
             patch.object(
                 proof,

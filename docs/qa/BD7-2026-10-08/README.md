@@ -292,3 +292,25 @@ passed serially through `OC_TEST_SLOTS=2 tool/qa/machine_lock.sh test`;
 [recovery host receipt](recovery-host.json) binds that result to source hashes.
 This is host verification only. Fresh 2202 device qualification follows in a
 separate evidence directory; no failed 2199 result is promoted.
+
+## 2202 saved-report qualification — 2026-10-09
+
+Finish line: on approved normal APK 2202, enable consent, issue one real
+`am crash` to the verified app PID, reopen, view the saved row and local share
+preview, then switch capture Off and verify deletion before same-lock normal
+2202 restoration. Non-goals: ANR, external share, provider/account interaction,
+installer-ticket repair, product changes or builds.
+
+The driver pins build 2202 and local signer, verifies the sidecar checksum, and
+preserves PID/start-ticks/trigger-time intent before signaling. A durable trigger
+receipt refuses another crash in the same output directory. Post-crash failures
+require navigation-only recovery, never blind rerunning of the crash command.
+Turning capture Off erases native and Flutter evidence in the product, so no
+separate Delete button exists afterwards; cleanup checks persisted consent and
+the empty ring and records the automatic deletion.
+
+The 2202 host checkpoint passes all 83 focused Python cases serially through
+`OC_TEST_SLOTS=2 tool/qa/machine_lock.sh test`. Changed-fixture controls failed
+against the preceding code: build admission, durable trigger, and Off-before-
+deletion behavior. [Host receipt](2202-saved-report-host.json). Fresh device
+evidence will be added after the run; this paragraph alone is not device proof.

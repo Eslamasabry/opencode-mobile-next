@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "result": "PASS",
+  "focusedTests": 83,
+  "candidateBuild": 2202,
+  "candidateSha256": "e63fb2e4ff32280ad4c739aee9c17db508eab2e99a42573c4e83bd66dc0babb0",
+  "deviceQualification": "pending",
+  "sourceSha256": {
+    "tool/qa/bd7_device_saved_report.py": "f069addf141f40535a55db31c16a19b4ef9f33b50f9b66c4f5889f20ae6868d7",
+    "tool/qa/bd7_device_crash_smoke.py": "19278af3f1f5ce3031cfab699922a10a60c0c319a52488752547e554bbcab4a4",
+    "tool/qa/bd7_device_ui.py": "546a98280d9cebf3ff3a89d9b549e61239edefc21f75cd5163e8c696d20339f1",
+    "tool/qa/bd7_exit_proof.py": "ec032e72560e6bba9a8f7ca4879255f67adbbda876bb344d87e8edbee2a7cb63",
+    "tool/qa/test_bd7_device_saved_report.py": "a59c91d017d650b71b77ba5f3614455c2e24ce56776ef3a57bfb8d5f8ce376e0"
+  }
+}
