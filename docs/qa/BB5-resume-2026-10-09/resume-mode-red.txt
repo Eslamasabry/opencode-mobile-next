@@ -1,0 +1,56 @@
+....native_qa_bb5RuntimePrepared=unproven
+native_qa_bb5IdleWaitEntered=unproven
+native_qa_refusal=bb5_cleanup_fixture_invalid
+..FFFFFF...............................
+======================================================================
+FAIL: test_resume_evidence_distinguishes_dart_from_native_fallback (test_bb5_runtime_acceptance.AdapterTest.test_resume_evidence_distinguishes_dart_from_native_fallback) (mode='bb5ObservedDartResume')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 102, in test_resume_evidence_distinguishes_dart_from_native_fallback
+    self.assertIn('PASS ' + label, self.evidence)
+AssertionError: 'PASS observed_Dart_foreground_resume' not found in ['PASS actual_minute_background_idle_exact_server_and_stand_in_helper_drain', 'PASS actual_foreground_same_generation_resume_helper_ack_budget_and_explicit_Stop', 'PASS actual_SystemUI_idle_notification_body_tap_and_native_MainActivity_resume', 'SCOPE canonical_server_uses_existing_OC2_projects_data_config_empty_helper_only_isolated', 'LIMIT no_real_agent_auth_account_Paseo_readiness_Dart_manual_count_or_cold_idle_marker_certification']
+
+======================================================================
+FAIL: test_resume_evidence_distinguishes_dart_from_native_fallback (test_bb5_runtime_acceptance.AdapterTest.test_resume_evidence_distinguishes_dart_from_native_fallback) (mode='bb5NativeFallbackResume')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 102, in test_resume_evidence_distinguishes_dart_from_native_fallback
+    self.assertIn('PASS ' + label, self.evidence)
+AssertionError: 'PASS native_fallback_not_Dart_resume_proof' not found in ['PASS actual_minute_background_idle_exact_server_and_stand_in_helper_drain', 'PASS actual_foreground_same_generation_resume_helper_ack_budget_and_explicit_Stop', 'PASS actual_SystemUI_idle_notification_body_tap_and_native_MainActivity_resume', 'SCOPE canonical_server_uses_existing_OC2_projects_data_config_empty_helper_only_isolated', 'LIMIT no_real_agent_auth_account_Paseo_readiness_Dart_manual_count_or_cold_idle_marker_certification']
+
+======================================================================
+FAIL: test_resume_requires_exactly_one_honest_mode (test_bb5_runtime_acceptance.AdapterTest.test_resume_requires_exactly_one_honest_mode) (modes={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 90, in test_resume_requires_exactly_one_honest_mode
+    with self.assertRaisesRegex(H.Q.Refused, '^bb5_resume_mode_unproven$'):
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_resume_requires_exactly_one_honest_mode (test_bb5_runtime_acceptance.AdapterTest.test_resume_requires_exactly_one_honest_mode) (modes={'bb5ObservedDartResume': 'false'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 90, in test_resume_requires_exactly_one_honest_mode
+    with self.assertRaisesRegex(H.Q.Refused, '^bb5_resume_mode_unproven$'):
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_resume_requires_exactly_one_honest_mode (test_bb5_runtime_acceptance.AdapterTest.test_resume_requires_exactly_one_honest_mode) (modes={'bb5ObservedDartResume': 'true', 'bb5NativeFallbackResume': 'true'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 90, in test_resume_requires_exactly_one_honest_mode
+    with self.assertRaisesRegex(H.Q.Refused, '^bb5_resume_mode_unproven$'):
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_resume_requires_exactly_one_honest_mode (test_bb5_runtime_acceptance.AdapterTest.test_resume_requires_exactly_one_honest_mode) (modes={'bb5ObservedDartResume': 'unknown', 'bb5NativeFallbackResume': 'true'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 90, in test_resume_requires_exactly_one_honest_mode
+    with self.assertRaisesRegex(H.Q.Refused, '^bb5_resume_mode_unproven$'):
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 39 tests in 0.020s
+
+FAILED (failures=6)

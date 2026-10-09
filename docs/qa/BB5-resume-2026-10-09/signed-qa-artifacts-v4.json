@@ -1,0 +1,28 @@
+{
+  "artifacts": [
+    {
+      "kind": "target",
+      "path": "/home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/flutter-apk/app-release.apk",
+      "sha256": "10298cae3bb57790cae51d9a48d10672b7d3b7ad7ee8018479bc8286e0266ff2",
+      "bytes": 65639585,
+      "package": "io.github.eslamasabry.opencode_mobile",
+      "versionCode": "2198",
+      "versionName": "1.2.0",
+      "certificateSHA256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
+    },
+    {
+      "kind": "runner",
+      "path": "/home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/apk/androidTest/release/app-release-androidTest.apk",
+      "sha256": "6f2928cfa851acdf879ca24ba25a20fca765864956caeade6e65621eaf30a4fe",
+      "bytes": 195414,
+      "package": "io.github.eslamasabry.opencode_mobile.test",
+      "versionCode": "",
+      "versionName": "",
+      "certificateSHA256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
+    }
+  ],
+  "installed": false,
+  "deviceQualified": false,
+  "fixtureVersion": 2,
+  "candidate": "candidate-v4.json"
+}

@@ -1,14 +1,25 @@
 # BB5 — idle stop and guarded foreground resume
 
-Status: Dart/native integration committed at `7b650152b` and merged into the
-2199 integration candidate. Native compilation and unit checks passed in the
-authorized build window; device idle qualification failed before the background
-wait and remains pending. BB5 stays default-off. Private QA cleanup/diagnostics
-were repaired offline; the modified runner still needs Android compilation and
-a new device run after BC's turn. The coordinator lifted the memory hold with a
-4GB Gradle heap, in-process Kotlin, at most two workers and at least 6GB available
-memory before builds. Native/lifecycle wiring is in progress; supporting-device
-qualification is still required before enabling the feature.
+Status: Dart/native integration committed at `7b650152b`; current frontend was
+merged without rebase at `18c56b149`. Fresh QA app/runner builds, 131 focused native
+tests, 55 focused Dart tests and clean analysis passed. The corrected runner
+confirmed `bb5_fixture_owner_changed` before the idle wait. Normal2202 was restored
+and the emulator lock released. BB5 remains default-off and device-unqualified.
+The revised private fixture retains the actual saved owner, canonical helper,
+existing recipe/budget and home instead of rebinding a synthetic profile. Its
+second compiled device run entered the real idle wait but refused incomplete
+helper acknowledgement after the runner's 28-second observation window. Native
+cleanup and normal2202 restoration passed again. The observer now allows 100
+seconds for the known timed stages (86 seconds plus scheduling allowance); this
+is diagnostic and does not claim downstream controller work is bounded.
+The same-owner transport-reconnect cancellation regression is fixed: pending idle
+helper restoration now uses owner/lifecycle authority and fresh native token
+checks; ordinary helper starts retain transport-generation fencing. All22 idle
+controller tests pass, including owner-away/back, disconnect, background, Stop,
+deletion and disposal revocation. The full controller file has three unrelated
+failures reproduced unchanged with this fix removed.
+Build admission remains at least 6GB available, 4GB Gradle heap, in-process Kotlin
+and at most two workers.
 
 Finish line: after the configured background idle period, the app stops its
 owned phone server and previously running phone-agent helper; foreground return
@@ -30,7 +41,7 @@ injected foreground, readable-owner and BA restoration callbacks. `running` and
 `invalidate()` revokes pending continuations; `dispose()` prevents later state
 publication. This class is now wired into `PhoneServerHealing`, including BA
 restoration and foreground/owner cancellation. The native channel handlers below
-are drafted and remain uncompiled. Policy defaults to off. See
+are implemented and compiled. Policy defaults to off. See
 [the original groundwork](../qa/BB5-2026-10-08/README.md) and
 [the integration checkpoint](../qa/BB5-integration-2026-10-08/README.md).
 
@@ -62,6 +73,11 @@ an `am start` command alone does not qualify notification-tap behavior. The idle
 notification has no Stop service action, starts no foreground service or helper,
 and holds no CPU lease or wake lock. Android dataSync timeout handling remains
 unchanged; the notification grants no extra background lifetime.
+
+Private QA reports exactly one of `bb5ObservedDartResume` or
+`bb5NativeFallbackResume`. A guarded native fallback qualifies only the native
+resume path and is never reported as observed Dart automatic restoration. The
+fixture does not delete personal recovery records, preferences or helper homes.
 
 Each new post resolves `NativeStrings` in the current locale. This resource
 requires no `NativeNotificationLocale` change: foreground return cancels the idle

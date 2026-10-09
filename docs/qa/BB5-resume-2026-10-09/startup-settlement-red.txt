@@ -1,0 +1,54 @@
+Behavioral removed-fix mutation: same Java settlement signature, immediate authority/quiescence/authority check; no retry. Repository files unchanged.
+
+test_fallback_refuses_stale_tokens_and_existing_or_in_flight_helpers (test_bb5_native_guard.NativeGuardTest.test_fallback_refuses_stale_tokens_and_existing_or_in_flight_helpers) ... ok
+test_fixture_retains_saved_owner_and_canonical_helper_mapping (test_bb5_native_guard.NativeGuardTest.test_fixture_retains_saved_owner_and_canonical_helper_mapping) ... ok
+test_observer_covers_real_callback_budget_and_reports_only_current_pending_token (test_bb5_native_guard.NativeGuardTest.test_observer_covers_real_callback_budget_and_reports_only_current_pending_token) ... ok
+test_runner_cannot_delete_or_rebind_personal_recovery_and_home (test_bb5_native_guard.NativeGuardTest.test_runner_cannot_delete_or_rebind_personal_recovery_and_home) ... ok
+test_startup_failure_is_preserved_even_when_cleanup_and_reporting_fail (test_bb5_native_guard.NativeGuardTest.test_startup_failure_is_preserved_even_when_cleanup_and_reporting_fail) ... ok
+test_startup_settlement_refuses_persistent_busy_after_fifteen_seconds (test_bb5_native_guard.NativeGuardTest.test_startup_settlement_refuses_persistent_busy_after_fifteen_seconds) ... FAIL
+test_startup_settlement_retries_transient_quiescence_only (test_bb5_native_guard.NativeGuardTest.test_startup_settlement_retries_transient_quiescence_only) ... FAIL
+test_startup_settlement_stops_immediately_on_owner_or_foreground_revocation (test_bb5_native_guard.NativeGuardTest.test_startup_settlement_stops_immediately_on_owner_or_foreground_revocation) ... FAIL
+test_trusted_android_app_alias_works_without_admitting_fixture_symlinks (test_bb5_native_guard.NativeGuardTest.test_trusted_android_app_alias_works_without_admitting_fixture_symlinks) ... ok
+
+======================================================================
+FAIL: test_startup_settlement_refuses_persistent_busy_after_fifteen_seconds (test_bb5_native_guard.NativeGuardTest.test_startup_settlement_refuses_persistent_busy_after_fifteen_seconds)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_native_guard.py", line 167, in test_startup_settlement_refuses_persistent_busy_after_fifteen_seconds
+    self.run_case('settle-persistent')
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_native_guard.py", line 158, in run_case
+    self.assertEqual(0, result.returncode, result.stderr)
+AssertionError: 0 != 1 : Exception in thread "main" java.lang.AssertionError: persistent work bounded at fifteen seconds
+	at io.github.eslamasabry.opencode_mobile.GuardHost.check(GuardHost.java:123)
+	at io.github.eslamasabry.opencode_mobile.GuardHost.main(GuardHost.java:49)
+
+
+======================================================================
+FAIL: test_startup_settlement_retries_transient_quiescence_only (test_bb5_native_guard.NativeGuardTest.test_startup_settlement_retries_transient_quiescence_only)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_native_guard.py", line 164, in test_startup_settlement_retries_transient_quiescence_only
+    self.run_case('settle-transient')
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_native_guard.py", line 158, in run_case
+    self.assertEqual(0, result.returncode, result.stderr)
+AssertionError: 0 != 1 : Exception in thread "main" java.lang.Exception: other_process_refused
+	at io.github.eslamasabry.opencode_mobile.GuardHost.main(GuardHost.java:36)
+
+
+======================================================================
+FAIL: test_startup_settlement_stops_immediately_on_owner_or_foreground_revocation (test_bb5_native_guard.NativeGuardTest.test_startup_settlement_stops_immediately_on_owner_or_foreground_revocation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_native_guard.py", line 170, in test_startup_settlement_stops_immediately_on_owner_or_foreground_revocation
+    self.run_case('settle-revoked')
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_native_guard.py", line 158, in run_case
+    self.assertEqual(0, result.returncode, result.stderr)
+AssertionError: 0 != 1 : Exception in thread "main" java.lang.AssertionError: authority revocation never retried
+	at io.github.eslamasabry.opencode_mobile.GuardHost.check(GuardHost.java:123)
+	at io.github.eslamasabry.opencode_mobile.GuardHost.main(GuardHost.java:60)
+
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.699s
+
+FAILED (failures=3)

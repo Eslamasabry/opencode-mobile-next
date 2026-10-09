@@ -1,0 +1,26 @@
+F..E.native_qa_bb5RuntimePrepared=unproven
+native_qa_bb5IdleWaitEntered=unproven
+native_qa_refusal=bb5_cleanup_fixture_invalid
+...................................
+======================================================================
+ERROR: test_failed_native_step_retains_only_fixed_boolean_observations (test_bb5_runtime_acceptance.AdapterTest.test_failed_native_step_retains_only_fixed_boolean_observations)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 138, in test_failed_native_step_retains_only_fixed_boolean_observations
+    observations = device.idle_observations
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Device' object has no attribute 'idle_observations'
+
+======================================================================
+FAIL: test_bounded_timeout_only_for_real_minute_step (test_bb5_runtime_acceptance.AdapterTest.test_bounded_timeout_only_for_real_minute_step)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 123, in test_bounded_timeout_only_for_real_minute_step
+    self.assertEqual(300, idle.call_args.args[1]); adb.assert_not_called()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 300 != 180
+
+----------------------------------------------------------------------
+Ran 40 tests in 0.021s
+
+FAILED (failures=1, errors=1)

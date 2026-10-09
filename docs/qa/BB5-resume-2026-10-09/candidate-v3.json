@@ -1,0 +1,23 @@
+{
+  "candidateHead": "7efee4661c420d86df677c848b77af3399f14cdf",
+  "utc": "2026-10-09T02:57:14.775146+00:00",
+  "files": {
+    "android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinIdleAcceptance.kt": "4d6246ecad6e074374097e7ce627d13983540426f910a7dc289af04d435b81e5",
+    "android/app/src/androidTest/java/io/github/eslamasabry/opencode_mobile/RuntimeQaGuard.java": "1080b32dc899d731bf3abca1afd825bb602d5b618f28c7e02e4e04bb3aea710e",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt": "0ca06e6ea267a712588085dbc619570eaa8161ae24d03fd5115b1b15e2f36c6b",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinServerService.kt": "aa567b45ead1401ad1dc8dcafc45c19cd46871f2b9443ec3ccb5f03505373330",
+    "android/app/build.gradle.kts": "55946b707f37eab0daf8b485b149176475e39bc19de30936cb2128cf55194b96",
+    "lib/builtin/phone_server_idle.dart": "e48383d3f7e8121af3357b09613cb9ce73d60b5a658d30901331df24b3664467",
+    "lib/builtin/builtin_server_recovery.dart": "3692464b1aae122525912413905c86e6e81f6259369de4e6c0ce6294e74b3283",
+    "lib/state/connection/connect.dart": "82564007e237b6fba9304f1bba0e2288174d81332759db961f52b8542c192454",
+    "lib/state/connection/phone_agents_idle.dart": "b70f17c5777b7b699286c9419b8fe3b555c3e1e412adaf0df9d6e7013ccb46c5",
+    "tool/qa/bb5_runtime_acceptance.py": "42470f2b10a139db5cc708d96ddb67a3438e7347fd7d29163472745185b698a1"
+  },
+  "normalVersion": 2202,
+  "qaVersion": 2198,
+  "targetPlatform": "android-x64",
+  "normalApk": "/home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk",
+  "normalSHA256": "e63fb2e4ff32280ad4c739aee9c17db508eab2e99a42573c4e83bd66dc0babb0",
+  "buildCap": "4GB / two workers / in-process Kotlin / >=6144MiB fresh start / <800MiB abort",
+  "deviceProof": false
+}

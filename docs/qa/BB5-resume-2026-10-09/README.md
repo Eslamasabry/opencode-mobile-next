@@ -1,43 +1,86 @@
-# BB5 resumed qualification — 2026-10-09
+# BB5 crash-resume qualification
 
-State: **not device qualified; fixture repair in progress**. BB7 has not started.
+Worktree: `oc_app-sol-bb`, branch `sol/bb-runtime`.
 
-The merged runtime compiled, 131 focused native tests and 55 focused Dart tests
-passed, 37 host restore tests and two actual Java guard tests passed, and Flutter
-analysis is clean. Build/signature details are in build-verification.md,
-signed-qa-artifacts.json and native-test-results.json. The normal-2202 host
-change has failing-first and removed-fix evidence in host-verification.md.
+The frontend merge is local commit `18c56b149`; no rebase or publication. The
+normal restore is version2202 with SHA256
+`e63fb2e4ff32280ad4c739aee9c17db508eab2e99a42573c4e83bd66dc0babb0`,
+using the existing local signer. Every device session holds the shared emulator
+lock and validates this normal artifact before mutation.
 
-## Actual device result
+## Completed checkpoints
 
-Held the shared emulator lock across baseline inspection, QA replacement,
-scenario, scoped recovery and normal2202 restoration. Only emulator-5554 was used.
-The initial full-UID server-only admission refused a pre-existing additional
-runtime. Invoked the existing BuiltinServerService stop action, then tapped the
-actual product Start button. Full-UID server-only admission passed afterward.
-No inference of logical chat idleness was made from this setup.
+- Initial merged candidate:55 affected Dart tests,131 native tests and clean
+  analysis. Pinned release QA app and runner compiled under the shared build
+  lock with fresh memory admission,4GB Gradle heap and two workers. Exact owned
+  daemons and this checkout's intermediates were cleaned. See the build logs,
+  `candidate.json`, and `signed-qa-artifacts.json`.
+- First device attempt exposed `bb5_fixture_owner_changed` before idle timing.
+  The private fixture's synthetic owner raced the real controller binding.
+  `device-session.txt`, `device-failure.json`, and `final-restoration.json` retain
+  failure and restored-normal evidence.
+- Revised fixture retains the saved owner, recipe, budget and helper home.
+  `release-runner-v2-retry.txt` proves compilation; the preceding v2 log is a
+  failed invocation and is not counted as success. `device-session-v2.txt`
+  reached runtime preparation and the real idle wait, then refused incomplete
+  helper completion. Native cleanup and normal2202 restore passed.
+- The original28-second observer is shorter than the current explicitly timed
+  Dart path (up to86seconds before unbounded reconciliation). V3 allows100seconds
+  as a diagnostic budget and never completes over a live/in-flight helper.
+  `fixture-guard-v3-red.txt` is a behavioral old-budget mutation failure;
+  `fixture-guard-v3-green.txt` contains6 passing JVM guard tests.
+- Host evidence now retains only allowlisted boolean milestones even on native
+  failure. `observation-host-red.txt` shows the missing behavior;
+  `observation-host-green.txt` contains40 passing tests. False/missing native
+  observations are recorded as unproven, never as success.
 
-The signed QA2198 app and corrected runner were installed in place after exact
-normal2202 identity and same-signer checks. The scenario now retained its actual
-primary code: **bb5_fixture_owner_changed**. **bb5_cleanup_owner_changed** was a
-separate cleanup failure. RuntimePrepared and IdleWaitEntered were unproven;
-there is no minute-idle, helper-pause, notification-tap or return success claim.
-This demonstrates the previously reproduced collision between the fixture's
-qa_bb5_idle owner and the foreground controller's legitimate saved owner.
-See device-session.txt and device-failure.json.
+## Current limitation
 
-## Restoration
+BB5 remains device-unqualified. The v2 run does not prove Dart automatic helper
+return. A separate failing-first controller regression confirms that a same-owner
+transport reconnect invalidates a pending idle helper restore. Its correction
+passes22 idle controller tests, including owner/lifecycle/native revocations.
+The initial two same-owner regression cases failed before the fix; all three
+same-owner cases (including a protocol alias) pass after it. The full controller
+file has126passes and3failures; the same resumed-title, profile-deletion and
+sign-in-reset failures reproduce with the correction removed. These baseline
+failures are retained in `controller-baseline-failures.txt` and left unchanged.
+The corrected app and V3 runner still require rebuild and device proof.
+BB7 is a design plan only and is not counted as implemented or verified.
 
-Generic restoration recovered the real native owner and policy. With the entire
-UID stopped, removed only new qa_bb5_idle native keys proven absent in the
-pre-session snapshot. The corrected native cleanup then passed and removed its
-own marker/policy, empty helper home and fixture. No account/config payload was
-exported, copied or changed. Normal2202 was installed with -r, checked against
-its exact hash and expected signer, and actual Connected UI and authenticated
-health were verified. Idle policy is default-off with no pending marker, no QA
-keys and no fixture. The emulator lock was released. Evidence: final-restoration.json,
-qa-fixture-recovery.json, cleanup-result.json and normal2202-restored.jpg.
+No physical-phone, real-agent authentication, full-suite, release or deployment
+claim is made. The shared normal2202 app is restored after each attempt.
 
-The next fixture must retain the actual saved runtime owner and valid existing
-recipe/budget. It must not relax production owner checks, disable the foreground
-controller, delete real profile homes or write synthetic recovery policy.
+## Third candidate, before installation
+
+Commit `7efee4661` fixes same-owner idle cancellation. Analysis is clean. The
+corrected app built in217.4seconds; its new runner built in1m41s. Fresh available
+memory was7081MiB and8060MiB respectively; both used the required4GB/two-worker
+caps, cleaned their exact owned daemons (3576748 and3585160), and removed their
+intermediates. `candidate-v3.json` and `signed-qa-artifacts-v3.json` bind source
+and artifact identities. No watchdog abort.
+
+The first V3 preinstall check refused the GenUI MCP child introduced by the
+required frontend merge, before any QA installation. The normal2202 app stayed
+healthy. `genui-source-comparison.json` and `genui-history-comparison.json` show
+that the installed helper exactly matches generated source at immutable commit
+`6015aea474e470ada3b3a661f6165b64682d7cf9` (18204bytes, SHA256
+`19be25af7575ac6e17958980cb07d4e253f0f32a20f5ad2d65e545be96bf8a7e`). It differs
+from the current helper. Narrow read-only admission is being updated to accept
+only a verified app-authored helper, never an arbitrary Node process. This
+setup admission is not proof of logical chat idleness.
+
+The GenUI setup admission now passes44 host tests, including exact source
+regeneration and adversarial children/path/content checks. The original host
+fails its new positive case with `bb5_initial_non_server_payload_refused`.
+`device-session-v3.txt` confirms this admission on the actual emulator, but the
+native scenario then refused `bb5_other_process_refused` before entering idle.
+`final-restoration-v3.json` confirms normal2202 restored, healthy, idle policy
+still off, and no private fixture. No idle behavior was qualified by that run.
+
+The V4 private runner adds bounded startup settlement before any fixture write:
+it repeats the same complete quiescence proof for at most15seconds, preserving
+persistent refusal and immediately failing owner/foreground revocation. The
+real production idle gates are unchanged. Nine JVM tests pass; an immediate-only
+mutation fails three behavioral tests. See `startup-settlement-red.txt` and
+`startup-settlement-green.txt`. V4 Android compile passed in1m38s with7830MiB fresh admission; owned daemon3604225 and intermediates cleaned. Signer/hash/source checks pass; target app SHA is unchanged. Device validation is pending.
