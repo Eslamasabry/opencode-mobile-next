@@ -1,25 +1,18 @@
 # BB5 — idle stop and guarded foreground resume
 
-Status: Dart/native integration committed at `7b650152b`; current frontend was
-merged without rebase at `18c56b149`. Fresh QA app/runner builds, 131 focused native
-tests, 55 focused Dart tests and clean analysis passed. The corrected runner
-confirmed `bb5_fixture_owner_changed` before the idle wait. Normal2202 was restored
-and the emulator lock released. BB5 remains default-off and device-unqualified.
-The revised private fixture retains the actual saved owner, canonical helper,
-existing recipe/budget and home instead of rebinding a synthetic profile. Its
-second compiled device run entered the real idle wait but refused incomplete
-helper acknowledgement after the runner's 28-second observation window. Native
-cleanup and normal2202 restoration passed again. The observer now allows 100
-seconds for the known timed stages (86 seconds plus scheduling allowance); this
-is diagnostic and does not claim downstream controller work is bounded.
-The same-owner transport-reconnect cancellation regression is fixed: pending idle
-helper restoration now uses owner/lifecycle authority and fresh native token
-checks; ordinary helper starts retain transport-generation fencing. All22 idle
-controller tests pass, including owner-away/back, disconnect, background, Stop,
-deletion and disposal revocation. The full controller file has three unrelated
-failures reproduced unchanged with this fix removed.
-Build admission remains at least 6GB available, 4GB Gradle heap, in-process Kotlin
-and at most two workers.
+Status (2026-10-09): implemented and device-qualified on the shared emulator at
+local source commit `001c85274` plus app fix `7efee4661`. The final unchanged V4
+runner retry passed the real one-minute idle stop, exact server/stand-in helper
+child drain, actual SystemUI notification tap, observed Dart foreground resume,
+helper acknowledgement, preserved recovery budget and explicit Stop refusal.
+Normal2202 was restored with its exact hash, healthy connection, default-off idle
+policy and absent QA fixture before the emulator lock was released. See
+[final device evidence](../qa/BB5-resume-2026-10-09/device-session-v4-retry.txt).
+An earlier V4 setup attempt failed its strict app-identity guard; its failure is
+retained separately and is not counted as proof. The current app passed22 idle
+controller tests and clean analysis; three unrelated controller failures also
+reproduce without the fix. No full-suite, physical-phone, real-agent auth,
+release or deployment qualification is claimed.
 
 Finish line: after the configured background idle period, the app stops its
 owned phone server and previously running phone-agent helper; foreground return

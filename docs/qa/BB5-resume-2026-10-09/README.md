@@ -84,3 +84,18 @@ persistent refusal and immediately failing owner/foreground revocation. The
 real production idle gates are unchanged. Nine JVM tests pass; an immediate-only
 mutation fails three behavioral tests. See `startup-settlement-red.txt` and
 `startup-settlement-green.txt`. V4 Android compile passed in1m38s with7830MiB fresh admission; owned daemon3604225 and intermediates cleaned. Signer/hash/source checks pass; target app SHA is unchanged. Device validation is pending.
+
+## Final BB5 device result
+
+`device-session-v4-retry.txt` is the successful unchanged-candidate retry after
+`device-session-v4.txt` refused an app identity change before the idle scenario.
+All required native flags passed, including `bb5ObservedDartResume=true` and no
+native fallback. The real60-second timer drained the exact original server and
+stand-in helper trees; the actual SystemUI notification tap resumed MainActivity
+and Dart completed the helper acknowledgement. Budget preservation and explicit
+Stop passed. The final restore checked exact normal2202 hash, healthy connection,
+idle default-off and fixture absence, then released the emulator lock. See
+`final-restoration-v4-retry.json` and `normal2202-restored-v4.jpg`.
+
+This qualifies the BB5 emulator journey. It does not qualify real-agent
+credentials, physical hardware, full-suite, release or deployment behavior.
