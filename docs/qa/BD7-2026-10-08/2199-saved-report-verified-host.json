@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "scope": "report_route_scroll_and_inline_history",
+  "candidateBuild": 2199,
+  "focusedTests": 81,
+  "result": "PASS",
+  "deviceQualification": "pending_complete_retry",
+  "sourceSha256": {
+    "tool/qa/bd7_device_saved_report.py": "9e3b240cb400227c3c58df2127191b1582cc3e6c7617547e5ea6fe282bdc7e93",
+    "tool/qa/bd7_device_crash_smoke.py": "b1caaa5b73defe6dee1740727a01fe6773a9ab906d3e02c9235106447ccf6acb",
+    "tool/qa/bd7_device_ui.py": "546a98280d9cebf3ff3a89d9b549e61239edefc21f75cd5163e8c696d20339f1",
+    "tool/qa/bd7_exit_proof.py": "ec032e72560e6bba9a8f7ca4879255f67adbbda876bb344d87e8edbee2a7cb63",
+    "tool/qa/test_bd7_device_saved_report.py": "0301505deb56bc7aa79571b81f0fd97d10ca83a5d9b868ea9d822ba5732e60c3"
+  }
+}

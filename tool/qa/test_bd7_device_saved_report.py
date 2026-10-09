@@ -264,6 +264,51 @@ class SavedReportTest(unittest.TestCase):
         session.ui.tap.assert_called_once_with("Start and connect")
         session.ui.navigate_report.assert_called_once()
 
+    def test_inline_recent_exit_stays_on_report_page_before_share(self):
+        session = proof.SavedReportSession("adb", Path("."), ports=Mock())
+        session.ui = Mock()
+        session.ui.find.return_value = ET.Element("node", {"package": proof.PACKAGE})
+        events = []
+        session.ui.tap.side_effect = lambda *a, **kw: events.append("open_share")
+        session.ui.screenshot.side_effect = lambda *a, **kw: events.append("screenshot")
+        with patch.object(
+            session, "execute", side_effect=lambda *a, **kw: events.append("back")
+        ):
+            session.share_preview()
+        self.assertEqual(events, ["open_share", "screenshot", "back"])
+
+    def test_report_page_is_reused_even_when_settings_tab_is_visible(self):
+        session = proof.SavedReportSession("adb", Path("."), ports=Mock())
+        session.ports.app_visible.return_value = True
+        session.ui = Mock()
+        session.ui.find.return_value = ET.Element("node", {"package": proof.PACKAGE})
+        with patch.object(
+            proof.DeviceSession, "navigate_current_page", return_value=True
+        ) as root_navigation:
+            self.assertTrue(session.navigate_current_page())
+        root_navigation.assert_not_called()
+
+    def test_report_entry_is_found_above_restored_bottom_scroll_position(self):
+        initial = xml(node("Settings", "[10,1000][300,1190]"))
+        bottom = xml(node("About", "[10,500][790,600]"))
+        above = xml(node("Report a problem", "[10,500][790,600]"))
+        consent = xml(node("Save crash reports on this phone", "[10,500][790,600]"))
+        fixture = UiFixture(initial)
+
+        def execute(command, **kwargs):
+            value = fixture.execute(command, **kwargs)
+            if command[:3] == ["shell", "input", "tap"]:
+                fixture.document = bottom if fixture.document == initial else consent
+            elif command[:3] == ["shell", "input", "swipe"] and int(command[4]) < int(
+                command[6]
+            ):
+                fixture.document = above
+            return value
+
+        ui = Bd7Ui(execute)
+        ui.navigate_report()
+        self.assertIsNotNone(ui.find("Save crash reports on this phone"))
+
     def test_reused_pid_starttime_never_receives_am_crash(self):
         session = proof.SavedReportSession("adb", Path("."), ports=Mock())
         with (

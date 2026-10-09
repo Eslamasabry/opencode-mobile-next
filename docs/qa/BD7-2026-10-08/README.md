@@ -263,3 +263,14 @@ and dispatches one guarded recovery per launch; the historical crash/ANR driver
 retains its 15-second default. All 78 focused host checks pass serially through
 machine_lock. App source, account data and ticket files are unchanged. A complete
 new crash/report/share/cleanup proof is still pending the next reservation.
+
+The [pre-consent attempt](2199-saved-report-final/report.json) stopped at
+`navigation_target_unavailable`; normal restoration passed and no second crash
+was triggered. A [navigation-only trace](2199-navigation-debug.json) then passed
+with capture Off and the saved ring empty. Three deterministic controls exposed
+report-page priority, retained Settings scroll and inline exit-history expansion
+assumptions (two assertions and one navigation error before correction). The
+driver now reuses the visible report page, scrolls Settings upward, and opens
+share preview directly from inline exit history. All 81 focused checks pass
+serially through machine_lock; no app source changed. Complete device proof
+still requires a new reservation.

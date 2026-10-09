@@ -126,16 +126,19 @@ class SavedReportSession(DeviceSession):
         return super().launch()
 
     def navigate_current_page(self):
-        if super().navigate_current_page():
+        # Reuse the current report page even when a root tab remains visible.
+        # Tapping that tab would leave this already-ready diagnostics surface.
+        if (
+            self.ports is not None
+            and self.ports.app_visible()
+            and self.owned_nodes(
+                self.ui.find("Report a problem"),
+                self.ui.find("Save crash reports on this phone"),
+                self.ui.find("Back"),
+            )
+        ):
             return True
-        if self.ports is None or not self.ports.app_visible():
-            return False
-        # Reopening an already visible diagnostics page needs no root tab.
-        return self.owned_nodes(
-            self.ui.find("Report a problem"),
-            self.ui.find("Save crash reports on this phone"),
-            self.ui.find("Back"),
-        )
+        return super().navigate_current_page()
 
     def recover_navigation(self):
         if (
@@ -252,8 +255,8 @@ class SavedReportSession(DeviceSession):
         return proof
 
     def share_preview(self):
-        # Existing proof returns with the recent-exit details sheet open.
-        self.execute(["shell", "input", "keyevent", "4"])
+        # 2199's recent-exit details expand inline on the report page. Back
+        # here would leave that page rather than dismiss a details sheet.
         self.ui.scroll("up")
         self.ui.scroll_find("Share saved crash reports")
         self.ui.tap("Share saved crash reports")
