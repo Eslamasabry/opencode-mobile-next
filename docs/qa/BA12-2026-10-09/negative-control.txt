@@ -28,7 +28,7 @@ The test description was:
 00:00 +0 -1: fresh agent snapshot restores busy after cached idle [E]
   Test failed. See exception logs above.
   The test description was: fresh agent snapshot restores busy after cached idle
-  
+
 00:00 +0 -1: hydrating a running agent publishes status without a turn event
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
@@ -58,7 +58,7 @@ The test description was:
 00:00 +0 -2: hydrating a running agent publishes status without a turn event [E]
   Test failed. See exception logs above.
   The test description was: hydrating a running agent publishes status without a turn event
-  
+
 00:00 +0 -2: drop mid-reply then reconnect running restores chat and composer
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
@@ -88,7 +88,7 @@ The test description was:
 00:01 +0 -3: drop mid-reply then reconnect running restores chat and composer [E]
   Test failed. See exception logs above.
   The test description was: drop mid-reply then reconnect running restores chat and composer
-  
+
 00:01 +0 -3: drop mid-reply then reconnect idle restores chat and composer
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
@@ -118,7 +118,7 @@ The test description was:
 00:01 +0 -4: drop mid-reply then reconnect idle restores chat and composer [E]
   Test failed. See exception logs above.
   The test description was: drop mid-reply then reconnect idle restores chat and composer
-  
+
 00:01 +0 -4: idle snapshot completes a streamed reply without a terminal event
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
@@ -148,7 +148,7 @@ The test description was:
 00:01 +0 -5: idle snapshot completes a streamed reply without a terminal event [E]
   Test failed. See exception logs above.
   The test description was: idle snapshot completes a streamed reply without a terminal event
-  
+
 00:01 +0 -5: subagent running and completed events reach controller busy state
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
@@ -177,7 +177,7 @@ The test description was:
 00:01 +0 -6: subagent running and completed events reach controller busy state [E]
   Test failed. See exception logs above.
   The test description was: subagent running and completed events reach controller busy state
-  
+
 00:01 +0 -6: Some tests failed.
 
 Failing tests:
