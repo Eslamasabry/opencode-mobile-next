@@ -123,12 +123,6 @@ def make_ports(agent_id, output):
                 print(json.dumps({'stage': 'setup', **summary}), flush=True)
                 self.last_job = signature
             return job
-        def target_not_installed_visible(self, target):
-            for node in self.ui():
-                value = self.text(node)
-                if re.fullmatch(re.escape(self.name) + r' removed\. Freed [0-9]+(?:\.[0-9]+)? (?:B|KB|MB|GB|KiB|MiB|GiB)\.', value):
-                    self.freed_display = value
-            return super().target_not_installed_visible(target)
     ports = Ports(d, p, a, metadata, agent_id)
     return d, p, ports, metadata
 

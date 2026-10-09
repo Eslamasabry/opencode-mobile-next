@@ -83,6 +83,39 @@ class LaunchTests(unittest.TestCase):
                 self.assertEqual(device.project, "/root/projects/private-name")
                 self.assertEqual(device.taps, ["New conversation", "OpenCode", "Sign in to " + name])
 
+    def test_current_selected_claude_chip_only_opens_picker_without_selecting_it(self):
+        class SelectedClaude(FakeUI):
+            def ui(self):
+                if self.page == 'new':
+                    return ['New conversation','What should we work on?','Claude Code']
+                return super().ui()
+            def tap_node(self,node):
+                if node == 'Claude Code' and self.page == 'new':
+                    self.taps.append(node)
+                    self.stack.append(self.page)
+                    self.page='picker'
+                else:
+                    super().tap_node(node)
+        device=SelectedClaude('fx',certified=True)
+        facts=run_launch(device,'fx','fx',deadlineSeconds=2)
+        self.assertEqual(facts['state'],'blocked_by_certification')
+        self.assertEqual(device.taps,['New conversation','Claude Code'])
+        self.assertFalse(facts['daemonLaunchObserved'])
+        self.assertEqual(device.page,'chats')
+
+    def test_android_repeated_status_hint_stays_target_scoped(self):
+        class RepeatedHint(FakeUI):
+            def ui(self):
+                rows=super().ui()
+                return [row.replace('Not certified on this version yet',
+                        'Not certified on this version yet, Not certified on this version yet')
+                        if row.startswith(self.name+'\n') else row for row in rows]
+        device=RepeatedHint('fx',certified=True)
+        facts=run_launch(device,'fx','fx')
+        self.assertEqual(facts['state'],'blocked_by_certification')
+        self.assertEqual(facts['plainCopy'],['Not certified on this version yet'])
+        self.assertFalse(facts['daemonLaunchObserved'])
+
     def test_missing_target_fails_closed_and_never_uses_claude(self):
         device = FakeUI(missing=True)
         facts = run_launch(device, "codex", "Codex")

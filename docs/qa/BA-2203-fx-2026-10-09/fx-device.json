@@ -1,0 +1,110 @@
+{
+  "agentId": "fx",
+  "appBuild": 2203,
+  "sourceRevision": "ec778efa3de1730402f096fc126e16fd2e83264e",
+  "normalRestored": true,
+  "availableBeforeBytes": 1371660288,
+  "partialTargetRemovedViaApp": false,
+  "installProof": {
+    "installedViaApp": true,
+    "freshJob": true,
+    "checksumVerified": true,
+    "jobId": "setup-1791525914213074"
+  },
+  "installed": {
+    "allocatedBytes": 12591104,
+    "pinMatches": true,
+    "linkMatches": true,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": true,
+    "staging": [],
+    "lockPresent": false
+  },
+  "version": {
+    "exactVersion": true
+  },
+  "retainedBeforeRemoval": {
+    "claudeSignedInVisible": true,
+    "phoneGateDigest": "6d88a3324dcdf6b3192b395af275e88d9fd0f968671b6925fc632c1a7391962e",
+    "claudeChatIdDigest": "0726bbaa34819a5a5af9f7107d37bfe52f755e76efbb2733a57fd1b0fd651897",
+    "claudeChatCount": 27,
+    "nodePresent": true,
+    "paseoPresent": true,
+    "claudeHomes": 2,
+    "targetHomes": {
+      "codex": 0,
+      "gemini": 0,
+      "qwen": 0,
+      "goose": 0,
+      "omp-acp": 0,
+      "fx": 0
+    }
+  },
+  "launch": {
+    "agentId": "fx",
+    "state": "app_rejection_with_way_forward",
+    "code": "auth_required",
+    "appPathObserved": true,
+    "plainError": true,
+    "noHang": true,
+    "daemonLaunchObserved": false,
+    "navigationUnwound": true,
+    "rejectionCaptured": true,
+    "plainCopy": [
+      "Sign in needed"
+    ],
+    "elapsedSeconds": 20.752
+  },
+  "uninstall": {
+    "state": "pass",
+    "code": "verified",
+    "facts": {
+      "asserted": true,
+      "removedViaApp": true,
+      "leftoversRemoved": true,
+      "noOrphans": true,
+      "bytesFreed": 12591104,
+      "freeSpaceDeltaBytes": 12546048,
+      "notInstalledRow": true,
+      "elapsedSeconds": 8.192
+    }
+  },
+  "appFreedDisplay": "fx removed. Freed 13 MB.",
+  "retainedAfterRemoval": {
+    "claudeSignedInVisible": true,
+    "phoneGateDigest": "6d88a3324dcdf6b3192b395af275e88d9fd0f968671b6925fc632c1a7391962e",
+    "claudeChatIdDigest": "0726bbaa34819a5a5af9f7107d37bfe52f755e76efbb2733a57fd1b0fd651897",
+    "claudeChatCount": 27,
+    "nodePresent": true,
+    "paseoPresent": true,
+    "claudeHomes": 2,
+    "targetHomes": {
+      "codex": 0,
+      "gemini": 0,
+      "qwen": 0,
+      "goose": 0,
+      "omp-acp": 0,
+      "fx": 0
+    }
+  },
+  "retainedStateMatches": true,
+  "finalInventory": {
+    "allocatedBytes": 0,
+    "pinMatches": false,
+    "linkMatches": false,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": false,
+    "staging": [],
+    "lockPresent": false
+  },
+  "availableAfterBytes": 1244946432,
+  "continuation": {
+    "confirmed": true,
+    "normalVerified": true,
+    "setupIdle": true,
+    "targetsAbsent": true,
+    "storageAvailable": true
+  }
+}

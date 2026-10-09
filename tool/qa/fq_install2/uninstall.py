@@ -29,12 +29,17 @@ def run_uninstall(agent_id, name, device, *, timeout_seconds=60,
                 'facts': {'asserted': False, 'removedViaApp': False}}
     began = clock()
     deadline = began + timeout_seconds
+    removed = False
     while clock() < deadline:
         after = device.target_inventory(agent_id)
         if (after.get('leftovers') is False and after.get('targetPids') == [] and
             after.get('allocatedBytes') == 0 and after.get('staging') == [] and
             after.get('lockPresent') is False):
+            removed = True
             visible = device.target_not_installed_visible(agent_id)
+            if not visible:
+                sleep(.25)
+                continue
             return {
                 'state': 'pass' if visible else 'partial',
                 'code': 'verified' if visible else 'removal_row_not_refreshed',
@@ -46,6 +51,13 @@ def run_uninstall(agent_id, name, device, *, timeout_seconds=60,
                           'elapsedSeconds': round(clock() - began, 3)},
             }
         sleep(.25)
+    if removed:
+        return {'state': 'partial', 'code': 'removal_row_not_refreshed',
+                'facts': {'asserted': False, 'removedViaApp': True,
+                          'leftoversRemoved': True, 'noOrphans': True,
+                          'bytesFreed': allocated, 'notInstalledRow': False,
+                          'freeSpaceDeltaBytes': device.available_storage_bytes() - available,
+                          'elapsedSeconds': round(clock() - began, 3)}}
     return {'state': 'fail', 'code': 'app_removal_timeout',
             'facts': {'asserted': False, 'removedViaApp': True,
                       'leftoversRemoved': False, 'noOrphans': False}}
