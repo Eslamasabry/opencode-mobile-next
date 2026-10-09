@@ -230,9 +230,30 @@ class SavedReportSession(DeviceSession):
     def proof(self, identity, reason, source, after, label):
         # BD7 qualifies saved capture and its previews. FD1's separate UI
         # navigation must not block this flow; exact OS exit proof stays required.
-        return super().proof(
+        result = super().proof(
             identity, reason, source, after, label, include_exit_ui=False
         )
+        # Best effort: report whether the Recent app exits row is visible and
+        # shows the exact reason code. A navigation miss never fails saved
+        # capture or preview; it only leaves visible_recent_exit False.
+        try:
+            self.ui.scroll_find("Recent app exits")
+            self.ui.tap("App stopped unexpectedly", contains=True)
+            try:
+                number = self.ui.details_number("Reason code")
+            except Bd7UiFailure:
+                # The expanded reason code can sit under the screen edge.
+                self.ui.scroll("down")
+                number = self.ui.details_number("Reason code")
+            if number == reason:
+                self.ui.screenshot(
+                    self.output / (source + "-exit.jpg"), section="Recent app exits"
+                )
+                result["visible_recent_exit"] = True
+        except (Bd7UiFailure, DeviceFailure) as error:
+            # Fixed authored failure text only; no device or account values.
+            result["recent_exit_note"] = str(error)[:80]
+        return result
 
     def crash(self):
         # Consent/navigation can outlive the outer setup preflight. Never

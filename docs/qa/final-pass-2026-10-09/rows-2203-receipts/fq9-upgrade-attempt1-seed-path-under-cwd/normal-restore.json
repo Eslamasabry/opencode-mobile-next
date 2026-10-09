@@ -1,0 +1,7 @@
+{
+  "state": "pass",
+  "expectedBuild": 2203,
+  "sha256": "82877732e8bb362722f49e3193b8ffe2a91aacbaf37954769e244a1de37462c7",
+  "installReturnedSuccess": true,
+  "versionVerified": true
+}

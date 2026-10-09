@@ -11,6 +11,7 @@ import time
 
 from tool.qa.bd7_device_ui import Bd7Ui
 from tool.qa.fq9.common import PACKAGE, DriverFailure
+from tool.qa.fq9.app_runtime import RuntimeTransaction
 from tool.qa.fq9.ports import AndroidPorts
 
 
@@ -273,7 +274,7 @@ def background(context, config):
     from tool.qa.fq9.run import write_private_receipt
     from tool.qa import final_pass_protocols
 
-    run_id = "fq9-2203-final-background"
+    run_id = config.get("run_id", "fq9-2203-final-background")
     port = AndroidPorts("emulator-5554", run_id)
     port.locked = True
     execute, ui = device_ui(context)
@@ -282,10 +283,17 @@ def background(context, config):
     original_background = None
     completed_cleanly = False
     outcome = None
+    transaction = None
     facts = {"appSentPrompt": False, "fixtureCreated": False}
     try:
         port.device_ready()
+        # The idle-setup check reads private app files and needs the app UID.
+        port.installed_identity()
         port.require_idle_setup()
+        # FQ9 background needs OpenCode 1 managed by the app. Select it through
+        # the app's own runtime switch and restore the prior runtime afterwards.
+        transaction = RuntimeTransaction(port)
+        transaction.begin()
         port._connect("opencode")
         states = port.protocol("GET", "/session/status")
         if not isinstance(states, dict) or any(
@@ -333,30 +341,32 @@ def background(context, config):
             ui.tap("Stay connected in the background")
             time.sleep(1)
         app_root(execute, ui)
-        # The global list is refreshed by reopening it; filter only the owned title.
-        ui.tap("All conversations")
+        # Find the owned conversation through the app's search; filter only its title.
+        ui.tap("Search")
         time.sleep(1)
         enter(execute, ui, title)
-        time.sleep(1)
+        time.sleep(2)
         ui.tap(title)
-        time.sleep(1)
-        # Only the selected free model is acceptable; never use an arbitrary paid default.
-        if ui.find("Big Pickle") is None:
-            candidates = [
+        time.sleep(2)
+        # The baseline model is exactly GLM-5.3 (the BC rerun policy), never an
+        # arbitrary default or its Highspeed variant.
+        if ui.find("GLM-5.3, Change model") is None:
+            ui.tap(", Change model", contains=True)
+            time.sleep(1.5)
+            choice = [
                 n
                 for n in ui.nodes()
-                if ui.text(n).startswith("Model:") or ui.text(n) == "Choose model"
+                if ui.text(n).startswith("GLM-5.3 Z.AI Coding Plan")
             ]
-            if not candidates:
-                raise DriverFailure("free_model_picker_unavailable")
-            x, y = ui.centre(candidates[0])
+            if len(choice) != 1:
+                raise DriverFailure("baseline_model_unavailable")
+            x, y = ui.centre(choice[0])
             execute(["shell", "input", "tap", str(x), str(y)])
             time.sleep(0.5)
-            if ui.find("Big Pickle") is None:
-                enter(execute, ui, "Big Pickle")
-                time.sleep(0.5)
-            ui.tap("Big Pickle")
-            time.sleep(0.5)
+            ui.tap("Use for this conversation")
+            time.sleep(1.5)
+            if ui.find("GLM-5.3, Change model") is None:
+                raise DriverFailure("baseline_model_not_selected")
         enter(execute, ui, PROMPT)
         ui.tap("Send")
         facts["appSentPrompt"] = True
@@ -393,6 +403,14 @@ def background(context, config):
         return outcome
     finally:
         port.close_protocol()
+        if transaction is not None:
+            try:
+                transaction.restore()
+                facts["runtimeTransaction"] = transaction.facts()
+            except Exception:
+                if outcome is not None:
+                    outcome.update(status="fail", reason="runtime_restore_failed")
+                    outcome["data"] = {"safe_to_continue": False}
         if original_background is False and (
             not facts["appSentPrompt"] or completed_cleanly
         ):
