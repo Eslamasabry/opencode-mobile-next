@@ -450,16 +450,23 @@ class _AssistantMessagePart extends StatelessWidget {
       // The reply's prose: plain body text at the prose's start edge, capped
       // at a reading width on wide windows ([KitMessage.reply]'s look).
       // Selectable on touch; desktop keeps the transcript-wide selection.
-      return KeyedSubtree(
-        key: const Key('assistant-text-block'),
-        child: Align(
-          alignment: AlignmentDirectional.topStart,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: KitLayout.readingWidth),
-            child: MarkdownText(
-              part.text,
-              selectable: !desktopInteractions,
-              onChoice: (option) => _insertChoice(context, option),
+      // Inside a work line's timeline the prose is a sentence with a dot on
+      // the rail; anywhere else this is the child unchanged.
+      return KitStepTimeline.sentence(
+        context,
+        child: KeyedSubtree(
+          key: const Key('assistant-text-block'),
+          child: Align(
+            alignment: AlignmentDirectional.topStart,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: KitLayout.readingWidth,
+              ),
+              child: MarkdownText(
+                part.text,
+                selectable: !desktopInteractions,
+                onChoice: (option) => _insertChoice(context, option),
+              ),
             ),
           ),
         ),

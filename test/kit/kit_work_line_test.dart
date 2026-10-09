@@ -11,6 +11,7 @@ import 'package:opencode_mobile/ui/kit/chat/kit_work_line.dart';
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
 import 'package:opencode_mobile/ui/kit/kit_chip.dart';
 import 'package:opencode_mobile/ui/kit/kit_status_mark.dart';
+import 'package:opencode_mobile/ui/kit/kit_tappable.dart';
 import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
 
 import 'kit_motion_still.dart';
@@ -106,6 +107,11 @@ final _chipNode = find
     .ancestor(of: find.byKey(_lineKey), matching: find.byType(Semantics))
     .first;
 
+/// The line's KitTappable (the one Tab stop of the line).
+final _lineTappable = find
+    .ancestor(of: find.byKey(_lineKey), matching: find.byType(KitTappable))
+    .first;
+
 /// Whether the kit part [owner] paints its keyboard focus ring: a stroke in
 /// the theme's `accent` role (LOOK-21). Nothing else in a chip or a
 /// tertiary button paints in accent, so this reads the drawn ring, not the
@@ -136,7 +142,7 @@ const _ringSettles = Duration(milliseconds: 300);
 Finder? _focusOwner(WidgetTester tester) {
   final focused = FocusManager.instance.primaryFocus?.context;
   if (focused == null) return null;
-  for (final type in [KitChip, KitButton]) {
+  for (final type in [KitButton, KitChip, KitTappable]) {
     final owner = find.ancestor(
       of: find.byElementPredicate((e) => e == focused),
       matching: find.byType(type),
@@ -230,9 +236,9 @@ void main() {
 
     // Owner, 2026-10-08: opened while running, the line showed the live
     // step with a spinner, and the same step ran again in the list with its
-    // own. Opened, the line is a plain collapse control; the running step in
-    // the list keeps the only spinner.
-    testWidgets('running and opened: "Hide steps", no mark, no live words', (
+    // own. Opened, the line keeps its summary and no mark (the chevron says
+    // it closes); the running step on the rail keeps the only spinner.
+    testWidgets('running and opened: the summary, no mark, no live words', (
       tester,
     ) async {
       final handle = tester.ensureSemantics();
@@ -245,10 +251,13 @@ void main() {
         ),
       );
       expect(find.byKey(_stepsKey), findsOneWidget);
-      expect(find.text('Hide steps'), findsOneWidget);
+      expect(find.text('Read 3 files · edited 1 file'), findsOneWidget);
       expect(find.text('Editing main.dart'), findsNothing);
       expect(find.byType(KitStatusMark), findsNothing);
-      expect(find.bySemanticsLabel('Working, Hide steps'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Working, Read 3 files · edited 1 file'),
+        findsOneWidget,
+      );
       handle.dispose();
       // Folded again: the live line is back, with its one mark.
       await _pump(
@@ -310,7 +319,10 @@ void main() {
         find.byType(KitStatusMark),
       );
       expect(marks.map((m) => m.state), [KitMarkState.failed]);
-      expect(find.text("Didn't finish"), findsOneWidget);
+      expect(
+        find.text("Read 3 files · edited 1 file · Didn't finish"),
+        findsOneWidget,
+      );
       expect(find.byKey(_stepsKey), findsOneWidget);
 
       final theme = AppTheme.dark();
@@ -332,21 +344,6 @@ void main() {
           i.color,
       ];
       expect(colours.where(forbidden.contains), isEmpty);
-      expect(
-        tester
-            .widget<RichText>(
-              find
-                  .descendant(
-                    of: find.text("Didn't finish"),
-                    matching: find.byType(RichText),
-                  )
-                  .first,
-            )
-            .text
-            .style
-            ?.color,
-        roles.text1,
-      );
     });
   });
 
@@ -461,6 +458,28 @@ void main() {
     expect(holdsStep, isTrue);
   });
 
+  testWidgets('200 steps: 25 built at first, earlier ones come 25 at a time '
+      '(PERF-2)', (tester) async {
+    await _pump(tester, _line(expanded: true, steps: _steps(200)));
+    int built() => find.textContaining('Step number').evaluate().length;
+    expect(built(), 25);
+    expect(find.text('Show 25 earlier steps'), findsOneWidget);
+    await tester.tap(find.text('Show 25 earlier steps'));
+    await tester.pump();
+    await tester.pump();
+    expect(built(), 50);
+    expect(tester.takeException(), isNull);
+    for (var i = 0; i < 5; i++) {
+      await tester.tap(find.text('Show 25 earlier steps'));
+      await tester.pump();
+    }
+    expect(built(), 175);
+    await tester.tap(find.text('Show 25 earlier steps'));
+    await tester.pump();
+    expect(built(), 200);
+    expect(find.textContaining('earlier steps'), findsNothing);
+  });
+
   testWidgets('keyboard reveal: focus lands on the first revealed step\'s '
       'own control, and no later Tab stop lacks a visible ring (G14)', (
     tester,
@@ -523,10 +542,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.pump();
       expect(FocusManager.instance.primaryFocus, isNot(same(revealed)));
-      expect(
-        tester.widget(_focusOwner(tester)!),
-        tester.widget(find.byKey(_lineKey)),
-      );
+      expect(tester.widget(_focusOwner(tester)!), tester.widget(_lineTappable));
     }
   });
 
@@ -538,7 +554,8 @@ void main() {
         reduceMotion: false,
       );
       final line = find.byType(KitWorkLine);
-      for (final type in [AnimatedSize, AnimatedContainer, SizeTransition]) {
+      // (A tappable's hover fill is an AnimatedContainer: colour only.)
+      for (final type in [AnimatedSize, SizeTransition]) {
         expect(
           find.descendant(of: line, matching: find.byType(type)),
           findsNothing,
@@ -649,7 +666,7 @@ void main() {
         steps: [TextButton(onPressed: () {}, child: const Text('Step button'))],
       ),
     );
-    final chip = find.byKey(_lineKey);
+    final chip = _lineTappable;
     expect(_ringShows(tester, chip), isFalse);
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pump();

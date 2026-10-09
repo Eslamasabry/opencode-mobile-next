@@ -677,9 +677,12 @@ void main() {
       if (identical(text.widget, tester.widget(title))) continue;
       final rect = tester.getRect(find.byWidget(text.widget));
       if (rect.width == 0) continue;
+      // On the timeline the detail sits under the title; it must not share
+      // the title's line and overlap it.
+      final below = rect.top >= tester.getRect(title).bottom - 0.5;
       expect(
-        rect.left,
-        greaterThanOrEqualTo(titleRight),
+        below || rect.left >= titleRight,
+        isTrue,
         reason: 'overlaps: ${(text.widget as Text).data}',
       );
     }
